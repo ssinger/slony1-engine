@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.14 2004-05-27 16:32:50 wieck Exp $
+ *	$Id: slonik.h,v 1.15 2004-05-31 15:24:16 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -41,6 +41,7 @@ typedef struct SlonikStmt_lock_set_s			SlonikStmt_lock_set;
 typedef struct SlonikStmt_unlock_set_s			SlonikStmt_unlock_set;
 typedef struct SlonikStmt_move_set_s			SlonikStmt_move_set;
 typedef struct SlonikStmt_ddl_script_s			SlonikStmt_ddl_script;
+typedef struct SlonikStmt_wait_event_s			SlonikStmt_wait_event;
 
 typedef enum {
 	STMT_TRY = 1,
@@ -70,6 +71,7 @@ typedef enum {
 	STMT_UNINSTALL_NODE,
 	STMT_UNLOCK_SET,
 	STMT_UNSUBSCRIBE_SET,
+	STMT_WAIT_EVENT,
 	STMT_ERROR
 } Slonik_stmttype;
 	
@@ -89,6 +91,7 @@ struct SlonikAdmInfo_s {
 	int					stmt_lno;
 	char			   *conninfo;
 	PGconn			   *dbconn;
+	int64				last_event;
 	int					version_major;
 	int					version_minor;
 	int					nodeid_checked;
@@ -316,6 +319,15 @@ struct SlonikStmt_ddl_script_s {
 };
 
 
+struct SlonikStmt_wait_event_s {
+	SlonikStmt			hdr;
+	int					wait_origin;
+	int					wait_confirmed;
+	int					wait_on;
+	int					wait_timeout;
+};
+
+
 
 
 extern SlonikScript	   *parser_script;
@@ -431,6 +443,7 @@ extern int		slonik_lock_set(SlonikStmt_lock_set *stmt);
 extern int		slonik_unlock_set(SlonikStmt_unlock_set *stmt);
 extern int		slonik_move_set(SlonikStmt_move_set *stmt);
 extern int		slonik_ddl_script(SlonikStmt_ddl_script *stmt);
+extern int		slonik_wait_event(SlonikStmt_wait_event *stmt);
 
 extern int		slon_scanint64(char *str, int64 *result);
 
@@ -450,6 +463,8 @@ int				db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
 int				db_disconnect(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
 
 int				db_exec_command(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
+									SlonDString *query);
+int				db_exec_evcommand(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
 									SlonDString *query);
 PGresult	   *db_exec_select(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
 									SlonDString *query);

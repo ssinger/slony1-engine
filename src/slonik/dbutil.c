@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.5 2004-05-21 15:30:35 wieck Exp $
+ *	$Id: dbutil.c,v 1.6 2004-05-31 15:24:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -198,6 +198,49 @@ db_exec_command(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
 	PQclear(res);
 
 	return retval;
+}
+
+
+/* ----------
+ * db_exec_evcommand
+ *
+ *	Execute a stored procedure returning an event sequence and remember
+ *	that in the admin info for later wait events.
+ * ----------
+ */
+int
+db_exec_evcommand(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
+{
+	PGresult   *res;
+
+	db_notice_stmt = stmt;
+
+	if (db_begin_xact(stmt, adminfo) < 0)
+		return -1;
+
+	res = PQexec(adminfo->dbconn, dstring_data(query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "%s:%d: %s %s - %s",
+				stmt->stmt_filename, stmt->stmt_lno,
+				PQresStatus(PQresultStatus(res)),
+				dstring_data(query), PQresultErrorMessage(res));
+		PQclear(res);
+		return -1;
+	}
+	if (PQntuples(res) != 1)
+	{
+		fprintf(stderr, "%s:%d: %s - did not return 1 row",
+				stmt->stmt_filename, stmt->stmt_lno,
+				dstring_data(query));
+		PQclear(res);
+		return -1;
+	}
+
+	slon_scanint64(PQgetvalue(res, 0, 0), &(adminfo->last_event));
+	PQclear(res);
+
+	return 0;
 }
 
 

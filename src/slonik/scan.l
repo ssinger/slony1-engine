@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.11 2004-05-27 16:32:50 wieck Exp $
+ *	$Id: scan.l,v 1.12 2004-05-31 15:24:16 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,10 +40,12 @@ identifier		({ident_start}{ident_cont}*)
 
 add				{ return K_ADD;					}
 admin			{ return K_ADMIN;				}
+all				{ return K_ALL;					}
 backup			{ return K_BACKUP;				}
 client			{ return K_CLIENT;				}
 cluster			{ return K_CLUSTER;				}
 comment			{ return K_COMMENT;				}
+confirmed		{ return K_CONFIRMED;			}
 conninfo		{ return K_CONNINFO;			}
 connretry		{ return K_CONNRETRY;			}
 create			{ return K_CREATE;				}
@@ -56,6 +58,7 @@ exit			{ return K_EXIT;				}
 failover		{ return K_FAILOVER;			}
 false			{ return K_FALSE;				}
 filename		{ return K_FILENAME;			}
+for				{ return K_FOR;					}
 forward			{ return K_FORWARD;				}
 full			{ return K_FULL;				}
 id				{ return K_ID;					}
@@ -87,6 +90,7 @@ store			{ return K_STORE;				}
 subscribe		{ return K_SUBSCRIBE;			}
 success			{ return K_SUCCESS;				}
 table			{ return K_TABLE;				}
+timeout			{ return K_TIMEOUT;				}
 trigger			{ return K_TRIGGER;				}
 true			{ return K_TRUE;				}
 try				{ return K_TRY;					}
@@ -94,6 +98,7 @@ uninstall		{ return K_UNINSTALL;			}
 unlock			{ return K_UNLOCK;				}
 unsubscribe		{ return K_UNSUBSCRIBE;			}
 yes				{ return K_YES;					}
+wait			{ return K_WAIT;				}
 
 {digit}+		{ return T_NUMBER;				}
 {identifier}	{ return T_IDENT;				}

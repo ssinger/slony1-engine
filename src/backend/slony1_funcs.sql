@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.10 2004-05-29 15:15:28 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.11 2004-05-31 15:24:15 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2997,7 +2997,7 @@ end;
 -- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.enableSubscription (int4, int4, int4)
-returns bigint
+returns int4
 as '
 declare
 	p_sub_set			alias for $1;

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.13 2004-05-27 16:32:50 wieck Exp $
+ *	$Id: parser.y,v 1.14 2004-05-31 15:24:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -41,8 +41,11 @@ typedef enum {
 	O_SER_KEY,
 	O_SET_ID,
 	O_TAB_ID,
+	O_TIMEOUT,
 	O_TRIG_NAME,
 	O_USE_KEY,
+	O_WAIT_CONFIRMED,
+	O_WAIT_ON,
 
 	END_OF_OPTIONS = -1
 } option_code;
@@ -145,6 +148,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_unlock_set
 %type <statement>	stmt_move_set
 %type <statement>	stmt_ddl_script
+%type <statement>	stmt_wait_event
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -158,11 +162,13 @@ static int	assign_options(statement_option *so, option_list *ol);
  */
 %token	K_ADD
 %token	K_ADMIN
+%token	K_ALL
 %token	K_BACKUP
 %token	K_CLIENT
 %token	K_CLUSTER
 %token	K_CLUSTERNAME
 %token	K_COMMENT
+%token	K_CONFIRMED
 %token	K_CONNINFO
 %token	K_CONNRETRY
 %token	K_CREATE
@@ -175,6 +181,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_FAILOVER
 %token	K_FALSE
 %token	K_FILENAME
+%token	K_FOR
 %token	K_FORWARD
 %token	K_FULL
 %token	K_ID
@@ -206,6 +213,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
 %token	K_TABLE
+%token	K_TIMEOUT
 %token	K_TRIGGER
 %token	K_TRUE
 %token	K_TRY
@@ -213,6 +221,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_UNLOCK
 %token	K_UNSUBSCRIBE
 %token	K_YES
+%token	K_WAIT
 
 /*
  * Other scanner tokens
@@ -266,6 +275,7 @@ hdr_admconninfo		: lno K_NODE id K_ADMIN K_CONNINFO '=' literal ';'
 						new->stmt_filename	= current_file;
 						new->stmt_lno		= $1;
 						new->conninfo		= $7;
+						new->last_event		= -1;
 
 						$$ = new;
 					}
@@ -434,6 +444,8 @@ try_stmt			: stmt_echo
 					| stmt_move_set
 						{ $$ = $1; }
 					| stmt_ddl_script
+						{ $$ = $1; }
+					| stmt_wait_event
 						{ $$ = $1; }
 					| stmt_error ';' { yyerrok; }
 						{ $$ = $1; }
@@ -1154,6 +1166,36 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 					}
 					;
 
+stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
+					{
+						SlonikStmt_wait_event *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_WAIT_CONFIRMED, -1 ),
+							STMT_OPTION_INT( O_WAIT_ON, 1 ),
+							STMT_OPTION_INT( O_TIMEOUT, 600 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_wait_event *)
+								malloc(sizeof(SlonikStmt_wait_event));
+						memset(new, 0, sizeof(SlonikStmt_wait_event));
+						new->hdr.stmt_type		= STMT_WAIT_EVENT;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $5) == 0)
+						{
+							new->wait_origin	= opt[0].ival;
+							new->wait_confirmed	= opt[1].ival;
+							new->wait_on		= opt[2].ival;
+							new->wait_timeout	= opt[3].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
 option_list			: ';'
 					{ $$ = NULL; }
 					| '(' option_list_items ')' ';'
@@ -1289,6 +1331,47 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_FILENAME;
 						$$ = $3;
 					}
+					| K_ORIGIN '=' K_ALL
+					{
+						option_list *new;
+						new = (option_list *)malloc(sizeof(option_list));
+
+						new->opt_code	= O_ORIGIN;
+						new->ival	= -2;
+						new->str	= NULL;
+						new->lineno	= yylineno;
+						new->next	= NULL;
+
+						$$ = new;
+					}
+					| K_CONFIRMED '=' option_item_id
+					{
+						$3->opt_code	= O_WAIT_CONFIRMED;
+						$$ = $3;
+					}
+					| K_CONFIRMED '=' K_ALL
+					{
+						option_list *new;
+						new = (option_list *)malloc(sizeof(option_list));
+
+						new->opt_code	= O_WAIT_CONFIRMED;
+						new->ival	= -2;
+						new->str	= NULL;
+						new->lineno	= yylineno;
+						new->next	= NULL;
+
+						$$ = new;
+					}
+					| K_WAIT K_ON '=' option_item_id
+					{
+						$4->opt_code	= O_WAIT_ON;
+						$$ = $4;
+					}
+					| K_TIMEOUT '=' option_item_id
+					{
+						$3->opt_code	= O_TIMEOUT;
+						$$ = $3;
+					}
 					;
 
 option_item_id		: id
@@ -1410,6 +1493,7 @@ option_str(option_code opt_code)
 		case O_CONNINFO:		return "conninfo";
 		case O_CONNRETRY:		return "connretry";
 		case O_EVENT_NODE:		return "event node";
+		case O_FILENAME:		return "filename";
 		case O_FORWARD:			return "forward";
 		case O_FQNAME:			return "full qualified name";
 		case O_ID:				return "id";
@@ -1423,9 +1507,11 @@ option_str(option_code opt_code)
 		case O_SER_KEY:			return "key";
 		case O_SET_ID:			return "set id";
 		case O_TAB_ID:			return "table id";
+		case O_TIMEOUT:			return "timeout";
 		case O_TRIG_NAME:		return "trigger name";
 		case O_USE_KEY:			return "key";
-		case O_FILENAME:		return "filename";
+		case O_WAIT_CONFIRMED:	return "confirmed";
+		case O_WAIT_ON:			return "wait on";
 		case END_OF_OPTIONS:	return "???";
 	}
 	return "???";
