@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.6 2004-10-08 16:30:11 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.7 2004-10-13 18:49:51 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -111,6 +111,19 @@ create or replace function @NAMESPACE@.getLocalNodeId (name) returns int4
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (name) to public;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION getModuleVersion ()
+--
+--	Returns the compiled in version number of the Slony-I shared
+--	object.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.getModuleVersion () returns text
+    as '$libdir/slony1_funcs', '_Slony_I_getModuleVersion'
+	language C
+	security definer;
+grant execute on function @NAMESPACE@.getModuleVersion () to public;
 
 
 -- ----------------------------------------------------------------------

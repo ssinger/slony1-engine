@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.9.2.2 2004-09-30 17:45:06 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.9.2.3 2004-10-13 18:49:53 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -207,6 +207,105 @@ db_getLocalNodeId(PGconn *conn)
 	 * Return the result as an integer value
 	 */
 	retval = strtol(PQgetvalue(res, 0, 0), NULL, 10);
+	PQclear(res);
+	
+	return retval;
+}
+
+
+/* ----------
+ * db_checkSchemaVersion
+ *
+ *	Check the Slony schema on a connection for the correct version number
+ * ----------
+ */
+int
+db_checkSchemaVersion(PGconn *conn)
+{
+	char		query[1024];
+	PGresult   *res;
+	int			retval = 0;
+
+	/*
+	 * Select the version number from the schema
+	 */
+	snprintf(query, 1024, "select %s.slonyVersion()",
+			rtcfg_namespace);
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,
+				"cannot get Slony-I schema version - %s",
+				PQresultErrorMessage(res));
+		slon_log(SLON_ERROR,
+				"please upgrade Slony-I schema to version %s\n",
+				SLONY_I_VERSION_STRING);
+		PQclear(res);
+		return -1;
+	}
+	if (PQntuples(res) != 1)
+	{
+		slon_log(SLON_ERROR,
+				"query '%s' returned %d rows (expected 1)\n",
+				query, PQntuples(res));
+		PQclear(res);
+		return -1;
+	}
+
+	/*
+	 * Check the version string of the schema
+	 */
+	if (strcmp(PQgetvalue(res, 0, 0), SLONY_I_VERSION_STRING) != 0)
+	{
+		slon_log(SLON_ERROR,
+				"Slony-I schema version is %s\n",
+				PQgetvalue(res, 0, 0));
+		slon_log(SLON_ERROR,
+				"please upgrade Slony-I schema to version %s\n",
+				SLONY_I_VERSION_STRING);
+		retval = -1;
+	}
+	PQclear(res);
+	
+	/*
+	 * Select the version number from the module
+	 */
+	snprintf(query, 1024, "select %s.getModuleVersion()",
+			rtcfg_namespace);
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,
+				"cannot get Slony-I module version - %s",
+				PQresultErrorMessage(res));
+		slon_log(SLON_ERROR,
+				"please upgrade Slony-I shared module to version %s\n",
+				SLONY_I_VERSION_STRING);
+		PQclear(res);
+		return -1;
+	}
+	if (PQntuples(res) != 1)
+	{
+		slon_log(SLON_ERROR,
+				"query '%s' returned %d rows (expected 1)\n",
+				query, PQntuples(res));
+		PQclear(res);
+		return -1;
+	}
+
+	/*
+	 * Check the version string of the module
+	 */
+	if (strcmp(PQgetvalue(res, 0, 0), SLONY_I_VERSION_STRING) != 0)
+	{
+		slon_log(SLON_ERROR,
+				"Slony-I module version is %s\n",
+				PQgetvalue(res, 0, 0));
+		slon_log(SLON_ERROR,
+				"please upgrade Slony-I shared module to version %s\n",
+				SLONY_I_VERSION_STRING);
+		retval = -1;
+	}
 	PQclear(res);
 	
 	return retval;

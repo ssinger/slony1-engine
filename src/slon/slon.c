@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.27.2.1 2004-09-30 17:45:06 cbbrowne Exp $
+ *	$Id: slon.c,v 1.27.2.2 2004-10-13 18:49:53 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -168,6 +168,9 @@ main (int argc, char *const argv[])
 	*cp2++ = '"';
 	*cp2 = '\0';
 
+	slon_log(SLON_CONFIG, "main: slon version %s starting up\n",
+			SLONY_I_VERSION_STRING);
+
 	/*
 	 * Remember the connection information for the local node.
 	 */
@@ -197,6 +200,11 @@ main (int argc, char *const argv[])
 	if (rtcfg_nodeid < 0)
 	{
 		slon_log(SLON_FATAL, "main: Node is not initialized properly\n");
+		slon_exit(-1);
+	}
+	if (db_checkSchemaVersion(startup_conn) < 0)
+	{
+		slon_log(SLON_FATAL, "main: Node has wrong Slony-I schema or module version loaded\n");
 		slon_exit(-1);
 	}
 	slon_log(SLON_CONFIG, "main: local node id = %d\n", rtcfg_nodeid);
