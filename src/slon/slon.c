@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.49 2005-03-23 23:06:50 darcyb Exp $
+ *	$Id: slon.c,v 1.50 2005-03-25 13:30:52 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -673,7 +673,7 @@ main(int argc, char *const argv[])
 		
 		slon_log(SLON_DEBUG2, "slon: begin signal handler setup\n");
 
-#ifndef (CYGWIN)
+#ifndef CYGWIN
 		act.sa_handler = &sighandler; 
 		sigemptyset(&act.sa_mask);
 		act.sa_flags = SA_NODEFER;
