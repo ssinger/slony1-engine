@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.51 2004-12-13 23:25:45 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.52 2004-12-17 23:19:03 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2298,18 +2298,19 @@ Note that the table id, tab_id, must be unique ACROSS ALL SETS.';
 create or replace function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
 returns int4
 as '
-	v_tab_relname		name;
-	v_tab_nspname		name;
 declare
-	p_set_id			alias for $1;
-	p_tab_id			alias for $2;
-	p_fqname			alias for $3;
+
+	p_set_id		alias for $1;
+	p_tab_id		alias for $2;
+	p_fqname		alias for $3;
 	p_tab_idxname		alias for $4;
 	p_tab_comment		alias for $5;
+	v_tab_relname		name;
+	v_tab_nspname		name;
 	v_local_node_id		int4;
 	v_set_origin		int4;
 	v_sub_provider		int4;
-	v_relkind			char;
+	v_relkind		char;
 	v_tab_reloid		oid;
 begin
 	-- ----
@@ -4721,6 +4722,16 @@ begin
 				and PGA.attname = ''_Slony-I_@CLUSTERNAME@_rowID''
 				and not PGA.attisdropped;
 	return found;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.tableHasSerialKey(text) is
+'tableHasSerialKey (tab_fqname)
+
+Checks if a table has our special serial key column that is used if
+the table has no natural unique constraint.';
+
+-- ----------------------------------------------------------------------
 -- FUNCTION updateRelname (set_id, only_on_node)
 --
 --      Reset the relnames          
@@ -4779,6 +4790,7 @@ begin
         return p_set_id;
 end;
 ' language plpgsql;
+
 comment on function @NAMESPACE@.updateRelname(int4, int4) is
 'updateRelname(set_id, only_on_node)';
 
@@ -4851,17 +4863,6 @@ comment on function @NAMESPACE@.updateReloid(int4, int4) is
 
 Updates the respective reloids in sl_table and sl_seqeunce based on
 their respective FQN';
-
--- ----------------------------------------------------------------------
-end;
-' language plpgsql;
-
-comment on function @NAMESPACE@.tableHasSerialKey(text) is
-'tableHasSerialKey (tab_fqname)
-
-Checks if a table has our special serial key column that is used if
-the table has no natural unique constraint.';
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION upgradeSchema(old_version)
