@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.10 2004-03-26 15:56:45 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.11 2004-06-23 19:49:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -64,7 +64,13 @@ cleanupThread_main(void *dummy)
 	 * stored procedure
 	 */
 	dstring_init(&query1);
-	slon_mkquery(&query1, "select %s.cleanupEvent();", rtcfg_namespace);
+	slon_mkquery(&query1, 
+			"select %s.cleanupEvent_1(); "
+			"select %s.cleanupEvent_2(); "
+			"select %s.cleanupEvent_3();", 
+			rtcfg_namespace,
+			rtcfg_namespace,
+			rtcfg_namespace);
 
 	/*
 	 * Build the query string for vacuuming replication
