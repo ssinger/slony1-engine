@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.3 2004-04-16 02:41:37 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.4 2004-04-16 18:54:18 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -661,12 +661,10 @@ begin
 	-- Let the backup node listen for all events where the
 	-- failed node did listen for it.
 	-- ----
-	for v_row in select L1.li_origin, L2.li_provider
-			from @NAMESPACE@.sl_listen L1, @NAMESPACE@.sl_listen L2
-			where L1.li_origin = L2.li_origin
-				and L1.li_receiver = p_backup_node
-				and L1.li_provider = p_failed_node
-				and L2.li_receiver = p_failed_node
+	for v_row in select li_origin, li_provider
+			from @NAMESPACE@.sl_listen
+			where li_receiver = p_failed_node
+				and li_provider <> p_backup_node
 	loop
 		perform @NAMESPACE@.storeListen_int(v_row.li_origin,
 				v_row.li_provider, p_backup_node);
@@ -682,11 +680,12 @@ begin
 
 	-- ----
 	-- For every set that moves, make sure that a receiver that
-	-- currently receives directly from the origin, is now listening
-	-- for events for that node from the backup node. And also that
+	-- currently receives directly from the origin, is now receiving
+	-- that set from the backup node. And also that
 	-- it will listen for events from the backup node directly.
 	-- ----
-	for v_row in select S.set_id, SUB.sub_provider, SUB.sub_receiver
+	for v_row in select S.set_id, SUB.sub_provider, SUB.sub_receiver,
+				SUB.sub_forward
 			from @NAMESPACE@.sl_set S, @NAMESPACE@.sl_subscribe SUB
 			where S.set_origin = p_failed_node
 				and S.set_id = SUB.sub_set
@@ -694,9 +693,9 @@ begin
 				and SUB.sub_receiver <> p_backup_node
 	loop
 		perform @NAMESPACE@.storeListen_int(p_failed_node, 
-				p_backup_node, v_row.set_id);
-		perform @NAMESPACE@.storeListen_int(p_backup_node, 
-				p_backup_node, v_row.set_id);
+				p_backup_node, v_row.sub_receiver);
+		perform @NAMESPACE@.subscribeSet_int(v_row.set_id,
+				p_backup_node, v_row.sub_receiver, v_row.sub_forward);
 	end loop;
 
 	-- ----
@@ -1732,6 +1731,7 @@ begin
 					where ev_origin = p_new_origin
 						and ev_type = ''SYNC'';
 			if v_last_sync > 0 then
+raise notice ''move_set set=% new setsync=%,%'', p_set_id, p_new_origin, v_last_sync;
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
@@ -1741,6 +1741,7 @@ begin
 						where ev_origin = p_new_origin
 							and ev_seqno = v_last_sync;
 			else
+raise notice ''move_set set=% new setsync=%,0 (no SYNC found)'', p_set_id, p_new_origin;
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
