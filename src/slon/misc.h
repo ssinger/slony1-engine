@@ -8,7 +8,7 @@
 #include "c.h"
 
 typedef enum {
-        SLON_FATAL,
+        SLON_FATAL = -4,
         SLON_ERROR,
         SLON_WARN,
         SLON_CONFIG,
