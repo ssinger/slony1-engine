@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.56 2004-07-07 16:33:39 wieck Exp $
+ *	$Id: remote_worker.c,v 1.57 2004-07-09 15:42:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -795,12 +795,10 @@ remoteWorkerThread_main(void *cdata)
 
 				/*
 				 * Do the actual enabling of the set only if
-				 * we are the receiver and if we received this
-				 * event from the provider.
+				 * we are the receiver.
 				 */
 				if (sub_receiver == rtcfg_nodeid &&
-					event->ev_origin == node->no_id &&
-					event->event_provider == sub_provider)
+					event->ev_origin == node->no_id)
 				{
 					int			sched_rc;
 					int			sleeptime = 15;
@@ -810,6 +808,35 @@ remoteWorkerThread_main(void *cdata)
 
 					while (true)
 					{
+						/*
+						 * If we received this event from another
+						 * node than the data provider, wait until the
+						 * data provider has synced up far enough.
+						 */
+						if (event->event_provider != sub_provider)
+						{
+							int64 prov_seqno = get_last_forwarded_confirm(
+										event->ev_origin,
+										sub_provider);
+
+							if (prov_seqno < 0 || event->ev_seqno > prov_seqno)
+							{
+								slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+									"copy set: data provider %d only on sync "
+									INT64_FORMAT
+									" - sleep 5 seconds\n",
+									node->no_id, sub_provider, 
+									prov_seqno);
+								sched_rc = sched_msleep(node, 5000);
+								if (sched_rc != SCHED_STATUS_OK)
+								{
+									event_ok = false;
+									break;
+								}
+								continue;
+							}
+						}
+						
 						/*
 						 * Execute the config changes so far, but don't
 						 * commit the transaction yet. We have to copy
