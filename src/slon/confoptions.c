@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <string.h>
+#include <errno.h>
 #include "libpq-fe.h"
 #include "confoptions.h"
 #include "postgres.h"
