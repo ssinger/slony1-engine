@@ -57,7 +57,8 @@ Make the version check use psql -c 'select version ()'.
 Add support for running all commands to slaves over ssh.
 
 Allow the script to execute the commands in perl at the end of
-the script.
+the script, thereby removing the 'feature' of writing out a bash
+script to be executed.
 
 Add more checking to see if databases, tables, users, groups, and
 languages are setup on each slave, that the sysids match, etc.
@@ -71,7 +72,25 @@ Cascading of slaves.
 
 Add support for generating failover scripts.
 
+Add support for detecting errors in piped commands in the shell script.
+Sometimes a "pg_dump | psql" will generate errors on the psql side. These
+are not always fatal, but should be looked at.
+
+Add support for detecting pg_dump 7.5 on the master and disabling dollar
+quoting if the slave is less than 7.5.
+
+Add support for detecting version of slaves to see if they satisfy?
+
 =head1 CHANGELOG
+
+06-18-2004
+
+Prompt for "working target directory" where setup script and dump scripts
+are written by slony_setup.pl. This is also where the bash script and slon
+will write.
+Detect $TMP variables and use them if they're set.
+Added usage argument.
+More cosmetic fixes.
 
 05-28-2004
 
@@ -97,23 +116,46 @@ eval {
 
 my $dumper = ($@) ? 0 : 1;
 
-$|= 1;
+$| = 1;
 
 $SIG{TERM} = \&clean_up;
 $SIG{INT} = \&clean_up;
 $SIG{KILL} = \&clean_up;
 
 #
+# Print out usage for variations of "-h" and "?"
+#
+
+if ($ARGV[0] =~ m/-h|--h|\?/) {
+	&pager ("
+usage: perl slony_setup.pl
+
+Run this as the user you plan to run slony. This script takes no
+arguments. Just run it.
+
+If you want to know more about it, then: perldoc ./slony_setup.pl
+
+");
+	exit -1;
+}
+
+#
 # Create a temporary working directory and set some variables
 #
 
 my $exitcode = -1;
-my $tmpdir = "/tmp/slony.$$";
+my $tmpbase = $ENV{"TMPDIR"} || $ENV{"TEMP"} || $ENV{"TMP"} || "/tmp";
+my $tmpdir = "$tmpbase/slony.$$";
+my $targetdir = $ENV{"HOME"} || $tmpbase;
 mkdir $tmpdir,0700 or &death ("Can't create temporary working directory: $!");
 
 my $pgpassfile = $ENV{"HOME"} . "/.pgpass";
 my $pgpassbackup = "$tmpdir/.pgpass.backup";
-my $dump_file = "/tmp/slony_dump";
+my $slony_dump = "$targetdir/slony_dump";
+my $slony_master_setup = "$targetdir/slony_master_setup.sh";
+my $setup_log = "$targetdir/slony_setup.log";
+my $outlog = "$targetdir/slon-DATABASENAME.out";
+my $errlog = "$targetdir/slon-DATABASENAME.err";
 
 #
 # Make sure we have the correct version
@@ -179,6 +221,41 @@ print "\nAre you ready to proceed? (Y|n) ";
 &clean_up if ! &get_one_bool;
 
 #
+# Set the working directory
+#
+
+$text = qq(
+The working target directory is where this script will store files that it
+creates.  The working target directory is currently set to '$targetdir'. If this
+directory should not be used, you should answer "no" to the follwing question
+and input a new directory. This directory should be writable by the script.
+);
+
+&pager ($text);
+
+print "\nThe target directory is '$targetdir'. Is this OK? (Y/n)";
+if (!&get_one_bool) {
+	$targetdir = "";
+	while (!$targetdir) {
+		print "\nEnter the full path to the working target directory: ";
+		my $temp = <>;
+		chomp ($temp);
+		$targetdir = $temp if $temp;
+		if (!$targetdir) {
+			print "No target directory specified. Select another directory.\n";
+			$targetdir = "";
+		} elsif (! -d $targetdir) {
+			print "The target directory '$targetdir' is not a directory. Select another directory.\n";
+			$targetdir = "";
+		} elsif (! -w $targetdir) {
+			print "The target directory '$targetdir' is not writable. Select another directory.\n";
+			$targetdir = "";
+		}
+	}
+	print "\nThe target directory is now '$targetdir'.\n";
+}
+
+#
 # Backup the ~/.pgpass, if it exists
 #
 
@@ -193,11 +270,11 @@ if (-f $pgpassfile) {
 my %data;
 my $cache = 0;
 
-if (-f $dump_file) {
+if (-f $slony_dump) {
 	print "\nA previous instance of slony_setup data was detected.\n";
 	print "Do you want to import this data? (Y|n) ";
 	if (&get_one_bool) {
-		open F, $dump_file and do {
+		open F, $slony_dump and do {
 			my $text = join ('', <F>);
 			close F;
 			my $VAR1;
@@ -267,7 +344,7 @@ while (1) {
 # Ask the user if all databases in the "instance" should be replicated
 #
 
-print "\nShould all databases on $data{'master'}{'hostname'} be replicated? (Y|n) ";
+print "\nShould all databases on '$data{'master'}{'hostname'}' be replicated? (Y|n) ";
 
 #
 # Loop over the databases and prompt for addition into replication
@@ -297,7 +374,7 @@ foreach my $database (keys %{$data{"master"}{"databases"}}) {
 	# Loop over the tables and prompt for addition
 	#
 	
-	print "\nShould all tables in the $database database be replicated?
+	print "\nShould all tables in the '$database' database be replicated?
 (Note: the script cannot guarantee the schema will be properly
  installed on slaves if you choose No) (Y|n) ";
 	
@@ -315,7 +392,7 @@ foreach my $database (keys %{$data{"master"}{"databases"}}) {
 	# Loop over the sequences and prompt for addition
 	#
 	
-	print "\nShould all sequences in the $database database be replicated? (Y|n) ";
+	print "\nShould all sequences in the '$database' database be replicated? (Y|n) ";
 	
 	if (&get_one_bool) {
 		$data{"master"}{"databases"}{$database}{"all_sequences"} = 1;
@@ -392,7 +469,7 @@ if (&get_one_bool) {
 	#
 	# Make this a variable!! FIXME!!
 	#
-  open F, ">/tmp/slony_master_setup.sh" or death ("Can't open /tmp/slony_master_setup.sh: $!");
+  open F, ">$slony_master_setup" or death ("Can't open $slony_master_setup: $!");
 	print F "#/bin/bash\n\n";
 	
 	#
@@ -405,7 +482,7 @@ if (&get_one_bool) {
 	$data{"master"}{"coninfo"} .= " password=" . $data{"master"}{"password"} if $data{"master"}{"password"} !~ /(\s+|\*)/;
 	$data{"master"}{"coninfo"} .= "'";
 
-	my $all_conn = "slonik <<_EOF_ 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n\tcluster name = T1;
+	my $all_conn = "slonik <<_EOF_ 2>> $setup_log 1>> $setup_log\n\tcluster name = T1;
 	node 1 admin conninfo = " . $data{"master"}{"coninfo"} . ";\n";
 
 	foreach my $slave (sort keys %{$data{"slaves"}}) {
@@ -447,7 +524,7 @@ _EOF_
 
 if [ \$? -ne 0 ]
 then
-	echo Errors were detected. Please review /tmp/slony_setup.log.  Uninstall halted.
+	echo Errors were detected. Please review $setup_log.  Uninstall halted.
 	exit -1
 fi
 
@@ -459,7 +536,7 @@ fi
 fi
 
 rm -f ~/.pgpass
-rm -f /tmp/slony_setup.log
+rm -f $setup_log
 
 ";
 
@@ -495,10 +572,10 @@ rm -f /tmp/slony_setup.log
 				"'" . $data{"master"}{"users"}{$user}{"passwd"} . "'," .
 				(($data{"master"}{"users"}{$user}{"valuntil"}) ? "'" . $data{"master"}{"users"}{$user}{"valuntil"} . "'": "null") . "," .
 				(($data{"master"}{"users"}{$user}{"useconfig"}) ? "'" . $data{"master"}{"users"}{$user}{"useconfig"} . "'": "null") . ")\"" .
-				" 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+				" 2>> $setup_log 1>> $setup_log\n";
 			print F "\nif [ \$? -ne 0 ]\n";
 			print F "then\n";
-			print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+			print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 			print F "\texit -1\n";
 			print F "fi\n\n";
 		}
@@ -515,10 +592,10 @@ rm -f /tmp/slony_setup.log
 				"'" . $data{"master"}{"groups"}{$group}{"groname"} . "'," .
 				"'" . $data{"master"}{"groups"}{$group}{"grosysid"} . "'," .
 				"'" . $data{"master"}{"groups"}{$group}{"grolist"} . "')\"" .
-				" 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+				" 2>> $setup_log 1>> $setup_log\n";
 			print F "\nif [ \$? -ne 0 ]\n";
 			print F "then\n";
-			print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+			print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 			print F "\texit -1\n";
 			print F "fi\n\n";
 		}
@@ -530,10 +607,10 @@ rm -f /tmp/slony_setup.log
 			" -p " . $data{"slaves"}{$slave}{"port"} .
 			" -U " . $data{"slaves"}{$slave}{"username"} .
 			" plpgsql template1" .
-			" 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+			" 2>> $setup_log 1>> $setup_log\n";
 		print F "\nif [ \$? -ne 0 ]\n";
 		print F "then\n";
-		print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+		print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 		print F "\texit -1\n";
 		print F "fi\n\n";
 		foreach my $database (keys %{$data{"master"}{"databases"}}) {
@@ -545,10 +622,10 @@ rm -f /tmp/slony_setup.log
 				" -p " . $data{"slaves"}{$slave}{"port"} .
 				" -U " . $data{"slaves"}{$slave}{"username"} .
 				" -O " . $data{"master"}{"databases"}{$database}{"owner"} .
-				" $database 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+				" $database 2>> $setup_log 1>> $setup_log\n";
 			print F "\nif [ \$? -ne 0 ]\n";
 			print F "then\n";
-			print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+			print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 			print F "\texit -1\n";
 			print F "fi\n\n";
 			#
@@ -561,16 +638,16 @@ rm -f /tmp/slony_setup.log
 					" -p " . $data{"master"}{"port"} .
 					" -U " . $data{"master"}{"username"} .
 					" -s " . $database .
-					" 2>> /tmp/slony_setup.log | \\\n" .
+					" 2>> $setup_log | \\\n" .
 					"psql" .
 					" -h " . $data{"slaves"}{$slave}{"hostname"} .
 					" -p " . $data{"slaves"}{$slave}{"port"} .
 					" -U " . $data{"slaves"}{$slave}{"username"} .
 					" -d " . $database .
-					" 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+					" 2>> $setup_log 1>> $setup_log\n";
 				print F "\nif [ \$? -ne 0 ]\n";
 				print F "then\n";
-				print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+				print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 				print F "\texit -1\n";
 				print F "fi\n\n";
 			#
@@ -586,16 +663,16 @@ rm -f /tmp/slony_setup.log
 						" -n " . $schema .
 						" -t " . $tablename .
 						" -s " . $database .
-						" 2>> /tmp/slony_setup.log | \\\n" .
+						" 2>> $setup_log | \\\n" .
 						"psql" .
 						" -h " . $data{"slaves"}{$slave}{"hostname"} .
 						" -p " . $data{"slaves"}{$slave}{"port"} .
 						" -U " . $data{"slaves"}{$slave}{"username"} .
 						" -d " . $database .
-						" 2>> /tmp/slony_setup.log 1>> /tmp/slony_setup.log\n";
+						" 2>> $setup_log 1>> $setup_log\n";
 					print F "\nif [ \$? -ne 0 ]\n";
 					print F "then\n";
-					print F "\techo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.\n";
+					print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
 					print F "\texit -1\n";
 					print F "fi\n\n";
 				}
@@ -724,21 +801,23 @@ _EOF_
 
 if [ \$? -ne 0 ]
 then
-	echo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.
+	echo Errors were detected. Please review $setup_log and fix the errors.
 	exit -1
 else
 ";
-		my $command = "slon T1 dbname=$database 2> /tmp/slon-$database.err 1> /tmp/slon-$database.out &\n";
+		my $command = "slon T1 dbname=$database 2> $errlog 1> $outlog &\n";
+
+		$command =~ s/DATABASENAME/$database/g;
 		
 		$slave_commands .= $command;
 		
-		print F "\t" . $command . "\techo slon has been started on the master and placed into the background. It is
-	echo logging STDOUT to /tmp/slon-$database.out and STDERR to /tmp/slon-$database.err.
+		$command = "\t" . $command . "\techo slon has been started on the master and placed into the background. It is
+	echo logging STDOUT to $outlog and STDERR to $errlog.
 	echo
 	echo Now start slon on all slaves by running the following command on all slaves as the
 	echo slony system user:
 	echo
-	echo \"slon T1 dbname=$database 2> /tmp/slon-$database.err 1> /tmp/slon-$database.out &\"
+	echo \"slon T1 dbname=$database 2> $errlog 1> $outlog &\"
 	echo
 	echo Once slon is running on all slaves, hit any key to proceed with the installation
 	read -s -n1 a
@@ -748,7 +827,8 @@ fi
 $conn
 ";
 		
-		print F "\ttry {\n";
+		$command =~ s/DATABASENAME/$database/g;
+		print F $command . "\ttry {\n";
 		foreach my $slave (sort keys %{$data{"slaves"}}) {
 			print F "\t\tsubscribe set (id = 1, provider = 1, receiver = " . ($slave + 1) . ", forward = no);\n";
 		}
@@ -762,7 +842,7 @@ _EOF_
 
 if [ \$? -ne 0 ]
 then
-	echo Errors were detected. Please review /tmp/slony_setup.log and fix the errors.
+	echo Errors were detected. Please review $setup_log and fix the errors.
 	exit -1
 fi\n";
 		
@@ -776,14 +856,16 @@ echo from the master.";
 close F;
 
 my $end = "
-The setup script was saved as /tmp/slony_master_setup.sh.  This script must
+The setup script was saved as '$slony_master_setup'.  This script must
 be executed on the master as the slony system user.  If all goes well, slony
-will be setup.  If not, errors should be reported in /tmp/slony_setup.log.
+will be setup.  If not, errors should be reported in '$setup_log'.
 
 Additionally, a data dump of all data collected by this script has been stored
-in the file /tmp/slony_dump. You might want to save this file if you want to
+in the file '$slony_dump'. You might want to save this file if you want to
 run this script again with many of the same values.  A subsequent run of
-slony_setup.pl looks for slony_dump in /tmp.
+slony_setup.pl looks for the dumpfile in the working target directory.  This dump
+file only contains the server names and login credentials for now.  Since it
+contains sensitive information, it should be safe-guarded.
 
 You must also run the following command(s) on each slave as the slony system
 user.  These commands should be also set to start and stop when postgres starts
@@ -814,9 +896,9 @@ $exitcode = 0;
 
 sub pager () {
 	my $text = shift;
-	my $pager = $ENV{"PAGER"} || 'less';
+	my $pager = $ENV{"PAGER"} || 'less' || 'more';
 	open P, "| $pager" or &death ("Can't open pipe to $pager: $!");
-	print P $text;
+	print P $text . "\n[This is the pager '$pager'. Press 'q' to exit]\n";
 	close P;
 }
 	
@@ -828,10 +910,9 @@ sub check_version () {
 	if (-x $psql) {
 		open P, "$psql --version |";
 		while (<P>) {
-			if ($_ =~ m/\s+(\d+)\.(\d+)((\w+)||(\.(\d+)))?\s+/) {
-				$pgversion_major = $1;
-				$pgversion_minor = $2;
-			}
+			$_ =~ m/\s+(\d+)\.(\d+)((\w+)||(\.(\d+)))?\s+/;
+			$pgversion_major = $1;
+			$pgversion_minor = $2;
 		}
 		close P;
 		if ($pgversion_major == 7 && $pgversion_minor >= 3) {
@@ -1044,7 +1125,7 @@ sub get_one_bool {
 
 sub dump_to_file {
 	return if ! $dumper;
-	open F, ">$dump_file" or &death ("Can't open $dump_file: $!");
+	open F, ">$slony_dump" or &death ("Can't open $slony_dump: $!");
 	foreach my $host (keys %data) {
 		delete $data{$host}{"databases"};
 		delete $data{$host}{"users"};
@@ -1054,6 +1135,7 @@ sub dump_to_file {
 	delete $data{"slaves"};
 	print F Data::Dumper::Dumper (\%data);
 	close F;
+	chmod 0600, $slony_dump;
 }
 
 sub backup_file {
