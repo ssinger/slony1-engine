@@ -17,10 +17,10 @@ What Slony-I is not.
 
 Slony-I is not a network management system. Slony-I does not have any
 functionality within it to detect a node failure, or automatically promote a
-note to a master or other data origin.  Slony-I is not multi-master, it's not a
-connection broker, and it doesn't make you coffee and toast in the morning.
+node to a master or other data origin.  Slony-I is not multi-master; it's not
+a connection broker, and it doesn't make you coffee and toast in the morning.
 
 Current Limitations:
 
 Slony-I does not automatically propagate schema changes, nor does it have any
-ability to replicate large objects
+ability to replicate large objects.

@@ -6,10 +6,10 @@ recommend that you learn how Slony-I functions by using a fresh new
 non-production database.
 
 The Slony-I replication engine is trigger-based, allowing us to replicate
-databases (or portions there of) running under the same postmaster.
+databases (or portions thereof) running under the same postmaster.
 
 This example will show how to replicate the pgbench database running on
-localhost (master) to the pgbenchslave database also running on localhost
+localhost (master) to the pgbench slave database also running on localhost
 (slave).  We make a couple of assumptions about your PostgreSQL configuration:
 
 1. You have tcpip_socket=true in your postgresql.conf and
@@ -49,7 +49,7 @@ pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDB
 Because Slony-I depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
-step because it's already installed into the $MASTERDBNAME
+step because it's already installed into the $MASTERDBNAME.
 
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 
@@ -78,8 +78,8 @@ Configuring the Database for Replication.
 Creating the configuration tables, stored procedures, triggers and
 configuration is all done through the slonik tool.  It is a specialized
 scripting aid that mostly calls stored procedures in the master/salve (node)
-databases.  The script to create the initial configuration for  the simple
-master-slave setup of out pgbench database looks like this:
+databases.  The script to create the initial configuration for the simple
+master-slave setup of our pgbench database looks like this:
 
 #!/bin/sh
 
@@ -104,14 +104,14 @@ slonik <<_EOF_
     # objects.
 
 	#--
-	init cluster ( id=1,  comment = 'Master Node');
+	init cluster ( id=1, comment = 'Master Node');
  
 	#--
     # Because the history table does not have a primary key or other unique
     # constraint that could be used to identify a row, we need to add one.
     # The following command adds a bigint column named
     # _Slony-I_$CLUSTERNAME_rowID to the table.  It will have a default value
-    # of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have  UNIQUE and NOT NULL
+    # of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have UNIQUE and NOT NULL
     # constraints applied.  All existing rows will be initialized with a
     # number
 	#--
@@ -119,8 +119,8 @@ slonik <<_EOF_
 
 	#--
     # Slony-I organizes tables into sets.  The smallest unit a node can
-    # subscribe is a set The following commands create one set containing all
-    # 4 pgbench tables.  The master or origin of the set is note 1.
+    # subscribe is a set.  The following commands create one set containing
+    # all 4 pgbench tables.  The master or origin of the set is node 1.
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
 	set add table (set id=1, origin=1, id=1, full qualified name = 'public.accounts', comment='accounts table');
@@ -144,16 +144,16 @@ EOF
 Is the pgbench still running?  If not start it again.
 
 At this point we have 2 databases that are fully prepared.  One is the master
-database which bgbench is busy accessing and changing rows in.  It's not time
-to start  the replication daemons.
+database in which bgbench is busy accessing and changing rows.  It's now time
+to start the replication daemons.
 
 On $MASTERHOST the command to start the replication engine is
 
-slon $CLUSTERNAME dbname=$MASTERDBNAME user=$REPLIATIONUSER host=$MASTERHOST
+slon $CLUSTERNAME dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST
 
 Likewise we start the replication system on node 2 (the slave)
 
-slon $CLUSTERNAME dbname=$SLAVEDBNAME user=$REPLIATIONUSER host=$SLAVEHOST
+slon $CLUSTERNAME dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST
 
 Even though we have the slon running on both the master and slave and they are
 both spitting out diagnostics and other messages, we aren't replicating any
@@ -204,7 +204,7 @@ are in fact the same.
 
 The following script will create ordered dumps of the 2 databases and compare
 them.  Make sure that pgbench has completed it's testing, and that your slon
-sessions are caught up.
+sessions have caught up.
 
 
 #!/bin/sh
@@ -240,6 +240,6 @@ else
     echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
 
-If this script returns "failed," please contact the developers at
+If this script returns "FAILED" please contact the developers at
 http://slony.org/
 
