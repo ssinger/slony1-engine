@@ -73,6 +73,12 @@ Add support for generating failover scripts.
 
 =head1 CHANGELOG
 
+05-28-2004
+
+Added support for replicating sequences.
+Made the queries that get the table names and sequence names use quote_ident()
+Fixed some cosmetic issues.
+
 05-06-2004
 
 Initial CVS import
@@ -285,12 +291,15 @@ if (!&get_one_bool) {
 
 foreach my $database (keys %{$data{"master"}{"databases"}}) {
 	&get_tables ("master", $database);
+	&get_sequences ("master", $database);
 
 	#
 	# Loop over the tables and prompt for addition
 	#
 	
-	print "\nShould all tables in the $database database be replicated?\n(Note: the script cannot guarantee the schema will be properly installed on slaves) (Y|n) ";
+	print "\nShould all tables in the $database database be replicated?
+(Note: the script cannot guarantee the schema will be properly
+ installed on slaves if you choose No) (Y|n) ";
 	
 	if (&get_one_bool) {
 		$data{"master"}{"databases"}{$database}{"all_tables"} = 1;
@@ -301,6 +310,30 @@ foreach my $database (keys %{$data{"master"}{"databases"}}) {
 			delete $data{"master"}{"databases"}{$database}{"tables"}{$table} if ! &get_one_bool;
 		}
 	}
+
+	#
+	# Loop over the sequences and prompt for addition
+	#
+	
+	print "\nShould all sequences in the $database database be replicated? (Y|n) ";
+	
+	if (&get_one_bool) {
+		$data{"master"}{"databases"}{$database}{"all_sequences"} = 1;
+	} else {
+		print "\nAdd sequences in database $database to replication:\n";
+		foreach my $sequence (keys %{$data{"master"}{"databases"}{$database}{"sequences"}}) {
+			print " Add $sequence? (Y|n) ";
+			delete $data{"master"}{"databases"}{$database}{"sequences"}{$sequence} if ! &get_one_bool;
+		}
+	}
+}
+
+#
+# Ensure that if no tables were added manually that the database isn't replicated
+#
+
+foreach my $database (keys %{$data{"master"}{"databases"}}) {
+	delete $data{"master"}{"databases"}{$database} if ! keys %{$data{"master"}{"databases"}{$database}{"tables"}};
 }
 
 #
@@ -320,12 +353,14 @@ $datum Password: VALIDATED";
 
 }
 
-$summary .=  "\n\nThe following databases/tables will be replicated:\n\n";
-
 foreach my $database (keys %{$data{"master"}{"databases"}}) {
-	$summary .= "  $database:\n\n";
+	$summary .=  "\n\nThe following tables in database $database will be replicated:\n\n";
 	foreach my $table (keys %{$data{"master"}{"databases"}{$database}{"tables"}}) {
 		$summary .=  "    $table\n";
+	}
+	$summary .=  "\n\nThe following sequences in database $database will be replicated:\n\n";
+	foreach my $sequence (keys %{$data{"master"}{"databases"}{$database}{"sequences"}}) {
+		$summary .=  "    $sequence\n";
 	}
 	$summary .=  "\n";
 }
@@ -660,8 +695,20 @@ rm -f /tmp/slony_setup.log
 		my $count = 1;
 		foreach my $table (keys %{$data{"master"}{"databases"}{$database}{"tables"}}) {
 			print F "
-		echo '  Adding $table...';
+		echo '  Adding table $table...';
 		set add table (set id = 1, origin = 1, id = $count, full qualified name = '$table', comment = 'Table $table');
+		echo '    done';\n";
+			$count++;
+		}
+
+		$count = 1;
+		
+		print F "\n\t\techo 'Adding sequences to the subscription set';\n";
+		
+		foreach my $sequence (keys %{$data{"master"}{"databases"}{$database}{"sequences"}}) {
+			print F "
+		echo '  Adding sequence $sequence...';
+		set add sequence (set id = 1, origin = 1, id = $count, full qualified name = '$sequence', comment = 'Sequence $sequence');
 		echo '    done';\n";
 			$count++;
 		}
@@ -669,7 +716,7 @@ rm -f /tmp/slony_setup.log
 		print F "
 	}
 	on error {
-		echo 'Could not add tables!';
+		echo 'Could not add tables and sequences!';
 		exit -1;
 	}
 	echo 'All tables added';
@@ -860,20 +907,37 @@ sub get_databases () {
 }
 
 sub get_tables () {
-	my ($which, $name) = @_;
+	my ($which, $database) = @_;
 	open P, "$psql -h " . $data{$which}{"hostname"} .
 		" -p " . $data{$which}{"port"} .
 		" -U " . $data{$which}{"username"} .
-		" -d $name " .
+		" -d $database " .
 		" -t" .
-		" -c \"select * from pg_tables where schemaname not in ('information_schema', 'pg_catalog')\" |"
+		" -c " . qq("select "pg_catalog".quote_ident(schemaname), "pg_catalog".quote_ident(tablename), "pg_catalog".quote_ident(tableowner) from pg_tables where schemaname not in ('information_schema', 'pg_catalog')") . " |"
 		|| &death ("Can't open pipe to $psql: $!");
 	while (<P>) {
-		$_ =~ m/\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+\|\s+\S+\s+/;
+		$_ =~ m/\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+/;
 		my $schema = $1;
 		my $table = $2;
 		my $owner = $3;
-		$data{$which}{"databases"}{$name}{"tables"}{$schema . "." . $table} = 1;
+		$data{$which}{"databases"}{$database}{"tables"}{$schema . "." . $table} = 1;
+	}
+	close P;
+}
+
+sub get_sequences () {
+	my ($which, $database) = @_;
+	open P, "$psql -h " . $data{$which}{"hostname"} .
+		" -p " . $data{$which}{"port"} .
+		" -U " . $data{$which}{"username"} .
+		" -d $database " .
+		" -t" .
+		" -c " . qq("select "pg_catalog".quote_ident(nspname) || '.' || "pg_catalog".quote_ident(relname) from pg_class c, pg_namespace n where c.relnamespace = n.oid and c.relkind = 'S'") . " |"
+		|| &death ("Can't open pipe to $psql: $!");
+	while (<P>) {
+		$_ =~ m/\s+(\S+)\s+/;
+		my $sequence_name = $1;
+		$data{$which}{"databases"}{$database}{"sequences"}{$sequence_name} = 1;
 	}
 	close P;
 }
