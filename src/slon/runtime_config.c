@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.14 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: runtime_config.c,v 1.15 2004-03-17 22:35:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -565,6 +565,54 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	rtcfg_unlock();
 	rtcfg_seq_bump();
 	sched_wakeup_node(set_origin);
+}
+
+
+void
+rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
+{
+	SlonSet	   *set;
+
+	rtcfg_lock();
+
+	/*
+	 * find the set
+	 */
+	for (set = rtcfg_set_list_head; set; set = set->next)
+	{
+		if (set->set_id == set_id)
+		{
+			slon_log(SLON_CONFIG,
+					"moveSet: set_id=%d old_origin=%d "
+					"new_origin=%d\n",
+					set_id, old_origin, new_origin);
+				
+			set->set_origin = new_origin;
+			set->sub_provider = sub_provider;
+			if (rtcfg_nodeid == old_origin)
+			{
+				set->sub_active = true;
+				set->sub_forward = true;
+			}
+			if (sub_provider < 0)
+			{
+				set->sub_active = false;
+				set->sub_forward = false;
+			}
+			rtcfg_unlock();
+			rtcfg_seq_bump();
+			sched_wakeup_node(old_origin);
+			sched_wakeup_node(new_origin);
+			return;
+		}
+	}
+
+	/*
+	 * This cannot happen.
+	 */
+	rtcfg_unlock();
+	slon_log(SLON_FATAL, "rtcfg_moveSet(): set %d not found\n", set_id);
+	slon_abort();
 }
 
 

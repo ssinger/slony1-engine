@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.27 2004-03-17 19:54:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.28 2004-03-17 22:35:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -568,6 +568,54 @@ remoteWorkerThread_main(void *cdata)
 				 * the runtime configuration.
 				 */
 			}
+			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
+			{
+				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
+				int		old_origin = (int) strtol(event->ev_data2, NULL, 10);
+				int		new_origin = (int) strtol(event->ev_data3, NULL, 10);
+				int		sub_provider = -1;
+				PGresult   *res;
+
+				/*
+				 * Move set is a little more tricky. The stored
+				 * proc does a lot of rearranging in the provider
+				 * chain. To catch up with that, we need to execute
+				 * it now and select the resulting provider for us.
+				 */
+				slon_appendquery(&query1,
+						"select %s.moveSet_int(%d, %d, %d); ",
+						rtcfg_namespace,
+						set_id, old_origin, new_origin);
+				if (query_execute(node, local_dbconn, &query1) < 0)
+					slon_abort();
+
+				slon_mkquery(&query1,
+						"select sub_provider from %s.sl_subscribe "
+						"	where sub_receiver = %d",
+						rtcfg_namespace, rtcfg_nodeid);
+				res = PQexec(local_dbconn, dstring_data(&query1));
+				if (PQresultStatus(res) != PGRES_TUPLES_OK)
+				{
+					slon_log(SLON_FATAL, "remoteWorkerThread_%d: \"%s\" %s",
+							node->no_id, dstring_data(&query1),
+							PQresultErrorMessage(res));
+					PQclear(res);
+					slon_abort();
+				}
+				if (PQntuples(res) == 1)
+				{
+					sub_provider =
+						(int) strtol(PQgetvalue(res, 0, 0), NULL, 10);
+				}
+				PQclear(res);
+
+				/*
+				 * Update the internal runtime configuration
+				 */
+				rtcfg_moveSet(set_id, old_origin, new_origin, sub_provider);
+
+				dstring_reset(&query1);
+			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
 			{
 				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
@@ -599,11 +647,9 @@ remoteWorkerThread_main(void *cdata)
 					event->ev_origin == node->no_id &&
 					event->event_provider == sub_provider)
 				{
-					SlonDString	query2;
 					int			sched_rc;
 					int			sleeptime = 15;
 
-					dstring_init(&query2);
 					slon_mkquery(&query2, "rollback transaction");
 					check_config = true;
 
@@ -628,7 +674,6 @@ remoteWorkerThread_main(void *cdata)
 									"select %s.enableSubscription(%d, %d); ",
 									rtcfg_namespace,
 									sub_set, sub_receiver);
-							dstring_free(&query2);
 							sched_rc = SCHED_STATUS_OK;
 							break;
 						}

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.13 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: local_listen.c,v 1.14 2004-03-17 22:35:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -294,6 +294,58 @@ localListenThread_main(void *dummy)
 				 * table information is not maintained in
 				 * the runtime configuration.
 				 */
+			}
+			else if (strcmp(ev_type, "MOVE_SET") == 0)
+			{
+				/*
+				 * MOVE_SET
+				 */
+				int		set_id;
+				int		old_origin;
+				int		new_origin;
+				PGresult *res2;
+				SlonDString	query2;
+				int		sub_provider;
+
+				set_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				old_origin	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				new_origin	= (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+
+				/*
+				 * We have been the old origin of the set, so according
+				 * to the rules we must have a provider now.
+				 */
+				dstring_init(&query2);
+				slon_mkquery(&query2,
+						"select sub_provider from %s.sl_subscribe "
+						"    where sub_receiver = %d",
+						rtcfg_namespace, rtcfg_nodeid);
+				res2 = PQexec(dbconn, dstring_data(&query2));
+				if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+				{
+					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s",
+							dstring_data(&query2),
+							PQresultErrorMessage(res2));
+					dstring_free(&query2);
+					PQclear(res2);
+					slon_abort();
+				}
+				if (PQntuples(res2) != 1)
+				{
+					slon_log(SLON_FATAL, "localListenThread: MOVE_SET "
+							"but no provider found for set %d\n",
+							set_id);
+					dstring_free(&query2);
+					PQclear(res2);
+					slon_abort();
+				}
+
+				sub_provider =
+					(int) strtol(PQgetvalue(res2, 0, 0), NULL, 10);
+				PQclear(res2);
+				dstring_free(&query2);
+
+				rtcfg_moveSet(set_id, old_origin, new_origin, sub_provider);
 			}
 			else if (strcmp(ev_type, "SUBSCRIBE_SET") == 0)
 			{

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.25 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: slon.h,v 1.26 2004-03-17 22:35:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -347,6 +347,8 @@ extern void		rtcfg_storeListen(int li_origin, int li_provider);
 extern void		rtcfg_dropListen(int li_origin, int li_provider);
 
 extern void		rtcfg_storeSet(int set_id, int set_origin, char *set_comment);
+extern void		rtcfg_moveSet(int set_id, int old_origin, int new_origin,
+							int sub_provider);
 
 extern void		rtcfg_storeSubscribe(int sub_set, int sub_provider,
 							char *sub_forward);

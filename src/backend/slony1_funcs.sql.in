@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.28 2004-03-17 18:34:57 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.29 2004-03-17 22:35:19 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -840,17 +840,19 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION moveSet (set_id)
+-- FUNCTION moveSet (set_id, new_origin)
 --
 --	Generate the MOVE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.moveSet (int4)
+create function @NAMESPACE@.moveSet (int4, int4)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
+	p_new_origin		alias for $2;
 	v_local_node_id		int4;
 	v_set_row			record;
+	v_sub_row			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -858,7 +860,7 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Check that the set exists and that it is currently remote
+	-- Check that the set exists and that we are the origin
 	-- ----
 	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	select * into v_set_row from @NAMESPACE@.sl_set
@@ -867,19 +869,42 @@ begin
 	if not found then
 		raise exception ''Slony-I: set % not found'', p_set_id;
 	end if;
-	if v_set_row.set_origin = v_local_node_id then
-		raise exception ''Slony-I: set % originates on local node'',
+	if v_set_row.set_origin <> v_local_node_id then
+		raise exception ''Slony-I: set % does not originate on local node'',
 				p_set_id;
 	end if;
 
 	-- ----
-	-- Take over the set and generate the message
+	-- Check that the new_origin is an active subscriber of the set
 	-- ----
-	update @NAMESPACE@.sl_set
-			set set_origin = v_local_node_id
-			where set_id = p_set_id;
+	select * into v_sub_row from @NAMESPACE@.sl_subscribe
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
+	if not found then
+		raise exception ''Slony-I: set % is not subscribed by node %'',
+				p_set_id, p_new_origin;
+	end if;
+	if not v_sub_row.sub_active then
+		raise exception ''Slony-I: subsctiption of node % for set % is inactive'',
+				p_new_origin, p_set_id;
+	end if;
+
+	-- ----
+	-- All right, we first generate a SYNC
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'');
+
+	-- ----
+	-- Reconfigure everything
+	-- ----
+	perform @NAMESPACE@.moveSet_int(p_set_id, v_local_node_id,
+			p_new_origin);
+
+	-- ----
+	-- Generate the real event
+	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
-			p_set_id, v_local_node_id);
+			p_set_id, v_local_node_id, p_new_origin);
 
 	return p_set_id;
 end;
@@ -887,17 +912,23 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION moveSet_int (set_id, new_set_origin)
+-- FUNCTION moveSet_int (set_id, old_origin, new_origin)
 --
 --	Process the MOVE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.moveSet_int (int4, int4)
+create function @NAMESPACE@.moveSet_int (int4, int4, int4)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
-	p_new_set_origin	alias for $2;
-	v_set_row			record;
+	p_old_origin		alias for $2;
+	p_new_origin		alias for $3;
+	v_local_node_id		int4;
+	v_tab_row			record;
+	v_sub_row			record;
+	v_sub_node			int4;
+	v_sub_last			int4;
+	v_sub_next			int4;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -905,21 +936,116 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Check that the set exists.
+	-- Get our local node ID
 	-- ----
-	select * into v_set_row from @NAMESPACE@.sl_set
-			where set_id = p_set_id
-			for update;
-	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+
+	--
+	-- If we are the old or new origin of the set, we need to
+	-- remove the log trigger from all tables first.
+	--
+	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
+		for v_tab_row in select tab_id from @NAMESPACE@.sl_table
+				where tab_set = p_set_id
+				order by tab_id
+		loop
+			perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+		end loop;
 	end if;
 
-	-- ----
-	-- Change the origin of the set
-	-- ----
+	--
+	-- Next we have to reverse the subscription path
+	--
+	v_sub_last = p_new_origin;
+	select sub_provider into v_sub_node
+			from @NAMESPACE@.sl_subscribe
+			where sub_receiver = p_new_origin;
+	if not found then
+		raise exception ''Slony-I: subscription path broken in moveSet_int'';
+	end if;
+	while v_sub_node <> p_old_origin loop
+		--
+		-- Tracing node by node, the old receiver is now in
+		-- v_sub_last and the old provider is in v_sub_node.
+		--
+
+		--
+		-- Get the current provider of this node as next
+		-- and change the provider to the previous one in
+		-- the reverse chain.
+		--
+		select sub_provider into v_sub_next
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = p_set_id
+					and sub_receiver = v_sub_node
+				for update;
+		if not found then
+			raise exception ''Slony-I: subscription path broken in moveSet_int'';
+		end if;
+		update @NAMESPACE@.sl_subscribe
+				set sub_provider = v_sub_last
+				where sub_set = p_set_id
+					and sub_receiver = v_sub_node;
+
+		v_sub_last = v_sub_node;
+		v_sub_node = v_sub_next;
+	end loop;
+
+	--
+	-- This includes creating a subscription for the old origin
+	--
+	insert into @NAMESPACE@.sl_subscribe
+			(sub_set, sub_provider, sub_receiver,
+			sub_forward, sub_active)
+			values (p_set_id, v_sub_last, p_old_origin, true, true);
+	if v_local_node_id = p_old_origin then
+		insert into @NAMESPACE@.sl_setsync
+				(ssy_setid, ssy_origin, ssy_seqno,
+				ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+				values (p_set_id, p_new_origin, ''0'',
+				''0'', ''0'', '''', NULL);
+	end if;
+
+	--
+	-- Now change the ownership of the set.
+	--
 	update @NAMESPACE@.sl_set
-			set set_origin = p_new_set_origin
+			set set_origin = p_new_origin
 			where set_id = p_set_id;
+
+	--
+	-- On the new origin, delete the obsolete setsync information
+	--
+	if v_local_node_id = p_new_origin then
+		delete from @NAMESPACE@.sl_setsync
+				where ssy_setid = p_set_id;
+	else
+		if v_local_node_id <> p_old_origin then
+			--
+			-- On every other node, change the setsync so that it will
+			-- pick up from the new origins epoch.
+			--
+			update @NAMESPACE@.sl_setsync
+					set ssy_origin = p_new_origin,
+						ssy_seqno = ''0'',
+						ssy_minxin = ''0'', ssy_maxxid = ''0'',
+						ssy_xip = '''', ssy_action_list = ''''
+					where ssy_setid = p_set_id;
+		end if;
+	end if;
+
+	--
+	-- Finally, if we are the new or old origin, we have to
+	-- put all the tables into altered state again.
+	--
+	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
+		for v_tab_row in select tab_id from @NAMESPACE@.sl_table
+				where tab_set = p_set_id
+				order by tab_id
+		loop
+			perform @NAMESPACE@.alterTableForReplication(v_tab_row.tab_id);
+		end loop;
+	end if;
 
 	return p_set_id;
 end;
@@ -1261,13 +1387,13 @@ begin
 		-- On the Origin we just drop the trigger we originally added
 		-- ----
 		execute ''drop trigger "_@CLUSTERNAME@_logtrigger_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname'';
+				p_tab_id || ''" on '' || v_tab_fqname;
 	else
 		-- ----
 		-- On the subscriber drop the denyAccess trigger
 		-- ----
 		execute ''drop trigger "_@CLUSTERNAME@_denyaccess_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname'';
+				p_tab_id || ''" on '' || v_tab_fqname;
 				
 		-- ----
 		-- Restore all original triggers
