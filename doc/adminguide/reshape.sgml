@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.11 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.12 2005-02-18 04:04:49 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <para>If you rearrange the nodes so that they serve different
@@ -22,19 +22,22 @@ will change the configuration.</para></listitem>
 
 <listitem><para> If the directions of data flows have changed, it is
 doubtless appropriate to issue a set of <command><link
-       linkend="stmtdroplisten"> DROP LISTEN</link></command> operations to
+linkend="stmtdroplisten"> DROP LISTEN</link></command> operations to
 drop out obsolete paths between nodes and <command><link
-       linkend="stmtstorelisten">STORE LISTEN </link></command> to add the
+linkend="stmtstorelisten">STORE LISTEN </link></command> to add the
 new ones.  At present, this is not changed automatically; at some
 point, <command> <link linkend="stmtmoveset"> MOVE
 SET</link></command> and <command> <link linkend="stmtsubscribeset">
 SUBSCRIBE SET</link> </command> might change the paths as a
 side-effect.  See <link linkend="listenpaths"> Slony Listen Paths
 </link> for more information about this.  In version 1.1 and later, it
-is likely that the generation of <envar>sl_listen</envar> entries will
-be entirely automated, where they will be regenerated when changes are
-made to sl_path or sl_subscribe, thereby making it unnecessary to even
-think about <command> <link linkend="stmtstorelisten"> STORE LISTEN
+is likely that the generation of <link linkend="table.sl-listen">
+<envar>sl_listen</envar></link> entries will be entirely automated,
+where they will be regenerated when changes are made to <link
+linkend="table.sl-path"> <envar>sl_path</envar></link> or <link
+linkend="table.sl-path"> <envar>sl_subscribe</envar></link>, thereby
+making it unnecessary to even think about <command> <link
+linkend="stmtstorelisten"> STORE LISTEN
 </link></command>.</para></listitem>
 
 </itemizedlist>

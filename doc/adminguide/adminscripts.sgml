@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.16 2005-02-10 06:22:40 smsimms Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.17 2005-02-18 04:04:48 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -222,8 +222,11 @@ from one version of &slony1; to another.</para>
 <sect2 id="regenlisten"><title>regenerate-listens.pl</title>
 
 <para>This script connects to a &slony1; node, and queries various
-tables (sl_set, sl_node, sl_subscribe, sl_path) to compute what
-<command><link linkend="stmtstorelisten"> STORE
+tables (<link linkend="table.sl-set"> <envar>sl_set</envar></link>,
+<link linkend="table.sl-node"> <envar>sl_node</envar></link>, <link
+linkend="table.sl-subscribe"> <envar>sl_subscribe</envar></link>,
+<link linkend="table.sl-path"> <envar>sl_path</envar></link>) to
+compute what <command><link linkend="stmtstorelisten"> STORE
 LISTEN</link></command> requests should be submitted to the
 cluster.</para>
 

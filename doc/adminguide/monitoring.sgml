@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.12 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.13 2005-02-18 04:04:48 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -81,19 +81,24 @@ connect to each of them.</para>
 including such things as:
 
 <itemizedlist>
-<listitem><para> Checking <envar> sl_listen </envar> for some
+<listitem><para> Checking  <link
+linkend="table.sl-listen"> <envar>sl_listen</envar></link> for some
 <quote>analytically determinable</quote> problems.  It lists paths
 that are not covered.</para></listitem>  
 
 <listitem><para> Providing a summary of events by origin node</para>
 
-<para> If a node hasn't submitted any events in a while, that likely suggests a problem.</para></listitem>
+<para> If a node hasn't submitted any events in a while, that likely
+suggests a problem.</para></listitem>
 
-<listitem><para> Summarizes the <quote>aging</quote> of table <envar>sl_confirm</envar></para>
+<listitem><para> Summarizes the <quote>aging</quote> of table <link
+linkend="table.sl-confirm"> <envar>sl_confirm</envar></link> </para>
 
 <para> If one or another of the nodes in the cluster hasn't reported
-back recently, that tends to lead to cleanups of tables like <envar>
-sl_log_1 </envar> and <envar> sl_seqlog </envar> not taking place.</para></listitem>
+back recently, that tends to lead to cleanups of tables like <link
+linkend="table.sl-log-1"> <envar>sl_log_1</envar></link> and <link
+linkend="table.sl-seqlog"> <envar>sl_seqlog</envar></link> not taking
+place.</para></listitem>
 
 <listitem><para> Summarizes what transactions have been running for a
 long time</para>

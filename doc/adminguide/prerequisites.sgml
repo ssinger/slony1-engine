@@ -165,10 +165,10 @@ paths pointing to the same server.</para>
 
 <para>A possible workaround for this, in environments where firewall
 rules are particularly difficult to implement, may be to establish
-<ulink url="http://www.brandonhutchinson.com/ssh_tunnelling.html"> SSH
-Tunnels </ulink> that are created on each host that allow remote
-access through a local IP address such as 127.0.0.1, using a different
-port for each destination.</para>
+<ulink url="http://www.brandonhutchinson.com/ssh_tunnelling.html"
+id="tunnelling"> SSH Tunnels </ulink> that are created on each host
+that allow remote access through a local IP address such as 127.0.0.1,
+using a different port for each destination.</para>
 
 <para> Note that <application>slonik</application> and the
 <application>slon</application> instances need no special connections
