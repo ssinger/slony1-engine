@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.16 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.17 2004-05-27 18:07:47 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -347,6 +347,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	Name			cluster_name;
 	int32			tab_id;
 	char		   *attkind;
+	int				attkind_idx;
 	int				cmddata_need;
 
 	/*
@@ -456,8 +457,10 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
-			 * Skip columns with NULL values
+			 * Skip dropped columns and NULL values
 			 */
+			if (tupdesc->attrs[i]->attisdropped)
+				continue;
 			if ((col_value[i] = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 				continue;
 
@@ -504,8 +507,10 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
-			 * Skip columns with NULL values
+			 * Skip dropped columns and NULL values
 			 */
+			if (tupdesc->attrs[i]->attisdropped)
+				continue;
 			if (col_value[i] == NULL)
 				continue;
 
@@ -565,6 +570,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		cmdtype = cs->cmdtype_U;
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
+			/*
+			 * Ignore dropped columns
+			 */
+			if (tupdesc->attrs[i]->attisdropped)
+				continue;
+
 			old_value = SPI_getbinval(old_row, tupdesc, i + 1, &old_isnull);
 			new_value = SPI_getbinval(new_row, tupdesc, i + 1, &new_isnull);
 
@@ -643,9 +654,13 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 */
 		if (!need_comma)
 		{
-			for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
+			for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 			{
-				if (attkind[i] == 'k')
+				if (tupdesc->attrs[i]->attisdropped)
+					continue;
+
+				attkind_idx++;
+				if (attkind[attkind_idx] == 'k')
 					break;
 			}
 			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
@@ -676,9 +691,16 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		*cp++ = 'e';
 		*cp++ = ' ';
 
-		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
+		for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 		{
-			if (attkind[i] != 'k')
+			/*
+			 * Ignore dropped columns
+			 */
+			if (tupdesc->attrs[i]->attisdropped)
+				continue;
+
+			attkind_idx++;
+			if (attkind[attkind_idx] != 'k')
 				continue;
 			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
@@ -734,9 +756,13 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 */
 		cmdtype = cs->cmdtype_D;
 
-		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
+		for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 		{
-			if (attkind[i] != 'k')
+			if (tupdesc->attrs[i]->attisdropped)
+				continue;
+
+			attkind_idx++;
+			if (attkind[attkind_idx] != 'k')
 				continue;
 			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
