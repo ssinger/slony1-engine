@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.2 2004-02-20 15:13:28 wieck Exp $
+#	$Id: Makefile,v 1.3 2004-02-24 23:03:49 wieck Exp $
 # ----------
 
 subdir = src/backend
@@ -26,7 +26,8 @@ SQL_NAMES =				\
 	$(BASE_COMMON)		\
 	$(FUNCS_COMMON)		\
 	$(BASE_73)			\
-	$(FUNCS_73)
+	$(FUNCS_73)			\
+	../ducttape/Prototype_log_trigger.sql
 
 ALL = $(SQL_NAMES)		\
 	$(FUNCS_SONAME)

@@ -5,7 +5,7 @@
 #	Shell script to load the base schema and support functions
 #	for a Slony-I cluster into a database.
 #
-# $Id: slony1_schema.sh.in,v 1.3 2003-12-03 19:07:29 wieck Exp $
+# $Id: slony1_schema.sh.in,v 1.4 2004-02-24 23:03:49 wieck Exp $
 # ----------------------------------------------------------------------
 
 
@@ -75,6 +75,7 @@ case $base_version in
 						${libdir}/slony1_base.$bfiles.sql				\
 						${libdir}/slony1_funcs.sql						\
 						${libdir}/slony1_funcs.$bfiles.sql				\
+						${libdir}/Prototype_log_trigger.sql				\
 						| sed -e "s/@CLUSTERNAME@/${clustername}/g"		\
 							  -e "s/@NAMESPACE@/\\\"${namespace}\\\"/g"	\
 				) | psql -e $dbname 2>&1 | grep "^ERROR"

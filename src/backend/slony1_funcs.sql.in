@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.13 2004-02-24 16:51:21 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.14 2004-02-24 23:03:49 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -987,7 +987,7 @@ begin
 	execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || p_tab_id || ''"
 			after insert or update or delete on '' || p_tab_fqname || ''
 			for each row execute procedure
-			@NAMESPACE@.logtrigger (''''@NAMESPACE@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
+			@NAMESPACE@.logTrigger (''''@NAMESPACE@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
 
 	return p_tab_id;
 end;
