@@ -88,7 +88,7 @@ try {
 <!-- ************************************************************ -->
 
 <reference id="hdrcmds"> 
-<title>Slonik Header Commands</title>
+<title>Slonik Preamble Commands</title>
 <partintro>
 <para>
 	The following commands must appear as a <quote/preamble/ at the very
@@ -200,6 +200,13 @@ try {
 </Refentry>
  
 
+</reference>
+<!-- ************************************************************ -->
+
+
+<!-- **************************************** -->
+<reference id="cmds">
+	<title>Configuration and Action commmands</title>
 <!-- **************************************** -->
 
 <refentry id ="stmtecho"><refmeta><refentrytitle>ECHO</refentrytitle> </refmeta>
@@ -256,13 +263,6 @@ try {
 </Programlisting>
 </Refsect1>
 </Refentry>
-</reference>
-<!-- ************************************************************ -->
-
-
-<!-- **************************************** -->
-<reference id="cmds">
-	<title>Configuration and Action commmands</title>
 	<refentry id ="stmtinitcluster">
 		<refmeta>
 			<refentrytitle>INIT CLUSTER</refentrytitle>
