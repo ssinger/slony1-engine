@@ -286,8 +286,10 @@
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
-    <title>Description</title> <para> Initialize the first node in a
-    new <productname>Slony-I</productname> replication cluster.  The
+    <title>Description</title> 
+
+    <para> Initialize the first node in a new
+    <productname>Slony-I</productname> replication cluster.  The
     initialization process consists of creating the cluster namespace,
     loading all the base tables, functions, procedures and
     initializing the node, using <xref
@@ -386,6 +388,10 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
+    <para> This uses <xref linkend=
+    "function.initializelocalnode-integer-text"> and <xref linkend=
+    "function.enablenode-integer">. </para>
     
    </Refsect1>
    <Refsect1><Title>Example</Title>
@@ -425,6 +431,9 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
+    <para> This uses <xref linkend=
+    "function.dropnode-integer">. </para>
 
    <warning><para> If you are using connections that cache query plans
    (this is particularly common for Java application frameworks with
@@ -471,6 +480,8 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
+    <para> This uses <xref linkend= "function.uninstallnode">. </para>
 
    <warning><para> If you are using connections that cache query plans
    (this is particularly common for Java application frameworks with
@@ -519,6 +530,7 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -584,6 +596,7 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.storepath-integer-integer-text-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -631,7 +644,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	</para></listitem>
       </varlistentry>
      </variablelist>
-    </para>
+    <para> This uses <xref linkend= "function.droppath-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -692,6 +705,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
 
+    <para> This uses <xref linkend= "function.storelisten-integer-integer-integer">. </para>
     <para> For more details, see <xref linkend="listenpaths">.</para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -733,6 +747,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
+    <para> This uses <xref linkend= "function.droplisten-integer-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -788,6 +803,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
+    <para> This uses <xref linkend= "function.tableaddkey-text">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -846,6 +862,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
+    <para> This uses <xref linkend= "function.storeset-integer-text">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -890,7 +907,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
-</refsect1>
+       <para> This uses <xref linkend= "function.dropset-integer">. </para>
+   </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
   DROP SET ( ID = 5, 
@@ -940,6 +958,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
+       <para> This uses <xref linkend= "function.mergeset-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1013,6 +1032,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setaddtable-integer-integer-text-name-text">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1079,6 +1099,7 @@ SET ADD TABLE (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setaddsequence-integer-integer-text-text">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1129,6 +1150,7 @@ SET ADD TABLE (
   <listitem><para> Unique ID of the table.</para></listitem></varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setdroptable-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1172,6 +1194,7 @@ SET ADD TABLE (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setdropsequence-integer">. </para>
    </refsect1>
 <refsect1><title>Example</title>
     <programlisting>
@@ -1226,6 +1249,7 @@ SET ADD TABLE (
   <listitem><para> Unique ID of the set to which the table should be added.</para></listitem></varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setmovetable-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1286,6 +1310,7 @@ SET MOVE TABLE (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.setmovesequence-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1342,6 +1367,7 @@ SET MOVE SEQUENCE (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.storetrigger-integer-name">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1393,6 +1419,7 @@ STORE TRIGGER (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.droptrigger-integer-name">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1488,6 +1515,7 @@ DROP TRIGGER (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.subscribeset-integer-integer-integer-boolean">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1540,6 +1568,7 @@ SUBSCRIBE SET (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.unsubscribeset-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1593,6 +1622,7 @@ UNSUBSCRIBE SET (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.lockset-integer">. </para>
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
@@ -1634,6 +1664,7 @@ LOCK SET (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.unlockset-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1702,6 +1733,7 @@ UNLOCK SET (
       </varlistentry>
      </variablelist>
     </para>
+    <para> This uses <xref linkend= "function.moveset-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1770,6 +1802,7 @@ MOVE SET (
      </varlistentry>
     </variablelist>
     
+    <para> This uses <xref linkend= "function.failednode-integer-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1856,6 +1889,7 @@ FAILOVER (
     that the triggers be regenerated, otherwise they may be
     inappropriate for the new form of the table schema.</para>
 
+    <para> This uses <xref linkend= "function.ddlscript-integer-text-integer">. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
