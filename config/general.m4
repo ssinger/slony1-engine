@@ -1,5 +1,3 @@
-# $PostgreSQL: pgsql-server/config/general.m4,v 1.3 2003/11/29 19:51:17 pgsql Exp $
-
 # This file defines new macros to process configure command line
 # arguments, to replace the brain-dead AC_ARG_WITH and AC_ARG_ENABLE.
 # The flaw in these is particularly that they only differentiate
@@ -26,7 +24,7 @@ m4_define([pgac_arg_to_variable],
 # as usual. ACTION-IF-YES is executed if the option is given without
 # and argument (or "yes", which is the same); similar for ACTION-IF-NO.
 
-AC_DEFUN([PGAC_ARG],
+AC_DEFUN([SLON_AC_ARG],
 [
 m4_case([$1],
 
@@ -66,10 +64,10 @@ AC_ARG_WITH([$2], [$3], [
 
 [m4_fatal([first argument of $0 must be 'enable' or 'with', not '$1'])]
 )
-])# PGAC_ARG
+])# SLON_AC_ARG
 
 
-# PGAC_ARG_BOOL(TYPE, NAME, DEFAULT, HELP-STRING, 
+# SLON_AC_ARG_BOOL(TYPE, NAME, DEFAULT, HELP-STRING, 
 #               [ACTION-IF-YES], [ACTION-IF-NO])
 # -----------------------------------------------
 # Accept a boolean option, that is, one that only takes yes or no.
@@ -78,8 +76,8 @@ AC_ARG_WITH([$2], [$3], [
 # (Consequently, one of ACTION-IF-YES and ACTION-IF-NO will always
 # execute.)
 
-AC_DEFUN([PGAC_ARG_BOOL],
-[PGAC_ARG([$1], [$2], [$4], [$5], [$6], 
+AC_DEFUN([SLON_AC_ARG_BOOL],
+[SLON_AC_ARG([$1], [$2], [$4], [$5], [$6], 
           [AC_MSG_ERROR([no argument expected for --$1-$2 option])],
           [m4_case([$3],
                    yes, [pgac_arg_to_variable([$1], [$2])=yes
@@ -87,23 +85,23 @@ $5],
                    no,  [pgac_arg_to_variable([$1], [$2])=no
 $6],
                    [m4_fatal([third argument of $0 must be 'yes' or 'no', not '$3'])])])[]dnl
-])# PGAC_ARG_BOOL
+])# SLON_AC_ARG_BOOL
 
 
-# PGAC_ARG_REQ(TYPE, NAME, HELP-STRING, [ACTION-IF-GIVEN], [ACTION-IF-NOT-GIVEN])
+# SLON_AC_ARG_REQ(TYPE, NAME, HELP-STRING, [ACTION-IF-GIVEN], [ACTION-IF-NOT-GIVEN])
 # -------------------------------------------------------------------------------
 # This option will require an argument; "yes" or "no" will not be
 # accepted.
 
-AC_DEFUN([PGAC_ARG_REQ],
-[PGAC_ARG([$1], [$2], [$3],
+AC_DEFUN([SLON_AC_ARG_REQ],
+[SLON_AC_ARG([$1], [$2], [$3],
           [AC_MSG_ERROR([argument required for --$1-$2 option])],
           [AC_MSG_ERROR([argument required for --$1-$2 option])],
           [$4],
           [$5])])# PGAC_ARG_REQ
 
 
-# PGAC_ARG_OPTARG(TYPE, NAME, HELP-STRING, [DEFAULT-ACTION], [ARG-ACTION]
+# SLON_AC_ARG_OPTARG(TYPE, NAME, HELP-STRING, [DEFAULT-ACTION], [ARG-ACTION]
 #                 [ACTION-ENABLED], [ACTION-DISABLED])
 # -----------------------------------------------------------------------
 # This will create an option that behaves as follows: If omitted, or
@@ -116,15 +114,15 @@ AC_DEFUN([PGAC_ARG_REQ],
 # The intent is to allow enabling a feature, and optionally pass an
 # additional piece of information.
 
-AC_DEFUN([PGAC_ARG_OPTARG],
-[PGAC_ARG([$1], [$2], [$3], [$4], [],
-          [pgac_arg_to_variable([$1], [$2])=yes
+AC_DEFUN([SLON_AC_ARG_OPTARG],
+[SLON_AC_ARG([$1], [$2], [$3], [$4], [],
+          [slon_ac_arg_to_variable([$1], [$2])=yes
 $5],
-          [pgac_arg_to_variable([$1], [$2])=no])
+          [slon_ac_arg_to_variable([$1], [$2])=no])
 dnl Add this code only if there's a ACTION-ENABLED or ACTION-DISABLED.
 m4_ifval([$6[]$7],
 [
-if test "[$]pgac_arg_to_variable([$1], [$2])" = yes; then
+if test "[$]slon_ac_arg_to_variable([$1], [$2])" = yes; then
   m4_default([$6], :)
 m4_ifval([$7],
 [else
@@ -132,4 +130,4 @@ m4_ifval([$7],
 ])[]dnl
 fi
 ])[]dnl
-])# PGAC_ARG_OPTARG
+])# SLON_AC_ARG_OPTARG
