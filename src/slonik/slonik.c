@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.35 2004-12-02 21:43:18 wieck Exp $
+ *	$Id: slonik.c,v 1.36 2004-12-02 23:30:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -837,7 +837,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 						errors++;
 					}
 
-					if (script_check_adminfo(hdr, stmt->sub_receiver) < 0)
+					if (script_check_adminfo(hdr, stmt->sub_provider) < 0)
 						errors++;
 				}
 				break;
@@ -3412,7 +3412,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set *stmt)
 	SlonikAdmInfo  *adminfo1;
 	SlonDString		query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->sub_receiver);
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->sub_provider);
 	if (adminfo1 == NULL)
 		return -1;
 

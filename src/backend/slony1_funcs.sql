@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.48 2004-12-02 21:43:17 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.49 2004-12-02 23:30:56 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3639,6 +3639,7 @@ declare
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
 	v_set_origin		int4;
+	v_ev_seqno			int8;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -3648,8 +3649,8 @@ begin
 	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
-	if p_sub_receiver != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: subscribeSet() must be called on receiver'';
+	if p_sub_provider != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: subscribeSet() must be called on provider'';
 	end if;
 
 	-- ----
@@ -3671,6 +3672,13 @@ begin
 	end if;
 
 	-- ----
+	-- Create the SUBSCRIBE_SET event
+	-- ----
+	v_ev_seqno :=  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
+			p_sub_set, p_sub_provider, p_sub_receiver, 
+			case p_sub_forward when true then ''t'' else ''f'' end);
+
+	-- ----
 	-- Call the internal procedure to store the subscription
 	-- ----
 	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
@@ -3681,12 +3689,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.RebuildListenEntries();
 
-	-- ----
-	-- Create the SUBSCRIBE_SET event
-	-- ----
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
-			p_sub_set, p_sub_provider, p_sub_receiver, 
-			case p_sub_forward when true then ''t'' else ''f'' end);
+	return v_ev_seqno;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.subscribeSet (int4, int4, int4, bool) is
