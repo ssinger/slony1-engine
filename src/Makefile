@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.8 2004-03-30 17:49:38 wieck Exp $
+#	$Id: Makefile,v 1.9 2004-07-13 18:51:36 xfade Exp $
 # ----------
 
 slony_subdir = src
@@ -16,7 +16,7 @@ SUBDIRS = xxid slon slonik backend ducttape
 
 all install installdirs clean distclean maintainer-clean:
 	for subdir in $(SUBDIRS) ; do \
-	  $(MAKE) -C $$subdir $@ ; \
+	  $(MAKE) -C $$subdir $@ || exit; \
     done
 
 distdir: $(DISTFILES)
