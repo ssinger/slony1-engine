@@ -46,7 +46,7 @@ createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDB
 
-Because Stony-I depends on the databases having the pl/pgSQL procedural
+Because Slony-I depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME
@@ -118,7 +118,7 @@ slonik <<_EOF_
 	table add key (node id = 1, full qualified name = 'public.history');
 
 	#--
-    # Stony organizes tables into sets.  The smallest unit a node can
+    # Slony organizes tables into sets.  The smallest unit a node can
     # subscribe is a set The following commands create one set containing all
     # 4 pgbench tables.  The master or origin of the set is note 1.
 	#--

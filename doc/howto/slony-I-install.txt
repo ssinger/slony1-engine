@@ -38,7 +38,7 @@ http://bt.postgresql.org/ .
 Also check to make sure you have sufficient disk space.  You will need
 approximately 5MB  for the source tree during build and installation.
 
-Getting Stony-I source
+Getting Slony-I source
 
 You can get the Slony-I source from
 http://slony.org/
@@ -69,7 +69,7 @@ with-pgsourcetree=</path/to/your/pg/sources> option.
 Example: ./configure with-pgsourcetree=/usr/local/src/postgresql-7.4.3
 
 This script will run a number of tests to guess values for various dependent
-variables and try to detect some quirks of your system.  Stony is known to
+variables and try to detect some quirks of your system.  Slony is known to
 need a modified version of libpq on specific platforms such as Solaris2.X on
 SPARC this patch can be found at http://slony.org/ 
 
