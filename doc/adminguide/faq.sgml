@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.12 2005-01-23 21:27:20 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.13 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -406,9 +406,9 @@ open.  Long running transactions will cause trouble, and should be
 avoided, even on "slave" nodes.</para>
 </answer></qandaentry>
 
-<qandaentry>
-<question><para>I started doing a backup using <application>pg_dump</application>,
-and suddenly Slony stops</para></question>
+<qandaentry> <question><para>I started doing a backup using
+<application>pg_dump</application>, and suddenly Slony
+stops</para></question>
 
 <answer><para>Ouch.  What happens here is a conflict between:
 <itemizedlist>
@@ -619,12 +619,12 @@ oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id 
 DELETE 6
 </screen></para>
 
-<para>General <quote>due diligance</quote> dictates starting with a
-<command>BEGIN</command>, looking at the contents of sl_confirm
-before, ensuring that only the expected records are purged, and then,
-only after that, confirming the change with a
-<command>COMMIT</command>.  If you delete confirm entries for the
-wrong node, that could ruin your whole day.</para>
+<para>General <quote>due diligence</quote> dictates starting with a
+<command>BEGIN</command>, looking at the contents of
+<envar>sl_confirm</envar> before, ensuring that only the expected
+records are purged, and then, only after that, confirming the change
+with a <command>COMMIT</command>.  If you delete confirm entries for
+the wrong node, that could ruin your whole day.</para>
 
 <para>You'll need to run this on each node that remains...</para>
 
@@ -834,7 +834,18 @@ because it does not expect them to be associated with an index.</para>
 <function>alterTableRestore(table id)</function>, which restores the
 table's OID into the <envar>pg_trigger</envar> or
 <envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
-affected node.</para></answer>
+affected node.</para></answer> 
+
+<answer><para> This implies that if you plan to draw backups from a
+subscriber node, you will need to draw the schema from the origin
+node.  It is straightforward to do this: </para>
+
+<screen>
+% pg_dump -h originnode.example.info -p 5432 --schema-only --schema=public ourdb > schema_backup.sql
+% pg_dump -h subscribernode.example.info -p 5432 --data-only --schema=public ourdb > data_backup.sql
+</screen>
+
+</answer>
 </qandaentry>
 <qandaentry>
 <question><para> After notification of a subscription on
@@ -979,10 +990,12 @@ idle in transaction for hours at a time.  </para> </answer>
 
 </qandaentry> 
 
-<qandaentry>
+<qandaentry id="neededexecddl">
 
-<question>
-<para> Behaviour - all the nodes fall behind, and all the logs have the following error message repeating in them (when I encountered it, there was a nice long sql statement above each entry):
+<question> <para> Behaviour - all the subscriber nodes start to fall
+behind the origin, and all the logs on the subscriber nodes have the
+following error message repeating in them (when I encountered it,
+there was a nice long SQL statement above each entry):
 
 <screen>
 ERROR remoteWorkerThread_1: helper 1 finished with error
@@ -990,34 +1003,35 @@ ERROR remoteWorkerThread_1: SYNC aborted
 </screen>
 </question>
 
-<answer>
-<para>
-Cause: you have likely issued alter table statements directly on the
-databases instead of using the slonik <link linkend="stmtddlscript">
-execute script </link> command.
+<answer> <para> Cause: you have likely issued <command>alter
+table</command> statements directly on the databases instead of using
+the slonik <link linkend="stmtddlscript"> <command>EXECUTE
+SCRIPT</command> </link> command.
 
 <para>The solution is to rebuild the trigger on the affected table and
 fix the entries in <envar>sl_log_1 </envar> by hand.
 
 <itemizedlist>
-<listitem><para>
-You'll need to identify from either the slony logs, or the postgres db logs exactly what the statement is that is causing the error.
 
-<listitem><para>
-You need to fix the Slony-defined triggers on the table in question.  This is done with the following procedure.
+<listitem><para> You'll need to identify from either the slon logs, or
+the PostgreSQL database logs exactly which statement it is that is
+causing the error.
+
+<listitem><para> You need to fix the Slony-defined triggers on the
+table in question.  This is done with the following procedure.
 
 <screen>
 BEGIN;
-LOCK TABLE <table_name>;
+LOCK TABLE table_name;
 SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
 SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
 COMMIT;
 </screen>
 
 <para>You then need to find the rows in <envar> sl_log_1 </envar> that
-have bad entries and fix them.  You may want to take down the slons
-for all nodes except the master, that way if you make a mistake, it
-won't propgate through to the slave.
+have bad entries and fix them.  You may want to take down the slon
+daemons for all nodes except the master; that way, if you make a
+mistake, it won't immediately propagate through to the subscribers.
 
 <para> Here is an example:
 
@@ -1057,6 +1071,92 @@ update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''
 </itemizedlist>
 </answer>
 
+</qandaentry>
+
+<qandaentry> <question><para> After notification of a subscription on
+<emphasis>another</emphasis> node, replication falls over on one of
+the subscribers, with the following error message:
+
+<screen>
+ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
+DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
+</screen>
+
+<para> This is then followed by a series of failed syncs as the
+<application> <link linkend="slon"> slon </link> </application> shuts
+down:
+
+<screen>
+DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
+</screen>
+
+</para></question>
+
+<answer><para> If you see a <application> <link linkend="slon"> slon
+</link> </application> shutting down with <emphasis>ignore new events
+due to shutdown</emphasis> log entries, you typically need to step
+back in the log to <emphasis>before</emphasis> they started failing to
+see indication of the root cause of the problem.
+</para></answer>
+
+<answer><para> In this particular case, the problem was that some of
+the <link linkend="stmtstorepath"> <command>STORE PATH </command>
+</link> commands had not yet made it to node 4 before the <link
+linkend="stmtsubscribeset"> <command>SUBSCRIBE SET </command> </link>
+command propagated. </para>
+
+<para>This demonstrates yet another example of the need to not do
+things in a rush; you need to be sure things are working right
+<emphasis>before</emphasis> making further configuration changes.
+</para></answer>
+
+</qandaentry>
+
+<qandaentry> <question><para> I can do a <command>pg_dump</command>
+and load the data back in much faster than the <command>SUBSCRIBE
+SET</command> runs.  Why is that?  </para></question>
+
+<answer><para> <productname>Slony-I</productname> depends on there
+being an already existant index on the primary key, and leaves all
+indexes alone whilst using the <productname>PostgreSQL</productname>
+<command>COPY</command> command to load the data.  Further hurting
+performane, the <command>COPY SET</command> event starts by deleting
+the contents of tables, which potentially leaves a lot of dead tuples
+</para>
+
+<para> When you use <command>pg_dump</command> to dump the contents of
+a database, and then load that, creation of indexes is deferred until
+the very end.  It is <emphasis>much</emphasis> more efficient to
+create indexes against the entire table, at the end, than it is to
+build up the index incrementally as each row is added to the
+table.</para>
+
+<para> Unfortunately, dropping and recreating indexes <quote>on the
+fly,</quote> as it were, has proven thorny.  Doing it automatically
+hasn't been implemented.  </para></answer>
+
+<answer><para> If you can drop unnecessary indices while the
+<command>COPY</command> takes place, that will improve performance
+quite a bit.  If you can <command>TRUNCATE</command> tables that
+contain data that is about to be eliminated, that will improve
+performance <emphasis>a lot.</emphasis> </para></answer>
+
+<answer><para> There is a TODO item for implementation in
+<productname>PostgreSQL</productname> that adds a new option,
+something like <option>BULKLOAD</option>, which would defer revising
+indexes until the end, and regenerating indexes in bulk.  That will
+likely not be available until <productname>PostgreSQL</productname>
+8.1, but it should substantially improve performance once available.
+</para></answer>
 </qandaentry>
 
 </qandaset>

@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.8 2005-01-18 22:57:36 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.9 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <article>
 <sect1 id="monitoring">
 <title>Monitoring</title>
@@ -109,7 +109,7 @@ this will find them.
 
 <para> If you have broken applications that hold connections open,
 that has several unsalutory effects as <link
-linkend="longtxnsareevil"> described in the FAQ</ulink>.
+linkend="longtxnsareevil"> described in the FAQ</link>.
 
 </itemizedlist>
 

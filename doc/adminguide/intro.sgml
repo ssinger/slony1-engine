@@ -1,15 +1,15 @@
-<!-- $Id: intro.sgml,v 1.6 2005-01-23 21:27:20 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.7 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <article id="introduction">
 <title>Introduction to <productname>Slony-I</productname></title>
-<sect1>
-<title>Why yet another replication system?</title>
+<sect1><title>Introduction to <productname>Slony-I</productname></title>
+<sect2><title>Why yet another replication system?</title>
 
 <para><productname>Slony-I</productname> was born from an idea to
 create a replication system that was not tied to a specific version of
 PostgreSQL, which is allowed to be started and stopped on an existing
-database with out the need for a dump/reload cycle.</para> </sect1>
+database with out the need for a dump/reload cycle.</para> </sect2>
 
-<sect1> <title>What <productname>Slony-I</productname> is</title>
+<sect2> <title>What <productname>Slony-I</productname> is</title>
 
 <para><productname>Slony-I</productname> is a <quote>master to
 multiple slaves</quote> replication system supporting cascading and
@@ -53,45 +53,46 @@ of feedback between the provider node and those nodes subscribing via
 <quote>log shipping.</quote></para>
 
 <para> But <productname>Slony-I</productname>, by only having a single
-origin for each set, is quite unsuitable for <emphasis> really
-</emphasis> asynchronous multiway replication.  For those that could
-use some sort of <quote>asynchronous multimaster replication with
-conflict resolution</quote> akin to what is provided by <productname>
-Lotus <trademark>Notes</trademark></productname> or the
-<quote>syncing</quote> protocols found on PalmOS systems, you will
+origin for each set, is quite unsuitable for
+<emphasis>really</emphasis> asynchronous multiway replication.  For
+those that could use some sort of <quote>asynchronous multimaster
+replication with conflict resolution</quote> akin to what is provided
+by <productname> Lotus <trademark>Notes</trademark></productname> or
+the <quote>syncing</quote> protocols found on PalmOS systems, you will
 really need to look elsewhere.  These sorts of replication models are
-not without merit, but they represent problems that
-<productname>Slony-I</productname> does not attempt to address.</para>
+not without merit, but they represent <emphasis>different</emphasis>
+replication scenarios that <productname>Slony-I</productname> does not
+attempt to address.</para>
 
-</sect1>
+</sect2>
 
-
-<sect1><title> <productname>Slony-I</productname> is not</title>
+<sect2><title> What <productname>Slony-I</productname> is not</title>
 
 <para><productname>Slony-I</productname> is not a network management
 system.</para>
 
 <para> <productname>Slony-I</productname> does not have any
-functionality within it to detect a node failure, or to automatically
+functionality within it to detect a node failure, nor to automatically
 promote a node to a master or other data origin.  It is quite possible
 that you may need to do that; that will require that you combine some
 network tools that evaluate <emphasis> to your satisfaction
-</emphasis> which nodes are <quote>live</quote> and which nodes are
-<quote>dead</quote> along with some local policy to determine what to
-do under those circumstances.  <productname>Slony-I</productname> does
-not dictate policy to you.</para>
+</emphasis> which nodes you consider <quote>live</quote> and which
+nodes you consider <quote>dead</quote> along with some local policy to
+determine what to do under those circumstances.
+<productname>Slony-I</productname> does not dictate any of that policy
+to you.</para>
 
-<para><productname>Slony-I</productname> is not multi-master; it's not
-a connection broker, and it doesn't make you coffee and toast in the
-morning.</para>
+<para><productname>Slony-I</productname> is not multi-master; it is
+not a connection broker, and it doesn't make you coffee and toast in
+the morning.</para>
 
 <para>That being said, the plan is for a subsequent system,
 <productname>Slony-II</productname>, to provide
 <quote>multimaster</quote> capabilities.  But that is a separate
 project, and expectations for <productname>Slony-I</productname>
-should not be based on hopes for future projects.</para></sect1>
+should not be based on hopes for future projects.</para></sect2>
 
-<sect1><title> Why doesn't <productname>Slony-I</productname> do
+<sect2><title> Why doesn't <productname>Slony-I</productname> do
 automatic fail-over/promotion?
 </title>
 
@@ -111,9 +112,9 @@ that might conflict with business requirements, thereby making
 <productname>Slony-I</productname> an unacceptable choice.</para>
 
 <para>As a result, let <productname>Slony-I</productname> do what it
-does best: provide database replication.</para></sect1>
+does best: provide database replication.</para></sect2>
 
-<sect1><title> Current Limitations</title>
+<sect2><title> Current Limitations</title>
 
 <para><productname>Slony-I</productname> does not automatically
 propagate schema changes, nor does it have any ability to replicate
@@ -125,9 +126,10 @@ when those kinds of changes take place.</para>
 
 <para>There is a capability for <productname>Slony-I</productname> to
 propagate DDL changes if you submit them as scripts via the
-<application>slonik</application> <command>EXECUTE SCRIPT</command>
-operation.  That is not <quote>automatic;</quote> you have to
-construct an SQL DDL script and submit it.</para>
+<application>slonik</application> <command> <link
+linkend="stmtddlscript"> EXECUTE SCRIPT </link></command> operation.
+That is not <quote>automatic;</quote> you have to construct an SQL DDL
+script and submit it.</para>
 
 <para>If you have those sorts of requirements, it may be worth
 exploring the use of <application>PostgreSQL</application> 8.0
@@ -151,10 +153,10 @@ server</quote> which cannot be used without it ceasing to be
 
 <para>There are a number of distinct models for database replication;
 it is impossible for one replication system to be all things to all
-people.</para></sect1>
+people.</para></sect2>
 
-<sect1 id="slonylistenercosts"><title> <productname>Slony-I</productname> Communications
-Costs</title>
+<sect1 id="slonylistenercosts"><title>
+<productname>Slony-I</productname> Communications Costs</title>
 
 <para>The cost of communications grows in a quadratic fashion in
 several directions as the number of replication nodes in a cluster

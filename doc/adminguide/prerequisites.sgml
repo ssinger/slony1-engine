@@ -1,4 +1,4 @@
-<!-- $Id: prerequisites.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id -->
 <article id="requirements">
 <title>System Requirements</title>
 
@@ -36,8 +36,15 @@ there being a <filename>pthreads</filename> library for
 interested party from volunteering to do the port.</para>
 
 <sect2>
-<title> Software needed</title>
-<para>
+<title> Slony-I Software Dependancies</title>
+
+<para> At present, <productname>Slony-I</productname> <emphasis>as
+well as <productname>PostgreSQL</productname></emphasis> need to be
+able to be compiled from source at your site.  
+
+<para> In order to compile <productname>Slony-I</productname>, you
+need to have the following tools.
+
 <itemizedlist>
 <listitem><para> GNU make.  Other make programs will not work.  GNU
 make is often installed under the name <command>gmake</command>; this
@@ -66,17 +73,29 @@ packaging for your operating system, or you may need to look for
 source code at your local GNU mirror (see <ulink
 url="http://www.gnu.org/order/ftp.html">
 http://www.gnu.org/order/ftp.html </ulink> for a list) or at <ulink
-url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink> .)</para></listitem>
+url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink>
+.)</para></listitem>
 
 <listitem><para> If you need to obtain PostgreSQL source, you can
 download it from your favorite PostgreSQL mirror.  See <ulink
 url="http://www.postgresql.org/mirrors-www.html">
-http://www.postgresql.org/mirrors-www.html </ulink> for a list.</para></listitem>
-</itemizedlist>
-</para>
+http://www.postgresql.org/mirrors-www.html </ulink> for a
+list.</para></listitem> </itemizedlist> </para>
+
 <para>Also check to make sure you have sufficient disk space.  You
 will need approximately 5MB for the source tree during build and
-installation.</para></sect2>
+installation.</para>
+
+<note><para>There are changes afoot for version 1.1 that ought to make
+it possible to compile <productname>Slony-I</productname> separately
+from <productname>PostgreSQL</productname>, which should make it
+practical for the makers of distributions of
+<productname>Linux</productname> and
+<productname>FreeBSD</productname> to include precompiled binary
+packages for <productname>Slony-I</productname>, but until that
+happens, you need to be prepared to use versions of all this software
+that you compile yourself.</para></note>
+</sect2>
 
 <sect2>
 <title> Getting <productname>Slony-I</productname>Source</title>
@@ -93,10 +112,11 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 
 <para> All the servers used within the replication cluster need to
 have their Real Time Clocks in sync. This is to ensure that slon
-doesn't error with messages indicating that slave is already ahead of
-the master during replication.  We recommend you have ntpd running on
-all nodes, with subscriber nodes using the <quote>master</quote>
-provider node as their time server.</para>
+doesn't generate errors with messages indicating that a subscriber is
+already ahead of its provider during replication.  We recommend you
+have <application>ntpd</application> running on all nodes, where
+subscriber nodes using the <quote>master</quote> provider host as
+their time server.</para>
 
 <para> It is possible for <productname>Slony-I</productname> to
 function even in the face of there being some time discrepancies, but
@@ -106,6 +126,37 @@ distributed applications.</para>
 <para> See <ulink url="http://www.ntp.org/"> www.ntp.org </ulink> for
 more details about NTP (Network Time Protocol).</para>
 
+<para> Some users have reported problems that have been traced to
+their locales indicating the use of some time zone that
+<productname>PostgreSQL</productname> did not recognize.  
+
+<itemizedlist>
+
+<listitem><para> On <productname>AIX</productname>,
+<command><envar>TZ</envar>=CUT0</command> was unrecognized, leading to
+timestamps pulled from system calls causing it to
+break.</para>
+
+<para> <command>CUT0</command> is a variant way of describing
+<command>UTC</command>
+</listitem>
+
+<listitem><para> Some countries' timezones are not yet included in
+<productname> PostgreSQL </productname>.  </para></listitem>
+
+</itemizedlist>
+
+<para> In any case, what commonly seems to be the <quote>best
+practice</quote> with <productname>Slony-I</productname> (and, for
+that matter, <productname> PostgreSQL </productname>) is for the
+postmaster user and/or the user under which
+<application>slon</application> runs to use
+<command><envar>TZ</envar>=UTC</command> or
+<command><envar>TZ</envar>=GMT</command>.  Those timezones are
+<emphasis>sure</emphasis> to be supported on any platform, and have
+the merit over <quote>local</quote> timezones that times never wind up
+leaping around due to Daylight Savings Time.</para>
+
 </sect2>
 
 <sect2><title> Network Connectivity</title>
@@ -114,54 +165,63 @@ more details about NTP (Network Time Protocol).</para>
 another have <emphasis>bidirectional</emphasis> network communications
 to the PostgreSQL instances.  That is, if node B is replicating data
 from node A, it is necessary that there be a path from A to B and from
-B to A.  It is recommended that all nodes in a
+B to A.  It is recommended that, as much as possible, all nodes in a
 <productname>Slony-I</productname> cluster allow this sort of
 bidirection communications from any node in the cluster to any other
 node in the cluster.</para>
 
-<para>Note that the network addresses need to be consistent across all
-of the nodes.  Thus, if there is any need to use a
-<quote>public</quote> address for a node, to allow remote/VPN access,
-that <quote>public</quote> address needs to be able to be used
-consistently throughout the <productname>Slony-I</productname>
-cluster, as the address is propagated throughout the cluster in table
+<para>Note that the network addresses must be consistent across all of
+the nodes.  Thus, if there is any need to use a <quote>public</quote>
+address for a node, to allow remote/VPN access, that
+<quote>public</quote> address needs to be able to be used consistently
+throughout the <productname>Slony-I</productname> cluster, as the
+address is propagated throughout the cluster in table
 <envar>sl_path</envar>.</para>
 
 <para>A possible workaround for this, in environments where firewall
-rules are particularly difficult to implement, may be to establish SSH
-Tunnels that are created on each host that allow remote access through
-IP address 127.0.0.1, with a different port for each destination.</para>
+rules are particularly difficult to implement, may be to establish
+<ulink url="http://www.brandonhutchinson.com/ssh_tunnelling.html"> SSH
+Tunnels </ulink> that are created on each host that allow remote
+access through a local IP address such as 127.0.0.1, using a different
+port for each destination.</para>
 
 <para> Note that <application>slonik</application> and the
 <application>slon</application> instances need no special connections
-or protocols to communicate with one another; they just need to be
-able to get access to the <application>PostgreSQL</application>
-databases, connecting as a <quote>superuser</quote>.</para>
+or protocols to communicate with one another; they merely need access
+to the <application>PostgreSQL</application> databases, connecting as
+a <quote>superuser</quote>.</para>
 
-<para> An implication of the communications model is that the entire
+<para> An implication of this communications model is that the entire
 extended network in which a <productname>Slony-I</productname> cluster
 operates must be able to be treated as being secure.  If there is a
-remote location where you cannot trust the
+remote location where you cannot trust one of the databases that is a
 <productname>Slony-I</productname> node to be considered
-<quote>secured,</quote> this represents a vulnerability that adversely
-the security of the entire cluster.  In effect, the security policies
-throughout the cluster can only be considered as stringent as those
-applied at the <emphasis>weakest</emphasis> link.  Running a
-full-blown <productname>Slony-I</productname> node at a branch
-location that can't be kept secure compromises security for the
-cluster.</para>
+<quote>secure,</quote> this represents a vulnerability that can
+adversely affect the security of the entire cluster.  As a
+<quote>peer-to-peer</quote> system, <emphasis>any</emphasis> of the
+hosts is able to introduce replication events that will affect the
+entire cluster.  Therefore, the security policies throughout the
+cluster can only be considered as stringent as those applied at the
+<emphasis>weakest</emphasis> link.  Running a
+<productname>Slony-I</productname> node at a branch location that
+can't be kept secure compromises security for the cluster as a
+whole.</para>
 
 <para>In the future plans is a feature whereby updates for a
 particular replication set would be serialized via a scheme called
-<quote>log shipping.</quote> The data stored in sl_log_1 and sl_log_2
-would be written out to log files on disk.  These files could be
-transmitted in any manner desired, whether via scp, FTP, burning them
-onto DVD-ROMs and mailing them, or even by recording them on a USB
-<quote>flash device</quote> and attaching them to birds, allowing a
-sort of <quote>avian transmission protocol.</quote> This will allow
-one way communications so that <quote>subscribers</quote> that use log
-shipping would have no need for access to other
+<quote>log shipping.</quote> The data stored in
+<envar>sl_log_1</envar> and <envar>sl_log_2</envar> would be written
+out to log files on disk.  These files could be transmitted in any
+manner desired, whether via scp, FTP, burning them onto DVD-ROMs and
+mailing them, or, at the frivolous end of the spectrum, by recording
+them on a USB <quote>flash device</quote> and attaching them to birds,
+allowing some equivalent to <ulink
+url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
+datagrams on avian carriers - RFC 1149.</ulink> But whatever the
+transmission mechanism, this will allow one way communications such
+that subscribers that use log shipping have no need of access to other
 <productname>Slony-I</productname> nodes.</para>
+
 </sect2>
 </sect1>
 </article>

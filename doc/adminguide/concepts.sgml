@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.7 2004-12-22 23:09:58 darcyb Exp $ -->
+<!-- $Id: concepts.sgml,v 1.8 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title><productname>Slony-I</productname> Concepts</title>
 
@@ -49,27 +49,31 @@ to the <function>PQconnectdb()</function> libpq function.</para>
 <sect2><title> Replication Set</title>
 
 <para>A replication set is defined as a set of tables and sequences
-that are to be replicated between nodes in a <productname>Slony-I</productname> cluster.</para>
+that are to be replicated between nodes in a
+<productname>Slony-I</productname> cluster.</para>
 
-<para>You may have several sets, and the <quote>flow</quote> of replication does
-not need to be identical between those sets.</para>
+<para>You may have several sets, and the <quote>flow</quote> of
+replication does not need to be identical between those sets.</para>
 </sect2>
+
 <sect2><title> Origin, Providers and Subscribers</title>
 
 <para>Each replication set has some origin node, which is the
 <emphasis>only</emphasis> place where user applications are permitted
 to modify data in the tables that are being replicated.  This might
-also be termed the <quote>master provider</quote>; it is the main place from
-which data is provided.</para>
+also be termed the <quote>master provider</quote>; it is the main
+place from which data is provided.</para>
 
-<para>Other nodes in the cluster will subscribe to the replication
-set, indicating that they want to receive the data.</para>
+<para>Other nodes in the cluster subscribe to the replication set,
+indicating that they want to receive the data.</para>
 
-<para>The origin node will never be considered a <quote>subscriber.</quote>
-(Ignoring the case where the cluster is reshaped, and the origin is
-moved to another node.)  But <productname>Slony-I</productname> supports the notion of cascaded
-subscriptions, that is, a node that is subscribed to the origin may
-also behave as a <quote>provider</quote> to other nodes in the cluster.</para>
+<para>The origin node will never be considered a
+<quote>subscriber.</quote> (Ignoring the case where the cluster is
+reshaped, and the origin is expressly shifted to another node.)  But
+<productname>Slony-I</productname> supports the notion of cascaded
+subscriptions, that is, a node that is subscribed to some set may also
+behave as a <quote>provider</quote> to other nodes in the cluster for
+that replication set.</para>
 </sect2>
 </sect1>
 

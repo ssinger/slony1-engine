@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.10 2004-12-22 23:09:57 darcyb Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.11 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <article>
 <sect1 id="altperl">
 <title>Slony-I Administration Scripts</title>
@@ -22,9 +22,10 @@ it to <link linkend="slonik">slonik</link>.</para>
 
 <sect2><title>Node/Cluster Configuration - cluster.nodes</title>
 
-<para>The UNIX environment variable <envar>SLONYNODES</envar> is used to
-determine what Perl configuration file will be used to control the
-shape of the nodes in a <productname>Slony-I</productname> cluster.</para>
+<para>The UNIX environment variable <envar>SLONYNODES</envar> is used
+to determine what Perl configuration file will be used to control the
+shape of the nodes in a <productname>Slony-I</productname>
+cluster.</para>
 
 <para>What variables are set up.
 <itemizedlist>
@@ -55,6 +56,7 @@ my %PARAMS =   (host=> undef,		# Host name
 		password => undef,	# password for user
 		parent => 1,		# which node is parent to this node
 		noforward => undef	# shall this node be set up to forward results?
+                sslmode => undef        # SSL mode argument - determine priority of SSL usage = disable,allow,prefer,require
 );
 </programlisting>
 </sect2>
@@ -65,14 +67,19 @@ determine what Perl configuration file will be used to determine what
 objects will be contained in a particular replication set.</para>
 
 <para>Unlike <envar>SLONYNODES</envar>, which is essential for
-<emphasis>all</emphasis> of the <link linkend="slonik">slonik</link>-generating scripts, this only needs to be set when running
-<filename>create_set.pl</filename>, as that is the only script used to
-control what tables will be in a particular replication set.</para>
+<emphasis>all</emphasis> of the <link
+linkend="slonik">slonik</link>-generating scripts, this only needs to
+be set when running <filename>create_set.pl</filename>, as that is the
+only script used to control what tables will be in a particular
+replication set.</para>
 
 <para>What variables are set up.</para>
 <itemizedlist>
 <listitem><para>$TABLE_ID = 44;</para>
 <para> Each table must be identified by a unique number; this variable controls where numbering starts</para>
+</listitem>
+<listitem><para>$SEQUENCE_ID = 17;</para>
+<para> Each sequence must be identified by a unique number; this variable controls where numbering starts</para>
 </listitem>
 <listitem><para>@PKEYEDTABLES</para>
 
@@ -221,6 +228,8 @@ cluster.</para>
 Listen Path Generation</link> for more details on how this
 works.</para>
 </sect2>
+
+
 </sect1>
 </article>
 <!-- Keep this comment at the end of the file

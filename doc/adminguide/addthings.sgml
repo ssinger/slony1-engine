@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.6 2004-12-22 23:09:57 darcyb Exp $ -->
+<!-- $Id: addthings.sgml,v 1.7 2005-01-24 17:35:35 cbbrowne Exp $ -->
 <article>
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
@@ -20,14 +20,18 @@ sets may be merged together using <command><link
 linkend="stmtmergeset">MERGE SET</link></command>.</para>
 
 <para>Up to and including 1.0.2, there was a potential problem where
-<<<<<<< addthings.sgml
-if <command><link linkend="stmtmergeset"> MERGE SET</link></command>
-=======
-if <command><link linkend="stmtmergeset">MERGE SET</link></command>
->>>>>>> 1.5
-is issued while other subscription-related events are pending, it is
+if <command><link linkend="stmtmergeset">MERGE SET</link></command> is
+issued while other subscription-related events are pending, it is
 possible for things to get pretty confused on the nodes where other
 things were pending.  This problem was resolved in 1.0.5.</para>
+
+<para> Note that if you add nodes, you will need to add both <link
+linkend="stmtstorepath">STORE PATH</link> statements to indicate how
+nodes communicate with one another, and <link
+linkend="stmtstorelisten">STORE LISTEN</link> statements to
+configuration the <quote>communications network</quote> that results
+from that.  See the section on <link linkend="listenpaths"> Listen
+Paths </link> for more details on the latter.
 
 <para>It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
