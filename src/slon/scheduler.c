@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.19 2005-03-10 23:11:26 cbbrowne Exp $
+ *	$Id: scheduler.c,v 1.20 2005-03-23 23:06:50 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -655,7 +655,7 @@ sched_shutdown()
 	 * Lock the master mutex and make sure that we are the main thread
 	 */
 	pthread_mutex_lock(&sched_master_lock);
-	if (pthread_self() != sched_main_thread)
+	if (!pthread_equal(pthread_self(), sched_main_thread))
 	{
 		slon_log(SLON_FATAL, "sched_sighandler: called in non-main thread\n");
 		slon_abort();

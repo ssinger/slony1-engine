@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.48 2005-03-23 22:59:24 darcyb Exp $
+ *	$Id: slon.c,v 1.49 2005-03-23 23:06:50 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -739,7 +739,7 @@ main(int argc, char *const argv[])
 static void
 main_sigalrmhandler(int signo)
 {
-	if (main_thread == pthread_self())
+	if (pthread_equal(main_thread, pthread_self()))
 	{
 		alarm(0);
 		slon_log(SLON_WARN, "main: shutdown timeout exiting\n");
