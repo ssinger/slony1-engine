@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: unsubscribe_set.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: unsubscribe_set.pl,v 1.3 2004-09-09 14:34:23 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -21,7 +21,7 @@ if ($set =~ /^set(\d+)$/) {
   die "unsubscribe_set setM nodeN\n";
 }
 
-open(SLONIK, ">/tmp/slonik-subscribe.$$");
+open(SLONIK, ">/tmp/slonik-unsubscribe.$$");
 print SLONIK genheader();
 print SLONIK qq{
         try {
