@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.20 2005-02-15 17:17:02 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.21 2005-02-18 17:26:09 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -1276,6 +1276,75 @@ which is a recognized condition, this won't help either, and if the
 problem is persistent, the connections will keep recycling which will
 drop the effect of the pooling, in the latter case the pooling code
 could also announce an admin to take a look...  </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> Node #1 was dropped via <link linkend="stmtdropnode">
+<command>DROP NODE</command> </link>, and the <link linkend="slon">
+<application>slon</application> </link> one of the other nodes is
+repeatedly failing with the error message:
+
+<screen>
+ERROR  remoteWorkerThread_3: "begin transaction; set transaction isolation level
+ serializable; lock table "_mailermailer".sl_config_lock; select "_mailermailer"
+.storeListen_int(2, 1, 3); notify "_mailermailer_Event"; notify "_mailermailer_C
+onfirm"; insert into "_mailermailer".sl_event     (ev_origin, ev_seqno, ev_times
+tamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3
+   ) values ('3', '2215', '2005-02-18 10:30:42.529048', '3286814', '3286815', ''
+, 'STORE_LISTEN', '2', '1', '3'); insert into "_mailermailer".sl_confirm
+(con_origin, con_received, con_seqno, con_timestamp)    values (3, 2, '2215', CU
+RRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or updat
+e on table "sl_listen" violates foreign key constraint "sl_listen-sl_path-ref"
+DETAIL:  Key (li_provider,li_receiver)=(1,3) is not present in table "sl_path".
+DEBUG1 syncThread: thread done
+</screen>
+
+<para> Evidently, a <link linkend="stmtstorelisten"> <command>STORE
+LISTEN</command> </link> request hadn't propagated yet before node 1
+was dropped.
+</para></question>
+
+<answer id="eventsurgery"><para> This points to a case where you'll
+need to do <quote>event surgery</quote> on one or more of the nodes.
+A <command>STORE_LISTEN</command> event remains outstanding that wants
+to add a listen path that <emphasis>cannot</emphasis> be created
+because node 1 and all paths pointing to node 1 have gone away.</para>
+
+<para> Let's assume, for exposition purposes, that the remaining nodes
+are #2 and #3, and that the above error is being reported on node
+#3.</para>
+
+<para> That implies that the event is stored on node #2, as it
+wouldn't be on node #3 if it had not already been processed
+successfully.  The easiest way to cope with this situation is to
+delete the offending <link linkend="table.sl-event">
+<envar>sl_event</envar> </link> entry on node #2.  You'll connect to
+node #2's database, and search for the <command>STORE_LISTEN</command>
+event:
+
+<para> <command> select * from sl_event where ev_type =
+'STORE_LISTEN';</command>
+
+<para> There may be several entries, only some of which need to be
+purged. </para>
+
+<screen> 
+-# begin;  -- Don't straight delete them; open a transaction so you can respond to OOPS
+BEGIN;
+-# delete from sl_event where ev_type = 'STORE_LISTEN' and
+-#  (ev_data1 = '1' or ev_data2 = '1' or ev_data3 = '1');
+DELETE 3
+-# -- Seems OK...
+-# commit;
+COMMIT
+</screen>
+
+<para> The next time the <application>slon</application> for node 3
+starts up, it will no longer find the <quote>offensive</quote>
+<command>STORE_LISTEN</command> events, and replication can continue.
+(You may then run into some other problem where an old stored event is
+referring to no-longer-existant configuration...) </para></answer>
+
 </qandaentry>
 
 </qandaset>
