@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.23 2004-03-14 16:38:01 wieck Exp $
+ *	$Id: remote_worker.c,v 1.24 2004-03-15 00:28:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1646,7 +1646,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 * copy the set, then we don't see the row either and it
 	 * would get lost.
 	 */
-	if (node->no_id == event->ev_origin)
+	if (sub_provider == set_origin)
 	{
 		slon_mkquery(&query1,
 				"start transaction; "
