@@ -1445,12 +1445,13 @@ manual on how to configure and set up a replication system.
 	point within the replication transaction stream.
 </p>
 <p>
-	The specified event origin must be the origin of the set. The
+	The specified event origin must be the origin of the set.  The
 	script file must not contain any START or COMMIT TRANSACTION
-	calls. In addition, non-deterministic DML statements (like
-	updating a field with CURRENT_TIMESTAMP) must be avoided,
-	since the data changes done by the script are explicitly not
-	replicated.
+	calls.  (This may change in PostgreSQL 8.0 once nested
+	transactions, aka savepoints, are supported)  In addition,
+	non-deterministic DML statements (like updating a field with
+	CURRENT_TIMESTAMP) must be avoided, since the data changes
+	done by the script are explicitly not replicated.
 </p>
 <table border="0" cellpadding="10">
 <tr>
