@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.18 2004-07-17 18:33:15 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.19 2004-09-07 16:40:24 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -20,6 +20,7 @@
 #include "commands/trigger.h"
 #include "access/xact.h"
 #include "utils/builtins.h"
+#include "utils/elog.h"
 #ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
 #endif
