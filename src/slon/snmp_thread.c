@@ -7,7 +7,7 @@
 #include <errno.h>
 
 #include "libpq-fe.h"
-#include "server/c.h"
+#include "c.h"
 
 #include "slon.h"
 

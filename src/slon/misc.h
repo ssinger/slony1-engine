@@ -5,7 +5,7 @@
  * ----------
  */
 #include "config.h"
-#include "server/c.h"
+#include "c.h"
 
 typedef enum
 {
