@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.7 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: misc.c,v 1.8 2004-03-05 00:02:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -71,7 +71,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 
 	if (outbuf == NULL)
 	{
-		outsize = 1024;
+		outsize = 8192;
 		outbuf = malloc(outsize);
 		if (outbuf == NULL)
 		{
@@ -83,7 +83,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 	sprintf(outbuf, "%-6.6s ", level_c); /* date and time here too */
 	off = strlen(outbuf);
 
-	while(vsnprintf(&outbuf[off], outsize - off, fmt, ap) < 0)
+	while(vsnprintf(&outbuf[off], outsize - off, fmt, ap) >= outsize - off)
 	{
 		outsize *= 2;
 		outbuf = realloc(outbuf, outsize);

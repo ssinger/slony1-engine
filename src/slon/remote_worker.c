@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.15 2004-03-04 22:41:05 wieck Exp $
+ *	$Id: remote_worker.c,v 1.16 2004-03-05 00:02:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2256,7 +2256,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	else
 		slon_mkquery(&new_qual, 
 				"(log_xid < '%s')",
-				event->ev_maxxid_c);
+				event->ev_minxid_c);
 
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -2412,7 +2412,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			else
 				slon_appendquery(provider_qual,
 						"(log_xid >= '%s')",
-						ssy_minxid);
+						ssy_maxxid);
 			if (strlen(ssy_action_list) != 0)
 				slon_appendquery(provider_qual,
 						" and log_actionseq not in (%s)\n) ",
@@ -2483,9 +2483,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 					if (PQresultStatus(res1) != PGRES_COMMAND_OK)
 					{
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-								"\"%s\" %s",
+								"\"%s\" %s - qualification was: %s\n",
 								node->no_id, dstring_data(&(wgline->data)),
-								PQresultErrorMessage(res1));
+								PQresultErrorMessage(res1),
+								dstring_data(&(wgline->provider->helper_qualification)));
 						num_errors++;
 					}
 					else
@@ -2495,9 +2496,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 							slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 									"replication query did not affect "
 									"one data row (cmdTuples = %s) - "
-									"query was: %s",
+									"query was: %s - qualification was: %s\n",
 									node->no_id, PQcmdTuples(res1),
-									dstring_data(&(wgline->data)));
+									dstring_data(&(wgline->data)),
+									dstring_data(&(wgline->provider->helper_qualification)));
 							num_errors++;
 						}
 						else
