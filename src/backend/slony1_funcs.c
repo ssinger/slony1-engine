@@ -3,10 +3,10 @@
  *
  *	  The C functions and triggers portion of Slony-I.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.28 2005-01-12 17:27:09 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.29 2005-03-30 15:24:13 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -46,6 +46,9 @@ PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 PG_FUNCTION_INFO_V1(_Slony_I_terminateNodeConnections);
 PG_FUNCTION_INFO_V1(_Slony_I_cleanupListener);
 
+PG_FUNCTION_INFO_V1(_slon_quote_ident);
+
+
 Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
@@ -57,6 +60,9 @@ Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum		_Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
 Datum		_Slony_I_cleanupListener(PG_FUNCTION_ARGS);
+
+Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
+
 
 #ifdef CYGWIN
 extern DLLIMPORT Node *newNodeMacroHolder;
@@ -110,6 +116,7 @@ static Slony_I_ClusterStatus *clusterStatusList = NULL;
 static Slony_I_ClusterStatus *
 getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
+const char * slon_quote_identifier(const char *ident);
 static char *slon_quote_literal(char *str);
 
 
@@ -501,7 +508,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			if ((col_value[i] = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 				continue;
 
-			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
+			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value[i] = slon_quote_literal(col_value[i]);
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
@@ -688,7 +695,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_comma = true;
 
-			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
+			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			if (new_isnull)
 				col_value = "NULL";
 			else
@@ -732,7 +739,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				if (attkind[attkind_idx] == 'k')
 					break;
 			}
-			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
+			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
@@ -774,7 +781,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			attkind_idx++;
 			if (attkind[attkind_idx] != 'k')
 				continue;
-			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
+			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
@@ -838,7 +845,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			attkind_idx++;
 			if (attkind[attkind_idx] != 'k')
 				continue;
-			col_ident = (char *)quote_identifier(SPI_fname(tupdesc, i + 1));
+			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
@@ -1097,7 +1104,7 @@ slon_quote_literal(char *str)
 	cp2 = result;
 
 	*cp2++ = '\'';
-	while (len > 0)
+	while (len-- > 0)
 	{
 		if ((wl = pg_mblen(cp1)) != 1)
 		{
@@ -1113,8 +1120,6 @@ slon_quote_literal(char *str)
 		if (*cp1 == '\\')
 			*cp2++ = '\\';
 		*cp2++ = *cp1++;
-
-		len--;
 	}
 
 	*cp2++ = '\'';
@@ -1122,6 +1127,124 @@ slon_quote_literal(char *str)
 
 	return result;
 }
+
+
+/*
+ * slon_quote_identifier                     - Quote an identifier only if needed
+ *
+ * When quotes are needed, we palloc the required space; slightly
+ * space-wasteful but well worth it for notational simplicity.
+ *
+ * Version: pgsql/src/backend/utils/adt/ruleutils.c,v 1.188 2005/01/13 17:19:10
+ */
+const char *
+slon_quote_identifier(const char *ident)
+{
+        /*
+         * Can avoid quoting if ident starts with a lowercase letter or
+         * underscore and contains only lowercase letters, digits, and
+         * underscores, *and* is not any SQL keyword.  Otherwise, supply
+         * quotes.
+         */
+        int                     nquotes = 0;
+        bool            safe;
+        const char *ptr;
+        char       *result;
+        char       *optr;
+
+        /*
+         * would like to use <ctype.h> macros here, but they might yield
+         * unwanted locale-specific results...
+         */
+        safe = ((ident[0] >= 'a' && ident[0] <= 'z') || ident[0] == '_');
+
+        for (ptr = ident; *ptr; ptr++)
+        {
+                char            ch = *ptr;
+
+                if ((ch >= 'a' && ch <= 'z') ||
+                        (ch >= '0' && ch <= '9') ||
+                        (ch == '_'))
+                {
+                        /* okay */
+                }
+                else
+                {
+                        safe = false;
+                        if (ch == '"')
+                                nquotes++;
+                }
+        }
+
+        if (safe)
+        {
+                /*
+                 * Check for keyword.  This test is overly strong, since many of
+                 * the "keywords" known to the parser are usable as column names,
+                 * but the parser doesn't provide any easy way to test for whether
+                 * an identifier is safe or not... so be safe not sorry.
+                 *
+                 * Note: ScanKeywordLookup() does case-insensitive comparison, but
+                 * that's fine, since we already know we have all-lower-case.
+                 */
+                if (ScanKeywordLookup(ident) != NULL)
+                        safe = false;
+        }
+
+        if (safe)
+                return ident;                   /* no change needed */
+
+        result = (char *) palloc(strlen(ident) + nquotes + 2 + 1);
+
+        optr = result;
+        *optr++ = '"';
+        for (ptr = ident; *ptr; ptr++)
+        {
+                char            ch = *ptr;
+
+                if (ch == '"')
+                        *optr++ = '"';
+                *optr++ = ch;
+        }
+        *optr++ = '"';
+        *optr = '\0';
+
+        return result;
+}
+
+
+
+/*
+ * _slon_quote_ident -
+ *        returns a properly quoted identifier
+ *
+ * Version: pgsql/src/backend/utils/adt/quote.c,v 1.14.4.1 2005/03/21 16:29:31
+ */
+Datum
+_slon_quote_ident(PG_FUNCTION_ARGS)
+{
+        text       *t = PG_GETARG_TEXT_P(0);
+        text       *result;
+        const char *qstr;
+        char       *str;
+        int                     len;
+
+        /* We have to convert to a C string to use quote_identifier */
+        len = VARSIZE(t) - VARHDRSZ;
+        str = (char *) palloc(len + 1);
+        memcpy(str, VARDATA(t), len);
+        str[len] = '\0';
+
+        qstr = slon_quote_identifier(str);
+
+        len = strlen(qstr);
+        result = (text *) palloc(len + VARHDRSZ);
+        VARATT_SIZEP(result) = len + VARHDRSZ;
+        memcpy(VARDATA(result), qstr, len);
+
+        PG_RETURN_TEXT_P(result);
+}
+
 
 
 static Slony_I_ClusterStatus *
