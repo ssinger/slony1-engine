@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.13.2.2 2004-08-26 19:44:56 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.13.2.3 2004-08-27 19:07:58 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -42,7 +42,6 @@ cleanupThread_main(void *dummy)
 	SlonDString	query1;
 	SlonDString	query2;
 	SlonDString	query3;
-	SlonDString	query4;
 	PGconn	   *dbconn;
 	PGresult   *res;
 	PGresult   *res2;
@@ -209,7 +208,6 @@ cleanupThread_main(void *dummy)
 	dstring_free(&query1);
 	dstring_free(&query2);
 	dstring_free(&query3);
-	dstring_free(&query4);
 
 	/*
 	 * Disconnect from the database
