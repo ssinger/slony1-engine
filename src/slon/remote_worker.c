@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.48 2004-06-01 20:18:19 wieck Exp $
+ *	$Id: remote_worker.c,v 1.49 2004-06-03 20:49:26 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1807,8 +1807,12 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	char			copybuf[8192];
 	int				copydone;
 #endif
+	struct timeval	tv_start;
+	struct timeval	tv_start2;
+	struct timeval	tv_now;
 
 	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
+	gettimeofday(&tv_start, NULL);
 
 	/*
 	 * Lookup the provider nodes conninfo
@@ -1983,6 +1987,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		char   *tab_comment	= PQgetvalue(res1, tupno1, 3);
 		int64	copysize	= 0;
 
+		gettimeofday(&tv_start2, NULL);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				"copy table %s\n",
 				node->no_id, tab_fqname);
@@ -2351,8 +2356,16 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			dstring_free(&query1);
 			return -1;
 		}
+
+		gettimeofday(&tv_now, NULL);
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"%.3f seconds to copy table %s\n",
+				node->no_id, 
+				TIMEVAL_DIFF(&tv_start2, &tv_now), tab_fqname);
 	}
 	PQclear(res1);
+
+	gettimeofday(&tv_start2, NULL);
 
 	/*
 	 * Copy the sequences contained in the set
@@ -2473,6 +2486,16 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		}
 	}
 	PQclear(res1);
+
+	if (ntuples1 > 0)
+	{
+		gettimeofday(&tv_now, NULL);
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"%.3f seconds to copy sequences\n",
+				node->no_id, 
+				TIMEVAL_DIFF(&tv_start2, &tv_now));
+	}
+	gettimeofday(&tv_start2, NULL);
 
 	/*
 	 * It depends on who is our data provider how we construct
@@ -2695,6 +2718,12 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		return -1;
 	}
 
+	gettimeofday(&tv_now, NULL);
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			"%.3f seconds to build initial setsync status\n",
+			node->no_id, 
+			TIMEVAL_DIFF(&tv_start2, &tv_now));
+
 	/*
 	 * Roll back the transaction we used on the provider and close
 	 * the database connection.
@@ -2713,7 +2742,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			"disconnected from provider DB\n",
 			node->no_id);
 
-	slon_log(SLON_DEBUG1, "copy_set %d done\n", set_id);
+	gettimeofday(&tv_now, NULL);
+	slon_log(SLON_DEBUG1, "copy_set %d done in %.3f seconds\n", set_id,
+			TIMEVAL_DIFF(&tv_start, &tv_now));
 
 	return 0;
 }
