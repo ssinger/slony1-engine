@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.5 2005-02-14 22:28:36 smsimms Exp $
+#       $Id: Makefile,v 1.6 2005-02-20 00:59:56 smsimms Exp $
 #
 # ----------
 
@@ -26,17 +26,27 @@ endif
 		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
                        -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
-                       -e "s#@@PGBINDIR@@#$(pgbindir)#;" \
+                       -e "s#@@TOOLSBIN@@#$(toolsbin)#;" \
                        $$file > $$tmpname; \
 		chmod 755 $$tmpname; \
 	done
 
-install: all
+install: all installdirs
+ifndef toolsbin
+	@echo "The altperl tools won't be installed unless --with-perltools is specified in configure"
+else
 	$(INSTALL_DATA)   slon_tools.conf-sample $(sysconfdir)
 	$(INSTALL_DATA)   slon-tools.pm          $(pglibdir)
-	$(INSTALL_SCRIPT) slon_start             $(pgbindir)
-	$(INSTALL_SCRIPT) slon_kill              $(pgbindir)
-	$(INSTALL_SCRIPT) slon_watchdog          $(pgbindir)
+	for file in $(wildcard *.pl) ; do \
+		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+		$(INSTALL_SCRIPT) $$tmpname	$(toolsbin) ; \
+	done
+endif
+
+installdirs:
+	$(mkinstalldirs) $(DESTDIR)$(sysconfdir)
+	$(mkinstalldirs) $(DESTDIR)$(pglibdir)
+	$(mkinstalldirs) $(DESTDIR)$(toolsbin)
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
