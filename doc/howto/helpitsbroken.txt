@@ -206,3 +206,13 @@ properly.  Implementing this via a SLONIK statement with a new Slony
 event would do that.  Submitting the three queries using EXECUTE
 SCRIPT can do that.  Less ideal would be to connect to each database
 and submit the queries by hand.
+
+10.  I tried to add a table to a set, and got the following message:
+
+   Slony-I: cannot add table to currently subscribed set 1
+
+You cannot add tables to sets that already have subscribers.
+
+The workaround to this is to create ANOTHER set, add the new tables to
+that new set, subscribe the same nodes subscribing to "set 1" to the
+new set, and then merge the sets together.
