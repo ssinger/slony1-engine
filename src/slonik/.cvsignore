@@ -1,2 +1,4 @@
+Makefile
+slonik
 parser.c
 scan.c
