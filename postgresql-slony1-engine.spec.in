@@ -4,7 +4,7 @@ Version: @PACKAGE_VERSION@
 Release: 1
 License: Berkeley/BSD
 Group: Applications/Databases
-URL: http://slony.org/
+URL: http://slony.info/
 Source0: @PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: postgresql-devel
