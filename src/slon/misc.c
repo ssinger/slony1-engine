@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.13 2004-09-24 22:12:35 darcyb Exp $
+ *	$Id: misc.c,v 1.14 2004-09-27 20:40:29 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,6 +38,7 @@ extern int      slon_log_level;
 
 extern bool     logpid;
 extern bool     logtimestamp;
+extern char    *log_timestamp_format;
 
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -149,7 +150,7 @@ slon_log(SlonLogLevel level, char *fmt,...)
 
 	if (logtimestamp == true && (Use_syslog != 1))
 	{
-		strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S %Z", localtime(&stamp_time));
+		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
 		sprintf(outbuf, "%s ", time_buf);
 	}
 	if (logpid == true)

@@ -26,6 +26,7 @@ char *Syslog_facility;
 int Use_syslog;
 bool logpid;
 bool logtimestamp;
+char *log_timestamp_format;
 
 
 enum config_type
@@ -233,6 +234,16 @@ static struct config_string ConfigureNamesString[] =
 		&pid_file,
 		NULL
 	},
+      {
+              {
+                      (const char *)"log_timestamp_format",
+                      gettext_noop("A strftime()-style log timestamp format string."),
+                      gettext_noop("A strftime()-style log timestamp format string."),
+                      SLON_C_STRING
+              },
+              &log_timestamp_format,
+              "%Y-%m-%d %H:%M:%S %Z"
+      },
 #ifdef HAVE_SYSLOG
 	{
 		{
