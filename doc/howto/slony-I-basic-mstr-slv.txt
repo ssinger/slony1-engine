@@ -1,12 +1,24 @@
-Replicating your first Database
+Replicating Your First Database
 
-In this example we will be replicating a brand new pgbench database.  The mechanics of replicating an existing database are covered here, however it is recommended you learn how Slony functions by using a fresh new non production database.
+In this example, we will be replicating a brand new pgbench database.  The
+mechanics of replicating an existing database are covered here, however we
+recommend that you learn how Slony functions by using a fresh new
+non-production database.
 
-The Slony replication engine is trigger based, allowing us to replicate databases (or portions there of) running under the same postmaster.
+The Slony replication engine is trigger-based, allowing us to replicate
+databases (or portions there of) running under the same postmaster.
 
-This example will show how to replicate the pgbench database running on localhost (master) to the pgbenchslave database also running on localhost (slave).  We make a couple of assumptions about your PostgreSQL configuration. These are that you have tcpip_socket=true in your postgresql.conf and that you have localhost set to trust in pg_hba.conf   The REPLICATIONUSER needs to be PostgreSQL superuser, depending on who you ran initdb as this is typically postgres or pgsql.
+This example will show how to replicate the pgbench database running on
+localhost (master) to the pgbenchslave database also running on localhost
+(slave).  We make a couple of assumptions about your PostgreSQL configuration:
 
-The following shell variables should be set
+1. You have tcpip_socket=true in your postgresql.conf and
+2. You have localhost set to trust in pg_hba.conf
+
+The REPLICATIONUSER needs to be PostgreSQL superuser.  This is typically
+postgres or pgsql.
+
+You should also set the following shell variables:
 
 CLUSTERNAME=slony_example
 MASTERDBNAME=pgbench
@@ -16,15 +28,16 @@ SLAVEHOST=localhost
 REPLICATIONUSER=pgsql
 PGBENCHUSER=pgbench
 
-Depending on your shell these are set in the following manner
+Here are a couple of examples for setting variables in common shells:
+
 bash/sh:
 	export CLUSTERNAME=slony_example
-csh:
+(t)csh:
 	setenv CLUSTERNAME slony_example
 
-Creating the pgbecnuser
+Creating the pgbenchuser
 
-createuser -A -D $PGBECNUSER
+createuser -A -D $PGBENCHUSER
 
 Preparing the databases
 
@@ -33,52 +46,81 @@ createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDB
 
-Because Stony-I depends on the databases having the pl/pgSQL procedural language installed, we better install it now.  It is possible that you have installed pl/pgSQL into the template1 database in which case you can skip this step because it's already installed into the $MASTERDBNAME
+Because Stony-I depends on the databases having the pl/pgSQL procedural
+language installed, we better install it now.  It is possible that you have
+installed pl/pgSQL into the template1 database in which case you can skip this
+step because it's already installed into the $MASTERDBNAME
 
-installlang plpgsql -h $MASTERHOST $MASTERDBNAME
+createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 
-As of this time Slony-I does not automatically copy table definitions from a master when a slave subscribes to it. So we need to import this data, this is done using pg_dump.
+Slony-I does not yet automatically copy table definitions from a master when a
+slave subscribes to it, so we need to import this data.  We do this with
+pg_dump.
 
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
 
-To illustrate how Slony-1 allows for on the fly replication subscription, lets start up pgbench. It is recommended to run the pgbench application in the foreground of a separate terminal window. This gives the flexibility to stop and restart it with different parameters at anytime.  You'll need to re-export the variables again so they are available in this session as well.
+To illustrate how Slony-1 allows for on the fly replication subscription, lets
+start up pgbench.  If you run the pgbench application in the foreground of a
+separate terminal window, you can stop and restart it with different
+parameters at any time.  You'll need to re-export the variables again so they
+are available in this session as well.
 
 The typical command to run pgbench would look like:
 
 pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 
-This will run pgbench with 5 concurrent clients each processing 1000 transactions against the pgbench database running on localhost as the pgbench user.
+This will run pgbench with 5 concurrent clients each processing 1000
+transactions against the pgbench database running on localhost as the pgbench
+user.
 
-Configuring the database for replication.
+Configuring the Database for Replication.
 
-Creating the configuration tables, stored procedures, triggers and configuration is all done through the slonik tool.  It is a specialized scripting aid that mostly calls stored procedures in the master/salve (node) databases.  The script to create the initial configuration for  the simple master-slave setup of out pgbench database looks like this:
+Creating the configuration tables, stored procedures, triggers and
+configuration is all done through the slonik tool.  It is a specialized
+scripting aid that mostly calls stored procedures in the master/salve (node)
+databases.  The script to create the initial configuration for  the simple
+master-slave setup of out pgbench database looks like this:
 
 #!/bin/sh
 
 slonik <<_EOF_
 	#--
-	# define the namespace the replication system uses in our example it is slony_example
+    # define the namespace the replication system uses in our example it is
+    # slony_example
 	#--
 	cluster name = $CLUSTERNAME;
 
 	#--
-	# admin conninfo's are used by slonik to connect to the nodes one for each node on each side of the cluster, the syntax is that of PQconnectdb in the C-API
+    # admin conninfo's are used by slonik to connect to the nodes one for each
+    # node on each side of the cluster, the syntax is that of PQconnectdb in
+    # the C-API
 	# --
 	node 1 admin conninfo 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
 	node 2 admin conninfo 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
-	# init the first node, it's id MUST be 1. this creates the schema _$CLUSTERNAME containing all replication system specific database objects.
+    # init the first node.  Its id MUST be 1.  This creates the schema
+    # _$CLUSTERNAME containing all replication system specific database
+    # objects.
+
 	#--
 	init cluster ( id=1,  comment = 'Master Node');
  
 	#--
-	# Because the history table does not have a primary key or other unique  constraint that could be used to identify a row.  We need to add one. The following command adds a bigint column named _Slony-I_$CLUSTERNAME_rowID to the table. It will have a default value of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have  UNIQUE and NOT NULL constraints applied.  All existing rows will be initialized with a number
+    # Because the history table does not have a primary key or other unique
+    # constraint that could be used to identify a row, we need to add one.
+    # The following command adds a bigint column named
+    # _Slony-I_$CLUSTERNAME_rowID to the table.  It will have a default value
+    # of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have  UNIQUE and NOT NULL
+    # constraints applied.  All existing rows will be initialized with a
+    # number
 	#--
-	table add key (node id =1, full qualified name = 'public.history');
+	table add key (node id = 1, full qualified name = 'public.history');
 
 	#--
-	# Stony organizes tables into sets. The smallest unit a node can subscribe is a set The following commands create one set containing all 4 pgbench tables.  The master or origin of the set is note 1.
+    # Stony organizes tables into sets.  The smallest unit a node can
+    # subscribe is a set The following commands create one set containing all
+    # 4 pgbench tables.  The master or origin of the set is note 1.
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
 	set add table (set id=1, origin=1, id=1, full qualified name = 'public.accounts', comment='accounts table');
@@ -87,7 +129,8 @@ slonik <<_EOF_
 	set add table (set id=1, origin=1, id=4, full qualified name = 'public.history', comment='history table', key = serial);
 
 	#--
-	#Create the second node (the slave) tell the 2 nodes hoe to connect to each other and hoe they should listen for events.
+    # Create the second node (the slave) tell the 2 nodes how to connect to
+    # each other and how they should listen for events.
 	#--
 
 	store node (id=2, comment = 'Slave node');
@@ -98,15 +141,28 @@ slonik <<_EOF_
 EOF
 
 
-Is the pgbench still running? If not start it again.
-At this point we have 2 databases that are fully prepared. One is the master database which bgbench is busy accessing and changing rows in. It's not time to start  the replication daemons.
+Is the pgbench still running?  If not start it again.
+
+At this point we have 2 databases that are fully prepared.  One is the master
+database which bgbench is busy accessing and changing rows in.  It's not time
+to start  the replication daemons.
+
 On $MASTERHOST the command to start the replication engine is
+
 slon $CLUSTERNAME dbname=$MASTERDBNAME user=$REPLIATIONUSER host=$MASTERHOST
+
 Likewise we start the replication system on node 2 (the slave)
+
 slon $CLUSTERNAME dbname=$SLAVEDBNAME user=$REPLIATIONUSER host=$SLAVEHOST
 
-Even though we have the slon running on both the master and slave and they are both spitting out diagnostics and other messages, we an;r replicating any data yet.  The notices you are seeing is the synchronization of cluster configurations between the 2 slon processes.
-To start replicating the 4 pgbench tables (set 1) from the master (node id 1) the the slave (node id 2) we must execute the following script/
+Even though we have the slon running on both the master and slave and they are
+both spitting out diagnostics and other messages, we aren't replicating any
+data yet.  The notices you are seeing is the synchronization of cluster
+configurations between the 2 slon processes.
+
+To start replicating the 4 pgbench tables (set 1) from the master (node id 1)
+the the slave (node id 2), execute the following script.
+
 #!/bin/sh
 slonik <<_EOF_
     # ----
@@ -130,17 +186,23 @@ slonik <<_EOF_
 _EOF_
 
 
-Any second here, the replication daemon on #SLAVEHOST will start to copy the current content of all 4 replicated
-tables.  While doing so, of course, the pgbench application will
-continue to modify the database.  When the copy process is finished,
-the replication daemon on $SLAVEHOST will start to catch up by applying the accumulated replication log.  It will do this in little steps, 10 seconds worth of application work at a time.  Depending on the
-performance of the two systems involved, the sizing of the two
-databases, the actual transaction load and how well the two databases
-are tuned and maintained, this catchup process can be a matter of
-minutes, hours, or infinity.
+Any second here, the replication daemon on $SLAVEHOST will start to copy the
+current content of all 4 replicated tables.  While doing so, of course, the
+pgbench application will continue to modify the database.  When the copy
+process is finished, the replication daemon on $SLAVEHOST will start to catch
+up by applying the accumulated replication log.  It will do this in little
+steps, 10 seconds worth of application work at a time.  Depending on the
+performance of the two systems involved, the sizing of the two databases, the
+actual transaction load and how well the two databases are tuned and
+maintained, this catchup process can be a matter of minutes, hours, or
+eons.
 
-
-You have now successfully set up your first basic master/slave replication system, and the 2 databases once the slave has caught up contain identical data.  It's best we test this to show you that the datasets are in fact the same. The following script will create ordered dumps of the 2 databases and compare them.  Make sure that pgbench has completed it's testing, and that your slon sessions are caught up.
+You have now successfully set up your first basic master/slave replication
+system, and the 2 databases once the slave has caught up contain identical
+data.  It's best to test this to check that the datasets are in fact the same.
+The following script will create ordered dumps of the 2 databases and compare
+them.  Make sure that pgbench has completed it's testing, and that your slon
+sessions are caught up.
 
 
 #!/bin/sh
@@ -176,5 +238,6 @@ else
     echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
 
-If this script returns failed please contact the developers at http://gborg.postgreesql.org/projects/slony1
+If this script returns "failed," please contact the developers at
+http://gborg.postgreesql.org/projects/slony1
 
