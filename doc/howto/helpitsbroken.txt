@@ -199,3 +199,10 @@ sl_table, and then run three queries, on each host:
 The schema will obviously depend on how you defined the Slony-I
 cluster.  The table ID, in this case, 40, will need to change to the
 ID of the table you want to have go away.
+
+You'll have to run these three queries on all of the nodes, preferably
+firstly on the "master" node, so that the dropping of this propagates
+properly.  Implementing this via a SLONIK statement with a new Slony
+event would do that.  Submitting the three queries using EXECUTE
+SCRIPT can do that.  Less ideal would be to connect to each database
+and submit the queries by hand.
