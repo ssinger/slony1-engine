@@ -1,38 +1,62 @@
-#!perl # -*- perl -*-
-# $Id: init_cluster.pl,v 1.6 2004-11-19 23:35:57 cbbrowne Exp $
+#!/usr/bin/perl
+# $Id: init_cluster.pl,v 1.7 2005-01-10 17:17:17 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
-my @COST;
-my @PATH;
+
+use Getopt::Long;
+
+my $SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
+my $SHOW_USAGE    = 0;          # Show usage, then quit
+
+# Read command-line options
+GetOptions("config=s"  => \$SLON_ENV_FILE,
+	   "help"      => \$SHOW_USAGE);
 
 require 'slon-tools.pm';
-require 'slon.env';
-my $FILE="/tmp/init-cluster.$$";
-open(SLONIK, ">$FILE");
+require $SLON_ENV_FILE;
 
-print SLONIK genheader();
+my $USAGE =
+"Usage: init_cluster.pl [--config file]
 
-my ($dbname, $dbhost)=($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
-print SLONIK "
-   init cluster (id = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');
+    Generates the slonik commands necessary to create a cluster and
+    prepare the nodes for use.  Also displays a report showing the
+    relationships between the various nodes.
+
 ";
 
-foreach my $node (@NODES) {
-  if ($node != $MASTERNODE) {		# skip the first one; it's already initialized!
-    my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
-    print SLONIK "   store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
-  }
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
 }
 
-print SLONIK "echo 'Set up replication nodes';
-";
+my $FILE="/tmp/init-cluster.$$";
 
-my @VIA ;
+# INIT CLUSTER
+open(SLONIK, ">", $FILE);
+print SLONIK "\n# INIT CLUSTER\n";
+print SLONIK genheader();
+my ($dbname, $dbhost) = ($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
+print SLONIK "  init cluster (id = $MASTERNODE, comment = 'Node $MASTERNODE - $dbname\@$dbhost');\n";
+
+# STORE NODE
+print SLONIK "\n# STORE NODE\n";
+foreach my $node (@NODES) {
+  if ($node != $MASTERNODE) {		# skip the master node; it's already initialized!
+    my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
+    print SLONIK "  store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
+  }
+}
+print SLONIK "  echo 'Set up replication nodes';\n";
+
+# STORE PATH
+print SLONIK "\n# STORE PATH\n";
+
+my @COST;
+my @VIA;
+my @PATH;
 generate_listen_paths();
-report_on_paths();
-print SLONIK qq[
-echo 'Next: configure paths for each node/origin';
-];
+
+print SLONIK "  echo 'Next: configure paths for each node/origin';\n";
 foreach my $nodea (@NODES) {
   my $dsna = $DSN[$nodea];
   foreach my $nodeb (@NODES) {
@@ -41,41 +65,36 @@ foreach my $nodea (@NODES) {
       my $providerba = $VIA[$nodea][$nodeb];
       my $providerab = $VIA[$nodeb][$nodea];
       if (!$printed[$nodea][$nodeb]) {
-	print SLONIK "      store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
+	print SLONIK "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
 	$printed[$nodea][$nodeb] = "done";
       }
       if (!$printed[$nodeb][$nodea]) {
-	print SLONIK "      store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
+	print SLONIK "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
 	$printed[$nodeb][$nodea] = "done";
       }
-      print SLONIK "echo 'configured path between $nodea and $nodeb';\n";
+      print SLONIK "  echo 'configured path between $nodea and $nodeb';\n";
     }
   }
 }
 
-
+# STORE LISTEN
+print SLONIK "\n# STORE LISTEN\n";
 foreach my $origin (@NODES) {
   my $dsna = $DSN[$origin];
   foreach my $receiver (@NODES) {
     if ($origin != $receiver) {
       my $provider = $VIA[$origin][$receiver];
-      print SLONIK "      store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
+      print SLONIK "  store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
     }
   }
 }
-
-print SLONIK qq[
-        echo 'Replication nodes prepared';
-        echo 'Please start a slon replication daemon for each node';
-];
-
+print SLONIK "  echo 'Replication nodes prepared';\n";
+print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
 close SLONIK;
 run_slonik_script($FILE);
+report_on_paths();
 
 sub generate_listen_paths {
-  my @COST;
-  my @PATH;
-
   my $infinity = 10000000;	# Initial costs are all infinite
   foreach my $node1 (@NODES) {
     foreach my $node2 (@NODES) {
@@ -146,49 +165,59 @@ sub generate_listen_paths {
 }
 
 sub report_on_paths {
-  print "cost\n";
-  print "    ";
+  print "# Configuration Summary:\n";
+  print "#\n";
+  print "# COST\n";
+  print "#      ";
   foreach my $node2 (@NODES) {
-    printf "%4d|", $node2;
+    printf "| %3d ", $node2;
   }
-  print "\n--------------------------------------------\n";
+  print "|\n# ";
+  print ("-----+" x (scalar(@NODES) + 1));
+  print "\n";
   foreach my $node1 (@NODES) {
-    printf "%4d|", $node1;
+    printf "#  %3d ", $node1;
     foreach my $node2 (@NODES) {
       if ($COST[$node2][$node1] == $infinity) {
-	printf "inf  ";
+	printf "| inf ";
       } else {
-	printf "%4d ", $COST[$node2][$node1];
+	printf "|%4d ", $COST[$node2][$node1];
       }
-      print "\n";
     }
+    print "|\n";
   }
-  print "\n\n";
-  print "VIA\n";
-  print "    ";
+  print "# \n";
+  print "# VIA\n";
+  print "#      ";
   foreach my $node2 (@NODES) {
-    printf "%4d|", $node2;
+    printf "| %3d ", $node2;
   }
-  print "\n--------------------------------------------\n";
+  print "|\n# ";
+  print ("-----+" x (scalar(@NODES) + 1));
+  print "\n";
   foreach my $node1 (@NODES) {
-    printf "%4d", $node1;
+    printf "#  %3d ", $node1;
     foreach my $node2 (@NODES) {
-      printf "%4d ", $VIA[$node2][$node1];
+      printf "|%4d ", $VIA[$node2][$node1];
     }
-    print "\n";
+    print "|\n";
   }
 
-  print "PATHS\n";
-  print "    ";
+  print "# \n";
+  print "# PATHS\n";
+  print "#      ";
   foreach my $node2 (@NODES) {
-    printf "%4d|", $node2;
+    printf "| %3d ", $node2;
   }
-  print "\n--------------------------------------------\n";
+  print "|\n# ";
+  print ("-----+" x (scalar(@NODES) + 1));
+  print "\n";
   foreach my $node1 (@NODES) {
-    printf "%4d", $node1;
+    printf "#  %3d ", $node1;
     foreach my $node2 (@NODES) {
-      printf "%4d ", $PATH[$node2][$node1];
+      printf "|%4d ", $PATH[$node2][$node1];
     }
-    print "\n";
+    print "|\n";
   }
+  print "\n";
 }
