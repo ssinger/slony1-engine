@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.3 2005-02-10 05:49:20 smsimms Exp $
+#       $Id: Makefile,v 1.4 2005-02-10 06:38:51 smsimms Exp $
 #
 # ----------
 
@@ -10,7 +10,7 @@ slony_subdir = tools/altperl
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-DISTFILES = Makefile ToDo README $(wildcard *.pl) $(wildcard *.pm) $(wildcard *.env)
+DISTFILES = Makefile ToDo README $(wildcard *.pl) $(wildcard *.pm) slon_tools.conf-sample
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
@@ -24,18 +24,29 @@ clean distclean maintainer-clean:
 		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
 		rm $$tmpname ; \
 	done
+
 all:
 ifndef PERL
-	@echo "You need perl to make use of these tools"
-else
+	@echo "The altperl tools require that Perl be installed."
+	exit 1;
+endif
 ifndef SED
-		@echo "You need sed to use slony"
-		exit 1;
-else
-		@for file in $(wildcard *.pl) ; do \
-			tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
-			$(SED) -e "s#@@PERL@@#$(PERL)#; s#@@SYSCONFDIR@@#$(sysconfdir)#; s#@@PGLIBDIR@@#$(pglibdir)#;" $$file > $$tmpname; \
-			chmod 755 $$tmpname; \
-		done
+	@echo "sed is required to build the altperl tools."
+	exit 1;
 endif
-endif
+	@for file in $(wildcard *.pl) ; do \
+		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
+                       -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
+                       -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
+                       -e "s#@@PGBINDIR@@#$(pgbindir)#;" $$file > $$tmpname; \
+		chmod 755 $$tmpname; \
+	done
+
+install: all
+	$(INSTALL_DATA)   slon_tools.conf-sample $(sysconfdir)
+	$(INSTALL_DATA)   slon-tools.pm          $(pglibdir)
+	$(INSTALL_SCRIPT) slon_start.pl          $(pgbindir)
+	$(INSTALL_SCRIPT) slon_kill.pl           $(pgbindir)
+	$(INSTALL_SCRIPT) slon_watchdog.pl       $(pgbindir)
+

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_start.pl,v 1.11 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_start.pl,v 1.12 2005-02-10 06:38:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -67,6 +67,6 @@ unless ($pid) {
   print "PID [$pid]\n";
   if ($START_WATCHDOG) {
     print "Start the watchdog process as well...\n";
-    system "perl slon_watchdog.pl --config=$CONFIG_FILE $node $SLEEP_TIME &";
+    system "@@PGBINDIR@@/slon_watchdog --config=$CONFIG_FILE $node $SLEEP_TIME &";
   }
 }
