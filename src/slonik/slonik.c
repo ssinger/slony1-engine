@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.24 2004-06-12 03:27:46 wieck Exp $
+ *	$Id: slonik.c,v 1.25 2004-06-15 17:46:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -19,7 +19,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "postgres.h"
 #include "libpq-fe.h"
