@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.20 2004-03-12 20:59:11 wieck Exp $
+ *	$Id: remote_worker.c,v 1.21 2004-03-12 23:17:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1755,9 +1755,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
+		 * TODO: use the transaction safe truncate table on 7.4 or better
+		 *       instead of delete.
 		 */
 		slon_mkquery(&query1,
-				"truncate %s; "
+				"delete from %s; "
 				"copy %s from stdin; ", tab_fqname, tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_COPY_IN)

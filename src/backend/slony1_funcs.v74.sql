@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v73.sql,v 1.3 2004-03-12 23:17:32 wieck Exp $
+-- $Id: slony1_funcs.v74.sql,v 1.1 2004-03-12 23:17:32 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -33,7 +33,7 @@ begin
 	-- Lookup the tables primary key or the specified unique index
 	--
 	if p_idx_name isnull then
-		select PGXC.relname, PGX.indexrelid, PGX.indkey
+		select PGXC.relname, PGX.indexrelid, PGX.indnatts, PGX.indkey
 				into v_idxrow
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN,
@@ -50,7 +50,7 @@ begin
 					p_tab_fqname;
 		end if;
 	else
-		select PGXC.relname, PGX.indexrelid, PGX.indkey
+		select PGXC.relname, PGX.indexrelid, PGX.indnatts, PGX.indkey
 				into v_idxrow
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN,
@@ -88,18 +88,13 @@ begin
 	loop
 		v_attfound = ''f'';
 
-		v_i := 0;
-		loop
+		for v_i in 0 .. v_idxrow.indnatts - 1 loop
 			select indkey[v_i] into v_attno from "pg_catalog".pg_index
 					where indexrelid = v_idxrow.indexrelid;
-			if v_attno = 0 then
-				exit;
-			end if;
 			if v_attrow.attnum = v_attno then
 				v_attfound = ''t'';
 				exit;
 			end if;
-			v_i := v_i + 1;
 		end loop;
 
 		if v_attfound then

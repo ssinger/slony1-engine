@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.12 2004-03-12 17:26:55 wieck Exp $
+# $Id: configure.ac,v 1.13 2004-03-12 23:17:31 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -144,6 +144,15 @@ AC_MSG_RESULT($have_pqputcopydata)
 if test $have_pqputcopydata = yes ; then
 	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
 fi
+
+AC_MSG_CHECKING([for typcache.h])
+if test -f "${test_includedir}/server/utils/typcache.h"; then
+	have_typcache=yes
+	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
+else
+	have_typcache=no
+fi
+AC_MSG_RESULT($have_typcache)
 
 # PQsetNoticeReceiver()
 AC_MSG_CHECKING([for PQsetNoticeReceiver() in libpq])

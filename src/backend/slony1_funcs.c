@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.6 2004-03-10 21:26:06 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.7 2004-03-12 23:17:31 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -18,7 +18,9 @@
 #include "commands/trigger.h"
 #include "access/xact.h"
 #include "utils/builtins.h"
+#ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
+#endif
 #include "mb/pg_wchar.h"
 
 
@@ -543,6 +545,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			 */
 			if (!old_isnull && !new_isnull)
 			{
+#ifdef HAVE_TYPCACHE
 				TypeCacheEntry *type_cache;
 
 				type_cache = lookup_type_cache(
@@ -551,6 +554,21 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				if (DatumGetBool(FunctionCall2(&(type_cache->eq_opr_finfo),
 							old_value, new_value)))
 					continue;
+#else
+				Oid			opr_proc;
+				FmgrInfo	opr_finfo;
+
+				opr_proc = compatible_oper_funcid(makeList1(makeString("=")),
+						SPI_gettypeid(tupdesc, i + 1),
+						SPI_gettypeid(tupdesc, i + 1), true);
+				if (!OidIsValid(opr_proc))
+					elog(ERROR, "Slony-I: failed to find '=' operator");
+
+				fmgr_info(opr_proc, &opr_finfo);
+				if (DatumGetBool(FunctionCall2(&opr_finfo,
+							old_value, new_value)))
+					continue;
+#endif
 			}
 
 			if (need_comma)

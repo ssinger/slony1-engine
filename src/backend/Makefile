@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.6 2004-03-12 17:26:55 wieck Exp $
+#	$Id: Makefile,v 1.7 2004-03-12 23:17:31 wieck Exp $
 # ----------
 
 subdir = src/backend
@@ -22,11 +22,16 @@ FUNCS_COMMON	= slony1_funcs.sql
 BASE_73			= slony1_base.v73.sql
 FUNCS_73		= slony1_funcs.v73.sql
 
+BASE_74			= slony1_base.v74.sql
+FUNCS_74		= slony1_funcs.v74.sql
+
 SQL_NAMES =				\
 	$(BASE_COMMON)		\
 	$(FUNCS_COMMON)		\
 	$(BASE_73)			\
-	$(FUNCS_73)
+	$(FUNCS_73)			\
+	$(BASE_74)			\
+	$(FUNCS_74)
 
 ALL = $(SQL_NAMES)		\
 	$(FUNCS_SONAME)

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.3 2004-03-12 17:26:55 wieck Exp $
+ *	$Id: slonik.c,v 1.4 2004-03-12 23:17:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -903,14 +903,17 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 
 	res = PQexec(adminfo->dbconn, dstring_data(&query));
 	dstring_free(&query);
-	if (PQresultStatus(res) != PGRES_COMMAND_OK &&
-		PQresultStatus(res) != PGRES_TUPLES_OK &&
-		PQresultStatus(res) != PGRES_EMPTY_QUERY)
+	rc = PQresultStatus(res);
+	if (rc != PGRES_COMMAND_OK &&
+		rc != PGRES_TUPLES_OK &&
+		rc != PGRES_EMPTY_QUERY &&
+		rc != PGRES_NONFATAL_ERROR)		/* for some reason, 7.3 does this */
 	{
-		printf("%s:%d: loading of file %s: %s %s",
+		printf("%s:%d: loading of file %s: %s %s%s",
 				stmt->stmt_filename, stmt->stmt_lno,
-				fnamebuf, PQresStatus(PQresultStatus(res)),
-				PQresultErrorMessage(res));
+				fnamebuf, PQresStatus(rc),
+				PQresultErrorMessage(res),
+				PQerrorMessage(adminfo->dbconn));
 		PQclear(res);
 		return -1;
 	}
@@ -962,9 +965,12 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 			switch (adminfo->version_minor)
 			{
 				case 3:
+					use_minor = 3;
+					break;
+
 				case 4:
 				case 5:
-					use_minor = 3;
+					use_minor = 4;
 					break;
 
 				default:
