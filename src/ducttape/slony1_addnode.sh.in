@@ -6,7 +6,7 @@
 #	the base schema and support functions into the database, and
 #	establish path and listen information for it.
 #
-# $Id: slony1_addnode.sh.in,v 1.4 2004-03-02 18:07:52 wieck Exp $
+# $Id: slony1_addnode.sh.in,v 1.5 2004-03-03 21:52:46 wieck Exp $
 # ----------------------------------------------------------------------
 
 # ----
@@ -124,7 +124,11 @@ echo ""
 # ----
 err=1
 case $base_version in
-	7.3|7.4|7.5)	#
+	7.3)		echo "pg_dump for 7.3 is useless ... this utility needs to be redone for 7.3"
+				exit -1
+
+				;;
+	7.4|7.5)	#
 				# Extract the current cluster config from PrimaryNode
 				#
 				echo "Extracting cluster configuration from node $PrimayNode"

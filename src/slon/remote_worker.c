@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.11 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: remote_worker.c,v 1.12 2004-03-03 21:52:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1479,7 +1479,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	PGresult	   *res2;
 	PGresult	   *res3;
 	int				rc;
-	char		   *copydata = NULL;
 	int				set_origin = 0;
 	SlonNode	   *sub_node;
 	int				sub_provider = 0;
@@ -1489,6 +1488,12 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	char		   *ssy_xip = NULL;
 	SlonDString		ssy_action_list;
 	char			seqbuf[64];
+#ifdef HAVE_PQPUTCOPYDATA
+	char		   *copydata = NULL;
+#else
+	char			copybuf[8192];
+	int				copydone;
+#endif
 
 	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
 
@@ -1686,7 +1691,12 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 					node->no_id, dstring_data(&query1),
 					PQresultErrorMessage(res2),
 					PQerrorMessage(pro_dbconn));
+#ifdef HAVE_PQPUTCOPYDATA
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
+#else
+			PQputline(loc_dbconn, "\\.\n");
+			PQendcopy(loc_dbconn);
+#endif
 			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
@@ -1698,6 +1708,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		/*
 		 * Copy the data over
 		 */
+#ifdef HAVE_PQPUTCOPYDATA
 		while ((rc = PQgetCopyData(pro_dbconn, &copydata, 0)) > 0)
 		{
 			int		len = strlen(copydata);
@@ -1788,8 +1799,107 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			dstring_free(&query1);
 			return -1;
 		}
-		PQclear(res2);
+#else /* ! HAVE_PQPUTCOPYDATA */
+		copydone = false;
+		while (!copydone)
+		{
+			rc = PQgetline(pro_dbconn, copybuf, sizeof(copybuf));
 
+			if (copybuf[0] == '\\' &&
+				copybuf[1] == '.' &&
+				copybuf[2] == '\0')
+			{
+				copydone = true;
+			}
+			else
+			{
+				switch(rc)
+				{
+					case EOF:
+						copydone = true;
+						break;
+					case 0:
+						PQputline(loc_dbconn, copybuf);
+						PQputline(loc_dbconn, "\n");
+						break;
+					case 1:
+						PQputline(loc_dbconn, copybuf);
+						break;
+						
+				}
+			}
+		}
+		PQputline(loc_dbconn, "\n\\.\n");
+
+		/*
+		 * End the COPY to stdout on the provider
+		 */
+		if (PQendcopy(pro_dbconn) != 0)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"PGendcopy() on provider%s",
+					node->no_id, PQerrorMessage(pro_dbconn)); 
+			PQclear(res3);
+			PQendcopy(loc_dbconn);
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		PQclear(res3);
+
+		/*
+		 * Check that the COPY to stdout on the provider node
+		 * finished successful.
+		 */
+		res3 = PQgetResult(pro_dbconn);
+		if (PQresultStatus(res3) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"copy to stdout on provider - %s %s",
+					node->no_id, PQresStatus(PQresultStatus(res3)),
+					PQresultErrorMessage(res3));
+			PQclear(res3);
+			PQendcopy(loc_dbconn);
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		PQclear(res3);
+
+		/*
+		 * End the COPY from stdin on the local node with success
+		 */
+		if (PQendcopy(loc_dbconn) != 0)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"PGendcopy() on local DB%s",
+					node->no_id, PQerrorMessage(loc_dbconn)); 
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		res2 = PQgetResult(loc_dbconn);
+		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"copy from stdin on local node - %s %s",
+					node->no_id, PQresStatus(PQresultStatus(res2)),
+					PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+#endif /* HAVE_PQPUTCOPYDATA */
+
+		PQclear(res2);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				INT64_FORMAT " bytes copied for table %s\n",
 				node->no_id, copysize, tab_fqname);

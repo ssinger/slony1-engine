@@ -1201,6 +1201,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+ac_config_headers="$ac_config_headers config.h"
+
 ac_aux_dir=
 for ac_dir in config $srcdir/config; do
   if test -f $ac_dir/install-sh; then
@@ -1226,8 +1228,6 @@ ac_config_guess="$SHELL $ac_aux_dir/config.guess"
 ac_config_sub="$SHELL $ac_aux_dir/config.sub"
 ac_configure="$SHELL $ac_aux_dir/configure" # This should be Cygnus configure.
 
-
-ac_config_headers="$ac_config_headers config.h"
 
 
 
@@ -2247,9 +2247,117 @@ fi
 PGHOME=$pghome
 
 
+# ----
+# Check if our libpq contains several functions
+# ----
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="-I${pghome}/include $CFLAGS"
+LIBS="-L${pghome}/lib -lpq $LIBS"
+
+# PQfreemem()
+echo "$as_me:$LINENO: checking for PQfreemem() in libpq" >&5
+echo $ECHO_N "checking for PQfreemem() in libpq... $ECHO_C" >&6
+have_pqfreemem=no
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <libpq-fe.h>
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+PQfreemem(NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  have_pqfreemem=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $have_pqfreemem" >&5
+echo "${ECHO_T}$have_pqfreemem" >&6
+if test $have_pqfreemem = yes ; then
+	cat >>confdefs.h <<\_ACEOF
+#define HAVE_PQFREEMEM 1
+_ACEOF
+
+fi
+
+# PQputCopyData()
+echo "$as_me:$LINENO: checking for PQputCopyData() in libpq" >&5
+echo $ECHO_N "checking for PQputCopyData() in libpq... $ECHO_C" >&6
+have_pqputcopydata=no
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <libpq-fe.h>
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+PQputCopyData(NULL,NULL,0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  have_pqputcopydata=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $have_pqputcopydata" >&5
+echo "${ECHO_T}$have_pqputcopydata" >&6
+if test $have_pqputcopydata = yes ; then
+	cat >>confdefs.h <<\_ACEOF
+#define HAVE_PQPUTCOPYDATA 1
+_ACEOF
+
+fi
+
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
 
 # Checks for typedefs, structures, and compiler characteristics.
-
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

@@ -6,14 +6,14 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.7 2004-03-02 21:49:13 wieck Exp $
+# $Id: configure.ac,v 1.8 2004-03-03 21:52:46 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
 AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
+AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADER([config.h])
 AC_PREFIX_DEFAULT(/usr/local/pgsql)
 
 AC_CANONICAL_HOST
@@ -74,6 +74,38 @@ if test ! -f "$pghome/include/server/executor/spi.h" ; then
 fi
 AC_SUBST(PGHOME, $pghome)
 
+# ----
+# Check if our libpq contains several functions
+# ----
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="-I${pghome}/include $CFLAGS"
+LIBS="-L${pghome}/lib -lpq $LIBS"
+
+# PQfreemem()
+AC_MSG_CHECKING([for PQfreemem() in libpq])
+have_pqfreemem=no
+AC_TRY_LINK([#include <libpq-fe.h>],
+	   [PQfreemem(NULL);],
+	   [have_pqfreemem=yes])
+AC_MSG_RESULT($have_pqfreemem)
+if test $have_pqfreemem = yes ; then
+	AC_DEFINE(HAVE_PQFREEMEM,1,)
+fi
+
+# PQputCopyData()
+AC_MSG_CHECKING([for PQputCopyData() in libpq])
+have_pqputcopydata=no
+AC_TRY_LINK([#include <libpq-fe.h>],
+	   [PQputCopyData(NULL,NULL,0);],
+	   [have_pqputcopydata=yes])
+AC_MSG_RESULT($have_pqputcopydata)
+if test $have_pqputcopydata = yes ; then
+	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
+fi
+
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile.in,v 1.1 2004-03-02 15:07:46 wieck Exp $
+#	$Id: Makefile.in,v 1.2 2004-03-03 21:52:46 wieck Exp $
 # ----------
 
 subdir = src/slon
@@ -13,7 +13,7 @@ include $(top_builddir)/Makefile.global
 
 CC = @PTHREAD_CC@
 CFLAGS += -g @PTHREAD_CFLAGS@
-LDFLAGS += -g @PTHREAD_CFLAGS@
+LDFLAGS += -g @PTHREAD_CFLAGS@ $(rpath)
 LIBS = @PTHREAD_LIBS@ $(LIBS)
 
 PROG		= slon
