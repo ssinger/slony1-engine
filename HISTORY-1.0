@@ -1,13 +1,21 @@
-1.0.2	(not released yet)
+1.0.2	Bugfix and 8.0 compatibility release
 
   date: 2004/07/09 13:43:09;  author: wieck;
   Fixed bug causing subscription information not to be copied
   correctly on node initialization.
 
-  date: 2004/07/09 15:42:59;  author: wieck;  state: Exp;  lines: +32 -5
+  date: 2004/07/09 15:42:59;  author: wieck;
   Fixed bug. If the event flow configured via listen is different
   from the data flow configured via subscribe set, then the new
   subscriber never started to copy the data.
+
+  date: 2004/07/31 05:10:16;  author: wieck;
+  Don't check for sync status on copy set if copying from the origin.
+
+  date: 2004/08/04 19:58:36;  author: darcyb;
+  PostgreSQL 7.5 has been renamed to 8.0, make it so that we pass
+  8.0 version checks
+
 
 1.0.1	Bugfix release
 
