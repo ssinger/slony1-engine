@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.13 2004-03-10 20:50:57 wieck Exp $
+ *	$Id: runtime_config.c,v 1.14 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -319,6 +319,64 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 		free(node->pa_conninfo);
 	node->pa_conninfo  = strdup(pa_conninfo);
 	node->pa_connretry = pa_connretry;
+
+	rtcfg_unlock();
+	rtcfg_seq_bump();
+
+	/*
+	 * Eventually start communicating with that node
+	 */
+	rtcfg_startStopNodeThread(node);
+}
+
+
+/* ----------
+ * rtcfg_dropPath
+ * ----------
+ */
+void
+rtcfg_dropPath(int pa_server)
+{
+	SlonNode	   *node;
+	SlonListen	   *listen;
+
+	rtcfg_lock();
+
+	node = rtcfg_findNode(pa_server);
+	if (!node)
+	{
+
+		rtcfg_unlock();
+
+		slon_log(SLON_WARN, 
+				"dropPath: unknown node ID %d\n", pa_server);
+
+		return;
+	}
+
+	/*
+	 * Drop all listen information as well
+	 * at this provider. Without a path we
+	 * cannot listen.
+	 */
+	while (node->listen_head != NULL)
+	{
+		listen = node->listen_head;
+
+		DLLIST_REMOVE(node->listen_head, node->listen_tail, listen);
+		free(listen);
+	}
+
+	/*
+	 * Remove the conninfo.
+	 */
+	slon_log(SLON_CONFIG,
+			"dropPath: pa_server=%d pa_client=%d\n",
+			pa_server, rtcfg_nodeid);
+	if (node->pa_conninfo != NULL)
+		free(node->pa_conninfo);
+	node->pa_conninfo  = NULL;
+	node->pa_connretry = 0;
 
 	rtcfg_unlock();
 	rtcfg_seq_bump();

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.12 2004-03-11 22:00:45 wieck Exp $
+ *	$Id: local_listen.c,v 1.13 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -220,6 +220,20 @@ localListenThread_main(void *dummy)
 
 				if (pa_client == rtcfg_nodeid)
 					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+			}
+			else if (strcmp(ev_type, "DROP_PATH") == 0)
+			{
+				/*
+				 * DROP_PATH
+				 */
+				int		pa_server;
+				int		pa_client;
+
+				pa_server	= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				pa_client	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+
+				if (pa_client == rtcfg_nodeid)
+					rtcfg_dropPath(pa_server);
 			}
 			else if (strcmp(ev_type, "STORE_LISTEN") == 0)
 			{

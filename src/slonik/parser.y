@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.2 2004-03-11 23:26:12 wieck Exp $
+ *	$Id: parser.y,v 1.3 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -117,6 +117,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
 %type <statement>	stmt_store_path
+%type <statement>	stmt_drop_path
 %type <statement>	stmt_store_listen
 %type <statement>	stmt_drop_listen
 %type <statement>	stmt_create_set
@@ -148,6 +149,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_ERROR
 %token	K_EVENT
 %token	K_EXIT
+%token	K_FALSE
 %token	K_FORWARD
 %token	K_FULL
 %token	K_ID
@@ -157,6 +159,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_NAME
 %token	K_NO
 %token	K_NODE
+%token	K_OFF
 %token	K_ON
 %token	K_ORIGIN
 %token	K_PATH
@@ -171,6 +174,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
 %token	K_TABLE
+%token	K_TRUE
 %token	K_TRY
 %token	K_YES
 
@@ -305,6 +309,8 @@ try_stmt			: stmt_echo
 					| stmt_store_node
 						{ $$ = $1; }
 					| stmt_store_path
+						{ $$ = $1; }
+					| stmt_drop_path
 						{ $$ = $1; }
 					| stmt_store_listen
 						{ $$ = $1; }
@@ -474,6 +480,34 @@ stmt_store_path		: lno K_STORE K_PATH option_list
 							new->pa_client		= opt[1].ival;
 							new->pa_conninfo	= opt[2].str;
 							new->pa_connretry	= opt[3].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_drop_path		: lno K_DROP K_PATH option_list
+					{
+						SlonikStmt_drop_path *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_SERVER, -1 ),
+							STMT_OPTION_INT( O_CLIENT, -1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_drop_path *)
+								malloc(sizeof(SlonikStmt_drop_path));
+						memset(new, 0, sizeof(SlonikStmt_drop_path));
+						new->hdr.stmt_type		= STMT_DROP_PATH;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->pa_server		= opt[0].ival;
+							new->pa_client		= opt[1].ival;
+							new->ev_origin		= opt[2].ival;
 						}
 
 						$$ = (SlonikStmt *)new;
@@ -786,7 +820,7 @@ option_item_literal	: literal
 					}
 					;
 
-option_item_yn		: K_YES
+option_item_yn		: option_item_yn_yes
 					{
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -798,7 +832,7 @@ option_item_yn		: K_YES
 
 						$$ = new;
 					}
-					| K_NO
+					| option_item_yn_no
 					{
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -810,6 +844,16 @@ option_item_yn		: K_YES
 
 						$$ = new;
 					}
+					;
+
+option_item_yn_yes	: K_YES
+					| K_ON
+					| K_TRUE
+					;
+
+option_item_yn_no	: K_NO
+					| K_OFF
+					| K_FALSE
 					;
 
 id					: T_NUMBER

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.25 2004-03-13 21:53:21 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.26 2004-03-15 20:08:10 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -530,9 +530,47 @@ as '
 declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
+	v_row			record;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropPath() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- There should be no existing subscriptions. Auto unsubscribing
+	-- is considered too dangerous. 
+	-- ----
+	for v_row in select sub_set, sub_provider, sub_receiver
+			from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_pa_server
+			and sub_receiver = p_pa_client
+	loop
+		raise exception 
+			''Slony-I: Path cannot be dropped, subscription of set % needs it'',
+			v_row.sub_set;
+	end loop;
+
+	-- ----
+	-- Drop all sl_listen entries that depend on this path
+	-- ----
+	for v_row in select li_origin, li_provider, li_receiver
+			from @NAMESPACE@.sl_listen
+			where li_provider = p_pa_server
+			and li_receiver = p_pa_client
+	loop
+		perform @NAMESPACE@.dropListen(
+				v_row.li_origin, v_row.li_provider, v_row.li_receiver);
+	end loop;
+
+	-- ----
+	-- Now drop the path and create the event
+	-- ----
+	perform @NAMESPACE@.dropPath_int(p_pa_server, p_pa_client);
+	perform @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
+			p_pa_server, p_pa_client);
+
+	return 0;
 end;
 ' language plpgsql;
 
@@ -549,8 +587,36 @@ declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropPath_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Remove any dangling sl_listen entries with the server
+	-- as provider and the client as receiver. This must have
+	-- been cleared out before, but obviously was not.
+	-- ----
+	delete from @NAMESPACE@.sl_listen
+			where li_provider = p_pa_server
+			and li_receiver = p_pa_client;
+
+	-- ----
+	-- Same with subscriptions
+	-- ----
+	delete from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_pa_server
+			and sub_receiver = p_pa_client;
+
+	delete from @NAMESPACE@.sl_path
+			where pa_server = p_pa_server
+			and pa_client = p_pa_client;
+
+	if found then
+		return 1;
+	else
+		return 0;
+	end if;
 end;
 ' language plpgsql;
 

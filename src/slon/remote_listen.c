@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.9 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: remote_listen.c,v 1.10 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -120,10 +120,11 @@ remoteListenThread_main(void *cdata)
 			 */
 			if (conn != NULL)
 			{
-				if (strcmp(conn_conninfo, node->pa_conninfo) != 0)
+				if (node->pa_conninfo == NULL || 
+						strcmp(conn_conninfo, node->pa_conninfo) != 0)
 				{
 					slon_log(SLON_DEBUG1,
-							"remoteListenThread_$d: "
+							"remoteListenThread_%d: "
 							"disconnecting from '%s'\n",
 							node->no_id, conn_conninfo);
 					slon_disconnectdb(conn);

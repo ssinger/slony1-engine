@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.24 2004-03-15 00:28:30 wieck Exp $
+ *	$Id: remote_worker.c,v 1.25 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -503,6 +503,19 @@ remoteWorkerThread_main(void *cdata)
 						"select %s.storePath_int(%d, %d, '%q', %d); ",
 						rtcfg_namespace,
 						pa_server, pa_client, pa_conninfo, pa_connretry);
+			}
+			else if (strcmp(event->ev_type, "DROP_PATH") == 0)
+			{
+				int		pa_server = (int) strtol(event->ev_data1, NULL, 10);
+				int		pa_client = (int) strtol(event->ev_data2, NULL, 10);
+
+				if (pa_client == rtcfg_nodeid)
+					rtcfg_dropPath(pa_server);
+
+				slon_appendquery(&query1,
+						"select %s.dropPath_int(%d, %d); ",
+						rtcfg_namespace,
+						pa_server, pa_client);
 			}
 			else if (strcmp(event->ev_type, "STORE_LISTEN") == 0)
 			{

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.5 2004-03-13 03:20:12 wieck Exp $
+ *	$Id: slonik.c,v 1.6 2004-03-15 20:08:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -302,6 +302,35 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (script_check_adminfo(hdr, stmt->pa_client) < 0)
 						errors++;
 
+				}
+				break;
+
+			case STMT_DROP_PATH:
+				{
+					SlonikStmt_drop_path *stmt =
+							(SlonikStmt_drop_path *)hdr;
+
+					if (stmt->ev_origin < 0)
+						stmt->ev_origin = stmt->pa_client;
+
+					if (stmt->pa_server < 0)
+					{
+						printf("%s:%d: Error: "
+								"server must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (stmt->pa_client < 0)
+					{
+						printf("%s:%d: Error: "
+								"client must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
 				}
 				break;
 
@@ -617,6 +646,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_store_path *)hdr;
 
 					if (slonik_store_path(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_PATH:
+				{
+					SlonikStmt_drop_path *stmt =
+							(SlonikStmt_drop_path *)hdr;
+
+					if (slonik_drop_path(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1361,6 +1400,36 @@ slonik_store_path(SlonikStmt_store_path *stmt)
 			stmt->hdr.script->clustername,
 			stmt->pa_server, stmt->pa_client, 
 			stmt->pa_conninfo, stmt->pa_connretry);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_drop_path(SlonikStmt_drop_path *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".dropPath(%d, %d); ",
+			stmt->hdr.script->clustername,
+			stmt->pa_server, stmt->pa_client);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
