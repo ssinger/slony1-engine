@@ -8,14 +8,22 @@ support functions, procedures and triggers.
 
 TODO:
 
+	slony1_base.sql
+
+		*	Change structures to enable logswitching
+
+
 	slony1_funcs.c
 
 		*	Add the C version of the log trigger
 
-	slony1_funcs.sqh
 
-		*	Convert all admin support procedures to their
-			final versions.
+	slony1_funcs.sql
 
+		*	resetLocalNode() - not implemented yet
+		*	dropNode() - to be added
+		*	dropNode_int() - to be added
+
+		*	storePath() ff. - overhaul from prototype
 
 		
