@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.17 2004-05-27 18:07:47 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.18 2004-07-17 18:33:15 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -48,6 +48,9 @@ Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum           _Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum           _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
 
+#ifdef CYGWIN
+extern DLLIMPORT Node *newNodeMacroHolder;
+#endif
 
 #define PLAN_NONE			0
 #define	PLAN_NOTIFY_EVENT	(1 << 0)
