@@ -83,17 +83,120 @@
 
      <para> Those commands are grouped together into one transaction
       per participating node. </para>
-<!-- ************************************************************ --></sect3></sect2></sect1></article>
+<!-- ************************************************************ -->
+
+ <reference id="metacmds">
+  <title>Slonik Meta Commands</title>
+  <partintro>
+   <para>
+     The following commands may be used to somewhat abstract the
+     definitions of components of Slonik scripts; <xref
+     linkend="stmtinclude"> grouping configuration into central files
+     that may be reused, and <xref linkend="stmtdefine"> allowing
+     mnemonic identifiers to replace cryptic numeric object IDs.
+   </para>
+  </partintro>
+  <!-- **************************************** -->
+  <refentry id ="stmtinclude"><refmeta><refentrytitle>INCLUDE</refentrytitle> </refmeta>
+   
+   <refnamediv><refname>INCLUDE</refname>
+    
+    <refpurpose> pulling in slonik code from another file </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>include </command>
+     <arg><replaceable class="parameter"> &lt;pathname&gt;</replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+      This draws the specified slonik script inline into the present
+      script.  If the <option>pathname</option> specifies a relative
+      path, <xref linkend="slonik"> will search relative to the
+      current working directory.
+    </para>
+
+    <para>
+      Nested include files are supported.  The scanner and parser
+      report the proper file names and line numbers when they run into
+      an error.  </para>
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+     include &lt;/tmp/preamble.slonik&gt;;
+    </programlisting>
+   </refsect1>
+  </refentry>
+  <!-- **************************************** -->
+  <refentry id ="stmtdefine"><refmeta><refentrytitle>DEFINE</refentrytitle> </refmeta>
+   
+   <refnamediv><refname>DEFINE</refname>
+    
+    <refpurpose> Defining a named symbol </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>define </command>
+     <arg><replaceable class="parameter"> name </replaceable></arg>
+     <arg><replaceable class="parameter"> value </replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+      This defines a named symbol.  Symbol names must follow the
+      slonik rules for constructing identifiers, by starting with a
+      letter, followed by letters, numbers, and underscores.
+    </para>
+
+    <para>
+      Symbol values may contain spaces and may recursively contain
+      symbol references.
+    </para>
+
+    <para>
+      Symbols are referenced by using a <quote>@</quote> followed by
+      the symbol name.  Note that symbol referencing is suppressed
+      inside string literals.
+    </para>
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+define    cluster movies;
+define    sakai   1;
+define    chen    2;
+define    fqn     fully qualified name;
+
+cluster name = @cluster;
+node @sakai admin conninfo = 'service=sakai-replication';
+node @chen  admin conninfo = 'service=chen-replication';
+define setMovies    id = 1;
+define sakaiMovies  @setMovies, origin = @sakai;
+
+create set ( @sakaiMovies, comment = 'movies' );
+
+set add table( set @sakaiMovies, id = 1, @fqn = 'public.customers', comment = 'sakai customers' );
+set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',     comment = 'sakai tapes' );
+echo 'But @sakaiMovies will display as a string, and is not expanded';
+    </programlisting>
+   </refsect1>
+  </refentry>
+
+ </reference>  
+  
+<!-- **************************************** -->
 
  <reference id="hdrcmds"> 
   <title>Slonik Preamble Commands</title>
   <partintro>
    <para>
-    The following commands must appear as a
-    <quote>preamble</quote> at the very top of every
-    <application>slonik</application> command script. They do not
-    cause any direct action on any of the nodes in the replication
-    system, but affect the execution of the entire script.
+    The following commands must appear as a <quote>preamble</quote> at
+    the beginning of each <application>slonik</application> command
+    script. They do not cause any direct action on any of the nodes in
+    the replication system, but affect the execution of the entire
+    script.
    </para>
   </partintro>
   <!-- **************************************** -->

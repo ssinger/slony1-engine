@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.7 2005-02-24 19:35:32 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.8 2005-03-07 19:31:02 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -32,8 +32,9 @@ likely access a particular server via the same host name or IP
 address.</para></listitem>
 
 <listitem><para> Users seem interested in wrapping everything possible
-in <command>TRY</command> blocks, which is regrettably
-<emphasis>less</emphasis> useful than might be imagined...</para></listitem>
+in <command>TRY</command> blocks, which is regrettably somewhat
+<emphasis>less</emphasis> useful than might be
+hoped...</para></listitem>
 
 </itemizedlist></para>
 
@@ -43,11 +44,9 @@ as:
 <itemizedlist>
 <listitem><para> Named nodes, named sets</para>
 
-<para> Unfortunately, the use of naming nearly turns into a need for
-an <quote>ESP protocol</quote>, as <application>slonik</application>
-would need to <emphasis>start</emphasis> by determining the (possibly
-in flux) set of mappings between node names and node
-IDs. </para></listitem>
+<para> This is supported by the (new in 1.1) <xref
+linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
+</para></listitem>
 
 <listitem><para> Looping and control constructs</para>
 
@@ -64,10 +63,6 @@ been seen <quote>in the wild</quote>:
 
 <itemizedlist>
 
-<listitem><para> Some sort of text rewriting system such as M4 may be
-used to map mnemonic object names onto the perhaps-less-intuitive
-numeric arrangement.</para></listitem>
-
 <listitem><para> Embedding generation of slonik inside shell
 scripts</para>
 
@@ -82,111 +77,6 @@ walks through the Perl objects as needed to satisfy whatever it is
 supposed to do.  </para></listitem>
 
 </itemizedlist>
-
-<sect1 id="slonikm4"><title> Using m4 to rewrite slonik scripts </title>
-
-<para> This needs to be prefaced with something of a warning, from the
-GNU M4 documentation:
-
-<warning><para> Some people found `m4' to be fairly addictive. They
-first use `m4' for simple problems, then take bigger and bigger
-challenges, learning how to write complex `m4' sets of macros along
-the way. Once really addicted, users pursue writing of sophisticated
-`m4' applications even to solve simple problems, devoting more time
-debugging their `m4' scripts than doing real work. Beware that `m4'
-may be dangerous for the health of compulsive
-programmers.</para></warning></para>
-
-<para> This being said, <application>m4</application> has three
-significant merits over other text rewriting systems (such as
-<application>cpp</application>, the C preprocessor):
-
-<itemizedlist>
-
-<listitem><para> Like slonik, m4 uses <quote>#</quote> to indicate
-comments, with the result that it may be quietly used to do rewrites
-on slonik scripts.</para>
-
-<para> Using <application>cpp</application> would require changing
-over to use C or C++ style comments.</para></listitem>
-
-<listitem><para> <application> m4 </application> is reasonably
-ubiquitous, being available in environments like
-<productname>Solaris</productname> and <productname>AIX</productname>
-even when they do not have compiler tools for C available.  Its
-presence is commonly mandated by the presence of
-<productname>Sendmail</productname>.
-</para></listitem>
-
-<listitem><para> A <emphasis>potential</emphasis> merit over
-<application>cpp</application> is that <application> m4</application>
-can do more than just rewrite symbols.  It has control structures, can
-store data in variables, and can loop.</para>
-
-<para> Of course, down that road lies the addictions warned of above,
-as well as the complexity challenges of
-<filename>sendmail.cf</filename>.  As soon as you discover you need
-things like loops and variables, it is quite likely that you want to
-write a slonik generator in your favorite scripting language, whether
-that be Bourne Shell, Perl, or Tcl.  Fans of more esoteric languages like
-Icon, Snobol, or Scheme will have to fight their own battles to get
-those deemed to be reasonable choices for <quote>best
-practices.</quote></para></listitem>
-</itemizedlist></para>
-
-<sect2><title> An m4 example </title>
-
-<para> Without further ado, here is an example where you set up a
-central file, <filename> cluster.m4 </filename> containing some M4
-rewrite rules:
-<programlisting>
-define(`node_srvrds005', `1')
-define(`node_srvrds004', `4')
-define(`node_srvrds003', `3')
-define(`node_srvrds007', `78')
-define(`ds501', `501')
-</programlisting></para>
-
-<para> In view of those node name definitions, you may write a Slonik
-script to initialize the cluster as follows, <filename>setup_cluster.slonik</filename>:
-
-<programlisting>
-node node_srvrds005 admin conninfo 'dsn=foo';
-node node_srvrds004 admin conninfo 'dsn=bar';
-node node_srvrds003 admin conninfo 'dsn=foo';
-node node_srvrds007 admin conninfo 'dsn=foo';
-node ds501 admin conninfo 'dsn=foo';
-
-create cluster	info (id=node_srvrds005);
-store node (id=node_srvrds004, comment='Node on ds004', spool='f');
-store node (id=node_srvrds003, comment='Node on ds003', spool='f');
-store node (id=node_srvrds007, comment='Node on ds007', spool='t');
-store node (id=ds501, comment='Node on ds-501', spool='f');
-</programlisting></para>
-
-<para> You then run the rewrite rules on the script, thus:</para>
-<para>
-<command> % m4 cluster.m4 setup_cluster.slonik </command></para>
-<para> And receive the following output:
-<programlisting>
-node 1 admin conninfo 'dsn=foo';
-node 4 admin conninfo 'dsn=bar';
-node 3 admin conninfo 'dsn=foo';
-node 78 admin conninfo 'dsn=foo';
-node 501 admin conninfo 'dsn=foo';
-
-create cluster  info (id=1);
-store node (id=4, comment='Node on ds004', spool='f');
-store node (id=3, comment='Node on ds003', spool='f');
-store node (id=78, comment='Node on ds007', spool='t');
-store node (id=501, comment='Node on ds-501', spool='f');
-</programlisting></para>
-
-<para> This makes no attempt to do anything <quote>smarter</quote>,
-such as to try to create the nodes via a loop that maps across a list
-of nodes.  As mentioned earlier, if you wish to do such things, it is
-highly preferable to do this by using a scripting language like the
-Bourne Shell or Perl.
 
 <sect1 id="slonikshell"><title> Embedding Slonik in Shell Scripts </title>
 
@@ -251,9 +141,13 @@ node 2 admin conninfo = 'dbname=$DB2';
 
 <para> The <envar>PREAMBLE</envar> value could then be reused over and
 over again if the shell script invokes <command>slonik</command>
-multiple times. </para>
+multiple times.  You might also consider using <xref
+linkend="stmtinclude"> and place the preamble in a file that is
+<command>include</command>d.
+ </para>
 
-<para> It also becomes simple to assign names to sets and nodes:
+<para> Shell variables provide a simple way to assign names to sets
+and nodes:
 
 <programlisting>
 origin=1
@@ -331,22 +225,29 @@ examples you'll find in <quote>real life.</quote></para>
 scripting language supports things like:
 
 <itemizedlist>
-<listitem><para> <quote>Record</quote> data structures that allow assigning things in parallel</para></listitem>
-<listitem><para> Functions, procedures, or subroutines, allowing you to implement
-useful functionality once, and then refer to it multiple times within a script</para></listitem>
-<listitem><para> Some sort of <quote>module import</quote> system so that common functionality
-can be shared across many scripts</para></listitem>
+
+<listitem><para> <quote>Record</quote> data structures that allow
+assigning things in parallel</para></listitem>
+
+<listitem><para> Functions, procedures, or subroutines, allowing you
+to implement useful functionality once, and then refer to it multiple
+times within a script</para></listitem>
+
+<listitem><para> Some sort of <quote>module import</quote> system so
+that common functionality can be shared across many
+scripts</para></listitem>
+
 </itemizedlist></para>
 
 <para> If you can depend on having <ulink
-	url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
-	url="http://www.zsh.org/"> zsh</ulink>, or <ulink
-	url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
+url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
+url="http://www.zsh.org/"> zsh</ulink>, or <ulink
+url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
 those are all shells with extensions supporting reasonably
 sophisticated data structures and module systems.  On Linux, Bash is
-fairly ubiquitous; on commercial <trademark>UNIX</trademark>, Korn shell is
-fairly ubiquitous; on BSD, <quote>sophisticated</quote> shells are an
-option rather than a default.</para>
+fairly ubiquitous; on commercial <trademark>UNIX</trademark>, Korn
+shell is fairly ubiquitous; on BSD, <quote>sophisticated</quote>
+shells are an option rather than a default.</para>
 
 <para> At that point, it makes sense to start looking at other
 scripting languages, of which Perl is the most ubiquitous, being

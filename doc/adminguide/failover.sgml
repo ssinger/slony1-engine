@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.13 2005-03-07 19:31:02 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 
@@ -60,8 +60,9 @@ subscriber, actively replicating the set.  So the two nodes have
 switched roles completely.</para></listitem>
 
 <listitem><para> After reconfiguring the web application (or
-<application>pgpool</application>) to connect to the database on node2, the web
-server is restarted and resumes normal operation.</para>
+<application><link linkend="pgpool"> pgpool </link></application>) to
+connect to the database on node2, the web server is restarted and
+resumes normal operation.</para>
 
 <para> Done in one shell script, that does the application shutdown,
 <application>slonik</application>, move config files and startup all
