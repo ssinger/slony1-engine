@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.17 2004-08-04 15:53:26 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.18 2004-08-04 15:58:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1408,7 +1408,7 @@ begin
 			p_set_id, v_local_node_id, p_set_comment);
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.store_set(int4, text) is
+comment on function @NAMESPACE@.storeSet(int4, text) is
 'Generate STORE_SET event for set set_id with human readable comment set_comment';
 
 -- ----------------------------------------------------------------------
@@ -1873,7 +1873,7 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.moveSet_int(int4, int4) is 
+comment on function @NAMESPACE@.moveSet_int(int4, int4, int4) is 
 'moveSet(set_id, old_origin, new_origin)
 
 Process MOVE_SET event to request that the origin for set set_id be
