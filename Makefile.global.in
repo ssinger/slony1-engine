@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.21 2004-12-22 02:15:49 darcyb Exp $
+# $Id: Makefile.global.in,v 1.22 2005-01-26 18:28:37 darcyb Exp $
 # ----------
 
 #location subsitutions
@@ -43,17 +43,20 @@ PTHREAD_LIBS=		@PTHREAD_LIBS@
 
 # Documentation
 
-JADE    = @JADE@
-NSGMLS  = @NSGMLS@
-SGMLSPL = @SGMLSPL@
-PS2PDF  = @PS2PDF@
-DJPEG   = @DJPEG@
-GROFF	= @GROFF@
-PNMTOPS = @PNMTOPS@
-TAR	= @TAR@
-DOCBOOKSTYLE = @DOCBOOKSTYLE@
-COLLATEINDEX = @COLLATEINDEX@
-PGAUTODOC = @PGAUTODOC@
+JADE=			@JADE@
+NSGMLS=			@NSGMLS@
+SGMLSPL=		@SGMLSPL@
+PS2PDF=			@PS2PDF@
+DJPEG=			@DJPEG@
+GROFF=			@GROFF@
+PNMTOPS=		@PNMTOPS@
+TAR=			@TAR@
+DOCBOOKSTYLE=		@DOCBOOKSTYLE@
+COLLATEINDEX=		@COLLATEINDEX@
+PGAUTODOC=		@PGAUTODOC@
+
+# support programs
+PERL=			@PERL@
 
 subdir=$(slony_subdir)
 
