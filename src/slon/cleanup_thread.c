@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.12 2004-06-23 23:29:43 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.13 2004-06-28 15:44:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,7 +26,6 @@
 #include "c.h"
 
 #include "slon.h"
-
 
 
 /* ----------
@@ -50,6 +49,7 @@ cleanupThread_main(void *dummy)
 	struct timeval	tv_start;
 	struct timeval	tv_end;
 	int			n, t;
+	int			vac_count = 0;
 
 	slon_log(SLON_DEBUG1, "cleanupThread: thread starts\n");
 
@@ -93,7 +93,7 @@ cleanupThread_main(void *dummy)
 	/*
 	 * Loop until shutdown time arrived
 	 */
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 300000) == SCHED_STATUS_OK)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
@@ -179,22 +179,27 @@ cleanupThread_main(void *dummy)
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
 		 */
-		gettimeofday(&tv_start, NULL);
-		res = PQexec(dbconn, dstring_data(&query3));
-		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		if (++vac_count >= SLON_VACUUM_FREQUENCY)
 		{
-			slon_log(SLON_FATAL,
-					"cleanupThread: \"%s\" - %s",
-					dstring_data(&query3), PQresultErrorMessage(res));
+			vac_count = 0;
+
+			gettimeofday(&tv_start, NULL);
+			res = PQexec(dbconn, dstring_data(&query3));
+			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			{
+				slon_log(SLON_FATAL,
+						"cleanupThread: \"%s\" - %s",
+						dstring_data(&query3), PQresultErrorMessage(res));
+				PQclear(res);
+				slon_abort();
+				break;
+			}
 			PQclear(res);
-			slon_abort();
-			break;
+			gettimeofday(&tv_end, NULL);
+			slon_log(SLON_DEBUG2,
+					"cleanupThread: %8.3f seconds for vacuuming\n",
+					TIMEVAL_DIFF(&tv_start, &tv_end));
 		}
-		PQclear(res);
-		gettimeofday(&tv_end, NULL);
-		slon_log(SLON_DEBUG2,
-				"cleanupThread: %8.3f seconds for vacuuming\n",
-				TIMEVAL_DIFF(&tv_start, &tv_end));
 	}
 
 	/*

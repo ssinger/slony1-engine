@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.34 2004-06-21 21:42:56 wieck Exp $
+ *	$Id: slon.h,v 1.35 2004-06-28 15:44:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -36,6 +36,11 @@
 #define SLON_DATA_FETCH_SIZE		10
 #define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 50)
 #endif
+
+
+#define SLON_CLEANUP_SLEEP			600		/* sleep 10 minutes between */
+											/* cleanup calls */
+#define SLON_VACUUM_FREQUENCY		3		/* vacuum every 3rd cleanup */
 
 
 typedef enum {
