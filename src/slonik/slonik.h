@@ -6,17 +6,18 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.21 2004-12-02 21:43:18 wieck Exp $
+ *	$Id: slonik.h,v 1.22 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
 
-typedef struct SlonikScript_s					SlonikScript;
-typedef struct SlonikAdmInfo_s					SlonikAdmInfo;
-typedef struct SlonikStmt_s						SlonikStmt;
-typedef struct SlonikStmt_try_s					SlonikStmt_try;
-typedef struct SlonikStmt_echo_s				SlonikStmt_echo;
-typedef struct SlonikStmt_exit_s				SlonikStmt_exit;
+typedef struct SlonikScript_s				SlonikScript;
+typedef struct SlonikAdmInfo_s				SlonikAdmInfo;
+typedef struct SlonikStmt_s				SlonikStmt;
+typedef struct SlonikStmt_try_s				SlonikStmt_try;
+typedef struct SlonikStmt_echo_s			SlonikStmt_echo;
+typedef struct SlonikStmt_exit_s			SlonikStmt_exit;
+typedef struct SlonikStmt_repair_config_s		SlonikStmt_repair_config;
 typedef struct SlonikStmt_restart_node_s		SlonikStmt_restart_node;
 typedef struct SlonikStmt_init_cluster_s		SlonikStmt_init_cluster;
 typedef struct SlonikStmt_store_node_s			SlonikStmt_store_node;
@@ -65,6 +66,7 @@ typedef enum {
 	STMT_MERGE_SET,
 	STMT_MOVE_SET,
 	STMT_RESTART_NODE,
+	STMT_REPAIR_CONFIG,
 	STMT_SET_ADD_SEQUENCE,
 	STMT_SET_ADD_TABLE,
 	STMT_SET_DROP_SEQUENCE,
@@ -143,6 +145,13 @@ struct SlonikStmt_exit_s {
 struct SlonikStmt_restart_node_s {
 	SlonikStmt			hdr;
 	int					no_id;
+};
+
+struct SlonikStmt_repair_config_s {
+        SlonikStmt                      hdr;
+        int                                     set_id;
+        int                                     ev_origin;
+        int                                     only_on_node;
 };
 
 

@@ -51,6 +51,7 @@
 		<li><a href="#stmt_failover">FAILOVER</a>
 		<li><a href="#stmt_ddl_script">EXECUTE SCRIPT</a>
 		<li><a href="#stmt_wait_event">WAIT FOR EVENT</a>
+		<li><a href="#stmt_repair_config">REPAIR CONFIG</a>
 	</ul>
 </ul>
 </div>
@@ -1747,6 +1748,54 @@ manual on how to configure and set up a replication system.
 </table>
 <h3>Example:</h3>
 <p>
+
+<!-- **************************************** -->
+<a name="stmt_repair_config">
+<h3>REINIT NODE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+        REPAIR CONFIG ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+        Resets the name to oid mapping, usefull for restoring after a pg_dump. 
+</p>
+<p>
+<table border="0" cellpadding="10">
+<tr>
+        <td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
+        <td align="left" valign="top"><p>
+                The unique, numeric ID number of the set affected by the script.
+        </p></td>
+</tr>
+<tr>
+        <td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+        <td align="left" valign="top"><p>
+                <b>(Optional)</b>
+                The ID of the current origin of the set.
+                The default value is 1.
+        </p></td>
+</tr>
+<tr>
+        <td align="left" valign="top" nowrap><b>EXECUTE ONLY ON = &lt;ival&gt;</b></td>
+        <td align="left" valign="top"><p>
+                <b>(Optional)</b>
+                The ID of the only node to actually update the mapping on.
+                The default is to execute this on all nodes that are
+                subscribed to the set.
+        </p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+        REPAIR CONFIG (
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;EVENT NODE = 2
+        <br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
 	WAIT FOR EVENT (
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = ALL,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;CONFIRMED = ALL,

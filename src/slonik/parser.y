@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.21 2004-12-02 21:43:18 wieck Exp $
+ *	$Id: parser.y,v 1.22 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -103,19 +103,19 @@ static int	assign_options(statement_option *so, option_list *ol);
  * Parser lval and types
  */
 %union {
-	int32			ival;
-	char		   *str;
-	option_list	   *opt_list;
-	SlonikAdmInfo  *adm_info;
-	SlonikStmt	   *statement;
+	int32		ival;
+	char		*str;
+	option_list	*opt_list;
+	SlonikAdmInfo	*adm_info;
+	SlonikStmt	*statement;
 }
 
 %type <ival>		id
 %type <ival>		lno
 %type <ival>		exit_code
-%type <str>			literal
-%type <str>			ident
-%type <str>			hdr_clustername
+%type <str>		literal
+%type <str>		ident
+%type <str>		hdr_clustername
 %type <adm_info>	hdr_admconninfos
 %type <adm_info>	hdr_admconninfo
 %type <statement>	stmts
@@ -157,6 +157,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_move_set
 %type <statement>	stmt_ddl_script
 %type <statement>	stmt_update_functions
+%type <statement>	stmt_repair_config
 %type <statement>	stmt_wait_event
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
@@ -178,6 +179,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_CLUSTERNAME
 %token	K_COMMENT
 %token	K_CONFIRMED
+%token	K_CONFIG
 %token	K_CONNINFO
 %token	K_CONNRETRY
 %token	K_CREATE
@@ -214,6 +216,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_PROVIDER
 %token	K_QUALIFIED
 %token	K_RECEIVER
+%token  K_REPAIR
 %token	K_RESTART
 %token	K_SCRIPT
 %token	K_SEQUENCE
@@ -467,6 +470,8 @@ try_stmt			: stmt_echo
 					| stmt_ddl_script
 						{ $$ = $1; }
 					| stmt_update_functions
+					| stmt_repair_config
+						{ $$ = $1; }
 						{ $$ = $1; }
 					| stmt_wait_event
 						{ $$ = $1; }
@@ -1375,6 +1380,36 @@ stmt_update_functions	: lno K_UPDATE K_FUNCTIONS option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
+stmt_repair_config		: lno K_REPAIR K_CONFIG option_list
+					{
+						SlonikStmt_repair_config *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_SET_ID, -1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_repair_config *)
+							malloc(sizeof(SlonikStmt_repair_config));
+						memset(new, 0, sizeof(SlonikStmt_repair_config));
+                                                new->hdr.stmt_type              = STMT_REPAIR_CONFIG;
+                                                new->hdr.stmt_filename  = current_file;
+                                                new->hdr.stmt_lno               = $1;
+
+                                                if (assign_options(opt, $4) == 0)
+						{
+							new->set_id		= opt[0].ival;
+							new->ev_origin		= opt[1].ival;
+							new->only_on_node	= opt[2].ival;
+						}
+						else
+						{
+							parser_errors++;
+						}
+                                                $$ = (SlonikStmt *)new;
+                                        }
+                                        ;
 
 stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 					{

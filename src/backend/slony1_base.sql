@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.24 2004-12-01 20:26:06 wieck Exp $
+-- $Id: slony1_base.sql,v 1.25 2004-12-13 22:08:49 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -93,6 +93,8 @@ comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'action list used du
 create table @NAMESPACE@.sl_table (
 	tab_id				int4,
 	tab_reloid			oid UNIQUE NOT NULL,
+	tab_relname			name NOT NULL,
+	tab_nspname			name NOT NULL,
 	tab_set				int4,
 	tab_idxname			name NOT NULL,
 	tab_altered			boolean NOT NULL,
@@ -107,6 +109,8 @@ create table @NAMESPACE@.sl_table (
 comment on table @NAMESPACE@.sl_table is 'Holds information about the tables being replicated.';
 comment on column @NAMESPACE@.sl_table.tab_id is 'Unique key for Slony-I to use to identify the table';
 comment on column @NAMESPACE@.sl_table.tab_reloid is 'The OID of the table in pg_catalog.pg_class.oid';
+comment on column @NAMESPACE@.sl_table.tab_relname is 'The name of the table in pg_catalog.pg_class.relname used to recover from a dump/restore cycle'; 
+comment on column @NAMESPACE@.sl_table.tab_nspname is 'The name of the schema in pg_catalog.pg_namespace.nspname used to recover from a dump/restore cycle'; 
 comment on column @NAMESPACE@.sl_table.tab_set is 'ID of the replication set the table is in';
 comment on column @NAMESPACE@.sl_table.tab_idxname is 'The name of the primary index of the table';
 comment on column @NAMESPACE@.sl_table.tab_altered is 'Has the table been modified for replication?';
@@ -138,6 +142,8 @@ comment on column @NAMESPACE@.sl_trigger.trig_tgname is 'Indicates the name of a
 create table @NAMESPACE@.sl_sequence (
 	seq_id				int4,
 	seq_reloid			oid UNIQUE NOT NULL,
+	seq_relname			name NOT NULL,
+	seq_nspname			name NOT NULL,
 	seq_set				int4,
 	seq_comment			text,
 
@@ -150,6 +156,8 @@ create table @NAMESPACE@.sl_sequence (
 comment on table @NAMESPACE@.sl_sequence is 'Similar to sl_table, each entry identifies a sequence being replicated.';
 comment on column @NAMESPACE@.sl_sequence.seq_id is 'An internally-used ID for Slony-I to use in its sequencing of updates';
 comment on column @NAMESPACE@.sl_sequence.seq_reloid is 'The OID of the sequence object';
+comment on column @NAMESPACE@.sl_sequence.seq_relname is 'The name of the sdequence in pg_catalog.pg_class.relname used to recover from a dump/restore cycle'; 
+comment on column @NAMESPACE@.sl_sequence.seq_nspname is 'The name of the schema in pg_catalog.pg_namespace.nspname used to recover from a dump/restore cycle'; 
 comment on column @NAMESPACE@.sl_sequence.seq_set is 'Indicates which replication set the object is in';
 comment on column @NAMESPACE@.sl_sequence.seq_comment is 'A human-oriented comment';
 
@@ -287,6 +295,7 @@ comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record
 				UNSUBSCRIBE_SET		=
 				DDL_SCRIPT			=
 				ADJUST_SEQ			=
+				RESET_CONFIG		=
 ';
 comment on column @NAMESPACE@.sl_event.ev_data1 is 'Data field containing an argument needed to process the event';
 comment on column @NAMESPACE@.sl_event.ev_data2 is 'Data field containing an argument needed to process the event';

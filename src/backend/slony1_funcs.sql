@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.49 2004-12-02 23:30:56 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.50 2004-12-13 22:08:49 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2298,6 +2298,8 @@ Note that the table id, tab_id, must be unique ACROSS ALL SETS.';
 create or replace function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
 returns int4
 as '
+	v_tab_relname		name;
+	v_tab_nspname		name;
 declare
 	p_set_id			alias for $1;
 	p_tab_id			alias for $2;
@@ -2341,7 +2343,7 @@ begin
 	-- ----
 	-- Get the tables OID and check that it is a real table
 	-- ----
-	select PGC.oid, PGC.relkind into v_tab_reloid, v_relkind
+	select PGC.oid, PGC.relkind, PGC.relname, PGN.nspname into v_tab_reloid, v_relkind, v_tab_relname, v_tab_nspname
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
 			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
@@ -2369,10 +2371,11 @@ begin
 	-- Add the table to sl_table and create the trigger on it.
 	-- ----
 	insert into @NAMESPACE@.sl_table
-			(tab_id, tab_reloid, tab_set, tab_idxname, 
-			tab_altered, tab_comment) values
-			(p_tab_id, v_tab_reloid, p_set_id, p_tab_idxname,
-			false, p_tab_comment);
+			(tab_id, tab_reloid, tab_relname, tab_nspname, 
+			tab_set, tab_idxname, tab_altered, tab_comment) 
+			values
+			(p_tab_id, v_tab_reloid, v_tab_relname, v_tab_nspname,
+			p_set_id, p_tab_idxname, false, p_tab_comment);
 	perform @NAMESPACE@.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
@@ -2580,6 +2583,8 @@ declare
 	v_sub_provider		int4;
 	v_relkind			char;
 	v_seq_reloid		oid;
+	v_seq_relname		name;
+	v_seq_nspname		name;
 	v_sync_row			record;
 begin
 	-- ----
@@ -2613,7 +2618,8 @@ begin
 	-- ----
 	-- Get the sequences OID and check that it is a sequence
 	-- ----
-	select PGC.oid, PGC.relkind into v_seq_reloid, v_relkind
+	select PGC.oid, PGC.relkind, PGC.relname, PGN.nspname 
+		into v_seq_reloid, v_relkind, v_seq_relname, v_seq_nspname
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
 			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
@@ -2631,8 +2637,9 @@ begin
 	-- Add the sequence to sl_sequence
 	-- ----
 	insert into @NAMESPACE@.sl_sequence
-			(seq_id, seq_reloid, seq_set, seq_comment) values
-			(p_seq_id, v_seq_reloid, p_set_id, p_seq_comment);
+		(seq_id, seq_reloid, seq_relname, seq_nspname, seq_set, seq_comment) 
+		values
+		(p_seq_id, v_seq_reloid, v_seq_relname, v_seq_nspname,  p_set_id, p_seq_comment);
 
 	-- ----
 	-- On the set origin, fake a sl_seqlog row for the last sync event
@@ -3278,6 +3285,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
+	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
 			p_set_id, p_script, p_only_on_node);
 end;
@@ -4683,7 +4691,7 @@ BEGIN
 	else
 		return 0;
 	end if;
-END;
+end;
 ' language plpgsql;
 
 comment on function @NAMESPACE@.generate_sync_event(interval) is
@@ -4713,6 +4721,138 @@ begin
 				and PGA.attname = ''_Slony-I_@CLUSTERNAME@_rowID''
 				and not PGA.attisdropped;
 	return found;
+-- FUNCTION updateRelname (set_id, only_on_node)
+--
+--      Reset the relnames          
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.updateRelname (int4, int4)
+returns int4
+as '
+declare
+        p_set_id                alias for $1;
+        p_only_on_node          alias for $2;
+        v_no_id                 int4;
+        v_set_origin            int4;
+begin
+        -- ----
+        -- Grab the central configuration lock
+        -- ----
+        lock table @NAMESPACE@.sl_config_lock;
+
+        -- ----
+        -- Check that we either are the set origin or a current
+        -- subscriber of the set.
+        -- ----
+        v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+        select set_origin into v_set_origin
+                        from @NAMESPACE@.sl_set
+                        where set_id = p_set_id
+                        for update;
+        if not found then
+                raise exception ''Slony-I: set % not found'', p_set_id;
+        end if;
+        if v_set_origin <> v_no_id
+                and not exists (select 1 from @NAMESPACE@.sl_subscribe
+                        where sub_set = p_set_id
+                        and sub_receiver = v_no_id)
+        then
+                return 0;
+        end if;
+    
+        -- ----
+        -- If execution on only one node is requested, check that
+        -- we are that node.
+        -- ----
+        if p_only_on_node > 0 and p_only_on_node <> v_no_id then
+                return 0;
+        end if;
+        update @NAMESPACE@.sl_table set 
+                tab_relname = PGC.relname, tab_nspname = PGN.nspname
+                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN 
+                where @NAMESPACE@.sl_table.tab_reloid = PGC.oid
+                        and PGC.relnamespace = PGN.oid;
+        update @NAMESPACE@.sl_sequence set
+                seq_relname = PGC.relname, seq_nspname = PGN.nspname
+                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+                where @NAMESPACE@.sl_sequence.seq_reloid = PGC.oid
+                and PGC.relnamespace = PGN.oid;
+        return p_set_id;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.updateRelname(int4, int4) is
+'updateRelname(set_id, only_on_node)';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION updateReloid (set_id, only_on_node)
+--
+--      Reset the relnames
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.updateReloid (int4, int4)
+returns int4
+as '
+declare
+        p_set_id                alias for $1;
+        p_only_on_node          alias for $2;
+        v_no_id                 int4;
+        v_set_origin            int4;
+begin
+        -- ----
+        -- Grab the central configuration lock
+        -- ----
+        lock table @NAMESPACE@.sl_config_lock;
+
+        -- ----
+        -- Check that we either are the set origin or a current
+        -- subscriber of the set.
+        -- ----
+        v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+        select set_origin into v_set_origin
+                        from @NAMESPACE@.sl_set
+                        where set_id = p_set_id
+                        for update;
+        if not found then
+                raise exception ''Slony-I: set % not found'', p_set_id;
+        end if;
+        if v_set_origin <> v_no_id
+                and not exists (select 1 from @NAMESPACE@.sl_subscribe
+                        where sub_set = p_set_id
+                        and sub_receiver = v_no_id)
+        then
+                return 0;
+        end if;
+
+        -- ----
+        -- If execution on only one node is requested, check that
+        -- we are that node.
+        -- ----
+        if p_only_on_node > 0 and p_only_on_node <> v_no_id then
+                return 0;
+        end if;
+        update @NAMESPACE@.sl_table set
+                tab_reloid = PGC.oid
+                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+                where pg_catalog.quote_ident(@NAMESPACE@.sl_table.tab_relname) = pg_catalog.quote_ident(PGC.relname)
+                        and PGC.relnamespace = PGN.oid
+			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(@NAMESPACE@.sl_table.tab_nspname);
+
+        update @NAMESPACE@.sl_sequence set
+                seq_reloid = PGC.oid
+                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+                where pg_catalog.quote_ident(@NAMESPACE@.sl_sequence.seq_relname) = pg_catalog.quote_ident(PGC.relname)
+                	and PGC.relnamespace = PGN.oid
+			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(@NAMESPACE@.sl_sequence.seq_nspname);
+
+        return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''RESET_CONFIG'',
+                        p_set_id, p_only_on_node);
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.updateReloid(int4, int4) is
+'updateReloid(set_id, only_on_node)
+
+Updates the respective reloids in sl_table and sl_seqeunce based on
+their respective FQN';
+
+-- ----------------------------------------------------------------------
 end;
 ' language plpgsql;
 
@@ -4725,12 +4865,49 @@ the table has no natural unique constraint.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION upgradeSchema(old_version)
+        -- upgrade sl_node
 --
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.upgradeSchema(text)
 returns text as '
 declare
+	-- upgrade sl_table
+	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
+		execute ''alter table @NAMESPACE@.sl_table add column tab_relname name'';
+		execute ''alter table @NAMESPACE@.sl_table add column tab_nspname name'';
+
+		-- populate the colums with data
+		update @NAMESPACE@.sl_table set
+			tab_relname = PGC.relname, tab_nspname = PGN.nspname
+			from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+			where @NAMESPACE@.sl_table.tab_reloid = PGC.oid
+			and PGC.relnamespace = PGN.oid;
+
+		-- constrain the colums
+		execute ''alter table @NAMESPACE@.sl_table alter column tab_relname set NOT NULL'';
+		execute ''alter table @NAMESPACE@.sl_table alter column tab_nspname set NOT NULL'';
+
+	end if;
+
+	-- upgrade sl_sequence
+	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+		-- Add new column(s) sl_sequence.seq_relname, sl_sequence.seq_nspname
+		execute ''alter table @NAMESPACE@.sl_sequence add column seq_relname name'';
+		execute ''alter table @NAMESPACE@.sl_sequence add column seq_nspname name'';
+
+		-- populate the columns with data
+		update @NAMESPACE@.sl_sequence set
+			seq_relname = PGC.relname, seq_nspname = PGN.nspname
+			from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+			where @NAMESPACE@.sl_sequence.seq_reloid = PGC.oid
+			and PGC.relnamespace = PGN.oid;
+
+		-- constrain the data
+		execute ''alter table @NAMESPACE@.sl_sequence alter column seq_relname set NOT NULL'';
+		execute ''alter table @NAMESPACE@.sl_sequence alter column seq_nspname set NOT NULL'';
+	end if;
 	p_old	alias for $1;
 begin
 	-- ----

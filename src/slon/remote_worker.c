@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.67 2004-12-02 21:43:17 wieck Exp $
+ *	$Id: remote_worker.c,v 1.68 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -963,6 +963,15 @@ remoteWorkerThread_main(void *cdata)
 				  "select %s.ddlScript_int(%d, '%q', %d); ",
 						 rtcfg_namespace,
 				   ddl_setid, ddl_script, ddl_only_on_node);
+			} else if (strcmp(event->ev_type, "RESET_CONFIG") == 0)
+			{
+				int	reset_config_setid = (int)strtol(event->ev_data1, NULL, 10);
+				int	reset_configonly_on_node = (int)strtol(event->ev_data2, NULL, 10);
+
+				slon_appendquery(&query1,
+				  "select %s.updateReloid(%d, '%q', %d); ",
+						rtcfg_namespace,
+				  reset_config_setid, reset_configonly_on_node);
 			} else
 			{
 				printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d," INT64_FORMAT " %s - unknown event type\n",

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.14 2004-09-27 20:40:29 darcyb Exp $
+ *	$Id: misc.c,v 1.15 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -146,6 +146,7 @@ slon_log(SlonLogLevel level, char *fmt,...)
 			slon_abort();
 		}
 	}
+
 	sprintf(outbuf, "");
 
 	if (logtimestamp == true && (Use_syslog != 1))

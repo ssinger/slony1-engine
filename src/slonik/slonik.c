@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.37 2004-12-03 17:16:03 wieck Exp $
+ *	$Id: slonik.c,v 1.38 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -242,6 +242,21 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
+				}
+				break;
+
+			case STMT_REPAIR_CONFIG:
+				{
+					SlonikStmt_repair_config *stmt = 
+							(SlonikStmt_repair_config *)hdr;
+					if (stmt->ev_origin < 0)
+					{
+						stmt->ev_origin = 1;
+					}
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+					{
+						errors++;
+					}
 				}
 				break;
 
@@ -1157,6 +1172,15 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_init_cluster *)hdr;
 
 					if (slonik_init_cluster(stmt) < 0)
+			case STMT_REPAIR_CONFIG:
+				{
+					SlonikStmt_repair_config *stmt =
+						(SlonikStmt_repair_config *)hdr;
+
+					if (slonik_repair_config(stmt) < 0)
+						errors++;
+				}
+				break;
 						errors++;
 				}
 				break;
@@ -1919,7 +1943,32 @@ slonik_restart_node(SlonikStmt_restart_node *stmt)
 	}
 
 	dstring_free(&query);
-	return 0;
+}
+
+int
+slonik_repair_config(SlonikStmt_repair_config *stmt)
+{
+        SlonikAdmInfo  *adminfo1;        
+        SlonDString             query;
+
+        adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+        if (adminfo1 == NULL)
+                return -1;
+
+        dstring_init(&query);
+                                 
+        slon_mkquery(&query,
+                        "select \"_%s\".updateReloid(%d, %d); ",
+                        stmt->hdr.script->clustername,
+			stmt->set_id, stmt->only_on_node);
+        if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+        {
+                dstring_free(&query);
+                return -1;
+        }
+
+        dstring_free(&query);
+        return 0;
 }
 
 
@@ -3814,17 +3863,8 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 	/*
 	 * Finally restart the node.
 	 */
-	slon_mkquery(&query,
-			"notify \"_%s_Restart\"; ",
-			stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
-	{
-		dstring_free(&query);
-		return -1;
-	}
 
-	dstring_free(&query);
-	return 0;
+	return slonik_restart_node((SlonikStmt_restart_node *)stmt);
 }
 
 

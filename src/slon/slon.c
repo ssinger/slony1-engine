@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.38 2004-12-13 18:58:04 darcyb Exp $
+ *	$Id: slon.c,v 1.39 2004-12-13 22:08:49 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -165,7 +165,6 @@ main(int argc, char *const argv[])
 	/*
 	 * Remember the connection information for the local node.
 	 */
-
 	if (rtcfg_conninfo == NULL)
 	{
 		errors++;
