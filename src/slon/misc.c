@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.10 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: misc.c,v 1.11 2004-09-23 16:37:44 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -43,7 +43,10 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 	static char	   *outbuf = NULL;
 	static int		outsize = -1;
 	int				off;
-	char		   *level_c = NULL;;
+	char		   *level_c = NULL;
+
+	char		time_buf[128];
+	time_t		stamp_time = time(NULL);
 
 	if (level > slon_log_level)
 		return;
@@ -85,7 +88,9 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 		}
 	}
 
-	sprintf(outbuf, "%-6.6s ", level_c); /* date and time here too */
+	strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S %Z", localtime(&stamp_time));
+
+	sprintf(outbuf, "%-6.6s [%s] ", level_c, time_buf);
 	off = strlen(outbuf);
 
 	while(vsnprintf(&outbuf[off], outsize - off, fmt, ap) >= outsize - off)
