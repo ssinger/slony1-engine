@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.12 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: runtime_config.c,v 1.13 2004-03-10 20:50:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -297,12 +297,15 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 	node = rtcfg_findNode(pa_server);
 	if (!node)
 	{
+
 		rtcfg_unlock();
 
-		slon_log(SLON_FATAL, 
-				"storePath: unknown node ID %d\n", pa_server);
-		slon_abort();
-		return;
+		slon_log(SLON_WARN, 
+				"storePath: unknown node ID %d - event pending\n", pa_server);
+		rtcfg_storeNode(pa_server, "<event pending>");
+
+		rtcfg_lock();
+		node = rtcfg_findNode(pa_server);
 	}
 
 	/*
@@ -390,6 +393,65 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	 * Eventually start communicating with that node
 	 */
 	rtcfg_startStopNodeThread(node);
+}
+
+
+/* ----------
+ * rtcfg_dropListen
+ * ----------
+ */
+void
+rtcfg_dropListen(int li_origin, int li_provider)
+{
+	SlonNode	   *node;
+	SlonListen	   *listen;
+
+	rtcfg_lock();
+
+	node = rtcfg_findNode(li_provider);
+	if (!node)
+	{
+		slon_log(SLON_FATAL,
+				"dropListen: unknown node ID %d\n", li_provider);
+		slon_abort();
+		return;
+	}
+
+	/*
+	 * Find that listen entry
+	 * at this provider.
+	 */
+	for (listen = node->listen_head; listen; listen = listen->next)
+	{
+		if (listen->li_origin == li_origin)
+		{
+			slon_log(SLON_CONFIG,
+					"dropListen: li_origin=%d li_receiver=%d "
+					"li_provider=%d\n",
+					li_origin, rtcfg_nodeid, li_provider);
+
+			DLLIST_REMOVE(node->listen_head, node->listen_tail, listen);
+			free(listen);
+
+			rtcfg_unlock();
+			rtcfg_seq_bump();
+
+			/*
+			 * Eventually stop communicating with that node
+			 */
+			rtcfg_startStopNodeThread(node);
+			return;
+		}
+	}
+	rtcfg_unlock();
+
+	/*
+	 * Add the new event origin to the provider (this node)
+	 */
+	slon_log(SLON_DEBUG1,
+			"storeListen: li_origin=%d li_receiver=%d li_provider=%d "
+			"- not listening\n",
+			li_origin, rtcfg_nodeid, li_provider);
 }
 
 

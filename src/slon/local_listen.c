@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.10 2004-02-28 04:16:10 wieck Exp $
+ *	$Id: local_listen.c,v 1.11 2004-03-10 20:50:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -218,6 +218,22 @@ localListenThread_main(void *dummy)
 
 				if (li_receiver == rtcfg_nodeid)
 					rtcfg_storeListen(li_origin, li_provider);
+			}
+			else if (strcmp(ev_type, "DROP_LISTEN") == 0)
+			{
+				/*
+				 * DROP_LISTEN
+				 */
+				int		li_origin;
+				int		li_provider;
+				int		li_receiver;
+
+				li_origin	= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				li_provider	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				li_receiver	= (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+
+				if (li_receiver == rtcfg_nodeid)
+					rtcfg_dropListen(li_origin, li_provider);
 			}
 			else if (strcmp(ev_type, "STORE_SET") == 0)
 			{

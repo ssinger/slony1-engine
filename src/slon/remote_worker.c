@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.16 2004-03-05 00:02:38 wieck Exp $
+ *	$Id: remote_worker.c,v 1.17 2004-03-10 20:50:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -207,11 +207,12 @@ pthread_mutex_t						node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 static void	adjust_provider_info(SlonNode *node,
 					WorkerGroupData *wd, int cleanup);
 static int	query_execute(SlonNode *node, PGconn *dbconn, 
-					SlonDString *dsp, int expected_rc);
+					SlonDString *dsp);
 static void	query_append_event(SlonDString *dsp, 
 					SlonWorkMsg_event *event);
 static void	store_confirm_forward(SlonNode *node, SlonConn *conn,
 					SlonWorkMsg_confirm *confirm);
+static int64 get_last_forwarded_confirm(int origin, int receiver);
 static int	copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 					SlonWorkMsg_event *event);
 static int	sync_event(SlonNode *node, SlonConn *local_conn,
@@ -279,7 +280,7 @@ remoteWorkerThread_main(void *cdata)
 	slon_mkquery(&query1,
 			"select %s.setSessionRole('_%s', 'slon'); ",
 			rtcfg_namespace, rtcfg_cluster_name);
-	if (query_execute(node, local_dbconn, &query1, PGRES_TUPLES_OK) < 0)
+	if (query_execute(node, local_dbconn, &query1) < 0)
 		slon_abort();
 
 	/*
@@ -392,7 +393,6 @@ remoteWorkerThread_main(void *cdata)
 		slon_mkquery(&query1, 
 				"begin transaction; "
 				"set transaction isolation level serializable; ");
-		query_append_event(&query1, event);
 		
 		/*
 		 * Event type specific processing
@@ -411,8 +411,7 @@ remoteWorkerThread_main(void *cdata)
 				 * Execute the forwarding and notify stuff, but
 				 * do not commit the transaction yet.
 				 */
-				if (query_execute(node, local_dbconn, &query1, 
-						PGRES_COMMAND_OK) < 0)
+				if (query_execute(node, local_dbconn, &query1) < 0)
 					slon_abort();
 
 				/*
@@ -431,8 +430,7 @@ remoteWorkerThread_main(void *cdata)
 				 * after the specified timeout.
 				 */
 				slon_mkquery(&query2, "rollback transaction");
-				if (query_execute(node, local_dbconn, &query2,
-						PGRES_COMMAND_OK) < 0)
+				if (query_execute(node, local_dbconn, &query2) < 0)
 					slon_abort();
 
 				if ((rc = sched_msleep(node, seconds * 1000)) != SCHED_STATUS_OK)
@@ -441,8 +439,11 @@ remoteWorkerThread_main(void *cdata)
 			if (rc != SCHED_STATUS_OK)
 				break;
 
-			slon_mkquery(&query1, "commit transaction;");
-			if (query_execute(node, local_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+			dstring_reset(&query1);
+			query_append_event(&query1, event);
+			slon_appendquery(&query1, "commit transaction;");
+
+			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_abort();
 		}
 		else
@@ -515,6 +516,20 @@ remoteWorkerThread_main(void *cdata)
 						rtcfg_namespace,
 						li_origin, li_provider, li_receiver);
 			}
+			else if (strcmp(event->ev_type, "DROP_LISTEN") == 0)
+			{
+				int		li_origin = (int) strtol(event->ev_data1, NULL, 10);
+				int		li_provider = (int) strtol(event->ev_data2, NULL, 10);
+				int		li_receiver = (int) strtol(event->ev_data3, NULL, 10);
+
+				if (li_receiver == rtcfg_nodeid)
+					rtcfg_dropListen(li_origin, li_provider);
+
+				slon_appendquery(&query1,
+						"select %s.dropListen_int(%d, %d, %d); ",
+						rtcfg_namespace,
+						li_origin, li_provider, li_receiver);
+			}
 			else if (strcmp(event->ev_type, "STORE_SET") == 0)
 			{
 				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
@@ -560,11 +575,6 @@ remoteWorkerThread_main(void *cdata)
 				int		sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
 				char   *sub_forward  = event->ev_data4;
 
-				slon_appendquery(&query1,
-						"select %s.enableSubscription(%d, %d); ",
-						rtcfg_namespace,
-						sub_set, sub_receiver);
-
 				/*
 				 * Do the actual enabling of the set only if
 				 * we are the receiver and if we received this
@@ -590,8 +600,7 @@ remoteWorkerThread_main(void *cdata)
 						 * commit the transaction yet. We have to copy
 						 * the data now ...
 						 */
-						if (query_execute(node, local_dbconn, &query1,
-								PGRES_TUPLES_OK) < 0)
+						if (query_execute(node, local_dbconn, &query1) < 0)
 							slon_abort();
 
 						/*
@@ -610,8 +619,7 @@ remoteWorkerThread_main(void *cdata)
 						 * Data copy for new enabled set has failed.
 						 * Rollback the transaction, sleep and try again.
 						 */
-						if (query_execute(node, local_dbconn, &query2,
-								PGRES_COMMAND_OK) < 0)
+						if (query_execute(node, local_dbconn, &query2) < 0)
 							slon_abort();
 
 						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
@@ -626,6 +634,11 @@ remoteWorkerThread_main(void *cdata)
 							sleeptime *= 2;
 					}
 				}
+
+				slon_appendquery(&query1,
+						"select %s.enableSubscription(%d, %d); ",
+						rtcfg_namespace,
+						sub_set, sub_receiver);
 			}
 			else
 			{
@@ -637,9 +650,10 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			 * All simple configuration events fall through here.
 			 * Commit the transaction.
 			 */
+			query_append_event(&query1, event);
 			slon_appendquery(&query1, 
 					"commit transaction;");
-			if (query_execute(node, local_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_abort();
 		}
 
@@ -1284,17 +1298,21 @@ remoteWorker_confirm(int no_id,
  * ----------
  */
 static int
-query_execute(SlonNode *node, PGconn *dbconn, 
-		SlonDString *dsp, int expected_rc)
+query_execute(SlonNode *node, PGconn *dbconn, SlonDString *dsp)
+		
 {
 	PGresult   *res;
+	int			rc;
 
 	res = PQexec(dbconn, dstring_data(dsp));
-	if (PQresultStatus(res) != expected_rc)
+	rc = PQresultStatus(res);
+	if (rc != PGRES_COMMAND_OK && rc != PGRES_TUPLES_OK &&
+		rc != PGRES_EMPTY_QUERY)
 	{
 		slon_log(SLON_ERROR,
-				"remoteWorkerThread_%d: \"%s\" %s",
+				"remoteWorkerThread_%d: \"%s\" %s %s",
 				node->no_id, dstring_data(dsp),
+				PQresStatus(rc),
 				PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
@@ -1461,6 +1479,41 @@ store_confirm_forward(SlonNode *node, SlonConn *conn,
 }
 
 
+/* ----------
+ * get_last_forwarded_confirm
+ *
+ *	Look what confirmed event seqno we forwarded last for
+ *	a given origin+receiver pair.
+ * ----------
+ */
+static int64
+get_last_forwarded_confirm(int origin, int receiver)
+{
+	struct node_confirm_status *cstat;
+
+	/*
+	 * Check the global confirm status if we already know about
+	 * this confirmation.
+	 */
+	pthread_mutex_lock(&node_confirm_lock);
+	for (cstat = node_confirm_head; cstat; cstat = cstat->next)
+	{
+		if (cstat->con_origin == origin &&
+			cstat->con_received == receiver)
+		{
+			/*
+			 * origin+received pair record found.
+			 */
+			pthread_mutex_unlock(&node_confirm_lock);
+			return cstat->con_seqno;
+		}
+	}
+	pthread_mutex_unlock(&node_confirm_lock);
+
+	return -1;
+}
+
+
 static int
 copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		SlonWorkMsg_event *event)
@@ -1608,7 +1661,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		slon_mkquery(&query1,
 				"start transaction; "
 				"set transaction isolation level serializable; ");
-		if (query_execute(node, pro_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+		if (query_execute(node, pro_dbconn, &query1) < 0)
 		{
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
@@ -1669,7 +1722,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				"select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
 				rtcfg_namespace,
 				set_id, tab_id, tab_fqname, tab_attkind, tab_comment);
-		if (query_execute(node, loc_dbconn, &query1, PGRES_TUPLES_OK) < 0)
+		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
@@ -2134,7 +2187,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			dstring_data(&ssy_action_list));
 	PQclear(res1);
 	dstring_free(&ssy_action_list);
-	if (query_execute(node, loc_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+	if (query_execute(node, loc_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
@@ -2146,7 +2199,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 * the database connection.
 	 */
 	slon_mkquery(&query1, "rollback transaction");
-	if (query_execute(node, pro_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+	if (query_execute(node, pro_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
@@ -2188,6 +2241,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT 
 			" processing\n",
 			node->no_id, event->ev_seqno);
+
+	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 	/*
 	 * Establish all required data provider connections
@@ -2238,10 +2293,34 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		if (event->ev_origin != provider->no_id &&
 			event->event_provider != provider->no_id)
 		{
-			slon_log(SLON_FATAL, "remoteWorkerThread_%d: "
-					"need to check sync status of data provider\n",
-					node->no_id);
-			slon_abort();
+			int64	prov_seqno;
+
+			prov_seqno = get_last_forwarded_confirm(event->ev_origin,
+							provider->no_id);
+			if (prov_seqno < 0)
+			{
+				slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+						"don't know what ev_seqno node %d confirmed "
+						"for ev_origin %d\n",
+						node->no_id, provider->no_id,
+						event->ev_origin);
+				return 10;
+			}
+			if (prov_seqno < event->ev_seqno)
+			{
+				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+						"data provider %d only confirmed up to "
+						"ev_seqno " INT64_FORMAT " for ev_origin %d\n",
+						node->no_id, provider->no_id,
+						prov_seqno, event->ev_origin);
+				return 10;
+			}
+
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+						"data provider %d confirmed up to "
+						"ev_seqno %s for ev_origin %d - OK\n",
+						node->no_id, provider->no_id,
+						seqbuf, event->ev_origin);
 		}
 	}
 
@@ -2274,15 +2353,18 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * Select all sets we receive from this provider
 		 */
 		slon_mkquery(&query,
-				"select S.sub_set, SSY.ssy_seqno, "
+				"select SSY.ssy_setid, SSY.ssy_seqno, "
 				"    SSY.ssy_minxid, SSY.ssy_maxxid, SSY.ssy_xip, "
 				"    SSY.ssy_action_list "
-				"from %s.sl_subscribe S, %s.sl_setsync SSY "
-				"where S.sub_provider = %d "
-				"    and S.sub_receiver = %d "
-				"    and S.sub_set = SSY.ssy_setid; ",
-				rtcfg_namespace, rtcfg_namespace,
-				provider->no_id, rtcfg_nodeid);
+				"from %s.sl_setsync SSY "
+				"where SSY.ssy_setid in (",
+				rtcfg_namespace);
+		for (pset = provider->set_head; pset; pset = pset->next)
+			slon_appendquery(&query, "%s%d",
+					(pset->prev == NULL) ? "" : ",",
+					pset->set_id);
+		slon_appendquery(&query, "); ");
+
 		res1 = PQexec(local_dbconn, dstring_data(&query));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -2335,6 +2417,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				return 60;
 			}
 			ntuples2 = PQntuples(res2);
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+					"syncing set %d with %d table(s) from provider %d\n",
+					node->no_id, sub_set, ntuples2, 
+					provider->no_id);
+
 			if (ntuples2 == 0)
 			{
 				PQclear(res2);
@@ -2594,7 +2681,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Light's are still green ... update the setsync status of
 	 * all the sets we've just replicated ...
 	 */
-	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 	slon_mkquery(&query,
 			"update %s.sl_setsync set "
 			"    ssy_seqno = '%s', ssy_minxid = '%s', ssy_maxxid = '%s', "
@@ -2719,7 +2805,7 @@ sync_helper(void *cdata)
 			 */
 			dstring_init(&query);
 			slon_mkquery(&query, "start transaction; ");
-			if (query_execute(node, dbconn, &query, PGRES_COMMAND_OK) < 0)
+			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
 				break;
@@ -2738,7 +2824,7 @@ sync_helper(void *cdata)
 					"from %s.sl_log_1 %s order by log_actionseq; ",
 					rtcfg_namespace, 
 					dstring_data(&(provider->helper_qualification)));
-			if (query_execute(node, dbconn, &query, PGRES_COMMAND_OK) < 0)
+			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
 				break;
@@ -2948,10 +3034,10 @@ sync_helper(void *cdata)
 		 * Close the cursor and rollback the transaction.
 		 */
 		slon_mkquery(&query, "close LOG; ");
-		if (query_execute(node, dbconn, &query, PGRES_COMMAND_OK) < 0)
+		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
 		slon_mkquery(&query, "rollback transaction; ");
-		if (query_execute(node, dbconn, &query, PGRES_COMMAND_OK) < 0)
+		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
 
 		/*

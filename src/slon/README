@@ -8,11 +8,14 @@ STATUS:
 	Slon can subscribe to a data set, copy the initial data from
 	the provider and sync. That is usually called "replication".
 
+	Slon can forward log information.
+
+	Slon can also subscribe to a set as a cascaded slave and
+	change the data provider later on the fly.
+
 TODO:
 
 	All other admin events (especially drop)
 
-	Forwarding for cascade and backup.
-
-	Free linebuffers when terminating sync helper threads.
+	Use forward data for PITR.
 
