@@ -2033,7 +2033,7 @@ EXECUTE SCRIPT (
        <listitem><para> The node to refresh.</para></listitem>
        
       </varlistentry>
-     </variablelist></para>
+     </variablelist>
 
    </refsect1>
    <refsect1><title>Example</title>

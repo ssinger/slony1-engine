@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.12 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.13 2005-03-15 20:12:01 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -224,6 +224,10 @@
      <para>
       File from which to read <application>slon</application> configuration.
      </para>
+
+     <para> This configuration is discussed further in <xref
+     linkend="runtime-config">.</para>
+
     </listitem>
    </varlistentry>
    <varlistentry>

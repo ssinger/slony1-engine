@@ -1,4 +1,4 @@
-<!-- $Id: slonik.sgml,v 1.12 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Id: slonik.sgml,v 1.13 2005-03-15 20:12:01 cbbrowne Exp $ -->
 <refentry id="slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -46,20 +46,21 @@
   script.</para>
 
   <para>Nearly all of the real configuration work is actually done by
-  calling stored procedures after loading the <productname>Slony-I</productname>
-  support base into a database.  <application>Slonik</application> was created
-  because these stored procedures have special requirements as to on
-  which particular node in the replication system they are called.
-  The absence of named parameters for stored procedures makes it
-  rather hard to do this from the <application>psql</application> prompt, and
-  <application>psql</application> lacks the ability to maintain multiple
-  connections with open transactions to multiple databases.</para>
+  calling stored procedures after loading the
+  <productname>Slony-I</productname> support base into a database.
+  <application>Slonik</application> was created because these stored
+  procedures have special requirements as to on which particular node
+  in the replication system they are called.  The absence of named
+  parameters for stored procedures makes it rather hard to do this
+  from the <application>psql</application> prompt, and
+  <application>psql</application> lacks the ability to maintain
+  multiple connections with open transactions to multiple
+  databases.</para>
 
-  <para>The format of the Slonik <quote>language</quote> is very similar to
-  that of SQL, and the parser is based on a similar set of formatting
-  rules for such things as numbers and strings.  Note that slonik is
-  declarative, using literal values throughout, and does
-  <emphasis>not</emphasis> have the notion of variables.  It is
+  <para>The format of the Slonik <quote>language</quote> is very
+  similar to that of SQL, and the parser is based on a similar set of
+  formatting rules for such things as numbers and strings.  Note that
+  slonik is declarative, using literal values throughout.  It is
   anticipated that Slonik scripts will typically be
   <emphasis>generated</emphasis> by scripts, such as Bash or Perl, and
   these sorts of scripting languages already have perfectly good ways
