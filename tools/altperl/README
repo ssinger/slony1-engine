@@ -1,0 +1,64 @@
+README
+$Id: README,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+
+Christopher Browne
+Database Administrator
+Afilias Canada
+
+This is a "second system" set of scripts for managing a set of Slony-I
+instances.
+
+Unlike the shell scripts that have been used, previously, it allows
+having an arbitrary number of Slony-I nodes.  They are configured in
+slon.env by calling add_node() once for each node that is needed.
+
+slon.env also contains lists of tables that are to be replicated:
+
+  @KEYEDTABLES contains all of the tables that have unique keys
+
+  @SERIALTABLES contains tables that do not have a unique key
+                to which Slony-I will need to add and populate
+                a unique key
+
+  @SEQUENCES lists all of the application sequences that are to be
+             replicated.
+
+Alas, this means that the values are "hardcoded" as far as the tools
+are concerned.
+
+The natural extension to be added to this to make it more flexible
+would be for slon.env to look at an environment variable to see what
+file these lists are found in.  That way, you could do something like:
+
+   for i in `seq 10`; do
+      SLONYENV="./set$i.config" ./init_cluster.pl
+   done
+
+Steps to start up replication
+
+0.  Dump from source system to destination
+ pg_dump -s -c  flex1 | psql flex2
+  
+1. Initializes the Slony cluster
+  ./init_cluster.pl
+
+  This sets up a FULL cross-join set of paths and listeners, doing
+  something of a shortest-path evaluation of which "store listens" to
+  set up.
+
+2. Start up slon servers for both DB instances
+  ./slon_start.pl node1
+  ./slon_start.pl node2
+
+3. Sets up all the tables for "set 1" for FlexReg 2.0  
+  ./create_set.pl set1
+    
+4. Subscribe Node #2 to Set #1
+  ./subscribe_set.pl set1 node2
+     This is the Big One...
+
+That SHOULD be it, although "should" is probably too strong a word :-)
+
+There are numerous other tools for adding/dropping Slony-I
+configuration, and scripts that might manage simple forms of
+switchover/failover.
