@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.22 2004-06-03 20:16:07 wieck Exp $
+ *	$Id: slonik.c,v 1.23 2004-06-08 12:52:52 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -67,7 +67,6 @@ int
 main(int argc, const char *argv[])
 {
 	extern int		optind;
-	extern char	   *optarg;
 	int				opt;
 
 	while ((opt = getopt(argc, (char **)argv, "h")) != EOF)
