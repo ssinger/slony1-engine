@@ -47,7 +47,7 @@
 
   <para>Nearly all of the real configuration work is actually done by
   calling stored procedures after loading the <productname>Slony-I</productname>
-  support base into a database.  <application>slonik</application> was created
+  support base into a database.  <application>Slonik</application> was created
   because these stored procedures have special requirements as to on
   which particular node in the replication system they are called.
   The absence of named parameters for stored procedures makes it
@@ -65,9 +65,8 @@
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</para>
   
-  <para>A detailed list of Slonik commands can be found here: <ulink
-  url="http://gborg.postgresql.org/project/slony1/genpage.php?slonik_commands">
-  slonik commands </ulink></para>
+  <para>See also <link linkend="slonikcommands"> Slonik Commands
+  </link>. </para>
 
  </refsect1>
 
