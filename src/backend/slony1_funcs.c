@@ -6,13 +6,14 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.10 2004-03-18 02:05:13 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.11 2004-03-19 01:57:06 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
 #include "postgres.h"
 #include "config.h"
 
+#include "miscadmin.h"
 #include "nodes/makefuncs.h"
 #include "parser/parse_type.h"
 #include "executor/spi.h"
@@ -248,6 +249,9 @@ _Slony_I_setSessionRole(PG_FUNCTION_ARGS)
 	else if (VARSIZE(new_role_t) == VARHDRSZ + 4 &&
 		memcmp(VARDATA(new_role_t), "slon", 4) == 0)
 	{
+		if (!superuser())
+			elog(ERROR, "Slony-I: insufficient privilege for replication role");
+
 		new_role = SLON_ROLE_SLON;
 	}
 	else
