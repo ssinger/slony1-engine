@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.17 2004-09-07 17:10:32 wieck Exp $
+ *	$Id: parser.y,v 1.18 2004-09-27 20:30:44 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -85,8 +85,9 @@ typedef struct statement_option {
  */
 char   *current_file = "<stdin>";
 extern int yyleng;
-
-
+#ifdef DEBUG
+int yydebug=1;
+#endif
 /*
  * Local functions
  */
@@ -454,8 +455,9 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_wait_event
 						{ $$ = $1; }
-					| stmt_error ';' { yyerrok; }
-						{ $$ = $1; }
+					| stmt_error ';' 
+						{ yyerrok;
+						  $$ = $1; }
 					;
 
 stmt_echo			: lno K_ECHO literal ';'
