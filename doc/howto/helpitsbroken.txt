@@ -144,3 +144,14 @@ This happens to be a COPY transaction involved in setting up the
 subscription for one of the nodes.  All is well; the system is busy
 setting up the first subscriber; it won't start on the second one
 until the first one has completed subscribing.
+
+9.  I tried setting up a second replication set, and got the following error:
+
+<stdin>:9: Could not create subscription set 2 for oxrslive!
+<stdin>:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
+CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
+
+The table IDs used in SET ADD TABLE are required to be unique ACROSS
+ALL SETS.  Thus, you can't restart numbering at 1 for a second set; if
+you are numbering them consecutively, a subsequent set has to start
+with IDs after where the previous set(s) left off.

@@ -1,4 +1,12 @@
 Random Things That Ought To Be Documented Somewhere
+---------------------------------------------------------------------------------------------
+
+$Id: randomfacts.txt,v 1.2 2004-08-30 20:31:39 cbbrowne Exp $
+
+These are things that have been noticed that need to be documented.
+There should probably be a "How To Set Up a Simple Slony-I Replication
+System" document as well as "Advanced Slonying for Master DBAs," and
+these should be added to those sorts of documents...
 
 1.  Yes, you CAN "kill -9" slon processes
 
