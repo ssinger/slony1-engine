@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.35 2004-10-19 01:16:06 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.36 2004-11-10 18:14:25 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -705,6 +705,9 @@ begin
 			set no_active = false
 			where no_id = p_no_id;
 
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	return p_no_id;
 end;
 ' language plpgsql;
@@ -797,6 +800,9 @@ begin
 	-- ----
 	perform @NAMESPACE@.terminateNodeConnections(
 			''_@CLUSTERNAME@_Node_'' || p_failed_node);
+
+-- Note that the following code should all become obsolete in the wake
+-- of the availability of RebuildListenEntries()...
 
 	-- ----
 	-- Let every node that listens for something on the failed node
@@ -909,6 +915,9 @@ raise notice ''failedNode: set % has other direct receivers - change providers o
 						and sub_receiver <> p_backup_node;
 		end if;
 	end loop;
+
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	-- ----
 	-- Make sure the node daemon will restart
@@ -1041,6 +1050,9 @@ begin
 				set set_origin = p_backup_node
 				where set_id = p_set_id;
 	end if;
+
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	-- ----
 	-- If we are a subscriber of the set ourself, change our
@@ -1206,6 +1218,9 @@ begin
 				(p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
 	end if;
 
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	return 0;
 end;
 ' language plpgsql;
@@ -1263,6 +1278,10 @@ begin
 	-- Now drop the path and create the event
 	-- ----
 	perform @NAMESPACE@.dropPath_int(p_pa_server, p_pa_client);
+
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
 			p_pa_server, p_pa_client);
 end;
@@ -1302,8 +1321,14 @@ begin
 			and pa_client = p_pa_client;
 
 	if found then
+		-- Rewrite sl_listen table
+		perform @NAMESPACE@.RebuildListenEntries();
+
 		return 1;
 	else
+		-- Rewrite sl_listen table
+		perform @NAMESPACE@.RebuildListenEntries();
+
 		return 0;
 	end if;
 end;
@@ -1938,6 +1963,9 @@ begin
 			where sub_set = p_set_id
 			and sub_receiver = p_new_origin;
 
+	-- Regenerate sl_listen since we revised the subscriptions
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	-- ----
 	-- If we are the new or old origin, we have to
 	-- put all the tables into altered state again.
@@ -2043,6 +2071,9 @@ begin
 			where ssy_setid = p_set_id;
 	delete from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
+
+	-- Regenerate sl_listen since we revised the subscriptions
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	return p_set_id;
 end;
@@ -3710,6 +3741,9 @@ begin
 				p_sub_provider, p_sub_receiver);
 	end if;
 
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	return p_sub_set;
 end;
 ' language plpgsql;
@@ -3789,6 +3823,9 @@ begin
 	-- ----
 	perform @NAMESPACE@.unsubscribeSet_int(p_sub_set, p_sub_receiver);
 
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+
 	-- ----
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
@@ -3828,6 +3865,9 @@ begin
 	delete from @NAMESPACE@.sl_subscribe
 			where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
+
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	return p_sub_set;
 end;
@@ -3896,6 +3936,9 @@ begin
 				(p_sub_set, p_sub_provider, p_sub_receiver,
 				false, true);
 	end if;
+
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	return p_sub_set;
 end;
@@ -4435,6 +4478,63 @@ A table was that was specified without a primary key is added to the
 replication. Assume that tableAddKey() was called before and finish
 the creation of the serial column. The return an attkind according to
 that.';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION RebuildListenEntries (provider, receiver)
+--
+--	Revises sl_listen rules based on contents of sl_path and
+--              sl_subscribe
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.RebuildListenEntries()
+returns int
+as '
+declare
+	v_row			record;
+	v_row2			record;
+	v_row3			record;
+	v_origin		int4;
+	v_receiver		int4;
+	v_done			boolean;
+
+begin
+	-- 0.  Drop out listens
+	delete from @NAMESPACE@.sl_listen;
+
+	-- 1.  Add listens pointed out by subscriptions - sl_listen
+	select @NAMESPACE@.storelisten(sub_provider, sub_provider, sub_receiver)
+		from @NAMESPACE@.sl_subscribe;
+
+	-- 2.  Add direct listens pointed out in sl_path
+	select @NAMESPACE@.storelisten(pa_server, pa_server, pa_client)
+		from @NAMESPACE@.sl_path path
+		where not exists (select true from @NAMESPACE@.sl_listen listen
+					where path.pa_server = listen.li_origin and
+					      path.pa_client = listen.li_reciever);
+
+	-- 3.  Iterate 'til we can't iterate no more...
+	--     Add in indirect listens based on what's in sl_listen and sl_path
+	v_done := ''f'';
+	while not v_done loop
+		select @NAMESPACE@.storelisten(li_origin,pa_server,pa_client)
+			from @NAMESPACE@.sl_path path, @NAMESPACE@.sl_listen listen
+			where
+				li_reciever = pa_server
+				and not exists (select true from @NAMESPACE@.sl_listen listen2
+					where listen2.li_origin = listen.origin and
+					      listen2.li_reciever = path.pa_client);
+
+		
+	end loop;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.RebuildListenEntries() is
+'RebuildListenEntries(p_provider, p_receiver)
+
+Invoked by various subscription and path modifying functions, this
+rewrites the sl_listen entries, adding in all the ones required to
+allow communications between nodes in the Slony-I cluster.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableHasSerialKey (tab_fqname)
