@@ -5208,6 +5208,7 @@ cd ${_pwd}
 echo "Overriding pgbindir with" ${with_pgbindir}
 PG_BINDIR=${with_pgbindir}
 fi
+
 if test -n "${with_pglibdir}"; then
 _pwd=`pwd`
 cd ${with_pglibdir}
@@ -5216,6 +5217,7 @@ cd ${_pwd}
 echo "Overriding pglibdir with" ${with_pglibdir}
 PG_LIBDIR=${with_pglibdir}
 fi
+
 if test -n "${with_pgincludedir}"; then
 _pwd=`pwd`
 cd ${with_pgincludedir}
@@ -5224,14 +5226,16 @@ cd ${_pwd}
 echo "Overriding pgincludedir with" ${with_pgincludedir}
 PG_INCLUDEDIR=${with_pgincludedir}
 fi
+
 if test -n "${with_pgpkglibdir}"; then
 _pwd=`pwd`
 cd ${with_pgpkglibdir}
 with_pgpkglibdir=`pwd`
-cd cd ${_pwd}
+cd ${_pwd}
 echo "Overriding pgpkglibdir with" ${with_pgpkglibdir}
 PG_PKGLIBDIR=${with_pgpkglibdir}
 fi
+
 if test -n "${with_pgincludeserverdir}"; then
 _pwd=`pwd`
 cd ${with_pgincludeserverdir}
@@ -5708,7 +5712,7 @@ fi
 LDFLAGS="$TEMP_FLAGS -L$PG_PKGLIBDIR"
 echo "$as_me:$LINENO: checking for plpgsql.so" >&5
 echo $ECHO_N "checking for plpgsql.so... $ECHO_C" >&6
-if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl"; then
+if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl" || test -s $PG_PKGLIBDIR"plpgsql.dll" ; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
 
@@ -5719,10 +5723,10 @@ _ACEOF
 else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
-    { { echo "$as_me:$LINENO: error: $PG_PKGLIBDIR/plpgsql.so is not found in the pkglibdir.
+    { { echo "$as_me:$LINENO: error: $PG_PKGLIBDIR/plpgsql.so|sl|dll is not found in the pkglibdir.
     Please specify the pkglibdir with --with-pgpkglibdir=<dir>
     " >&5
-echo "$as_me: error: $PG_PKGLIBDIR/plpgsql.so is not found in the pkglibdir.
+echo "$as_me: error: $PG_PKGLIBDIR/plpgsql.so|sl|dll is not found in the pkglibdir.
     Please specify the pkglibdir with --with-pgpkglibdir=<dir>
     " >&2;}
    { (exit 1); exit 1; }; }
@@ -5730,7 +5734,7 @@ fi
 
 echo "$as_me:$LINENO: checking for postgresql.conf.sample" >&5
 echo $ECHO_N "checking for postgresql.conf.sample... $ECHO_C" >&6
-PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir}"
+PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir} ${PG_BINDIR}/../share"
 for i in $PGSHARE_POSSIBLE_LOCATIONS; do
     if test -s "$i/postgresql.conf.sample" ; then
 	PG_SHAREDIR=$i/

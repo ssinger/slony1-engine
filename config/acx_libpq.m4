@@ -145,18 +145,18 @@ fi
 
 LDFLAGS="$TEMP_FLAGS -L$PG_PKGLIBDIR"
 AC_MSG_CHECKING(for plpgsql.so)
-if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl"; then
+if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl" || test -s $PG_PKGLIBDIR"plpgsql.dll" ; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
 else
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR($PG_PKGLIBDIR/plpgsql.so is not found in the pkglibdir.
+    AC_MSG_ERROR($PG_PKGLIBDIR/plpgsql.[so|sl|dll] is not found in the pkglibdir.
     Please specify the pkglibdir with --with-pgpkglibdir=<dir>
     )
 fi
 
 AC_MSG_CHECKING(for postgresql.conf.sample)
-PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir} $(PG_BINDIR)/../share"
+PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir} ${PG_BINDIR}/../share"
 for i in $PGSHARE_POSSIBLE_LOCATIONS; do
     if test -s "$i/postgresql.conf.sample" ; then
 	PG_SHAREDIR=$i/
