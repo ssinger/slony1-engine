@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.15 2005-02-07 21:47:28 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.17 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -34,10 +34,9 @@ ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_mi
 </question>
 
 <answer><para>On AIX and Solaris (and possibly elsewhere), both
-<productname>Slony-I</productname> <emphasis>and
-<productname>PostgreSQL</productname></emphasis> must be compiled with
-the <option>--enable-thread-safety</option> option.  The above results
-when <productname>PostgreSQL</productname> isn't so compiled.</para>
+&slony1; <emphasis>and &postgres;</emphasis> must be compiled with the
+<option>--enable-thread-safety</option> option.  The above results
+when &postgres; isn't so compiled.</para>
 
 <para>What breaks here is that the libc (threadsafe) and libpq
 (non-threadsafe) use different memory locations for errno, thereby
@@ -63,10 +62,9 @@ wasn't clear that this was the case until I ran <command>ldd</command> against
 <question> <para>I tried creating a CLUSTER NAME with a "-" in it.
 That didn't work.</para></question>
 
-<answer><para> <productname>Slony-I</productname> uses the same rules
-for unquoted identifiers as the <productname>PostgreSQL</productname>
-main parser, so no, you probably shouldn't put a "-" in your
-identifier name.</para>
+<answer><para> &slony1; uses the same rules for unquoted identifiers
+as the &postgres; main parser, so no, you probably shouldn't put a "-"
+in your identifier name.</para>
 
 <para> You may be able to defeat this by putting <quote>quotes</quote> around
 identifier names, but it's still liable to bite you some, so this is
@@ -87,12 +85,14 @@ can I do? The tuples can't be dropped from this relation.</para>
 serving this node already</para></blockquote></para></question>
 
 <answer><para> The problem is that the system table
-<envar>pg_catalog.pg_listener</envar>, used by <productname>PostgreSQL</productname> to
-manage event notifications, contains some entries that are pointing to
-backends that no longer exist.  The new <link linkend="slon">
-<application>slon</application></link> instance connects to the database, and is
-convinced, by the presence of these entries, that an old
-<application>slon</application> is still servicing this <productname>Slony-I</productname> node.</para>
+<envar>pg_catalog.pg_listener</envar>, used by
+<productname>PostgreSQL</productname> to manage event notifications,
+contains some entries that are pointing to backends that no longer
+exist.  The new <link linkend="slon">
+<application>slon</application></link> instance connects to the
+database, and is convinced, by the presence of these entries, that an
+old <application>slon</application> is still servicing this &slony1;
+node.</para>
 
 <para> The <quote>trash</quote> in that table needs to be thrown away.</para>
 
@@ -145,25 +145,22 @@ could not open file '$libdir/xxid': No such file or directory
 
 <answer><para> Evidently, you haven't got the
 <filename>xxid.so</filename> library in the <envar>$libdir</envar>
-directory that the <productname>PostgreSQL</productname> instance is
-using.  Note that the <productname>Slony-I</productname> components
-need to be installed in the <productname>PostgreSQL</productname>
+directory that the &postgres; instance is
+using.  Note that the &slony1; components
+need to be installed in the &postgres;
 software installation for <emphasis>each and every one</emphasis> of
 the nodes, not just on the origin node.</para>
 
 <para>This may also point to there being some other mismatch between
-the <productname>PostgreSQL</productname> binary instance and the
-<productname>Slony-I</productname> instance.  If you compiled
-<productname>Slony-I</productname> yourself, on a machine that may
-have multiple <productname>PostgreSQL</productname> builds
-<quote>lying around,</quote> it's possible that the slon or slonik
-binaries are asking to load something that isn't actually in the
-library directory for the <productname>PostgreSQL</productname>
-database cluster that it's hitting.</para>
+the &postgres; binary instance and the &slony1; instance.  If you
+compiled &slony1; yourself, on a machine that may have multiple
+&postgres; builds <quote>lying around,</quote> it's possible that the
+slon or slonik binaries are asking to load something that isn't
+actually in the library directory for the &postgres; database cluster
+that it's hitting.</para>
 
 <para>Long and short: This points to a need to <quote>audit</quote>
-what installations of <productname>PostgreSQL</productname> and
-<productname>Slony-I</productname> you have in place on the
+what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
 not to link up quite right.  See also <link linkend="slonyfaq02">
 SlonyFAQ02 </link> concerning threading issues on Solaris ...</para>
@@ -197,20 +194,20 @@ WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
 <para>Oops.  What I forgot to mention, as well, was that I was trying
 to add <emphasis>TWO</emphasis> subscribers, concurrently.</para></question>
 
-<answer><para> That doesn't work out: <productname>Slony-I</productname> won't work on the
+<answer><para> That doesn't work out: &slony1; won't work on the
 <command>COPY</command> commands concurrently.  See
 <filename>src/slon/remote_worker.c</filename>, function
 <function>copy_set()</function></para>
 
 <para>This has the (perhaps unfortunate) implication that you cannot
-populate two slaves concurrently.  You have to subscribe one to the
-set, and only once it has completed setting up the subscription
-(copying table contents and such) can the second subscriber start
-setting up the subscription.</para>
+populate two slaves concurrently from a single provider.  You have to
+subscribe one to the set, and only once it has completed setting up
+the subscription (copying table contents and such) can the second
+subscriber start setting up the subscription.</para>
 
 <para>It could also be possible for there to be an old outstanding
-transaction blocking <productname>Slony-I</productname> from processing the sync.  You might want
-to take a look at pg_locks to see what's up:
+transaction blocking &slony1; from processing the sync.  You might
+want to take a look at pg_locks to see what's up:
 
 <screen>
 sampledb=# select * from pg_locks where transaction is not null order by transaction;
@@ -233,13 +230,12 @@ subscription for one of the nodes.  All is well; the system is busy
 setting up the first subscriber; it won't start on the second one
 until the first one has completed subscribing.</para>
 
-<para>By the way, if there is more than one database on the
-<productname>PostgreSQL</productname> cluster, and activity is taking
-place on the OTHER database, that will lead to there being
-<quote>transactions earlier than XID whatever</quote> being found to
-be still in progress.  The fact that it's a separate database on the
-cluster is irrelevant; <productname>Slony-I</productname> will wait
-until those old transactions terminate.</para>
+<para>By the way, if there is more than one database on the &postgres;
+cluster, and activity is taking place on the OTHER database, that will
+lead to there being <quote>transactions earlier than XID
+whatever</quote> being found to be still in progress.  The fact that
+it's a separate database on the cluster is irrelevant; &slony1; will
+wait until those old transactions terminate.</para>
 </answer>
 </qandaentry>
 
@@ -291,16 +287,16 @@ three queries, on each host:</emphasis>
   delete from _slonyschema.sl_table where tab_id = 40;
 </programlisting></para>
 
-<para>The schema will obviously depend on how you defined the
-<productname>Slony-I</productname> cluster.  The table ID, in this
-case, 40, will need to change to the ID of the table you want to have
-go away.</para>
+<para>The schema will obviously depend on how you defined the &slony1;
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.</para>
 
-<para> You'll have to run these three queries on all of the nodes, preferably
-firstly on the origin node, so that the dropping of this propagates
-properly.  Implementing this via a <link linkend="slonik"> slonik
-</link> statement with a new <productname>Slony-I</productname> event
-would do that.  Submitting the three queries using <command> <link linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command> could do
+<para> You'll have to run these three queries on all of the nodes,
+preferably firstly on the origin node, so that the dropping of this
+propagates properly.  Implementing this via a <link linkend="slonik">
+slonik </link> statement with a new &slony1; event would do that.
+Submitting the three queries using <command> <link
+linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command> could do
 that.  Also possible would be to connect to each database and submit
 the queries by hand.</para></listitem> </itemizedlist></para>
 </answer>
@@ -346,13 +342,12 @@ eliminating the sequence everywhere <quote>at once.</quote> Or they
 may be applied by hand to each of the nodes.</para>
 
 <para>Similarly to <command> <link linkend="stmtsetdroptable"> SET
-DROP TABLE </link> </command>, this is implemented
-<productname>Slony-I</productname> version 1.0.5 as <command> <link
-linkend="stmtsetdropsequence"> SET DROP
+DROP TABLE </link> </command>, this is implemented &slony1; version
+1.0.5 as <command> <link linkend="stmtsetdropsequence"> SET DROP
 SEQUENCE</link></command>.</para></answer></qandaentry>
 
 <qandaentry>
-<question><para><productname>Slony-I</productname>: cannot add table to currently subscribed set 1</para>
+<question><para>Slony-I: cannot add table to currently subscribed set 1</para>
 
 <para> I tried to add a table to a set, and got the following message:
 
@@ -372,8 +367,8 @@ together.</para>
 <qandaentry id="PGLISTENERFULL">
 <question><para>Some nodes start consistently falling behind</para>
 
-<para>I have been running <productname>Slony-I</productname> on a node
-for a while, and am seeing system performance suffering.</para>
+<para>I have been running &slony1; on a node for a while, and am
+seeing system performance suffering.</para>
 
 <para>I'm seeing long running queries of the form:
 <screen>
@@ -393,17 +388,16 @@ minutes would likely be AOK.</para>
 
 <para> Slon daemons already vacuum a bunch of tables, and
 <filename>cleanup_thread.c</filename> contains a list of tables that
-are frequently vacuumed automatically.  In
-<productname>Slony-I</productname> 1.0.2, <envar>pg_listener</envar>
-is not included.  In 1.0.5 and later, it is regularly vacuumed, so
-this should cease to be a direct issue.</para>
+are frequently vacuumed automatically.  In &slony1; 1.0.2,
+<envar>pg_listener</envar> is not included.  In 1.0.5 and later, it is
+regularly vacuumed, so this should cease to be a direct issue.</para>
 
 <para>There is, however, still a scenario where this will still
-"bite."  Vacuums cannot delete tuples that were made "obsolete" at any
-time after the start time of the eldest transaction that is still
-open.  Long running transactions will cause trouble, and should be
-avoided, even on "slave" nodes.</para>
-</answer></qandaentry>
+<quote>bite.</quote> Under MVCC, vacuums cannot delete tuples that
+were made <quote>obsolete</quote> at any time after the start time of
+the eldest transaction that is still open.  Long running transactions
+will cause trouble, and should be avoided, even on subscriber
+nodes.</para> </answer></qandaentry>
 
 <qandaentry> <question><para>I started doing a backup using
 <application>pg_dump</application>, and suddenly Slony
@@ -414,13 +408,11 @@ stops</para></question>
 
 <listitem><para> <application>pg_dump</application>, which has taken
 out an <command>AccessShareLock</command> on all of the tables in the
-database, including the <productname>Slony-I</productname> ones,
-and</para></listitem>
+database, including the &slony1; ones, and</para></listitem>
 
-<listitem><para> A <productname>Slony-I</productname> sync event,
-which wants to grab a <command>AccessExclusiveLock</command> on the
-table <envar>sl_event</envar>.</para></listitem>
-</itemizedlist></para>
+<listitem><para> A &slony1; sync event, which wants to grab a
+<command>AccessExclusiveLock</command> on the table
+<envar>sl_event</envar>.</para></listitem> </itemizedlist></para>
 
 <para>The initial query that will be blocked is thus:
 
@@ -473,25 +465,24 @@ sync through.</para></question>
 
 <answer><para> You might want to take a look at the sl_log_1/sl_log_2
 tables, and do a summary to see if there are any really enormous
-<productname>Slony-I</productname> transactions in there.  Up until at
-least 1.0.2, there needs to be a slon connected to the origin in order
-for <command>SYNC</command> events to be generated.</para>
+&slony1; transactions in there.  Up until at least 1.0.2, there needs
+to be a slon connected to the origin in order for
+<command>SYNC</command> events to be generated.</para>
 
 <para>If none are being generated, then all of the updates until the
-next one is generated will collect into one rather enormous
-<productname>Slony-I</productname> transaction.</para>
+next one is generated will collect into one rather enormous &slony1;
+transaction.</para>
 
 <para>Conclusion: Even if there is not going to be a subscriber
 around, you <emphasis>really</emphasis> want to have a
 <application>slon</application> running to service the origin
 node.</para>
 
-<para><productname>Slony-I</productname> 1.1 provides a stored
-procedure that allows <command>SYNC</command> counts to be updated on
-the origin based on a <application>cron</application> job even if
-there is no <link linkend="slon"> <application>slon</application></link> daemon
-running.</para>
-</answer></qandaentry>
+<para>&slony1; 1.1 provides a stored procedure that allows
+<command>SYNC</command> counts to be updated on the origin based on a
+<application>cron</application> job even if there is no <link
+linkend="slon"> <application>slon</application></link> daemon
+running.</para> </answer></qandaentry>
 
 <qandaentry>
 <question><para>I pointed a subscribing node to a different provider
@@ -560,9 +551,9 @@ Path Generation </link> provides a heuristic to generate listener
 entries.  If you are still tied to earlier versions, a Perl script,
 <link linkend="regenlisten">
 <application>regenerate-listens.pl</application> </link>, provides a
-way of querying a live <productname>Slony-I</productname> instance and
-generating the <link linkend="slonik"> Slonik </link> commands to
-generate the listen path network.</para></listitem>
+way of querying a live &slony1; instance and generating the <link
+linkend="slonik"> Slonik </link> commands to generate the listen path
+network.</para></listitem>
 
 </itemizedlist></para>
 
@@ -578,7 +569,7 @@ out anymore.</para></question>
 <answer><para> This is a common scenario in versions before 1.0.5, as
 the <quote>clean up</quote> that takes place when purging the node
 does not include purging out old entries from the
-<productname>Slony-I</productname> table, sl_confirm, for the recently
+&slony1; table, sl_confirm, for the recently
 departed node.</para>
 
 <para> The node is no longer around to update confirmations of what
@@ -670,11 +661,11 @@ ERROR  remoteWorkerThread_1: SYNC aborted
 </screen></para>
 
 <para>The transaction rolls back, and
-<productname>Slony-I</productname> tries again, and again, and again.
+&slony1; tries again, and again, and again.
 The problem is with one of the <emphasis>last</emphasis> SQL
 statements, the one with <command>log_cmdtype = 'I'</command>.  That
 isn't quite obvious; what takes place is that
-<productname>Slony-I</productname> groups 10 update queries together
+&slony1; groups 10 update queries together
 to diminish the number of network round trips.</para></question>
 
 <answer><para> A <emphasis>certain</emphasis> cause for this has not
@@ -687,7 +678,7 @@ What has seemed necessary, at this point, is to drop the replication
 set (or even the node), and restart replication from scratch on that
 node.</para>
 
-<para>In <productname>Slony-I</productname> 1.0.5, the handling of
+<para>In &slony1; 1.0.5, the handling of
 purges of sl_log_1 became more conservative, refusing to purge
 entries that haven't been successfully synced for at least 10 minutes
 on all nodes.  It was not certain that that will prevent the
@@ -789,7 +780,7 @@ delete the new rows in the child as well.
 </qandaentry>
 
 <qandaentry><question><para> What happens with rules and triggers on
-<productname>Slony-I</productname>-replicated tables?</para>
+&slony1;-replicated tables?</para>
 </question>
 
 <answer><para> Firstly, let's look at how it is handled
@@ -810,7 +801,7 @@ that uses the <link linkend="function.logtrigger">
 table.</para>
 
 <para> That trigger initiates the action of logging all updates to the
-table to <productname>Slony-I</productname> <envar>sl_log</envar>
+table to &slony1; <envar>sl_log</envar>
 tables.</para></listitem>
 
 <listitem><para> On a subscriber node, this involves disabling
@@ -840,7 +831,7 @@ because it does not expect them to be associated with an index.</para>
 <command>STORE TRIGGER</command> </link> enters into things.</para>
 
 <para> Simply put, this command causes
-<productname>Slony-I</productname> to restore the trigger using
+&slony1; to restore the trigger using
 <function>alterTableRestore(table id)</function>, which restores the
 table's OID into the <envar>pg_trigger</envar> or
 <envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
@@ -1135,7 +1126,7 @@ things in a rush; you need to be sure things are working right
 and load the data back in much faster than the <command>SUBSCRIBE
 SET</command> runs.  Why is that?  </para></question>
 
-<answer><para> <productname>Slony-I</productname> depends on there
+<answer><para> &slony1; depends on there
 being an already existant index on the primary key, and leaves all
 indexes alone whilst using the <productname>PostgreSQL</productname>
 <command>COPY</command> command to load the data.  Further hurting
@@ -1179,7 +1170,7 @@ from scratch? </para></question>
 <answer><para> The action of <command><link
 linkend="stmtfailover">FAILOVER</link></command> is to
 <emphasis>abandon</emphasis> the failed node so that no more
-<productname>Slony-I</productname> activity goes to or from that node.
+&slony1; activity goes to or from that node.
 As soon as that takes place, the failed node will progressively fall
 further and further out of sync.
 </para></answer>
@@ -1193,11 +1184,11 @@ never was a disk failure making it <quote>physical.</quote>
 </para></answer>
 
 <answer><para> As discusssed in the section on <link
-linkend="failover"> Doing switchover and failover with Slony-I</link>,
-using <command><link linkend="stmtfailover">FAILOVER</link></command>
-should be considered a <emphasis>last resort</emphasis> as it implies
-that you are abandoning the origin node as being corrupted.
-</para></answer>
+linkend="failover"> Doing switchover and failover with
+&slony1;</link>, using <command><link
+linkend="stmtfailover">FAILOVER</link></command> should be considered
+a <emphasis>last resort</emphasis> as it implies that you are
+abandoning the origin node as being corrupted.  </para></answer>
 </qandaentry>
 
 </qandaset>
@@ -1205,7 +1196,7 @@ that you are abandoning the origin node as being corrupted.
 <!-- Keep this comment at the end of the file Local variables:
 mode:sgml sgml-omittag:nil sgml-shorttag:t
 sgml-minimize-attributes:nil sgml-always-quote-attributes:t
-sgml-indent-step:1 sgml-indent-data:t sgml-parent-document:slony.sgml
-sgml-default-dtd-file:"./reference.ced" sgml-exposed-tags:nil
+sgml-indent-step:1 sgml-indent-data:t sgml-parent-document:"book.sgml"
+sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil End: -->

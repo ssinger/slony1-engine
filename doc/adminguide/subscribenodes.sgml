@@ -1,15 +1,15 @@
-<!-- $Id: subscribenodes.sgml,v 1.8 2005-02-02 19:41:55 cbbrowne Exp $ -->
+<!-- $Id: subscribenodes.sgml,v 1.10 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <para>Before you subscribe a node to a set, be sure that you have
 <application><link linkend="slon"> slon </link></application>
 processes running for both the provider and the new subscribing node. If
 you don't have slons running, nothing will happen, and you'll beat
-your head against a wall trying to figure out what is going on.
+your head against a wall trying to figure out what is going on.</para>
 
 <para>Subscribing a node to a set is done by issuing the <link
-linkend="slonik"> slonik </link> command <command> <link
-linkend="stmtsubscribeset"> subscribe set </link> </command>. It may
+   linkend="slonik"> slonik </link> command <command> <link
+    linkend="stmtsubscribeset"> subscribe set </link> </command>. It may
 seem tempting to try to subscribe several nodes to a set within a
 single try block like this:
 
@@ -89,8 +89,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

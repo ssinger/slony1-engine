@@ -1,22 +1,27 @@
-<!-- $Id: help.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="help">
-<title>More Slony-I Help</title>
+<title>More &slony1; Help</title>
 
-<para>If you are having problems with Slony-I, you have several
+<para>If you are having problems with &slony1;, you have several
 options for help:
 
 <itemizedlist>
 
-<listitem><para> <ulink
-url="http://slony.info/">http://slony.info/</ulink> - the official
-<quote>home</quote> of Slony</para></listitem>
+<listitem><para> <ulink url="http://slony.info/">http://slony.info/</ulink> - the official
+<quote>home</quote> of &slony1;</para></listitem>
 
-<listitem><para> Documentation on the Slony-I Site- Check the
-documentation on the Slony website: <ulink url="http://gborg.postgresql.org/project/slony1/genpage.php?howto_idx">Howto
+<listitem><para> Documentation on the &slony1; Site- Check the
+documentation on the Slony website: <ulink
+      url="http://gborg.postgresql.org/project/slony1/genpage.php?howto_idx">Howto
 </ulink></para></listitem>
 
+<listitem><para> A copy of this documentation lives at <ulink
+      url="http://linuxdatabases.info/info/slony.html"> Christopher Browne's
+Web Site </ulink>.</para></listitem>
+
 <listitem><para> Other Documentation - There are several articles here
-<ulink url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
+<ulink
+      url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
 Varlena GeneralBits </ulink> that may be helpful.</para></listitem>
 
 <listitem><para> IRC - There are usually some people on #slony on
@@ -28,7 +33,7 @@ to chat with.</para></listitem>
 in the Slony1-general mailing list archives, or you may choose to ask
 your question on the Slony1-general mailing list. The mailing list
 archives, and instructions for joining the list may be found <ulink
-url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink></para></listitem>
+      url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink></para></listitem>
 
 <listitem><para> If your Russian is much better than your English,
 then <ulink url="http://kirov.lug.ru/wiki/Slony">
@@ -39,7 +44,7 @@ go.</para></listitem> </itemizedlist></para>
 <itemizedlist>
 
 <listitem><para> <ulink
-url="http://comstar.dotgeek.org/postgres/slony-config/">
+      url="http://comstar.dotgeek.org/postgres/slony-config/">
 slony-config</ulink> - A Perl tool for configuring Slony nodes using
 config files in an XML-based format that the tool transforms into a
 Slonik script</para></listitem>
@@ -56,8 +61,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

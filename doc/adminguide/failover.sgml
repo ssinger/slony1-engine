@@ -1,32 +1,31 @@
-<!-- $Id: failover.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="failover">
-<title>Doing switchover and failover with Slony-I</title>
+<title>Doing switchover and failover with &slony1;</title>
 
 <sect2><title>Foreword</title>
 
-<para> <productname>Slony-I</productname> is an asynchronous
-replication system.  Because of that, it is almost certain that at the
-moment the current origin of a set fails, the final transactions
-committed at the origin will have not yet propagated to the
-subscribers.  Systems are particularly likely to fail under heavy
-load; that is one of the corollaries of Murphy's Law.  Therefore the
-principal goal is to <emphasis>prevent</emphasis> the main server from
-failing.  The best way to do that is frequent maintenance.</para>
+<para>&slony1; is an asynchronous replication system.  Because of
+that, it is almost certain that at the moment the current origin of a
+set fails, the final transactions committed at the origin will have
+not yet propagated to the subscribers.  Systems are particularly
+likely to fail under heavy load; that is one of the corollaries of
+Murphy's Law.  Therefore the principal goal is to
+<emphasis>prevent</emphasis> the main server from failing.  The best
+way to do that is frequent maintenance.</para>
 
 <para> Opening the case of a running server is not exactly what we
 should consider a <quote>professional</quote> way to do system
 maintenance.  And interestingly, those users who found it valuable to
 use replication for backup and failover purposes are the very ones
 that have the lowest tolerance for terms like <quote>system
-downtime.</quote> To help support these requirements,
-<productname>Slony-I</productname> not only offers failover
-capabilities, but also the notion of controlled origin
-transfer.</para>
+downtime.</quote> To help support these requirements, &slony1; not
+only offers failover capabilities, but also the notion of controlled
+origin transfer.</para>
 
 <para> It is assumed in this document that the reader is familiar with
 the <link linkend="slonik"> <application>slonik</application> </link>
 utility and knows at least how to set up a simple 2 node replication
-system with <productname>Slony-I</productname>.</para></sect2>
+system with &slony1;.</para></sect2>
 
 <sect2><title> Controlled Switchover</title>
 
@@ -35,7 +34,7 @@ system with <productname>Slony-I</productname>.</para></sect2>
 slave).  A web application on a third server is accessing the database
 on node1.  Both databases are up and running and replication is more
 or less in sync.  We do controlled switchover using <command> <link
-linkend="stmtmoveset"> MOVE SET </link> </command>.
+     linkend="stmtmoveset"> MOVE SET </link> </command>.
 
 <itemizedlist>
 
@@ -74,7 +73,7 @@ seconds.</para></listitem>
 
 <para> You may now simply shutdown the server hosting node1 and do
 whatever is required to maintain the server.  When <application><link
-linkend="slon">slon</link></application> node1 is restarted later,
+     linkend="slon">slon</link></application> node1 is restarted later,
 it will start replicating again, and soon catch up.  At this point the
 procedure to switch origins is executed again to restore the original
 configuration.</para>
@@ -88,7 +87,7 @@ be any loss of data.</para>
 
 <para> If some more serious problem occurs on the
 <quote>origin</quote> server, it may be necessary to <command><link
-linkend="stmtfailover">FAILOVER</link></command> to a backup
+     linkend="stmtfailover">FAILOVER</link></command> to a backup
 server.  This is a highly undesirable circumstance, as transactions
 <quote>committed</quote> on the origin, but not applied to the
 subscribers, will be lost.  You may have reported these transactions
@@ -98,13 +97,12 @@ should be considered a <emphasis>last resort</emphasis>.  If the
 where it can limp along long enough to do a controlled switchover,
 that is <emphasis>greatly</emphasis> preferable.</para>
 
-<para> <productname>Slony-I</productname> does not provide any
-automatic detection for failed systems.  Abandoning committed
-transactions is a business decision that cannot be made by a database
-system.  If someone wants to put the commands below into a script
-executed automatically from the network monitoring system, well
-... it's <emphasis>your</emphasis> data, and it's
-<emphasis>your</emphasis> failover policy. </para>
+<para> &slony1; does not provide any automatic detection for failed
+systems.  Abandoning committed transactions is a business decision
+that cannot be made by a database system.  If someone wants to put the
+commands below into a script executed automatically from the network
+monitoring system, well ... it's <emphasis>your</emphasis> data, and
+it's <emphasis>your</emphasis> failover policy. </para>
 
 <itemizedlist>
 
@@ -117,8 +115,8 @@ failover (id = 1, backup node = 2);
 
 <para> causes node2 to assume the ownership (origin) of all sets that
 have node1 as their current origin.  If there should happen to be
-additional nodes in the <productname>Slony-I</productname> cluster,
-all direct subscribers of node1 are instructed that this is happening.
+additional nodes in the &slony1; cluster, all direct subscribers of
+node1 are instructed that this is happening.
 <application>Slonik</application> will also query all direct
 subscribers in order to determine out which node has the highest
 replication status (<emphasis>e.g.</emphasis> - the latest committed
@@ -142,7 +140,7 @@ node2.</para>
 <para> After the failover is complete and node2 accepts write
 operations against the tables, remove all remnants of node1's
 configuration information with the <command><link
-linkend="stmtdropnode">DROP NODE</link></command> command:
+       linkend="stmtdropnode">DROP NODE</link></command> command:
 
 <programlisting>
 drop node (id = 1, event node = 2);
@@ -172,9 +170,9 @@ affecting customer accounts at the time of failure, you wouldn't want
 to lose that information.</para>
 
 <para> If the database is very large, it may take many hours to
-recover node1 as a functioning <productname>Slony-I</productname>
-node; that is another reason to consider failover as an undesirable
-<quote>final resort.</quote></para>
+recover node1 as a functioning &slony1; node; that is another reason
+to consider failover as an undesirable <quote>final
+resort.</quote></para>
 
 </sect2>
 
@@ -188,8 +186,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

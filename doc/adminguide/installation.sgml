@@ -1,10 +1,9 @@
-<!-- $Id: installation.sgml,v 1.8 2005-02-07 21:48:23 cbbrowne Exp $ -->
-<article id="installation">
-<title>Slony-I Installation</title>
-<sect1>
-<title>Slony-I Installation</title>
-<para>You should have obtained the <productname>Slony-I</productname> source from
-the previous step. Unpack it.</para>
+<!-- $Id: installation.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<sect1 id="installation">
+<title>&slony1; Installation</title>
+
+<para>You should have obtained the &slony1; source from the previous
+step. Unpack it.</para>
 
 <screen>
 gunzip slony.tar.gz;
@@ -12,7 +11,7 @@ tar xf slony.tar
 </screen>
 
 <para> This will create a directory under the current directory with
-the <productname>Slony-I</productname> sources.  Head into that that directory for the rest of
+the &slony1; sources.  Head into that that directory for the rest of
 the installation procedure.</para>
 
 <sect2>
@@ -23,7 +22,7 @@ the installation procedure.</para>
 ./configure --with-pgsourcetree=/whereever/the/source/is 
 gmake all; gmake install 
 </screen>
-</para>
+</para></sect2>
 
 <sect2>
 <title>Configuration</title>
@@ -32,11 +31,11 @@ gmake all; gmake install
 source tree for your system.  This is done by running the
 <application>configure</application> script.  In early versions,
 <application>configure</application> needed to know where your
-<productname>PostgreSQL</productname> source tree is, is done with the
+&postgres; source tree is, is done with the
 <option>--with-pgsourcetree=</option> option.  As of version 1.1,
-<productname>Slony-I</productname> is configured by pointing it to the various
-library, binary, and include directories; for a full list of these
-options, use the command <command>./configure --help</command>
+&slony1; is configured by pointing it to the various library, binary,
+and include directories; for a full list of these options, use the
+command <command>./configure --help</command>
 </para>
 </sect2>
 
@@ -49,11 +48,12 @@ options, use the command <command>./configure --help</command>
 
 <para>This script will run a number of tests to guess values for
 various dependent variables and try to detect some quirks of your
-system.  <productname>Slony-I</productname> is known to need a modified version of libpq on
+system.  &slony1; is known to need a modified version of libpq on
 specific platforms such as Solaris2.X on SPARC this patch can be found
 at <ulink
-url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
-http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulink></para>
+      url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
+http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz
+</ulink></para>
 </sect2>
 
 
@@ -78,9 +78,9 @@ install.  </command></para>
 </sect2>
 
 <sect2>
-<title> Installing Slony-I</title>
+<title> Installing &slony1;</title>
 
-<para> To install Slony-I, enter
+<para> To install &slony1;, enter
 
 <command>
 gmake install
@@ -88,7 +88,7 @@ gmake install
 
 <para>This will install files into postgresql install directory as
 specified by the <option>--prefix</option> option used in the
-PostgreSQL configuration.  Make sure you have appropriate permissions
+&postgres; configuration.  Make sure you have appropriate permissions
 to write into that area.  Normally you need to do this either as root
 or as the postgres user.  </para>
 </sect2>
@@ -103,8 +103,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:slony.sgml
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

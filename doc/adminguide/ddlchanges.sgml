@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.9 2005-02-07 21:46:22 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -8,8 +8,7 @@ for this to be handled rather carefully, otherwise different nodes may
 get rather deranged because they disagree on how particular tables are
 built.</para>
 
-<para>If you pass the changes through
-<productname>Slony-I</productname> via the <command><link
+<para>If you pass the changes through &slony1; via the <command><link
 linkend="stmtddlscript">EXECUTE SCRIPT</link></command> (slonik)
 /<function>ddlscript(set,script,node)</function> (stored function),
 this allows you to be certain that the changes take effect at the same
@@ -35,10 +34,10 @@ SCRIPT</link></command>:</para>
 <listitem><para>The script <emphasis>must not</emphasis> contain
 transaction <command>BEGIN</command> or <command>END</command>
 statements, as the script is already executed inside a transaction.
-In <productname>PostgreSQL</productname> version 8, the introduction
-of nested transactions may modify this requirement somewhat, but you
-must still remain aware that the actions in the script are wrapped
-inside a transaction.</para></listitem>
+In &postgres; version 8, the introduction of nested transactions may
+modify this requirement somewhat, but you must still remain aware that
+the actions in the script are wrapped inside a
+transaction.</para></listitem>
 
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
 the script, or about how it executes on a particular node, this will
@@ -61,19 +60,18 @@ are queued up, waiting to head to the subscriber.  You don't run the
 risk of there being updates made that depended on the DDL changes in
 order to be correct.</para></listitem>
 
-<listitem><para> When you run <command><link
-linkend="stmtddlscript">EXECUTE SCRIPT</link></command>, this causes
+<listitem><para> When you run <command><link linkend="stmtddlscript">EXECUTE SCRIPT</link></command>, this causes
 the <application>slonik</application> to request, <emphasis>for each
-table in the specified set</emphasis>, an exclusive table lock.
+table in the specified set</emphasis>, an exclusive table lock.</para>
 
 <para> It starts by requesting the lock, and altering the table to
-remove <productname>Slony-I</productname> triggers:
+remove &slony1; triggers:
 
 <screen>
 BEGIN;
 LOCK TABLE table_name;
 SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
-</screen>
+</screen></para>
 
 <para> After the script executes, each table is
 <quote>restored</quote> to add back either the trigger that collects
@@ -82,7 +80,7 @@ updates at the origin or that denies updates on subscribers:
 <screen>
 SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
 COMMIT;
-</screen>
+</screen></para>
 
 <para> On a system which is busily taking updates, it may be
 troublesome to <quote>get in edgewise</quote> to actually successfully
@@ -94,30 +92,29 @@ This points to two ways to address this:
 <listitem><para> You may be able to <link linkend="definesets"> define
 replication sets </link> that consist of smaller sets of tables so
 that fewer locks need to be taken in order for the DDL script to make
-it into place.
+it into place.</para>
 
 <para> If a particular DDL script only affects one table, it should be
-unnecessary to lock <emphasis>all</emphasis> application tables.
+unnecessary to lock <emphasis>all</emphasis> application tables.</para></listitem>
 
 <listitem><para> You may need to take a brief application outage in
 order to ensure that your applications are not demanding locks that
 will conflict with the ones you need to take in order to update the
-database schema.
+database schema.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para></listitem>
 
 </itemizedlist>
 
 <para>Unfortunately, this nonetheless implies that the use of the DDL
 facility is somewhat fragile and fairly dangerous.  Making DDL changes
 must not be done in a sloppy or cavalier manner.  If your applications
-do not have fairly stable SQL schemas, then using
-<productname>Slony-I</productname> for replication is likely to be
-fraught with trouble and frustration.</para>
+do not have fairly stable SQL schemas, then using &slony1; for
+replication is likely to be fraught with trouble and
+frustration.</para>
 
-<para>There is an article on how to manage Slony-I schema changes
-here:
-<ulink url="http://www.varlena.com/varlena/GeneralBits/88.php">
+<para>There is an article on how to manage &slony1; schema changes
+here: <ulink url="http://www.varlena.com/varlena/GeneralBits/88.php">
 Varlena General Bits</ulink></para>
 
 <sect2><title> Changes that you might <emphasis>not</emphasis> want to
@@ -130,46 +127,45 @@ that you might wish to handle some other way:
 
 <itemizedlist>
 
-<listitem><Para> There are various sorts of objects that don't have
-triggers that <productname>Slony-I</productname>
-<emphasis>doesn't</emphasis> replicate, such as stored functions, and
-it is quite likely to cause you grief if you propagate updates to them
-associated with a replication set where <command>EXECUTE
-SCRIPT</command> will lock a whole lot of tables that didn't really
-need to be locked.
+<listitem><para> There are various sorts of objects that don't have
+triggers that &slony1; <emphasis>doesn't</emphasis> replicate, such as
+stored functions, and it is quite likely to cause you grief if you
+propagate updates to them associated with a replication set where
+<command>EXECUTE SCRIPT</command> will lock a whole lot of tables that
+didn't really need to be locked.</para>
 
 <para> If you are propagating a stored procedure that
 <emphasis>isn't</emphasis> used all the time (such that you'd care if
 it was briefly out of sync between nodes), then you could simply
 submit it to each node using <application>psql</application>, making
-no special use of <productname>Slony-I</productname>
+no special use of &slony1;.</para>
 
 <para> If it <emphasis>does</emphasis> matter that the object be
 propagated at the same location in the transaction stream on all the
 nodes, then you but no tables need to be locked, then you might create
 a replication set that contains <emphasis>no</emphasis> tables,
 subscribe all the appropriate nodes to it, and use <command>EXECUTE
-SCRIPT</command>, specifying that <quote>empty set.</quote>
+SCRIPT</command>, specifying that <quote>empty set.</quote></para></listitem>
 
-<listitem><Para> You may want an extra index on some replicated
-node(s) in order to improve performance there.  
+<listitem><para> You may want an extra index on some replicated
+node(s) in order to improve performance there.</para>  
 
 <para> For instance, a table consisting of transactions may only need
 indices related to referential integrity on the <quote>origin</quote>
 node, and maximizing performance there dictates adding no more indices
 than are absolutely needed.  But nothing prevents you from adding
 additional indices to improve the performance of reports that run
-against replicated nodes.
+against replicated nodes.</para>
 
 <para> It would be unwise to add additional indices that
 <emphasis>constrain</emphasis> things on replicated nodes, as if they
 find problems, this leads to replication breaking down as the
 subscriber(s) will be unable to apply changes coming from the origin
-that violate the constraints.
+that violate the constraints.</para>
 
 <para> But it's no big deal to add some performance-enhancing indices.
 You should almost certainly <emphasis> not</emphasis> use
-<command>EXECUTE SCRIPT</emphasis> to add them; that leads to some
+<command>EXECUTE SCRIPT</command> to add them; that leads to some
 replication set locking and unlocking tables, and possibly failing to
 apply the event due to some locks outstanding on objects and having to
 retry a few times before it gets the change in.  If you instead apply
@@ -180,27 +176,27 @@ an exclusive lock for the time it takes to build the index; that will
 implicitly stop replication, while the index builds, but shouldn't
 cause any particular problems.  If you add an index on a table that
 takes 20 minutes to build, replication will block for 20 minutes, but
-should catch up quickly once the index is created.
+should catch up quickly once the index is created.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para></sect2>
 
 <sect2><title> Testing DDL Changes </title>
 
 <para> A method for testing DDL changes has been pointed out as a
-likely <quote>best practice.</quote>
+likely <quote>best practice.</quote></para>
 
 <para> You <emphasis>need</emphasis> to test DDL scripts in a
-non-destructive manner.
+non-destructive manner.</para>
 
 <para> The problem is that if nodes are, for whatever reason, at all
 out of sync, replication is likely to fall over, and this takes place
 at what is quite likely one of the most inconvenient times, namely the
-moment when you wanted it to <emphasis> work. </emphasis>
+moment when you wanted it to <emphasis> work. </emphasis></para>
 
 <para> You may indeed check to see if schema scripts work well or
 badly, by running them by hand, against each node, adding <command>
 BEGIN; </command> at the beginning, and <command> ROLLBACK; </command>
-at the end, so that the would-be changes roll back.
+at the end, so that the would-be changes roll back.</para>
 
 <para> If this script works OK on all of the nodes, that suggests that
 it should work fine everywhere if executed via Slonik.  If problems
@@ -211,7 +207,7 @@ the state of affairs on those nodes so that the script
 <warning> <para> If the SQL script contains a <command> COMMIT;
 </command> somewhere before the <command> ROLLBACK; </command>, that
 may allow changes to go in unexpectedly.  </para>
-</warning>
+</warning></para>
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
@@ -223,8 +219,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

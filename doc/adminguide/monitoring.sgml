@@ -1,9 +1,9 @@
-<!-- $Id: monitoring.sgml,v 1.10 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.12 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
-<para>Here are some of things that you may find in your
-<productname>Slony-I</productname> logs, and explanations of what they mean.</para>
+<para>Here are some of things that you may find in your &slony1; logs,
+and explanations of what they mean.</para>
 
 <sect2><title>CONFIG notices</title>
 
@@ -83,38 +83,37 @@ including such things as:
 <itemizedlist>
 <listitem><para> Checking <envar> sl_listen </envar> for some
 <quote>analytically determinable</quote> problems.  It lists paths
-that are not covered.  
+that are not covered.</para></listitem>  
 
-<listitem><para> Providing a summary of events by origin node
+<listitem><para> Providing a summary of events by origin node</para>
 
-<para> If a node hasn't submitted any events in a while, that likely suggests a problem.
+<para> If a node hasn't submitted any events in a while, that likely suggests a problem.</para></listitem>
 
-<listitem><para> Summarizes the <quote>aging</quote> of table <envar>sl_confirm</envar>
+<listitem><para> Summarizes the <quote>aging</quote> of table <envar>sl_confirm</envar></para>
 
 <para> If one or another of the nodes in the cluster hasn't reported
 back recently, that tends to lead to cleanups of tables like <envar>
-sl_log_1 </envar> and <envar> sl_seqlog </envar> not taking place.
+sl_log_1 </envar> and <envar> sl_seqlog </envar> not taking place.</para></listitem>
 
 <listitem><para> Summarizes what transactions have been running for a
-long time
+long time</para>
 
 <para> This only works properly if the statistics collector is
 configured to collect command strings, as controlled by the option
 <option> stats_command_string = true </option> in <filename>
-postgresql.conf </filename>.
+postgresql.conf </filename>.</para>
 
 <para> If you have broken applications that hold connections open,
-this will find them.
+this will find them.</para>
 
 <para> If you have broken applications that hold connections open,
-that has several unsalutory effects as <link
-linkend="longtxnsareevil"> described in the FAQ</link>.
+that has several unsalutory effects as <link linkend="longtxnsareevil"> described in the FAQ</link>.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para> The script does not yet do much in the way of diagnosis work;
 it should be enhanced to be able to, based on some parameterization,
-notify someone of those problems it encounters.
+notify someone of those problems it encounters.</para>
 
 </sect2>
 
@@ -128,8 +127,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

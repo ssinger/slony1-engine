@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.8 2005-02-07 21:49:52 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.10 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <refentry id="app-slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -36,7 +36,7 @@
   </para>
  </refsect1>
  
- <refsect1 id="R1-APP-SLON-3">
+ <refsect1 id="r1-app-slon-3">
   <title>Options</title>
   
   <variablelist>
@@ -50,14 +50,14 @@
      <para>
       The eight levels of logging are:
       <itemizedlist>
-       <listitem><Para>Error</Para></listitem>
-       <listitem><Para>Warn</Para></listitem>
-       <listitem><Para>Config</Para></listitem>
-       <listitem><Para>Info</Para></listitem>
-       <listitem><Para>Debug1</Para></listitem>
-       <listitem><Para>Debug2</Para></listitem>
-       <listitem><Para>Debug3</Para></listitem>
-       <listitem><Para>Debug4</Para></listitem>
+       <listitem><para>Error</para></listitem>
+       <listitem><para>Warn</para></listitem>
+       <listitem><para>Config</para></listitem>
+       <listitem><para>Info</para></listitem>
+       <listitem><para>Debug1</para></listitem>
+       <listitem><para>Debug2</para></listitem>
+       <listitem><para>Debug3</para></listitem>
+       <listitem><para>Debug4</para></listitem>
       </itemizedlist>
      </para>
     </listitem>
@@ -246,7 +246,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"slony.sgml"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:"/usr/lib/sgml/catalog"
 sgml-local-ecat-files:nil

@@ -1,15 +1,15 @@
-<!-- $Id: startslons.sgml,v 1.7 2005-02-02 19:41:55 cbbrowne Exp $ -->
+<!-- $Id: startslons.sgml,v 1.9 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
-<para>The programs that actually perform <productname>Slony-I</productname> replication are the
+<para>The programs that actually perform &slony1; replication are the
 <application>slon</application> daemons.</para>
 
 <para>You need to run one <application><link linkend="slon"> slon
-</link></application> instance for each node in a
-<productname>Slony-I</productname> cluster, whether you consider that node a
-<quote>master</quote> or a <quote>slave</quote>. Since a <command>MOVE SET</command> or
-<command>FAILOVER</command> can switch the roles of nodes, slon needs to be
-able to function for both providers and subscribers.  It is not
+</link></application> instance for each node in a &slony1; cluster,
+whether you consider that node a <quote>master</quote> or a
+<quote>slave</quote>. Since a <command>MOVE SET</command> or
+<command>FAILOVER</command> can switch the roles of nodes, slon needs
+to be able to function for both providers and subscribers.  It is not
 essential that these daemons run on any particular host, but there are
 some principles worth considering:
 
@@ -17,13 +17,12 @@ some principles worth considering:
 
 <listitem><para> Each <application>slon</application> needs to be able
 to communicate quickly with the database whose <quote>node
-controller</quote> it is.  Therefore, if a
-<productname>Slony-I</productname> cluster runs across some form of
-Wide Area Network, each slon process should run on or nearby the
-databases each is controlling.  If you break this rule, no particular
-disaster should ensue, but the added latency introduced to monitoring
-events on the slon's <quote>own node</quote> will cause it to
-replicate in a <emphasis>somewhat</emphasis> less timely
+controller</quote> it is.  Therefore, if a &slony1; cluster runs
+across some form of Wide Area Network, each slon process should run on
+or nearby the databases each is controlling.  If you break this rule,
+no particular disaster should ensue, but the added latency introduced
+to monitoring events on the slon's <quote>own node</quote> will cause
+it to replicate in a <emphasis>somewhat</emphasis> less timely
 manner.</para></listitem>
 
 <listitem><para> The very fastest results would be achieved by having
@@ -56,7 +55,7 @@ invocation of <application><link linkend="slon"> slon
 database, checking to see if a <command>SYNC</command> has taken place
 recently.  We have had VPN connections that occasionally fall over
 without signalling the application, so that the <application><link
-linkend="slon"> slon </link></application> stops working, but doesn't
+       linkend="slon"> slon </link></application> stops working, but doesn't
 actually die; this polling addresses that issue.</para></listitem>
 
 </itemizedlist></para>
@@ -82,8 +81,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

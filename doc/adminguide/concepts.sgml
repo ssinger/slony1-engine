@@ -1,10 +1,10 @@
-<!-- $Id: concepts.sgml,v 1.8 2005-01-24 17:35:35 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="concepts">
-<title><productname>Slony-I</productname> Concepts</title>
+<title>&slony1; Concepts</title>
 
 
-<para>In order to set up a set of <productname>Slony-I</productname> replicas, it is necessary to
-understand the following major abstractions that it uses:</para>
+<para>In order to set up a set of &slony1; replicas, it is necessary
+to understand the following major abstractions that it uses:</para>
 
 <itemizedlist>
 	<listitem><para>Cluster</para></listitem>
@@ -16,20 +16,22 @@ understand the following major abstractions that it uses:</para>
 <sect2>
 <title>Cluster</title>
 
-<para>In <productname>Slony-I</productname> terms, a Cluster is a named set of PostgreSQL
-database instances; replication takes place between those databases.</para>
+<para>In &slony1; terms, a Cluster is a named set of &postgres;
+database instances; replication takes place between those
+databases.</para>
 
 <para>The cluster name is specified in each and every Slonik script via the directive:</para>
 <programlisting>
 cluster name = 'something';
 </programlisting>
 
-<para>If the Cluster name is <envar>something</envar>, then <productname>Slony-I</productname> will
-create, in each database instance in the cluster, the namespace/schema <envar>_something.</envar></para>
+<para>If the Cluster name is <envar>something</envar>, then &slony1;
+will create, in each database instance in the cluster, the
+namespace/schema <envar>_something.</envar></para>
 </sect2>
 <sect2><title>Node</title>
 
-<para>A <productname>Slony-I</productname> Node is a named PostgreSQL database that will be participating in replication.</para>
+<para>A &slony1; Node is a named &postgres; database that will be participating in replication.</para>
 
 <para>It is defined, near the beginning of each Slonik script, using the directive:</para>
 <programlisting>
@@ -40,17 +42,17 @@ create, in each database instance in the cluster, the namespace/schema <envar>_s
 information indicates a string argument that will ultimately be passed
 to the <function>PQconnectdb()</function> libpq function.</para>
 
-<para>Thus, a <productname>Slony-I</productname> cluster consists of:</para>
+<para>Thus, a &slony1; cluster consists of:</para>
 <itemizedlist>
 	<listitem><para> A cluster name</para></listitem>
-	<listitem><para> A set of <productname>Slony-I</productname> nodes, each of which has a namespace based on that cluster name</para></listitem>
+	<listitem><para> A set of &slony1; nodes, each of which has a namespace based on that cluster name</para></listitem>
 </itemizedlist>
 </sect2>
 <sect2><title> Replication Set</title>
 
 <para>A replication set is defined as a set of tables and sequences
 that are to be replicated between nodes in a
-<productname>Slony-I</productname> cluster.</para>
+&slony1; cluster.</para>
 
 <para>You may have several sets, and the <quote>flow</quote> of
 replication does not need to be identical between those sets.</para>
@@ -70,10 +72,10 @@ indicating that they want to receive the data.</para>
 <para>The origin node will never be considered a
 <quote>subscriber.</quote> (Ignoring the case where the cluster is
 reshaped, and the origin is expressly shifted to another node.)  But
-<productname>Slony-I</productname> supports the notion of cascaded
-subscriptions, that is, a node that is subscribed to some set may also
-behave as a <quote>provider</quote> to other nodes in the cluster for
-that replication set.</para>
+&slony1; supports the notion of cascaded subscriptions, that is, a
+node that is subscribed to some set may also behave as a
+<quote>provider</quote> to other nodes in the cluster for that
+replication set.</para>
 </sect2>
 </sect1>
 
@@ -86,8 +88,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

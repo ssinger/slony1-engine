@@ -1,11 +1,10 @@
-<!-- $Id: cluster.sgml,v 1.7 2004-12-22 23:09:58 darcyb Exp $ -->
+<!-- $Id: cluster.sgml,v 1.9 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="cluster">
-<title>Defining Slony-I Clusters</title>
+<title>Defining &slony1; Clusters</title>
 
-<para>A <productname>Slony-I</productname> cluster is the basic
-grouping of database instances in which replication takes place.  It
-consists of a set of <productname>PostgreSQL</productname> database
-instances in which is defined a namespace specific to that
+<para>A &slony1; cluster is the basic grouping of database instances
+in which replication takes place.  It consists of a set of &postgres;
+database instances in which is defined a namespace specific to that
 cluster.</para>
 
 <para>Each database instance in which replication is to take place is
@@ -35,8 +34,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

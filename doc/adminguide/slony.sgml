@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.12 2005-02-07 21:43:54 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.13 2005-02-09 14:42:45 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -6,12 +6,14 @@
   <!entity % filelist SYSTEM "filelist.sgml">
     %filelist;
   <!entity reference  SYSTEM "reference.sgml">
+  <!ENTITY slony1 "<PRODUCTNAME>Slony-I</PRODUCTNAME>">
+  <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
 ]>
 
 <book id="slony">
-  <title><productname>Slony-I</productname> &version; Documentation</title>
+  <title>&slony1; &version; Documentation</title>
   <bookinfo>
-    <corpauthor>The Slony Global Development Group</corpauthor>
+    <corpauthor>The &postgres; Global Development Group</corpauthor>
     <author>
       <firstname>Christopher</firstname>
       <surname>Browne</surname>
@@ -20,7 +22,7 @@
   </bookinfo>
 
   <article id="slonyintro">
-    <title><productname>Slony-I</productname> Introduction</title>
+    <title>&slony1; Introduction</title>
 
     &intro;
     &prerequisites;
@@ -76,7 +78,7 @@ worth documenting</emphasis>.</para>
 </part>
 
 <part id="commandreferencec">
-    <title>Core <productname>Slony-I</productname> Programs</title>
+    <title>Core &slony1; Programs</title>
 	&slon;
 	&slonik;
         &usingslonik;
@@ -95,8 +97,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

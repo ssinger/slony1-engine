@@ -1,6 +1,6 @@
-<!-- $Id: defineset.sgml,v 1.9 2005-02-07 21:44:49 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="definingsets">
-<title>Defining Slony-I Replication Sets</title>
+<title>Defining &slony1; Replication Sets</title>
 
 <para>Defining the nodes indicated the shape of the cluster of
 database servers; it is now time to determine what data is to be
@@ -20,19 +20,18 @@ suitable primary key</para></listitem>
 
 <sect2><title>Primary Keys</title>
 
-<para><productname>Slony-I</productname> <emphasis>needs</emphasis> to
-have a primary key or candidate thereof on each table that is
-replicated.  PK values are used as the primary identifier for each
-tuple that is modified in the source system.  There are three ways
-that you can get <productname>Slony-I</productname> to use a primary
-key:</para>
+<para>&slony1; <emphasis>needs</emphasis> to have a primary key or
+candidate thereof on each table that is replicated.  PK values are
+used as the primary identifier for each tuple that is modified in the
+source system.  There are three ways that you can get &slony1; to use
+a primary key:</para>
 
 <itemizedlist>
 
 <listitem><para> If the table has a formally identified primary key,
 <command><link linkend="stmtsetaddtable">SET ADD
 TABLE</link></command> can be used without any need to reference the
-primary key.  <productname>Slony-I</productname> will pick up that
+primary key.  &slony1; will pick up that
 there is a primary key, and use it.</para></listitem>
 
 <listitem><para> If the table hasn't got a primary key, but has some
@@ -52,25 +51,25 @@ table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
 <listitem><para> If the table hasn't even got a candidate primary key,
-you can ask <productname>Slony-I</productname> to provide one.  This is done by
-first using <command><link linkend="stmttableaddkey"> TABLE ADD KEY
-</link> </command> to add a column populated using a
-<productname>Slony-I</productname> sequence, and then having the <command> <link
-linkend="stmtsetaddtable"> SET ADD TABLE</link></command> include the
-directive <option>key=serial</option>, to indicate that
-<productname>Slony-I</productname>'s own column should be used.</para></listitem>
+you can ask &slony1; to provide one.  This is done by first using
+<command><link linkend="stmttableaddkey"> TABLE ADD KEY </link>
+</command> to add a column populated using a &slony1; sequence, and
+then having the <command> <link linkend="stmtsetaddtable"> SET ADD
+TABLE</link></command> include the directive
+<option>key=serial</option>, to indicate that &slony1;'s own column
+should be used.</para></listitem>
 
 </itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
 key;</quote> it is, however, recommended that you have one of those
-instead of having <productname>Slony-I</productname> populate the PK column for
-you.  If you don't have a suitable primary key, that means that the
-table hasn't got any mechanism from your application's standpoint of
-keeping values unique.  <productname>Slony-I</productname> may therefore introduce
-a new failure mode for your application, and this implies that you had
-a way to enter confusing data into the database.</para>
+instead of having &slony1; populate the PK column for you.  If you
+don't have a suitable primary key, that means that the table hasn't
+got any mechanism from your application's standpoint of keeping values
+unique.  &slony1; may therefore introduce a new failure mode for your
+application, and this implies that you had a way to enter confusing
+data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>
@@ -90,9 +89,10 @@ replication set:
 <itemizedlist>
 
 <listitem><para> Replicating a large set leads to a <link
-linkend="longtxnsareevil"> long running transaction </link> on the
-provider node.  The FAQ outlines a number of problems that result from
-long running transactions that will injure system performance.</para>
+       linkend="longtxnsareevil"> long running transaction </link> on the
+provider node.  The <link linkend="faq"> FAQ </link> outlines a number
+of problems that result from long running transactions that will
+injure system performance.</para>
 
 <para> If you can split a large set into several pieces, that will
 shorten the length of each of the transactions, lessening the degree
@@ -112,13 +112,13 @@ locked, and the greater the chances of deadlocks. </para>
 
 <para> By the same token, if a particular DDL script only needs to
 affect a couple of tables, you might use <link
-linkend="stmtsetmovetable"> <command>SET MOVE TABLE</command></link>
+       linkend="stmtsetmovetable"> <command>SET MOVE TABLE</command></link>
 to move them temporarily to a new replication set.  By diminishing the
 number of locks needed, this should ease the ability to get the DDL
 change into place.</para>
 </listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 </sect2>
 
@@ -127,7 +127,7 @@ change into place.</para>
 <para> Each time a SYNC is processed, values are recorded for
 <emphasis>all</emphasis> of the sequences in the set.  If there are a
 lot of sequences, this can cause <envar>sl_seqlog</envar> to grow
-rather large.
+rather large.</para>
 
 <para> This points to an important difference between tables and
 sequences: if you add additional tables that do not see much/any
@@ -137,7 +137,9 @@ by replication.  For a replicated sequence, values must
 the effects:
 
 <itemizedlist>
-<listitem><para> A replicated table that is never updated does not introduce much work to the system.
+
+<listitem><para> A replicated table that is never updated does not
+introduce much work to the system.</para>
 
 <para> If it is not updated, the trigger on the table on the origin
 never fires, and no entries are added to <envar>sl_log_1</envar>.  The
@@ -145,20 +147,20 @@ table never appears in any of the further replication queries
 (<emphasis>e.g.</emphasis> in the <command>FETCH 100 FROM
 LOG</command> queries used to find replicatable data) as they only
 look for tables for which there are entries in
-<envar>sl_log_1</envar>.
+<envar>sl_log_1</envar>.</para></listitem>
 
 <listitem><para> In contrast, a fixed amount of work is introduced to
-each SYNC by each sequence that is replicated.
+each SYNC by each sequence that is replicated.</para>
 
 <para> Replicate 300 sequence and 300 rows need to be added to
-<envar>sl_seqlog</envar> on a regular basis.
+<envar>sl_seqlog</envar> on a regular basis.</para>
 
 <para> It is more than likely that if the value of a particular
 sequence hasn't changed since it was last checked, perhaps the same
 value need not be stored over and over; some thought needs to go into
-how to do that safely.
+how to do that safely.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para></sect2>
 
 </sect1>
 
@@ -171,8 +173,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

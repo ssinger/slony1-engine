@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
 
@@ -25,12 +25,12 @@ possible for things to get pretty confused on the nodes where other
 things were pending.  This problem was resolved in 1.0.5.</para>
 
 <para> Note that if you add nodes, you will need to add both <link
-linkend="stmtstorepath">STORE PATH</link> statements to indicate how
+   linkend="stmtstorepath">STORE PATH</link> statements to indicate how
 nodes communicate with one another, and <link
-linkend="stmtstorelisten">STORE LISTEN</link> statements to
+   linkend="stmtstorelisten">STORE LISTEN</link> statements to
 configuration the <quote>communications network</quote> that results
 from that.  See the section on <link linkend="listenpaths"> Listen
-Paths </link> for more details on the latter.
+Paths </link> for more details on the latter.</para>
 
 <para>It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
@@ -39,7 +39,7 @@ often turns out quite badly.  If it is <emphasis>truly</emphasis>
 necessary to automate this, you'll probably want to submit <command>
 <link linkend="stmtwaitevent">WAIT FOR EVENT</link></command>
 requests in between subscription requests in order that the <link
-linkend="slonik">slonik</link> script wait for one subscription to
+   linkend="slonik">slonik</link> script wait for one subscription to
 complete processing before requesting the next one.</para>
 
 <para>But in general, it is likely to be easier to cope with complex
@@ -57,8 +57,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

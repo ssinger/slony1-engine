@@ -1,20 +1,21 @@
-<!-- $Id: maintenance.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
-<sect1 id="maintenance"> <title>Slony-I Maintenance</title>
+<!-- $Id: maintenance.sgml,v 1.11 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
-<para><productname>Slony-I</productname> actually does most of its necessary
-maintenance itself, in a <quote>cleanup</quote> thread:
+<para>&slony1; actually does a lot of its necessary maintenance
+itself, in a <quote>cleanup</quote> thread:
 
 <itemizedlist>
 
 <listitem><para> Deletes old data from various tables in the
-<productname>Slony-I</productname> cluster's namespace, notably entries in
-sl_log_1, sl_log_2 (not yet used), and sl_seqlog.</para></listitem>
+<productname>Slony-I</productname> cluster's namespace, notably
+entries in <envar>sl_log_1</envar>, <envar>sl_log_2</envar> (not yet
+used), and <envar>sl_seqlog</envar>.</para></listitem>
 
-<listitem><para> Vacuum certain tables used by <productname>Slony-I</productname>.
-As of 1.0.5, this includes pg_listener; in earlier versions, you must
-vacuum that table heavily, otherwise you'll find replication slowing
-down because <productname>Slony-I</productname> raises plenty of events, which
-leads to that table having plenty of dead tuples.</para>
+<listitem><para> Vacuum certain tables used by &slony1;.  As of 1.0.5,
+this includes pg_listener; in earlier versions, you must vacuum that
+table heavily, otherwise you'll find replication slowing down because
+&slony1; raises plenty of events, which leads to that table having
+plenty of dead tuples.</para>
 
 <para> In some versions (1.1, for sure; possibly 1.0.5) there is the
 option of not bothering to vacuum any of these tables if you are using
@@ -22,13 +23,14 @@ something like <application>pg_autovacuum</application> to handle
 vacuuming of these tables.  Unfortunately, it has been quite possible
 for <application>pg_autovacuum</application> to not vacuum quite
 frequently enough, so you probably want to use the internal vacuums.
-Vacuuming pg_listener <quote>too often</quote> isn't nearly as
-hazardous as not vacuuming it frequently enough.</para>
+Vacuuming <envar>pg_listener</envar> <quote>too often</quote> isn't
+nearly as hazardous as not vacuuming it frequently enough.</para>
 
 <para>Unfortunately, if you have long-running transactions, vacuums
 cannot clear out dead tuples that are newer than the eldest
 transaction that is still running.  This will most notably lead to
-pg_listener growing large and will slow replication.</para></listitem>
+<envar>pg_listener</envar> growing large and will slow
+replication.</para></listitem>
 
 </itemizedlist>
 </para>
@@ -44,7 +46,7 @@ that causes loss of connectivity.</para>
 </sect2>
 <sect2><title>Parallel to Watchdog: generate_syncs.sh</title>
 
-<para>A new script for <productname>Slony-I</productname> 1.1 is
+<para>A new script for &slony1; 1.1 is
 <application>generate_syncs.sh</application>, which addresses the following kind of
 situation.</para>
 
@@ -57,9 +59,10 @@ database came back up, none of the <application>slon</application> daemons
 survived.  Your online application then saw nearly three days worth of
 reasonably heavy transaction load.</para>
 
-<para>When you restart slon on Monday, it hasn't done a SYNC on the
-master since Friday, so that the next <quote>SYNC set</quote> comprises all
-of the updates between Friday and Monday.  Yuck.</para>
+<para>When you restart <application>slon</application> on Monday, it
+hasn't done a SYNC on the master since Friday, so that the next
+<quote>SYNC set</quote> comprises all of the updates between Friday
+and Monday.  Yuck.</para>
 
 <para>If you run <application>generate_syncs.sh</application> as a cron job every
 20 minutes, it will force in a periodic <command>SYNC</command> on the origin, which
@@ -73,15 +76,14 @@ regularly, this script won't bother doing anything.</para>
 
 <sect2><title>Replication Test Scripts </title>
 
-<para> In the directory <filename>tools</filename> may be found four scripts
-that may be used to do monitoring of <productname> Slony-I
-</productname> instances:
+<para> In the directory <filename>tools</filename> may be found four
+scripts that may be used to do monitoring of &slony1; instances:
 
 <itemizedlist>
 
-<listitem><para> <command>test_slony_replication.pl</command> is a Perl script
-to which you can pass connection information to get to a
-<productname>Slony-I</productname> node.  It then queries <envar>sl_path</envar> and other
+<listitem><para> <command>test_slony_replication.pl</command> is a
+Perl script to which you can pass connection information to get to a
+&slony1; node.  It then queries <envar>sl_path</envar> and other
 information on that node in order to determine the shape of the
 requested replication set.</para>
 
@@ -97,12 +99,11 @@ CREATE TABLE slony_test (
 );
 </programlisting></para>
 
-<para> The last column in that table was defined by
-<productname>Slony-I</productname> as one lacking a primary key...</para>
+<para> The last column in that table was defined by &slony1; as one
+lacking a primary key...</para>
 
-<para> This script generates a line of output for each
-<productname>Slony-I</productname> node that is active for the requested
-replication set in a file called
+<para> This script generates a line of output for each &slony1; node
+that is active for the requested replication set in a file called
 <filename>cluster.fact.log</filename>.</para>
 
 <para> There is an additional <option>finalquery</option> option that allows
@@ -115,8 +116,9 @@ for the Perl scripts.</para></listitem>
 <listitem><para><command>run_rep_tests.sh</command> is a <quote>wrapper</quote> script
 that runs <command>test_slony_replication.pl</command>.</para>
 
-<para> If you have several <productname>Slony-I</productname> clusters, you might
-set up configuration in this file to connect to all those clusters.</para></listitem>
+<para> If you have several &slony1; clusters, you might set up
+configuration in this file to connect to all those
+clusters.</para></listitem>
 
 <listitem><para><command>nagios_slony_test.pl</command> is a script
 that was constructed to query the log files so that you might run the
@@ -130,9 +132,9 @@ in those logs.</para>
 <application>cron</application> job run the tests and have
 <productname>Nagios</productname> check the results rather than having
 <productname>Nagios</productname> run the tests directly.  The tests
-can exercise the whole <productname>Slony-I</productname> cluster at
-once rather than <productname>Nagios</productname> invoking updates
-over and over again.</para></listitem>
+can exercise the whole &slony1; cluster at once rather than
+<productname>Nagios</productname> invoking updates over and over
+again.</para></listitem>
 
 </itemizedlist></para>
 
@@ -165,8 +167,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:book.sgml
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

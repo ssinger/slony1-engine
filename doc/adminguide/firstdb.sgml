@@ -1,20 +1,19 @@
-<!-- $Id: firstdb.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <para>In this example, we will be replicating a brand new pgbench
 database.  The mechanics of replicating an existing database are
-covered here, however we recommend that you learn how
-<productname>Slony-I</productname> functions by using a fresh new
-non-production database.</para>
+covered here, however we recommend that you learn how &slony1;
+functions by using a fresh new non-production database.</para>
 
-<para>The <productname>Slony-I</productname> replication engine is
-trigger-based, allowing us to replicate databases (or portions
-thereof) running under the same postmaster.</para>
+<para>The &slony1; replication engine is trigger-based, allowing us to
+replicate databases (or portions thereof) running under the same
+postmaster.</para>
 
 <para>This example will show how to replicate the pgbench database
 running on localhost (master) to the pgbench slave database also
 running on localhost (slave).  We make a couple of assumptions about
-your PostgreSQL configuration:
+your &postgres; configuration:
 
 <itemizedlist>
 
@@ -26,8 +25,10 @@ your PostgreSQL configuration:
 
 </itemizedlist></para>
 
-<para> The <envar>REPLICATIONUSER</envar> needs to be a PostgreSQL superuser.
-This is typically postgres or pgsql.</para>
+<para> The <envar>REPLICATIONUSER</envar> needs to be a &postgres;
+superuser.  This is typically postgres or pgsql, although in complex
+environments it is quite likely a good idea to define a &slony1; user
+to distinguish between them.</para>
 
 <para>You should also set the following shell variables:
 
@@ -55,7 +56,7 @@ This is typically postgres or pgsql.</para>
 </itemizedlist>
 </para>
 
-<para><warning><Para> If you're changing these variables to use
+<para><warning><para> If you're changing these variables to use
 different hosts for <envar>MASTERHOST</envar> and <envar>SLAVEHOST</envar>, be sure
 <emphasis>not</emphasis> to use localhost for either of them.  This will result
 in an error similar to the following:</para>
@@ -81,16 +82,18 @@ createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 
-<para>Because <productname>Slony-I</productname> depends on the databases having the pl/pgSQL procedural
-language installed, we better install it now.  It is possible that you have
-installed pl/pgSQL into the template1 database in which case you can skip this
-step because it's already installed into the <envar>$MASTERDBNAME</envar>.
+<para>Because &slony1; depends on the databases having the pl/pgSQL
+procedural language installed, we better install it now.  It is
+possible that you have installed pl/pgSQL into the template1 database
+in which case you can skip this step because it's already installed
+into the <envar>$MASTERDBNAME</envar>.
 
 <programlisting>
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 </para>
-<para><productname>Slony-I</productname> does not yet automatically copy table definitions from a
+
+<para>&slony1; does not automatically copy table definitions from a
 master when a slave subscribes to it, so we need to import this data.
 We do this with <application>pg_dump</application>.
 
@@ -99,13 +102,14 @@ pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATI
 </programlisting>
 </para>
 
-<para>To illustrate how <productname>Slony-I</productname> allows for on the fly
-replication subscription, let's start up <application>pgbench</application>.  If
-you run the <application>pgbench</application> application in the foreground of a
-separate terminal window, you can stop and restart it with different
-parameters at any time.  You'll need to re-export the variables again
-so they are available in this session as well.
+<para>To illustrate how &slony1; allows for on the fly replication
+subscription, let's start up <application>pgbench</application>.  If
+you run the <application>pgbench</application> application in the
+foreground of a separate terminal window, you can stop and restart it
+with different parameters at any time.  You'll need to re-export the
+variables again so they are available in this session as well.
 </para>
+
 <para>The typical command to run <application>pgbench</application> would look like:
 
 <programlisting>
@@ -121,11 +125,11 @@ database running on localhost as the pgbench user.
 <sect2><title>Configuring the Database for Replication.</title>
 
 <para>Creating the configuration tables, stored procedures, triggers
-and configuration is all done through the 
-<link linkend="slonik"><application>slonik</application></link> tool. 
-It is a specialized scripting aid that mostly calls stored procedures 
-in the master/slave (node) databases.  The script to create the initial 
-configuration for the simple master-slave setup of our pgbench database looks like this:
+and configuration is all done through the <link linkend="slonik"><application>slonik</application></link> tool. It is
+a specialized scripting aid that mostly calls stored procedures in the
+master/slave (node) databases.  The script to create the initial
+configuration for the simple master-slave setup of our pgbench
+database looks like this:
 
 <programlisting>
 #!/bin/sh
@@ -186,14 +190,15 @@ slonik <<_EOF_
 	store listen (origin=1, provider = 1, receiver =2);
 	store listen (origin=2, provider = 2, receiver =1);
 _EOF_
-</programlisting>
+</programlisting></para>
 
 <para>Is the <application>pgbench</application> still running?  If not start it
 again.</para>
+
 <para>At this point we have 2 databases that are fully prepared.  One
-is the master database in which <application>pgbench</application> is busy
-accessing and changing rows.  It's now time to start the replication
-daemons.</para>
+is the master database in which <application>pgbench</application> is
+busy accessing and changing rows.  It's now time to start the
+replication daemons.</para>
 
 <para>On $MASTERHOST the command to start the replication engine is
 
@@ -213,7 +218,7 @@ are both spitting out diagnostics and other messages, we aren't
 replicating any data yet.  The notices you are seeing is the
 synchronization of cluster configurations between the 2
 <application><link linkend="slon">slon</link></application>
-processes.
+processes.</para>
 
 <para>To start replicating the 4 pgbench tables (set 1) from the
 master (node id 1) the the slave (node id 2), execute the following
@@ -302,13 +307,12 @@ fi
 </para>
 
 <para>Note that there is somewhat more sophisticated documentation of
-the process in the <productname>Slony-I</productname> source code tree
-in a file called
+the process in the &slony1; source code tree in a file called
 <filename>slony-I-basic-mstr-slv.txt</filename>.</para>
 
 <para>If this script returns <command>FAILED</command> please contact the
 developers at <ulink url="http://slony.info/">
-http://slony.info/</ulink></para>
+http://slony.info/</ulink></para></sect2>
 
 </sect1>
 
@@ -321,8 +325,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

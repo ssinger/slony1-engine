@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.11 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <para>If you rearrange the nodes so that they serve different
@@ -17,15 +17,14 @@ subscriptions of other nodes.  You might want to modify a node to get
 its data from a different provider, or to change it to turn forwarding
 on or off.  This can be accomplished by issuing the slonik <command>
 <link linkend="stmtsubscribeset"> SUBSCRIBE SET</link> </command>
-operation with the new subscription information for the node;
-<productname>Slony-I</productname> will change the
-configuration.</para></listitem>
+operation with the new subscription information for the node; &slony1;
+will change the configuration.</para></listitem>
 
 <listitem><para> If the directions of data flows have changed, it is
 doubtless appropriate to issue a set of <command><link
-linkend="stmtdroplisten"> DROP LISTEN</link></command> operations to
+       linkend="stmtdroplisten"> DROP LISTEN</link></command> operations to
 drop out obsolete paths between nodes and <command><link
-linkend="stmtstorelisten">STORE LISTEN </link></command> to add the
+       linkend="stmtstorelisten">STORE LISTEN </link></command> to add the
 new ones.  At present, this is not changed automatically; at some
 point, <command> <link linkend="stmtmoveset"> MOVE
 SET</link></command> and <command> <link linkend="stmtsubscribeset">
@@ -56,8 +55,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

@@ -1,19 +1,19 @@
-<!-- $Id: intro.sgml,v 1.8 2005-02-07 21:48:23 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
 <sect1 id="introduction">
-<title>Introduction to <productname>Slony-I</productname></title>
+<title>Introduction to &slony1;</title>
 <sect2><title>Why yet another replication system?</title>
 
-<para><productname>Slony-I</productname> was born from an idea to
+<para>&slony1; was born from an idea to
 create a replication system that was not tied to a specific version of
-PostgreSQL, which is allowed to be started and stopped on an existing
+&postgres;, which is allowed to be started and stopped on an existing
 database with out the need for a dump/reload cycle.</para> </sect2>
 
-<sect2> <title>What <productname>Slony-I</productname> is</title>
+<sect2> <title>What &slony1; is</title>
 
-<para><productname>Slony-I</productname> is a <quote>master to
+<para>&slony1; is a <quote>master to
 multiple slaves</quote> replication system supporting cascading and
 slave promotion.  The big picture for the development of
-<productname>Slony-I</productname> is as a master-slave system that
+&slony1; is as a master-slave system that
 includes all features and capabilities needed to replicate large
 databases to a reasonably limited number of slave systems.
 <quote>Reasonable,</quote> in this context, is probably no more than a
@@ -24,26 +24,24 @@ cost of communications becomes prohibitively high.</para>
 </link> for a further analysis of costs associated with having many
 nodes.</para>
 
-<para> <productname>Slony-I</productname> is a system intended for
-data centers and backup sites, where the normal mode of operation is
-that all nodes are available all the time, and where all nodes can be
-secured.  If you have nodes that are likely to regularly drop onto and
-off of the network, or have nodes that cannot be kept secure,
-<productname>Slony-I</productname> is probably not the ideal
-replication solution for you.</para>
+<para> &slony1; is a system intended for data centers and backup
+sites, where the normal mode of operation is that all nodes are
+available all the time, and where all nodes can be secured.  If you
+have nodes that are likely to regularly drop onto and off of the
+network, or have nodes that cannot be kept secure, &slony1; is
+probably not the ideal replication solution for you.</para>
 
-<para> Thus, examples of cases where
-<productname>Slony-I</productname> probably won't work out well would
-include:
+<para> Thus, examples of cases where &slony1; probably won't work out
+well would include:
 
 <itemizedlist>
 <listitem><para> Sites where connectivity is really <quote>flakey</quote>
 </para></listitem>
-<listitem><para> Replication to nodes that are unpredictably connected.
+<listitem><para> Replication to nodes that are unpredictably connected.</para>
 
 <para> Replicating a pricing database from a central server to sales
 staff who connect periodically to grab updates.  </para></listitem>
-</itemizedlist>
+</itemizedlist></para>
 
 <para> There are plans for a <quote>file-based log shipping</quote>
 extension where updates would be serialized into files.  Given that,
@@ -51,90 +49,84 @@ log files could be distributed by any means desired without any need
 of feedback between the provider node and those nodes subscribing via
 <quote>log shipping.</quote></para>
 
-<para> But <productname>Slony-I</productname>, by only having a single
-origin for each set, is quite unsuitable for
-<emphasis>really</emphasis> asynchronous multiway replication.  For
-those that could use some sort of <quote>asynchronous multimaster
-replication with conflict resolution</quote> akin to what is provided
-by <productname> Lotus <trademark>Notes</trademark></productname> or
-the <quote>syncing</quote> protocols found on PalmOS systems, you will
+<para> But &slony1;, by only having a single origin for each set, is
+quite unsuitable for <emphasis>really</emphasis> asynchronous multiway
+replication.  For those that could use some sort of
+<quote>asynchronous multimaster replication with conflict
+resolution</quote> akin to what is provided by <productname>Lotus
+<trademark>Notes</trademark></productname> or the
+<quote>syncing</quote> protocols found on PalmOS systems, you will
 really need to look elsewhere.  These sorts of replication models are
 not without merit, but they represent <emphasis>different</emphasis>
-replication scenarios that <productname>Slony-I</productname> does not
-attempt to address.</para>
+replication scenarios that &slony1; does not attempt to
+address.</para>
 
 </sect2>
 
-<sect2><title> What <productname>Slony-I</productname> is not</title>
+<sect2><title> What &slony1; is not</title>
 
-<para><productname>Slony-I</productname> is not a network management
-system.</para>
+<para>&slony1; is not a network management system.</para>
 
-<para> <productname>Slony-I</productname> does not have any
-functionality within it to detect a node failure, nor to automatically
-promote a node to a master or other data origin.  It is quite possible
-that you may need to do that; that will require that you combine some
-network tools that evaluate <emphasis> to your satisfaction
-</emphasis> which nodes you consider <quote>live</quote> and which
-nodes you consider <quote>dead</quote> along with some local policy to
-determine what to do under those circumstances.
-<productname>Slony-I</productname> does not dictate any of that policy
-to you.</para>
+<para> &slony1; does not have any functionality within it to detect a
+node failure, nor to automatically promote a node to a master or other
+data origin.  It is quite possible that you may need to do that; that
+will require that you combine some network tools that evaluate
+<emphasis> to your satisfaction </emphasis> which nodes you consider
+<quote>live</quote> and which nodes you consider <quote>dead</quote>
+along with some local policy to determine what to do under those
+circumstances.  &slony1; does not dictate any of that policy to
+you.</para>
 
-<para><productname>Slony-I</productname> is not multi-master; it is
-not a connection broker, and it doesn't make you coffee and toast in
-the morning.</para>
+<para>&slony1; is not multi-master; it is not a connection broker, and
+it doesn't make you coffee and toast in the morning.</para>
 
 <para>That being said, the plan is for a subsequent system,
 <productname>Slony-II</productname>, to provide
 <quote>multimaster</quote> capabilities.  But that is a separate
-project, and expectations for <productname>Slony-I</productname>
-should not be based on hopes for future projects.</para></sect2>
+project, and expectations for &slony1; should not be based on hopes
+for future projects.</para></sect2>
 
-<sect2><title> Why doesn't <productname>Slony-I</productname> do
-automatic fail-over/promotion?
+<sect2><title> Why doesn't &slony1; do automatic fail-over/promotion?
 </title>
 
-<para>This is the job of network monitoring software, not Slony.
+<para>This is the job of network monitoring software, not &slony1;.
 Every site's configuration and fail-over paths are different.  For
 example, keep-alive monitoring with redundant NIC's and intelligent HA
 switches that guarantee race-condition-free takeover of a network
 address and disconnecting the <quote>failed</quote> node will vary
 based on network configuration, vendor choices, and the combinations
 of hardware and software in use.  This is clearly the realm of network
-management software and not <productname>Slony-I</productname>.</para>
+management software and not &slony1;.</para>
 
 <para> Furthermore, choosing what to do based on the
 <quote>shape</quote> of the cluster represents local business policy.
-If <productname>Slony-I</productname> imposed failover policy on you,
+If &slony1; imposed failover policy on you,
 that might conflict with business requirements, thereby making
-<productname>Slony-I</productname> an unacceptable choice.</para>
+&slony1; an unacceptable choice.</para>
 
-<para>As a result, let <productname>Slony-I</productname> do what it
-does best: provide database replication.</para></sect2>
+<para>As a result, let &slony1; do what it does best: provide database
+replication.</para></sect2>
 
 <sect2><title> Current Limitations</title>
 
-<para><productname>Slony-I</productname> does not automatically
+<para>&slony1; does not automatically
 propagate schema changes, nor does it have any ability to replicate
 large objects.  There is a single common reason for these limitations,
-namely that <productname>Slony-I</productname> operates using
+namely that &slony1; operates using
 triggers, and neither schema changes nor large object operations can
-raise triggers suitable to tell <productname>Slony-I</productname>
+raise triggers suitable to tell &slony1;
 when those kinds of changes take place.</para>
 
-<para>There is a capability for <productname>Slony-I</productname> to
-propagate DDL changes if you submit them as scripts via the
-<application>slonik</application> <command> <link
-linkend="stmtddlscript"> EXECUTE SCRIPT </link></command> operation.
-That is not <quote>automatic;</quote> you have to construct an SQL DDL
-script and submit it.</para>
+<para>There is a capability for &slony1; to propagate DDL changes if
+you submit them as scripts via the <application>slonik</application>
+<command> <link linkend="stmtddlscript"> EXECUTE SCRIPT
+</link></command> operation.  That is not <quote>automatic;</quote>
+you have to construct an SQL DDL script and submit it.</para>
 
 <para>If you have those sorts of requirements, it may be worth
-exploring the use of <application>PostgreSQL</application> 8.0
-<acronym>PITR</acronym> (Point In Time Recovery), where
-<acronym>WAL</acronym> logs are replicated to remote nodes.
-Unfortunately, that has two attendant limitations:
+exploring the use of &postgres; 8.0 <acronym>PITR</acronym> (Point In
+Time Recovery), where <acronym>WAL</acronym> logs are replicated to
+remote nodes.  Unfortunately, that has two attendant limitations:
 
 <itemizedlist>
 	
@@ -205,8 +197,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:slony.sgml
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

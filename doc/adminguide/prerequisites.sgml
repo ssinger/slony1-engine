@@ -1,8 +1,8 @@
 <!-- $Id -->
 <sect1 id="requirements">
 <title>System Requirements</title> <para>Any platform that can run
-PostgreSQL should be able to run
-<productname>Slony-I</productname>.</para>
+&postgres; should be able to run
+&slony1;.</para>
 
 <para>The platforms that have received specific testing at the time of
 this release are FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha,
@@ -10,20 +10,20 @@ osX-10.3, Linux-2.4X-i386 Linux-2.6X-i386 Linux-2.6X-amd64,
 <trademark>Solaris</trademark>-2.8-SPARC, <trademark>Solaris</trademark>-2.9-SPARC, AIX 5.1
 and OpenBSD-3.5-sparc64.</para>
 
-<para>There have been reports of success at running
-<productname>Slony-I</productname> hosts that are running PostgreSQL
-on Microsoft <trademark>Windows</trademark>.  At this time, the
+<para>There have been reports of success at running &slony1; hosts
+that are running PostgreSQL on Microsoft
+<trademark>Windows</trademark>.  At this time, the
 <quote>binary</quote> applications (<emphasis>e.g.</emphasis> -
 <application><link linkend="slonik">slonik</link></application>,
 <application><link linkend="slon">slon</link></application>) do not
 run on <trademark>Windows</trademark>, but a <application><link
-linkend="slon">slon</link></application> running on one of the
+    linkend="slon">slon</link></application> running on one of the
 Unix-like systems has no reason to have difficulty connect to a
 PostgreSQL instance running on <trademark>Windows</trademark>.</para>
 
 <para> It ought to be possible to port <application><link
-linkend="slon"> slon </link></application> and <application><link
-linkend="slonik"> slonik </link></application> to run on
+    linkend="slon"> slon </link></application> and <application><link
+    linkend="slonik"> slonik </link></application> to run on
 <trademark>Windows</trademark>; the conspicuous challenge is of having
 a POSIX-like <filename>pthreads</filename> implementation for
 <application><link linkend="slon"> slon </link></application>, as it
@@ -33,14 +33,13 @@ there being a <filename>pthreads</filename> library for
 interested party from volunteering to do the port.</para>
 
 <sect2>
-<title> Slony-I Software Dependancies</title>
+<title> &slony1; Software Dependancies</title>
 
-<para> At present, <productname>Slony-I</productname> <emphasis>as
-well as <productname>PostgreSQL</productname></emphasis> need to be
-able to be compiled from source at your site.  
+<para> At present, &slony1; <emphasis>as well as &postgres;</emphasis>
+need to be able to be compiled from source at your site.</para>
 
-<para> In order to compile <productname>Slony-I</productname>, you
-need to have the following tools.
+<para> In order to compile &slony1;, you need to have the following
+tools.
 
 <itemizedlist>
 <listitem><para> GNU make.  Other make programs will not work.  GNU
@@ -54,23 +53,22 @@ will suffice; previous versions may not.</para></listitem>
 <listitem><para> You need an ISO/ANSI C compiler.  Recent versions of
 <application>GCC</application> work.</para></listitem>
 
-<listitem><para> You also need a recent version of PostgreSQL
-<emphasis>source</emphasis>.  <productname>Slony-I</productname>
-depends on namespace support so you must have PostgreSQL version 7.3.3
-or newer to be able to build and use
-<productname>Slony-I</productname>.  </para></listitem>
+<listitem><para> You also need a recent version of &postgres;
+<emphasis>source</emphasis>.  &slony1; depends on namespace support so
+you must have &postgres; version 7.3.3 or newer to be able to build
+and use &slony1;.  </para></listitem>
 
 <listitem><para> GNU packages may be included in the standard
 packaging for your operating system, or you may need to look for
 source code at your local GNU mirror (see <ulink
-url="http://www.gnu.org/order/ftp.html">
+       url="http://www.gnu.org/order/ftp.html">
 http://www.gnu.org/order/ftp.html </ulink> for a list) or at <ulink
-url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink>
+       url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink>
 .)</para></listitem>
 
-<listitem><para> If you need to obtain PostgreSQL source, you can
-download it from your favorite PostgreSQL mirror.  See <ulink
-url="http://www.postgresql.org/mirrors-www.html">
+<listitem><para> If you need to obtain &postgres; source, you can
+download it from your favorite &postgres; mirror.  See <ulink
+       url="http://www.postgresql.org/mirrors-www.html">
 http://www.postgresql.org/mirrors-www.html </ulink> for a
 list.</para></listitem> </itemizedlist> </para>
 
@@ -79,21 +77,20 @@ will need approximately 5MB for the source tree during build and
 installation.</para>
 
 <note><para>There are changes afoot for version 1.1 that ought to make
-it possible to compile <productname>Slony-I</productname> separately
-from <productname>PostgreSQL</productname>, which should make it
-practical for the makers of distributions of
+it possible to compile &slony1; separately from &postgres;, which
+should make it practical for the makers of distributions of
 <productname>Linux</productname> and
 <productname>FreeBSD</productname> to include precompiled binary
-packages for <productname>Slony-I</productname>, but until that
-happens, you need to be prepared to use versions of all this software
-that you compile yourself.</para></note>
+packages for &slony1;, but until that happens, you need to be prepared
+to use versions of all this software that you compile
+yourself.</para></note>
 </sect2>
 
 <sect2>
-<title> Getting <productname>Slony-I</productname>Source</title>
+<title> Getting &slony1; Source</title>
 
-<para>You can get the <productname>Slony-I</productname> source from
-<ulink url="http://developer.postgresql.org/~wieck/slony1/download/">
+<para>You can get the &slony1; source from <ulink
+    url="http://developer.postgresql.org/~wieck/slony1/download/">
 http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 </para>
 
@@ -103,24 +100,24 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 <title> Time Synchronization</title>
 
 <para> All the servers used within the replication cluster need to
-have their Real Time Clocks in sync. This is to ensure that slon
-doesn't generate errors with messages indicating that a subscriber is
-already ahead of its provider during replication.  We recommend you
-have <application>ntpd</application> running on all nodes, where
-subscriber nodes using the <quote>master</quote> provider host as
-their time server.</para>
+have their Real Time Clocks in sync. This is to ensure that <link
+    linkend="slon"> slon </link> doesn't generate errors with messages
+indicating that a subscriber is already ahead of its provider during
+replication.  We recommend you have <application>ntpd</application>
+running on all nodes, where subscriber nodes using the
+<quote>master</quote> provider host as their time server.</para>
 
-<para> It is possible for <productname>Slony-I</productname> to
-function even in the face of there being some time discrepancies, but
-having systems <quote>in sync</quote> is usually pretty important for
-distributed applications.</para>
+<para> It is possible for &slony1; itself to function even in the face
+of there being some time discrepancies, but having systems <quote>in
+sync</quote> is usually pretty important for distributed
+applications.</para>
 
 <para> See <ulink url="http://www.ntp.org/"> www.ntp.org </ulink> for
 more details about NTP (Network Time Protocol).</para>
 
 <para> Some users have reported problems that have been traced to
-their locales indicating the use of some time zone that
-<productname>PostgreSQL</productname> did not recognize.  
+their locales indicating the use of some time zone that &postgres; did
+not recognize.
 
 <itemizedlist>
 
@@ -130,18 +127,17 @@ timestamps pulled from system calls causing it to
 break.</para>
 
 <para> <command>CUT0</command> is a variant way of describing
-<command>UTC</command>
+<command>UTC</command></para>
 </listitem>
 
 <listitem><para> Some countries' timezones are not yet included in
-<productname> PostgreSQL </productname>.  </para></listitem>
+&postgres;.  </para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para> In any case, what commonly seems to be the <quote>best
-practice</quote> with <productname>Slony-I</productname> (and, for
-that matter, <productname> PostgreSQL </productname>) is for the
-postmaster user and/or the user under which
+practice</quote> with &slony1; (and, for that matter, &postgres;) is
+for the postmaster user and/or the user under which
 <application>slon</application> runs to use
 <command><envar>TZ</envar>=UTC</command> or
 <command><envar>TZ</envar>=GMT</command>.  Those timezones are
@@ -155,20 +151,17 @@ leaping around due to Daylight Savings Time.</para>
 
 <para>It is necessary that the hosts that are to replicate between one
 another have <emphasis>bidirectional</emphasis> network communications
-to the PostgreSQL instances.  That is, if node B is replicating data
+to the &postgres; instances.  That is, if node B is replicating data
 from node A, it is necessary that there be a path from A to B and from
 B to A.  It is recommended that, as much as possible, all nodes in a
-<productname>Slony-I</productname> cluster allow this sort of
-bidirection communications from any node in the cluster to any other
-node in the cluster.</para>
+&slony1; cluster allow this sort of bidirection communications from
+any node in the cluster to any other node in the cluster.</para>
 
-<para>Note that the network addresses must be consistent across all of
-the nodes.  Thus, if there is any need to use a <quote>public</quote>
-address for a node, to allow remote/VPN access, that
-<quote>public</quote> address needs to be able to be used consistently
-throughout the <productname>Slony-I</productname> cluster, as the
-address is propagated throughout the cluster in table
-<envar>sl_path</envar>.</para>
+<para>For ease of configuration, network addresses should be
+consistent across all of the nodes.  <link linkend="stmtstorepath">
+<command>STORE PATH</command> </link> does allow them to vary, but
+down this road lies madness as you try to manage the multiplicity of
+paths pointing to the same server.</para>
 
 <para>A possible workaround for this, in environments where firewall
 rules are particularly difficult to implement, may be to establish
@@ -180,24 +173,22 @@ port for each destination.</para>
 <para> Note that <application>slonik</application> and the
 <application>slon</application> instances need no special connections
 or protocols to communicate with one another; they merely need access
-to the <application>PostgreSQL</application> databases, connecting as
-a <quote>superuser</quote>.</para>
+to the &postgres; databases, connecting as a
+<quote>superuser</quote>.</para>
 
 <para> An implication of this communications model is that the entire
-extended network in which a <productname>Slony-I</productname> cluster
-operates must be able to be treated as being secure.  If there is a
-remote location where you cannot trust one of the databases that is a
-<productname>Slony-I</productname> node to be considered
-<quote>secure,</quote> this represents a vulnerability that can
-adversely affect the security of the entire cluster.  As a
+extended network in which a &slony1; cluster operates must be able to
+be treated as being secure.  If there is a remote location where you
+cannot trust one of the databases that is a &slony1; node to be
+considered <quote>secure,</quote> this represents a vulnerability that
+can adversely affect the security of the entire cluster.  As a
 <quote>peer-to-peer</quote> system, <emphasis>any</emphasis> of the
 hosts is able to introduce replication events that will affect the
 entire cluster.  Therefore, the security policies throughout the
 cluster can only be considered as stringent as those applied at the
-<emphasis>weakest</emphasis> link.  Running a
-<productname>Slony-I</productname> node at a branch location that
-can't be kept secure compromises security for the cluster as a
-whole.</para>
+<emphasis>weakest</emphasis> link.  Running a &slony1; node at a
+branch location that can't be kept secure compromises security for the
+cluster as a whole.</para>
 
 <para>In the future plans is a feature whereby updates for a
 particular replication set would be serialized via a scheme called
@@ -208,11 +199,11 @@ manner desired, whether via scp, FTP, burning them onto DVD-ROMs and
 mailing them, or, at the frivolous end of the spectrum, by recording
 them on a USB <quote>flash device</quote> and attaching them to birds,
 allowing some equivalent to <ulink
-url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
+    url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
 datagrams on avian carriers - RFC 1149.</ulink> But whatever the
 transmission mechanism, this will allow one way communications such
 that subscribers that use log shipping have no need of access to other
-<productname>Slony-I</productname> nodes.</para>
+&slony1; nodes.</para>
 
 </sect2>
 </sect1>
@@ -225,8 +216,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:nil
-sgml-default-dtd-file:"./reference.ced"
+sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil
