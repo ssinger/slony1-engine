@@ -10,7 +10,7 @@ STATUS:
 
 	Slon can forward log information.
 
-	Slon can also subscribe to a set as a cascaded slave and
+	Slon can also subscribe to a set as a cascaded subscriber and
 	change the data provider later on the fly.
 
 TODO:

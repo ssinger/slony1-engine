@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.25 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: remote_worker.c,v 1.26 2004-03-17 19:29:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2226,7 +2226,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	else
 	{
 		/*
-		 * Our provider is another slave, so we can copy the
+		 * Our provider is another subscriber, so we can copy the
 		 * existing setsync from him.
 		 */
 		slon_mkquery(&query1,

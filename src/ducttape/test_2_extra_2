@@ -7,7 +7,7 @@
 #	to be node 3, making it a cascaded node.
 #
 #	It can only be run after node 2 has been reconfigured to be a
-#	direct slave. The required configuration checks are not yet
+#	direct subscriber. The required configuration checks are not yet
 #	implemented, so running it too early breaks the replication
 #	cluster.
 #

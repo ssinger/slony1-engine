@@ -4,7 +4,7 @@
 # script test_2_extra_1
 #
 #	This script demonstrates how to switch the provider for node 3
-#	to be the primary node (master). This makes node 3 logically
+#	to be the primary node (origin). This makes node 3 logically
 #	identical to node 2.
 #
 #	It can only be run after node 3 has completed copying the entire

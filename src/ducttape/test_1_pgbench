@@ -168,12 +168,12 @@ fi
 
 echo ""
 echo "**********************************************************************"
-echo "**** $DB1 is now the Slony-I master for set 1"
+echo "**** $DB1 is now the Slony-I origin for set 1"
 echo "**********************************************************************"
 echo ""
 
 ######################################################################
-# Setup DB2 as a slave node and let it subscribe the replication
+# Setup DB2 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
 echo "**** creating database for Node 2"
