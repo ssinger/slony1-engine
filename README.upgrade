@@ -1,4 +1,4 @@
-Beginning with version 1.0.3 the slon replication engine refuses to
+Beginning with version 1.0.4 the slon replication engine refuses to
 work against any database that does not have the stored procedures
 for the same version loaded or where the shared object containing the
 C language support functions and the log trigger does not match the

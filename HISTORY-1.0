@@ -1,4 +1,4 @@
-1.0.3	Bugfixes and required minor features
+1.0.4	Bugfixes and required minor features
 
   date: 2004/08/26 19:28:07;  author: wieck;
   Since every notify causes a new row version for listeners, I added
@@ -98,6 +98,10 @@
 
   date: 2004/10/18 15:11:29;  author: wieck;
   Added -v option to slon (and slonik) to show version number and exit.
+
+  ----------------------------
+
+1.0.3	Version number skipped due to late patch application
 
   ----------------------------
 
