@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.15 2004-05-05 16:13:30 wieck Exp $
+ *	$Id: slonik.c,v 1.16 2004-05-18 23:15:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2463,7 +2463,6 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 	SlonikAdmInfo  *adminfo1;
 	SlonDString		query;
 	char		   *idxname;
-	char		   *attkind;
 	PGresult	   *res;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
@@ -2484,7 +2483,7 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 	{
 		slon_mkquery(&query,
 				"select \"_%s\".determineIdxnameSerial('%q'), "
-				"    \"_%s\".determineAttkindSerial('%q');",
+				"       \"_%s\".determineAttKindSerial('%q'); ",
 				stmt->hdr.script->clustername, stmt->tab_fqname,
 				stmt->hdr.script->clustername, stmt->tab_fqname);
 				
@@ -2494,23 +2493,14 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 		if (stmt->use_key == NULL)
 		{
 			slon_mkquery(&query,
-					"select \"_%s\".determineIdxnameUnique('%q', NULL), "
-					"    \"_%s\".determineAttkindUnique('%q', "
-					"        \"_%s\".determineIdxnameUnique('%q', NULL));",
-					stmt->hdr.script->clustername,
-					stmt->tab_fqname,
-					stmt->hdr.script->clustername,
-					stmt->tab_fqname,
-					stmt->hdr.script->clustername,
-					stmt->tab_fqname);
+					"select \"_%s\".determineIdxnameUnique('%q', NULL); ",
+					stmt->hdr.script->clustername, stmt->tab_fqname);
+					
 		}
 		else
 		{
 			slon_mkquery(&query,
-					"select \"_%s\".determineIdxnameUnique('%q', '%q'), "
-					"     \"_%s\".determineAttkindUnique('%q', '%q');",
-					stmt->hdr.script->clustername,
-					stmt->tab_fqname, stmt->use_key,
+					"select \"_%s\".determineIdxnameUnique('%q', '%q'); ",
 					stmt->hdr.script->clustername,
 					stmt->tab_fqname, stmt->use_key);
 		}
@@ -2525,13 +2515,12 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 		return -1;
 	}
 	idxname = PQgetvalue(res, 0, 0);
-	attkind = PQgetvalue(res, 0, 1);
 
 	slon_mkquery(&query,
-			"select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q', '%q'); ",
+			"select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q'); ",
 			stmt->hdr.script->clustername,
 			stmt->set_id, stmt->tab_id,
-			stmt->tab_fqname, idxname, attkind, stmt->tab_comment);
+			stmt->tab_fqname, idxname, stmt->tab_comment);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{
 		PQclear(res);

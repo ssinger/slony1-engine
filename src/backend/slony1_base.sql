@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.11 2004-03-26 14:59:05 wieck Exp $
+-- $Id: slony1_base.sql,v 1.12 2004-05-18 23:15:50 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -76,7 +76,6 @@ create table @NAMESPACE@.sl_table (
 	tab_reloid			oid,
 	tab_set				int4,
 	tab_idxname			name NOT NULL,
-	tab_attkind			text NOT NULL,
 	tab_altered			boolean NOT NULL,
 	tab_comment			text,
 

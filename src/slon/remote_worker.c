@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.41 2004-05-17 17:10:23 wieck Exp $
+ *	$Id: remote_worker.c,v 1.42 2004-05-18 23:15:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1856,7 +1856,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			"select T.tab_id, "
 			"    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
 			"    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
-			"    T.tab_idxname, T.tab_attkind, T.tab_comment "
+			"    T.tab_idxname, T.tab_comment "
 			"from %s.sl_table T, "
 			"    \"pg_catalog\".pg_class PGC, "
 			"    \"pg_catalog\".pg_namespace PGN "
@@ -1886,8 +1886,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		int		tab_id		= strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
 		char   *tab_fqname	= PQgetvalue(res1, tupno1, 1);
 		char   *tab_idxname	= PQgetvalue(res1, tupno1, 2);
-		char   *tab_attkind	= PQgetvalue(res1, tupno1, 3);
-		char   *tab_comment	= PQgetvalue(res1, tupno1, 4);
+		char   *tab_comment	= PQgetvalue(res1, tupno1, 3);
 		int64	copysize	= 0;
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
@@ -1982,10 +1981,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 * suppressed.
 		 */
 		slon_mkquery(&query1,
-				"select %s.setAddTable_int(%d, %d, '%q', '%q', '%q', '%q'); ",
+				"select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
 				rtcfg_namespace,
-				set_id, tab_id, tab_fqname, tab_idxname, 
-				tab_attkind, tab_comment);
+				set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.5 2004-04-16 20:00:22 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.6 2004-05-18 23:15:50 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1790,9 +1790,9 @@ end;
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_idxname,
---					tab_attkind, tab_comment)
+--					tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable(int4, int4, text, name, text, text)
+create function @NAMESPACE@.setAddTable(int4, int4, text, name, text)
 returns int4
 as '
 declare
@@ -1800,8 +1800,7 @@ declare
 	p_tab_id			alias for $2;
 	p_fqname			alias for $3;
 	p_tab_idxname		alias for $4;
-	p_tab_attkind		alias for $5;
-	p_tab_comment		alias for $6;
+	p_tab_comment		alias for $5;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -1833,10 +1832,10 @@ begin
 	-- Add the table to the set and generate the SET_ADD_TABLE event
 	-- ----
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
-			p_tab_idxname, p_tab_attkind, p_tab_comment);
+			p_tab_idxname, p_tab_comment);
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
 			p_set_id, p_tab_id, p_fqname,
-			p_tab_idxname, p_tab_attkind, p_tab_comment);
+			p_tab_idxname, p_tab_comment);
 
 	return p_tab_id;
 end;
@@ -1845,9 +1844,9 @@ end;
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname,
---						tab_attkind, tab_comment)
+--						tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text, text)
+create function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
 returns int4
 as '
 declare
@@ -1855,8 +1854,7 @@ declare
 	p_tab_id			alias for $2;
 	p_fqname			alias for $3;
 	p_tab_idxname		alias for $4;
-	p_tab_attkind		alias for $5;
-	p_tab_comment		alias for $6;
+	p_tab_comment		alias for $5;
 	v_local_node_id		int4;
 	v_set_origin		int4;
 	v_sub_provider		int4;
@@ -1923,9 +1921,9 @@ begin
 	-- ----
 	insert into @NAMESPACE@.sl_table
 			(tab_id, tab_reloid, tab_set, tab_idxname, 
-			tab_attkind, tab_altered, tab_comment) values
+			tab_altered, tab_comment) values
 			(p_tab_id, v_tab_reloid, p_set_id, p_tab_idxname,
-			p_tab_attkind, false, p_tab_comment);
+			false, p_tab_comment);
 	perform @NAMESPACE@.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
@@ -2128,6 +2126,7 @@ declare
 	v_no_id				int4;
 	v_tab_row			record;
 	v_tab_fqname		text;
+	v_tab_attkind		text;
 	v_n					int4;
 begin
 	-- ----
@@ -2144,7 +2143,7 @@ begin
 	-- Get the sl_table row and the current tables origin. Check
 	-- that the table currently is NOT in altered state.
 	-- ----
-	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
+	select T.tab_reloid, T.tab_set, T.tab_idxname, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
 			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
@@ -2169,6 +2168,9 @@ begin
 				v_tab_fqname;
 	end if;
 
+	v_tab_attkind := @NAMESPACE@.determineAttKindUnique(v_tab_row.tab_fqname, 
+						v_tab_row.tab_idxname);
+
 	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
 
 	-- ----
@@ -2183,7 +2185,7 @@ begin
 				v_tab_fqname || '' for each row execute procedure
 				@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || 
 					p_tab_id || '''''', '''''' || 
-					v_tab_row.tab_attkind || '''''');'';
+					v_tab_attkind || '''''');'';
 	else
 		-- ----
 		-- On the subscriber the thing is a bit more difficult. We want
@@ -2264,7 +2266,7 @@ begin
 	-- Get the sl_table row and the current tables origin. Check
 	-- that the table currently IS in altered state.
 	-- ----
-	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
+	select T.tab_reloid, T.tab_set, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
 			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
