@@ -1,11 +1,13 @@
---
+-- ----------
 -- xxid.v73.sql.in
+--
+--	SQL script for loading the transaction ID compatible datatype 
 --
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA INC.
 --
--- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/src/xxid/Attic/xxid.v73.sql.in,v 1.1 2003-11-17 17:29:00 wieck Exp $
---
+-- $Id: xxid.v73.sql.in,v 1.2 2003-11-18 15:11:35 wieck Exp $
+-- ----------
 
 --
 -- Type specific input and output functions

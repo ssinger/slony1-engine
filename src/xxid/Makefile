@@ -1,8 +1,11 @@
+# ----------
 # Makefile for src/xxid
-# Author: Jan Wieck, Afilias USA INC.
 #
-#	$Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/src/xxid/Attic/Makefile,v 1.1 2003-11-17 17:29:00 wieck Exp $
+#	Copyright (c) 2003, PostgreSQL Global Development Group
+#	Author: Jan Wieck, Afilias USA INC.
 #
+#	$Id: Makefile,v 1.2 2003-11-18 15:11:35 wieck Exp $
+# ----------
 
 subdir = src/xxid
 top_builddir = ../..
