@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.19 2004-10-14 22:17:48 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.20 2004-10-19 01:16:05 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -413,42 +413,6 @@ create view @NAMESPACE@.sl_seqlastvalue as
 		where S.set_id = SQ.seq_set
 			and PGC.oid = SQ.seq_reloid and PGN.oid = PGC.relnamespace;
 		
--- ----------------------------------------------------------------------
--- VIEW sl_status
---
---	This view shows the local nodes last event sequence number
---	and how far all remote nodes have processed events.
--- ----------------------------------------------------------------------
-create or replace view @NAMESPACE@.sl_status as select
-	E.ev_origin as st_origin,
-	C.con_received as st_received,
-	E.ev_seqno as st_last_event,
-	E.ev_timestamp as st_last_event_ts,
-	C.con_seqno as st_last_received,
-	C.con_timestamp as st_last_received_ts,
-	CE.ev_timestamp as st_last_received_event_ts,
-	E.ev_seqno - C.con_seqno as st_lag_num_events,
-	current_timestamp - CE.ev_timestamp as st_lag_time
-	from @NAMESPACE@.sl_event E, @NAMESPACE@.sl_confirm C,
-		@NAMESPACE@.sl_event CE
-	where E.ev_origin = C.con_origin
-	and CE.ev_origin = E.ev_origin
-	and CE.ev_seqno = C.con_seqno
-	and (E.ev_origin, E.ev_seqno) in 
-		(select ev_origin, max(ev_seqno)
-			from @NAMESPACE@.sl_event
-			where ev_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
-			group by 1
-		)
-	and (C.con_origin, C.con_received, C.con_seqno) in
-		(select con_origin, con_received, max(con_seqno)
-			from @NAMESPACE@.sl_confirm
-			where con_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
-			group by 1, 2
-		);
-comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.
-';
-
 -- **********************************************************************
 -- * Sequences
 -- **********************************************************************
