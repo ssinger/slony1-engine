@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+$Id: README,v 1.2 2004-07-29 21:28:58 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -35,6 +35,7 @@ file these lists are found in.  That way, you could do something like:
    done
 
 Steps to start up replication
+-------------------------------
 
 0.  Dump from source system to destination
  pg_dump -s -c  flex1 | psql flex2

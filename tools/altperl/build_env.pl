@@ -1,5 +1,5 @@
 #!perl
-# $Id: build_env.pl,v 1.1 2004-07-29 18:53:05 cbbrowne Exp $
+# $Id: build_env.pl,v 1.2 2004-07-29 21:28:58 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
@@ -82,21 +82,21 @@ $dbh->disconnect();
 if ( scalar(@tablesWithIndexes) > 1 ) {
   print '@KEYEDTABLES=(' . "\n";
   foreach my $table (sort @tablesWithIndexes) {
-    print "\t\"public.$table\",\n";
+    print "\t\"$table\",\n";
   }
   print ");\n";
 }
 if ( scalar(@tablesWithoutIndexes) > 1 ) {
   print '@SERIALTABLES=(' . "\n";
   foreach my $table (sort @tablesWithoutIndexes) {
-    print "\t\"public.$table\",\n";
+    print "\t\"$table\",\n";
   }
   print ");\n";
 }
 if ( scalar(@sequences) > 1 ) {
   print '@SEQUENCES=(' . "\n";
   foreach my $table (sort @sequences) {
-    print "\t\"public.$table\",\n";
+    print "\t\"$table\",\n";
   }
   print ");\n";
 }
