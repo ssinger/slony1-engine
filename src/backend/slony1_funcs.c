@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.17.2.2 2004-09-23 17:28:24 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.17.2.3 2004-10-06 15:08:56 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -19,14 +19,18 @@
 #include "executor/spi.h"
 #include "commands/trigger.h"
 #include "commands/async.h"
+#include "catalog/pg_operator.h"
 #include "access/xact.h"
 #include "utils/builtins.h"
 #ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
+#else
+#include "parser/parse_oper.h"
 #endif
 #include "mb/pg_wchar.h"
 
 #include <signal.h>
+#include <errno.h>
 
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
@@ -594,30 +598,55 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			 */
 			if (!old_isnull && !new_isnull)
 			{
+				Oid			opr_oid;
+				FmgrInfo   *opr_finfo_p;
+
+				/*
+				 * Lookup the equal operators function call info
+				 * using the typecache if available
+				 */
 #ifdef HAVE_TYPCACHE
 				TypeCacheEntry *type_cache;
 
 				type_cache = lookup_type_cache(
 						SPI_gettypeid(tupdesc, i + 1),
 						TYPECACHE_EQ_OPR | TYPECACHE_EQ_OPR_FINFO);
-				if (DatumGetBool(FunctionCall2(&(type_cache->eq_opr_finfo),
-							old_value, new_value)))
-					continue;
+				opr_oid = type_cache->eq_opr;
+				if (opr_oid == ARRAY_EQ_OP)
+					opr_oid = InvalidOid;
+				else
+					opr_finfo_p = &(type_cache->eq_opr_finfo);
 #else
-				Oid			opr_proc;
 				FmgrInfo	opr_finfo;
 
-				opr_proc = compatible_oper_funcid(makeList1(makeString("=")),
+				opr_oid = compatible_oper_funcid(makeList1(makeString("=")),
 						SPI_gettypeid(tupdesc, i + 1),
 						SPI_gettypeid(tupdesc, i + 1), true);
-				if (!OidIsValid(opr_proc))
-					elog(ERROR, "Slony-I: failed to find '=' operator");
-
-				fmgr_info(opr_proc, &opr_finfo);
-				if (DatumGetBool(FunctionCall2(&opr_finfo,
-							old_value, new_value)))
-					continue;
+				if (OidIsValid(opr_oid))
+				{
+					fmgr_info(opr_oid, &opr_finfo);
+					opr_finfo_p = & opr_finfo;
+				}
 #endif
+				/*
+				 * If we have an equal operator, use that to do binary
+				 * comparision. Else get the string representation of
+				 * both attributes and do string comparision.
+				 */
+				if (OidIsValid(opr_oid))
+				{
+					if (DatumGetBool(FunctionCall2(opr_finfo_p,
+								old_value, new_value)))
+						continue;
+				}
+				else
+				{
+					char   *old_strval = SPI_getvalue(old_row, tupdesc, i + 1);
+					char   *new_strval = SPI_getvalue(new_row, tupdesc, i + 1);
+
+					if (strcmp(old_strval, new_strval) == 0)
+						continue;
+				}
 			}
 
 			if (need_comma)
