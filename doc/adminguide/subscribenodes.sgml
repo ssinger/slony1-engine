@@ -1,4 +1,6 @@
-<sect1 id="subscribenodes"> <title/ Subscribing Nodes/
+<!-- $Id -->
+<article>
+<sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <para>Before you subscribe a node to a set, be sure that you have
 <application><link linkend="slon"> slon </link></application>
@@ -47,25 +49,25 @@ to them); a request to unsubscribe the node will be
 subscribe it.</para>
 
 <para>When you subscribe a node to a set, you should see something
-like this in your <application/slon/ logs for the provider node:
+like this in your <application>slon</application> logs for the provider node:
 
 <screen>
 DEBUG2 remoteWorkerThread_3: Received event 3,1059 SUBSCRIBE_SET
 </screen>
-
+</para>
 <para>You should also start seeing log entries like this in the
-<application/slon/ logs for the subscribing node:
+<application>slon</application> logs for the subscribing node:
 
 <screen>
 DEBUG2 remoteWorkerThread_1: copy table public.my_table
 </screen>
-
+</para>
 <para>It may take some time for larger tables to be copied from the
 provider node to the new subscriber. If you check the pg_stat_activity
 table on the provider node, you should see a query that is copying the
 table to stdout.
-
-<para>The table <envar/sl_subscribe/ on both the provider, and the new
+</para>
+<para>The table <envar>sl_subscribe</envar> on both the provider, and the new
 subscriber should contain entries for the new subscription:
 
 <screen>
@@ -73,12 +75,13 @@ subscriber should contain entries for the new subscription:
 ---------+--------------+--------------+-------------+------------
       1  |            1 |            2 |           t |         t
 </screen>
-
+</para>
 <para>A final test is to insert a row into one of the replicated
 tables on the origin node, and verify that the row is copied to the
 new subscriber.
+</para>
 </sect1>
-
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

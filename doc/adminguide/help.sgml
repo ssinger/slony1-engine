@@ -1,4 +1,7 @@
-<sect1 id="help"> <title> More Slony-I Help </title>
+<!-- $Id -->
+<article>
+<sect1 id="help">
+<title>More Slony-I Help</title>
 
 <para>If you are having problems with Slony-I, you have several
 options for help:
@@ -44,9 +47,9 @@ config files in an XML-based format that the tool transforms into a
 Slonik script</para></listitem>
 
 </itemizedlist>
-
 </sect2>
 </sect1>
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

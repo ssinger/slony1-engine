@@ -1,4 +1,6 @@
-<sect1 id="cluster"> <title>Defining Slony-I Clusters</title>
+<!-- $Id -->
+<sect1 id="cluster">
+<title>Defining Slony-I Clusters</title>
 
 <para>A <productname>Slony-I</productname> cluster is the basic
 grouping of database instances in which replication takes place.  It
@@ -7,21 +9,21 @@ instances in which is defined a namespace specific to that
 cluster.</para>
 
 <para>Each database instance in which replication is to take place is
-identified by a node number.
+identified by a node number.</para>
 
 <para>For a simple install, it may be reasonable for the origin to be
-node #1, and for the subscriber to be node #2.
+node #1, and for the subscriber to be node #2.</para>
 
 <para>Some planning should be done, in more complex cases, to ensure
 that the numbering system is kept sane, lest the administrators be
 driven insane.  The node numbers should be chosen to somehow
 correspond to the shape of the environment, as opposed to (say) the
-order in which nodes were initialized.
+order in which nodes were initialized.</para>
 
 <para>It may be that in version 1.1, nodes will also have a
-<quote/name/ attribute, so that they may be given more mnemonic names.
+<quote>name</quote> attribute, so that they may be given more mnemonic names.
 In that case, the node numbers might remain somewhat cryptic; it will
-be the node name that is used to organize the cluster.
+be the node name that is used to organize the cluster.</para>
 </sect1>
 
 <!-- Keep this comment at the end of the file

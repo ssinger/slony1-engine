@@ -1,4 +1,6 @@
-<sect1 id="firstdb"><title/Replicating Your First Database/
+<!-- $Id -->
+<article>
+<sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <para>In this example, we will be replicating a brand new pgbench
 database.  The mechanics of replicating an existing database are
@@ -31,40 +33,48 @@ This is typically postgres or pgsql.</para>
 <para>You should also set the following shell variables:
 
 <itemizedlist>
-<listitem><para> <envar/CLUSTERNAME/=slony_example
-<listitem><para> <envar/MASTERDBNAME/=pgbench
-<listitem><para> <envar/SLAVEDBNAME/=pgbenchslave
-<listitem><para> <envar/MASTERHOST/=localhost
-<listitem><para> <envar/SLAVEHOST/=localhost
-<listitem><para> <envar/REPLICATIONUSER/=pgsql
-<listitem><para> <envar/PGBENCHUSER/=pgbench
+<listitem><para> <envar>CLUSTERNAME</envar>=slony_example</para></listitem>
+<listitem><para> <envar>MASTERDBNAME</envar>=pgbench</para></listitem>
+<listitem><para> <envar>SLAVEDBNAME</envar>=pgbenchslave</para></listitem>
+<listitem><para> <envar>MASTERHOST</envar>=localhost</para></listitem>
+<listitem><para> <envar>SLAVEHOST</envar>=localhost</para></listitem>
+<listitem><para> <envar>REPLICATIONUSER</envar>=pgsql</para></listitem>
+<listitem><para> <envar>PGBENCHUSER</envar>=pgbench</para></listitem>
 </itemizedlist>
+</para>
 <para>Here are a couple of examples for setting variables in common shells:
 
 <itemizedlist>
-<listitem><Para> bash, sh, ksh
-	<command/export CLUSTERNAME=slony_example/
-<listitem><Para> (t)csh:
-	<command/setenv CLUSTERNAME slony_example/
+<listitem>
+  <para>bash, sh, ksh
+  <command>export CLUSTERNAME=slony_example</command></para>
+</listitem>
+<listitem>
+  <para>(t)csh:
+  <command>setenv CLUSTERNAME slony_example</command></para>
+</listitem>
 </itemizedlist>
+</para>
 
 <para><warning><Para> If you're changing these variables to use
-different hosts for <envar/MASTERHOST/ and <envar/SLAVEHOST/, be sure
-<emphasis/not/ to use localhost for either of them.  This will result
-in an error similar to the following:
+different hosts for <envar>MASTERHOST</envar> and <envar>SLAVEHOST</envar>, be sure
+<emphasis>not</emphasis> to use localhost for either of them.  This will result
+in an error similar to the following:</para>
 
 <para><command>
 ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
-</command>
+</command></para>
 </warning></para>
 
-<sect2><title/ Creating the pgbenchuser/
+
+<sect2><title>Creating the pgbenchuser</title>
 
 <para><command>
 createuser -A -D $PGBENCHUSER
 </command>
-
-<sect2><title/ Preparing the databases/
+</para>
+</sect2>
+<sect2><title>Preparing the databases</title>
 
 <programlisting>
 createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
@@ -72,90 +82,93 @@ createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 
-<para>Because <productname/Slony-I/ depends on the databases having the pl/pgSQL procedural
+<para>Because <productname>Slony-I</productname> depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
-step because it's already installed into the $MASTERDBNAME.
+step because it's already installed into the <envar>$MASTERDBNAME</envar>.
 
 <programlisting>
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 </programlisting>
-
-<para><productname/Slony-I/ does not yet automatically copy table definitions from a
+</para>
+<para><productname>Slony-I</productname> does not yet automatically copy table definitions from a
 master when a slave subscribes to it, so we need to import this data.
-We do this with <application/pg_dump/.
+We do this with <application>pg_dump</application>.
 
 <programlisting>
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
 </programlisting>
+</para>
 
-<para>To illustrate how <productname/Slony-I/ allows for on the fly
-replication subscription, let's start up <application/pgbench/.  If
-you run the <application/pgbench/ application in the foreground of a
+<para>To illustrate how <productname>Slony-I</productname> allows for on the fly
+replication subscription, let's start up <application>pgbench</application>.  If
+you run the <application>pgbench</application> application in the foreground of a
 separate terminal window, you can stop and restart it with different
 parameters at any time.  You'll need to re-export the variables again
 so they are available in this session as well.
-
-<para>The typical command to run <application/pgbench/ would look like:
+</para>
+<para>The typical command to run <application>pgbench</application> would look like:
 
 <programlisting>
 pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
+</para>
 
-<para>This will run <application/pgbench/ with 5 concurrent clients
-each processing 1000 transactions against the <application/pgbench/
+<para>This will run <application>pgbench</application> with 5 concurrent clients
+each processing 1000 transactions against the <application>pgbench</application>
 database running on localhost as the pgbench user.
+</para></sect2>
 
-<sect2><title/ Configuring the Database for Replication./
+<sect2><title>Configuring the Database for Replication.</title>
 
 <para>Creating the configuration tables, stored procedures, triggers
-and configuration is all done through the <link linkend="slonik">
-<application/slonik/ </link> tool.  It is a specialized scripting aid
-that mostly calls stored procedures in the master/slave (node)
-databases.  The script to create the initial configuration for the
-simple master-slave setup of our pgbench database looks like this:
+and configuration is all done through the 
+<link linkend="slonik"><application>slonik</application></link> tool. 
+It is a specialized scripting aid that mostly calls stored procedures 
+in the master/slave (node) databases.  The script to create the initial 
+configuration for the simple master-slave setup of our pgbench database looks like this:
 
 <programlisting>
 #!/bin/sh
 
 slonik <<_EOF_
 	#--
-	 # define the namespace the replication system uses in our example it is
-	 # slony_example
+	# define the namespace the replication system uses in our example it is
+	# slony_example
 	#--
 	cluster name = $CLUSTERNAME;
 
 	#--
-	 # admin conninfo's are used by slonik to connect to the nodes one for each
-	 # node on each side of the cluster, the syntax is that of PQconnectdb in
-	 # the C-API
+	# admin conninfo's are used by slonik to connect to the nodes one for each
+	# node on each side of the cluster, the syntax is that of PQconnectdb in
+	# the C-API
 	# --
 	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
 	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
-	 # init the first node.  Its id MUST be 1.  This creates the schema
-	 # _$CLUSTERNAME containing all replication system specific database
-	 # objects.
+	# init the first node.  Its id MUST be 1.  This creates the schema
+	# _$CLUSTERNAME containing all replication system specific database
+	# objects.
 
 	#--
 	init cluster ( id=1, comment = 'Master Node');
  
 	#--
-	 # Because the history table does not have a primary key or other unique
-	 # constraint that could be used to identify a row, we need to add one.
-	 # The following command adds a bigint column named
-	 # _Slony-I_$CLUSTERNAME_rowID to the table.  It will have a default value
-	 # of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have UNIQUE and NOT NULL
-	 # constraints applied.  All existing rows will be initialized with a
-	 # number
+	# Because the history table does not have a primary key or other unique
+	# constraint that could be used to identify a row, we need to add one.
+	# The following command adds a bigint column named
+	# _Slony-I_$CLUSTERNAME_rowID to the table.  It will have a default value
+	# of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have UNIQUE and NOT NULL
+	# constraints applied.  All existing rows will be initialized with a
+	# number
 	#--
 	table add key (node id = 1, fully qualified name = 'public.history');
 
 	#--
-	 # Slony-I organizes tables into sets.  The smallest unit a node can
-	 # subscribe is a set.  The following commands create one set containing
-	 # all 4 pgbench tables.  The master or origin of the set is node 1.
+	# Slony-I organizes tables into sets.  The smallest unit a node can
+	# subscribe is a set.  The following commands create one set containing
+	# all 4 pgbench tables.  The master or origin of the set is node 1.
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
 	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
@@ -164,8 +177,8 @@ slonik <<_EOF_
 	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table', key = serial);
 
 	#--
-	 # Create the second node (the slave) tell the 2 nodes how to connect to
-	 # each other and how they should listen for events.
+	# Create the second node (the slave) tell the 2 nodes how to connect to
+	# each other and how they should listen for events.
 	#--
 
 	store node (id=2, comment = 'Slave node');
@@ -176,32 +189,31 @@ slonik <<_EOF_
 _EOF_
 </programlisting>
 
-<para>Is the <application/pgbench/ still running?  If not start it
-again.
-
+<para>Is the <application>pgbench</application> still running?  If not start it
+again.</para>
 <para>At this point we have 2 databases that are fully prepared.  One
-is the master database in which <application/pgbench/ is busy
+is the master database in which <application>pgbench</application> is busy
 accessing and changing rows.  It's now time to start the replication
-daemons.
+daemons.</para>
 
 <para>On $MASTERHOST the command to start the replication engine is
 
 <programlisting>
 slon $CLUSTERNAME "dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST"
 </programlisting>
-
+</para>
 <para>Likewise we start the replication system on node 2 (the slave)
 
 <programlisting>
 slon $CLUSTERNAME "dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST"
 </programlisting>
-
-<para>Even though we have the <application><link linkend="slon"> slon
-</link></application> running on both the master and slave, and they
+</para>
+<para>Even though we have the <application><link linkend="slon">slon</link></application>
+ running on both the master and slave, and they
 are both spitting out diagnostics and other messages, we aren't
 replicating any data yet.  The notices you are seeing is the
 synchronization of cluster configurations between the 2
-<application><link linkend="slon"> slon </link></application>
+<application><link linkend="slon">slon</link></application>
 processes.
 
 <para>To start replicating the 4 pgbench tables (set 1) from the
@@ -231,8 +243,8 @@ slonik <<_EOF_
 	 subscribe set ( id = 1, provider = 1, receiver = 2, forward = no);
 _EOF_
 </programlisting>
-
-<para>Any second now, the replication daemon on $SLAVEHOST will start
+</para>
+<para>Any second now, the replication daemon on <envar>$SLAVEHOST</envar> will start
 to copy the current content of all 4 replicated tables.  While doing
 so, of course, the pgbench application will continue to modify the
 database.  When the copy process is finished, the replication daemon
@@ -251,7 +263,7 @@ practice, it's good to build confidence by verifying that the datasets
 are in fact the same.</para>
 
 <para>The following script will create ordered dumps of the 2
-databases and compare them.  Make sure that <application/pgbench/ has
+databases and compare them.  Make sure that <application>pgbench</application> has
 completed its testing, and that your slon sessions have caught up.
 
 <programlisting>
@@ -287,7 +299,8 @@ if diff dump.tmp.1.$$ dump.tmp.2.$$ >$CLUSTERNAME.diff ; then
 else
 	 echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
-</programlisting></para>
+</programlisting>
+</para>
 
 <para>Note that there is somewhat more sophisticated documentation of
 the process in the <productname>Slony-I</productname> source code tree
@@ -299,6 +312,7 @@ developers at <ulink url="http://slony.info/">
 http://slony.info/</ulink></para>
 
 </sect1>
+</article>
 
 <!-- Keep this comment at the end of the file
 Local variables:

@@ -1,4 +1,7 @@
-<sect1 id="ddlchanges"> <title/Database Schema Changes (DDL)/
+<!-- $Id -->
+<article>
+<sect1 id="ddlchanges">
+<title>Database Schema Changes (DDL)</title>
 
 <para>When changes are made to the database schema,
 <emphasis>e.g.</emphasis> - adding fields to a table, it is necessary
@@ -6,10 +9,9 @@ for this to be handled rather carefully, otherwise different nodes may
 get rather deranged because they disagree on how particular tables are
 built.</para>
 
-<para>If you pass the changes through
-<productname>Slony-I</productname> via the <command><link
-linkend="stmtddlscript"> EXECUTE SCRIPT</link> </command> (slonik) /
-<function>ddlscript(set,script,node)</function> (stored function),
+<para>If you pass the changes through <productname>Slony-I</productname>
+via the <command><link linkend="stmtddlscript">EXECUTE SCRIPT</link></command>
+ (slonik) /<function>ddlscript(set,script,node)</function> (stored function),
 this allows you to be certain that the changes take effect at the same
 point in the transaction streams on all of the nodes.  That may not be
 too important if you can take something of an outage to do schema
@@ -17,13 +19,12 @@ changes, but if you want to do upgrades that take place while
 transactions are still winding their way through your systems, this is
 necessary.</para>
 
-<para>It's worth making a couple of comments on <quote/special things/
-about <command><link linkend="stmtddlscript"> EXECUTE SCRIPT</link>
-</command>:
+<para>It's worth making a couple of comments on <quote>special things</quote>
+about <command><link linkend="stmtddlscript">EXECUTE SCRIPT</link></command>:</para>
 
 <itemizedlist>
 
-<listitem><para> The script must not contain transaction
+<listitem><para>The script must not contain transaction
 <command>BEGIN</command> or <command>END</command> statements, as the
 script is already executed inside a transaction.  In
 <productname>PostgreSQL</productname> version 8, the introduction of
@@ -31,10 +32,10 @@ nested transactions may change this requirement somewhat, but you must
 still remain aware that the actions in the script are wrapped inside a
 transaction.</para></listitem>
 
-<listitem><para> If there is <emphasis>anything</emphasis> broken
+<listitem><para>If there is <emphasis>anything</emphasis> broken
 about the script, or about how it executes on a particular node, this
-will cause the <link linkend="slon"> <application>slon</application>
-</link> daemon for that node to panic and crash. If you restart the
+will cause the <link linkend="slon"><application>slon</application></link>
+ daemon for that node to panic and crash. If you restart the
 node, it will, more likely than not, try to
 <emphasis>repeat</emphasis> the DDL script, which will, almost
 certainly, fail the second time just as it did the first time.  I have
@@ -68,6 +69,7 @@ here:
 Varlena General Bits</ulink></para>
 
 </sect1>
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

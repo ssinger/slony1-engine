@@ -1,5 +1,6 @@
-<chapter id="slony-commands">
-	<title>Slony-I Commands</title>
+<!-- $Id -->
+<chapter>
+	<title><productname>Slony-I</productname> binaries</title>
 	&slon;
 	&slonik;
 	&slonikref;

@@ -1,74 +1,76 @@
-<sect1 id="concepts"> <title><productname/Slony-I/ Concepts</title>
+<!-- $Id -->
+<sect1 id="concepts">
+<title><productname>Slony-I</productname> Concepts</title>
 
 
-<para>In order to set up a set of <productname/Slony-I/ replicas, it is necessary to
-understand the following major abstractions that it uses:
+<para>In order to set up a set of <productname>Slony-I</productname> replicas, it is necessary to
+understand the following major abstractions that it uses:</para>
 
 <itemizedlist>
-	<listitem><para> Cluster
-	<listitem><para> Node
-	<listitem><para> Replication Set
-	<listitem><para> Origin, Providers and Subscribers
+	<listitem><para>Cluster</para></listitem>
+	<listitem><para>Node</para></listitem>
+	<listitem><para>Replication Set</para></listitem>
+	<listitem><para>Origin, Providers and Subscribers</para></listitem>
 </itemizedlist>
 
-<sect2><title>Cluster</title>
+<sect2>
+<title>Cluster</title>
 
-<para>In <productname/Slony-I/ terms, a Cluster is a named set of PostgreSQL
-database instances; replication takes place between those databases.
+<para>In <productname>Slony-I</productname> terms, a Cluster is a named set of PostgreSQL
+database instances; replication takes place between those databases.</para>
 
-<para>The cluster name is specified in each and every Slonik script via the directive:
+<para>The cluster name is specified in each and every Slonik script via the directive:</para>
 <programlisting>
 cluster name = 'something';
 </programlisting>
 
-<para>If the Cluster name is <envar/something/, then <productname/Slony-I/ will
-create, in each database instance in the cluster, the namespace/schema
-<envar/_something/.
+<para>If the Cluster name is <envar>something</envar>, then <productname>Slony-I</productname> will
+create, in each database instance in the cluster, the namespace/schema <envar>_something.</envar></para>
+</sect2>
+<sect2><title>Node</title>
 
-<sect2><title> Node</title>
+<para>A <productname>Slony-I</productname> Node is a named PostgreSQL database that will be participating in replication.</para>
 
-<para>A <productname/Slony-I/ Node is a named PostgreSQL database that will be participating in replication.  
-
-<para>It is defined, near the beginning of each Slonik script, using the directive:
+<para>It is defined, near the beginning of each Slonik script, using the directive:</para>
 <programlisting>
  NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
 </programlisting>
 
-<para>The <link linkend="admconninfo"> <command/CONNINFO/</link>
+<para>The <link linkend="admconninfo"><command>CONNINFO</command></link>
 information indicates a string argument that will ultimately be passed
-to the <function>PQconnectdb()</function> libpq function.
+to the <function>PQconnectdb()</function> libpq function.</para>
 
-<para>Thus, a <productname/Slony-I/ cluster consists of:
+<para>Thus, a <productname>Slony-I</productname> cluster consists of:</para>
 <itemizedlist>
-	<listitem><para> A cluster name
-	<listitem><para> A set of <productname/Slony-I/ nodes, each of which has a namespace based on that cluster name
+	<listitem><para> A cluster name</para></listitem>
+	<listitem><para> A set of <productname>Slony-I</productname> nodes, each of which has a namespace based on that cluster name</para></listitem>
 </itemizedlist>
-
+</sect2>
 <sect2><title> Replication Set</title>
 
 <para>A replication set is defined as a set of tables and sequences
-that are to be replicated between nodes in a <productname/Slony-I/ cluster.
+that are to be replicated between nodes in a <productname>Slony-I</productname> cluster.</para>
 
-<para>You may have several sets, and the <quote/flow/ of replication does
-not need to be identical between those sets.
-
+<para>You may have several sets, and the <quote>flow</quote> of replication does
+not need to be identical between those sets.</para>
+</sect2>
 <sect2><title> Origin, Providers and Subscribers</title>
 
 <para>Each replication set has some origin node, which is the
 <emphasis>only</emphasis> place where user applications are permitted
 to modify data in the tables that are being replicated.  This might
-also be termed the <quote/master provider/; it is the main place from
-which data is provided.
+also be termed the <quote>master provider</quote>; it is the main place from
+which data is provided.</para>
 
 <para>Other nodes in the cluster will subscribe to the replication
-set, indicating that they want to receive the data.
+set, indicating that they want to receive the data.</para>
 
-<para>The origin node will never be considered a <quote/subscriber./
+<para>The origin node will never be considered a <quote>subscriber.</quote>
 (Ignoring the case where the cluster is reshaped, and the origin is
-moved to another node.)  But <productname/Slony-I/ supports the notion of cascaded
+moved to another node.)  But <productname>Slony-I</productname> supports the notion of cascaded
 subscriptions, that is, a node that is subscribed to the origin may
-also behave as a <quote/provider/ to other nodes in the cluster.
-
+also behave as a <quote>provider</quote> to other nodes in the cluster.</para>
+</sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file

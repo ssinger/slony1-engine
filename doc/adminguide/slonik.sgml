@@ -1,3 +1,4 @@
+<!-- $Id -->
 <refentry id="app-slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -19,7 +20,7 @@
  <refsynopsisdiv>
   <cmdsynopsis>
    <command>slonik</command>
-   <arg><replaceable class="parameter">filename</replaceable>
+   <arg><replaceable class="parameter">filename</replaceable></arg>
   </cmdsynopsis>
  </refsynopsisdiv>
 
@@ -33,7 +34,7 @@
     </para>
  </refsect1>
 
- <refsect1><title> Outline</title>
+ <refsect1><title>Outline</title>
 
   <para>The <application>slonik</application> command line utility is
   supposed to be used embedded into shell scripts and reads commands
@@ -45,16 +46,16 @@
   script.</para>
 
   <para>Nearly all of the real configuration work is actually done by
-  calling stored procedures after loading the <productname/Slony-I/
-  support base into a database.  <application/Slonik/ was created
+  calling stored procedures after loading the <productname>Slony-I</productname>
+  support base into a database.  <application>slonik</application> was created
   because these stored procedures have special requirements as to on
   which particular node in the replication system they are called.
   The absence of named parameters for stored procedures makes it
-  rather hard to do this from the <application/psql/ prompt, and
-  <application/psql/ lacks the ability to maintain multiple
+  rather hard to do this from the <application>psql</application> prompt, and
+  <application>psql</application> lacks the ability to maintain multiple
   connections with open transactions to multiple databases.</para>
 
-  <para>The format of the Slonik <quote/language/ is very similar to
+  <para>The format of the Slonik <quote>language</quote> is very similar to
   that of SQL, and the parser is based on a similar set of formatting
   rules for such things as numbers and strings.  Note that slonik is
   declarative, using literal values throughout, and does

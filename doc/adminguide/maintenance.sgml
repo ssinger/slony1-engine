@@ -1,19 +1,21 @@
+<!-- $Id -->
+<article>
 <sect1 id="maintenance"> <title>Slony-I Maintenance</title>
 
-<para><productname/Slony-I/ actually does most of its necessary
+<para><productname>Slony-I</productname> actually does most of its necessary
 maintenance itself, in a <quote>cleanup</quote> thread:
 
 <itemizedlist>
 
 <listitem><para> Deletes old data from various tables in the
-<productname/Slony-I/ cluster's namespace, notably entries in
-sl_log_1, sl_log_2 (not yet used), and sl_seqlog.
+<productname>Slony-I</productname> cluster's namespace, notably entries in
+sl_log_1, sl_log_2 (not yet used), and sl_seqlog.</para></listitem>
 
-<listitem><para> Vacuum certain tables used by <productname/Slony-I/.
+<listitem><para> Vacuum certain tables used by <productname>Slony-I</productname>.
 As of 1.0.5, this includes pg_listener; in earlier versions, you must
 vacuum that table heavily, otherwise you'll find replication slowing
-down because <productname/Slony-I/ raises plenty of events, which
-leads to that table having plenty of dead tuples.
+down because <productname>Slony-I</productname> raises plenty of events, which
+leads to that table having plenty of dead tuples.</para>
 
 <para> In some versions (1.1, for sure; possibly 1.0.5) there is the
 option of not bothering to vacuum any of these tables if you are using
@@ -27,64 +29,67 @@ hazardous as not vacuuming it frequently enough.</para>
 <para>Unfortunately, if you have long-running transactions, vacuums
 cannot clear out dead tuples that are newer than the eldest
 transaction that is still running.  This will most notably lead to
-pg_listener growing large and will slow replication.</para>
+pg_listener growing large and will slow replication.</para></listitem>
 
 </itemizedlist>
+</para>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
-<para>There are a couple of <quote/watchdog/ scripts available that
-monitor things, and restart the <application/slon/ processes should
-they happen to die for some reason, such as a network <quote/glitch/
-that causes loss of connectivity.
+<para>There are a couple of <quote>watchdog</quote> scripts available that
+monitor things, and restart the <application>slon</application> processes should
+they happen to die for some reason, such as a network <quote>glitch</quote>
+that causes loss of connectivity.</para>
 
-<para>You might want to run them...
-
+<para>You might want to run them...</para>
+</sect2>
 <sect2><title>Alternative to Watchdog: generate_syncs.sh</title>
 
-<para>A new script for <productname/Slony-I/ 1.1 is
-<application/generate_syncs.sh/, which addresses the following kind of
-situation.
+<para>A new script for <productname>Slony-I</productname> 1.1 is
+<application>generate_syncs.sh</application>, which addresses the following kind of
+situation.</para>
 
 <para>Supposing you have some possibly-flakey server where the
-<application/slon/ daemon that might not run all the time, you might
-return from a weekend away only to discover the following situation...
+<application>slon</application> daemon that might not run all the time, you might
+return from a weekend away only to discover the following situation.</para>
 
-<para>On Friday night, something went <quote/bump/ and while the
-database came back up, none of the <application/slon/ daemons
+<para>On Friday night, something went <quote>bump</quote> and while the
+database came back up, none of the <application>slon</application> daemons
 survived.  Your online application then saw nearly three days worth of
-reasonably heavy transaction load.
+reasonably heavy transaction load.</para>
 
 <para>When you restart slon on Monday, it hasn't done a SYNC on the
-master since Friday, so that the next <quote/SYNC set/ comprises all
-of the updates between Friday and Monday.  Yuck.
+master since Friday, so that the next <quote>SYNC set</quote> comprises all
+of the updates between Friday and Monday.  Yuck.</para>
 
-<para>If you run <application/generate_syncs.sh/ as a cron job every
-20 minutes, it will force in a periodic <command/SYNC/ on the origin, which
+<para>If you run <application>generate_syncs.sh</application> as a cron job every
+20 minutes, it will force in a periodic <command>SYNC</command> on the origin, which
 means that between Friday and Monday, the numerous updates are split
 into more than 100 syncs, which can be applied incrementally, making
-the cleanup a lot less unpleasant.
+the cleanup a lot less unpleasant.</para>
 
-<para>Note that if <command/SYNC/s <emphasis>are</emphasis> running
-regularly, this script won't bother doing anything.
-
+<para>Note that if <command>SYNC</command>s <emphasis>are</emphasis> running
+regularly, this script won't bother doing anything.</para>
+</sect2>
 <sect2><title> Log Files</title>
 
-<para><link linkend="slon"> <application/slon/ </link> daemons
+<para><link linkend="slon"> <application>slon</application></link> daemons
 generate some more-or-less verbose log files, depending on what
 debugging level is turned on.  You might assortedly wish to:
 
 <itemizedlist>
 
-<listitem><para> Use a log rotator like <productname/Apache/
-<application/rotatelogs/ to have a sequence of log files so that no
-one of them gets too big;
+<listitem><para> Use a log rotator like <productname>Apache</productname> 
+<application>rotatelogs</application> to have a sequence of log files so that no
+one of them gets too big;</para></listitem>
 
-<listitem><para> Purge out old log files, periodically.</para>
+<listitem><para> Purge out old log files, periodically.</para></listitem>
 
 </itemizedlist>
+</para>
 </sect2>
 </sect1>
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

@@ -1,43 +1,45 @@
-<sect1 id="dropthings"> <title/ Dropping things from Slony Replication/
+<!-- $Id -->
+<article>
+<sect1 id="dropthings"> <title>Dropping things from Slony Replication</title>
 
 <para>There are several things you might want to do involving dropping
-things from <productname/Slony-I/ replication.
+things from <productname>Slony-I</productname> replication.</para>
 
-<sect2><title/ Dropping A Whole Node/
+<sect2><title>Dropping A Whole Node</title>
 
 <para>If you wish to drop an entire node from replication, the <link
-linkend="slonik"> slonik </link> command <command><link
-linkend="stmtdropnode"> DROP NODE</link></command> should do the
+linkend="slonik">slonik</link> command <command><link
+linkend="stmtdropnode">DROP NODE</link></command> should do the
 trick.</para>
 
-<para>This will lead to <productname/Slony-I/ dropping the triggers
+<para>This will lead to <productname>Slony-I</productname> dropping the triggers
 (generally that deny the ability to update data), restoring the
-<quote/native/ triggers, dropping the schema used by
-<productname/Slony-I/, and the slon process for that node terminating
-itself.
+<quote>>native</quote> triggers, dropping the schema used by
+<productname>Slony-I</productname>, and the slon process for that node terminating
+itself.</para>
 
 <para>As a result, the database should be available for whatever use
-your application makes of the database.
+your application makes of the database.</para>
 
 <para>This is a pretty major operation, with considerable potential to
-cause substantial destruction; make sure you drop the right node!
+cause substantial destruction; make sure you drop the right node!</para>
 
 <para>The operation will fail if there are any nodes subscribing to
 the node that you attempt to drop, so there is a bit of a failsafe to
-protect you from errors.
+protect you from errors.</para>
 
-<para><link linkend="FAQ17"> sl_log_1 isn't getting purged </link>
+<para><link linkend="FAQ17">sl_log_1 isn't getting purged</link> 
 documents some extra maintenance that may need to be done on
-sl_confirm if you are running versions prior to 1.0.5.
+sl_confirm if you are running versions prior to 1.0.5.</para>
 
-<sect2><title/ Dropping An Entire Set/
+<sect2><title>Dropping An Entire Set</title>
 
 <para>If you wish to stop replicating a particular replication set,
-the <link linkend="slonik"> slonik </link> command <command> <link
-linkend="stmtdropset"> DROP SET</link> </command> is what you need to
+the <link linkend="slonik">slonik</link> command <command><link
+linkend="stmtdropset">DROP SET</link></command> is what you need to
 use.</para>
 
-<para>Much as with <command><link linkend="stmtdropnode"> DROP NODE
+<para>Much as with <command><link linkend="stmtdropnode">DROP NODE
 </link></command>, this leads to <productname>Slony-I</productname>
 dropping the <productname>Slony-I</productname> triggers on the tables
 and restoring <quote>native</quote> triggers.  One difference is that
@@ -47,25 +49,24 @@ not clear out the <productname>Slony-I</productname> cluster's
 namespace, as there might be other sets being serviced.</para>
 
 <para>This operation is quite a bit more dangerous than <command>
-<link linkend="stmtdropnode"> DROP NODE </link></command>, as there
+<link linkend="stmtdropnode">DROP NODE</link></command>, as there
 <emphasis>isn't</emphasis> the same sort of <quote>failsafe.</quote>
-If you tell <command> <link linkend="stmtdropset"> DROP
+If you tell <command><link linkend="stmtdropset">DROP
 SET</link></command> to drop the <emphasis>wrong</emphasis> set, there
 isn't anything to prevent potentially career-limiting
 <quote>unfortunate results.</quote> Handle with care...</para>
+</sect2>
+<sect2><title>Unsubscribing One Node From One Set</title>
 
-<sect2><title/ Unsubscribing One Node From One Set/
-
-<para>The <command> <link linkend="stmtunsubscribeset"> UNSUBSCRIBE
-SET </link> </command> operation is a little less invasive than either
-<command> <link linkend="stmtdropset"> DROP SET </link> </command> or
-<command> <link linkend="stmtdropnode"> DROP NODE </link></command>; it involves dropping
+<para>The <command><link linkend="stmtunsubscribeset">UNSUBSCRIBE
+SET</link></command> operation is a little less invasive than either
+<command><link linkend="stmtdropset">DROP SET</link></command> or
+<command><link linkend="stmtdropnode">DROP NODE</link></command>; it involves dropping
 <productname>Slony-I</productname> triggers and restoring
-<quote/native/ triggers on one node, for one replication set.</para>
+<quote>native</quote> triggers on one node, for one replication set.</para>
 
-<para>Much like with <command> <link linkend="stmtdropnode"> DROP NODE
-</link></command>, this operation will fail if there is a node
-subscribing to the set on this node.
+<para>Much like with <command><link linkend="stmtdropnode">DROP NODE</link></command>, 
+this operation will fail if there is a node subscribing to the set on this node.
 
 <warning>
 <para>For all of the above operations, <quote>turning replication back
@@ -73,13 +74,16 @@ on</quote> will require that the node copy in a
 <emphasis>full</emphasis> fresh set of the data on a provider.  The
 fact that the data was recently being replicated isn't good enough;
 <productname>Slony-I</productname> will expect to refresh the data
-from scratch.</para> </warning></para>
+from scratch.</para>
+</warning>
+</para>
 
+</sect2>
 <sect2><title> Dropping A Table From A Set</title>
 
 <para>In <productname>Slony-I</productname> 1.0.5 and above, there is
-a Slonik command <command> <link linkend="stmtsetdroptable"> SET DROP
-TABLE </link> </command> that allows dropping a single table from
+a Slonik command <command><link linkend="stmtsetdroptable">SET DROP
+TABLE</link></command> that allows dropping a single table from
 replication without forcing the user to drop the entire replication
 set.</para>
 
@@ -89,12 +93,12 @@ to do this:</para>
 <para>You can fiddle this by hand by finding the table ID for the
 table you want to get rid of, which you can find in sl_table, and then
 run the following three queries, on each host:
-
 <programlisting>
   select _slonyschema.alterTableRestore(40);
   select _slonyschema.tableDropKey(40);
   delete from _slonyschema.sl_table where tab_id = 40;
-</programlisting></para>
+</programlisting>
+</para>
 
 <para>The schema will obviously depend on how you defined the
 <productname>Slony-I</productname> cluster.  The table ID, in this
@@ -103,26 +107,26 @@ go away.</para>
 
 <para>You'll have to run these three queries on all of the nodes,
 preferably firstly on the origin node, so that the dropping of this
-propagates properly.  Implementing this via a <link linkend="slonik">
-slonik </link> statement with a new <productname>Slony-I</productname>
+propagates properly.  Implementing this via a <link linkend="slonik">slonik</link> 
+statement with a new <productname>Slony-I</productname>
 event would do that.  Submitting the three queries using
-<command><link linkend="stmtddlscript"> EXECUTE SCRIPT </link>
-</command> could do that; see <link linkend="ddlchanges"> Database
-Schema Changes </link> for more details.  Also possible would be to
-connect to each database and submit the queries by
-hand.</para></sect2>
+<command><link linkend="stmtddlscript">EXECUTE SCRIPT</link></command> could do that; 
+see <link linkend="ddlchanges">Database Schema Changes</link> for more details.  
+Also possible would be to connect to each database and submit the queries by
+hand.</para>
+</sect2>
 
-<sect2><title/ Dropping A Sequence From A Set/
+<sect2><title>Dropping A Sequence From A Set</title>
 
-<para>Just as with <command> <link linkend="stmtsetdroptable"> SET
-DROP TABLE </link> </command>, version 1.0.5 introduces the operation
-<command> <link linkend="stmtsetdropsequence"> SET DROP
-SEQUENCE</link> </command>.</para>
+<para>Just as with <command><link linkend="stmtsetdroptable">SET
+DROP TABLE</link> </command>, version 1.0.5 introduces the operation
+<command><link linkend="stmtsetdropsequence">SET DROP
+SEQUENCE</link></command>.</para>
 
 <para>If you are running an earlier version, here are instructions as
-to how to drop sequences:
+to how to drop sequences:</para>
 
-<para>The data that needs to be deleted to stop <productname/Slony-I/
+<para>The data that needs to be deleted to stop <productname>Slony-I</productname>
 from continuing to replicate the two sequences identified with
 Sequence IDs 93 and 59 are thus:
 
@@ -130,14 +134,16 @@ Sequence IDs 93 and 59 are thus:
 delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
 delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting>
+</para>
 
 <para> Those two queries could be submitted to all of the nodes via
-<function>ddlscript()</function> / <command> <link
-linkend="stmtddlscript"> EXECUTE SCRIPT</link> </command>, thus
+<function>ddlscript()</function> / <command><link
+linkend="stmtddlscript">EXECUTE SCRIPT</link></command>, thus
 eliminating the sequence everywhere <quote>at once.</quote> Or they
 may be applied by hand to each of the nodes.</para>
+</sect2>
 </sect1>
-
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

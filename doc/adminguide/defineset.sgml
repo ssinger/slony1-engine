@@ -1,42 +1,42 @@
-<sect1 id="definingsets"> <title>Defining Slony-I Replication
-Sets</title>
+<!-- $Id -->
+<sect1 id="definingsets">
+<title>Defining Slony-I Replication Sets</title>
 
 <para>Defining the nodes indicated the shape of the cluster of
 database servers; it is now time to determine what data is to be
 copied between them.  The groups of data that are copied are defined
-as <quote>sets.</quote>
+as <quote>sets.</quote></para>
 
-<para>A replication set consists of the following:
+<para>A replication set consists of the following:</para>
 <itemizedlist>
 
-<listitem><para> Keys on tables that are to be replicated that have no
+<listitem><para>Keys on tables that are to be replicated that have no
 suitable primary key</para></listitem>
 
-<listitem><para> Tables that are to be replicated</para></listitem>
+<listitem><para>Tables that are to be replicated</para></listitem>
 
-<listitem><para> Sequences that are to be replicated</para></listitem>
+<listitem><para>Sequences that are to be replicated</para></listitem>
 </itemizedlist>
 
-<sect2><title> Primary Keys</title>
+<sect2><title>Primary Keys</title>
 
-<para><productname/Slony-I/ <emphasis>needs</emphasis> to have a
+<para><productname>Slony-I</productname> <emphasis>needs</emphasis> to have a
 primary key or candidate thereof on each table that is replicated.  PK
 values are used as the primary identifier for each tuple that is
 modified in the source system.  There are three ways that you can get
-<productname/Slony-I/ to use a primary key:
+<productname>Slony-I</productname> to use a primary key:</para>
 
 <itemizedlist>
 
-<listitem><para> If the table has a formally identified primary key,
-<command> <link linkend="stmtsetaddtable"> SET ADD
+<listitem><para> If the table has a formally identified primary key, <command><link linkend="stmtsetaddtable">SET ADD
 TABLE</link></command> can be used without any need to reference the
-primary key.  <productname/Slony-I/ will pick up that there is a
-primary key, and use it.
+primary key.  <productname>Slony-I</productname> will pick up that there is a
+primary key, and use it.</para></listitem>
 
 <listitem><para> If the table hasn't got a primary key, but has some
 <emphasis>candidate</emphasis> primary key, that is, some index on a
 combination of fields that is UNIQUE and NOT NULL, then you can
-specify the key, as in
+specify the key, as in</para>
 
 <programlisting>
 SET ADD TABLE (set id = 1, origin = 1, id = 42, 
@@ -47,30 +47,30 @@ SET ADD TABLE (set id = 1, origin = 1, id = 42,
 
 <para> Notice that while you need to specify the namespace for the
 table, you must <emphasis>not</emphasis> specify the namespace for the
-key, as it infers the namespace from the table.
+key, as it infers the namespace from the table.</para></listitem>
 
 <listitem><para> If the table hasn't even got a candidate primary key,
-you can ask <productname/Slony-I/ to provide one.  This is done by
+you can ask <productname>Slony-I</productname> to provide one.  This is done by
 first using <command><link linkend="stmttableaddkey"> TABLE ADD KEY
 </link> </command> to add a column populated using a
-<productname/Slony-I/ sequence, and then having the <command> <link
+<productname>Slony-I</productname> sequence, and then having the <command> <link
 linkend="stmtsetaddtable"> SET ADD TABLE</link></command> include the
 directive <option>key=serial</option>, to indicate that
-<productname/Slony-I/'s own column should be used.</para></listitem>
+<productname>Slony-I</productname>'s own column should be used.</para></listitem>
 
 </itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
 key;</quote> it is, however, recommended that you have one of those
-instead of having <productname/Slony-I/ populate the PK column for
+instead of having <productname>Slony-I</productname> populate the PK column for
 you.  If you don't have a suitable primary key, that means that the
 table hasn't got any mechanism from your application's standpoint of
-keeping values unique.  <productname/Slony-I/ may therefore introduce
+keeping values unique.  <productname>Slony-I</productname> may therefore introduce
 a new failure mode for your application, and this implies that you had
 a way to enter confusing data into the database.</para>
-
-<sect2><title> Grouping tables into sets</title>
+</sect2>
+<sect2><title>Grouping tables into sets</title>
 
 <para> It will be vital to group tables together into a single set if
 those tables are related via foreign key constraints.  If tables that
@@ -85,9 +85,9 @@ that replication sets will be virtually synonymous with namespaces.
 All of the tables and sequences in a particular namespace will be
 sufficiently related that you will want to replicate them all.
 Conversely, tables found in different schemas will likely
-<emphasis/not/ be related, and therefore should be replicated in
+<emphasis>not</emphasis> be related, and therefore should be replicated in
 separate sets.</para>
-
+</sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file

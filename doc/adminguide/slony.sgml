@@ -9,7 +9,7 @@
 ]>
 
 <book id="slony">
-  <title>Slony-I &version; Documentation</title>
+  <title><productname>Slony-I</productname> &version; Documentation</title>
   <bookinfo>
     <corpauthor>The Slony Global Development Group</corpauthor>
     <author>
@@ -20,8 +20,7 @@
   </bookinfo>
 
   <part id="slonyintro">
-    <title>Slony-I Introduction</title>
-
+    <title><productname>Slony-I</productname> Introduction</title>
     &intro;
     &prerequisites;
     &installation;
@@ -30,13 +29,13 @@
     &defineset;
   </part>
 
-  <part id="refrence">
-    <title>Slony-I Command Reference</title>
+  <part id="commandreferencec">
+    <title>Core <productname>Slony-I</productname> Programs</title>
     &reference;
   </part>
 
   <part id="slonyadmin">
-    <title>Slony-I Administration</title>
+    <title><productname>Slony-I</productname> Administration</title>
 
     &adminscripts;
     &startslons;
@@ -70,9 +69,7 @@ worth documenting</emphasis>.</para>
       &schemadoc;
     </article>
   </part>
-<!--  &errcodes; -->
-<!--  &biblio; -->
-<!--  &bookindex; -->
+&bookindex;
 
 </book>
 
