@@ -14,12 +14,12 @@ And now, the contents.
 
 Slony currently supports PostgreSQL 7.3.x and 7.4.x.
 
-Slony must be built and installed by the postgres unix user.  The
+Slony must be built and installed by the PostgreSQL Unix user.  The
 installation target will be identical to the existing PostgreSQL
 installation and the original PostgreSQL source tree must be
 available.  On certain platforms (AIX is one of these), PostgreSQL must
 be configured with the option --enable-thread-safety to provide
-correct client libraries.  The location of the PostgreSQL sourcetree is
+correct client libraries.  The location of the PostgreSQL source-tree is
 specified with the configure option --with-pgsourcetree=<dir>.
 
 The complete list of files installed is:
@@ -38,9 +38,9 @@ The complete list of files installed is:
 
 The .sql files are not fully substituted yet.  And it is correct that
 both, the 7.3 and the 7.4 files get installed on a system regardless
-of its version.  The sloni admin utility will do the substitution and
+of its version.  The slonik admin utility will do the substitution and
 load these files when creating replication nodes.  At that time, the
-database being instialized might be remote and of a different version.
+database being initialized might be remote and of a different version.
 
 At least the two shared objects installed in the $libdir directory
 must be installed onto every computer that is supposed to become a
@@ -73,10 +73,10 @@ DBNAME1=pgbench_node1
 DBNAME2=pgbench_node2
 HOST1=<host name of pgbench_node1>
 HOST2=<host name of pgbench_node2>
-SLONY_USER=<postgres superuser to connect as for replication>
+SLONY_USER=<PostgreSQL superuser to connect as for replication>
 PGBENCH_USER=<normal user to run the pgbench application>
 
-Here, we assume that the the unix user executing all the commands in
+Here, we assume that the the Unix user executing all the commands in
 this example has the ability to establish all database connections.
 This is not intended to become a "pg_hba.conf HOWTO", so replacing
 whatever sophisticated authentication method is used with "trust"
@@ -101,7 +101,7 @@ time.  The command to run it would look like this:
 
 pgbench [-n] -s 1 -c <n_clients> -U $PGBENCH_USER -h $HOST1 -t <n_trans> $DBNAME1
 
-    * -n suppresses deleting the content of the hostory table and
+    * -n suppresses deleting the content of the history table and
     * vacuuming the database at the start of pgbench.
     * -c <n_clients> specifies the number of concurrent clients to
     * simulate (should be between 1 and 10).  Note that a high number
