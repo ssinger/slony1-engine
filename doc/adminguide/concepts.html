@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Slony-I Concepts</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE="Slonik"
+HREF="slonik.html"><LINK
+REL="NEXT"
+TITLE="Defining Slony-I Clusters"
+HREF="cluster.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="slonik.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="cluster.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CONCEPTS"
+>5. Slony-I Concepts</A
+></H1
+><P
+>In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
+
+<P
+></P
+><UL
+><LI
+><P
+> Cluster
+	</P
+></LI
+><LI
+><P
+> Node
+	</P
+></LI
+><LI
+><P
+> Replication Set
+	</P
+></LI
+><LI
+><P
+> Provider and Subscriber</P
+></LI
+></UL
+>&#13;</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN231"
+>5.1. Cluster</A
+></H2
+><P
+>In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.&#13;</P
+><P
+>The cluster name is specified in each and every Slonik script via the directive:
+<TT
+CLASS="COMMAND"
+>cluster name = 'something';</TT
+>&#13;</P
+><P
+>If the Cluster name is 'something', then Slony-I will create, in each database instance in the cluster, the namespace/schema '_something'.&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN237"
+>5.2. Node</A
+></H2
+><P
+>A Slony-I Node is a named PostgreSQL database that will be participating in replication.  &#13;</P
+><P
+>It is defined, near the beginning of each Slonik script, using the directive:
+<TT
+CLASS="COMMAND"
+> NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';</TT
+>&#13;</P
+><P
+>The CONNINFO information indicates a string argument that will ultimately be passed to the <CODE
+CLASS="FUNCTION"
+>PQconnectdb()</CODE
+> libpq function. &#13;</P
+><P
+>Thus, a Slony-I cluster consists of:
+<P
+></P
+><UL
+><LI
+><P
+> A cluster name
+	</P
+></LI
+><LI
+><P
+> A set of Slony-I nodes, each of which has a namespace based on that cluster name</P
+></LI
+></UL
+>&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN250"
+>5.3. Replication Set</A
+></H2
+><P
+>A replication set is defined as a set of tables and sequences that are to be replicated between nodes in a Slony-I cluster.&#13;</P
+><P
+>You may have several sets, and the "flow" of replication does not need to be identical between those sets.&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN254"
+>5.4. Provider and Subscriber</A
+></H2
+><P
+>Each replication set has some "master" node, which winds up
+being the <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>only</I
+></SPAN
+> place where user applications are permitted
+to modify data in the tables that are being replicated.  That "master"
+may be considered the master "provider node;" it is the main place
+from which data is provided.&#13;</P
+><P
+>Other nodes in the cluster will subscribe to the replication
+set, indicating that they want to receive the data.&#13;</P
+><P
+>The "master" node will never be considered a "subscriber."  But
+Slony-I supports the notion of cascaded subscriptions, that is, a node
+that is subscribed to the "master" may also behave as a "provider" to
+other nodes in the cluster.
+
+
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="slonik.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="cluster.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Slonik</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Defining Slony-I Clusters</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Reshaping a Cluster</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE="Slony-I Maintenance"
+HREF="maintenance.html"><LINK
+REL="NEXT"
+TITLE="Doing switchover and failover with Slony-I"
+HREF="failover.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="maintenance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="failover.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RESHAPE"
+>14. Reshaping a Cluster</A
+></H1
+><P
+>If you rearrange the nodes so that they serve different purposes, this will likely lead to the subscribers changing a bit.&#13;</P
+><P
+>This will require doing several things:
+<P
+></P
+><UL
+><LI
+><P
+> If you want a node that is a subscriber to become the "master" provider for a particular replication set, you will have to issue the slonik MOVE SET operation to change that "master" provider node.&#13;</P
+></LI
+><LI
+><P
+> You may subsequently, or instead, wish to modify the subscriptions of other nodes.  You might want to modify a node to get its data from a different provider, or to change it to turn forwarding on or off.  This can be accomplished by issuing the slonik SUBSCRIBE SET operation with the new subscription information for the node; Slony-I will change the configuration.&#13;</P
+></LI
+><LI
+><P
+> If the directions of data flows have changed, it is doubtless appropriate to issue a set of DROP LISTEN operations to drop out obsolete paths between nodes and SET LISTEN to add the new ones.  At present, this is not changed automatically; at some point, MOVE SET and SUBSCRIBE SET might change the paths as a side-effect.  See SlonyListenPaths for more information about this.  In version 1.1 and later, it is likely that the generation of sl_listen entries will be entirely automated, where they will be regenerated when changes are made to sl_path or sl_subscribe, thereby making it unnecessary to even think about SET LISTEN.&#13;</P
+></LI
+></UL
+></P
+><P
+> The "altperl" toolset includes a "init_cluster.pl" script that is quite up to the task of creating the new SET LISTEN commands; it isn't smart enough to know what listener paths should be dropped.
+
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="maintenance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="failover.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Slony-I Maintenance</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Doing switchover and failover with Slony-I</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

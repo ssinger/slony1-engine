@@ -1,4 +1,4 @@
-<article id="slonconfig"> <title/Slon Configuration Options/
+<sect1 id="slonconfig"> <title/Slon Configuration Options/
 
 <para>Slon parameters:
 
@@ -65,7 +65,6 @@ Options:
 <para>The location of the slon configuration file.
 </itemizedlist>
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

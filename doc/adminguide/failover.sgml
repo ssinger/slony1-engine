@@ -1,6 +1,6 @@
-<article id="failover"> <title/Doing switchover and failover with Slony-I/
+<sect1 id="failover"> <title/Doing switchover and failover with Slony-I/
 
-<sect1><title/Foreword/
+<sect2><title/Foreword/
 
 <para>	 Slony-I is an asynchronous replication system.  Because of that, it
 	 is almost certain that at the moment the current origin of a set
@@ -21,7 +21,7 @@
 	 the slonik utility and knows at least how to set up a simple
 	 2 node replication system with Slony-I.
 
-<sect1><title/ Switchover
+<sect2><title/ Switchover
 
 <para>	 We assume a current "origin" as node1 (AKA master) with one 
 	 "subscriber" as node2 (AKA slave).  A web application on a third
@@ -60,7 +60,7 @@
 	 whole procedure is executed with exchanged node IDs and the
 	 original configuration is restored.
 
-<sect1><title/ Failover/
+<sect2><title/ Failover/
 
 <para>	 Because of the possibility of missing not-yet-replicated
 	 transactions that are committed, failover is the worst thing
@@ -110,14 +110,14 @@
 </command>
 </itemizedlist>
 
-<sect1><title/After failover, getting back node1/
+<sect2><title/After failover, getting back node1/
 <para>
 	 After the above failover, the data stored on node1 must be
 	 considered out of sync with the rest of the nodes.  Therefore, the
 	 only way to get node1 back and transfer the master role to it is
 	 to rebuild it from scratch as a slave, let it catch up and then
 	 follow the switchover procedure.
-</article>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

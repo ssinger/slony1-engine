@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.1 2004-12-06 23:44:53 cbbrowne Exp $
+# $Id: Makefile,v 1.2 2004-12-10 18:41:56 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -86,7 +86,8 @@ all: html
 
 html: slony.sgml $(ALLSGML) stylesheet.dsl
 	@rm -f *.html
-	$(JADE) $(JADEFLAGS) $(SPFLAGS) $(SGMLINCLUDE) $(CATALOG) -d stylesheet.dsl -ioutput-html -t sgml $<
+	$(JADE) -ioutput.html -d mysheet.dsl -t sgml $<
+	#$(JADE) $(JADEFLAGS) $(SPFLAGS) $(SGMLINCLUDE) $(CATALOG) -d mysheet.dsl -ioutput-html -t sgml $<
 ifeq ($(vpath_build), yes)
 	@cp $(srcdir)/stylesheet.css .
 endif

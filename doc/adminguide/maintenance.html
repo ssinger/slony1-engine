@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Slony-I Maintenance</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE="Monitoring"
+HREF="monitoring.html"><LINK
+REL="NEXT"
+TITLE="Reshaping a Cluster"
+HREF="reshape.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="monitoring.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="reshape.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="MAINTENANCE"
+>13. Slony-I Maintenance</A
+></H1
+><P
+>Slony-I actually does most of its necessary maintenance itself, in a "cleanup" thread:
+
+<P
+></P
+><UL
+><LI
+><P
+> Deletes old data from various tables in the
+	Slony-I cluster's namespace, notably entries in sl_log_1,
+	sl_log_2 (not yet used), and sl_seqlog.
+
+	</P
+></LI
+><LI
+><P
+> Vacuum certain tables used by Slony-I.  As of
+	1.0.5, this includes pg_listener; in earlier versions, you
+	must vacuum that table heavily, otherwise you'll find
+	replication slowing down because Slony-I raises plenty of
+	events, which leads to that table having plenty of dead
+	tuples.
+
+	</P
+><P
+> In some versions (1.1, for sure; possibly 1.0.5) there is the option of not bothering to vacuum any of these tables if you are using something like pg_autovacuum to handle vacuuming of these tables.  Unfortunately, it has been quite possible for pg_autovacuum to not vacuum quite frequently enough, so you probably want to use the internal vacuums.  Vacuuming pg_listener "too often" isn't nearly as hazardous as not vacuuming it frequently enough.
+
+	</P
+><P
+>Unfortunately, if you have long-running transactions, vacuums cannot clear out dead tuples that are newer than the eldest transaction that is still running.  This will most notably lead to pg_listener growing large and will slow replication.&#13;</P
+></LI
+></UL
+></P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN587"
+>13.1. Watchdogs: Keeping Slons Running</A
+></H2
+><P
+>There are a couple of "watchdog" scripts available that monitor things, and restart the slon processes should they happen to die for some reason, such as a network "glitch" that causes loss of connectivity.&#13;</P
+><P
+>You might want to run them...&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN591"
+>13.2. Alternative to Watchdog: generate_syncs.sh</A
+></H2
+><P
+>A new script for Slony-I 1.1 is "generate_syncs.sh", which addresses the following kind of situation.&#13;</P
+><P
+>Supposing you have some possibly-flakey slon daemon that might not run all the time, you might return from a weekend away only to discover the following situation...&#13;</P
+><P
+>On Friday night, something went "bump" and while the database came back up, none of the slon daemons survived.  Your online application then saw nearly three days worth of heavy transactions.&#13;</P
+><P
+>When you restart slon on Monday, it hasn't done a SYNC on the master since Friday, so that the next "SYNC set" comprises all of the updates between Friday and Monday.  Yuck.&#13;</P
+><P
+>If you run generate_syncs.sh as a cron job every 20 minutes, it will force in a periodic SYNC on the "master" server, which means that between Friday and Monday, the numerous updates are split into more than 100 syncs, which can be applied incrementally, making the cleanup a lot less unpleasant.&#13;</P
+><P
+>Note that if SYNCs <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>are</I
+></SPAN
+> running regularly, this script won't bother doing anything.&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN600"
+>13.3. Log Files</A
+></H2
+><P
+>Slon daemons generate some more-or-less verbose log files, depending on what debugging level is turned on.  You might assortedly wish to:
+<P
+></P
+><UL
+><LI
+><P
+> Use a log rotator like Apache rotatelogs to have a sequence of log files so that no one of them gets too big;
+
+	</P
+></LI
+><LI
+><P
+> Purge out old log files, periodically.</P
+></LI
+></UL
+>
+
+
+
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="reshape.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Monitoring</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Reshaping a Cluster</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -21,6 +21,7 @@
 <!entity ddlchanges           SYSTEM "ddlchanges.sgml">
 <!entity firstdb           SYSTEM "firstdb.sgml">
 <!entity help           SYSTEM "help.sgml">
+<!entity faq           SYSTEM "faq.sgml">
 
 
 

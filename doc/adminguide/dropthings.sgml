@@ -1,8 +1,8 @@
-<article id="dropthings"> <title/ Dropping things from Slony Replication/
+<sect1 id="dropthings"> <title/ Dropping things from Slony Replication/
 
 <para>There are several things you might want to do involving dropping things from Slony-I replication.
 
-<sect1><title/ Dropping A Whole Node/
+<sect2><title/ Dropping A Whole Node/
 
 <para>If you wish to drop an entire node from replication, the Slonik command DROP NODE should do the trick.  
 
@@ -16,31 +16,51 @@
 
 <para>SlonyFAQ17 documents some extra maintenance that may need to be done on sl_confirm if you are running versions prior to 1.0.5.
 
-<sect1><title/ Dropping An Entire Set/
+<sect2><title/ Dropping An Entire Set/
 
-<para>If you wish to stop replicating a particular replication set, the Slonik command DROP SET is what you need to use.
+<para>If you wish to stop replicating a particular replication set,
+the Slonik command <command/DROP SET/ is what you need to use.
 
-<para>Much as with DROP NODE, this leads to Slony-I dropping the Slony-I triggers on the tables and restoring "native" triggers.  One difference is that this takes place on *all* nodes in the cluster, rather than on just one node.  Another difference is that this does not clear out the Slony-I cluster's namespace, as there might be other sets being serviced.
+<para>Much as with <command/DROP NODE/, this leads to Slony-I dropping
+the Slony-I triggers on the tables and restoring <quote/native/
+triggers.  One difference is that this takes place on <emphasis/all/
+nodes in the cluster, rather than on just one node.  Another
+difference is that this does not clear out the Slony-I cluster's
+namespace, as there might be other sets being serviced.
 
-<para>This operation is quite a bit more dangerous than DROP NODE, as there _isn't_ the same sort of "failsafe."  If you tell DROP SET to drop the _wrong_ set, there isn't anything to prevent "unfortunate results."
+<para>This operation is quite a bit more dangerous than <command/DROP
+NODE/, as there <emphasis/isn't/ the same sort of "failsafe."  If you
+tell <command/DROP SET/ to drop the <emphasis/wrong/ set, there isn't
+anything to prevent "unfortunate results."
 
-<sect1><title/ Unsubscribing One Node From One Set/
+<sect2><title/ Unsubscribing One Node From One Set/
 
-<para>The UNSUBSCRIBE SET operation is a little less invasive than either DROP SET or DROP NODE; it involves dropping Slony-I triggers and restoring "native" triggers on one node, for one replication set.
+<para>The <command/UNSUBSCRIBE SET/ operation is a little less
+invasive than either <command/DROP SET/ or <command/DROP NODE/; it
+involves dropping Slony-I triggers and restoring "native" triggers on
+one node, for one replication set.
 
-<para>Much like with DROP NODE, this operation will fail if there is a node subscribing to the set on this node. 
+<para>Much like with <command/DROP NODE/, this operation will fail if there is a node subscribing to the set on this node. 
 
-<sect1><title/ Warning!!!/
+<warning>
+<para>For all of the above operations, <quote/turning replication back
+on/ will require that the node copy in a <emphasis/full/ fresh set of
+the data on a provider.  The fact that the data was recently being
+replicated isn't good enough; Slony-I will expect to refresh the data
+from scratch.
+</warning>
 
-<para>For all of the above operations, "turning replication back on" will require that the node copy in a <emphasis/full/ fresh set of the data on a provider.  The fact that the data was recently being replicated isn't good enough; Slony-I will expect to refresh the data from scratch.
+<sect2><title/ Dropping A Table From A Set/
 
-<sect1><title/ Dropping A Table From A Set/
+<para>In Slony 1.0.5 and above, there is a Slonik command <command/SET
+DROP TABLE/ that allows dropping a single table from replication
+without forcing the user to drop the entire replication set.
 
-<para>In Slony 1.0.5 and above, there is a Slonik command SET DROP TABLE that allows dropping a single table from replication without forcing the user to drop the entire replication set.
+<para>If you are running an earlier version, there is a <quote/hack/ to do this:
 
-<para>If you are running an earlier version, there is a "hack" to do this:
-
-<para>You can fiddle this by hand by finding the table ID for the table you want to get rid of, which you can find in sl_table, and then run the following three queries, on each host:
+<para>You can fiddle this by hand by finding the table ID for the
+table you want to get rid of, which you can find in sl_table, and then
+run the following three queries, on each host:
 
 <para><command>
   select _slonyschema.alterTableRestore(40);
@@ -48,7 +68,9 @@
   delete from _slonyschema.sl_table where tab_id = 40;
 </command>
 
-<para>The schema will obviously depend on how you defined the Slony-I cluster.  The table ID, in this case, 40, will need to change to the ID of the table you want to have go away.
+<para>The schema will obviously depend on how you defined the Slony-I
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.
 
 <para>You'll have to run these three queries on all of the nodes,
 preferably firstly on the "master" node, so that the dropping of this
@@ -57,13 +79,17 @@ new Slony event would do that.  Submitting the three queries using
 EXECUTE SCRIPT could do that.  Also possible would be to connect to
 each database and submit the queries by hand.
 
-<sect1><title/ Dropping A Sequence From A Set/
+<sect2><title/ Dropping A Sequence From A Set/
 
-<para>Just as with SET DROP TABLE, version 1.0.5 introduces the operation SET DROP SEQUENCE.
+<para>Just as with <command/SET DROP TABLE/, version 1.0.5 introduces
+the operation <command/SET DROP SEQUENCE/.
 
-<para>If you are running an earlier version, here are instructions as to how to drop sequences:
+<para>If you are running an earlier version, here are instructions as
+to how to drop sequences:
 
-<para>The data that needs to be deleted to stop Slony from continuing to replicate the two sequences identified with Sequence IDs 93 and 59 are thus:
+<para>The data that needs to be deleted to stop Slony from continuing
+to replicate the two sequences identified with Sequence IDs 93 and 59
+are thus:
 
 <para><command>
 delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
@@ -75,7 +101,6 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 the sequence everywhere "at once."  Or they may be applied by hand to
 each of the nodes.
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

@@ -12,13 +12,14 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
 ]>
 
 <book id="slony">
- <title>Slony 1.1 Documentation</title>
+ <title>Slony-I 1.1 Administration</title>
 
  <bookinfo>
-  <corpauthor>The PostgreSQL Global Development Group</corpauthor>
+  <corpauthor>The Slony Global Development Group</corpauthor>
+  <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
   &legal;
  </bookinfo>
-<part id="overview"> <title/Overview/
+<article> <title>Slony-I Administration</title>
 
  &intro;
  &prerequisites;
@@ -27,9 +28,6 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
  &concepts;
  &cluster;
  &defineset;
-</part>
-
-<part id="tools"> <title/Tools/
  &adminscripts;
  &startslons;
  &slonconfig;
@@ -45,10 +43,15 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
  &firstdb;
  &help;
 
-</part>
+</article>
 
-<!--  <part id="appendixes"> -->
-<!--   <title>Appendixes</title> -->
+<article id="faq"><title> FAQ </title>
+
+<para> Not all of these are, strictly speaking, <quote/frequently
+asked;/ some represent <emphasis/trouble found that seemed worth
+documenting/.
+
+ &faq;
 
 <!--   &errcodes; -->
 

@@ -1,90 +1,147 @@
-<article id="slonyintroduction"> <title/Introduction to Slony-I/
+<sect1 id="introduction"> <title>Introduction to Slony-I</title>
 
-<sect1> <title>Why yet another replication system? </title>
+<sect2> <title>Why yet another replication system? </title>
 
 <para>Slony-I was born from an idea to create a replication system that was not tied
 to a specific version of PostgreSQL, which is allowed to be started and stopped on
-an existing database with out the need for a dump/reload cycle.
+an existing database with out the need for a dump/reload cycle.</para></sect2>
 
-<sect1> <title/What Slony-I is/
+<sect2> <title>What Slony-I is</title>
 
-<para>Slony-I is a <quote/master to multiple slaves/ replication
+<para>Slony-I is a <quote>master to multiple slaves</quote> replication
 system supporting cascading and slave promotion.  The big picture for
 the development of Slony-I is as a master-slave system that includes
 all features and capabilities needed to replicate large databases to a
-reasonably limited number of slave systems.  "Reasonable," in this
+reasonably limited number of slave systems.  <quote>Reasonable,</quote> in this
 context, is probably no more than a few dozen servers.  If the number
 of servers grows beyond that, the cost of communications becomes
-prohibitively high.  
+prohibitively high.</para>  
 
-<!-- See also <link linkend="SlonyListenerCosts"> SlonyListenerCosts </link> -->
+<para> See also <link linkend="slonylistenercosts"> SlonyListenerCosts
+</link> for a further analysis.</para>
 
 <para> Slony-I is a system intended for data centers and backup sites,
 where the normal mode of operation is that all nodes are available all
 the time, and where all nodes can be secured.  If you have nodes that
 are likely to regularly drop onto and off of the network, or have
 nodes that cannot be kept secure, Slony-I may not be the ideal
-replication solution for you.
+replication solution for you.</para>
 
-<para> There are plans for a <quote/file-based log shipping/ extension where updates would be serialized into files.  Given that, log files could be distributed by any means desired without any need of feedback between the provider node and those nodes subscribing via "log shipping."
+<para> There are plans for a <quote>file-based log shipping</quote>
+extension where updates would be serialized into files.  Given that,
+log files could be distributed by any means desired without any need
+of feedback between the provider node and those nodes subscribing via
+<quote>log shipping.</quote></para></sect2>
 
 
-<sect1><title/ Slony-I is not/
+<sect2><title> Slony-I is not</title>
 
-<para>Slony-I is not a network management system.  
+<para>Slony-I is not a network management system.</para>  
 
 <para> Slony-I does not have any functionality within it to detect a
 node failure, or automatically promote a node to a master or other
-data origin.
+data origin.</para>
 
 <para>Slony-I is not multi-master; it's not a connection broker, and
-it doesn't make you coffee and toast in the morning.
+it doesn't make you coffee and toast in the morning.</para>
 
 <para>(That being said, the plan is for a subsequent system, Slony-II,
 to provide "multimaster" capabilities, and be "bootstrapped" using
 Slony-I.  But that is a separate project, and expectations for Slony-I
-should not be based on hopes for future projects.)
+should not be based on hopes for future projects.)</para></sect2>
 
-<sect1><title> Why doesn't Slony-I do automatic fail-over/promotion? 
+<sect2><title> Why doesn't Slony-I do automatic fail-over/promotion? 
 </title>
 
 <para>This is the job of network monitoring software, not Slony.
 Every site's configuration and fail-over path is different.  For
 example, keep-alive monitoring with redundant NIC's and intelligent HA
 switches that guarantee race-condition-free takeover of a network
-address and disconnecting the "failed" node vary in every network
-setup, vendor choice, hardware/software combination.  This is clearly
-the realm of network management software and not Slony-I.
+address and disconnecting the <quote>failed</quote> node vary in every
+network setup, vendor choice, hardware/software combination.  This is
+clearly the realm of network management software and not
+Slony-I.</para>
 
-<para>Let Slony-I do what it does best: provide database replication.
+<para>Let Slony-I do what it does best: provide database replication.</para></sect2>
 
-<sect1><title/ Current Limitations/
+<sect2><title> Current Limitations</title>
 
 <para>Slony-I does not automatically propagate schema changes, nor
 does it have any ability to replicate large objects.  There is a
 single common reason for these limitations, namely that Slony-I
 operates using triggers, and neither schema changes nor large object
 operations can raise triggers suitable to tell Slony-I when those
-kinds of changes take place.
+kinds of changes take place.</para>
 
 <para>There is a capability for Slony-I to propagate DDL changes if
-you submit them as scripts via the slonik <command/EXECUTE SCRIPT/
-operation.  That is not "automatic;" you have to construct an SQL DDL
-script and submit it.
+you submit them as scripts via the <application>slonik</application>
+<command>EXECUTE SCRIPT</command> operation.  That is not
+<quote>automatic;</quote> you have to construct an SQL DDL script and submit
+it.</para>
 
 <para>If you have those sorts of requirements, it may be worth
-exploring the use of PostgreSQL 8.0 PITR (Point In Time Recovery),
-where WAL logs are replicated to remote nodes.  Unfortunately, that
-has two attendant limitations:
+exploring the use of <application>PostgreSQL</application> 8.0 PITR (Point In Time
+Recovery), where <acronym>WAL</acronym> logs are replicated to remote
+nodes.  Unfortunately, that has two attendant limitations:
 
 <itemizedlist>
-	<listitem><para> PITR replicates <emphasis/all/ changes in <emphasis/all/ databases; you cannot exclude data that isn't relevant;
-	<listitem><para> A PITR replica remains dormant until you apply logs and start up the database.  You cannot use the database and apply updates simultaneously.  It is like having a <quote/standby server/ which cannot be used without it ceasing to be <quote/standby./
+	
+<listitem><para> PITR replicates <emphasis>all</emphasis> changes in
+<emphasis>all</emphasis> databases; you cannot exclude data that isn't
+relevant;</para></listitem>
 
-</itemizedlist>
+<listitem><para> A PITR replica remains dormant until you apply logs
+and start up the database.  You cannot use the database and apply
+updates simultaneously.  It is like having a <quote>standby
+server</quote> which cannot be used without it ceasing to be
+<quote>standby.</quote></para></listitem>
 
-<para>There are a number of distinct models for database replication; it is impossible for one replication system to be all things to all people.
+</itemizedlist></para>
 
+<para>There are a number of distinct models for database replication;
+it is impossible for one replication system to be all things to all
+people.</para></sect2>
+
+<sect2 id="slonylistenercosts"><title> Slony-I Communications
+Costs</title>
+
+<para>The cost of communications grows in a quadratic fashion in
+several directions as the number of replication nodes in a cluster
+increases.  Note the following relationships:
+
+<itemizedlist>
+
+<listitem><para> It is necessary to have a sl_path entry allowing
+connection from each node to every other node.  Most will normally not
+need to be used for a given replication configuration, but this means
+that there needs to be n(n-1) paths.  It is probable that there will
+be considerable repetition of entries, since the path to "node n" is
+likely to be the same from everywherein the network.</para></listitem>
+
+<listitem><para> It is similarly necessary to have a sl_listen entry
+indicating how data flows from every node to every other node.  This
+again requires configuring n(n-1) "listener paths."</para></listitem>
+
+<listitem><para> Each SYNC applied needs to be reported back to all of
+the other nodes participating in the set so that the nodes all know
+that it is safe to purge sl_log_1 and sl_log_2 data, as any
+<quote>forwarding</quote> node could potentially take over as <quote>master</quote>
+at any time.  One might expect SYNC messages to need to travel through
+n/2 nodes to get propagated to their destinations; this means that
+each SYNC is expected to get transmitted n(n/2) times.  Again, this
+points to a quadratic growth in communications costs as the number of
+nodes increases.</para></listitem>
+
+</itemizedlist></para>
+
+<para>This points to it being a bad idea to have the large
+communications network resulting from the number of nodes being large.
+Up to a half dozen nodes seems pretty reasonable; every time the
+number of nodes doubles, this can be expected to quadruple
+communications overheads.</para>
+</sect2>
+
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

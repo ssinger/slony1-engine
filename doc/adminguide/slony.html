@@ -1,0 +1,685 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Slony-I 1.1 Administration</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="NEXT"
+HREF="t24.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="BOOK"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="SLONY"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="SLONY"
+>Slony-I 1.1 Administration</A
+></H1
+><H3
+CLASS="CORPAUTHOR"
+>The Slony Global Development Group</H3
+><H3
+CLASS="AUTHOR"
+><A
+NAME="AEN5"
+></A
+>Christopher Browne</H3
+><P
+CLASS="COPYRIGHT"
+>Copyright &copy; 2004-2005 The PostgreSQL Global Development Group</P
+><DIV
+CLASS="LEGALNOTICE"
+><A
+NAME="LEGALNOTICE"
+></A
+><P
+><B
+>Legal Notice</B
+></P
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is Copyright &copy; 2004-2005
+  by the PostgreSQL Global Development Group and is distributed under
+  the terms of the license of the University of California below.
+ </P
+><P
+>  Permission to use, copy, modify, and distribute this software and
+  its documentation for any purpose, without fee, and without a
+  written agreement is hereby granted, provided that the above
+  copyright notice and this paragraph and the following two paragraphs
+  appear in all copies.
+ </P
+><P
+>  IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY
+  PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+  DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS
+  SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF CALIFORNIA
+  HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ </P
+><P
+>  THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
+  PROVIDED HEREUNDER IS ON AN <SPAN
+CLASS="QUOTE"
+>"AS-IS"</SPAN
+> BASIS, AND THE
+  UNIVERSITY OF CALIFORNIA HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE,
+  SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ </P
+><P
+> Note that <SPAN
+CLASS="TRADEMARK"
+>UNIX</SPAN
+>&#8482; is a registered trademark of The
+ Open Group.  <SPAN
+CLASS="TRADEMARK"
+>Windows</SPAN
+>&#8482; is a registered trademark of
+ Microsoft Corporation in the United States and other countries.
+ <SPAN
+CLASS="TRADEMARK"
+>Solaris</SPAN
+>&#8482; is a registered trademark of Sun Microsystems,
+ Inc.  <SPAN
+CLASS="TRADEMARK"
+>Linux</SPAN
+>&#8482; is a trademark of Linus Torvalds.&#13;</P
+></DIV
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="t24.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t24.html#INTRODUCTION"
+>Introduction to Slony-I</A
+></DT
+><DD
+><DL
+><DT
+>1.1. <A
+HREF="t24.html#AEN28"
+>Why yet another replication system?</A
+></DT
+><DT
+>1.2. <A
+HREF="t24.html#AEN31"
+>What Slony-I is</A
+></DT
+><DT
+>1.3. <A
+HREF="t24.html#AEN42"
+>Slony-I is not</A
+></DT
+><DT
+>1.4. <A
+HREF="t24.html#AEN48"
+>Why doesn't Slony-I do automatic fail-over/promotion?</A
+></DT
+><DT
+>1.5. <A
+HREF="t24.html#AEN53"
+>Current Limitations</A
+></DT
+><DT
+>1.6. <A
+HREF="t24.html#SLONYLISTENERCOSTS"
+>Slony-I Communications
+Costs</A
+></DT
+></DL
+></DD
+><DT
+>2. <A
+HREF="requirements.html"
+>Requirements</A
+></DT
+><DD
+><DL
+><DT
+>2.1. <A
+HREF="requirements.html#AEN109"
+>Software needed</A
+></DT
+><DT
+>2.2. <A
+HREF="requirements.html#AEN136"
+>Getting Slony-I Source</A
+></DT
+><DT
+>2.3. <A
+HREF="requirements.html#AEN140"
+>Time Synchronization</A
+></DT
+><DT
+>2.4. <A
+HREF="requirements.html#AEN148"
+>Network Connectivity</A
+></DT
+></DL
+></DD
+><DT
+>3. <A
+HREF="installation.html"
+>Slony-I Installation</A
+></DT
+><DD
+><DL
+><DT
+>3.1. <A
+HREF="installation.html#AEN176"
+>Short Version</A
+></DT
+><DT
+>3.2. <A
+HREF="installation.html#AEN182"
+>Configuration</A
+></DT
+><DT
+>3.3. <A
+HREF="installation.html#AEN185"
+>Example</A
+></DT
+><DT
+>3.4. <A
+HREF="installation.html#AEN191"
+>Build</A
+></DT
+><DT
+>3.5. <A
+HREF="installation.html#AEN198"
+>Installing Slony-I</A
+></DT
+></DL
+></DD
+><DT
+>4. <A
+HREF="slonik.html"
+>Slonik</A
+></DT
+><DD
+><DL
+><DT
+>4.1. <A
+HREF="slonik.html#AEN206"
+>Introduction</A
+></DT
+><DT
+>4.2. <A
+HREF="slonik.html#AEN209"
+>General outline</A
+></DT
+></DL
+></DD
+><DT
+>5. <A
+HREF="concepts.html"
+>Slony-I Concepts</A
+></DT
+><DD
+><DL
+><DT
+>5.1. <A
+HREF="concepts.html#AEN231"
+>Cluster</A
+></DT
+><DT
+>5.2. <A
+HREF="concepts.html#AEN237"
+>Node</A
+></DT
+><DT
+>5.3. <A
+HREF="concepts.html#AEN250"
+>Replication Set</A
+></DT
+><DT
+>5.4. <A
+HREF="concepts.html#AEN254"
+>Provider and Subscriber</A
+></DT
+></DL
+></DD
+><DT
+>6. <A
+HREF="cluster.html"
+>Defining Slony-I Clusters</A
+></DT
+><DT
+>7. <A
+HREF="x267.html"
+>Defining Slony-I Replication Sets</A
+></DT
+><DD
+><DL
+><DT
+>7.1. <A
+HREF="x267.html#AEN278"
+>Primary Keys</A
+></DT
+><DT
+>7.2. <A
+HREF="x267.html#AEN303"
+>Grouping tables into sets</A
+></DT
+></DL
+></DD
+><DT
+>8. <A
+HREF="altperl.html"
+>Slony-I Administration Scripts</A
+></DT
+><DD
+><DL
+><DT
+>8.1. <A
+HREF="altperl.html#AEN314"
+>Node/Cluster Configuration - cluster.nodes</A
+></DT
+><DT
+>8.2. <A
+HREF="altperl.html#AEN342"
+>Set configuration - cluster.set1, cluster.set2</A
+></DT
+><DT
+>8.3. <A
+HREF="altperl.html#AEN362"
+>build_env.pl</A
+></DT
+><DT
+>8.4. <A
+HREF="altperl.html#AEN375"
+>create_set.pl</A
+></DT
+><DT
+>8.5. <A
+HREF="altperl.html#AEN380"
+>drop_node.pl</A
+></DT
+><DT
+>8.6. <A
+HREF="altperl.html#AEN383"
+>drop_set.pl</A
+></DT
+><DT
+>8.7. <A
+HREF="altperl.html#AEN387"
+>failover.pl</A
+></DT
+><DT
+>8.8. <A
+HREF="altperl.html#AEN390"
+>init_cluster.pl</A
+></DT
+><DT
+>8.9. <A
+HREF="altperl.html#AEN393"
+>merge_sets.pl</A
+></DT
+><DT
+>8.10. <A
+HREF="altperl.html#AEN396"
+>move_set.pl</A
+></DT
+><DT
+>8.11. <A
+HREF="altperl.html#AEN399"
+>replication_test.pl</A
+></DT
+><DT
+>8.12. <A
+HREF="altperl.html#AEN402"
+>restart_node.pl</A
+></DT
+><DT
+>8.13. <A
+HREF="altperl.html#AEN405"
+>restart_nodes.pl</A
+></DT
+><DT
+>8.14. <A
+HREF="altperl.html#AEN408"
+>show_configuration.pl</A
+></DT
+><DT
+>8.15. <A
+HREF="altperl.html#AEN412"
+>slon_kill.pl</A
+></DT
+><DT
+>8.16. <A
+HREF="altperl.html#AEN415"
+>slon_pushsql.pl</A
+></DT
+><DT
+>8.17. <A
+HREF="altperl.html#AEN418"
+>slon_start.pl</A
+></DT
+><DT
+>8.18. <A
+HREF="altperl.html#AEN421"
+>slon_watchdog.pl</A
+></DT
+><DT
+>8.19. <A
+HREF="altperl.html#AEN424"
+>slon_watchdog2.pl</A
+></DT
+><DT
+>8.20. <A
+HREF="altperl.html#AEN428"
+>subscribe_set.pl</A
+></DT
+><DT
+>8.21. <A
+HREF="altperl.html#AEN431"
+>uninstall_nodes.pl</A
+></DT
+><DT
+>8.22. <A
+HREF="altperl.html#AEN434"
+>unsubscribe_set.pl</A
+></DT
+><DT
+>8.23. <A
+HREF="altperl.html#AEN437"
+>update_nodes.pl</A
+></DT
+></DL
+></DD
+><DT
+>9. <A
+HREF="slonstart.html"
+>Slon daemons</A
+></DT
+><DT
+>10. <A
+HREF="slonconfig.html"
+>Slon Configuration Options</A
+></DT
+><DT
+>11. <A
+HREF="subscribenodes.html"
+>Subscribing Nodes</A
+></DT
+><DT
+>12. <A
+HREF="monitoring.html"
+>Monitoring</A
+></DT
+><DD
+><DL
+><DT
+>12.1. <A
+HREF="monitoring.html#AEN565"
+>CONFIG notices</A
+></DT
+><DT
+>12.2. <A
+HREF="monitoring.html#AEN571"
+>DEBUG Notices</A
+></DT
+></DL
+></DD
+><DT
+>13. <A
+HREF="maintenance.html"
+>Slony-I Maintenance</A
+></DT
+><DD
+><DL
+><DT
+>13.1. <A
+HREF="maintenance.html#AEN587"
+>Watchdogs: Keeping Slons Running</A
+></DT
+><DT
+>13.2. <A
+HREF="maintenance.html#AEN591"
+>Alternative to Watchdog: generate_syncs.sh</A
+></DT
+><DT
+>13.3. <A
+HREF="maintenance.html#AEN600"
+>Log Files</A
+></DT
+></DL
+></DD
+><DT
+>14. <A
+HREF="reshape.html"
+>Reshaping a Cluster</A
+></DT
+><DT
+>15. <A
+HREF="failover.html"
+>Doing switchover and failover with Slony-I</A
+></DT
+><DD
+><DL
+><DT
+>15.1. <A
+HREF="failover.html#AEN622"
+>Foreword</A
+></DT
+><DT
+>15.2. <A
+HREF="failover.html#AEN627"
+>Switchover</A
+></DT
+><DT
+>15.3. <A
+HREF="failover.html#AEN642"
+>Failover</A
+></DT
+><DT
+>15.4. <A
+HREF="failover.html#AEN659"
+>After failover, getting back node1</A
+></DT
+></DL
+></DD
+><DT
+>16. <A
+HREF="listenpaths.html"
+>Slony Listen Paths</A
+></DT
+><DD
+><DL
+><DT
+>16.1. <A
+HREF="listenpaths.html#AEN666"
+>How Listening Can Break</A
+></DT
+><DT
+>16.2. <A
+HREF="listenpaths.html#AEN672"
+>How The Listen Configuration Should Look</A
+></DT
+><DT
+>16.3. <A
+HREF="listenpaths.html#AEN697"
+>Open Question</A
+></DT
+><DT
+>16.4. <A
+HREF="listenpaths.html#AEN700"
+>Generating listener entries via heuristics</A
+></DT
+></DL
+></DD
+><DT
+>17. <A
+HREF="addthings.html"
+>Adding Things to Replication</A
+></DT
+><DT
+>18. <A
+HREF="dropthings.html"
+>Dropping things from Slony Replication</A
+></DT
+><DD
+><DL
+><DT
+>18.1. <A
+HREF="dropthings.html#AEN729"
+>Dropping A Whole Node</A
+></DT
+><DT
+>18.2. <A
+HREF="dropthings.html#AEN737"
+>Dropping An Entire Set</A
+></DT
+><DT
+>18.3. <A
+HREF="dropthings.html#AEN750"
+>Unsubscribing One Node From One Set</A
+></DT
+><DT
+>18.4. <A
+HREF="dropthings.html#AEN762"
+>Dropping A Table From A Set</A
+></DT
+><DT
+>18.5. <A
+HREF="dropthings.html#AEN773"
+>Dropping A Sequence From A Set</A
+></DT
+></DL
+></DD
+><DT
+>19. <A
+HREF="ddlchanges.html"
+>Database Schema Changes (DDL)</A
+></DT
+><DT
+>20. <A
+HREF="firstdb.html"
+>Replicating Your First Database</A
+></DT
+><DD
+><DL
+><DT
+>20.1. <A
+HREF="firstdb.html#AEN867"
+>Creating the pgbenchuser</A
+></DT
+><DT
+>20.2. <A
+HREF="firstdb.html#AEN871"
+>Preparing the databases</A
+></DT
+><DT
+>20.3. <A
+HREF="firstdb.html#AEN885"
+>Configuring the Database for Replication.</A
+></DT
+></DL
+></DD
+><DT
+>21. <A
+HREF="help.html"
+>More Slony-I Help</A
+></DT
+><DT
+>22. <A
+HREF="x931.html"
+>Other Information Sources</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="faq.html"
+></A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

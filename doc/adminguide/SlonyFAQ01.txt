@@ -1,12 +1,1 @@
-%META:TOPICINFO{author="guest" date="1098326312" format="1.0" version="1.1"}%
-%META:TOPICPARENT{name="SlonyFAQ"}%
----++ I looked for the _clustername namespace, and it wasn't there.
-
-If the DSNs are wrong, then slon instances can't connect to the nodes.
-
-This will generally lead to nodes remaining entirely untouched.
-
-Recheck the connection configuration.  By the way, since slon links to
-libpq, you could have password information stored in $HOME/.pgpass,
-partially filling in right/wrong authentication information there.
-
+Moved to SGML

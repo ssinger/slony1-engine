@@ -1,4 +1,4 @@
-<article id="subscribenodes"> <title/ Subscribing Nodes/
+<sect1 id="subscribenodes"> <title/ Subscribing Nodes/
 
 <para>Before you subscribe a node to a set, be sure that you have slons running for both the master and the new subscribing node. If you don't have slons running, nothing will happen, and you'll beat your head against a wall trying to figure out what's going on.
 
@@ -51,7 +51,6 @@ DEBUG2 remoteWorkerThread_1: copy table public.my_table
 
 <para>A final test is to insert a row into a table on the master node, and to see if the row is copied to the new subscriber. 
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

@@ -1,4 +1,4 @@
-<article id="concepts"> <title/Slony-I Concepts/
+<sect1 id="concepts"> <title/Slony-I Concepts/
 
 
 <para>In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
@@ -10,7 +10,7 @@
 	<listitem><Para> Provider and Subscriber
 </itemizedlist>
 
-<sect1><title/Cluster/
+<sect2><title/Cluster/
 
 <para>In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.
 
@@ -21,7 +21,7 @@ cluster name = 'something';
 
 <para>If the Cluster name is 'something', then Slony-I will create, in each database instance in the cluster, the namespace/schema '_something'.
 
-<sect1><title/ Node/
+<sect2><title/ Node/
 
 <para>A Slony-I Node is a named PostgreSQL database that will be participating in replication.  
 
@@ -38,13 +38,13 @@ cluster name = 'something';
 	<listitem><Para> A set of Slony-I nodes, each of which has a namespace based on that cluster name
 </itemizedlist>
 
-<sect1><title/ Replication Set/
+<sect2><title/ Replication Set/
 
 <para>A replication set is defined as a set of tables and sequences that are to be replicated between nodes in a Slony-I cluster.
 
 <para>You may have several sets, and the "flow" of replication does not need to be identical between those sets.
 
-<sect1><title/ Provider and Subscriber/
+<sect2><title/ Provider and Subscriber/
 
 <para>Each replication set has some "master" node, which winds up
 being the <emphasis/only/ place where user applications are permitted
@@ -60,7 +60,6 @@ Slony-I supports the notion of cascaded subscriptions, that is, a node
 that is subscribed to the "master" may also behave as a "provider" to
 other nodes in the cluster.
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

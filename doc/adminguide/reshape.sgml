@@ -1,4 +1,4 @@
-<article id="reshape"> <title/Reshaping a Cluster/
+<sect1 id="reshape"> <title/Reshaping a Cluster/
 
 <para>If you rearrange the nodes so that they serve different purposes, this will likely lead to the subscribers changing a bit.
 
@@ -14,7 +14,6 @@
 </itemizedlist>
 <para> The "altperl" toolset includes a "init_cluster.pl" script that is quite up to the task of creating the new SET LISTEN commands; it isn't smart enough to know what listener paths should be dropped.
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

@@ -1,11 +1,1 @@
-%META:TOPICINFO{author="guest" date="1099541886" format="1.0" version="1.4"}%
-%META:TOPICPARENT{name="SlonyIAdministration"}%
----++ Adding Things to Replication
-
-You may discover that you have missed replicating things that you wish you were replicating.
-
-This can be fairly easily remedied.
-
-You cannot directly use SET ADD TABLE or SET ADD SEQUENCE in order to add tables and sequences to a replication set that is presently replicating; you must instead create a new replication set.  Once it is identically subscribed (e.g. - the set of subscribers is _identical_ to that for the set it is to merge with), the sets may be merged together using MERGE SET.
-
-Up to and including 1.0.2, there is a potential problem where if MERGE_SET is issued when other subscription-related events are pending, it is possible for things to get pretty confused on the nodes where other things were pending.  This problem was resolved in 1.0.5.
+Moved to SGML

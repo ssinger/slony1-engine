@@ -1,70 +1,71 @@
-<article id="installation"> <title/ Slony-I Installation
+<sect1 id="installation"> <title> Slony-I Installation</title>
 
-<para>You should have obtained the Slony-I source from the previous step. Unpack it.
+<para>You should have obtained the Slony-I source from the previous step. Unpack it.</para>
 
 <para><command>
 gunzip slony.tar.gz;
 tar xf slony.tar
-</command>
+</command></para>
 
 <para> This will create a directory Slony-I under the current
 directory with the Slony-I sources.  Head into that that directory for
-the rest of the installation procedure.
+the rest of the installation procedure.</para>
 
-<sect1><title/ Short Version/
+<sect2><title> Short Version</title>
 
 <para>
-<command>./configure --with-pgsourcetree=/whereever/the/source/is </command>
-<para> <command> gmake all; gmake install </command>
+<command>./configure --with-pgsourcetree=/whereever/the/source/is </command></para>
+<para> <command> gmake all; gmake install </command></para></sect2>
 
-<sect1><title/ Configuration/
+<sect2><title> Configuration</title>
 
 <para>The first step of the installation procedure is to configure the source tree
 for your system.  This is done by running the configure script.  Configure
 needs to know where your PostgreSQL source tree is, this is done with the
---with-pgsourcetree= option.
+--with-pgsourcetree= option.</para></sect2>
 
-<sect1><title/ Example/
+<sect2><title> Example</title>
 
 <para> <command>
 ./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
-</command>
+</command></para>
 
 <para>This script will run a number of tests to guess values for
 various dependent variables and try to detect some quirks of your
 system.  Slony-I is known to need a modified version of libpq on
 specific platforms such as Solaris2.X on SPARC this patch can be found
-at <ulink url=
-"http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
-http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulinK>
+at <ulink url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
+http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulink></para></sect2>
 
 
-<sect1><title/ Build/
+<sect2><title> Build</title>
 
 <para>To start the build process, type
 
 <command>
 gmake all
-</command>
+</command></para>
 
-<para> Be sure to use GNU make; on BSD systems, it is called gmake; on Linux, GNU make is typically the native "make", so the name of the command you type in may vary somewhat. The build may take anywhere from a few seconds to 2 minutes depending on how fast your hardware is at compiling things.  The last line displayed should be
+<para> Be sure to use GNU make; on BSD systems, it is called gmake; on Linux, GNU make is typically the native "make", so the name of the command you type in may vary somewhat. The build may take anywhere from a few seconds to 2 minutes depending on how fast your hardware is at compiling things.  The last line displayed should be</para>
 
 <para> <command>
 All of Slony-I is successfully made.  Ready to install.
-</command>
+</command></para></sect2>
 
-<sect1><title/ Installing Slony-I/
+<sect2><title> Installing Slony-I</title>
 
 <para> To install Slony-I, enter
 
 <command>
 gmake install
-</command>
+</command></para>
 
 <para>This will install files into postgresql install directory as
-specified by the --prefix option used in the PostgreSQL configuration.
-Make sure you have appropriate permissions to write into that area.
-Normally you need to do this either as root or as the postgres user.
+specified by the <option>--prefix</option> option used in the PostgreSQL
+configuration.  Make sure you have appropriate permissions to write
+into that area.  Normally you need to do this either as root or as the
+postgres user.
+</para></sect2></sect1>
 
 <!-- Keep this comment at the end of the file
 Local variables:

@@ -1,4 +1,4 @@
-<article id="cluster"> <title/Defining Slony-I Clusters/
+<sect1 id="cluster"> <title/Defining Slony-I Clusters/
 
 <para>A Slony-I cluster is the basic grouping of database instances in
 which replication takes place.  It consists of a set of PostgreSQL
@@ -18,7 +18,6 @@ attribute, so that they may be given more mnemonic names.  In that
 case, the node numbers can be cryptic; it will be the node name that
 is used to organize the cluster.
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

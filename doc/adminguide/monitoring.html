@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Monitoring</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE=" Subscribing Nodes"
+HREF="subscribenodes.html"><LINK
+REL="NEXT"
+TITLE="Slony-I Maintenance"
+HREF="maintenance.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="subscribenodes.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="maintenance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="MONITORING"
+>12. Monitoring</A
+></H1
+><P
+>Here are some of things that you may find in your Slony logs, and explanations of what they mean. &#13;</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN565"
+>12.1. CONFIG notices</A
+></H2
+><P
+>These entries are pretty straightforward. They are informative messages about your configuration. &#13;</P
+><P
+>Here are some typical entries that you will probably run into in your logs:&#13;</P
+><P
+><TT
+CLASS="COMMAND"
+>CONFIG main: local node id = 1
+CONFIG main: loading current cluster configuration
+CONFIG storeNode: no_id=3 no_comment='Node 3'
+CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo user=postgres port=6132" pa_connretry=10
+CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
+CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
+CONFIG main: configuration complete - starting threads</TT
+>&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN571"
+>12.2. DEBUG Notices</A
+></H2
+><P
+>Debug notices are always prefaced by the name of the thread that the notice originates from. You will see messages from the following threads:&#13;</P
+><P
+><TT
+CLASS="COMMAND"
+>localListenThread: This is the local thread that listens for events on the local node.
+remoteWorkerThread_X: The thread processing remote events.
+remoteListenThread_X: Listens for events on a remote node database.
+cleanupThread: Takes care of things like vacuuming, cleaning out the confirm and event tables, and deleting logs.
+syncThread: Generates sync events.</TT
+>&#13;</P
+><P
+> WriteMe: I can't decide the format for the rest of this. I
+think maybe there should be a "how it works" page, explaining more
+about how the threads work, what to expect in the logs after you run a
+slonik command...
+
+
+
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="subscribenodes.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="maintenance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Subscribing Nodes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Slony-I Maintenance</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

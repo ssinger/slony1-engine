@@ -1,14 +1,1 @@
-%META:TOPICINFO{author="guest" date="1099541111" format="1.0" version="1.1"}%
-%META:TOPICPARENT{name="SlonyIntroduction"}%
----++ Slony-I Communications Costs
-
-The cost of communications grows in a quadratic fashion in several directions as the number of replication nodes in a cluster increases.  Note the following relationships:
-
-	* It is necessary to have a sl_path entry allowing connection from each node to every other node.  Most will normally not need to be used for a given replication configuration, but this means that there needs to be n(n-1) paths.  It is probable that there will be considerable repetition of entries, since the path to "node n" is likely to be the same from everywherein the network.
-
-	* It is similarly necessary to have a sl_listen entry indicating how data flows from every node to every other node.  This again requires configuring n(n-1) "listener paths."
-
-	* Each SYNC applied needs to be reported back to all of the other nodes participating in the set so that the nodes all know that it is safe to purge sl_log_1 and sl_log_2 data, as any "forwarding" node may take over as "master" at any time.  One might expect SYNC messages to need to travel through n/2 nodes to get propagated to their destinations; this means that each SYNC is expected to get transmitted n(n/2) times.  Again, this points to a quadratic growth in communications costs as the number of nodes increases.
-
-This points to it being a bad idea to have the large communications network resulting from the number of nodes being large.  Up to a half dozen nodes seems pretty reasonable; every time the number of nodes doubles, this can be expected to quadruple communications overheads.
-
+Moved to SGML

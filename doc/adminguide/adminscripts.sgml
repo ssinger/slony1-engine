@@ -1,20 +1,20 @@
-<article id="altperl"> <title/Slony Administration Scripts
+<sect1 id="altperl"><title/ Slony-I Administration Scripts/
 
 <para>In the "altperl" directory in the CVS tree, there is a sizable set of Perl scripts that may be used to administer a set of Slony-I instances, which support having arbitrary numbers of nodes.
 
 <para>Most of them generate Slonik scripts that are then to be passed on to the slonik utility to be submitted to all of the Slony-I nodes in a particular cluster.  At one time, this embedded running slonik on the slonik scripts.  Unfortunately, this turned out to be a pretty large calibre "foot gun," as minor typos on the command line led, on a couple of occasions, to pretty calamitous actions, so the behaviour has been changed so that the scripts simply submit output to standard output.  An administrator should review the slonik script before submitting it to Slonik.
 
-<sect1><title> Node/Cluster Configuration - cluster.nodes</title>
+<sect2><title> Node/Cluster Configuration - cluster.nodes</title>
 
 <para>The UNIX environment variable <envar/SLONYNODES/ is used to determine what Perl configuration file will be used to control the shape of the nodes in a Slony-I cluster.
 
 <para>What variables are set up...
 <itemizedlist>
 
-<listitem><Para> $SETNAME=orglogs;	# What is the name of the replication set?
-<listitem><Para> $LOGDIR='/opt/OXRS/log/LOGDBS';  # What is the base directory for logs?
-<listitem><Para> $SLON_BIN_PATH='/opt/dbs/pgsql74/bin';  # Where to look for slony binaries
-<listitem><Para> $APACHE_ROTATOR="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator
+<listitem><Para> <envar/$SETNAME/=orglogs;	# What is the name of the replication set?
+<listitem><Para> <envar/$LOGDIR/='/opt/OXRS/log/LOGDBS';  # What is the base directory for logs?
+<listitem><Para> <envar/$SLON_BIN_PATH/='/opt/dbs/pgsql74/bin';  # Where to look for slony binaries
+<listitem><Para> <envar/$APACHE_ROTATOR/="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator
 </itemizedlist>
 
 <para>You then define the set of nodes that are to be replicated using a set of calls to <function/add_node()/.
@@ -24,18 +24,12 @@
 </command></para>
 
 <para>The set of parameters for <function/add_node()/ are thus:
-<command>
-  my %PARAMS = (host=> undef,						# Host name
-		dbname => 'template1',			# database name
-		port => 5432,						# Port number
-		user => 'postgres',				# user to connect as
-		node => undef,					  # node number
-		password => undef,				 # password for user
-		parent => 1,						 # which node is parent to this node
-		noforward => undef				 # shall this node be set up to forward results?
-			 );
-</command>
-<sect1><title> Set configuration - cluster.set1, cluster.set2</title>
+
+<para> <literallayout><literal remap="tt"><inlinegraphic
+fileref="params.txt"
+format="linespecific"></literal></literallayout></para>
+     
+<sect2><title> Set configuration - cluster.set1, cluster.set2</title>
 
 <para>The UNIX environment variable <envar/SLONYSET/ is used to determine what Perl configuration file will be used to determine what objects will be contained in a particular replication set.
 
@@ -50,7 +44,7 @@
 <listitem><Para> @SEQUENCES			An array of names of sequences that are to be replicated
 </itemizedlist>
 
-<sect1><title/ build_env.pl/
+<sect2><title/ build_env.pl/
 
 <para>Queries a database, generating output hopefully suitable for
 <filename/slon.env/ consisting of:
@@ -60,78 +54,78 @@
 <listitem><Para> The arrays <envar/@KEYEDTABLES/, <envar/@SERIALTABLES/, and <envar/@SEQUENCES/
 </itemizedlist>
 
-<sect1><title/ create_set.pl/
+<sect2><title/ create_set.pl/
 
 <para>This requires <envar/SLONYSET/ to be set as well as <envar/SLONYNODES/; it is used to
 generate the Slonik script to set up a replication set consisting of a
 set of tables and sequences that are to be replicated.
 
-<sect1><title/ drop_node.pl/
+<sect2><title/ drop_node.pl/
 
 <para>Generates Slonik script to drop a node from a Slony-I cluster.
 
-<sect1><title/ drop_set.pl/
+<sect2><title/ drop_set.pl/
 
 <para>Generates Slonik script to drop a replication set (<emphasis/e.g./ - set of tables and sequences) from a Slony-I cluster.
 
-<sect1><title/ failover.pl/
+<sect2><title/ failover.pl/
 
 <para>Generates Slonik script to request failover from a dead node to some new origin
 
-<sect1><title/ init_cluster.pl/
+<sect2><title/ init_cluster.pl/
 
 <para>Generates Slonik script to initialize a whole Slony-I cluster,
 including setting up the nodes, communications paths, and the listener
 routing.
 
-<sect1><title/ merge_sets.pl/
+<sect2><title/ merge_sets.pl/
 
 <para>Generates Slonik script to merge two replication sets together.
 
-<sect1><title/ move_set.pl/
+<sect2><title/ move_set.pl/
 
 <para>Generates Slonik script to move the origin of a particular set to a different node.
 
-<sect1><title/ replication_test.pl/
+<sect2><title/ replication_test.pl/
 
 <para>Script to test whether Slony-I is successfully replicating data.
 
-<sect1><title/ restart_node.pl/
+<sect2><title/ restart_node.pl/
 
 <para>Generates Slonik script to request the restart of a node.  This was
 particularly useful pre-1.0.5 when nodes could get snarled up when
 slon daemons died.
 
-<sect1><title/ restart_nodes.pl/
+<sect2><title/ restart_nodes.pl/
 
 <para>Generates Slonik script to restart all nodes in the cluster.  Not
 particularly useful...
 
-<sect1><title/ show_configuration.pl/
+<sect2><title/ show_configuration.pl/
 
 <para>Displays an overview of how the environment (e.g. - <envar/SLONYNODES/) is set
 to configure things.
 
-<sect1><title/ slon_kill.pl/
+<sect2><title/ slon_kill.pl/
 
 <para>Kills slony watchdog and all slon daemons for the specified set.  It
 only works if those processes are running on the local host, of
 course!
 
-<sect1><title/ slon_pushsql.pl/
+<sect2><title/ slon_pushsql.pl/
 
 <para>Generates Slonik script to push DDL changes to a replication set.
 
-<sect1><title/ slon_start.pl/
+<sect2><title/ slon_start.pl/
 
 <para>This starts a slon daemon for the specified cluster and node, and uses
 slon_watchdog.pl to keep it running.
 
-<sect1><title/ slon_watchdog.pl/
+<sect2><title/ slon_watchdog.pl/
 
 <para>Used by slon_start.pl...
 
-<sect1><title/ slon_watchdog2.pl/
+<sect2><title/ slon_watchdog2.pl/
 
 <para>This is a somewhat smarter watchdog; it monitors a particular Slony-I
 node, and restarts the slon process if it hasn't seen updates go in in
@@ -140,29 +134,26 @@ node, and restarts the slon process if it hasn't seen updates go in in
 <para>This is helpful if there is an unreliable network connection such that
 the slon sometimes stops working without becoming aware of it...
 
-<sect1><title/ subscribe_set.pl/
+<sect2><title/ subscribe_set.pl/
 
 <para>Generates Slonik script to subscribe a particular node to a particular replication set.
 
-<sect1><title/ uninstall_nodes.pl/
+<sect2><title/ uninstall_nodes.pl/
 
 <para>This goes through and drops the Slony-I schema from each node; use
 this if you want to destroy replication throughout a cluster.  This is
 a VERY unsafe script!
 
-<sect1><title/ unsubscribe_set.pl/
+<sect2><title/ unsubscribe_set.pl/
 
 <para>Generates Slonik script to unsubscribe a node from a replication set.
 
-<sect1><title/ update_nodes.pl/
+<sect2><title/ update_nodes.pl/
 
 <para>Generates Slonik script to tell all the nodes to update the Slony-I
 functions.  This will typically be needed when you upgrade from one
 version of Slony-I to another.
 
-
-
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

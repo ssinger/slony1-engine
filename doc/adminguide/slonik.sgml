@@ -1,11 +1,11 @@
-<article id="slonik"> <title>Slonik</title>
+<sect1 id="slonik"> <title>Slonik</title>
 
-<sect1><title/Introduction/
+<sect2><title/Introduction/
 
 <para>Slonik is a command line utility designed specifically to setup
 and modify configurations of the Slony-I replication system.</para>
 
-<sect1><title/General outline/
+<sect2><title/General outline/
 
 <para>The slonik command line utility is supposed to be used embedded
 into shell scripts and reads commands from files or stdin.</para>

@@ -1,22 +1,25 @@
-<article id="firstdb"><title/Replicating Your First Database/
+<sect1 id="firstdb"><title/Replicating Your First Database/
 
 <para>In this example, we will be replicating a brand new pgbench database.  The
 mechanics of replicating an existing database are covered here, however we
 recommend that you learn how Slony-I functions by using a fresh new
 non-production database.
 
-<para>The Slony-I replication engine is trigger-based, allowing us to replicate
-databases (or portions thereof) running under the same postmaster.
+<para>The Slony-I replication engine is trigger-based, allowing us to
+replicate databases (or portions thereof) running under the same
+postmaster.
 
-<para>This example will show how to replicate the pgbench database running on
-localhost (master) to the pgbench slave database also running on localhost
-(slave).  We make a couple of assumptions about your PostgreSQL configuration:
+<para>This example will show how to replicate the pgbench database
+running on localhost (master) to the pgbench slave database also
+running on localhost (slave).  We make a couple of assumptions about
+your PostgreSQL configuration:
+
 <itemizedlist>
-	<listitem><para> You have tcpip_socket=true in your postgresql.conf and
-	<listitem><para> You have enabled access in your cluster(s) via pg_hba.conf
+	<listitem><para> You have <option/tcpip_socket=true/ in your <filename/postgresql.conf/ and
+	<listitem><para> You have enabled access in your cluster(s) via <filename/pg_hba.conf/
 </itemizedlist>
 
-<para> The REPLICATIONUSER needs to be a PostgreSQL superuser.  This is typically
+<para> The <envar/REPLICATIONUSER/ needs to be a PostgreSQL superuser.  This is typically
 postgres or pgsql.
 
 <para>You should also set the following shell variables:
@@ -39,23 +42,23 @@ postgres or pgsql.
 	<command/setenv CLUSTERNAME slony_example/
 </itemizedlist>
 
-<para><warning><Para> If you're changing these variables to use different
-hosts for MASTERHOST and SLAVEHOST, be sure <emphasis/not/ to use
-localhost for either of them.  This will result in an error similar to
-the following:
+<para><warning><Para> If you're changing these variables to use
+different hosts for <envar/MASTERHOST/ and <envar/SLAVEHOST/, be sure
+<emphasis/not/ to use localhost for either of them.  This will result
+in an error similar to the following:
 
 <para><command>
 ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
 </command>
 </warning></para>
 
-<sect1><title/ Creating the pgbenchuser/
+<sect2><title/ Creating the pgbenchuser/
 
 <para><command>
 createuser -A -D $PGBENCHUSER
 </command>
 
-<sect1><title/ Preparing the databases/
+<sect2><title/ Preparing the databases/
 
 <para><command>
 createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
@@ -96,7 +99,7 @@ pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 transactions against the pgbench database running on localhost as the pgbench
 user.
 
-<sect1><title/ Configuring the Database for Replication./
+<sect2><title/ Configuring the Database for Replication./
 
 <para>Creating the configuration tables, stored procedures, triggers and
 configuration is all done through the slonik tool.  It is a specialized
@@ -276,7 +279,7 @@ fi
 <para>If this script returns "FAILED" please contact the developers at
 <ulink url="http://slony.org/"> http://slony.org/</ulink>
 
-</article>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

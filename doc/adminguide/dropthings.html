@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+> Dropping things from Slony Replication</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE=" Adding Things to Replication"
+HREF="addthings.html"><LINK
+REL="NEXT"
+TITLE="Database Schema Changes (DDL)"
+HREF="ddlchanges.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="addthings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="ddlchanges.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DROPTHINGS"
+>18. Dropping things from Slony Replication</A
+></H1
+><P
+>There are several things you might want to do involving dropping things from Slony-I replication.&#13;</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN729"
+>18.1. Dropping A Whole Node</A
+></H2
+><P
+>If you wish to drop an entire node from replication, the Slonik command DROP NODE should do the trick.  &#13;</P
+><P
+>This will lead to Slony-I dropping the triggers (generally that deny the ability to update data), restoring the "native" triggers, dropping the schema used by Slony-I, and the slon process for that node terminating itself.&#13;</P
+><P
+>As a result, the database should be available for whatever use your application makes of the database.&#13;</P
+><P
+>This is a pretty major operation, with considerable potential to cause substantial destruction; make sure you drop the right node!&#13;</P
+><P
+>The operation will fail if there are any nodes subscribing to the node that you attempt to drop, so there is a bit of failsafe.&#13;</P
+><P
+>SlonyFAQ17 documents some extra maintenance that may need to be done on sl_confirm if you are running versions prior to 1.0.5.&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN737"
+>18.2. Dropping An Entire Set</A
+></H2
+><P
+>If you wish to stop replicating a particular replication set,
+the Slonik command <TT
+CLASS="COMMAND"
+>DROP SET</TT
+> is what you need to use.&#13;</P
+><P
+>Much as with <TT
+CLASS="COMMAND"
+>DROP NODE</TT
+>, this leads to Slony-I dropping
+the Slony-I triggers on the tables and restoring <SPAN
+CLASS="QUOTE"
+>"native"</SPAN
+>
+triggers.  One difference is that this takes place on <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>all</I
+></SPAN
+>
+nodes in the cluster, rather than on just one node.  Another
+difference is that this does not clear out the Slony-I cluster's
+namespace, as there might be other sets being serviced.&#13;</P
+><P
+>This operation is quite a bit more dangerous than <TT
+CLASS="COMMAND"
+>DROP
+NODE</TT
+>, as there <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>isn't</I
+></SPAN
+> the same sort of "failsafe."  If you
+tell <TT
+CLASS="COMMAND"
+>DROP SET</TT
+> to drop the <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>wrong</I
+></SPAN
+> set, there isn't
+anything to prevent "unfortunate results."&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN750"
+>18.3. Unsubscribing One Node From One Set</A
+></H2
+><P
+>The <TT
+CLASS="COMMAND"
+>UNSUBSCRIBE SET</TT
+> operation is a little less
+invasive than either <TT
+CLASS="COMMAND"
+>DROP SET</TT
+> or <TT
+CLASS="COMMAND"
+>DROP NODE</TT
+>; it
+involves dropping Slony-I triggers and restoring "native" triggers on
+one node, for one replication set.&#13;</P
+><P
+>Much like with <TT
+CLASS="COMMAND"
+>DROP NODE</TT
+>, this operation will fail if there is a node subscribing to the set on this node. 
+
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>For all of the above operations, <SPAN
+CLASS="QUOTE"
+>"turning replication back
+on"</SPAN
+> will require that the node copy in a <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>full</I
+></SPAN
+> fresh set of
+the data on a provider.  The fact that the data was recently being
+replicated isn't good enough; Slony-I will expect to refresh the data
+from scratch.</P
+></TD
+></TR
+></TABLE
+></DIV
+>&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN762"
+>18.4. Dropping A Table From A Set</A
+></H2
+><P
+>In Slony 1.0.5 and above, there is a Slonik command <TT
+CLASS="COMMAND"
+>SET
+DROP TABLE</TT
+> that allows dropping a single table from replication
+without forcing the user to drop the entire replication set.&#13;</P
+><P
+>If you are running an earlier version, there is a <SPAN
+CLASS="QUOTE"
+>"hack"</SPAN
+> to do this:&#13;</P
+><P
+>You can fiddle this by hand by finding the table ID for the
+table you want to get rid of, which you can find in sl_table, and then
+run the following three queries, on each host:&#13;</P
+><P
+><TT
+CLASS="COMMAND"
+>  select _slonyschema.alterTableRestore(40);
+  select _slonyschema.tableDropKey(40);
+  delete from _slonyschema.sl_table where tab_id = 40;</TT
+>&#13;</P
+><P
+>The schema will obviously depend on how you defined the Slony-I
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.&#13;</P
+><P
+>You'll have to run these three queries on all of the nodes,
+preferably firstly on the "master" node, so that the dropping of this
+propagates properly.  Implementing this via a Slonik statement with a
+new Slony event would do that.  Submitting the three queries using
+EXECUTE SCRIPT could do that.  Also possible would be to connect to
+each database and submit the queries by hand.&#13;</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN773"
+>18.5. Dropping A Sequence From A Set</A
+></H2
+><P
+>Just as with <TT
+CLASS="COMMAND"
+>SET DROP TABLE</TT
+>, version 1.0.5 introduces
+the operation <TT
+CLASS="COMMAND"
+>SET DROP SEQUENCE</TT
+>.&#13;</P
+><P
+>If you are running an earlier version, here are instructions as
+to how to drop sequences:&#13;</P
+><P
+>The data that needs to be deleted to stop Slony from continuing
+to replicate the two sequences identified with Sequence IDs 93 and 59
+are thus:&#13;</P
+><P
+><TT
+CLASS="COMMAND"
+>delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+
+delete from _oxrsorg.sl_sequence where seq_id in (93,59);&#13;</TT
+>&#13;</P
+><P
+> Those two queries could be submitted to all of the nodes via
+<CODE
+CLASS="FUNCTION"
+>ddlscript()</CODE
+> / <TT
+CLASS="COMMAND"
+>EXECUTE SCRIPT</TT
+>, thus eliminating
+the sequence everywhere "at once."  Or they may be applied by hand to
+each of the nodes.
+
+
+
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="addthings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ddlchanges.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Adding Things to Replication</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Database Schema Changes (DDL)</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,304 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Slon Configuration Options</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+HREF="t24.html"><LINK
+REL="PREVIOUS"
+TITLE="Slon daemons"
+HREF="slonstart.html"><LINK
+REL="NEXT"
+TITLE=" Subscribing Nodes"
+HREF="subscribenodes.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="slonstart.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="subscribenodes.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SLONCONFIG"
+>10. Slon Configuration Options</A
+></H1
+><P
+>Slon parameters:&#13;</P
+><P
+> usage: slon [options] clustername conninfo&#13;</P
+><P
+><TT
+CLASS="COMMAND"
+>Options:
+-d debuglevel		 verbosity of logging (1..8)
+-s milliseconds	  SYNC check interval (default 10000)
+-t milliseconds	  SYNC interval timeout (default 60000)
+-g num				  maximum SYNC group size (default 6)
+-c num				  how often to vacuum in cleanup cycles
+-p filename			slon pid file
+-f filename			slon configuration file</TT
+>
+
+<P
+></P
+><UL
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-d</CODE
+>&#13;</P
+><P
+>The eight levels of logging are:
+<P
+></P
+><UL
+><LI
+><P
+>Error</P
+></LI
+><LI
+><P
+>Warn</P
+></LI
+><LI
+><P
+>Config</P
+></LI
+><LI
+><P
+>Info</P
+></LI
+><LI
+><P
+>Debug1</P
+></LI
+><LI
+><P
+>Debug2</P
+></LI
+><LI
+><P
+>Debug3</P
+></LI
+><LI
+><P
+>Debug4</P
+></LI
+></UL
+>
+		  </P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-s</CODE
+>&#13;</P
+><P
+>A SYNC event will be sent at least this often, regardless of whether update activity is detected.&#13;</P
+><P
+>Short sync times keep the master on a "short leash," updating the slaves more frequently.  If you have replicated sequences that are frequently updated _without_ there being tables that are affected, this keeps there from being times when only sequences are updated, and therefore <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>no</I
+></SPAN
+> syncs take place.&#13;</P
+><P
+>Longer sync times allow there to be fewer events, which allows somewhat better efficiency.&#13;</P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-t</CODE
+>&#13;</P
+><P
+>The time before the SYNC check interval times out.&#13;</P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-g</CODE
+>&#13;</P
+><P
+>Number of SYNC events to try to cram together.  The default is 6, which is probably suitable for small systems that can devote only very limited bits of memory to slon.  If you have plenty of memory, it would be reasonable to increase this, as it will increase the amount of work done in each transaction, and will allow a subscriber that is behind by a lot to catch up more quickly.&#13;</P
+><P
+>Slon processes usually stay pretty small; even with large value for this option, slon would be expected to only grow to a few MB in size.&#13;</P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-c</CODE
+>&#13;</P
+><P
+>How often to vacuum (<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>e.g.</I
+></SPAN
+> - how many cleanup cycles to run before vacuuming). &#13;</P
+><P
+>Set this to zero to disable slon-initiated vacuuming.  If you are using something like <B
+CLASS="APPLICATION"
+>pg_autovacuum</B
+> to initiate vacuums, you may not need for slon to initiate vacuums itself.  If you are not, there are some tables Slony-I uses that collect a <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>lot</I
+></SPAN
+> of dead tuples that should be vacuumed frequently.&#13;</P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-p</CODE
+>&#13;</P
+><P
+> The location of the PID file for the slon process.&#13;</P
+></LI
+><LI
+><P
+><CODE
+CLASS="OPTION"
+>-f</CODE
+>&#13;</P
+><P
+>The location of the slon configuration file.</P
+></LI
+></UL
+>
+
+
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="slonstart.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="subscribenodes.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Slon daemons</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="t24.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Subscribing Nodes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
