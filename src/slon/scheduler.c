@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.13 2004-04-02 03:01:18 wieck Exp $
+ *	$Id: scheduler.c,v 1.14 2004-06-14 11:46:42 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -269,7 +269,7 @@ sched_wait_conn(SlonConn *conn, int condition)
  *
  *	Assumes that the thread holds the lock on conn->conn_lock.
  *
- *	Like sched_wait_time() but with a timeout. Can be called without
+ *	Like sched_wait_conn() but with a timeout. Can be called without
  *	any read/write condition to wait for to resemble a pure timeout
  *	mechanism.
  * ----------
