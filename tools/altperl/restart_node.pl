@@ -1,21 +1,57 @@
-#!@@PERL@@
-# $Id: restart_node.pl,v 1.6 2005-02-10 06:22:41 smsimms Exp $
+#!/usr/bin/perl
+# $Id: restart_node.pl,v 1.7 2005-02-22 16:51:09 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
+use Getopt::Long;
+
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
+$ALL_NODES   = 0;
+
+# Read command-line options
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE,
+	   "all"      => \$ALL_NODES);
+
+my $USAGE =
+"Usage: restart_node [--config file] [--all] [node# ...]
+
+    Restart one or more nodes
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
 require '@@PGLIBDIR@@/slon-tools.pm';
-require '@@SYSCONFDIR@@/slon_tools.conf';
+require $CONFIG_FILE;
 
-my ($node) = @_;
-if ($node =~ /^node(\d+)$/) {
-  $nodenum = $node
-} else {
-  die "./restart_node nodeN\n";
-} 
+my @nodes;
+if ($ALL_NODES) {
+    @nodes = @NODES;
+}
+else {
+    foreach my $node (@ARGV) {
+	if ($node =~ /^(?:node)?(\d+)$/) {
+	    push @nodes, ($1);
+	}
+	else {
+	    die $USAGE;
+	}
+    }
+}
+
+die $USAGE unless scalar @nodes;
+
 my $FILE="/tmp/restart.$$";
-
-open(SLONIK, ">$FILE");
+open(SLONIK, ">", $FILE);
 print SLONIK genheader();
-print SLONIK "restart node $node;\n";
+foreach my $node (@nodes) {
+    print SLONIK "  restart node $node;\n";
+}
 close SLONIK;
 run_slonik_script($FILE);

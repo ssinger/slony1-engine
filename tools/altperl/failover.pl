@@ -1,43 +1,58 @@
 #!@@PERL@@
-# $Id: failover.pl,v 1.7 2005-02-10 06:22:41 smsimms Exp $
+# $Id: failover.pl,v 1.8 2005-02-22 16:51:09 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require '@@PGLIBDIR@@/slon-tools.pm';
-require '@@SYSCONFDIR@@/slon_tools.conf';
+use Getopt::Long;
 
-my ($node1, $set1, $node2) = @ARGV;
-if ($node1 =~ /^node(\d+)$/) {
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
+
+# Read command-line options
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: failover [--config file] dead_node backup_node
+
+    Abandons dead_node, making backup_node the origin for all sets on
+    dead_node.
+
+    move_set should be used if dead_node is still available, so that
+    transactions are not lost.
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
+
+my ($node1, $node2) = @ARGV;
+if ($node1 =~ /^(?:node)?(\d+)$/) {
   $node1 = $1;
 } else {
-  print "Valid node names are node1, node2, ...\n\n";
-  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
+  die $USAGE;
 }
-if ($set1 =~ /^set(\d+)$/) {
-  $set1 = $1;
-} else {
-  print "Valid set names are set1, set2, ...\n\n";
-  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
-}
-if ($node2 =~ /^node(\d+)$/) {
+
+if ($node2 =~ /^(?:node)?(\d+)$/) {
   $node2 = $1;
 } else {
-  print "Valid node names are node1, node2, ...\n\n";
-  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
+  die $USAGE;
 }
 
-open(SLONIK, ">/tmp/slonik.$$");
+open(SLONIK, ">", "/tmp/slonik.$$");
 print SLONIK genheader();
-my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
-print SLONIK qq[
-try {
-      failover (id = $node1, backup node = $node2);
-} on error {
-      echo 'Failure to fail node $node1 over to $node2';
-      exit 1;
-}
-      echo 'Replication sets originating on $node1 failed over to $node2';
-];
-
+print SLONIK "  try {\n";
+print SLONIK "      failover (id = $node1, backup node = $node2);\n";
+print SLONIK "  } on error {\n";
+print SLONIK "      echo 'Failure to fail node $node1 over to $node2';\n";
+print SLONIK "      exit 1;\n";
+print SLONIK "  }\n";
+print SLONIK "  echo 'Replication sets originating on $node1 failed over to $node2';\n";
 close SLONIK;
 run_slonik_script("/tmp/slonik.$$");

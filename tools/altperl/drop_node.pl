@@ -1,30 +1,49 @@
 #!@@PERL@@
-# $Id: drop_node.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: drop_node.pl,v 1.9 2005-02-22 16:51:09 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
+use Getopt::Long;
+
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
+
+# Read command-line options
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: drop_node [--config file] node#
+
+    Drops a node.
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
 require '@@PGLIBDIR@@/slon-tools.pm';
-require '@@SYSCONFDIR@@/slon_tools.conf';
+require $CONFIG_FILE;
 
 my ($node) = @ARGV;
-if ($node =~ /^node(\d+)$/) {
+if ($node =~ /^(?:node)?(\d+)$/) {
   $node = $1;
 } else {
-  print "Need to specify node!\n";
-  die "drop_node nodeN\n";
+  die $USAGE;
 }
 
-my $OUTPUTFILE="/tmp/slonik-drop.$$";
-open(SLONIK, ">$OUTPUTFILE");
+my $FILE="/tmp/slonik-drop.$$";
+open(SLONIK, ">", $FILE);
 print SLONIK genheader();
-print SLONIK qq{
-try {
-      drop node (id = $node, event node = $MASTERNODE);
-} on error {
-      echo 'Failed to drop node $node from cluster';
-      exit 1;
-}
-echo 'dropped node $node cluster';
-};
+print SLONIK "  try {\n";
+print SLONIK "      drop node (id = $node, event node = $MASTERNODE);\n";
+print SLONIK "  } on error {\n";
+print SLONIK "      echo 'Failed to drop node $node from cluster';\n";
+print SLONIK "      exit 1;\n";
+print SLONIK "  }\n";
+print SLONIK "  echo 'dropped node $node cluster';\n";
 close SLONIK;
-run_slonik_script($OUTPUTFILE);
+run_slonik_script($FILE);

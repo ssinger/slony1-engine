@@ -1,13 +1,33 @@
 #!@@PERL@@
-# $Id: show_configuration.pl,v 1.5 2005-02-10 06:22:41 smsimms Exp $
+# $Id: show_configuration.pl,v 1.6 2005-02-22 16:51:09 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 # This script simply displays an overview of node configuration
 # for a given SLONY node set
 
+use Getopt::Long;
+
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
+
+# Read command-line options
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: show_configuration [--config file]
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
 require '@@PGLIBDIR@@/slon-tools.pm';
-require '@@SYSCONFDIR@@/slon_tools.conf';
+require $CONFIG_FILE;
 
 print "Slony Configuration\n-------------------------------------\n";
 if ($ENV{"SLONYNODES"}) {
@@ -29,10 +49,8 @@ print qq{
 Node information
 --------------------------------
 };
-foreach $node (0..100) {
-  if ($DSN[$node]) {
-    printf("Node: %2d Host: %15s User: %8s Port: %4d Forwarding? %4s Parent: %2d Database: %10s\n         DSN: %s\n",
-	   $node, $HOST[$node], $USER[$node], $PORT[$node], $NOFORWARD[$node],
-	   $PARENT[$node], $DBNAME[$node], $DSN[$node]);
-  }
+foreach $node (@NODES) {
+  printf("Node: %2d Host: %15s User: %8s Port: %4d Forwarding? %4s Parent: %2d Database: %10s\n         DSN: %s\n",
+	 $node, $HOST[$node], $USER[$node], $PORT[$node], $NOFORWARD[$node],
+	 $PARENT[$node], $DBNAME[$node], $DSN[$node]);
 }

@@ -1,40 +1,62 @@
 #!@@PERL@@
-# $Id: slon_pushsql.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_pushsql.pl,v 1.9 2005-02-22 16:51:10 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require '@@PGLIBDIR@@/slon-tools.pm';
-require '@@SYSCONFDIR@@/slon_tools.conf';
-my ($set, $node, $file) = @ARGV;
-if ($set =~ /^set(\d+)$/) {
-  $set = $1;
-} else {
-  print "Invalid set identifier";
-  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
-}
-if ($node =~ /^node(\d+)$/) {
-  $node = $1;
-} else {
-  print "Invalid node identifier";
-  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
+use Getopt::Long;
+
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
+
+# Read command-line options
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: slon_pushsql [--config file] set# node# full_path_to_sql_script_file
+
+    Executes the contents of a SQL script file on the specified set and node.
+
+    The script only needs to exist on the machine running the slon daemon.
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
 }
 
-if ($file =~ /^\//) {
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
+
+my ($set, $node, $file) = @ARGV;
+if ($set =~ /^(?:set)?(\d+)$/) {
+  $set = $1;
 } else {
-  print "SQL script path needs to be a full path, i.e. /tmp/my_script.sql\n";
-  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
+  print "Invalid set identifier\n\n";
+  die $USAGE;
+}
+
+if ($node =~ /^(?:node)?(\d+)$/) {
+  $node = $1;
+} else {
+  print "Invalid node identifier\n\n";
+  die $USAGE;
+}
+
+unless ($file =~ /^\// and -f $file) {
+  print "SQL script path needs to be a full path, e.g. /tmp/my_script.sql\n\n";
+  die $USAGE;
 }
 
 my $FILE="/tmp/gensql.$$";
-open(SLONIK, ">$FILE");
+open(SLONIK, ">", $FILE);
 print SLONIK genheader();
-
-print SLONIK qq{
-  execute script (
-    set id=$set,
-    filename='$file',
-    event node = $node
-  );
-};
+print SLONIK "  execute script (\n";
+print SLONIK "    set id = $set,\n";
+print SLONIK "    filename = '$file',\n";
+print SLONIK "    event node = $node\n";
+print SLONIK "  );\n";
 close SLONIK;
 run_slonik_script($FILE);
