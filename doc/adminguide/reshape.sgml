@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: reshape.sgml,v 1.8 2005-01-12 22:56:44 cbbrowne Exp $ -->
 <article>
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
@@ -33,19 +33,20 @@ SET</link></command> and <command> <link linkend="stmtsubscribeset">
 SUBSCRIBE SET</link> </command> might change the paths as a
 side-effect.  See <link linkend="listenpaths"> Slony Listen Paths
 </link> for more information about this.  In version 1.1 and later, it
-is likely that the generation of sl_listen entries will be entirely
-automated, where they will be regenerated when changes are made to
-sl_path or sl_subscribe, thereby making it unnecessary to even think
-about <command> <link linkend="stmtstorelisten"> STORE LISTEN
+is likely that the generation of <envar>sl_listen</envar> entries will
+be entirely automated, where they will be regenerated when changes are
+made to sl_path or sl_subscribe, thereby making it unnecessary to even
+think about <command> <link linkend="stmtstorelisten"> STORE LISTEN
 </link></command>.</para></listitem>
 
 </itemizedlist>
 </para>
 <para> The <filename>altperl</filename> toolset includes a
-<application>init_cluster.pl</application> script that is quite up to the task of
+<application>regenerate-listens.pl</application> script that is up to the task of
 creating the new <command>STORE LISTEN</command> commands; it isn't,
 however, smart enough to know what listener paths should be dropped.
 </para>
+
 </sect1>
 </article>
 <!-- Keep this comment at the end of the file
