@@ -12,9 +12,7 @@ And now, the contents.
 
 1.  Build and install
 
-This snapshot slony-Sample1.tar.gz was used to create this example.  It
-supports PostgreSQL 7.3.x and 7.4.x and should even be capable of
-replicating from one version to the other.
+Slony currently supports PostgreSQL 7.3.x and 7.4.x.
 
 Slony must be built and installed by the postgres unix user.  The
 installation target will be identical to the existing PostgreSQL
