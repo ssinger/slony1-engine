@@ -1,0 +1,481 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>slon</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:cbbrowne@gmail.com"><LINK
+REL="HOME"
+TITLE="Slony-I 1.1 Administration"
+HREF="slony.html"><LINK
+REL="UP"
+TITLE="Slony-I Commands"
+HREF="slony-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="Slony-I Commands"
+HREF="slony-commands.html"><LINK
+REL="NEXT"
+TITLE="slonik"
+HREF="app-slonik.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stdstyle.css"><META
+HTTP-EQUIV="Content-Type"></HEAD
+><BODY
+CLASS="REFENTRY"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Slony-I 1.1 Administration</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="slony-commands.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="app-slonik.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="APP-SLON"
+></A
+><B
+CLASS="APPLICATION"
+>slon</B
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN343"
+></A
+><H2
+>Name</H2
+><B
+CLASS="APPLICATION"
+>slon</B
+>&nbsp;--&nbsp;      <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> daemon
+    </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN350"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>slon</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...] [<TT
+CLASS="REPLACEABLE"
+><I
+>clustername</I
+></TT
+>
+    [<TT
+CLASS="REPLACEABLE"
+><I
+>conninfo</I
+></TT
+>]]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN359"
+></A
+><H2
+>Description</H2
+><P
+>     <B
+CLASS="APPLICATION"
+>slon</B
+> is the daemon application that
+     <SPAN
+CLASS="QUOTE"
+>"runs"</SPAN
+> <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
+     replication.  A <B
+CLASS="APPLICATION"
+>slon</B
+> instance must be
+     run for each node in a <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
+     cluster.
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="R1-APP-SLON-3"
+></A
+><H2
+>Options</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="OPTION"
+>-d <TT
+CLASS="REPLACEABLE"
+><I
+>debuglevel</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      Specifies the level of verbosity that <B
+CLASS="APPLICATION"
+>slon</B
+> should
+      use when logging its activity.
+      </P
+><P
+>The eight levels of logging are:
+      <P
+></P
+><UL
+><LI
+><P
+>Error
+       </P
+></LI
+><LI
+><P
+>Warn
+       </P
+></LI
+><LI
+><P
+>Config
+       </P
+></LI
+><LI
+><P
+>Info
+       </P
+></LI
+><LI
+><P
+>Debug1
+       </P
+></LI
+><LI
+><P
+>Debug2
+       </P
+></LI
+><LI
+><P
+>Debug3
+       </P
+></LI
+><LI
+><P
+>Debug4
+      </P
+></LI
+></UL
+>
+    </P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-s <TT
+CLASS="REPLACEABLE"
+><I
+>SYNC check interval</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      Specifies the interval, in milliseconds, in which
+      <B
+CLASS="APPLICATION"
+>slon</B
+> should add a SYNC even if none has been
+      mandated by data creation.  Default is 10000 ms.
+     </P
+><P
+>Short sync times keep the master on a <SPAN
+CLASS="QUOTE"
+>"short leash,"</SPAN
+>
+      updating the slaves more frequently.  If you have replicated
+      sequences that are frequently updated <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>without</I
+></SPAN
+> there
+      being tables that are affected, this keeps there from being times
+      when only sequences are updated, and therefore <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>no</I
+></SPAN
+>
+      syncs take place.
+    </P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-t <TT
+CLASS="REPLACEABLE"
+><I
+>SYNC interval timeout</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      Default is 60000 ms.
+      </P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-g <TT
+CLASS="REPLACEABLE"
+><I
+>group size</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      Maximum SYNC group size; defaults to 6.  Thus, if a particular
+      node is behind by 200 SYNCs, it will try to group them together
+      into groups of 6.  This would be expected to reduce transaction
+      overhead due to having fewer transactions to <TT
+CLASS="COMMAND"
+>COMMIT</TT
+>.
+     </P
+><P
+>The default of 6 is probably suitable for small systems
+      that can devote only very limited bits of memory to slon.  If you
+      have plenty of memory, it would be reasonable to increase this,
+      as it will increase the amount of work done in each transaction,
+      and will allow a subscriber that is behind by a lot to catch up
+      more quickly.</P
+><P
+>Slon processes usually stay pretty small; even with large
+      value for this option, slon would be expected to only grow to a
+      few MB in size.</P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-c <TT
+CLASS="REPLACEABLE"
+><I
+>cleanup cycles</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      How often to <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> in cleanup cycles.
+     </P
+><P
+>Set this to zero to disable slon-initiated vacuuming.  If
+      you are using something like
+      <B
+CLASS="APPLICATION"
+>pg_autovacuum</B
+> to initiate vacuums, you
+      may not need for slon to initiate vacuums itself.  If you are
+      not, there are some tables Slony-I uses that collect a
+      <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>lot</I
+></SPAN
+> of dead tuples that should be vacuumed
+      frequently.</P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-p <TT
+CLASS="REPLACEABLE"
+><I
+>PID filename</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      PID filename.
+      </P
+></DD
+><DT
+><CODE
+CLASS="OPTION"
+>-f <TT
+CLASS="REPLACEABLE"
+><I
+>config file</I
+></TT
+></CODE
+></DT
+><DD
+><P
+>      File containing <B
+CLASS="APPLICATION"
+>slon</B
+> configuration.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN444"
+></A
+><H2
+>Exit Status</H2
+><P
+>   <B
+CLASS="APPLICATION"
+>slon</B
+> returns 0 to the shell if it
+   finished normally.  It returns -1 if it encounters any fatal error.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="slony-commands.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="app-slonik.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Slony-I Commands</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="slony-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><B
+CLASS="APPLICATION"
+>slonik</B
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

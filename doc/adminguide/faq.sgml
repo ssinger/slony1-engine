@@ -1,17 +1,20 @@
 <qandaset>
 
 <qandaentry>
+
 <question><para>I looked for the <envar/_clustername/ namespace, and
 it wasn't there.</question>
 
-<answer><para> If the DSNs are wrong, then slon instances can't connect to the nodes.
+<answer><para> If the DSNs are wrong, then slon instances can't
+connect to the nodes.
 
 <para>This will generally lead to nodes remaining entirely untouched.
 
-<para>Recheck the connection configuration.  By the way, since
-<application/slon/ links to libpq, you could have password information
-stored in <filename> <envar>$HOME</envar>/.pgpass</filename>,
-partially filling in right/wrong authentication information there.
+<para>Recheck the connection configuration.  By the way, since <link
+linkend="slon"> <application/slon/ </link> links to libpq, you could
+have password information stored in <filename>
+<envar>$HOME</envar>/.pgpass</filename>, partially filling in
+right/wrong authentication information there.
 </answer>
 </qandaentry>
 
@@ -27,7 +30,7 @@ ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_mi
 </screen>
 
 <answer><para>
-On AIX and Solaris (and possibly elsewhere), both Slony-I <emphasis/and PostgreSQL/ must be compiled with the <option/--enable-thread-safety/ option.  The above results when PostgreSQL isn't so compiled.
+On AIX and Solaris (and possibly elsewhere), both <productname/Slony-I/ <emphasis/and <productname/PostgreSQL// must be compiled with the <option/--enable-thread-safety/ option.  The above results when <productname/PostgreSQL/ isn't so compiled.
 
 <para>What breaks here is that the libc (threadsafe) and libpq (non-threadsafe) use different memory locations for errno, thereby leading to the request failing.
 
@@ -38,7 +41,7 @@ compiled and linked with <option/--enable-thread-safety/.
 
 <para>For instance, I ran into the problem one that
 <envar/LD_LIBRARY_PATH/ had been set, on Solaris, to point to
-libraries from an old PostgreSQL compile.  That meant that even though
+libraries from an old <productname/PostgreSQL/ compile.  That meant that even though
 the database <emphasis/had/ been compiled with
 <option/--enable-thread-safety/, and <application/slon/ had been
 compiled against that, <application/slon/ was being dynamically linked
@@ -50,7 +53,7 @@ wasn't clear that this was the case until I ran <command/ldd/ against
 <question> <para>I tried creating a CLUSTER NAME with a "-" in it.
 That didn't work.
 
-<answer><Para> Slony-I uses the same rules for unquoted identifiers as the PostgreSQL
+<answer><Para> <productname/Slony-I/ uses the same rules for unquoted identifiers as the <productname/PostgreSQL/
 main parser, so no, you probably shouldn't put a "-" in your
 identifier name.
 
@@ -103,7 +106,7 @@ on the command line.
 <filename><envar/$(HOME)//.pgpass.</filename>
 
 <qandaentry>
-<question><Para>Slonik fails - cannot load PostgreSQL library - <command>PGRES_FATAL_ERROR load '$libdir/xxid';</command>
+<question><Para>Slonik fails - cannot load <productname/PostgreSQL/ library - <command>PGRES_FATAL_ERROR load '$libdir/xxid';</command>
 
 <para> When I run the sample setup script I get an error message similar
 to:
@@ -114,24 +117,25 @@ could not open file '$libdir/xxid': No such file or directory
 </command>
 
 <answer><para> Evidently, you haven't got the <filename/xxid.so/
-library in the <envar/$libdir/ directory that the PostgreSQL instance
-is using.  Note that the Slony-I components need to be installed in
-the PostgreSQL software installation for <emphasis/each and every one/
-of the nodes, not just on the <quote/master node./
+library in the <envar/$libdir/ directory that the <productname/PostgreSQL/ instance
+is using.  Note that the <productname/Slony-I/ components need to be installed in
+the <productname/PostgreSQL/ software installation for <emphasis/each and every one/
+of the nodes, not just on the origin node.
 
 <para>This may also point to there being some other mismatch between
-the PostgreSQL binary instance and the Slony-I instance.  If you
-compiled Slony-I yourself, on a machine that may have multiple
-PostgreSQL builds <quote/lying around,/ it's possible that the slon or
+the <productname/PostgreSQL/ binary instance and the <productname/Slony-I/ instance.  If you
+compiled <productname/Slony-I/ yourself, on a machine that may have multiple
+<productname/PostgreSQL/ builds <quote/lying around,/ it's possible that the slon or
 slonik binaries are asking to load something that isn't actually in
-the library directory for the PostgreSQL database cluster that it's
+the library directory for the <productname/PostgreSQL/ database cluster that it's
 hitting.
 
 <para>Long and short: This points to a need to <quote/audit/ what
-installations of PostgreSQL and Slony you have in place on the
-machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right.  See also <link linkend="SlonyFAQ02">
-SlonyFAQ02 </link> concerning threading issues on Solaris ...
+installations of <productname/PostgreSQL/ and <productname/Slony-I/
+you have in place on the machine(s).  Unfortunately, just about any
+mismatch will cause things not to link up quite right.  See also <link
+linkend="SlonyFAQ02"> SlonyFAQ02 </link> concerning threading issues
+on Solaris ...
 
 <qandaentry>
 <question><Para>Table indexes with FQ namespace names
@@ -161,7 +165,7 @@ WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
 <para>Oops.  What I forgot to mention, as well, was that I was trying
 to add <emphasis/TWO/ subscribers, concurrently.
 
-<answer><para> That doesn't work out: Slony-I won't work on the
+<answer><para> That doesn't work out: <productname/Slony-I/ won't work on the
 <command/COPY/ commands concurrently.  See
 <filename>src/slon/remote_worker.c</filename>, function
 <function/copy_set()/
@@ -173,7 +177,7 @@ set, and only once it has completed setting up the subscription
 setting up the subscription.
 
 <para>It could also be possible for there to be an old outstanding
-transaction blocking Slony-I from processing the sync.  You might want
+transaction blocking <productname/Slony-I/ from processing the sync.  You might want
 to take a look at pg_locks to see what's up:
 
 <screen>
@@ -197,11 +201,11 @@ subscription for one of the nodes.  All is well; the system is busy
 setting up the first subscriber; it won't start on the second one
 until the first one has completed subscribing.
 
-<para>By the way, if there is more than one database on the PostgreSQL
+<para>By the way, if there is more than one database on the <productname/PostgreSQL/
 cluster, and activity is taking place on the OTHER database, that will
 lead to there being <quote/transactions earlier than XID whatever/ being
 found to be still in progress.  The fact that it's a separate database
-on the cluster is irrelevant; Slony-I will wait until those old
+on the cluster is irrelevant; <productname/Slony-I/ will wait until those old
 transactions terminate.
 <qandaentry>
 <question><Para>
@@ -238,16 +242,17 @@ This can be accomplished several ways, not all equally desirable ;-).
   delete from _slonyschema.sl_table where tab_id = 40;
 </programlisting>
 
-<para>The schema will obviously depend on how you defined the Slony-I
+<para>The schema will obviously depend on how you defined the <productname/Slony-I/
 cluster.  The table ID, in this case, 40, will need to change to the
 ID of the table you want to have go away.
 
 You'll have to run these three queries on all of the nodes, preferably
-firstly on the "master" node, so that the dropping of this propagates
-properly.  Implementing this via a SLONIK statement with a new Slony
-event would do that.  Submitting the three queries using EXECUTE
-SCRIPT could do that.  Also possible would be to connect to each
-database and submit the queries by hand.
+firstly on the origin node, so that the dropping of this propagates
+properly.  Implementing this via a <link linkend="slonik"> slonik
+</link> statement with a new <productname/Slony-I/ event would do
+that.  Submitting the three queries using <command/EXECUTE SCRIPT/
+could do that.  Also possible would be to connect to each database and
+submit the queries by hand.
 </itemizedlist>
 <qandaentry>
 <question><Para>I need to drop a sequence from a replication set
@@ -284,10 +289,10 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 the sequence everywhere <quote/at once./ Or they may be applied by
 hand to each of the nodes.
 
-<para>Similarly to <command/SET DROP TABLE/, this should be in place for Slony-I version
+<para>Similarly to <command/SET DROP TABLE/, this should be in place for <productname/Slony-I/ version
 1.0.5 as <command/SET DROP SEQUENCE./
 <qandaentry>
-<question><Para>Slony-I: cannot add table to currently subscribed set 1
+<question><Para><productname/Slony-I/: cannot add table to currently subscribed set 1
 
 <para> I tried to add a table to a set, and got the following message:
 
@@ -305,7 +310,7 @@ to "set 1" to the new set, and then merge the sets together.
 <qandaentry>
 <question><Para>Some nodes start consistently falling behind
 
-<para>I have been running Slony-I on a node for a while, and am seeing
+<para>I have been running <productname/Slony-I/ on a node for a while, and am seeing
 system performance suffering.
 
 <para>I'm seeing long running queries of the form:
@@ -322,7 +327,7 @@ fall further and further behind.
 
 <para> Slon daemons already vacuum a bunch of tables, and
 <filename/cleanup_thread.c/ contains a list of tables that are
-frequently vacuumed automatically.  In Slony-I 1.0.2,
+frequently vacuumed automatically.  In <productname/Slony-I/ 1.0.2,
 <envar/pg_listener/ is not included.  In 1.0.5 and later, it is
 regularly vacuumed, so this should cease to be a direct issue.
 
@@ -338,9 +343,9 @@ avoided, even on "slave" nodes.
 <answer><para>Ouch.  What happens here is a conflict between:
 <itemizedlist>
 
-<listitem><para> <application/pg_dump/, which has taken out an <command/AccessShareLock/ on all of the tables in the database, including the Slony-I ones, and
+<listitem><para> <application/pg_dump/, which has taken out an <command/AccessShareLock/ on all of the tables in the database, including the <productname/Slony-I/ ones, and
 
-<listitem><para> A Slony-I sync event, which wants to grab a <command/AccessExclusiveLock/ on	 the table <envar/sl_event/.
+<listitem><para> A <productname/Slony-I/ sync event, which wants to grab a <command/AccessExclusiveLock/ on	 the table <envar/sl_event/.
 </itemizedlist>
 
 <para>The initial query that will be blocked is thus:
@@ -384,34 +389,37 @@ exclusive that alleviates this problem.
 <question><Para>The slons spent the weekend out of commission [for
 some reason], and it's taking a long time to get a sync through.
 
-<answer><para>
-You might want to take a look at the sl_log_1/sl_log_2 tables, and do
-a summary to see if there are any really enormous Slony-I transactions
-in there.  Up until at least 1.0.2, there needs to be a slon connected
-to the master in order for <command/SYNC/ events to be generated.
+<answer><para> You might want to take a look at the sl_log_1/sl_log_2
+tables, and do a summary to see if there are any really enormous
+<productname/Slony-I/ transactions in there.  Up until at least 1.0.2,
+there needs to be a slon connected to the origin in order for
+<command/SYNC/ events to be generated.
 
 <para>If none are being generated, then all of the updates until the next
-one is generated will collect into one rather enormous Slony-I
+one is generated will collect into one rather enormous <productname/Slony-I/
 transaction.
 
-<para>Conclusion: Even if there is not going to be a subscriber around, you
-<emphasis/really/ want to have a slon running to service the <quote/master/ node.
+<para>Conclusion: Even if there is not going to be a subscriber
+around, you <emphasis/really/ want to have a slon running to service
+the origin node.
 
-<para>Some future version (probably 1.1) may provide a way for
-<command/SYNC/ counts to be updated on the master by the stored
-function that is invoked by the table triggers.
+<para><productname/Slony-I/ 1.1 provides a stored procedure that
+allows <command/SYNC/ counts to be updated on the origin based on a
+<application/cron/ job even if there is no <link linkend="slon"> slon
+</link> daemon running.
 
 <qandaentry>
-<question><Para>I pointed a subscribing node to a different parent and it stopped replicating
+<question><Para>I pointed a subscribing node to a different provider
+and it stopped replicating
 
 <answer><para>
 We noticed this happening when we wanted to re-initialize a node,
 where we had configuration thus:
 
 <itemizedlist>
-<listitem><para> Node 1 - master
-<listitem><para> Node 2 - child of node 1 - the node we're reinitializing
-<listitem><para> Node 3 - child of node 3 - node that should keep replicating
+<listitem><para> Node 1 - provider
+<listitem><para> Node 2 - subscriber to node 1 - the node we're reinitializing
+<listitem><para> Node 3 - subscriber to node 3 - node that should keep replicating
 </itemizedlist>
 
 <para>The subscription for node 3 was changed to have node 1 as
@@ -462,12 +470,12 @@ help manage this.
 <para>The issues of "listener paths" are discussed further at <link
 linkend="ListenPaths"> Slony Listen Paths </link>
 
-<qandaentry>
+<qandaentry id="faq17">
 <question><Para>After dropping a node, sl_log_1 isn't getting purged out anymore.
 
 <answer><para> This is a common scenario in versions before 1.0.5, as
 the "clean up" that takes place when purging the node does not include
-purging out old entries from the Slony-I table, sl_confirm, for the
+purging out old entries from the <productname/Slony-I/ table, sl_confirm, for the
 recently departed node.
 
 <para> The node is no longer around to update confirmations of what
@@ -551,10 +559,10 @@ delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  dupl
 ERROR  remoteWorkerThread_1: SYNC aborted
 </screen>
 
-<para>The transaction rolls back, and Slony-I tries again, and again,
+<para>The transaction rolls back, and <productname/Slony-I/ tries again, and again,
 and again.  The problem is with one of the <emphasis/last/ SQL statements, the
 one with <command/log_cmdtype = 'I'/.  That isn't quite obvious; what takes
-place is that Slony-I groups 10 update queries together to diminish
+place is that <productname/Slony-I/ groups 10 update queries together to diminish
 the number of network round trips.
 
 <answer><para>
@@ -571,7 +579,7 @@ suffering from periodic "SIG 11" problems, where backends were falling
 over, as well as when temporary network failure seemed likely.
 
 <listitem><para> The scenario seems to involve a delete transaction
-having been missed by Slony-I.
+having been missed by <productname/Slony-I/.
 
 </itemizedlist>
 
@@ -582,7 +590,7 @@ possible.
 <para>What is necessary, at this point, is to drop the replication set
 (or even the node), and restart replication from scratch on that node.
 
-<para>In Slony-I 1.0.5, the handling of purges of sl_log_1 are rather
+<para>In <productname/Slony-I/ 1.0.5, the handling of purges of sl_log_1 are rather
 more conservative, refusing to purge entries that haven't been
 successfully synced for at least 10 minutes on all nodes.  It is not
 certain that that will prevent the "glitch" from taking place, but it

@@ -82,7 +82,8 @@ NAME="CONCEPTS"
 >4. Slony-I Concepts</A
 ></H1
 ><P
->In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
+>In order to set up a set of Slony-I replicas, it is necessary to
+understand the following major abstractions that it uses:
 
 <P
 ></P
@@ -104,7 +105,7 @@ NAME="CONCEPTS"
 ></LI
 ><LI
 ><P
-> Provider and Subscriber</P
+> Origin, Providers and Subscribers</P
 ></LI
 ></UL
 >&#13;</P
@@ -113,11 +114,12 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN212"
+NAME="AEN241"
 >4.1. Cluster</A
 ></H2
 ><P
->In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.&#13;</P
+>In Slony-I terms, a Cluster is a named set of PostgreSQL
+database instances; replication takes place between those databases.&#13;</P
 ><P
 >The cluster name is specified in each and every Slonik script via the directive:
 <TABLE
@@ -149,7 +151,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN220"
+NAME="AEN249"
 >4.2. Node</A
 ></H2
 ><P
@@ -170,10 +172,12 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->The CONNINFO information indicates a string argument that will ultimately be passed to the <CODE
+>The CONNINFO information indicates a string argument that will
+ultimately be passed to the <CODE
 CLASS="FUNCTION"
 >PQconnectdb()</CODE
-> libpq function. &#13;</P
+> libpq
+function.&#13;</P
 ><P
 >Thus, a Slony-I cluster consists of:
 <P
@@ -196,7 +200,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN233"
+NAME="AEN262"
 >4.3. Replication Set</A
 ></H2
 ><P
@@ -214,39 +218,39 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN238"
->4.4. Provider and Subscriber</A
+NAME="AEN267"
+>4.4. Origin, Providers and Subscribers</A
 ></H2
 ><P
->Each replication set has some <SPAN
-CLASS="QUOTE"
->"master"</SPAN
-> node, which
-winds up being the <SPAN
+>Each replication set has some origin node, which is the
+<SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >only</I
 ></SPAN
-> place where user
-applications are permitted to modify data in the tables that are being
-replicated.  That <SPAN
+> place where user applications are permitted
+to modify data in the tables that are being replicated.  This might
+also be termed the <SPAN
 CLASS="QUOTE"
->"master"</SPAN
-> may be considered the
-originating <SPAN
-CLASS="QUOTE"
->"provider node;"</SPAN
-> it is the main place from
+>"master provider"</SPAN
+>; it is the main place from
 which data is provided.&#13;</P
 ><P
 >Other nodes in the cluster will subscribe to the replication
 set, indicating that they want to receive the data.&#13;</P
 ><P
->The "master" node will never be considered a "subscriber."  But
-Slony-I supports the notion of cascaded subscriptions, that is, a node
-that is subscribed to the "master" may also behave as a "provider" to
-other nodes in the cluster.&#13;</P
+>The origin node will never be considered a <SPAN
+CLASS="QUOTE"
+>"subscriber."</SPAN
+>
+(Ignoring the case where the cluster is reshaped, and the origin is
+moved to another node.)  But Slony-I supports the notion of cascaded
+subscriptions, that is, a node that is subscribed to the origin may
+also behave as a <SPAN
+CLASS="QUOTE"
+>"provider"</SPAN
+> to other nodes in the cluster.&#13;</P
 ></DIV
 ></DIV
 ><DIV

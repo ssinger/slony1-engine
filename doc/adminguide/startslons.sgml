@@ -1,38 +1,39 @@
 <sect1 id="slonstart"> <title/Slon daemons/
 
-<para>The programs that actually perform Slony-I replication are the
+<para>The programs that actually perform <productname/Slony-I/ replication are the
 <application/slon/ daemons.
 
-<para>You need to run one <application/slon/ instance for each node in
-a Slony-I cluster, whether you consider that node a <quote/master/ or
-a <quote/slave./ Since a <command/MOVE SET/ or <command/FAILOVER/ can
-switch the roles of nodes, slon needs to be able to function for both
-providers and subscribers.  It is not essential that these daemons run
-on any particular host, but there are some principles worth
-considering:
+<para>You need to run one <application><link linkend="slon"> slon
+</link></application> instance for each node in a
+<productname/Slony-I/ cluster, whether you consider that node a
+<quote/master/ or a <quote/slave./ Since a <command/MOVE SET/ or
+<command/FAILOVER/ can switch the roles of nodes, slon needs to be
+able to function for both providers and subscribers.  It is not
+essential that these daemons run on any particular host, but there are
+some principles worth considering:
 
 <itemizedlist>
 
-<listitem><Para> Each slon needs to be able to communicate quickly
-with the database whose <quote/node controller/ it is.  Therefore, if
-a Slony-I cluster runs across some form of Wide Area Network, each
-slon process should run on or nearby the databases each is
-controlling.  If you break this rule, no particular disaster should
-ensue, but the added latency introduced to monitoring events on the
-slon's <quote/own node/ will cause it to replicate in a
-<emphasis/somewhat/ less timely manner.
+<listitem><Para> Each <application/slon/ needs to be able to
+communicate quickly with the database whose <quote/node controller/ it
+is.  Therefore, if a <productname/Slony-I/ cluster runs across some
+form of Wide Area Network, each slon process should run on or nearby
+the databases each is controlling.  If you break this rule, no
+particular disaster should ensue, but the added latency introduced to
+monitoring events on the slon's <quote/own node/ will cause it to
+replicate in a <emphasis/somewhat/ less timely manner.
 
-<listitem><Para> The fastest results would be achieved by having each
-slon run on the database server that it is servicing.  If it runs
-somewhere within a fast local network, performance will not be
-noticeably degraded.
+<listitem><Para> The very fastest results would be achieved by having
+each <application/slon/ run on the database server that it is
+servicing.  If it runs somewhere within a fast local network,
+performance will not be noticeably degraded.
 
 <listitem><Para> It is an attractive idea to run many of the
 <application/slon/ processes for a cluster on one machine, as this
 makes it easy to monitor them both in terms of log files and process
-tables from one location.  This eliminates the need to login to
-several hosts in order to look at log files or to restart <application/slon/
-instances.
+tables from one location.  This also eliminates the need to login to
+several hosts in order to look at log files or to restart
+<application/slon/ instances.
 
 </itemizedlist>
 
@@ -40,29 +41,34 @@ instances.
 
 <itemizedlist>
 
-<listitem><Para> <filename>tools/altperl/slon_watchdog.pl</filename> -
-an <quote/early/ version that basically wraps a loop around the
-invocation of <application/slon/, restarting any time it falls over
+<listitem><para> <filename>tools/altperl/slon_watchdog.pl</filename> -
+an <quote>early</quote> version that basically wraps a loop around the
+invocation of <application><link linkend="slon"> slon
+</link></application>, restarting any time it falls over</para>
+</listitem>
 
 <listitem><Para> <filename>tools/altperl/slon_watchdog2.pl</filename>
 - a somewhat more intelligent version that periodically polls the
 database, checking to see if a <command/SYNC/ has taken place
 recently.  We have had VPN connections that occasionally fall over
-without signalling the application, so that the <application/slon/
-stops working, but doesn't actually die; this polling addresses that
-issue.
+without signalling the application, so that the <application><link
+linkend="slon"> slon </link></application> stops working, but doesn't
+actually die; this polling addresses that issue.
 
 </itemizedlist>
 
-<para>The <filename/slon_watchdog2.pl/ script is probably
-<emphasis/usually/ the preferable thing to run.  It was at one point
-not preferable to run it whilst subscribing a very large replication
-set where it is expected to take many hours to do the initial
-<command/COPY SET/.  The problem that came up in that case was that it
-figured that since it hasn't done a <command/SYNC/ in 2 hours,
-something was broken requiring restarting slon, thereby restarting the
-<command/COPY SET/ event.  More recently, the script has been changed
-to detect <command/COPY SET/ in progress.
+<para>The <filename>slon_watchdog2.pl</filename> script is probably
+<emphasis>usually</emphasis> the preferable thing to run.  It was at
+one point not preferable to run it whilst subscribing a very large
+replication set where it is expected to take many hours to do the
+initial <command>COPY SET</command>.  The problem that came up in that
+case was that it figured that since it hasn't done a
+<command>SYNC</command> in 2 hours, something was broken requiring
+restarting slon, thereby restarting the <command>COPY SET</command>
+event.  More recently, the script has been changed to detect
+<command>COPY SET</command> in progress.</para>
+
+</sect1>
 
 <!-- Keep this comment at the end of the file
 Local variables:

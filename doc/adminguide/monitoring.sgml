@@ -1,12 +1,15 @@
 <sect1 id="monitoring"> <title/Monitoring/
 
-<para>Here are some of things that you may find in your Slony logs, and explanations of what they mean. 
+<para>Here are some of things that you may find in your
+<productname/Slony-I/ logs, and explanations of what they mean.
 
 <sect2><title/CONFIG notices/
 
-<para>These entries are pretty straightforward. They are informative messages about your configuration. 
+<para>These entries are pretty straightforward. They are informative
+messages about your configuration.
 
-<para>Here are some typical entries that you will probably run into in your logs:
+<para>Here are some typical entries that you will probably run into in
+your logs:
 
 <screen>
 CONFIG main: local node id = 1
@@ -18,9 +21,11 @@ CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
 CONFIG main: configuration complete - starting threads
 </screen>
 
-<sect2><title/DEBUG Notices/
+<sect2><title>DEBUG Notices</title>
 
-<para>Debug notices are always prefaced by the name of the thread that the notice originates from. You will see messages from the following threads:
+<para>Debug notices are always prefaced by the name of the thread that
+the notice originates from. You will see messages from the following
+threads:
 
 <screen>
 localListenThread: This is the local thread that listens for events on the local node.
@@ -34,6 +39,8 @@ syncThread: Generates sync events.
 think maybe there should be a "how it works" page, explaining more
 about how the threads work, what to expect in the logs after you run a
 slonik command...
+
+</sect1>
 
 <!-- Keep this comment at the end of the file
 Local variables:

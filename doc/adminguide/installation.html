@@ -82,7 +82,11 @@ NAME="INSTALLATION"
 >3. Slony-I Installation</A
 ></H1
 ><P
->You should have obtained the Slony-I source from the previous step. Unpack it.</P
+>You should have obtained the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> source from
+the previous step. Unpack it.</P
 ><TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -97,15 +101,18 @@ CLASS="SCREEN"
 ></TR
 ></TABLE
 ><P
-> This will create a directory Slony-I under the current
-directory with the Slony-I sources.  Head into that that directory for
-the rest of the installation procedure.</P
+> This will create a directory under the current directory with
+the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> sources.  Head into that that directory for the rest of
+the installation procedure.</P
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN175"
+NAME="AEN196"
 >3.1. Short Version</A
 ></H2
 ><P
@@ -129,21 +136,44 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN179"
+NAME="AEN200"
 >3.2. Configuration</A
 ></H2
 ><P
->The first step of the installation procedure is to configure the source tree
-for your system.  This is done by running the configure script.  Configure
-needs to know where your PostgreSQL source tree is, this is done with the
---with-pgsourcetree= option.</P
+>The first step of the installation procedure is to configure the
+source tree for your system.  This is done by running the
+<B
+CLASS="APPLICATION"
+>configure</B
+> script.  In early versions,
+<B
+CLASS="APPLICATION"
+>Configure</B
+> needed to know where your
+<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> source tree is, is done with the
+<CODE
+CLASS="OPTION"
+>--with-pgsourcetree=</CODE
+> option.  As of version 1.1,
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> is configured by pointing it to the various
+library, binary, and include directories; for a full list of these
+options, use the command <TT
+CLASS="COMMAND"
+> ./configure --help </TT
+></P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN182"
+NAME="AEN209"
 >3.3. Example</A
 ></H2
 ><TABLE
@@ -174,7 +204,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN187"
+NAME="AEN214"
 >3.4. Build</A
 ></H2
 ><P
@@ -194,11 +224,18 @@ CLASS="SCREEN"
 ></TABLE
 ></P
 ><P
-> Be sure to use GNU make; on BSD systems, it is called gmake; on
-Linux, GNU make is typically the native "make", so the name of the
-command you type in may vary somewhat. The build may take anywhere
-from a few seconds to 2 minutes depending on how fast your hardware is
-at compiling things.  The last line displayed should be</P
+> Be sure to use GNU make; on BSD systems, it is called
+<B
+CLASS="APPLICATION"
+>gmake</B
+>; on Linux, GNU make is typically the native
+<B
+CLASS="APPLICATION"
+>make</B
+>, so the name of the command you type in may vary
+somewhat. The build may take anywhere from a few seconds to 2 minutes
+depending on how fast your hardware is at compiling things.  The last
+line displayed should be</P
 ><P
 > <TT
 CLASS="COMMAND"
@@ -211,7 +248,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN194"
+NAME="AEN223"
 >3.5. Installing Slony-I</A
 ></H2
 ><P
@@ -226,10 +263,10 @@ CLASS="COMMAND"
 specified by the <CODE
 CLASS="OPTION"
 >--prefix</CODE
-> option used in the PostgreSQL
-configuration.  Make sure you have appropriate permissions to write
-into that area.  Normally you need to do this either as root or as the
-postgres user.</P
+> option used in the
+PostgreSQL configuration.  Make sure you have appropriate permissions
+to write into that area.  Normally you need to do this either as root
+or as the postgres user.  </P
 ></DIV
 ></DIV
 ><DIV

@@ -81,59 +81,152 @@ CLASS="SECT1"
 NAME="LISTENPATHS"
 >8. Slony Listen Paths</A
 ></H1
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+> If you are running version <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.1, it
+should be <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>completely unnecessary</I
+></SPAN
+> to read this section as it
+introduces a way to automatically manage this part of its
+configuration.  For earlier versions, however, it is needful...</P
+></TD
+></TR
+></TABLE
+></DIV
 ><P
 >If you have more than two or three nodes, and any degree of
-usage of cascaded subscribers (_e.g._ - subscribers that are
+usage of cascaded subscribers (<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>e.g.</I
+></SPAN
+> - subscribers that are
 subscribing through a subscriber node), you will have to be fairly
-careful about the configuration of "listen paths" via the Slonik STORE
-LISTEN and DROP LISTEN statements that control the contents of the
+careful about the configuration of <SPAN
+CLASS="QUOTE"
+>"listen paths"</SPAN
+> via the Slonik <TT
+CLASS="COMMAND"
+>STORE
+LISTEN</TT
+> and <TT
+CLASS="COMMAND"
+>DROP LISTEN</TT
+> statements that control the contents of the
 table sl_listen.&#13;</P
 ><P
->The "listener" entries in this table control where each node
-expects to listen in order to get events propagated from other nodes.
-You might think that nodes only need to listen to the "parent" from
-whom they are getting updates, but in reality, they need to be able to
-receive messages from _all_ nodes in order to be able to conclude that
-SYNCs have been received everywhere, and that, therefore, entries in
-sl_log_1 and sl_log_2 have been applied everywhere, and can therefore
-be purged.&#13;</P
+>The <SPAN
+CLASS="QUOTE"
+>"listener"</SPAN
+> entries in this table control where each
+node expects to listen in order to get events propagated from other
+nodes.  You might think that nodes only need to listen to the
+<SPAN
+CLASS="QUOTE"
+>"parent"</SPAN
+> from whom they are getting updates, but in reality,
+they need to be able to receive messages from <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>all</I
+></SPAN
+> nodes in
+order to be able to conclude that SYNCs have been received everywhere,
+and that, therefore, entries in sl_log_1 and sl_log_2 have been
+applied everywhere, and can therefore be purged.  This extra
+communication is needful so <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> is able to shift
+origins to other locations.&#13;</P
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN744"
+NAME="AEN898"
 >8.1. How Listening Can Break</A
 ></H2
 ><P
 >On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
-(#3) that was, in effect, a "cascaded slave."  Dropping the subscriber
-node initially didn't work, as slonik informed me that there was a
-dependant node.  I repointed the dependant node to the "master" node
-for the subscription set, which, for a while, replicated without
-difficulties.&#13;</P
+(#3) that was, in effect, a <SPAN
+CLASS="QUOTE"
+>"cascaded slave."</SPAN
+> Dropping the
+subscriber node initially didn't work, as <A
+HREF="app-slonik.html#SLONIK"
+><TT
+CLASS="COMMAND"
+>slonik</TT
+> </A
+> informed me that there was a dependant node.
+I repointed the dependant node to the <SPAN
+CLASS="QUOTE"
+>"master"</SPAN
+> node for the
+subscription set, which, for a while, replicated without difficulties.&#13;</P
 ><P
->I then dropped the subscription on "node 2," and started
-resubscribing it.  That raised the Slony-I <TT
+>I then dropped the subscription on <SPAN
+CLASS="QUOTE"
+>"node 2,"</SPAN
+> and started
+resubscribing it.  That raised the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
+<TT
 CLASS="COMMAND"
 >SET_SUBSCRIPTION</TT
->
-event, which started copying tables.  At that point in time, events
-stopped propagating to "node 3," and while it was in perfectly OK
-shape, no events were making it to it.&#13;</P
+> event, which started copying tables.  At
+that point in time, events stopped propagating to <SPAN
+CLASS="QUOTE"
+>"node 3,"</SPAN
+> and
+while it was in perfectly OK shape, no events were making it to it.&#13;</P
 ><P
 >The problem was that node #3 was expecting to receive events
 from node #2, which was busy processing the <TT
 CLASS="COMMAND"
 >SET_SUBSCRIPTION</TT
-> event,
-and was not passing anything else on.&#13;</P
+>
+event, and was not passing anything else on.&#13;</P
 ><P
 >We dropped the listener rules that caused node #3 to listen to
 node 2, replacing them with rules where it expected its events to come
-from node #1 (the "master" provider node for the replication set).  At
-that moment, "as if by magic," node #3 started replicating again, as
+from node #1 (the origin node for the replication set).  At that
+moment, <SPAN
+CLASS="QUOTE"
+>"as if by magic,"</SPAN
+> node #3 started replicating again, as
 it discovered a place to get <TT
 CLASS="COMMAND"
 >SYNC</TT
@@ -144,19 +237,22 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN753"
+NAME="AEN915"
 >8.2. How The Listen Configuration Should Look</A
 ></H2
 ><P
->The simple cases tend to be simple to cope with.  We'll look at
-a fairly complex set of nodes.&#13;</P
+>The simple cases tend to be simple to cope with.  We need to
+instead look at a more complex node configuration.&#13;</P
 ><P
->Consider a set of nodes, 1 thru 6, where 1 is the "master,"
-where 2-4 subscribe directly to the master, and where 5 subscribes to
+>Consider a set of nodes, 1 thru 6, where 1 is the origin, 
+where 2-4 subscribe directly to the origin, and where 5 subscribes to
 2, and 6 subscribes to 5.&#13;</P
 ><P
->Here is a "listener network" that indicates where each node
-should listen for messages coming from each other node:
+>Here is a <SPAN
+CLASS="QUOTE"
+>"listener network"</SPAN
+> that indicates where each
+node should listen for messages coming from each other node:
 
 <TABLE
 BORDER="0"
@@ -240,8 +336,17 @@ CLASS="PROGRAMLISTING"
 ><P
 >How we read these listen statements is thus...&#13;</P
 ><P
->When on the "receiver" node, look to the "provider" node to
-provide events coming from the "origin" node.&#13;</P
+>When on the <SPAN
+CLASS="QUOTE"
+>"receiver"</SPAN
+> node, look to the <SPAN
+CLASS="QUOTE"
+>"provider"</SPAN
+>
+node to provide events coming from the <SPAN
+CLASS="QUOTE"
+>"origin"</SPAN
+> node.&#13;</P
 ><P
 >The tool <TT
 CLASS="FILENAME"
@@ -251,9 +356,19 @@ CLASS="FILENAME"
 >altperl</TT
 >
 scripts produces optimized listener networks in both the tabular form
-shown above as well as in the form of Slonik statements.&#13;</P
+shown above as well as in the form of <A
+HREF="app-slonik.html#SLONIK"
+><B
+CLASS="APPLICATION"
+>slonik</B
+> </A
+> statements.&#13;</P
 ><P
->There are three "thorns" in this set of roses:
+>There are three <SPAN
+CLASS="QUOTE"
+>"thorns"</SPAN
+> in this set of roses:
+
 <P
 ></P
 ><UL
@@ -262,8 +377,14 @@ shown above as well as in the form of Slonik statements.&#13;</P
 > If you change the shape of the node set, so that the
 nodes subscribe differently to things, you need to drop sl_listen
 entries and create new ones to indicate the new preferred paths
-between nodes.  There is no automated way at this point to do this
-"reshaping."&#13;</P
+between nodes.  Until <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>, there is no automated way
+at this point to do this <SPAN
+CLASS="QUOTE"
+>"reshaping."</SPAN
+>&#13;</P
 ></LI
 ><LI
 ><P
@@ -276,7 +397,10 @@ CLASS="EMPHASIS"
 > change the sl_listen entries,
 events will likely continue to propagate so long as all of the nodes
 continue to run well.  The problem will only be noticed when a node is
-taken down, "orphaning" any nodes that are listening through it.&#13;</P
+taken down, <SPAN
+CLASS="QUOTE"
+>"orphaning"</SPAN
+> any nodes that are listening through it.&#13;</P
 ></LI
 ><LI
 ><P
@@ -287,8 +411,12 @@ CLASS="emphasis"
 CLASS="EMPHASIS"
 >different</I
 ></SPAN
-> shapes for their respective trees of subscribers.  There
-won't be a single "best" listener configuration in that case.&#13;</P
+> shapes for their respective trees of subscribers.
+There won't be a single <SPAN
+CLASS="QUOTE"
+>"best"</SPAN
+> listener configuration in that
+case.&#13;</P
 ></LI
 ><LI
 ><P
@@ -301,10 +429,16 @@ CLASS="EMPHASIS"
 ></SPAN
 > be a series of sl_path entries connecting the origin
 to the receiver.  This means that if the contents of sl_path do not
-express a "connected" network of nodes, then some nodes will not be
-reachable.  This would typically happen, in practice, when you have
+express a <SPAN
+CLASS="QUOTE"
+>"connected"</SPAN
+> network of nodes, then some nodes will not
+be reachable.  This would typically happen, in practice, when you have
 two sets of nodes, one in one subnet, and another in another subnet,
-where there are only a couple of "firewall" nodes that can talk
+where there are only a couple of <SPAN
+CLASS="QUOTE"
+>"firewall"</SPAN
+> nodes that can talk
 between the subnets.  Cut out those nodes and the subnets stop
 communicating.&#13;</P
 ></LI
@@ -316,62 +450,16 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN783"
->8.3. Open Question</A
+NAME="AEN958"
+>8.3. Automated Listen Path Generation</A
 ></H2
 ><P
->I am not certain what happens if you have multiple listen path
-entries for one path, that is, if you set up entries allowing a node
-to listen to multiple receivers to get events from a particular
-origin.  Further commentary on that would be appreciated!
-
-<DIV
-CLASS="NOTE"
-><P
-></P
-><TABLE
-CLASS="NOTE"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="./images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
-> Actually, I do have answers to this; the remainder of
-this document should be re-presented based on the fact that Slony-I
-1.1 will include a "heuristic" to generate the listener paths
-automatically. </P
-></TD
-></TR
-></TABLE
-></DIV
->&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN788"
->8.4. Generating listener entries via heuristics</A
-></H2
-><P
->It ought to be possible to generate sl_listen entries
-dynamically, based on the following heuristics.  Hopefully this will
-take place in version 1.1, eliminating the need to configure this by
-hand.&#13;</P
-><P
->Configuration will (tentatively) be controlled based on two data
-sources:
+> In <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> version 1.1, a heuristic scheme is
+introduced to automatically generate listener entries.  This happens,
+in order, based on three data sources:
 
 <P
 ></P
@@ -379,32 +467,41 @@ sources:
 ><LI
 ><P
 > sl_subscribe entries are the first, most vital
-control as to what listens to what; we know there must be a "listen"
-entry for a subscriber node to listen to its provider for events from
-the provider, and there should be direct "listening" taking place
-between subscriber and provider.&#13;</P
+control as to what listens to what; we <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>know</I
+></SPAN
+> there must be a
+direct path between each subscriber node and its provider.&#13;</P
 ></LI
 ><LI
 ><P
 > sl_path entries are the second indicator; if
-sl_subscribe has not already indicated "how to listen," then a node
-may listen directly to the event's origin if there is a suitable
-sl_path entry&#13;</P
+sl_subscribe has not already indicated <SPAN
+CLASS="QUOTE"
+>"how to listen,"</SPAN
+> then a
+node may listen directly to the event's origin if there is a suitable
+sl_path entry.&#13;</P
 ></LI
 ><LI
 ><P
-> If there is no guidance thus far based on the above
-data sources, then nodes can listen indirectly if there is an sl_path
-entry that points to a suitable sl_listen entry...&#13;</P
+> Lastly, if there has been no guidance thus far based
+on the above data sources, then nodes can listen indirectly via every
+node that is either a provider for the receiver, or that is using the
+receiver as a provider.&#13;</P
 ></LI
 ></UL
 >&#13;</P
 ><P
-> A stored procedure would run on each node, rewriting sl_listen
-each time sl_subscribe or sl_path are modified.
-
-
- </P
+> Any time sl_subscribe or sl_path are modified,
+<CODE
+CLASS="FUNCTION"
+>RebuildListenEntries()</CODE
+> will be called to revise
+the listener paths.</P
 ></DIV
 ></DIV
 ><DIV

@@ -82,61 +82,104 @@ NAME="DROPTHINGS"
 >10. Dropping things from Slony Replication</A
 ></H1
 ><P
->There are several things you might want to do involving dropping things from Slony-I replication.&#13;</P
+>There are several things you might want to do involving dropping
+things from <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> replication.&#13;</P
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN817"
+NAME="AEN995"
 >10.1. Dropping A Whole Node</A
 ></H2
 ><P
->If you wish to drop an entire node from replication, the Slonik command DROP NODE should do the trick.  &#13;</P
+>If you wish to drop an entire node from replication, the <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+> command <TT
+CLASS="COMMAND"
+>DROP NODE</TT
+> should do
+the trick.&#13;</P
 ><P
->This will lead to Slony-I dropping the triggers (generally that deny the ability to update data), restoring the "native" triggers, dropping the schema used by Slony-I, and the slon process for that node terminating itself.&#13;</P
+>This will lead to <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> dropping the triggers
+(generally that deny the ability to update data), restoring the
+"native" triggers, dropping the schema used by <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>,
+and the slon process for that node terminating itself.&#13;</P
 ><P
->As a result, the database should be available for whatever use your application makes of the database.&#13;</P
+>As a result, the database should be available for whatever use
+your application makes of the database.&#13;</P
 ><P
->This is a pretty major operation, with considerable potential to cause substantial destruction; make sure you drop the right node!&#13;</P
+>This is a pretty major operation, with considerable potential to
+cause substantial destruction; make sure you drop the right node!&#13;</P
 ><P
->The operation will fail if there are any nodes subscribing to the node that you attempt to drop, so there is a bit of failsafe.&#13;</P
+>The operation will fail if there are any nodes subscribing to
+the node that you attempt to drop, so there is a bit of a failsafe to
+protect you from errors.&#13;</P
 ><P
->SlonyFAQ17 documents some extra maintenance that may need to be done on sl_confirm if you are running versions prior to 1.0.5.&#13;</P
+><A
+HREF="faq.html#FAQ17"
+> sl_log_1 isn't getting purged </A
+>
+documents some extra maintenance that may need to be done on
+sl_confirm if you are running versions prior to 1.0.5.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN825"
+NAME="AEN1008"
 >10.2. Dropping An Entire Set</A
 ></H2
 ><P
 >If you wish to stop replicating a particular replication set,
-the Slonik command <TT
+the <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+> command <TT
 CLASS="COMMAND"
 >DROP SET</TT
-> is what you need to use.&#13;</P
+>
+is what you need to use.&#13;</P
 ><P
 >Much as with <TT
 CLASS="COMMAND"
 >DROP NODE</TT
->, this leads to Slony-I dropping
-the Slony-I triggers on the tables and restoring <SPAN
+>, this leads to
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> dropping the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> triggers on
+the tables and restoring <SPAN
 CLASS="QUOTE"
 >"native"</SPAN
->
-triggers.  One difference is that this takes place on <SPAN
+> triggers.  One difference is
+that this takes place on <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >all</I
 ></SPAN
->
-nodes in the cluster, rather than on just one node.  Another
-difference is that this does not clear out the Slony-I cluster's
-namespace, as there might be other sets being serviced.&#13;</P
+> nodes in the cluster, rather
+than on just one node.  Another difference is that this does not clear
+out the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> cluster's namespace, as there might be
+other sets being serviced.&#13;</P
 ><P
 >This operation is quite a bit more dangerous than <TT
 CLASS="COMMAND"
@@ -148,8 +191,11 @@ CLASS="emphasis"
 CLASS="EMPHASIS"
 >isn't</I
 ></SPAN
-> the same sort of "failsafe."  If you
-tell <TT
+> the same sort of <SPAN
+CLASS="QUOTE"
+>"failsafe."</SPAN
+> If
+you tell <TT
 CLASS="COMMAND"
 >DROP SET</TT
 > to drop the <SPAN
@@ -158,15 +204,19 @@ CLASS="emphasis"
 CLASS="EMPHASIS"
 >wrong</I
 ></SPAN
-> set, there isn't
-anything to prevent "unfortunate results."&#13;</P
+> set, there
+isn't anything to prevent potentially career-limiting
+<SPAN
+CLASS="QUOTE"
+>"unfortunate results."</SPAN
+> Handle with care...&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN838"
+NAME="AEN1027"
 >10.3. Unsubscribing One Node From One Set</A
 ></H2
 ><P
@@ -181,13 +231,17 @@ CLASS="COMMAND"
 CLASS="COMMAND"
 >DROP NODE</TT
 >; it
-involves dropping Slony-I triggers and restoring "native" triggers on
-one node, for one replication set.&#13;</P
+involves dropping <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> triggers and restoring
+"native" triggers on one node, for one replication set.&#13;</P
 ><P
 >Much like with <TT
 CLASS="COMMAND"
 >DROP NODE</TT
->, this operation will fail if there is a node subscribing to the set on this node. 
+>, this operation will fail if
+there is a node subscribing to the set on this node.
 
 <DIV
 CLASS="WARNING"
@@ -222,8 +276,11 @@ CLASS="EMPHASIS"
 ></SPAN
 > fresh set of
 the data on a provider.  The fact that the data was recently being
-replicated isn't good enough; Slony-I will expect to refresh the data
-from scratch.</P
+replicated isn't good enough; <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> will expect to
+refresh the data from scratch.</P
 ></TD
 ></TR
 ></TABLE
@@ -235,21 +292,26 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN850"
+NAME="AEN1041"
 >10.4. Dropping A Table From A Set</A
 ></H2
 ><P
->In Slony 1.0.5 and above, there is a Slonik command <TT
+>In <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.0.5 and above, there is a Slonik
+command <TT
 CLASS="COMMAND"
->SET
-DROP TABLE</TT
-> that allows dropping a single table from replication
-without forcing the user to drop the entire replication set.&#13;</P
+>SET DROP TABLE</TT
+> that allows dropping a single table
+from replication without forcing the user to drop the entire
+replication set.&#13;</P
 ><P
 >If you are running an earlier version, there is a <SPAN
 CLASS="QUOTE"
 >"hack"</SPAN
-> to do this:&#13;</P
+>
+to do this:&#13;</P
 ><P
 >You can fiddle this by hand by finding the table ID for the
 table you want to get rid of, which you can find in sl_table, and then
@@ -271,23 +333,38 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->The schema will obviously depend on how you defined the Slony-I
-cluster.  The table ID, in this case, 40, will need to change to the
-ID of the table you want to have go away.&#13;</P
+>The schema will obviously depend on how you defined the
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> cluster.  The table ID, in this case, 40, will
+need to change to the ID of the table you want to have go away.&#13;</P
 ><P
 >You'll have to run these three queries on all of the nodes,
-preferably firstly on the "master" node, so that the dropping of this
-propagates properly.  Implementing this via a Slonik statement with a
-new Slony event would do that.  Submitting the three queries using
-EXECUTE SCRIPT could do that.  Also possible would be to connect to
-each database and submit the queries by hand.&#13;</P
+preferably firstly on the origin node, so that the dropping of this
+propagates properly.  Implementing this via a <A
+HREF="app-slonik.html#SLONIK"
+>slonik </A
+> statement with a new <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> event would
+do that.  Submitting the three queries using <TT
+CLASS="COMMAND"
+>EXECUTE SCRIPT</TT
+>
+could do that; see <A
+HREF="ddlchanges.html"
+> Database Schema Changes</A
+> for more details.  Also possible would be to connect to each
+database and submit the queries by hand.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN860"
+NAME="AEN1057"
 >10.5. Dropping A Sequence From A Set</A
 ></H2
 ><P
@@ -303,9 +380,12 @@ CLASS="COMMAND"
 >If you are running an earlier version, here are instructions as
 to how to drop sequences:&#13;</P
 ><P
->The data that needs to be deleted to stop Slony from continuing
-to replicate the two sequences identified with Sequence IDs 93 and 59
-are thus:
+>The data that needs to be deleted to stop <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
+from continuing to replicate the two sequences identified with
+Sequence IDs 93 and 59 are thus:
 
 <TABLE
 BORDER="0"
@@ -329,13 +409,12 @@ CLASS="FUNCTION"
 > / <TT
 CLASS="COMMAND"
 >EXECUTE SCRIPT</TT
->, thus eliminating
-the sequence everywhere "at once."  Or they may be applied by hand to
-each of the nodes.
-
-
-
- </P
+>,
+thus eliminating the sequence everywhere <SPAN
+CLASS="QUOTE"
+>"at once."</SPAN
+> Or
+they may be applied by hand to each of the nodes.</P
 ></DIV
 ></DIV
 ><DIV

@@ -1,4 +1,4 @@
-<refentry id="slonik">
+<refentry id="app-slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
     <manvolnum>1</manvolnum>
@@ -6,13 +6,13 @@
   </refmeta>
 
   <refnamediv>
-    <refname><application>slonik</application></refname>
+    <refname><application id="slonik">slonik</application></refname>
     <refpurpose>
       <productname>Slony-I</productname> command processor
     </refpurpose>
   </refnamediv>
 
- <indexterm zone="slonik">
+ <indexterm zone="app-slonik">
   <primary>slonik</primary>
  </indexterm>
 
@@ -35,9 +35,9 @@
 
  <refsect1><title> Outline</title>
 
-  <para>The slonik command line utility is supposed to be used
-  embedded into shell scripts and reads commands from files or
-  stdin.</para>
+  <para>The <application>slonik</application> command line utility is
+  supposed to be used embedded into shell scripts and reads commands
+  from files or stdin.</para>
 
   <para>It reads a set of Slonik statements, which are written in a
   scripting language with syntax similar to that of SQL, and performs
@@ -45,13 +45,14 @@
   script.</para>
 
   <para>Nearly all of the real configuration work is actually done by
-  calling stored procedures after loading the Slony-I support base
-  into a database.  Slonik was created because these stored procedures
-  have special requirements as to on which particular node in the
-  replication system they are called.  The absence of named parameters
-  for stored procedures makes it rather hard to do this from the psql
-  prompt, and psql lacks the ability to maintain multiple connections
-  with open transactions to multiple databases.</para>
+  calling stored procedures after loading the <productname/Slony-I/
+  support base into a database.  <application/Slonik/ was created
+  because these stored procedures have special requirements as to on
+  which particular node in the replication system they are called.
+  The absence of named parameters for stored procedures makes it
+  rather hard to do this from the <application/psql/ prompt, and
+  <application/psql/ lacks the ability to maintain multiple
+  connections with open transactions to multiple databases.</para>
 
   <para>The format of the Slonik <quote/language/ is very similar to
   that of SQL, and the parser is based on a similar set of formatting
@@ -61,7 +62,7 @@
   anticipated that Slonik scripts will typically be
   <emphasis>generated</emphasis> by scripts, such as Bash or Perl, and
   these sorts of scripting languages already have perfectly good ways
-  of managing variables.</para>
+  of managing variables, doing iteration, and such.</para>
   
   <para>A detailed list of Slonik commands can be found here: <ulink
   url="http://gborg.postgresql.org/project/slony1/genpage.php?slonik_commands">

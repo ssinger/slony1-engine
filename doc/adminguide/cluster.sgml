@@ -1,15 +1,15 @@
 <sect1 id="cluster"> <title>Defining Slony-I Clusters</title>
 
-<para>A Slony-I cluster is the basic grouping of database instances in
-which replication takes place.  It consists of a set of PostgreSQL
-database instances in which is defined a namespace specific to that
-cluster.
+<para>A <productname/Slony-I/ cluster is the basic grouping of
+database instances in which replication takes place.  It consists of a
+set of <productname/PostgreSQL/ database instances in which is defined
+a namespace specific to that cluster.
 
 <para>Each database instance in which replication is to take place is
 identified by a node number.
 
-<para>For a simple install, it may be reasonable for the "master" to
-be node #1, and for the "slave" to be node #2.
+<para>For a simple install, it may be reasonable for the origin to be
+node #1, and for the subscriber to be node #2.
 
 <para>Some planning should be done, in more complex cases, to ensure
 that the numbering system is kept sane, lest the administrators be

@@ -81,7 +81,10 @@ NAME="SLONSTART"
 >2. Slon daemons</A
 ></H1
 ><P
->The programs that actually perform Slony-I replication are the
+>The programs that actually perform <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> replication are the
 <B
 CLASS="APPLICATION"
 >slon</B
@@ -89,46 +92,58 @@ CLASS="APPLICATION"
 ><P
 >You need to run one <B
 CLASS="APPLICATION"
->slon</B
-> instance for each node in
-a Slony-I cluster, whether you consider that node a <SPAN
+><A
+HREF="app-slon.html#SLON"
+> slon</A
+></B
+> instance for each node in a
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> cluster, whether you consider that node a
+<SPAN
 CLASS="QUOTE"
 >"master"</SPAN
-> or
-a <SPAN
+> or a <SPAN
 CLASS="QUOTE"
 >"slave."</SPAN
 > Since a <TT
 CLASS="COMMAND"
 >MOVE SET</TT
-> or <TT
+> or
+<TT
 CLASS="COMMAND"
 >FAILOVER</TT
-> can
-switch the roles of nodes, slon needs to be able to function for both
-providers and subscribers.  It is not essential that these daemons run
-on any particular host, but there are some principles worth
-considering:
+> can switch the roles of nodes, slon needs to be
+able to function for both providers and subscribers.  It is not
+essential that these daemons run on any particular host, but there are
+some principles worth considering:
 
 <P
 ></P
 ><UL
 ><LI
 ><P
-> Each slon needs to be able to communicate quickly
-with the database whose <SPAN
+> Each <B
+CLASS="APPLICATION"
+>slon</B
+> needs to be able to
+communicate quickly with the database whose <SPAN
 CLASS="QUOTE"
 >"node controller"</SPAN
-> it is.  Therefore, if
-a Slony-I cluster runs across some form of Wide Area Network, each
-slon process should run on or nearby the databases each is
-controlling.  If you break this rule, no particular disaster should
-ensue, but the added latency introduced to monitoring events on the
-slon's <SPAN
+> it
+is.  Therefore, if a <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> cluster runs across some
+form of Wide Area Network, each slon process should run on or nearby
+the databases each is controlling.  If you break this rule, no
+particular disaster should ensue, but the added latency introduced to
+monitoring events on the slon's <SPAN
 CLASS="QUOTE"
 >"own node"</SPAN
-> will cause it to replicate in a
-<SPAN
+> will cause it to
+replicate in a <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
@@ -138,10 +153,13 @@ CLASS="EMPHASIS"
 ></LI
 ><LI
 ><P
-> The fastest results would be achieved by having each
-slon run on the database server that it is servicing.  If it runs
-somewhere within a fast local network, performance will not be
-noticeably degraded.&#13;</P
+> The very fastest results would be achieved by having
+each <B
+CLASS="APPLICATION"
+>slon</B
+> run on the database server that it is
+servicing.  If it runs somewhere within a fast local network,
+performance will not be noticeably degraded.&#13;</P
 ></LI
 ><LI
 ><P
@@ -151,12 +169,12 @@ CLASS="APPLICATION"
 >slon</B
 > processes for a cluster on one machine, as this
 makes it easy to monitor them both in terms of log files and process
-tables from one location.  This eliminates the need to login to
-several hosts in order to look at log files or to restart <B
+tables from one location.  This also eliminates the need to login to
+several hosts in order to look at log files or to restart
+<B
 CLASS="APPLICATION"
 >slon</B
->
-instances.&#13;</P
+> instances.&#13;</P
 ></LI
 ></UL
 >&#13;</P
@@ -181,8 +199,11 @@ CLASS="QUOTE"
 > version that basically wraps a loop around the
 invocation of <B
 CLASS="APPLICATION"
->slon</B
->, restarting any time it falls over&#13;</P
+><A
+HREF="app-slon.html#SLON"
+> slon</A
+></B
+>, restarting any time it falls over</P
 ></LI
 ><LI
 ><P
@@ -198,10 +219,12 @@ CLASS="COMMAND"
 recently.  We have had VPN connections that occasionally fall over
 without signalling the application, so that the <B
 CLASS="APPLICATION"
->slon</B
->
-stops working, but doesn't actually die; this polling addresses that
-issue.&#13;</P
+><A
+HREF="app-slon.html#SLON"
+> slon </A
+></B
+> stops working, but doesn't
+actually die; this polling addresses that issue.&#13;</P
 ></LI
 ></UL
 >&#13;</P
@@ -216,29 +239,27 @@ CLASS="emphasis"
 CLASS="EMPHASIS"
 >usually</I
 ></SPAN
-> the preferable thing to run.  It was at one point
-not preferable to run it whilst subscribing a very large replication
-set where it is expected to take many hours to do the initial
-<TT
+> the preferable thing to run.  It was at
+one point not preferable to run it whilst subscribing a very large
+replication set where it is expected to take many hours to do the
+initial <TT
 CLASS="COMMAND"
 >COPY SET</TT
->.  The problem that came up in that case was that it
-figured that since it hasn't done a <TT
+>.  The problem that came up in that
+case was that it figured that since it hasn't done a
+<TT
 CLASS="COMMAND"
 >SYNC</TT
-> in 2 hours,
-something was broken requiring restarting slon, thereby restarting the
+> in 2 hours, something was broken requiring
+restarting slon, thereby restarting the <TT
+CLASS="COMMAND"
+>COPY SET</TT
+>
+event.  More recently, the script has been changed to detect
 <TT
 CLASS="COMMAND"
 >COPY SET</TT
-> event.  More recently, the script has been changed
-to detect <TT
-CLASS="COMMAND"
->COPY SET</TT
-> in progress.
-
-
- </P
+> in progress.</P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"

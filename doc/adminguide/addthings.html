@@ -87,53 +87,70 @@ you wish you were replicating.&#13;</P
 ><P
 >This can be fairly easily remedied.&#13;</P
 ><P
->You cannot directly use <TT
+>You cannot directly use <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+>
+commands <TT
 CLASS="COMMAND"
 >SET ADD TABLE</TT
 > or <TT
 CLASS="COMMAND"
->SET
-ADD SEQUENCE</TT
-> in order to add tables and sequences to a replication
-set that is presently replicating; you must instead create a new
-replication set.  Once it is identically subscribed (e.g. - the set of
+>SET ADD SEQUENCE</TT
+> in
+order to add tables and sequences to a replication set that is
+presently replicating; you must instead create a new replication set.
+Once it is identically subscribed (e.g. - the set of providers and
 subscribers is <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
->identical</I
+>entirely identical</I
 ></SPAN
-> to that for the set it is to merge
-with), the sets may be merged together using <TT
+> to that for the set it is
+to merge with), the sets may be merged together using <TT
 CLASS="COMMAND"
->MERGE SET</TT
+>MERGE
+SET</TT
 >.&#13;</P
 ><P
->Up to and including 1.0.2, there is a potential problem where if
-<TT
+>Up to and including 1.0.2, there was a potential problem where
+if <TT
 CLASS="COMMAND"
 >MERGE_SET</TT
-> is issued when other subscription-related events
-are pending, it is possible for things to get pretty confused on the
-nodes where other things were pending.  This problem was resolved in
-1.0.5.&#13;</P
+> is issued while other subscription-related
+events are pending, it is possible for things to get pretty confused
+on the nodes where other things were pending.  This problem was
+resolved in 1.0.5.&#13;</P
 ><P
 >It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
-particular set in one Slonik script often turns out quite badly.  If
-it is truly necessary to automate this, you'll probably want to submit
-<TT
+particular set in one <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+> script
+often turns out quite badly.  If it is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>truly</I
+></SPAN
+> necessary to
+automate this, you'll probably want to submit <TT
 CLASS="COMMAND"
 >WAIT FOR EVENT</TT
-> requests in between subscription requests in
-order that the Slonik script wait for one subscription to complete
-processing before requesting the next one.&#13;</P
+>
+requests in between subscription requests in order that the <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+> script wait for one subscription to
+complete processing before requesting the next one.&#13;</P
 ><P
 >But in general, it is likely to be easier to cope with complex
 node reconfigurations by making sure that one change has been
 successfully processed before going on to the next.  It's way easier
-to fix one thing that has broken than the interaction of five things
-that have broken.
+to fix one thing that has broken than to piece things together after
+the interaction of five things that have all broken.
 
 
  </P

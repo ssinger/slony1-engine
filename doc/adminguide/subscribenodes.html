@@ -85,18 +85,24 @@ NAME="SUBSCRIBENODES"
 >Before you subscribe a node to a set, be sure that you have
 <B
 CLASS="APPLICATION"
->slon</B
->s running for both the master and the new
-subscribing node. If you don't have slons running, nothing will
-happen, and you'll beat your head against a wall trying to figure out
-what is going on.&#13;</P
+><A
+HREF="app-slon.html#SLON"
+> slon </A
+></B
+>
+processes running for both the provider and the new subscribing node. If
+you don't have slons running, nothing will happen, and you'll beat
+your head against a wall trying to figure out what is going on.&#13;</P
 ><P
->Subscribing a node to a set is done by issuing the slonik
-command <TT
+>Subscribing a node to a set is done by issuing the <A
+HREF="app-slonik.html#SLONIK"
+> slonik </A
+> command <TT
 CLASS="COMMAND"
 >subscribe set</TT
->. It may seem tempting to try to
-subscribe several nodes to a set within a single try block like this:
+>. It
+may seem tempting to try to subscribe several nodes to a set within a
+single try block like this:
 
 <TABLE
 BORDER="0"
@@ -121,20 +127,26 @@ CLASS="PROGRAMLISTING"
 >
 &#13;</P
 ><P
-> You are just asking for trouble if you try to subscribe sets in
-that fashion. The proper procedure is to subscribe one node at a time,
-and to check the logs and databases before you move onto subscribing
-the next node to the set. It is also worth noting that the
+> But you are just asking for trouble if you try to subscribe
+sets in that fashion. The proper procedure is to subscribe one node at
+a time, and to check the logs and databases before you move onto
+subscribing the next node to the set. It is also worth noting that the
 <SPAN
 CLASS="QUOTE"
 >"success"</SPAN
-> within the above slonik try block does not imply that
-nodes 2, 3, and 4 have all been successfully subscribed. It merely
-indicates that the slonik commands were successfully received by the
+> within the above <A
+HREF="app-slonik.html#SLONIK"
+><B
+CLASS="APPLICATION"
+>slonik</B
+> </A
+> try block does not imply that nodes 2, 3,
+and 4 have all been successfully subscribed. It merely indicates that
+the slonik commands were successfully received by the
 <B
 CLASS="APPLICATION"
 >slon</B
-> running on the master node.&#13;</P
+> running on the origin node.&#13;</P
 ><P
 >A typical sort of problem that will arise is that a cascaded
 subscriber is looking for a provider that is not ready yet.  In that
@@ -158,7 +170,10 @@ CLASS="QUOTE"
 node is stuck on the attempt to subscribe it.&#13;</P
 ><P
 >When you subscribe a node to a set, you should see something
-like this in your slony logs for the master node:
+like this in your <B
+CLASS="APPLICATION"
+>slon</B
+> logs for the provider node:
 
 <TABLE
 BORDER="0"
@@ -174,7 +189,11 @@ CLASS="SCREEN"
 ></TABLE
 >&#13;</P
 ><P
->You should also start seeing log entries like this in the slony logs for the subscribing node:
+>You should also start seeing log entries like this in the
+<B
+CLASS="APPLICATION"
+>slon</B
+> logs for the subscribing node:
 
 <TABLE
 BORDER="0"
@@ -191,14 +210,14 @@ CLASS="SCREEN"
 >&#13;</P
 ><P
 >It may take some time for larger tables to be copied from the
-master node to the new subscriber. If you check the pg_stat_activity
-table on the master node, you should see a query that is copying the
+provider node to the new subscriber. If you check the pg_stat_activity
+table on the provider node, you should see a query that is copying the
 table to stdout.&#13;</P
 ><P
 >The table <CODE
 CLASS="ENVAR"
 >sl_subscribe</CODE
-> on both the master, and the new
+> on both the provider, and the new
 subscriber should contain entries for the new subscription:
 
 <TABLE
@@ -218,12 +237,8 @@ CLASS="SCREEN"
 >&#13;</P
 ><P
 >A final test is to insert a row into one of the replicated
-tables on the master node, and verify that the row is copied to the
-new subscriber.
-
-
-
- </P
+tables on the origin node, and verify that the row is copied to the
+new subscriber.</P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"

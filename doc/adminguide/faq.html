@@ -71,7 +71,7 @@ CLASS="TITLEPAGE"
 ><H1
 CLASS="TITLE"
 ><A
-NAME="AEN1025"
+NAME="AEN1247"
 >Slony-I FAQ</A
 ></H1
 ><H3
@@ -80,7 +80,7 @@ CLASS="CORPAUTHOR"
 ><H3
 CLASS="AUTHOR"
 ><A
-NAME="AEN1028"
+NAME="AEN1250"
 >Christopher  Browne</A
 ></H3
 ><HR></DIV
@@ -102,7 +102,7 @@ CLASS="QANDASET"
 ><DL
 ><DT
 >Q: <A
-HREF="faq.html#AEN1036"
+HREF="faq.html#AEN1258"
 >I looked for the <CODE
 CLASS="ENVAR"
 >_clustername</CODE
@@ -111,7 +111,7 @@ it wasn't there.</A
 ></DT
 ><DT
 >Q: <A
-HREF="faq.html#AEN1047"
+HREF="faq.html#AEN1270"
 >Some events moving around, but no replication&#13;</A
 ></DT
 ></DL
@@ -122,7 +122,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1036"
+NAME="AEN1258"
 ></A
 ><B
 >Q: I looked for the <CODE
@@ -138,23 +138,26 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
-> If the DSNs are wrong, then slon instances can't connect to the nodes.&#13;</P
+> If the DSNs are wrong, then slon instances can't
+connect to the nodes.&#13;</P
 ><P
 >This will generally lead to nodes remaining entirely untouched.&#13;</P
 ><P
->Recheck the connection configuration.  By the way, since
-<B
+>Recheck the connection configuration.  By the way, since <A
+HREF="app-slon.html#SLON"
+> <B
 CLASS="APPLICATION"
 >slon</B
-> links to libpq, you could have password information
-stored in <TT
+> </A
+> links to libpq, you could
+have password information stored in <TT
 CLASS="FILENAME"
-> <CODE
+><CODE
 CLASS="ENVAR"
 >$HOME</CODE
 >/.pgpass</TT
->,
-partially filling in right/wrong authentication information there.</P
+>, partially filling in
+right/wrong authentication information there.</P
 ></DIV
 ></DIV
 ><DIV
@@ -164,7 +167,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1047"
+NAME="AEN1270"
 ></A
 ><B
 >Q: Some events moving around, but no replication&#13;</B
@@ -193,16 +196,25 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
->On AIX and Solaris (and possibly elsewhere), both Slony-I <SPAN
+>On AIX and Solaris (and possibly elsewhere), both <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
->and PostgreSQL</I
+>and <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+></I
 ></SPAN
 > must be compiled with the <CODE
 CLASS="OPTION"
 >--enable-thread-safety</CODE
-> option.  The above results when PostgreSQL isn't so compiled.&#13;</P
+> option.  The above results when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> isn't so compiled.&#13;</P
 ><P
 >What breaks here is that the libc (threadsafe) and libpq (non-threadsafe) use different memory locations for errno, thereby leading to the request failing.&#13;</P
 ><P
@@ -228,7 +240,10 @@ CLASS="OPTION"
 CLASS="ENVAR"
 >LD_LIBRARY_PATH</CODE
 > had been set, on Solaris, to point to
-libraries from an old PostgreSQL compile.  That meant that even though
+libraries from an old <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> compile.  That meant that even though
 the database <SPAN
 CLASS="emphasis"
 ><I
@@ -266,7 +281,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1070"
+NAME="AEN1297"
 ></A
 ><B
 >Q: I tried creating a CLUSTER NAME with a "-" in it.
@@ -279,7 +294,13 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
-> Slony-I uses the same rules for unquoted identifiers as the PostgreSQL
+> <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> uses the same rules for unquoted identifiers as the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
 main parser, so no, you probably shouldn't put a "-" in your
 identifier name.&#13;</P
 ><P
@@ -293,7 +314,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1076"
+NAME="AEN1305"
 ></A
 ><B
 >Q:  slon does not restart after crash&#13;</B
@@ -353,7 +374,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1087"
+NAME="AEN1316"
 ></A
 ><B
 >Q: ps finds passwords on command line&#13;</B
@@ -386,10 +407,13 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1096"
+NAME="AEN1325"
 ></A
 ><B
->Q: Slonik fails - cannot load PostgreSQL library - <TT
+>Q: Slonik fails - cannot load <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> library - <TT
 CLASS="COMMAND"
 >PGRES_FATAL_ERROR load '$libdir/xxid';</TT
 >&#13;</B
@@ -417,41 +441,69 @@ CLASS="FILENAME"
 library in the <CODE
 CLASS="ENVAR"
 >$libdir</CODE
-> directory that the PostgreSQL instance
-is using.  Note that the Slony-I components need to be installed in
-the PostgreSQL software installation for <SPAN
+> directory that the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> instance
+is using.  Note that the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> components need to be installed in
+the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> software installation for <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >each and every one</I
 ></SPAN
 >
-of the nodes, not just on the <SPAN
-CLASS="QUOTE"
->"master node."</SPAN
->&#13;</P
+of the nodes, not just on the origin node.&#13;</P
 ><P
 >This may also point to there being some other mismatch between
-the PostgreSQL binary instance and the Slony-I instance.  If you
-compiled Slony-I yourself, on a machine that may have multiple
-PostgreSQL builds <SPAN
+the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> binary instance and the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> instance.  If you
+compiled <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> yourself, on a machine that may have multiple
+<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> builds <SPAN
 CLASS="QUOTE"
 >"lying around,"</SPAN
 > it's possible that the slon or
 slonik binaries are asking to load something that isn't actually in
-the library directory for the PostgreSQL database cluster that it's
+the library directory for the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database cluster that it's
 hitting.&#13;</P
 ><P
 >Long and short: This points to a need to <SPAN
 CLASS="QUOTE"
 >"audit"</SPAN
 > what
-installations of PostgreSQL and Slony you have in place on the
-machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right.  See also <A
+installations of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> and <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
+you have in place on the machine(s).  Unfortunately, just about any
+mismatch will cause things not to link up quite right.  See also <A
 HREF="faq.html#SLONYFAQ02"
->SlonyFAQ02 </A
-> concerning threading issues on Solaris ...&#13;</P
+> SlonyFAQ02 </A
+> concerning threading issues
+on Solaris ...&#13;</P
 ><DIV
 CLASS="QANDAENTRY"
 ><DIV
@@ -459,7 +511,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1113"
+NAME="AEN1352"
 ></A
 ><B
 >Q: Table indexes with FQ namespace names
@@ -506,7 +558,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1121"
+NAME="AEN1360"
 ></A
 ><B
 >Q: I'm trying to get a slave subscribed, and get the following
@@ -545,7 +597,10 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
-> That doesn't work out: Slony-I won't work on the
+> That doesn't work out: <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> won't work on the
 <TT
 CLASS="COMMAND"
 >COPY</TT
@@ -566,7 +621,10 @@ set, and only once it has completed setting up the subscription
 setting up the subscription.&#13;</P
 ><P
 >It could also be possible for there to be an old outstanding
-transaction blocking Slony-I from processing the sync.  You might want
+transaction blocking <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> from processing the sync.  You might want
 to take a look at pg_locks to see what's up:
 
 <TABLE
@@ -614,14 +672,20 @@ subscription for one of the nodes.  All is well; the system is busy
 setting up the first subscriber; it won't start on the second one
 until the first one has completed subscribing.&#13;</P
 ><P
->By the way, if there is more than one database on the PostgreSQL
+>By the way, if there is more than one database on the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
 cluster, and activity is taking place on the OTHER database, that will
 lead to there being <SPAN
 CLASS="QUOTE"
 >"transactions earlier than XID whatever"</SPAN
 > being
 found to be still in progress.  The fact that it's a separate database
-on the cluster is irrelevant; Slony-I will wait until those old
+on the cluster is irrelevant; <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> will wait until those old
 transactions terminate.</P
 ><DIV
 CLASS="QANDAENTRY"
@@ -630,7 +694,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1141"
+NAME="AEN1384"
 ></A
 ><B
 >Q: ERROR: duplicate key violates unique constraint "sl_table-pkey"&#13;</B
@@ -677,7 +741,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1149"
+NAME="AEN1392"
 ></A
 ><B
 >Q: I need to drop a table from a replication set</B
@@ -722,16 +786,28 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->The schema will obviously depend on how you defined the Slony-I
+>The schema will obviously depend on how you defined the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
 cluster.  The table ID, in this case, 40, will need to change to the
 ID of the table you want to have go away.
 
 You'll have to run these three queries on all of the nodes, preferably
-firstly on the "master" node, so that the dropping of this propagates
-properly.  Implementing this via a SLONIK statement with a new Slony
-event would do that.  Submitting the three queries using EXECUTE
-SCRIPT could do that.  Also possible would be to connect to each
-database and submit the queries by hand.</P
+firstly on the origin node, so that the dropping of this propagates
+properly.  Implementing this via a <A
+HREF="app-slonik.html#SLONIK"
+> slonik</A
+> statement with a new <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> event would do
+that.  Submitting the three queries using <TT
+CLASS="COMMAND"
+>EXECUTE SCRIPT</TT
+>
+could do that.  Also possible would be to connect to each database and
+submit the queries by hand.</P
 ></LI
 ></UL
 ></P
@@ -742,7 +818,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1163"
+NAME="AEN1410"
 ></A
 ><B
 >Q: I need to drop a sequence from a replication set&#13;</B
@@ -835,7 +911,10 @@ hand to each of the nodes.&#13;</P
 >Similarly to <TT
 CLASS="COMMAND"
 >SET DROP TABLE</TT
->, this should be in place for Slony-I version
+>, this should be in place for <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> version
 1.0.5 as <TT
 CLASS="COMMAND"
 >SET DROP SEQUENCE.</TT
@@ -847,10 +926,13 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1186"
+NAME="AEN1434"
 ></A
 ><B
->Q: Slony-I: cannot add table to currently subscribed set 1&#13;</B
+>Q: <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>: cannot add table to currently subscribed set 1&#13;</B
 ></BIG
 ></P
 ><P
@@ -894,14 +976,17 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1195"
+NAME="AEN1444"
 ></A
 ><B
 >Q: Some nodes start consistently falling behind&#13;</B
 ></BIG
 ></P
 ><P
->I have been running Slony-I on a node for a while, and am seeing
+>I have been running <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> on a node for a while, and am seeing
 system performance suffering.&#13;</P
 ><P
 >I'm seeing long running queries of the form:
@@ -951,7 +1036,10 @@ CLASS="ENVAR"
 CLASS="FILENAME"
 >cleanup_thread.c</TT
 > contains a list of tables that are
-frequently vacuumed automatically.  In Slony-I 1.0.2,
+frequently vacuumed automatically.  In <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.0.2,
 <CODE
 CLASS="ENVAR"
 >pg_listener</CODE
@@ -970,7 +1058,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1213"
+NAME="AEN1464"
 ></A
 ><B
 >Q: I started doing a backup using pg_dump, and suddenly Slony stops&#13;</B
@@ -994,11 +1082,17 @@ CLASS="APPLICATION"
 >, which has taken out an <TT
 CLASS="COMMAND"
 >AccessShareLock</TT
-> on all of the tables in the database, including the Slony-I ones, and&#13;</P
+> on all of the tables in the database, including the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> ones, and&#13;</P
 ></LI
 ><LI
 ><P
-> A Slony-I sync event, which wants to grab a <TT
+> A <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> sync event, which wants to grab a <TT
 CLASS="COMMAND"
 >AccessExclusiveLock</TT
 > on	 the table <CODE
@@ -1108,7 +1202,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1251"
+NAME="AEN1504"
 ></A
 ><B
 >Q: The slons spent the weekend out of commission [for
@@ -1121,36 +1215,50 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
->You might want to take a look at the sl_log_1/sl_log_2 tables, and do
-a summary to see if there are any really enormous Slony-I transactions
-in there.  Up until at least 1.0.2, there needs to be a slon connected
-to the master in order for <TT
+> You might want to take a look at the sl_log_1/sl_log_2
+tables, and do a summary to see if there are any really enormous
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> transactions in there.  Up until at least 1.0.2,
+there needs to be a slon connected to the origin in order for
+<TT
 CLASS="COMMAND"
 >SYNC</TT
 > events to be generated.&#13;</P
 ><P
 >If none are being generated, then all of the updates until the next
-one is generated will collect into one rather enormous Slony-I
+one is generated will collect into one rather enormous <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>
 transaction.&#13;</P
 ><P
->Conclusion: Even if there is not going to be a subscriber around, you
-<SPAN
+>Conclusion: Even if there is not going to be a subscriber
+around, you <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >really</I
 ></SPAN
-> want to have a slon running to service the <SPAN
-CLASS="QUOTE"
->"master"</SPAN
-> node.&#13;</P
+> want to have a slon running to service
+the origin node.&#13;</P
 ><P
->Some future version (probably 1.1) may provide a way for
-<TT
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.1 provides a stored procedure that
+allows <TT
 CLASS="COMMAND"
 >SYNC</TT
-> counts to be updated on the master by the stored
-function that is invoked by the table triggers.&#13;</P
+> counts to be updated on the origin based on a
+<B
+CLASS="APPLICATION"
+>cron</B
+> job even if there is no <A
+HREF="app-slon.html#SLON"
+> slon</A
+> daemon running.&#13;</P
 ><DIV
 CLASS="QANDAENTRY"
 ><DIV
@@ -1158,10 +1266,11 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1263"
+NAME="AEN1520"
 ></A
 ><B
->Q: I pointed a subscribing node to a different parent and it stopped replicating&#13;</B
+>Q: I pointed a subscribing node to a different provider
+and it stopped replicating&#13;</B
 ></BIG
 ></P
 ></DIV
@@ -1178,15 +1287,15 @@ where we had configuration thus:
 ><UL
 ><LI
 ><P
-> Node 1 - master</P
+> Node 1 - provider</P
 ></LI
 ><LI
 ><P
-> Node 2 - child of node 1 - the node we're reinitializing</P
+> Node 2 - subscriber to node 1 - the node we're reinitializing</P
 ></LI
 ><LI
 ><P
-> Node 3 - child of node 3 - node that should keep replicating</P
+> Node 3 - subscriber to node 3 - node that should keep replicating</P
 ></LI
 ></UL
 >&#13;</P
@@ -1281,7 +1390,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1294"
+NAME="AEN1551"
 ></A
 ><B
 >Q: After dropping a node, sl_log_1 isn't getting purged out anymore.&#13;</B
@@ -1295,7 +1404,10 @@ CLASS="ANSWER"
 >A: </B
 > This is a common scenario in versions before 1.0.5, as
 the "clean up" that takes place when purging the node does not include
-purging out old entries from the Slony-I table, sl_confirm, for the
+purging out old entries from the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> table, sl_confirm, for the
 recently departed node.&#13;</P
 ><P
 > The node is no longer around to update confirmations of what
@@ -1407,7 +1519,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1318"
+NAME="AEN1576"
 ></A
 ><B
 >Q: Replication Fails - Unique Constraint Violation&#13;</B
@@ -1450,7 +1562,10 @@ CLASS="SCREEN"
 ></TABLE
 >&#13;</P
 ><P
->The transaction rolls back, and Slony-I tries again, and again,
+>The transaction rolls back, and <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> tries again, and again,
 and again.  The problem is with one of the <SPAN
 CLASS="emphasis"
 ><I
@@ -1462,7 +1577,10 @@ one with <TT
 CLASS="COMMAND"
 >log_cmdtype = 'I'</TT
 >.  That isn't quite obvious; what takes
-place is that Slony-I groups 10 update queries together to diminish
+place is that <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> groups 10 update queries together to diminish
 the number of network round trips.&#13;</P
 ></DIV
 ><DIV
@@ -1501,7 +1619,10 @@ over, as well as when temporary network failure seemed likely.&#13;</P
 ><LI
 ><P
 > The scenario seems to involve a delete transaction
-having been missed by Slony-I.&#13;</P
+having been missed by <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>.&#13;</P
 ></LI
 ></UL
 >&#13;</P
@@ -1513,7 +1634,10 @@ possible.&#13;</P
 >What is necessary, at this point, is to drop the replication set
 (or even the node), and restart replication from scratch on that node.&#13;</P
 ><P
->In Slony-I 1.0.5, the handling of purges of sl_log_1 are rather
+>In <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.0.5, the handling of purges of sl_log_1 are rather
 more conservative, refusing to purge entries that haven't been
 successfully synced for at least 10 minutes on all nodes.  It is not
 certain that that will prevent the "glitch" from taking place, but it
@@ -1528,7 +1652,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1339"
+NAME="AEN1601"
 ></A
 ><B
 >Q:  If you have a slonik script something like this, it

@@ -82,14 +82,21 @@ NAME="FIRSTDB"
 >12. Replicating Your First Database</A
 ></H1
 ><P
->In this example, we will be replicating a brand new pgbench database.  The
-mechanics of replicating an existing database are covered here, however we
-recommend that you learn how Slony-I functions by using a fresh new
-non-production database.&#13;</P
+>In this example, we will be replicating a brand new pgbench
+database.  The mechanics of replicating an existing database are
+covered here, however we recommend that you learn how
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> functions by using a fresh new
+non-production database.</P
 ><P
->The Slony-I replication engine is trigger-based, allowing us to
-replicate databases (or portions thereof) running under the same
-postmaster.&#13;</P
+>The <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> replication engine is
+trigger-based, allowing us to replicate databases (or portions
+thereof) running under the same postmaster.</P
 ><P
 >This example will show how to replicate the pgbench database
 running on localhost (master) to the pgbench slave database also
@@ -104,27 +111,28 @@ your PostgreSQL configuration:
 > You have <CODE
 CLASS="OPTION"
 >tcpip_socket=true</CODE
-> in your <TT
+> in your
+<TT
 CLASS="FILENAME"
 >postgresql.conf</TT
-> and
-	</P
+> and</P
 ></LI
 ><LI
 ><P
-> You have enabled access in your cluster(s) via <TT
+> You have enabled access in your cluster(s) via
+<TT
 CLASS="FILENAME"
 >pg_hba.conf</TT
 ></P
 ></LI
 ></UL
->&#13;</P
+></P
 ><P
 > The <CODE
 CLASS="ENVAR"
 >REPLICATIONUSER</CODE
-> needs to be a PostgreSQL superuser.  This is typically
-postgres or pgsql.&#13;</P
+> needs to be a PostgreSQL superuser.
+This is typically postgres or pgsql.</P
 ><P
 >You should also set the following shell variables:
 
@@ -259,7 +267,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN953"
+NAME="AEN1161"
 >12.1. Creating the pgbenchuser</A
 ></H2
 ><P
@@ -273,7 +281,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN957"
+NAME="AEN1165"
 >12.2. Preparing the databases</A
 ></H2
 ><TABLE
@@ -291,7 +299,10 @@ CLASS="PROGRAMLISTING"
 ></TR
 ></TABLE
 ><P
->Because Slony-I depends on the databases having the pl/pgSQL procedural
+>Because <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME.
@@ -310,7 +321,10 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->Slony-I does not yet automatically copy table definitions from a
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> does not yet automatically copy table definitions from a
 master when a slave subscribes to it, so we need to import this data.
 We do this with <B
 CLASS="APPLICATION"
@@ -331,18 +345,21 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->To illustrate how Slony-I allows for on the fly replication
-subscription, let's start up <B
+>To illustrate how <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> allows for on the fly
+replication subscription, let's start up <B
 CLASS="APPLICATION"
 >pgbench</B
->.  If you run the
-<B
+>.  If
+you run the <B
 CLASS="APPLICATION"
 >pgbench</B
-> application in the foreground of a separate
-terminal window, you can stop and restart it with different parameters
-at any time.  You'll need to re-export the variables again so they are
-available in this session as well.&#13;</P
+> application in the foreground of a
+separate terminal window, you can stop and restart it with different
+parameters at any time.  You'll need to re-export the variables again
+so they are available in this session as well.&#13;</P
 ><P
 >The typical command to run <B
 CLASS="APPLICATION"
@@ -367,24 +384,32 @@ CLASS="PROGRAMLISTING"
 CLASS="APPLICATION"
 >pgbench</B
 > with 5 concurrent clients
-each processing 1000 transactions against the pgbench database running
-on localhost as the pgbench user.&#13;</P
+each processing 1000 transactions against the <B
+CLASS="APPLICATION"
+>pgbench</B
+>
+database running on localhost as the pgbench user.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN973"
+NAME="AEN1185"
 >12.3. Configuring the Database for Replication.</A
 ></H2
 ><P
 >Creating the configuration tables, stored procedures, triggers
-and configuration is all done through the slonik tool.  It is a
-specialized scripting aid that mostly calls stored procedures in the
-master/slave (node) databases.  The script to create the initial
-configuration for the simple master-slave setup of our pgbench
-database looks like this:
+and configuration is all done through the <A
+HREF="app-slonik.html#SLONIK"
+><B
+CLASS="APPLICATION"
+>slonik</B
+> </A
+> tool.  It is a specialized scripting aid
+that mostly calls stored procedures in the master/slave (node)
+databases.  The script to create the initial configuration for the
+simple master-slave setup of our pgbench database looks like this:
 
 <TABLE
 BORDER="0"
@@ -457,11 +482,19 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >&#13;</P
 ><P
->Is the pgbench still running?  If not start it again.&#13;</P
+>Is the <B
+CLASS="APPLICATION"
+>pgbench</B
+> still running?  If not start it
+again.&#13;</P
 ><P
 >At this point we have 2 databases that are fully prepared.  One
-is the master database in which bgbench is busy accessing and changing
-rows.  It's now time to start the replication daemons.&#13;</P
+is the master database in which <B
+CLASS="APPLICATION"
+>pgbench</B
+> is busy
+accessing and changing rows.  It's now time to start the replication
+daemons.&#13;</P
 ><P
 >On $MASTERHOST the command to start the replication engine is
 
@@ -497,15 +530,22 @@ CLASS="PROGRAMLISTING"
 ><P
 >Even though we have the <B
 CLASS="APPLICATION"
->slon</B
-> running on both the
-master and slave, and they are both spitting out diagnostics and other
-messages, we aren't replicating any data yet.  The notices you are
-seeing is the synchronization of cluster configurations between the 2
+><A
+HREF="app-slon.html#SLON"
+> slon</A
+></B
+> running on both the master and slave, and they
+are both spitting out diagnostics and other messages, we aren't
+replicating any data yet.  The notices you are seeing is the
+synchronization of cluster configurations between the 2
 <B
 CLASS="APPLICATION"
->slon</B
-> processes.&#13;</P
+><A
+HREF="app-slon.html#SLON"
+> slon </A
+></B
+>
+processes.&#13;</P
 ><P
 >To start replicating the 4 pgbench tables (set 1) from the
 master (node id 1) the the slave (node id 2), execute the following
@@ -558,17 +598,20 @@ seconds worth of application work at a time.  Depending on the
 performance of the two systems involved, the sizing of the two
 databases, the actual transaction load and how well the two databases
 are tuned and maintained, this catchup process can be a matter of
-minutes, hours, or eons.&#13;</P
+minutes, hours, or eons.</P
 ><P
 >You have now successfully set up your first basic master/slave
 replication system, and the 2 databases should, once the slave has
 caught up, contain identical data.  That's the theory, at least.  In
 practice, it's good to build confidence by verifying that the datasets
-are in fact the same.&#13;</P
+are in fact the same.</P
 ><P
->The following script will create ordered dumps of the 2 databases and compare
-them.  Make sure that pgbench has completed it's testing, and that your slon
-sessions have caught up.
+>The following script will create ordered dumps of the 2
+databases and compare them.  Make sure that <B
+CLASS="APPLICATION"
+>pgbench</B
+> has
+completed its testing, and that your slon sessions have caught up.
 
 <TABLE
 BORDER="0"
@@ -613,23 +656,28 @@ CLASS="PROGRAMLISTING"
 ></TD
 ></TR
 ></TABLE
->&#13;</P
+></P
 ><P
 >Note that there is somewhat more sophisticated documentation of
-the process in the Slony-I source code tree in a file called
-slony-I-basic-mstr-slv.txt.&#13;</P
+the process in the <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> source code tree
+in a file called
+<TT
+CLASS="FILENAME"
+>slony-I-basic-mstr-slv.txt</TT
+>.</P
 ><P
->If this script returns "FAILED" please contact the developers at
-<A
-HREF="http://slony.org/"
+>If this script returns <TT
+CLASS="COMMAND"
+>FAILED</TT
+> please contact the
+developers at <A
+HREF="http://slony.info/"
 TARGET="_top"
-> http://slony.org/</A
->
-
-
-
-
- </P
+>http://slony.info/</A
+></P
 ></DIV
 ></DIV
 ><DIV

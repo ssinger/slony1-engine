@@ -1,4 +1,4 @@
-<refentry id="slon">
+<refentry id="app-slon">
 <refmeta>
     <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
     <manvolnum>1</manvolnum>
@@ -6,13 +6,13 @@
   </refmeta>
 
   <refnamediv>
-    <refname><application>slon</application></refname>
+    <refname><application id="slon">slon</application></refname>
     <refpurpose>
       <productname>Slony-I</productname> daemon
     </refpurpose>
   </refnamediv>
 
- <indexterm zone="slon">
+ <indexterm zone="app-slon">
   <primary>slon</primary>
  </indexterm>
 

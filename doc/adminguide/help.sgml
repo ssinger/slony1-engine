@@ -1,36 +1,37 @@
-<sect1 id="help"> <title/ More Slony-I Help /
-<para>If you are having problems with Slony-I, you have several options for help:
+<sect1 id="help"> <title> More Slony-I Help </title>
+
+<para>If you are having problems with Slony-I, you have several
+options for help:
 
 <itemizedlist>
 
-<listitem><Para> <ulink
+<listitem><para> <ulink
 url="http://slony.info/">http://slony.info/</ulink> - the official
-"home" of Slony
+"home" of Slony</para></listitem>
 
-<listitem><Para> Documentation on the Slony-I Site- Check the
+<listitem><para> Documentation on the Slony-I Site- Check the
 documentation on the Slony website: <ulink
 url="http://gborg.postgresql.org/project/slony1/genpage.php?howto_idx">Howto
-</ulink>
+</ulink></para></listitem>
 
-<listitem><Para> Other Documentation - There are several articles here
-<ulink url=
-"http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
-Varlena GeneralBits </ulink> that may be helpful.
+<listitem><para> Other Documentation - There are several articles here
+<ulink url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
+Varlena GeneralBits </ulink> that may be helpful.</para></listitem>
 
-<listitem><Para> IRC - There are usually some people on #slony on
+<listitem><para> IRC - There are usually some people on #slony on
 irc.freenode.net who may be able to answer some of your
 questions. There is also a bot named "rtfm_please" that you may want
-to chat with.
+to chat with.</para></listitem>
 
-<listitem><Para> Mailing lists - The answer to your problem may exist
+<listitem><para> Mailing lists - The answer to your problem may exist
 in the Slony1-general mailing list archives, or you may choose to ask
 your question on the Slony1-general mailing list. The mailing list
 archives, and instructions for joining the list may be found <ulink
-url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink>
+url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink></para></listitem>
 
-<listitem><Para> If your Russian is much better than your English,
+<listitem><para> If your Russian is much better than your English,
 then <ulink url="http://kirov.lug.ru/wiki/Slony">
-KirovOpenSourceCommunity: Slony</ulink> may be the place to go
+KirovOpenSourceCommunity: Slony</ulink> may be the place to go</para></listitem>
 </itemizedlist>
 
 <sect2><title> Other Information Sources</title>
@@ -45,6 +46,7 @@ Slonik script</para></listitem>
 </itemizedlist>
 
 </sect2>
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

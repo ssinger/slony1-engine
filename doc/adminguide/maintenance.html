@@ -82,37 +82,60 @@ NAME="MAINTENANCE"
 >5. Slony-I Maintenance</A
 ></H1
 ><P
->Slony-I actually does most of its necessary maintenance itself, in a "cleanup" thread:
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> actually does most of its necessary
+maintenance itself, in a <SPAN
+CLASS="QUOTE"
+>"cleanup"</SPAN
+> thread:
 
 <P
 ></P
 ><UL
 ><LI
 ><P
-> Deletes old data from various tables in the Slony-I
-cluster's namespace, notably entries in sl_log_1, sl_log_2 (not yet
-used), and sl_seqlog.&#13;</P
+> Deletes old data from various tables in the
+<SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> cluster's namespace, notably entries in
+sl_log_1, sl_log_2 (not yet used), and sl_seqlog.&#13;</P
 ></LI
 ><LI
 ><P
-> Vacuum certain tables used by Slony-I.  As of 1.0.5,
-this includes pg_listener; in earlier versions, you must vacuum that
-table heavily, otherwise you'll find replication slowing down because
-Slony-I raises plenty of events, which leads to that table having
-plenty of dead tuples.&#13;</P
+> Vacuum certain tables used by <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+>.
+As of 1.0.5, this includes pg_listener; in earlier versions, you must
+vacuum that table heavily, otherwise you'll find replication slowing
+down because <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> raises plenty of events, which
+leads to that table having plenty of dead tuples.&#13;</P
 ><P
 > In some versions (1.1, for sure; possibly 1.0.5) there is the
 option of not bothering to vacuum any of these tables if you are using
-something like pg_autovacuum to handle vacuuming of these tables.
-Unfortunately, it has been quite possible for pg_autovacuum to not
-vacuum quite frequently enough, so you probably want to use the
-internal vacuums.  Vacuuming pg_listener "too often" isn't nearly as
-hazardous as not vacuuming it frequently enough.&#13;</P
+something like <B
+CLASS="APPLICATION"
+>pg_autovacuum</B
+> to handle vacuuming of
+these tables.  Unfortunately, it has been quite possible for
+<B
+CLASS="APPLICATION"
+>pg_autovacuum</B
+> to not vacuum quite frequently enough, so
+you probably want to use the internal vacuums.  Vacuuming pg_listener
+"too often" isn't nearly as hazardous as not vacuuming it frequently
+enough.&#13;</P
 ><P
 >Unfortunately, if you have long-running transactions, vacuums
 cannot clear out dead tuples that are newer than the eldest
 transaction that is still running.  This will most notably lead to
-pg_listener growing large and will slow replication.&#13;</P
+pg_listener growing large and will slow replication.</P
 ></LI
 ></UL
 >&#13;</P
@@ -121,14 +144,23 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN665"
+NAME="AEN748"
 >5.1. Watchdogs: Keeping Slons Running</A
 ></H2
 ><P
->There are a couple of "watchdog" scripts available that monitor
-things, and restart the slon processes should they happen to die for
-some reason, such as a network "glitch" that causes loss of
-connectivity.&#13;</P
+>There are a couple of <SPAN
+CLASS="QUOTE"
+>"watchdog"</SPAN
+> scripts available that
+monitor things, and restart the <B
+CLASS="APPLICATION"
+>slon</B
+> processes should
+they happen to die for some reason, such as a network <SPAN
+CLASS="QUOTE"
+>"glitch"</SPAN
+>
+that causes loss of connectivity.&#13;</P
 ><P
 >You might want to run them...&#13;</P
 ></DIV
@@ -137,27 +169,50 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN669"
+NAME="AEN755"
 >5.2. Alternative to Watchdog: generate_syncs.sh</A
 ></H2
 ><P
->A new script for Slony-I 1.1 is "generate_syncs.sh", which
-addresses the following kind of situation.&#13;</P
+>A new script for <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> 1.1 is
+<B
+CLASS="APPLICATION"
+>generate_syncs.sh</B
+>, which addresses the following kind of
+situation.&#13;</P
 ><P
->Supposing you have some possibly-flakey slon daemon that might
-not run all the time, you might return from a weekend away only to
-discover the following situation...&#13;</P
+>Supposing you have some possibly-flakey server where the <B
+CLASS="APPLICATION"
+>slon</B
+>
+daemon that might not run all the time, you might return from a
+weekend away only to discover the following situation...&#13;</P
 ><P
->On Friday night, something went "bump" and while the database
-came back up, none of the slon daemons survived.  Your online
-application then saw nearly three days worth of heavy transactions.&#13;</P
+>On Friday night, something went <SPAN
+CLASS="QUOTE"
+>"bump"</SPAN
+> and while the
+database came back up, none of the <B
+CLASS="APPLICATION"
+>slon</B
+> daemons
+survived.  Your online application then saw nearly three days worth of
+reasonably heavy transaction load.&#13;</P
 ><P
 >When you restart slon on Monday, it hasn't done a SYNC on the
-master since Friday, so that the next "SYNC set" comprises all of the
-updates between Friday and Monday.  Yuck.&#13;</P
+master since Friday, so that the next <SPAN
+CLASS="QUOTE"
+>"SYNC set"</SPAN
+> comprises all
+of the updates between Friday and Monday.  Yuck.&#13;</P
 ><P
->If you run generate_syncs.sh as a cron job every 20 minutes, it
-will force in a periodic SYNC on the "master" server, which means that
+>If you run <B
+CLASS="APPLICATION"
+>generate_syncs.sh</B
+> as a cron job every 20 minutes, it
+will force in a periodic SYNC on the origin, which means that
 between Friday and Monday, the numerous updates are split into more
 than 100 syncs, which can be applied incrementally, making the cleanup
 a lot less unpleasant.&#13;</P
@@ -168,40 +223,49 @@ CLASS="emphasis"
 CLASS="EMPHASIS"
 >are</I
 ></SPAN
-> running regularly, this script
-won't bother doing anything.&#13;</P
+> running regularly,
+this script won't bother doing anything.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN678"
+NAME="AEN771"
 >5.3. Log Files</A
 ></H2
 ><P
->Slon daemons generate some more-or-less verbose log files,
-depending on what debugging level is turned on.  You might assortedly
-wish to:
+><A
+HREF="app-slon.html#SLON"
+> <B
+CLASS="APPLICATION"
+>slon</B
+> </A
+> daemons
+generate some more-or-less verbose log files, depending on what
+debugging level is turned on.  You might assortedly wish to:
 
 <P
 ></P
 ><UL
 ><LI
 ><P
-> Use a log rotator like Apache rotatelogs to have a
-sequence of log files so that no one of them gets too big;&#13;</P
+> Use a log rotator like <SPAN
+CLASS="PRODUCTNAME"
+>Apache</SPAN
+>
+<B
+CLASS="APPLICATION"
+>rotatelogs</B
+> to have a sequence of log files so that no
+one of them gets too big;&#13;</P
 ></LI
 ><LI
 ><P
-> Purge out old log files, periodically.&#13;</P
+> Purge out old log files, periodically.</P
 ></LI
 ></UL
->
-
-
-
- </P
+></P
 ></DIV
 ></DIV
 ><DIV

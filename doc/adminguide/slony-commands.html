@@ -2,7 +2,7 @@
 <HTML
 ><HEAD
 ><TITLE
->Defining Slony-I Clusters</TITLE
+>Slony-I Commands</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
@@ -11,21 +11,19 @@ HREF="mailto:cbbrowne@gmail.com"><LINK
 REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
-REL="UP"
-HREF="slonyintro.html"><LINK
 REL="PREVIOUS"
-TITLE="Slony-I Concepts"
-HREF="concepts.html"><LINK
-REL="NEXT"
 TITLE="Defining Slony-I Replication
 Sets"
 HREF="definingsets.html"><LINK
+REL="NEXT"
+TITLE="slon"
+HREF="app-slon.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
 HREF="stdstyle.css"><META
 HTTP-EQUIV="Content-Type"></HEAD
 ><BODY
-CLASS="SECT1"
+CLASS="REFERENCE"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -51,7 +49,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="concepts.html"
+HREF="definingsets.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -65,7 +63,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="definingsets.html"
+HREF="app-slon.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -75,41 +73,49 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECT1"
-><H1
-CLASS="SECT1"
+CLASS="REFERENCE"
 ><A
-NAME="CLUSTER"
->5. Defining Slony-I Clusters</A
-></H1
-><P
->A <SPAN
+NAME="SLONY-COMMANDS"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+>I. Slony-I Commands</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="app-slon.html"
+><B
+CLASS="APPLICATION"
+>slon</B
+></A
+>&nbsp;--&nbsp;      <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
-> cluster is the basic grouping of
-database instances in which replication takes place.  It consists of a
-set of <SPAN
+> daemon
+    </DT
+><DT
+><A
+HREF="app-slonik.html"
+><B
+CLASS="APPLICATION"
+>slonik</B
+></A
+>&nbsp;--&nbsp;      <SPAN
 CLASS="PRODUCTNAME"
->PostgreSQL</SPAN
-> database instances in which is defined
-a namespace specific to that cluster.&#13;</P
-><P
->Each database instance in which replication is to take place is
-identified by a node number.&#13;</P
-><P
->For a simple install, it may be reasonable for the origin to be
-node #1, and for the subscriber to be node #2.&#13;</P
-><P
->Some planning should be done, in more complex cases, to ensure
-that the numbering system is kept sane, lest the administrators be
-driven insane.  The node numbers should be chosen to somehow
-correspond to the shape of the environment, as opposed to (say) the
-order in which nodes were initialized.&#13;</P
-><P
->It may be that in version 1.1, nodes will also have a "name"
-attribute, so that they may be given more mnemonic names.  In that
-case, the node numbers can be cryptic; it will be the node name that
-is used to organize the cluster.</P
+>Slony-I</SPAN
+> command processor
+    </DT
+></DL
+></DIV
+></DIV
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
@@ -127,7 +133,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="concepts.html"
+HREF="definingsets.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -145,7 +151,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="definingsets.html"
+HREF="app-slon.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -155,22 +161,21 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Slony-I Concepts</TD
+>Defining Slony-I Replication
+Sets</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
-><A
-HREF="slonyintro.html"
-ACCESSKEY="U"
->Up</A
-></TD
+>&nbsp;</TD
 ><TD
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Defining Slony-I Replication
-Sets</TD
+><B
+CLASS="APPLICATION"
+>slon</B
+></TD
 ></TR
 ></TABLE
 ></DIV

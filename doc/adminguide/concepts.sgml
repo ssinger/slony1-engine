@@ -1,18 +1,20 @@
 <sect1 id="concepts"> <title>Slony-I Concepts</title>
 
 
-<para>In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
+<para>In order to set up a set of Slony-I replicas, it is necessary to
+understand the following major abstractions that it uses:
 
 <itemizedlist>
 	<listitem><para> Cluster
 	<listitem><para> Node
 	<listitem><para> Replication Set
-	<listitem><para> Provider and Subscriber
+	<listitem><para> Origin, Providers and Subscribers
 </itemizedlist>
 
 <sect2><title>Cluster</title>
 
-<para>In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.
+<para>In Slony-I terms, a Cluster is a named set of PostgreSQL
+database instances; replication takes place between those databases.
 
 <para>The cluster name is specified in each and every Slonik script via the directive:
 <programlisting>
@@ -32,7 +34,9 @@ create, in each database instance in the cluster, the namespace/schema
  NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
 </programlisting>
 
-<para>The CONNINFO information indicates a string argument that will ultimately be passed to the <function>PQconnectdb()</function> libpq function. 
+<para>The CONNINFO information indicates a string argument that will
+ultimately be passed to the <function>PQconnectdb()</function> libpq
+function.
 
 <para>Thus, a Slony-I cluster consists of:
 <itemizedlist>
@@ -48,22 +52,22 @@ that are to be replicated between nodes in a Slony-I cluster.
 <para>You may have several sets, and the <quote/flow/ of replication does
 not need to be identical between those sets.
 
-<sect2><title> Provider and Subscriber</title>
+<sect2><title> Origin, Providers and Subscribers</title>
 
-<para>Each replication set has some <quote>master</quote> node, which
-winds up being the <emphasis>only</emphasis> place where user
-applications are permitted to modify data in the tables that are being
-replicated.  That <quote>master</quote> may be considered the
-originating <quote>provider node;</quote> it is the main place from
+<para>Each replication set has some origin node, which is the
+<emphasis>only</emphasis> place where user applications are permitted
+to modify data in the tables that are being replicated.  This might
+also be termed the <quote/master provider/; it is the main place from
 which data is provided.
 
 <para>Other nodes in the cluster will subscribe to the replication
 set, indicating that they want to receive the data.
 
-<para>The "master" node will never be considered a "subscriber."  But
-Slony-I supports the notion of cascaded subscriptions, that is, a node
-that is subscribed to the "master" may also behave as a "provider" to
-other nodes in the cluster.
+<para>The origin node will never be considered a <quote/subscriber./
+(Ignoring the case where the cluster is reshaped, and the origin is
+moved to another node.)  But Slony-I supports the notion of cascaded
+subscriptions, that is, a node that is subscribed to the origin may
+also behave as a <quote/provider/ to other nodes in the cluster.
 
 </sect1>
 
