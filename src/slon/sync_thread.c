@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.7 2004-04-02 03:01:18 wieck Exp $
+ *	$Id: sync_thread.c,v 1.8 2004-04-02 03:49:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -44,7 +44,7 @@ syncThread_main(void *dummy)
 	SlonDString	query2;
 	PGconn	   *dbconn;
 	PGresult   *res;
-	int			restart_count = 360;
+	int			restart_count = 1440;
 
 	slon_log(SLON_DEBUG1,
 			"syncThread: thread starts\n");
@@ -145,6 +145,7 @@ syncThread_main(void *dummy)
 			/*
 			 * No database activity detected - rollback.
 			 */
+			PQclear(res);
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
@@ -158,8 +159,8 @@ syncThread_main(void *dummy)
 		}
 
 		/*
-		 * Once an hour we restart the node daemon to avoid
-		 * resource leakage to pile up.
+		 * Once every four hours we restart the node daemon to avoid
+		 * any possible resource leakage to pile up.
 		 */
 		if (--restart_count == 0)
 			slon_restart();
