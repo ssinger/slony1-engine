@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 
@@ -23,9 +23,8 @@ only offers failover capabilities, but also the notion of controlled
 origin transfer.</para>
 
 <para> It is assumed in this document that the reader is familiar with
-the <link linkend="slonik"> <application>slonik</application> </link>
-utility and knows at least how to set up a simple 2 node replication
-system with &slony1;.</para></sect2>
+the <xref linkend="slonik"> utility and knows at least how to set up a
+simple 2 node replication system with &slony1;.</para></sect2>
 
 <sect2><title> Controlled Switchover</title>
 
@@ -33,8 +32,8 @@ system with &slony1;.</para></sect2>
 <quote>subscriber</quote> as node2 (<emphasis>e.g.</emphasis> -
 slave).  A web application on a third server is accessing the database
 on node1.  Both databases are up and running and replication is more
-or less in sync.  We do controlled switchover using <command> <link
-     linkend="stmtmoveset"> MOVE SET </link> </command>.
+or less in sync.  We do controlled switchover using <xref
+linkend="stmtmoveset">.
 
 <itemizedlist>
 
@@ -44,8 +43,8 @@ order to avoid any complications, we simply shut down the web server.
 Users who use <application>pg_pool</application> for the applications database
 connections merely have to shut down the pool.</para></listitem>
 
-<listitem><para> A small <link linkend="slonik"> Slonik </link> script
-executes the following commands:
+<listitem><para> A small <xref linkend="slonik"> script executes the
+following commands:
 
 <programlisting>
 lock set (id = 1, origin = 1);
@@ -72,10 +71,10 @@ seconds.</para></listitem>
 </itemizedlist></para>
 
 <para> You may now simply shutdown the server hosting node1 and do
-whatever is required to maintain the server.  When <application><link
-     linkend="slon">slon</link></application> node1 is restarted later,
-it will start replicating again, and soon catch up.  At this point the
-procedure to switch origins is executed again to restore the original
+whatever is required to maintain the server.  When <xref
+linkend="slon"> node1 is restarted later, it will start replicating
+again, and soon catch up.  At this point the procedure to switch
+origins is executed again to restore the original
 configuration.</para>
 
 <para> This is the preferred way to handle things; it runs quickly,
@@ -86,16 +85,16 @@ be any loss of data.</para>
 <sect2><title> Failover</title>
 
 <para> If some more serious problem occurs on the
-<quote>origin</quote> server, it may be necessary to <command><link
-     linkend="stmtfailover">FAILOVER</link></command> to a backup
-server.  This is a highly undesirable circumstance, as transactions
-<quote>committed</quote> on the origin, but not applied to the
-subscribers, will be lost.  You may have reported these transactions
-as <quote>successful</quote> to outside users.  As a result, failover
-should be considered a <emphasis>last resort</emphasis>.  If the
-<quote>injured</quote> origin server can be brought up to the point
-where it can limp along long enough to do a controlled switchover,
-that is <emphasis>greatly</emphasis> preferable.</para>
+<quote>origin</quote> server, it may be necessary to <xref
+linkend="stmtfailover"> to a backup server.  This is a highly
+undesirable circumstance, as transactions <quote>committed</quote> on
+the origin, but not applied to the subscribers, will be lost.  You may
+have reported these transactions as <quote>successful</quote> to
+outside users.  As a result, failover should be considered a
+<emphasis>last resort</emphasis>.  If the <quote>injured</quote>
+origin server can be brought up to the point where it can limp along
+long enough to do a controlled switchover, that is
+<emphasis>greatly</emphasis> preferable.</para>
 
 <para> &slony1; does not provide any automatic detection for failed
 systems.  Abandoning committed transactions is a business decision
@@ -107,7 +106,7 @@ it's <emphasis>your</emphasis> failover policy. </para>
 <itemizedlist>
 
 <listitem>
-<para>The <link linkend="slonik"><application>slonik</application></link> command
+<para>The <xref linkend="slonik"> command
 <programlisting>
 failover (id = 1, backup node = 2);
 </programlisting>
@@ -139,8 +138,8 @@ node2.</para>
 <listitem>
 <para> After the failover is complete and node2 accepts write
 operations against the tables, remove all remnants of node1's
-configuration information with the <command><link
-       linkend="stmtdropnode">DROP NODE</link></command> command:
+configuration information with the <xref linkend="stmtdropnode">
+command:
 
 <programlisting>
 drop node (id = 1, event node = 2);

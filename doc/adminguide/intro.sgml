@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.11 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2><title>Why yet another replication system?</title>
@@ -20,9 +20,8 @@ databases to a reasonably limited number of slave systems.
 few dozen servers.  If the number of servers grows beyond that, the
 cost of communications becomes prohibitively high.</para>
 
-<para> See also <link linkend="slonylistenercosts"> SlonyListenerCosts
-</link> for a further analysis of costs associated with having many
-nodes.</para>
+<para> See also <xref linkend="slonylistenercosts"> for a further
+analysis of costs associated with having many nodes.</para>
 
 <para> &slony1; is a system intended for data centers and backup
 sites, where the normal mode of operation is that all nodes are
@@ -119,9 +118,9 @@ when those kinds of changes take place.</para>
 
 <para>There is a capability for &slony1; to propagate DDL changes if
 you submit them as scripts via the <application>slonik</application>
-<command> <link linkend="stmtddlscript"> EXECUTE SCRIPT
-</link></command> operation.  That is not <quote>automatic;</quote>
-you have to construct an SQL DDL script and submit it.</para>
+<xref linkend="stmtddlscript"> operation.  That is not
+<quote>automatic;</quote> you have to construct an SQL DDL script and
+submit it.</para>
 
 <para>If you have those sorts of requirements, it may be worth
 exploring the use of &postgres; 8.0 <acronym>PITR</acronym> (Point In
@@ -155,17 +154,18 @@ increases.  Note the following relationships:
 
 <itemizedlist>
 
-<listitem><para> It is necessary to have a <envar>sl_path</envar>
-entry allowing connection from each node to every other node.  Most
-will normally not need to be used for a given replication
-configuration, but this means that there needs to be n(n-1) paths.  It
-is probable that there will be considerable repetition of entries,
-since the path to <quote>node n</quote> is likely to be the same from
-everywhere throughout the network.</para></listitem>
+<listitem><para> It is necessary to have a <xref linkend=
+"table.sl-path"> entry allowing connection from each node to every
+other node.  Most will normally not need to be used for a given
+replication configuration, but this means that there needs to be
+n(n-1) paths.  It is probable that there will be considerable
+repetition of entries, since the path to <quote>node n</quote> is
+likely to be the same from everywhere throughout the
+network.</para></listitem>
 
-<listitem><para> It is similarly necessary to have a
-<envar>sl_listen</envar> entry indicating how data flows from every
-node to every other node.  This again requires configuring n(n-1)
+<listitem><para> It is similarly necessary to have a <xref linkend=
+"table.sl-listen"> entry indicating how data flows from every node to
+every other node.  This again requires configuring n(n-1)
 <quote>listener paths.</quote></para></listitem>
 
 <listitem><para> Each SYNC applied needs to be reported back to all of

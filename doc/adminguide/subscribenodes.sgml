@@ -1,15 +1,14 @@
-<!-- $Id: subscribenodes.sgml,v 1.10 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: subscribenodes.sgml,v 1.11 2005-02-18 22:43:35 cbbrowne Exp $ -->
 <sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <para>Before you subscribe a node to a set, be sure that you have
-<application><link linkend="slon"> slon </link></application>
-processes running for both the provider and the new subscribing node. If
-you don't have slons running, nothing will happen, and you'll beat
-your head against a wall trying to figure out what is going on.</para>
+<xref linkend="slon"> processes running for both the provider and the
+new subscribing node. If you don't have slons running, nothing will
+happen, and you'll beat your head against a wall trying to figure out
+what is going on.</para>
 
-<para>Subscribing a node to a set is done by issuing the <link
-   linkend="slonik"> slonik </link> command <command> <link
-    linkend="stmtsubscribeset"> subscribe set </link> </command>. It may
+<para>Subscribing a node to a set is done by issuing the <xref
+linkend="slonik"> command <xref linkend="stmtsubscribeset">. It may
 seem tempting to try to subscribe several nodes to a set within a
 single try block like this:
 
@@ -30,12 +29,11 @@ try {
 sets in that fashion. The proper procedure is to subscribe one node at
 a time, and to check the logs and databases before you move onto
 subscribing the next node to the set. It is also worth noting that the
-<quote>success</quote> within the above <link linkend="slonik">
-<application>slonik</application> </link> try block does not imply
-that nodes 2, 3, and 4 have all been successfully subscribed. It
-merely indicates that the slonik commands were successfully received
-by the <application>slon</application> running on the origin
-node.</para>
+<quote>success</quote> within the above <xref linkend="slonik"> try
+block does not imply that nodes 2, 3, and 4 have all been successfully
+subscribed. It merely indicates that the slonik commands were
+successfully received by the <application>slon</application> running
+on the origin node.</para>
 
 <para>A typical sort of problem that will arise is that a cascaded
 subscriber is looking for a provider that is not ready yet.  In that

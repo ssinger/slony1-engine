@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.4 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.5 2005-02-18 22:43:35 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -26,10 +26,10 @@ grow decreasingly intuitive.</para></listitem>
 
 <listitem><para> People have observed that
 <application>Slonik</application> does not provide any notion of
-iteration.  It is common to want to create a set of similar <link
-      linkend="stmtstorepath"> <command>STORE PATH</command></link> entries,
-since, in most cases, hosts will likely access a particular server via
-the same host name or IP address.</para></listitem>
+iteration.  It is common to want to create a set of similar <xref
+linkend="stmtstorepath"> entries, since, in most cases, hosts will
+likely access a particular server via the same host name or IP
+address.</para></listitem>
 
 <listitem><para> Users seem interested in wrapping everything possible
 in <command>TRY</command> blocks, which is regrettably
@@ -74,8 +74,8 @@ scripts</para>
 <para> The test bed found in the <filename>src/ducttape</filename>
 directory takes this approach.</para></listitem>
 
-<listitem><para> The <link linkend="altperl"> altperl admin scripts
-</link> use Perl code to generate Slonik scripts.</para>
+<listitem><para> The <xref linkend="altperl"> use Perl code to
+generate Slonik scripts.</para>
 
 <para> You define the cluster as a set of Perl objects; each script
 walks through the Perl objects as needed to satisfy whatever it is
@@ -236,10 +236,9 @@ _EOF_
 
 <para> A more sophisticated approach might involve defining some
 common components, notably the <quote>preamble</quote> that consists
-of the <command><link linkend="clustername">CLUSTER
-NAME</link></command> <command><link linkend="admconninfo">ADMIN
-CONNINFO</link></command> commands that are common to every Slonik
-script, thus:
+of the <xref linkend="clustername"> <xref linkend="admconninfo">
+commands that are common to every Slonik script, thus:
+
 <programlisting>
 CLUSTER=T1
 DB1=slony_test1
@@ -382,7 +381,39 @@ _slonycluster.sl_listen;</command></para>
 <para> <command> select _slonycluster.storelisten(pa_server,
 pa_server, pa_client) from _slonycluster.sl_path;</command></para>
 
-<para> 
+<para> The result of this set of queries is to regenerate
+<emphasis/and propagate/ the listen paths.  By running the main
+<function/ _slonycluster.storelisten()/ function,
+<command/STORE_LISTEN/ events are raised to cause the listen paths to
+propagate to the other nodes in the cluster.
+
+<para> If there was a <emphasis/local/ problem on one node, and you
+didn't want the updates to propagate (this would be an unusual
+situation; you almost certainly want to fix things
+<emphasis/everywhere/), the queries would instead be:
+
+<para> <command> select
+slonycluster.droplisten_int(li_origin,li_provider,li_receiver) from
+_slonycluster.sl_listen;</command></para>
+
+<para> <command> select _slonycluster.storelisten_int(pa_server,
+pa_server, pa_client) from _slonycluster.sl_path;</command></para>
+
+<para> If you are planning to add &slony1; support to other tools
+(<emphasis>e.g.</emphasis> - adding replication support to something
+like <ulink url="http://www.pgadmin.org/"> <productname>pgAdmin
+III</productname> </ulink>), you need to be clear on where various
+functions need to be called.  The normal <quote>protocol</quote> is
+thus:
+
+<itemizedlist>
+
+<listitem><para> The <quote>main</quote> function
+(<emphasis>e.g.</emphasis> - without the <command>_int</command>
+suffix) is called on a <quote>relevant</quote> node in the &slony1;
+cluster.
+
+</itemizedlist>
 
 </sect1>
 <!-- Keep this comment at the end of the file

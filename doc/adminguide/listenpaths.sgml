@@ -1,4 +1,4 @@
-<!-- $Id: listenpaths.sgml,v 1.12 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.13 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
 <note><para> If you are running version
 &slony1; 1.1 or later it should be
@@ -11,10 +11,9 @@ configuration.  For earlier versions, however, it is needful.</para>
 usage of cascaded subscribers (<emphasis>e.g.</emphasis> - subscribers
 that are subscribing through a subscriber node), you will have to be
 fairly careful about the configuration of <quote>listen paths</quote>
-via the Slonik <command> <link linkend="stmtstorelisten">STORE
-LISTEN</link></command> and <link
-linkend="stmtdroplisten"><command>DROP LISTEN</command></link>
-statements that control the contents of the table sl_listen.</para>
+via the Slonik <xref linkend="stmtstorelisten"> and <xref
+linkend="stmtdroplisten"> statements that control the contents of the
+table sl_listen.</para>
 
 <para>The <quote>listener</quote> entries in this table control where
 each node expects to listen in order to get events propagated from
@@ -33,10 +32,10 @@ to other locations.</para>
 <para>On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
 (#3) that was, in effect, a <quote>cascaded slave.</quote> Dropping
-the subscriber node initially didn't work, as <link linkend="slonik"><command>slonik</command></link> informed me that
-there was a dependant node.  I repointed the dependant node to the
-<quote>master</quote> node for the subscription set, which, for a
-while, replicated without difficulties.</para>
+the subscriber node initially didn't work, as <xref linkend="slonik">
+informed me that there was a dependant node.  I repointed the
+dependant node to the <quote>master</quote> node for the subscription
+set, which, for a while, replicated without difficulties.</para>
 
 <para>I then dropped the subscription on <quote>node 2</quote>, and
 started resubscribing it.  that raised the &slony1;
@@ -129,8 +128,7 @@ node to provide events coming from the <quote>origin</quote> node.</para>
 <para>The tool <filename>init_cluster.pl</filename> in the
 <filename>altperl</filename> scripts produces optimized listener
 networks in both the tabular form shown above as well as in the form
-of <link linkend="slonik"> <application>slonik</application></link>
-statements.</para>
+of <xref linkend="slonik"> statements.</para>
 
 <para>There are three <quote>thorns</quote> in this set of roses:
 
@@ -197,10 +195,9 @@ receiver as a provider.</para></listitem>
 the listener paths.</para>
 
 <para> If you are running an earlier version of &slony1;, you may want
-to take a look at <link linkend="regenlisten"><application>regenerate-listens.pl</application></link>,
-a Perl script which duplicates the functionality of the stored
-procedure in the form of a script that generates the <link
-    linkend="slonik"><command>slonik</command> </link> requests to
+to take a look at <xref linkend="regenlisten">, a Perl script which
+duplicates the functionality of the stored procedure in the form of a
+script that generates the <xref linkend="slonik"> requests to
 generate the listener paths.</para></sect2>
 
 </sect1>

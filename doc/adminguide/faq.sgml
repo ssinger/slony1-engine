@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.21 2005-02-18 17:26:09 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.22 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -6,15 +6,14 @@
 <question><para>I looked for the <envar>_clustername</envar> namespace, and
 it wasn't there.</para></question>
 
-<answer><para> If the DSNs are wrong, then <link linkend="slon">
-<application>slon</application></link> instances can't connect to the nodes.</para>
+<answer><para> If the DSNs are wrong, then <xref linkend="slon">
+instances can't connect to the nodes.</para>
 
 <para>This will generally lead to nodes remaining entirely untouched.</para>
 
-<para>Recheck the connection configuration.  By the way, since <link
-linkend="slon"><application>slon</application></link> links to libpq, you could
-have password information stored in <filename>
-$HOME/.pgpass</filename>, partially filling in
+<para>Recheck the connection configuration.  By the way, since <xref
+linkend="slon"> links to libpq, you could have password information
+stored in <filename> $HOME/.pgpass</filename>, partially filling in
 right/wrong authentication information there.</para>
 </answer>
 </qandaentry>
@@ -72,8 +71,8 @@ something that is probably not worth working around.</para>
 </answer>
 </qandaentry>
 <qandaentry>
-<question><para> <link linkend="slon"> <application>slon</application></link> does
-not restart after crash</para>
+<question><para> <xref linkend="slon"> does not restart after
+crash</para>
 
 <para> After an immediate stop of postgresql (simulation of system
 crash) in pg_catalog.pg_listener a tuple with
@@ -88,8 +87,7 @@ serving this node already</para></blockquote></para></question>
 <envar>pg_catalog.pg_listener</envar>, used by
 <productname>PostgreSQL</productname> to manage event notifications,
 contains some entries that are pointing to backends that no longer
-exist.  The new <link linkend="slon">
-<application>slon</application></link> instance connects to the
+exist.  The new <xref linkend="slon"> instance connects to the
 database, and is convinced, by the presence of these entries, that an
 old <application>slon</application> is still servicing this &slony1;
 node.</para>
@@ -112,9 +110,8 @@ restart node 3;
 restart node 4;
 </programlisting></para>
 
-<para> <command> <link linkend="stmtrestartnode">RESTART NODE</link>
-</command> cleans up dead notifications so that you can restart the
-node.</para>
+<para> <xref linkend="stmtrestartnode"> cleans up dead notifications
+so that you can restart the node.</para>
 
 <para>As of version 1.0.5, the startup process of slon looks for this
 condition, and automatically cleans it up.</para>
@@ -251,13 +248,12 @@ stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_
 CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
 </screen></para></question>
 
-<answer><para> The table IDs used in <command><link
-linkend="stmtsetaddtable">SET ADD TABLE</link></command> are
-required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus, you
-can't restart numbering at 1 for a second set; if you are numbering
-them consecutively, a subsequent set has to start with IDs after where
-the previous set(s) left off.</para>
-</answer> </qandaentry>
+<answer><para> The table IDs used in <xref linkend="stmtsetaddtable">
+are required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus,
+you can't restart numbering at 1 for a second set; if you are
+numbering them consecutively, a subsequent set has to start with IDs
+after where the previous set(s) left off.</para> </answer>
+</qandaentry>
 
 <qandaentry>
 <question><para>I need to drop a table from a replication set</para></question>
@@ -275,11 +271,11 @@ on the rest of the set while that's happening.</para></listitem>
 command SET DROP TABLE, which will "do the trick."</para></listitem>
 
 <listitem><para> If you are still using 1.0.1 or 1.0.2, the
-<emphasis>essential functionality of <command><link linkend="stmtsetdroptable">SET DROP TABLE</link></command> involves
-the functionality in <function>droptable_int()</function>.  You can
-fiddle this by hand by finding the table ID for the table you want to
-get rid of, which you can find in sl_table, and then run the following
-three queries, on each host:</emphasis>
+<emphasis>essential functionality of <xref linkend="stmtsetdroptable">
+involves the functionality in <function>droptable_int()</function>.
+You can fiddle this by hand by finding the table ID for the table you
+want to get rid of, which you can find in sl_table, and then run the
+following three queries, on each host:</emphasis>
 
 <programlisting>
   select _slonyschema.alterTableRestore(40);
@@ -293,12 +289,11 @@ ID of the table you want to have go away.</para>
 
 <para> You'll have to run these three queries on all of the nodes,
 preferably firstly on the origin node, so that the dropping of this
-propagates properly.  Implementing this via a <link linkend="slonik">
-slonik </link> statement with a new &slony1; event would do that.
-Submitting the three queries using <command> <link
-linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command> could do
-that.  Also possible would be to connect to each database and submit
-the queries by hand.</para></listitem> </itemizedlist></para>
+propagates properly.  Implementing this via a <xref linkend="slonik">
+statement with a new &slony1; event would do that.  Submitting the
+three queries using <xref linkend="stmtddlscript"> could do that.
+Also possible would be to connect to each database and submit the
+queries by hand.</para></listitem> </itemizedlist></para>
 </answer>
 </qandaentry>
 
@@ -306,10 +301,8 @@ the queries by hand.</para></listitem> </itemizedlist></para>
 <question><para>I need to drop a sequence from a replication set</para></question>
 
 <answer><para></para><para>If you are running 1.0.5 or later, there is
-a <command> <link linkend="stmtsetdropsequence"> SET DROP SEQUENCE
-</link></command> command in Slonik to allow you to do this,
-parallelling <command> <link linkend="stmtsetdroptable"> SET DROP
-TABLE</link></command>.</para>
+a <xref linkend="stmtsetdropsequence"> command in Slonik to allow you
+to do this, parallelling <xref linkend="stmtsetdroptable">.</para>
 
 <para>If you are running 1.0.2 or earlier, the process is a bit more manual.</para>
 
@@ -336,15 +329,14 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting></para>
 
 <para>Those two queries could be submitted to all of the nodes via
-<function>ddlscript()</function> / <command> <link
-linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command>, thus
-eliminating the sequence everywhere <quote>at once.</quote> Or they
-may be applied by hand to each of the nodes.</para>
+<xref linkend="function.ddlscript-integer-text-integer"> / <xref
+linkend="stmtddlscript">, thus eliminating the sequence everywhere
+<quote>at once.</quote> Or they may be applied by hand to each of the
+nodes.</para>
 
-<para>Similarly to <command> <link linkend="stmtsetdroptable"> SET
-DROP TABLE </link> </command>, this is implemented &slony1; version
-1.0.5 as <command> <link linkend="stmtsetdropsequence"> SET DROP
-SEQUENCE</link></command>.</para></answer></qandaentry>
+<para>Similarly to <xref linkend="stmtsetdroptable">, this is
+implemented &slony1; version 1.0.5 as <xref
+linkend="stmtsetdropsequence">.</para></answer></qandaentry>
 
 <qandaentry>
 <question><para>Slony-I: cannot add table to currently subscribed set 1</para>
@@ -480,9 +472,8 @@ node.</para>
 
 <para>&slony1; 1.1 provides a stored procedure that allows
 <command>SYNC</command> counts to be updated on the origin based on a
-<application>cron</application> job even if there is no <link
-linkend="slon"> <application>slon</application></link> daemon
-running.</para> </answer></qandaentry>
+<application>cron</application> job even if there is no <xref
+linkend="slon"> daemon running.</para> </answer></qandaentry>
 
 <qandaentry>
 <question><para>I pointed a subscribing node to a different provider
@@ -499,19 +490,16 @@ where we had configuration thus:
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as
-provider, and we did <command> <link linkend="stmtdropset"> DROP
-SET</link></command>/<command> <link linkend="stmtsubscribeset">
-SUBSCRIBE SET</link> </command> for node 2 to get it
-repopulating.</para>
+provider, and we did <<xref linkend="stmtdropset"> /<xref
+linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
 
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
 
 <para>The problem was that there was not a suitable set of
 <quote>listener paths</quote> in sl_listen to allow the events from
 node 1 to propagate to node 3.  The events were going through node 2,
-and blocking behind the <command> <link linkend="stmtsubscribeset">
-SUBSCRIBE SET </link> </command> event that node 2 was working
-on.</para>
+and blocking behind the <xref linkend="stmtsubscribeset"> event that
+node 2 was working on.</para>
 
 <para>The following slonik script dropped out the listen paths where
 node 3 had to go through node 2, and added in direct listens between
@@ -538,28 +526,25 @@ This points out two principles:
 <itemizedlist>
 
 <listitem><para> If you have multiple nodes, and cascaded subscribers,
-you need to be quite careful in populating the <command> <link
-linkend="stmtstorelisten"> STORE LISTEN </link></command> entries, and
-in modifying them if the structure of the replication
-<quote>tree</quote> changes.</para></listitem>
+you need to be quite careful in populating the <xref
+linkend="stmtstorelisten"> entries, and in modifying them if the
+structure of the replication <quote>tree</quote>
+changes.</para></listitem>
 
 <listitem><para> Version 1.1 should provide better tools to help
 manage this.</para>
 
-<para> In fact, it does.  <link linkend="autolisten"> Automated Listen
-Path Generation </link> provides a heuristic to generate listener
-entries.  If you are still tied to earlier versions, a Perl script,
-<link linkend="regenlisten">
-<application>regenerate-listens.pl</application> </link>, provides a
-way of querying a live &slony1; instance and generating the <link
-linkend="slonik"> Slonik </link> commands to generate the listen path
+<para> In fact, it does.  <xref linkend="autolisten"> provides a
+heuristic to generate listener entries.  If you are still tied to
+earlier versions, a Perl script, <xref linkend="regenlisten">,
+provides a way of querying a live &slony1; instance and generating the
+<xref linkend="slonik"> commands to generate the listen path
 network.</para></listitem>
 
 </itemizedlist></para>
 
-<para>The issues of <quote>listener paths</quote> are discussed further at
-<link linkend="listenpaths"> Slony Listen Paths </link></para>
-</answer>
+<para>The issues of <quote>listener paths</quote> are discussed
+further at <xref linkend="listenpaths"> </para></answer>
 </qandaentry>
 
 <qandaentry id="faq17">
@@ -594,10 +579,10 @@ oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_i
 (6 rows)
 </screen></para>
 
-<para>In version 1.0.5, the <command><link linkend="stmtdropnode">
-drop node </link> </command> function purges out entries in sl_confirm
-for the departing node.  In earlier versions, this needs to be done
-manually.  Supposing the node number is 3, then the query would be:
+<para>In version 1.0.5, the <xref linkend="stmtdropnode"> function
+purges out entries in sl_confirm for the departing node.  In earlier
+versions, this needs to be done manually.  Supposing the node number
+is 3, then the query would be:
 
 <screen>
 delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
@@ -716,9 +701,9 @@ problem might be alleviated by running the query:
 
 <qandaentry>
 
-<question><para> If you have a <link linkend="slonik">slonik</link>
-script something like this, it will hang on you and never complete,
-because you can't have <command>wait for event</command> inside a
+<question><para> If you have a <xref linkend="slonik"> script
+something like this, it will hang on you and never complete, because
+you can't have <command>wait for event</command> inside a
 <command>try</command> block. A <command>try</command> block is
 executed as one transaction, and the event that you are waiting for
 can never arrive inside the scope of the transaction.
@@ -741,9 +726,8 @@ try {
 }
 </programlisting></para></question>
 
-<answer><para> You must not invoke <command> <link
-linkend="stmtwaitevent"> wait for event</link> </command> inside a
-<quote>try</quote> block.</para></answer>
+<answer><para> You must not invoke <xref linkend="stmtwaitevent">
+inside a <quote>try</quote> block.</para></answer>
 
 </qandaentry>
 
@@ -759,11 +743,10 @@ foreign key constraint triggers are turned off on subscriber nodes.
 </answer>
 
 <answer> <para>(Jan Wieck comments:) The order of table ID's is only
-significant during a <command> <link linkend="stmtlockset"> LOCK
-SET</link> </command> in preparation of switchover. If that order is
-different from the order in which an application is acquiring its
-locks, it can lead to deadlocks that abort either the application or
-<application>slon</application>.
+significant during a <xref linkend="stmtlockset"> in preparation of
+switchover. If that order is different from the order in which an
+application is acquiring its locks, it can lead to deadlocks that
+abort either the application or <application>slon</application>.
 </para>
 </answer>
 
@@ -784,20 +767,17 @@ delete the new rows in the child as well.
 </question>
 
 <answer><para> Firstly, let's look at how it is handled
-<emphasis>absent</emphasis> of the special handling of the <link
-linkend="stmtstoretrigger"> <command>STORE TRIGGER</command> </link>
-Slonik command.  </para>
+<emphasis>absent</emphasis> of the special handling of the <xref
+linkend="stmtstoretrigger"> Slonik command.  </para>
 
-<para> The function <link
-linkend="function.altertableforreplication-integer">
-altertableforreplication(table id) </link> prepares each table for
-replication.
+<para> The function <xref
+linkend="function.altertableforreplication-integer"> prepares each
+table for replication.
 
 <itemizedlist>
 
 <listitem><para> On the origin node, this involves adding a trigger
-that uses the <link linkend="function.logtrigger">
-<function>logTrigger</function>() </link> function to the
+that uses the <xref linkend="function.logtrigger"> function to the
 table.</para>
 
 <para> That trigger initiates the action of logging all updates to the
@@ -827,8 +807,8 @@ because it does not expect them to be associated with an index.</para>
 
 </answer>
 
-<answer> <para> Now, consider how <link linkend="stmtstoretrigger">
-<command>STORE TRIGGER</command> </link> enters into things.</para>
+<answer> <para> Now, consider how <xref linkend="stmtstoretrigger">
+enters into things.</para>
 
 <para> Simply put, this command causes
 &slony1; to restore the trigger using
@@ -858,9 +838,8 @@ ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level
 DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
 </screen>
 
-<para> This is then followed by a series of failed syncs as the
-<application> <link linkend="slon"> slon </link> </application> shuts
-down:
+<para> This is then followed by a series of failed syncs as the <xref
+linkend="slon"> shuts down:
 
 <screen>
 DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
@@ -877,19 +856,17 @@ DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
 
 </para></question>
 
-<answer><para> If you see a <application> <link linkend="slon"> slon
-</link> </application> shutting down with <emphasis>ignore new events
-due to shutdown</emphasis> log entries, you'll typically have to step
-back to <emphasis>before</emphasis> they started failing to see
-indication of the root cause of the problem.
+<answer><para> If you see a <xref linkend="slon"> shutting down with
+<emphasis>ignore new events due to shutdown</emphasis> log entries,
+you'll typically have to step back to <emphasis>before</emphasis> they
+started failing to see indication of the root cause of the problem.
 
 </para></answer>
 
 <answer><para> In this particular case, the problem was that some of
-the <link linkend="stmtstorepath"> <command>STORE PATH </command>
-</link> commands had not yet made it to node 4 before the <link
-linkend="stmtsubscribeset"> <command>SUBSCRIBE SET </command> </link>
-command propagated. </para>
+the <xref linkend="stmtstorepath"> commands had not yet made it to
+node 4 before the <xref linkend="stmtsubscribeset"> command
+propagated. </para>
 
 <para>This is yet another example of the need to not do things too
 terribly quickly; you need to be sure things are working right
@@ -901,22 +878,20 @@ terribly quickly; you need to be sure things are working right
 
 <qandaentry>
 
-<question><para>I just used <link linkend="stmtmoveset"> <command>MOVE
-SET</command> </link> to move the origin to a new node.
-Unfortunately, some subscribers are still pointing to the former
-origin node, so I can't take it out of service for maintenance without
-stopping them from getting updates.  What do I do?  </para></question>
+<question><para>I just used <xref linkend="stmtmoveset"> to move the
+origin to a new node.  Unfortunately, some subscribers are still
+pointing to the former origin node, so I can't take it out of service
+for maintenance without stopping them from getting updates.  What do I
+do?  </para></question>
 
-<answer><para> You need to use <link linkend="stmtsubscribeset">
-<command>SUBSCRIBE SET</command> </link> to alter the subscriptions
-for those nodes to have them subscribe to a provider that
-<emphasis>will</emphasis> be sticking around during the
+<answer><para> You need to use <xref linkend="stmtsubscribeset"> to
+alter the subscriptions for those nodes to have them subscribe to a
+provider that <emphasis>will</emphasis> be sticking around during the
 maintenance.</para>
 
-<warning> <para> What you <emphasis>don't</emphasis> do is to <link
-linkend="stmtunsubscribeset"> <command>UNSUBSCRIBE SET</command>
-</link>; that would require reloading all data for the nodes from
-scratch later.
+<warning> <para> What you <emphasis>don't</emphasis> do is to <xref
+linkend="stmtunsubscribeset">; that would require reloading all data
+for the nodes from scratch later.
 
 </para></warning>
 </answer>
@@ -1006,8 +981,7 @@ ERROR remoteWorkerThread_1: SYNC aborted
 
 <answer> <para> Cause: you have likely issued <command>alter
 table</command> statements directly on the databases instead of using
-the slonik <link linkend="stmtddlscript"> <command>EXECUTE
-SCRIPT</command> </link> command.
+the slonik <xref linkend="stmtddlscript"> command.
 
 <para>The solution is to rebuild the trigger on the affected table and
 fix the entries in <envar>sl_log_1 </envar> by hand.
@@ -1083,9 +1057,8 @@ ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level
 DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
 </screen>
 
-<para> This is then followed by a series of failed syncs as the
-<application> <link linkend="slon"> slon </link> </application> shuts
-down:
+<para> This is then followed by a series of failed syncs as the <xref
+linkend="slon"> shuts down:
 
 <screen>
 DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
@@ -1102,18 +1075,16 @@ DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
 
 </para></question>
 
-<answer><para> If you see a <application> <link linkend="slon"> slon
-</link> </application> shutting down with <emphasis>ignore new events
-due to shutdown</emphasis> log entries, you typically need to step
-back in the log to <emphasis>before</emphasis> they started failing to
-see indication of the root cause of the problem.
-</para></answer>
+<answer><para> If you see a <xref linkend="slon"> shutting down with
+<emphasis>ignore new events due to shutdown</emphasis> log entries,
+you typically need to step back in the log to
+<emphasis>before</emphasis> they started failing to see indication of
+the root cause of the problem.  </para></answer>
 
 <answer><para> In this particular case, the problem was that some of
-the <link linkend="stmtstorepath"> <command>STORE PATH </command>
-</link> commands had not yet made it to node 4 before the <link
-linkend="stmtsubscribeset"> <command>SUBSCRIBE SET </command> </link>
-command propagated. </para>
+the <xref linkend="stmtstorepath"> commands had not yet made it to
+node 4 before the <xref linkend="stmtsubscribeset"> command
+propagated. </para>
 
 <para>This demonstrates yet another example of the need to not do
 things in a rush; you need to be sure things are working right
@@ -1162,17 +1133,14 @@ likely not be available until <productname>PostgreSQL</productname>
 
 <qandaentry>
 <question> <para> I had a network <quote>glitch</quote> that led to my
-using <command><link linkend="stmtfailover">FAILOVER</link></command>
-to fail over to an alternate node.  The failure wasn't a disk problem
-that would corrupt databases; why do I need to rebuild the failed node
-from scratch? </para></question>
+using <xref linkend="stmtfailover"> to fail over to an alternate node.
+The failure wasn't a disk problem that would corrupt databases; why do
+I need to rebuild the failed node from scratch? </para></question>
 
-<answer><para> The action of <command><link
-linkend="stmtfailover">FAILOVER</link></command> is to
-<emphasis>abandon</emphasis> the failed node so that no more
-&slony1; activity goes to or from that node.
-As soon as that takes place, the failed node will progressively fall
-further and further out of sync.
+<answer><para> The action of <xref linkend="stmtfailover"> is to
+<emphasis>abandon</emphasis> the failed node so that no more &slony1;
+activity goes to or from that node.  As soon as that takes place, the
+failed node will progressively fall further and further out of sync.
 </para></answer>
 
 <answer><para> The <emphasis>big</emphasis> problem with trying to
@@ -1183,12 +1151,10 @@ sort of <quote>logical</quote> corruption of the data even if there
 never was a disk failure making it <quote>physical.</quote>
 </para></answer>
 
-<answer><para> As discusssed in the section on <link
-linkend="failover"> Doing switchover and failover with
-&slony1;</link>, using <command><link
-linkend="stmtfailover">FAILOVER</link></command> should be considered
-a <emphasis>last resort</emphasis> as it implies that you are
-abandoning the origin node as being corrupted.  </para></answer>
+<answer><para> As discusssed in <xref linkend="failover">, using <xref
+linkend="stmtfailover"> should be considered a <emphasis>last
+resort</emphasis> as it implies that you are abandoning the origin
+node as being corrupted.  </para></answer>
 </qandaentry>
 
 <qandaentry id="morethansuper">
@@ -1278,11 +1244,11 @@ drop the effect of the pooling, in the latter case the pooling code
 could also announce an admin to take a look...  </para> </answer>
 </qandaentry>
 
-<qandaentry>
-<question><para> Node #1 was dropped via <link linkend="stmtdropnode">
-<command>DROP NODE</command> </link>, and the <link linkend="slon">
-<application>slon</application> </link> one of the other nodes is
-repeatedly failing with the error message:
+<qandaentry> 
+
+<question><para> Node #1 was dropped via <xref
+linkend="stmtdropnode">, and the <xref linkend="slon"> one of the
+other nodes is repeatedly failing with the error message:
 
 <screen>
 ERROR  remoteWorkerThread_3: "begin transaction; set transaction isolation level
@@ -1299,10 +1265,8 @@ DETAIL:  Key (li_provider,li_receiver)=(1,3) is not present in table "sl_path".
 DEBUG1 syncThread: thread done
 </screen>
 
-<para> Evidently, a <link linkend="stmtstorelisten"> <command>STORE
-LISTEN</command> </link> request hadn't propagated yet before node 1
-was dropped.
-</para></question>
+<para> Evidently, a <xref linkend="stmtstorelisten"> request hadn't
+propagated yet before node 1 was dropped.  </para></question>
 
 <answer id="eventsurgery"><para> This points to a case where you'll
 need to do <quote>event surgery</quote> on one or more of the nodes.
@@ -1317,10 +1281,9 @@ are #2 and #3, and that the above error is being reported on node
 <para> That implies that the event is stored on node #2, as it
 wouldn't be on node #3 if it had not already been processed
 successfully.  The easiest way to cope with this situation is to
-delete the offending <link linkend="table.sl-event">
-<envar>sl_event</envar> </link> entry on node #2.  You'll connect to
-node #2's database, and search for the <command>STORE_LISTEN</command>
-event:
+delete the offending <xref linkend="table.sl-event"> entry on node #2.
+You'll connect to node #2's database, and search for the
+<command>STORE_LISTEN</command> event:
 
 <para> <command> select * from sl_event where ev_type =
 'STORE_LISTEN';</command>

@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.11 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -38,9 +38,9 @@ namespace/schema <envar>_something.</envar></para>
  NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
 </programlisting>
 
-<para>The <link linkend="admconninfo"><command>CONNINFO</command></link>
-information indicates a string argument that will ultimately be passed
-to the <function>PQconnectdb()</function> libpq function.</para>
+<para>The <xref linkend="admconninfo"> information indicates a string
+argument that will ultimately be passed to the
+<function>PQconnectdb()</function> libpq function.</para>
 
 <para>Thus, a &slony1; cluster consists of:</para>
 <itemizedlist>

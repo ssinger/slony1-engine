@@ -113,23 +113,24 @@
    <refsect1>
     <title>Description</title>
     <para>
-     Must be the very first command in every
-     <application>slonik</application> script. Defines the namespace
-     in which all <productname>Slony-I</productname> specific
-     functions, procedures, tables and sequences are defined. The
-     namespace name is built by prefixing the given string literal
-     with an underscore. This namespace will be identical in all
-     databases that participate in the same replication group.
+     Must be the very first statement in every
+     <application>slonik</application> script. It defines the
+     namespace in which all <productname>Slony-I</productname>
+     specific functions, procedures, tables and sequences are
+     defined. The namespace name is built by prefixing the given
+     string literal with an underscore. This namespace will be
+     identical in all databases that participate in the same
+     replication group.
     </para>
     
     <para>
-     No user objects are supposed to live in this namespace and the
+     No user objects are supposed to live in this namespace, and the
      namespace is not allowed to exist prior to adding a database to
      the replication system.  Thus, if you add a new node using
      <command> pg_dump -s </command> on a database that is already in
      the cluster of replicated databases, you will need to drop the
      namespace via the SQL command <command> DROP SCHEMA _testcluster
-      CASCADE; </command>.
+     CASCADE; </command>.
     </para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -170,12 +171,12 @@
 
     <para>
      The <application>slonik</application> utility will not try to
-     connect to the databases unless some subsequent command requires
-     the connection.
+     connect to a given database unless some subsequent command
+     requires the connection.
     </para>
 
-    <para>
-     Note: As mentioned in the original documents,
+   <note> <para>
+     As mentioned in the original documents,
      <productname>Slony-I</productname> is designed as an enterprise
      replication system for data centers. It has been assumed
      throughout the entire development that the database servers and
@@ -184,14 +185,22 @@
      schemes like <quote>trust</quote>.  Alternatively, libpq can read
      passwords from <filename> .pgpass </filename>.
     </para>
+   </note>
+   <note>
     <para>
-     Note: If you need to change the DSN information for a node, as
-     would happen if the IP address for a host were to change, you may
-     submit the new information using this command, and that
-     configuration will be propagated.  Existing <application>> slon
-     </application> processes will need to be restarted in order to
-     become aware of the configuration change.
+    If you need to change the DSN information for a node, as would
+    happen if the IP address for a host were to change, you must
+    submit the new information using the <xref
+    linkend="stmtstorepath"> command, and that configuration will be
+    propagated.  Existing <application> slon </application> processes
+    may need to be restarted in order to become aware of the
+    configuration change.
     </para>
+   </note>
+
+   <para> For more details on the distinction between this and <xref
+   linkend="stmtstorepath">, see <xref linkend="plainpaths">.</para>
+
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
@@ -278,10 +287,12 @@
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title> <para> Initialize the first node in a
-     new <productname>Slony-I</productname> replication cluster.  The
-     initialization process consists of creating the cluster namespace,
-     loading all the base tables, functions, procedures and
-     initializing the node.
+    new <productname>Slony-I</productname> replication cluster.  The
+    initialization process consists of creating the cluster namespace,
+    loading all the base tables, functions, procedures and
+    initializing the node, using <xref
+    linkend="function.initializelocalnode-integer-text"> and <xref
+    linkend= "function.enablenode-integer">.
      
      <variablelist>
       <varlistentry><term><literal>ID</literal></term>
@@ -313,6 +324,13 @@ INIT CLUSTER (
    COMMENT = 'Node 1'
 );
     </programlisting>
+
+   <note> <para> This command functions very similarly to <xref
+   linkend="stmtstorenode">, the difference being that <command>INIT
+   CLUSTER </command> does not need to draw configuration from other
+   existing nodes.
+
+   </para> </note>
    </refsect1>
   </refentry>
 
@@ -335,10 +353,10 @@ INIT CLUSTER (
     existing cluster.</para>
 
     <para> The initialization process consists of creating the cluster
-     namespace in the new node (the database itself must already
-     exist), loading all the base tables, functions, procedures and
-     initializing the node. The existing configuration of the rest of
-     the cluster is copied from the <quote>event node</quote>.
+    namespace in the new node (the database itself must already
+    exist), loading all the base tables, functions, procedures and
+    initializing the node.  The existing configuration of the rest of
+    the cluster is copied from the <quote>event node</quote>.
      
      <variablelist>
       <varlistentry><term><literal>ID = ival</literal></term>
@@ -645,16 +663,16 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      to the provider (as server).</para>
 
     <para> Every node in the system must listen for events from every
-     other node in the system. As a general rule of thumb, a subscriber
-     (see <link linkend="stmtsubscribeset">SUBSCRIBE SET</link>) should
-     listen for events of the set's origin on the same provider, where
-     it receives the data from. In turn, the origin of the data set
-     should listen for events from the origin in the opposite
-     direction. A node can listen for events from one and the same
-     origin on different providers at the same time. However, to
-     process <command>SYNC</command> events from that origin, all data
-     providers must have the same or higher sync status, so this will
-     not result in any faster replication behaviour.
+    other node in the system. As a general rule of thumb, a subscriber
+    (see <xref linkend="stmtsubscribeset">) should listen for events
+    of the set's origin on the same provider, where it receives the
+    data from. In turn, the origin of the data set should listen for
+    events from the origin in the opposite direction. A node can
+    listen for events from one and the same origin on different
+    providers at the same time. However, to process
+    <command>SYNC</command> events from that origin, all data
+    providers must have the same or higher sync status, so this will
+    not result in any faster replication behaviour.
     </para>
 
     <variablelist>
@@ -672,7 +690,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
 
-    <para> For more details, see the section on <link linkend="listenpaths"> Slony-I Listen Paths. </link></para>
+    <para> For more details, see <xref linkend="listenpaths">.</para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -758,8 +776,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <variablelist>
      <varlistentry><term><literal> NODE ID = ival </literal></term>
       <listitem><para> Node ID of the set origin where the table will be
-	added as a set member. (See <link linkend="stmtsetaddtable">
-	 <command>SET ADD TABLE</command></link>.)</para></listitem>
+	added as a set member. (See <xref linkend="stmtsetaddtable">.)</para></listitem>
      </varlistentry>
      <varlistentry><term><literal> FULLY QUALIFIED NAME  = 'string' </literal></term>
       <listitem><para> The full name of the table consisting of the schema
@@ -949,9 +966,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para> Add an existing user table to a replication set. The set
-     cannot currently be subscribed by any other node - that
-     functionality is supported by the <command><link
-       linkend="stmtmergeset"> MERGE SET</link> </command> command.
+    cannot currently be subscribed by any other node - that
+    functionality is supported by the <xref linkend="stmtmergeset">
+    command.
      
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
@@ -966,8 +983,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
        <listitem><para> Unique ID of the table. These ID's are not
 	 only used to uniquely identify the individual table within the
 	 replication system. The numeric value of this ID also
-	 determines the order in which the tables are locked in a <link
-	  linkend="stmtlockset">LOCK SET</link> command for example. So
+	 determines the order in which the tables are locked in a <xref
+	  linkend="stmtlockset"> command for example. So
 	 these numbers should represent any applicable table hierarchy
 	 to make sure the <application>slonik</application> command
 	 scripts do not deadlock at any critical
@@ -975,15 +992,15 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full table name as described in
-	 <link linkend="stmttableaddkey">TABLE ADD KEY</link>.</para></listitem>
+	 <xref linkend="stmttableaddkey">.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> KEY = { 'string' | SERIAL }
 	</literal></term> <listitem><para>
 	 <emphasis>(Optional)</emphasis> The index name that covers the
 	 unique and not null column set to be used as the row identifier
 	 for replication purposes. Or the keyword SERIAL to use the
-	 special column added with a previous <link
-	  linkend="stmttableaddkey">TABLE ADD KEY</link> command. Default
+	 special column added with a previous <xref
+	  linkend="stmttableaddkey"> command. Default
 	 is to use the table's primary key.  The index name is <emphasis>
 	  not </emphasis> fully qualified; you must omit the
 	 namespace.</para></listitem>
@@ -1029,8 +1046,8 @@ SET ADD TABLE (
     <para>
      Add an existing user sequence to a replication set. The set
      cannot currently be subscribed by any other node - that
-     functionality is supported by the <command><link
-       linkend="stmtmergeset"> MERGE SET</link> </command> command.
+     functionality is supported by the <xref linkend="stmtmergeset">
+     command.
      
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
@@ -1053,7 +1070,7 @@ SET ADD TABLE (
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full sequence name as described in
-	 <link linkend="stmttableaddkey">TABLE ADD KEY</link>.</para></listitem>
+	 < linkend="stmttableaddkey">.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the sequence entry.  </para></listitem>
@@ -1096,9 +1113,9 @@ SET ADD TABLE (
      Drop a table from a replication set.
     </para>
     <para>
-     Note that this action will <emphasis> not </emphasis> drop a candidate
-     primary key created using <link linkend="stmttableaddkey"> <command> TABLE ADD KEY
-      </command></link>.
+     Note that this action will <emphasis> not </emphasis> drop a
+     candidate primary key created using <xref
+     linkend="stmttableaddkey">.
      
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
@@ -1551,8 +1568,7 @@ UNSUBSCRIBE SET (
     <title>Description</title>
     
     <para> Guards a replication set against client application updates
-     in preparation for a <link linkend="stmtmoveset">MOVE SET</link>
-     command.
+    in preparation for a <xref linkend="stmtmoveset"> command.
     </para>
 
     <para> This command must be the first in a possible statement
@@ -1728,16 +1744,15 @@ MOVE SET (
      After successful failover, all former direct subscribers of the
      failed node become direct subscribers of the backup node. The
      failed node is abandoned, and can and should be removed from the
-     configuration with <command><link linkend="stmtdropnode"> DROP
-     NODE</link> </command>.
+     configuration with <xref linkend="stmtdropnode">.
     </para>
     
     <warning><para> This command will abandon the status of the failed
-      node.  There is no possibility to let the failed node join the
-      cluster again without rebuilding it from scratch as a slave.  If
-      at all possible, you would likely prefer to use <command> <link
-	linkend="stmtmoveset"> MOVE SET </link> </command> instead, as
-      that does <emphasis>not</emphasis> abandon the failed node.
+    node.  There is no possibility to let the failed node join the
+    cluster again without rebuilding it from scratch as a slave.  If
+    at all possible, you would likely prefer to use <xref
+    linkend="stmtmoveset"> instead, as that does
+    <emphasis>not</emphasis> abandon the failed node.
     </para></warning>
     
     <variablelist>
@@ -1823,8 +1838,7 @@ FAILOVER (
      </varlistentry>
     </variablelist>
     
-    <para> See also the warnings in <link linkend="ddlchanges">
-    Database Schema Changes (DDL)</link>.</para>
+    <para> See also the warnings in <xref linkend="ddlchanges">.</para>
 
     <para> Note that at the start of this event, all tables in the
     specified set are unlocked via the function
@@ -1875,9 +1889,8 @@ EXECUTE SCRIPT (
      by earlier calls are currently not checked). In certain situations
      it is necessary that events generated on one node (such as
      <command>CREATE SET</command>) are processed on another node
-     before issuing more commands (for instance, <link
-      linkend="stmtsubscribeset"><command>SUBSCRIBE
-       SET</command></link>).  <command>WAIT FOR EVENT</command> may be
+     before issuing more commands (for instance, <xref
+      linkend="stmtsubscribeset">).  <command>WAIT FOR EVENT</command> may be
      used to cause the <application>slonik</application> script to wait
      until the subscriber node is ready for the next action.
     </para>

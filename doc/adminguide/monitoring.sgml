@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.13 2005-02-18 04:04:48 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.14 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -112,7 +112,9 @@ postgresql.conf </filename>.</para>
 this will find them.</para>
 
 <para> If you have broken applications that hold connections open,
-that has several unsalutory effects as <link linkend="longtxnsareevil"> described in the FAQ</link>.</para></listitem>
+that has several unsalutory effects as <link
+linkend="longtxnsareevil"> described in the
+FAQ</link>.</para></listitem>
 
 </itemizedlist></para>
 

@@ -1,4 +1,4 @@
-<!-- $Id: versionupgrade.sgml,v 1.3 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: versionupgrade.sgml,v 1.4 2005-02-18 22:43:35 cbbrowne Exp $ -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
 
 <para> A number of people have found
@@ -40,10 +40,11 @@ procedure is rather less time consuming:
 <listitem><para> Stop all applications that might modify the data</para></listitem>
 
 <listitem><para> Lock the set against client application updates using
-<link linkend="stmtlockset"><command>LOCK SET</command></link></para></listitem>
+<xref linkend="stmtlockset"></para></listitem>
 
-<listitem><para> Submit the Slonik command <link linkend="stmtmoveset">eset"><command>MOVE SET</command></link> to shift the
-origin from the old database to the new one</para></listitem>
+<listitem><para> Submit the Slonik command <xref
+linkend="stmtmoveset"> to shift the origin from the old database to
+the new one</para></listitem>
 
 <listitem><para> Point the applications at the new database</para></listitem>
 </itemizedlist></para>
@@ -57,9 +58,9 @@ minutes is likely.</para>
 <para> Note that after the origin has been shifted, updates now flow
 into the <emphasis>old</emphasis> database.  If you discover that due
 to some unforeseen, untested condition, your application is somehow
-unhappy connecting to the new database, you could easily use <link
-   linkend="stmtmoveset"><command>MOVE SET</command></link> again to
-shift the origin back to the old database.</para>
+unhappy connecting to the new database, you could easily use <xref
+linkend="stmtmoveset"> again to shift the origin back to the old
+database.</para>
 
 <para> If you consider it particularly vital to be able to shift back
 to the old database in its state at the time of the changeover, so as
@@ -87,13 +88,12 @@ all applications that might modify the data</para></listitem>
 that has been feeding the subscriber running the old version of
 &postgres;</para>
 
-<para> You may want to use <link linkend="stmtuninstallnode">
-<command>UNINSTALL NODE</command></link> to decommission this node,
-making it into a standalone database, or merely kill the
-<application>slon</application>, depending on how permanent you want
-this all to be.</para></listitem>
+<para> You may want to use <xref linkend="stmtuninstallnode"> to
+decommission this node, making it into a standalone database, or
+merely kill the <application>slon</application>, depending on how
+permanent you want this all to be.</para></listitem>
 
-<listitem><para> Then use <command>MOVE SET</command> to shift the
+<listitem><para> Then use <xref linkend="stmtmoveset"> to shift the
 origin, as before.</para></listitem>
 
 </itemizedlist></para>

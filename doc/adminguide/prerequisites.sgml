@@ -13,22 +13,20 @@ and OpenBSD-3.5-sparc64.</para>
 <para>There have been reports of success at running &slony1; hosts
 that are running PostgreSQL on Microsoft
 <trademark>Windows</trademark>.  At this time, the
-<quote>binary</quote> applications (<emphasis>e.g.</emphasis> -
-<application><link linkend="slonik">slonik</link></application>,
-<application><link linkend="slon">slon</link></application>) do not
-run on <trademark>Windows</trademark>, but a <application><link
-    linkend="slon">slon</link></application> running on one of the
-Unix-like systems has no reason to have difficulty connect to a
-PostgreSQL instance running on <trademark>Windows</trademark>.</para>
+<quote>binary</quote> applications (<emphasis>e.g.</emphasis> - <xref
+linkend="slonik">, <xref linkend="slon">) do not run on
+<trademark>Windows</trademark>, but a <xref linkend="slon"> running on
+one of the Unix-like systems has no reason to have difficulty connect
+to a PostgreSQL instance running on
+<trademark>Windows</trademark>.</para>
 
-<para> It ought to be possible to port <application><link
-    linkend="slon"> slon </link></application> and <application><link
-    linkend="slonik"> slonik </link></application> to run on
-<trademark>Windows</trademark>; the conspicuous challenge is of having
-a POSIX-like <filename>pthreads</filename> implementation for
-<application><link linkend="slon"> slon </link></application>, as it
-uses that to have multiple threads of execution.  There are reports of
-there being a <filename>pthreads</filename> library for
+<para> It ought to be possible to port <xref linkend="slon"> and <xref
+linkend="slonik"> to run on <trademark>Windows</trademark>; the
+conspicuous challenge is of having a POSIX-like
+<filename>pthreads</filename> implementation for <xref
+linkend="slon">, as it uses that to have multiple threads of
+execution.  There are reports of there being a
+<filename>pthreads</filename> library for
 <trademark>Windows</trademark>, so nothing should prevent some
 interested party from volunteering to do the port.</para>
 
@@ -100,12 +98,12 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 <title> Time Synchronization</title>
 
 <para> All the servers used within the replication cluster need to
-have their Real Time Clocks in sync. This is to ensure that <link
-    linkend="slon"> slon </link> doesn't generate errors with messages
-indicating that a subscriber is already ahead of its provider during
-replication.  We recommend you have <application>ntpd</application>
-running on all nodes, where subscriber nodes using the
-<quote>master</quote> provider host as their time server.</para>
+have their Real Time Clocks in sync. This is to ensure that <xref
+linkend="slon"> doesn't generate errors with messages indicating that
+a subscriber is already ahead of its provider during replication.  We
+recommend you have <application>ntpd</application> running on all
+nodes, where subscriber nodes using the <quote>master</quote> provider
+host as their time server.</para>
 
 <para> It is possible for &slony1; itself to function even in the face
 of there being some time discrepancies, but having systems <quote>in
@@ -158,10 +156,9 @@ B to A.  It is recommended that, as much as possible, all nodes in a
 any node in the cluster to any other node in the cluster.</para>
 
 <para>For ease of configuration, network addresses should be
-consistent across all of the nodes.  <link linkend="stmtstorepath">
-<command>STORE PATH</command> </link> does allow them to vary, but
-down this road lies madness as you try to manage the multiplicity of
-paths pointing to the same server.</para>
+consistent across all of the nodes.  <xref linkend="stmtstorepath">
+does allow them to vary, but down this road lies madness as you try to
+manage the multiplicity of paths pointing to the same server.</para>
 
 <para>A possible workaround for this, in environments where firewall
 rules are particularly difficult to implement, may be to establish

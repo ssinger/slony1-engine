@@ -1,4 +1,4 @@
-<!-- $Id: plainpaths.sgml,v 1.3 2005-02-18 17:04:07 cbbrowne Exp $ -->
+<!-- $Id: plainpaths.sgml,v 1.4 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="plainpaths"><title> &slony1; Path Communications</title>
 
 <para> &slony1; uses &postgres; DSNs in two contexts to establish
@@ -6,16 +6,15 @@ access to databases:
 
 <itemizedlist>
 
-<listitem><para> <link linkend="admconninfo"> <command> ADMIN CONNINFO
-</command> </link> - controlling how a <link linkend="slonik"> slonik
-</link> script accesses the various nodes.
+<listitem><para> <xref linkend="admconninfo"> - controlling how a
+<xref linkend="slonik"> script accesses the various nodes.
 
 <para> These connections are the ones that go from your
 <quote/administrative workstation/ to all of the nodes in a &slony1;
 cluster.
 
 <para> It is <emphasis/vital/ that you have connections from the
-central location where you run <link linkend="slonik"> slonik </link>
+central location where you run <xref linkend="slonik"> 
 to each and every node in the network.  These connections are only
 used briefly, to submit the few <acronym/SQL/ requests required to
 control the administration of the cluster.
@@ -24,16 +23,14 @@ control the administration of the cluster.
 be quite reasonable to <quote>hack together</quote> temporary
 connections using <link linkend="tunnelling">SSH tunnelling</link>.
 
-<listitem><para> <link linkend="stmtstorepath"> <command> STORE PATH
-</command> </link> - controlling how <link linkend="slon"> slon
-</link> daemons communicate with remote nodes.  These paths are stored
-in <link linkend="table.sl-path"> <envar>sl_path</envar> </link>. 
+<listitem><para> <xref linkend="stmtstorepath"> - controlling how
+<xref linkend="slon"> daemons communicate with remote nodes.  These
+paths are stored in <xref linkend="table.sl-path">.
 
 <para> You forcibly <emphasis>need</emphasis> to have a path between
 each subscriber node and its provider; other paths are optional, and
-will not be used unless a listen path in <link
-linkend="table.sl-listen"> <envar>sl_listen</envar> </link>. is needed
-that uses that particular path.
+will not be used unless a listen path in <xref
+linkend="table.sl-listen">. is needed that uses that particular path.
 
 </itemizedlist>
 

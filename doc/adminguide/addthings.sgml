@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.10 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.11 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
 
@@ -7,40 +7,38 @@ you wish you were replicating.</para>
 
 <para>This can be fairly easily remedied.</para>
 
-<para>You cannot directly use <link linkend="slonik">slonik</link>
-commands <command><link linkend="stmtsetaddtable"> SET ADD
-TABLE</link></command> or <command><link linkend="stmtsetaddsequence">
-SET ADD SEQUENCE</link></command> in order to add tables and sequences
+<para>You cannot directly use <xref linkend="slonik">
+<xref linkend="stmtsetaddtable"> or <xref linkend="stmtsetaddsequence">
+in order to add tables and sequences
 to a replication set that is presently replicating; you must instead
 create a new replication set.  Once it is identically subscribed
 (e.g. - the set of providers and subscribers is <emphasis>entirely
 identical</emphasis> to that for the set it is to merge with), the
-sets may be merged together using <command><link
-linkend="stmtmergeset">MERGE SET</link></command>.</para>
+sets may be merged together using <xref
+linkend="stmtmergeset">.</para>
 
 <para>Up to and including 1.0.2, there was a potential problem where
-if <command><link linkend="stmtmergeset">MERGE SET</link></command> is
-issued while other subscription-related events are pending, it is
-possible for things to get pretty confused on the nodes where other
-things were pending.  This problem was resolved in 1.0.5.</para>
+if <xref linkend="stmtmergeset"> is issued while other
+subscription-related events are pending, it is possible for things to
+get pretty confused on the nodes where other things were pending.
+This problem was resolved in 1.0.5.</para>
 
-<para> Note that if you add nodes, you will need to add both <link
-   linkend="stmtstorepath">STORE PATH</link> statements to indicate how
-nodes communicate with one another, and <link
-   linkend="stmtstorelisten">STORE LISTEN</link> statements to
+<para> Note that if you add nodes, you will need to add both <xref
+linkend="stmtstorepath"> statements to indicate how nodes communicate
+with one another, and <xref linkend="stmtstorelisten"> statements to
 configuration the <quote>communications network</quote> that results
-from that.  See the section on <link linkend="listenpaths"> Listen
-Paths </link> for more details on the latter.</para>
+from that.  See <xref linkend="listenpaths"> for more details on the
+latter.</para>
 
 <para>It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
-particular set in one <link linkend="slonik"> slonik </link> script
-often turns out quite badly.  If it is <emphasis>truly</emphasis>
-necessary to automate this, you'll probably want to submit <command>
-<link linkend="stmtwaitevent">WAIT FOR EVENT</link></command>
-requests in between subscription requests in order that the <link
-   linkend="slonik">slonik</link> script wait for one subscription to
-complete processing before requesting the next one.</para>
+particular set in one <xref linkend="slonik"> script often turns out
+quite badly.  If it is <emphasis>truly</emphasis> necessary to
+automate this, you'll probably want to submit <xref
+linkend="stmtwaitevent"> requests in between subscription requests in
+order that the <xref linkend="slonik"> script wait for one
+subscription to complete processing before requesting the next
+one.</para>
 
 <para>But in general, it is likely to be easier to cope with complex
 node reconfigurations by making sure that one change has been

@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -29,10 +29,9 @@ a primary key:</para>
 <itemizedlist>
 
 <listitem><para> If the table has a formally identified primary key,
-<command><link linkend="stmtsetaddtable">SET ADD
-TABLE</link></command> can be used without any need to reference the
-primary key.  &slony1; will pick up that
-there is a primary key, and use it.</para></listitem>
+<xref linkend="stmtsetaddtable"> can be used without any need to
+reference the primary key.  &slony1; will pick up that there is a
+primary key, and use it.</para></listitem>
 
 <listitem><para> If the table hasn't got a primary key, but has some
 <emphasis>candidate</emphasis> primary key, that is, some index on a
@@ -52,10 +51,9 @@ key, as it infers the namespace from the table.</para></listitem>
 
 <listitem><para> If the table hasn't even got a candidate primary key,
 you can ask &slony1; to provide one.  This is done by first using
-<command><link linkend="stmttableaddkey"> TABLE ADD KEY </link>
-</command> to add a column populated using a &slony1; sequence, and
-then having the <command> <link linkend="stmtsetaddtable"> SET ADD
-TABLE</link></command> include the directive
+<xref linkend="stmttableaddkey"> to add a column populated using a
+&slony1; sequence, and then having the <xref
+linkend="stmtsetaddtable"> include the directive
 <option>key=serial</option>, to indicate that &slony1;'s own column
 should be used.</para></listitem>
 
@@ -89,33 +87,32 @@ replication set:
 <itemizedlist>
 
 <listitem><para> Replicating a large set leads to a <link
-       linkend="longtxnsareevil"> long running transaction </link> on the
-provider node.  The <link linkend="faq"> FAQ </link> outlines a number
-of problems that result from long running transactions that will
-injure system performance.</para>
+linkend="longtxnsareevil"> long running transaction </link> on the
+provider node.  <xref linkend="faq"> outlines a number of problems
+that result from long running transactions that will injure system
+performance.</para>
 
 <para> If you can split a large set into several pieces, that will
 shorten the length of each of the transactions, lessening the degree
 of <quote>injury</quote> to performance.</para></listitem>
 
-<listitem><para> Any time you invoke <link linkend="stmtddlscript">
-<command> EXECUTE SCRIPT </command></link>, this requests a lock on
-<emphasis> every single table in the replication set. </emphasis></para>
+<listitem><para> Any time you invoke <xref linkend="stmtddlscript">,
+this requests a lock on <emphasis> every single table in the
+replication set. </emphasis></para>
 
 <para> There have been reports <quote>in the field</quote> of this
-leading to deadlocks such that the <link linkend="stmtddlscript">
-<command> EXECUTE SCRIPT </command></link> request had to be submitted
-many times in order for it to actually complete successfully.</para>
+leading to deadlocks such that the <xref linkend="stmtddlscript">
+request had to be submitted many times in order for it to actually
+complete successfully.</para>
 
 <para> The more tables you have in a set, the more tables need to be
 locked, and the greater the chances of deadlocks. </para>
 
 <para> By the same token, if a particular DDL script only needs to
-affect a couple of tables, you might use <link
-       linkend="stmtsetmovetable"> <command>SET MOVE TABLE</command></link>
-to move them temporarily to a new replication set.  By diminishing the
-number of locks needed, this should ease the ability to get the DDL
-change into place.</para>
+affect a couple of tables, you might use <xref
+linkend="stmtsetmovetable"> to move them temporarily to a new
+replication set.  By diminishing the number of locks needed, this
+should ease the ability to get the DDL change into place.</para>
 </listitem>
 
 </itemizedlist></para>

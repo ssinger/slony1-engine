@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.11 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -142,9 +142,9 @@ again.</para></listitem>
 
 <sect2><title> Log Files</title>
 
-<para><link linkend="slon"> <application>slon</application></link> daemons
-generate some more-or-less verbose log files, depending on what
-debugging level is turned on.  You might assortedly wish to:
+<para><xref linkend="slon"> daemons generate some more-or-less verbose
+log files, depending on what debugging level is turned on.  You might
+assortedly wish to:
 
 <itemizedlist>
 

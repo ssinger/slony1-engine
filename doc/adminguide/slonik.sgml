@@ -1,5 +1,5 @@
-<!-- $Id: slonik.sgml,v 1.11 2005-02-09 20:08:43 cbbrowne Exp $ -->
-<refentry id="app-slonik">
+<!-- $Id: slonik.sgml,v 1.12 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<refentry id="slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
     <manvolnum>1</manvolnum>
@@ -7,13 +7,13 @@
   </refmeta>
 
   <refnamediv>
-    <refname><application id="slonik">slonik</application></refname>
+    <refname><application>slonik</application></refname>
     <refpurpose>
-      <productname>Slony-I</productname> command processor
+      &slony1; command processor
     </refpurpose>
   </refnamediv>
 
- <indexterm zone="app-slonik">
+ <indexterm zone="slonik">
   <primary>slonik</primary>
  </indexterm>
 
@@ -30,7 +30,7 @@
     <para>
      <application>slonik</application> is the command processor
      application that is used to set up and modify configurations of
-     <productname>Slony-I</productname> replication clusters.
+     &slony1; replication clusters.
     </para>
  </refsect1>
 
@@ -65,8 +65,7 @@
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</para>
   
-  <para>See also <link linkend="slonikref"> Slonik Command Summary
-  </link>. </para>
+  <para>See also <xref linkend="slonikref">. </para>
 
  </refsect1>
 

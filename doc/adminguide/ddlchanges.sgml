@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.12 2005-02-14 16:23:02 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.13 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -8,9 +8,9 @@ for this to be handled rather carefully, otherwise different nodes may
 get rather deranged because they disagree on how particular tables are
 built.</para>
 
-<para>If you pass the changes through &slony1; via the <command><link
-linkend="stmtddlscript">EXECUTE SCRIPT</link></command> (slonik)
-/<function>ddlscript(set,script,node)</function> (stored function),
+<para>If you pass the changes through &slony1; via <xref
+linkend="stmtddlscript"> (slonik) /<xref
+linkend="function.ddlscript-integer-text-integer"> (stored function),
 this allows you to be certain that the changes take effect at the same
 point in the transaction streams on all of the nodes.  That may not be
 so important if you can take something of an outage to do schema
@@ -26,8 +26,7 @@ the schema change.  This has the potential to corrupt data on
 subscriber nodes.  </para>
 
 <para>It's worth making a couple of comments on <quote>special
-things</quote> about <command><link linkend="stmtddlscript">EXECUTE
-SCRIPT</link></command>:</para>
+things</quote> about <xref linkend="stmtddlscript">:</para>
 
 <itemizedlist>
 
@@ -41,13 +40,13 @@ transaction.</para></listitem>
 
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
 the script, or about how it executes on a particular node, this will
-cause the <link linkend="slon"><application>slon</application></link>
-daemon for that node to panic and crash. If you restart the node, it
-will, more likely than not, try to <emphasis>repeat</emphasis> the DDL
-script, which will, almost certainly, fail the second time just as it
-did the first time.  I have found this scenario to lead to a need to
-go to the <quote>master</quote> node to delete the event to stop it
-from continuing to fail.</para></listitem>
+cause the <xref linkend="slon"> daemon for that node to panic and
+crash. If you restart the node, it will, more likely than not, try to
+<emphasis>repeat</emphasis> the DDL script, which will, almost
+certainly, fail the second time just as it did the first time.  I have
+found this scenario to lead to a need to go to the
+<quote>master</quote> node to delete the event to stop it from
+continuing to fail.</para></listitem>
 
 <listitem><para> For <application>slon</application> to, at that
 point, <quote>panic</quote> is probably the
@@ -60,9 +59,10 @@ are queued up, waiting to head to the subscriber.  You don't run the
 risk of there being updates made that depended on the DDL changes in
 order to be correct.</para></listitem>
 
-<listitem><para> When you run <command><link linkend="stmtddlscript">EXECUTE SCRIPT</link></command>, this causes
-the <application>slonik</application> to request, <emphasis>for each
-table in the specified set</emphasis>, an exclusive table lock.</para>
+<listitem><para> When you run <xref linkend="stmtddlscript">, this
+causes the <application>slonik</application> to request, <emphasis>for
+each table in the specified set</emphasis>, an exclusive table
+lock.</para>
 
 <para> It starts by requesting the lock, and altering the table to
 remove &slony1; triggers:

@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.17 2005-02-18 04:04:48 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.18 2005-02-18 22:43:34 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -9,16 +9,16 @@ a set of &slony1; instances, which support having arbitrary numbers of
 nodes.</para>
 
 <para>Most of them generate Slonik scripts that are then to be passed
-on to the <link linkend="slonik"><application>slonik</application></link> utility
-to be submitted to all of the &slony1; nodes in a
-particular cluster.  At one time, this embedded running <link
-   linkend="slonik">slonik</link> on the slonik scripts.
+on to the <xref linkend="slonik"> utility to be submitted to all of
+the &slony1; nodes in a particular cluster.  At one time, this
+embedded running <xref linkend="slonik"> on the slonik scripts.
 Unfortunately, this turned out to be a pretty large calibre
-<quote>foot gun</quote>, as minor typos on the command line led, on a couple
-of occasions, to pretty calamitous actions, so the behavior has been
-changed so that the scripts simply submit output to standard output.
-An administrator should review the script <emphasis>before</emphasis> submitting
-it to <link linkend="slonik">slonik</link>.</para>
+<quote>foot gun</quote>, as minor typos on the command line led, on a
+couple of occasions, to pretty calamitous actions, so the behavior has
+been changed so that the scripts simply submit output to standard
+output.  An administrator should review the script
+<emphasis>before</emphasis> submitting it to <xref
+linkend="slonik">.</para>
 
 <sect2><title>Node/Cluster Configuration - cluster.nodes</title>
 
@@ -67,10 +67,10 @@ determine what Perl configuration file will be used to determine what
 objects will be contained in a particular replication set.</para>
 
 <para>Unlike <envar>SLONYNODES</envar>, which is essential for
-<emphasis>all</emphasis> of the <link linkend="slonik">slonik</link>-generating scripts, this only needs to
-be set when running <filename>create_set.pl</filename>, as that is the
-only script used to control what tables will be in a particular
-replication set.</para>
+<emphasis>all</emphasis> of the <xref linkend="slonik">-generating
+scripts, this only needs to be set when running
+<filename>create_set.pl</filename>, as that is the only script used to
+control what tables will be in a particular replication set.</para>
 
 <para>What variables are set up.</para>
 <itemizedlist>
@@ -222,17 +222,12 @@ from one version of &slony1; to another.</para>
 <sect2 id="regenlisten"><title>regenerate-listens.pl</title>
 
 <para>This script connects to a &slony1; node, and queries various
-tables (<link linkend="table.sl-set"> <envar>sl_set</envar></link>,
-<link linkend="table.sl-node"> <envar>sl_node</envar></link>, <link
-linkend="table.sl-subscribe"> <envar>sl_subscribe</envar></link>,
-<link linkend="table.sl-path"> <envar>sl_path</envar></link>) to
-compute what <command><link linkend="stmtstorelisten"> STORE
-LISTEN</link></command> requests should be submitted to the
+tables (sl_set, sl_node, sl_subscribe, sl_path) to compute what <xref
+linkend="stmtstorelisten"> requests should be submitted to the
 cluster.</para>
 
-<para> See the documentation on <link linkend="autolisten">Automated
-Listen Path Generation</link> for more details on how this
-works.</para>
+<para> See the documentation in <xref linkend="autolisten"> for more
+details on how this works.</para>
 </sect2>
 
 </sect1>

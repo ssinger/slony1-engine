@@ -1,18 +1,18 @@
-<!-- $Id: slon.sgml,v 1.11 2005-02-17 23:42:07 cbbrowne Exp $ -->
-<refentry id="app-slon">
+<!-- $Id: slon.sgml,v 1.12 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
   <manvolnum>1</manvolnum>
   <refmiscinfo>Application</refmiscinfo>
  </refmeta>
  <refnamediv>
-  <refname><application id="slon">slon</application></refname>
+  <refname><application>slon</application></refname>
   <refpurpose>
-   <productname>Slony-I</productname> daemon
+   &slony1; daemon
   </refpurpose>
  </refnamediv>
  
- <indexterm zone="app-slon">
+ <indexterm zone="slon">
   <primary>slon</primary>
  </indexterm>
  
