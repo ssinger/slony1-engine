@@ -4,7 +4,7 @@
 #
 #	Shell script to create a set and add tables.
 #
-# $Id: slony1_makeset.sh.in,v 1.1 2004-03-03 00:54:23 wieck Exp $
+# $Id: slony1_makeset.sh.in,v 1.2 2004-03-04 19:37:44 wieck Exp $
 # ----------------------------------------------------------------------
 
 # ----
@@ -153,6 +153,7 @@ while [ ! -z $1 ] ; do
     tab_attkind=`get_tab_attkind "$tab_fqname"`
 
 	if [ $? -ne 0 ] ; then
+		echo "lock table $tab_fqname;"
 		echo "alter table $tab_fqname add column \"_Slony-I_T1_rowID\" bigint;"
 		echo "alter table $tab_fqname alter column \"_Slony-I_T1_rowID\""
 		echo "    set default \"pg_catalog\".nextval('\"$namespace\".sl_rowid_seq');"

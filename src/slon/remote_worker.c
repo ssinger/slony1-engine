@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.12 2004-03-03 21:52:46 wieck Exp $
+ *	$Id: remote_worker.c,v 1.13 2004-03-04 19:37:44 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1563,7 +1563,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 
 	/*
 	 * Begin a serialized transaction and check if our xmin
-	 * in the snapshot is > that ev_maxxid. This ensures that
+	 * in the snapshot is > than ev_maxxid. This ensures that
 	 * all transactions that have been in progress when the
 	 * subscription got enabled (which is after the triggers
 	 * on the tables have been defined), have finished.
@@ -1573,33 +1573,48 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 * copy the set, then we don't see the row either and it
 	 * would get lost.
 	 */
-	slon_mkquery(&query1,
-			"start transaction; "
-			"set transaction isolation level serializable; "
-			"select %s.getMinXid() <= '%s'::%s.xxid; ",
-			rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
-	res1 = PQexec(pro_dbconn, dstring_data(&query1));
-	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	if (node->no_id == event->ev_origin)
 	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				node->no_id, dstring_data(&query1),
-				PQresultErrorMessage(res1));
+		slon_mkquery(&query1,
+				"start transaction; "
+				"set transaction isolation level serializable; "
+				"select %s.getMinXid() <= '%s'::%s.xxid; ",
+				rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
+		res1 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res1));
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		if (*(PQgetvalue(res1, 0, 0)) == 't')
+		{
+			slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+					"transactions earlier than XID %s are still in progress\n",
+					node->no_id, event->ev_maxxid_c);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
 		PQclear(res1);
-		slon_disconnectdb(pro_conn);
-		dstring_free(&query1);
-		return -1;
 	}
-	if (*(PQgetvalue(res1, 0, 0)) == 't')
+	else
 	{
-		slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-				"transactions earlier than XID %s are still in progress\n",
-				node->no_id, event->ev_maxxid_c);
-		PQclear(res1);
-		slon_disconnectdb(pro_conn);
-		dstring_free(&query1);
-		return -1;
+		slon_mkquery(&query1,
+				"start transaction; "
+				"set transaction isolation level serializable; ");
+		if (query_execute(node, pro_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+		{
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
 	}
-	PQclear(res1);
 
 	/*
 	 * Select the list of all tables the provider currently has in the set.
