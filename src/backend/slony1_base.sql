@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.17 2004-09-23 14:50:18 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.18 2004-10-14 22:05:32 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -273,6 +273,8 @@ comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record
 				STORE_TRIGGER		=
 				DROP_TRIGGER		=
 				MOVE_SET			=
+				SET_DROP_TABLE			=
+				SET_DROP_SEQUENCE		=
 				FAILOVER_SET		=
 				SUBSCRIBE_SET		=
 				ENABLE_SUBSCRIPTION	=
@@ -350,22 +352,6 @@ begin
 end;
 ' language plpgsql;
 
-
--- ----------------------------------------------------------------------
--- VIEW sl_seqlastvalue
--- ----------------------------------------------------------------------
-create view @NAMESPACE@.sl_seqlastvalue as
-	select SQ.seq_id, SQ.seq_set, SQ.seq_reloid,
-			S.set_origin as seq_origin,
-			@NAMESPACE@.sequenceLastValue(
-					"pg_catalog".quote_ident(PGN.nspname) || '.' ||
-					"pg_catalog".quote_ident(PGC.relname)) as seq_last_value
-		from @NAMESPACE@.sl_sequence SQ, @NAMESPACE@.sl_set S,
-			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
-		where S.set_id = SQ.seq_set
-			and PGC.oid = SQ.seq_reloid and PGN.oid = PGC.relnamespace;
-		
-
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_1
 -- ----------------------------------------------------------------------
@@ -407,6 +393,59 @@ comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perfor
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
+
+-- **********************************************************************
+-- * Views
+-- **********************************************************************
+-- ----------------------------------------------------------------------
+-- VIEW sl_seqlastvalue
+-- ----------------------------------------------------------------------
+create view @NAMESPACE@.sl_seqlastvalue as
+	select SQ.seq_id, SQ.seq_set, SQ.seq_reloid,
+			S.set_origin as seq_origin,
+			@NAMESPACE@.sequenceLastValue(
+					"pg_catalog".quote_ident(PGN.nspname) || '.' ||
+					"pg_catalog".quote_ident(PGC.relname)) as seq_last_value
+		from @NAMESPACE@.sl_sequence SQ, @NAMESPACE@.sl_set S,
+			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+		where S.set_id = SQ.seq_set
+			and PGC.oid = SQ.seq_reloid and PGN.oid = PGC.relnamespace;
+		
+-- ----------------------------------------------------------------------
+-- VIEW sl_status
+--
+--	This view shows the local nodes last event sequence number
+--	and how far all remote nodes have processed events.
+-- ----------------------------------------------------------------------
+create or replace view @NAMESPACE@.sl_status as select
+	E.ev_origin as st_origin,
+	C.con_received as st_received,
+	E.ev_seqno as st_last_event,
+	E.ev_timestamp as st_last_event_ts,
+	C.con_seqno as st_last_received,
+	C.con_timestamp as st_last_received_ts,
+	CE.ev_timestamp as st_last_received_event_ts,
+	E.ev_seqno - C.con_seqno as st_lag_num_events,
+	current_timestamp - CE.ev_timestamp as st_lag_time
+	from @NAMESPACE@.sl_event E, @NAMESPACE@.sl_confirm C,
+		@NAMESPACE@.sl_event CE
+	where E.ev_origin = C.con_origin
+	and CE.ev_origin = E.ev_origin
+	and CE.ev_seqno = C.con_seqno
+	and (E.ev_origin, E.ev_seqno) in 
+		(select ev_origin, max(ev_seqno)
+			from @NAMESPACE@.sl_event
+			where ev_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
+			group by 1
+		)
+	and (C.con_origin, C.con_received, C.con_seqno) in
+		(select con_origin, con_received, max(con_seqno)
+			from @NAMESPACE@.sl_confirm
+			where con_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
+			group by 1, 2
+		);
+comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.
+';
 
 -- **********************************************************************
 -- * Sequences

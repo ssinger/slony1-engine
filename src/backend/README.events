@@ -123,6 +123,26 @@ SET_ADD_TABLE
 	table to their configuration data. The call also adds the
 	replication log trigger to the table.
 
+SET_DROP_TABLE
+	ev_data1		tab_id
+
+	setDropTable(tab_id)
+	setDropTable_int(tab_id)
+
+	Only nodes that are currently subscribed to the table will drop the
+	table from their configuration data.  The call also drops the 
+	replication log trigger from the table, and restores the "normal"
+	rules/triggers.
+
+SET_DROP_SEQUENCE
+	ev_data1		seq_id
+
+
+	setDropSequence(seq_id)
+	setDropSequence_int(seq_id)
+
+	Only nodes that are currently subscribed to the sequence will drop the
+	table from their configuration data.
 
 SUBSCRIBE_SET
 	ev_data1		sub_set
