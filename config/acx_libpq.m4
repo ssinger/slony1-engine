@@ -58,22 +58,46 @@ dnl -----------------------------------------
 
 
 if test -n "${with_pgbindir}" ; then
+_pwd=`pwd`
+cd ${with_pgbindir}
+with_pgbindir=`pwd`
+cd ${_pwd}
 echo "Overriding pgbindir with" ${with_pgbindir}
 PG_BINDIR=${with_pgbindir}
 fi
+
 if test -n "${with_pglibdir}"; then
+_pwd=`pwd`
+cd ${with_pglibdir}
+with_pglibdir=`pwd`
+cd ${_pwd}
 echo "Overriding pglibdir with" ${with_pglibdir}
 PG_LIBDIR=${with_pglibdir}
 fi
+
 if test -n "${with_pgincludedir}"; then
+_pwd=`pwd`
+cd ${with_pgincludedir}
+with_pgincludedir=`pwd`
+cd ${_pwd}
 echo "Overriding pgincludedir with" ${with_pgincludedir}
 PG_INCLUDEDIR=${with_pgincludedir}
 fi
+
 if test -n "${with_pgpkglibdir}"; then
+_pwd=`pwd`
+cd ${with_pgpkglibdir}
+with_pgpkglibdir=`pwd`
+cd ${_pwd}
 echo "Overriding pgpkglibdir with" ${with_pgpkglibdir}
 PG_PKGLIBDIR=${with_pgpkglibdir}
 fi
+
 if test -n "${with_pgincludeserverdir}"; then
+_pwd=`pwd`
+cd ${with_pgincludeserverdir}
+with_pgincludeserverdir=`pwd`
+cd ${_pwd}
 echo "Overriding pgincludeserverdir with" ${with_pgincludeserverdir}
 PG_INCLUDESERVERDIR=${with_pgincludeserverdir}
 fi
@@ -121,7 +145,7 @@ fi
 
 LDFLAGS="$TEMP_FLAGS -L$PG_PKGLIBDIR"
 AC_MSG_CHECKING(for plpgsql.so)
-if test -s $PG_PKGLIBDIR"plpgsql.so"; then
+if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
 else
