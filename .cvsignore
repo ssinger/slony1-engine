@@ -3,3 +3,4 @@ config.log
 config.status
 Makefile.global
 config.h
+postgresql-slony1-engine.spec
