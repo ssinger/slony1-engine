@@ -1,4 +1,4 @@
-<!-- $ID$ --> 
+<!-- $Id: stylesheet.dsl,v 1.2 2004-12-21 17:44:46 darcyb Exp $ --> 
 <!DOCTYPE style-sheet PUBLIC "-//James Clark//DTD DSSSL Style Sheet//EN" [
 
 <!-- must turn on one of these with -i on the jade command line -->
@@ -174,6 +174,7 @@
 (define %root-filename%         "index")
 (define %link-mailto-url%       (string-append "mailto:" slony-list))
 (define %use-id-as-filename%    #t)
+(define %html-manifest%		#t)
 (define %stylesheet%            "stylesheet.css")
 (define %graphic-default-extension% "gif")
 (define %gentext-nav-use-ff%    #t)

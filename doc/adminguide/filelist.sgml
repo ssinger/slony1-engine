@@ -1,4 +1,4 @@
-<!-- $PostgreSQL: pgsql/doc/src/sgml/filelist.sgml,v 1.40 2004/12/03 05:50:18 momjian Exp $ -->
+<!-- $Id: filelist.sgml,v 1.6 2004-12-21 17:44:46 darcyb Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">

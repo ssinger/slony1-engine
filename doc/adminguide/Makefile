@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.6 2004-12-21 15:12:57 darcyb Exp $
+# $Id: Makefile,v 1.7 2004-12-21 17:44:46 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ include $(slony_top_builddir)/Makefile.global
 
 GENERATED_SGML = bookindex.sgml version.sgml
 
-ALLSGML := $(wildcard $(srcdir)/*.sgml $(GENERATED_SGML))
+ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML)
 
 ifdef DOCBOOKSTYLE
 CATALOG = -c $(DOCBOOKSTYLE)/catalog
@@ -62,7 +62,7 @@ html:
 else
 html: slony.sgml $(ALLSGML) stylesheet.dsl
 	@rm -f *.html
-	$(JADE) $(JADEFLAGS) $(SGMLINCLUDE) $(CATALOG) -d mysheet.dsl -ioutput-html -t sgml $<
+	$(JADE) $(JADEFLAGS) $(SGMLINCLUDE) $(CATALOG) -d stylesheet.dsl -ioutput-html -t sgml $<
 ifeq ($(vpath_build), yes)
 	@cp $(srcdir)/stylesheet.css .
 endif
