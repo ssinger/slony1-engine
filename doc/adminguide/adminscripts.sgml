@@ -200,9 +200,19 @@ a VERY unsafe script!
 
 <sect2><title/ update_nodes.pl/
 
-<para>Generates Slonik script to tell all the nodes to update the Slony-I
-functions.  This will typically be needed when you upgrade from one
-version of Slony-I to another.
+<para>Generates Slonik script to tell all the nodes to update the
+Slony-I functions.  This will typically be needed when you upgrade
+from one version of <productname/Slony-I/ to another.
+
+<sect2 id="regenlisten"><title/ regenerate-listens.pl/
+
+<para> This script connects to a <productname/Slony-I/ node, and
+queries various tables (sl_set, sl_node, sl_subscribe, sl_path) to
+compute what <command/SET LISTEN/ requests should be submitted to the
+cluster.
+
+<para> See the documentation on <link linkend="autolisten"> Automated
+Listen Path Generation </link> for more details on how this works.
 
 </sect1>
 

@@ -1,38 +1,42 @@
 <sect1 id="listenpaths"> <title/ Slony Listen Paths/
 
-<note> <para> If you are running version <productname>Slony-I</productname> 1.1, it
-should be <emphasis>completely unnecessary</emphasis> to read this section as it
+<note> <para> If you are running version
+<productname>Slony-I</productname> 1.1, it should be
+<emphasis>completely unnecessary</emphasis> to read this section as it
 introduces a way to automatically manage this part of its
 configuration.  For earlier versions, however, it is needful...</para>
 </note>
 
 <para>If you have more than two or three nodes, and any degree of
-usage of cascaded subscribers (<emphasis/e.g./ - subscribers that are
-subscribing through a subscriber node), you will have to be fairly
-careful about the configuration of <quote/listen paths/ via the Slonik <command/STORE
-LISTEN/ and <command/DROP LISTEN/ statements that control the contents of the
-table sl_listen.
+usage of cascaded subscribers (<emphasis>e.g.</emphasis> - subscribers
+that are subscribing through a subscriber node), you will have to be
+fairly careful about the configuration of <quote>listen paths</quote>
+via the Slonik <command>STORE LISTEN</command> and <command>DROP
+LISTEN</command> statements that control the contents of the table
+sl_listen.</para>
 
-<para>The <quote/listener/ entries in this table control where each
-node expects to listen in order to get events propagated from other
-nodes.  You might think that nodes only need to listen to the
-<quote/parent/ from whom they are getting updates, but in reality,
-they need to be able to receive messages from <emphasis/all/ nodes in
-order to be able to conclude that SYNCs have been received everywhere,
-and that, therefore, entries in sl_log_1 and sl_log_2 have been
-applied everywhere, and can therefore be purged.  This extra
-communication is needful so <productname/Slony-I/ is able to shift
-origins to other locations.
+<para>The <quote>listener</quote> entries in this table control where
+each node expects to listen in order to get events propagated from
+other nodes.  You might think that nodes only need to listen to the
+<quote>parent</quote> from whom they are getting updates, but in
+reality, they need to be able to receive messages from
+<emphasis>all</emphasis> nodes in order to be able to conclude that
+SYNCs have been received everywhere, and that, therefore, entries in
+sl_log_1 and sl_log_2 have been applied everywhere, and can therefore
+be purged.  This extra communication is needful so
+<productname>Slony-I</productname> is able to shift origins to other
+locations.</para>
 
 <sect2><title/ How Listening Can Break/
 
 <para>On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
-(#3) that was, in effect, a <quote/cascaded slave./ Dropping the
-subscriber node initially didn't work, as <link linkend="slonik">
-<command/slonik/ </link> informed me that there was a dependant node.
-I repointed the dependant node to the <quote/master/ node for the
-subscription set, which, for a while, replicated without difficulties.
+(#3) that was, in effect, a <quote>cascaded slave.</quote> Dropping
+the subscriber node initially didn't work, as <link linkend="slonik">
+<command>slonik</command> </link> informed me that there was a
+dependant node.  I repointed the dependant node to the
+<quote>master</quote> node for the subscription set, which, for a
+while, replicated without difficulties.</para>
 
 <para>I then dropped the subscription on <quote/node 2,/ and started
 resubscribing it.  That raised the <productname/Slony-I/
@@ -158,33 +162,45 @@ communicating.
 
 </itemizedlist>
 
-<sect2><title/Automated Listen Path Generation/
+</sect2>
 
-<para> In <productname/Slony-I/ version 1.1, a heuristic scheme is
-introduced to automatically generate listener entries.  This happens,
-in order, based on three data sources:
+<sect2 id="autolisten"><title>Automated Listen Path Generation</title>
+
+<para> In <productname>Slony-I</productname> version 1.1, a heuristic
+scheme is introduced to automatically generate listener entries.  This
+happens, in order, based on three data sources:
 
 <itemizedlist>
 
 <listitem><para> sl_subscribe entries are the first, most vital
-control as to what listens to what; we <emphasis/know/ there must be a
-direct path between each subscriber node and its provider.
+control as to what listens to what; we <emphasis>know</emphasis> there
+must be a direct path between each subscriber node and its
+provider.</para></listitem>
 
 <listitem><para> sl_path entries are the second indicator; if
-sl_subscribe has not already indicated <quote/how to listen,/ then a
-node may listen directly to the event's origin if there is a suitable
-sl_path entry.
+sl_subscribe has not already indicated <quote>how to listen,</quote>
+then a node may listen directly to the event's origin if there is a
+suitable sl_path entry.</para></listitem>
 
 <listitem><para> Lastly, if there has been no guidance thus far based
 on the above data sources, then nodes can listen indirectly via every
 node that is either a provider for the receiver, or that is using the
-receiver as a provider.
+receiver as a provider.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para> Any time sl_subscribe or sl_path are modified,
 <function>RebuildListenEntries()</function> will be called to revise
 the listener paths.</para>
+
+<para> If you are running an earlier version of
+<productname>Slony-I</productname>, you may want to take a look at
+<link linkend="regenlisten">
+<application>regenerate-listens.pl</application> </link>, a Perl
+script which duplicates the functionality of the stored procedure in
+the form of a script that generates the <link linkend="slonik"> Slonik
+</link> requests to generate the listener paths.</para></sect2>
+
 </sect1>
 
 <!-- Keep this comment at the end of the file
