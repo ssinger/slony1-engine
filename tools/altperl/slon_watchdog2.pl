@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: slon_watchdog2.pl,v 1.1 2004-09-23 16:03:32 cbbrowne Exp $
+# $Id: slon_watchdog2.pl,v 1.2 2004-09-27 20:32:22 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -38,28 +38,14 @@ while (1) {
     }
   } else {
     $restart = "YES";
+    # See if the slon log ends with "FATAL  localListenThread: Another slon daemon is serving this node already"
+    my $lastlog=`/bin/ls -t $LOGDIR/slony1/node$nodenum/$dbname*log | head -1`;
+    my $lastline=`tail -1 $lastlog`;
+    if ($lastline =~ /Another slon daemon is serving this node already/) {
+      $kick = "YES";   # Yup, need to tell slonik to reset this node
+    }
   }
 
-  if ($restart eq "YES") {
-    if ($pid) {  # process is still alive, but evidently deranged, so it's getting terminated
-      log_to_watchdog_log("terminate slon daemon for $SETNAME node $nodenum");
-      # Kill slon until dead...
-      kill 2, $pid;
-      sleep 3;
-      kill 15, $pid;
-      sleep 3;
-      kill 9, $pid;
-      sleep 3;
-    }
-  }
-  if ($restart eq "YES") {
-    # Now, let's see if there's a lingering pg_listener entry
-    my $dead_connections = query_slon_connections($nodenum);
-    log_to_watchdog_log("spurious pg_listener entries for $SETNAME node $node - Count=[$dead_connections]");
-    if ($dead_connections > 0) {
-      $kick = "YES";
-    }
-  }
   # If the node needs a swift kick in the "RESTART", then submit that to slonik
   if ($kick eq "YES") {
     log_to_watchdog_log("submit slonik to restart $SETNAME node $nodenum");
@@ -69,6 +55,15 @@ while (1) {
     close SLONIK;
   }
   if ($restart eq "YES") {
+    if ($pid) {
+      log_to_watchdog_log("terminate slon daemon for $SETNAME node $nodenum");
+      # Kill slon until dead...
+      kill 2, $pid;
+      sleep 3;
+      kill 15, $pid;
+      sleep 3;
+      kill 9, $pid;
+    }
     log_to_watchdog_log("restart slon for $nodenum");
     start_slon($nodenum);
   }
