@@ -39,6 +39,8 @@
 		<li><a href="#stmt_set_add_sequence">SET ADD SEQUENCE</a>
 		<li><a href="#stmt_set_drop_table">SET DROP TABLE</a>
 		<li><a href="#stmt_set_drop_sequence">SET DROP SEQUENCE</a>
+		<li><a href="#stmt_set_move_table">SET DROP TABLE</a>
+		<li><a href="#stmt_set_move_sequence">SET DROP SEQUENCE</a>
 		<li><a href="#stmt_store_trigger">STORE TRIGGER</a>
 		<li><a href="#stmt_drop_trigger">DROP TRIGGER</a>
 		<li><a href="#stmt_subscribe_set">SUBSCRIBE SET</a>
@@ -1091,6 +1093,106 @@ manual on how to configure and set up a replication system.
 	SET DROP SEQUENCE (
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_move_table">
+<h3>SET MOVE TABLE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET MOVE TABLE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Change the set a table belongs to. The current set and the new set
+	must origin on the same node and subscribed by the same nodes.
+	CAUTION: Due to the way subscribing to new sets works make
+	absolutely sure that the subscription of all nodes to the sets
+	is completely processed before moving tables. Moving a table too
+	early to a new set causes the subscriber to try and add the table
+	already during the subscription process, which fails with a duplicate
+	key error and breaks replication.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set. A future version of slonik
+		might figure out this information by itself.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the table. 
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the new set. 
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET MOVE TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_move_sequence">
+<h3>SET MOVE SEQUENCE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET MOVE SEQUENCE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Change the set a sequence belongs to. The current set and the new set
+	must origin on the same node and subscribed by the same nodes.
+	CAUTION: Due to the way subscribing to new sets works make
+	absolutely sure that the subscription of all nodes to the sets
+	is completely processed before moving sequences. Moving a sequence too
+	early to a new set causes the subscriber to try and add the sequence
+	already during the subscription process, which fails with a duplicate
+	key error and breaks replication.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set. A future version of slonik
+		might figure out this information by itself.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the sequence. 
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the new set. 
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET MOVE SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 54,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
 	<br>);
 </p>
 </div>
