@@ -3,10 +3,10 @@
  *
  *	Global definitions for the main replication engine.
  *
- *	Copyright (c) 2003, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.8 2004-01-22 21:26:51 wieck Exp $
+ *	$Id: slon.h,v 1.9 2004-02-20 15:13:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,7 +45,12 @@ struct SlonNode_s {
 	int					no_id;			/* node ID */
 	int					no_active;		/* it's active state */
 	char			   *no_comment;		/* comment field */
+#if 0
 	pthread_mutex_t		node_lock;		/* mutex for node */
+#endif
+
+	char			   *pa_conninfo;	/* path to the node */
+	int					pa_connretry;	/* connection retry interval */
 
 	int64				last_event;		/* last event we have received */
 
@@ -268,6 +273,9 @@ extern void		slon_exit(int code);
  * Functions in runtime_config.c
  * ----------
  */
+extern void		rtcfg_lock(void);
+extern void		rtcfg_unlock(void);
+
 extern void		rtcfg_storeNode(int no_id, char *no_comment);
 extern void		rtcfg_enableNode(int no_id);		
 extern void		rtcfg_dropNode(int no_id);

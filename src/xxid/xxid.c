@@ -3,10 +3,10 @@
  *
  *	Our own datatype for safe storage of transaction ID's.
  *
- *	Copyright (c) 2003, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.4 2003-11-24 14:30:35 wieck Exp $
+ *	$Id: xxid.c,v 1.5 2004-02-20 15:13:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -3,10 +3,10 @@
  *
  *	Functions maintaining the in-memory configuration information
  *
- *	Copyright (c) 2003, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.1 2004-01-22 21:26:51 wieck Exp $
+ *	$Id: runtime_config.c,v 1.2 2004-02-20 15:13:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -73,6 +73,28 @@ static void			rtcfg_startStopNodeThread(SlonNode *node);
 
 
 /* ----------
+ * rtcfg_lock
+ * ----------
+ */
+void
+rtcfg_lock(void)
+{
+	pthread_mutex_lock(&config_lock);
+}
+
+
+/* ----------
+ * rtcfg_unlock
+ * ----------
+ */
+void
+rtcfg_unlock(void)
+{
+	pthread_mutex_unlock(&config_lock);
+}
+
+
+/* ----------
  * rtcfg_storeNode
  * ----------
  */
@@ -81,7 +103,7 @@ rtcfg_storeNode(int no_id, char *no_comment)
 {
 	SlonNode	   *node;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
 
 	/*
 	 * If we have that node already, just change the comment field.
@@ -93,7 +115,7 @@ printf("rtcfg_storeNode: no_id=%d: UPD no_comment='%s'\n", no_id, no_comment);
 		free(node->no_comment);
 		node->no_comment = strdup(no_comment);
 
-		pthread_mutex_unlock(&config_lock);
+		rtcfg_unlock();
 		return;
 	}
 
@@ -107,11 +129,13 @@ printf("rtcfg_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 	node->no_id      = no_id;
 	node->no_active  = false;
 	node->no_comment = strdup(no_comment);
+#if 0
 	pthread_mutex_init(&(node->node_lock), NULL);
+#endif
 
 	DLLIST_ADD_TAIL(node_list_head, node_list_tail, node);
 
-	pthread_mutex_unlock(&config_lock);
+	rtcfg_unlock();
 }
 
 
@@ -130,12 +154,12 @@ rtcfg_enableNode(int no_id)
 {
 	SlonNode	   *node;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
 
 	node = rtcfg_findNode(no_id);
 	if (!node)
 	{
-		pthread_mutex_unlock(&config_lock);
+		rtcfg_unlock();
 
 		fprintf(stderr, "rtcfg_enableNode: unknown node ID %d\n", no_id);
 		slon_abort();
@@ -148,7 +172,7 @@ rtcfg_enableNode(int no_id)
 printf("rtcfg_enableNode: no_id=%d\n", no_id);
 	node->no_active = true;
 
-	pthread_mutex_unlock(&config_lock);
+	rtcfg_unlock();
 
 	rtcfg_startStopNodeThread(node);
 }
@@ -172,13 +196,15 @@ rtcfg_dropNode(int no_id)
 void
 rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 {
-printf("rtcfg_storePath: pa_server=%d pa_conninfo=\"%s\"\n", 
-pa_server, pa_conninfo);
-#if 0
-	SlonNode	   *node = rtcfg_findNode(pa_server);
+	SlonNode	   *node;
 
+	rtcfg_lock();
+
+	node = rtcfg_findNode(pa_server);
 	if (!node)
 	{
+		rtcfg_unlock();
+
 		fprintf(stderr, "rtcfg_storePath: unknown node ID %d\n", pa_server);
 		slon_abort();
 		return;
@@ -187,20 +213,19 @@ pa_server, pa_conninfo);
 	/*
 	 * Store the (new) conninfo to the node
 	 */
-printf("rtcfg_storePath: pa_server=%d pa_conninfo=\"%s\"\n", 
-pa_server, pa_conninfo);
+printf("rtcfg_storePath: pa_server=%d pa_conninfo=\"%s\" pa_connretry=%d\n", 
+pa_server, pa_conninfo, pa_connretry);
 	if (node->pa_conninfo != NULL)
 		free(node->pa_conninfo);
 	node->pa_conninfo  = strdup(pa_conninfo);
 	node->pa_connretry = pa_connretry;
 
+	rtcfg_unlock();
+
 	/*
 	 * Eventually start communicating with that node
 	 */
 	rtcfg_startStopNodeThread(node);
-
-	pthread_mutex_unlock(&(node->node_lock));
-#endif
 }
 
 
@@ -211,12 +236,12 @@ pa_server, pa_conninfo);
 void
 rtcfg_storeListen(int li_origin, int li_provider)
 {
-printf("rtcfg_storeListen: add li_origin=%d to li_provider=%d\n",
-li_origin, li_provider);
-#if 0
-	SlonNode	   *node = rtcfg_findNode(li_provider);
+	SlonNode	   *node;
 	SlonListen	   *listen;
 
+	rtcfg_lock();
+
+	node = rtcfg_findNode(li_provider);
 	if (!node)
 	{
 		fprintf(stderr, "rtcfg_storeListen: unknown node ID %d\n", li_provider);
@@ -228,13 +253,13 @@ li_origin, li_provider);
 	 * Check if we already listen for events from that origin
 	 * at this provider.
 	 */
-	for (listen = node->li_list_head; listen; listen = listen->next)
+	for (listen = node->listen_head; listen; listen = listen->next)
 	{
 		if (listen->li_origin == li_origin)
 		{
 printf("rtcfg_storeListen: already listening for li_origin=%d li_provider=%d\n",
 li_origin, li_provider);
-			pthread_mutex_unlock(&(node->node_lock));
+			rtcfg_unlock();
 			return;
 		}
 	}
@@ -248,15 +273,14 @@ li_origin, li_provider);
 	memset(listen, 0, sizeof(SlonListen));
 
 	listen->li_origin = li_origin;
-	DLLIST_ADD_TAIL(node->li_list_head, node->li_list_tail, listen);
+	DLLIST_ADD_TAIL(node->listen_head, node->listen_tail, listen);
+
+	rtcfg_unlock();
 
 	/*
 	 * Eventually start communicating with that node
 	 */
 	rtcfg_startStopNodeThread(node);
-
-	pthread_mutex_unlock(&(node->node_lock));
-#endif
 }
 
 
@@ -399,6 +423,18 @@ rtcfg_findNode(int no_id)
 static void
 rtcfg_startStopNodeThread(SlonNode *node)
 {
+	rtcfg_lock();
+
+	/*
+	 * Check if we have to create a new remote_listen thread
+	 */
+	if (node->listen_status == SLON_TSTAT_NONE && node->listen_head != NULL)
+	{
+printf("TODO: rtcfg_startStopNodeThread() need to start \"remote_listen\" for no_id=%d\n", node->no_id);
+	}
+
+	rtcfg_unlock();
+
 #if 0
 	if (node->have_thread)
 	{

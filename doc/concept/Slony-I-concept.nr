@@ -3,10 +3,10 @@
 .\"
 .\"		Original design goals and technical overview
 .\"
-.\"		Copyright (c) 2003, PostgreSQL Global Development Group
-.\"		Author: Jan Wieck, Afilias USA INC.
+.\"	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+.\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-concept.nr,v 1.2 2004-01-19 20:25:50 wieck Exp $
+.\"	$Id: Slony-I-concept.nr,v 1.3 2004-02-20 15:13:27 wieck Exp $
 .\" ----------
 .\" format this document with
 .\"
