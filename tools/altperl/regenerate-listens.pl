@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: regenerate-listens.pl,v 1.3 2005-02-02 17:22:29 cbbrowne Exp $
+# $Id: regenerate-listens.pl,v 1.4 2005-02-09 16:17:54 cbbrowne Exp $
 # Copyright 2005
 # Christopher B. Browne
 # cbbrowne@acm.org
@@ -17,14 +17,11 @@
 # But until 1.1, this should be useful for building/rebuilding
 # listener paths
 
-use Pg;
+use DBI;
 use Getopt::Long;
 
 my $goodopts = GetOptions("help", "host=s", "user=s", "password=s", "db=s",
 			  "port=s", "cluster=s" );
-
-my $db = 'oxrsorg';
-my $sinfo = "dbname=$db port=5532 host=dba2 user=cbbrowne";
 
 if (defined($opt_help)) {
   print "Help - $opt_help\n";
@@ -33,51 +30,36 @@ if (defined($opt_help)) {
 };
 }
 
-my $sinfo = "";#"dbname=$database host=$host port=$port user=$user";
+my $sinfo = "dbi:Pg";
 if (defined($opt_db)) {
-  $sinfo .= " dbname=$opt_db";
+  $sinfo .= ":dbname=$opt_db";
 } else {
-  $sinfo .= " dbname=oxrsorg";
+  die "must specify database name\n";
 }
 if (defined($opt_host)) {
-  $sinfo .= " host=$opt_host";
-} else {
-  $sinfo .= " host=dba2";
+  $sinfo .= ";host=$opt_host";
 }
-if (defined($opt_user)) {
-  $sinfo .= " user=$opt_user";
-} else {
-  $sinfo .= " user=cbbrowne";
-}
-$sinfo .= " password=$opt_password"
-  if (defined($opt_password));
 if (defined($opt_port)) {
-  $sinfo .= " port=$opt_port";
-} else {
-  $sinfo .= " port=5532";
+  $sinfo .= ";port=$opt_port";
 }
 if (defined($opt_cluster)) {
   $cluster = $opt_cluster;
 } else {
-  print "No Slony-I cluster specified\n";
-  die -1;
-}
-$conn =  Pg::connectdb($sinfo);
-$status_conn = $conn->status;
-
-if ($status_conn ne PGRES_CONNECTION_OK) {
-  print "No connection to database.";
-  print $conn->errorMessage;
-  exit(1);
+  die "No Slony-I cluster specified\n";
 }
 
-my $nodes_query = qq{ 
+$dbh = DBI->connect($sinfo,$opt_user,$opt_password)
+  or die "No connection to database " . $DBI::errstr;
+
+my $nodes_query = $dbh->prepare(qq{ 
    select n1.no_id as origin, n2.no_id as receiver 
     from "_$cluster".sl_node n1, "_$cluster".sl_node n2
     where n1.no_id <> n2.no_id;
-};
-my $res = $conn->exec($nodes_query);
-while (my @row = $res->fetchrow) {
+}) or die $dbh->errstr;
+
+$nodes_query->execute() or die $dbh->errstr;
+
+while (my @row = $nodes_query->fetchrow_array) {
   my ($origin, $receiver) = @row;
   rebuildlistenentries ($origin, $receiver);
 }
@@ -97,7 +79,7 @@ foreach my $origin (sort keys %PROVIDER) {
 sub rebuildlistenentries {
   my ($origin, $receiver) = @_;
 
-  my $subquery = qq{ 
+  my $subquery = $dbh->prepare(qq{ 
    select distinct sub_provider 
    from "_$cluster".sl_subscribe, "_$cluster".sl_set, "_$cluster".sl_path
    where sub_set = set_id
@@ -105,26 +87,26 @@ sub rebuildlistenentries {
 	and sub_receiver = $receiver
 	and sub_provider = pa_server
 	and sub_receiver = pa_client;
-  };
-  my $res = $conn->exec($subquery);
-  while (my @row = $res->fetchrow) {
+  }) or die $dbh->errstr;
+  $subquery->execute() or die $dbh->errstr;
+  while (my @row = $subquery->fetchrow_array) {
     my ($provider) = @row;
     $PROVIDER{$origin}{$receiver}=$provider;
     return 1;
   }
-  my $path_query = qq{
+  my $path_query = $dbh->prepare(qq{
    select true from "_$cluster".sl_path
    where pa_server = $origin and
          pa_client = $receiver
    limit 1;
-  };
-  $res = $conn->exec($path_query);
-  while (my @row = $res->fetchrow) {
+  }) or die $dbh->errstr;
+  $path_query->execute() or die $dbh->errstr;
+  while (my @row = $path_query->fetchrow_array) {
     $PROVIDER{$origin}{$receiver}=$origin;
     return 1;
   }
 
-  my $providers_query = qq{
+  my $providers_query = $dbh->prepare(qq{
      select distinct provider from (
 			select sub_provider as provider
 					from "_$cluster".sl_subscribe
@@ -137,21 +119,21 @@ sub rebuildlistenentries {
 								where pa_server = sub_receiver
 								and pa_client = sub_provider)
 			) as S;
-     };
+     }) or die $dbh->errstr;
 
-  $res = $conn->exec($providers_query);
-  while (my @row = $res->fetchrow) {
+  $providers_query->execute() or die $dbh->errstr;
+  while (my @row = $providers_query->fetchrow_array) {
     my ($provider) = @_;
     $PROVIDER{$origin}{$receiver}=$provider;
     return 1;
   }
-  my $last_resort = qq{
+  my $last_resort = $dbh->prepare(qq{
    select pa_server as provider
    from "_$cluster".sl_path
    where pa_client = $receiver;
-  };
-  $res = $conn->exec($last_resort);
-  while (my @row = $res->fetchrow) {
+  }) or die $dbh->errstr;
+  $last_resort->execute() or die $dbh->errstr;
+  while (my @row = $last_resort->fetchrow_array) {
     my ($provider) = @_;
     if ($PROVIDER{$origin}{$receiver}) {
       $PROVIDER{$origin}{$receiver}=$provider;
