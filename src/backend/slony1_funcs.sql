@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.8 2004-10-20 21:20:56 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.9 2004-10-22 14:45:11 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1947,6 +1947,42 @@ begin
 	end if;
 
 	-- ----
+	-- Also check that there are no unconfirmed enable subscriptions
+	-- still lingering (prevents bug 896)
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = p_set_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: set % cannot be merged because of pending subscription'',
+				p_set_id;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = p_add_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: set % cannot be merged because of pending subscription'',
+				p_add_id;
+	end if;
+
+	-- ----
 	-- Create a SYNC event, merge the sets, create a MERGE_SET event
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
@@ -2606,6 +2642,40 @@ begin
 	end if;
 
 	-- ----
+	-- Also check that there are no unconfirmed enable subscriptions
+	-- still lingering (prevents bug 896)
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = v_old_set_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: table cannot be moved because of pending subscription'';
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = p_new_set_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: table cannot be moved because of pending subscription'';
+	end if;
+
+	-- ----
 	-- Change the set the table belongs to
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
@@ -2720,6 +2790,40 @@ begin
 	then
 		raise exception ''Slony-I: subscriber lists of set % and % are different'',
 				v_old_set_id, p_new_set_id;
+	end if;
+
+	-- ----
+	-- Also check that there are no unconfirmed enable subscriptions
+	-- still lingering (prevents bug 896)
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = v_old_set_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: sequence cannot be moved because of pending subscription'';
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_event
+				where ev_origin = v_origin
+				and ev_type = ''ENABLE_SUBSCRIPTION''
+				and ev_data1 = p_new_set_id
+				and ev_seqno > (select min(max_con_seqno) from
+					(select con_received, max(con_seqno) as max_con_seqno
+							from @NAMESPACE@.sl_confirm
+							where con_origin = v_origin
+							group by con_received) as CON
+					)
+				)
+	then
+		raise exception ''Slony-I: sequence cannot be moved because of pending subscription'';
 	end if;
 
 	-- ----
