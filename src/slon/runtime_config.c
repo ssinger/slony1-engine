@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.16 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: runtime_config.c,v 1.17 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -254,13 +254,40 @@ rtcfg_enableNode(int no_id)
 
 
 /* ----------
- * slon_dropNode
+ * slon_disableNode
  * ----------
  */
 void
-rtcfg_dropNode(int no_id)
+rtcfg_disableNode(int no_id)
 {
-	printf("TODO: ********** rtcfg_dropNode\n");
+	SlonNode	   *node;
+
+	rtcfg_lock();
+
+	node = rtcfg_findNode(no_id);
+	if (!node)
+	{
+		rtcfg_unlock();
+
+		slon_log(SLON_FATAL,
+				"enableNode: unknown node ID %d\n", no_id);
+		slon_abort();
+		return;
+	}
+
+	/*
+	 * Deactivate the node
+	 */
+	slon_log(SLON_CONFIG,
+			"disableNode: no_id=%d\n", no_id);
+	node->no_active = false;
+
+	rtcfg_unlock();
+	rtcfg_seq_bump();
+
+	/*
+	rtcfg_startStopNodeThread(node);
+	*/
 }
 
 

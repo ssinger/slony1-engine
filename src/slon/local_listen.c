@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.15 2004-03-20 02:25:46 wieck Exp $
+ *	$Id: local_listen.c,v 1.16 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -202,6 +202,39 @@ localListenThread_main(void *dummy)
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_enableNode(no_id);
+			}
+			else if (strcmp(ev_type, "DROP_NODE") == 0)
+			{
+				/*
+				 * DROP_NODE
+				 */
+				int		no_id;
+				char	notify_query[256];
+				PGresult *notify_res;
+
+				no_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+
+				/*
+				 * Deactivate the node in the runtime configuration
+				 */
+				rtcfg_disableNode(no_id);
+
+				/*
+				 * And cause the replication daemon to restart to get
+				 * rid of it.
+				 */
+				snprintf(notify_query, sizeof(notify_query),
+						"notify \"_%s_Restart\";",
+						rtcfg_cluster_name);
+				notify_res = PQexec(dbconn, notify_query);
+				if (PQresultStatus(notify_res) != PGRES_COMMAND_OK)
+				{
+					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s",
+							notify_query, PQresultErrorMessage(notify_res));
+					PQclear(notify_res);
+					slon_abort();
+				}
+				PQclear(notify_res);
 			}
 			else if (strcmp(ev_type, "STORE_PATH") == 0)
 			{

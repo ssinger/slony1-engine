@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.5 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: parser.y,v 1.6 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -118,6 +118,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_error
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
+%type <statement>	stmt_drop_node
 %type <statement>	stmt_store_path
 %type <statement>	stmt_drop_path
 %type <statement>	stmt_store_listen
@@ -320,6 +321,8 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_store_node
 						{ $$ = $1; }
+					| stmt_drop_node
+						{ $$ = $1; }
 					| stmt_store_path
 						{ $$ = $1; }
 					| stmt_drop_path
@@ -470,6 +473,32 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 							new->no_id			= opt[0].ival;
 							new->no_comment		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_drop_node		: lno K_DROP K_NODE option_list
+					{
+						SlonikStmt_drop_node *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_drop_node *)
+								malloc(sizeof(SlonikStmt_drop_node));
+						memset(new, 0, sizeof(SlonikStmt_drop_node));
+						new->hdr.stmt_type		= STMT_DROP_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->ev_origin		= opt[1].ival;
 						}
 
 						$$ = (SlonikStmt *)new;

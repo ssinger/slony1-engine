@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.27 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: slon.h,v 1.28 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -334,7 +334,7 @@ extern void		rtcfg_unlock(void);
 
 extern void		rtcfg_storeNode(int no_id, char *no_comment);
 extern void		rtcfg_enableNode(int no_id);		
-extern void		rtcfg_dropNode(int no_id);
+extern void		rtcfg_disableNode(int no_id);
 extern SlonNode *rtcfg_findNode(int no_id);
 extern int64	rtcfg_setNodeLastEvent(int no_id, int64 event_seq);
 extern int64	rtcfg_getNodeLastEvent(int no_id);

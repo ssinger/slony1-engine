@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.9 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: slonik.c,v 1.10 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -289,6 +289,23 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_NODE:
+				{
+					SlonikStmt_drop_node *stmt =
+							(SlonikStmt_drop_node *)hdr;
+
+					if (stmt->ev_origin == stmt->no_id)
+					{
+						printf("%s:%d: Error: "
+								"Node ID and event node cannot be identical\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 				}
@@ -743,6 +760,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_store_node *)hdr;
 
 					if (slonik_store_node(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_NODE:
+				{
+					SlonikStmt_drop_node *stmt =
+							(SlonikStmt_drop_node *)hdr;
+
+					if (slonik_drop_node(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1533,6 +1560,36 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 			stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
 			stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo2, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_drop_node(SlonikStmt_drop_node *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".dropNode(%d); ",
+			stmt->hdr.script->clustername,
+			stmt->no_id);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;

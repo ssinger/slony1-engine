@@ -24,6 +24,7 @@
 	<ul>
 		<li><a href="#stmt_init_cluster">INIT CLUSTER</a>
 		<li><a href="#stmt_store_node">STORE NODE</a>
+		<li><a href="#stmt_drop_node">DROP NODE</a>
 		<li><a href="#stmt_restart_node">RESTART NODE</a>
 		<li><a href="#stmt_store_path">STORE PATH</a>
 		<li><a href="#stmt_drop_path">DROP PATH</a>
@@ -341,6 +342,37 @@
 <p align="right">Back to <a href="#index">Index</a></p>
 
 <!-- **************************************** -->
+<a name="stmt_drop_node">
+<h3>DROP NODE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	DROP NODE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drop a node. This command removes the specified node entirely from
+	the replication systems configuration. If the replication daemon
+	is still running on that node (and processing events), it will
+	attempt to uninstall the replication system and terminate itself.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Node ID of the system to remove.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	DROP NODE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
 <a name="stmt_restart_node">
 <h3>RESTART NODE</h3>
 </a>
@@ -471,7 +503,7 @@
 <p>
 	DROP PATH (
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;SERVER = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2
 	<br>);
 </p>
 </div>

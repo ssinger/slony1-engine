@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.30 2004-03-20 02:25:46 wieck Exp $
+ *	$Id: remote_worker.c,v 1.31 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -488,6 +488,46 @@ remoteWorkerThread_main(void *cdata)
 						"select %s.enableNode_int(%d); ",
 						rtcfg_namespace,
 						no_id);
+			}
+			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
+			{
+				int		no_id = (int) strtol(event->ev_data1, NULL, 10);
+
+				if (no_id != rtcfg_nodeid)
+					rtcfg_disableNode(no_id);
+
+				slon_appendquery(&query1,
+						"select %s.dropNode_int(%d); "
+						rtcfg_namespace,
+						no_id);
+
+				/*
+				 * If this is our own nodeid, then calling disableNode_int()
+				 * will destroy the whole configuration including the
+				 * entire schema. Make sure we call just that and get
+				 * out of here ASAP!
+				 */
+				if (no_id == rtcfg_nodeid)
+				{
+					slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+							"got DROP NODE for local node ID\n",
+							node->no_id);
+
+					slon_appendquery(&query1, 
+							"commit transaction; "
+							"drop schema %s cascade; ",
+							rtcfg_namespace);
+
+					query_execute(node, local_dbconn, &query1);
+					slon_abort();
+				}
+
+				/*
+				 * this is a remote node. Arrange for daemon restart.
+				 */
+				slon_appendquery(&query1,
+						"notify \"_%s_Restart\"; ",
+						rtcfg_cluster_name);
 			}
 			else if (strcmp(event->ev_type, "STORE_PATH") == 0)
 			{

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.33 2004-03-20 02:25:46 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.34 2004-03-23 12:38:56 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -434,9 +434,55 @@ returns int4
 as '
 declare
 	p_no_id			alias for $1;
+	v_node_row		record;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropNode() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that this got called on a different node
+	-- ----
+	if p_no_id = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: DROP_NODE cannot initiate on the dropped node'';
+	end if;
+
+	select * into v_node_row from @NAMESPACE@.sl_node
+			where no_id = p_no_id
+			for update;
+	if not found then
+		raise exception ''Slony-I: unknown node ID %'', p_no_id;
+	end if;
+
+	-- ----
+	-- Make sure we do not break other nodes subscriptions with this
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_no_id)
+	then
+		raise exception ''Slony-I: Node % is still configured as data provider'',
+				p_no_id;
+	end if;
+
+	-- ----
+	-- Make sure no set originates there any more
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_set
+			where set_origin = p_no_id)
+	then
+		raise exception ''Slony-I: Node % is still origin of one or more sets'',
+				p_no_id;
+	end if;
+
+	-- ----
+	-- Call the internal drop functionality and generate the event
+	-- ----
+	perform @NAMESPACE@.dropNode_int(p_no_id);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_NODE'',
+									p_no_id);
+
+	return p_no_id;
 end;
 ' language plpgsql;
 
@@ -451,9 +497,78 @@ returns int4
 as '
 declare
 	p_no_id			alias for $1;
+	v_tab_row		record;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropNode_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- If the dropped node is a remote node, clean the configuration
+	-- from all traces for it.
+	-- ----
+	if p_no_id <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		delete from @NAMESPACE@.sl_subscribe
+				where sub_receiver = p_no_id;
+		delete from @NAMESPACE@.sl_listen
+				where li_origin = p_no_id
+					or li_provider = p_no_id
+					or li_receiver = p_no_id;
+		delete from @NAMESPACE@.sl_path
+				where pa_server = p_no_id
+					or pa_client = p_no_id;
+		delete from @NAMESPACE@.sl_confirm
+				where con_origin = p_no_id
+					or con_received = p_no_id;
+		delete from @NAMESPACE@.sl_event
+				where ev_origin = p_no_id;
+		delete from @NAMESPACE@.sl_node
+				where no_id = p_no_id;
+
+		return p_no_id;
+	end if;
+
+	-- ----
+	-- This is us ... deactivate the node for now, the daemon
+	-- will call uninstallNode() in a separate transaction.
+	-- ----
+	update @NAMESPACE@.sl_node
+			set no_active = false
+			where no_id = p_no_id;
+
+	return p_no_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION uninstallNode ()
+--
+--	Reset the whole database to standalone by removing the whole
+--	replication system.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.uninstallNode ()
+returns int4
+as '
+declare
+	v_tab_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- This is us ... time for suicide! Restore all tables to
+	-- their original status.
+	-- ----
+	for v_tab_row in select * from @NAMESPACE@.sl_table loop
+		perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+	end loop;
+
+	drop schema "_@CLUSTERNAME@" cascade;
+	return 0;
 end;
 ' language plpgsql;
 

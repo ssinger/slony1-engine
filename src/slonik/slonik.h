@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.6 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: slonik.h,v 1.7 2004-03-23 12:38:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -20,6 +20,7 @@ typedef struct SlonikStmt_exit_s				SlonikStmt_exit;
 typedef struct SlonikStmt_restart_node_s		SlonikStmt_restart_node;
 typedef struct SlonikStmt_init_cluster_s		SlonikStmt_init_cluster;
 typedef struct SlonikStmt_store_node_s			SlonikStmt_store_node;
+typedef struct SlonikStmt_drop_node_s			SlonikStmt_drop_node;
 typedef struct SlonikStmt_store_path_s			SlonikStmt_store_path;
 typedef struct SlonikStmt_drop_path_s			SlonikStmt_drop_path;
 typedef struct SlonikStmt_store_listen_s		SlonikStmt_store_listen;
@@ -47,6 +48,7 @@ typedef enum {
 	STMT_SET_ADD_TABLE,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
+	STMT_DROP_NODE,
 	STMT_STORE_PATH,
 	STMT_SUBSCRIBE_SET,
 	STMT_TABLE_ADD_KEY,
@@ -126,6 +128,13 @@ struct SlonikStmt_store_node_s {
 	SlonikStmt			hdr;
 	int					no_id;
 	char			   *no_comment;
+	int					ev_origin;
+};
+
+
+struct SlonikStmt_drop_node_s {
+	SlonikStmt			hdr;
+	int					no_id;
 	int					ev_origin;
 };
 
@@ -322,6 +331,7 @@ extern char	   *current_file;
 extern int		slonik_restart_node(SlonikStmt_restart_node *stmt);
 extern int		slonik_init_cluster(SlonikStmt_init_cluster *stmt);
 extern int		slonik_store_node(SlonikStmt_store_node *stmt);
+extern int		slonik_drop_node(SlonikStmt_drop_node *stmt);
 extern int		slonik_store_path(SlonikStmt_store_path *stmt);
 extern int		slonik_drop_path(SlonikStmt_drop_path *stmt);
 extern int		slonik_store_listen(SlonikStmt_store_listen *stmt);
