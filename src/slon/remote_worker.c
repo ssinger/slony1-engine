@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.43 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: remote_worker.c,v 1.44 2004-05-20 00:42:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2267,6 +2267,18 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				INT64_FORMAT " bytes copied for table %s\n",
 				node->no_id, copysize, tab_fqname);
+
+		/*
+		 * Analyze the table to update statistics
+		 */
+		slon_mkquery(&query1, "analyze %s; ", tab_fqname);
+		if (query_execute(node, loc_dbconn, &query1) < 0)
+		{
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
 	}
 	PQclear(res1);
 
@@ -2389,7 +2401,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		}
 	}
 	PQclear(res1);
-
 
 	/*
 	 * It depends on who is our data provider how we construct
