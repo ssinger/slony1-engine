@@ -207,7 +207,7 @@ event would do that.  Submitting the three queries using EXECUTE
 SCRIPT can do that.  Less ideal would be to connect to each database
 and submit the queries by hand.
 
-10.  I tried to add a table to a set, and got the following message:
+11.  I tried to add a table to a set, and got the following message:
 
    Slony-I: cannot add table to currently subscribed set 1
 
@@ -216,3 +216,31 @@ You cannot add tables to sets that already have subscribers.
 The workaround to this is to create ANOTHER set, add the new tables to
 that new set, subscribe the same nodes subscribing to "set 1" to the
 new set, and then merge the sets together.
+
+12.  I want to stop replicating a sequence
+
+There is not at this point a SET DROP SEQUENCE command in Slonik to
+allow you to do this.  That should come in at the same time as SET
+DROP TABLE does (see #10).
+
+Supposing I want to get rid of the two sequences listed below,
+whois_cachemgmt_seq and epp_whoi_cach_seq_, we start by needing the
+seq_id values.
+
+oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
+ seq_id | seq_reloid | seq_set |             seq_comment             
+--------+------------+---------+-------------------------------------
+     93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
+     59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
+(2 rows)
+
+
+The data that needs to be deleted to stop Slony from continuing to
+replicate these are thus:
+
+delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+delete from _oxrsorg.sl_sequence where seq_id in (93,59);
+
+Those two queries could be submitted to all of the nodes via
+ddlscript() / EXECUTE SCRIPT, thus eliminating the sequence everywhere
+"at once."
