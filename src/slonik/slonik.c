@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.26 2004-06-16 13:09:36 wieck Exp $
+ *	$Id: slonik.c,v 1.27 2004-07-01 23:00:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2506,6 +2506,10 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 		}
 		else
 		{
+			printf("IMPORTANT: Last known SYNC for set %d = "
+					INT64_FORMAT "\n",
+					setinfo[i].set_id,
+					setinfo[i].max_seqno);
 			use_node = setinfo[i].max_node->no_id;
 			use_adminfo = setinfo[i].max_node->adminfo;
 
