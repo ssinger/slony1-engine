@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.70 2005-01-12 17:27:10 darcyb Exp $
+ *	$Id: remote_worker.c,v 1.71 2005-01-28 22:51:11 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -208,19 +208,18 @@ static struct node_confirm_status *node_confirm_head = NULL;
 static struct node_confirm_status *node_confirm_tail = NULL;
 pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int			sync_group_maxsize;
+int sync_group_maxsize;
 
-int			last_sync_group_size;
-int			next_sync_group_size;
+int last_sync_group_size;
+int next_sync_group_size;
 
-int			desired_sync_time = 60000;
-int			ideal_sync;
-struct timeval sync_start;
-struct timeval sync_end;
-int			last_sync_length;
-int			max_sync;
-int			min_sync;
-
+int desired_sync_time = 60000;
+int ideal_sync ;
+struct timeval  sync_start;
+struct timeval  sync_end;
+int last_sync_length;
+int max_sync;
+int min_sync;
 /*
  * ---------- Local functions ----------
  */
@@ -437,7 +436,7 @@ remoteWorkerThread_main(void *cdata)
 
 			if (true)
 			{
-				/* Force last_sync_group_size to a reasonable range */
+			  /* Force last_sync_group_size to a reasonable range */
 				if (last_sync_group_size < 1)
 					last_sync_group_size = 1;
 				if (last_sync_group_size > 100)
@@ -468,10 +467,11 @@ remoteWorkerThread_main(void *cdata)
 					if (next_sync_group_size < 1)
 						next_sync_group_size = 1;
 					slon_log(SLON_DEBUG2, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
-							 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
+						 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
 				}
 
 				gettimeofday(&sync_start, NULL);
+
 				pthread_mutex_lock(&(node->message_lock));
 				while (sync_group_size < next_sync_group_size && node->message_head != NULL)
 				{
@@ -485,6 +485,7 @@ remoteWorkerThread_main(void *cdata)
 					event = (SlonWorkMsg_event *) (node->message_head);
 					sync_group[sync_group_size++] = event;
 					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
+					last_sync_group_size ++;
 				}
 				pthread_mutex_unlock(&(node->message_lock));
 			}
