@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.52 2004-06-18 20:22:01 darcyb Exp $
+ *	$Id: remote_worker.c,v 1.53 2004-06-23 05:42:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3533,7 +3533,9 @@ sync_helper(void *cdata)
 			/*
 			 * Start a transaction
 			 */
-			slon_mkquery(&query, "start transaction; ");
+			slon_mkquery(&query, "start transaction; "
+					"set enable_seqscan = off; "
+					"set enable_indexscan = on; ");
 			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
@@ -3795,7 +3797,9 @@ sync_helper(void *cdata)
 		slon_mkquery(&query, "close LOG; ");
 		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
-		slon_mkquery(&query, "rollback transaction; ");
+		slon_mkquery(&query, "rollback transaction; "
+				"set enable_seqscan = default; "
+				"set enable_indexscan = default; ");
 		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
 
