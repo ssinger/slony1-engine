@@ -199,7 +199,9 @@ eons.
 
 You have now successfully set up your first basic master/slave replication
 system, and the 2 databases once the slave has caught up contain identical
-data.  It's best to test this to check that the datasets are in fact the same.
+data.  That's the theory.  In practice, it's good to check that the datasets
+are in fact the same.
+
 The following script will create ordered dumps of the 2 databases and compare
 them.  Make sure that pgbench has completed it's testing, and that your slon
 sessions are caught up.
