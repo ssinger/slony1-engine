@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.73 2005-02-17 23:42:08 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.74 2005-02-18 17:00:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -282,7 +282,7 @@ remoteWorkerThread_main(void *cdata)
 	wd->workgroup_status = SLON_WG_IDLE;
 	wd->node = node;
 
-	wd->tab_fqname_size = SLON_MAX_PATH
+	wd->tab_fqname_size = SLON_MAX_PATH;
 	wd->tab_fqname = (char **)malloc(sizeof(char *) * wd->tab_fqname_size);
 	memset(wd->tab_fqname, 0, sizeof(char *) * wd->tab_fqname_size);
 	wd->tab_forward = malloc(wd->tab_fqname_size);
