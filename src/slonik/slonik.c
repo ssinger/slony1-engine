@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.39 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: slonik.c,v 1.40 2005-01-26 19:51:22 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1673,7 +1673,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 			close(sed_pipe[0]);
 			close(sed_pipe[1]);
 
-			execlp("sed", "sed", "-e", rex1, "-e", rex2, fnamebuf, NULL);
+			execlp(SED, SED, "-e", rex1, "-e", rex2, fnamebuf, NULL);
 			perror("execlp()");
 			exit(-1);
 

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.13 2004-12-11 00:08:35 darcyb Exp $
+#	$Id: Makefile,v 1.14 2005-01-26 19:51:22 darcyb Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -15,7 +15,7 @@ ifeq ($(PORTNAME), aix)
   CFLAGS += -D_LARGE_FILES
 endif
 
-override CFLAGS += -I$(slony_top_builddir) -I$(pgincludedir) -I$(pgincludeserverdir) -DPGSHARE="\"$(pgsharedir)\""
+override CFLAGS += -I$(slony_top_builddir) -I$(pgincludedir) -I$(pgincludeserverdir) -DPGSHARE="\"$(pgsharedir)\"" -DSED="\"$(SED)\""
 override LDFLAGS += $(rpath) -lpq
 
 PROG		= slonik
@@ -53,7 +53,7 @@ else
 endif
 
 scan.c:				scan.l slonik.h
-ifdef FLEX
+ifdef FLEX 
 	$(FLEX) $(FLEXFLAGS) -o'$@' $<
 else
 	@echo "Missing flex $< $@"
