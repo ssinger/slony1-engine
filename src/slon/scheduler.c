@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.14 2004-06-14 11:46:42 wieck Exp $
+ *	$Id: scheduler.c,v 1.15 2004-06-23 23:29:43 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -410,6 +410,7 @@ sched_mainloop(void *dummy)
 	SlonConn	   *next;
 	struct timeval	min_timeout;
 	struct timeval *tv;
+	int				i;
 
 	/*
 	 * Grab the scheduler master lock. This will wait until the
@@ -453,8 +454,15 @@ sched_mainloop(void *dummy)
 		/*
 		 * Make copies of the file descriptor sets for select(2)
 		 */
-		memcpy(&rfds, &sched_fdset_read, sizeof(fd_set));
-		memcpy(&wfds, &sched_fdset_write, sizeof(fd_set));
+		FD_ZERO(&rfds);
+		FD_ZERO(&wfds);
+		for (i = 0; i < sched_numfd; i++)
+		{
+			if (FD_ISSET(i, &sched_fdset_read))
+				FD_SET(i, &rfds);
+			if (FD_ISSET(i, &sched_fdset_write))
+				FD_SET(i, &wfds);
+		}
 
 		/*
 		 * Check if any of the connections in the wait queue

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.14 2004-06-23 19:49:18 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15 2004-06-23 23:29:43 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3083,17 +3083,19 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION cleanupEvent_1 ()
+-- FUNCTION cleanupEvent ()
 --
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupEvent_1 ()
+create or replace function @NAMESPACE@.cleanupEvent ()
 returns int4
 as '
 declare
 	v_max_row	record;
+	v_min_row	record;
+	v_max_sync	int8;
 begin
 	-- ----
-	-- 1) Remove all but the oldest confirm row per origin,receiver pair
+	-- First remove all but the oldest confirm row per origin,receiver pair
 	-- ----
 	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
 				from @NAMESPACE@.sl_confirm
@@ -3105,26 +3107,9 @@ begin
 				and con_seqno < v_max_row.con_seqno;
 	end loop;
 
-	return 0;
-end;
-' language plpgsql;
-
-
--- ----------------------------------------------------------------------
--- FUNCTION cleanupEvent_2 ()
---
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupEvent_2 ()
-returns int4
-as '
-declare
-	v_max_row	record;
-	v_min_row	record;
-	v_max_sync	int8;
-begin
 	-- ----
-	-- 2) Remove all events that are confirmed by all nodes in the
-	--    whole cluster up to the last SYNC
+	-- Then remove all events that are confirmed by all nodes in the
+	-- whole cluster up to the last SYNC
 	-- ----
 	for v_min_row in select con_origin, min(con_seqno) as con_seqno
 				from @NAMESPACE@.sl_confirm
@@ -3139,59 +3124,6 @@ begin
 			delete from @NAMESPACE@.sl_event
 					where ev_origin = v_min_row.con_origin
 					and ev_seqno < v_max_sync;
-		end if;
-	end loop;
-
-	return 0;
-end;
-' language plpgsql;
-
-
--- ----------------------------------------------------------------------
--- FUNCTION cleanupEvent_3 ()
---
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupEvent_3 ()
-returns int4
-as '
-declare
-	v_max_row	record;
-	v_min_row	record;
-	v_max_sync	int8;
-begin
-	-- ----
-	-- 3) Get the full SYNC row and remove all log data that
-	--    is older than it. We ignore the fancy xip stuff here
-	--    because it does not matter if we leave some rows
-	--    for the next run or not. But it matters that we can
-	--    use a prepared plan without a horribly expensive NOT IN
-	--    clause.
-	-- ----
-	for v_min_row in select con_origin, min(con_seqno) as con_seqno
-				from @NAMESPACE@.sl_confirm
-				group by con_origin
-	loop
-		select coalesce(max(ev_seqno), 0) into v_max_sync
-				from @NAMESPACE@.sl_event
-				where ev_origin = v_min_row.con_origin
-				and ev_seqno <= v_min_row.con_seqno
-				and ev_type = ''SYNC'';
-		if v_max_sync > 0 then
-			select * into v_max_row
-					from @NAMESPACE@.sl_event
-					where ev_origin = v_min_row.con_origin
-					and ev_seqno = v_max_sync;
-			if found then
-				delete from @NAMESPACE@.sl_log_1
-						where log_origin = v_max_row.ev_origin
-						and   log_xid    < v_max_row.ev_minxid;
-				delete from @NAMESPACE@.sl_log_2
-						where log_origin = v_max_row.ev_origin
-						and   log_xid    < v_max_row.ev_minxid;
-				delete from @NAMESPACE@.sl_seqlog
-						where seql_origin = v_max_row.ev_origin
-						and   seql_ev_seqno < v_max_row.ev_seqno;
-			end if;
 		end if;
 	end loop;
 
