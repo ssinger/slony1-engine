@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.3 2004-12-17 00:32:19 darcyb Exp $
+# $Id: Makefile,v 1.4 2004-12-17 23:26:06 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -204,4 +204,21 @@ clean distclean maintainer-clean:
 # index
 	rm -f HTML.index $(GENERATED_SGML)
 # text
-	rm -f INSTALL HISTORY regress_README
+	rm -f INSTALL HISTORY README
+
+BASEDIR=$(slony_top_builddir)/src/backend
+BASESQL=$(BASEDIR)/slony1_base.sql
+BASEFUNS=$(BASEDIR)/slony1_funcs.sql
+XIDSQL=localxid.sql
+TEMPDB=schemadoc
+TEMPSCHEMA=schemadoc
+CREATELANG=$(pgbindir)/createlang   # That's how it is for me...
+
+schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
+	@$(pgbindir)/createdb $(TEMPDB) && ( \
+	$(CREATELANG) plpgsql $(TEMPDB) 2>/dev/null ; \
+	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | $(pgbindir)/psql $(TEMPDB) && \
+	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed -e "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  -e "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | $(pgbindir)/psql $(TEMPDB) && \
+	$(PGAUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t xml -f schemadoc ;\
+	$(pgbindir)/dropdb $(TEMPDB) >/dev/null 2>&1 \
+	) || echo "unable to createdb $(TEMPDB)"
