@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.30 2004-03-18 02:05:13 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.31 2004-03-18 17:29:17 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1181,6 +1181,7 @@ begin
 
 	-- ----
 	-- On the new origin, delete the obsolete setsync information
+	-- and the subscription.
 	-- ----
 	if v_local_node_id = p_new_origin then
 		delete from @NAMESPACE@.sl_setsync
@@ -1194,11 +1195,14 @@ begin
 			update @NAMESPACE@.sl_setsync
 					set ssy_origin = p_new_origin,
 						ssy_seqno = ''0'',
-						ssy_minxin = ''0'', ssy_maxxid = ''0'',
+						ssy_minxid = ''0'', ssy_maxxid = ''0'',
 						ssy_xip = '''', ssy_action_list = ''''
 					where ssy_setid = p_set_id;
 		end if;
 	end if;
+	delete from @NAMESPACE@.sl_subscribe
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
 
 	-- ----
 	-- If we are the new or old origin, we have to
@@ -1253,17 +1257,19 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+-- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_idxname,
+--					tab_attkind, tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable(int4, int4, text, text, text)
+create function @NAMESPACE@.setAddTable(int4, int4, text, name, text, text)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
 	p_tab_id			alias for $2;
 	p_fqname			alias for $3;
-	p_tab_attkind		alias for $4;
-	p_tab_comment		alias for $5;
+	p_tab_idxname		alias for $4;
+	p_tab_attkind		alias for $5;
+	p_tab_comment		alias for $6;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -1288,9 +1294,10 @@ begin
 	-- Add the table to the set and generate the SET_ADD_TABLE event
 	-- ----
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
-			p_tab_attkind, p_tab_comment);
+			p_tab_idxname, p_tab_attkind, p_tab_comment);
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
-			p_set_id, p_tab_id, p_fqname, p_tab_attkind, p_tab_comment);
+			p_set_id, p_tab_id, p_fqname,
+			p_tab_idxname, p_tab_attkind, p_tab_comment);
 
 	return p_tab_id;
 end;
@@ -1298,17 +1305,19 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+-- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname,
+--						tab_attkind, tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable_int(int4, int4, text, text, text)
+create function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text, text)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
 	p_tab_id			alias for $2;
 	p_fqname			alias for $3;
-	p_tab_attkind		alias for $4;
-	p_tab_comment		alias for $5;
+	p_tab_idxname		alias for $4;
+	p_tab_attkind		alias for $5;
+	p_tab_comment		alias for $6;
 	v_local_node_id		int4;
 	v_set_origin		int4;
 	v_sub_provider		int4;
@@ -1360,14 +1369,24 @@ begin
 				p_fqname;
 	end if;
 
+	if not exists (select indexrelid
+			from "pg_catalog".pg_index PGX, "pg_catalog".pg_class PGC
+			where PGX.indrelid = v_tab_reloid
+				and PGX.indexrelid = PGC.oid
+				and PGC.relname = p_tab_idxname)
+	then
+		raise exception ''Slony-I: setAddTable(): table % has no index %'',
+				p_fqname, p_tab_idxname;
+	end if;
+
 	-- ----
 	-- Add the table to sl_table and create the trigger on it.
 	-- ----
 	insert into @NAMESPACE@.sl_table
-			(tab_id, tab_reloid, tab_set, tab_attkind, 
-			tab_altered, tab_comment) values
-			(p_tab_id, v_tab_reloid, p_set_id, p_tab_attkind,
-			false, p_tab_comment);
+			(tab_id, tab_reloid, tab_set, tab_idxname, 
+			tab_attkind, tab_altered, tab_comment) values
+			(p_tab_id, v_tab_reloid, p_set_id, p_tab_idxname,
+			p_tab_attkind, false, p_tab_comment);
 	perform @NAMESPACE@.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
@@ -1403,16 +1422,20 @@ begin
 	-- that the table currently is NOT in altered state.
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
-			S.set_origin, 
+			S.set_origin, PGX.indexrelid,
 			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
-				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_index PGX, "pg_catalog".pg_class PGXC
 			where T.tab_id = p_tab_id
 				and T.tab_set = S.set_id
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid
+				and PGX.indrelid = T.tab_reloid
+				and PGX.indexrelid = PGXC.oid
+				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
 		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
@@ -1448,13 +1471,11 @@ begin
 		-- ----
 		-- Disable all existing triggers
 		-- ----
-		insert into @NAMESPACE@.sl_saved_trigger
-				select * from "pg_catalog".pg_trigger PGT
-				where PGT.tgrelid = v_tab_row.tab_reloid;
+		update "pg_catalog".pg_trigger
+				set tgrelid = v_tab_row.indexrelid
+				where tgrelid = v_tab_row.tab_reloid;
 		get diagnostics v_n = row_count;
 		if v_n > 0 then
-			delete from "pg_catalog".pg_trigger
-					where tgrelid = v_tab_row.tab_reloid;
 			update "pg_catalog".pg_class
 					set reltriggers = reltriggers - v_n
 					where oid = v_tab_row.tab_reloid;
@@ -1463,13 +1484,11 @@ begin
 		-- ----
 		-- Disable all existing rules
 		-- ----
-		insert into @NAMESPACE@.sl_saved_rewrite
-				select * from "pg_catalog".pg_rewrite PGR
-				where PGR.ev_class = v_tab_row.tab_reloid;
+		update "pg_catalog".pg_rewrite
+				set ev_class = v_tab_row.indexrelid
+				where ev_class = v_tab_row.tab_reloid;
 		get diagnostics v_n = row_count;
 		if v_n > 0 then
-			delete from "pg_catalog".pg_rewrite
-					where ev_class = v_tab_row.tab_reloid;
 			update "pg_catalog".pg_class
 					set relhasrules = false
 					where oid = v_tab_row.tab_reloid;
@@ -1523,16 +1542,20 @@ begin
 	-- that the table currently IS in altered state.
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
-			S.set_origin, 
+			S.set_origin, PGX.indexrelid,
 			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
-				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_index PGX, "pg_catalog".pg_class PGXC
 			where T.tab_id = p_tab_id
 				and T.tab_set = S.set_id
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid
+				and PGX.indrelid = T.tab_reloid
+				and PGX.indexrelid = PGXC.oid
+				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
 		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
@@ -1564,13 +1587,11 @@ begin
 		-- ----
 		-- Restore all original triggers
 		-- ----
-		insert into "pg_catalog".pg_trigger
-				select * from @NAMESPACE@.sl_saved_trigger ST
-				where ST.tgrelid = v_tab_row.tab_reloid;
+		update "pg_catalog".pg_trigger
+				set tgrelid = v_tab_row.tab_reloid
+				where tgrelid = v_tab_row.indexrelid;
 		get diagnostics v_n = row_count;
 		if v_n > 0 then
-			delete from @NAMESPACE@.sl_saved_trigger
-					where tgrelid = v_tab_row.tab_reloid;
 			update "pg_catalog".pg_class
 					set reltriggers = reltriggers + v_n
 					where oid = v_tab_row.tab_reloid;
@@ -1579,13 +1600,11 @@ begin
 		-- ----
 		-- Restore all original rewrite rules
 		-- ----
-		insert into "pg_catalog".pg_rewrite
-				select * from @NAMESPACE@.sl_saved_rewrite SR
-				where SR.ev_class = v_tab_row.tab_reloid;
+		update "pg_catalog".pg_rewrite
+				set ev_class = v_tab_row.tab_reloid
+				where ev_class = v_tab_row.indexrelid;
 		get diagnostics v_n = row_count;
 		if v_n > 0 then
-			delete from @NAMESPACE@.sl_saved_rewrite
-					where ev_class = v_tab_row.tab_reloid;
 			update "pg_catalog".pg_class
 					set relhasrules = true
 					where oid = v_tab_row.tab_reloid;
@@ -1994,6 +2013,193 @@ begin
 	return v_attkind;
 end;
 ' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION determineIdxnameUnique (tab_fqname, indexname)
+--
+--	Given a tablename, check that a unique index exists or return
+--	the tables primary key index name.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.determineIdxnameUnique(text, name) returns name
+as '
+declare
+	p_tab_fqname	alias for $1;
+	p_idx_name		alias for $2;
+	v_idxrow		record;
+begin
+	--
+	-- Lookup the tables primary key or the specified unique index
+	--
+	if p_idx_name isnull then
+		select PGXC.relname
+				into v_idxrow
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN,
+					"pg_catalog".pg_index PGX,
+					"pg_catalog".pg_class PGXC
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisprimary;
+		if not found then
+			raise exception ''Slony-I: table % has no primary key'',
+					p_tab_fqname;
+		end if;
+	else
+		select PGXC.relname
+				into v_idxrow
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN,
+					"pg_catalog".pg_index PGX,
+					"pg_catalog".pg_class PGXC
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisunique
+					and PGXC.relname = p_idx_name;
+		if not found then
+			raise exception ''Slony-I: table % has no unique index %'',
+					p_tab_fqname, p_idx_name;
+		end if;
+	end if;
+
+	--
+	-- Return the found index name
+	--
+	return v_idxrow.relname;
+end;
+' language plpgsql called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION determineIdxnameSerial (tab_fqname)
+--
+--	Given a tablename, construct the serial columns index name
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.determineIdxnameSerial(text) returns name
+as '
+declare
+	p_tab_fqname	alias for $1;
+	v_row			record;
+begin
+	--
+	-- Lookup the table name alone
+	--
+	select PGC.relname
+			into v_row
+			from "pg_catalog".pg_class PGC,
+				"pg_catalog".pg_namespace PGN
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+				"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace;
+	if not found then
+		raise exception ''Slony-I: table % not found'',
+				p_tab_fqname;
+	end if;
+
+	--
+	-- Return the found index name
+	--
+	return v_row.relname || ''__Slony-I_@CLUSTERNAME@_rowID_key'';
+end;
+' language plpgsql called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION determineAttKindUnique (tab_fqname, indexname)
+--
+--	Given a tablename, return the Slony-I specific attkind (used for
+--	the log trigger) of the table. Use the specified unique index or
+--	the primary key (if indexname is NULL).
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.determineAttkindUnique(text, name) returns text
+as '
+declare
+	p_tab_fqname	alias for $1;
+	p_idx_name		alias for $2;
+	v_idxrow		record;
+	v_attrow		record;
+	v_i				integer;
+	v_attno			int2;
+	v_attkind		text default '''';
+	v_attfound		bool;
+begin
+	--
+	-- Lookup the tables primary key or the specified unique index
+	--
+	if p_idx_name isnull then
+		raise exception ''Slony-I: index name must be specified'';
+	else
+		select PGXC.relname, PGX.indexrelid, PGX.indkey
+				into v_idxrow
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN,
+					"pg_catalog".pg_index PGX,
+					"pg_catalog".pg_class PGXC
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisunique
+					and PGXC.relname = p_idx_name;
+		if not found then
+			raise exception ''Slony-I: table % has no unique index %'',
+					p_tab_fqname, p_idx_name;
+		end if;
+	end if;
+
+	--
+	-- Loop over the tables attributes and check if they are
+	-- index attributes. If so, add a "k" to the return value,
+	-- otherwise add a "v".
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from "pg_catalog".pg_class PGC,
+			    "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_attribute PGA
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum > 0
+			order by attnum
+	loop
+		v_attfound = ''f'';
+
+		v_i := 0;
+		loop
+			select indkey[v_i] into v_attno from "pg_catalog".pg_index
+					where indexrelid = v_idxrow.indexrelid;
+			if v_attno = 0 then
+				exit;
+			end if;
+			if v_attrow.attnum = v_attno then
+				v_attfound = ''t'';
+				exit;
+			end if;
+			v_i := v_i + 1;
+		end loop;
+
+		if v_attfound then
+			v_attkind := v_attkind || ''k'';
+		else
+			v_attkind := v_attkind || ''v'';
+		end if;
+	end loop;
+
+	--
+	-- Return the resulting attkind
+	--
+	return v_attkind;
+end;
+' language plpgsql called on null input;
 
 
 -- ----------------------------------------------------------------------

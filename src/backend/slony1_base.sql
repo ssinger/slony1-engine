@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.8 2004-03-18 02:05:13 wieck Exp $
+-- $Id: slony1_base.sql,v 1.9 2004-03-18 17:29:16 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -75,6 +75,7 @@ create table @NAMESPACE@.sl_table (
 	tab_id				int4,
 	tab_reloid			oid,
 	tab_set				int4,
+	tab_idxname			name NOT NULL,
 	tab_attkind			text NOT NULL,
 	tab_altered			boolean NOT NULL,
 	tab_comment			text,
@@ -215,27 +216,6 @@ create table @NAMESPACE@.sl_log_2 (
 );
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
-
-
--- ----------------------------------------------------------------------
--- TABLE sl_saved_trigger
---
---	Here we save application- and referential integrity triggers
---	while a table is replicated on a subscriber.
--- ----------------------------------------------------------------------
-select * into @NAMESPACE@.sl_saved_trigger
-	from "pg_catalog".pg_trigger
-	where false;
-
-
--- ----------------------------------------------------------------------
--- TABLE sl_saved_rules
---
---	Here we save rewrite rules while a table is replicated on a subscriber.
--- ----------------------------------------------------------------------
-select * into @NAMESPACE@.sl_saved_rewrite
-	from "pg_catalog".pg_rewrite
-	where false;
 
 
 -- **********************************************************************
