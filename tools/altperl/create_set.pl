@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.8 2004-11-19 23:35:57 cbbrowne Exp $
+# $Id: create_set.pl,v 1.9 2005-01-10 16:46:44 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -77,14 +77,16 @@ print OUTFILE "
                 echo 'Adding sequences to the subscription set';
 ";
 
-$SEQID=1;
+if ($SEQUENCE_ID < 1) {
+  $SEQUENCE_ID = 1;
+}
 foreach my $seq (@SEQUENCES) {
   $seq = ensure_namespace($seq);
   print OUTFILE "
-                set add sequence (set id = $set, origin = $MASTERNODE, id = $SEQID, full qualified name = '$seq', comment = 'Sequence $seq');
+                set add sequence (set id = $set, origin = $MASTERNODE, id = $SEQUENCE_ID, full qualified name = '$seq', comment = 'Sequence $seq');
                 echo 'Add sequence $seq';
 ";
-  $SEQID++;
+  $SEQUENCE_ID++;
 }
 print OUTFILE "
         echo 'All tables added';
