@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.8 2004-03-12 23:55:02 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.9 2004-03-17 17:56:34 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -31,6 +31,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
 PG_FUNCTION_INFO_V1(_Slony_I_setSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
+PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 
 Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -38,6 +39,7 @@ Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
 Datum           _Slony_I_setSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_logTrigger(PG_FUNCTION_ARGS);
+Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
 
 
 #define PLAN_NONE			0
@@ -752,6 +754,75 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 
 	SPI_finish();
 	return PointerGetDatum(NULL);
+}
+
+
+Datum
+_Slony_I_denyAccess(PG_FUNCTION_ARGS)
+{
+	Slony_I_ClusterStatus *cs;
+	TriggerData	   *tg;
+	int				rc;
+	Name			cluster_name;
+
+	/*
+	 * Get the trigger call context
+	 */
+	if (!CALLED_AS_TRIGGER(fcinfo))
+		elog(ERROR, "Slony-I: logTrigger() not called as trigger");
+	tg = (TriggerData *)(fcinfo->context);
+
+	/*
+	 * Check all logTrigger() calling conventions
+	 */
+	if (!TRIGGER_FIRED_BEFORE(tg->tg_event))
+		elog(ERROR, "Slony-I: denyAccess() must be fired BEFORE");
+	if (!TRIGGER_FIRED_FOR_ROW(tg->tg_event))
+		elog(ERROR, "Slony-I: denyAccess() must be fired FOR EACH ROW");
+	if (tg->tg_trigger->tgnargs != 1)
+		elog(ERROR, "Slony-I: denyAccess() must be defined with 1 arg");
+
+	/*
+	 * Connect to the SPI manager
+	 */
+	if ((rc = SPI_connect()) < 0)
+		elog(ERROR, "Slony-I: SPI_connect() failed in denyAccess()");
+
+	/*
+	 * Get all the trigger arguments
+	 */
+	cluster_name = DatumGetName(DirectFunctionCall1(namein,
+			CStringGetDatum(tg->tg_trigger->tgargs[0])));
+
+	/*
+	 * Get or create the cluster status information and make sure it
+	 * has the SPI plans that we need here.
+	 */
+	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
+
+	/*
+	 * Check/set the session role
+	 */
+	switch (cs->session_role)
+	{
+		case SLON_ROLE_UNSET:	/* Unknown or Normal is not allowed here */
+		case SLON_ROLE_NORMAL:
+			cs->session_role = SLON_ROLE_NORMAL;
+			elog(ERROR,
+				"Slony-I: Table %s is replicated and cannot be "
+				"modified on a subscriber node",
+				NameStr(tg->tg_relation->rd_rel->relname));
+			break;
+
+		case SLON_ROLE_SLON:	/* Replication session, nothing to do here */
+			break;
+	}
+
+	SPI_finish();
+	if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))
+		return PointerGetDatum(tg->tg_newtuple);
+	else
+		return PointerGetDatum(tg->tg_trigtuple);
 }
 
 

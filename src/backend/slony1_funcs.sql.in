@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.26 2004-03-15 20:08:10 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.27 2004-03-17 17:56:34 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -73,6 +73,18 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION denyAccess (cluster_name)
+--
+--	Trigger function to prevent modifications to a table on
+--	a subscriber.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.denyAccess ()
+	returns trigger
+	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
+	language C;
 
 
 -- ----------------------------------------------------------------------
@@ -1060,9 +1072,11 @@ begin
 	-- Add the table to sl_table and create the trigger on it.
 	-- ----
 	insert into @NAMESPACE@.sl_table
-			(tab_id, tab_reloid, tab_set, tab_attkind, tab_comment) values
-			(p_tab_id, v_tab_reloid, p_set_id, p_tab_attkind, p_tab_comment);
-	perform @NAMESPACE@.tableAddTrigger(p_tab_id, p_fqname, p_tab_attkind);
+			(tab_id, tab_reloid, tab_set, tab_attkind, 
+			tab_altered, tab_comment) values
+			(p_tab_id, v_tab_reloid, p_set_id, p_tab_attkind,
+			false, p_tab_comment);
+	perform @NAMESPACE@.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
 end;
@@ -1070,47 +1084,244 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION tableAddTrigger (tab_id, tab_fqname, attkind)
+-- FUNCTION alterTableForReplication (tab_id)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.tableAddTrigger (int4, text, text)
+create function @NAMESPACE@.alterTableForReplication (int4)
 returns int4
 as '
 declare
 	p_tab_id			alias for $1;
-	p_tab_fqname		alias for $2;
-	p_tab_attkind		alias for $3;
-	v_tgname			name;
+	v_no_id				int4;
+	v_tab_row			record;
+	v_tab_fqname		text;
+	v_n					int4;
 begin
 	-- ----
-	-- The table must have a primary key
+	-- Grab the central configuration lock
 	-- ----
-	if not p_tab_attkind ~ ''k'' then
-		raise exception ''Slony-I: table % does not have a primary key'',
-				p_tab_fqname;
-	end if;
+	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Check if the log trigger exists already
+	-- Get our local node ID
 	-- ----
-	v_tgname := ''_@CLUSTERNAME@_logtrigger_'' || p_tab_id;
-	if exists (select true 
-			from @NAMESPACE@.sl_table T,
-			"pg_catalog".pg_trigger PGT
+	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+
+	-- ----
+	-- Get the sl_table row and the current tables origin. Check
+	-- that the table currently is NOT in altered state.
+	-- ----
+	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
+			S.set_origin, 
+			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			into v_tab_row
+			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where T.tab_id = p_tab_id
-			and T.tab_reloid = PGT.tgrelid
-			and PGT.tgname = v_tgname)
-	then
-		return p_tab_id;
+				and T.tab_set = S.set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+				for update;
+	if not found then
+		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
+	end if;
+	v_tab_fqname = v_tab_row.tab_fqname;
+	if v_tab_row.tab_altered then
+		raise exception ''Slony-I: Table % is already in altered state'',
+				v_tab_fqname;
 	end if;
 
+	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
 
 	-- ----
-	-- Define the trigger on the table
+	-- Procedures are different on origin and subscriber
 	-- ----
-	execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || p_tab_id || ''"
-			after insert or update or delete on '' || p_tab_fqname || ''
-			for each row execute procedure
-			@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
+	if v_no_id = v_tab_row.set_origin then
+		-- ----
+		-- On the Origin we add the log trigger to the table and done
+		-- ----
+		raise notice ''Slony-I: alter table % for origin mode'', 
+				v_tab_fqname;
+
+		execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || 
+				p_tab_id || ''" after insert or update or delete on '' ||
+				v_tab_fqname || '' for each row execute procedure
+				@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || 
+					p_tab_id || '''''', '''''' || 
+					v_tab_row.tab_attkind || '''''');'';
+	else
+		-- ----
+		-- On the subscriber the thing is a bit more difficult. We want
+		-- to disable all user- and foreign key triggers and rules.
+		-- ----
+
+		raise notice ''Slony-I: alter table % for subscriber mode'', 
+				v_tab_fqname;
+
+		-- ----
+		-- Disable all existing triggers
+		-- ----
+		insert into @NAMESPACE@.sl_saved_trigger
+				select * from "pg_catalog".pg_trigger PGT
+				where PGT.tgrelid = v_tab_row.tab_reloid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			delete from "pg_catalog".pg_trigger
+					where tgrelid = v_tab_row.tab_reloid;
+			update "pg_catalog".pg_class
+					set reltriggers = reltriggers - v_n
+					where oid = v_tab_row.tab_reloid;
+		end if;
+		raise notice ''Slony-I: % triggers disabled on table %'',
+				v_n, v_tab_fqname;
+
+		-- ----
+		-- Disable all existing rules
+		-- ----
+		insert into @NAMESPACE@.sl_saved_rewrite
+				select * from "pg_catalog".pg_rewrite PGR
+				where PGR.ev_class = v_tab_row.tab_reloid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			delete from "pg_catalog".pg_rewrite
+					where ev_class = v_tab_row.tab_reloid;
+			update "pg_catalog".pg_class
+					set relhasrules = false
+					where oid = v_tab_row.tab_reloid;
+		end if;
+		raise notice ''Slony-I: % rules disabled on table %'',
+				v_n, v_tab_fqname;
+
+		-- ----
+		-- Add the trigger that denies write access to replicated tables
+		-- ----
+		execute ''create trigger "_@CLUSTERNAME@_denyaccess_'' || 
+				p_tab_id || ''" before insert or update or delete on '' ||
+				v_tab_fqname || '' for each row execute procedure
+				@NAMESPACE@.denyAccess (''''_@CLUSTERNAME@'''');'';
+	end if;
+
+	-- ----
+	-- Mark the table altered in our configuration
+	-- ----
+	update @NAMESPACE@.sl_table
+			set tab_altered = true where tab_id = p_tab_id;
+
+	return p_tab_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION alterTableRestore (tab_id)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.alterTableRestore (int4)
+returns int4
+as '
+declare
+	p_tab_id			alias for $1;
+	v_no_id				int4;
+	v_tab_row			record;
+	v_tab_fqname		text;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get our local node ID
+	-- ----
+	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+
+	-- ----
+	-- Get the sl_table row and the current tables origin. Check
+	-- that the table currently IS in altered state.
+	-- ----
+	select T.tab_reloid, T.tab_set, T.tab_attkind, T.tab_altered,
+			S.set_origin, 
+			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			into v_tab_row
+			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+			where T.tab_id = p_tab_id
+				and T.tab_set = S.set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+				for update;
+	if not found then
+		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
+	end if;
+	v_tab_fqname = v_tab_row.tab_fqname;
+	if not v_tab_row.tab_altered then
+		raise exception ''Slony-I: Table % is not in altered state'',
+				v_tab_fqname;
+	end if;
+
+	raise notice ''Slony-I: alter table % restore'', 
+			v_tab_fqname;
+
+	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
+
+	-- ----
+	-- Procedures are different on origin and subscriber
+	-- ----
+	if v_no_id = v_tab_row.set_origin then
+		-- ----
+		-- On the Origin we just drop the trigger we originally added
+		-- ----
+		execute ''drop trigger "_@CLUSTERNAME@_logtrigger_'' || 
+				p_tab_id || ''" on '' || v_tab_fqname'';
+	else
+		-- ----
+		-- On the subscriber drop the denyAccess trigger
+		-- ----
+		execute ''drop trigger "_@CLUSTERNAME@_denyaccess_'' || 
+				p_tab_id || ''" on '' || v_tab_fqname'';
+				
+		-- ----
+		-- Restore all original triggers
+		-- ----
+		insert into "pg_catalog".pg_trigger
+				select * from @NAMESPACE@.sl_saved_trigger ST
+				where ST.tgrelid = v_tab_row.tab_reloid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			delete from @NAMESPACE@.sl_saved_trigger
+					where tgrelid = v_tab_row.tab_reloid;
+			update "pg_catalog".pg_class
+					set reltriggers = reltriggers + v_n
+					where oid = v_tab_row.tab_reloid;
+		end if;
+		raise notice ''Slony-I: % triggers restored on table %'',
+				v_n, v_tab_fqname;
+
+		-- ----
+		-- Restore all original rewrite rules
+		-- ----
+		insert into "pg_catalog".pg_rewrite
+				select * from @NAMESPACE@.sl_saved_rewrite SR
+				where SR.ev_class = v_tab_row.tab_reloid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			delete from @NAMESPACE@.sl_saved_rewrite
+					where ev_class = v_tab_row.tab_reloid;
+			update "pg_catalog".pg_class
+					set relhasrules = true
+					where oid = v_tab_row.tab_reloid;
+		end if;
+		raise notice ''Slony-I: % rules restored on table %'',
+				v_n, v_tab_fqname;
+
+	end if;
+
+	-- ----
+	-- Mark the table not altered in our configuration
+	-- ----
+	update @NAMESPACE@.sl_table
+			set tab_altered = false where tab_id = p_tab_id;
 
 	return p_tab_id;
 end;
@@ -1492,9 +1703,9 @@ begin
 	if not v_have_serial then
 		execute ''lock table '' || p_tab_fqname ||
 			'' in access exclusive mode'';
-		execute ''alter table '' || p_tab_fqname ||
+		execute ''alter table only '' || p_tab_fqname ||
 			'' add column "_Slony-I_@CLUSTERNAME@_rowID" bigint;'';
-		execute ''alter table '' || p_tab_fqname ||
+		execute ''alter table only '' || p_tab_fqname ||
 			'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
 			'' set default "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
 
@@ -1571,9 +1782,9 @@ begin
 	execute ''update '' || p_tab_fqname ||
 		'' set "_Slony-I_@CLUSTERNAME@_rowID" ='' ||
 		'' "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
-	execute ''alter table '' || p_tab_fqname ||
+	execute ''alter table only '' || p_tab_fqname ||
 		'' add unique ("_Slony-I_@CLUSTERNAME@_rowID");'';
-	execute ''alter table '' || p_tab_fqname ||
+	execute ''alter table only '' || p_tab_fqname ||
 		'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
 		'' set not null;'';
 
