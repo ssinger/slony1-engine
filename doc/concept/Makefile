@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.1 2003-11-18 15:10:25 wieck Exp $
+# $Id: Makefile,v 1.2 2003-11-18 15:18:15 wieck Exp $
 # ----------
 
 
@@ -42,7 +42,9 @@ all-pdf:	$(PDF)
 
 all-txt:	$(TXT)
 
-clean:
+install installdirs:	all
+
+clean distclean maintainer-clean:
 	rm -f $(PS) $(PDF) $(TXT) tmp.* Slon.eps
 
 Slony-I-concept.ps:		$(SRC_CONCEPT)
