@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slon.sh,v 1.1 2005-02-27 20:18:05 cbbrowne Exp $
+# $Id: check_slon.sh,v 1.2 2005-03-03 23:44:44 cbbrowne Exp $
 
 # nagios plugin that checks whether the slon daemon is running
 # if the 3rd parameter (LOGFILE) is specified then the log file is
@@ -22,7 +22,7 @@
 # check parameters are valid
 if [[ $# -lt 2 && $# -gt 3 ]]
 then
-   echo "Invalid parameters need CLUSTERNAME DBNAME [LOGFILE]"
+   echo "Invalid parameters need CLUSTERNAME DBNAME DBHOST [LOGFILE]"
    exit 2
 fi
 
@@ -32,8 +32,15 @@ DBNAME=$2
 LOGFILE=$3
 
 # check to see whether the slon daemon is running
-SLONPROCESS=`ps -auxww | egrep "[s]lon $CLUSTERNAME" | egrep 
-"dbname=$DBNAME" | awk '{print $2}'`
+case `uname` in
+Linux) PSCOMMAND="ps auxww" ;;
+SunOS) PSCOMMAND="/usr/ucb/ps -auxww" ;;
+FreeBSD) PSCOMMAND="/bin/ps -auxww" ;;
+AIX) PSCOMMAND="/usr/bin/ps auxww" ;;
+*) PSCOMMAND="ps auxww"
+esac
+
+SLONPROCESS=`$PSCOMMAND | egrep "[s]lon $CLUSTERNAME" | egrep "dbname=$DBNAME" | awk '{print $2}'`
 
 if [ ! -n "$SLONPROCESS" ]
 then
