@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.13 2004-06-28 15:44:07 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.14 2004-08-27 13:26:24 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -82,7 +82,8 @@ cleanupThread_main(void *dummy)
 			"vacuum analyze %s.sl_setsync; "
 			"vacuum analyze %s.sl_log_1; "
 			"vacuum analyze %s.sl_log_2;"
-			"vacuum analyze %s.sl_seqlog;",
+			"vacuum analyze %s.sl_seqlog;"
+			"vacuum analyze pg_catalog.pg_listener;",
 			rtcfg_namespace, 
 			rtcfg_namespace, 
 			rtcfg_namespace, 
