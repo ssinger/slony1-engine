@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.43 2004-11-19 23:47:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.44 2004-11-25 18:34:38 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4742,7 +4742,7 @@ BEGIN
          a.attname = p_field;
   if not found then
     raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
-    v_query := ''alter table "'' || p_namespace || ''".'' || p_table || ' add column '';
+    v_query := ''alter table "'' || p_namespace || ''".'' || p_table || '' add column '';
     v_query := v_query || p_field || '' type '' || p_type || '';'';
     execute v_query;
     return ''t'';
