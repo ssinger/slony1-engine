@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.2 2004-07-29 21:28:58 cbbrowne Exp $
+$Id: README,v 1.3 2004-08-04 15:06:39 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -26,13 +26,21 @@ slon.env also contains lists of tables that are to be replicated:
 Alas, this means that the values are "hardcoded" as far as the tools
 are concerned.
 
-The natural extension to be added to this to make it more flexible
-would be for slon.env to look at an environment variable to see what
-file these lists are found in.  That way, you could do something like:
+To make this more flexible, slon.env looks at the environment variable
+SLONYENV as an alternative source for this configuration.  
+
+That way, you may do something like:
 
    for i in `seq 10`; do
       SLONYENV="./set$i.config" ./init_cluster.pl
    done
+
+- Such an "alternative slon.env" might import Pg, and do queries
+against a database to be replicated in order to populate the sets of
+tables and such.
+
+- The "alternative slon.env" might search some sort of 'registry' for
+the set of nodes to be replicated.
 
 Steps to start up replication
 -------------------------------
