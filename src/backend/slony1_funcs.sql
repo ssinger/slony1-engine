@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.26 2004-09-23 14:50:19 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.27 2004-09-23 17:28:50 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -217,6 +217,16 @@ create or replace function @NAMESPACE@.terminateNodeConnections (name) returns i
 	language C;
 comment on function @NAMESPACE@.terminateNodeConnections (name) is 
   'not yet documented';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cleanupListener ()
+--
+--	
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cleanupListener () returns int4
+    as '$libdir/slony1_funcs', '_Slony_I_cleanupListener'
+	language C;
 
 
 -- **********************************************************************
