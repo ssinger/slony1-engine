@@ -1,5 +1,5 @@
 #!perl     # -*- perl -*-
-# $Id: slon-tools.pm,v 1.12 2004-12-04 00:21:31 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.13 2004-12-10 18:44:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -140,22 +140,54 @@ sub start_slon {
 }
 
 
-$killafter="00:40:00";  # Restart slon after this interval, if there is no activity
+$killafter="00:20:00";  # Restart slon after this interval, if there is no activity
 sub query_slony_status {
   my ($nodenum) = @_;
+
+# Old query - basically looked at how far we are behind
+#   my $query = qq{
+#   select now() - ev_timestamp > '$killafter'::interval as event_old, now() - ev_timestamp as age,
+#        ev_timestamp, ev_seqno, ev_origin as origin
+# from _$SETNAME.sl_event events, _$SETNAME.sl_subscribe slony_master
+#   where 
+#      events.ev_origin = slony_master.sub_provider and
+#      not exists (select * from _$SETNAME.sl_subscribe providers
+#                   where providers.sub_receiver = slony_master.sub_provider and
+#                         providers.sub_set = slony_master.sub_set and
+#                         slony_master.sub_active = 't' and
+#                         providers.sub_active = 't')
+# order by ev_origin desc, ev_seqno desc limit 1;
+# };
+
+# New query: Looks to see if an event has been confirmed, for the set,
+# for the master node, within the interval requested
+
   my $query = qq{
-  select now() - ev_timestamp > '$killafter'::interval as event_old, now() - ev_timestamp as age,
-       ev_timestamp, ev_seqno, ev_origin as origin
-from _$SETNAME.sl_event events, _$SETNAME.sl_subscribe slony_master
-  where 
-     events.ev_origin = slony_master.sub_provider and
-     not exists (select * from _$SETNAME.sl_subscribe providers
+select * from 
+(select now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
+       con_timestamp
+from _$SETNAME.sl_confirm c, _$SETNAME.sl_subscribe slony_master
+  where c.con_origin = slony_master.sub_provider and
+             not exists (select * from _$SETNAME.sl_subscribe providers
                   where providers.sub_receiver = slony_master.sub_provider and
                         providers.sub_set = slony_master.sub_set and
                         slony_master.sub_active = 't' and
-                        providers.sub_active = 't')
-order by ev_origin desc, ev_seqno desc limit 1;
-};
+                        providers.sub_active = 't') and
+        c.con_received = _$SETNAME.getLocalNodeId('_$SETNAME') and
+        now() - con_timestamp < '$killafter'::interval
+limit 1) as slave_confirmed_events
+union all (select
+now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
+       con_timestamp
+from _$SETNAME.sl_confirm c, _$SETNAME.sl_subscribe slony_master
+  where c.con_origin = _$SETNAME.getLocalNodeId('_$SETNAME') and
+             exists (select * from _$SETNAME.sl_subscribe providers
+                  where providers.sub_provider = _$SETNAME.getLocalNodeId('_$SETNAME') and
+                        slony_master.sub_active = 't') and
+        now() - con_timestamp < '$killafter'::interval
+limit 1)
+;
+  };
   my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
   my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
   chomp $result;

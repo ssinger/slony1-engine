@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: slon_watchdog2.pl,v 1.3 2004-12-04 00:21:31 cbbrowne Exp $
+# $Id: slon_watchdog2.pl,v 1.4 2004-12-10 18:44:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -21,7 +21,7 @@ log_to_watchdog_log("Invoking watchdog for $SETNAME node $nodenum");
 while (1) {
   my $res = query_slony_status($nodenum);    # See where the node stands
   my $eventsOK;
-  if ($res =~ /^\s*f\s*\|/) {
+  if ($res =~ /^\s*t\s*\|/) {
     $eventsOK = "YES";
   } else {
     $res = node_is_subscribing();
