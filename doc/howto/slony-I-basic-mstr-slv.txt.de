@@ -10,7 +10,7 @@ Die Slony-I Replikationsengine basiert auf Triggern, daher ist es möglich
 Datenbanken (oder auch Teile davon) zu replizieren die innerhalb der selben
 "postmaster" Instanz laufen.
 
-In diesem Beispiel wird nun die auf localhost (Master) laufenden "pgbench"
+In diesem Beispiel wird nun die auf localhost (Master) laufende "pgbench"
 Datenbank auf die ebenfalls auf localhost laufende Slave "pgbench" Datenbank
 repliziert.
 Bezüglich der bestehenden PostgreSQL Installation werden einen Reihe von
@@ -22,7 +22,7 @@ Annahmen getroffen:
 Der REPLICATIONUSER muss ein PostgreSQL Superuser sein. Typischerweise ist dies
 "postgres" oder "pgsql".
 
-Zusätzlich sollten folgende Shell Umgebungsvariablen gesetzt werden:
+Zusätzlich sollten folgende Umgebungsvariablen in Ihrer Shell gesetzt werden:
 
 CLUSTERNAME=slony_example
 MASTERDBNAME=pgbench
@@ -32,7 +32,7 @@ SLAVEHOST=localhost
 REPLICATIONUSER=pgsql
 PGBENCHUSER=pgbench
 
-Here sind ein paar Beispiele um diese Variablen in verschiedenen Shells
+Hier sind ein paar Beispiele um diese Variablen in verschiedenen Shells
 zu setzen:
 
 bash/sh:
@@ -52,15 +52,16 @@ createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 
-Da Slony-I die Installation von pl/pgSQL in den Datenbanken voraussetzt,
-sollte diese nun installiert werden.
+Da Slony-I die Existenz von pl/pgSQL in den beiden Datenbanken
+voraussetzt, sollte dieses nun installiert werden.
 Falls pl/pgSQL bereits früher in der template1 Datenbank installiert wurde
-kann dieser Schritt übersprungen werden.
+kann dieser Schritt jedoch übersprungen werden.
 
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 
-Slony-I kopiert bis jetzt keine Tabellendefinitionen von der Masterdatenbank,
-wenn ein Slave hinzugefügt wird. Daher ist es nötig diese Daten zu importieren.
+Slony-I kopiert zum jetzigen Zeitpunkt keine Tabellendefinitionen von der
+Masterdatenbank, wenn ein Slave hinzugefügt wird.
+Daher ist es nötig diese Daten manuell zu importieren.
 Im folgenden Beispiel wird pg_dump dafür verwendet.
 
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
@@ -77,11 +78,12 @@ Ein typisches Aufruf von "pgbench" könnte so aussehen:
 
 pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 
-Dieser Aufruf wird pgbench mit 5 parallel Clients, wobei jeder 1000 Transaktionen
-durchführt starten. Dieser Vorgang wird die pgbench Datenbank die auf localhost
-läuft und den entsprechenden pgbench Benutzer verwenden. 
+Dieser Aufruf wird pgbench mit 5 parallelen Clients, wobei jeder 1000
+Transaktionen durchführt, starten.
+Dieser Vorgang wird die pgbench Datenbank die auf localhost läuft und den
+entsprechenden PGBENCHUSER verwenden. 
 
-Konfiguration der Datenbank für die Replikation
+Konfiguration der Datenbanken für die Replikation
 
 Das Erzeugen der Konfigurationstabellen, Stored Procedures, Trigger und der
 Konfiguration geschieht mit Hilfe des slonik Tools. Es handelt sich hierbei um 
@@ -117,10 +119,10 @@ slonik <<_EOF_
 	#--
     # Da die history Tabelle keine primären Schlüssel oder einen anderen
     # eindeutigen Constraint enthält, der zu Identifizierung einer
-    # Tabellenreihe dienen könnte, muss entsprechender hinzugefügt werden.
+    # Tabellenreihe dienen könnte, muss ein entsprechender hinzugefügt werden.
     # Das folgende Kommando fügt eine bigint Spalte mit der Bezeichnung
     # _Slony-I_$CLUSTERNAME_rowID zur Tabelle hinzu.
-    # Diese Spalten wird einen Standardwert von
+    # Diese Spalte wird einen Standardwert von
     # nextval('_$CLUSTERNAME.s1_rowid_seq'), sowie UNIQUE und NOT NULL
     # Einschränkungen, besitzen.
     # Alle bereits bestehenden Zeilen werden mit einer Nummer initialisiert. 
@@ -128,7 +130,7 @@ slonik <<_EOF_
 	table add key (node id = 1, fully qualified name = 'public.history');
 
 	#--
-    # Slony-I teil Tabellen in "Sets" ein. Die kleinste Einheit zu der ein
+    # Slony-I teilt Tabellen in "Sets" ein. Die kleinste Einheit zu der ein
     # Knoten subskribieren kann ist ein Set.
     # Die folgenden Kommandos erzeugen ein Set welches alle 4 pgbench
     # Tabellen beinhaltet. Der Master bzw. die Quelle dieses Sets ist
@@ -143,7 +145,7 @@ slonik <<_EOF_
 	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table', key = serial);
 
 	#--
-    # Erzeugung des zweiten Knotens (der Slave). Weiters folgen die nötigen
+    # Erzeugung des zweiten Knotens (des Slaves). Weiters folgen die nötigen
     # Informationen wie die beiden Knoten miteinander kommunizieren sollen.
 	#--
 
@@ -157,9 +159,9 @@ _EOF_
 
 Sollte pgbench jetzt nicht mehr laufen, sollte es erneut gestartet werden.
 
-Zu diesem Zeitpunkt existieren zwei komplett vorbereitete Datenbanken.
-Eine ist der Master in dem pgbench fleissig auf Daten zugreift und diese
-verändert.
+Zu diesem Zeitpunkt existieren nun zwei komplett vorbereitete Datenbanken.
+Eine davon ist die Masterdatenbank in dem pgbench fleissig auf Daten zugreift
+und diese kontinuierlich verändert.
 Es ist nun an der Zeit die Replikationsdaemons zu starten.
 
 Der Befehl zum starten der Replikationengine auf dem $MASTERHOST ist:
@@ -205,12 +207,13 @@ _EOF_
 
 
 Wenige Sekunden später wird der auf $SLAVEHOST laufende Replikationsdaemon
-beginnen, den aktuellen Inhalt der 4 replizierten Tablen, zu kopieren.
+beginnen, den aktuellen Inhalt der 4 zu replizierenden Tabellen, zu kopieren.
 Während diesem Vorgang wird klarerweise die pgbench Anwendung weiterhin die
-Datenbank modifizieren. Sobald der Kopiervorgang abgeschlossen ist, wird der
+Datenbank modifizieren. 
+Sobald der initiale Kopiervorgang abgeschlossen ist, wird der
 Replikationsdaemon auf dem $SLAVEHOST beginnen "aufzuholen" indem er beginnt
-das sich angesammelte Replikationslog abzuarbeiten.
-Diese Vorgang geschied Schrittweise, jeweils werden 10 Sekunden an
+das sich ansammelnde Replikationslog abzuarbeiten.
+Dieser Vorgang geschied Schrittweise, jeweils werden 10 Sekunden an
 Anwendungsarbeit repliziert.
 Abhängig von der Leistungsfähigkeit der beiden involvierten Systeme, der
 aktuellen Transaktionslast, der Grösse sowie des Tunings der Datenbanken,
@@ -219,12 +222,12 @@ sein.
 
 Sie haben nun erfolgreich Ihr erstes Master-Slave Replikationssystem
 installiert, die beiden Datenbanken enthalten nun identische Daten.
-Soweit die Theorie. In der Praxis schaded es nicht zu überprüfen ob die
+Soweit die Theorie. In der Praxis schadet es nicht zu überprüfen ob die
 beiden Datensets wirklich identisch sind.
 
 Das folgende Skript erzeugt sortierte Dumps der beiden Datenbanken und 
 vergleicht diese. Stellen Sie sicher das "pgbench" seinen Testlauf beendet
-hat und die slon-Instanzen aufgeholt haben.
+hat und die slon-Instanzen aufgeholt haben bevor Sie dieses Skript ausführen.
 
 
 #!/bin/sh
