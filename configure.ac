@@ -6,7 +6,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.2 2003-11-18 14:48:51 wieck Exp $
+# $Id: configure.ac,v 1.3 2003-12-03 20:08:54 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -61,18 +61,20 @@ AC_SUBST(with_gnu_ld)
 
 # Checks for header files.
 
-AC_ARG_WITH(pgincludes, [  --with-pgincludes=<dir> Location for PgSQL Include Files], AC_SUBST(PGINC, $with_pgincludes))
+AC_ARG_WITH(pghome, [  --with-pghome=<dir> Location of postgres home directory], AC_SUBST(PGHOME, $with_pghome))
 
-if test "x$with_pgincludes" = x ; then
+if test "x$with_pghome" = x ; then
   AC_MSG_ERROR([
-                ****************************************
-                Location of PgSQL include files required
+                ********************************************
+                Location of postgres home directory required
                 
-                       Use --with-pgincludes option                    
-                ****************************************])
+                       Use --with-pghome option                    
+                ********************************************])
 else
-  if test ! -f "$with_pgincludes/executor/spi.h" ; then
-    AC_MSG_ERROR($with_pgincludes/executor/spi.h NOT found)
+  if test ! -f "$with_pghome/include/server/executor/spi.h" ; then
+    AC_MSG_ERROR([
+           $with_pghome/include/server/executor/spi.h NOT found
+           Was PostgreSQL installed including 'make install-all-headers'?])
   fi
 fi
 
