@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.15 2004-03-18 19:32:21 wieck Exp $
+# $Id: configure.ac,v 1.16 2004-03-19 03:41:43 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -66,7 +66,11 @@ AC_SUBST(with_gnu_ld)
 # or we will never be able to administer a box remote. Check for
 # certain files to be in those locations.
 
-test_prefix=/usr/local/pgsql
+if test "x$prefix" = "xNONE" ; then
+	test_prefix=/usr/local/pgsql
+else
+	test_prefix=$prefix
+fi
 eval test_dir="${includedir}"
 if test "${test_dir}" = "NONE/include" ; then
 	test_dir="${test_prefix}/include"

@@ -2192,7 +2192,11 @@ with_gnu_ld=$ac_cv_prog_gnu_ld
 # or we will never be able to administer a box remote. Check for
 # certain files to be in those locations.
 
-test_prefix=/usr/local/pgsql
+if test "x$prefix" = "xNONE" ; then
+	test_prefix=/usr/local/pgsql
+else
+	test_prefix=$prefix
+fi
 eval test_dir="${includedir}"
 if test "${test_dir}" = "NONE/include" ; then
 	test_dir="${test_prefix}/include"
