@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.19 2004-03-12 17:26:55 wieck Exp $
+ *	$Id: remote_worker.c,v 1.20 2004-03-12 20:59:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1756,7 +1756,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
 		 */
-		slon_mkquery(&query1, "copy %s from stdin; ", tab_fqname);
+		slon_mkquery(&query1,
+				"truncate %s; "
+				"copy %s from stdin; ", tab_fqname, tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_COPY_IN)
 		{
@@ -1774,7 +1776,8 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		/*
 		 * Begin a COPY to stdout for the table on the provider DB
 		 */
-		slon_mkquery(&query1, "copy %s to stdout; ", tab_fqname);
+		slon_mkquery(&query1,
+				"copy %s to stdout; ", tab_fqname);
 		res3 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res3) != PGRES_COPY_OUT)
 		{
@@ -1944,22 +1947,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 * Check that the COPY to stdout on the provider node
 		 * finished successful.
 		 */
-		res3 = PQgetResult(pro_dbconn);
-		if (PQresultStatus(res3) != PGRES_COMMAND_OK)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					"copy to stdout on provider - %s %s",
-					node->no_id, PQresStatus(PQresultStatus(res3)),
-					PQresultErrorMessage(res3));
-			PQclear(res3);
-			PQendcopy(loc_dbconn);
-			PQclear(res2);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			return -1;
-		}
-		PQclear(res3);
 
 		/*
 		 * End the COPY from stdin on the local node with success
@@ -1969,19 +1956,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 					"PGendcopy() on local DB%s",
 					node->no_id, PQerrorMessage(loc_dbconn)); 
-			PQclear(res2);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			return -1;
-		}
-		res2 = PQgetResult(loc_dbconn);
-		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					"copy from stdin on local node - %s %s",
-					node->no_id, PQresStatus(PQresultStatus(res2)),
-					PQresultErrorMessage(res2));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
