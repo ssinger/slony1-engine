@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.18 2004-07-12 18:53:12 xfade Exp $
+#	$Id: Makefile,v 1.19 2004-07-17 18:31:32 xfade Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -21,6 +21,10 @@ override CFLAGS += -g $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir
 override LDFLAGS += -g $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
 
 PROG		= slon
+
+ifeq ($(PORTNAME), win)
+PROG            = slon.exe
+endif
 
 OBJS		= 			\
 	slon.o				\
