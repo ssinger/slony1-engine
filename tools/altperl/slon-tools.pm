@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.16 2005-02-02 17:22:29 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.17 2005-02-20 02:12:10 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -203,6 +203,50 @@ limit 1)
   #print "Result was: $result\n";
   return $result;
 }
+
+# This is a horrible function name, but it really *is* what it should
+# be called.
+sub get_set {
+    my $set = shift();
+    my $match;
+
+    # If the variables are already set through $ENV{SLONYSET}, just
+    # make sure we have an integer for $SET_ID
+    if ($TABLE_ID) {
+	return 0 unless $set =~ /^(?:set)?(\d+)$/;
+	return $1;
+    }
+
+    # Die if we don't have any sets defined in the configuration file.
+    unless (defined $SLONY_SETS
+	    and ref($SLONY_SETS) eq "HASH"
+	    and keys %{$SLONY_SETS}) {
+	die "There are no sets defined in your configuration file.";
+    }
+
+    # Is this a set name or number?
+    if ($SLONY_SETS->{$set}) {
+	$match = $SLONY_SETS->{$set};
+    }
+    elsif ($set =~ /^\d+$/) {
+	my ($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
+	$match = $SLONY_SETS->{$name};
+    }
+    else {
+	return 0;
+    }
+
+    # Set the variables for this set.
+    $TABLE_ID     = $match->{"table_id"};
+    $SEQUENCE_ID  = $match->{"sequence_id"};
+    @PKEYEDTABLES = @{$match->{"pkeyedtables"}};
+    %KEYEDTABLES  = %{$match->{"keyedtables"}};
+    @SERIALTABLES = @{$match->{"serialtables"}};
+    @SEQUENCES    = @{$match->{"sequences"}};
+
+    return $match->{"set_id"};
+}
+
 
 # This function checks to see if there is a still-in-progress subscription
 # It does so by looking to see if there is a SUBSCRIBE_SET event corresponding

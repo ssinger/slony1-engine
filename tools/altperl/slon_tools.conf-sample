@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.1 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_tools.conf-sample,v 1.2 2005-02-20 02:12:11 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -66,6 +66,67 @@ if ($ENV{"SLONYNODES"}) {
              password => '');
 }
 
+# The $SLONY_SETS variable contains information about all of the sets
+# in your cluster.
+
+my $SLONY_SETS = {
+
+    # A unique name for the set
+    "set1" => {
+
+	# The set_id, also unique
+	"set_id" => 1,
+
+	# The first ID to use for tables and sequences that are added
+	# to the replication cluster.  This must be unique across the
+	# cluster.
+	# 
+	# TODO: This should be determined automatically, which can be
+	# done fairly easily in most cases using psql.  create_set
+	# should derive it, and give an option to override it with a
+	# specific value.
+	"table_id"    => 1,
+	"sequence_id" => 1,
+
+	# This array contains a list of tables that already have
+	# primary keys.
+        "pkeyedtables" => [
+			   'table1',
+			   'table2',
+			   ],
+
+	# For tables that have unique not null keys, but no primary
+	# key, enter their names and indexes here.
+	"keyedtables" => {
+	    'table3' => 'index_on_table3',
+	    'table4' => 'index_on_table4',
+	},
+
+	# If a table does not have a suitable key or set of keys that
+	# can act as a primary key, Slony can add one.
+	#
+	# Note: The Slony development team does not recomment this
+	# approach -- you should create your own primary keys instead.
+	"serialtables" => ["table5"],
+
+	# Sequences that need to be replicated should be entered here.
+	"sequences" => ['sequence1',
+			'sequence2',
+			],
+    },
+
+    "set2" => {
+	"set_id"       => 2,
+	"table_id"     => 6,
+	"sequence_id"  => 3,
+	"pkeyedtables" => ["table6"],
+	"keyedtables"  => {},
+	"serialtables" => [],
+	"sequences"    => [],
+    },
+
+};
+
 # Keeping the following three lines for backwards compatibility in
 # case this gets incorporated into a 1.0.6 release.
 #
@@ -76,48 +137,6 @@ if ($ENV{"SLONYNODES"}) {
 #
 if ($ENV{"SLONYSET"}) {
     require $ENV{"SLONYSET"};
-} else {
-
-    # The first ID to use for tables and sequences that are added to
-    # the replication cluster.  This must be unique across the
-    # cluster.
-    # 
-    # TODO: This should be determined automatically, which can be done
-    # fairly easily in most cases using psql.  create_set should
-    # derive it, and give an option to override it with a specific
-    # value.
-    $TABLE_ID    = 1;
-    $SEQUENCE_ID = 1;
-
-    # This array contains a list of tables that already have primary
-    # keys.
-    @PKEYEDTABLES=(
-		   'table1',
-		   'table2'
-		   );
-
-    # For tables that have unique not null keys, but no primary key,
-    # enter their names and indexes here.
-    %KEYEDTABLES=(
-		  'table3' => 'index_on_table3',
-		  'table4' => 'index_on_table4'
-		  );
-
-    # If a table does not have a suitable key or set of keys that can
-    # act as a primary key, Slony can add one.
-    #
-    # Note: The Slony development team does not recomment this
-    # approach -- you should create your own primary keys instead.
-    @SERIALTABLES=(
-		   'table5'
-		   );
-
-    # Sequences that need to be replicated should be entered here.
-    @SEQUENCES=(
-		'sequence1',
-		'sequence2'
-		);
-
 }
 
 # Please do not add or change anything below this point.
