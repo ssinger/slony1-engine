@@ -1,0 +1,74 @@
+#!/bin/sh
+# $Id: check_slony_cluster.sh,v 1.1 2005-02-27 20:18:05 cbbrowne Exp $
+
+# nagios plugin that checks whether the slave nodes in a slony cluster
+# are being updated from the master
+#
+# possible exit statuses:
+#  0 = OK
+#  2 = Error, one or more slave nodes are not sync'ing with the master
+#
+# script requires two parameters:
+# CLUSTERNAME - name of slon cluster to be checked
+# DBNAME - name of master database
+#
+# Author:  John Sidney-Woollett
+# Created: 26-Feb-2005
+# Copyright 2005
+
+# check parameters are valid
+if [[ $# -ne 2 ]]
+then
+   echo "Invalid parameters need CLUSTERNAME DBNAME"
+   exit 2
+fi
+
+# assign parameters
+CLUSTERNAME=$1
+DBNAME=$2
+
+# setup the query to check the replication status
+SQL="select case
+   when ttlcount = okcount then 'OK - '||okcount||' nodes in sync'
+   else 'ERROR - '||ttlcount-okcount||' of '||ttlcount||' nodes not in sync'
+end as syncstatus
+from (
+-- determine total active receivers
+select (select count(distinct sub_receiver)
+     from _$CLUSTERNAME.sl_subscribe
+     where sub_active = true) as ttlcount,
+(
+-- determine active nodes syncing within 10 seconds
+  select count(*) from (
+   select st_received, st_last_received_ts - st_last_event_ts as cfmdelay
+   from _$CLUSTERNAME.sl_status
+   where st_received in (
+     select distinct sub_receiver
+     from _$CLUSTERNAME.sl_subscribe
+     where sub_active = true
+   )
+) as t1
+where cfmdelay < interval '10 secs') as okcount
+) as t2"
+
+# query the master database
+CHECK=`/usr/local/pgsql/bin/psql -c "$SQL" --tuples-only -U postgres 
+$DBNAME`
+
+if [ ! -n "$CHECK" ]
+then
+   echo "ERROR querying $DBNAME"
+   exit 2
+fi
+
+# echo the result of the query
+echo $CHECK
+
+# and check the return status
+STATUS=`echo $CHECK | awk '{print $1}'`
+if [ $STATUS = "OK" ]
+then
+   exit 0
+else
+   exit 2
+fi
