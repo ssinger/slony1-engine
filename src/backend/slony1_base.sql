@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.13 2004-05-19 19:38:28 wieck Exp $
+-- $Id: slony1_base.sql,v 1.13.2.1 2004-08-02 21:53:20 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -73,7 +73,7 @@ create table @NAMESPACE@.sl_setsync (
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_table (
 	tab_id				int4,
-	tab_reloid			oid,
+	tab_reloid			oid UNIQUE NOT NULL,
 	tab_set				int4,
 	tab_idxname			name NOT NULL,
 	tab_altered			boolean NOT NULL,
@@ -108,7 +108,7 @@ create table @NAMESPACE@.sl_trigger (
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_sequence (
 	seq_id				int4,
-	seq_reloid			oid,
+	seq_reloid			oid UNIQUE NOT NULL,
 	seq_set				int4,
 	seq_comment			text,
 
