@@ -2363,6 +2363,55 @@ _ACEOF
 
 fi
 
+# PQsetNoticeReceiver()
+echo "$as_me:$LINENO: checking for PQsetNoticeReceiver() in libpq" >&5
+echo $ECHO_N "checking for PQsetNoticeReceiver() in libpq... $ECHO_C" >&6
+have_pqsetnoticereceiver=no
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <libpq-fe.h>
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+PQsetNoticeReceiver(NULL,NULL,NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  have_pqsetnoticereceiver=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $have_pqsetnoticereceiver" >&5
+echo "${ECHO_T}$have_pqsetnoticereceiver" >&6
+if test $have_pqsetnoticereceiver = yes ; then
+	cat >>confdefs.h <<\_ACEOF
+#define HAVE_PQSETNOTICERECEIVER 1
+_ACEOF
+
+fi
+
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 

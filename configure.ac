@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.9 2004-03-10 21:27:31 wieck Exp $
+# $Id: configure.ac,v 1.10 2004-03-11 03:17:51 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -105,6 +105,17 @@ AC_TRY_LINK([#include <libpq-fe.h>],
 AC_MSG_RESULT($have_pqputcopydata)
 if test $have_pqputcopydata = yes ; then
 	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
+fi
+
+# PQsetNoticeReceiver()
+AC_MSG_CHECKING([for PQsetNoticeReceiver() in libpq])
+have_pqsetnoticereceiver=no
+AC_TRY_LINK([#include <libpq-fe.h>],
+	   [PQsetNoticeReceiver(NULL,NULL,NULL);],
+	   [have_pqsetnoticereceiver=yes])
+AC_MSG_RESULT($have_pqsetnoticereceiver)
+if test $have_pqsetnoticereceiver = yes ; then
+	AC_DEFINE(HAVE_PQSETNOTICERECEIVER,1,)
 fi
 
 CFLAGS="$save_CFLAGS"

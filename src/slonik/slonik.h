@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.1 2004-03-10 21:27:32 wieck Exp $
+ *	$Id: slonik.h,v 1.2 2004-03-11 03:17:52 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -281,7 +281,11 @@ extern int		slonik_subscribe_set(SlonikStmt_subscribe_set *stmt);
 extern int		db_notice_silent;
 extern int		db_notice_lno;
 
+#ifdef HAVE_PQSETNOTICERECEIVER
 void			db_notice_recv(void *arg, const PGresult *res);
+#else
+void			db_notice_recv(void *arg, const char *msg);
+#endif
 int				db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
 int				db_disconnect(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * $Id: config.h.in,v 1.5 2004-03-10 21:27:31 wieck Exp $
+ * $Id: config.h.in,v 1.6 2004-03-11 03:17:51 wieck Exp $
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
@@ -24,5 +24,9 @@
 /* Set to 1 if libpq contains PQputCopyData(), PQendCopyData()
  * and PQgetCopyData() - i.e. libpq >= 7.4 */
 #undef HAVE_PQPUTCOPYDATA
+
+/* Set to 1 if libpq contains PQsetNoticeReceiver(), use
+ * PQsetNoticeProcessor() instead. */
+#undef HAVE_PQSETNOTICERECEIVER
 
 #endif /* SLONY_I_CONFIG_H */

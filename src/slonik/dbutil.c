@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.1 2004-03-10 21:27:32 wieck Exp $
+ *	$Id: dbutil.c,v 1.2 2004-03-11 03:17:52 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -36,6 +36,7 @@ SlonikStmt	   *db_notice_stmt = NULL;
  */
 static int		slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
 
+#ifdef HAVE_PQSETNOTICERECEIVER
 
 /* ----------
  * db_notice_recv
@@ -69,6 +70,39 @@ db_notice_recv(void *arg, const PGresult *res)
 	}
 }
 
+#else /* !HAVE_PQSETNOTICERECEIVER */
+
+/* ----------
+ * db_notice_recv
+ *
+ *	PostgreSQL specific notice message processor
+ * ----------
+ */
+void
+db_notice_recv(void *arg, const char *msg)
+{
+	/*
+	 * Suppress notice messages when we're silenced
+	 */
+	if (db_notice_silent)
+		return;
+
+	/*
+	 * Print the message including script location info
+	 */
+	if (db_notice_stmt == NULL)
+	{
+		fprintf(stderr, "<unknown>:<unknown>: %s", msg);
+	}
+	else
+	{
+		fprintf(stderr, "%s:%d: %s",
+				db_notice_stmt->stmt_filename,
+				db_notice_stmt->stmt_lno, msg);
+	}
+}
+
+#endif /* !HAVE_PQSETNOTICERECEIVER */
 
 /* ----------
  * db_connect
@@ -98,7 +132,11 @@ db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 		return -1;
 	}
 
+#ifdef HAVE_PQSETNOTICERECEIVER
 	PQsetNoticeReceiver(dbconn, db_notice_recv, NULL);
+#else
+	PQsetNoticeProcessor(dbconn, db_notice_recv, NULL);
+#endif /* !HAVE_PQSETNOTICERECEIVER */
 	adminfo->dbconn = dbconn;
 	return 0;
 }
