@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.27.2.4 2004-10-08 16:30:13 wieck Exp $
+ *	$Id: slonik.c,v 1.27.2.5 2004-10-18 15:09:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -70,13 +70,17 @@ main(int argc, const char *argv[])
 	extern int		optind;
 	int				opt;
 
-	while ((opt = getopt(argc, (char **)argv, "h")) != EOF)
+	while ((opt = getopt(argc, (char **)argv, "hv")) != EOF)
 	{
 		switch(opt)
 		{
 			case 'h':	parser_errors++;
 						break;
 
+			case 'v':	printf("slonik version %s\n", SLONY_I_VERSION_STRING);
+						exit(0);
+						break;
+						
 			default:	printf("unknown option '%c'\n", opt);
 						parser_errors++;
 						break;
