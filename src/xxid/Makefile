@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.12 2004-07-20 09:15:31 dfetter Exp $
+#	$Id: Makefile,v 1.13 2004-08-18 23:39:54 darcyb Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -17,8 +17,12 @@ SO_NAME		= $(NAME)$(DLSUFFIX)
 SQL_NAME73	= $(NAME).v73.sql
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAMES	= $(SQL_NAME73) $(SQL_NAME74)
-
+POSTGRES_IMP=
 SO_OBJS		= xxid.o
+
+ifeq ($(PORTNAME), aix)
+POSTGRES_IMP=$(slony_top_builddir)/postgresql.imp
+endif
 
 ALL =					\
 	$(SO_NAME)			\
@@ -31,7 +35,7 @@ all:	$(ALL)
 $(SQL_NAME74):	$(SQL_NAME73)
 	cp $< $@
 
-$(SO_NAME):     $(SO_OBJS)
+$(SO_NAME):     $(SO_OBJS) $(POSTGRES_IMP)
 
 clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
@@ -56,3 +60,7 @@ distdir: $(DISTFILES)
       cp $$file $(distdir)/$(subdir)/$$file ; \
     done
 
+ifeq ($(PORTNAME), aix)
+$(POSTGRES_IMP): $(pgbindir)/postgres
+	$(MKLDEXPORT) $(pgbindir)/postgres > $@
+endif

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.14 2004-07-20 09:15:31 dfetter Exp $
+#	$Id: Makefile,v 1.15 2004-08-18 23:39:54 darcyb Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -19,12 +19,16 @@ SO_OBJS	= $(NAME).o
 
 BASE_COMMON		= slony1_base.sql
 FUNCS_COMMON	= slony1_funcs.sql
-
+POSTGRES_IMP=
 BASE_73			= slony1_base.v73.sql
 FUNCS_73		= slony1_funcs.v73.sql
 
 BASE_74			= slony1_base.v74.sql
 FUNCS_74		= slony1_funcs.v74.sql
+
+ifeq ($(PORTNAME), aix)
+POSTGRES_IMP=$(slony_top_builddir)/postgresql.imp
+endif
 
 SQL_NAMES =				\
 	$(BASE_COMMON)		\
@@ -42,7 +46,7 @@ ALL = $(SQL_NAMES)		\
 
 all:	$(ALL)
 
-$(SO_NAME):	$(SO_OBJS)
+$(SO_NAME):	$(SO_OBJS) $(POSTGRES_IMP)
 
 clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
@@ -67,3 +71,7 @@ distdir: $(DISTFILES)
       cp $$file $(distdir)/$(subdir)/$$file ; \
     done
 
+ifeq ($(PORTNAME), aix)
+$(POSTGRES_IMP): $(pgbindir)/postgres
+	$(MKLDEXPORT) $(pgbindir)/postgres > $@
+endif
