@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.8 2005-01-18 22:57:36 cbbrowne Exp $ -->
 <article>
 <sect1 id="monitoring">
 <title>Monitoring</title>
@@ -62,6 +62,63 @@ think maybe there should be a "how it works" page, explaining more
 about how the threads work, what to expect in the logs after you run a
 </para>
 </sect2>
+
+<sect2 id="testslonystate"> <title> test_slony_state.pl </title>
+
+<para> This script is in preliminary stages, and may be used to do
+some analysis of the state of a <productname>Slony-I</productname>
+cluster.</para>
+
+<para> You specify arguments including <option>database</option>,
+<option>host</option>, <option>user</option>,
+<option>cluster</option>, <option>password</option>, and
+<option>port</option> to connect to any of the nodes on a cluster.</para>
+
+<para> The script then rummages through <envar>sl_path</envar> to find
+all of the nodes in the cluster, and the DSNs to allow it to, in turn,
+connect to each of them.</para>
+
+<para> For each node, the script examines the state of things,
+including such things as:
+
+<itemizedlist>
+<listitem><para> Checking <envar> sl_listen </envar> for some
+<quote>analytically determinable</quote> problems.  It lists paths
+that are not covered.  
+
+<listitem><para> Providing a summary of events by origin node
+
+<para> If a node hasn't submitted any events in a while, that likely suggests a problem.
+
+<listitem><para> Summarizes the <quote>aging</quote> of table <envar>sl_confirm</envar>
+
+<para> If one or another of the nodes in the cluster hasn't reported
+back recently, that tends to lead to cleanups of tables like <envar>
+sl_log_1 </envar> and <envar> sl_seqlog </envar> not taking place.
+
+<listitem><para> Summarizes what transactions have been running for a
+long time
+
+<para> This only works properly if the statistics collector is
+configured to collect command strings, as controlled by the option
+<option> stats_command_string = true </option> in <filename>
+postgresql.conf </filename>.
+
+<para> If you have broken applications that hold connections open,
+this will find them.
+
+<para> If you have broken applications that hold connections open,
+that has several unsalutory effects as <link
+linkend="longtxnsareevil"> described in the FAQ</ulink>.
+
+</itemizedlist>
+
+<para> The script does not yet do much in the way of diagnosis work;
+it should be enhanced to be able to, based on some parameterization,
+notify someone of those problems it encounters.
+
+</sect2>
+
 </sect1>
 </article>
 <!-- Keep this comment at the end of the file

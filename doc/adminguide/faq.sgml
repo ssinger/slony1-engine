@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.9 2005-01-12 23:01:39 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.10 2005-01-18 22:57:35 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -860,12 +860,12 @@ scratch later.
 </answer>
 </qandaentry>
 
-<qandaentry> 
+<qandaentry id="longtxnsareevil">
 
-<question><para> Replication has been slowing down, I'm seeing <command>
-FETCH 100 FROM LOG </command> queries running for a long time, <envar>
-sl_log_1 </envar> is growing, and performance is, well, generally
-getting steadily worse. </para>
+<question><para> Replication has been slowing down, I'm seeing
+<command> FETCH 100 FROM LOG </command> queries running for a long
+time, <envar> sl_log_1 </envar> is growing, and performance is, well,
+generally getting steadily worse. </para>
 </question>
 
 <answer> <para> There are actually a number of possible causes for
