@@ -60,11 +60,25 @@ relname='_${cluster_name}_Restart' exists. slon doesn't start cause it
 thinks another process is serving the cluster on this node.  What can
 I do? The tuples can't be dropped from this relation.
 
-Answer:  
+The logs claim that "Another slon daemon is serving this node already"
 
-Before starting slon, do a 'restart node'. PostgreSQL tries to notify
-the listeners and drop those are not answering. Slon then starts
-cleanly.
+It's handy to keep a slonik script like the following one around to
+run in such cases:
+================================================================================
+twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
+cluster name = oxrsorg ;
+node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
+node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
+node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
+node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
+restart node 1;
+restart node 2;
+restart node 3;
+restart node 4;
+================================================================================
+
+'restart node n' cleans this stuff up so that you can restart the
+node.
 
 5.  If I run a "ps" command, I, and everyone else, can see passwords
 on the command line.
@@ -145,6 +159,13 @@ subscription for one of the nodes.  All is well; the system is busy
 setting up the first subscriber; it won't start on the second one
 until the first one has completed subscribing.
 
+By the way, if there is more than one database on the PostgreSQL
+cluster, and activity is taking place on the OTHER database, that will
+lead to there being "transactions earlier than XID whatever" being
+found to be still in progress.  The fact that it's a separate database
+on the cluster is irrelevant; Slony-I will wait until those old
+transactions terminate.
+
 9.  I tried setting up a second replication set, and got the following error:
 
 <stdin>:9: Could not create subscription set 2 for oxrslive!
@@ -204,8 +225,8 @@ You'll have to run these three queries on all of the nodes, preferably
 firstly on the "master" node, so that the dropping of this propagates
 properly.  Implementing this via a SLONIK statement with a new Slony
 event would do that.  Submitting the three queries using EXECUTE
-SCRIPT can do that.  Less ideal would be to connect to each database
-and submit the queries by hand.
+SCRIPT could do that.  Also possible would be to connect to each
+database and submit the queries by hand.
 
 11.  I tried to add a table to a set, and got the following message:
 
@@ -257,11 +278,66 @@ I'm seeing long running queries of the form:
 This is characteristic of pg_listener (which is the table containing
 NOTIFY data) having plenty of dead tuples in it.
 
-You need to do a VACUUM FULL on pg_listener, and need to vacuum
-pg_listener really frequently.  (Once every five minutes would likely
-be AOK.)
+You quite likely need to do a VACUUM FULL on pg_listener, to
+vigorously clean it out, and need to vacuum pg_listener really
+frequently.  (Once every five minutes would likely be AOK.)
 
-Slon daemons vacuum a bunch of tables, and cleanup_thread.c contains a
-list of tables that are frequently vacuumed automatically.  In Slony-I
-1.0.2, pg_listener is not included.  In later versions, it will be, so
-that you probably don't need to worry about this anymore.
+Slon daemons already vacuum a bunch of tables, and cleanup_thread.c
+contains a list of tables that are frequently vacuumed automatically.
+In Slony-I 1.0.2, pg_listener is not included.  In later versions, it
+will be, so that you probably don't need to worry about this anymore.
+
+14.  I started doing a backup using pg_dump, and suddenly Slony stops
+replicating anything.
+
+Ouch.  What happens here is a conflict between:
+
+ a) pg_dump, which has taken out an AccessShareLock on all of the
+    tables in the database, including the Slony-I ones, and
+
+ b) A Slony-I sync event, which wants to grab a AccessExclusiveLock on
+    the table sl_event.
+
+The initial query that will be blocked is thus:
+
+    select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);     
+
+(You can see this in pg_stat_activity, if you have query display
+turned on in postgresql.conf)
+
+The actual query combination that is causing the lock is from the
+function Slony_I_ClusterStatus(), found in slony1_funcs.c, and is
+localized in the code that does:
+
+  LOCK TABLE %s.sl_event;
+  INSERT INTO %s.sl_event (...stuff...)
+  SELECT currval('%s.sl_event_seq');
+
+The LOCK statement will sit there and wait until pg_dump (or whatever
+else has pretty much any kind of access lock on sl_event) completes.  
+
+Every subsequent query submitted that touches sl_event will block
+behind the createEvent call.
+
+There are a number of possible answers to this:
+
+ a) Have pg_dump specify the schema dumped using --schema=whatever,
+    and don't try dumping the cluster's schema.
+
+ b) It would be nice to add an "--exclude-schema" option to pg_dump to
+    exclude the Slony cluster schema.  Maybe in 8.0 or 8.1...
+
+15.  The slons spent the weekend out of commission [for some reason],
+and it's taking a long time to get a sync through.
+
+You might want to take a look at the sl_log_1/sl_log_2 tables, and do
+a summary to see if there are any really enormous Slony-I transactions
+in there.  Up until at least 1.0.2, there needs to be a slon connected
+to the master in order for SYNC events to be generated.
+
+If none are being generated, then all of the updates until the next
+one is generated will collect into one rather enormous Slony-I
+transaction.
+
+Conclusion: Even if there is not going to be a subscriber around, you
+_really_ want to have a slon running to service the "master" node.
