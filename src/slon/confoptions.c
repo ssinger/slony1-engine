@@ -442,7 +442,7 @@ set_config_option(const char *name, const char *value)
 	case SLON_C_STRING:
 		{
 			struct config_string *conf = (struct config_string *) record;
-			char           *newval;
+			char           *newval=NULL;
 
 			if (value)
 			{
