@@ -2247,6 +2247,15 @@ fi
 PGHOME=$pghome
 
 
+cat >>confdefs.h <<_ACEOF
+#define PGHOME "${pghome}"
+_ACEOF
+
+cat >>confdefs.h <<_ACEOF
+#define PGLIB "${pghome}/lib"
+_ACEOF
+
+
 # ----
 # Check if our libpq contains several functions
 # ----

@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.8 2004-03-03 21:52:46 wieck Exp $
+# $Id: configure.ac,v 1.9 2004-03-10 21:27:31 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -74,6 +74,9 @@ if test ! -f "$pghome/include/server/executor/spi.h" ; then
 fi
 AC_SUBST(PGHOME, $pghome)
 
+AC_DEFINE_UNQUOTED(PGHOME, "${pghome}", )
+AC_DEFINE_UNQUOTED(PGLIB, "${pghome}/lib", )
+
 # ----
 # Check if our libpq contains several functions
 # ----
@@ -122,7 +125,7 @@ AC_CONFIG_FILES([
 ])
 
 AC_CONFIG_LINKS([
-  Makefile.port:makefiles/Makefile.${template}
+	Makefile.port:makefiles/Makefile.${template}
 ])
 
 

@@ -6,11 +6,14 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * $Id: config.h.in,v 1.4 2004-03-03 21:52:46 wieck Exp $
+ * $Id: config.h.in,v 1.5 2004-03-10 21:27:31 wieck Exp $
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
 #define SLONY_I_CONFIG_H
+
+#undef PGHOME
+#undef PGLIB
 
 /* Set to 1 if libpq contains PQfreemem() */
 #undef HAVE_PQFREEMEM
