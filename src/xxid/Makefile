@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.9 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.9.2.1 2004-07-07 16:41:35 wieck Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -38,7 +38,7 @@ clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
 	rm -f $(SQL_NAME74)
 
-
+install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pkglibdir)
 	for file in $(SQL_NAMES); do \
 	  $(INSTALL_SCRIPT) $$file $(DESTDIR)$(datadir) || exit ; \
