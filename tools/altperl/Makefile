@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.2 2005-01-26 19:42:23 darcyb Exp $
+#       $Id: Makefile,v 1.3 2005-02-10 05:49:20 smsimms Exp $
 #
 # ----------
 
@@ -34,7 +34,7 @@ ifndef SED
 else
 		@for file in $(wildcard *.pl) ; do \
 			tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
-			$(SED) -e "s#@@PERL@@#$(PERL)#" $$file > $$tmpname; \
+			$(SED) -e "s#@@PERL@@#$(PERL)#; s#@@SYSCONFDIR@@#$(sysconfdir)#; s#@@PGLIBDIR@@#$(pglibdir)#;" $$file > $$tmpname; \
 			chmod 755 $$tmpname; \
 		done
 endif
