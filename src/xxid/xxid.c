@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.3 2003-11-18 15:11:35 wieck Exp $
+ *	$Id: xxid.c,v 1.4 2003-11-24 14:30:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -15,6 +15,7 @@
 #include <limits.h>
 
 #include "access/xact.h"
+#include "access/transam.h"
 
 
 #ifndef PG_GETARG_TRANSACTIONID
@@ -112,7 +113,7 @@ _Slony_I_xxidlt(PG_FUNCTION_ARGS)
 	if (TransactionIdEquals(value1, value2))
 		PG_RETURN_BOOL(false);
 
-	PG_RETURN_BOOL(value1 < value2);
+	PG_RETURN_BOOL(TransactionIdPrecedes(value1, value2));
 }
 
 
@@ -128,7 +129,7 @@ _Slony_I_xxidle(PG_FUNCTION_ARGS)
 	if (TransactionIdEquals(value1, value2))
 		PG_RETURN_BOOL(true);
 
-	PG_RETURN_BOOL(value1 <= value2);
+	PG_RETURN_BOOL(TransactionIdPrecedesOrEquals(value1, value2));
 }
 
 
@@ -144,12 +145,12 @@ _Slony_I_xxidgt(PG_FUNCTION_ARGS)
 	if (TransactionIdEquals(value1, value2))
 		PG_RETURN_BOOL(false);
 
-	PG_RETURN_BOOL(value1 > value2);
+	PG_RETURN_BOOL(TransactionIdFollows(value1, value2));
 }
 
 
 /*
- *		xxidge			- is value1 <= value2 ?
+ *		xxidge			- is value1 >= value2 ?
  */
 Datum
 _Slony_I_xxidge(PG_FUNCTION_ARGS)
@@ -160,7 +161,7 @@ _Slony_I_xxidge(PG_FUNCTION_ARGS)
 	if (TransactionIdEquals(value1, value2))
 		PG_RETURN_BOOL(true);
 
-	PG_RETURN_BOOL(value1 >= value2);
+	PG_RETURN_BOOL(TransactionIdFollowsOrEquals(value1, value2));
 }
 
 
@@ -176,7 +177,7 @@ _Slony_I_btxxidcmp(PG_FUNCTION_ARGS)
 	if (TransactionIdEquals(value1, value2))
 		PG_RETURN_INT32(0);
 
-	if (value1 < value2)
+	if (TransactionIdPrecedes(value1, value2))
 		PG_RETURN_INT32(-1);
 	PG_RETURN_INT32(1);
 }
