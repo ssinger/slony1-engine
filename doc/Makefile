@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.7 2004-08-05 21:57:42 darcyb Exp $
+#	$Id: Makefile,v 1.8 2004-09-02 18:08:00 darcyb Exp $
 # ----------
 
 slony_subdir = doc
@@ -18,7 +18,7 @@ DISTFILES = Makefile
 all install installdirs:
 
 clean distclean maintainer-clean:
-	for subdir in $(SUBDIRS) ; do \
+	@for subdir in $(SUBDIRS) ; do \
 		$(MAKE) -C $$subdir $@ ; \
 	done
 
@@ -26,9 +26,9 @@ clean distclean maintainer-clean:
 distdir: $(DISTFILES)
 	mkdir -p $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
-	for file in $(DISTFILES) ; do \
+	@for file in $(DISTFILES) ; do \
 		cp $$file $(distdir)/$(subdir)/$$file ; \
 	done
-	for subdir in $(SUBDIRS) ; do \
+	@for subdir in $(SUBDIRS) ; do \
 		$(MAKE) -C $$subdir distdir ; \
 	done
