@@ -153,10 +153,10 @@ manual on how to configure and set up a replication system.
 </a>
 <div style="margin-left:40px; margin-right:80px;">
 <p>
-	The following commands must appear at the very top of every
-	slonik command script. They do not cause any direct action on
-	any of the nodes in the replication system, but affect the
-	execution of the entire script.
+	The following commands must appear as a "preamble" at the very
+	top of every slonik command script. They do not cause any
+	direct action on any of the nodes in the replication system,
+	but affect the execution of the entire script.
 </p>
 
 <!-- **************************************** -->
@@ -1704,9 +1704,9 @@ manual on how to configure and set up a replication system.
 	until the subscriber node is ready for the next action.
 </p>
 <p>
-	WAIT FOR EVENT must be called outside of any try block to
-	work, since new confirm messages don't become visible within
-	a transaction.
+	<tt>WAIT FOR EVENT</tt> must be called outside of any try
+	block in order to work, since new confirm messages don't
+	become visible within a transaction.
 </p>
 <table border="0" cellpadding="10">
 <tr>
