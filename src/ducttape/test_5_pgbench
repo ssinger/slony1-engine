@@ -260,7 +260,7 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when cought up."
+echo "**** please terminate the replication engines when caught up."
 wait $slon1_pid
 wait $slon2_pid
 

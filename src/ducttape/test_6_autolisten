@@ -361,7 +361,7 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when cought up."
+echo "**** please terminate the replication engines when caught up."
 
 for node in 1 2 3 4 5 6; do
     pid=$PID[$node]
