@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.23 2004-03-10 20:50:57 wieck Exp $
+ *	$Id: slon.h,v 1.24 2004-03-11 22:00:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -316,7 +316,13 @@ do { \
     kill(slon_pid, SIGTERM); \
 	pthread_exit(NULL); \
 } while (0)
+#define slon_restart() \
+do { \
+    kill(slon_pid, SIGHUP); \
+} while (0)
 extern void		slon_exit(int code);
+
+extern int		slon_restart_request;
 
 
 /* ----------

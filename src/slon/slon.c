@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.18 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: slon.c,v 1.19 2004-03-11 22:00:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,13 @@
 #include "c.h"
 
 #include "slon.h"
+
+
+/* ----------
+ * Global data
+ * ----------
+ */
+int slon_restart_request = false;
 
 
 /* ----------
@@ -413,6 +420,15 @@ main (int argc, const char *argv[])
 	if (pthread_join(local_sync_thread, NULL) < 0)
 		slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
 				strerror(errno));
+
+	if (slon_restart_request)
+	{
+		slon_log(SLON_DEBUG1, "main: restart requested\n");
+		execvp(argv[0], argv);
+		slon_log(SLON_FATAL,
+				"main: cannot restart via execvp(): %s\n", strerror(errno));
+		exit(-1);
+	}
 
 	/*
 	 * That's it.

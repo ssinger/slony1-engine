@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.11 2004-03-10 20:50:57 wieck Exp $
+ *	$Id: local_listen.c,v 1.12 2004-03-11 22:00:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -47,6 +47,8 @@ localListenThread_main(void *dummy)
 	int			ntuples;
 	int			tupno;
 	PGnotify   *notification;
+	char		restart_notify[256];
+	int			restart_request;
 
 	slon_log(SLON_DEBUG1, "localListenThread: thread starts\n");
 
@@ -61,11 +63,15 @@ localListenThread_main(void *dummy)
 	 * Initialize local data
 	 */
 	dstring_init(&query1);
+	sprintf(restart_notify, "_%s_Restart", rtcfg_cluster_name);
 
 	/*
 	 * Listen for local events
 	 */
-	slon_mkquery(&query1, "listen \"_%s_Event\"", rtcfg_cluster_name);
+	slon_mkquery(&query1, 
+			"listen \"_%s_Event\"; "
+			"listen \"_%s_Restart\"; ",
+			rtcfg_cluster_name, rtcfg_cluster_name);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -105,8 +111,20 @@ localListenThread_main(void *dummy)
 		 * Drain notifications.
 		 */
 		PQconsumeInput(dbconn);
+		restart_request = false;
 		while ((notification = PQnotifies(dbconn)) != NULL)
+		{
+			if (strcmp(restart_notify, notification->relname) == 0)
+				restart_request = true;
 			PQfreemem(notification);
+		}
+		if (restart_request)
+		{
+			slon_log(SLON_INFO,
+					"localListenThread: got restart notification - "
+					"signal scheduler\n");
+			slon_restart();
+		}
 
 		/*
 		 * Query the database for new local events

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.7 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: scheduler.c,v 1.8 2004-03-11 22:00:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -57,6 +57,7 @@ static sigset_t			sched_sigset;
  */
 static void			   *sched_mainloop(void *);
 static void				sched_sighandler(int signo);
+static void				sched_sighuphandler(int signo);
 static void				sched_add_fdset(int fd, fd_set *fds);
 static void				sched_remove_fdset(int fd, fd_set *fds);
 
@@ -84,14 +85,16 @@ sched_start_mainloop(void)
 	 * threads in the system. The two signals will explicitly be
 	 * unblocked again while we're waiting for the scheduler thread.
 	 */
+	signal(SIGHUP, sched_sighuphandler);
+	signal(SIGINT, sched_sighandler);
+	signal(SIGTERM, sched_sighandler);
+	
 	sigemptyset(&sched_sigset);
+	sigaddset(&sched_sigset, SIGHUP);
 	sigaddset(&sched_sigset, SIGINT);
 	sigaddset(&sched_sigset, SIGTERM);
 	pthread_sigmask(SIG_BLOCK, &sched_sigset, NULL);
 
-	signal(SIGINT, sched_sighandler);
-	signal(SIGTERM, sched_sighandler);
-	
 	/*
 	 * Grab the scheduler master lock
 	 */
@@ -718,6 +721,14 @@ sched_sighandler(int signo)
 	 * Unlock the master mutex
 	 */
 	pthread_mutex_unlock(&sched_master_lock);
+}
+
+
+static void
+sched_sighuphandler(int signo)
+{
+	slon_restart_request = true;
+	sched_sighandler(signo);
 }
 
 
