@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slony_cluster.sh,v 1.1 2005-02-27 20:18:05 cbbrowne Exp $
+# $Id: check_slony_cluster.sh,v 1.2 2005-03-03 23:46:33 cbbrowne Exp $
 
 # nagios plugin that checks whether the slave nodes in a slony cluster
 # are being updated from the master
@@ -11,21 +11,25 @@
 # script requires two parameters:
 # CLUSTERNAME - name of slon cluster to be checked
 # DBNAME - name of master database
+# DBHOST - host name of master database
+#
+# It also depends on PGPORT being set to the appropriate port
 #
 # Author:  John Sidney-Woollett
 # Created: 26-Feb-2005
 # Copyright 2005
 
 # check parameters are valid
-if [[ $# -ne 2 ]]
+if [[ $# -ne 3 ]]
 then
-   echo "Invalid parameters need CLUSTERNAME DBNAME"
+   echo "Invalid parameters need CLUSTERNAME DBNAME DBHOST"
    exit 2
 fi
 
 # assign parameters
 CLUSTERNAME=$1
 DBNAME=$2
+DBHOST=$3
 
 # setup the query to check the replication status
 SQL="select case
@@ -35,16 +39,16 @@ end as syncstatus
 from (
 -- determine total active receivers
 select (select count(distinct sub_receiver)
-     from _$CLUSTERNAME.sl_subscribe
+     from \"_$CLUSTERNAME\".sl_subscribe
      where sub_active = true) as ttlcount,
 (
 -- determine active nodes syncing within 10 seconds
   select count(*) from (
    select st_received, st_last_received_ts - st_last_event_ts as cfmdelay
-   from _$CLUSTERNAME.sl_status
+   from \"_$CLUSTERNAME\".sl_status
    where st_received in (
      select distinct sub_receiver
-     from _$CLUSTERNAME.sl_subscribe
+     from \"_$CLUSTERNAME\".sl_subscribe
      where sub_active = true
    )
 ) as t1
@@ -52,8 +56,7 @@ where cfmdelay < interval '10 secs') as okcount
 ) as t2"
 
 # query the master database
-CHECK=`/usr/local/pgsql/bin/psql -c "$SQL" --tuples-only -U postgres 
-$DBNAME`
+CHECK=`psql -c "$SQL" --tuples-only -U postgres -h $DBHOST $DBNAME`
 
 if [ ! -n "$CHECK" ]
 then
