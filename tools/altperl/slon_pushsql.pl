@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: slon_pushsql.pl,v 1.3 2004-09-09 17:04:07 cbbrowne Exp $
+# $Id: slon_pushsql.pl,v 1.4 2004-09-15 21:56:37 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -7,16 +7,21 @@ require 'slon-tools.pm';
 require 'slon.env';
 my ($set, $node, $file) = @ARGV;
 if ($set =~ /^set(\d+)$/) {
-    $set = $1;
+  $set = $1;
 } else {
-    print "Invalid set identifier";
-    die "Usage: ./slon_pushsql.pl set[N] node[N] sql_script_file\n";
+  print "Invalid set identifier";
+  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
 }
 if ($node =~ /^node(\d+)$/) {
-    $node = $1;
+  $node = $1;
 } else {
-    print "Invalid node identifier";
-    die "Usage: ./slon_pushsql.pl set[N] node[N] sql_script_file\n";
+  print "Invalid node identifier";
+  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
+}
+
+if ($file !=~ /^\//) {
+  print "SQL script path needs to be a full path, i.e. /tmp/my_script.sql\n";
+  die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
 }
 
 my $FILE="/tmp/gensql.$$";
