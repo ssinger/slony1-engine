@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.55.2.3 2004-07-31 05:10:16 wieck Exp $
+ *	$Id: remote_worker.c,v 1.55.2.4 2004-08-15 15:43:24 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2980,6 +2980,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		}
 		PQclear(res1);
 
+#ifdef NOT_USED
 		/*
 		 * Start listening on the special relation that will cause
 		 * our local connection to be killed when the provider node
@@ -2993,6 +2994,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			dstring_free(&query);
 			return 60;
 		}
+#endif
 	}
 
 	dstring_init(&new_qual);
@@ -3453,6 +3455,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		PQclear(res1);
 	}
 
+#ifdef NOT_USED
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
 		/*
@@ -3461,7 +3464,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * fails.
 		 */
 		slon_mkquery(&query,
-				"listen \"_%s_Node_%d\"; ",
+				"unlisten \"_%s_Node_%d\"; ",
 				rtcfg_cluster_name, provider->no_id);
 		if (query_execute(node, local_dbconn, &query) < 0)
 		{
@@ -3469,6 +3472,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			return 60;
 		}
 	}
+#endif
 
 	/*
 	 * Get the nodes rowid sequence at that sync time just in case
