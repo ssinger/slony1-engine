@@ -121,6 +121,7 @@ slonik <<_EOF_
     # Slony-I organizes tables into sets.  The smallest unit a node can
     # subscribe is a set.  The following commands create one set containing
     # all 4 pgbench tables.  The master or origin of the set is node 1.
+    # you need to have a set add table() for each table you wish to replicate
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
 	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
@@ -138,7 +139,7 @@ slonik <<_EOF_
 	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
 	store listen (origin=1, provider = 1, receiver =2);
 	store listen (origin=2, provider = 2, receiver =1);
-EOF
+_EOF_
 
 
 Is the pgbench still running?  If not start it again.
