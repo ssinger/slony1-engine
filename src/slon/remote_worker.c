@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.55.2.2 2004-07-09 15:42:57 wieck Exp $
+ *	$Id: remote_worker.c,v 1.55.2.3 2004-07-31 05:10:16 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -792,6 +792,23 @@ remoteWorkerThread_main(void *cdata)
 				int		sub_provider = (int) strtol(event->ev_data2, NULL, 10);
 				int		sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
 				char   *sub_forward  = event->ev_data4;
+				SlonSet *rtcfg_set;
+				int		set_origin   = -1;
+
+				/*
+				 * Lookup the origin of the set
+				 */
+				rtcfg_lock();
+				for (rtcfg_set = rtcfg_set_list_head; rtcfg_set; 
+						rtcfg_set = rtcfg_set->next)
+				{
+					if (rtcfg_set->set_id == sub_set)
+					{
+						set_origin = rtcfg_set->set_origin;
+						break;
+					}
+				}
+				rtcfg_unlock();
 
 				/*
 				 * Do the actual enabling of the set only if
@@ -813,7 +830,8 @@ remoteWorkerThread_main(void *cdata)
 						 * node than the data provider, wait until the
 						 * data provider has synced up far enough.
 						 */
-						if (event->event_provider != sub_provider)
+						if (event->event_provider != sub_provider
+							&& sub_provider != set_origin)
 						{
 							int64 prov_seqno = get_last_forwarded_confirm(
 										event->ev_origin,
