@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.1 2004-03-10 21:27:32 wieck Exp $
+ *	$Id: parser.y,v 1.2 2004-03-11 23:26:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -112,6 +112,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	try_on_success
 %type <statement>	stmt_echo
 %type <statement>	stmt_exit
+%type <statement>	stmt_restart_node
 %type <statement>	stmt_error
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
@@ -162,6 +163,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_PROVIDER
 %token	K_QUALIFIED
 %token	K_RECEIVER
+%token	K_RESTART
 %token	K_SERIAL
 %token	K_SERVER
 %token	K_SET
@@ -296,6 +298,8 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_exit
 						{ $$ = $1; }
+					| stmt_restart_node
+						{ $$ = $1; }
 					| stmt_init_cluster
 						{ $$ = $1; }
 					| stmt_store_node
@@ -347,6 +351,23 @@ stmt_exit			: lno K_EXIT exit_code ';'
 						new->hdr.stmt_lno		= $1;
 
 						new->exitcode = $3;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_restart_node	: lno K_RESTART K_NODE id ';'
+					{
+						SlonikStmt_restart_node *new;
+
+						new = (SlonikStmt_restart_node *)
+								malloc(sizeof(SlonikStmt_restart_node));
+						memset(new, 0, sizeof(SlonikStmt_restart_node));
+						new->hdr.stmt_type		= STMT_RESTART_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						new->no_id = $4;
 
 						$$ = (SlonikStmt *)new;
 					}

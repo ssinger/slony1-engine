@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.1 2004-03-10 21:27:32 wieck Exp $
+ *	$Id: slonik.c,v 1.2 2004-03-11 23:26:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -224,6 +224,16 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				break;
 
 			case STMT_EXIT:
+				break;
+
+			case STMT_RESTART_NODE:
+				{
+					SlonikStmt_restart_node *stmt =
+							(SlonikStmt_restart_node *)hdr;
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
+				}
 				break;
 
 			case STMT_ERROR:
@@ -562,6 +572,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_exit *)hdr;
 
 					exit (stmt->exitcode);
+				}
+				break;
+
+			case STMT_RESTART_NODE:
+				{
+					SlonikStmt_restart_node *stmt =
+							(SlonikStmt_restart_node *)hdr;
+
+					if (slonik_restart_node(stmt) < 0)
+						errors++;
 				}
 				break;
 
@@ -1000,6 +1020,32 @@ load_slony_base(SlonikStmt *stmt, int no_id)
  * Statement specific processing functions follow
  * ------------------------------------------------------------
  */
+
+
+int
+slonik_restart_node(SlonikStmt_restart_node *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"notify \"_%s_Restart\"; ",
+			stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
 
 
 int
