@@ -18,3 +18,65 @@
   scratch.
 
   That certainly isn't ideal.
+
+
+-------------------------------------------------------------------------------------------------
+
+More about the "generating SET LISTEN" calculation
+------------------------------------------------------------------------
+
+I have been mulling over the notion of setting up the Slonik STORE
+LISTEN(ORIGIN=a, RECEIVER=b, PROVIDER=c) configuration via a stored
+procedure, using in-the-DBMS data.
+
+The "features" of this idea:
+
+This involves having a table (view?) containing the intended parentage
+for each node, that is, which nodes point to which parents.
+
+This would allow the following good things:
+
+- Can't drop a node that has children, probably adding in other
+possible data checks
+
+- Can calculate the full "listener matrix" within pl/pgsql instead of
+doing it in Perl (take a look at init_cluster.pl, subroutine
+generate_listen_paths()).
+
+My preliminary thinking about it was pointing to there being a pretty
+elegant way to do this using SQL queries that might be more readable
+than the dynamic programming formulation embedded in that subroutine.
+(I didn't write out the Bellman equations, but took a look back at my
+old optimization texts ;-).)
+
+The primary problem that this solves is to create those STORE LISTEN()
+definitions, which get pretty involved to generate by hand if you get
+more than three nodes.
+
+In doing some further thinking, I noticed a couple of conspicuous
+challenges:
+
+1. There can be no fixed association with sets, as the sl_listen table
+does not contain set fields, and different sets can use differently
+shaped subscription trees.
+
+(I think users would be doing something pretty stupid to have _wildly_
+different arrangements for different sets, but I still have to support
+it...)
+
+2. The tree cannot be based on subscriptions because it needs to exist
+before any subscriptions are established
+
+In effect, I have no fixed place where I can get the information at
+the point at which I most need it.
+
+Once all nodes are subscribed, I could use subscription information to
+weight the cost functions, but I need the data BEFORE we do anything.
+
+This isn't pointing yet to a good approach to "seeding" it; if someone
+has some inspiration, let me know...
+-- 
+Christopher Browne
+<cbbrowne@acm.org>
+
+-------------------------------------------------------------------------------------------------
