@@ -2,7 +2,7 @@
 # Makefile for the HOWTOs
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.1 2004-07-26 19:05:24 xfade Exp $
+#       $Id: Makefile,v 1.1.2.1 2004-09-30 17:37:28 cbbrowne Exp $
 #
 # ----------
 

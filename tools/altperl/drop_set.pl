@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: drop_set.pl,v 1.4 2004-09-09 14:42:52 cbbrowne Exp $
+# $Id: drop_set.pl,v 1.4.2.1 2004-09-30 17:37:28 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

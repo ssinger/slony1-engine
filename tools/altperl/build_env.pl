@@ -1,5 +1,5 @@
 #!perl    # -*- perl -*-
-# $Id: build_env.pl,v 1.5 2004-09-16 15:37:05 cbbrowne Exp $
+# $Id: build_env.pl,v 1.5.2.1 2004-09-30 17:37:28 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net

@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: subscribe_set.pl,v 1.4 2004-09-29 22:09:38 cbbrowne Exp $
+# $Id: subscribe_set.pl,v 1.4.2.1 2004-09-30 17:37:28 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
