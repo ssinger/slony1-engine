@@ -1,8 +1,8 @@
-# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win,v 1.5 2005-03-23 22:59:23 darcyb Exp $
+# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win,v 1.6 2005-03-25 09:49:33 xfade Exp $
 LDFLAGS+= -g
 DLLTOOL= dlltool
 DLLWRAP= dllwrap
-DLLLIBS= -lcygipc -lcrypt -lpostgres
+DLLLIBS= -lcygipc -lcrypt -lpostgres -lpthread
 BE_DLLLIBS=-lpostgres
 MK_NO_LORDER=true
 MAKE_DLL=true
@@ -21,6 +21,6 @@ override CFLAGS += -DCYGWIN=1
 	$(DLLWRAP) -o $@ --def $*.def $< $(DLLLIBS)
 	rm -f $*.def
 %.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
 sqlmansect = 7
