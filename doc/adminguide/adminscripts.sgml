@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.20 2005-02-22 19:02:25 smsimms Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.21 2005-02-22 20:50:27 smsimms Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -31,7 +31,6 @@ shape of the nodes in a &slony1; cluster.</para>
 
 <listitem><para><envar>$CLUSTER_NAME</envar>=orglogs;	# What is the name of the replication cluster?</para></listitem>
 <listitem><para><envar>$LOGDIR</envar>='/opt/OXRS/log/LOGDBS';	# What is the base directory for logs?</para></listitem>
-<listitem><para><envar>$SLON_BIN_PATH</envar>='/opt/dbs/pgsql74/bin';  # Where to look for Slony-I binaries</para></listitem>
 <listitem><para><envar>$APACHE_ROTATOR</envar>="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator</para></listitem>
 </itemizedlist>
 </para>

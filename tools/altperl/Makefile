@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.7 2005-02-22 20:34:45 smsimms Exp $
+#       $Id: Makefile,v 1.8 2005-02-22 20:50:28 smsimms Exp $
 #
 # ----------
 
@@ -21,8 +21,8 @@ ifndef SED
 	@echo "sed is required to build the altperl tools."
 	exit 1;
 endif
-	@for file in $(wildcard *.pl) ; do \
-		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+	@for file in $(wildcard *.pl) $(wildcard *.pm); do \
+		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` ; \
 		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
                        -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
@@ -37,10 +37,10 @@ ifndef toolsbin
 	@echo "The altperl tools won't be installed unless --with-perltools is specified in configure"
 else
 	$(INSTALL_DATA)   slon_tools.conf-sample $(sysconfdir)
-	$(INSTALL_DATA)   slon-tools.pm          $(pglibdir)
+	$(INSTALL_DATA)   slon-tools             $(pglibdir)/slon-tools.pm
 	for file in $(wildcard *.pl) ; do \
 		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
-		$(INSTALL_SCRIPT) $$tmpname	$(toolsbin) ; \
+		$(INSTALL_SCRIPT) $$tmpname $(toolsbin) ; \
 	done
 endif
 
@@ -57,8 +57,8 @@ distdir: $(DISTFILES)
 	done
 
 clean distclean maintainer-clean:
-	@for file in $(wildcard *.pl); do \
-		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+	@for file in $(wildcard *.pl) $(wildcard *.pm); do \
+		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` ; \
 		rm $$tmpname ; \
 	done
 

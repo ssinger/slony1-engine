@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.10 2005-02-10 06:22:41 smsimms Exp $
+$Id: README,v 1.11 2005-02-22 20:50:28 smsimms Exp $
 
 Christopher Browne
 Database Administrator
@@ -22,9 +22,6 @@ The following configuration is set up:
 This configuration will normally apply to all clusters being managed
 on a particular host, so it would probably make sense to modify it
 directly in slon_tools.conf.
-
- $SLON_BIN_PATH is the path to use to find the slon and slonik
-   binaries.
 
  $APACHE_ROTATOR is an optional reference to the location of the
    Apache log rotator; if you set it to a path to an Apache "rotatelog"

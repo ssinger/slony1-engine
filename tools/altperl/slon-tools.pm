@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.17 2005-02-20 02:12:10 smsimms Exp $
+# $Id: slon-tools.pm,v 1.18 2005-02-22 20:50:28 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -137,11 +137,11 @@ sub start_slon {
   my $cmd;
   `mkdir -p $LOGDIR/slony1/node$nodenum`;
   if ($APACHE_ROTATOR) {
-    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 $CLUSTER_NAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" . $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M&";
+    $cmd = "@@PGBINDIR@@/slon -s 1000 -d2 $CLUSTER_NAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" . $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M&";
   } else {
     my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
     chomp $now;
-    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 -g 80 $CLUSTER_NAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname-$now.log &";
+    $cmd = "@@PGBINDIR@@/slon -s 1000 -d2 -g 80 $CLUSTER_NAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname-$now.log &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system $cmd;
@@ -197,7 +197,7 @@ limit 1)
 ;
   };
   my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
-  my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";
@@ -265,7 +265,7 @@ where ev_origin = "_$CLUSTER_NAME".getlocalnodeid('_$CLUSTER_NAME') and  -- Even
 limit 1;   --- One such entry is sufficient...
 };
   my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
-  my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";

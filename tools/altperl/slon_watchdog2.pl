@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog2.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_watchdog2.pl,v 1.9 2005-02-22 20:50:28 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -54,7 +54,7 @@ while (1) {
   # If the node needs a swift kick in the "RESTART", then submit that to slonik
   if ($kick eq "YES") {
     log_to_watchdog_log("submit slonik to restart $CLUSTER_NAME node $nodenum");
-    open(SLONIK, "|$SLON_BIN_PATH/slonik");
+    open(SLONIK, "|@@PGBINDIR@@/slonik");
     print SLONIK genheader();
     print SLONIK "restart node $node\n";
     close SLONIK;
