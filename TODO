@@ -1,9 +1,11 @@
 * Documentation
 ----------------
 
- - Pull material from Chris Browne's wiki
-   <http://cbbrowne.dyndns.info:8741/cgi-bin/twiki/view/Sandbox/SlonyIAdministration>,
-   reformat to DocBook, and add this in...
+-Provide instructions on how to upgrade form 1.0 to 1.1
+
+-Add more documentation on how to add/drop nodes from a running replication 
+ cluster
+
 
 * Backend
 ----------------
