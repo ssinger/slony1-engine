@@ -17,7 +17,8 @@ else
 CFLAGS_SL = -KPIC
 endif
 
+%.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 %.so: %.o
 	$(LD) -G -Bdynamic -o $@ $<
-
-sqlmansect = 5sql

@@ -26,8 +26,9 @@ MKLDEXPORT=$(top_srcdir)/src/backend/port/aix/mkldexport.sh
 %$(EXPSUFF): %.o
 	$(MKLDEXPORT) $*.o > $*$(EXPSUFF)
 
+%.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 %$(DLSUFFIX): %.o %$(EXPSUFF)
 	@echo Making shared library $@ from $*.o, $*$(EXPSUFF) and postgres.imp
 	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(top_builddir)/src/backend/$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)
-
-sqlmansect = 7

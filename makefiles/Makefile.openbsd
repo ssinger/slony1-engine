@@ -23,4 +23,6 @@ else
 	  -o $@ $@.pic
 endif
 
-sqlmansect = 7
+%.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
