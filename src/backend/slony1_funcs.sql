@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.39 2004-11-11 19:24:38 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.40 2004-11-12 18:17:22 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4573,6 +4573,33 @@ comment on function @NAMESPACE@.RebuildListenEntries() is
 Invoked by various subscription and path modifying functions, this
 rewrites the sl_listen entries, adding in all the ones required to
 allow communications between nodes in the Slony-I cluster.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION generate_sync_event ()
+--
+--  This code will be run from inside the logtrigger() function,
+--      and will create SYNC events every once in a while...
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.generate_sync_event()
+returns int4
+as '
+declare
+    v_leventtime        timestamptz;
+
+BEGIN
+    -- When was the last SYNC on this node?
+        select ev_timestamp into v_leventtime from @NAMESPACE@.sl_event 
+          where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId()
+          order by ev_origin, ev_seqno desc limit 1;
+
+    -- If there has been no SYNC in the last 30 seconds, then push one
+    if ev_timestamp + ''30 s''::interval < now() then
+        select @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+    end if;
+END' language plpgsql;
+
+comment on function @NAMESPACE@.generate_sync_event() is
+  'Generate a sync event if there has not been one in 30 seconds.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableHasSerialKey (tab_fqname)
