@@ -1,4 +1,4 @@
-ÐÐdnl Available from the GNU Autoconf Macro Archive at:
+dnl Available from the GNU Autoconf Macro Archive at:
 dnl http://www.gnu.org/software/ac-archive/htmldoc/acx_pthread.html
 dnl
 AC_DEFUN([ACX_PTHREAD], [
@@ -87,7 +87,7 @@ for flag in $acx_pthread_flags; do
 
                 -*)
                 AC_MSG_CHECKING([whether pthreads work with $flag])
-#                PTHREAD_CFLAGS="$flag"
+                PTHREAD_CFLAGS="$flag"
                 ;;
 
 		pthread-config)
