@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.25 2004-10-14 16:01:04 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.26 2004-11-10 20:54:14 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1005,7 +1005,7 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 	{
 		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
 				SPI_tuptable->tupdesc, 1, &isnull));
-		elog(NOTICE, "Slony-I: terminating DB connection of faile node "
+		elog(NOTICE, "Slony-I: terminating DB connection of failed node "
 				"with pid %d", pid);
 		kill(pid, SIGTERM);
 	}

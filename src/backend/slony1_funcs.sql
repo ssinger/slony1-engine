@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.36 2004-11-10 18:14:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.37 2004-11-10 20:54:14 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -164,7 +164,7 @@ create or replace function @NAMESPACE@.getLocalNodeId (name) returns int4
 grant execute on function @NAMESPACE@.getLocalNodeId (name) to public;
 
 comment on function @NAMESPACE@.getLocalNodeId (name) is 
-  'not yet documented';
+  'Returns the node ID of the node being serviced on the local database';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION getModuleVersion ()
@@ -178,6 +178,8 @@ create or replace function @NAMESPACE@.getModuleVersion () returns text
 	security definer;
 grant execute on function @NAMESPACE@.getModuleVersion () to public;
 
+comment on function @NAMESPACE@.getModuleVersion () is
+  'Returns the compiled-in version number of the Slony-I shared object';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setSessionRole (name, role)
@@ -188,8 +190,10 @@ create or replace function @NAMESPACE@.setSessionRole (name, text) returns text
     as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
 	language C
 	security definer;
+
 comment on function @NAMESPACE@.setSessionRole (name, text) is 
   'not yet documented';
+
 grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 
 
@@ -202,10 +206,11 @@ create or replace function @NAMESPACE@.getSessionRole (name) returns text
     as '$libdir/slony1_funcs', '_Slony_I_getSessionRole'
 	language C
 	security definer;
+
 comment on function @NAMESPACE@.getSessionRole (name) is 
   'not yet documented';
-grant execute on function @NAMESPACE@.getSessionRole (name) to public;
 
+grant execute on function @NAMESPACE@.getSessionRole (name) to public;
 
 -- ----------------------------------------------------------------------
 -- FUNCTION logTrigger ()
@@ -216,8 +221,11 @@ create or replace function @NAMESPACE@.logTrigger () returns trigger
     as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
 	language C
 	security definer;
+
 comment on function @NAMESPACE@.logTrigger () is 
-  'not yet documented';
+  'This is the trigger that is executed on the origin node that causes
+updates to be recorded in sl_log_1/sl_log_2.';
+
 grant execute on function @NAMESPACE@.logTrigger () to public;
 
 -- ----------------------------------------------------------------------
@@ -228,9 +236,9 @@ grant execute on function @NAMESPACE@.logTrigger () to public;
 create or replace function @NAMESPACE@.terminateNodeConnections (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_terminateNodeConnections'
 	language C;
-comment on function @NAMESPACE@.terminateNodeConnections (name) is 
-  'not yet documented';
 
+comment on function @NAMESPACE@.terminateNodeConnections (name) is 
+  'terminates connections to the node and terminates the process';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION cleanupListener ()
@@ -241,6 +249,8 @@ create or replace function @NAMESPACE@.cleanupListener () returns int4
     as '$libdir/slony1_funcs', '_Slony_I_cleanupListener'
 	language C;
 
+comment on function @NAMESPACE@.cleanupListener() is
+  'look for stale pg_listener entries and submit Async_Unlisten() to them';
 
 -- **********************************************************************
 -- * PL/pgSQL functions for administrative tasks
@@ -257,9 +267,9 @@ begin
 	return 1;
 end;
 ' language plpgsql;
+
 comment on function @NAMESPACE@.slonyVersionMajor () is 
   'Returns the major version number of the slony schema';
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION slonyVersionMinor()
@@ -1779,6 +1789,13 @@ begin
 	-- ----
 	perform @NAMESPACE@.moveSet_int(p_set_id, v_local_node_id,
 			p_new_origin);
+
+	for v_sub_row in select sub_provider, sub_receiver 
+			from @NAMESPACE@.sl_subscribe
+			where sub_set = p_set_id
+	loop
+		perform @NAMESPACE@.GenerateListensOnSubscribe(v_sub_row.sub_provider, v_sub_row.sub_receiver)
+	done;
 
 	-- ----
 	-- At this time we hold access exclusive locks for every table
@@ -3646,6 +3663,11 @@ begin
 			p_sub_receiver, p_sub_forward);
 
 	-- ----
+	-- Submit listen management events
+	-- ----
+	perform @NAMESPACE@.GenerateListensOnSubscribe(p_sub_provider, p_sub_receiver);
+
+	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
@@ -4512,8 +4534,8 @@ begin
 					where path.pa_server = listen.li_origin and
 					      path.pa_client = listen.li_reciever);
 
-	-- 3.  Iterate 'til we can't iterate no more...
-	--     Add in indirect listens based on what's in sl_listen and sl_path
+	-- 3.  Iterate until we cannot iterate any more...
+	--     Add in indirect listens based on what is in sl_listen and sl_path
 	v_done := ''f'';
 	while not v_done loop
 		select @NAMESPACE@.storelisten(li_origin,pa_server,pa_client)
