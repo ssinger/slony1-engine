@@ -374,7 +374,7 @@ void *get_config_option(const char *name)
 		case SLON_C_INT:
 		{
 			struct config_int *conf = (struct config_int *) record;
-			return (void *)*conf->variable;
+			return (void *)conf->variable;
 			break;
 		}
 		case SLON_C_REAL:
