@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.20 2004-08-05 19:10:42 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.21 2004-09-06 03:42:21 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3869,4 +3869,43 @@ comment on function @NAMESPACE@.tableHasSerialKey(text) is
 
 Checks if a table has our special serial key column that is used if
 the table has no natural unique constraint.';
+
+
+-- **********************************************************************
+-- * Views
+-- **********************************************************************
+
+
+-- ----------------------------------------------------------------------
+-- VIEW sl_status
+--
+--	This view shows the local nodes last event sequence number
+--	and how far all remote nodes have processed events.
+-- ----------------------------------------------------------------------
+create view @NAMESPACE@.sl_status as select
+	ev_origin as st_origin,
+	con_received as st_received,
+	ev_seqno as st_last_event,
+	ev_timestamp as st_last_event_ts,
+	con_seqno as st_last_received,
+	con_timestamp as st_last_received_ts,
+	ev_seqno - con_seqno as lag_num_events,
+	current_timestamp - con_timestamp as lag_time
+	from @NAMESPACE@.sl_event E, @NAMESPACE@.sl_confirm C
+	where ev_origin = con_origin
+	and (E.ev_origin, E.ev_seqno) in 
+		(select ev_origin, max(ev_seqno)
+			from @NAMESPACE@.sl_event
+			where ev_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
+			group by 1
+		)
+	and (C.con_origin, C.con_received, C.con_seqno) in
+		(select con_origin, con_received, max(con_seqno)
+			from @NAMESPACE@.sl_confirm
+			where con_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
+			group by 1, 2
+		);
+comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.
+';
+
 

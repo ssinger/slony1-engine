@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.15 2004-08-03 18:16:49 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.16 2004-09-06 03:42:21 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -486,6 +486,7 @@ create table @NAMESPACE@.sl_config_lock (
 );
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
+
 
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.
