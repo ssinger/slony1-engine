@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.22 2005-01-26 18:28:37 darcyb Exp $
+# $Id: Makefile.global.in,v 1.23 2005-01-26 19:32:59 darcyb Exp $
 # ----------
 
 #location subsitutions
@@ -57,7 +57,7 @@ PGAUTODOC=		@PGAUTODOC@
 
 # support programs
 PERL=			@PERL@
-
+SED=			@SED@
 subdir=$(slony_subdir)
 
 override CPPFLAGS := -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
