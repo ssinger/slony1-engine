@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.20 2004-10-19 01:16:05 wieck Exp $
+-- $Id: slony1_base.sql,v 1.21 2004-11-08 16:40:39 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -28,6 +28,7 @@ create table @NAMESPACE@.sl_node (
 );
 comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with this namespace.';
 comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the node';  
+comment on column @NAMESPACE@.sl_node.no_active is 'Is the node active in replication yet?';  
 comment on column @NAMESPACE@.sl_node.no_comment is 'A human-oriented description of the node';
 
 
@@ -48,7 +49,8 @@ create table @NAMESPACE@.sl_set (
 );
 comment on table @NAMESPACE@.sl_set is 'Holds definitions of replication sets.';
 comment on column @NAMESPACE@.sl_set.set_id is 'A unique ID number for the set.';
-comment on column @NAMESPACE@.sl_set.set_origin is 'The ID number of the source node for the replication set.';
+comment on column @NAMESPACE@.sl_set.set_origin is 
+	'The ID number of the source node for the replication set.';
 comment on column @NAMESPACE@.sl_set.set_locked is 'Indicates whether or not the set is locked.';
 comment on column @NAMESPACE@.sl_set.set_comment is 'A human-oriented description of the set.';
 
@@ -81,8 +83,8 @@ comment on column @NAMESPACE@.sl_setsync.ssy_origin is 'ID number of the node';
 comment on column @NAMESPACE@.sl_setsync.ssy_seqno is 'Slony-I sequence number';
 comment on column @NAMESPACE@.sl_setsync.ssy_minxid is 'Earliest XID in provider system affected by SYNC';
 comment on column @NAMESPACE@.sl_setsync.ssy_maxxid is 'Latest XID in provider system affected by SYNC';
-comment on column @NAMESPACE@.sl_setsync.ssy_xip is 'TBD';
-comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'TBD';
+comment on column @NAMESPACE@.sl_setsync.ssy_xip is 'Contains the list of XIDs in the SYNC in the order they should be applied';
+comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'Presently always null';
 
 
 -- ----------------------------------------------------------------------
@@ -105,7 +107,9 @@ create table @NAMESPACE@.sl_table (
 comment on table @NAMESPACE@.sl_table is 'Holds information about the tables being replicated.';
 comment on column @NAMESPACE@.sl_table.tab_id is 'Unique key for Slony-I to use to identify the table';
 comment on column @NAMESPACE@.sl_table.tab_reloid is 'The OID of the table in pg_catalog.pg_class.oid';
+comment on column @NAMESPACE@.sl_table.tab_set is 'ID of the replication set the table is in';
 comment on column @NAMESPACE@.sl_table.tab_idxname is 'The name of the primary index of the table';
+comment on column @NAMESPACE@.sl_table.tab_altered is 'Has the table been modified for replication?';
 comment on column @NAMESPACE@.sl_table.tab_comment is 'Human-oriented description of the table';
 
 
@@ -255,7 +259,7 @@ comment on column @NAMESPACE@.sl_event.ev_timestamp is 'When this event record w
 comment on column @NAMESPACE@.sl_event.ev_minxid is 'Earliest XID on provider node for this event';
 comment on column @NAMESPACE@.sl_event.ev_maxxid is 'Latest XID on provider node for this event';
 comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
-comment on column @NAMESPACE@.sl_event.ev_xip is 'TBD';
+comment on column @NAMESPACE@.sl_event.ev_xip is 'List of XIDs, in order, that are part of this event';
 comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record is for.  
 				SYNC				= Synchronise
 				STORE_NODE			=
@@ -327,7 +331,7 @@ comment on table @NAMESPACE@.sl_seqlog is 'Log of Sequence updates';
 
 comment on column @NAMESPACE@.sl_seqlog.seql_seqid is 'Sequence ID';
 comment on column @NAMESPACE@.sl_seqlog.seql_origin is 'Publisher node at which the sequence originates';
-comment on column @NAMESPACE@.sl_seqlog.seql_ev_seqno is 'TBD';
+comment on column @NAMESPACE@.sl_seqlog.seql_ev_seqno is 'Slony-I Event with which this sequence update is associated';
 comment on column @NAMESPACE@.sl_seqlog.seql_last_value is 'Last value published for this sequence';
 
 create index sl_seqlog_idx on @NAMESPACE@.sl_seqlog
