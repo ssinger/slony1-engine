@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.13 2005-01-24 17:35:35 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.14 2005-02-02 18:34:43 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -684,20 +684,21 @@ go together to contribute to this scenario are as follows:
 
 <itemizedlist>
 
-<listitem><para> The <quote>glitch</quote> seems to coincide with some sort
-of outage; it has been observed both in cases where databases were
-suffering from periodic "SIG 11" problems, where backends were falling
-over, as well as when temporary network failure seemed
-likely.</para></listitem>
+<listitem><para> The <quote>glitch</quote> has occasionally coincided
+with some sort of outage; it has been observed both in cases where
+databases were suffering from periodic <quote>SIG 11</quote> problems,
+where backends were falling over, as well as when temporary network
+failure seemed likely.</para></listitem>
 
 <listitem><para> The scenario seems to involve a delete transaction
-having been missed by <productname>Slony-I</productname>.</para></listitem>
+having been missed by <productname>Slony-I</productname>. </para>
+</listitem>
 
 </itemizedlist></para>
 
 <para>By the time we notice that there is a problem, the missed delete
-transaction has been cleaned out of sl_log_1, so there is no recovery
-possible.</para>
+transaction has been cleaned out of <envar>sl_log_1</envar>, so there
+is no recovery possible.</para>
 
 <para>What is necessary, at this point, is to drop the replication set
 (or even the node), and restart replication from scratch on that
@@ -712,7 +713,17 @@ leave enough sl_log_1 data to be able to do something about recovering
 from the condition or at least diagnosing it more exactly.  And
 perhaps the problem is that sl_log_1 was being purged too
 aggressively, and this will resolve the issue completely.</para>
-</answer></qandaentry>
+</answer>
+<answer><para> Unfortunately, this problem has been observed in 1.0.5,
+so this still appears to represent a bug still in existence.</para>
+
+<para> It is a shame to have to reconstruct a large replication node
+for this; if you discover that this problem recurs, it may be an idea
+to break replication down into multiple sets in order to diminish the
+work involved in restarting replication.  If only one set has broken,
+you only unsubscribe/drop and resubscribe the one set.
+</para></answer>
+</qandaentry>
 
 <qandaentry>
 
@@ -1156,6 +1167,37 @@ something like <option>BULKLOAD</option>, which would defer revising
 indexes until the end, and regenerating indexes in bulk.  That will
 likely not be available until <productname>PostgreSQL</productname>
 8.1, but it should substantially improve performance once available.
+</para></answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para> I had a network <quote>glitch</quote> that led to my
+using <command><link linkend="stmtfailover">FAILOVER</link></command>
+to fail over to an alternate node.  The failure wasn't a disk problem
+that would corrupt databases; why do I need to rebuild the failed node
+from scratch? </para></question>
+
+<answer><para> The action of <command><link
+linkend="stmtfailover">FAILOVER</link></command> is to
+<emphasis>abandon</emphasis> the failed node so that no more
+<productname>Slony-I</productname> activity goes to or from that node.
+As soon as that takes place, the failed node will progressively fall
+further and further out of sync.
+</para></answer>
+
+<answer><para> The <emphasis>big</emphasis> problem with trying to
+recover the failed node is that it may contain updates that never made
+it out of the origin.  If they get retried, on the new origin, you may
+find that you have conflicting updates.  In any case, you do have a
+sort of <quote>logical</quote> corruption of the data even if there
+never was a disk failure making it <quote>physical.</quote>
+</para></answer>
+
+<answer><para> As discusssed in the section on <link
+linkend="failover"> Doing switchover and failover with Slony-I</link>,
+using <command><link linkend="stmtfailover">FAILOVER</link></command>
+should be considered a <emphasis>last resort</emphasis> as it implies
+that you are abandoning the origin node as being corrupted.
 </para></answer>
 </qandaentry>
 

@@ -1693,9 +1693,9 @@ MOVE SET (
     <title>Description</title>
     
     <para>
-     The failover command causes the backup node to take over all sets
+     The <command>FAILOVER</command> command causes the backup node to take over all sets
      that currently originate on the failed
-     node. <application>Slonik</application> will contact all other
+     node. <application>slonik</application> will contact all other
      direct subscribers of the failed node to determine which node has
      the highest sync status for each set. If another node has a
      higher sync status than the backup node, the replication will
@@ -1703,20 +1703,22 @@ MOVE SET (
      that other node, before assuming the origin role and allowing
      update activity.
     </para>
+
     <para>
      After successful failover, all former direct subscribers of the
      failed node become direct subscribers of the backup node. The
-     failed node can and should be removed from the configuration with
-     <command><link linkend="stmtdropnode"> DROP NODE</link>
-     </command>.
+     failed node is abandoned, and can and should be removed from the
+     configuration with <command><link linkend="stmtdropnode"> DROP
+     NODE</link> </command>.
     </para>
     
     <warning><para> This command will abandon the status of the failed
       node.  There is no possibility to let the failed node join the
-      cluster again without rebuilding it from scratch as a slave slave.
-      It would often be highly preferable to use <command> <link
-	linkend="stmtmoveset"> MOVE SET </link> </command> instead.
-     </para></warning>
+      cluster again without rebuilding it from scratch as a slave.  If
+      at all possible, you would likely prefer to use <command> <link
+	linkend="stmtmoveset"> MOVE SET </link> </command> instead, as
+      that does <emphasis>not</emphasis> abandon the failed node.
+    </para></warning>
     
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
