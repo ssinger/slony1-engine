@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.17 2004-07-02 14:51:46 wieck Exp $
+ *	$Id: scan.l,v 1.17.2.1 2004-08-30 21:24:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -143,6 +143,7 @@ scan_new_input_file(FILE *in)
 	{
 		dstring_nappend(&ds, buf, len);
 	}
+	dstring_terminate(&ds);
 	yy_switch_to_buffer(yy_scan_string(dstring_data(&ds)));
 
 	dstring_free(&ds);
