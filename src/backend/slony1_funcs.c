@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.14 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.15 2004-04-14 20:18:12 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -915,8 +915,8 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 	{
 		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
 				SPI_tuptable->tupdesc, 1, &isnull));
-		elog(NOTICE, "Slony-I: terminating DB connection with pid %d of "
-				"failed node", pid);
+		elog(NOTICE, "Slony-I: terminating DB connection of faile node "
+				"with pid %d", pid);
 		kill(pid, SIGTERM);
 	}
 
@@ -1121,10 +1121,16 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
 			"select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
 			"from %s.sl_seqlastvalue "
-			"where seq_origin = '%d'",
+			"where seq_origin = '%d'; "
+			"insert into %s.sl_seqlog "
+			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+			"select '0', '%d', currval('%s.sl_event_seq'), "
+			" last_value from %s.sl_rowid_seq; ",
 			cs->clusterident, 
 			cs->localNodeId, cs->clusterident,
-			cs->clusterident, cs->localNodeId);
+			cs->clusterident, cs->localNodeId,
+			cs->clusterident, cs->localNodeId,
+			cs->clusterident, cs->clusterident);
 
 		cs->plan_record_sequences = SPI_saveplan(SPI_prepare(query, 0, NULL));
 		if (cs->plan_record_sequences == NULL)

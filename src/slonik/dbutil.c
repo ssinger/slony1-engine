@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.3 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: dbutil.c,v 1.4 2004-04-14 20:18:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -316,8 +316,7 @@ db_begin_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	if (adminfo->have_xact)
 		return 0;
 
-	res = PQexec(adminfo->dbconn, "begin transaction; "
-			"set transaction isolation level serializable; ");
+	res = PQexec(adminfo->dbconn, "begin transaction; ");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		printf("%s:%d: begin transaction; - %s",

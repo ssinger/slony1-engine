@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.38 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: remote_worker.c,v 1.39 2004-04-14 20:18:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2305,13 +2305,23 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				"set last_value of sequence %s (%s) to %s\n",
 				node->no_id, seql_seqid, seq_fqname, seql_last_value);
 
+		/*
+		 * sequence with ID 0 is a nodes rowid ... only remember
+		 * in seqlog.
+		 */
+		if (strtol(seql_seqid, NULL, 10) != 0)
+		{
 		slon_mkquery(&query1,
-				"select \"pg_catalog\".setval('%q', '%s'); "
+				"select \"pg_catalog\".setval('%q', '%s'); ",
+				seq_fqname, seql_last_value);
+		}
+		else
+			dstring_reset(&query1);
+		slon_appendquery(&query1,
 				"insert into %s.sl_seqlog "
 				"		(seql_seqid, seql_origin, seql_ev_seqno, "
 				"		seql_last_value) values "
 				"		(%s, %d, '%s', '%s'); ",
-				seq_fqname, seql_last_value,
 				rtcfg_namespace,
 				seql_seqid, node->no_id, seqbuf, seql_last_value);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
@@ -3190,23 +3200,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		PQclear(res1);
 	}
 
-	slon_mkquery(&query,
-			"select round((extract (epoch from timeofday()::timestamp) - "
-			"    extract (epoch from '%q'::timestamp))::numeric, 2); ",
-			event->ev_timestamp_c);
-	res1 = PQexec(local_dbconn, dstring_data(&query));
-	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				node->no_id, dstring_data(&query),
-				PQresultErrorMessage(res1));
-		PQclear(res1);
-		dstring_free(&query);
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
-				node->no_id);
-		return 10;
-	}
-
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
 		/*
@@ -3225,15 +3218,53 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	}
 
 	/*
+	 * Get the nodes rowid sequence at that sync time just in case
+	 * we are later on asked to restore the node after a failover.
+	 */
+	slon_mkquery(&query,
+			"select seql_last_value from %s.sl_seqlog "
+			"	where seql_seqid = 0 "
+			"	and seql_origin = %d "
+			"	and seql_ev_seqno = '%s'; ",
+			rtcfg_namespace, node->no_id,
+			seqbuf);
+	res1 = PQexec(wd->provider_head->conn->dbconn, dstring_data(&query));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		dstring_free(&query);
+		return 60;
+	}
+	if (PQntuples(res1) > 0)
+	{
+		slon_mkquery(&query,
+				"insert into %s.sl_seqlog "
+				"	(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+				"	values (0, %d, '%s', '%s'); ",
+				rtcfg_namespace, node->no_id,
+				seqbuf, PQgetvalue(res1, 0, 0));
+		if (query_execute(node, local_dbconn, &query) < 0)
+		{
+			PQclear(res1);
+			dstring_free(&query);
+			return 60;
+		}
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"new sl_rowid_seq value: %s\n",
+				node->no_id, PQgetvalue(res1, 0, 0));
+	}
+	PQclear(res1);
+
+	/*
 	 * Good job!
 	 */
 	dstring_free(&query);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC "
-			INT64_FORMAT " done "
-			"with %s seconds delay\n",
-			node->no_id, event->ev_seqno,
-			PQgetvalue(res1, 0, 0));
-	PQclear(res1);
+			INT64_FORMAT " done\n",
+			node->no_id, event->ev_seqno);
 	return 0;
 }
 

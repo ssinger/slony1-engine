@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.13 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: slonik.c,v 1.14 2004-04-14 20:18:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1693,6 +1693,34 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 	}
 	PQclear(res);
 
+	/*
+	 * If available, bump the rowid sequence to the last known
+	 * value.
+	 */
+	slon_mkquery(&query,
+			"select max(seql_last_value) from \"_%s\".sl_seqlog "
+			"	where seql_seqid = 0 "
+			"	and seql_origin = %d; ",
+			stmt->hdr.script->clustername, stmt->no_id);
+	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+	if (res == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	if (PQntuples(res) == 1 && !PQgetisnull(res, 0, 0))
+	{
+		slon_mkquery(&query,
+				"select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
+				stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
+		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+		{
+			dstring_free(&query);
+			PQclear(res);
+			return -1;
+		}
+	}
+	PQclear(res);
 
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
