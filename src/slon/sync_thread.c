@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.10 2004-06-07 18:46:17 wieck Exp $
+ *	$Id: sync_thread.c,v 1.11 2004-06-08 15:15:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -33,7 +33,7 @@
  * ----------
  */
 int		sync_interval = 10000;
-
+int		sync_interval_timeout = 60000;
 
 
 /* ----------
@@ -51,7 +51,7 @@ syncThread_main(void *dummy)
 	SlonDString	query2;
 	PGconn	   *dbconn;
 	PGresult   *res;
-	int			restart_count = 1440;
+	int			timeout_count;
 
 	slon_log(SLON_DEBUG1,
 			"syncThread: thread starts\n");
@@ -89,6 +89,8 @@ syncThread_main(void *dummy)
 			"select %s.createEvent('_%s', 'SYNC', NULL);",
 			rtcfg_namespace, rtcfg_cluster_name);
 
+	timeout_count = (sync_interval_timeout == 0) ? 0 :
+			sync_interval_timeout - sync_interval;
 	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, sync_interval) == SCHED_STATUS_OK)
 	{
 		/*
@@ -107,9 +109,14 @@ syncThread_main(void *dummy)
 		}
 
 		/*
-		 * Check if it's identical to the last know seq.
+		 * Check if it's identical to the last know seq or if the
+		 * sync interval timeout has arrived.
 		 */
-		if (strcmp(last_actseq_buf, PQgetvalue(res, 0, 0)) != 0)
+		if (sync_interval_timeout != 0)
+			timeout_count -= sync_interval;
+
+		if (strcmp(last_actseq_buf, PQgetvalue(res, 0, 0)) != 0 ||
+				timeout_count < 0)
 		{
 			/*
 			 * Action sequence has changed, generate a SYNC event
@@ -146,6 +153,12 @@ syncThread_main(void *dummy)
 				slon_abort();
 			}
 			PQclear(res);
+
+			/*
+			 * Restart the timeout on a sync.
+			 */
+			timeout_count = (sync_interval_timeout == 0) ? 0 :
+					sync_interval_timeout - sync_interval;
 		}
 		else
 		{
@@ -164,15 +177,6 @@ syncThread_main(void *dummy)
 			}
 			PQclear(res);
 		}
-
-		/*
-		 * Once every four hours we restart the node daemon to avoid
-		 * any possible resource leakage to pile up.
-		 */
-		/*
-		if (--restart_count == 0)
-			slon_restart();
-		*/
 	}
 
 	dstring_free(&query1);

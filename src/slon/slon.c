@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.26 2004-06-02 14:08:45 wieck Exp $
+ *	$Id: slon.c,v 1.27 2004-06-08 15:15:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -72,7 +72,7 @@ main (int argc, char *const argv[])
 	extern char *optarg;
 	int			group_size_set = 0;
 
-	while ((c = getopt(argc, argv, "d:s:g:h")) != EOF)
+	while ((c = getopt(argc, argv, "d:s:t:g:h")) != EOF)
 	{
 		switch(c)
 		{
@@ -97,6 +97,15 @@ main (int argc, char *const argv[])
 							sync_group_maxsize = 60000 / sync_interval;
 							if (sync_group_maxsize > 100)
 								sync_group_maxsize = 100;
+						}
+
+						break;
+
+			case 't':	sync_interval_timeout = strtol(optarg, NULL, 10);
+						if (sync_interval < 0)
+						{
+							fprintf(stderr, "sync interval must be >= 0\n");
+							errors++;
 						}
 
 						break;
@@ -129,9 +138,16 @@ main (int argc, char *const argv[])
 		fprintf(stderr, "Options:\n");
 		fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
 		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
+		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
 		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
 		return 1;
 	}
+
+	/*
+	 * Make sure the sync interval isn't too small.
+	 */
+	if (sync_interval_timeout != 0 && sync_interval_timeout <= sync_interval)
+		sync_interval_timeout = sync_interval * 2;
 
 	/*
 	 * Remember the cluster name and build the properly quoted 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.31 2004-06-02 14:08:45 wieck Exp $
+ *	$Id: slon.h,v 1.32 2004-06-08 15:15:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -386,6 +386,7 @@ extern void	   *cleanupThread_main(void *dummy);
  * ----------
  */
 extern int		sync_interval;
+extern int		sync_interval_timeout;
 
 
 /* ----------
