@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.13.2.4 2004-09-30 17:45:06 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.13.2.5 2005-01-12 03:15:36 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -145,7 +145,7 @@ cleanupThread_main(void *dummy)
 					"delete from %s.sl_log_1 "
 					"where log_origin = '%s' "
 					"and log_xid < '%s'; "
-					"delete from %s.sl_log_1 "
+					"delete from %s.sl_log_2 "
 					"where log_origin = '%s' "
 					"and log_xid < '%s'; "
 					"delete from %s.sl_seqlog "
