@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: init_cluster.pl,v 1.4 2004-09-09 17:04:07 cbbrowne Exp $
+# $Id: init_cluster.pl,v 1.5 2004-10-01 20:42:59 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
@@ -12,9 +12,9 @@ open(SLONIK, ">$FILE");
 
 print SLONIK genheader();
 
-my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
+my ($dbname, $dbhost)=($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
 print SLONIK "
-   init cluster (id = 1, comment = 'Node $node - $dbname\@$dbhost');
+   init cluster (id = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');
 ";
 close SLONIK;
 run_slonik_script($FILE);
@@ -23,9 +23,9 @@ open(SLONIK, ">$FILE");
 print SLONIK genheader();
 
 foreach my $node (@NODES) {
-  if ($node > 1) {		# skip the first one; it's already initialized!
+  if ($node != $MASTERNODE) {		# skip the first one; it's already initialized!
     my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
-    print SLONIK "   store node (id = $node, comment = 'Node $node - $dbname\@$dbhost');\n";
+    print SLONIK "   store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
   }
 }
 

@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: uninstall_nodes.pl,v 1.2 2004-09-09 17:04:08 cbbrowne Exp $
+# $Id: uninstall_nodes.pl,v 1.3 2004-10-01 20:42:59 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -10,7 +10,7 @@ $FILE="/tmp/slonik.$$";
 open(SLONIK, ">$FILE");
 print SLONIK genheader();
 print SLONIK qq{
-	uninstall node (id=1);
+	uninstall node (id=$MASTERNODE);
 };
 close SLONIK;
 run_slonik_script($FILE);
