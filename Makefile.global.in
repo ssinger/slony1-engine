@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.17 2004-09-02 17:38:48 darcyb Exp $
+# $Id: Makefile.global.in,v 1.18 2004-12-07 00:50:39 darcyb Exp $
 # ----------
 
 #location subsitutions
@@ -30,10 +30,6 @@ CC=			@CC@
 PTHREAD_CC=		@PTHREAD_CC@
 YACC=			@YACC@
 FLEX=			@LEX@
-GROFF=			@GROFF@
-PS2PDF=			@PS2PDF@
-DJPEG=			@DJPEG@
-PNMTOPS=		@PNMTOPS@
 
 #build tool flags
 CFLAGS=			@CFLAGS@
@@ -44,6 +40,15 @@ FLEXFLAGS=		@LEXFLAGS@ $(LFLAGS)
 #libs
 PTHREAD_LIBS=		@PTHREAD_LIBS@
 
+# Documentation
+
+JADE    = @JADE@
+NSGMLS  = @NSGMLS@
+SGMLSPL = @SGMLSPL@
+PS2PDF  = @PS2PDF@
+DJPEG   = @DJPEG@
+GROFF	= @GROFF@
+PNMTOPS = @PNMTOPS@
 
 subdir=$(slony_subdir)
 

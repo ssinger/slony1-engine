@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.33 2004-09-02 17:38:48 darcyb Exp $
+# $Id: configure.ac,v 1.34 2004-12-07 00:50:39 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -124,6 +124,17 @@ AC_SUBST(GROFF)
 AC_SUBST(PS2PDF)
 AC_SUBST(DJPEG)
 AC_SUBST(PNMTOPS)
+
+#
+# Check for DocBook and tools
+#
+SLON_AC_PROG_NSGMLS
+SLON_AC_PROG_JADE
+SLON_AC_CHECK_DOCBOOK(3.1)
+SLON_AC_PATH_DOCBOOK_STYLESHEETS
+SLON_AC_PATH_COLLATEINDEX
+AC_CHECK_PROGS(SGMLSPL, sgmlspl)
+
 
 
 AC_CONFIG_FILES([
