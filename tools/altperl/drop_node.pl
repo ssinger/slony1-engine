@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: drop_node.pl,v 1.3 2004-08-12 22:14:30 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: drop_node.pl,v 1.4 2004-09-09 17:04:07 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

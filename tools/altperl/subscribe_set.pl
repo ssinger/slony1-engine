@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: subscribe_set.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: subscribe_set.pl,v 1.3 2004-09-09 17:04:08 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -31,7 +31,7 @@ if ($DSN[$node]) {
   if ($PARENT[$node]) {
     $parent = $PARENT[$node];
   }
-  if ($NOFORWARD[$node] eq "no") {
+  if ($NOFORWARD[$node] eq "yes") {
     $forward = "no";
   } else {
     $forward = "yes";

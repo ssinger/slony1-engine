@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: init_cluster.pl,v 1.3 2004-08-12 22:14:31 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: init_cluster.pl,v 1.4 2004-09-09 17:04:07 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
@@ -14,7 +14,7 @@ print SLONIK genheader();
 
 my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
 print SLONIK "
-   init cluster (id = 1, comment = 'Node $dbname\@$dbhost');
+   init cluster (id = 1, comment = 'Node $node - $dbname\@$dbhost');
 ";
 close SLONIK;
 run_slonik_script($FILE);
@@ -82,7 +82,7 @@ foreach my $origin (@NODES) {
 
 print SLONIK qq[
         echo 'Replication nodes prepared';
-        echo 'Please start the replication daemon on both systems';
+        echo 'Please start a slon replication daemon for each node';
 ];
 
 close SLONIK;

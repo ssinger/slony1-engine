@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.5 2004-08-12 22:14:29 cbbrowne Exp $
+# $Id: create_set.pl,v 1.6 2004-09-09 17:04:07 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -31,7 +31,6 @@ foreach my $table (@SERIALTABLES) {
 close OUTFILE;
 run_slonik_script($OUTPUTFILE);
 
-
 open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
 
@@ -55,7 +54,9 @@ print OUTFILE "
 
 ";
 
-$TABLE_ID=1;
+if ($TABLE_ID < 1) {
+  $TABLE_ID = 1;
+}
 foreach my $table (@SERIALTABLES) {
   $table = ensure_namespace($table);
   print OUTFILE "
@@ -75,10 +76,10 @@ foreach my $table (@PKEYEDTABLES) {
 }
 
 foreach my $table (keys %KEYEDTABLES) {
+  my $key = $KEYEDTABLES{$table};
   $table = ensure_namespace($table);
-  $key = $KEYEDTABLES{$table};
   print OUTFILE "
-                set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', key='$key', comment = 'Table $table with candidate primary key $key');
+		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', key='$key', comment = 'Table $table with candidate primary key $key');
                 echo 'Add candidate primary keyed table $table';
 ";
   $TABLE_ID++;
@@ -119,3 +120,4 @@ sub ensure_namespace {
   }
   return $object;
 }
+

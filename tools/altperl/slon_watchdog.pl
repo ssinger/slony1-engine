@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: slon_watchdog.pl,v 1.2 2004-08-12 22:14:32 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: slon_watchdog.pl,v 1.3 2004-09-09 17:04:08 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

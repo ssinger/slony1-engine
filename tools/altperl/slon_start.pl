@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: slon_start.pl,v 1.4 2004-08-12 22:14:32 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: slon_start.pl,v 1.5 2004-09-09 17:04:07 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
