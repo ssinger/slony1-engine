@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.6 2004-02-27 20:16:10 wieck Exp $
+ *	$Id: misc.c,v 1.7 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -18,6 +18,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -100,3 +101,72 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 
 	va_end(ap);
 }
+
+
+/*
+ * scanint8 --- try to parse a string into an int8.
+ *
+ * If errorOK is false, ereport a useful error message if the string is bad.
+ * If errorOK is true, just return "false" for bad input.
+ */
+int
+slon_scanint64(char *str, int64 *result)
+{
+	char	   *ptr = str;
+	int64		tmp = 0;
+	int			sign = 1;
+
+	/*
+	 * Do our own scan, rather than relying on sscanf which might be
+	 * broken for long long.
+	 */
+
+	/* skip leading spaces */
+	while (*ptr && isspace((unsigned char) *ptr))
+		ptr++;
+
+	/* handle sign */
+	if (*ptr == '-')
+	{
+		ptr++;
+		sign = -1;
+
+		/*
+		 * Do an explicit check for INT64_MIN.	Ugly though this is, it's
+		 * cleaner than trying to get the loop below to handle it
+		 * portably.
+		 */
+#ifndef INT64_IS_BUSTED
+		if (strcmp(ptr, "9223372036854775808") == 0)
+		{
+			*result = -INT64CONST(0x7fffffffffffffff) - 1;
+			return true;
+		}
+#endif
+	}
+	else if (*ptr == '+')
+		ptr++;
+
+	/* require at least one digit */
+	if (!isdigit((unsigned char) *ptr))
+		return false;
+
+	/* process digits */
+	while (*ptr && isdigit((unsigned char) *ptr))
+	{
+		int64		newtmp = tmp * 10 + (*ptr++ - '0');
+
+		if ((newtmp / 10) != tmp)		/* overflow? */
+			return false;
+		tmp = newtmp;
+	}
+
+	/* trailing junk? */
+	if (*ptr)
+		return false;
+
+	*result = (sign < 0) ? -tmp : tmp;
+
+	return true;
+}
+

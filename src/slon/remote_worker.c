@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.10 2004-02-28 04:16:10 wieck Exp $
+ *	$Id: remote_worker.c,v 1.11 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -374,7 +374,7 @@ remoteWorkerThread_main(void *cdata)
 		}
 
 		event = (SlonWorkMsg_event *)msg;
-		sprintf(seqbuf, "%lld", event->ev_seqno);
+		sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				"Received event %d,%s %s\n",
@@ -629,7 +629,7 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else
 			{
-printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d,%lld %s - unknown event type\n",
+printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d," INT64_FORMAT " %s - unknown event type\n",
 node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			}
 
@@ -1008,7 +1008,8 @@ remoteWorker_event(int event_provider,
 	{
 		rtcfg_unlock();
 		slon_log(SLON_WARN,
-				"remoteWorker_event: event %d,%lld ignored - unknown origin\n",
+				"remoteWorker_event: event %d," INT64_FORMAT
+				" ignored - unknown origin\n",
 				ev_origin, ev_seqno);
 		return;
 	}
@@ -1016,7 +1017,8 @@ remoteWorker_event(int event_provider,
 	{
 		rtcfg_unlock();
 		slon_log(SLON_WARN,
-				"remoteWorker_event: event %d,%lld ignored - origin inactive\n",
+				"remoteWorker_event: event %d," INT64_FORMAT
+				" ignored - origin inactive\n",
 				ev_origin, ev_seqno);
 		return;
 	}
@@ -1024,7 +1026,8 @@ remoteWorker_event(int event_provider,
 	{
 		rtcfg_unlock();
 		slon_log(SLON_DEBUG2,
-				"remoteWorker_event: event %d,%lld ignored - duplicate\n",
+				"remoteWorker_event: event %d," INT64_FORMAT
+				" ignored - duplicate\n",
 				ev_origin, ev_seqno);
 		return;
 	}
@@ -1193,7 +1196,7 @@ remoteWorker_confirm(int no_id,
 
 	con_origin = strtol(con_origin_c, NULL, 10);
 	con_received = strtol(con_received_c, NULL, 10);
-	sscanf(con_seqno_c, "%lld", &con_seqno);
+	slon_scanint64(con_seqno_c, &con_seqno);
 
 	/*
 	 * Check that the node exists and that we have a worker thread.
@@ -1313,7 +1316,7 @@ static void
 query_append_event(SlonDString *dsp, SlonWorkMsg_event *event)
 {
 	char		seqbuf[64];
-	sprintf(seqbuf, "%lld", event->ev_seqno);
+	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 	slon_appendquery(dsp,
 			"notify \"_%s_Event\"; "
@@ -1429,7 +1432,7 @@ store_confirm_forward(SlonNode *node, SlonConn *conn,
 	 * the table sl_confirm.
 	 */
 	dstring_init(&query);
-	sprintf(seqbuf, "%lld", confirm->con_seqno);
+	sprintf(seqbuf, INT64_FORMAT, confirm->con_seqno);
 	
 	slon_log(SLON_DEBUG2,
 			"remoteWorkerThread_%d: forward confirm %d,%s received by %d\n",
@@ -1551,7 +1554,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	pro_dbconn = pro_conn->dbconn;
 	loc_dbconn = local_conn->dbconn;
 	dstring_init(&query1);
-	sprintf(seqbuf, "%lld", event->ev_seqno);
+	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 	/*
 	 * Begin a serialized transaction and check if our xmin
@@ -1788,7 +1791,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		PQclear(res2);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				"%lld bytes copied for table %s\n",
+				INT64_FORMAT " bytes copied for table %s\n",
 				node->no_id, copysize, tab_fqname);
 	}
 	PQclear(res1);
@@ -2057,7 +2060,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	SlonDString		query;
 	SlonDString	   *provider_qual;
 
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC %lld processing\n",
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT 
+			" processing\n",
 			node->no_id, event->ev_seqno);
 
 	/*
@@ -2463,7 +2467,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Light's are still green ... update the setsync status of
 	 * all the sets we've just replicated ...
 	 */
-	sprintf(seqbuf, "%lld", event->ev_seqno);
+	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 	slon_mkquery(&query,
 			"update %s.sl_setsync set "
 			"    ssy_seqno = '%s', ssy_minxid = '%s', ssy_maxxid = '%s', "
@@ -2525,7 +2529,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Good job!
 	 */
 	dstring_free(&query);
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC %lld done "
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC "
+			INT64_FORMAT " done "
 			"with %s seconds delay\n",
 			node->no_id, event->ev_seqno,
 			PQgetvalue(res1, 0, 0));

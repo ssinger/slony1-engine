@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.19 2004-02-28 04:16:11 wieck Exp $
+ *	$Id: slon.h,v 1.20 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -451,6 +451,8 @@ typedef enum {
 } SlonLogLevel;
 
 extern void		slon_log(SlonLogLevel level, char * fmt, ...);
+
+extern int		slon_scanint64(char *str, int64 *result);
 
 
 

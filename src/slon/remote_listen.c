@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.8 2004-02-28 04:16:10 wieck Exp $
+ *	$Id: remote_listen.c,v 1.9 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -620,7 +620,7 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 			return -1;
 		}
 
-		sprintf(seqno_buf, "%lld", origin->last_event);
+		sprintf(seqno_buf, INT64_FORMAT, origin->last_event);
 		slon_appendquery(&query,
 				" %s (e.ev_origin = '%d' and e.ev_seqno > '%s')",
 				where_or_or, listat->li_origin, seqno_buf);
@@ -655,7 +655,7 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 		int64		ev_seqno;
 
 		ev_origin = strtol(PQgetvalue(res, tupno, 0), NULL, 10);
-		sscanf(PQgetvalue(res, tupno, 1), "%lld", &ev_seqno);
+		slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
 
 		remoteWorker_event(node->no_id,
 				ev_origin, ev_seqno,

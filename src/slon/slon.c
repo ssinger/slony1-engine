@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.17 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: slon.c,v 1.18 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -174,7 +174,7 @@ main (int argc, const char *argv[])
 			/*
 			 * Add a remote node
 			 */
-			sscanf(PQgetvalue(res, i, 3), "%lld", &last_event);
+			slon_scanint64(PQgetvalue(res, i, 3), &last_event);
 			rtcfg_storeNode(no_id, no_comment);
 			rtcfg_setNodeLastEvent(no_id, last_event);
 

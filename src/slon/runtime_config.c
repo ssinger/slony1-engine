@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.11 2004-02-28 04:16:10 wieck Exp $
+ *	$Id: runtime_config.c,v 1.12 2004-03-02 13:29:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -184,7 +184,7 @@ rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 	rtcfg_unlock();
 
 	slon_log(SLON_DEBUG2,
-			"setNodeLastEvent: no_id=%d event_seq=%lld\n",
+			"setNodeLastEvent: no_id=%d event_seq=" INT64_FORMAT "\n",
 			no_id, retval);
 
 	return retval;
