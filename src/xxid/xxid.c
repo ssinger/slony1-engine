@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.8 2004-06-15 23:27:18 wieck Exp $
+ *	$Id: xxid.c,v 1.9 2005-01-12 17:27:12 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,13 +27,14 @@
 #endif
 
 
-typedef struct {
-	int32			varsz;
-	TransactionId	xmin;
-	TransactionId	xmax;
-	int				nxip;
-	TransactionId	xip[1];
-} xxid_snapshot;
+typedef struct
+{
+	int32		varsz;
+	TransactionId xmin;
+	TransactionId xmax;
+	int			nxip;
+	TransactionId xip[1];
+}	xxid_snapshot;
 
 
 PG_FUNCTION_INFO_V1(_Slony_I_xxidin);
@@ -48,27 +49,27 @@ PG_FUNCTION_INFO_V1(_Slony_I_btxxidcmp);
 PG_FUNCTION_INFO_V1(_Slony_I_getCurrentXid);
 PG_FUNCTION_INFO_V1(_Slony_I_getMinXid);
 PG_FUNCTION_INFO_V1(_Slony_I_getMaxXid);
-Datum           _Slony_I_xxidin(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidout(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxideq(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidne(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidlt(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidle(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidgt(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxidge(PG_FUNCTION_ARGS);
-Datum           _Slony_I_btxxidcmp(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getCurrentXid(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getMinXid(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getMaxXid(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidin(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidout(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxideq(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidne(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidlt(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidle(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidgt(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxidge(PG_FUNCTION_ARGS);
+Datum		_Slony_I_btxxidcmp(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getCurrentXid(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getMinXid(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getMaxXid(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(_Slony_I_xxid_snapshot_in);
 PG_FUNCTION_INFO_V1(_Slony_I_xxid_snapshot_out);
 PG_FUNCTION_INFO_V1(_Slony_I_xxid_lt_snapshot);
 PG_FUNCTION_INFO_V1(_Slony_I_xxid_ge_snapshot);
-Datum           _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxid_snapshot_out(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxid_lt_snapshot(PG_FUNCTION_ARGS);
-Datum           _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxid_snapshot_out(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxid_lt_snapshot(PG_FUNCTION_ARGS);
+Datum		_Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS);
 
 
 
@@ -78,7 +79,7 @@ Datum           _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS);
 Datum
 _Slony_I_xxidin(PG_FUNCTION_ARGS)
 {
-	char   *str = PG_GETARG_CSTRING(0);
+	char	   *str = PG_GETARG_CSTRING(0);
 
 	PG_RETURN_TRANSACTIONID((TransactionId) strtoul(str, NULL, 0));
 }
@@ -90,8 +91,8 @@ _Slony_I_xxidin(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_xxidout(PG_FUNCTION_ARGS)
 {
-	TransactionId	value = PG_GETARG_TRANSACTIONID(0);
-	char		   *str = palloc(11);
+	TransactionId value = PG_GETARG_TRANSACTIONID(0);
+	char	   *str = palloc(11);
 
 	snprintf(str, 11, "%lu", (unsigned long)value);
 
@@ -225,7 +226,7 @@ _Slony_I_getMinXid(PG_FUNCTION_ARGS)
 {
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMinXid()");
-	
+
 	PG_RETURN_TRANSACTIONID(SerializableSnapshot->xmin);
 }
 
@@ -238,7 +239,7 @@ _Slony_I_getMaxXid(PG_FUNCTION_ARGS)
 {
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMaxXid()");
-	
+
 	PG_RETURN_TRANSACTIONID(SerializableSnapshot->xmax);
 }
 
@@ -249,22 +250,22 @@ _Slony_I_getMaxXid(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 {
-	static int				a_size = 0;
-	static TransactionId   *xip = NULL;
+	static int	a_size = 0;
+	static TransactionId *xip = NULL;
 
-	int				a_used = 0;
-	TransactionId	xmin;
-	TransactionId	xmax;
-	xxid_snapshot  *snap;
-	int				size;
+	int			a_used = 0;
+	TransactionId xmin;
+	TransactionId xmax;
+	xxid_snapshot *snap;
+	int			size;
 
-	char   *str = PG_GETARG_CSTRING(0);
-	char   *endp;
+	char	   *str = PG_GETARG_CSTRING(0);
+	char	   *endp;
 
 	if (a_size == 0)
 	{
 		a_size = 4096;
-		xip = (TransactionId *)malloc(sizeof(TransactionId) * a_size);
+		xip = (TransactionId *) malloc(sizeof(TransactionId) * a_size);
 		if (xip == NULL)
 			elog(ERROR, "Out of memory in xxid_snapshot_in");
 	}
@@ -284,7 +285,7 @@ _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 		if (a_used >= a_size)
 		{
 			a_size *= 2;
-			xip = (TransactionId *)realloc(xip, sizeof(TransactionId) * a_size);
+			xip = (TransactionId *) realloc(xip, sizeof(TransactionId) * a_size);
 			if (xip == NULL)
 				elog(ERROR, "Out of memory in xxid_snapshot_in");
 		}
@@ -292,14 +293,14 @@ _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 		if (*str == '\'')
 		{
 			str++;
-			xip[a_used++] = (TransactionId)strtoul(str, &endp, 0);
+			xip[a_used++] = (TransactionId) strtoul(str, &endp, 0);
 			if (*endp != '\'')
 				elog(ERROR, "illegal xxid_snapshot input format");
 			str = endp + 1;
 		}
 		else
 		{
-			xip[a_used++] = (TransactionId)strtoul(str, &endp, 0);
+			xip[a_used++] = (TransactionId) strtoul(str, &endp, 0);
 			str = endp;
 		}
 		if (*str == ',')
@@ -312,7 +313,7 @@ _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 	}
 
 	size = offsetof(xxid_snapshot, xip) + sizeof(TransactionId) * a_used;
-	snap = (xxid_snapshot *)palloc(size);
+	snap = (xxid_snapshot *) palloc(size);
 	snap->varsz = size;
 	snap->xmin = xmin;
 	snap->xmax = xmax;
@@ -330,20 +331,20 @@ _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_xxid_snapshot_out(PG_FUNCTION_ARGS)
 {
-	xxid_snapshot  *snap = (xxid_snapshot *)PG_GETARG_VARLENA_P(0);
+	xxid_snapshot *snap = (xxid_snapshot *) PG_GETARG_VARLENA_P(0);
 
-	char		   *str = palloc(28 + snap->nxip * 13);
-	char		   *cp = str;
-	int				i;
+	char	   *str = palloc(28 + snap->nxip * 13);
+	char	   *cp = str;
+	int			i;
 
 	snprintf(str, 26, "%lu:%lu:", (unsigned long)snap->xmin,
-			(unsigned long)snap->xmax);
+			 (unsigned long)snap->xmax);
 	cp = str + strlen(str);
 
 	for (i = 0; i < snap->nxip; i++)
 	{
 		snprintf(cp, 13, "%lu%s", (unsigned long)snap->xip[i],
-				(i < snap->nxip - 1) ? "," : "");
+				 (i < snap->nxip - 1) ? "," : "");
 		cp += strlen(cp);
 	}
 
@@ -358,8 +359,8 @@ Datum
 _Slony_I_xxid_lt_snapshot(PG_FUNCTION_ARGS)
 {
 	TransactionId value = PG_GETARG_TRANSACTIONID(0);
-	xxid_snapshot *snap = (xxid_snapshot *)PG_GETARG_VARLENA_P(1);
-	int	i;
+	xxid_snapshot *snap = (xxid_snapshot *) PG_GETARG_VARLENA_P(1);
+	int			i;
 
 	if (TransactionIdPrecedes(value, snap->xmin))
 		PG_RETURN_BOOL(true);
@@ -384,8 +385,8 @@ Datum
 _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS)
 {
 	TransactionId value = PG_GETARG_TRANSACTIONID(0);
-	xxid_snapshot *snap = (xxid_snapshot *)PG_GETARG_VARLENA_P(1);
-	int	i;
+	xxid_snapshot *snap = (xxid_snapshot *) PG_GETARG_VARLENA_P(1);
+	int			i;
 
 	if (TransactionIdEquals(value, snap->xmax))
 		PG_RETURN_BOOL(true);
@@ -403,5 +404,3 @@ _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS)
 
 	PG_RETURN_BOOL(false);
 }
-
-

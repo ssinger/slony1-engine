@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.6 2004-05-31 15:24:15 wieck Exp $
+ *	$Id: dbutil.c,v 1.7 2005-01-12 17:27:11 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,14 +27,14 @@
 /*
  * Global data
  */
-int				db_notice_silent = false;
-SlonikStmt	   *db_notice_stmt = NULL;
+int			db_notice_silent = false;
+SlonikStmt *db_notice_stmt = NULL;
 
 
 /*
  * Local functions
  */
-static int		slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
+static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 
 #ifdef HAVE_PQSETNOTICERECEIVER
 
@@ -70,7 +70,7 @@ db_notice_recv(void *arg, const PGresult *res)
 	}
 }
 
-#else /* !HAVE_PQSETNOTICERECEIVER */
+#else							/* !HAVE_PQSETNOTICERECEIVER */
 
 /* ----------
  * db_notice_recv
@@ -101,15 +101,14 @@ db_notice_recv(void *arg, const char *msg)
 				db_notice_stmt->stmt_lno, msg);
 	}
 }
-
-#endif /* !HAVE_PQSETNOTICERECEIVER */
+#endif   /* !HAVE_PQSETNOTICERECEIVER */
 
 /* ----------
  * db_connect
  * ----------
  */
 int
-db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGconn	   *dbconn;
 
@@ -119,15 +118,15 @@ db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	if (dbconn == NULL)
 	{
 		printf("%s:%d: FATAL: PQconnectdb() failed\n",
-				stmt->stmt_filename, stmt->stmt_lno);
+			   stmt->stmt_filename, stmt->stmt_lno);
 		return -1;
 	}
 
 	if (PQstatus(dbconn) != CONNECTION_OK)
 	{
 		printf("%s:%d: %s",
-				stmt->stmt_filename, stmt->stmt_lno, 
-				PQerrorMessage(dbconn));
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   PQerrorMessage(dbconn));
 		PQfinish(dbconn);
 		return -1;
 	}
@@ -136,7 +135,7 @@ db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	PQsetNoticeReceiver(dbconn, db_notice_recv, NULL);
 #else
 	PQsetNoticeProcessor(dbconn, db_notice_recv, NULL);
-#endif /* !HAVE_PQSETNOTICERECEIVER */
+#endif   /* !HAVE_PQSETNOTICERECEIVER */
 	adminfo->dbconn = dbconn;
 	return 0;
 }
@@ -147,9 +146,9 @@ db_connect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_disconnect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_disconnect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
-	int		rc = 0;
+	int			rc = 0;
 
 	if (adminfo->dbconn == NULL)
 		return 0;
@@ -171,7 +170,7 @@ db_disconnect(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_exec_command(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
+db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 {
 	PGresult   *res;
 	int			retval;
@@ -209,7 +208,7 @@ db_exec_command(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
  * ----------
  */
 int
-db_exec_evcommand(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
+db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 {
 	PGresult   *res;
 
@@ -251,7 +250,7 @@ db_exec_evcommand(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
  * ----------
  */
 PGresult *
-db_exec_select(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
+db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 {
 	PGresult   *res;
 
@@ -282,19 +281,19 @@ db_exec_select(SlonikStmt *stmt, SlonikAdmInfo *adminfo, SlonDString *query)
  * ----------
  */
 int
-db_get_nodeid(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
-	PGresult	   *res;
-	SlonDString		query;
-	int				no_id;
+	PGresult   *res;
+	SlonDString query;
+	int			no_id;
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
 
 	dstring_init(&query);
-	slon_mkquery(&query, 
-			"select \"_%s\".getLocalNodeId('_%q');",
-			stmt->script->clustername, stmt->script->clustername);
+	slon_mkquery(&query,
+				 "select \"_%s\".getLocalNodeId('_%q');",
+				 stmt->script->clustername, stmt->script->clustername);
 	res = db_exec_select(stmt, adminfo, &query);
 	dstring_free(&query);
 
@@ -315,10 +314,10 @@ db_get_nodeid(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_get_version(SlonikStmt *stmt, SlonikAdmInfo *adminfo, int *major, int *minor)
+db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo, int *major, int *minor)
 {
-	PGresult	   *res;
-	SlonDString		query;
+	PGresult   *res;
+	SlonDString query;
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
@@ -352,9 +351,9 @@ db_get_version(SlonikStmt *stmt, SlonikAdmInfo *adminfo, int *major, int *minor)
  * ----------
  */
 int
-db_begin_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
-	PGresult	   *res;
+	PGresult   *res;
 
 	if (adminfo->have_xact)
 		return 0;
@@ -363,8 +362,8 @@ db_begin_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		printf("%s:%d: begin transaction; - %s",
-				stmt->stmt_filename, stmt->stmt_lno,
-				PQresultErrorMessage(res));
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
@@ -383,9 +382,9 @@ db_begin_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_commit_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_commit_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
-	PGresult	   *res;
+	PGresult   *res;
 
 	if (!adminfo->have_xact)
 		return 0;
@@ -394,8 +393,8 @@ db_commit_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		printf("%s:%d: commit transaction; - %s",
-				stmt->stmt_filename, stmt->stmt_lno,
-				PQresultErrorMessage(res));
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
@@ -412,9 +411,9 @@ db_commit_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_rollback_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
+db_rollback_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
-	PGresult	   *res;
+	PGresult   *res;
 
 	if (!adminfo->have_xact)
 		return 0;
@@ -423,8 +422,8 @@ db_rollback_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		printf("%s:%d: rollback transaction; - %s",
-				stmt->stmt_filename, stmt->stmt_lno,
-				PQresultErrorMessage(res));
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
@@ -441,25 +440,25 @@ db_rollback_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo)
  * ----------
  */
 int
-db_check_namespace(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clustername)
+db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustername)
 {
-	PGresult	   *res;
-	SlonDString		query;
-	int				ntuples;
+	PGresult   *res;
+	SlonDString query;
+	int			ntuples;
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
 
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select 1 from \"pg_catalog\".pg_namespace N "
-			"	where N.nspname = '_%q';",
-			clustername);
+				 "select 1 from \"pg_catalog\".pg_namespace N "
+				 "	where N.nspname = '_%q';",
+				 clustername);
 	res = db_exec_select(stmt, adminfo, &query);
 	dstring_free(&query);
 	if (res == NULL)
 		return -1;
-	
+
 	ntuples = PQntuples(res);
 	PQclear(res);
 
@@ -474,11 +473,11 @@ db_check_namespace(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clustername)
  * ----------
  */
 int
-db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clustername)
+db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustername)
 {
-	PGresult	   *res;
-	SlonDString		query;
-	int				ntuples;
+	PGresult   *res;
+	SlonDString query;
+	int			ntuples;
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
@@ -489,8 +488,8 @@ db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clusternam
 	 * Check that PL/pgSQL is installed
 	 */
 	slon_mkquery(&query,
-			"select 1 from \"pg_catalog\".pg_language "
-			"	where lanname = 'plpgsql';");
+				 "select 1 from \"pg_catalog\".pg_language "
+				 "	where lanname = 'plpgsql';");
 	res = db_exec_select(stmt, adminfo, &query);
 	if (res == NULL)
 	{
@@ -502,9 +501,9 @@ db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clusternam
 	if (ntuples == 0)
 	{
 		printf("%s:%d: Error: language PL/pgSQL is not installed "
-				"in database '%s'\n",
-				stmt->stmt_filename, stmt->stmt_lno,
-				adminfo->conninfo);
+			   "in database '%s'\n",
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   adminfo->conninfo);
 		dstring_free(&query);
 		return -1;
 	}
@@ -516,9 +515,9 @@ db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clusternam
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		printf("%s:%d: Error: the extension for the xxid data type "
-				"cannot be loaded in database '%s'\n",
-				stmt->stmt_filename, stmt->stmt_lno,
-				adminfo->conninfo);
+			   "cannot be loaded in database '%s'\n",
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   adminfo->conninfo);
 		dstring_free(&query);
 		return -1;
 	}
@@ -530,9 +529,9 @@ db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clusternam
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		printf("%s:%d: Error: the extension for the Slony-I C functions "
-				"cannot be loaded in database '%s'\n",
-				stmt->stmt_filename, stmt->stmt_lno,
-				adminfo->conninfo);
+			   "cannot be loaded in database '%s'\n",
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   adminfo->conninfo);
 		dstring_free(&query);
 		return -1;
 	}
@@ -555,7 +554,7 @@ db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clusternam
  * ----------
  */
 int
-slon_mkquery(SlonDString *dsp, char *fmt, ...)
+slon_mkquery(SlonDString * dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -578,7 +577,7 @@ slon_mkquery(SlonDString *dsp, char *fmt, ...)
  * ----------
  */
 int
-slon_appendquery(SlonDString *dsp, char *fmt, ...)
+slon_appendquery(SlonDString * dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -599,64 +598,70 @@ slon_appendquery(SlonDString *dsp, char *fmt, ...)
  * ----------
  */
 static int
-slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
+slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
 	char	   *s;
-	char		buf[64];
+	char		buf    [64];
 
 	while (*fmt)
 	{
-		switch(*fmt)
+		switch (*fmt)
 		{
 			case '%':
 				fmt++;
-				switch(*fmt)
+				switch (*fmt)
 				{
-					case 's':	s = va_arg(ap, char *);
-								dstring_append(dsp, s);
-								fmt++;
-								break;
+					case 's':
+						s = va_arg(ap, char *);
+						dstring_append(dsp, s);
+						fmt++;
+						break;
 
-					case 'q':	s = va_arg(ap, char *);
-								while (*s != '\0')
-								{
-									switch (*s)
-									{
-										case '\'':
-											dstring_addchar(dsp, '\'');
-											break;
-										case '\\':
-											dstring_addchar(dsp, '\\');
-											break;
-										default:
-											break;
-									}
-									dstring_addchar(dsp, *s);
-									s++;
-								}
-								fmt++;
-								break;
+					case 'q':
+						s = va_arg(ap, char *);
+						while (*s != '\0')
+						{
+							switch (*s)
+							{
+								case '\'':
+									dstring_addchar(dsp, '\'');
+									break;
+								case '\\':
+									dstring_addchar(dsp, '\\');
+									break;
+								default:
+									break;
+							}
+							dstring_addchar(dsp, *s);
+							s++;
+						}
+						fmt++;
+						break;
 
-					case 'd':	sprintf(buf, "%d", va_arg(ap, int));
-								dstring_append(dsp, buf);
-								fmt++;
-								break;
+					case 'd':
+						sprintf(buf, "%d", va_arg(ap, int));
+						dstring_append(dsp, buf);
+						fmt++;
+						break;
 
-					default:	dstring_addchar(dsp, '%');
-								dstring_addchar(dsp, *fmt);
-								fmt++;
-								break;
-				}
-				break;
-
-			case '\\':	fmt++;
+					default:
+						dstring_addchar(dsp, '%');
 						dstring_addchar(dsp, *fmt);
 						fmt++;
 						break;
+				}
+				break;
 
-			default:	dstring_addchar(dsp, *fmt);
-						fmt++;
-						break;
+			case '\\':
+				fmt++;
+				dstring_addchar(dsp, *fmt);
+				fmt++;
+				break;
+
+			default:
+				dstring_addchar(dsp, *fmt);
+				fmt++;
+				break;
 		}
 	}
 
@@ -664,5 +669,3 @@ slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
 
 	return 0;
 }
-
-

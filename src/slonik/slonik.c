@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.38 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: slonik.c,v 1.39 2005-01-12 17:27:11 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,32 +32,32 @@
 /*
  * Global data
  */
-SlonikScript		   *parser_script = NULL;
-int						parser_errors = 0;
-int						current_try_level;
+SlonikScript *parser_script = NULL;
+int			parser_errors = 0;
+int			current_try_level;
 
 
 /*
  * Local functions
  */
-static void				usage(void);
-static SlonikAdmInfo   *get_adminfo(SlonikStmt *stmt, int no_id);
-static SlonikAdmInfo   *get_active_adminfo(SlonikStmt *stmt, int no_id);
-static SlonikAdmInfo   *get_checked_adminfo(SlonikStmt *stmt, int no_id);
+static void usage(void);
+static SlonikAdmInfo *get_adminfo(SlonikStmt * stmt, int no_id);
+static SlonikAdmInfo *get_active_adminfo(SlonikStmt * stmt, int no_id);
+static SlonikAdmInfo *get_checked_adminfo(SlonikStmt * stmt, int no_id);
 
 
-static int				script_check(SlonikScript *script);
-static int				script_check_adminfo(SlonikStmt *hdr, int no_id);
-static int				script_check_stmts(SlonikScript *script, 
-									SlonikStmt *stmt);
-static int				script_exec(SlonikScript *script);
-static int				script_exec_stmts(SlonikScript *script, 
-									SlonikStmt *stmt);
-static void				script_commit_all(SlonikStmt *stmt,
-									SlonikScript *script);
-static void				script_rollback_all(SlonikStmt *stmt,
-									SlonikScript *script);
-static void				script_disconnect_all(SlonikScript *script);
+static int	script_check(SlonikScript * script);
+static int	script_check_adminfo(SlonikStmt * hdr, int no_id);
+static int script_check_stmts(SlonikScript * script,
+				   SlonikStmt * stmt);
+static int	script_exec(SlonikScript * script);
+static int script_exec_stmts(SlonikScript * script,
+				  SlonikStmt * stmt);
+static void script_commit_all(SlonikStmt * stmt,
+				  SlonikScript * script);
+static void script_rollback_all(SlonikStmt * stmt,
+					SlonikScript * script);
+static void script_disconnect_all(SlonikScript * script);
 
 
 /* ----------
@@ -67,23 +67,26 @@ static void				script_disconnect_all(SlonikScript *script);
 int
 main(int argc, const char *argv[])
 {
-	extern int		optind;
-	int				opt;
+	extern int	optind;
+	int			opt;
 
 	while ((opt = getopt(argc, (char **)argv, "hv")) != EOF)
 	{
-		switch(opt)
+		switch (opt)
 		{
-			case 'h':	parser_errors++;
-						break;
+			case 'h':
+				parser_errors++;
+				break;
 
-			case 'v':   printf("slonik version %s\n", SLONY_I_VERSION_STRING);
-						exit(0);
-						break;
+			case 'v':
+				printf("slonik version %s\n", SLONY_I_VERSION_STRING);
+				exit(0);
+				break;
 
-			default:	printf("unknown option '%c'\n", opt);
-						parser_errors++;
-						break;
+			default:
+				printf("unknown option '%c'\n", opt);
+				parser_errors++;
+				break;
 		}
 	}
 
@@ -94,7 +97,8 @@ main(int argc, const char *argv[])
 	{
 		while (optind < argc)
 		{
-			FILE *fp;
+			FILE	   *fp;
+
 			fp = fopen(argv[optind], "r");
 			scan_new_input_file(fp);
 			current_file = (char *)argv[optind++];
@@ -137,7 +141,7 @@ static void
 usage(void)
 {
 	fprintf(stderr, "usage: slonik [fname [...]]\n");
-	exit (1);
+	exit(1);
 }
 
 
@@ -146,11 +150,11 @@ usage(void)
  * ----------
  */
 static int
-script_check(SlonikScript *script)
+script_check(SlonikScript * script)
 {
-	SlonikAdmInfo	   *adminfo;
-	SlonikAdmInfo	   *adminfo2;
-	int					errors = 0;
+	SlonikAdmInfo *adminfo;
+	SlonikAdmInfo *adminfo2;
+	int			errors = 0;
 
 
 	for (adminfo = script->adminfo_list; adminfo; adminfo = adminfo->next)
@@ -162,10 +166,10 @@ script_check(SlonikScript *script)
 			if (adminfo2->no_id == adminfo->no_id)
 			{
 				printf("%s:%d: Error: duplicate admin conninfo for node %d\n",
-						adminfo2->stmt_filename, adminfo2->stmt_lno,
-						adminfo2->no_id);
+					   adminfo2->stmt_filename, adminfo2->stmt_lno,
+					   adminfo2->no_id);
 				printf("%s:%d: location of the previous definition\n",
-						adminfo->stmt_filename, adminfo->stmt_lno);
+					   adminfo->stmt_filename, adminfo->stmt_lno);
 				errors++;
 			}
 		}
@@ -183,9 +187,9 @@ script_check(SlonikScript *script)
  * ----------
  */
 static int
-script_check_adminfo(SlonikStmt *hdr, int no_id)
+script_check_adminfo(SlonikStmt * hdr, int no_id)
 {
-	SlonikAdmInfo	   *adminfo;
+	SlonikAdmInfo *adminfo;
 
 	for (adminfo = hdr->script->adminfo_list; adminfo; adminfo = adminfo->next)
 	{
@@ -194,8 +198,8 @@ script_check_adminfo(SlonikStmt *hdr, int no_id)
 	}
 
 	printf("%s:%d: Error: "
-			"No admin conninfo provided for node %d\n",
-			hdr->stmt_filename, hdr->stmt_lno, no_id);
+		   "No admin conninfo provided for node %d\n",
+		   hdr->stmt_filename, hdr->stmt_lno, no_id);
 	return -1;
 }
 
@@ -205,9 +209,9 @@ script_check_adminfo(SlonikStmt *hdr, int no_id)
  * ----------
  */
 static int
-script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
+script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 {
-	int		errors = 0;
+	int			errors = 0;
 
 	while (hdr)
 	{
@@ -218,7 +222,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_TRY:
 				{
 					SlonikStmt_try *stmt =
-							(SlonikStmt_try *)hdr;
+					(SlonikStmt_try *) hdr;
 
 					if (script_check_stmts(script, stmt->try_block) < 0)
 						errors++;
@@ -238,7 +242,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_RESTART_NODE:
 				{
 					SlonikStmt_restart_node *stmt =
-							(SlonikStmt_restart_node *)hdr;
+					(SlonikStmt_restart_node *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
@@ -247,8 +251,9 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 
 			case STMT_REPAIR_CONFIG:
 				{
-					SlonikStmt_repair_config *stmt = 
-							(SlonikStmt_repair_config *)hdr;
+					SlonikStmt_repair_config *stmt =
+					(SlonikStmt_repair_config *) hdr;
+
 					if (stmt->ev_origin < 0)
 					{
 						stmt->ev_origin = 1;
@@ -266,7 +271,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_INIT_CLUSTER:
 				{
 					SlonikStmt_init_cluster *stmt =
-							(SlonikStmt_init_cluster *)hdr;
+					(SlonikStmt_init_cluster *) hdr;
 
 					/*
 					 * Check that we have conninfo to that
@@ -279,7 +284,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_NODE:
 				{
 					SlonikStmt_store_node *stmt =
-							(SlonikStmt_store_node *)hdr;
+					(SlonikStmt_store_node *) hdr;
 
 					if (stmt->ev_origin < 0)
 					{
@@ -288,9 +293,9 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->no_id == stmt->ev_origin)
 					{
 						printf("%s:%d: Error: "
-								"ev_origin for store_node cannot "
-								"be the new node\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "ev_origin for store_node cannot "
+							   "be the new node\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 					}
 
 					if (!stmt->no_spool)
@@ -306,13 +311,13 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_NODE:
 				{
 					SlonikStmt_drop_node *stmt =
-							(SlonikStmt_drop_node *)hdr;
+					(SlonikStmt_drop_node *) hdr;
 
 					if (stmt->ev_origin == stmt->no_id)
 					{
 						printf("%s:%d: Error: "
-								"Node ID and event node cannot be identical\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "Node ID and event node cannot be identical\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
@@ -323,13 +328,13 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_FAILED_NODE:
 				{
 					SlonikStmt_failed_node *stmt =
-							(SlonikStmt_failed_node *)hdr;
+					(SlonikStmt_failed_node *) hdr;
 
 					if (stmt->backup_node == stmt->no_id)
 					{
 						printf("%s:%d: Error: "
-								"Node ID and backup node cannot be identical\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							 "Node ID and backup node cannot be identical\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (script_check_adminfo(hdr, stmt->backup_node) < 0)
@@ -340,7 +345,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNINSTALL_NODE:
 				{
 					SlonikStmt_uninstall_node *stmt =
-							(SlonikStmt_uninstall_node *)hdr;
+					(SlonikStmt_uninstall_node *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
@@ -350,7 +355,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_PATH:
 				{
 					SlonikStmt_store_path *stmt =
-							(SlonikStmt_store_path *)hdr;
+					(SlonikStmt_store_path *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->pa_client) < 0)
 						errors++;
@@ -361,7 +366,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_PATH:
 				{
 					SlonikStmt_drop_path *stmt =
-							(SlonikStmt_drop_path *)hdr;
+					(SlonikStmt_drop_path *) hdr;
 
 					if (stmt->ev_origin < 0)
 						stmt->ev_origin = stmt->pa_client;
@@ -369,16 +374,16 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->pa_server < 0)
 					{
 						printf("%s:%d: Error: "
-								"server must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "server must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
 					if (stmt->pa_client < 0)
 					{
 						printf("%s:%d: Error: "
-								"client must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "client must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -390,7 +395,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_LISTEN:
 				{
 					SlonikStmt_store_listen *stmt =
-							(SlonikStmt_store_listen *)hdr;
+					(SlonikStmt_store_listen *) hdr;
 
 					if (stmt->li_provider < 0)
 					{
@@ -404,7 +409,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_LISTEN:
 				{
 					SlonikStmt_drop_listen *stmt =
-							(SlonikStmt_drop_listen *)hdr;
+					(SlonikStmt_drop_listen *) hdr;
 
 					if (stmt->li_provider < 0)
 					{
@@ -418,7 +423,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_CREATE_SET:
 				{
 					SlonikStmt_create_set *stmt =
-							(SlonikStmt_create_set *)hdr;
+					(SlonikStmt_create_set *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
@@ -428,13 +433,13 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_SET:
 				{
 					SlonikStmt_drop_set *stmt =
-							(SlonikStmt_drop_set *)hdr;
+					(SlonikStmt_drop_set *) hdr;
 
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -446,21 +451,21 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_MERGE_SET:
 				{
 					SlonikStmt_merge_set *stmt =
-							(SlonikStmt_merge_set *)hdr;
+					(SlonikStmt_merge_set *) hdr;
 
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
 					if (stmt->add_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id to merge (add) must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id to merge (add) must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -472,24 +477,24 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_ADD_TABLE:
 				{
 					SlonikStmt_set_add_table *stmt =
-							(SlonikStmt_set_add_table *)hdr;
+					(SlonikStmt_set_add_table *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -499,29 +504,29 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					}
 
 					/*
-					 * Check that we have the table id, name
-					 * and what to use for the key.
+					 * Check that we have the table id, name and what to use
+					 * for the key.
 					 */
 					if (stmt->tab_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"table id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->tab_fqname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"table FQ-name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table FQ-name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->use_serial && stmt->use_key != NULL)
 					{
 						printf("%s:%d: Error: "
-								"unique key name or SERIAL are "
-								"mutually exclusive\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "unique key name or SERIAL are "
+							   "mutually exclusive\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -533,24 +538,24 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_ADD_SEQUENCE:
 				{
 					SlonikStmt_set_add_sequence *stmt =
-							(SlonikStmt_set_add_sequence *)hdr;
+					(SlonikStmt_set_add_sequence *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -560,21 +565,21 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					}
 
 					/*
-					 * Check that we have the table id, name
-					 * and what to use for the key.
+					 * Check that we have the table id, name and what to use
+					 * for the key.
 					 */
 					if (stmt->seq_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"sequence id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "sequence id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->seq_fqname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"sequence FQ-name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "sequence FQ-name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -586,17 +591,17 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_DROP_TABLE:
 				{
 					SlonikStmt_set_drop_table *stmt =
-							(SlonikStmt_set_drop_table *)hdr;
+					(SlonikStmt_set_drop_table *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -606,14 +611,14 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					}
 
 					/*
-					 * Check that we have the table id, name
-					 * and what to use for the key.
+					 * Check that we have the table id, name and what to use
+					 * for the key.
 					 */
 					if (stmt->tab_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"table id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 				}
@@ -622,17 +627,17 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_DROP_SEQUENCE:
 				{
 					SlonikStmt_set_drop_sequence *stmt =
-							(SlonikStmt_set_drop_sequence *)hdr;
+					(SlonikStmt_set_drop_sequence *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -642,14 +647,14 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					}
 
 					/*
-					 * Check that we have the table id, name
-					 * and what to use for the key.
+					 * Check that we have the table id, name and what to use
+					 * for the key.
 					 */
 					if (stmt->seq_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"sequence id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "sequence id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 				}
@@ -658,17 +663,17 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_MOVE_TABLE:
 				{
 					SlonikStmt_set_move_table *stmt =
-							(SlonikStmt_set_move_table *)hdr;
+					(SlonikStmt_set_move_table *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -683,15 +688,15 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->tab_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"table id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->new_set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"new set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "new set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 				}
@@ -700,17 +705,17 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_MOVE_SEQUENCE:
 				{
 					SlonikStmt_set_move_sequence *stmt =
-							(SlonikStmt_set_move_sequence *)hdr;
+					(SlonikStmt_set_move_sequence *) hdr;
 
 					/*
-					 * Check that we have the set_id and set_origin
-					 * and that we can reach the origin.
+					 * Check that we have the set_id and set_origin and that
+					 * we can reach the origin.
 					 */
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -725,15 +730,15 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->seq_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"sequence id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "sequence id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->new_set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"new set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "new set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 				}
@@ -742,17 +747,17 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_TABLE_ADD_KEY:
 				{
 					SlonikStmt_table_add_key *stmt =
-							(SlonikStmt_table_add_key *)hdr;
+					(SlonikStmt_table_add_key *) hdr;
 
 					/*
-					 * Check that we have the node id and that
-					 * we can reach it.
+					 * Check that we have the node id and that we can reach
+					 * it.
 					 */
 					if (stmt->no_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"node id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "node id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					else
@@ -767,8 +772,8 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->tab_fqname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"table FQ-name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table FQ-name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 				}
@@ -777,7 +782,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_TRIGGER:
 				{
 					SlonikStmt_store_trigger *stmt =
-							(SlonikStmt_store_trigger *)hdr;
+					(SlonikStmt_store_trigger *) hdr;
 
 					if (stmt->ev_origin < 0)
 					{
@@ -786,15 +791,15 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->trig_tabid < 0)
 					{
 						printf("%s:%d: Error: "
-								"table id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->trig_tgname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"trigger name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "trigger name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -806,7 +811,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_TRIGGER:
 				{
 					SlonikStmt_drop_trigger *stmt =
-							(SlonikStmt_drop_trigger *)hdr;
+					(SlonikStmt_drop_trigger *) hdr;
 
 					if (stmt->ev_origin < 0)
 					{
@@ -815,15 +820,15 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->trig_tabid < 0)
 					{
 						printf("%s:%d: Error: "
-								"table id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "table id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->trig_tgname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"trigger name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "trigger name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -835,20 +840,20 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SUBSCRIBE_SET:
 				{
 					SlonikStmt_subscribe_set *stmt =
-							(SlonikStmt_subscribe_set *)hdr;
+					(SlonikStmt_subscribe_set *) hdr;
 
 					if (stmt->sub_setid < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->sub_provider < 0)
 					{
 						printf("%s:%d: Error: "
-								"provider must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "provider must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -860,13 +865,13 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNSUBSCRIBE_SET:
 				{
 					SlonikStmt_unsubscribe_set *stmt =
-							(SlonikStmt_unsubscribe_set *)hdr;
+					(SlonikStmt_unsubscribe_set *) hdr;
 
 					if (stmt->sub_setid < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -878,20 +883,20 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_LOCK_SET:
 				{
 					SlonikStmt_lock_set *stmt =
-							(SlonikStmt_lock_set *)hdr;
+					(SlonikStmt_lock_set *) hdr;
 
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -903,20 +908,20 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNLOCK_SET:
 				{
 					SlonikStmt_unlock_set *stmt =
-							(SlonikStmt_unlock_set *)hdr;
+					(SlonikStmt_unlock_set *) hdr;
 
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -928,34 +933,34 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_MOVE_SET:
 				{
 					SlonikStmt_move_set *stmt =
-							(SlonikStmt_move_set *)hdr;
+					(SlonikStmt_move_set *) hdr;
 
 					if (stmt->set_id < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->old_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"old origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "old origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->new_origin < 0)
 					{
 						printf("%s:%d: Error: "
-								"new origin must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "new origin must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->new_origin == stmt->old_origin)
 					{
 						printf("%s:%d: Error: "
-								"old and new origin cannot be identical\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "old and new origin cannot be identical\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -967,7 +972,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DDL_SCRIPT:
 				{
 					SlonikStmt_ddl_script *stmt =
-							(SlonikStmt_ddl_script *)hdr;
+					(SlonikStmt_ddl_script *) hdr;
 
 					if (stmt->ev_origin < 0)
 					{
@@ -976,15 +981,15 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->ddl_setid < 0)
 					{
 						printf("%s:%d: Error: "
-								"set id must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->ddl_fname == NULL)
 					{
 						printf("%s:%d: Error: "
-								"script file name must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "script file name must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -995,9 +1000,9 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->ddl_fd < 0)
 					{
 						printf("%s:%d: Error: "
-								"%s - %s\n", 
-								hdr->stmt_filename, hdr->stmt_lno,
-								stmt->ddl_fname, strerror(errno));
+							   "%s - %s\n",
+							   hdr->stmt_filename, hdr->stmt_lno,
+							   stmt->ddl_fname, strerror(errno));
 						errors++;
 					}
 				}
@@ -1006,7 +1011,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UPDATE_FUNCTIONS:
 				{
 					SlonikStmt_update_functions *stmt =
-							(SlonikStmt_update_functions *)hdr;
+					(SlonikStmt_update_functions *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
@@ -1016,20 +1021,20 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_WAIT_EVENT:
 				{
 					SlonikStmt_wait_event *stmt =
-							(SlonikStmt_wait_event *)hdr;
+					(SlonikStmt_wait_event *) hdr;
 
 					if (stmt->wait_origin == -1)
 					{
 						printf("%s:%d: Error: "
-								"event origin to wait for must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+							   "event origin to wait for must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 					if (stmt->wait_confirmed == -1)
 					{
 						printf("%s:%d: Error: "
-								"confirming node to wait for must be specified\n",
-								hdr->stmt_filename, hdr->stmt_lno);
+						   "confirming node to wait for must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
 
@@ -1053,7 +1058,7 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
  * ----------
  */
 static int
-script_exec(SlonikScript *script)
+script_exec(SlonikScript * script)
 {
 	if (script_exec_stmts(script, script->script_stmts) < 0)
 	{
@@ -1074,9 +1079,9 @@ script_exec(SlonikScript *script)
  * ----------
  */
 static int
-script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
+script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 {
-	int		errors = 0;
+	int			errors = 0;
 
 	while (hdr && errors == 0)
 	{
@@ -1087,8 +1092,8 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_TRY:
 				{
 					SlonikStmt_try *stmt =
-							(SlonikStmt_try *)hdr;
-					int		rc;
+					(SlonikStmt_try *) hdr;
+					int			rc;
 
 					current_try_level++;
 					rc = script_exec_stmts(script, stmt->try_block);
@@ -1101,8 +1106,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 						{
 							/*
 							 * Successfull execution of ON ERROR case block
-							 * suppressed setting the overall script on
-							 * error.
+							 * suppressed setting the overall script on error.
 							 */
 							if (script_exec_stmts(script, stmt->error_block) < 0)
 								errors++;
@@ -1110,8 +1114,8 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 						else
 						{
 							/*
-							 * The try-block has no ON ERROR action,
-							 * abort script execution.
+							 * The try-block has no ON ERROR action, abort
+							 * script execution.
 							 */
 							errors++;
 						}
@@ -1119,9 +1123,10 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 					else
 					{
 						script_commit_all(hdr, script);
+
 						/*
-						 * If the try block has an ON SUCCESS block, 
-						 * execute that.
+						 * If the try block has an ON SUCCESS block, execute
+						 * that.
 						 */
 						if (stmt->success_block)
 							if (script_exec_stmts(script, stmt->success_block) < 0)
@@ -1133,27 +1138,27 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_ECHO:
 				{
 					SlonikStmt_echo *stmt =
-							(SlonikStmt_echo *)hdr;
+					(SlonikStmt_echo *) hdr;
 
 					printf("%s:%d: %s\n",
-							stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
-							stmt->str);
+						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+						   stmt->str);
 				}
 				break;
 
 			case STMT_EXIT:
 				{
 					SlonikStmt_exit *stmt =
-							(SlonikStmt_exit *)hdr;
+					(SlonikStmt_exit *) hdr;
 
-					exit (stmt->exitcode);
+					exit(stmt->exitcode);
 				}
 				break;
 
 			case STMT_RESTART_NODE:
 				{
 					SlonikStmt_restart_node *stmt =
-							(SlonikStmt_restart_node *)hdr;
+					(SlonikStmt_restart_node *) hdr;
 
 					if (slonik_restart_node(stmt) < 0)
 						errors++;
@@ -1162,33 +1167,33 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 
 			case STMT_ERROR:
 				printf("slonik_exec_stmt: FATAL error: STMT_ERROR node "
-						"made it into execution!\n");
+					   "made it into execution!\n");
 				exit(-1);
 				break;
 
 			case STMT_INIT_CLUSTER:
 				{
 					SlonikStmt_init_cluster *stmt =
-							(SlonikStmt_init_cluster *)hdr;
+					(SlonikStmt_init_cluster *) hdr;
 
 					if (slonik_init_cluster(stmt) < 0)
 			case STMT_REPAIR_CONFIG:
-				{
-					SlonikStmt_repair_config *stmt =
-						(SlonikStmt_repair_config *)hdr;
+					{
+						SlonikStmt_repair_config *stmt =
+						(SlonikStmt_repair_config *) hdr;
 
-					if (slonik_repair_config(stmt) < 0)
-						errors++;
-				}
-				break;
-						errors++;
+						if (slonik_repair_config(stmt) < 0)
+							errors++;
+					}
+					break;
+					errors++;
 				}
 				break;
 
 			case STMT_STORE_NODE:
 				{
 					SlonikStmt_store_node *stmt =
-							(SlonikStmt_store_node *)hdr;
+					(SlonikStmt_store_node *) hdr;
 
 					if (slonik_store_node(stmt) < 0)
 						errors++;
@@ -1198,7 +1203,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_NODE:
 				{
 					SlonikStmt_drop_node *stmt =
-							(SlonikStmt_drop_node *)hdr;
+					(SlonikStmt_drop_node *) hdr;
 
 					if (slonik_drop_node(stmt) < 0)
 						errors++;
@@ -1208,7 +1213,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_FAILED_NODE:
 				{
 					SlonikStmt_failed_node *stmt =
-							(SlonikStmt_failed_node *)hdr;
+					(SlonikStmt_failed_node *) hdr;
 
 					if (slonik_failed_node(stmt) < 0)
 						errors++;
@@ -1218,7 +1223,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNINSTALL_NODE:
 				{
 					SlonikStmt_uninstall_node *stmt =
-							(SlonikStmt_uninstall_node *)hdr;
+					(SlonikStmt_uninstall_node *) hdr;
 
 					if (slonik_uninstall_node(stmt) < 0)
 						errors++;
@@ -1228,7 +1233,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_PATH:
 				{
 					SlonikStmt_store_path *stmt =
-							(SlonikStmt_store_path *)hdr;
+					(SlonikStmt_store_path *) hdr;
 
 					if (slonik_store_path(stmt) < 0)
 						errors++;
@@ -1238,7 +1243,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_PATH:
 				{
 					SlonikStmt_drop_path *stmt =
-							(SlonikStmt_drop_path *)hdr;
+					(SlonikStmt_drop_path *) hdr;
 
 					if (slonik_drop_path(stmt) < 0)
 						errors++;
@@ -1248,7 +1253,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_LISTEN:
 				{
 					SlonikStmt_store_listen *stmt =
-							(SlonikStmt_store_listen *)hdr;
+					(SlonikStmt_store_listen *) hdr;
 
 					if (slonik_store_listen(stmt) < 0)
 						errors++;
@@ -1258,7 +1263,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_LISTEN:
 				{
 					SlonikStmt_drop_listen *stmt =
-							(SlonikStmt_drop_listen *)hdr;
+					(SlonikStmt_drop_listen *) hdr;
 
 					if (slonik_drop_listen(stmt) < 0)
 						errors++;
@@ -1268,7 +1273,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_CREATE_SET:
 				{
 					SlonikStmt_create_set *stmt =
-							(SlonikStmt_create_set *)hdr;
+					(SlonikStmt_create_set *) hdr;
 
 					if (slonik_create_set(stmt) < 0)
 						errors++;
@@ -1278,7 +1283,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_SET:
 				{
 					SlonikStmt_drop_set *stmt =
-							(SlonikStmt_drop_set *)hdr;
+					(SlonikStmt_drop_set *) hdr;
 
 					if (slonik_drop_set(stmt) < 0)
 						errors++;
@@ -1288,7 +1293,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_MERGE_SET:
 				{
 					SlonikStmt_merge_set *stmt =
-							(SlonikStmt_merge_set *)hdr;
+					(SlonikStmt_merge_set *) hdr;
 
 					if (slonik_merge_set(stmt) < 0)
 						errors++;
@@ -1298,7 +1303,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_ADD_TABLE:
 				{
 					SlonikStmt_set_add_table *stmt =
-							(SlonikStmt_set_add_table *)hdr;
+					(SlonikStmt_set_add_table *) hdr;
 
 					if (slonik_set_add_table(stmt) < 0)
 						errors++;
@@ -1308,7 +1313,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_ADD_SEQUENCE:
 				{
 					SlonikStmt_set_add_sequence *stmt =
-							(SlonikStmt_set_add_sequence *)hdr;
+					(SlonikStmt_set_add_sequence *) hdr;
 
 					if (slonik_set_add_sequence(stmt) < 0)
 						errors++;
@@ -1317,7 +1322,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_DROP_TABLE:
 				{
 					SlonikStmt_set_drop_table *stmt =
-							(SlonikStmt_set_drop_table *)hdr;
+					(SlonikStmt_set_drop_table *) hdr;
 
 					if (slonik_set_drop_table(stmt) < 0)
 						errors++;
@@ -1327,7 +1332,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_DROP_SEQUENCE:
 				{
 					SlonikStmt_set_drop_sequence *stmt =
-							(SlonikStmt_set_drop_sequence *)hdr;
+					(SlonikStmt_set_drop_sequence *) hdr;
 
 					if (slonik_set_drop_sequence(stmt) < 0)
 						errors++;
@@ -1337,7 +1342,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_MOVE_TABLE:
 				{
 					SlonikStmt_set_move_table *stmt =
-							(SlonikStmt_set_move_table *)hdr;
+					(SlonikStmt_set_move_table *) hdr;
 
 					if (slonik_set_move_table(stmt) < 0)
 						errors++;
@@ -1347,7 +1352,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SET_MOVE_SEQUENCE:
 				{
 					SlonikStmt_set_move_sequence *stmt =
-							(SlonikStmt_set_move_sequence *)hdr;
+					(SlonikStmt_set_move_sequence *) hdr;
 
 					if (slonik_set_move_sequence(stmt) < 0)
 						errors++;
@@ -1357,7 +1362,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_TABLE_ADD_KEY:
 				{
 					SlonikStmt_table_add_key *stmt =
-							(SlonikStmt_table_add_key *)hdr;
+					(SlonikStmt_table_add_key *) hdr;
 
 					if (slonik_table_add_key(stmt) < 0)
 						errors++;
@@ -1367,7 +1372,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_STORE_TRIGGER:
 				{
 					SlonikStmt_store_trigger *stmt =
-							(SlonikStmt_store_trigger *)hdr;
+					(SlonikStmt_store_trigger *) hdr;
 
 					if (slonik_store_trigger(stmt) < 0)
 						errors++;
@@ -1377,7 +1382,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DROP_TRIGGER:
 				{
 					SlonikStmt_drop_trigger *stmt =
-							(SlonikStmt_drop_trigger *)hdr;
+					(SlonikStmt_drop_trigger *) hdr;
 
 					if (slonik_drop_trigger(stmt) < 0)
 						errors++;
@@ -1387,7 +1392,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_SUBSCRIBE_SET:
 				{
 					SlonikStmt_subscribe_set *stmt =
-							(SlonikStmt_subscribe_set *)hdr;
+					(SlonikStmt_subscribe_set *) hdr;
 
 					if (slonik_subscribe_set(stmt) < 0)
 						errors++;
@@ -1397,7 +1402,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNSUBSCRIBE_SET:
 				{
 					SlonikStmt_unsubscribe_set *stmt =
-							(SlonikStmt_unsubscribe_set *)hdr;
+					(SlonikStmt_unsubscribe_set *) hdr;
 
 					if (slonik_unsubscribe_set(stmt) < 0)
 						errors++;
@@ -1407,7 +1412,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_LOCK_SET:
 				{
 					SlonikStmt_lock_set *stmt =
-							(SlonikStmt_lock_set *)hdr;
+					(SlonikStmt_lock_set *) hdr;
 
 					if (slonik_lock_set(stmt) < 0)
 						errors++;
@@ -1417,7 +1422,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UNLOCK_SET:
 				{
 					SlonikStmt_unlock_set *stmt =
-							(SlonikStmt_unlock_set *)hdr;
+					(SlonikStmt_unlock_set *) hdr;
 
 					if (slonik_unlock_set(stmt) < 0)
 						errors++;
@@ -1427,7 +1432,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_MOVE_SET:
 				{
 					SlonikStmt_move_set *stmt =
-							(SlonikStmt_move_set *)hdr;
+					(SlonikStmt_move_set *) hdr;
 
 					if (slonik_move_set(stmt) < 0)
 						errors++;
@@ -1437,7 +1442,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_DDL_SCRIPT:
 				{
 					SlonikStmt_ddl_script *stmt =
-							(SlonikStmt_ddl_script *)hdr;
+					(SlonikStmt_ddl_script *) hdr;
 
 					if (slonik_ddl_script(stmt) < 0)
 						errors++;
@@ -1447,7 +1452,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_UPDATE_FUNCTIONS:
 				{
 					SlonikStmt_update_functions *stmt =
-							(SlonikStmt_update_functions *)hdr;
+					(SlonikStmt_update_functions *) hdr;
 
 					if (slonik_update_functions(stmt) < 0)
 						errors++;
@@ -1457,7 +1462,7 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 			case STMT_WAIT_EVENT:
 				{
 					SlonikStmt_wait_event *stmt =
-							(SlonikStmt_wait_event *)hdr;
+					(SlonikStmt_wait_event *) hdr;
 
 					if (slonik_wait_event(stmt) < 0)
 						errors++;
@@ -1486,13 +1491,13 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 
 
 static void
-script_commit_all(SlonikStmt *stmt, SlonikScript *script)
+script_commit_all(SlonikStmt * stmt, SlonikScript * script)
 {
-	SlonikAdmInfo  *adminfo;
-	int				error = 0;
+	SlonikAdmInfo *adminfo;
+	int			error = 0;
 
-	for (adminfo = script->adminfo_list; 
-			adminfo; adminfo = adminfo->next)
+	for (adminfo = script->adminfo_list;
+		 adminfo; adminfo = adminfo->next)
 	{
 		if (adminfo->dbconn != NULL && adminfo->have_xact)
 		{
@@ -1508,12 +1513,12 @@ script_commit_all(SlonikStmt *stmt, SlonikScript *script)
 
 
 static void
-script_rollback_all(SlonikStmt *stmt, SlonikScript *script)
+script_rollback_all(SlonikStmt * stmt, SlonikScript * script)
 {
-	SlonikAdmInfo  *adminfo;
+	SlonikAdmInfo *adminfo;
 
-	for (adminfo = script->adminfo_list; 
-			adminfo; adminfo = adminfo->next)
+	for (adminfo = script->adminfo_list;
+		 adminfo; adminfo = adminfo->next)
 	{
 		if (adminfo->dbconn != NULL && adminfo->have_xact)
 			db_rollback_xact(stmt, adminfo);
@@ -1522,10 +1527,10 @@ script_rollback_all(SlonikStmt *stmt, SlonikScript *script)
 
 
 static void
-script_disconnect_all(SlonikScript *script)
+script_disconnect_all(SlonikScript * script)
 {
-	SlonikAdmInfo  *adminfo;
-	SlonikStmt		eofstmt;
+	SlonikAdmInfo *adminfo;
+	SlonikStmt	eofstmt;
 
 	eofstmt.stmt_type = STMT_ERROR;
 	eofstmt.stmt_filename = script->filename;
@@ -1533,8 +1538,8 @@ script_disconnect_all(SlonikScript *script)
 	eofstmt.script = script;
 	eofstmt.next = NULL;
 
-	for (adminfo = script->adminfo_list; 
-			adminfo; adminfo = adminfo->next)
+	for (adminfo = script->adminfo_list;
+		 adminfo; adminfo = adminfo->next)
 	{
 		db_disconnect(&eofstmt, adminfo);
 	}
@@ -1542,12 +1547,12 @@ script_disconnect_all(SlonikScript *script)
 
 
 static SlonikAdmInfo *
-get_adminfo(SlonikStmt *stmt, int no_id)
+get_adminfo(SlonikStmt * stmt, int no_id)
 {
-	SlonikAdmInfo  *adminfo;
+	SlonikAdmInfo *adminfo;
 
-	for (adminfo = stmt->script->adminfo_list; 
-			adminfo; adminfo = adminfo->next)
+	for (adminfo = stmt->script->adminfo_list;
+		 adminfo; adminfo = adminfo->next)
 	{
 		if (adminfo->no_id == no_id)
 			return adminfo;
@@ -1558,14 +1563,14 @@ get_adminfo(SlonikStmt *stmt, int no_id)
 
 
 static SlonikAdmInfo *
-get_active_adminfo(SlonikStmt *stmt, int no_id)
+get_active_adminfo(SlonikStmt * stmt, int no_id)
 {
-	SlonikAdmInfo  *adminfo;
+	SlonikAdmInfo *adminfo;
 
 	if ((adminfo = get_adminfo(stmt, no_id)) == NULL)
 	{
 		printf("%s:%d: ERROR: no admin conninfo for node %d\n",
-				stmt->stmt_filename, stmt->stmt_lno, no_id);
+			   stmt->stmt_filename, stmt->stmt_lno, no_id);
 		return NULL;
 	}
 
@@ -1574,8 +1579,8 @@ get_active_adminfo(SlonikStmt *stmt, int no_id)
 		if (db_connect(stmt, adminfo) < 0)
 			return NULL;
 
-		if (db_get_version(stmt, adminfo, 
-				&(adminfo->version_major), &(adminfo->version_minor)) < 0)
+		if (db_get_version(stmt, adminfo,
+				   &(adminfo->version_major), &(adminfo->version_minor)) < 0)
 		{
 			PQfinish(adminfo->dbconn);
 			adminfo->dbconn = NULL;
@@ -1595,11 +1600,11 @@ get_active_adminfo(SlonikStmt *stmt, int no_id)
 
 
 static SlonikAdmInfo *
-get_checked_adminfo(SlonikStmt *stmt, int no_id)
+get_checked_adminfo(SlonikStmt * stmt, int no_id)
 {
-	SlonikAdmInfo  *adminfo;
-	int				db_no_id;
-	int				had_xact;
+	SlonikAdmInfo *adminfo;
+	int			db_no_id;
+	int			had_xact;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return NULL;
@@ -1611,9 +1616,9 @@ get_checked_adminfo(SlonikStmt *stmt, int no_id)
 		if ((db_no_id = db_get_nodeid(stmt, adminfo)) != no_id)
 		{
 			printf("%s:%d: database specified in %s:%d reports no_id %d\n",
-					stmt->stmt_filename, stmt->stmt_lno,
-					adminfo->stmt_filename, adminfo->stmt_lno,
-					db_no_id);
+				   stmt->stmt_filename, stmt->stmt_lno,
+				   adminfo->stmt_filename, adminfo->stmt_lno,
+				   db_no_id);
 			return NULL;
 		}
 		adminfo->nodeid_checked = true;
@@ -1630,17 +1635,17 @@ get_checked_adminfo(SlonikStmt *stmt, int no_id)
 
 
 static int
-load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
+load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 {
-	PGresult	   *res;
-	SlonDString		query;
-	va_list			ap;
-	int				rc;
-	char			fnamebuf[1024];
-	char			buf[4096];
-	char			rex1[256];
-	char			rex2[256];
-	int				sed_pipe[2];
+	PGresult   *res;
+	SlonDString query;
+	va_list		ap;
+	int			rc;
+	char		fnamebuf[1024];
+	char		buf    [4096];
+	char		rex1   [256];
+	char		rex2   [256];
+	int			sed_pipe[2];
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
@@ -1678,7 +1683,7 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 	}
 
 	dstring_init(&query);
-	while((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
+	while ((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
 		dstring_nappend(&query, buf, rc);
 
 	if (rc < 0)
@@ -1695,17 +1700,16 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 	if (rc != 0)
 	{
 		printf("%s:%d: command sed terminated with exitcode %d\n",
-				stmt->stmt_filename, stmt->stmt_lno, rc);
+			   stmt->stmt_filename, stmt->stmt_lno, rc);
 		dstring_free(&query);
 		return -1;
 	}
 
 	/*
-	 * This little hoop is required because for some
-	 * reason, 7.3 returns total garbage as a result
-	 * code for such a big pile of commands. So we just
-	 * fire that off, and then do one extra select and
-	 * see if we have an aborted transaction.
+	 * This little hoop is required because for some reason, 7.3 returns total
+	 * garbage as a result code for such a big pile of commands. So we just
+	 * fire that off, and then do one extra select and see if we have an
+	 * aborted transaction.
 	 */
 	res = PQexec(adminfo->dbconn, dstring_data(&query));
 	dstring_free(&query);
@@ -1715,10 +1719,10 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 	if (rc != PGRES_TUPLES_OK)
 	{
 		printf("%s:%d: loading of file %s: %s %s%s",
-				stmt->stmt_filename, stmt->stmt_lno,
-				fnamebuf, PQresStatus(rc),
-				PQresultErrorMessage(res),
-				PQerrorMessage(adminfo->dbconn));
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   fnamebuf, PQresStatus(rc),
+			   PQresultErrorMessage(res),
+			   PQerrorMessage(adminfo->dbconn));
 		PQclear(res);
 		return -1;
 	}
@@ -1729,36 +1733,36 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 
 
 static int
-load_slony_base(SlonikStmt *stmt, int no_id)
+load_slony_base(SlonikStmt * stmt, int no_id)
 {
-	SlonikAdmInfo  *adminfo;
-	PGconn		   *dbconn;
-	SlonDString		query;
-	int				rc;
+	SlonikAdmInfo *adminfo;
+	PGconn	   *dbconn;
+	SlonDString query;
+	int			rc;
 
-	int				use_major = 0;
-	int				use_minor = 0;
+	int			use_major = 0;
+	int			use_minor = 0;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
-	
+
 	dbconn = adminfo->dbconn;
 
 	rc = db_check_namespace(stmt, adminfo, stmt->script->clustername);
 	if (rc > 0)
 	{
 		printf("%s:%d: Error: namespace \"_%s\" "
-				"already exists in database of node %d\n",
-				stmt->stmt_filename, stmt->stmt_lno,
-				stmt->script->clustername, no_id);
+			   "already exists in database of node %d\n",
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   stmt->script->clustername, no_id);
 		return -1;
 	}
 	if (rc < 0)
 	{
 		printf("%s:%d: Error: cannot determine "
-				" if namespace \"_%s\" exists in node %d\n",
-				stmt->stmt_filename, stmt->stmt_lno,
-				stmt->script->clustername, no_id);
+			   " if namespace \"_%s\" exists in node %d\n",
+			   stmt->stmt_filename, stmt->stmt_lno,
+			   stmt->script->clustername, no_id);
 		return -1;
 	}
 
@@ -1787,9 +1791,9 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 
 				default:
 					printf("%s:%d: unsupported PostgreSQL "
-							"version %d.%d\n",
-							stmt->stmt_filename, stmt->stmt_lno,
-							adminfo->version_major, adminfo->version_minor);
+						   "version %d.%d\n",
+						   stmt->stmt_filename, stmt->stmt_lno,
+						   adminfo->version_major, adminfo->version_minor);
 			}
 			break;
 		case 8:
@@ -1804,25 +1808,25 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 				default:
 					use_minor = 4;
 					printf("%s:%d: Possible unsupported PostgreSQL "
-							"version %d.%d\n",
-							stmt->stmt_filename, stmt->stmt_lno,
-							adminfo->version_major, adminfo->version_minor);
+						   "version %d.%d\n",
+						   stmt->stmt_filename, stmt->stmt_lno,
+						   adminfo->version_major, adminfo->version_minor);
 					break;
 			}
 			break;
 
 		default:
 			printf("%s:%d: unsupported PostgreSQL "
-					"version %d.%d\n",
-					stmt->stmt_filename, stmt->stmt_lno,
-					adminfo->version_major, adminfo->version_minor);
+				   "version %d.%d\n",
+				   stmt->stmt_filename, stmt->stmt_lno,
+				   adminfo->version_major, adminfo->version_minor);
 	}
 
 	dstring_init(&query);
 
 	/* Create the cluster namespace */
 	slon_mkquery(&query,
-			"create schema \"_%s\";", stmt->script->clustername);
+				 "create schema \"_%s\";", stmt->script->clustername);
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		dstring_free(&query);
@@ -1832,15 +1836,15 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-			"%s/xxid.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
+					  "%s/xxid.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_base.sql", PGSHARE) < 0 
+						   "%s/slony1_base.sql", PGSHARE) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_base.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
+			   "%s/slony1_base.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.sql", PGSHARE) < 0 
+						   "%s/slony1_funcs.sql", PGSHARE) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
+			 "%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -1855,17 +1859,17 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 
 
 static int
-load_slony_functions(SlonikStmt *stmt, int no_id)
+load_slony_functions(SlonikStmt * stmt, int no_id)
 {
-	SlonikAdmInfo  *adminfo;
-	PGconn		   *dbconn;
+	SlonikAdmInfo *adminfo;
+	PGconn	   *dbconn;
 
-	int				use_major = 0;
-	int				use_minor = 0;
+	int			use_major = 0;
+	int			use_minor = 0;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
-	
+
 	dbconn = adminfo->dbconn;
 
 	switch (adminfo->version_major)
@@ -1886,25 +1890,25 @@ load_slony_functions(SlonikStmt *stmt, int no_id)
 
 				default:
 					printf("%s:%d: unsupported PostgreSQL "
-							"version %d.%d\n",
-							stmt->stmt_filename, stmt->stmt_lno,
-							adminfo->version_major, adminfo->version_minor);
+						   "version %d.%d\n",
+						   stmt->stmt_filename, stmt->stmt_lno,
+						   adminfo->version_major, adminfo->version_minor);
 			}
 			break;
 
 		default:
 			printf("%s:%d: unsupported PostgreSQL "
-					"version %d.%d\n",
-					stmt->stmt_filename, stmt->stmt_lno,
-					adminfo->version_major, adminfo->version_minor);
+				   "version %d.%d\n",
+				   stmt->stmt_filename, stmt->stmt_lno,
+				   adminfo->version_major, adminfo->version_minor);
 	}
 
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.sql", PGSHARE) < 0 
+						"%s/slony1_funcs.sql", PGSHARE) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
+			 "%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		return -1;
@@ -1922,21 +1926,21 @@ load_slony_functions(SlonikStmt *stmt, int no_id)
 
 
 int
-slonik_restart_node(SlonikStmt_restart_node *stmt)
+slonik_restart_node(SlonikStmt_restart_node * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo1 == NULL)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"notify \"_%s_Restart\"; ",
-			stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "notify \"_%s_Restart\"; ",
+				 stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -1946,58 +1950,58 @@ slonik_restart_node(SlonikStmt_restart_node *stmt)
 }
 
 int
-slonik_repair_config(SlonikStmt_repair_config *stmt)
+slonik_repair_config(SlonikStmt_repair_config * stmt)
 {
-        SlonikAdmInfo  *adminfo1;        
-        SlonDString             query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-        adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
-        if (adminfo1 == NULL)
-                return -1;
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
 
-        dstring_init(&query);
-                                 
-        slon_mkquery(&query,
-                        "select \"_%s\".updateReloid(%d, %d); ",
-                        stmt->hdr.script->clustername,
-			stmt->set_id, stmt->only_on_node);
-        if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
-        {
-                dstring_free(&query);
-                return -1;
-        }
+	dstring_init(&query);
 
-        dstring_free(&query);
-        return 0;
+	slon_mkquery(&query,
+				 "select \"_%s\".updateReloid(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->only_on_node);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
 }
 
 
 int
-slonik_init_cluster(SlonikStmt_init_cluster *stmt)
+slonik_init_cluster(SlonikStmt_init_cluster * stmt)
 {
-	SlonikAdmInfo  *adminfo;
-	SlonDString		query;
-	int				rc;
+	SlonikAdmInfo *adminfo;
+	SlonDString query;
+	int			rc;
 
-	adminfo = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	adminfo = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo) < 0)
 		return -1;
 
-	rc = load_slony_base((SlonikStmt *)stmt, stmt->no_id);
+	rc = load_slony_base((SlonikStmt *) stmt, stmt->no_id);
 	if (rc < 0)
 		return -1;
 
 	/* call initializeLocalNode() and enableNode() */
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select \"_%s\".initializeLocalNode(%d, '%q'); "
-			"select \"_%s\".enableNode(%d); ",
-			stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
-			stmt->hdr.script->clustername, stmt->no_id);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
+				 "select \"_%s\".initializeLocalNode(%d, '%q'); "
+				 "select \"_%s\".enableNode(%d); ",
+				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				 stmt->hdr.script->clustername, stmt->no_id);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo, &query) < 0)
 		rc = -1;
 	else
 		rc = 0;
@@ -2008,42 +2012,42 @@ slonik_init_cluster(SlonikStmt_init_cluster *stmt)
 
 
 int
-slonik_store_node(SlonikStmt_store_node *stmt)
+slonik_store_node(SlonikStmt_store_node * stmt)
 {
-	SlonikAdmInfo  *adminfo1 = NULL;
-	SlonikAdmInfo  *adminfo2;
-	SlonDString		query;
-	int				rc;
-	PGresult	   *res;
-	int				ntuples;
-	int				tupno;
+	SlonikAdmInfo *adminfo1 = NULL;
+	SlonikAdmInfo *adminfo2;
+	SlonDString query;
+	int			rc;
+	PGresult   *res;
+	int			ntuples;
+	int			tupno;
 
 	if (!stmt->no_spool)
 	{
-		adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 		if (adminfo1 == NULL)
 			return -1;
 	}
 
-	adminfo2 = get_checked_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	adminfo2 = get_checked_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo2 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo2) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo2) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	if (!stmt->no_spool)
 	{
-		if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		{
 			dstring_free(&query);
 			return -1;
 		}
 
 		/* Load the slony base tables */
-		rc = load_slony_base((SlonikStmt *)stmt, stmt->no_id);
+		rc = load_slony_base((SlonikStmt *) stmt, stmt->no_id);
 		if (rc < 0)
 		{
 			dstring_free(&query);
@@ -2052,11 +2056,11 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 
 		/* call initializeLocalNode() and enableNode_int() */
 		slon_mkquery(&query,
-				"select \"_%s\".initializeLocalNode(%d, '%q'); "
-				"select \"_%s\".enableNode_int(%d); ",
+					 "select \"_%s\".initializeLocalNode(%d, '%q'); "
+					 "select \"_%s\".enableNode_int(%d); ",
 				stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
-				stmt->hdr.script->clustername, stmt->no_id);
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+					 stmt->hdr.script->clustername, stmt->no_id);
+		if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 		{
 			dstring_free(&query);
 			return -1;
@@ -2066,10 +2070,10 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		 * Duplicate the content of sl_node
 		 */
 		slon_mkquery(&query,
-				"select no_id, no_active, no_comment, no_spool "
-				"from \"_%s\".sl_node; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select no_id, no_active, no_comment, no_spool "
+					 "from \"_%s\".sl_node; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2078,22 +2082,22 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *no_id = PQgetvalue(res, tupno, 0);
-			char   *no_active = PQgetvalue(res, tupno, 1);
-			char   *no_comment = PQgetvalue(res, tupno, 2);
-			char   *no_spool = PQgetvalue(res, tupno, 3);
+			char	   *no_id = PQgetvalue(res, tupno, 0);
+			char	   *no_active = PQgetvalue(res, tupno, 1);
+			char	   *no_comment = PQgetvalue(res, tupno, 2);
+			char	   *no_spool = PQgetvalue(res, tupno, 3);
 
 			slon_mkquery(&query,
-					"select \"_%s\".storeNode_int(%s, '%q', '%s'); ",
-					stmt->hdr.script->clustername, no_id, no_comment, no_spool);
-			if (*no_active == 't') 
+						 "select \"_%s\".storeNode_int(%s, '%q', '%s'); ",
+				 stmt->hdr.script->clustername, no_id, no_comment, no_spool);
+			if (*no_active == 't')
 			{
 				slon_appendquery(&query,
-					"select \"_%s\".enableNode_int(%s); ",
-					stmt->hdr.script->clustername, no_id);
+								 "select \"_%s\".enableNode_int(%s); ",
+								 stmt->hdr.script->clustername, no_id);
 			}
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2106,10 +2110,10 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		 * Duplicate the content of sl_path
 		 */
 		slon_mkquery(&query,
-				"select pa_server, pa_client, pa_conninfo, pa_connretry "
-				"from \"_%s\".sl_path; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select pa_server, pa_client, pa_conninfo, pa_connretry "
+					 "from \"_%s\".sl_path; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2118,17 +2122,17 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *pa_server = PQgetvalue(res, tupno, 0);
-			char   *pa_client = PQgetvalue(res, tupno, 1);
-			char   *pa_conninfo = PQgetvalue(res, tupno, 2);
-			char   *pa_connretry = PQgetvalue(res, tupno, 3);
+			char	   *pa_server = PQgetvalue(res, tupno, 0);
+			char	   *pa_client = PQgetvalue(res, tupno, 1);
+			char	   *pa_conninfo = PQgetvalue(res, tupno, 2);
+			char	   *pa_connretry = PQgetvalue(res, tupno, 3);
 
 			slon_mkquery(&query,
-					"select \"_%s\".storePath_int(%s, %s, '%q', %s); ",
-					stmt->hdr.script->clustername, 
-					pa_server, pa_client, pa_conninfo, pa_connretry);
+						 "select \"_%s\".storePath_int(%s, %s, '%q', %s); ",
+						 stmt->hdr.script->clustername,
+						 pa_server, pa_client, pa_conninfo, pa_connretry);
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2141,10 +2145,10 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		 * Duplicate the content of sl_listen
 		 */
 		slon_mkquery(&query,
-				"select li_origin, li_provider, li_receiver "
-				"from \"_%s\".sl_listen; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select li_origin, li_provider, li_receiver "
+					 "from \"_%s\".sl_listen; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2153,16 +2157,16 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *li_origin = PQgetvalue(res, tupno, 0);
-			char   *li_provider = PQgetvalue(res, tupno, 1);
-			char   *li_receiver = PQgetvalue(res, tupno, 2);
+			char	   *li_origin = PQgetvalue(res, tupno, 0);
+			char	   *li_provider = PQgetvalue(res, tupno, 1);
+			char	   *li_receiver = PQgetvalue(res, tupno, 2);
 
 			slon_mkquery(&query,
-					"select \"_%s\".storeListen_int(%s, %s, %s); ",
-					stmt->hdr.script->clustername, 
-					li_origin, li_provider, li_receiver);
+						 "select \"_%s\".storeListen_int(%s, %s, %s); ",
+						 stmt->hdr.script->clustername,
+						 li_origin, li_provider, li_receiver);
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2175,10 +2179,10 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		 * Duplicate the content of sl_set
 		 */
 		slon_mkquery(&query,
-				"select set_id, set_origin, set_comment "
-				"from \"_%s\".sl_set; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select set_id, set_origin, set_comment "
+					 "from \"_%s\".sl_set; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2187,16 +2191,16 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *set_id = PQgetvalue(res, tupno, 0);
-			char   *set_origin = PQgetvalue(res, tupno, 1);
-			char   *set_comment = PQgetvalue(res, tupno, 2);
+			char	   *set_id = PQgetvalue(res, tupno, 0);
+			char	   *set_origin = PQgetvalue(res, tupno, 1);
+			char	   *set_comment = PQgetvalue(res, tupno, 2);
 
 			slon_mkquery(&query,
-					"select \"_%s\".storeSet_int(%s, %s, '%q'); ",
-					stmt->hdr.script->clustername, 
-					set_id, set_origin, set_comment);
+						 "select \"_%s\".storeSet_int(%s, %s, '%q'); ",
+						 stmt->hdr.script->clustername,
+						 set_id, set_origin, set_comment);
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2209,11 +2213,11 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		 * Duplicate the content of sl_subscribe
 		 */
 		slon_mkquery(&query,
-				"select sub_set, sub_provider, sub_receiver, "
-				"	sub_forward, sub_active "
-				"from \"_%s\".sl_subscribe; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select sub_set, sub_provider, sub_receiver, "
+					 "	sub_forward, sub_active "
+					 "from \"_%s\".sl_subscribe; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2222,25 +2226,25 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *sub_set = PQgetvalue(res, tupno, 0);
-			char   *sub_provider = PQgetvalue(res, tupno, 1);
-			char   *sub_receiver = PQgetvalue(res, tupno, 2);
-			char   *sub_forward = PQgetvalue(res, tupno, 3);
-			char   *sub_active = PQgetvalue(res, tupno, 4);
+			char	   *sub_set = PQgetvalue(res, tupno, 0);
+			char	   *sub_provider = PQgetvalue(res, tupno, 1);
+			char	   *sub_receiver = PQgetvalue(res, tupno, 2);
+			char	   *sub_forward = PQgetvalue(res, tupno, 3);
+			char	   *sub_active = PQgetvalue(res, tupno, 4);
 
 			slon_mkquery(&query,
-					"select \"_%s\".subscribeSet_int(%s, %s, %s, '%q'); ",
-					stmt->hdr.script->clustername, 
-					sub_set, sub_provider, sub_receiver, sub_forward);
+					   "select \"_%s\".subscribeSet_int(%s, %s, %s, '%q'); ",
+						 stmt->hdr.script->clustername,
+						 sub_set, sub_provider, sub_receiver, sub_forward);
 			if (*sub_active == 't')
 			{
 				slon_appendquery(&query,
-					"select \"_%s\".enableSubscription_int(%s, %s, %s); ",
-					stmt->hdr.script->clustername, 
-					sub_set, sub_provider, sub_receiver);
+					   "select \"_%s\".enableSubscription_int(%s, %s, %s); ",
+								 stmt->hdr.script->clustername,
+								 sub_set, sub_provider, sub_receiver);
 			}
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2250,15 +2254,15 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		PQclear(res);
 
 		/*
-		 * Set our own event seqno in case the node id was used before
-		 * and our confirms.
+		 * Set our own event seqno in case the node id was used before and our
+		 * confirms.
 		 */
 		slon_mkquery(&query,
-				"select ev_origin, max(ev_seqno) "
-				"    from \"_%s\".sl_event "
-				"    group by ev_origin; ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select ev_origin, max(ev_seqno) "
+					 "    from \"_%s\".sl_event "
+					 "    group by ev_origin; ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2267,28 +2271,28 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		ntuples = PQntuples(res);
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			char   *ev_origin_c = PQgetvalue(res, tupno, 0);
-			char   *ev_seqno_c = PQgetvalue(res, tupno, 1);
+			char	   *ev_origin_c = PQgetvalue(res, tupno, 0);
+			char	   *ev_seqno_c = PQgetvalue(res, tupno, 1);
 
 			if (stmt->no_id == (int)strtol(ev_origin_c, NULL, 10))
 			{
 				slon_mkquery(&query,
-					"select \"pg_catalog\".setval('\"_%s\".sl_event_seq', "
-					"'%s'::int8 + 1); ",
-					stmt->hdr.script->clustername, ev_seqno_c);
+					  "select \"pg_catalog\".setval('\"_%s\".sl_event_seq', "
+							 "'%s'::int8 + 1); ",
+							 stmt->hdr.script->clustername, ev_seqno_c);
 			}
 			else
 			{
 				slon_appendquery(&query,
-					"insert into \"_%s\".sl_confirm "
-					"    (con_origin, con_received, con_seqno, con_timestamp) "
-					"    values "
-					"    (%s, %d, '%s', CURRENT_TIMESTAMP); ",
-					stmt->hdr.script->clustername, 
-					ev_origin_c, stmt->no_id, ev_seqno_c);
+								 "insert into \"_%s\".sl_confirm "
+				  "    (con_origin, con_received, con_seqno, con_timestamp) "
+								 "    values "
+								 "    (%s, %d, '%s', CURRENT_TIMESTAMP); ",
+								 stmt->hdr.script->clustername,
+								 ev_origin_c, stmt->no_id, ev_seqno_c);
 			}
 
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2298,15 +2302,14 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		PQclear(res);
 
 		/*
-		 * If available, bump the rowid sequence to the last known
-		 * value.
+		 * If available, bump the rowid sequence to the last known value.
 		 */
 		slon_mkquery(&query,
-				"select max(seql_last_value) from \"_%s\".sl_seqlog "
-				"	where seql_seqid = 0 "
-				"	and seql_origin = %d; ",
-				stmt->hdr.script->clustername, stmt->no_id);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+					 "select max(seql_last_value) from \"_%s\".sl_seqlog "
+					 "	where seql_seqid = 0 "
+					 "	and seql_origin = %d; ",
+					 stmt->hdr.script->clustername, stmt->no_id);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -2315,9 +2318,9 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		if (PQntuples(res) == 1 && !PQgetisnull(res, 0, 0))
 		{
 			slon_mkquery(&query,
-					"select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
-					stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			  "select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
+					   stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 			{
 				dstring_free(&query);
 				PQclear(res);
@@ -2329,12 +2332,12 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
-			"select \"_%s\".storeNode(%d, '%q', '%s'); "
-			"select \"_%s\".enableNode(%d); ",
-			stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
-			(stmt->no_spool != 0) ? "t" : "f",
-			stmt->hdr.script->clustername, stmt->no_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo2, &query) < 0)
+				 "select \"_%s\".storeNode(%d, '%q', '%s'); "
+				 "select \"_%s\".enableNode(%d); ",
+				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				 (stmt->no_spool != 0) ? "t" : "f",
+				 stmt->hdr.script->clustername, stmt->no_id);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo2, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -2344,14 +2347,14 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 	if (stmt->no_spool)
 	{
 		slon_mkquery(&query,
-				"insert into \"_%s\".sl_confirm select "
-				"    ev_origin, %d, max(ev_seqno), CURRENT_TIMESTAMP "
-				"    from \"_%s\".sl_event group by 1, 2, 4; ",
-				stmt->hdr.script->clustername,
-				stmt->no_id,
-				stmt->hdr.script->clustername);
+					 "insert into \"_%s\".sl_confirm select "
+					 "    ev_origin, %d, max(ev_seqno), CURRENT_TIMESTAMP "
+					 "    from \"_%s\".sl_event group by 1, 2, 4; ",
+					 stmt->hdr.script->clustername,
+					 stmt->no_id,
+					 stmt->hdr.script->clustername);
 
-		if (db_exec_command((SlonikStmt *)stmt, adminfo2, &query) < 0)
+		if (db_exec_command((SlonikStmt *) stmt, adminfo2, &query) < 0)
 		{
 			dstring_free(&query);
 			return -1;
@@ -2364,25 +2367,25 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 
 
 int
-slonik_drop_node(SlonikStmt_drop_node *stmt)
+slonik_drop_node(SlonikStmt_drop_node * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".dropNode(%d); ",
-			stmt->hdr.script->clustername,
-			stmt->no_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".dropNode(%d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -2393,67 +2396,72 @@ slonik_drop_node(SlonikStmt_drop_node *stmt)
 }
 
 
-typedef struct {
-	int				no_id;
-	SlonikAdmInfo  *adminfo;
-	int				has_slon;
-	int				slon_pid;
-	int				num_sets;
-} failnode_node;
+typedef struct
+{
+	int			no_id;
+	SlonikAdmInfo *adminfo;
+	int			has_slon;
+	int			slon_pid;
+	int			num_sets;
+}	failnode_node;
 
 
-typedef struct {
-	int				set_id;
-	int				num_subscribers;
+typedef struct
+{
+	int			set_id;
+	int			num_subscribers;
 	failnode_node **subscribers;
-	failnode_node  *max_node;
-	int64			max_seqno;
-} failnode_set;
+	failnode_node *max_node;
+	int64		max_seqno;
+}	failnode_set;
 
 
 int
-slonik_failed_node(SlonikStmt_failed_node *stmt)
+slonik_failed_node(SlonikStmt_failed_node * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	int				num_nodes;
-	int				num_sets;
-	int				n, i, j, k;
+	int			num_nodes;
+	int			num_sets;
+	int			n	  ,
+				i		 ,
+				j		 ,
+				k;
 
-	failnode_node  *nodeinfo;
-	failnode_set   *setinfo;
-	char		   *configbuf;
+	failnode_node *nodeinfo;
+	failnode_set *setinfo;
+	char	   *configbuf;
 
-	PGresult	   *res1;
-	PGresult	   *res2;
-	PGresult	   *res3;
-	int64			max_seqno_total = 0;
-	failnode_node  *max_node_total = NULL;
+	PGresult   *res1;
+	PGresult   *res2;
+	PGresult   *res3;
+	int64		max_seqno_total = 0;
+	failnode_node *max_node_total = NULL;
 
-	int				rc = 0;
+	int			rc = 0;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->backup_node);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->backup_node);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	/*
-	 * On the backup node select a list of all active nodes except
-	 * for the failed node.
+	 * On the backup node select a list of all active nodes except for the
+	 * failed node.
 	 */
 	slon_mkquery(&query,
-			"select no_id from \"_%s\".sl_node "
-			"    where no_id <> %d "
-			"    and no_active "
-			"    order by no_id; ",
-			stmt->hdr.script->clustername,
-			stmt->no_id);
-	res1 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+				 "select no_id from \"_%s\".sl_node "
+				 "    where no_id <> %d "
+				 "    and no_active "
+				 "    order by no_id; ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id);
+	res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res1 == NULL)
 	{
 		dstring_free(&query);
@@ -2462,22 +2470,22 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	num_nodes = PQntuples(res1);
 
 	/*
-	 * Get a list of all sets that are subscribed more than once
-	 * directly from the origin
+	 * Get a list of all sets that are subscribed more than once directly from
+	 * the origin
 	 */
 	slon_mkquery(&query,
-			"select S.set_id, count(S.set_id) "
-			"    from \"_%s\".sl_set S, \"_%s\".sl_subscribe SUB "
-			"    where S.set_id = SUB.sub_set "
-			"    and S.set_origin = %d "
-			"    and SUB.sub_provider = %d "
-			"    and SUB.sub_active "
-			"    group by set_id "
-			"    having count(S.set_id) > 1",
-			stmt->hdr.script->clustername,
-			stmt->hdr.script->clustername,
-			stmt->no_id, stmt->no_id);
-	res2 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+				 "select S.set_id, count(S.set_id) "
+				 "    from \"_%s\".sl_set S, \"_%s\".sl_subscribe SUB "
+				 "    where S.set_id = SUB.sub_set "
+				 "    and S.set_origin = %d "
+				 "    and SUB.sub_provider = %d "
+				 "    and SUB.sub_active "
+				 "    group by set_id "
+				 "    having count(S.set_id) > 1",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->no_id, stmt->no_id);
+	res2 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res2 == NULL)
 	{
 		PQclear(res1);
@@ -2490,34 +2498,34 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	 * Allocate and initialize memory to hold some config info
 	 */
 	configbuf = malloc(
-				MAXALIGN(sizeof(failnode_node) * num_nodes) +
-				MAXALIGN(sizeof(failnode_set) * num_sets) +
-				sizeof(failnode_node *) * num_nodes * num_sets);
-	memset(configbuf, 0, 
-				MAXALIGN(sizeof(failnode_node) * num_nodes) +
-				MAXALIGN(sizeof(failnode_set) * num_sets) +
-				sizeof(failnode_node *) * num_nodes * num_sets);
+					   MAXALIGN(sizeof(failnode_node) * num_nodes) +
+					   MAXALIGN(sizeof(failnode_set) * num_sets) +
+					   sizeof(failnode_node *) * num_nodes * num_sets);
+	memset(configbuf, 0,
+		   MAXALIGN(sizeof(failnode_node) * num_nodes) +
+		   MAXALIGN(sizeof(failnode_set) * num_sets) +
+		   sizeof(failnode_node *) * num_nodes * num_sets);
 
-	nodeinfo = (failnode_node *)configbuf;
-	setinfo  = (failnode_set *)(configbuf + 
-				MAXALIGN(sizeof(failnode_node) * num_nodes));
+	nodeinfo = (failnode_node *) configbuf;
+	setinfo = (failnode_set *) (configbuf +
+								MAXALIGN(sizeof(failnode_node) * num_nodes));
 	for (i = 0; i < num_sets; i++)
 	{
 		setinfo[i].subscribers = (failnode_node **)
-				(configbuf + MAXALIGN(sizeof(failnode_node) * num_nodes) +
-							MAXALIGN(sizeof(failnode_set) * num_sets) +
-							sizeof(failnode_node *) * num_nodes * i);
+			(configbuf + MAXALIGN(sizeof(failnode_node) * num_nodes) +
+			 MAXALIGN(sizeof(failnode_set) * num_sets) +
+			 sizeof(failnode_node *) * num_nodes * i);
 	}
 
 	/*
-	 * Connect to all these nodes and determine if there is a node
-	 * daemon running on that node.
+	 * Connect to all these nodes and determine if there is a node daemon
+	 * running on that node.
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
 		nodeinfo[i].no_id = (int)strtol(PQgetvalue(res1, i, 0), NULL, 10);
-		nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *)stmt, 
-												nodeinfo[i].no_id);
+		nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
+												 nodeinfo[i].no_id);
 		if (nodeinfo[i].adminfo == NULL)
 		{
 			PQclear(res1);
@@ -2525,14 +2533,14 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 			dstring_free(&query);
 			return -1;
 		}
-		
+
 		slon_mkquery(&query,
-				"lock table \"_%s\".sl_config_lock; "
-				"select listenerpid from \"pg_catalog\".pg_listener "
-				"    where relname = '_%s_Restart'; ",
-				stmt->hdr.script->clustername,
-				stmt->hdr.script->clustername);
-		res3 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+					 "lock table \"_%s\".sl_config_lock; "
+					 "select listenerpid from \"pg_catalog\".pg_listener "
+					 "    where relname = '_%s_Restart'; ",
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername);
+		res3 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 		if (res3 == NULL)
 		{
 			PQclear(res1);
@@ -2556,24 +2564,23 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	PQclear(res1);
 
 	/*
-	 * For every set we're interested in lookup the direct
-	 * subscriber nodes.
+	 * For every set we're interested in lookup the direct subscriber nodes.
 	 */
 	for (i = 0; i < num_sets; i++)
 	{
 		setinfo[i].set_id = (int)strtol(PQgetvalue(res2, i, 0), NULL, 10);
 
 		slon_mkquery(&query,
-				"select sub_receiver "
-				"    from \"_%s\".sl_subscribe "
-				"    where sub_set = %d "
-				"    and sub_provider = %d "
-				"    and sub_active and sub_forward; ",
-				stmt->hdr.script->clustername,
-				setinfo[i].set_id,
-				stmt->no_id);
-				
-		res3 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+					 "select sub_receiver "
+					 "    from \"_%s\".sl_subscribe "
+					 "    where sub_set = %d "
+					 "    and sub_provider = %d "
+					 "    and sub_active and sub_forward; ",
+					 stmt->hdr.script->clustername,
+					 setinfo[i].set_id,
+					 stmt->no_id);
+
+		res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res3 == NULL)
 		{
 			free(configbuf);
@@ -2584,14 +2591,14 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 
 		for (j = 0; j < n; j++)
 		{
-			int sub_receiver = (int)strtol(PQgetvalue(res3, j, 0), NULL, 10);
+			int			sub_receiver = (int)strtol(PQgetvalue(res3, j, 0), NULL, 10);
 
 			for (k = 0; k < num_nodes; k++)
 			{
 				if (nodeinfo[k].no_id == sub_receiver)
 				{
 					setinfo[i].subscribers[setinfo[i].num_subscribers] =
-							&nodeinfo[k];
+						&nodeinfo[k];
 					setinfo[i].num_subscribers++;
 					break;
 				}
@@ -2599,7 +2606,7 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 			if (k == num_nodes)
 			{
 				printf("node %d not found - inconsistent configuration\n",
-						sub_receiver);
+					   sub_receiver);
 				free(configbuf);
 				PQclear(res3);
 				PQclear(res2);
@@ -2612,14 +2619,14 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	PQclear(res2);
 
 	/*
-	 * Execute the failedNode() procedure, first on the backup
-	 * node, then on all other nodes.
+	 * Execute the failedNode() procedure, first on the backup node, then on
+	 * all other nodes.
 	 */
 	slon_mkquery(&query,
-			"select \"_%s\".failedNode(%d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->no_id, stmt->backup_node);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".failedNode(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id, stmt->backup_node);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		free(configbuf);
 		dstring_free(&query);
@@ -2630,7 +2637,7 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 		if (nodeinfo[i].no_id == stmt->backup_node)
 			continue;
 
-		if (db_exec_command((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query) < 0)
+		if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 		{
 			free(configbuf);
 			dstring_free(&query);
@@ -2643,7 +2650,7 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
-		if (db_commit_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 		{
 			free(configbuf);
 			dstring_free(&query);
@@ -2652,8 +2659,8 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	}
 
 	/*
-	 * Wait until all slon replication engines that where running
-	 * have restarted.
+	 * Wait until all slon replication engines that where running have
+	 * restarted.
 	 */
 	n = 0;
 	while (n < num_nodes)
@@ -2669,12 +2676,12 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 			}
 
 			slon_mkquery(&query,
-					"select listenerpid from \"pg_catalog\".pg_listener "
-					"    where relname = '_%s_Restart' "
-					"    and listenerpid <> %d; ",
-					stmt->hdr.script->clustername,
-					nodeinfo[i].slon_pid);
-			res1 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+						 "select listenerpid from \"pg_catalog\".pg_listener "
+						 "    where relname = '_%s_Restart' "
+						 "    and listenerpid <> %d; ",
+						 stmt->hdr.script->clustername,
+						 nodeinfo[i].slon_pid);
+			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res1 == NULL)
 			{
 				free(configbuf);
@@ -2686,9 +2693,9 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 				nodeinfo[i].has_slon = false;
 				n++;
 			}
-			
+
 			PQclear(res1);
-			if (db_rollback_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+			if (db_rollback_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 			{
 				free(configbuf);
 				dstring_free(&query);
@@ -2698,23 +2705,23 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	}
 
 	/*
-	 * Determine the absolutely last event sequence known from the
-	 * failed node.
+	 * Determine the absolutely last event sequence known from the failed
+	 * node.
 	 */
 	slon_mkquery(&query,
-			"select max(ev_seqno) "
-			"    from \"_%s\".sl_event "
-			"    where ev_origin = %d; ",
-			stmt->hdr.script->clustername,
-			stmt->no_id);
+				 "select max(ev_seqno) "
+				 "    from \"_%s\".sl_event "
+				 "    where ev_origin = %d; ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id);
 	for (i = 0; i < num_nodes; i++)
 	{
-		res1 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+		res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 		if (res1 != NULL)
 		{
 			if (PQntuples(res1) == 1)
 			{
-				int64	max_seqno;
+				int64		max_seqno;
 
 				slon_scanint64(PQgetvalue(res1, 0, 0), &max_seqno);
 				if (max_seqno > max_seqno_total)
@@ -2730,27 +2737,27 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	}
 
 	/*
-	 * For every set determine the direct subscriber with the highest
-	 * applied sync, preferring the backup node.
+	 * For every set determine the direct subscriber with the highest applied
+	 * sync, preferring the backup node.
 	 */
 	for (i = 0; i < num_sets; i++)
 	{
 		setinfo[i].max_node = NULL;
-		setinfo[i].max_seqno  = 0;
+		setinfo[i].max_seqno = 0;
 
 		slon_mkquery(&query,
-				"select ssy_seqno "
-				"    from \"_%s\".sl_setsync "
-				"    where ssy_setid = %d; ",
-				stmt->hdr.script->clustername,
-				setinfo[i].set_id);
+					 "select ssy_seqno "
+					 "    from \"_%s\".sl_setsync "
+					 "    where ssy_setid = %d; ",
+					 stmt->hdr.script->clustername,
+					 setinfo[i].set_id);
 
 		for (j = 0; j < setinfo[i].num_subscribers; j++)
 		{
-			int64	ssy_seqno;
+			int64		ssy_seqno;
 
-			res1 = db_exec_select((SlonikStmt *)stmt, 
-					setinfo[i].subscribers[j]->adminfo, &query);
+			res1 = db_exec_select((SlonikStmt *) stmt,
+								  setinfo[i].subscribers[j]->adminfo, &query);
 			if (res1 == NULL)
 			{
 				free(configbuf);
@@ -2784,7 +2791,7 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 			else
 			{
 				printf("can't get setsync status for set %d from node %d\n",
-						setinfo[i].set_id, setinfo[i].subscribers[j]->no_id);
+					   setinfo[i].set_id, setinfo[i].subscribers[j]->no_id);
 				rc = -1;
 			}
 
@@ -2793,18 +2800,18 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	}
 
 	/*
-	 * Now switch the backup node to receive all sets from those
-	 * highest nodes.
+	 * Now switch the backup node to receive all sets from those highest
+	 * nodes.
 	 */
 	for (i = 0; i < num_sets; i++)
 	{
-		int				use_node;
-		SlonikAdmInfo  *use_adminfo;
+		int			use_node;
+		SlonikAdmInfo *use_adminfo;
 
 		if (setinfo[i].max_node == NULL)
 		{
-			printf("no setsync status for set %d found at all\n", 
-					setinfo[i].set_id);
+			printf("no setsync status for set %d found at all\n",
+				   setinfo[i].set_id);
 			rc = -1;
 			use_node = stmt->backup_node;
 			use_adminfo = adminfo1;
@@ -2812,9 +2819,9 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 		else
 		{
 			printf("IMPORTANT: Last known SYNC for set %d = "
-					INT64_FORMAT "\n",
-					setinfo[i].set_id,
-					setinfo[i].max_seqno);
+				   INT64_FORMAT "\n",
+				   setinfo[i].set_id,
+				   setinfo[i].max_seqno);
 			use_node = setinfo[i].max_node->no_id;
 			use_adminfo = setinfo[i].max_node->adminfo;
 
@@ -2824,45 +2831,44 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 		if (use_node != stmt->backup_node)
 		{
 			slon_mkquery(&query,
-					"select \"_%s\".storeListen(%d,%d,%d); "
-					"select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
-					stmt->hdr.script->clustername,
-					stmt->no_id, use_node, stmt->backup_node,
-					stmt->hdr.script->clustername,
-					setinfo[i].set_id, use_node, stmt->backup_node);
-			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+						 "select \"_%s\".storeListen(%d,%d,%d); "
+						 "select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
+						 stmt->hdr.script->clustername,
+						 stmt->no_id, use_node, stmt->backup_node,
+						 stmt->hdr.script->clustername,
+						 setinfo[i].set_id, use_node, stmt->backup_node);
+			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 				rc = -1;
 		}
 	}
 
 	/*
-	 * Commit the transaction on the backup node to activate
-	 * those changes.
+	 * Commit the transaction on the backup node to activate those changes.
 	 */
-	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		rc = -1;
 
 	/*
-	 * Now execute all FAILED_NODE events on the node that
-	 * had the highest of all events alltogether.
+	 * Now execute all FAILED_NODE events on the node that had the highest of
+	 * all events alltogether.
 	 */
 	if (max_node_total != NULL)
 	{
 		for (i = 0; i < num_sets; i++)
 		{
-			char			ev_seqno_c[64];
-			char			ev_seqfake_c[64];
+			char		ev_seqno_c[64];
+			char		ev_seqfake_c[64];
 
 			sprintf(ev_seqno_c, INT64_FORMAT, setinfo[i].max_seqno);
 			sprintf(ev_seqfake_c, INT64_FORMAT, ++max_seqno_total);
 
 			slon_mkquery(&query,
-					"select \"_%s\".failedNode2(%d,%d,%d,'%s','%s'); ",
-					stmt->hdr.script->clustername,
-					stmt->no_id, stmt->backup_node,
-					setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);
-			if (db_exec_command((SlonikStmt *)stmt, 
-						max_node_total->adminfo, &query) < 0)
+						 "select \"_%s\".failedNode2(%d,%d,%d,'%s','%s'); ",
+						 stmt->hdr.script->clustername,
+						 stmt->no_id, stmt->backup_node,
+						 setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);
+			if (db_exec_command((SlonikStmt *) stmt,
+								max_node_total->adminfo, &query) < 0)
 				rc = -1;
 		}
 	}
@@ -2872,7 +2878,7 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
-		if (db_commit_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 			rc = -1;
 	}
 
@@ -2883,49 +2889,49 @@ slonik_failed_node(SlonikStmt_failed_node *stmt)
 
 
 int
-slonik_uninstall_node(SlonikStmt_uninstall_node *stmt)
+slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".uninstallNode(); ",
-			stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".uninstallNode(); ",
+				 stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
 	}
-	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
 		dstring_free(&query);
 		return -1;
 	}
 
 	slon_mkquery(&query,
-			"drop schema \"_%s\" cascade; ",
-			stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "drop schema \"_%s\" cascade; ",
+				 stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
 	}
-	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
 		dstring_free(&query);
 		return -1;
 	}
 
-	db_disconnect((SlonikStmt *)stmt, adminfo1);
+	db_disconnect((SlonikStmt *) stmt, adminfo1);
 
 	dstring_free(&query);
 	return 0;
@@ -2933,56 +2939,26 @@ slonik_uninstall_node(SlonikStmt_uninstall_node *stmt)
 
 
 int
-slonik_store_path(SlonikStmt_store_path *stmt)
+slonik_store_path(SlonikStmt_store_path * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->pa_client);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->pa_client);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".storePath(%d, %d, '%q', %d); ",
-			stmt->hdr.script->clustername,
-			stmt->pa_server, stmt->pa_client, 
-			stmt->pa_conninfo, stmt->pa_connretry);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-
-	dstring_free(&query);
-	return 0;
-}
-
-
-int
-slonik_drop_path(SlonikStmt_drop_path *stmt)
-{
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
-	if (adminfo1 == NULL)
-		return -1;
-
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
-		return -1;
-
-	dstring_init(&query);
-
-	slon_mkquery(&query,
-			"select \"_%s\".dropPath(%d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->pa_server, stmt->pa_client);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".storePath(%d, %d, '%q', %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->pa_server, stmt->pa_client,
+				 stmt->pa_conninfo, stmt->pa_connretry);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -2994,26 +2970,25 @@ slonik_drop_path(SlonikStmt_drop_path *stmt)
 
 
 int
-slonik_store_listen(SlonikStmt_store_listen *stmt)
+slonik_drop_path(SlonikStmt_drop_path * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->li_receiver);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".storeListen(%d, %d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->li_origin, stmt->li_provider, 
-			stmt->li_receiver);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".dropPath(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->pa_server, stmt->pa_client);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3025,26 +3000,26 @@ slonik_store_listen(SlonikStmt_store_listen *stmt)
 
 
 int
-slonik_drop_listen(SlonikStmt_drop_listen *stmt)
+slonik_store_listen(SlonikStmt_store_listen * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->li_receiver);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->li_receiver);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".dropListen(%d, %d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->li_origin, stmt->li_provider, 
-			stmt->li_receiver);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".storeListen(%d, %d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->li_origin, stmt->li_provider,
+				 stmt->li_receiver);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3056,25 +3031,26 @@ slonik_drop_listen(SlonikStmt_drop_listen *stmt)
 
 
 int
-slonik_create_set(SlonikStmt_create_set *stmt)
+slonik_drop_listen(SlonikStmt_drop_listen * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->li_receiver);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".storeSet(%d, '%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id, stmt->set_comment);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".dropListen(%d, %d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->li_origin, stmt->li_provider,
+				 stmt->li_receiver);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3086,25 +3062,25 @@ slonik_create_set(SlonikStmt_create_set *stmt)
 
 
 int
-slonik_drop_set(SlonikStmt_drop_set *stmt)
+slonik_create_set(SlonikStmt_create_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".dropSet(%d); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".storeSet(%d, '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->set_comment);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3116,25 +3092,25 @@ slonik_drop_set(SlonikStmt_drop_set *stmt)
 
 
 int
-slonik_merge_set(SlonikStmt_merge_set *stmt)
+slonik_drop_set(SlonikStmt_drop_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".mergeSet(%d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id, stmt->add_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".dropSet(%d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3146,56 +3122,85 @@ slonik_merge_set(SlonikStmt_merge_set *stmt)
 
 
 int
-slonik_set_add_table(SlonikStmt_set_add_table *stmt)
+slonik_merge_set(SlonikStmt_merge_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	char		   *idxname;
-	PGresult	   *res;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+				 "select \"_%s\".mergeSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->add_id);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_set_add_table(SlonikStmt_set_add_table * stmt)
+{
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+	char	   *idxname;
+	PGresult   *res;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	/*
-	 * Determine the attkind of the table.
-	 * The stored procedure for KEY = SERIAL might actually
-	 * add a bigserial column to the table.
+	 * Determine the attkind of the table. The stored procedure for KEY =
+	 * SERIAL might actually add a bigserial column to the table.
 	 */
 	if (stmt->use_serial)
 	{
 		slon_mkquery(&query,
-				"select \"_%s\".determineIdxnameSerial('%q'), "
-				"       \"_%s\".determineAttKindSerial('%q'); ",
-				stmt->hdr.script->clustername, stmt->tab_fqname,
-				stmt->hdr.script->clustername, stmt->tab_fqname);
-				
+					 "select \"_%s\".determineIdxnameSerial('%q'), "
+					 "       \"_%s\".determineAttKindSerial('%q'); ",
+					 stmt->hdr.script->clustername, stmt->tab_fqname,
+					 stmt->hdr.script->clustername, stmt->tab_fqname);
+
 	}
 	else
 	{
 		if (stmt->use_key == NULL)
 		{
 			slon_mkquery(&query,
-					"select \"_%s\".determineIdxnameUnique('%q', NULL); ",
-					stmt->hdr.script->clustername, stmt->tab_fqname);
-					
+					   "select \"_%s\".determineIdxnameUnique('%q', NULL); ",
+						 stmt->hdr.script->clustername, stmt->tab_fqname);
+
 		}
 		else
 		{
 			slon_mkquery(&query,
-					"select \"_%s\".determineIdxnameUnique('%q', '%q'); ",
-					stmt->hdr.script->clustername,
-					stmt->tab_fqname, stmt->use_key);
+					   "select \"_%s\".determineIdxnameUnique('%q', '%q'); ",
+						 stmt->hdr.script->clustername,
+						 stmt->tab_fqname, stmt->use_key);
 		}
 	}
 
 	db_notice_silent = true;
-	res = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+	res = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	db_notice_silent = false;
 	if (res == NULL)
 	{
@@ -3205,11 +3210,11 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 	idxname = PQgetvalue(res, 0, 0);
 
 	slon_mkquery(&query,
-			"select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id, stmt->tab_id,
-			stmt->tab_fqname, idxname, stmt->tab_comment);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->tab_id,
+				 stmt->tab_fqname, idxname, stmt->tab_comment);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		PQclear(res);
 		dstring_free(&query);
@@ -3223,16 +3228,16 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 
 
 int
-slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt)
+slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -3242,11 +3247,11 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt)
 	 */
 	db_notice_silent = true;
 	slon_mkquery(&query,
-			"select \"_%s\".setAddSequence(%d, %d, '%q', '%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id, stmt->seq_id, stmt->seq_fqname,
-			stmt->seq_comment);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".setAddSequence(%d, %d, '%q', '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->seq_id, stmt->seq_fqname,
+				 stmt->seq_comment);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -3259,25 +3264,26 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt)
 
 
 int
-slonik_set_drop_table(SlonikStmt_set_drop_table *stmt)
+slonik_set_drop_table(SlonikStmt_set_drop_table * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
-	
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
-	
+
 	dstring_init(&query);
-	
+
 	slon_mkquery(&query,
 				 "select \"_%s\".setDropTable(%d); ",
-				 stmt->hdr.script->clustername,		     
+				 stmt->hdr.script->clustername,
 				 stmt->tab_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0) {
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
 		dstring_free(&query);
 		return -1;
 	}
@@ -3287,16 +3293,16 @@ slonik_set_drop_table(SlonikStmt_set_drop_table *stmt)
 
 
 int
-slonik_set_drop_sequence(SlonikStmt_set_drop_sequence *stmt)
+slonik_set_drop_sequence(SlonikStmt_set_drop_sequence * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -3306,10 +3312,10 @@ slonik_set_drop_sequence(SlonikStmt_set_drop_sequence *stmt)
 	 */
 	db_notice_silent = true;
 	slon_mkquery(&query,
-		     "select \"_%s\".setDropSequence(%d); ",
-		     stmt->hdr.script->clustername,		     
-		     stmt->seq_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".setDropSequence(%d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->seq_id);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -3322,25 +3328,26 @@ slonik_set_drop_sequence(SlonikStmt_set_drop_sequence *stmt)
 
 
 int
-slonik_set_move_table(SlonikStmt_set_move_table *stmt)
+slonik_set_move_table(SlonikStmt_set_move_table * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
-	
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
-	
+
 	dstring_init(&query);
-	
+
 	slon_mkquery(&query,
 				 "select \"_%s\".setMoveTable(%d, %d); ",
-				 stmt->hdr.script->clustername,		     
+				 stmt->hdr.script->clustername,
 				 stmt->tab_id, stmt->new_set_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0) {
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
 		dstring_free(&query);
 		return -1;
 	}
@@ -3350,25 +3357,26 @@ slonik_set_move_table(SlonikStmt_set_move_table *stmt)
 
 
 int
-slonik_set_move_sequence(SlonikStmt_set_move_sequence *stmt)
+slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
-	
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
-	
+
 	dstring_init(&query);
-	
+
 	slon_mkquery(&query,
 				 "select \"_%s\".setMoveSequence(%d, %d); ",
-				 stmt->hdr.script->clustername,		     
+				 stmt->hdr.script->clustername,
 				 stmt->seq_id, stmt->new_set_id);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0) {
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
 		dstring_free(&query);
 		return -1;
 	}
@@ -3378,16 +3386,16 @@ slonik_set_move_sequence(SlonikStmt_set_move_sequence *stmt)
 
 
 int
-slonik_table_add_key(SlonikStmt_table_add_key *stmt)
+slonik_table_add_key(SlonikStmt_table_add_key * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -3397,10 +3405,10 @@ slonik_table_add_key(SlonikStmt_table_add_key *stmt)
 	 */
 	db_notice_silent = true;
 	slon_mkquery(&query,
-			"select \"_%s\".tableAddKey('%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->tab_fqname);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".tableAddKey('%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->tab_fqname);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -3414,25 +3422,25 @@ slonik_table_add_key(SlonikStmt_table_add_key *stmt)
 
 
 int
-slonik_store_trigger(SlonikStmt_store_trigger *stmt)
+slonik_store_trigger(SlonikStmt_store_trigger * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".storeTrigger(%d, '%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->trig_tabid, stmt->trig_tgname);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".storeTrigger(%d, '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->trig_tabid, stmt->trig_tgname);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3444,25 +3452,25 @@ slonik_store_trigger(SlonikStmt_store_trigger *stmt)
 
 
 int
-slonik_drop_trigger(SlonikStmt_drop_trigger *stmt)
+slonik_drop_trigger(SlonikStmt_drop_trigger * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".dropTrigger(%d, '%q'); ",
-			stmt->hdr.script->clustername,
-			stmt->trig_tabid, stmt->trig_tgname);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".dropTrigger(%d, '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->trig_tabid, stmt->trig_tgname);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3474,27 +3482,27 @@ slonik_drop_trigger(SlonikStmt_drop_trigger *stmt)
 
 
 int
-slonik_subscribe_set(SlonikStmt_subscribe_set *stmt)
+slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->sub_provider);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_provider);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".subscribeSet(%d, %d, %d, '%s'); ",
-			stmt->hdr.script->clustername,
-			stmt->sub_setid, stmt->sub_provider, 
-			stmt->sub_receiver,
-			(stmt->sub_forward) ? "t" : "f");
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".subscribeSet(%d, %d, %d, '%s'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->sub_setid, stmt->sub_provider,
+				 stmt->sub_receiver,
+				 (stmt->sub_forward) ? "t" : "f");
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3506,25 +3514,25 @@ slonik_subscribe_set(SlonikStmt_subscribe_set *stmt)
 
 
 int
-slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt)
+slonik_unsubscribe_set(SlonikStmt_unsubscribe_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->sub_receiver);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_receiver);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".unsubscribeSet(%d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->sub_setid, stmt->sub_receiver);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".unsubscribeSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->sub_setid, stmt->sub_receiver);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3536,22 +3544,22 @@ slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt)
 
 
 int
-slonik_lock_set(SlonikStmt_lock_set *stmt)
+slonik_lock_set(SlonikStmt_lock_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	PGresult	   *res1;
-	PGresult	   *res2;
-	char		   *maxxid_lock;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+	PGresult   *res1;
+	PGresult   *res2;
+	char	   *maxxid_lock;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
 	if (adminfo1->have_xact)
 	{
 		printf("%s:%d: cannot lock set - admin connection already in transaction\n",
-				stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+			   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
 		return -1;
 	}
 
@@ -3560,12 +3568,12 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 	 */
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select \"_%s\".lockSet(%d); "
-			"select \"_%s\".getMaxXid(); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id,
-			stmt->hdr.script->clustername);
-	res1 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+				 "select \"_%s\".lockSet(%d); "
+				 "select \"_%s\".getMaxXid(); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id,
+				 stmt->hdr.script->clustername);
+	res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res1 == NULL)
 	{
 		dstring_free(&query);
@@ -3574,10 +3582,9 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 	maxxid_lock = PQgetvalue(res1, 0, 0);
 
 	/*
-	 * Now we need to commit this already and wait until
-	 * xmin is >= that xmax
+	 * Now we need to commit this already and wait until xmin is >= that xmax
 	 */
-	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
 		dstring_free(&query);
 		PQclear(res1);
@@ -3585,12 +3592,12 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 	}
 
 	slon_mkquery(&query,
-			"select \"_%s\".getMinXid() >= '%s'; ",
-			stmt->hdr.script->clustername, maxxid_lock);
-			
+				 "select \"_%s\".getMinXid() >= '%s'; ",
+				 stmt->hdr.script->clustername, maxxid_lock);
+
 	while (true)
 	{
-		res2 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+		res2 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res2 == NULL)
 		{
 			PQclear(res1);
@@ -3602,7 +3609,7 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 			break;
 
 		PQclear(res2);
-		if (db_rollback_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		if (db_rollback_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		{
 			dstring_free(&query);
 			PQclear(res1);
@@ -3620,25 +3627,25 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 
 
 int
-slonik_unlock_set(SlonikStmt_unlock_set *stmt)
+slonik_unlock_set(SlonikStmt_unlock_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".unlockSet(%d); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".unlockSet(%d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3650,25 +3657,25 @@ slonik_unlock_set(SlonikStmt_unlock_set *stmt)
 
 
 int
-slonik_move_set(SlonikStmt_move_set *stmt)
+slonik_move_set(SlonikStmt_move_set * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->old_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->old_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".moveSet(%d, %d); ",
-			stmt->hdr.script->clustername,
-			stmt->set_id, stmt->new_origin);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				 "select \"_%s\".moveSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->set_id, stmt->new_origin);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3680,22 +3687,22 @@ slonik_move_set(SlonikStmt_move_set *stmt)
 
 
 int
-slonik_ddl_script(SlonikStmt_ddl_script *stmt)
+slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonDString		query;
-	SlonDString		script;
-	int				rc;
-	char			buf[4096];
-	char			rex1[256];
-	char			rex2[256];
-	int				sed_pipe[2];
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+	SlonDString script;
+	int			rc;
+	char		buf    [4096];
+	char		rex1   [256];
+	char		rex2   [256];
+	int			sed_pipe[2];
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
 	sprintf(rex1, "s/@CLUSTERNAME@/%s/g", stmt->hdr.script->clustername);
@@ -3730,7 +3737,7 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 	}
 
 	dstring_init(&script);
-	while((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
+	while ((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
 		dstring_nappend(&script, buf, rc);
 
 	if (rc < 0)
@@ -3747,18 +3754,18 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 	if (rc != 0)
 	{
 		printf("%s:%d: command sed terminated with exitcode %d\n",
-				stmt->hdr.stmt_filename, stmt->hdr.stmt_lno, rc);
+			   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno, rc);
 		dstring_free(&query);
 		return -1;
 	}
 
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select \"_%s\".ddlScript(%d, '%q', %d); ",
-			stmt->hdr.script->clustername,
-			stmt->ddl_setid, dstring_data(&script), stmt->only_on_node);
+				 "select \"_%s\".ddlScript(%d, '%q', %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->ddl_setid, dstring_data(&script), stmt->only_on_node);
 	dstring_free(&script);
-	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3770,31 +3777,31 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 
 
 int
-slonik_update_functions(SlonikStmt_update_functions *stmt)
+slonik_update_functions(SlonikStmt_update_functions * stmt)
 {
-	SlonikAdmInfo  *adminfo;
-	PGresult	   *res;
-	SlonDString		query;
+	SlonikAdmInfo *adminfo;
+	PGresult   *res;
+	SlonDString query;
 
-	adminfo = get_checked_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	adminfo = get_checked_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo) < 0)
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo) < 0)
 		return -1;
 
 	/*
-	 * Check if the currently loaded schema has the function
-	 * slonyVersion() defined.
+	 * Check if the currently loaded schema has the function slonyVersion()
+	 * defined.
 	 */
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select true from pg_proc P, pg_namespace N "
-			"    where P.proname = 'slonyversion' "
-			"    and P.pronamespace = N.oid "
-			"    and N.nspname = '_%s';",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo, &query);
+				 "select true from pg_proc P, pg_namespace N "
+				 "    where P.proname = 'slonyversion' "
+				 "    and P.pronamespace = N.oid "
+				 "    and N.nspname = '_%s';",
+				 stmt->hdr.script->clustername);
+	res = db_exec_select((SlonikStmt *) stmt, adminfo, &query);
 	if (res == NULL)
 	{
 		dstring_free(&query);
@@ -3803,13 +3810,13 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 	if (PQntuples(res) == 0)
 	{
 		/*
-		 * No - this must be a 1.0.2 or earlier. Generate a query to
-		 * call upgradeSchema() from 1.0.2.
+		 * No - this must be a 1.0.2 or earlier. Generate a query to call
+		 * upgradeSchema() from 1.0.2.
 		 */
 		PQclear(res);
 		slon_mkquery(&query,
-				"select \"_%s\".upgradeSchema('1.0.2'); ",
-				stmt->hdr.script->clustername);
+					 "select \"_%s\".upgradeSchema('1.0.2'); ",
+					 stmt->hdr.script->clustername);
 	}
 	else
 	{
@@ -3819,9 +3826,9 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 		 */
 		PQclear(res);
 		slon_mkquery(&query,
-				"select \"_%s\".slonyVersion(); ",
-				stmt->hdr.script->clustername);
-		res = db_exec_select((SlonikStmt *)stmt, adminfo, &query);
+					 "select \"_%s\".slonyVersion(); ",
+					 stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *) stmt, adminfo, &query);
 		if (res == NULL)
 		{
 			dstring_free(&query);
@@ -3829,23 +3836,23 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 		}
 		if (PQntuples(res) != 1)
 		{
-			 printf("%s:%d: failed to determine current schema version\n",
-						 stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+			printf("%s:%d: failed to determine current schema version\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
 			PQclear(res);
 			dstring_free(&query);
 			return -1;
 		}
 		slon_mkquery(&query,
-				"select \"_%s\".upgradeSchema('%s'); ",
-				 stmt->hdr.script->clustername,
-				 PQgetvalue(res, 0, 0));
+					 "select \"_%s\".upgradeSchema('%s'); ",
+					 stmt->hdr.script->clustername,
+					 PQgetvalue(res, 0, 0));
 		PQclear(res);
 	}
 
 	/*
 	 * Load the new slony1_functions.sql
 	 */
-	if (load_slony_functions((SlonikStmt *)stmt, stmt->no_id) < 0)
+	if (load_slony_functions((SlonikStmt *) stmt, stmt->no_id) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3854,7 +3861,7 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 	/*
 	 * Call the upgradeSchema() function
 	 */
-	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
+	if (db_exec_command((SlonikStmt *) stmt, adminfo, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3864,24 +3871,24 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 	 * Finally restart the node.
 	 */
 
-	return slonik_restart_node((SlonikStmt_restart_node *)stmt);
+	return slonik_restart_node((SlonikStmt_restart_node *) stmt);
 }
 
 
 int
-slonik_wait_event(SlonikStmt_wait_event *stmt)
+slonik_wait_event(SlonikStmt_wait_event * stmt)
 {
-	SlonikAdmInfo  *adminfo1;
-	SlonikAdmInfo  *adminfo;
-	SlonikScript   *script = stmt->hdr.script;
-	SlonDString		query;
-	PGresult	   *res;
-	time_t			timeout;
-	time_t			now;
-	int				all_confirmed = 0;
-	char			seqbuf[64];
+	SlonikAdmInfo *adminfo1;
+	SlonikAdmInfo *adminfo;
+	SlonikScript *script = stmt->hdr.script;
+	SlonDString query;
+	PGresult   *res;
+	time_t		timeout;
+	time_t		now;
+	int			all_confirmed = 0;
+	char		seqbuf [64];
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->wait_on);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->wait_on);
 	if (adminfo1 == NULL)
 		return -1;
 
@@ -3893,19 +3900,19 @@ slonik_wait_event(SlonikStmt_wait_event *stmt)
 	{
 		all_confirmed = 1;
 
-		for (adminfo = script->adminfo_list; 
-				adminfo; adminfo = adminfo->next)
+		for (adminfo = script->adminfo_list;
+			 adminfo; adminfo = adminfo->next)
 		{
 			/*
-			 * If a specific event origin is given, skip all other
-			 * nodes last_event.
+			 * If a specific event origin is given, skip all other nodes
+			 * last_event.
 			 */
 			if (stmt->wait_origin > 0 && stmt->wait_origin != adminfo->no_id)
 				continue;
-			
+
 			/*
-			 * If we have not generated any event on that node, there
-			 * is nothing to wait for.
+			 * If we have not generated any event on that node, there is
+			 * nothing to wait for.
 			 */
 			if (adminfo->last_event < 0)
 				continue;
@@ -3914,38 +3921,38 @@ slonik_wait_event(SlonikStmt_wait_event *stmt)
 			{
 				sprintf(seqbuf, INT64_FORMAT, adminfo->last_event);
 				slon_mkquery(&query,
-						"select no_id, max(con_seqno) "
-						"    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
-						"    where N.no_id <> %d "
-						"    and N.no_active "
-						"    and N.no_id = C.con_received "
-						"    and C.con_origin = %d "
-						"    group by no_id "
-						"    having max(con_seqno) < '%s'; ",
-						stmt->hdr.script->clustername,
-						stmt->hdr.script->clustername,
-						adminfo->no_id, adminfo->no_id,
-						seqbuf);
+							 "select no_id, max(con_seqno) "
+						   "    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
+							 "    where N.no_id <> %d "
+							 "    and N.no_active "
+							 "    and N.no_id = C.con_received "
+							 "    and C.con_origin = %d "
+							 "    group by no_id "
+							 "    having max(con_seqno) < '%s'; ",
+							 stmt->hdr.script->clustername,
+							 stmt->hdr.script->clustername,
+							 adminfo->no_id, adminfo->no_id,
+							 seqbuf);
 			}
 			else
 			{
 				sprintf(seqbuf, INT64_FORMAT, adminfo->last_event);
 				slon_mkquery(&query,
-						"select no_id, max(con_seqno) "
-						"    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
-						"    where N.no_id = %d "
-						"    and N.no_active "
-						"    and N.no_id = C.con_received "
-						"    and C.con_origin = %d "
-						"    group by no_id "
-						"    having max(con_seqno) < '%s'; ",
-						stmt->hdr.script->clustername,
-						stmt->hdr.script->clustername,
-						stmt->wait_confirmed, adminfo->no_id,
-						seqbuf);
+							 "select no_id, max(con_seqno) "
+						   "    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
+							 "    where N.no_id = %d "
+							 "    and N.no_active "
+							 "    and N.no_id = C.con_received "
+							 "    and C.con_origin = %d "
+							 "    group by no_id "
+							 "    having max(con_seqno) < '%s'; ",
+							 stmt->hdr.script->clustername,
+							 stmt->hdr.script->clustername,
+							 stmt->wait_confirmed, adminfo->no_id,
+							 seqbuf);
 			}
 
-			res = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+			res = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 			if (res == NULL)
 			{
 				dstring_free(&query);
@@ -3969,7 +3976,7 @@ slonik_wait_event(SlonikStmt_wait_event *stmt)
 		if (stmt->wait_timeout > 0 && now > timeout)
 		{
 			printf("%s:%d: timeout exceeded while waiting for event confirmation\n",
-					stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
 			dstring_free(&query);
 			return -1;
 		}
@@ -3990,19 +3997,19 @@ slonik_wait_event(SlonikStmt_wait_event *stmt)
  * If errorOK is true, just return "false" for bad input.
  */
 int
-slon_scanint64(char *str, int64 *result)
+slon_scanint64(char *str, int64 * result)
 {
 	char	   *ptr = str;
 	int64		tmp = 0;
 	int			sign = 1;
 
 	/*
-	 * Do our own scan, rather than relying on sscanf which might be
-	 * broken for long long.
+	 * Do our own scan, rather than relying on sscanf which might be broken
+	 * for long long.
 	 */
 
 	/* skip leading spaces */
-	while (*ptr && isspace((unsigned char) *ptr))
+	while (*ptr && isspace((unsigned char)*ptr))
 		ptr++;
 
 	/* handle sign */
@@ -4013,8 +4020,7 @@ slon_scanint64(char *str, int64 *result)
 
 		/*
 		 * Do an explicit check for INT64_MIN.	Ugly though this is, it's
-		 * cleaner than trying to get the loop below to handle it
-		 * portably.
+		 * cleaner than trying to get the loop below to handle it portably.
 		 */
 #ifndef INT64_IS_BUSTED
 		if (strcmp(ptr, "9223372036854775808") == 0)
@@ -4028,11 +4034,11 @@ slon_scanint64(char *str, int64 *result)
 		ptr++;
 
 	/* require at least one digit */
-	if (!isdigit((unsigned char) *ptr))
+	if (!isdigit((unsigned char)*ptr))
 		return false;
 
 	/* process digits */
-	while (*ptr && isdigit((unsigned char) *ptr))
+	while (*ptr && isdigit((unsigned char)*ptr))
 	{
 		int64		newtmp = tmp * 10 + (*ptr++ - '0');
 
@@ -4052,8 +4058,8 @@ slon_scanint64(char *str, int64 *result)
 
 /*
  * Local Variables:
- *  tab-width: 4
- *  c-indent-level: 4
- *  c-basic-offset: 4
+ *	tab-width: 4
+ *	c-indent-level: 4
+ *	c-basic-offset: 4
  * End:
  */

@@ -8,36 +8,35 @@
 
 
 static struct config_generic **conf_variables;
-static int      size_conf_variables;
-static int      num_conf_variables;
+static int	size_conf_variables;
+static int	num_conf_variables;
 
-static int      conf_var_compare(const void *a, const void *b);
-static int      conf_name_compare(const char *namea, const char *nameb);
+static int	conf_var_compare(const void *a, const void *b);
+static int	conf_name_compare(const char *namea, const char *nameb);
 
-bool            set_config_option(const char *name, const char *value);
-void		*get_config_option(const char *name);
+bool		set_config_option(const char *name, const char *value);
+void	   *get_config_option(const char *name);
 
-bool            bool_placeholder;
-double          real_placeholder;
-char           *string_placeholder;
+bool		bool_placeholder;
+double		real_placeholder;
+char	   *string_placeholder;
 
 
 
-void 
+void
 build_conf_variables(void)
 {
-	int             size_vars;
-	int             num_vars = 0;
+	int			size_vars;
+	int			num_vars = 0;
 	struct config_generic **conf_vars;
-	int             i;
+	int			i;
 
 	for (i = 0; ConfigureNamesBool[i].gen.name; i++)
 	{
 		struct config_bool *conf = &ConfigureNamesBool[i];
 
 		/*
-		 * Rather than requiring vartype to be filled in by hand, do
-		 * this:
+		 * Rather than requiring vartype to be filled in by hand, do this:
 		 */
 		conf->gen.vartype = SLON_C_BOOL;
 		num_vars++;
@@ -46,6 +45,7 @@ build_conf_variables(void)
 	for (i = 0; ConfigureNamesInt[i].gen.name; i++)
 	{
 		struct config_int *conf = &ConfigureNamesInt[i];
+
 		conf->gen.vartype = SLON_C_INT;
 		num_vars++;
 	}
@@ -53,6 +53,7 @@ build_conf_variables(void)
 	for (i = 0; ConfigureNamesReal[i].gen.name; i++)
 	{
 		struct config_real *conf = &ConfigureNamesReal[i];
+
 		conf->gen.vartype = SLON_C_REAL;
 		num_vars++;
 	}
@@ -60,13 +61,14 @@ build_conf_variables(void)
 	for (i = 0; ConfigureNamesString[i].gen.name; i++)
 	{
 		struct config_string *conf = &ConfigureNamesString[i];
+
 		conf->gen.vartype = SLON_C_STRING;
 		num_vars++;
 	}
 
 	size_vars = num_vars + num_vars / 4;
 
-	conf_vars = (struct config_generic **) malloc(size_vars * sizeof(struct config_generic *));
+	conf_vars = (struct config_generic **)malloc(size_vars * sizeof(struct config_generic *));
 	if (conf_vars == NULL)
 	{
 		slon_log(FATAL, "malloc failed");
@@ -102,15 +104,15 @@ build_conf_variables(void)
 }
 
 
-static          bool
-add_conf_variable(struct config_generic * var, int elevel)
+static bool
+add_conf_variable(struct config_generic *var, int elevel)
 {
 	if (num_conf_variables + 1 >= size_conf_variables)
 	{
 		/*
 		 * Increase the vector by 25%
 		 */
-		int             size_vars = size_conf_variables + size_conf_variables / 4;
+		int			size_vars = size_conf_variables + size_conf_variables / 4;
 		struct config_generic **conf_vars;
 
 		if (size_vars == 0)
@@ -118,7 +120,8 @@ add_conf_variable(struct config_generic * var, int elevel)
 			size_vars = 100;
 			conf_vars = (struct config_generic **)
 				malloc(size_vars * sizeof(struct config_generic *));
-		} else
+		}
+		else
 		{
 			conf_vars = (struct config_generic **)
 				realloc(conf_variables, size_vars * sizeof(struct config_generic *));
@@ -127,22 +130,22 @@ add_conf_variable(struct config_generic * var, int elevel)
 		if (conf_vars == NULL)
 		{
 			slon_log(elevel, "malloc failed");
-			return false;	/* out of memory */
+			return false;		/* out of memory */
 		}
 		conf_variables = conf_vars;
 		size_conf_variables = size_vars;
 	}
 	conf_variables[num_conf_variables++] = var;
 	qsort((void *)conf_variables, num_conf_variables,
-	      sizeof(struct config_generic *), conf_var_compare);
+		  sizeof(struct config_generic *), conf_var_compare);
 	return true;
 }
 
-void 
+void
 InitializeConfOptions(void)
 {
-	int             i;
-	char           *env;
+	int			i;
+	char	   *env;
 
 	build_conf_variables();
 
@@ -152,36 +155,40 @@ InitializeConfOptions(void)
 
 		switch (gconf->vartype)
 		{
-		case SLON_C_BOOL:
-			{
-				struct config_bool *conf = (struct config_bool *) gconf;
-				*conf->variable = conf->default_val;
-				break;
-			}
-		case SLON_C_INT:
-			{
-				struct config_int *conf = (struct config_int *) gconf;
-				*conf->variable = conf->default_val;
-				break;
-			}
-		case SLON_C_REAL:
-			{
-				struct config_real *conf = (struct config_real *) gconf;
-				*conf->variable = conf->default_val;
-				break;
-			}
-		case SLON_C_STRING:
-			{
-				char           *str;
-				struct config_string *conf = (struct config_string *) gconf;
-				*conf->variable = NULL;
-				if (conf->default_val)
+			case SLON_C_BOOL:
 				{
-					str = strdup(conf->default_val);
-					*conf->variable = str;
+					struct config_bool *conf = (struct config_bool *)gconf;
+
+					*conf->variable = conf->default_val;
+					break;
 				}
-				break;
-			}
+			case SLON_C_INT:
+				{
+					struct config_int *conf = (struct config_int *)gconf;
+
+					*conf->variable = conf->default_val;
+					break;
+				}
+			case SLON_C_REAL:
+				{
+					struct config_real *conf = (struct config_real *)gconf;
+
+					*conf->variable = conf->default_val;
+					break;
+				}
+			case SLON_C_STRING:
+				{
+					char	   *str;
+					struct config_string *conf = (struct config_string *)gconf;
+
+					*conf->variable = NULL;
+					if (conf->default_val)
+					{
+						str = strdup(conf->default_val);
+						*conf->variable = str;
+					}
+					break;
+				}
 		}
 	}
 
@@ -192,10 +199,10 @@ InitializeConfOptions(void)
 	}
 }
 
-static          bool
+static bool
 parse_bool(const char *value, bool * result)
 {
-	size_t          len = strlen(value);
+	size_t		len = strlen(value);
 
 	if (strncasecmp(value, "true", len) == 0)
 	{
@@ -203,49 +210,57 @@ parse_bool(const char *value, bool * result)
 		{
 			*result = true;
 		}
-	} else if (strncasecmp(value, "false", len) == 0)
+	}
+	else if (strncasecmp(value, "false", len) == 0)
 	{
 		if (result)
 		{
 			*result = false;
 		}
-	} else if (strncasecmp(value, "yes", len) == 0)
+	}
+	else if (strncasecmp(value, "yes", len) == 0)
 	{
 		if (result)
 		{
 			*result = true;
 		}
-	} else if (strncasecmp(value, "no", len) == 0)
+	}
+	else if (strncasecmp(value, "no", len) == 0)
 	{
 		if (result)
 		{
 			*result = false;
 		}
-	} else if (strncasecmp(value, "on", len) == 0)
+	}
+	else if (strncasecmp(value, "on", len) == 0)
 	{
 		if (result)
 		{
 			*result = true;
 		}
-	} else if (strncasecmp(value, "off", len) == 0)
+	}
+	else if (strncasecmp(value, "off", len) == 0)
 	{
 		if (result)
 		{
 			*result = false;
 		}
-	} else if (strncasecmp(value, "1", len) == 0)
+	}
+	else if (strncasecmp(value, "1", len) == 0)
 	{
 		if (result)
 		{
 			*result = true;
 		}
-	} else if (strncasecmp(value, "o", len) == 0)
+	}
+	else if (strncasecmp(value, "o", len) == 0)
 	{
 		if (result)
 		{
 			*result = false;
 		}
-	} else
+	}
+	else
 	{
 		return false;
 	}
@@ -254,14 +269,14 @@ parse_bool(const char *value, bool * result)
 
 /*
  * Try to parse value as an integer.  The accepted formats are the usual
- * decimal, octal, or hexadecimal formats.  If the string parses okay, return
+ * decimal, octal, or hexadecimal formats.	If the string parses okay, return
  * true, else false.  If result is not NULL, return the value there.
  */
-static          bool
+static bool
 parse_int(const char *value, int *result)
 {
-	long            val;
-	char           *endptr;
+	long		val;
+	char	   *endptr;
 
 	errno = 0;
 	val = strtol(value, &endptr, 0);
@@ -269,7 +284,7 @@ parse_int(const char *value, int *result)
 	if (endptr == value || *endptr != '\0' || errno == ERANGE
 #ifdef HAVE_LONG_INT_64
 	/* if long > 32 bits, check for overflow of int4 */
-	    || val != (long)((int32) val)
+		|| val != (long)((int32) val)
 #endif
 		)
 		return false;
@@ -283,11 +298,11 @@ parse_int(const char *value, int *result)
  * If the value parsed okay return true, else false.  If result is not NULL,
  * return the semantic value there.
  */
-static          bool
+static bool
 parse_real(const char *value, double *result)
 {
-	double          val;
-	char           *endptr;
+	double		val;
+	char	   *endptr;
 
 	errno = 0;
 	val = strtod(value, &endptr);
@@ -302,15 +317,15 @@ parse_real(const char *value, double *result)
 static struct config_generic *
 find_option(const char *name, int elevel)
 {
-	const char    **key = &name;
+	const char **key = &name;
 	struct config_generic **res;
 
 	res = (struct config_generic **)
 		bsearch((void *)&key,
-			(void *)conf_variables,
-			num_conf_variables,
-			sizeof(struct config_generic *),
-			conf_var_compare);
+				(void *)conf_variables,
+				num_conf_variables,
+				sizeof(struct config_generic *),
+				conf_var_compare);
 	if (res)
 	{
 		return *res;
@@ -324,8 +339,8 @@ find_option(const char *name, int elevel)
 static int
 conf_var_compare(const void *a, const void *b)
 {
-	struct config_generic *confa = *(struct config_generic **) a;
-	struct config_generic *confb = *(struct config_generic **) b;
+	struct config_generic *confa = *(struct config_generic **)a;
+	struct config_generic *confb = *(struct config_generic **)b;
 
 	return conf_name_compare(confa->name, confb->name);
 }
@@ -334,14 +349,14 @@ static int
 conf_name_compare(const char *namea, const char *nameb)
 {
 	/*
-	 * The temptation to use strcasecmp() here must be resisted, because
-	 * the array ordering has to remain stable across setlocale() calls.
-	 * So, build our own with a simple ASCII-only downcasing.
+	 * The temptation to use strcasecmp() here must be resisted, because the
+	 * array ordering has to remain stable across setlocale() calls. So, build
+	 * our own with a simple ASCII-only downcasing.
 	 */
 	while (*namea && *nameb)
 	{
-		char            cha = *namea++;
-		char            chb = *nameb++;
+		char		cha = *namea++;
+		char		chb = *nameb++;
 
 		if (cha >= 'A' && cha <= 'Z')
 			cha += 'a' - 'A';
@@ -351,57 +366,63 @@ conf_name_compare(const char *namea, const char *nameb)
 			return cha - chb;
 	}
 	if (*namea)
-		return 1;	/* a is longer */
+		return 1;				/* a is longer */
 	if (*nameb)
-		return -1;	/* b is longer */
+		return -1;				/* b is longer */
 	return 0;
 }
 
-void *get_config_option(const char *name)
+void *
+get_config_option(const char *name)
 {
 	struct config_generic *record;
-	int	elevel;
+	int			elevel;
 
 	record = find_option(name, elevel);
 	if (record == NULL)
-	{	slon_log(elevel, "unrecognized configuration parameter \"%s\"\n", name);
+	{
+		slon_log(elevel, "unrecognized configuration parameter \"%s\"\n", name);
 		return NULL;
 	}
 	switch (record->vartype)
 	{
 		case SLON_C_BOOL:
-		{
-			struct config_bool *conf = (struct config_bool *) record;
-			return (void *)conf->variable;
-			break;
-		}
+			{
+				struct config_bool *conf = (struct config_bool *)record;
+
+				return (void *)conf->variable;
+				break;
+			}
 		case SLON_C_INT:
-		{
-			struct config_int *conf = (struct config_int *) record;
-			return (void *)conf->variable;
-			break;
-		}
+			{
+				struct config_int *conf = (struct config_int *)record;
+
+				return (void *)conf->variable;
+				break;
+			}
 		case SLON_C_REAL:
-		{
-			struct config_real *conf = (struct config_real *) record;
-			return (void *)conf->variable;
-			break;			
-		}
+			{
+				struct config_real *conf = (struct config_real *)record;
+
+				return (void *)conf->variable;
+				break;
+			}
 		case SLON_C_STRING:
-		{
-			struct config_string *conf = (struct config_string *)record;
-			return (void *)*conf->variable;
-			break;
-		}
+			{
+				struct config_string *conf = (struct config_string *)record;
+
+				return (void *)*conf->variable;
+				break;
+			}
 	}
 	return NULL;
 }
 
-bool 
+bool
 set_config_option(const char *name, const char *value)
 {
 	struct config_generic *record;
-	int             elevel;
+	int			elevel;
 
 	elevel = SLON_WARN;
 
@@ -414,103 +435,109 @@ set_config_option(const char *name, const char *value)
 	}
 	switch (record->vartype)
 	{
-	case SLON_C_BOOL:
-		{
-			struct config_bool *conf = (struct config_bool *) record;
-			bool            newval;
-			if (value)
+		case SLON_C_BOOL:
 			{
-				if (!parse_bool(value, &newval))
-				{
-					slon_log(elevel, "parameter \"%s\" requires a Boolean value\n", name);
-					return false;
-				}
-			} else
-			{
-				slon_log(elevel, "parameter \"%s\"\n", name);
-			}
+				struct config_bool *conf = (struct config_bool *)record;
+				bool		newval;
 
-			*conf->variable = newval;
+				if (value)
+				{
+					if (!parse_bool(value, &newval))
+					{
+						slon_log(elevel, "parameter \"%s\" requires a Boolean value\n", name);
+						return false;
+					}
+				}
+				else
+				{
+					slon_log(elevel, "parameter \"%s\"\n", name);
+				}
 
-			break;
-		}
-	case SLON_C_INT:
-		{
-			struct config_int *conf = (struct config_int *) record;
-			int             newval;
-			if (value)
-			{
-				if (!parse_int(value, &newval))
-				{
-					slon_log(elevel, "parameter \"%s\" requires a integer value\n", name);
-					return false;
-				}
-				if (newval < conf->min || newval > conf->max)
-				{
-					slon_log(elevel, "%d is outside the valid range for parameter \"%s\" (%d .. %d)\n",
-					newval, name, conf->min, conf->max);
-					return false;
-				}
-			} else
-			{
-				slon_log(elevel, "parameter \"%s\"\n", name);
-			}
-			*conf->variable = newval;
-			break;
-		}
-	case SLON_C_REAL:
-		{
-			struct config_real *conf = (struct config_real *) record;
-			double          newval;
+				*conf->variable = newval;
 
-			if (value)
-			{
-				if (!parse_real(value, &newval))
-				{
-					slon_log(elevel, "parameter \"%s\" requires a numeric value\n", name);
-					return false;
-				}
-				if (newval < conf->min || newval > conf->max)
-				{
-					slon_log(elevel, "%g is outside the valid range for parameter \"%s\" (%g .. %g)\n",
-					newval, name, conf->min, conf->max);
-					return false;
-				}
-			} else
-			{
-				slon_log(elevel, "parameter \"%s\"\n", name);
+				break;
 			}
-			*conf->variable = newval;
-			break;
-		}
-	case SLON_C_STRING:
-		{
-			struct config_string *conf = (struct config_string *) record;
-			char           *newval=NULL;
+		case SLON_C_INT:
+			{
+				struct config_int *conf = (struct config_int *)record;
+				int			newval;
 
-			if (value)
-			{
-				newval = strdup(value);
-				if (newval == NULL)
+				if (value)
 				{
-					return false;
+					if (!parse_int(value, &newval))
+					{
+						slon_log(elevel, "parameter \"%s\" requires a integer value\n", name);
+						return false;
+					}
+					if (newval < conf->min || newval > conf->max)
+					{
+						slon_log(elevel, "%d is outside the valid range for parameter \"%s\" (%d .. %d)\n",
+								 newval, name, conf->min, conf->max);
+						return false;
+					}
 				}
-			} else
-			{
-				slon_log(elevel, "parameter \"%s\"\n", name);
-				free(newval);
+				else
+				{
+					slon_log(elevel, "parameter \"%s\"\n", name);
+				}
+				*conf->variable = newval;
+				break;
 			}
-			*conf->variable = newval;
-			break;
-		}
+		case SLON_C_REAL:
+			{
+				struct config_real *conf = (struct config_real *)record;
+				double		newval;
+
+				if (value)
+				{
+					if (!parse_real(value, &newval))
+					{
+						slon_log(elevel, "parameter \"%s\" requires a numeric value\n", name);
+						return false;
+					}
+					if (newval < conf->min || newval > conf->max)
+					{
+						slon_log(elevel, "%g is outside the valid range for parameter \"%s\" (%g .. %g)\n",
+								 newval, name, conf->min, conf->max);
+						return false;
+					}
+				}
+				else
+				{
+					slon_log(elevel, "parameter \"%s\"\n", name);
+				}
+				*conf->variable = newval;
+				break;
+			}
+		case SLON_C_STRING:
+			{
+				struct config_string *conf = (struct config_string *)record;
+				char	   *newval = NULL;
+
+				if (value)
+				{
+					newval = strdup(value);
+					if (newval == NULL)
+					{
+						return false;
+					}
+				}
+				else
+				{
+					slon_log(elevel, "parameter \"%s\"\n", name);
+					free(newval);
+				}
+				*conf->variable = newval;
+				break;
+			}
 	}
 	return true;
 }
 
 /*
  * Local Variables:
- *  tab-width: 4
- *  c-indent-level: 4
- *  c-basic-offset: 4
+ *	tab-width: 4
+ *	c-indent-level: 4
+ *	c-basic-offset: 4
  * End:
  */

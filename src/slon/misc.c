@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.15 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: misc.c,v 1.16 2005-01-12 17:27:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -34,11 +34,11 @@
 #include "slon.h"
 
 
-extern int      slon_log_level;
+extern int	slon_log_level;
 
-extern bool     logpid;
-extern bool     logtimestamp;
-extern char    *log_timestamp_format;
+extern bool logpid;
+extern bool logtimestamp;
+extern char *log_timestamp_format;
 
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -54,82 +54,81 @@ static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define SLON_SYSLOG_LIMIT 128
 #endif
 
-extern int                     Use_syslog;
-extern char       *Syslog_facility;    /* openlog() parameters */
-extern char       *Syslog_ident;
+extern int	Use_syslog;
+extern char *Syslog_facility;	/* openlog() parameters */
+extern char *Syslog_ident;
 
 static void write_syslog(int level, const char *line);
 
 #else
 
 #define Use_syslog 0
-
 #endif   /* HAVE_SYSLOG */
 
 
 void
 slon_log(SlonLogLevel level, char *fmt,...)
 {
-	va_list         ap;
-	static char    *outbuf = NULL;
-	static int      outsize = -1;
-	int             off;
-	char           *level_c = NULL;
+	va_list		ap;
+	static char *outbuf = NULL;
+	static int	outsize = -1;
+	int			off;
+	char	   *level_c = NULL;
 
-	char            time_buf[128];
-	time_t          stamp_time = time(NULL);
+	char		time_buf[128];
+	time_t		stamp_time = time(NULL);
 
 #ifdef HAVE_SYSLOG
-	int		syslog_level = LOG_ERR;
+	int			syslog_level = LOG_ERR;
 #endif
 	if (level > slon_log_level)
 		return;
 
 	switch (level)
 	{
-	case SLON_DEBUG4:
-		level_c = "DEBUG4";
-		break;
-	case SLON_DEBUG3:
-		level_c = "DEBUG3";
-		break;
-	case SLON_DEBUG2:
-		level_c = "DEBUG2";
-		break;
-	case SLON_DEBUG1:
-		level_c = "DEBUG1";
+		case SLON_DEBUG4:
+			level_c = "DEBUG4";
+			break;
+		case SLON_DEBUG3:
+			level_c = "DEBUG3";
+			break;
+		case SLON_DEBUG2:
+			level_c = "DEBUG2";
+			break;
+		case SLON_DEBUG1:
+			level_c = "DEBUG1";
 #ifdef HAVE_SYSLOG
-		syslog_level = LOG_DEBUG;
+			syslog_level = LOG_DEBUG;
 #endif
-		break;
-	case SLON_INFO:
-		level_c = "INFO";
+			break;
+		case SLON_INFO:
+			level_c = "INFO";
 #ifdef HAVE_SYSLOG
-                syslog_level = LOG_INFO;
+			syslog_level = LOG_INFO;
 #endif
-		break;
-	case SLON_CONFIG:
-		level_c = "CONFIG";
-		break;
-	case SLON_WARN:
-		level_c = "WARN";
+			break;
+		case SLON_CONFIG:
+			level_c = "CONFIG";
+			break;
+		case SLON_WARN:
+			level_c = "WARN";
 #ifdef HAVE_SYSLOG
-                syslog_level = LOG_WARNING;
+			syslog_level = LOG_WARNING;
 #endif
-		break;
-	case SLON_ERROR:
-		level_c = "ERROR";
+			break;
+		case SLON_ERROR:
+			level_c = "ERROR";
 #ifdef HAVE_SYSLOG
-                syslog_level = LOG_ERR;
+			syslog_level = LOG_ERR;
 #endif
-		break;
-	case SLON_FATAL:
-		level_c = "FATAL";
+			break;
+		case SLON_FATAL:
+			level_c = "FATAL";
 #ifdef HAVE_SYSLOG
-                syslog_level = LOG_ERR;
+			syslog_level = LOG_ERR;
 #endif
 
-		break;
+			break;
 	}
 
 	va_start(ap, fmt);
@@ -175,7 +174,7 @@ slon_log(SlonLogLevel level, char *fmt,...)
 #ifdef HAVE_SYSLOG
 	if (Use_syslog >= 1)
 	{
-		write_syslog(syslog_level,outbuf);
+		write_syslog(syslog_level, outbuf);
 	}
 #endif
 	fwrite(outbuf, strlen(outbuf), 1, stdout);
@@ -188,20 +187,20 @@ slon_log(SlonLogLevel level, char *fmt,...)
 
 /*
  * scanint8 --- try to parse a string into an int8.
- * 
+ *
  * If errorOK is false, ereport a useful error message if the string is bad. If
  * errorOK is true, just return "false" for bad input.
  */
 int
 slon_scanint64(char *str, int64 * result)
 {
-	char           *ptr = str;
-	int64           tmp = 0;
-	int             sign = 1;
+	char	   *ptr = str;
+	int64		tmp = 0;
+	int			sign = 1;
 
 	/*
-	 * Do our own scan, rather than relying on sscanf which might be
-	 * broken for long long.
+	 * Do our own scan, rather than relying on sscanf which might be broken
+	 * for long long.
 	 */
 
 	/* skip leading spaces */
@@ -215,9 +214,8 @@ slon_scanint64(char *str, int64 * result)
 		sign = -1;
 
 		/*
-		 * Do an explicit check for INT64_MIN.	Ugly though this is,
-		 * it's cleaner than trying to get the loop below to handle
-		 * it portably.
+		 * Do an explicit check for INT64_MIN.	Ugly though this is, it's
+		 * cleaner than trying to get the loop below to handle it portably.
 		 */
 #ifndef INT64_IS_BUSTED
 		if (strcmp(ptr, "9223372036854775808") == 0)
@@ -226,7 +224,8 @@ slon_scanint64(char *str, int64 * result)
 			return true;
 		}
 #endif
-	} else if (*ptr == '+')
+	}
+	else if (*ptr == '+')
 		ptr++;
 
 	/* require at least one digit */
@@ -236,9 +235,9 @@ slon_scanint64(char *str, int64 * result)
 	/* process digits */
 	while (*ptr && isdigit((unsigned char)*ptr))
 	{
-		int64           newtmp = tmp * 10 + (*ptr++ - '0');
+		int64		newtmp = tmp * 10 + (*ptr++ - '0');
 
-		if ((newtmp / 10) != tmp)	/* overflow? */
+		if ((newtmp / 10) != tmp)		/* overflow? */
 			return false;
 		tmp = newtmp;
 	}
@@ -256,102 +255,102 @@ slon_scanint64(char *str, int64 * result)
 static void
 write_syslog(int level, const char *line)
 {
-        static bool openlog_done = false;
-        static unsigned long seq = 0;
-        static int      syslog_fac = LOG_LOCAL0;
+	static bool openlog_done = false;
+	static unsigned long seq = 0;
+	static int	syslog_fac = LOG_LOCAL0;
 
-        int                     len = strlen(line);
+	int			len = strlen(line);
 
-        if (Use_syslog == 0)
-                return;
+	if (Use_syslog == 0)
+		return;
 
-        if (!openlog_done)
-        {
-                if (strcasecmp(Syslog_facility, "LOCAL0") == 0)
-                        syslog_fac = LOG_LOCAL0;
-                if (strcasecmp(Syslog_facility, "LOCAL1") == 0)
-                        syslog_fac = LOG_LOCAL1;
-                if (strcasecmp(Syslog_facility, "LOCAL2") == 0)
-                        syslog_fac = LOG_LOCAL2;
-                if (strcasecmp(Syslog_facility, "LOCAL3") == 0)
-                        syslog_fac = LOG_LOCAL3;
-                if (strcasecmp(Syslog_facility, "LOCAL4") == 0)
-                        syslog_fac = LOG_LOCAL4;
-                if (strcasecmp(Syslog_facility, "LOCAL5") == 0)
-                        syslog_fac = LOG_LOCAL5;
-                if (strcasecmp(Syslog_facility, "LOCAL6") == 0)
-                        syslog_fac = LOG_LOCAL6;
-                if (strcasecmp(Syslog_facility, "LOCAL7") == 0)
-                        syslog_fac = LOG_LOCAL7;
-                openlog(Syslog_ident, LOG_PID | LOG_NDELAY, syslog_fac);
-                openlog_done = true;
-        }
+	if (!openlog_done)
+	{
+		if (strcasecmp(Syslog_facility, "LOCAL0") == 0)
+			syslog_fac = LOG_LOCAL0;
+		if (strcasecmp(Syslog_facility, "LOCAL1") == 0)
+			syslog_fac = LOG_LOCAL1;
+		if (strcasecmp(Syslog_facility, "LOCAL2") == 0)
+			syslog_fac = LOG_LOCAL2;
+		if (strcasecmp(Syslog_facility, "LOCAL3") == 0)
+			syslog_fac = LOG_LOCAL3;
+		if (strcasecmp(Syslog_facility, "LOCAL4") == 0)
+			syslog_fac = LOG_LOCAL4;
+		if (strcasecmp(Syslog_facility, "LOCAL5") == 0)
+			syslog_fac = LOG_LOCAL5;
+		if (strcasecmp(Syslog_facility, "LOCAL6") == 0)
+			syslog_fac = LOG_LOCAL6;
+		if (strcasecmp(Syslog_facility, "LOCAL7") == 0)
+			syslog_fac = LOG_LOCAL7;
+		openlog(Syslog_ident, LOG_PID | LOG_NDELAY, syslog_fac);
+		openlog_done = true;
+	}
 
-        /*
-         * We add a sequence number to each log message to suppress "same"
-         * messages.
-         */
-        seq++;
+	/*
+	 * We add a sequence number to each log message to suppress "same"
+	 * messages.
+	 */
+	seq++;
 
-        /* divide into multiple syslog() calls if message is too long */
-        /* or if the message contains embedded NewLine(s) '\n' */
-        if (len > SLON_SYSLOG_LIMIT || strchr(line, '\n') != NULL)
-        {
-	        int                     chunk_nr = 0;
+	/* divide into multiple syslog() calls if message is too long */
+	/* or if the message contains embedded NewLine(s) '\n' */
+	if (len > SLON_SYSLOG_LIMIT || strchr(line, '\n') != NULL)
+	{
+		int			chunk_nr = 0;
 
-                while (len > 0)
-                {
-                        char            buf[SLON_SYSLOG_LIMIT + 1];
-                        int                     buflen;
-                        int                     i;
+		while (len > 0)
+		{
+			char		buf    [SLON_SYSLOG_LIMIT + 1];
+			int			buflen;
+			int			i;
 
-                        /* if we start at a newline, move ahead one char */
-                        if (line[0] == '\n')
-                        {
-                                line++;
-                                len--;
-                                continue;
-                        }
+			/* if we start at a newline, move ahead one char */
+			if (line[0] == '\n')
+			{
+				line++;
+				len--;
+				continue;
+			}
 
-                        strncpy(buf, line, SLON_SYSLOG_LIMIT);
-                        buf[SLON_SYSLOG_LIMIT] = '\0';
-                        if (strchr(buf, '\n') != NULL)
-                                *strchr(buf, '\n') = '\0';
+			strncpy(buf, line, SLON_SYSLOG_LIMIT);
+			buf[SLON_SYSLOG_LIMIT] = '\0';
+			if (strchr(buf, '\n') != NULL)
+				*strchr(buf, '\n') = '\0';
 
-                        buflen = strlen(buf);
+			buflen = strlen(buf);
 
-                        if (buflen <= 0)
-                                return;
-                        buf[buflen] = '\0';
+			if (buflen <= 0)
+				return;
+			buf[buflen] = '\0';
 
-                        /* already word boundary? */
-                        if (!isspace((unsigned char) line[buflen]) &&
-                                line[buflen] != '\0')
-                        {
-                                /* try to divide at word boundary */
-                                i = buflen - 1;
-                                while (i > 0 && !isspace((unsigned char) buf[i]))
-                                        i--;
+			/* already word boundary? */
+			if (!isspace((unsigned char)line[buflen]) &&
+				line[buflen] != '\0')
+			{
+				/* try to divide at word boundary */
+				i = buflen - 1;
+				while (i > 0 && !isspace((unsigned char)buf[i]))
+					i--;
 
-                                if (i > 0)              /* else couldn't divide word boundary */
-                                {
-                                        buflen = i;
-                                        buf[i] = '\0';
-                                }
-                        }
+				if (i > 0)		/* else couldn't divide word boundary */
+				{
+					buflen = i;
+					buf[i] = '\0';
+				}
+			}
 
-                        chunk_nr++;
+			chunk_nr++;
 
-                        syslog(level, "[%lu-%d] %s", seq, chunk_nr, buf);
-                        line += buflen;
-                        len -= buflen;
-                }
-        }
-        else
-        {
-                /* message short enough */
-                syslog(level, "[%lu] %s", seq, line);
-        }
+			syslog(level, "[%lu-%d] %s", seq, chunk_nr, buf);
+			line += buflen;
+			len -= buflen;
+		}
+	}
+	else
+	{
+		/* message short enough */
+		syslog(level, "[%lu] %s", seq, line);
+	}
 }
-#endif   /* HAVE_SYSLOG */
 
+#endif   /* HAVE_SYSLOG */

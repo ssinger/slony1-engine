@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.27 2004-11-19 23:47:03 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.28 2005-01-12 17:27:09 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -46,26 +46,26 @@ PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 PG_FUNCTION_INFO_V1(_Slony_I_terminateNodeConnections);
 PG_FUNCTION_INFO_V1(_Slony_I_cleanupListener);
 
-Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
+Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
 
-Datum           _Slony_I_setSessionRole(PG_FUNCTION_ARGS);
-Datum           _Slony_I_getSessionRole(PG_FUNCTION_ARGS);
-Datum           _Slony_I_logTrigger(PG_FUNCTION_ARGS);
-Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
-Datum           _Slony_I_lockedSet(PG_FUNCTION_ARGS);
-Datum           _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
-Datum           _Slony_I_cleanupListener(PG_FUNCTION_ARGS);
+Datum		_Slony_I_setSessionRole(PG_FUNCTION_ARGS);
+Datum		_Slony_I_getSessionRole(PG_FUNCTION_ARGS);
+Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
+Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
+Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
+Datum		_Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
+Datum		_Slony_I_cleanupListener(PG_FUNCTION_ARGS);
 
 #ifdef CYGWIN
 extern DLLIMPORT Node *newNodeMacroHolder;
 #endif
 
 #define PLAN_NONE			0
-#define	PLAN_NOTIFY_EVENT	(1 << 0)
-#define	PLAN_INSERT_EVENT	(1 << 1)
-#define	PLAN_INSERT_LOG		(1 << 2)
+#define PLAN_NOTIFY_EVENT	(1 << 0)
+#define PLAN_INSERT_EVENT	(1 << 1)
+#define PLAN_INSERT_LOG		(1 << 2)
 
 #define SLON_ROLE_UNSET		0
 #define SLON_ROLE_NORMAL	1
@@ -79,47 +79,49 @@ extern DLLIMPORT Node *newNodeMacroHolder;
  *	The per-cluster data to hold for functions and triggers.
  * ----
  */
-typedef struct slony_I_cluster_status {
-	NameData		clustername;
-	char		   *clusterident;
-	int32			localNodeId;
-	TransactionId	currentXid;
-	int				session_role;
-	void		   *plan_active_log;
+typedef struct slony_I_cluster_status
+{
+	NameData	clustername;
+	char	   *clusterident;
+	int32		localNodeId;
+	TransactionId currentXid;
+	int			session_role;
+	void	   *plan_active_log;
 
-	int				have_plan;
-	void		   *plan_notify_event;
-	void		   *plan_insert_event;
-	void		   *plan_insert_log_1;
-	void		   *plan_insert_log_2;
-	void		   *plan_record_sequences;
+	int			have_plan;
+	void	   *plan_notify_event;
+	void	   *plan_insert_event;
+	void	   *plan_insert_log_1;
+	void	   *plan_insert_log_2;
+	void	   *plan_record_sequences;
 
-	text		   *cmdtype_I;
-	text		   *cmdtype_U;
-	text		   *cmdtype_D;
+	text	   *cmdtype_I;
+	text	   *cmdtype_U;
+	text	   *cmdtype_D;
 
-	text		   *cmddata_buf;
-	int				cmddata_size;
+	text	   *cmddata_buf;
+	int			cmddata_size;
 
 	struct slony_I_cluster_status *next;
-} Slony_I_ClusterStatus;
+}	Slony_I_ClusterStatus;
 
 
-static Slony_I_ClusterStatus   *clusterStatusList = NULL;
-static Slony_I_ClusterStatus   *getClusterStatus(Name cluster_name,
-												int need_plan_mask);
-static char					   *slon_quote_literal(char *str);
+static Slony_I_ClusterStatus *clusterStatusList = NULL;
+static Slony_I_ClusterStatus *
+getClusterStatus(Name cluster_name,
+				 int need_plan_mask);
+static char *slon_quote_literal(char *str);
 
 
 Datum
 _Slony_I_createEvent(PG_FUNCTION_ARGS)
 {
-	TransactionId	newXid = GetCurrentTransactionId();
+	TransactionId newXid = GetCurrentTransactionId();
 	Slony_I_ClusterStatus *cs;
 	text	   *ev_xip;
 	char	   *ev_type_c;
-	Datum		argv[12];
-	char		nulls[13];
+	Datum		argv  [12];
+	char		nulls  [13];
 	char	   *buf;
 	size_t		buf_size;
 	int			rc;
@@ -136,10 +138,10 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		elog(ERROR, "Slony-I: SPI_connect() failed in createEvent()");
 
 	/*
-	 * Get or create the cluster status information and make sure it
-	 * has the SPI plans that we need here.
+	 * Get or create the cluster status information and make sure it has the
+	 * SPI plans that we need here.
 	 */
-	cs = getClusterStatus(PG_GETARG_NAME(0), 
+	cs = getClusterStatus(PG_GETARG_NAME(0),
 						  PLAN_NOTIFY_EVENT | PLAN_INSERT_EVENT);
 
 	buf_size = 8192;
@@ -160,8 +162,8 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	}
 
 	/*
-	 * Build the comma separated list of transactions in progress
-	 * as Text datum.
+	 * Build the comma separated list of transactions in progress as Text
+	 * datum.
 	 */
 	*(cp = buf) = '\0';
 	for (xcnt = 0; xcnt < SerializableSnapshot->xcnt; xcnt++)
@@ -170,7 +172,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		{
 			buf_size *= 2;
 			buf = repalloc(buf, buf_size);
-			cp = buf+ strlen(buf);
+			cp = buf + strlen(buf);
 		}
 		sprintf(cp, "%s'%u'", (xcnt > 0) ? "," : "",
 				SerializableSnapshot->xip[xcnt]);
@@ -206,22 +208,22 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		elog(ERROR, "Slony-I: SPI_execp() failed for \"INSERT INTO sl_event ...\"");
 
 	/*
-	 * The INSERT plan also contains a SELECT currval('sl_event_seq'),
-	 * use the new sequence number as return value.
+	 * The INSERT plan also contains a SELECT currval('sl_event_seq'), use the
+	 * new sequence number as return value.
 	 */
 	if (SPI_processed != 1)
 		elog(ERROR, "Slony-I: INSERT plan did not return 1 result row");
 	retval = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
-			SPI_tuptable->tupdesc, 1, &isnull));
+										 SPI_tuptable->tupdesc, 1, &isnull));
 
 	/*
-	 * For SYNC and ENABLE_SUBSCRIPTION events, we also
-	 * remember all current sequence values.
+	 * For SYNC and ENABLE_SUBSCRIPTION events, we also remember all current
+	 * sequence values.
 	 */
 	if (PG_NARGS() > 1 && !PG_ARGISNULL(1))
 	{
 		ev_type_c = DatumGetPointer(DirectFunctionCall1(
-				textout, PG_GETARG_DATUM(1)));
+											   textout, PG_GETARG_DATUM(1)));
 		if (strcmp(ev_type_c, "SYNC") == 0 ||
 			strcmp(ev_type_c, "ENABLE_SUBSCRIPTION") == 0)
 		{
@@ -238,17 +240,17 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 
 /*
  * _Slony_I_getLocalNodeId -
- *    
- *    SQL callable wrapper for calling getLocalNodeId() in order
- *    to get the current setting of sequence sl_local_node_id with
- *    configuration check.
+ *
+ *	  SQL callable wrapper for calling getLocalNodeId() in order
+ *	  to get the current setting of sequence sl_local_node_id with
+ *	  configuration check.
  *
  */
 Datum
 _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	int		rc;
+	int			rc;
 
 	if ((rc = SPI_connect()) < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in getLocalNodeId()");
@@ -263,16 +265,16 @@ _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS)
 
 /*
  * _Slony_I_getModuleVersion -
- *    
- *    SQL callable function to determine the version number
- *    of this shared object during the startup checks.
+ *
+ *	  SQL callable function to determine the version number
+ *	  of this shared object during the startup checks.
  *
  */
 Datum
 _Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
 {
-	text   *retval;
-	int		len;
+	text	   *retval;
+	int			len;
 
 	len = strlen(SLONY_I_VERSION_STRING);
 	retval = palloc(VARHDRSZ + len);
@@ -287,9 +289,9 @@ Datum
 _Slony_I_setSessionRole(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	int		rc;
-	text   *new_role_t = PG_GETARG_TEXT_P(1);
-	int		new_role = SLON_ROLE_UNSET;
+	int			rc;
+	text	   *new_role_t = PG_GETARG_TEXT_P(1);
+	int			new_role = SLON_ROLE_UNSET;
 
 	if ((rc = SPI_connect()) < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in setSessionRole()");
@@ -298,13 +300,13 @@ _Slony_I_setSessionRole(PG_FUNCTION_ARGS)
 
 	SPI_finish();
 
-	if (VARSIZE(new_role_t) == VARHDRSZ + 6 && 
+	if (VARSIZE(new_role_t) == VARHDRSZ + 6 &&
 		memcmp(VARDATA(new_role_t), "normal", 6) == 0)
 	{
 		new_role = SLON_ROLE_NORMAL;
 	}
 	else if (VARSIZE(new_role_t) == VARHDRSZ + 4 &&
-		memcmp(VARDATA(new_role_t), "slon", 4) == 0)
+			 memcmp(VARDATA(new_role_t), "slon", 4) == 0)
 	{
 		if (!superuser())
 			elog(ERROR, "Slony-I: insufficient privilege for replication role");
@@ -334,8 +336,8 @@ Datum
 _Slony_I_getSessionRole(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	int		rc;
-	text   *retval = NULL;
+	int			rc;
+	text	   *retval = NULL;
 
 	if ((rc = SPI_connect()) < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in getSessionRole()");
@@ -373,24 +375,24 @@ _Slony_I_getSessionRole(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 {
-	TransactionId	newXid = GetCurrentTransactionId();
+	TransactionId newXid = GetCurrentTransactionId();
 	Slony_I_ClusterStatus *cs;
-	TriggerData	   *tg;
-	Datum			argv[4];
-	text		   *cmdtype = NULL;
-	int				rc;
-	Name			cluster_name;
-	int32			tab_id;
-	char		   *attkind;
-	int				attkind_idx;
-	int				cmddata_need;
+	TriggerData *tg;
+	Datum		argv  [4];
+	text	   *cmdtype = NULL;
+	int			rc;
+	Name		cluster_name;
+	int32		tab_id;
+	char	   *attkind;
+	int			attkind_idx;
+	int			cmddata_need;
 
 	/*
 	 * Get the trigger call context
 	 */
 	if (!CALLED_AS_TRIGGER(fcinfo))
 		elog(ERROR, "Slony-I: logTrigger() not called as trigger");
-	tg = (TriggerData *)(fcinfo->context);
+	tg = (TriggerData *) (fcinfo->context);
 
 	/*
 	 * Check all logTrigger() calling conventions
@@ -412,13 +414,13 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	 * Get all the trigger arguments
 	 */
 	cluster_name = DatumGetName(DirectFunctionCall1(namein,
-			CStringGetDatum(tg->tg_trigger->tgargs[0])));
+								CStringGetDatum(tg->tg_trigger->tgargs[0])));
 	tab_id = strtol(tg->tg_trigger->tgargs[1], NULL, 10);
 	attkind = tg->tg_trigger->tgargs[2];
 
 	/*
-	 * Get or create the cluster status information and make sure it
-	 * has the SPI plans that we need here.
+	 * Get or create the cluster status information and make sure it has the
+	 * SPI plans that we need here.
 	 */
 	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
 
@@ -470,20 +472,20 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		/*
 		 * INSERT
 		 *
-		 *	cmdtype = 'I'
-		 *	cmddata = ("non-NULL-col" [, ...]) values ('value' [, ...])
+		 * cmdtype = 'I' cmddata = ("non-NULL-col" [, ...]) values ('value' [,
+		 * ...])
 		 */
 		cmdtype = cs->cmdtype_I;
 
 		/*
-		 * Allocate an array of char pointers to hold the values.
-		 * We need to go over the tuple descriptor 2 times, first
-		 * to add the column names of non-null columns, second to
-		 * add the values. But we can identify what's NULL only by
-		 * getting the value via SPI_getvalue() in the first pass.
+		 * Allocate an array of char pointers to hold the values. We need to
+		 * go over the tuple descriptor 2 times, first to add the column names
+		 * of non-null columns, second to add the values. But we can identify
+		 * what's NULL only by getting the value via SPI_getvalue() in the
+		 * first pass.
 		 */
-		col_value = (char **)palloc(sizeof(char *) * 
-				tg->tg_relation->rd_att->natts);
+		col_value = (char **)palloc(sizeof(char *) *
+									tg->tg_relation->rd_att->natts);
 
 		/*
 		 * Specify all the columns
@@ -503,11 +505,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			col_value[i] = slon_quote_literal(col_value[i]);
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_ident = strlen(col_ident));
+				(len_ident = strlen(col_ident));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
@@ -518,7 +521,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_comma = true;
 
-			memcpy(cp, col_ident, len_ident); cp += len_ident;
+			memcpy(cp, col_ident, len_ident);
+			cp += len_ident;
 		}
 
 		/*
@@ -550,11 +554,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_value = strlen(col_value[i]));
+				(len_value = strlen(col_value[i]));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
@@ -565,7 +570,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_comma = true;
 
-			memcpy(cp, col_value[i], len_value); cp += len_value;
+			memcpy(cp, col_value[i], len_value);
+			cp += len_value;
 		}
 
 		/*
@@ -573,8 +579,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 */
 		*cp++ = ')';
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) = 
-				VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		VARATT_SIZEP(cs->cmddata_buf) =
+			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
 	}
 	else if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))
 	{
@@ -598,9 +604,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		/*
 		 * UPDATE
 		 *
-		 *	cmdtype = 'U'
-		 *	cmddata = "col_ident"='value' [, ...] 
-		 *             where "pk_ident" = 'value' [ and ...]
+		 * cmdtype = 'U' cmddata = "col_ident"='value' [, ...] where "pk_ident" =
+		 * 'value' [ and ...]
 		 */
 		cmdtype = cs->cmdtype_U;
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
@@ -621,8 +626,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 
 			/*
-			 * If both are NOT NULL, we need to compare the values
-			 * and skip setting the column if equal
+			 * If both are NOT NULL, we need to compare the values and skip
+			 * setting the column if equal
 			 */
 			if (!old_isnull && !new_isnull)
 			{
@@ -630,15 +635,15 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				FmgrInfo   *opr_finfo_p;
 
 				/*
-				 * Lookup the equal operators function call info
-				 * using the typecache if available
+				 * Lookup the equal operators function call info using the
+				 * typecache if available
 				 */
 #ifdef HAVE_TYPCACHE
 				TypeCacheEntry *type_cache;
 
 				type_cache = lookup_type_cache(
-						SPI_gettypeid(tupdesc, i + 1),
-						TYPECACHE_EQ_OPR | TYPECACHE_EQ_OPR_FINFO);
+											   SPI_gettypeid(tupdesc, i + 1),
+								  TYPECACHE_EQ_OPR | TYPECACHE_EQ_OPR_FINFO);
 				opr_oid = type_cache->eq_opr;
 				if (opr_oid == ARRAY_EQ_OP)
 					opr_oid = InvalidOid;
@@ -648,29 +653,30 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				FmgrInfo	opr_finfo;
 
 				opr_oid = compatible_oper_funcid(makeList1(makeString("=")),
-						SPI_gettypeid(tupdesc, i + 1),
-						SPI_gettypeid(tupdesc, i + 1), true);
+											   SPI_gettypeid(tupdesc, i + 1),
+										SPI_gettypeid(tupdesc, i + 1), true);
 				if (OidIsValid(opr_oid))
 				{
 					fmgr_info(opr_oid, &opr_finfo);
-					opr_finfo_p = & opr_finfo;
+					opr_finfo_p = &opr_finfo;
 				}
 #endif
+
 				/*
 				 * If we have an equal operator, use that to do binary
-				 * comparision. Else get the string representation of
-				 * both attributes and do string comparision.
+				 * comparision. Else get the string representation of both
+				 * attributes and do string comparision.
 				 */
 				if (OidIsValid(opr_oid))
 				{
 					if (DatumGetBool(FunctionCall2(opr_finfo_p,
-								old_value, new_value)))
+												   old_value, new_value)))
 						continue;
 				}
 				else
 				{
-					char   *old_strval = SPI_getvalue(old_row, tupdesc, i + 1);
-					char   *new_strval = SPI_getvalue(new_row, tupdesc, i + 1);
+					char	   *old_strval = SPI_getvalue(old_row, tupdesc, i + 1);
+					char	   *new_strval = SPI_getvalue(new_row, tupdesc, i + 1);
 
 					if (strcmp(old_strval, new_strval) == 0)
 						continue;
@@ -689,28 +695,31 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				col_value = slon_quote_literal(SPI_getvalue(new_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_ident = strlen(col_ident)) + 
-							(len_value = strlen(col_value));
+				(len_ident = strlen(col_ident)) +
+				(len_value = strlen(col_value));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
 			}
-			
-			memcpy(cp, col_ident, len_ident); cp += len_ident;
+
+			memcpy(cp, col_ident, len_ident);
+			cp += len_ident;
 			*cp++ = '=';
-			memcpy(cp, col_value, len_value); cp += len_value;
+			memcpy(cp, col_value, len_value);
+			cp += len_value;
 		}
 
 		/*
-		 * It can happen that the only UPDATE an application does is
-		 * to set a column to the same value again. In that case, we'd
-		 * end up here with no columns in the SET clause yet. We add
-		 * the first key column here with it's old value to simulate
-		 * the same for the replication engine.
+		 * It can happen that the only UPDATE an application does is to set a
+		 * column to the same value again. In that case, we'd end up here with
+		 * no columns in the SET clause yet. We add the first key column here
+		 * with it's old value to simulate the same for the replication
+		 * engine.
 		 */
 		if (!need_comma)
 		{
@@ -727,20 +736,23 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_ident = strlen(col_ident)) + 
-							(len_value = strlen(col_value));
+				(len_ident = strlen(col_ident)) +
+				(len_value = strlen(col_value));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
 			}
-			
-			memcpy(cp, col_ident, len_ident); cp += len_ident;
+
+			memcpy(cp, col_ident, len_ident);
+			cp += len_ident;
 			*cp++ = '=';
-			memcpy(cp, col_value, len_value); cp += len_value;
+			memcpy(cp, col_value, len_value);
+			cp += len_value;
 		}
 
 		*cp++ = ' ';
@@ -766,12 +778,13 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_ident = strlen(col_ident)) + 
-							(len_value = strlen(col_value));
+				(len_ident = strlen(col_ident)) +
+				(len_value = strlen(col_value));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
@@ -788,13 +801,15 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_and = true;
 
-			memcpy(cp, col_ident, len_ident); cp += len_ident;
+			memcpy(cp, col_ident, len_ident);
+			cp += len_ident;
 			*cp++ = '=';
-			memcpy(cp, col_value, len_value); cp += len_value;
+			memcpy(cp, col_value, len_value);
+			cp += len_value;
 		}
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) = 
-				VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		VARATT_SIZEP(cs->cmddata_buf) =
+			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
 	}
 	else if (TRIGGER_FIRED_BY_DELETE(tg->tg_event))
 	{
@@ -811,8 +826,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		/*
 		 * DELETE
 		 *
-		 *	cmdtype = 'D'
-		 *	cmddata = "pk_ident"='value' [and ...]
+		 * cmdtype = 'D' cmddata = "pk_ident"='value' [and ...]
 		 */
 		cmdtype = cs->cmdtype_D;
 
@@ -828,12 +842,13 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-							(len_ident = strlen(col_ident)) + 
-							(len_value = strlen(col_value));
+				(len_ident = strlen(col_ident)) +
+				(len_value = strlen(col_value));
 			if (cs->cmddata_size < cmddata_need)
 			{
-				int		have = (cp - (char *)(cs->cmddata_buf));
-				while(cs->cmddata_size < cmddata_need)
+				int			have = (cp - (char *)(cs->cmddata_buf));
+
+				while (cs->cmddata_size < cmddata_need)
 					cs->cmddata_size *= 2;
 				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
 				cp = (char *)(cs->cmddata_buf) + have;
@@ -850,13 +865,15 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_and = true;
 
-			memcpy(cp, col_ident, len_ident); cp += len_ident;
+			memcpy(cp, col_ident, len_ident);
+			cp += len_ident;
 			*cp++ = '=';
-			memcpy(cp, col_value, len_value); cp += len_value;
+			memcpy(cp, col_value, len_value);
+			cp += len_value;
 		}
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) = 
-				VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		VARATT_SIZEP(cs->cmddata_buf) =
+			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
 	}
 	else
 		elog(ERROR, "Slony-I: logTrigger() fired for unhandled event");
@@ -879,16 +896,16 @@ Datum
 _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	TriggerData	   *tg;
-	int				rc;
-	Name			cluster_name;
+	TriggerData *tg;
+	int			rc;
+	Name		cluster_name;
 
 	/*
 	 * Get the trigger call context
 	 */
 	if (!CALLED_AS_TRIGGER(fcinfo))
 		elog(ERROR, "Slony-I: denyAccess() not called as trigger");
-	tg = (TriggerData *)(fcinfo->context);
+	tg = (TriggerData *) (fcinfo->context);
 
 	/*
 	 * Check all logTrigger() calling conventions
@@ -910,11 +927,11 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 	 * Get all the trigger arguments
 	 */
 	cluster_name = DatumGetName(DirectFunctionCall1(namein,
-			CStringGetDatum(tg->tg_trigger->tgargs[0])));
+								CStringGetDatum(tg->tg_trigger->tgargs[0])));
 
 	/*
-	 * Get or create the cluster status information and make sure it
-	 * has the SPI plans that we need here.
+	 * Get or create the cluster status information and make sure it has the
+	 * SPI plans that we need here.
 	 */
 	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
 
@@ -927,9 +944,9 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 		case SLON_ROLE_NORMAL:
 			cs->session_role = SLON_ROLE_NORMAL;
 			elog(ERROR,
-				"Slony-I: Table %s is replicated and cannot be "
-				"modified on a subscriber node",
-				NameStr(tg->tg_relation->rd_rel->relname));
+				 "Slony-I: Table %s is replicated and cannot be "
+				 "modified on a subscriber node",
+				 NameStr(tg->tg_relation->rd_rel->relname));
 			break;
 
 		case SLON_ROLE_SLON:	/* Replication session, nothing to do here */
@@ -947,14 +964,14 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_lockedSet(PG_FUNCTION_ARGS)
 {
-	TriggerData	   *tg;
+	TriggerData *tg;
 
 	/*
 	 * Get the trigger call context
 	 */
 	if (!CALLED_AS_TRIGGER(fcinfo))
 		elog(ERROR, "Slony-I: lockedSet() not called as trigger");
-	tg = (TriggerData *)(fcinfo->context);
+	tg = (TriggerData *) (fcinfo->context);
 
 	/*
 	 * Check all logTrigger() calling conventions
@@ -967,9 +984,9 @@ _Slony_I_lockedSet(PG_FUNCTION_ARGS)
 		elog(ERROR, "Slony-I: denyAccess() must be defined with 1 arg");
 
 	elog(ERROR,
-		"Slony-I: Table %s is currently locked against updates "
-		"because of MOVE_SET operation in progress",
-		NameStr(tg->tg_relation->rd_rel->relname));
+		 "Slony-I: Table %s is currently locked against updates "
+		 "because of MOVE_SET operation in progress",
+		 NameStr(tg->tg_relation->rd_rel->relname));
 
 	return (Datum)0;
 }
@@ -981,7 +998,7 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 	Name		relname = PG_GETARG_NAME(0);
 	void	   *plan;
 	Oid			argtypes[1];
-	Datum		args[1];
+	Datum		args  [1];
 	int			i;
 	int32		pid;
 	bool		isnull;
@@ -991,9 +1008,9 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 
 	argtypes[0] = NAMEOID;
 	plan = SPI_prepare("select listenerpid "
-			"    from \"pg_catalog\".pg_listener "
-			"    where relname = $1; ",
-			1, argtypes);
+					   "    from \"pg_catalog\".pg_listener "
+					   "    where relname = $1; ",
+					   1, argtypes);
 	if (plan == NULL)
 		elog(ERROR, "Slony-I: SPI_prepare() failed in terminateNodeConnections()");
 
@@ -1003,10 +1020,10 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 
 	for (i = 0; i < SPI_processed; i++)
 	{
-		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
-				SPI_tuptable->tupdesc, 1, &isnull));
+		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
+										  SPI_tuptable->tupdesc, 1, &isnull));
 		elog(NOTICE, "Slony-I: terminating DB connection of failed node "
-				"with pid %d", pid);
+			 "with pid %d", pid);
 		kill(pid, SIGTERM);
 	}
 
@@ -1019,11 +1036,11 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_cleanupListener(PG_FUNCTION_ARGS)
 {
-	static void	   *plan = NULL;
-	int				i;
-	int32			pid;
-	char		   *relname;
-	bool			isnull;
+	static void *plan = NULL;
+	int			i;
+	int32		pid;
+	char	   *relname;
+	bool		isnull;
 
 
 	if (SPI_connect() < 0)
@@ -1032,8 +1049,8 @@ _Slony_I_cleanupListener(PG_FUNCTION_ARGS)
 	if (plan == NULL)
 	{
 		plan = SPI_saveplan(SPI_prepare("select relname, listenerpid "
-				"    from \"pg_catalog\".pg_listener; ",
-				0, NULL));
+									 "    from \"pg_catalog\".pg_listener; ",
+										0, NULL));
 		if (plan == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed in cleanupListener()");
 	}
@@ -1043,17 +1060,17 @@ _Slony_I_cleanupListener(PG_FUNCTION_ARGS)
 
 	for (i = 0; i < SPI_processed; i++)
 	{
-		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
-				SPI_tuptable->tupdesc, 2, &isnull));
+		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
+										  SPI_tuptable->tupdesc, 2, &isnull));
 		if (kill(pid, 0) < 0)
 		{
 			if (errno == ESRCH)
 			{
 				relname = SPI_getvalue(SPI_tuptable->vals[i],
-						SPI_tuptable->tupdesc, 1);
+									   SPI_tuptable->tupdesc, 1);
 
 				elog(NOTICE, "Slony-I: removing stale pg_listener entry "
-						"for pid %d, relname %s", pid, relname);
+					 "for pid %d, relname %s", pid, relname);
 				Async_Unlisten(relname, pid);
 			}
 		}
@@ -1110,30 +1127,29 @@ slon_quote_literal(char *str)
 static Slony_I_ClusterStatus *
 getClusterStatus(Name cluster_name, int need_plan_mask)
 {
-	Slony_I_ClusterStatus  *cs;
-	int						rc;
-	char					query[1024];
-	bool					isnull;
-	Oid						plan_types[12];
-	Oid						xxid_typid;
-	TypeName			   *xxid_typename;
+	Slony_I_ClusterStatus *cs;
+	int			rc;
+	char		query  [1024];
+	bool		isnull;
+	Oid			plan_types[12];
+	Oid			xxid_typid;
+	TypeName   *xxid_typename;
 
 	/*
 	 * Find an existing cs row for this cluster
 	 */
 	for (cs = clusterStatusList; cs; cs = cs->next)
 	{
-		if ((bool)DirectFunctionCall2(nameeq, 
-				NameGetDatum(&(cs->clustername)),
-				NameGetDatum(cluster_name)) == true)
+		if ((bool) DirectFunctionCall2(nameeq,
+									   NameGetDatum(&(cs->clustername)),
+									   NameGetDatum(cluster_name)) == true)
 		{
 			/*
-			 * Return it if all the requested SPI plans are
-			 * prepared already.
+			 * Return it if all the requested SPI plans are prepared already.
 			 */
 			if ((cs->have_plan & need_plan_mask) == need_plan_mask)
 				return cs;
-		
+
 			/*
 			 * Create more SPI plans below.
 			 */
@@ -1146,7 +1162,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		/*
 		 * No existing cs found ... create a new one
 		 */
-		cs = (Slony_I_ClusterStatus *)malloc(sizeof(Slony_I_ClusterStatus));
+		cs = (Slony_I_ClusterStatus *) malloc(sizeof(Slony_I_ClusterStatus));
 		memset(cs, 0, sizeof(Slony_I_ClusterStatus));
 
 		/*
@@ -1158,19 +1174,19 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * ... and the quoted identifier of it for building queries
 		 */
 		cs->clusterident = strdup(DatumGetCString(DirectFunctionCall1(textout,
-				DirectFunctionCall1(quote_ident,
-				DirectFunctionCall1(textin, CStringGetDatum(NameStr(*cluster_name)))))));
+											 DirectFunctionCall1(quote_ident,
+																 DirectFunctionCall1(textin, CStringGetDatum(NameStr(*cluster_name)))))));
 
 		/*
 		 * Get our local node ID
 		 */
 		snprintf(query, 1024, "select last_value::int4 from %s.sl_local_node_id",
-			cs->clusterident);
+				 cs->clusterident);
 		rc = SPI_exec(query, 0);
 		if (rc < 0 || SPI_processed != 1)
 			elog(ERROR, "Slony-I: failed to read sl_local_node_id");
 		cs->localNodeId = DatumGetInt32(
-			SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull));
+										SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull));
 		SPI_freetuptable(SPI_tuptable);
 		if (cs->localNodeId < 0)
 			elog(ERROR, "Slony-I: Node is uninitialized");
@@ -1197,7 +1213,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->plan_notify_event = SPI_saveplan(SPI_prepare(query, 0, NULL));
 		if (cs->plan_notify_event == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
-		
+
 		cs->have_plan |= PLAN_NOTIFY_EVENT;
 	}
 
@@ -1211,31 +1227,32 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * Lookup the oid of our special xxid type
 		 */
 		xxid_typename = makeNode(TypeName);
-		xxid_typename->names = 
+		xxid_typename->names =
 			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
-								 makeString("xxid"));
+					makeString("xxid"));
 		xxid_typid = typenameTypeId(xxid_typename);
 
 		plan_types[0] = INT4OID;
+
 		/*
-		 * Create the saved plan. We lock the sl_event table in exclusive
-		 * mode in order to ensure that all events are really assigned
-		 * sequence numbers in the order they get committed.
+		 * Create the saved plan. We lock the sl_event table in exclusive mode
+		 * in order to ensure that all events are really assigned sequence
+		 * numbers in the order they get committed.
 		 */
 		sprintf(query,
-			"LOCK TABLE %s.sl_event IN EXCLUSIVE MODE; "
-			"INSERT INTO %s.sl_event "
-			"(ev_origin, ev_seqno, "
-			"ev_timestamp, ev_minxid, ev_maxxid, ev_xip, "
-			"ev_type, ev_data1, ev_data2, ev_data3, ev_data4, "
-			"ev_data5, ev_data6, ev_data7, ev_data8) "
-			"VALUES ('%d', nextval('%s.sl_event_seq'), "
-			"now(), $1, $2, $3, "
-			"$4, $5, $6, $7, $8, $9, $10, $11, $12); "
-			"SELECT currval('%s.sl_event_seq');", 
-			cs->clusterident,
-			cs->clusterident, cs->localNodeId, cs->clusterident,
-			cs->clusterident);
+				"LOCK TABLE %s.sl_event IN EXCLUSIVE MODE; "
+				"INSERT INTO %s.sl_event "
+				"(ev_origin, ev_seqno, "
+				"ev_timestamp, ev_minxid, ev_maxxid, ev_xip, "
+				"ev_type, ev_data1, ev_data2, ev_data3, ev_data4, "
+				"ev_data5, ev_data6, ev_data7, ev_data8) "
+				"VALUES ('%d', nextval('%s.sl_event_seq'), "
+				"now(), $1, $2, $3, "
+				"$4, $5, $6, $7, $8, $9, $10, $11, $12); "
+				"SELECT currval('%s.sl_event_seq');",
+				cs->clusterident,
+				cs->clusterident, cs->localNodeId, cs->clusterident,
+				cs->clusterident);
 		plan_types[0] = xxid_typid;
 		plan_types[1] = xxid_typid;
 		plan_types[2] = TEXTOID;
@@ -1248,35 +1265,35 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		plan_types[9] = TEXTOID;
 		plan_types[10] = TEXTOID;
 		plan_types[11] = TEXTOID;
-		
+
 		cs->plan_insert_event = SPI_saveplan(SPI_prepare(query, 12, plan_types));
 		if (cs->plan_insert_event == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
 		/*
-		 * Also prepare the plan to remember sequence numbers
-		 * on certain events.
+		 * Also prepare the plan to remember sequence numbers on certain
+		 * events.
 		 */
 		sprintf(query,
-			"insert into %s.sl_seqlog "
-			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-			"select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
-			"from %s.sl_seqlastvalue "
-			"where seq_origin = '%d'; "
-			"insert into %s.sl_seqlog "
-			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-			"select '0', '%d', currval('%s.sl_event_seq'), "
-			" last_value from %s.sl_rowid_seq; ",
-			cs->clusterident, 
-			cs->localNodeId, cs->clusterident,
-			cs->clusterident, cs->localNodeId,
-			cs->clusterident, cs->localNodeId,
-			cs->clusterident, cs->clusterident);
+				"insert into %s.sl_seqlog "
+				"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+		   "select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
+				"from %s.sl_seqlastvalue "
+				"where seq_origin = '%d'; "
+				"insert into %s.sl_seqlog "
+				"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+				"select '0', '%d', currval('%s.sl_event_seq'), "
+				" last_value from %s.sl_rowid_seq; ",
+				cs->clusterident,
+				cs->localNodeId, cs->clusterident,
+				cs->clusterident, cs->localNodeId,
+				cs->clusterident, cs->localNodeId,
+				cs->clusterident, cs->clusterident);
 
 		cs->plan_record_sequences = SPI_saveplan(SPI_prepare(query, 0, NULL));
 		if (cs->plan_record_sequences == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
-			
+
 		cs->have_plan |= PLAN_INSERT_EVENT;
 	}
 
@@ -1290,9 +1307,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * Lookup the oid of our special xxid type
 		 */
 		xxid_typename = makeNode(TypeName);
-		xxid_typename->names = 
+		xxid_typename->names =
 			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
-								 makeString("xxid"));
+					makeString("xxid"));
 		xxid_typid = typenameTypeId(xxid_typename);
 
 		/*
@@ -1308,29 +1325,29 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		plan_types[1] = INT4OID;
 		plan_types[2] = TEXTOID;
 		plan_types[3] = TEXTOID;
-		
+
 		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 4, plan_types));
 		if (cs->plan_insert_log_1 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
-		
+
 		sprintf(query, "INSERT INTO %s.sl_log_2 "
-			"(log_origin, log_xid, log_tableid, log_actionseq,"
-			" log_cmdtype, log_cmddata) "
-			"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
-			" $3, $4);",
-			cs->clusterident, cs->localNodeId, cs->clusterident);
+				"(log_origin, log_xid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
+				" $3, $4);",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
 		plan_types[0] = xxid_typid;
 		plan_types[1] = INT4OID;
 		plan_types[2] = TEXTOID;
 		plan_types[3] = TEXTOID;
-		
+
 		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 4, plan_types));
 		if (cs->plan_insert_log_2 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
 		/*
-		 * Also create the 3 rather static text values for
-		 * the log_cmdtype parameter and initialize the cmddata_buf.
+		 * Also create the 3 rather static text values for the log_cmdtype
+		 * parameter and initialize the cmddata_buf.
 		 */
 		cs->cmdtype_I = malloc(VARHDRSZ + 1);
 		VARATT_SIZEP(cs->cmdtype_I) = VARHDRSZ + 1;
@@ -1343,8 +1360,8 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		*VARDATA(cs->cmdtype_D) = 'D';
 
 		cs->cmddata_size = 8192;
-		cs->cmddata_buf = (text *)malloc(8192);
-		
+		cs->cmddata_buf = (text *) malloc(8192);
+
 		cs->have_plan |= PLAN_INSERT_LOG;
 	}
 
@@ -1354,8 +1371,8 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 
 /*
  * Local Variables:
- *  tab-width: 4
- *  c-indent-level: 4
- *  c-basic-offset: 4
+ *	tab-width: 4
+ *	c-indent-level: 4
+ *	c-basic-offset: 4
  * End:
  */

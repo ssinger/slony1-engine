@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.14 2004-10-14 16:01:05 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.15 2005-01-12 17:27:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,16 +29,16 @@
 #include "slon.h"
 
 
-static int      slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
+static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 
 /*
  * This mutex is used to wrap around PQconnectdb. There's a problem that
  * occurs when your libpq is compiled with libkrb (kerberos) which is not
- * threadsafe.  It is especially odd because I'm not using kerberos.
- * 
+ * threadsafe.	It is especially odd because I'm not using kerberos.
+ *
  * This is fixed in libpq in 8.0, but for now (and for older versions we'll just
  * use this mutex.
- * 
+ *
  */
 static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -46,11 +46,11 @@ static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 /*
  * ---------- slon_connectdb ----------
  */
-SlonConn       *
+SlonConn *
 slon_connectdb(char *conninfo, char *symname)
 {
-	PGconn         *dbconn;
-	SlonConn       *conn;
+	PGconn	   *dbconn;
+	SlonConn   *conn;
 
 	/*
 	 * Create the native database connection
@@ -61,18 +61,19 @@ slon_connectdb(char *conninfo, char *symname)
 	if (dbconn == NULL)
 	{
 		slon_log(SLON_ERROR,
-			 "slon_connectdb: PQconnectdb(\"%s\") failed\n",
-			 conninfo);
+				 "slon_connectdb: PQconnectdb(\"%s\") failed\n",
+				 conninfo);
 		return NULL;
 	}
 	if (PQstatus(dbconn) != CONNECTION_OK)
 	{
 		slon_log(SLON_ERROR,
-			 "slon_connectdb: PQconnectdb(\"%s\") failed - %s",
-			 conninfo, PQerrorMessage(dbconn));
+				 "slon_connectdb: PQconnectdb(\"%s\") failed - %s",
+				 conninfo, PQerrorMessage(dbconn));
 		PQfinish(dbconn);
 		return NULL;
 	}
+
 	/*
 	 * Embed it into a SlonConn structure used to exchange it with the
 	 * scheduler. On return this new connection object is locked.
@@ -99,8 +100,7 @@ slon_disconnectdb(SlonConn * conn)
 #endif
 
 	/*
-	 * Unlock and destroy the condition and mutex variables and free
-	 * memory.
+	 * Unlock and destroy the condition and mutex variables and free memory.
 	 */
 	slon_free_dummyconn(conn);
 }
@@ -109,10 +109,10 @@ slon_disconnectdb(SlonConn * conn)
 /*
  * ---------- slon_make_dummyconn ----------
  */
-SlonConn       *
+SlonConn *
 slon_make_dummyconn(char *symname)
 {
-	SlonConn       *conn;
+	SlonConn   *conn;
 
 	/*
 	 * Allocate and initialize the SlonConn structure
@@ -163,38 +163,39 @@ slon_free_dummyconn(SlonConn * conn)
 
 /*
  * ---------- db_getLocalNodeId
- * 
+ *
  * Query a connection for the value of sequence sl_local_node_id ----------
  */
 int
-db_getLocalNodeId(PGconn * conn)
+db_getLocalNodeId(PGconn *conn)
 {
-	char            query[1024];
-	PGresult       *res;
-	int             retval;
+	char		query  [1024];
+	PGresult   *res;
+	int			retval;
 
 	/*
 	 * Select the last_value from the sl_local_node_id sequence
 	 */
 	snprintf(query, 1024, "select last_value::int4 from %s.sl_local_node_id",
-		 rtcfg_namespace);
+			 rtcfg_namespace);
 	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-			 "cannot get sl_local_node_id - %s",
-			 PQresultErrorMessage(res));
+				 "cannot get sl_local_node_id - %s",
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
 	if (PQntuples(res) != 1)
 	{
 		slon_log(SLON_ERROR,
-			 "query '%s' returned %d rows (expected 1)\n",
-			 query, PQntuples(res));
+				 "query '%s' returned %d rows (expected 1)\n",
+				 query, PQntuples(res));
 		PQclear(res);
 		return -1;
 	}
+
 	/*
 	 * Return the result as an integer value
 	 */
@@ -214,7 +215,7 @@ db_getLocalNodeId(PGconn * conn)
 int
 db_checkSchemaVersion(PGconn *conn)
 {
-	char		query[1024];
+	char		query  [1024];
 	PGresult   *res;
 	int			retval = 0;
 
@@ -222,24 +223,24 @@ db_checkSchemaVersion(PGconn *conn)
 	 * Select the version number from the schema
 	 */
 	snprintf(query, 1024, "select %s.slonyVersion()",
-			rtcfg_namespace);
+			 rtcfg_namespace);
 	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-				"cannot get Slony-I schema version - %s",
-				PQresultErrorMessage(res));
+				 "cannot get Slony-I schema version - %s",
+				 PQresultErrorMessage(res));
 		slon_log(SLON_ERROR,
-				"please upgrade Slony-I schema to version %s\n",
-				SLONY_I_VERSION_STRING);
+				 "please upgrade Slony-I schema to version %s\n",
+				 SLONY_I_VERSION_STRING);
 		PQclear(res);
 		return -1;
 	}
 	if (PQntuples(res) != 1)
 	{
 		slon_log(SLON_ERROR,
-				"query '%s' returned %d rows (expected 1)\n",
-				query, PQntuples(res));
+				 "query '%s' returned %d rows (expected 1)\n",
+				 query, PQntuples(res));
 		PQclear(res);
 		return -1;
 	}
@@ -250,37 +251,37 @@ db_checkSchemaVersion(PGconn *conn)
 	if (strcmp(PQgetvalue(res, 0, 0), SLONY_I_VERSION_STRING) != 0)
 	{
 		slon_log(SLON_ERROR,
-				"Slony-I schema version is %s\n",
-				PQgetvalue(res, 0, 0));
+				 "Slony-I schema version is %s\n",
+				 PQgetvalue(res, 0, 0));
 		slon_log(SLON_ERROR,
-				"please upgrade Slony-I schema to version %s\n",
-				SLONY_I_VERSION_STRING);
+				 "please upgrade Slony-I schema to version %s\n",
+				 SLONY_I_VERSION_STRING);
 		retval = -1;
 	}
 	PQclear(res);
-	
+
 	/*
 	 * Select the version number from the module
 	 */
 	snprintf(query, 1024, "select %s.getModuleVersion()",
-			rtcfg_namespace);
+			 rtcfg_namespace);
 	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-				"cannot get Slony-I module version - %s",
-				PQresultErrorMessage(res));
+				 "cannot get Slony-I module version - %s",
+				 PQresultErrorMessage(res));
 		slon_log(SLON_ERROR,
-				"please upgrade Slony-I shared module to version %s\n",
-				SLONY_I_VERSION_STRING);
+				 "please upgrade Slony-I shared module to version %s\n",
+				 SLONY_I_VERSION_STRING);
 		PQclear(res);
 		return -1;
 	}
 	if (PQntuples(res) != 1)
 	{
 		slon_log(SLON_ERROR,
-				"query '%s' returned %d rows (expected 1)\n",
-				query, PQntuples(res));
+				 "query '%s' returned %d rows (expected 1)\n",
+				 query, PQntuples(res));
 		PQclear(res);
 		return -1;
 	}
@@ -291,22 +292,22 @@ db_checkSchemaVersion(PGconn *conn)
 	if (strcmp(PQgetvalue(res, 0, 0), SLONY_I_VERSION_STRING) != 0)
 	{
 		slon_log(SLON_ERROR,
-				"Slony-I module version is %s\n",
-				PQgetvalue(res, 0, 0));
+				 "Slony-I module version is %s\n",
+				 PQgetvalue(res, 0, 0));
 		slon_log(SLON_ERROR,
-				"please upgrade Slony-I shared module to version %s\n",
-				SLONY_I_VERSION_STRING);
+				 "please upgrade Slony-I shared module to version %s\n",
+				 SLONY_I_VERSION_STRING);
 		retval = -1;
 	}
 	PQclear(res);
-	
+
 	return retval;
 }
 
 
 /*
  * ---------- slon_mkquery
- * 
+ *
  * A simple query formatting and quoting function using dynamic string buffer
  * allocation. Similar to sprintf() it uses formatting symbols: %s
  * tring argument %q		Quoted literal (\ and ' will be escaped) %d
@@ -315,7 +316,7 @@ db_checkSchemaVersion(PGconn *conn)
 int
 slon_mkquery(SlonDString * dsp, char *fmt,...)
 {
-	va_list         ap;
+	va_list		ap;
 
 	dstring_reset(dsp);
 
@@ -331,13 +332,13 @@ slon_mkquery(SlonDString * dsp, char *fmt,...)
 
 /*
  * ---------- slon_appendquery
- * 
+ *
  * Append query string material to an existing dynamic string. ----------
  */
 int
 slon_appendquery(SlonDString * dsp, char *fmt,...)
 {
-	va_list         ap;
+	va_list		ap;
 
 	va_start(ap, fmt);
 	slon_appendquery_int(dsp, fmt, ap);
@@ -351,74 +352,74 @@ slon_appendquery(SlonDString * dsp, char *fmt,...)
 
 /*
  * ---------- slon_appendquery_int
- * 
+ *
  * Implementation of slon_mkquery() and slon_appendquery(). ----------
  */
 static int
 slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
-	char           *s;
-	char            buf[64];
+	char	   *s;
+	char		buf    [64];
 
 	while (*fmt)
 	{
 		switch (*fmt)
 		{
-		case '%':
-			fmt++;
-			switch (*fmt)
-			{
-			case 's':
-				s = va_arg(ap, char *);
-				dstring_append(dsp, s);
+			case '%':
 				fmt++;
-				break;
-
-			case 'q':
-				s = va_arg(ap, char *);
-				while (s && *s != '\0')
+				switch (*fmt)
 				{
-					switch (*s)
-					{
-					case '\'':
-						dstring_addchar(dsp, '\'');
+					case 's':
+						s = va_arg(ap, char *);
+						dstring_append(dsp, s);
+						fmt++;
 						break;
-					case '\\':
-						dstring_addchar(dsp, '\\');
+
+					case 'q':
+						s = va_arg(ap, char *);
+						while (s && *s != '\0')
+						{
+							switch (*s)
+							{
+								case '\'':
+									dstring_addchar(dsp, '\'');
+									break;
+								case '\\':
+									dstring_addchar(dsp, '\\');
+									break;
+								default:
+									break;
+							}
+							dstring_addchar(dsp, *s);
+							s++;
+						}
+						fmt++;
 						break;
+
+					case 'd':
+						sprintf(buf, "%d", va_arg(ap, int));
+						dstring_append(dsp, buf);
+						fmt++;
+						break;
+
 					default:
+						dstring_addchar(dsp, '%');
+						dstring_addchar(dsp, *fmt);
+						fmt++;
 						break;
-					}
-					dstring_addchar(dsp, *s);
-					s++;
 				}
-				fmt++;
 				break;
 
-			case 'd':
-				sprintf(buf, "%d", va_arg(ap, int));
-				dstring_append(dsp, buf);
+			case '\\':
+				fmt++;
+				dstring_addchar(dsp, *fmt);
 				fmt++;
 				break;
 
 			default:
-				dstring_addchar(dsp, '%');
 				dstring_addchar(dsp, *fmt);
 				fmt++;
 				break;
-			}
-			break;
-
-		case '\\':
-			fmt++;
-			dstring_addchar(dsp, *fmt);
-			fmt++;
-			break;
-
-		default:
-			dstring_addchar(dsp, *fmt);
-			fmt++;
-			break;
 		}
 	}
 
@@ -429,8 +430,8 @@ slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 
 /*
  * Local Variables:
- *  tab-width: 4
- *  c-indent-level: 4
- *  c-basic-offset: 4
+ *	tab-width: 4
+ *	c-indent-level: 4
+ *	c-basic-offset: 4
  * End:
  */

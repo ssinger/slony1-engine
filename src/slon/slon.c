@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.40 2005-01-10 23:45:32 cbbrowne Exp $
+ *	$Id: slon.c,v 1.41 2005-01-12 17:27:11 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,10 +32,10 @@
 /*
  * ---------- Global data ----------
  */
-int             slon_restart_request = false;
+int			slon_restart_request = false;
 
 pthread_mutex_t slon_wait_listen_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  slon_wait_listen_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t slon_wait_listen_cond = PTHREAD_COND_INITIALIZER;
 
 
 /*
@@ -47,11 +47,11 @@ static pthread_t local_sync_thread;
 
 
 static pthread_t main_thread;
-static char    *const *main_argv;
-static void     sigalrmhandler(int signo);
+static char *const *main_argv;
+static void sigalrmhandler(int signo);
 
-int             slon_log_level;
-char *pid_file;
+int			slon_log_level;
+char	   *pid_file;
 
 /*
  * ---------- main ----------
@@ -59,16 +59,17 @@ char *pid_file;
 int
 main(int argc, char *const argv[])
 {
-	char           *cp1;
-	char           *cp2;
-	SlonDString     query;
-	PGresult       *res;
-	int             i, n;
-	PGconn         *startup_conn;
-	int             c;
-	int             errors = 0;
-	extern int      optind;
-	extern char    *optarg;
+	char	   *cp1;
+	char	   *cp2;
+	SlonDString query;
+	PGresult   *res;
+	int			i	  ,
+				n;
+	PGconn	   *startup_conn;
+	int			c;
+	int			errors = 0;
+	extern int	optind;
+	extern char *optarg;
 
 
 	InitializeConfOptions();
@@ -78,53 +79,54 @@ main(int argc, char *const argv[])
 	{
 		switch (c)
 		{
-		case 'f':
-			ProcessConfigFile(optarg);
-			break;
+			case 'f':
+				ProcessConfigFile(optarg);
+				break;
 
-		case 'd':
-			set_config_option("log_level", optarg);
-			break;
+			case 'd':
+				set_config_option("log_level", optarg);
+				break;
 
-		case 's':
-			set_config_option("sync_interval", optarg);
-			break;
+			case 's':
+				set_config_option("sync_interval", optarg);
+				break;
 
-		case 't':
-			set_config_option("sync_interval_timeout", optarg);
-			break;
+			case 't':
+				set_config_option("sync_interval_timeout", optarg);
+				break;
 
-		case 'g':
-			set_config_option("sync_group_maxsize", optarg);
-			break;
+			case 'g':
+				set_config_option("sync_group_maxsize", optarg);
+				break;
 
-		case 'c':
-			set_config_option("vac_frequency", optarg);
-			break;
+			case 'c':
+				set_config_option("vac_frequency", optarg);
+				break;
 
-		case 'p':
-			set_config_option("pid_file", optarg);
-			break;
+			case 'p':
+				set_config_option("pid_file", optarg);
+				break;
 
-		case 'o':
-			set_config_option("desired_sync_time", optarg);
-			break;
+			case 'o':
+				set_config_option("desired_sync_time", optarg);
+				break;
 
-		case 'h':
-			errors++;
-			break;
+			case 'h':
+				errors++;
+				break;
 
-		case 'v':
-			printf("slon version %s\n", SLONY_I_VERSION_STRING);
-			exit(0);
-			break;
+			case 'v':
+				printf("slon version %s\n", SLONY_I_VERSION_STRING);
+				exit(0);
+				break;
 
-		default:
-			fprintf(stderr, "unknown option '%c'\n", c);
-			errors++;
-			break;
+			default:
+				fprintf(stderr, "unknown option '%c'\n", c);
+				errors++;
+				break;
 		}
 	}
+
 	/*
 	 * Make sure the sync interval isn't too small.
 	 */
@@ -145,26 +147,26 @@ main(int argc, char *const argv[])
 
 	if (rtcfg_cluster_name != NULL)
 	{
-	  rtcfg_namespace = malloc(strlen(rtcfg_cluster_name) * 2 + 4);
-	  cp2 = rtcfg_namespace;
-	  *cp2++ = '"';
-	  *cp2++ = '_';
-	  for (cp1 = (char *)rtcfg_cluster_name; *cp1; cp1++)
-	  {
-		if (*cp1 == '"')
-			*cp2++ = '"';
-		*cp2++ = *cp1;
-	  }
-	  *cp2++ = '"';
-	  *cp2 = '\0';
+		rtcfg_namespace = malloc(strlen(rtcfg_cluster_name) * 2 + 4);
+		cp2 = rtcfg_namespace;
+		*cp2++ = '"';
+		*cp2++ = '_';
+		for (cp1 = (char *)rtcfg_cluster_name; *cp1; cp1++)
+		{
+			if (*cp1 == '"')
+				*cp2++ = '"';
+			*cp2++ = *cp1;
+		}
+		*cp2++ = '"';
+		*cp2 = '\0';
 	}
 	else
 	{
-	  errors++;
+		errors++;
 	}
 
 	slon_log(SLON_CONFIG, "main: slon version %s starting up\n",
-			SLONY_I_VERSION_STRING);
+			 SLONY_I_VERSION_STRING);
 
 	/*
 	 * Remember the connection information for the local node.
@@ -174,25 +176,24 @@ main(int argc, char *const argv[])
 		errors++;
 	}
 
-        if (errors != 0)
-        {
-                fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
-                fprintf(stderr, "\n");
-                fprintf(stderr, "Options:\n");
-                fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
-                fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
-                fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
-                fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
-                fprintf(stderr, "    -c <num>              how often to vaccum in cleanup cycles\n");
-                fprintf(stderr, "    -p <filename>         slon pid file\n");
-                fprintf(stderr, "    -f <filename>         slon configuration file\n");
-                return 1;
-        }
+	if (errors != 0)
+	{
+		fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
+		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
+		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
+		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
+		fprintf(stderr, "    -c <num>              how often to vaccum in cleanup cycles\n");
+		fprintf(stderr, "    -p <filename>         slon pid file\n");
+		fprintf(stderr, "    -f <filename>         slon configuration file\n");
+		return 1;
+	}
 
-	
+
 	/*
-	 * Connect to the local database for reading the initial
-	 * configuration
+	 * Connect to the local database for reading the initial configuration
 	 */
 
 
@@ -205,10 +206,11 @@ main(int argc, char *const argv[])
 	if (PQstatus(startup_conn) != CONNECTION_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s",
-			 PQerrorMessage(startup_conn));
+				 PQerrorMessage(startup_conn));
 		PQfinish(startup_conn);
 		slon_exit(-1);
 	}
+
 	/*
 	 * Get our local node ID
 	 */
@@ -224,17 +226,17 @@ main(int argc, char *const argv[])
 		slon_exit(-1);
 	}
 	slon_log(SLON_CONFIG, "main: local node id = %d\n", rtcfg_nodeid);
-        
+
 	if (pid_file)
 	{
-		FILE *pidfile;
+		FILE	   *pidfile;
 
-        	pidfile=fopen(pid_file,"w");
-		if(pidfile)
+		pidfile = fopen(pid_file, "w");
+		if (pidfile)
 		{
-		  fprintf(pidfile,"%d",slon_pid);
-                  fclose(pidfile);
-                }
+			fprintf(pidfile, "%d", slon_pid);
+			fclose(pidfile);
+		}
 		else
 		{
 			slon_log(SLON_WARN, "Cannot open pid_file \"%s\", pid_file\n");
@@ -254,12 +256,12 @@ main(int argc, char *const argv[])
 	 * Begin a transaction
 	 */
 	res = PQexec(startup_conn,
-		     "start transaction; "
-		     "set transaction isolation level serializable;");
+				 "start transaction; "
+				 "set transaction isolation level serializable;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_FATAL, "Cannot start transaction - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		slon_exit(-1);
 	}
@@ -270,28 +272,28 @@ main(int argc, char *const argv[])
 	 */
 	dstring_init(&query);
 	slon_mkquery(&query,
-		     "select no_id, no_active, no_comment, "
-		"    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
-		  "        where con_origin = no_id and con_received = %d) "
-		     "        as last_event "
-		     "from %s.sl_node "
-		     "order by no_id; ",
-		     rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
+				 "select no_id, no_active, no_comment, "
+				 "    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
+				 "        where con_origin = no_id and con_received = %d) "
+				 "        as last_event "
+				 "from %s.sl_node "
+				 "order by no_id; ",
+				 rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot get node list - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
-		int             no_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int             no_active = (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
-		char           *no_comment = PQgetvalue(res, i, 2);
-		int64           last_event;
+		int			no_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int			no_active = (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
+		char	   *no_comment = PQgetvalue(res, i, 2);
+		int64		last_event;
 
 		if (no_id == rtcfg_nodeid)
 		{
@@ -300,7 +302,8 @@ main(int argc, char *const argv[])
 			 */
 			rtcfg_nodeactive = no_active;
 			rtcfg_nodecomment = strdup(no_comment);
-		} else
+		}
+		else
 		{
 			/*
 			 * Add a remote node
@@ -310,8 +313,8 @@ main(int argc, char *const argv[])
 			rtcfg_setNodeLastEvent(no_id, last_event);
 
 			/*
-			 * If it is active, remember for activation just
-			 * before we start processing events.
+			 * If it is active, remember for activation just before we start
+			 * processing events.
 			 */
 			if (no_active)
 				rtcfg_needActivate(no_id);
@@ -323,23 +326,23 @@ main(int argc, char *const argv[])
 	 * Read configuration table sl_path - the interesting pieces
 	 */
 	slon_mkquery(&query,
-		     "select pa_server, pa_conninfo, pa_connretry "
-		     "from %s.sl_path where pa_client = %d",
-		     rtcfg_namespace, rtcfg_nodeid);
+				 "select pa_server, pa_conninfo, pa_connretry "
+				 "from %s.sl_path where pa_client = %d",
+				 rtcfg_namespace, rtcfg_nodeid);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot get path config - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
-		int             pa_server = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		char           *pa_conninfo = PQgetvalue(res, i, 1);
-		int             pa_connretry = (int)strtol(PQgetvalue(res, i, 2), NULL, 10);
+		int			pa_server = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+		char	   *pa_conninfo = PQgetvalue(res, i, 1);
+		int			pa_connretry = (int)strtol(PQgetvalue(res, i, 2), NULL, 10);
 
 		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
 	}
@@ -354,23 +357,23 @@ main(int argc, char *const argv[])
 	 * Read configuration table sl_set
 	 */
 	slon_mkquery(&query,
-		     "select set_id, set_origin, set_comment "
-		     "from %s.sl_set",
-		     rtcfg_namespace);
+				 "select set_id, set_origin, set_comment "
+				 "from %s.sl_set",
+				 rtcfg_namespace);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot get set config - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
-		int             set_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int             set_origin = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
-		char           *set_comment = PQgetvalue(res, i, 2);
+		int			set_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int			set_origin = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+		char	   *set_comment = PQgetvalue(res, i, 2);
 
 		rtcfg_storeSet(set_id, set_origin, set_comment);
 	}
@@ -380,25 +383,25 @@ main(int argc, char *const argv[])
 	 * Read configuration table sl_subscribe - our subscriptions only
 	 */
 	slon_mkquery(&query,
-		     "select sub_set, sub_provider, sub_forward, sub_active "
-		     "from %s.sl_subscribe "
-		     "where sub_receiver = %d",
-		     rtcfg_namespace, rtcfg_nodeid);
+				 "select sub_set, sub_provider, sub_forward, sub_active "
+				 "from %s.sl_subscribe "
+				 "where sub_receiver = %d",
+				 rtcfg_namespace, rtcfg_nodeid);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot get subscription config - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
-		int             sub_set = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int             sub_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
-		char           *sub_forward = PQgetvalue(res, i, 2);
-		char           *sub_active = PQgetvalue(res, i, 3);
+		int			sub_set = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int			sub_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+		char	   *sub_forward = PQgetvalue(res, i, 2);
+		char	   *sub_active = PQgetvalue(res, i, 3);
 
 		rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 		if (*sub_active == 't')
@@ -410,14 +413,14 @@ main(int argc, char *const argv[])
 	 * Remember the last known local event sequence
 	 */
 	slon_mkquery(&query,
-		     "select coalesce(max(ev_seqno), -1) from %s.sl_event "
-		     "where ev_origin = '%d'",
-		     rtcfg_namespace, rtcfg_nodeid);
+				 "select coalesce(max(ev_seqno), -1) from %s.sl_event "
+				 "where ev_origin = '%d'",
+				 rtcfg_namespace, rtcfg_nodeid);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot get last local eventid - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		slon_exit(-1);
@@ -431,8 +434,8 @@ main(int argc, char *const argv[])
 	PQclear(res);
 	dstring_free(&query);
 	slon_log(SLON_DEBUG2,
-		 "main: last local event sequence = %s\n",
-		 rtcfg_lastevent);
+			 "main: last local event sequence = %s\n",
+			 rtcfg_lastevent);
 
 	/*
 	 * Rollback the transaction we used to get the config snapshot
@@ -441,7 +444,7 @@ main(int argc, char *const argv[])
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_FATAL, "main: Cannot rollback transaction - %s",
-			 PQresultErrorMessage(res));
+				 PQresultErrorMessage(res));
 		PQclear(res);
 		slon_exit(-1);
 	}
@@ -455,16 +458,16 @@ main(int argc, char *const argv[])
 	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
 	/*
-	 * Create the local event thread that is monitoring the local node
-	 * for administrative events to adjust the configuration at runtime.
-	 * We wait here until the local listen thread has checked that there
-	 * is no other slon daemon running.
+	 * Create the local event thread that is monitoring the local node for
+	 * administrative events to adjust the configuration at runtime. We wait
+	 * here until the local listen thread has checked that there is no other
+	 * slon daemon running.
 	 */
 	pthread_mutex_lock(&slon_wait_listen_lock);
 	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: cannot create localListenThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 		slon_abort();
 	}
 	pthread_cond_wait(&slon_wait_listen_cond, &slon_wait_listen_lock);
@@ -476,25 +479,27 @@ main(int argc, char *const argv[])
 	rtcfg_doActivate();
 
 	/*
-	 * Create the local cleanup thread that will remove old events and
-	 * log data.
+	 * Create the local cleanup thread that will remove old events and log
+	 * data.
 	 */
 	if (pthread_create(&local_cleanup_thread, NULL, cleanupThread_main, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: cannot create cleanupThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 		slon_abort();
 	}
+
 	/*
-	 * Create the local sync thread that will generate SYNC events if we
-	 * had local database updates.
+	 * Create the local sync thread that will generate SYNC events if we had
+	 * local database updates.
 	 */
 	if (pthread_create(&local_sync_thread, NULL, syncThread_main, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: cannot create syncThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 		slon_abort();
 	}
+
 	/*
 	 * Wait until the scheduler has shut down all remote connections
 	 */
@@ -523,24 +528,25 @@ main(int argc, char *const argv[])
 	 */
 	if (pthread_join(local_event_thread, NULL) < 0)
 		slon_log(SLON_ERROR, "main: cannot join localListenThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 
 	if (pthread_join(local_cleanup_thread, NULL) < 0)
 		slon_log(SLON_ERROR, "main: cannot join cleanupThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 
 	if (pthread_join(local_sync_thread, NULL) < 0)
 		slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
-			 strerror(errno));
+				 strerror(errno));
 
 	if (slon_restart_request)
 	{
 		slon_log(SLON_DEBUG1, "main: restart requested\n");
 		execvp(argv[0], argv);
 		slon_log(SLON_FATAL,
-		"main: cannot restart via execvp(): %s\n", strerror(errno));
+				 "main: cannot restart via execvp(): %s\n", strerror(errno));
 		exit(-1);
 	}
+
 	/*
 	 * That's it.
 	 */
@@ -581,8 +587,8 @@ sigalrmhandler(int signo)
 
 /*
  * Local Variables:
- *  tab-width: 4
- *  c-indent-level: 4
- *  c-basic-offset: 4
+ *	tab-width: 4
+ *	c-indent-level: 4
+ *	c-basic-offset: 4
  * End:
  */
