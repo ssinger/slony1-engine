@@ -93,8 +93,8 @@ static struct config_int ConfigureNamesInt[] =
         {
                 {
                         (const char *)"vac_frequency",                                                                /* conf name */
-                        gettext_noop("Sets how many cleanup cyclse to run before a vacum is done"),    /* short desc */
-                        gettext_noop("Sets how many cleanup cyclse to run before a vacum is done"),    /* long desc */
+                        gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),    /* short desc */
+                        gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),    /* long desc */
                         SLON_C_INT                                                                      /* config type */
                 },
                 &vac_frequency,                                                                         /* var name */
