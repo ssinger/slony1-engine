@@ -299,8 +299,10 @@
        <listitem><para>The unique, numeric ID number of the node.</para></listitem>
       </varlistentry>
       
-      <varlistentry><term><literal>COMMENT = 'comment text'</literal></term>
-       <listitem><para> A descriptive text added to the node entry in the table sl_node.</para></listitem>
+      <varlistentry><term><literal>COMMENT = 'comment
+      text'</literal></term> <listitem><para> A descriptive text added
+      to the node entry in the table <xref linkend="table.sl-node">.
+      </para></listitem>
       </varlistentry>
      </variablelist>
      
@@ -365,7 +367,7 @@ INIT CLUSTER (
       </varlistentry>
       
       <varlistentry><term><literal> COMMENT = 'description' </literal></term>
-       <listitem><para> A descriptive text added to the node entry in the table sl_node.</para></listitem>
+       <listitem><para> A descriptive text added to the node entry in the table <xref linkend="table.sl-node"></para></listitem>
       </varlistentry>
       
       <varlistentry><term><literal> SPOOLNODE = boolean </literal></term>
@@ -1910,7 +1912,7 @@ EXECUTE SCRIPT (
        
       </varlistentry>
       <varlistentry><term><literal> WAIT ON = ival </literal></term>
-       <listitem><para> The ID of the node where the sl_confirm table
+       <listitem><para> The ID of the node where the <xref linkend="table.sl-confirm"> table
 	 is to be checked.  The default value is 1.</para></listitem>
        
       </varlistentry>

@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.13 2005-02-22 17:37:59 darcyb Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.14 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -8,8 +8,9 @@ itself, in a <quote>cleanup</quote> thread:
 
 <listitem><para> Deletes old data from various tables in the
 <productname>Slony-I</productname> cluster's namespace, notably
-entries in <envar>sl_log_1</envar>, <envar>sl_log_2</envar> (not yet
-used), and <envar>sl_seqlog</envar>.</para></listitem>
+entries in <xref linkend="table.sl-log-1">, <xref
+linkend="table.sl-log-2"> (not yet used), and <xref
+linkend="table.sl-seqlog">.</para></listitem>
 
 <listitem><para> Vacuum certain tables used by &slony1;.  As of 1.0.5,
 this includes pg_listener; in earlier versions, you must vacuum that
@@ -83,8 +84,8 @@ scripts that may be used to do monitoring of &slony1; instances:
 
 <listitem><para> <command>test_slony_replication</command> is a
 Perl script to which you can pass connection information to get to a
-&slony1; node.  It then queries <envar>sl_path</envar> and other
-information on that node in order to determine the shape of the
+&slony1; node.  It then queries <xref linkend="table.sl-path"> and
+other information on that node in order to determine the shape of the
 requested replication set.</para>
 
 <para> It then injects some test queries to a test table called

@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.13 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <para>There are several things you might want to do involving dropping
@@ -25,9 +25,10 @@ cause substantial destruction; make sure you drop the right node!</para>
 the node that you attempt to drop, so there is a bit of a failsafe to
 protect you from errors.</para>
 
-<para><link linkend="faq17">sl_log_1 isn't getting purged</link>
-documents some extra maintenance that may need to be done on
-sl_confirm if you are running versions prior to 1.0.5.</para></sect2>
+<para><link linkend="faq17"> <envar>sl_log_1</envar> isn't getting
+purged</link> documents some extra maintenance that may need to be
+done on <xref linkend="table.sl-confirm"> if you are running versions
+prior to 1.0.5.</para></sect2>
 
 <sect2><title>Dropping An Entire Set</title>
 
@@ -83,8 +84,9 @@ set.</para>
 to do this:</para>
 
 <para>You can fiddle this by hand by finding the table ID for the
-table you want to get rid of, which you can find in sl_table, and then
-run the following three queries, on each host:
+table you want to get rid of, which you can find in <xref
+linkend="table.sl-table">, and then run the following three queries,
+on each host:
 <programlisting>
   select _slonyschema.alterTableRestore(40);
   select _slonyschema.tableDropKey(40);

@@ -1,4 +1,4 @@
-<!-- $Id: listenpaths.sgml,v 1.14 2005-02-22 17:37:59 darcyb Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.15 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
 <note><para> If you are running version
 &slony1; 1.1 or later it should be
@@ -13,7 +13,7 @@ that are subscribing through a subscriber node), you will have to be
 fairly careful about the configuration of <quote>listen paths</quote>
 via the Slonik <xref linkend="stmtstorelisten"> and <xref
 linkend="stmtdroplisten"> statements that control the contents of the
-table sl_listen.</para>
+table <xref linkend="table.sl-listen">.</para>
 
 <para>The <quote>listener</quote> entries in this table control where
 each node expects to listen in order to get events propagated from
@@ -22,10 +22,11 @@ other nodes.  You might think that nodes only need to listen to the
 reality, they need to be able to receive messages from
 <emphasis>all</emphasis> nodes in order to be able to conclude that
 <command>sync</command>s have been received everywhere, and that,
-therefore, entries in sl_log_1 and sl_log_2 have been applied
-everywhere, and can therefore be purged.  this extra communication is
-needful so <productname>Slony-I</productname> is able to shift origins
-to other locations.</para>
+therefore, entries in <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-log-2"> have been applied everywhere, and can
+therefore be purged.  this extra communication is needful so
+<productname>Slony-I</productname> is able to shift origins to other
+locations.</para>
 
 <sect2><title>how listening can break</title>
 
@@ -135,13 +136,14 @@ of <xref linkend="slonik"> statements.</para>
 <itemizedlist>
 
 <listitem><para> If you change the shape of the node set, so that the
-nodes subscribe differently to things, you need to drop sl_listen
-entries and create new ones to indicate the new preferred paths
-between nodes.  Until &slony1;, there is no automated way at this
-point to do this <quote>reshaping</quote>.</para></listitem>
+nodes subscribe differently to things, you need to drop <xref
+linkend="table.sl-listen"> entries and create new ones to indicate the
+new preferred paths between nodes.  Until &slony1;, there is no
+automated way at this point to do this
+<quote>reshaping</quote>.</para></listitem>
 
 <listitem><para> If you <emphasis>don't</emphasis> change the
-sl_listen entries, events will likely continue to propagate so long as
+<xref linkend="table.sl-listen"> entries, events will likely continue to propagate so long as
 all of the nodes continue to run well.  the problem will only be
 noticed when a node is taken down, <quote>orphaning</quote> any nodes
 that are listening through it.</para></listitem>
@@ -151,15 +153,17 @@ that are listening through it.</para></listitem>
 subscribers.  there won't be a single <quote>best</quote> listener
 configuration in that case.</para></listitem>
 
-<listitem><para> In order for there to be an sl_listen path, there
-<emphasis>must</emphasis> be a series of sl_path entries connecting
-the origin to the receiver.  this means that if the contents of
-sl_path do not express a <quote>connected</quote> network of nodes,
-then some nodes will not be reachable.  this would typically happen,
-in practice, when you have two sets of nodes, one in one subnet, and
-another in another subnet, where there are only a couple of
-<quote>firewall</quote> nodes that can talk between the subnets.  cut
-out those nodes and the subnets stop communicating.</para></listitem>
+<listitem><para> In order for there to be an <xref
+linkend="table.sl-listen"> path, there <emphasis>must</emphasis> be a
+series of <xref linkend="table.sl-path"> entries connecting the origin
+to the receiver.  this means that if the contents of <xref
+linkend="table.sl-path"> do not express a <quote>connected</quote>
+network of nodes, then some nodes will not be reachable.  this would
+typically happen, in practice, when you have two sets of nodes, one in
+one subnet, and another in another subnet, where there are only a
+couple of <quote>firewall</quote> nodes that can talk between the
+subnets.  cut out those nodes and the subnets stop
+communicating.</para></listitem>
 
 </itemizedlist></para>
 
@@ -173,15 +177,16 @@ based on three data sources:
 
 <itemizedlist>
 
-<listitem><para> sl_subscribe entries are the first, most vital
-control as to what listens to what; we <emphasis>know</emphasis> there
-must be a direct path between each subscriber node and its
-provider.</para></listitem>
+<listitem><para> <xref linkend="table.sl-subscribe"> entries are the
+first, most vital control as to what listens to what; we
+<emphasis>know</emphasis> there must be a direct path between each
+subscriber node and its provider.</para></listitem>
 
-<listitem><para> sl_path entries are the second indicator; if
-sl_subscribe has not already indicated <quote>how to listen,</quote>
-then a node may listen directly to the event's origin if there is a
-suitable sl_path entry.</para></listitem>
+<listitem><para> <xref linkend="table.sl-path"> entries are the second
+indicator; if <xref linkend="table.sl-subscribe"> has not already
+indicated <quote>how to listen,</quote> then a node may listen
+directly to the event's origin if there is a suitable <xref
+linkend="table.sl-path"> entry.</para></listitem>
 
 <listitem><para> Lastly, if there has been no guidance thus far based
 on the above data sources, then nodes can listen indirectly via every
@@ -190,7 +195,8 @@ receiver as a provider.</para></listitem>
 
 </itemizedlist></para>
 
-<para> Any time sl_subscribe or sl_path are modified,
+<para> Any time <xref linkend="table.sl-subscribe"> or <xref
+linkend="table.sl-path"> are modified,
 <function>RebuildListenEntries()</function> will be called to revise
 the listener paths.</para>
 

@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.5 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.6 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -369,10 +369,10 @@ requests directly via the stored functions.
 
 <para> When debugging problems in <quote>troubled</quote> &slony1;
 clusters, it has also occasionally proven useful to use the stored
-functions.  This has been particularly useful for cases where
-<envar>sl_listen</envar> configuration has been broken, and events
-have not been propagating properly.  The <quote>easiest</quote> fix
-was to:</para>
+functions.  This has been particularly useful for cases where <xref
+linkend="table.sl-listen"> configuration has been broken, and
+events have not been propagating properly.  The <quote>easiest</quote>
+fix was to:</para>
 
 <para> <command> select
 _slonycluster.droplisten(li_origin,li_provider,li_receiver) from

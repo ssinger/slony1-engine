@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.15 2005-02-22 17:37:59 darcyb Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.16 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -73,32 +73,30 @@ cluster.</para>
 <option>cluster</option>, <option>password</option>, and
 <option>port</option> to connect to any of the nodes on a cluster.</para>
 
-<para> The script then rummages through <envar>sl_path</envar> to find
-all of the nodes in the cluster, and the DSNs to allow it to, in turn,
-connect to each of them.</para>
+<para> The script then rummages through <xref linkend="table.sl-path">
+to find all of the nodes in the cluster, and the DSNs to allow it to,
+in turn, connect to each of them.</para>
 
 <para> For each node, the script examines the state of things,
 including such things as:
 
 <itemizedlist>
-<listitem><para> Checking  <link
-linkend="table.sl-listen"> <envar>sl_listen</envar></link> for some
+<listitem><para> Checking <xref linkend="table.sl-listen"> for some
 <quote>analytically determinable</quote> problems.  It lists paths
-that are not covered.</para></listitem>  
+that are not covered.</para></listitem>
 
 <listitem><para> Providing a summary of events by origin node</para>
 
 <para> If a node hasn't submitted any events in a while, that likely
 suggests a problem.</para></listitem>
 
-<listitem><para> Summarizes the <quote>aging</quote> of table <link
-linkend="table.sl-confirm"> <envar>sl_confirm</envar></link> </para>
+<listitem><para> Summarizes the <quote>aging</quote> of table <xref
+linkend="table.sl-confirm"> </para>
 
 <para> If one or another of the nodes in the cluster hasn't reported
-back recently, that tends to lead to cleanups of tables like <link
-linkend="table.sl-log-1"> <envar>sl_log_1</envar></link> and <link
-linkend="table.sl-seqlog"> <envar>sl_seqlog</envar></link> not taking
-place.</para></listitem>
+back recently, that tends to lead to cleanups of tables like <xref
+linkend="table.sl-log-1"> and <xref linkend="table.sl-seqlog"> not
+taking place.</para></listitem>
 
 <listitem><para> Summarizes what transactions have been running for a
 long time</para>

@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.23 2005-02-21 18:34:54 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.24 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -274,7 +274,7 @@ command SET DROP TABLE, which will "do the trick."</para></listitem>
 <emphasis>essential functionality of <xref linkend="stmtsetdroptable">
 involves the functionality in <function>droptable_int()</function>.
 You can fiddle this by hand by finding the table ID for the table you
-want to get rid of, which you can find in sl_table, and then run the
+want to get rid of, which you can find in <xref linkend="table.sl-table">, and then run the
 following three queries, on each host:</emphasis>
 
 <programlisting>
@@ -403,8 +403,8 @@ out an <command>AccessShareLock</command> on all of the tables in the
 database, including the &slony1; ones, and</para></listitem>
 
 <listitem><para> A &slony1; sync event, which wants to grab a
-<command>AccessExclusiveLock</command> on the table
-<envar>sl_event</envar>.</para></listitem> </itemizedlist></para>
+<command>AccessExclusiveLock</command> on the table <xref
+linkend="table.sl-event">.</para></listitem> </itemizedlist></para>
 
 <para>The initial query that will be blocked is thus:
 
@@ -429,10 +429,11 @@ does:
 
 <para>The <command>LOCK</command> statement will sit there and wait
 until <command>pg_dump</command> (or whatever else has pretty much any
-kind of access lock on <envar>sl_event</envar>) completes.</para>
+kind of access lock on <xref linkend="table.sl-event">)
+completes.</para>
 
 <para>Every subsequent query submitted that touches
-<envar>sl_event</envar> will block behind the
+<xref linkend="table.sl-event"> will block behind the
 <function>createEvent</function> call.</para>
 
 <para>There are a number of possible answers to this:
@@ -455,10 +456,11 @@ exclusive that alleviates this problem.</para></listitem>
 commission [for some reason], and it's taking a long time to get a
 sync through.</para></question>
 
-<answer><para> You might want to take a look at the sl_log_1/sl_log_2
-tables, and do a summary to see if there are any really enormous
-&slony1; transactions in there.  Up until at least 1.0.2, there needs
-to be a slon connected to the origin in order for
+<answer><para> You might want to take a look at the <xref
+linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
+do a summary to see if there are any really enormous &slony1;
+transactions in there.  Up until at least 1.0.2, there needs to be a
+<xref linkend="slon"> connected to the origin in order for
 <command>SYNC</command> events to be generated.</para>
 
 <para>If none are being generated, then all of the updates until the
@@ -496,7 +498,7 @@ linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
 
 <para>The problem was that there was not a suitable set of
-<quote>listener paths</quote> in sl_listen to allow the events from
+<quote>listener paths</quote> in <xref linkend="table.sl-listen"> to allow the events from
 node 1 to propagate to node 3.  The events were going through node 2,
 and blocking behind the <xref linkend="stmtsubscribeset"> event that
 node 2 was working on.</para>
@@ -548,23 +550,24 @@ further at <xref linkend="listenpaths"> </para></answer>
 </qandaentry>
 
 <qandaentry id="faq17">
-<question><para>After dropping a node, sl_log_1 isn't getting purged
-out anymore.</para></question>
+<question><para>After dropping a node, <xref linkend="table.sl-log-1">
+isn't getting purged out anymore.</para></question>
 
 <answer><para> This is a common scenario in versions before 1.0.5, as
 the <quote>clean up</quote> that takes place when purging the node
-does not include purging out old entries from the
-&slony1; table, sl_confirm, for the recently
-departed node.</para>
+does not include purging out old entries from the &slony1; table,
+<xref linkend="table.sl-confirm">, for the recently departed
+node.</para>
 
 <para> The node is no longer around to update confirmations of what
 syncs have been applied on it, and therefore the cleanup thread that
 purges log entries thinks that it can't safely delete entries newer
-than the final sl_confirm entry, which rather curtails the ability to
-purge out old logs.</para>
+than the final <xref linkend="table.sl-confirm"> entry, which rather
+curtails the ability to purge out old logs.</para>
 
 <para>Diagnosis: Run the following query to see if there are any
-<quote>phantom/obsolete/blocking</quote> sl_confirm entries:
+<quote>phantom/obsolete/blocking</quote> <xref
+linkend="table.sl-confirm"> entries:
 
 <screen>
 oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
@@ -580,9 +583,9 @@ oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_i
 </screen></para>
 
 <para>In version 1.0.5, the <xref linkend="stmtdropnode"> function
-purges out entries in sl_confirm for the departing node.  In earlier
-versions, this needs to be done manually.  Supposing the node number
-is 3, then the query would be:
+purges out entries in <xref linkend="table.sl-confirm"> for the
+departing node.  In earlier versions, this needs to be done manually.
+Supposing the node number is 3, then the query would be:
 
 <screen>
 delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
@@ -596,7 +599,7 @@ DELETE 6
 
 <para>General <quote>due diligence</quote> dictates starting with a
 <command>BEGIN</command>, looking at the contents of
-<envar>sl_confirm</envar> before, ensuring that only the expected
+<xref linkend="table.sl-confirm"> before, ensuring that only the expected
 records are purged, and then, only after that, confirming the change
 with a <command>COMMIT</command>.  If you delete confirm entries for
 the wrong node, that could ruin your whole day.</para>
@@ -604,15 +607,16 @@ the wrong node, that could ruin your whole day.</para>
 <para>You'll need to run this on each node that remains...</para>
 
 <para>Note that as of 1.0.5, this is no longer an issue at all, as it
-purges unneeded entries from sl_confirm in two places:
+purges unneeded entries from <xref linkend="table.sl-confirm"> in two
+places:
 
 <itemizedlist>
 <listitem><para> At the time a node is dropped</para></listitem>
 
-<listitem><para> At the start of each <function>cleanupEvent</function> run,
-which is the event in which old data is purged from sl_log_1 and
-sl_seqlog</para></listitem> 
-</itemizedlist></para>
+<listitem><para> At the start of each
+<function>cleanupEvent</function> run, which is the event in which old
+data is purged from <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
 </answer>
 </qandaentry>
 
@@ -657,21 +661,22 @@ to diminish the number of network round trips.</para></question>
 yet been arrived at.
 
 <para>By the time we notice that there is a problem, the seemingly
-missed delete transaction has been cleaned out of
-<envar>sl_log_1</envar>, so there appears to be no recovery possible.
-What has seemed necessary, at this point, is to drop the replication
-set (or even the node), and restart replication from scratch on that
-node.</para>
+missed delete transaction has been cleaned out of <xref
+linkend="table.sl-log-1">, so there appears to be no recovery
+possible.  What has seemed necessary, at this point, is to drop the
+replication set (or even the node), and restart replication from
+scratch on that node.</para>
 
-<para>In &slony1; 1.0.5, the handling of
-purges of sl_log_1 became more conservative, refusing to purge
+<para>In &slony1; 1.0.5, the handling of purges of <xref
+linkend="table.sl-log-1"> became more conservative, refusing to purge
 entries that haven't been successfully synced for at least 10 minutes
 on all nodes.  It was not certain that that will prevent the
-<quote>glitch</quote> from taking place, but it seems likely that it will
-leave enough sl_log_1 data to be able to do something about recovering
-from the condition or at least diagnosing it more exactly.  And
-perhaps the problem is that sl_log_1 was being purged too
-aggressively, and this will resolve the issue completely.</para>
+<quote>glitch</quote> from taking place, but it seemed likely that it
+might leave enough <xref linkend="table.sl-log-1"> data to be able to
+do something about recovering from the condition or at least
+diagnosing it more exactly.  And perhaps the problem is that <xref
+linkend="table.sl-log-1"> was being purged too aggressively, and this
+will resolve the issue completely.</para>
 </answer>
 
 <answer><para> Unfortunately, this problem has been observed in 1.0.5,
@@ -681,17 +686,17 @@ so this still appears to represent a bug still in existence.</para>
 for this; if you discover that this problem recurs, it may be an idea
 to break replication down into multiple sets in order to diminish the
 work involved in restarting replication.  If only one set has broken,
-you only unsubscribe/drop and resubscribe the one set.
+you may only need to unsubscribe/drop and resubscribe the one set.
 </para>
 
 <para> In one case we found two lines in the SQL error message in the
 log file that contained <emphasis> identical </emphasis> insertions
-into <envar> sl_log_1 </envar>.  This <emphasis> ought </emphasis> to
-be impossible as is a primary key on <envar>sl_log_1</envar>.  The
-latest punctured theory that comes from <emphasis>that</emphasis> was
-that perhaps this PK index has been corrupted (representing a
-<productname>PostgreSQL</productname> bug), and that perhaps the
-problem might be alleviated by running the query:
+into <xref linkend="table.sl-log-1">.  This <emphasis> ought
+</emphasis> to be impossible as is a primary key on <xref
+linkend="table.sl-log-1">.  The latest punctured theory that comes
+from <emphasis>that</emphasis> was that perhaps this PK index has been
+corrupted (representing a <productname>PostgreSQL</productname> bug),
+and that perhaps the problem might be alleviated by running the query:
 <programlisting>
 # reindex table _slonyschema.sl_log_1;
 </programlisting>
@@ -781,7 +786,7 @@ that uses the <xref linkend="function.logtrigger"> function to the
 table.</para>
 
 <para> That trigger initiates the action of logging all updates to the
-table to &slony1; <envar>sl_log</envar>
+table to &slony1; <xref linkend="table.sl-log-1">
 tables.</para></listitem>
 
 <listitem><para> On a subscriber node, this involves disabling
@@ -901,8 +906,8 @@ for the nodes from scratch later.
 
 <question><para> Replication has been slowing down, I'm seeing
 <command> FETCH 100 FROM LOG </command> queries running for a long
-time, <envar> sl_log_1 </envar> is growing, and performance is, well,
-generally getting steadily worse. </para>
+time, <xref linkend="table.sl-log-1"> is growing, and performance is,
+well, generally getting steadily worse. </para>
 </question>
 
 <answer> <para> There are actually a number of possible causes for
@@ -925,9 +930,10 @@ of which will adversely affect performance:
 idle transaction. </para> </listitem>
 
 <listitem><para> The cleanup thread will be unable to clean out
-entries in <envar> sl_log_1 </envar> and <envar> sl_seqlog </envar>,
-with the result that these tables will grow, ceaselessly, until the
-transaction is closed. </para> </listitem>
+entries in <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog">, with the result that these tables will
+grow, ceaselessly, until the transaction is closed. </para>
+</listitem>
 </itemizedlist>
 </answer>
 
@@ -984,7 +990,7 @@ table</command> statements directly on the databases instead of using
 the slonik <xref linkend="stmtddlscript"> command.
 
 <para>The solution is to rebuild the trigger on the affected table and
-fix the entries in <envar>sl_log_1 </envar> by hand.
+fix the entries in <xref linkend="table.sl-log-1"> by hand.
 
 <itemizedlist>
 
@@ -1003,10 +1009,11 @@ SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_ta
 COMMIT;
 </screen>
 
-<para>You then need to find the rows in <envar> sl_log_1 </envar> that
-have bad entries and fix them.  You may want to take down the slon
-daemons for all nodes except the master; that way, if you make a
-mistake, it won't immediately propagate through to the subscribers.
+<para>You then need to find the rows in <xref
+linkend="table.sl-log-1"> that have bad entries and fix them.  You may
+want to take down the slon daemons for all nodes except the master;
+that way, if you make a mistake, it won't immediately propagate
+through to the subscribers.
 
 <para> Here is an example:
 

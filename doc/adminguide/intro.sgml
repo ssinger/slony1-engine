@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.11 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.12 2005-02-23 23:18:58 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2><title>Why yet another replication system?</title>
@@ -154,24 +154,15 @@ increases.  Note the following relationships:
 
 <itemizedlist>
 
-<listitem><para> It is necessary to have a <xref linkend=
-"table.sl-path"> entry allowing connection from each node to every
-other node.  Most will normally not need to be used for a given
-replication configuration, but this means that there needs to be
-n(n-1) paths.  It is probable that there will be considerable
-repetition of entries, since the path to <quote>node n</quote> is
-likely to be the same from everywhere throughout the
-network.</para></listitem>
-
-<listitem><para> It is similarly necessary to have a <xref linkend=
-"table.sl-listen"> entry indicating how data flows from every node to
-every other node.  This again requires configuring n(n-1)
-<quote>listener paths.</quote></para></listitem>
+<listitem><para> It is necessary to have <xref linkend=
+"table.sl-listen"> entries allowing connection from each node to every
+other node.  Most will normally not need to be very heavily, but it
+still means that there needs to be n(n-1) paths.  </para></listitem>
 
 <listitem><para> Each SYNC applied needs to be reported back to all of
 the other nodes participating in the set so that the nodes all know
-that it is safe to purge <envar>sl_log_1</envar> and
-<envar>sl_log_2</envar> data, as any <quote>forwarding</quote> node
+that it is safe to purge <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-log-2"> data, as any <quote>forwarding</quote> node
 could potentially take over as <quote>master</quote> at any time.  One
 might expect SYNC messages to need to travel through n/2 nodes to get
 propagated to their destinations; this means that each SYNC is
