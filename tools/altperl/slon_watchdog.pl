@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.10 2005-02-22 20:34:45 smsimms Exp $
+# $Id: slon_watchdog.pl,v 1.11 2005-03-16 18:57:21 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -59,8 +59,8 @@ while (1) {
     system "date >> $LOGDIR/slon_watchdog.log";
     print LOG "Found slon daemon running for the $CLUSTER_NAME cluster, PID $pid\n";
     print LOG "Looks Ok\n";
-    print LOG "Sleeping for $sleep seconds\n";
+    print LOG "Sleeping for $sleep +/- " . int($sleep/2) . " seconds\n";
   }
   close(PSOUT);
-  sleep $sleep;
+  sleep $sleep + (rand($sleep) - $sleep/2);
 }
