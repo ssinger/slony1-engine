@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.19 2004-08-04 19:59:02 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.20 2004-08-05 19:10:42 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2749,8 +2749,8 @@ begin
 	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 
 	-- ----
-	-- Get the sl_table row and the current tables origin. Check
-	-- that the table currently is NOT in altered state.
+	-- Get the sl_table row and the current origin of the table. 
+	-- Verify that the table currently is NOT in altered state.
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_idxname, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
@@ -2853,7 +2853,15 @@ begin
 	return p_tab_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.alterTableForReplication(int4) is
+'alterTableForReplication(tab_id)
 
+Sets up a table for replication.
+On the origin, this involves adding the "logTrigger()" trigger to the
+table.
+
+On a subscriber node, this involves disabling triggers and rules, and
+adding in the trigger that denies write access to replicated tables.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableRestore (tab_id)
@@ -2962,7 +2970,15 @@ begin
 	return p_tab_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.alterTableRestore (int4) is
+'alterTableRestore (tab_id)
 
+Restores table tab_id from being replicated.
+
+On the origin, this simply involves dropping the "logtrigger" trigger.
+
+On subscriber nodes, this involves dropping the "denyaccess" trigger,
+and restoring user triggers and rules.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
@@ -3021,7 +3037,11 @@ begin
 			case p_sub_forward when true then ''t'' else ''f'' end);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.subscribeSet (int4, int4, int4, bool) is
+'subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
 
+Makes sure that the receiver is not the provider, then stores the
+subscription, and publishes the SUBSCRIBE_SET event to other nodes.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
@@ -3109,6 +3129,11 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool) is
+'subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
+
+Internal actions for subscribing receiver sub_receiver to subscription
+set sub_set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION unsubscribeSet (sub_set, sub_receiver)
@@ -3184,7 +3209,15 @@ begin
 			p_sub_set, p_sub_receiver);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.unsubscribeSet (int4, int4) is
+'unsubscribeSet (sub_set, sub_receiver) 
 
+Unsubscribe node sub_receiver from subscription set sub_set.  This is
+invoked on the receiver node.  It verifies that this does not break
+any chains (e.g. - where sub_receiver is a provider for another node),
+then restores tables, drops Slony-specific keys, drops table entries
+for the set, drops the subscription, and generates an UNSUBSCRIBE_SET
+node to publish that the node is being dropped.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION unsubscribeSet_int (sub_set, sub_receiver)
@@ -3212,7 +3245,12 @@ begin
 	return p_sub_set;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.unsubscribeSet_int (int4, int4) is
+'unsubscribeSet_int (sub_set, sub_receiver)
 
+All the REAL work of removing the subscriber is done before the event
+is generated, so this function just has to drop the references to the
+subscription in sl_subscribe.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver)
@@ -3230,6 +3268,12 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.enableSubscription (int4, int4, int4) is 
+'enableSubscription (sub_set, sub_provider, sub_receiver)
+
+Indicates that sub_receiver intends subscribing to set sub_set from
+sub_provider.  Work is all done by the internal function
+enableSubscription_int (sub_set, sub_provider, sub_receiver).';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION enableSubscription_int (sub_set, sub_provider, sub_receiver)
@@ -3270,9 +3314,18 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.enableSubscription_int (int4, int4, int4) is
+'enableSubscription_int (sub_set, sub_provider, sub_receiver)
+
+Internal function to enable subscription of node sub_receiver to set
+sub_set via node sub_provider.
+
+slon does most of the work; all we need do here is to remember that it
+happened.  The function updates sl_subscribe, indicating that the
+subscription has become active.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION forwardConfirm ()
+-- FUNCTION forwardConfirm (p_con_origin, p_con_received, p_con_seqno, p_con_timestamp)
 --
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
@@ -3301,7 +3354,12 @@ begin
 	return v_max_seqno;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp) is
+'forwardConfirm (p_con_origin, p_con_received, p_con_seqno, p_con_timestamp)
 
+Confirms (recorded in sl_confirm) that items from p_con_origin up to
+p_con_seqno have been received by node p_con_received as of
+p_con_timestamp, and raises an event to forward this confirmation.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION cleanupEvent ()
@@ -3351,7 +3409,11 @@ begin
 	return 0;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.cleanupEvent () is
+'cleaning old data out of sl_confirm, sl_event.  Removes all but the
+last sl_confirm row per (origin,receiver), and then removes all events
+that are confirmed by all nodes in the whole cluster up to the last
+SYNC.  ';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableAddKey (tab_fqname)
@@ -3427,13 +3489,17 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.tableAddKey(text) is
+
+'tableAddKey (tab_fqname) - if the table has not got a column of the
+form _Slony-I_<clustername>_rowID, then add it as a bigint, defaulted
+to nextval() for a sequence created for the cluster.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableDropKey (tab_id)
 --
---	If the specified table does not have a column 
---	"_Slony-I_<clustername>_rowID", then add it as a bigint
---	with default nextval('"_<clustername>".sl_rowid_seq').
+--	If the specified table has a column 
+--	"_Slony-I_<clustername>_rowID", then drop it.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.tableDropKey(int4) returns int4
 as '
@@ -3480,6 +3546,11 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.tableDropKey(int4) is
+'tableDropKey (tab_id)
+
+If the specified table has a column "_Slony-I_<clustername>_rowID",
+then drop it.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION determineIdxnameUnique (tab_fqname, indexname)
@@ -3540,6 +3611,12 @@ begin
 	return v_idxrow.relname;
 end;
 ' language plpgsql called on null input;
+comment on function @NAMESPACE@.determineIdxnameUnique(text, name) is
+'FUNCTION determineIdxnameUnique (tab_fqname, indexname)
+
+Given a tablename, tab_fqname, check that the unique index, indexname,
+exists or return the primary key index name for the table.  If there
+is no unique index, it raises an exception.';
 
 
 -- ----------------------------------------------------------------------
@@ -3574,7 +3651,10 @@ begin
 	return v_row.relname || ''__Slony-I_@CLUSTERNAME@_rowID_key'';
 end;
 ' language plpgsql called on null input;
+comment on function @NAMESPACE@.determineIdxnameSerial(text) is
+'determineIdxnameSerial (tab_fqname)
 
+Given a tablename, construct the index name of the serial column.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION determineAttKindUnique (tab_fqname, indexname)
@@ -3667,6 +3747,12 @@ begin
 end;
 ' language plpgsql called on null input;
 
+comment on function @NAMESPACE@.determineAttkindUnique(text, name) is
+'determineAttKindUnique (tab_fqname, indexname)
+
+Given a tablename, return the Slony-I specific attkind (used for the
+log trigger) of the table. Use the specified unique index or the
+primary key (if indexname is NULL).';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION determineAttKindSerial (tab_fqname)
@@ -3743,6 +3829,13 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.determineAttkindSerial(text) is
+'determineAttKindSerial (tab_fqname)
+
+A table was that was specified without a primary key is added to the
+replication. Assume that tableAddKey() was called before and finish
+the creation of the serial column. The return an attkind according to
+that.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableHasSerialKey (tab_fqname)
@@ -3771,4 +3864,9 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.tableHasSerialKey(text) is
+'tableHasSerialKey (tab_fqname)
+
+Checks if a table has our special serial key column that is used if
+the table has no natural unique constraint.';
 
