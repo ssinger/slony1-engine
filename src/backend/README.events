@@ -145,6 +145,28 @@ SET_DROP_SEQUENCE
 	Only nodes that are currently subscribed to the sequence will drop the
 	table from their configuration data.
 
+SET_MOVE_TABLE
+	ev_data1		tab_id
+	ev_data2		set_id
+
+	setMoveTable(tab_id, new_set_id)
+	setMoveTable_int(tab_id, new_set_id)
+
+	Only nodes currently subscribed to the table will drop it from
+	one set, and move it to another.
+
+SET_MOVE_SEQUENCE
+	ev_data1		seq_id
+	ev_data2		set_id
+
+	setMoveSequence(seq_id, new_set_id)
+	setMoveSequence_int(seq_id, new_set_id)
+
+	
+	Only nodes currently subscribed to the sequence will drop it
+	from one set, and move it to another.
+
+
 SUBSCRIBE_SET
 	ev_data1		sub_set
 	ev_data2		sub_provider
