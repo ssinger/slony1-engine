@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.14 2004-04-14 20:18:12 wieck Exp $
+ *	$Id: slonik.c,v 1.15 2004-05-05 16:13:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2666,7 +2666,7 @@ slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-			"select \"_%s\".subscribeSet(%d, %d); ",
+			"select \"_%s\".unsubscribeSet(%d, %d); ",
 			stmt->hdr.script->clustername,
 			stmt->sub_setid, stmt->sub_receiver);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
