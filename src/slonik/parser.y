@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.3 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: parser.y,v 1.4 2004-03-18 22:47:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -28,7 +28,9 @@ typedef enum {
 	O_FORWARD,
 	O_FQNAME,
 	O_ID,
+	O_NEW_ORIGIN,
 	O_NODE_ID,
+	O_OLD_ORIGIN,
 	O_ORIGIN,
 	O_PROVIDER,
 	O_RECEIVER,
@@ -124,6 +126,9 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_set_add_table
 %type <statement>	stmt_table_add_key
 %type <statement>	stmt_subscribe_set
+%type <statement>	stmt_lock_set
+%type <statement>	stmt_unlock_set
+%type <statement>	stmt_move_set
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -156,10 +161,14 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_INIT
 %token	K_KEY
 %token	K_LISTEN
+%token	K_LOCK
+%token	K_MOVE
 %token	K_NAME
+%token	K_NEW
 %token	K_NO
 %token	K_NODE
 %token	K_OFF
+%token	K_OLD
 %token	K_ON
 %token	K_ORIGIN
 %token	K_PATH
@@ -176,6 +185,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_TABLE
 %token	K_TRUE
 %token	K_TRY
+%token	K_UNLOCK
 %token	K_YES
 
 /*
@@ -323,6 +333,12 @@ try_stmt			: stmt_echo
 					| stmt_set_add_table
 						{ $$ = $1; }
 					| stmt_subscribe_set
+						{ $$ = $1; }
+					| stmt_lock_set
+						{ $$ = $1; }
+					| stmt_unlock_set
+						{ $$ = $1; }
+					| stmt_move_set
 						{ $$ = $1; }
 					| stmt_error ';' { yyerrok; }
 						{ $$ = $1; }
@@ -690,6 +706,86 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 					}
 					;
 
+stmt_lock_set		: lno K_LOCK K_SET option_list
+					{
+						SlonikStmt_lock_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_lock_set *)
+								malloc(sizeof(SlonikStmt_lock_set));
+						memset(new, 0, sizeof(SlonikStmt_lock_set));
+						new->hdr.stmt_type		= STMT_LOCK_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->set_origin		= opt[1].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_unlock_set		: lno K_UNLOCK K_SET option_list
+					{
+						SlonikStmt_unlock_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_unlock_set *)
+								malloc(sizeof(SlonikStmt_unlock_set));
+						memset(new, 0, sizeof(SlonikStmt_unlock_set));
+						new->hdr.stmt_type		= STMT_UNLOCK_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->set_origin		= opt[1].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_move_set		: lno K_MOVE K_SET option_list
+					{
+						SlonikStmt_move_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_OLD_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_NEW_ORIGIN, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_move_set *)
+								malloc(sizeof(SlonikStmt_move_set));
+						memset(new, 0, sizeof(SlonikStmt_move_set));
+						new->hdr.stmt_type		= STMT_MOVE_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->old_origin		= opt[1].ival;
+							new->new_origin		= opt[2].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
 option_list			: ';'
 					{ $$ = NULL; }
 					| '(' option_list_items ')' ';'
@@ -726,6 +822,16 @@ option_list_item	: K_ID '=' option_item_id
 					{
 						$3->opt_code	= O_ORIGIN;
 						$$ = $3;
+					}
+					| K_OLD K_ORIGIN '=' option_item_id
+					{
+						$4->opt_code	= O_OLD_ORIGIN;
+						$$ = $4;
+					}
+					| K_NEW K_ORIGIN '=' option_item_id
+					{
+						$4->opt_code	= O_NEW_ORIGIN;
+						$$ = $4;
 					}
 					| K_RECEIVER '=' option_item_id
 					{
@@ -900,7 +1006,7 @@ lno					:
  * ----------
  */
 static char *
-option_str(int opt_code)
+option_str(option_code opt_code)
 {
 	switch (opt_code)
 	{
@@ -919,8 +1025,12 @@ option_str(int opt_code)
 		case O_SER_KEY:			return "key";
 		case O_SET_ID:			return "set id";
 		case O_USE_KEY:			return "key";
-		default:				return "???";
+		case O_FORWARD:			return "forward";
+		case O_NEW_ORIGIN:		return "new origin";
+		case O_OLD_ORIGIN:		return "old origin";
+		case END_OF_OPTIONS:	return "???";
 	}
+	return "???";
 }
 
 /* ----------

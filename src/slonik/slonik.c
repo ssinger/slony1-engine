@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.7 2004-03-18 17:29:17 wieck Exp $
+ *	$Id: slonik.c,v 1.8 2004-03-18 22:47:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -493,6 +493,95 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_LOCK_SET:
+				{
+					SlonikStmt_lock_set *stmt =
+							(SlonikStmt_lock_set *)hdr;
+
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->set_origin < 0)
+					{
+						printf("%s:%d: Error: "
+								"origin must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_UNLOCK_SET:
+				{
+					SlonikStmt_unlock_set *stmt =
+							(SlonikStmt_unlock_set *)hdr;
+
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->set_origin < 0)
+					{
+						printf("%s:%d: Error: "
+								"origin must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_MOVE_SET:
+				{
+					SlonikStmt_move_set *stmt =
+							(SlonikStmt_move_set *)hdr;
+
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->old_origin < 0)
+					{
+						printf("%s:%d: Error: "
+								"old origin must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->new_origin < 0)
+					{
+						printf("%s:%d: Error: "
+								"new origin must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->new_origin == stmt->old_origin)
+					{
+						printf("%s:%d: Error: "
+								"old and new origin cannot be identical\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->old_origin) < 0)
+						errors++;
+				}
+				break;
+
 		}
 
 		hdr = hdr->next;
@@ -716,6 +805,36 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_subscribe_set *)hdr;
 
 					if (slonik_subscribe_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_LOCK_SET:
+				{
+					SlonikStmt_lock_set *stmt =
+							(SlonikStmt_lock_set *)hdr;
+
+					if (slonik_lock_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_UNLOCK_SET:
+				{
+					SlonikStmt_unlock_set *stmt =
+							(SlonikStmt_unlock_set *)hdr;
+
+					if (slonik_unlock_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_MOVE_SET:
+				{
+					SlonikStmt_move_set *stmt =
+							(SlonikStmt_move_set *)hdr;
+
+					if (slonik_move_set(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1678,6 +1797,153 @@ slonik_subscribe_set(SlonikStmt_subscribe_set *stmt)
 			stmt->sub_setid, stmt->sub_provider, 
 			stmt->sub_receiver,
 			(stmt->sub_forward) ? "t" : "f");
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_lock_set(SlonikStmt_lock_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+	PGresult	   *res1;
+	PGresult	   *res2;
+	char		   *maxxid_lock;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (adminfo1->have_xact)
+	{
+		printf("%s:%d: cannot lock set - admin connection already in transaction\n",
+				stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+	}
+
+	/*
+	 * We issue the lockSet() and get the current xmax
+	 */
+	dstring_init(&query);
+	slon_mkquery(&query,
+			"select \"_%s\".lockSet(%d); "
+			"select \"_%s\".getMaxXid(); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id,
+			stmt->hdr.script->clustername);
+	res1 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+	if (res1 == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	maxxid_lock = PQgetvalue(res1, 0, 0);
+
+	/*
+	 * Now we need to commit this already and wait until
+	 * xmin is >= that xmax
+	 */
+	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	{
+		dstring_free(&query);
+		PQclear(res1);
+		return -1;
+	}
+
+	printf("lockSet(%d): waiting for xmin to become >= %s\n",
+			stmt->set_id, maxxid_lock);
+	slon_mkquery(&query,
+			"select \"_%s\".getMinXid() >= '%s'; ",
+			stmt->hdr.script->clustername, maxxid_lock);
+			
+	while (true)
+	{
+		res2 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+		if (res2 == NULL)
+		{
+			PQclear(res1);
+			dstring_free(&query);
+			return -1;
+		}
+
+		if (*PQgetvalue(res2, 0, 0) == 't')
+			break;
+
+		PQclear(res2);
+		if (db_rollback_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		{
+			dstring_free(&query);
+			PQclear(res1);
+			return -1;
+		}
+
+		printf("    not yet\n");
+		sleep(1);
+	}
+
+	printf("    done\n");
+	PQclear(res1);
+	PQclear(res2);
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_unlock_set(SlonikStmt_unlock_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".unlockSet(%d); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_move_set(SlonikStmt_move_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->old_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".moveSet(%d, %d); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id, stmt->new_origin);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);

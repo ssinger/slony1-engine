@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.4 2004-03-15 20:08:10 wieck Exp $
+ *	$Id: slonik.h,v 1.5 2004-03-18 22:47:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -28,6 +28,9 @@ typedef struct SlonikStmt_create_set_s			SlonikStmt_create_set;
 typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
 typedef struct SlonikStmt_subscribe_set_s		SlonikStmt_subscribe_set;
+typedef struct SlonikStmt_lock_set_s			SlonikStmt_lock_set;
+typedef struct SlonikStmt_unlock_set_s			SlonikStmt_unlock_set;
+typedef struct SlonikStmt_move_set_s			SlonikStmt_move_set;
 
 typedef enum {
 	STMT_TRY = 1,
@@ -44,6 +47,9 @@ typedef enum {
 	STMT_SET_ADD_TABLE,
 	STMT_TABLE_ADD_KEY,
 	STMT_SUBSCRIBE_SET,
+	STMT_LOCK_SET,
+	STMT_UNLOCK_SET,
+	STMT_MOVE_SET,
 	STMT_ERROR
 } Slonik_stmttype;
 	
@@ -191,6 +197,28 @@ struct SlonikStmt_subscribe_set_s {
 };
 
 
+struct SlonikStmt_lock_set_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					set_origin;
+};
+
+
+struct SlonikStmt_unlock_set_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					set_origin;
+};
+
+
+struct SlonikStmt_move_set_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					old_origin;
+	int					new_origin;
+};
+
+
 
 
 extern SlonikScript	   *parser_script;
@@ -293,6 +321,9 @@ extern int		slonik_create_set(SlonikStmt_create_set *stmt);
 extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);
 extern int		slonik_subscribe_set(SlonikStmt_subscribe_set *stmt);
+extern int		slonik_lock_set(SlonikStmt_lock_set *stmt);
+extern int		slonik_unlock_set(SlonikStmt_unlock_set *stmt);
+extern int		slonik_move_set(SlonikStmt_move_set *stmt);
 
 
 /*
