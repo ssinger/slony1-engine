@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.9 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: scan.l,v 1.10 2004-05-20 17:50:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -61,6 +61,7 @@ init			{ return K_INIT;				}
 key				{ return K_KEY;					}
 listen			{ return K_LISTEN;				}
 lock			{ return K_LOCK;				}
+merge			{ return K_MERGE;				}
 move			{ return K_MOVE;				}
 name			{ return K_NAME;				}
 new				{ return K_NEW;					}

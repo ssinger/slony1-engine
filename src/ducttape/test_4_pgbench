@@ -1,18 +1,11 @@
 #!/bin/sh
 
 # **********
-# test_1_pgbench
+# test_4_pgbench
 #
-# 	This test script creates a standalone pgbench database 
-#	as slony_test1 and then:
-#
-#	- initializes a primary node and starts the node daemon
-#	- creates a set containing all 4 pgbench tables
-#	- creates a second database as slony_test2
-#	- adds database slony_test2 to the system
-#	- starts the second replication daemon
-#	- creates the pgbench tables (schema only)
-#	- subscribes the replication set from the primary node
+# 	This test script is derived from test_1_pgbench. It 
+#	tests the MERGE_SET funcitonality by delaying the subsciption
+#	of the history table until later.
 # **********
 
 export PATH
@@ -21,7 +14,7 @@ DB1=slony_test1
 DB2=slony_test2
 
 PGBENCH_SCALE=1
-PGBENCH_CLIENTS=5
+PGBENCH_CLIENTS=2
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
 
 trap '
@@ -114,7 +107,7 @@ xterm -title "Slon node 1" -e sh -c "slon T1 dbname=$DB1; echo -n 'Enter>'; read
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
-echo "**** creating a replication set containing the 4 pgbench tables ... "
+echo "**** creating a replication set containing the 3 pgbench tables ... "
 slonik <<_EOF_
 	cluster name = T1;
 	node 1 admin conninfo = 'dbname=$DB1';
@@ -138,9 +131,6 @@ slonik <<_EOF_
 		set add table (set id = 1, origin = 1,
 			id = 3, full qualified name = 'public.tellers',
 			comment = 'Table tellers');
-		set add table (set id = 1, origin = 1,
-			id = 4, full qualified name = 'public.history',
-			key = serial, comment = 'Table accounts');
 	}
 	on error {
 		exit 1;
@@ -239,6 +229,54 @@ echo "**********************************************************************"
 echo "**** $DB2 should now be copying data and attempting to catch up."
 echo "**********************************************************************"
 echo ""
+
+echo -n "Hit enter when node 2 ready >"
+read line
+echo ""
+
+echo "**** creating a replication set containing the history table ... "
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		table add key (node id = 1, full qualified name = 'public.history');
+	}
+	on error {
+		exit 1;
+	}
+
+	try {
+		create set (id = 99, origin = 1, comment = 'Set 99 - history');
+		set add table (set id = 99, origin = 1,
+			id = 4, full qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+sleep 30
+
+echo "**** subscribing node 2 to set 99 ... "
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	subscribe set ( id = 99, provider = 1, receiver = 2, forward = yes );
+_EOF_
+sleep 30
+
+echo "**** merging set 99 to 1 ... "
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	merge set ( id = 1, add id = 99, origin = 1);
+_EOF_
 
 echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do

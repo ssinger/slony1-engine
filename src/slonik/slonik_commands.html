@@ -33,6 +33,8 @@
 		<li><a href="#stmt_drop_listen">DROP LISTEN</a>
 		<li><a href="#stmt_table_add_key">TABLE ADD KEY</a>
 		<li><a href="#stmt_create_set">CREATE SET</a>
+		<li><a href="#stmt_drop_set">DROP SET</a>
+		<li><a href="#stmt_merge_set">MERGE SET</a>
 		<li><a href="#stmt_set_add_table">SET ADD TABLE</a>
 		<li><a href="#stmt_set_add_sequence">SET ADD SEQUENCE</a>
 		<li><a href="#stmt_store_trigger">STORE TRIGGER</a>
@@ -750,6 +752,89 @@
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Tables of ticket system'
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_drop_set">
+<h3>DROP SET</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	DROP SET ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drop a set of tables from the Slony-I configuration. This
+	automatically unsubscribes all nodes from the set and restores
+	the original triggers and rules on all subscribers.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the set to be dropped.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	DROP SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 5,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_merge_set">
+<h3>MERGE SET</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	MERGE SET ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Merge a set of tables and sequences into another one. This function
+	is a workaround for the problem that it is not possible to add
+	tables/sequences to subscribed sets. One can create a temporary set,
+	add the new objects to that, subscribe all nodes, currently subscribed
+	to the other set to this new one and then merge the two together.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the set to contain the union of the two separate sets.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ADD ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the set whos objects should be transferred.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the two sets.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	MERGE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ADD ID = 9999,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
 	<br>);
 </p>
 </div>

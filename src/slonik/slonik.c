@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.17 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: slonik.c,v 1.18 2004-05-20 17:50:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -393,6 +393,50 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				{
 					SlonikStmt_create_set *stmt =
 							(SlonikStmt_create_set *)hdr;
+
+					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_SET:
+				{
+					SlonikStmt_drop_set *stmt =
+							(SlonikStmt_drop_set *)hdr;
+
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_MERGE_SET:
+				{
+					SlonikStmt_merge_set *stmt =
+							(SlonikStmt_merge_set *)hdr;
+
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (stmt->add_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id to merge (add) must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 
 					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
@@ -961,6 +1005,26 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_create_set *)hdr;
 
 					if (slonik_create_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_SET:
+				{
+					SlonikStmt_drop_set *stmt =
+							(SlonikStmt_drop_set *)hdr;
+
+					if (slonik_drop_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_MERGE_SET:
+				{
+					SlonikStmt_merge_set *stmt =
+							(SlonikStmt_merge_set *)hdr;
+
+					if (slonik_merge_set(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -2524,6 +2588,66 @@ slonik_create_set(SlonikStmt_create_set *stmt)
 			"select \"_%s\".storeSet(%d, '%q'); ",
 			stmt->hdr.script->clustername,
 			stmt->set_id, stmt->set_comment);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_drop_set(SlonikStmt_drop_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".dropSet(%d); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_merge_set(SlonikStmt_merge_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".mergeSet(%d, %d); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id, stmt->add_id);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);

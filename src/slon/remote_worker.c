@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.44 2004-05-20 00:42:54 wieck Exp $
+ *	$Id: remote_worker.c,v 1.45 2004-05-20 17:50:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -609,6 +609,28 @@ remoteWorkerThread_main(void *cdata)
 						"select %s.storeSet_int(%d, %d, '%q'); ",
 						rtcfg_namespace,
 						set_id, set_origin, set_comment);
+			}
+			else if (strcmp(event->ev_type, "DROP_SET") == 0)
+			{
+				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
+
+				rtcfg_dropSet(set_id);
+
+				slon_appendquery(&query1,
+						"select %s.dropSet_int(%d); ",
+						rtcfg_namespace, set_id);
+			}
+			else if (strcmp(event->ev_type, "MERGE_SET") == 0)
+			{
+				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
+				int		add_id = (int) strtol(event->ev_data2, NULL, 10);
+
+				rtcfg_dropSet(add_id);
+
+				slon_appendquery(&query1,
+						"select %s.mergeSet_int(%d, %d); ",
+						rtcfg_namespace,
+						set_id, add_id);
 			}
 			else if (strcmp(event->ev_type, "SET_ADD_TABLE") == 0)
 			{

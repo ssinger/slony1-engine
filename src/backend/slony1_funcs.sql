@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.7 2004-05-19 19:38:28 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.8 2004-05-20 17:50:34 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1764,9 +1764,34 @@ returns int4
 as '
 declare
 	p_set_id			alias for $1;
+	v_origin			int4;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropSet() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	-- ----
+	-- Check that the set exists and originates here
+	-- ----
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Call the internal drop set functionality and generate the event
+	-- ----
+	perform @NAMESPACE@.dropSet_int(p_set_id);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_SET'', 
+			p_set_id);
+
+	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -1781,9 +1806,155 @@ returns int4
 as '
 declare
 	p_set_id			alias for $1;
+	v_tab_row			record;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropSet_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	-- ----
+	-- Restore all tables original triggers and rules and remove
+	-- our replication stuff.
+	-- ----
+	for v_tab_row in select tab_id from @NAMESPACE@.sl_table
+			where tab_set = p_set_id
+			order by tab_id
+	loop
+		perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+		perform @NAMESPACE@.tableDropKey(v_tab_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Remove all traces of the set configuration
+	-- ----
+	delete from @NAMESPACE@.sl_sequence
+			where seq_set = p_set_id;
+	delete from @NAMESPACE@.sl_table
+			where tab_set = p_set_id;
+	delete from @NAMESPACE@.sl_subscribe
+			where sub_set = p_set_id;
+	delete from @NAMESPACE@.sl_setsync
+			where ssy_setid = p_set_id;
+	delete from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION mergeSet (set_id, add_id)
+--
+--	Generate the MERGE_SET event.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.mergeSet (int4, int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_add_id			alias for $2;
+	v_origin			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	-- ----
+	-- Check that both sets exist and originate here
+	-- ----
+	if p_set_id = p_add_id then
+		raise exception ''Slony-I: merged set ids cannot be identical'';
+	end if;
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+	end if;
+
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = p_add_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_add_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_add_id;
+	end if;
+
+	-- ----
+	-- Check that both sets are subscribed by the same set of nodes
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = p_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = p_add_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				p_set_id, p_add_id;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = p_add_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = p_set_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				p_add_id, p_set_id;
+	end if;
+
+	-- ----
+	-- Create a SYNC event, merge the sets, create a MERGE_SET event
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	perform @NAMESPACE@.mergeSet_int(p_set_id, p_add_id);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MERGE_SET'', 
+			p_set_id, p_add_id);
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION mergeSet_int (set_id, add_id)
+--
+--	Process the MERGE_SET event.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.mergeSet_int (int4, int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_add_id			alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	update @NAMESPACE@.sl_sequence
+			set seq_set = p_set_id
+			where seq_set = p_add_id;
+	update @NAMESPACE@.sl_table
+			set tab_set = p_set_id
+			where tab_set = p_add_id;
+	delete from @NAMESPACE@.sl_subscribe
+			where sub_set = p_add_id;
+	delete from @NAMESPACE@.sl_setsync
+			where ssy_setid = p_add_id;
+	delete from @NAMESPACE@.sl_set
+			where set_id = p_add_id;
+
+	return p_set_id;
 end;
 ' language plpgsql;
 

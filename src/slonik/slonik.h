@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.11 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: slonik.h,v 1.12 2004-05-20 17:50:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -28,6 +28,8 @@ typedef struct SlonikStmt_drop_path_s			SlonikStmt_drop_path;
 typedef struct SlonikStmt_store_listen_s		SlonikStmt_store_listen;
 typedef struct SlonikStmt_drop_listen_s			SlonikStmt_drop_listen;
 typedef struct SlonikStmt_create_set_s			SlonikStmt_create_set;
+typedef struct SlonikStmt_drop_set_s			SlonikStmt_drop_set;
+typedef struct SlonikStmt_merge_set_s			SlonikStmt_merge_set;
 typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
 typedef struct SlonikStmt_set_add_sequence_s	SlonikStmt_set_add_sequence;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
@@ -45,12 +47,14 @@ typedef enum {
 	STMT_DROP_LISTEN,
 	STMT_DROP_NODE,
 	STMT_DROP_PATH,
+	STMT_DROP_SET,
 	STMT_DROP_TRIGGER,
 	STMT_ECHO,
 	STMT_EXIT,
 	STMT_FAILED_NODE,
 	STMT_INIT_CLUSTER,
 	STMT_LOCK_SET,
+	STMT_MERGE_SET,
 	STMT_MOVE_SET,
 	STMT_RESTART_NODE,
 	STMT_SET_ADD_SEQUENCE,
@@ -200,6 +204,21 @@ struct SlonikStmt_create_set_s {
 	int					set_id;
 	int					set_origin;
 	char			   *set_comment;
+};
+
+
+struct SlonikStmt_drop_set_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					set_origin;
+};
+
+
+struct SlonikStmt_merge_set_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					add_id;
+	int					set_origin;
 };
 
 
@@ -388,6 +407,8 @@ extern int		slonik_drop_path(SlonikStmt_drop_path *stmt);
 extern int		slonik_store_listen(SlonikStmt_store_listen *stmt);
 extern int		slonik_drop_listen(SlonikStmt_drop_listen *stmt);
 extern int		slonik_create_set(SlonikStmt_create_set *stmt);
+extern int		slonik_drop_set(SlonikStmt_drop_set *stmt);
+extern int		slonik_merge_set(SlonikStmt_merge_set *stmt);
 extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
 extern int		slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);

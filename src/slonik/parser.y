@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.11 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: parser.y,v 1.12 2004-05-20 17:50:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -20,6 +20,7 @@
  * Common option types
  */
 typedef enum {
+	O_ADD_ID,
 	O_BACKUP_NODE,
 	O_CLIENT,
 	O_COMMENT,
@@ -130,6 +131,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_store_listen
 %type <statement>	stmt_drop_listen
 %type <statement>	stmt_create_set
+%type <statement>	stmt_drop_set
+%type <statement>	stmt_merge_set
 %type <statement>	stmt_set_add_table
 %type <statement>	stmt_set_add_sequence
 %type <statement>	stmt_table_add_key
@@ -175,6 +178,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_KEY
 %token	K_LISTEN
 %token	K_LOCK
+%token	K_MERGE
 %token	K_MOVE
 %token	K_NAME
 %token	K_NEW
@@ -399,6 +403,10 @@ try_stmt			: stmt_echo
 					| stmt_drop_listen
 						{ $$ = $1; }
 					| stmt_create_set
+						{ $$ = $1; }
+					| stmt_drop_set
+						{ $$ = $1; }
+					| stmt_merge_set
 						{ $$ = $1; }
 					| stmt_table_add_key
 						{ $$ = $1; }
@@ -764,6 +772,60 @@ stmt_create_set		: lno K_CREATE K_SET option_list
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 							new->set_comment	= opt[2].str;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_drop_set		: lno K_DROP K_SET option_list
+					{
+						SlonikStmt_drop_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_drop_set *)
+								malloc(sizeof(SlonikStmt_drop_set));
+						memset(new, 0, sizeof(SlonikStmt_drop_set));
+						new->hdr.stmt_type		= STMT_DROP_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->set_origin		= opt[1].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_merge_set		: lno K_MERGE K_SET option_list
+					{
+						SlonikStmt_merge_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_ADD_ID, -1 ),
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_merge_set *)
+								malloc(sizeof(SlonikStmt_merge_set));
+						memset(new, 0, sizeof(SlonikStmt_merge_set));
+						new->hdr.stmt_type		= STMT_MERGE_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->add_id			= opt[1].ival;
+							new->set_origin		= opt[2].ival;
 						}
 
 						$$ = (SlonikStmt *)new;
@@ -1138,6 +1200,11 @@ option_list_item	: K_ID '=' option_item_id
 						$4->opt_code	= O_SET_ID;
 						$$ = $4;
 					}
+					| K_ADD K_ID '=' option_item_id
+					{
+						$4->opt_code	= O_ADD_ID;
+						$$ = $4;
+					}
 					| K_NODE K_ID '=' option_item_id
 					{
 						$4->opt_code	= O_NODE_ID;
@@ -1295,6 +1362,7 @@ option_str(option_code opt_code)
 {
 	switch (opt_code)
 	{
+		case O_ADD_ID:			return "add id";
 		case O_BACKUP_NODE:		return "backup node";
 		case O_CLIENT:			return "client";
 		case O_COMMENT:			return "comment";

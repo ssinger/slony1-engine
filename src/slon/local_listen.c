@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.19 2004-05-19 19:38:28 wieck Exp $
+ *	$Id: local_listen.c,v 1.20 2004-05-20 17:50:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -314,6 +314,30 @@ localListenThread_main(void *dummy)
 				set_comment	= PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeSet(set_id, set_origin, set_comment);
+			}
+			else if (strcmp(ev_type, "DROP_SET") == 0)
+			{
+				/*
+				 * DROP_SET
+				 */
+				int		set_id;
+
+				set_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+
+				rtcfg_dropSet(set_id);
+			}
+			else if (strcmp(ev_type, "MERGE_SET") == 0)
+			{
+				/*
+				 * MERGE_SET
+				 */
+				int		set_id;
+				int		add_id;
+
+				set_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				add_id		= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+
+				rtcfg_dropSet(add_id);
 			}
 			else if (strcmp(ev_type, "SET_ADD_TABLE") == 0)
 			{

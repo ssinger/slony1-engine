@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.18 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: runtime_config.c,v 1.19 2004-05-20 17:50:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -600,6 +600,41 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	rtcfg_unlock();
 	rtcfg_seq_bump();
 	sched_wakeup_node(set_origin);
+}
+
+
+void
+rtcfg_dropSet(int set_id)
+{
+	SlonSet	   *set;
+
+	rtcfg_lock();
+
+	/*
+	 * Find the set and remove it from the config
+	 */
+	for (set = rtcfg_set_list_head; set; set = set->next)
+	{
+		if (set->set_id == set_id)
+		{
+			int old_origin = set->set_origin;
+
+			slon_log(SLON_CONFIG,
+					"dropSet: set_id=%d\n", set_id);
+			DLLIST_REMOVE(rtcfg_set_list_head, rtcfg_set_list_tail, set);
+			free(set->set_comment);
+			free(set);
+
+			rtcfg_unlock();
+			rtcfg_seq_bump();
+			sched_wakeup_node(old_origin);
+			return;
+		}
+	}
+
+	slon_log(SLON_CONFIG,
+			"dropSet: set_id=%d - set not found\n", set_id);
+	rtcfg_unlock();
 }
 
 
