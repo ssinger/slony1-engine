@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="guest" date="1099002364" format="1.0" version="1.3"}%
+%META:TOPICINFO{author="guest" date="1101234514" format="1.0" version="1.4"}%
 %META:TOPICPARENT{name="SlonyIAdministration"}%
 ---++ Slony-I Installation
 
@@ -17,7 +17,7 @@ This will create a directory Slony-I under the current directory with the Slony-
 ./configure --with-pgsourcetree=/whereever/the/source/is
 gmake all
 gmake install
-<verbatim>
+</verbatim>
 
 ---+++ Configuration
 
@@ -62,4 +62,3 @@ This will install files into postgresql install directory as specified by the
 --prefix option used in the PostgreSQL configuration.  Make sure you have
 appropriate permissions to write into that area.  Normally you need to do this either
 as root or as the postgres user.`
-
