@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.4 2004-04-16 18:54:18 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.5 2004-04-16 20:00:22 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -679,27 +679,7 @@ begin
 				or li_receiver = p_failed_node;
 
 	-- ----
-	-- For every set that moves, make sure that a receiver that
-	-- currently receives directly from the origin, is now receiving
-	-- that set from the backup node. And also that
-	-- it will listen for events from the backup node directly.
-	-- ----
-	for v_row in select S.set_id, SUB.sub_provider, SUB.sub_receiver,
-				SUB.sub_forward
-			from @NAMESPACE@.sl_set S, @NAMESPACE@.sl_subscribe SUB
-			where S.set_origin = p_failed_node
-				and S.set_id = SUB.sub_set
-				and SUB.sub_provider = p_failed_node
-				and SUB.sub_receiver <> p_backup_node
-	loop
-		perform @NAMESPACE@.storeListen_int(p_failed_node, 
-				p_backup_node, v_row.sub_receiver);
-		perform @NAMESPACE@.subscribeSet_int(v_row.set_id,
-				p_backup_node, v_row.sub_receiver, v_row.sub_forward);
-	end loop;
-
-	-- ----
-	-- Now move the sets and change providers
+	-- Move the sets
 	-- ----
 	for v_row in select S.set_id, (select count(*)
 					from @NAMESPACE@.sl_subscribe SUB
@@ -715,6 +695,7 @@ begin
 		-- If the backup node is the only direct subscriber ...
 		-- ----
 		if v_row.num_direct_receivers = 0 then
+raise notice ''failedNode: set % has no other direct receivers - move now'', v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
 			-- right now. On the backup node itself that includes restoring
@@ -748,6 +729,7 @@ begin
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
+raise notice ''failedNode: set % has other direct receivers - change providers only'', v_row.set_id;
 			-- ----
 			-- Backup node is not the only direct subscriber. This
 			-- means that at this moment, we redirect all direct
