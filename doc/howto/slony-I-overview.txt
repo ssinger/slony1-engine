@@ -20,6 +20,16 @@ functionality within it to detect a node failure, or automatically promote a
 node to a master or other data origin.  Slony-I is not multi-master; it's not
 a connection broker, and it doesn't make you coffee and toast in the morning.
 
+Why doesn't Slony-I do automatic fail-over/promotion?
+
+This is the job of network monitoring software, not Slony.  Every site's
+configuration and fail-over path is different. For example keep-alive monitoring 
+with redundant NIC's and intelligent HA switches that guarantee race-condition 
+free takeover of a network address and disconnecting the "failed" node vary
+in every network setup, vendor choice, hardware/software combination.  This 
+is clearly the realm of network management software and not Slony-I. Let 
+Slony-I do what it does best, and that is provide database replication.
+
 Current Limitations:
 
 Slony-I does not automatically propagate schema changes, nor does it have any
