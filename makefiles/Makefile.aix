@@ -21,7 +21,7 @@ IMPSUFF= .imp
 
 POSTGRES_IMP= postgres$(IMPSUFF)
 
-MKLDEXPORT=$(top_srcdir)/src/backend/port/aix/mkldexport.sh
+MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 
 %$(EXPSUFF): %.o
 	$(MKLDEXPORT) $*.o > $*$(EXPSUFF)
@@ -31,4 +31,4 @@ MKLDEXPORT=$(top_srcdir)/src/backend/port/aix/mkldexport.sh
 
 %$(DLSUFFIX): %.o %$(EXPSUFF)
 	@echo Making shared library $@ from $*.o, $*$(EXPSUFF) and postgres.imp
-	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(top_builddir)/src/backend/$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)
+	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(slony_top_builddir)/src/backend/$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)
