@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.26 2004-12-11 00:56:21 darcyb Exp $
+#	$Id: Makefile,v 1.27 2005-01-26 18:30:07 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -61,7 +61,12 @@ conf-file.o:		conf-file.c slon.h confoptions.h
 confoptions.o:		confoptions.c slon.h confoptions.h
 
 conf-file.c:		conf-file.l
-	$(FLEX) -o$(@) $<
+ifdef FLEX
+	$(FLEX) $(FLEXFLAGS) -o'$@' $<
+else
+	@echo "Missing flex $< $@"
+	@exit
+endif
 
 clean distclean:
 	rm -f $(ALL) $(OBJS) $(PROG).core
