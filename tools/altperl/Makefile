@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.8 2005-02-22 20:50:28 smsimms Exp $
+#       $Id: Makefile,v 1.9 2005-03-25 09:45:27 xfade Exp $
 #
 # ----------
 
@@ -59,6 +59,6 @@ distdir: $(DISTFILES)
 clean distclean maintainer-clean:
 	@for file in $(wildcard *.pl) $(wildcard *.pm); do \
 		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` ; \
-		rm $$tmpname ; \
+		rm -f $$tmpname ; \
 	done
 
