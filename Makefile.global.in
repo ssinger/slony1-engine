@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.8 2004-03-12 17:26:55 wieck Exp $
+# $Id: Makefile.global.in,v 1.9 2004-03-12 18:36:58 wieck Exp $
 # ----------
 
 ##########################################################################
@@ -39,7 +39,6 @@ endif
 #
 # Configuration options
 #
-SLONY_I_MAXNODES := @slony_I_maxnodes@
 
 
 ##########################################################################
@@ -50,101 +49,11 @@ SLONY_I_MAXNODES := @slony_I_maxnodes@
 prefix := @prefix@
 exec_prefix := ${prefix}
 
-bindir := ${exec_prefix}/bin
-sbindir := ${exec_prefix}/sbin
+libdir := @libdir@
+datadir := @datadir@
+bindir := @bindir@
+includedir := @includedir@
 
-basedir := ${prefix}
-ifeq "$(findstring pgsql, $(basedir))" ""
-ifeq "$(findstring postgres, $(basedir))" ""
-override basedir := $(basedir)
-endif
-endif
-
-libexecdir := ${exec_prefix}/libexec
-ifeq "$(findstring pgsql, $(libexecdir))" ""
-ifeq "$(findstring postgres, $(libexecdir))" ""
-override libexecdir := $(libexecdir)
-endif
-endif
-
-datadir := ${prefix}/share
-ifeq "$(findstring pgsql, $(datadir))" ""
-ifeq "$(findstring postgres, $(datadir))" ""
-override datadir := $(datadir)
-endif
-endif
-
-sysconfdir := ${prefix}/etc
-ifeq "$(findstring pgsql, $(sysconfdir))" ""
-ifeq "$(findstring postgres, $(sysconfdir))" ""
-override sysconfdir := $(sysconfdir)
-endif
-endif
-
-libdir := ${exec_prefix}/lib
-pkglibdir = $(libdir)
-ifeq "$(findstring pgsql, $(pkglibdir))" ""
-ifeq "$(findstring postgres, $(pkglibdir))" ""
-override pkglibdir := $(pkglibdir)
-endif
-endif
-
-logdir := ${prefix}/log
-pkglogdir = $(logdir)
-ifeq "$(findstring pgsql, $(pkglogdir))" ""
-ifeq "$(findstring postgres, $(pkglogdir))" ""
-override pkglogdir := $(pkglogdir)
-endif
-endif
-
-confdir := ${prefix}/conf
-pkgconfdir = $(confdir)
-ifeq "$(findstring pgsql, $(pkgconfdir))" ""
-ifeq "$(findstring postgres, $(pkgconfdir))" ""
-override pkgconfdir := $(pkgconfdir)
-endif
-endif
-
-sqldir := ${prefix}/sql
-pkgsqldir = $(sqldir)
-ifeq "$(findstring pgsql, $(pkgsqldir))" ""
-ifeq "$(findstring postgres, $(pkgsqldir))" ""
-override pkgsqldir := $(pkgsqldir)
-endif
-endif
-
-templdir := ${prefix}/templates
-pkgtempldir = $(templdir)
-ifeq "$(findstring pgsql, $(pkgtempldir))" ""
-ifeq "$(findstring postgres, $(pkgtempldir))" ""
-override pkgtempldir := $(pkgtempldir)
-endif
-endif
-
-includedir := ${prefix}/include
-pkgincludedir = $(includedir)
-ifeq "$(findstring pgsql, $(pkgincludedir))" ""
-ifeq "$(findstring postgres, $(pkgincludedir))" ""
-override pkgincludedir := $(pkgincludedir)
-endif
-endif
-includedir_server = $(pkgincludedir)/server
-includedir_internal = $(pkgincludedir)/internal
-
-mandir := ${prefix}/man
-sqlmansect_dummy = l
-
-docdir := ${prefix}/doc
-ifeq "$(findstring pgsql, $(docdir))" ""
-ifeq "$(findstring postgres, $(docdir))" ""
-override docdir := $(docdir)
-endif
-endif
-
-odbcinst_ini_dir = ${sysconfdir}
-
-javadir := $(DESTDIR)$(datadir)/java
-localedir := 
 
 
 ##########################################################################
