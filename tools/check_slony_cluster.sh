@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slony_cluster.sh,v 1.2 2005-03-03 23:46:33 cbbrowne Exp $
+# $Id: check_slony_cluster.sh,v 1.3 2005-03-22 17:30:10 smsimms Exp $
 
 # nagios plugin that checks whether the slave nodes in a slony cluster
 # are being updated from the master
@@ -20,7 +20,7 @@
 # Copyright 2005
 
 # check parameters are valid
-if [[ $# -ne 3 ]]
+if [ $# -ne 3 ]
 then
    echo "Invalid parameters need CLUSTERNAME DBNAME DBHOST"
    exit 2
