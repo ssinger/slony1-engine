@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.24 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.25 2005-02-28 01:01:41 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -956,19 +956,20 @@ very long time.  The <envar> query_start </envar> time in <envar>
 pg_stat_activity </envar> may show you some query that has been
 running way too long.  </para> </answer>
 
-<answer> <para> There are plans for
-<productname>PostgreSQL</productname> to have a timeout parameter,
-<envar> open_idle_transaction_timeout </envar>, which would cause old
+<answer> <para> There are plans for <productname> PostgreSQL
+</productname> to have a timeout parameter, <envar>
+open_idle_transaction_timeout </envar>, which would cause old
 transactions to time out after some period of disuse.  Buggy
 connection pool logic is a common culprit for this sort of thing.
-There are plans for <productname> pgpool </productname> to provide a
-better alternative, eventually, where connections would be shared
-inside a connection pool implemented in C.  You may have some more or
-less buggy connection pool in your Java or PHP application; if a small
-set of <emphasis> real </emphasis> connections are held in
-<productname>pgpool</productname>, that will hide from the database
-the fact that the application imagins that numerous of them are left
-idle in transaction for hours at a time.  </para> </answer>
+There are plans for <productname> <link linkend="pgpool"> pgpool
+</link> </productname> to provide a better alternative, eventually,
+where connections would be shared inside a connection pool implemented
+in C.  You may have some more or less buggy connection pool in your
+Java or PHP application; if a small set of <emphasis> real </emphasis>
+connections are held in <productname>pgpool</productname>, that will
+hide from the database the fact that the application imagines that
+numerous of them are left idle in transaction for hours at a time.
+</para> </answer>
 
 </qandaentry> 
 
