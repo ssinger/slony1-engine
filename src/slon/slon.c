@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.24 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: slon.c,v 1.25 2004-05-21 20:18:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -63,10 +63,70 @@ main (int argc, char *const argv[])
 	PGresult   *res;
 	int			i, n;
 	PGconn	   *startup_conn;
+	int			c;
+	int			errors = 0;
+	extern int	optind;
+	extern char *optarg;
+	int			group_size_set = 0;
 
-	if (argc != 3)
+	while ((c = getopt(argc, argv, "d:s:g:h")) != EOF)
 	{
-		fprintf(stderr, "usage: %s clustername conninfo\n", argv[0]);
+		switch(c)
+		{
+			case 'd':	slon_log_level = strtol(optarg, NULL, 10);
+						if (slon_log_level < 0 || slon_log_level > 4)
+						{
+							fprintf(stderr, "illegal debug level %d\n",
+									slon_log_level);
+							errors++;
+						}
+						slon_log_level += SLON_INFO;
+						break;
+
+			case 's':	sync_interval = strtol(optarg, NULL, 10);
+						if (sync_interval < 100 || sync_interval > 60000)
+						{
+							fprintf(stderr, "sync interval must be between 100 and 60000 ms\n");
+							errors++;
+						}
+						else if (!group_size_set)
+						{
+							sync_group_maxsize = 60000 / sync_interval;
+							if (sync_group_maxsize > 100)
+								sync_group_maxsize = 100;
+						}
+
+						break;
+
+			case 'g':	sync_group_maxsize = strtol(optarg, NULL, 10);
+						if (sync_group_maxsize < 1 || sync_group_maxsize > 100)
+						{
+							fprintf(stderr, "sync group size must be between 1 and 100 ms\n");
+							errors++;
+						}
+						group_size_set = 1;
+						break;
+
+			case 'h':	errors++;
+						break;
+
+			default:	fprintf(stderr, "unknown option '%c'\n", c);
+						errors++;
+						break;
+		}
+	}
+
+	if (argc - optind != 2)
+		errors++;
+
+	if (errors != 0)
+	{
+		fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
+		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
+		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
 		return 1;
 	}
 
@@ -75,12 +135,12 @@ main (int argc, char *const argv[])
 	 * namespace identifier
 	 */
 	slon_pid = getpid();
-	rtcfg_cluster_name	= (char *)argv[1];
-	rtcfg_namespace		= malloc(strlen(argv[1]) * 2 + 4);
+	rtcfg_cluster_name	= (char *)argv[optind];
+	rtcfg_namespace		= malloc(strlen(argv[optind]) * 2 + 4);
 	cp2 = rtcfg_namespace;
 	*cp2++ = '"';
 	*cp2++ = '_';
-	for (cp1 = (char *)argv[1]; *cp1; cp1++)
+	for (cp1 = (char *)argv[optind]; *cp1; cp1++)
 	{
 		if (*cp1 == '"')
 			*cp2++ = '"';
@@ -92,7 +152,7 @@ main (int argc, char *const argv[])
 	/*
 	 * Remember the connection information for the local node.
 	 */
-	rtcfg_conninfo = (char *)argv[2];
+	rtcfg_conninfo = (char *)argv[++optind];
 
 	/*
 	 * Connect to the local database for reading the initial configuration

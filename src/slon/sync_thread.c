@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.8 2004-04-02 03:49:21 wieck Exp $
+ *	$Id: sync_thread.c,v 1.9 2004-05-21 20:18:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,6 +26,13 @@
 #include "c.h"
 
 #include "slon.h"
+
+
+/* ----------
+ * Global variables
+ * ----------
+ */
+int		sync_interval = 10000;
 
 
 
@@ -82,7 +89,7 @@ syncThread_main(void *dummy)
 			"select %s.createEvent('_%s', 'SYNC', NULL);",
 			rtcfg_namespace, rtcfg_cluster_name);
 
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000) == SCHED_STATUS_OK)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, sync_interval) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Start a serializable transaction and get the last value

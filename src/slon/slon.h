@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.29 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: slon.h,v 1.30 2004-05-21 20:18:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -380,6 +380,13 @@ extern void	   *cleanupThread_main(void *dummy);
 
 
 /* ----------
+ * Global variables in sync_thread.c
+ * ----------
+ */
+extern int		sync_interval;
+
+
+/* ----------
  * Functions in sync_thread.c
  * ----------
  */
@@ -401,7 +408,14 @@ extern void	   *remoteListenThread_main(void *cdata);
 
 
 /* ----------
- * Functions in remote_listen.c
+ * Globals in remote_worker.c
+ * ----------
+ */
+extern int		sync_group_maxsize;
+
+
+/* ----------
+ * Functions in remote_worker.c
  * ----------
  */
 extern void	   *remoteWorkerThread_main(void *cdata);
@@ -446,6 +460,13 @@ extern int		db_getLocalNodeId(PGconn *conn);
 
 extern int		slon_mkquery(SlonDString *ds, char *fmt, ...);
 extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);
+
+
+/* ----------
+ * Globals in misc.c
+ * ----------
+ */
+extern int		slon_log_level;
 
 
 /* ----------

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.9 2004-04-02 03:01:18 wieck Exp $
+ *	$Id: misc.c,v 1.10 2004-05-21 20:18:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -30,6 +30,9 @@
 #include "slon.h"
 
 
+int		slon_log_level = SLON_INFO;
+
+
 static pthread_mutex_t	log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -42,7 +45,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 	int				off;
 	char		   *level_c = NULL;;
 
-	if (level > SLON_DEBUG2)
+	if (level > slon_log_level)
 		return;
 
 	switch (level)

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.45 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: remote_worker.c,v 1.46 2004-05-21 20:18:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -198,6 +198,8 @@ struct node_confirm_status {
 static struct node_confirm_status  *node_confirm_head = NULL;
 static struct node_confirm_status  *node_confirm_tail = NULL;
 pthread_mutex_t						node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
+
+int		sync_group_maxsize = 6;
 
 
 /* ----------
@@ -405,12 +407,39 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
+			SlonWorkMsg_event  *sync_group[100];
+			int					sync_group_size;
+
 			int		seconds;
 			int		rc;
+			int		i;
 
 			/*
 			 * SYNC event
 			 */
+
+			sync_group[0] = event;
+			sync_group_size = 1;
+
+			if (true)
+			{
+				pthread_mutex_lock(&(node->message_lock));
+				while (sync_group_size < sync_group_maxsize && node->message_head != NULL)
+				{
+					if (node->message_head->msg_type != WMSG_EVENT)
+						break;
+					if (strcmp(((SlonWorkMsg_event *)(node->message_head))->ev_type, 
+								"SYNC") != 0)
+						break;
+
+					msg = node->message_head;
+					event = (SlonWorkMsg_event *)(node->message_head);
+					sync_group[sync_group_size++] = event;
+					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
+				}
+				pthread_mutex_unlock(&(node->message_lock));
+			}
+
 			while (true)
 			{
 				/*
@@ -445,8 +474,19 @@ remoteWorkerThread_main(void *cdata)
 			if (rc != SCHED_STATUS_OK)
 				break;
 
+			/*
+			 * replace query1 with the forwarding of all the
+			 * grouped sync events and a commit. Also free all
+			 * the WMSG structres except the last one (it's freed
+			 * further down).
+			 */
 			dstring_reset(&query1);
-			query_append_event(&query1, event);
+			for (i = 0; i < sync_group_size; i++)
+			{
+				query_append_event(&query1, sync_group[i]);
+				if (i < (sync_group_size - 1))
+					free(sync_group[i]);
+			}
 			slon_appendquery(&query1, "commit transaction;");
 
 			if (query_execute(node, local_dbconn, &query1) < 0)
