@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.18 2005-02-11 21:13:47 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.19 2005-02-15 17:10:59 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -1229,6 +1229,54 @@ denied on the system table, <envar>pg_class</envar>.</para></answer>
 update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
 </programlisting>
 </answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para>
+We just got bitten by something we didn't foresee when completely
+uninstalling a slony replication cluster from the master and slave...</para>
+
+<warning> <para>MAKE SURE YOU STOP YOUR APPLICATION RUNNING AGAINST YOUR MASTER
+DATABASE WHEN REMOVING THE WHOLE SLONY CLUSTER, or at least re-cycle
+all your open connections after the event!
+</para></warning>
+
+<para> The connections <quote>remember</quote> or refer to OIDs which
+are removed by the uninstall node script. And you get lots of errors
+as a result...
+</para>
+
+</question>
+
+<answer><para> There are two notable areas of
+<productname>PostgreSQL</productname> that cache query plans and OIDs:
+<itemizedlist>
+<listitem><para> Prepared statements
+<listitem><para> pl/pgSQL functions
+</itemizedlist>
+
+<para> The problem isn't particularly a &slony1; one; it would occur
+any time such significant changes are made to the database schema.  It
+shouldn't be expected to lead to data loss, but you'll see a wide
+range of OID-related errors.
+</para></answer>
+
+<answer><para> The problem occurs when you are using some sort of
+<quote>connection pool</quote> that keeps recycling old connections.
+If you restart the application after this, the new connections will
+create <emphasis>new</emphasis> query plans, and the errors will go
+away.  If your connection pool drops the connections, and creates new
+ones, the new ones will have <emphasis>new</emphasis> query plans, and
+the errors will go away. </para></answer>
+
+<answer> <para> In our code we drop the connection on any error we
+cannot map to an expected condition. This would eventually recycle all
+connections on such unexpected problems after just one error per
+connection.  Of course if the error surfaces as a constraint violation
+which is a recognized condition, this won't help either, and if the
+problem is persistent, the connections will keep recycling which will
+drop the effect of the pooling, in the latter case the pooling code
+could also announce an admin to take a look...  </para> </answer>
 </qandaentry>
 
 </qandaset>
