@@ -1,4 +1,4 @@
-<!-- $Id: filelist.sgml,v 1.7 2005-01-10 23:31:34 darcyb Exp $ -->
+<!-- $Id: filelist.sgml,v 1.8 2005-02-07 21:42:12 cbbrowne Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
@@ -15,6 +15,7 @@
 <!entity reshape            SYSTEM "reshape.sgml">
 <!entity failover           SYSTEM "failover.sgml">
 <!entity listenpaths        SYSTEM "listenpaths.sgml">
+<!entity plainpaths         SYSTEM "plainpaths.sgml">
 <!entity addthings          SYSTEM "addthings.sgml">
 <!entity dropthings         SYSTEM "dropthings.sgml">
 <!entity ddlchanges         SYSTEM "ddlchanges.sgml">
@@ -23,6 +24,8 @@
 <!entity faq                SYSTEM "faq.sgml">
 <!entity reference          SYSTEM "reference.sgml">
 <!entity slonik             SYSTEM "slonik.sgml">
+<!entity usingslonik        SYSTEM "usingslonik.sgml">
+<!entity versionupgrade     SYSTEM "versionupgrade.sgml">
 <!entity slonikref          SYSTEM "slonik_ref.sgml">
 <!entity slon               SYSTEM "slon.sgml">
 <!entity slonconf	    SYSTEM "slonconf.sgml">
