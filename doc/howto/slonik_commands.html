@@ -371,6 +371,15 @@ manual on how to configure and set up a replication system.
 	</p></td>
 </tr>
 <tr>
+	<td align="left" valign="top" nowrap><b>SPOOLNODE = &lt;boolean&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Specifies that the new node is a virtual spool node for
+		file archiving of replication log. If true slonik will not
+		attempt to initialize a database with the replication
+		schema.
+	</p></td>
+</tr>
+<tr>
 	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
 	<td align="left" valign="top"><p>
 		<b>(Optional)</b>
