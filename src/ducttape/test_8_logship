@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship,v 1.1 2005-03-07 23:27:02 cbbrowne Exp $
+# $Id: test_8_logship,v 1.2 2005-03-15 18:59:28 cbbrowne Exp $
 # **********
 # test_8_logship
 #
@@ -60,7 +60,7 @@ WGM=`which gmake`
 if [ -z $WGM ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
-    if [ -z $CGNU ] ; then
+    if [ -z "$CGNU" ] ; then
 	echo "GNU Make not found - please install GNU Make"
 	exit 1
     fi
