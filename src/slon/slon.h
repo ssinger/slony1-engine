@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.20 2004-03-02 13:29:55 wieck Exp $
+ *	$Id: slon.h,v 1.21 2004-03-03 15:42:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -24,7 +24,7 @@
 
 
 #define SLON_DATA_FETCH_SIZE		100
-#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 2)
+#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 4)
 
 
 typedef enum {
@@ -131,8 +131,8 @@ struct SlonConn_s {
  * SlonDString
  * ----------
  */
-#define		SLON_DSTRING_SIZE_INIT	64
-#define		SLON_DSTRING_SIZE_INC	64
+#define		SLON_DSTRING_SIZE_INIT	256
+#define		SLON_DSTRING_SIZE_INC	2
 
 typedef struct
 {
@@ -168,7 +168,7 @@ do { \
 	if ((__ds)->n_used + (__n) >= (__ds)->n_alloc)  \
 	{ \
 		while ((__ds)->n_used + (__n) >= (__ds)->n_alloc) \
-			(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
+			(__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
 		if ((__ds)->data == NULL) \
 		{ \
@@ -189,7 +189,7 @@ do { \
 do { \
 	if ((__ds)->n_used + 1 >= (__ds)->n_alloc)  \
 	{ \
-		(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
+		(__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
 		if ((__ds)->data == NULL) \
 		{ \
