@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.31 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: remote_worker.c,v 1.32 2004-03-23 12:46:08 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -497,7 +497,7 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_disableNode(no_id);
 
 				slon_appendquery(&query1,
-						"select %s.dropNode_int(%d); "
+						"select %s.dropNode_int(%d); ",
 						rtcfg_namespace,
 						no_id);
 
