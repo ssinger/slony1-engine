@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.17 2004-03-10 20:50:57 wieck Exp $
+ *	$Id: remote_worker.c,v 1.18 2004-03-11 21:18:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -241,6 +241,7 @@ remoteWorkerThread_main(void *cdata)
 	int			check_config = true;
 	int64		curr_config = -1;
 	char		seqbuf[64];
+	int			event_ok;
 
 	slon_log(SLON_DEBUG1,
 			"remoteWorkerThread_%d: thread starts\n", 
@@ -374,6 +375,7 @@ remoteWorkerThread_main(void *cdata)
 			slon_abort();
 		}
 
+		event_ok = true;
 		event = (SlonWorkMsg_event *)msg;
 		sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
@@ -588,7 +590,6 @@ remoteWorkerThread_main(void *cdata)
 					int			sched_rc;
 					int			sleeptime = 15;
 
-					rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
 					dstring_init(&query2);
 					slon_mkquery(&query2, "rollback transaction");
 					check_config = true;
@@ -609,8 +610,12 @@ remoteWorkerThread_main(void *cdata)
 						 */
 						if (copy_set(node, local_conn, sub_set, event) == 0)
 						{
+							rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
+							slon_mkquery(&query1,
+									"select %s.enableSubscription(%d, %d); ",
+									rtcfg_namespace,
+									sub_set, sub_receiver);
 							dstring_free(&query2);
-							dstring_reset(&query1);
 							sched_rc = SCHED_STATUS_OK;
 							break;
 						}
@@ -628,17 +633,26 @@ remoteWorkerThread_main(void *cdata)
 								node->no_id, sub_set, sleeptime);
 						sched_rc = sched_msleep(node, sleeptime * 1000);
 						if (sched_rc != SCHED_STATUS_OK)
+						{
+							event_ok = false;
 							break;
+						}
 
 						if (sleeptime < 60)
 							sleeptime *= 2;
 					}
 				}
+				else
+				{
+					/*
+					 * Somebody else got enabled, just remember it
+					 */
+					slon_appendquery(&query1,
+							"select %s.enableSubscription(%d, %d); ",
+							rtcfg_namespace,
+							sub_set, sub_receiver);
+				}
 
-				slon_appendquery(&query1,
-						"select %s.enableSubscription(%d, %d); ",
-						rtcfg_namespace,
-						sub_set, sub_receiver);
 			}
 			else
 			{
@@ -650,9 +664,15 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			 * All simple configuration events fall through here.
 			 * Commit the transaction.
 			 */
-			query_append_event(&query1, event);
-			slon_appendquery(&query1, 
-					"commit transaction;");
+			if (event_ok)
+			{
+				query_append_event(&query1, event);
+				slon_appendquery(&query1, "commit transaction;");
+			}
+			else
+			{
+				slon_mkquery(&query1, "rollback transaction;");
+			}
 			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_abort();
 		}
@@ -1626,7 +1646,10 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 * copy the set, then we don't see the row either and it
 	 * would get lost.
 	 */
+	if (node->no_id == sub_node->no_id)
+	/*
 	if (node->no_id == event->ev_origin)
+	*/
 	{
 		slon_mkquery(&query1,
 				"start transaction; "
@@ -2382,6 +2405,15 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * For every set we receive from this provider
 		 */
 		ntuples1 = PQntuples(res1);
+		if (ntuples1 == 0)
+		{
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: \"%s\" "
+					"returned no set\n",
+					node->no_id, dstring_data(&query));
+			PQclear(res1);
+			continue;
+		}
+
 		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
 		{
 			int		sub_set		= strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
