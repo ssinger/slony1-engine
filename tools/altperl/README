@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.4 2004-08-12 22:16:21 cbbrowne Exp $
+$Id: README,v 1.5 2004-08-20 19:06:22 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -11,6 +11,24 @@ instances.
 Unlike the shell scripts that have been used, previously, it allows
 having an arbitrary number of Slony-I nodes.  They are configured in
 slon.env by calling add_node() once for each node that is needed.
+
+The following configuration is set up:
+
+ $SETNAME represents the name of the cluster.  In each database
+  involved in the replication set, you will find the namespace
+  "_$SETNAME" that contains Slony-I's configuration tables
+
+ $SLON_BIN_PATH is the path to use to find the slon and slonik
+   binaries.
+
+ $LOGDIR is the directory in which to put log files.  The script will
+   generate a subdirectory for each node.
+
+ $APACHE_ROTATOR is an optional reference to the location of the
+   Apache log rotator; if you set it to a path to an Apache "rotatelog"
+   program, that will be used to keep log file size down to a "dull
+   roar".
+  <http://httpd.apache.org/docs-2.0/programs/rotatelogs.html>
 
 slon.env also contains lists of tables that are to be replicated:
 

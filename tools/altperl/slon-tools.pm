@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.5 2004-08-20 18:03:49 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.6 2004-08-20 19:06:22 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -124,7 +124,12 @@ sub get_pid {
 sub start_slon {
   my ($nodenum) = @_;
   my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
-  my $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2  $SETNAME '$dsn' 2>$LOGDIR/slon-$dbname-node$nodenum.err >$LOGDIR/slon-$dbname-$nodenum.out &";
+  my $cmd;
+  if ($APACHE_ROTATOR) {
+    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2  $SETNAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/$dbname_%Y-%m-%d_%H:%M:%S.log\" 10M &";
+  } else {
+    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2  $SETNAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname.log &";
+  }
   print "Invoke slon: $cmd\n";
   system $cmd;
 }
