@@ -1,10 +1,10 @@
 #!@@PERL@@
-# $Id: unsubscribe_set.pl,v 1.5 2005-02-10 04:32:51 smsimms Exp $
+# $Id: unsubscribe_set.pl,v 1.6 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require 'slon-tools.pm';
-require 'slon.env';
+require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@SYSCONFDIR@@/slon_tools.conf';
 
 my ($set, $node) = @ARGV;
 if ($node =~ /^node(\d+)$/) {

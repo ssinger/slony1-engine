@@ -1,22 +1,22 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.7 2005-02-10 04:32:50 smsimms Exp $
+# $Id: slon_watchdog.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
 
 # Defaults
-$SLON_ENV_FILE  = 'slon.env'; # Where to find the slon.env file
-$SHOW_USAGE     = 0;          # Show usage, then quit
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s"  => \$SLON_ENV_FILE,
+GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
 "Usage: slon_watchdog.pl [--config file] node# sleep_seconds
 
-    --config file  Location of the slon.env file (default: Perl's \@INC)
+    --config file  Location of the slon_tools.conf file
 
     sleep_seconds  Number of seconds for the watchdog process to sleep
                    between checks
@@ -27,8 +27,8 @@ if ($SHOW_USAGE or scalar(@ARGV) != 2) {
   die $USAGE;
 }
 
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
 
 $node = $ARGV[0];
 $sleep = $ARGV[1];

@@ -1,18 +1,18 @@
 #!@@PERL@@
-# $Id: slon_start.pl,v 1.10 2005-02-10 04:32:50 smsimms Exp $
+# $Id: slon_start.pl,v 1.11 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
 
 # Defaults
-$START_WATCHDOG = 1;          # Whether or not the watchdog process should be started
-$SLEEP_TIME     = 30;         # Number of seconds for watchdog to sleep
-$SLON_ENV_FILE  = 'slon.env'; # Where to find the slon.env file
-$SHOW_USAGE     = 0;          # Show usage, then quit
+$START_WATCHDOG = 1;
+$SLEEP_TIME     = 30;
+$CONFIG_FILE    = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE     = 0;
 
 # Read command-line options
-GetOptions("config=s"  => \$SLON_ENV_FILE,
+GetOptions("config=s"  => \$CONFIG_FILE,
 	   "watchdog!" => \$START_WATCHDOG,
 	   "sleep=i"   => \$SLEEP_TIME,
 	   "help"      => \$SHOW_USAGE);
@@ -21,7 +21,7 @@ my $USAGE =
 "Usage: slon_start.pl [--config file] [--watchdog|--nowatchdog]
        [--sleep seconds] node#
 
-    --config file    Location of the slon.env file (default: Perl's \@INC)
+    --config file    Location of the slon_tools.conf file
 
     --watchdog       Start a watchdog process after starting the slon
                      daemon (default)
@@ -37,8 +37,8 @@ if ($SHOW_USAGE or scalar(@ARGV) != 1) {
   die $USAGE;
 }
 
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
 
 $node = $ARGV[0];
 
@@ -67,6 +67,6 @@ unless ($pid) {
   print "PID [$pid]\n";
   if ($START_WATCHDOG) {
     print "Start the watchdog process as well...\n";
-    system "perl slon_watchdog.pl --config=$SLON_ENV_FILE $node $SLEEP_TIME &";
+    system "perl slon_watchdog.pl --config=$CONFIG_FILE $node $SLEEP_TIME &";
   }
 }

@@ -1,10 +1,10 @@
 #!@@PERL@@
-# $Id: slon_pushsql.pl,v 1.7 2005-02-10 04:32:50 smsimms Exp $
+# $Id: slon_pushsql.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require 'slon-tools.pm';
-require 'slon.env';
+require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@SYSCONFDIR@@/slon_tools.conf';
 my ($set, $node, $file) = @ARGV;
 if ($set =~ /^set(\d+)$/) {
   $set = $1;

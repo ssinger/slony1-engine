@@ -1,16 +1,17 @@
 #!@@PERL@@
-# $Id: drop_set.pl,v 1.7 2005-02-10 04:32:49 smsimms Exp $
+# $Id: drop_set.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
 
-$SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
-$SHOW_USAGE    = 0;          # Show usage, then quit
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s"  => \$SLON_ENV_FILE,
-	   "help"      => \$SHOW_USAGE);
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
 "Usage: drop_set.pl [--config file] set#
@@ -24,8 +25,8 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
 
 my ($set) = @ARGV;
 if ($set =~ /^(?:set)?(\d+)$/) {

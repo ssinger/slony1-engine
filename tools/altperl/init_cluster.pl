@@ -1,19 +1,17 @@
 #!@@PERL@@
-# $Id: init_cluster.pl,v 1.9 2005-02-10 04:32:49 smsimms Exp $
+# $Id: init_cluster.pl,v 1.10 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
 
-my $SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
-my $SHOW_USAGE    = 0;          # Show usage, then quit
+# Defaults
+my $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+my $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s"  => \$SLON_ENV_FILE,
-	   "help"      => \$SHOW_USAGE);
-
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+GetOptions("config=s" => \$CONFIG_FILE,
+	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
 "Usage: init_cluster.pl [--config file]
@@ -28,6 +26,9 @@ if ($SHOW_USAGE) {
   print $USAGE;
   exit 0;
 }
+
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
 
 my $FILE="/tmp/init-cluster.$$";
 

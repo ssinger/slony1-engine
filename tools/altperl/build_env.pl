@@ -1,11 +1,11 @@
-#!@@PERl@@
-# $Id: build_env.pl,v 1.7 2005-02-10 04:32:49 smsimms Exp $
+#!@@PERL@@
+# $Id: build_env.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
 
 # This script, given parameters concerning the database nodes,
-# generates output for "slon.env" consisting of:
+# generates output for "slon_tools.conf" consisting of:
 # - A set of add_node() calls to configure the cluster
 # - The arrays @KEYEDTABLES, @SERIALTABLES, and @SEQUENCES
 

@@ -1,10 +1,10 @@
 #!@@PERL@@
-# $Id: move_set.pl,v 1.6 2005-02-10 04:32:49 smsimms Exp $
+# $Id: move_set.pl,v 1.7 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require 'slon-tools.pm';
-require 'slon.env';
+require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@SYSCONFDIR@@/slon_tools.conf';
 
 my ($set, $node1, $node2) = @ARGV;
 if ($set =~ /^set(\d+)$/) {

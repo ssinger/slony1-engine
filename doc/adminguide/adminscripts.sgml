@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.15 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.16 2005-02-10 06:22:40 smsimms Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -105,7 +105,7 @@ sequence that &slony1; generates</para>
 <sect2><title>build_env.pl</title>
 
 <para>Queries a database, generating output hopefully suitable for
-<filename>slon.env</filename> consisting of:</para>
+<filename>slon_tools.conf</filename> consisting of:</para>
 <itemizedlist>
 
 <listitem><para> a set of <function>add_node()</function> calls to configure the cluster</para></listitem>

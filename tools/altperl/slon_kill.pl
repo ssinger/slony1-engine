@@ -1,16 +1,17 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.9 2005-02-10 04:32:50 smsimms Exp $
+# $Id: slon_kill.pl,v 1.10 2005-02-10 06:22:41 smsimms Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
 
-$SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
-$SHOW_USAGE    = 0;          # Show usage, then quit
+# Defaults
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
+$SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s"  => \$SLON_ENV_FILE,
+GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
@@ -26,8 +27,8 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+require '@@PGLIBDIR@@/slon-tools.pm';
+require $CONFIG_FILE;
 
 print "slon_kill.pl...   Killing all slon and slon_watchdog instances for the cluster $CLUSTER_NAME\n";
 print "1.  Kill slon watchdogs\n";

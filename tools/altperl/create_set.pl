@@ -1,10 +1,10 @@
 #!@@PERL@@
-# $Id: create_set.pl,v 1.11 2005-02-02 17:22:29 cbbrowne Exp $
+# $Id: create_set.pl,v 1.12 2005-02-10 06:22:41 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
-require 'slon-tools.pm';
-require 'slon.env';
+require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@SYSCONFDIR@@/slon_tools.conf';
 my ($set) = @ARGV;
 if ($set =~ /^set(\d+)$/) {
   $set = $1;

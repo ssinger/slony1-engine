@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.9 2005-02-02 17:22:29 cbbrowne Exp $
+$Id: README,v 1.10 2005-02-10 06:22:41 smsimms Exp $
 
 Christopher Browne
 Database Administrator
@@ -21,7 +21,7 @@ The following configuration is set up:
 
 This configuration will normally apply to all clusters being managed
 on a particular host, so it would probably make sense to modify it
-directly in slon.env.
+directly in slon_tools.conf.
 
  $SLON_BIN_PATH is the path to use to find the slon and slonik
    binaries.
@@ -75,12 +75,12 @@ Perl variables:
   @SEQUENCES lists all of the application sequences that are to be
              replicated.
 
-The values in slon.env are "hardcoded" as far as the tools are
+The values in slon_tools.conf are "hardcoded" as far as the tools are
 concerned.
 
-To make this more flexible, slon.env also looks at the environment
-variables SLONYNODES and SLONYSET as alternative sources for
-configuration.
+To make this more flexible, slon_tools.conf also looks at the
+environment variables SLONYNODES and SLONYSET as alternative sources
+for configuration.
 
 That way, you may do something like:
 
