@@ -57,7 +57,7 @@ voraussetzt, sollte dieses nun installiert werden.
 Falls pl/pgSQL bereits früher in der template1 Datenbank installiert wurde
 kann dieser Schritt jedoch übersprungen werden.
 
-createlang plpgsql -h $MASTERHOST $MASTERDBNAME
+createlang -h $MASTERHOST plpgsql $MASTERDBNAME
 
 Slony-I kopiert zum jetzigen Zeitpunkt keine Tabellendefinitionen von der
 Masterdatenbank, wenn ein Slave hinzugefügt wird.
@@ -106,8 +106,8 @@ slonik <<_EOF_
     # zu jedem Knoten auf jeder Seite des Clusters zu verbinden. Die Syntax
     # entspricht der von PQconnectdb in der C-API.
 	# --
-	node 1 admin conninfo 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	node 2 admin conninfo 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
+	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
     # Initialisierung des ersten Knotens, die ID dieses Knotens muss 1 sein.

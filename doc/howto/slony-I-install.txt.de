@@ -37,20 +37,15 @@ Versionen können unter Umstände Probleme verursachen.
 Ein ISO/ANSI kompatibler C-Kompiler ist erforderlich, aktuelle
 Versionen des gcc sollten problemlos funktionieren.
 
-Weiters ist eine aktuelle Version des PostgreSQL Quellcodes
-erforderlich. Da Slony-I Namespaceunterstützung benötigt ist
-PostgreSQL in der Version 7.3 die Minimalanforderung für eine
-erfolgreiche Übersetzung.
+Weiters ist eine aktuelle Version des PostgreSQL Datenbanksystems mit
+installierten Server Headerdateien erforderlich.
+Da Slony-I Namespaceunterstützung benötigt ist PostgreSQL in der
+Version 7.3 die Minimalanforderung für eine erfolgreiche Übersetzung.
 
 Sollte ein benötigtes GNU Package fehlen so ist dieses im Lieferumfang
 des jeweiligen Betriebssystems oder auch auf dem lokalen GNU
 Spiegelserver (Liste unter http://www.gnu.org/order/ftp.html) bzw.
 direkt auf ftp://ftp.gnu.org/gnu zu finden.
-
-Sollte der PostgreSQL Quellcode benötigt werden, so kann dieser vom
-bevorzugten PostgreSQL Spiegelserver (Liste unter
-http://www.postgresql.org/mirrors-www.html), oder mittels BitTorrent
-von http://bt.postgresql.org/ bezogen werden.
 
 Slony-I benötigt für eine erfolgreiche Übersetzung und anschliessende
 Installation etwa 5MB an Festplattenkapazität.
@@ -72,7 +67,7 @@ in dieses Verzeichnis wechseln.
 
 Kurzversion der Installation:
 
-./configure --with-pgsourcetree=<Pfad/zu/den/PostgreSQL/Quellen>
+./configure
 gmake all
 gmake install
 
@@ -81,14 +76,10 @@ gmake install
 Der erste Schritt der Installationsprozedur besteht in der
 Vorbereitung des Quellcodeverzeichnisses. Diese erfolgt mit Hilfe des
 "configure" Skriptes. 
-Dieses Skript benötigt die Information wo sich Ihr PostgreSQl
-Quellcodeverzeichnis befindet.  Zur Übergabe dieser Information an das
-Skript dient die --with-pgsourcetree=<Pfad/zu/den/PostgreSQL/Quellen>
-Kommandozeilenoption.
 
 Ein Beispiel:
 
-./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
+./configure
 
 Dieses Skript wird eine Reihe von Tests durchfuehren um verschiedene
 nötige Informationen zu sammeln und eventuelle Eigenheiten Ihrer
@@ -119,7 +110,8 @@ Um Slony-I zu installieren verwenden Sie bitte
 gmake install
 
 Dieses Kommando wird die nötigen Dateien in das PostgreSQL
-Installationverzeichnis kopieren.  Beachten Sie bitte das Sie die
-nötigen Schreibberechtigungen auf den entsprechenden Bereich besitzen.
+Installationverzeichnis kopieren, welches mittes "pg_config" ermittelt wird.
+Beachten Sie bitte das Sie die nötigen Schreibberechtigungen auf den
+entsprechenden Bereich besitzen.
 Üblicherweise sind für diesen Schritt daher "root"-Berechtigungen
 erforderlich.

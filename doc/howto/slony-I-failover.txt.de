@@ -64,20 +64,22 @@ kontrollierte Serviceübernahme
 
   Schritt 3)
 
-    Nach der Rekonfiguration der Webapplikation (oder des pgpool Dämons)
+    Nach der Rekonfiguration der Webapplikation (oder des "pgpool"-Daemons)
     um auf die Datenbank zu verbinden, die nun auf Knoten 2 läuft, sollte
     der Webserver neu gestartet werden.
 
-    Ausgeführt mittels Hilfe eines Shellskriptes, welches dieses Herunterfahren,
-    die Neukonfiguration mittels "slonik" sowie das Verschieben der Konfigurationsdaten
-    sammt anschliessendem Neustart erledigt, dauert diese Prozedure weniger als
-    zehn Sekunden.
+    Ausgeführt mittels Hilfe eines Shellskriptes, welches dieses
+    Herunterfahren, die Neukonfiguration mittels "slonik" sowie das
+    Verschieben der Konfigurationsdaten sammt anschliessendem Neustart
+    automatisch erledigt, dauert diese Prozedure weniger als zehn Sekunden.
 
-    Danach ist es möglich, den Knoten 1 herunterzufahren und die nötigen Wartungsarbeiten
-    vorzunehmen. Nach einem späteren Neustart, wird Knoten 1 erneut an der Replikation 
+    Danach ist es möglich, den Knoten 1 herunterzufahren und die nötigen
+    Wartungsarbeiten vorzunehmen.
+    Nach einem späteren Neustart, wird Knoten 1 erneut an der Replikation 
     teilnehmen und nach einiger Zeit eventuell wieder "aufholen".
-    Zu diesem Zeitpunkt wird nun die gesamte Prozedure mit vertauschten Knotenid's
-    erneut durchgeführt und damit die ursprüngliche Situation wiederhergestellt.
+    Zu diesem Zeitpunkt wird nun die gesamte Prozedure mit vertauschten
+    Knotenid's erneut durchgeführt und damit die ursprüngliche Situation
+    wiederhergestellt.
 
 
 Serviceübernahme im Notfall
@@ -133,11 +135,12 @@ Serviceübernahme im Notfall
 	drop node (id = 1, event node = 2);
 
 
-Wiederinbetriebnahme von Knoten 1 nach der Ubernahme
+Wiederinbetriebnahme von Knoten 1 nach der Übernahme
 
     Nach der Übernahme müssen alle auf Knoten 1 gespeicherten Daten als
     ungültig in Bezug zum Rest der Knoten betrachtet werden. Aus diesem
-    Grund besteht die einzige Möglichkeit Knoten 1 wieder in Betrieb zu nehmen 
-    und erneut die Masterrolle zuzuweisen darin ihn neu zu initialisieren.
+    Grund besteht die einzige Möglichkeit Knoten 1 wieder in Betrieb zu
+    nehmen und erneut die Masterrolle zuzuweisen, darin ihn neu zu
+    initialisieren.
     Nachdem er erneut syncronisiert ist kann eine kontrollierte Dienstübernahme
     mittels der Anfangs angefuhrten Prozedur durchgeführt werden.
