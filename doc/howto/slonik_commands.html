@@ -50,6 +50,7 @@
 		<li><a href="#stmt_move_set">MOVE SET</a>
 		<li><a href="#stmt_failover">FAILOVER</a>
 		<li><a href="#stmt_ddl_script">EXECUTE SCRIPT</a>
+		<li><a href="#stmt_update_functions">UPDATE FUNCTIONS</a>
 		<li><a href="#stmt_wait_event">WAIT FOR EVENT</a>
 	</ul>
 </ul>
@@ -1667,6 +1668,36 @@ manual on how to configure and set up a replication system.
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;FILENAME = 'changes_20040510.sql',
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;EVENT NODE = 1
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_update_functions">
+<h3>UPDATE FUNCTIONS</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	UPDATE FUNCTIONS ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Reloads all stored procedure and function definitions in the
+	Slony schema for the specified node. This command is usually
+	part of the Slony software upgrade procedure.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The unique ID of the node.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	UPDATE FUNCTIONS (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 3
 	<br>);
 </p>
 </div>
