@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v73.sql,v 1.4.2.2 2004-09-30 17:45:05 cbbrowne Exp $
+-- $Id: slony1_funcs.v73.sql,v 1.4.2.3 2004-10-06 17:37:26 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -25,3 +25,4 @@ begin
 	return 1;
 end;
 ' language plpgsql;
+
