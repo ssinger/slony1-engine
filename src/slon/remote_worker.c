@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.32 2004-03-23 12:46:08 wieck Exp $
+ *	$Id: remote_worker.c,v 1.33 2004-03-23 17:22:43 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -513,12 +513,19 @@ remoteWorkerThread_main(void *cdata)
 							"got DROP NODE for local node ID\n",
 							node->no_id);
 
-					slon_appendquery(&query1, 
-							"commit transaction; "
-							"drop schema %s cascade; ",
-							rtcfg_namespace);
+					slon_appendquery(&query1, "commit transaction; ");
+					if (query_execute(node, local_dbconn, &query1) < 0)
+						slon_abort();
 
+					slon_mkquery(&query1, "select %s.uninstallNode(); ",
+							rtcfg_namespace);
+					if (query_execute(node, local_dbconn, &query1) < 0)
+						slon_abort();
+
+					slon_mkquery(&query1, "drop schema %s cascade; ",
+							rtcfg_namespace);
 					query_execute(node, local_dbconn, &query1);
+
 					slon_abort();
 				}
 

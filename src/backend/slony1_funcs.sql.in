@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.34 2004-03-23 12:38:56 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.35 2004-03-23 17:22:42 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -565,9 +565,10 @@ begin
 	-- ----
 	for v_tab_row in select * from @NAMESPACE@.sl_table loop
 		perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+		perform @NAMESPACE@.tableDropKey(v_tab_row.tab_id);
 	end loop;
 
-	drop schema "_@CLUSTERNAME@" cascade;
+	raise notice ''Slony-I: Please drop schema "_@CLUSTERNAME@"'';
 	return 0;
 end;
 ' language plpgsql;
@@ -1918,6 +1919,7 @@ begin
 			order by tab_id
 	loop
 		perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+		perform @NAMESPACE@.tableDropKey(v_tab_row.tab_id);
 	end loop;
 
 	-- ----
@@ -2199,6 +2201,59 @@ begin
 	-- Return the resulting Slony-I attkind
 	--
 	return v_attkind;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION tableDropKey (tab_id)
+--
+--	If the specified table does not have a column 
+--	"_Slony-I_<clustername>_rowID", then add it as a bigint
+--	with default nextval('"_<clustername>".sl_rowid_seq').
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.tableDropKey(int4) returns int4
+as '
+declare
+	p_tab_id		alias for $1;
+	v_tab_fqname	text;
+	v_tab_oid		oid;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Construct the tables full qualified name and get its oid
+	-- ----
+	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+				"pg_catalog".quote_ident(PGC.relname),
+				PGC.oid into v_tab_fqname, v_tab_oid
+			from @NAMESPACE@.sl_table T,
+				"pg_catalog".pg_class PGC,
+				"pg_catalog".pg_namespace PGN
+			where T.tab_id = p_tab_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid;
+	if not found then
+		raise exception ''Slony-I: table with ID % not found'', p_tab_id;
+	end if;
+
+	-- ----
+	-- Drop the special serial ID column if the table has it
+	-- ----
+	if exists (select true from "pg_catalog".pg_attribute
+			where attrelid = v_tab_oid
+				and attname = ''_Slony-I_@CLUSTERNAME@_rowID'')
+	then
+		execute ''lock table '' || v_tab_fqname ||
+				'' in access exclusive mode'';
+		execute ''alter table '' || v_tab_fqname ||
+				'' drop column "_Slony-I_@CLUSTERNAME@_rowID"'';
+	end if;
+
+	return p_tab_id;
 end;
 ' language plpgsql;
 
