@@ -6,12 +6,13 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.27 2004-07-21 18:06:35 darcyb Exp $
+# $Id: configure.ac,v 1.28 2004-07-21 22:33:31 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
-m4_define([REL_VERSION],$Name:  $)
-AC_INIT(postgresql-slony1-engine,[REL_VERSION])
+m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | sed -e 's/\: REL_//;s/\$//g;s/_/./g;s/\./\-/3;s/\ //g'| tr -d '\n']))
+ifelse([SLONREL_VERSION],`:',m4_define([SLONREL_VERSION], esyscmd([echo `date +HEAD-%Y%m%d`|tr -d '\n'])))
+AC_INIT(postgresql-slony1-engine,[SLONREL_VERSION])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
