@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.53 2004-06-23 05:42:20 wieck Exp $
+ *	$Id: remote_worker.c,v 1.54 2004-06-23 12:46:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2952,9 +2952,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 	if (strlen(event->ev_xip) != 0)
 		slon_mkquery(&new_qual, 
-				"(log_xid < '%s' or (log_xid < '%s' and "
-				"%s.xxid_lt_snapshot(log_xid, '%s:%s:%q')))",
-				event->ev_minxid_c, event->ev_maxxid_c, 
+				"(log_xid < '%s' and "
+				"%s.xxid_lt_snapshot(log_xid, '%s:%s:%q'))",
+				event->ev_maxxid_c, 
 				rtcfg_namespace, 
 				event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip);
 	else
@@ -3141,10 +3141,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			/* add the <snapshot_qual_of_setsync> */
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(provider_qual,
-						"(log_xid >='%s' or"
-						" (log_xid >= '%s' and "
-						"%s.xxid_ge_snapshot(log_xid, '%s:%s:%q')))",
-						ssy_maxxid, ssy_minxid, 
+						"(log_xid >= '%s' and "
+						"%s.xxid_ge_snapshot(log_xid, '%s:%s:%q'))",
+						ssy_minxid, 
 						rtcfg_namespace,
 						ssy_minxid, ssy_maxxid, ssy_xip);
 			else
