@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.34 2004-03-25 01:37:55 wieck Exp $
+ *	$Id: remote_worker.c,v 1.35 2004-03-25 02:22:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2550,7 +2550,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		provider_qual = &(provider->helper_qualification);
 		dstring_reset(provider_qual);
 		slon_mkquery(provider_qual,
-				"where log_origin = %d",
+				"where log_origin = %d ",
 				node->no_id);
 
 		/*
