@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.41 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: slon.c,v 1.42 2005-01-28 22:31:52 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -128,7 +128,7 @@ main(int argc, char *const argv[])
 	}
 
 	/*
-	 * Make sure the sync interval isn't too small.
+	 * Make sure the sync interval timeout isn't too small.
 	 */
 	if (sync_interval_timeout != 0 && sync_interval_timeout <= sync_interval)
 		sync_interval_timeout = sync_interval * 2;
@@ -193,7 +193,7 @@ main(int argc, char *const argv[])
 
 
 	/*
-	 * Connect to the local database for reading the initial configuration
+	 * Connect to the local database to read the initial configuration
 	 */
 
 
@@ -380,7 +380,7 @@ main(int argc, char *const argv[])
 	PQclear(res);
 
 	/*
-	 * Read configuration table sl_subscribe - our subscriptions only
+	 * Read configuration table sl_subscribe - only subscriptions for local node
 	 */
 	slon_mkquery(&query,
 				 "select sub_set, sub_provider, sub_forward, sub_active "
@@ -458,10 +458,10 @@ main(int argc, char *const argv[])
 	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
 	/*
-	 * Create the local event thread that is monitoring the local node for
-	 * administrative events to adjust the configuration at runtime. We wait
-	 * here until the local listen thread has checked that there is no other
-	 * slon daemon running.
+	 * Create the local event thread that monitors the local node
+	 * for administrative events to adjust the configuration at
+	 * runtime. We wait here until the local listen thread has
+	 * checked that there is no other slon daemon running.
 	 */
 	pthread_mutex_lock(&slon_wait_listen_lock);
 	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
