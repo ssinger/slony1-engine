@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile.in,v 1.2 2004-03-18 19:32:21 wieck Exp $
+#	$Id: Makefile.in,v 1.3 2004-03-23 18:45:11 wieck Exp $
 # ----------
 
 subdir = src/slonik
@@ -36,8 +36,10 @@ parser.o:			parser.c scan.c
 parser.c:			parser.y slonik.h
 scan.c:				scan.l slonik.h
 
-clean distclean maintainer-clean:
+clean distclean:
 	rm -f $(ALL) $(OBJS)
+
+maintainer-clean:	clean
 	rm -f parser.c scan.c
 
 install: all installdirs
