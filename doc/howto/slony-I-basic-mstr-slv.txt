@@ -241,5 +241,5 @@ else
 fi
 
 If this script returns "failed," please contact the developers at
-http://gborg.postgreesql.org/projects/slony1
+http://slony.org/
 
