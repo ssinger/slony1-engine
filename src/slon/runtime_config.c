@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.2 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: runtime_config.c,v 1.3 2004-02-22 03:10:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -44,6 +44,8 @@ char				   *rtcfg_lastevent = NULL;
 
 SlonSet				   *rtcfg_set_list_head = NULL;
 SlonSet				   *rtcfg_set_list_tail = NULL;
+SlonNode			   *rtcfg_node_list_head = NULL;
+SlonNode			   *rtcfg_node_list_tail = NULL;
 
 
 /* ----------
@@ -51,8 +53,6 @@ SlonSet				   *rtcfg_set_list_tail = NULL;
  * ----------
  */
 static pthread_mutex_t	config_lock = PTHREAD_MUTEX_INITIALIZER;
-static SlonNode		   *node_list_head = NULL;
-static SlonNode		   *node_list_tail = NULL;
 
 struct to_activate {
 	int					no_id;
@@ -68,7 +68,6 @@ static struct to_activate *to_activate_tail = NULL;
  * Local functions
  * ----------
  */
-static SlonNode	   *rtcfg_findNode(int no_id);
 static void			rtcfg_startStopNodeThread(SlonNode *node);
 
 
@@ -133,15 +132,71 @@ printf("rtcfg_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 	pthread_mutex_init(&(node->node_lock), NULL);
 #endif
 
-	DLLIST_ADD_TAIL(node_list_head, node_list_tail, node);
+	DLLIST_ADD_TAIL(rtcfg_node_list_head, rtcfg_node_list_tail, node);
 
 	rtcfg_unlock();
 }
 
 
-void
+/* ----------
+ * rtcfg_setNodeLastEvent()
+ *
+ *	Set the last_event field in the node runtime structure.
+ *
+ *	Returns:	0 if the event_seq is <= the known value
+ *				-1 if the node is not known
+ *				event_seq otherwise
+ * ----------
+ */
+int64
 rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 {
+	SlonNode   *node;
+	int64		retval;
+
+	rtcfg_lock();
+	if ((node = rtcfg_findNode(no_id)) != NULL)
+	{
+		if (node->last_event < event_seq)
+		{
+			node->last_event = event_seq;
+			retval = event_seq;
+		}
+		else
+			retval = 0;
+	}
+	else
+		retval = -1;
+
+	rtcfg_unlock();
+
+	return retval;
+}
+
+
+/* ----------
+ * rtcfg_getNodeLastEvent
+ *
+ *	Read the nodes last_event field
+ * ----------
+ */
+int64
+rtcfg_getNodeLastEvent(int no_id)
+{
+	SlonNode   *node;
+	int64		retval;
+
+	rtcfg_lock();
+	if ((node = rtcfg_findNode(no_id)) != NULL)
+	{
+		retval = node->last_event;
+	}
+	else
+		retval = -1;
+
+	rtcfg_unlock();
+
+	return retval;
 }
 
 
@@ -186,6 +241,25 @@ void
 rtcfg_dropNode(int no_id)
 {
 	printf("TODO: rtcfg_dropNode\n");
+}
+
+
+/* ----------
+ * rtcfg_findNode
+ * ----------
+ */
+SlonNode *
+rtcfg_findNode(int no_id)
+{
+	SlonNode	   *node;
+
+	for (node = rtcfg_node_list_head; node; node = node->next)
+	{
+		if (node->no_id == no_id)
+			return node;
+	}
+
+	return NULL;
 }
 
 
@@ -398,72 +472,102 @@ printf("rtcfg_enableSubscription: sub_set=%d\n", sub_set);
 
 
 /* ----------
- * rtcfg_findNode
- * ----------
- */
-static SlonNode *
-rtcfg_findNode(int no_id)
-{
-	SlonNode	   *node;
-
-	for (node = node_list_head; node; node = node->next)
-	{
-		if (node->no_id == no_id)
-			return node;
-	}
-
-	return NULL;
-}
-
-
-/* ----------
  * rtcfg_startStopNodeThread
  * ----------
  */
 static void
 rtcfg_startStopNodeThread(SlonNode *node)
 {
+	int		need_listen = false;
+	int		need_worker = false;
+	int		need_wakeup = false;
+
 	rtcfg_lock();
 
 	/*
-	 * Check if we have to create a new remote_listen thread
+	 * Determine if we need a listener thread
 	 */
-	if (node->listen_status == SLON_TSTAT_NONE && node->listen_head != NULL)
+	if (node->listen_head != NULL)
+		need_listen = true;
+	if (!(node->no_active))
+		need_listen = false;
+
+	/*
+	 * Start or stop the remoteListenThread
+	 */
+	if (need_listen)
 	{
-printf("TODO: rtcfg_startStopNodeThread() need to start \"remote_listen\" for no_id=%d\n", node->no_id);
+		/*
+		 * Node specific listen thread is required
+		 */
+		switch (node->listen_status)
+		{
+			case SLON_TSTAT_NONE:
+				node->listen_status = SLON_TSTAT_RUNNING;
+				if (pthread_create(&(node->listen_thread), NULL,
+						remoteListenThread_main, (void *)node) < 0)
+				{
+					perror("rtcfg_startStopNodeThread(): pthread_create");
+					rtcfg_unlock();
+					slon_abort();
+				}
+printf("TODO: rtcfg_startStopNodeThread(): node %d - listen thread started\n",
+node->no_id);
+				break;
+
+			case SLON_TSTAT_RUNNING:
+				need_wakeup = true;
+				break;
+
+			case SLON_TSTAT_SHUTDOWN:
+				node->listen_status = SLON_TSTAT_RESTART;
+				need_wakeup = true;
+printf("rtcfg_startStopNodeThread(): node %d - listen thread changed to restart\n",
+node->no_id);
+				break;
+
+			case SLON_TSTAT_RESTART:
+				need_wakeup = true;
+				break;
+		}
+	}
+	else
+	{
+		/*
+		 * Node specific listen thread not required
+		 */
+		switch (node->listen_status)
+		{
+			case SLON_TSTAT_NONE:
+				break;
+
+			case SLON_TSTAT_RUNNING:
+				node->listen_status = SLON_TSTAT_SHUTDOWN;
+				need_wakeup = true;
+printf("rtcfg_startStopNodeThread(): node %d - listen thread changed to shutdown\n",
+node->no_id);
+				break;
+
+			case SLON_TSTAT_SHUTDOWN:
+				need_wakeup = true;
+				break;
+
+			case SLON_TSTAT_RESTART:
+				node->listen_status = SLON_TSTAT_SHUTDOWN;
+				need_wakeup = true;
+printf("rtcfg_startStopNodeThread(): node %d - listen thread changed to shutdown\n",
+node->no_id);
+				break;
+		}
 	}
 
 	rtcfg_unlock();
 
-#if 0
-	if (node->have_thread)
-	{
-printf("TODO: rtcfg_startStopNodeThread() have_thread branch\n");
-	}
-	else
-	{
-		if (!rtcfg_nodeactive)
-			return;
-		if (!node->no_active)
-			return;
-		if (node->pa_conninfo == NULL)
-			return;
-		if (node->li_list_head == NULL)
-			return;
-
-		/*
-		 * All signs are go ... start the remote connection
-		 */
-		if (pthread_create(&(node->event_thread), NULL,
-				slon_remoteEventThread, (void *)node) < 0)
-		{
-			perror("rtcfg_startStopNodeThread: pthread_create()");
-			return;
-		}
-		node->have_thread = true;
-printf("rtcfg_startStopNodeThread() thread for node %d created\n", node->no_id);
-	}
-#endif
+	/*
+	 * If need be, wakeup all node threads to reread the configuration.
+	 */
+	if (need_wakeup)
+		sched_wakeup_node(node->no_id);
 }
 
 
@@ -499,7 +603,7 @@ rtcfg_joinAllRemoteThreads(void)
 	SlonNode   *node;
 
 	pthread_mutex_lock(&config_lock);
-	for (node = node_list_head; node; node = node->next)
+	for (node = rtcfg_node_list_head; node; node = node->next)
 	{
 		pthread_join(node->event_thread, NULL);
 		pthread_mutex_lock(&(node->node_lock));

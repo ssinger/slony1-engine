@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.11 2004-02-20 17:59:42 wieck Exp $
+ *	$Id: slon.c,v 1.12 2004-02-22 03:10:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -47,7 +47,7 @@ main (int argc, const char *argv[])
 {
 	char	   *cp1;
 	char	   *cp2;
-	char		query[1024];
+	SlonDString	query;
 	PGresult   *res;
 	int			i, n;
 	PGconn	   *startup_conn;
@@ -135,14 +135,17 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Read configuration table sl_node
 	 */
-	snprintf(query, 1024, "select no_id, no_active, no_comment from %s.sl_node",
+	dstring_init(&query);
+	slon_mkquery(&query, 
+			"select no_id, no_active, no_comment from %s.sl_node",
 			rtcfg_namespace);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get node list - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
@@ -179,15 +182,17 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Read configuration table sl_path - the interesting pieces
 	 */
-	snprintf(query, 1024, "select pa_server, pa_conninfo, pa_connretry
-			from %s.sl_path where pa_client = %d",
+	slon_mkquery(&query, 
+			"select pa_server, pa_conninfo, pa_connretry "
+			"from %s.sl_path where pa_client = %d",
 			rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get path config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
@@ -203,15 +208,17 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Read configuration table sl_listen - the interesting pieces
 	 */
-	snprintf(query, 1024, "select li_origin, li_provider
-			from %s.sl_listen where li_receiver = %d",
+	slon_mkquery(&query, 
+			"select li_origin, li_provider "
+			"from %s.sl_listen where li_receiver = %d",
 			rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get listen config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
@@ -226,15 +233,17 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Read configuration table sl_set
 	 */
-	snprintf(query, 1024, "select set_id, set_origin, set_comment
-			from %s.sl_set",
+	slon_mkquery(&query, 
+			"select set_id, set_origin, set_comment "
+			"from %s.sl_set",
 			rtcfg_namespace);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get set config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
@@ -250,17 +259,18 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Read configuration table sl_subscribe - our subscriptions only
 	 */
-	snprintf(query, 1024, "select sub_set, sub_provider,
-			sub_forward, sub_active
-			from %s.sl_subscribe
-			where sub_receiver = %d",
+	slon_mkquery(&query, 
+			"select sub_set, sub_provider, sub_forward, sub_active "
+			"from %s.sl_subscribe "
+			"where sub_receiver = %d",
 			rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get subscription config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
@@ -281,16 +291,17 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	/*
 	 * Remember the last known local event sequence
 	 */
-	snprintf(query, sizeof(query),
+	slon_mkquery(&query,
 			"select max(ev_seqno) from %s.sl_event "
-			"    where ev_origin = %d",
+			"where ev_origin = '%d'",
 			rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, query);
+	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "Cannot get last local eventid - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
+		dstring_free(&query);
 		slon_exit(-1);
 	}
 	if (PQntuples(res) == 0)
@@ -301,6 +312,7 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 		else
 			rtcfg_lastevent = strdup(PQgetvalue(res, 0, 0));
 	PQclear(res);
+	dstring_free(&query);
 printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 
 	/*

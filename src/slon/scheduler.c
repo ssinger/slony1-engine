@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.3 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: scheduler.c,v 1.4 2004-02-22 03:10:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -185,6 +185,8 @@ sched_wait_mainloop(void)
 int
 sched_wait_conn(SlonConn *conn, int condition)
 {
+	int		rc;
+
 	/*
 	 * Grab the master lock and check that we're in normal runmode
 	 */
@@ -223,11 +225,20 @@ sched_wait_conn(SlonConn *conn, int condition)
 	pthread_cond_wait(&(conn->conn_cond), &(conn->conn_lock));
 
 	/*
-	 * Final check for current runmode.
+	 * Determine the return code
 	 */
-	if (sched_get_status() != SCHED_STATUS_OK)
-		return -1;
-	return 0;
+	pthread_mutex_lock(&sched_master_lock);
+	if ((rc = sched_status) == SCHED_STATUS_OK)
+	{
+		if (conn->condition & SCHED_WAIT_CANCEL)
+		{
+			conn->condition &= ~(SCHED_WAIT_CANCEL);
+			rc = SCHED_STATUS_CANCEL;
+		}
+	}
+	pthread_mutex_unlock(&sched_master_lock);
+
+	return rc;
 }
 
 
@@ -262,6 +273,34 @@ sched_wait_time(SlonConn *conn, int condition, int msec)
 
 
 /* ----------
+ * sched_msleep
+ *
+ *	Use the schedulers event loop to sleep for msec milliseconds.
+ * ----------
+ */
+int
+sched_msleep(SlonNode *node, int msec)
+{
+	SlonConn   *conn;
+	char		dummyconn_name[64];
+	int			rc;
+
+	if (node)
+	{
+		snprintf(dummyconn_name, 64, "msleep_node_%d", node->no_id);
+		conn = slon_make_dummyconn(dummyconn_name);
+	}
+	else
+		conn = slon_make_dummyconn("msleep_local");
+
+	rc = sched_wait_time(conn, 0, msec);
+	slon_free_dummyconn(conn);
+
+	return rc;
+}
+
+
+/* ----------
  * sched_get_status
  *
  *	Return the current scheduler status in a thread safe fashion
@@ -276,6 +315,55 @@ sched_get_status(void)
 	status = sched_status;
 	pthread_mutex_unlock(&sched_master_lock);
 	return status;
+}
+
+
+/* ----------
+ * sched_wakeup_node
+ *
+ *	Wakeup the threads (listen and worker) of one or all remote
+ *	nodes to cause them rechecking the current runtime status or
+ *	adjust their configuration to changes.
+ * ----------
+ */
+int
+sched_wakeup_node (int no_id)
+{
+	SlonConn   *conn;
+	int			num_wakeup = 0;
+
+	pthread_mutex_lock(&sched_master_lock);
+
+	/*
+	 * Set all waiters that belong to that node to cancel
+	 */
+	for (conn = sched_waitqueue_head; conn; conn = conn->next)
+	{
+		if (conn->node != NULL)
+		{
+			if (no_id < 0 || conn->node->no_id == no_id)
+			{
+				conn->condition |= SCHED_WAIT_CANCEL;
+				num_wakeup++;
+			}
+		}
+	}
+
+	/*
+	 * Give the scheduler thread a heads up if some wait was canceled;
+	 */
+	if (num_wakeup > 0)
+	{
+		if (write(sched_sockpair[1], "x", 1) < 0)
+		{
+			perror("sched_wait_conn: write()");
+			slon_abort();
+		}
+	}
+
+	pthread_mutex_unlock(&sched_master_lock);
+
+	return num_wakeup;
 }
 
 
@@ -352,6 +440,30 @@ sched_mainloop(void *dummy)
 		{
 			next = conn->next;
 
+			if (conn->condition & SCHED_WAIT_CANCEL)
+			{
+				/*
+				 * Some other thread wants this thread to
+				 * wake up.
+				 */
+				DLLIST_REMOVE(sched_waitqueue_head, 
+							sched_waitqueue_tail, conn);
+
+				if (conn->condition & SCHED_WAIT_SOCK_READ)
+					sched_remove_fdset(PQsocket(conn->dbconn), 
+									&sched_fdset_read);
+				if (conn->condition & SCHED_WAIT_SOCK_WRITE)
+					sched_remove_fdset(PQsocket(conn->dbconn),
+									&sched_fdset_write);
+
+				pthread_mutex_lock(&(conn->conn_lock));
+				pthread_cond_signal(&(conn->conn_cond));
+				pthread_mutex_unlock(&(conn->conn_lock));
+
+				conn = next;
+				continue;
+			}
+
 			if (conn->condition & SCHED_WAIT_TIMEOUT)
 			{
 				/*
@@ -378,10 +490,6 @@ sched_mainloop(void *dummy)
 					 * elapsed to avoid a full scheduler round just
 					 * for one kernel tick.
 					 */
-					pthread_mutex_lock(&(conn->conn_lock));
-					pthread_cond_signal(&(conn->conn_cond));
-					pthread_mutex_unlock(&(conn->conn_lock));
-
 					DLLIST_REMOVE(sched_waitqueue_head, 
 								sched_waitqueue_tail, conn);
 
@@ -391,6 +499,10 @@ sched_mainloop(void *dummy)
 					if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 						sched_remove_fdset(PQsocket(conn->dbconn),
 										&sched_fdset_write);
+
+					pthread_mutex_lock(&(conn->conn_lock));
+					pthread_cond_signal(&(conn->conn_cond));
+					pthread_mutex_unlock(&(conn->conn_lock));
 				}
 				else
 				{

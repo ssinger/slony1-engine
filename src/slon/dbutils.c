@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.4 2004-02-20 15:48:45 wieck Exp $
+ *	$Id: dbutils.c,v 1.5 2004-02-22 03:10:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,9 +29,12 @@
 #include "slon.h"
 
 
-/* ----
+static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
+
+
+/* ----------
  * slon_connectdb
- * ----
+ * ----------
  */
 SlonConn *
 slon_connectdb(char *conninfo, char *symname)
@@ -68,9 +71,9 @@ slon_connectdb(char *conninfo, char *symname)
 }
 
 
-/* ----
+/* ----------
  * slon_disconnectdb
- * ----
+ * ----------
  */
 void
 slon_disconnectdb(SlonConn *conn)
@@ -88,9 +91,9 @@ slon_disconnectdb(SlonConn *conn)
 }
 
 
-/* ----
+/* ----------
  * slon_make_dummyconn
- * ----
+ * ----------
  */
 SlonConn *
 slon_make_dummyconn(char *symname)
@@ -115,9 +118,9 @@ slon_make_dummyconn(char *symname)
 }
 
 
-/* ----
+/* ----------
  * slon_free_dummyconn
- * ----
+ * ----------
  */
 void
 slon_free_dummyconn(SlonConn *conn)
@@ -137,11 +140,11 @@ slon_free_dummyconn(SlonConn *conn)
 }
 
 
-/* ----
+/* ----------
  * db_getLocalNodeId
  *
  *	Query a connection for the value of sequence sl_local_node_id
- * ----
+ * ----------
  */
 int
 db_getLocalNodeId(PGconn *conn)
@@ -181,7 +184,7 @@ db_getLocalNodeId(PGconn *conn)
 }
 
 
-/* ----
+/* ----------
  * slon_mkquery
  *
  *	A simple query formatting and quoting function using dynamic string
@@ -190,18 +193,58 @@ db_getLocalNodeId(PGconn *conn)
  *		%s		String argument
  *		%q		Quoted literal (\ and ' will be escaped)
  *		%d		Integer argument
- * ----
+ * ----------
  */
 int
 slon_mkquery(SlonDString *dsp, char *fmt, ...)
 {
 	va_list		ap;
-	char	   *s;
-	char		buf[64];
 
 	dstring_reset(dsp);
 
 	va_start(ap, fmt);
+	slon_appendquery_int(dsp, fmt, ap);
+	va_end(ap);
+
+	dstring_terminate(dsp);
+
+	return 0;
+}
+
+
+/* ----------
+ * slon_appendquery
+ *
+ *	Append query string material to an existing dynamic string.
+ * ----------
+ */
+int
+slon_appendquery(SlonDString *dsp, char *fmt, ...)
+{
+	va_list		ap;
+
+	va_start(ap, fmt);
+	slon_appendquery_int(dsp, fmt, ap);
+	va_end(ap);
+
+	dstring_terminate(dsp);
+
+	return 0;
+}
+
+
+/* ----------
+ * slon_appendquery_int
+ *
+ *	Implementation of slon_mkquery() and slon_appendquery().
+ * ----------
+ */
+static int
+slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
+{
+	char	   *s;
+	char		buf[64];
+
 	while (*fmt)
 	{
 		switch(*fmt)
@@ -257,7 +300,6 @@ slon_mkquery(SlonDString *dsp, char *fmt, ...)
 						break;
 		}
 	}
-	va_end(ap);
 
 	dstring_terminate(dsp);
 

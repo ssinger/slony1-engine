@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.2 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: sync_thread.c,v 1.3 2004-02-22 03:10:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -81,7 +81,7 @@ syncThread_main(void *dummy)
 			"select %s.createEvent('_%s', 'SYNC', NULL);",
 			rtcfg_namespace, rtcfg_cluster_name);
 
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000) == 0)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Start a serializable transaction and get the last value

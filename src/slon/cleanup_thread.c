@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.3 2004-02-20 15:28:49 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.4 2004-02-22 03:10:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -82,7 +82,7 @@ cleanupThread_main(void *dummy)
 	/*
 	 * Loop until shutdown time arrived
 	 */
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 60000) == 0)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 60000) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()

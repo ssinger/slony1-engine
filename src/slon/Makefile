@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.6 2004-02-20 17:59:42 wieck Exp $
+#	$Id: Makefile,v 1.7 2004-02-22 03:10:47 wieck Exp $
 # ----------
 
 subdir = src/slon
@@ -19,8 +19,9 @@ PROG		= slon
 OBJS		= 			\
 	slon.o				\
 	runtime_config.o	\
-	sync_thread.o		\
 	local_listen.o		\
+	remote_listen.o		\
+	sync_thread.o		\
 	cleanup_thread.o	\
 	scheduler.o			\
 	dbutils.o			\

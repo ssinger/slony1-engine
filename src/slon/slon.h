@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.10 2004-02-20 17:59:42 wieck Exp $
+ *	$Id: slon.h,v 1.11 2004-02-22 03:10:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -22,9 +22,12 @@
 #endif
 
 
-#define	SLON_TSTAT_NONE		0
-#define	SLON_TSTAT_RUNNING	1
-#define	SLON_TSTAT_SHUTDOWN	2
+typedef enum {
+	SLON_TSTAT_NONE,
+	SLON_TSTAT_RUNNING,
+	SLON_TSTAT_SHUTDOWN,
+	SLON_TSTAT_RESTART,
+} SlonThreadStatus;
 
 
 
@@ -37,9 +40,9 @@ typedef struct SlonListen_s	SlonListen;
 typedef struct SlonSet_s	SlonSet;
 typedef struct SlonConn_s	SlonConn;
 
-/* ----
+/* ----------
  * SlonNode
- * ----
+ * ----------
  */
 struct SlonNode_s {
 	int					no_id;			/* node ID */
@@ -54,7 +57,7 @@ struct SlonNode_s {
 
 	int64				last_event;		/* last event we have received */
 
-	int					listen_status;	/* status of the listen thread */
+	SlonThreadStatus	listen_status;	/* status of the listen thread */
 	pthread_t			listen_thread;	/* thread id of listen thread */
 	SlonListen		   *listen_head;	/* list of origins we listen for */
 	SlonListen		   *listen_tail;
@@ -63,9 +66,9 @@ struct SlonNode_s {
 	SlonNode		   *next;
 };
 
-/* ----
+/* ----------
  * SlonListen
- * ----
+ * ----------
  */
 struct SlonListen_s {
 	int					li_origin;		/* origin of events */
@@ -74,9 +77,9 @@ struct SlonListen_s {
 	SlonListen		   *next;
 };
 
-/* ----
+/* ----------
  * SlonSet
- * ----
+ * ----------
  */
 struct SlonSet_s {
 	int					set_id;			/* set ID */
@@ -92,9 +95,9 @@ struct SlonSet_s {
 	SlonSet			   *next;
 };
 
-/* ----
+/* ----------
  * SlonConn
- * ----
+ * ----------
  */
 struct SlonConn_s {
 	char			   *symname;		/* Symbolic name of connection */
@@ -110,9 +113,9 @@ struct SlonConn_s {
 	SlonConn		   *next;
 };
 
-/* ----
+/* ----------
  * SlonDString
- * ----
+ * ----------
  */
 #define		SLON_DSTRING_SIZE_INIT	64
 #define		SLON_DSTRING_SIZE_INC	64
@@ -233,7 +236,8 @@ typedef struct
 #define SCHED_STATUS_OK			0
 #define SCHED_STATUS_SHUTDOWN	1
 #define SCHED_STATUS_DONE		2
-#define SCHED_STATUS_ERROR		3
+#define SCHED_STATUS_CANCEL		3
+#define SCHED_STATUS_ERROR		4
 
 /* ----------
  * Scheduler wait conditions
@@ -242,6 +246,7 @@ typedef struct
 #define SCHED_WAIT_SOCK_READ	1
 #define SCHED_WAIT_SOCK_WRITE	2
 #define SCHED_WAIT_TIMEOUT		4
+#define SCHED_WAIT_CANCEL		8
 
 
 /* ----------
@@ -257,6 +262,8 @@ extern int		rtcfg_nodeactive;
 extern char	   *rtcfg_nodecomment;
 extern char	   *rtcfg_lastevent;
 
+extern SlonNode *rtcfg_node_list_head;
+extern SlonNode *rtcfg_node_list_tail;
 extern SlonSet *rtcfg_set_list_head;
 extern SlonSet *rtcfg_set_list_tail;
 
@@ -283,7 +290,9 @@ extern void		rtcfg_unlock(void);
 extern void		rtcfg_storeNode(int no_id, char *no_comment);
 extern void		rtcfg_enableNode(int no_id);		
 extern void		rtcfg_dropNode(int no_id);
-extern void		rtcfg_setNodeLastEvent(int no_id, int64 last_event);
+extern SlonNode *rtcfg_findNode(int no_id);
+extern int64	rtcfg_setNodeLastEvent(int no_id, int64 event_seq);
+extern int64	rtcfg_getNodeLastEvent(int no_id);
 
 extern void		rtcfg_storePath(int pa_server, char *pa_conninfo,
 							int pa_connretry);
@@ -330,10 +339,10 @@ extern void	   *localListenThread_main(void *dummy);
 
 
 /* ----------
- * Functions in remote_node.c
+ * Functions in remote_listen.c
  * ----------
  */
-extern void	   *slon_remoteEventThread(void *cdata);
+extern void	   *remoteListenThread_main(void *cdata);
 
 
 /* ----------
@@ -344,7 +353,9 @@ extern int		sched_start_mainloop(void);
 extern int		sched_wait_mainloop(void);
 extern int		sched_wait_conn(SlonConn *conn, int condition);
 extern int		sched_wait_time(SlonConn *conn, int condition, int msec);
+extern int		sched_msleep(SlonNode *node, int msec);
 extern int		sched_get_status(void);
+extern int		sched_wakeup_node(int no_id);
 
 
 /* ----------
@@ -359,6 +370,7 @@ extern void		slon_free_dummyconn(SlonConn *conn);
 extern int		db_getLocalNodeId(PGconn *conn);
 
 extern int		slon_mkquery(SlonDString *ds, char *fmt, ...);
+extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);
 
 
 /* ----------
