@@ -1,29 +1,48 @@
-#!perl # -*- perl -*-
-# $Id: drop_set.pl,v 1.4 2004-09-09 14:42:52 cbbrowne Exp $
+#!/usr/bin/perl
+# $Id: drop_set.pl,v 1.5 2005-01-10 18:20:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
+use Getopt::Long;
+
+$SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
+$SHOW_USAGE    = 0;          # Show usage, then quit
+
+# Read command-line options
+GetOptions("config=s"  => \$SLON_ENV_FILE,
+	   "help"      => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: drop_set.pl [--config file] set#
+
+    Drops a set.
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
 require 'slon-tools.pm';
-require 'slon.env';
+require $SLON_ENV_FILE;
+
 my ($set) = @ARGV;
-if ($set =~ /^set(\d+)$/) {
+if ($set =~ /^(?:set)?(\d+)$/) {
   $set = $1;
 } else {
   print "Need set identifier\n";
-  die "drop_set.pl setN\n";
+  die $USAGE;
 }
-$OUTFILE="/tmp/dropset.$$";
-open(SLONIK, ">>$OUTFILE");
 
+$FILE = "/tmp/dropset.$$";
+open(SLONIK, ">", $FILE);
 print SLONIK genheader();
-
-print SLONIK qq{
-try {
-      drop set (id = $set, origin=1);
-} on error {
-      exit 1;
-}
-echo 'Dropped set $set';
-};
+print SLONIK "  try {\n";
+print SLONIK "        drop set (id = $set, origin = $MASTERNODE);\n";
+print SLONIK "  } on error {\n";
+print SLONIK "        exit 1;\n";
+print SLONIK "  }\n";
+print SLONIK "  echo 'Dropped set $set';\n";
 close SLONIK;
-run_slonik_script($OUTFILE);
+run_slonik_script($FILE);
