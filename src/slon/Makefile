@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.21 2004-08-31 21:41:53 darcyb Exp $
+#	$Id: Makefile,v 1.22 2004-09-24 18:51:42 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -36,6 +36,8 @@ OBJS		= 			\
 	cleanup_thread.o	\
 	scheduler.o			\
 	dbutils.o			\
+	conf-file.o	\
+	confoptions.o	\
 	misc.o
 
 DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h)
@@ -59,6 +61,11 @@ runtime_config.o:	runtime_config.c slon.h
 scheduler.o:		scheduler.c slon.h
 slon.o:				slon.c slon.h
 sync_thread.o:		sync_thread.c slon.h
+conf-file.o:		conf-file.c slon.h confoptions.h
+confoptions.o:		confoptions.c slon.h confoptions.h
+
+conf-file.c:		conf-file.l
+	$(FLEX) -o$(@) $<
 
 clean distclean maintainer-clean:
 	rm -f $(ALL) $(OBJS)

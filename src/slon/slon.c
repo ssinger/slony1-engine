@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.28 2004-08-30 16:47:45 darcyb Exp $
+ *	$Id: slon.c,v 1.29 2004-09-24 18:51:43 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,7 +27,7 @@
 #include "c.h"
 
 #include "slon.h"
-
+#include "confoptions.h"
 
 /* ----------
  * Global data
@@ -52,6 +52,8 @@ static pthread_t		main_thread;
 static char *const	   *main_argv;
 static void				sigalrmhandler(int signo);
 
+int slon_log_level;
+
 
 /* ----------
  * main
@@ -73,70 +75,58 @@ main (int argc, char *const argv[])
 	int			group_size_set = 0;
 
 
-	while ((c = getopt(argc, argv, "d:s:t:g:c:h")) != EOF)
+        InitializeConfOptions();
+
+
+	while ((c = getopt(argc, argv, "f:d:s:t:g:c:f:h")) != EOF)
 	{
 		switch(c)
 		{
-			case 'd':	slon_log_level = strtol(optarg, NULL, 10);
-						if (slon_log_level < 0 || slon_log_level > 4)
-						{
-							fprintf(stderr, "illegal debug level %d\n",
-									slon_log_level);
-							errors++;
-						}
-						slon_log_level += SLON_INFO;
-						break;
+			case 'f':
+				ProcessConfigFile(optarg);
+				break;
 
-			case 's':	sync_interval = strtol(optarg, NULL, 10);
-						if (sync_interval < 100 || sync_interval > 60000)
-						{
-							fprintf(stderr, "sync interval must be between 100 and 60000 ms\n");
-							errors++;
-						}
-						else if (!group_size_set)
-						{
-							sync_group_maxsize = 60000 / sync_interval;
-							if (sync_group_maxsize > 100)
-								sync_group_maxsize = 100;
-						}
+			case 'd':	
+				set_config_option("log_level", optarg);
+				break;
 
-						break;
+			case 's':	
+				set_config_option("sync_group_maxsize", optarg);
+				break;
 
-			case 't':	sync_interval_timeout = strtol(optarg, NULL, 10);
-						if (sync_interval < 0)
-						{
-							fprintf(stderr, "sync interval must be >= 0\n");
-							errors++;
-						}
+			case 't':	
+				set_config_option("sync_interval_timeout", optarg);
+				break;
 
-						break;
+			case 'g':
+				set_config_option("sync_group_maxsize", optarg);
+				break;
 
-			case 'g':	sync_group_maxsize = strtol(optarg, NULL, 10);
-						if (sync_group_maxsize < 1 || sync_group_maxsize > 100)
-						{
-							fprintf(stderr, "sync group size must be between 1 and 100 ms\n");
-							errors++;
-						}
-						group_size_set = 1;
-						break;
+			case 'c':
+				set_config_option("vac_frequency", optarg);
+				break;
 
-			case 'c':	vac_frequency = strtol(optarg, NULL, 10);
-						if (vac_frequency < 0 || vac_frequency > 10)
-						{
-							fprintf(stderr, "Vaccum frequency must be between 0 (disable) and 10\n");
-							errors++;
-						}
-						break;
-
-                        case 'h':       errors++;
-                                                break;
+                        case 'h':
+				errors++;
+                                break;
 
 			default:	fprintf(stderr, "unknown option '%c'\n", c);
 						errors++;
 						break;
 		}
 	}
-
+#if 0
+fprintf( stderr, "config:   vac_frequency %d\n"
+                 "          sync_group_maxsize %d\n"
+                 "          sync_interval_timeout %d\n"
+                 "          sync_interval %d\n"
+                 "          slon_log_level %d\n"
+		 "          log_pid %d\n"
+                 "	    log_timestamp %d\n",
+		 vac_frequency, sync_group_maxsize, sync_interval_timeout,
+		 sync_interval, slon_log_level, logpid, logtimestamp);
+fflush(NULL);
+#endif
 	if (argc - optind != 2)
 		errors++;
 
@@ -150,6 +140,7 @@ main (int argc, char *const argv[])
 		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
 		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
 		fprintf(stderr, "    -c <num>		   how often to vaccum in cleanup cycles\n");
+		fprintf(stderr, "    -f <filename>	   slon configuration file\n");
 		return 1;
 	}
 

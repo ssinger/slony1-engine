@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.11 2004-06-08 15:15:49 wieck Exp $
+ *	$Id: sync_thread.c,v 1.12 2004-09-24 18:51:43 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,8 +32,8 @@
  * Global variables
  * ----------
  */
-int		sync_interval = 10000;
-int		sync_interval_timeout = 60000;
+int		sync_interval;
+int		sync_interval_timeout;
 
 
 /* ----------

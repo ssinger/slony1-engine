@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.60 2004-09-07 17:10:19 wieck Exp $
+ *	$Id: remote_worker.c,v 1.61 2004-09-24 18:51:42 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -199,7 +199,7 @@ static struct node_confirm_status  *node_confirm_head = NULL;
 static struct node_confirm_status  *node_confirm_tail = NULL;
 pthread_mutex_t						node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int		sync_group_maxsize = 6;
+int		sync_group_maxsize;
 
 
 /* ----------

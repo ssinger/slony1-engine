@@ -6,14 +6,16 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.37 2004-08-30 16:47:45 darcyb Exp $
+ *	$Id: slon.h,v 1.38 2004-09-24 18:51:43 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
 #ifndef SLON_H_INCLUDED
 #define SLON_H_INCLUDED
 
+
 #include "config.h"
+#include "misc.h"
 
 #define SLON_MEMDEBUG	1
 
@@ -51,6 +53,8 @@ typedef enum {
 	SLON_TSTAT_DONE
 } SlonThreadStatus;
 
+
+extern bool logpid;
 
 /* ----------
  * In memory structures for cluster configuration
@@ -491,28 +495,6 @@ extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);
  * ----------
  */
 extern int		slon_log_level;
-
-/* ----------
- * Functions in misc.c
- * ----------
- */
-typedef enum {
-	SLON_FATAL,
-	SLON_ERROR,
-	SLON_WARN,
-	SLON_CONFIG,
-	SLON_INFO,
-	SLON_DEBUG1,
-	SLON_DEBUG2,
-	SLON_DEBUG3,
-	SLON_DEBUG4
-} SlonLogLevel;
-
-extern void		slon_log(SlonLogLevel level, char * fmt, ...);
-
-extern int		slon_scanint64(char *str, int64 *result);
-
-
 
 #endif /*  SLON_H_INCLUDED */
 

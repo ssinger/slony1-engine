@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.11 2004-09-23 16:37:44 darcyb Exp $
+ *	$Id: misc.c,v 1.12 2004-09-24 18:51:42 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,11 +27,14 @@
 #include "libpq-fe.h"
 #include "c.h"
 
+#include "confoptions.h"
 #include "slon.h"
 
 
-int		slon_log_level = SLON_INFO;
+extern int		slon_log_level;
 
+extern bool		logpid;
+extern bool		logtimestamp;
 
 static pthread_mutex_t	log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -88,9 +91,20 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 		}
 	}
 
-	strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S %Z", localtime(&stamp_time));
+	sprintf(outbuf, "");
+	
+	if (logtimestamp == true)
+	{
+		strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S %Z", localtime(&stamp_time));
+		sprintf(outbuf, "%s ", time_buf);
+	}
 
-	sprintf(outbuf, "%-6.6s [%s] ", level_c, time_buf);
+	if (logpid == true)
+	{
+		sprintf(outbuf, "%s[%d] ", outbuf, slon_pid);
+	}
+	sprintf(outbuf, "%s%-6.6s ",outbuf, level_c);
+
 	off = strlen(outbuf);
 
 	while(vsnprintf(&outbuf[off], outsize - off, fmt, ap) >= outsize - off)
