@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.9 2004-03-23 18:53:11 wieck Exp $
+ *	$Id: scheduler.c,v 1.10 2004-03-25 01:37:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -46,7 +46,7 @@ static int				sched_status = SCHED_STATUS_OK;
 static int				sched_numfd = 0;
 static fd_set			sched_fdset_read;
 static fd_set			sched_fdset_write;
-static int				sched_sockpair[2];
+static int				sched_wakeuppipe[2];
 static SlonConn		   *sched_waitqueue_head = NULL;
 static SlonConn		   *sched_waitqueue_tail = NULL;
 
@@ -227,7 +227,7 @@ sched_wait_conn(SlonConn *conn, int condition)
 	 * Give the scheduler thread a heads up, release the master lock
 	 * and wait for it to tell us that the event we're waiting for happened.
 	 */
-	if (write(sched_sockpair[1], "x", 1) < 0)
+	if (write(sched_wakeuppipe[1], "x", 1) < 0)
 	{
 		perror("sched_wait_conn: write()");
 		exit(-1);
@@ -365,7 +365,7 @@ sched_wakeup_node (int no_id)
 	 */
 	if (num_wakeup > 0)
 	{
-		if (write(sched_sockpair[1], "x", 1) < 0)
+		if (write(sched_wakeuppipe[1], "x", 1) < 0)
 		{
 			perror("sched_wait_conn: write()");
 			slon_abort();
@@ -413,17 +413,17 @@ sched_mainloop(void *dummy)
 	FD_ZERO(&sched_fdset_write);
 
 	/*
-	 * Create a socketpair used by the main thread to cleanly
+	 * Create a pipe used by the main thread to cleanly
 	 * wakeup the scheduler on signals.
 	 */
-	if (socketpair(PF_LOCAL, SOCK_STREAM, 0, sched_sockpair) < 0)
+	if (pipe(sched_wakeuppipe) < 0)
 	{
-		perror("sched_mainloop: socketpair()");
+		perror("sched_mainloop: pipe()");
 		sched_status = SCHED_STATUS_ERROR;
 		pthread_cond_signal(&sched_master_cond);
 		pthread_exit(NULL);
 	}
-	sched_add_fdset(sched_sockpair[0], &sched_fdset_read);
+	sched_add_fdset(sched_wakeuppipe[0], &sched_fdset_read);
 
 	/*
 	 * Done with all initialization. Let the main thread go
@@ -558,14 +558,14 @@ sched_mainloop(void *dummy)
 		}
 
 		/*
-		 * Check the special socketpair for a heads up.
+		 * Check the special pipe for a heads up.
 		 */
-		if (FD_ISSET(sched_sockpair[0], &rfds))
+		if (FD_ISSET(sched_wakeuppipe[0], &rfds))
 		{
 			char	buf[1];
 
 			rc--;
-			if (read(sched_sockpair[0], buf, 1) != 1)
+			if (read(sched_wakeuppipe[0], buf, 1) != 1)
 			{
 				perror("sched_mainloop: read()");
 				sched_status = SCHED_STATUS_ERROR;
@@ -642,9 +642,9 @@ sched_mainloop(void *dummy)
 	 * master lock. First we close the scheduler heads-up socket
 	 * pair so nobody will think we're listening any longer.
 	 */
-	close(sched_sockpair[0]);
-	close(sched_sockpair[1]);
-	sched_sockpair[0] = sched_sockpair[1] = -1;
+	close(sched_wakeuppipe[0]);
+	close(sched_wakeuppipe[1]);
+	sched_wakeuppipe[0] = sched_wakeuppipe[1] = -1;
 
 	/*
 	 * Then we cond_signal all connections that are in the queue.
@@ -712,13 +712,13 @@ sched_sighandler(int signo)
 	/*
 	 * Try to wakeup the scheduler thread by throwing a bait
 	 */
-	if (sched_sockpair[1] < 0)
+	if (sched_wakeuppipe[1] < 0)
 	{
 		slon_log(SLON_ERROR, "sched_sighandler: sockpair already closed\n");
 		pthread_mutex_unlock(&sched_master_lock);
 		return;
 	}
-	if (write(sched_sockpair[1], "x", 1) < 0)
+	if (write(sched_wakeuppipe[1], "x", 1) < 0)
 	{
 		perror("sched_sighandler: write()");
 		pthread_mutex_unlock(&sched_master_lock);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.33 2004-03-23 17:22:43 wieck Exp $
+ *	$Id: remote_worker.c,v 1.34 2004-03-25 01:37:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2245,8 +2245,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			 */
 			slon_mkquery(&query1,
 					"select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
-					"from %s.sl_event where ev_seqno = '%s'; ",
-					rtcfg_namespace, PQgetvalue(res1, 0, 0));
+					"from %s.sl_event "
+					"where ev_origin = %d and ev_seqno = '%s'; ",
+					rtcfg_namespace, node->no_id, PQgetvalue(res1, 0, 0));
 			PQclear(res1);
 			res1 = PQexec(pro_dbconn, dstring_data(&query1));
 			if (PQresultStatus(res1) != PGRES_TUPLES_OK)
