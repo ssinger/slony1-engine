@@ -1,3 +1,5 @@
+# $Id: docbook.m4,v 1.3 2004-12-17 23:20:45 darcyb Exp $
+
 # SLON_AC_PROG_JADE
 # --------------
 AC_DEFUN([SLON_AC_PROG_JADE],
@@ -14,7 +16,7 @@ AC_DEFUN([SLON_AC_PROG_NSGMLS],
 # ---------------------------
 AC_DEFUN([SLON_AC_CHECK_DOCBOOK],
 [AC_REQUIRE([SLON_AC_PROG_NSGMLS])
-AC_CACHE_CHECK([for DocBook V$1], [slon_ac_cv_check_docbook],
+AC_CACHE_CHECK([for DocBook V$1], [slonac_cv_check_docbook],
 [cat >conftest.sgml <<EOF
 <!doctype book PUBLIC "-//OASIS//DTD DocBook V$1//EN">
 <book>
@@ -29,17 +31,17 @@ AC_CACHE_CHECK([for DocBook V$1], [slon_ac_cv_check_docbook],
 </book>
 EOF
 
-slon_ac_cv_check_docbook=no
+slonac_cv_check_docbook=no
 
 if test -n "$NSGMLS"; then
   $NSGMLS -s conftest.sgml 1>&AS_MESSAGE_LOG_FD 2>&1
   if test $? -eq 0; then
-    slon_ac_cv_check_docbook=yes
+    slonac_cv_check_docbook=yes
   fi
 fi
 rm -f conftest.sgml])
 
-have_docbook=$slon_ac_cv_check_docbook
+have_docbook=$slonac_cv_check_docbook
 AC_SUBST([have_docbook])
 ])# SLON_AC_CHECK_DOCBOOK
 
@@ -49,37 +51,38 @@ AC_SUBST([have_docbook])
 AC_DEFUN([SLON_AC_PATH_DOCBOOK_STYLESHEETS],
 [AC_ARG_VAR(DOCBOOKSTYLE, [location of DocBook stylesheets])dnl
 AC_MSG_CHECKING([for DocBook stylesheets])
-AC_CACHE_VAL([slon_ac_cv_path_stylesheets],
+AC_CACHE_VAL([slonac_cv_path_stylesheets],
 [if test -n "$DOCBOOKSTYLE"; then
-  slon_ac_cv_path_stylesheets=$DOCBOOKSTYLE
+  slonac_cv_path_stylesheets=$DOCBOOKSTYLE
 else
-  for slon_ac_prefix in /usr /usr/local /opt; do
-    for slon_ac_infix in share lib; do
-      for slon_ac_postfix in \
+  for slonac_prefix in /usr /usr/local /opt; do
+    for slonac_infix in share lib; do
+      for slonac_postfix in \
         sgml/stylesheets/nwalsh-modular \
         sgml/stylesheets/docbook \
+	sgml/docbook-dsssl \
         sgml/docbook/dsssl/modular \
         sgml/docbook/stylesheet/dsssl/modular \
         sgml/docbook/dsssl-stylesheets
       do
-        slon_ac_candidate=$pgac_prefix/$pgac_infix/$pgac_postfix
-        if test -r "$pgac_candidate/html/docbook.dsl" \
-           && test -r "$pgac_candidate/print/docbook.dsl"
+        slonac_candidate=$slonac_prefix/$slonac_infix/$slonac_postfix
+        if test -r "$slonac_candidate/html/docbook.dsl" \
+           && test -r "$slonac_candidate/print/docbook.dsl"
         then
-          slon_ac_cv_path_stylesheets=$pgac_candidate
+          slonac_cv_path_stylesheets=$slonac_candidate
           break 3
         fi
       done
     done
   done
 fi])
-DOCBOOKSTYLE=$slon_ac_cv_path_stylesheets
+DOCBOOKSTYLE=$slonac_cv_path_stylesheets
 AC_SUBST([DOCBOOKSTYLE])
 if test -n "$DOCBOOKSTYLE"; then
   AC_MSG_RESULT([$DOCBOOKSTYLE])
 else
   AC_MSG_RESULT(no)
-fi])# SLON_AC_PATH_DOCBOOK_STYLESHEETS
+fi])# SLON_C_PATH_DOCBOOK_STYLESHEETS
 
 
 # SLON_AC_PATH_COLLATEINDEX
@@ -91,4 +94,4 @@ if test -n "$DOCBOOKSTYLE"; then
                 [$DOCBOOKSTYLE/bin $PATH])
 else
   AC_PATH_PROGS(COLLATEINDEX, collateindex.pl)
-fi])# SLON_AC_PATH_COLLATEINDEX
+fi])# PGAC_PATH_COLLATEINDEX
