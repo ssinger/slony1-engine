@@ -1,0 +1,22 @@
+Beginning with version 1.0.3 the slon replication engine refuses to
+work against any database that does not have the stored procedures
+for the same version loaded or where the shared object containing the
+C language support functions and the log trigger does not match the
+version number.
+
+This means that the Slony installation on all nodes in a cluster must
+be upgraded at once.
+
+The proper upgrade procedure would is:
+
+    1.	Stop the slon replication engine on all nodes.
+
+	2.	Install the new Slony version on all nodes.
+
+	3.	Execute a slonik script containing the command
+
+			update functions (id = <nodeId>);
+
+		for every node in the cluster.
+
+	4.	Start all slon replication engines.
