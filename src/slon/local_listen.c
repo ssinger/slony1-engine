@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.27 2004-11-13 04:52:46 wieck Exp $
+ *	$Id: local_listen.c,v 1.28 2005-01-05 22:20:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -394,7 +394,7 @@ localListenThread_main(void *dummy)
 
 				/*
 				 * Nothing to do ATM ... we don't support
-				 * adding tables to subscribed sets yet and
+				 * adding tables to subscribed sets and
 				 * table information is not maintained in
 				 * the runtime configuration.
 				 */
@@ -407,7 +407,7 @@ localListenThread_main(void *dummy)
 
 				/*
 				 * Nothing to do ATM ... we don't support
-				 * adding sequences to subscribed sets yet and
+				 * adding sequences to subscribed sets and
 				 * table information is not maintained in
 				 * the runtime configuration.
 				 */
@@ -625,7 +625,7 @@ localListenThread_main(void *dummy)
 		PQclear(res);
 
 		/*
-		 * If there where events, commit the transaction.
+		 * If there were events, commit the transaction.
 		 */
 		if (ntuples > 0)
 		{
