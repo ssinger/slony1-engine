@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="guest" date="1098325777" format="1.0" version="1.6"}%
+%META:TOPICINFO{author="guest" date="1100276070" format="1.0" version="1.7"}%
 %META:TOPICPARENT{name="WebHome"}%
 ---++ Slony-I Replication
 
@@ -12,7 +12,7 @@ Slony-I is a replication system for use with [[http://www.postgresql.org Postgre
 	* SlonyDefineCluster - defining the network of nodes (includes some "best practices" on numbering them)
 	* SlonyDefineSet - defining sets of tables/sequences to be replicated (make sure YOU define a primary key!)
 	* SlonyAdministrationScripts - the "altperl" tools
-	* SlonyStartSlons - watchdog script; where should slon run?
+	* SlonyStartSlons - About the slon daemons - where should slon run?
 	* SlonySlonConfiguration - what are the options, how should they be chosen
 	* SlonySubscribeNodes 
 	* SlonyMonitoring - what to expect in the logs, scripts to monitor things
