@@ -1,4 +1,4 @@
-dnl Available from the GNU Autoconf Macro Archive at:
+ÐÐdnl Available from the GNU Autoconf Macro Archive at:
 dnl http://www.gnu.org/software/ac-archive/htmldoc/acx_pthread.html
 dnl
 AC_DEFUN([ACX_PTHREAD], [
@@ -40,7 +40,7 @@ fi
 # which indicates that we try without any flags at all, and "pthread-config"
 # which is a program returning the flags for the Pth emulation library.
 
-acx_pthread_flags="pthreads none -Kthread -lpthread -kthread lthread -pthread -lpthreads -pthread -mthreads pthread --thread-safe -mt pthread-config"
+acx_pthread_flags="pthreads none -Kthread -lpthread -kthread lthread pthread -pthread -mthreads pthread --thread-safe -mt pthread-config"
 
 # The ordering *is* (sometimes) important.  Some notes on the
 # individual items follow:
@@ -49,7 +49,7 @@ acx_pthread_flags="pthreads none -Kthread -lpthread -kthread lthread -pthread -l
 # none: in case threads are in libc; should be tried before -Kthread and
 #       other compiler flags to prevent continual compiler warnings
 # -Kthread: Sequent (threads in libc, but -Kthread needed for pthread.h)
-# -lpthread: FreeBSD prefered threads (5.x)
+# -lpthreads: FreeBSD prefered threads (5.x)
 # -kthread: FreeBSD kernel threads (preferred to -pthread since SMP-able)
 # lthread: LinuxThreads port on FreeBSD (also preferred to -pthread)
 # -pthread: Linux/gcc (kernel threads), BSD/gcc (userland threads)
@@ -87,7 +87,7 @@ for flag in $acx_pthread_flags; do
 
                 -*)
                 AC_MSG_CHECKING([whether pthreads work with $flag])
-                PTHREAD_CFLAGS="$flag"
+#                PTHREAD_CFLAGS="$flag"
                 ;;
 
 		pthread-config)
@@ -167,8 +167,15 @@ if test "x$acx_pthread_ok" = xyes; then
         AC_MSG_CHECKING([if more special flags are required for pthreads])
         flag=no
         case "${host_cpu}-${host_os}" in
-                *-aix* | *-freebsd*)     flag="-D_THREAD_SAFE";;
-                *solaris* | *-osf* | *-hpux*) flag="-D_REENTRANT";;
+                *-aix* | *-freebsd*)
+			flag="-D_THREAD_SAFE"
+		;;
+                *solaris*)
+			flag="-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT"
+		;;
+ 		*-osf* | *-hpux*) 
+			flag="-D_REENTRANT"
+		;;
         esac
         AC_MSG_RESULT(${flag})
         if test "x$flag" != xno; then

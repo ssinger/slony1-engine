@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.23 2004-12-01 17:47:06 darcyb Exp $
+#	$Id: Makefile,v 1.24 2004-12-10 23:57:37 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -13,12 +13,8 @@ include $(slony_top_builddir)/Makefile.global
 
 CC = $(PTHREAD_CC)
 
-ifeq ($(PORTNAME), solaris)
-  CFLAGS += -D_POSIX_PTHREAD_SEMANTICS
-endif
-
 override CFLAGS +=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
-override LDFLAGS += $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
+override LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
 
 PROG		= slon
 
@@ -34,6 +30,7 @@ OBJS		= 			\
 	remote_worker.o		\
 	sync_thread.o		\
 	cleanup_thread.o	\
+	stats_thread.o		\
 	scheduler.o			\
 	dbutils.o			\
 	conf-file.o	\
@@ -49,7 +46,7 @@ ALL =				\
 all:	$(ALL)
 
 $(PROG):	$(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $(PROG)
+	$(CC) $(CFLAGS) $(OBJS) $(PTHREAD_LDFLAGS) $(LDFLAGS) -o $(PROG)
 
 cleanup_thread.o:	cleanup_thread.c slon.h
 dbutils.o:			dbutils.c slon.h
