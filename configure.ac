@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.18 2004-03-31 13:46:09 wieck Exp $
+# $Id: configure.ac,v 1.19 2004-04-20 15:23:34 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -58,10 +58,10 @@ AC_SUBST(LD)
 AC_SUBST(with_gnu_ld)
 ACX_PTHREAD()
 
+# ----
 # Locate the PostgreSQL source tree
-
+# ----
 AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL source tree], AC_SUBST(PGSOURCETREE, $with_pgsourcetree))
-
 if test "x$with_pgsourcetree" = "x" ; then
 	AC_MSG_ERROR([
     ********************
@@ -71,6 +71,19 @@ if test "x$with_pgsourcetree" = "x" ; then
     ********************
 	])
 fi
+# ----
+# Locate the PostgreSQL source tree
+# ----
+if test ! -f ${with_pgsourcetree}/src/interfaces/libpq/libpq.a ; then
+	AC_MSG_ERROR([
+    ********************
+    * The sourcetree in ${with_pgsourcetree}
+    * does not appear to be built. Please make sure to build 
+    * and install PostgreSQL from sources first.
+    ********************
+	])
+fi
+
 
 # ----
 # Check if our libpq contains several functions

@@ -2756,8 +2756,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+# ----
 # Locate the PostgreSQL source tree
-
+# ----
 
 # Check whether --with-pgsourcetree or --without-pgsourcetree was given.
 if test "${with_pgsourcetree+set}" = set; then
@@ -2765,7 +2766,6 @@ if test "${with_pgsourcetree+set}" = set; then
   PGSOURCETREE=$with_pgsourcetree
 
 fi;
-
 if test "x$with_pgsourcetree" = "x" ; then
 	{ { echo "$as_me:$LINENO: error:
     ********************
@@ -2783,6 +2783,27 @@ echo "$as_me: error:
 	" >&2;}
    { (exit 1); exit 1; }; }
 fi
+# ----
+# Locate the PostgreSQL source tree
+# ----
+if test ! -f ${with_pgsourcetree}/src/interfaces/libpq/libpq.a ; then
+	{ { echo "$as_me:$LINENO: error:
+    ********************
+    * The sourcetree in ${with_pgsourcetree}
+    * does not appear to be built. Please make sure to build
+    * and install PostgreSQL from sources first.
+    ********************
+	" >&5
+echo "$as_me: error:
+    ********************
+    * The sourcetree in ${with_pgsourcetree}
+    * does not appear to be built. Please make sure to build
+    * and install PostgreSQL from sources first.
+    ********************
+	" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 
 # ----
 # Check if our libpq contains several functions
