@@ -1,4 +1,15 @@
+# ----------
+# configure.ac
+#
+#	Autoconf configuration file for Slony-I
+#
+#	Copyright (c) 2003, PostgreSQL Global Development Group
+#	Author: Jan Wieck, Afilias USA INC.
+#
+# $Id: configure.ac,v 1.2 2003-11-18 14:48:51 wieck Exp $
+#
 # Process this file with autoconf to produce a configure script.
+# ----------
 AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
