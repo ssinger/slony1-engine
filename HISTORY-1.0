@@ -16,6 +16,12 @@
   PostgreSQL 7.5 has been renamed to 8.0, make it so that we pass
   8.0 version checks
 
+  date: 2004/08/15 15:43:24;  author: wieck;
+  Disabled a listen+unlisten per SYNC processing, that caused
+  pg_listener bloat. The pg_listener entry was used to speedup
+  failover. The entire node restart mechanism will be redone
+  in 1.1.
+
 
 1.0.1	Bugfix release
 
