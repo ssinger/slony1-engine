@@ -146,7 +146,7 @@ _EOF_
 Is the pgbench still running?  If not start it again.
 
 At this point we have 2 databases that are fully prepared.  One is the master
-database in which bgbench is busy accessing and changing rows.  It's now time
+database in which pgbench is busy accessing and changing rows.  It's now time
 to start the replication daemons.
 
 On $MASTERHOST the command to start the replication engine is
@@ -163,7 +163,7 @@ data yet.  The notices you are seeing is the synchronization of cluster
 configurations between the 2 slon processes.
 
 To start replicating the 4 pgbench tables (set 1) from the master (node id 1)
-the the slave (node id 2), execute the following script.
+the slave (node id 2), execute the following script.
 
 #!/bin/sh
 slonik <<_EOF_
@@ -243,5 +243,5 @@ else
 fi
 
 If this script returns "FAILED" please contact the developers at
-http://slony.org/
+http://slony.info/
 
