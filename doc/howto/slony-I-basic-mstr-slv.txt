@@ -150,11 +150,11 @@ to start the replication daemons.
 
 On $MASTERHOST the command to start the replication engine is
 
-slon $CLUSTERNAME dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST
+slon $CLUSTERNAME "dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST"
 
 Likewise we start the replication system on node 2 (the slave)
 
-slon $CLUSTERNAME dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST
+slon $CLUSTERNAME "dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST"
 
 Even though we have the slon running on both the master and slave and they are
 both spitting out diagnostics and other messages, we aren't replicating any
