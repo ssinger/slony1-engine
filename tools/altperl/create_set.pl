@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: create_set.pl,v 1.13 2005-02-20 02:12:11 smsimms Exp $
+# $Id: create_set.pl,v 1.14 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -13,7 +13,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: create_set.pl [--config file] set
+"Usage: create_set [--config file] set
 
     set  The name or ID of the set to be created
 

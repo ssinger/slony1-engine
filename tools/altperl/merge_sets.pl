@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: merge_sets.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: merge_sets.pl,v 1.9 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: merge_sets.pl [--config file] node# set# set#
+"Usage: merge_sets [--config file] node# set# set#
 
     Merges the contents of the second set into the first one.
 

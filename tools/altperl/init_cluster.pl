@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: init_cluster.pl,v 1.10 2005-02-10 06:22:41 smsimms Exp $
+# $Id: init_cluster.pl,v 1.11 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: init_cluster.pl [--config file]
+"Usage: init_cluster [--config file]
 
     Generates the slonik commands necessary to create a cluster and
     prepare the nodes for use.  Also displays a report showing the

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.10 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_kill.pl,v 1.11 2005-02-22 17:11:18 smsimms Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
@@ -15,7 +15,7 @@ GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: slon_kill.pl [--config file]
+"Usage: slon_kill [--config file]
 
    Kills all running slon and slon_watchdog instances for the set
    specified in the config file.

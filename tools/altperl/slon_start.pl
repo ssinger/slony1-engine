@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_start.pl,v 1.13 2005-02-20 01:00:00 smsimms Exp $
+# $Id: slon_start.pl,v 1.14 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -18,7 +18,7 @@ GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: slon_start.pl [--config file] [--watchdog|--nowatchdog]
+"Usage: slon_start [--config file] [--watchdog|--nowatchdog]
        [--sleep seconds] node#
 
     --config file    Location of the slon_tools.conf file

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: update_nodes.pl,v 1.6 2005-02-22 16:51:10 smsimms Exp $
+# $Id: update_nodes.pl,v 1.7 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: update_nodes.pl [--config file]
+"Usage: update_nodes [--config file]
 
     Updates the functions on all nodes.
 

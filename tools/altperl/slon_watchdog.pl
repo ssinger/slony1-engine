@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: slon_watchdog.pl,v 1.9 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: slon_watchdog.pl [--config file] node# sleep_seconds
+"Usage: slon_watchdog [--config file] node# sleep_seconds
 
     --config file  Location of the slon_tools.conf file
 

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: subscribe_set.pl,v 1.8 2005-02-10 06:22:41 smsimms Exp $
+# $Id: subscribe_set.pl,v 1.9 2005-02-22 17:11:18 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s"  => \$CONFIG_FILE,
 	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: subscribe_set.pl [--config file] set# node#
+"Usage: subscribe_set [--config file] set# node#
 
     Begins replicating a set to the specified node.
 
