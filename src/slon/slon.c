@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.10 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: slon.c,v 1.11 2004-02-20 17:59:42 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -331,13 +331,11 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 * the local node for administrative events to adjust the
 	 * configuration at runtime.
 	 */
-#if 0
-	if (pthread_create(&local_event_thread, NULL, slon_localEventThread, NULL) < 0)
+	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
 	{
 		perror("pthread_create()");
 		slon_exit(-1);
 	}
-#endif
 
 	/*
 	 * Create the local cleanup thread that will remove old

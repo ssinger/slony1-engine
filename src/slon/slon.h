@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.9 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: slon.h,v 1.10 2004-02-20 17:59:42 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -265,7 +265,11 @@ extern SlonSet *rtcfg_set_list_tail;
  * Functions in slon.c
  * ----------
  */
-#define slon_abort() {kill(slon_pid, SIGTERM);}
+#define slon_abort() \
+do { \
+    kill(slon_pid, SIGTERM); \
+	pthread_exit(NULL); \
+} while (0)
 extern void		slon_exit(int code);
 
 
@@ -316,6 +320,13 @@ extern void	   *cleanupThread_main(void *dummy);
  * ----------
  */
 extern void	   *syncThread_main(void *dummy);
+
+
+/* ----------
+ * Functions in local_listen.c
+ * ----------
+ */
+extern void	   *localListenThread_main(void *dummy);
 
 
 /* ----------
