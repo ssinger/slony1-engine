@@ -6,7 +6,7 @@
 .\"		Copyright (c) 2003, PostgreSQL Global Development Group
 .\"		Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-concept.nr,v 1.1 2003-11-18 15:10:25 wieck Exp $
+.\"	$Id: Slony-I-concept.nr,v 1.2 2004-01-19 20:25:50 wieck Exp $
 .\" ----------
 .\" format this document with
 .\"
@@ -23,7 +23,7 @@
 .ds Slony1     Slony-\f(TRI\fP
 .ds Slony1bold \fBSlony-\fP\f(TBI\fP
 .ds LH \*[Slony1]
-.ds RH Draft
+.ds RH "Version 1.0
 .\" .RP
 .\" **********************************************************************
 .PSPIC Slon.eps 6.0
@@ -32,6 +32,8 @@
 .br
 \!.br
 A replication system for PostgreSQL
+.sp
+.UL "Concept
 .AU
 Jan Wieck
 .AI
