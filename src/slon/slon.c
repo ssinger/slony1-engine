@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.19 2004-03-11 22:00:45 wieck Exp $
+ *	$Id: slon.c,v 1.20 2004-03-28 19:09:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,12 +45,17 @@ static pthread_t        local_cleanup_thread;
 static pthread_t        local_sync_thread;
 
 
+static pthread_t		main_thread;
+static void				sigalrmhandler(int signo);
+static char *const	   *main_argv;
+
+
 /* ----------
  * main
  * ----------
  */
 int
-main (int argc, const char *argv[])
+main (int argc, char *const argv[])
 {
 	char	   *cp1;
 	char	   *cp2;
@@ -404,7 +409,14 @@ main (int argc, const char *argv[])
 	/*
 	 * Wait for all remote threads to finish
 	 */
+	main_thread = pthread_self();
+	main_argv = argv;
+	signal(SIGALRM, sigalrmhandler);
+	alarm(10);
+
 	rtcfg_joinAllRemoteThreads();
+
+	alarm(0);
 
 	/*
 	 * Wait for the local threads to finish
@@ -443,5 +455,28 @@ slon_exit(int code)
 {
 	exit(code);
 }
+
+
+static void
+sigalrmhandler(int signo)
+{
+	if (main_thread == pthread_self())
+	{
+		alarm(0);
+
+		slon_log(SLON_WARN, "main: shutdown timeout\n");
+		if (slon_restart_request)
+		{
+			execvp(main_argv[0], main_argv);
+			slon_log(SLON_FATAL,
+				"main: cannot restart via execvp(): %s\n", strerror(errno));
+		}
+		exit(-1);
+	}
+
+	slon_log(SLON_DEBUG1, "SIGALRM for non-main thread\n");
+	pthread_exit(NULL);
+}
+
 
 

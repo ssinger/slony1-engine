@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.10 2004-03-25 01:37:55 wieck Exp $
+ *	$Id: scheduler.c,v 1.11 2004-03-28 19:09:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -101,6 +101,7 @@ sched_start_mainloop(void)
 	sigaddset(&sched_sigset, SIGHUP);
 	sigaddset(&sched_sigset, SIGINT);
 	sigaddset(&sched_sigset, SIGTERM);
+	sigaddset(&sched_sigset, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &sched_sigset, NULL);
 
 	/*
