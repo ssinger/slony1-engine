@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.40 2004-11-12 18:17:22 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.41 2004-11-12 20:09:19 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4577,25 +4577,25 @@ allow communications between nodes in the Slony-I cluster.';
 -- ----------------------------------------------------------------------
 -- FUNCTION generate_sync_event ()
 --
---  This code will be run from inside the logtrigger() function,
+--	This code will be run from inside the logtrigger() function,
 --      and will create SYNC events every once in a while...
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.generate_sync_event()
 returns int4
 as '
 declare
-    v_leventtime        timestamptz;
+	v_leventtime		timestamptz;
 
 BEGIN
-    -- When was the last SYNC on this node?
+	-- When was the last SYNC on this node?
         select ev_timestamp into v_leventtime from @NAMESPACE@.sl_event 
           where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId()
           order by ev_origin, ev_seqno desc limit 1;
 
-    -- If there has been no SYNC in the last 30 seconds, then push one
-    if ev_timestamp + ''30 s''::interval < now() then
-        select @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
-    end if;
+	-- If there has been no SYNC in the last 30 seconds, then push one
+	if ev_timestamp + ''30 s''::interval < now() then
+		select @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+	end if;
 END' language plpgsql;
 
 comment on function @NAMESPACE@.generate_sync_event() is
@@ -4634,6 +4634,28 @@ comment on function @NAMESPACE@.tableHasSerialKey(text) is
 Checks if a table has our special serial key column that is used if
 the table has no natural unique constraint.';
 
+create or replace function @NAMESPACE@.upgrade_sl_node () returns bool 
+as '
+DECLARE
+	v_row  record;
+BEGIN
+   select 1 into v_row 
+     from pg_namespace n, pg_class c, pg_attribute a
+     where
+        n.nspname = ''@NAMESPACE@'' and
+        c.relnamespace = n.oid and
+        c.relname = ''sl_node'' and
+        a.attrelid = c.oid and
+        a.attname = ''no_spool'';
+   if not found then
+	raise notice ''Upgrade sl_node - add field no_spool'';
+	alter table @NAMESPACE@.sl_node
+            add column no_spool boolean default ''f'';
+        update @NAMESPACE@.sl_node set no_spool = ''f'';
+        return ''t'';
+   end if;
+   return ''f'';
+END;' language plpgsql;
 
 -- ----------------------------------------------------------------------
 -- VIEW sl_status
