@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.10 2004-01-09 21:33:13 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.11 2004-01-22 18:40:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -21,55 +21,55 @@
 --	Create an sl_event entry
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.createEvent (name, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
 create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text)
-	returns int4
+	returns bigint
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;

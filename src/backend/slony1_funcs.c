@@ -6,7 +6,7 @@
  * Copyright (c) 2003, PostgreSQL Global Development Group
  * Author: Jan Wieck, Afilias USA LLC.
  *
- *	$Id: slony1_funcs.c,v 1.2 2003-12-17 21:21:13 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.3 2004-01-22 18:40:05 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -62,6 +62,8 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	int			xcnt;
 	char	   *cp;
 	int			i;
+	int64		retval;
+	bool		isnull;
 
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in createEvent()");
@@ -116,8 +118,10 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 				"ev_data5, ev_data6, ev_data7, ev_data8) "
 				"VALUES ('%d', nextval('%s.sl_event_seq'), "
 				"now(), $1, $2, $3,
-				$4, $5, $6, $7, $8, $9, $10, $11, $12);", 
-				cs->clusterident, cs->localNodeId, cs->clusterident);
+				$4, $5, $6, $7, $8, $9, $10, $11, $12);
+				SELECT currval('%s.sl_event_seq');", 
+				cs->clusterident, cs->localNodeId, cs->clusterident,
+				cs->clusterident);
 			plan_types[0] = xxid_typid;
 			plan_types[1] = xxid_typid;
 			plan_types[2] = TEXTOID;
@@ -191,9 +195,18 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	if ((rc = SPI_execp(cs->plan_insert_event, argv, nulls, 0)) < 0)
 		elog(ERROR, "Slony-I: SPI_execp() failed for \"INSERT INTO sl_event ...\"");
 
+	/*
+	 * The INSERT plan also contains a SELECT currval('sl_event_seq'),
+	 * use the new sequence number as return value.
+	 */
+	if (SPI_processed != 1)
+		elog(ERROR, "Slony-I: INSERT plan did not return 1 result row");
+	retval = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
+			SPI_tuptable->tupdesc, 1, &isnull));
+
 	SPI_finish();
 
-	PG_RETURN_INT32(0);
+	PG_RETURN_INT64(retval);
 }
 
 
