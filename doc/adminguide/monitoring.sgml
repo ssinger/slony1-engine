@@ -4,8 +4,8 @@
 <title>Monitoring</title>
 
 <para>Here are some of things that you may find in your
-<productname>Slony-I</productname> logs, and explanations of what they mean.
-</para>
+<productname>Slony-I</productname> logs, and explanations of what they mean.</para>
+
 <sect2><title>CONFIG notices</title>
 
 <para>These entries are pretty straightforward. They are informative
@@ -22,27 +22,44 @@ CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo
 CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
 CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
 CONFIG main: configuration complete - starting threads
-</screen>
-</para>
-</sect2>
+</screen></para></sect2>
+
 <sect2><title>DEBUG Notices</title>
 
 <para>Debug notices are always prefaced by the name of the thread that
 the notice originates from. You will see messages from the following
 threads:
 
-<screen>
-localListenThread: This is the local thread that listens for events on the local node.
-remoteWorkerThread_X: The thread processing remote events.
-remoteListenThread_X: Listens for events on a remote node database.
-cleanupThread: Takes care of things like vacuuming, cleaning out the confirm and event tables, and deleting logs.
-syncThread: Generates sync events.
-</screen>
+<variablelist>
+<varlistentry><term>localListenThread</term> 
+
+<listitem><para> This is the local thread that listens for events on
+the local node.</para></listitem></varlistentry>
+
+<varlistentry><term>remoteWorkerThread-X</term> 
+
+<listitem><para> The thread processing remote events.  You can expect
+to see one of these for each node that this node communicates
+with.</para></listitem></varlistentry>
+
+<varlistentry><term>remoteListenThread-X</term>
+
+<listitem><para>Listens for events on a remote node database.  You may
+expect to see one of these for each node in the
+cluster.</para></listitem></varlistentry>
+
+<varlistentry><term>cleanupThread</term> <listitem><para> Takes care
+of things like vacuuming, cleaning out the confirm and event tables,
+and deleting logs.</para></listitem></varlistentry>
+
+<varlistentry><term>syncThread</term> <listitem><para> Generates sync
+events.</para></listitem></varlistentry>
+
+</variablelist>
 </para>
 <para> WriteMe: I can't decide the format for the rest of this. I
 think maybe there should be a "how it works" page, explaining more
 about how the threads work, what to expect in the logs after you run a
-slonik command...
 </para>
 </sect2>
 </sect1>
@@ -63,4 +80,3 @@ sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil
 End:
 -->
-
