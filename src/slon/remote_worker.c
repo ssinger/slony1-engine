@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.18 2004-03-11 21:18:37 wieck Exp $
+ *	$Id: remote_worker.c,v 1.19 2004-03-12 17:26:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1619,8 +1619,8 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	{
 		free(conninfo);
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				"copy set %d - cannot connect to provider DB\n",
-				node->no_id, set_id);
+				"copy set %d - cannot connect to provider DB node %d\n",
+				node->no_id, set_id, sub_node->no_id);
 		return -1;
 	}
 	free(conninfo);
@@ -1920,7 +1920,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				}
 			}
 		}
-		PQputline(loc_dbconn, "\n\\.\n");
+		PQputline(loc_dbconn, "\\.\n");
 
 		/*
 		 * End the COPY to stdout on the provider

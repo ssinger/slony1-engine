@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.7 2004-03-03 21:52:46 wieck Exp $
+# $Id: Makefile.global.in,v 1.8 2004-03-12 17:26:55 wieck Exp $
 # ----------
 
 ##########################################################################
@@ -155,9 +155,9 @@ localedir :=
 
 CPP = cc -E
 CPPFLAGS = 
-override CPPFLAGS := -I$(top_builddir) -I@PGHOME@/include -I@PGHOME@/include/server $(CPPFLAGS)
+override CPPFLAGS := -I$(top_builddir) -I${includedir} -I${includedir}/server $(CPPFLAGS)
 ifdef VPATH
-override CPPFLAGS := -I$(top_builddir) -I@PGHOME@/include -I@PGHOME@/include/server $(CPPFLAGS)
+override CPPFLAGS := -I$(top_builddir) -I${includedir} -I${includedir}/server $(CPPFLAGS)
 endif
 
 CC = @CC@
@@ -180,7 +180,7 @@ LIBS = -lssl -lcrypto -lz -lcrypt -lcompat -lm -lutil -lreadline
 LD = @LD@
 with_gnu_ld = @with_gnu_ld@
 ld_R_works = 
-LDFLAGS =  @LDFLAGS@ -L@PGHOME@/lib -lpq
+LDFLAGS =  @LDFLAGS@ -L${libdir} -lpq
 LDREL = -r
 LDOUT = -o
 RANLIB = ranlib

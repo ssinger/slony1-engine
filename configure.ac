@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.11 2004-03-11 03:36:44 wieck Exp $
+# $Id: configure.ac,v 1.12 2004-03-12 17:26:55 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -56,34 +56,72 @@ AC_PROG_CC
 AC_PROG_LD
 AC_SUBST(LD)
 AC_SUBST(with_gnu_ld)
-AC_PATH_PROG(bash_path,bash)
-AC_SUBST(bash_path)
 
 # Checks for libraries.
 
 # Checks for header files.
 
-# The installation prefix must be the postgres home. Otherwise
-# we will never be able to administer a box remote.
-pghome=$prefix
-test "x$pghome" = xNONE && pghome=$ac_default_prefix
-if test ! -f "$pghome/include/server/executor/spi.h" ; then
-    AC_MSG_ERROR([
-           $pghome/include/server/executor/spi.h NOT found
-           Was PostgreSQL installed including 'make install-all-headers'?])
-fi
-AC_SUBST(PGHOME, $pghome)
+# The installation locations must be identical to those of postgresql
+# or we will never be able to administer a box remote. Check for
+# certain files to be in those locations.
 
-AC_DEFINE_UNQUOTED(PGHOME, "${pghome}", )
-AC_DEFINE_UNQUOTED(PGLIB, "${pghome}/lib", )
+test_prefix=/usr/local/pgsql
+eval test_dir="${includedir}"
+if test "${test_dir}" = "NONE/include" ; then
+	test_dir="${test_prefix}/include"
+fi
+if test ! -f "${test_dir}/server/executor/spi.h" ; then
+    AC_MSG_ERROR([
+        ${test_dir}/server/executor/spi.h NOT found
+        you need to specify --includedir= pointing to the same directory
+        PostgreSQL was configured with and PostgreSQL must be installed 
+        including 'make install-all-headers'])
+fi
+test_includedir="${test_dir}"
+
+eval test_dir="${bindir}"
+if test "${test_dir}" = "NONE/bin" ; then
+	test_dir="${test_prefix}/bin"
+fi
+if test ! -f "${test_dir}/postmaster" ; then
+    AC_MSG_ERROR([
+        ${test_dir}/postmaster NOT found
+        you need to specify --bindir= pointing to the same directory
+        PostgreSQL was configured with])
+fi
+
+eval test_dir="${datadir}"
+if test "${test_dir}" = "NONE/share" ; then
+	test_dir="${test_prefix}/share"
+fi
+if test ! -f "${test_dir}/postgresql.conf.sample" ; then
+    AC_MSG_ERROR([
+        ${test_dir}/postgresql.conf.sample NOT found
+        you need to specify --datadir= pointing to the same directory
+        PostgreSQL was configured with])
+fi
+AC_DEFINE_UNQUOTED(PGSHARE, "${test_dir}", )
+
+eval test_dir="${libdir}"
+if test "${test_dir}" = "NONE/lib" ; then
+	test_dir="${test_prefix}/lib"
+fi
+if test ! -f "`ls ${test_dir}/plpgsql*`" ; then
+    AC_MSG_ERROR([
+        ${test_dir}/plpgsql module NOT found
+        you need to specify --libdir= pointing to the same directory
+        PostgreSQL was configured with])
+fi
+test_libdir="${test_dir}"
+
 
 # ----
 # Check if our libpq contains several functions
 # ----
 save_CFLAGS="$CFLAGS"
 save_LIBS="$LIBS"
-CFLAGS="-I${pghome}/include $CFLAGS"
-LIBS="-L${pghome}/lib -lpq $LIBS"
+CFLAGS="-I${test_includedir} $CFLAGS"
+LIBS="-L${test_libdir} -lpq $LIBS"
 
 # PQfreemem()
 AC_MSG_CHECKING([for PQfreemem() in libpq])

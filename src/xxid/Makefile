@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.3 2004-02-20 15:13:28 wieck Exp $
+#	$Id: Makefile,v 1.4 2004-03-12 17:26:55 wieck Exp $
 # ----------
 
 subdir = src/xxid
@@ -34,7 +34,7 @@ clean distclean maintainer-clean:
 install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(libdir)
 	for file in $(SQL_NAMES); do \
-	  $(INSTALL_SCRIPT) $$file $(libdir) || exit ; \
+	  $(INSTALL_SCRIPT) $$file $(datadir) || exit ; \
 	done
 
 

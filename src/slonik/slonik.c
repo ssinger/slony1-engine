@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.2 2004-03-11 23:26:12 wieck Exp $
+ *	$Id: slonik.c,v 1.3 2004-03-12 17:26:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -996,15 +996,15 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-			"%s/xxid.v%d%d.sql", PGLIB, use_major, use_minor) < 0
+			"%s/xxid.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_base.sql", PGLIB) < 0 
+			"%s/slony1_base.sql", PGSHARE) < 0 
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_base.v%d%d.sql", PGLIB, use_major, use_minor) < 0
+			"%s/slony1_base.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.sql", PGLIB) < 0 
+			"%s/slony1_funcs.sql", PGSHARE) < 0 
 		|| load_sql_script(stmt, adminfo,
-			"%s/slony1_funcs.v%d%d.sql", PGLIB, use_major, use_minor) < 0)
+			"%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
