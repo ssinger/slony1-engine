@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.18 2004-05-20 17:50:35 wieck Exp $
+ *	$Id: slonik.c,v 1.19 2004-05-21 15:30:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1424,6 +1424,11 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 				" if namespace \"_%s\" exists in node %d\n",
 				stmt->stmt_filename, stmt->stmt_lno,
 				stmt->script->clustername, no_id);
+		return -1;
+	}
+
+	if (db_check_requirements(stmt, adminfo, stmt->script->clustername) < 0)
+	{
 		return -1;
 	}
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.4 2004-04-14 20:18:12 wieck Exp $
+ *	$Id: dbutil.c,v 1.5 2004-05-21 15:30:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -421,6 +421,82 @@ db_check_namespace(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clustername)
 	PQclear(res);
 
 	return ntuples;
+}
+
+
+/* ----------
+ * db_check_requirements
+ *
+ *	Check if a database fits all the Slony-I needs
+ * ----------
+ */
+int
+db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *clustername)
+{
+	PGresult	   *res;
+	SlonDString		query;
+	int				ntuples;
+
+	if (db_begin_xact(stmt, adminfo) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	/*
+	 * Check that PL/pgSQL is installed
+	 */
+	slon_mkquery(&query,
+			"select 1 from \"pg_catalog\".pg_language "
+			"	where lanname = 'plpgsql';");
+	res = db_exec_select(stmt, adminfo, &query);
+	if (res == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	ntuples = PQntuples(res);
+	PQclear(res);
+	if (ntuples == 0)
+	{
+		printf("%s:%d: Error: language PL/pgSQL is not installed "
+				"in database '%s'\n",
+				stmt->stmt_filename, stmt->stmt_lno,
+				adminfo->conninfo);
+		dstring_free(&query);
+		return -1;
+	}
+
+	/*
+	 * Check loading of xxid module
+	 */
+	slon_mkquery(&query, "load '$libdir/xxid'; ");
+	if (db_exec_command(stmt, adminfo, &query) < 0)
+	{
+		printf("%s:%d: Error: the extension for the xxid data type "
+				"cannot be loaded in database '%s'\n",
+				stmt->stmt_filename, stmt->stmt_lno,
+				adminfo->conninfo);
+		dstring_free(&query);
+		return -1;
+	}
+
+	/*
+	 * Check loading of slony1_funcs module
+	 */
+	slon_mkquery(&query, "load '$libdir/slony1_funcs'; ");
+	if (db_exec_command(stmt, adminfo, &query) < 0)
+	{
+		printf("%s:%d: Error: the extension for the Slony-I C functions "
+				"cannot be loaded in database '%s'\n",
+				stmt->stmt_filename, stmt->stmt_lno,
+				adminfo->conninfo);
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+
+	return 0;
 }
 
 

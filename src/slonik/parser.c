@@ -184,7 +184,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.c,v 1.7 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: parser.c,v 1.8 2004-05-21 15:30:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.12 2004-05-20 17:50:35 wieck Exp $
+ *	$Id: slonik.h,v 1.13 2004-05-21 15:30:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -444,6 +444,8 @@ PGresult	   *db_exec_select(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
 int				db_get_version(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
 									int *major, int *minor);
 int				db_check_namespace(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
+									char *clustername);
+int				db_check_requirements(SlonikStmt *stmt, SlonikAdmInfo *adminfo,
 									char *clustername);
 int				db_get_nodeid(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
 int				db_begin_xact(SlonikStmt *stmt, SlonikAdmInfo *adminfo);
