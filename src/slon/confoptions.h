@@ -7,15 +7,15 @@
 void		InitializeConfOptions(void);
 
 bool		set_config_option(const char *name, const char *value);
-void	   *get_config_option(const char *name);
+void		*get_config_option(const char *name);
 
 extern double real_placeholder;
 
-extern char *rtcfg_cluster_name;
-extern char *rtcfg_conninfo;
+extern char	*rtcfg_cluster_name;
+extern char	*rtcfg_conninfo;
 
-extern char *pid_file;
-extern char *archive_dir;
+extern char	*pid_file;
+extern char	*archive_dir;
 
 extern int	vac_frequency;
 extern int	slon_log_level;
@@ -25,13 +25,14 @@ extern int	sync_interval_timeout;
 extern int	sync_group_maxsize;
 extern int	desired_sync_time;
 
-char	   *Syslog_ident;
-char	   *Syslog_facility;
-int			Use_syslog;
+char	   	*Syslog_ident;
+char	   	*Syslog_facility;
+int		Use_syslog;
+
 bool		logpid;
 bool		logtimestamp;
-char	   *log_timestamp_format;
-
+char		*log_timestamp_format;
+char		*sql_on_connection;
 
 enum config_type
 {
@@ -281,6 +282,19 @@ static struct config_string ConfigureNamesString[] =
 			SLON_C_STRING
 		},
 		&archive_dir,
+		NULL
+	},
+	{
+		{
+			(const char *)"sql_on_connection",
+			gettext_noop("SQL to send to each connected node on "
+				"connection establishment, usefull to enable "
+				"duration logging, or to adjust any other "
+				"connection settable GUC"),
+			NULL,
+			SLON_C_STRING
+		},
+		&sql_on_connection,
 		NULL
 	},
 #ifdef HAVE_SYSLOG

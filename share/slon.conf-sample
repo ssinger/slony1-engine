@@ -72,3 +72,8 @@
 # Range [10000,600000], default 60000. 
 #desired_sync_time=60000
 
+# Execute the following SQL on each node at slon connect time
+# useful to set logging levels, or to tune the planner/memory
+# settings.  You can specify multiple statements by seperating
+# them with a ;
+#sql_on_connection="SET log_min_duration_statement TO '1000';"

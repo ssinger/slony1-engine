@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.46 2005-03-07 23:27:03 cbbrowne Exp $
+ *	$Id: slon.h,v 1.47 2005-03-08 22:52:37 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -508,7 +508,7 @@ extern int	db_checkSchemaVersion(PGconn *conn);
 
 extern int	slon_mkquery(SlonDString * ds, char *fmt,...);
 extern int	slon_appendquery(SlonDString * ds, char *fmt,...);
-
+extern char 	*sql_on_connection;
 
 /* ----------
  * Globals in misc.c

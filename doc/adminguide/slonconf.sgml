@@ -165,6 +165,21 @@
         </para>
       </listitem>
     </varlistentry>
+
+    <varlistentry id="slon-config-sql-on-connection" xreflabel="slon_conf_sql_on_connection">
+      <term><varname>sql_on_connection  (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>sql_on_connection</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Execute this SQL on each node at slon connect time. Useful to set logging 
+          levels, or to tune the planner/memory settings.  You can specify multiple 
+          statements by seperating them with a ;
+        </para>
+      </listitem>
+    </varlistentry>
+
   </variablelist>
 </sect1>
 <sect1 id="slon-config-interval">

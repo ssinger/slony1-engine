@@ -28,6 +28,7 @@ enum {
         SLON_EQUALS = 5,
         SLON_UNQUOTED_STRING = 6,
         SLON_QUALIFIED_ID = 7,
+	SLON_ESCAPED_STRING = 8,
         SLON_EOL = 99,
         SLON_FERROR = 100
 };
@@ -62,7 +63,7 @@ QUALIFIED_ID    {ID}"."{ID}
 
 UNQUOTED_STRING {LETTER}({LETTER_OR_DIGIT}|[-._:/])*
 STRING          \'([^'\n]|\\.)*\'
-
+ESCAPED_STRING  \"([^"\n]|\\.)*\"
 %%
 
 \n              ConfigFileLineno++; return SLON_EOL;
@@ -73,6 +74,7 @@ STRING          \'([^'\n]|\\.)*\'
 {QUALIFIED_ID}  return SLON_QUALIFIED_ID;
 {STRING}        return SLON_STRING;
 {UNQUOTED_STRING} return SLON_UNQUOTED_STRING;
+{ESCAPED_STRING}  return SLON_ESCAPED_STRING;
 {INTEGER}       return SLON_INTEGER;
 {REAL}          return SLON_REAL;
 =               return SLON_EQUALS;
@@ -172,12 +174,12 @@ void ProcessConfigFile(const char *filename)
 				{
 					token =  yylex();
 				}
-				if (token != SLON_ID && token != SLON_STRING && token != SLON_INTEGER && token != SLON_REAL && token != SLON_UNQUOTED_STRING)
+				if (token != SLON_ID && token != SLON_STRING && token != SLON_INTEGER && token != SLON_REAL && token != SLON_UNQUOTED_STRING && token != SLON_ESCAPED_STRING)
 				{
 					goto parse_error;
 				}
 				opt_value = strdup(yytext);
-				if (token == SLON_STRING)
+				if (token == SLON_STRING || token == SLON_ESCAPED_STRING)
 				{
 					memmove(opt_value,opt_value+1,strlen(opt_value)-1);
 					opt_value[strlen(opt_value)-2]='\0';

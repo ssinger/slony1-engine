@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.15 2005-01-12 17:27:10 darcyb Exp $
+ *	$Id: dbutils.c,v 1.16 2005-03-08 22:52:37 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -72,6 +72,24 @@ slon_connectdb(char *conninfo, char *symname)
 				 conninfo, PQerrorMessage(dbconn));
 		PQfinish(dbconn);
 		return NULL;
+	}
+	if (sql_on_connection != NULL)
+	{
+
+		PGresult *res;
+		SlonDString query;
+
+		dstring_init(&query);
+		slon_mkquery(&query, "%s", sql_on_connection);
+		res = PQexec(dbconn, dstring_data(&query));
+		if ( ! ((PQresultStatus(res) == PGRES_TUPLES_OK) ||
+		       (PQresultStatus(res)  == PGRES_COMMAND_OK)) )
+		{
+			slon_log(SLON_ERROR,
+				"query %s failed\n",
+				dstring_data(&query));
+		}
+                PQclear(res);
 	}
 
 	/*
