@@ -35,17 +35,17 @@ if test -n "$PG_CONFIG_LOCATION"; then
     if test "$PG_MAJOR_VERSION" = "7"; then
 	if test $PG_MINOR_VERSION -gt 2; then
 	    AC_MSG_RESULT($PG_VERSION)
-	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3 or later])
+	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
 	else
 	    AC_MSG_RESULT("error")
 	    AC_MSG_ERROR(Your version of PostgreSQL ($PG_VERSION) is lower 
-	    than the required 7.3.x. Slony-I needs functions included in
+	    than the required 7.3.3. Slony-I needs functions included in
 	    a newer version.)
 	fi
     fi
     if test "$PG_MAJOR_VERSION" = "8"; then
       AC_MSG_RESULT($PG_VERSION)
-      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3 or later])
+      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
     fi
 else
     dnl Specify the commandline options here.
@@ -138,7 +138,7 @@ CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR -I$PG_INCLUDESERVERDIR"
 
 AC_CHECK_HEADER(postgres.h, HAVE_LIBPQSERVER=1)
 AC_CHECK_HEADER(utils/typcache.h, AC_DEFINE(HAVE_TYPCACHE,1,[PostgreSQL typcache]),[],[#include "postgres.h"])
-if test -n "$HAVE_LIBPQSERVER" ; then
+if test -n "$HAVE_LIBPQSERVER" -a "$HAVE_TYPCACHE" != "yes"; then
     AC_DEFINE(PG_LIBPQSERVER_VERIFIED,1,[PostgreSQL header check])
 else
     AC_MSG_ERROR(Headers for libpqserver are not found in the includeserverdir.
@@ -149,7 +149,13 @@ fi
 
 LDFLAGS="$TEMP_FLAGS -L$PG_PKGLIBDIR"
 AC_MSG_CHECKING(for plpgsql.so)
-if test -s $PG_PKGLIBDIR"plpgsql.so" || test -s $PG_PKGLIBDIR"plpgsql.sl" || test -s $PG_PKGLIBDIR"plpgsql.dll" ; then
+if test -s $PG_PKGLIBDIR"/plpgsql.so"; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
+elif test -s $PG_PKGLIBDIR"plpgsql.sl"; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
+elif test -s $PG_PKGLIBDIR"plpgsql.dll"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
 else
