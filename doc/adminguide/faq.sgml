@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.22 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.23 2005-02-21 18:34:54 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -490,7 +490,7 @@ where we had configuration thus:
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as
-provider, and we did <<xref linkend="stmtdropset"> /<xref
+provider, and we did <xref linkend="stmtdropset"> /<xref
 linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
 
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
