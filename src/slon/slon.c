@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.46 2005-03-10 23:11:26 cbbrowne Exp $
+ *	$Id: slon.c,v 1.47 2005-03-17 22:54:23 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -673,7 +673,7 @@ main(int argc, char *const argv[])
 
 		act.sa_handler = &sighandler; 
 		sigemptyset(&act.sa_mask);
-		act.sa_flags = SA_NOMASK;
+		act.sa_flags = SA_NODEFER;
 
 		if (sigaction(SIGHUP,&act,NULL) < 0)
 		{

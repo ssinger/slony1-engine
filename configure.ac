@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.42 2005-02-18 00:15:55 darcyb Exp $
+# $Id: configure.ac,v 1.43 2005-03-17 22:54:23 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -101,6 +101,7 @@ AC_CHECK_FUNCS([strtoul])
 AC_CHECK_TYPES([int32_t, uint32_t, u_int32_t])
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
 AC_CHECK_TYPES([ssize_t])
+SLON_AC_FUNC_POSIX_SIGNALS()
 
 # ----
 # Locate PostgreSQL paths
