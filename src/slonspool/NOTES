@@ -1,0 +1,139 @@
+Slony-I Log Shipping
+==========================================
+
+One of the features intended for 1.1 is the ability to serialize the
+updates to go out into files that can be kept in a spool directory.
+
+The spool files could then be transferred via whatever means was
+desired to a "slave system," whether that be via FTP, rsync, or
+perhaps even by pushing them onto a 1GB "USB key" to be sent to the
+destination by clipping it to the ankle of some sort of "avian
+transport" system  ;-) .
+
+There are plenty of neat things you can do with a data stream in this
+form, including:
+
+  -> Using it to replicate to nodes that _aren't_ securable
+  -> Supporting a different form of PITR
+  -> If disaster strikes, you can look at the logs of queries
+     themselves
+  -> This is a neat scheme for building load for tests...
+  -> We have a data "escrow" system that would become incredibly
+     cheaper given 'log shipping'
+
+But we need to start thinking about how to implement it to be usable.
+I'm at the stage of starting to think about questions; this will be
+WAY richer on questions than on answers...
+
+Q1: Where should the "spool files" for a subscription set be generated?
+
+ Several thoughts come to mind:
+
+  A1 -> The slon for the origin node generates them
+
+  A2 -> Any slon node participating in the subscription set can generate
+        them
+
+  A3 -> A special "pseudo-node" generates spool files rather than applying
+        changes to a database
+
+ Answer tentatively seems to be A3.
+
+Q2: What takes place when a failover/MOVE SET takes place?
+
+   -> If we picked, for Q1, A2 or A3, then the answer is "nothing."
+
+   -> If Q1's answer was A1, then it becomes necessary for the new
+      origin to start generating spool files.  
+
+      What do we do if it that slon hasn't got suitable configuration?
+      Simply stop spooling?
+
+ Given Q1:A3, nothing special happens when failover/MOVE SET takes
+ place, except that if the "spool node" is subscribed to a node that
+ is somehow orphaned, it might get disconnected :-(.
+
+Q3: What if we run out of "spool space"?
+
+   -> It's forced to stop writing out logs; this should _prevent_
+      purging sl_log_1/sl_log_2 entries in the affected range so 
+      that "log shipping" isn't corrupted.
+
+      In effect, "log shipping" is a sort of 'virtual destination'
+      that Slony-I's existing data structures need to know something
+      about.  It's not a "true" node, but it needs to have a
+      subscription and set up
+      sl_confirm entries.
+
+Q4: How do we configure it?
+
+   Things that need to be configured include:
+
+   a) Path in which to put "spool files"
+
+      SPOOLPATH
+
+   b) Naming convention for the spool files, likely using a
+      strftime()-conformant name string, also with the option of
+      having it use the starting and/or ending SYNC ids.
+
+   c) There needs to be some sort of "subscribe" notion...
+
+Q5: What should the logs consist of?
+
+  -> Should they simply consist of the updates on the tables Slony-I
+     is to replicate?
+
+  -> Should there also be some information stored concerning what
+     SYNCS are processed?
+
+     Yes, there should be.  There shouldn't merely be comments; the
+     structure should be something like:
+
+     BEGIN;
+       @NAMESPACE@.start_spool(23451);  -- SYNC 23451
+       insert this
+       delete that
+       update other thing
+       @NAMESPACE@.end_spool(23451);  -- SYNC 23451
+     COMMIT;
+     BEGIN;
+       @NAMESPACE@.start_spool(23452);  -- SYNC 23452
+       insert this
+       delete that
+       update other thing
+       @NAMESPACE@.end_spool(23452);
+     COMMIT;
+     BEGIN;
+       @NAMESPACE@.start_spool(23454);  -- SYNC 23454
+       insert this
+       delete that
+       update other thing
+       @NAMESPACE@.end_spool(23454);
+     COMMIT;
+     BEGIN;
+       @NAMESPACE@.start_spool(23453);  -- SYNC 23453
+       insert this
+       delete that
+       update other thing
+       @NAMESPACE@.end_spool(23453);
+     COMMIT;
+
+  -> Would the log-shipped-subscribers also operate in a
+     "mostly-read-only" mode as is the case for 'direct' subscribers?
+
+     start_spool() could alter tables to turn on and off the
+     ability to update the data...
+
+  -> How much metadata should get added in?  E.g. - comments about
+     SYNCs, when data was added in, data about events that aren't
+     directly updating data
+
+     For this to be overly voluminous would be irritating, but having
+     some metadata to search through would be handy...
+
+  -> Would it be a useful notion to try to make it possible for a
+     resulting "node" to join a replication set?
+
+I'm sure there are some "oughtn't try to do that" answers to be had
+here, but we might as well start somewhere...
