@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.37 2004-11-10 20:54:14 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.38 2004-11-10 23:33:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1348,7 +1348,7 @@ comment on function @NAMESPACE@.dropPath_int (int4, int4) is
 'Process DROP_PATH event to drop path from pa_server to pa_client';
 
 -- ----------------------------------------------------------------------
--- FUNCTION storeListen (li_origin, li_provider, li_receiver)
+-- FUNCTION storeListen (origin, provider, receiver)
 --
 --	Generate the STORE_LISTEN event.
 -- ----------------------------------------------------------------------
@@ -1356,13 +1356,13 @@ create or replace function @NAMESPACE@.storeListen (int4, int4, int4)
 returns bigint
 as '
 declare
-	p_li_origin		alias for $1;
-	p_li_provider	alias for $2;
-	p_li_receiver	alias for $3;
+	p_origin		alias for $1;
+	p_provider	alias for $2;
+	p_receiver	alias for $3;
 begin
-	perform @NAMESPACE@.storeListen_int (p_li_origin, p_li_provider, p_li_receiver);
+	perform @NAMESPACE@.storeListen_int (p_origin, p_provider, p_receiver);
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
-			p_li_origin, p_li_provider, p_li_receiver);
+			p_origin, p_provider, p_receiver);
 end;
 ' language plpgsql
 	called on null input;
@@ -1790,12 +1790,7 @@ begin
 	perform @NAMESPACE@.moveSet_int(p_set_id, v_local_node_id,
 			p_new_origin);
 
-	for v_sub_row in select sub_provider, sub_receiver 
-			from @NAMESPACE@.sl_subscribe
-			where sub_set = p_set_id
-	loop
-		perform @NAMESPACE@.GenerateListensOnSubscribe(v_sub_row.sub_provider, v_sub_row.sub_receiver)
-	done;
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	-- ----
 	-- At this time we hold access exclusive locks for every table
@@ -3665,7 +3660,7 @@ begin
 	-- ----
 	-- Submit listen management events
 	-- ----
-	perform @NAMESPACE@.GenerateListensOnSubscribe(p_sub_provider, p_sub_receiver);
+	perform @NAMESPACE@.RebuildListenEntries();
 
 	-- ----
 	-- Create the SUBSCRIBE_SET event
@@ -4513,41 +4508,52 @@ returns int
 as '
 declare
 	v_row			record;
-	v_row2			record;
-	v_row3			record;
 	v_origin		int4;
 	v_receiver		int4;
 	v_done			boolean;
 
 begin
+	return 0;
 	-- 0.  Drop out listens
 	delete from @NAMESPACE@.sl_listen;
 
 	-- 1.  Add listens pointed out by subscriptions - sl_listen
-	select @NAMESPACE@.storelisten(sub_provider, sub_provider, sub_receiver)
-		from @NAMESPACE@.sl_subscribe;
+	-- @NAMESPACE@.storelisten(origin, provider, receiver)
+	perform @NAMESPACE@.storelisten(sub_provider, sub_provider, sub_receiver)
+		from @NAMESPACE@.sl_subscribe s
+		where exists (select true from @NAMESPACE@.sl_path p where 
+                                 p.pa_server = s.sub_provider and
+                                 p.pa_client = s.sub_receiver);
 
 	-- 2.  Add direct listens pointed out in sl_path
-	select @NAMESPACE@.storelisten(pa_server, pa_server, pa_client)
+	perform @NAMESPACE@.storelisten(pa_server, pa_server, pa_client)
 		from @NAMESPACE@.sl_path path
 		where not exists (select true from @NAMESPACE@.sl_listen listen
 					where path.pa_server = listen.li_origin and
-					      path.pa_client = listen.li_reciever);
+					      path.pa_client = listen.li_receiver);
 
 	-- 3.  Iterate until we cannot iterate any more...
 	--     Add in indirect listens based on what is in sl_listen and sl_path
 	v_done := ''f'';
 	while not v_done loop
-		select @NAMESPACE@.storelisten(li_origin,pa_server,pa_client)
+		v_done := ''t'';
+		for v_row in select  li_origin, pa_server, pa_client
 			from @NAMESPACE@.sl_path path, @NAMESPACE@.sl_listen listen
 			where
-				li_reciever = pa_server
+				li_receiver = pa_server
 				and not exists (select true from @NAMESPACE@.sl_listen listen2
-					where listen2.li_origin = listen.origin and
-					      listen2.li_reciever = path.pa_client);
+					where listen2.li_origin = listen.li_origin and
+					      listen2.li_receiver = path.pa_client)
+                                and exists (select true from @NAMESPACE@.sl_path p
+                                        where p.pa_server = path.pa_server and
+                                              p.pa_client = path.pa_client )
 
-		
+		loop
+			perform @NAMESPACE@.storelisten(v_row.li_origin,v_row.pa_server,v_row.pa_client);
+			v_done := ''f'';
+		end loop;		
 	end loop;
+	return 0;
 end;
 ' language plpgsql;
 
