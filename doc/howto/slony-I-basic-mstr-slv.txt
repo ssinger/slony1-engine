@@ -51,7 +51,7 @@ language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME.
 
-createlang plpgsql -h $MASTERHOST $MASTERDBNAME
+createlang -h $MASTERHOST plpgsql $MASTERDBNAME
 
 Slony-I does not yet automatically copy table definitions from a master when a
 slave subscribes to it, so we need to import this data.  We do this with
@@ -95,8 +95,8 @@ slonik <<_EOF_
     # node on each side of the cluster, the syntax is that of PQconnectdb in
     # the C-API
 	# --
-	node 1 admin conninfo 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	node 2 admin conninfo 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
+	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
     # init the first node.  Its id MUST be 1.  This creates the schema
@@ -122,6 +122,7 @@ slonik <<_EOF_
     # subscribe is a set.  The following commands create one set containing
     # all 4 pgbench tables.  The master or origin of the set is node 1.
     # you need to have a set add table() for each table you wish to replicate
+
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
 	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
@@ -145,7 +146,7 @@ _EOF_
 Is the pgbench still running?  If not start it again.
 
 At this point we have 2 databases that are fully prepared.  One is the master
-database in which pgbench is busy accessing and changing rows.  It's now time
+database in which bgbench is busy accessing and changing rows.  It's now time
 to start the replication daemons.
 
 On $MASTERHOST the command to start the replication engine is
@@ -162,7 +163,7 @@ data yet.  The notices you are seeing is the synchronization of cluster
 configurations between the 2 slon processes.
 
 To start replicating the 4 pgbench tables (set 1) from the master (node id 1)
-to the slave (node id 2), execute the following script.
+the the slave (node id 2), execute the following script.
 
 #!/bin/sh
 slonik <<_EOF_
@@ -242,5 +243,5 @@ else
 fi
 
 If this script returns "FAILED" please contact the developers at
-http://slony.info/
+http://slony.org/
 
