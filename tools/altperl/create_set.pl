@@ -1,7 +1,8 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.2 2004-08-04 15:09:47 cbbrowne Exp $
+# $Id: create_set.pl,v 1.3 2004-08-04 16:35:53 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
+
 require 'slon-tools.pm';
 require 'slon.env';
 my ($set) = @ARGV;
@@ -18,7 +19,8 @@ open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
 
 foreach my $table (@SERIALTABLES) {
- print OUTFILE "
+  $table = ensure_namespace($table);
+  print OUTFILE "
 		echo '  Adding unique key to table $table...';
 		table add key (
 		    node id=1,
@@ -55,12 +57,8 @@ print OUTFILE "
 
 $TABLE_ID=1;
 foreach my $table (@SERIALTABLES) {
-  if ($table =~ /^(.*\..*)$/) {
-    # Table has a namespace specified
-  } else {
-    $table = "$table";
-  }
-    print OUTFILE "
+  $table = ensure_namespace($table);
+  print OUTFILE "
 		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table', key=serial);
                 echo 'Add unkeyed table $table';
 "; 
@@ -68,11 +66,7 @@ foreach my $table (@SERIALTABLES) {
 }
 
 foreach my $table (@KEYEDTABLES) {
-  if ($table =~ /^(.*\..*)$/) {
-    # Table has a namespace specified
-  } else {
-    $table = "public.$table";
-  }
+  $table = ensure_namespace($table);
   print OUTFILE "
 		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table');
                 echo 'Add keyed table $table';
@@ -92,11 +86,7 @@ print OUTFILE "
 
 $SEQID=1;
 foreach my $seq (@SEQUENCES) {
-  if ($seq =~ /^(.*\..*)$/) {
-    # Table has a namespace specified
-  } else {
-    $seq = "public.$seq";
-  }
+  $seq = ensure_namespace($seq);
   print OUTFILE "
                 set add sequence (set id = $set, origin = 1, id = $SEQID, full qualified name = '$seq', comment = 'Sequence $seq');
                 echo 'Add sequence $seq';
@@ -109,3 +99,14 @@ print OUTFILE "
 
 print `slonik < $OUTPUTFILE`;
 unlink($OUTPUTFILE);
+
+### If object hasn't a namespace specified, assume it's in "public", and make it so...
+sub ensure_namespace {
+  my ($object) = @_;
+    if ($object =~ /^(.*\..*)$/) {
+    # Table has a namespace specified
+  } else {
+    $object = "public.$object";
+  }
+  return $object;
+}
