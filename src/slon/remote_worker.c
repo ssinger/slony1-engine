@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.76 2005-02-25 22:36:52 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.77 2005-03-07 23:27:03 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -249,7 +249,9 @@ static void terminate_log_archive ();
 static int generate_archive_header (int node_id, char *seqbuf);
 static int submit_query_to_archive(SlonDString *ds);
 static int submit_string_to_archive (const char *s);
+static int submit_raw_data_to_archive (const char *s);
 static int logarchive_tracking (const char *namespace, int sub_set, const char *firstseq, const char *seqbuf);
+static int write_void_log (int node_id, char *seqbuf, const char *message);
 
 #define TERMINATE_QUERY_AND_ARCHIVE dstring_free(&query); terminate_log_archive();
 
@@ -582,11 +584,14 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeNode(no_id, no_comment);
 
 				slon_appendquery(&query1,
-								 "select %s.storeNode_int(%d, '%q', '%s'); ",
-								 rtcfg_namespace,
-								 no_id, no_comment, no_spool);
-
+						 "select %s.storeNode_int(%d, '%q', '%s'); ",
+						 rtcfg_namespace,
+						 no_id, no_comment, no_spool);
+				
 				need_reloadListen = true;
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- STORE_NODE");
+
 			}
 			else if (strcmp(event->ev_type, "ENABLE_NODE") == 0)
 			{
@@ -601,6 +606,9 @@ remoteWorkerThread_main(void *cdata)
 								 no_id);
 
 				need_reloadListen = true;
+
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- ENABLE_NODE");
 			}
 			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
@@ -650,6 +658,8 @@ remoteWorkerThread_main(void *cdata)
 								 rtcfg_cluster_name);
 
 				need_reloadListen = true;
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- DROP_NODE");
 			}
 			else if (strcmp(event->ev_type, "STORE_PATH") == 0)
 			{
@@ -667,6 +677,8 @@ remoteWorkerThread_main(void *cdata)
 							pa_server, pa_client, pa_conninfo, pa_connretry);
 
 				need_reloadListen = true;
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- STORE_PATH");
 			}
 			else if (strcmp(event->ev_type, "DROP_PATH") == 0)
 			{
@@ -682,6 +694,8 @@ remoteWorkerThread_main(void *cdata)
 								 pa_server, pa_client);
 
 				need_reloadListen = true;
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- DROP_PATH");
 			}
 			else if (strcmp(event->ev_type, "STORE_LISTEN") == 0)
 			{
@@ -696,6 +710,8 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.storeListen_int(%d, %d, %d); ",
 								 rtcfg_namespace,
 								 li_origin, li_provider, li_receiver);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- STORE_LISTEN");
 			}
 			else if (strcmp(event->ev_type, "DROP_LISTEN") == 0)
 			{
@@ -710,6 +726,8 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.dropListen_int(%d, %d, %d); ",
 								 rtcfg_namespace,
 								 li_origin, li_provider, li_receiver);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- DROP_LISTEN");
 			}
 			else if (strcmp(event->ev_type, "STORE_SET") == 0)
 			{
@@ -724,6 +742,9 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.storeSet_int(%d, %d, '%q'); ",
 								 rtcfg_namespace,
 								 set_id, set_origin, set_comment);
+
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- STORE_SET");
 			}
 			else if (strcmp(event->ev_type, "DROP_SET") == 0)
 			{
@@ -734,18 +755,46 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1,
 								 "select %s.dropSet_int(%d); ",
 								 rtcfg_namespace, set_id);
+
+				/* The table deleted needs to be
+				 * dropped from log shipping too */
+				if (archive_dir) {
+				    rc = open_log_archive(rtcfg_nodeid, seqbuf);
+				    rc = generate_archive_header(rtcfg_nodeid, seqbuf);
+				    slon_mkquery(&query1, 
+						 "delete from %s.sl_setsync_offline "
+						 "  where ssy_setid= %d;",
+						 rtcfg_namespace, set_id);
+				    rc = submit_query_to_archive(&query1);
+				    rc = close_log_archive();
+				}
 			}
 			else if (strcmp(event->ev_type, "MERGE_SET") == 0)
 			{
-				int			set_id = (int)strtol(event->ev_data1, NULL, 10);
-				int			add_id = (int)strtol(event->ev_data2, NULL, 10);
-
+				int set_id = (int)strtol(event->ev_data1, NULL, 10);
+				int add_id = (int)strtol(event->ev_data2, NULL, 10);
+				char dropquery[280];
 				rtcfg_dropSet(add_id);
 
 				slon_appendquery(&query1,
-								 "select %s.mergeSet_int(%d, %d); ",
-								 rtcfg_namespace,
-								 set_id, add_id);
+						 "select %s.mergeSet_int(%d, %d); ",
+						 rtcfg_namespace,
+						 set_id, add_id);
+				
+				/* Log shipping gets the change here
+				 * that we need to delete the table
+				 * being merged from the set being
+				 * maintained. */
+				if (archive_dir) {
+				    rc = open_log_archive(rtcfg_nodeid, seqbuf);
+				    rc = generate_archive_header(rtcfg_nodeid, seqbuf);
+				    rc = slon_mkquery(&query1, 
+						      "delete from %s.sl_setsync_offline "
+						      "  where ssy_setid= %d;",
+						      rtcfg_namespace, add_id);
+				    rc = submit_query_to_archive(&query1);
+				    rc = close_log_archive();
+				}
 			}
 			else if (strcmp(event->ev_type, "SET_ADD_TABLE") == 0)
 			{
@@ -754,6 +803,8 @@ remoteWorkerThread_main(void *cdata)
 				 * subscribed sets yet and table information is not maintained
 				 * in the runtime configuration.
 				 */
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_ADD_TABLE");
 			}
 			else if (strcmp(event->ev_type, "SET_ADD_SEQUENCE") == 0)
 			{
@@ -762,6 +813,8 @@ remoteWorkerThread_main(void *cdata)
 				 * subscribed sets yet and sequences information is not
 				 * maintained in the runtime configuration.
 				 */
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_ADD_SEQUENCE");
 			}
 			else if (strcmp(event->ev_type, "SET_DROP_TABLE") == 0)
 			{
@@ -770,6 +823,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1, "select %s.setDropTable_int(%d);",
 								 rtcfg_namespace,
 								 tab_id);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_DROP_TABLE");
 			}
 			else if (strcmp(event->ev_type, "SET_DROP_SEQUENCE") == 0)
 			{
@@ -778,6 +833,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1, "select %s.setDropSequence_int(%d);",
 								 rtcfg_namespace,
 								 seq_id);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_DROP_SEQUENCE");
 			}
 			else if (strcmp(event->ev_type, "SET_MOVE_TABLE") == 0)
 			{
@@ -787,6 +844,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1, "select %s.setMoveTable_int(%d, %d);",
 								 rtcfg_namespace,
 								 tab_id, new_set_id);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_MOVE_TABLE");
 			}
 			else if (strcmp(event->ev_type, "SET_MOVE_SEQUENCE") == 0)
 			{
@@ -796,6 +855,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1, "select %s.setMoveSequence_int(%d, %d);",
 								 rtcfg_namespace,
 								 seq_id, new_set_id);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SET_MOVE_SEQUENCE");
 			}
 			else if (strcmp(event->ev_type, "STORE_TRIGGER") == 0)
 			{
@@ -806,6 +867,8 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.storeTrigger_int(%d, '%q'); ",
 								 rtcfg_namespace,
 								 trig_tabid, trig_tgname);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- STORE_TRIGGER");
 			}
 			else if (strcmp(event->ev_type, "DROP_TRIGGER") == 0)
 			{
@@ -816,6 +879,70 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.dropTrigger_int(%d, '%q'); ",
 								 rtcfg_namespace,
 								 trig_tabid, trig_tgname);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- DROP_TRIGGER");
+			}
+			else if (strcmp(event->ev_type, "ACCEPT_SET") == 0)
+			{
+			    int set_id = (int) strtol(event->ev_data1, NULL, 10);
+			    int old_origin = (int) strtol(event->ev_data2, NULL, 10);
+			    int new_origin = (int) strtol(event->ev_data3, NULL, 10);
+			    int seq_no = (int) strtol(event->ev_data4, NULL, 10);
+			    PGresult   *res;
+			    
+			    /* If we're a remote node, and haven't yet
+			     * received the MOVE_SET event from the
+			     * new origin, then we'll need to sleep a
+			     * bit...  This avoids a race condition
+			     * where new SYNCs take place on the new
+			     * origin, and are ignored on some
+			     * subscribers (and their children)
+			     * because the MOVE_SET wasn't yet
+			     * received and processed  */
+
+			    if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin)) {
+				slon_mkquery(&query1, 
+					     "select 1 from %s.sl_event accept "
+					     "where "
+					     "   accept.ev_type = 'ACCEPT_SET' and "
+					     "   accept.ev_origin = %d and "
+					     "   accept.ev_data1 = %d and "
+					     "   accept.ev_data2 = %d and "
+					     "   accept.ev_data3 = %d and "
+					     "   accept.ev_data4 = %d and "
+					     "   not exists  "
+					     "   (select 1 from %s.sl_event move "
+					     "    where "
+					     "      accept.ev_origin = move.ev_data3 and "
+					     "      move.ev_type = 'MOVE_SET' and "
+					     "      move.ev_data1 = accept.ev_data1 and "
+					     "      move.ev_data2 = accept.ev_data2 and "
+					     "      move.ev_data3 = accept.ev_data3 and "
+					     "      move.ev_seqno = %d); ",
+					     
+					     rtcfg_namespace, 
+					     old_origin, set_id, old_origin, new_origin, seq_no,
+					     rtcfg_namespace, seq_no);
+				res = PQexec(local_dbconn, dstring_data(&query1));
+				while (PQntuples(res) > 0) {
+				    int sleeptime = 15;
+				    int sched_rc;
+				    slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+					     "accept set: node has not yet received MOVE_SET event "
+					     "for set %d old origin %d new origin - sleep %d seconds\n",
+					     rtcfg_nodeid, set_id, old_origin, new_origin, sleeptime);
+				    sched_rc = sched_msleep(node, sleeptime * 1000);
+				    if (sched_rc != SCHED_STATUS_OK) {
+					event_ok = false;
+					break;
+				    } else {
+					if (sleeptime < 60)
+					    sleeptime *= 2;
+				    }
+				    res = PQexec(local_dbconn, dstring_data(&query1));
+				}
+			    }
+			    
 			}
 			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
 			{
@@ -831,10 +958,11 @@ remoteWorkerThread_main(void *cdata)
 				 * that, we need to execute it now and select the resulting
 				 * provider for us.
 				 */
+
 				slon_appendquery(&query1,
-								 "select %s.moveSet_int(%d, %d, %d); ",
-								 rtcfg_namespace,
-								 set_id, old_origin, new_origin);
+						 "select %s.moveSet_int(%d, %d, %d); ",
+						 rtcfg_namespace,
+						 set_id, old_origin, new_origin);
 				if (query_execute(node, local_dbconn, &query1) < 0)
 					slon_abort();
 
@@ -880,6 +1008,8 @@ remoteWorkerThread_main(void *cdata)
 								 rtcfg_namespace,
 								 failed_node, backup_node, set_id);
 
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- FAILOVER_SET");
 				need_reloadListen = true;
 			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
@@ -893,10 +1023,11 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 
 				slon_appendquery(&query1,
-							"select %s.subscribeSet_int(%d, %d, %d, '%q'); ",
-								 rtcfg_namespace,
-						   sub_set, sub_provider, sub_receiver, sub_forward);
-
+						 "select %s.subscribeSet_int(%d, %d, %d, '%q'); ",
+						 rtcfg_namespace,
+						 sub_set, sub_provider, sub_receiver, sub_forward);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- SUBSCRIBE_SET");
 				need_reloadListen = true;
 			}
 			else if (strcmp(event->ev_type, "ENABLE_SUBSCRIPTION") == 0)
@@ -928,7 +1059,7 @@ remoteWorkerThread_main(void *cdata)
 						 */
 						if (event->event_provider != sub_provider)
 						{
-							int64		prov_seqno = get_last_forwarded_confirm(
+						        int64		prov_seqno = get_last_forwarded_confirm(
 															event->ev_origin,
 															   sub_provider);
 
@@ -1004,7 +1135,9 @@ remoteWorkerThread_main(void *cdata)
 									 rtcfg_namespace,
 									 sub_set, sub_provider, sub_receiver);
 				}
-
+				/* Note: No need to do anything based
+				   on archive_dir here; copy_set does
+				   that nicely already.  */
 				need_reloadListen = true;
 			}
 			else if (strcmp(event->ev_type, "UNSUBSCRIBE_SET") == 0)
@@ -1022,6 +1155,16 @@ remoteWorkerThread_main(void *cdata)
 								 sub_set, sub_receiver);
 
 				need_reloadListen = true;
+				if (archive_dir) {
+					rc = open_log_archive(rtcfg_nodeid, seqbuf);
+					rc = generate_archive_header(rtcfg_nodeid, seqbuf);
+					slon_mkquery(&query1, 
+						     "delete from %s.sl_setsync_offline "
+						     "  where ssy_setid= %d;",
+						     rtcfg_namespace, sub_set);
+					rc = submit_query_to_archive(&query1);
+					rc = close_log_archive();
+				}
 			}
 			else if (strcmp(event->ev_type, "DDL_SCRIPT") == 0)
 			{
@@ -1037,45 +1180,45 @@ remoteWorkerThread_main(void *cdata)
 				
 				/* DDL_SCRIPT needs to be turned into a log shipping script */
 				if (archive_dir) {
-				  if ((ddl_only_on_node < 1) || (ddl_only_on_node == rtcfg_nodeid)) {
-				    
-				    rc = open_log_archive(node->no_id, seqbuf);
-				    if (rc < 0) {
-				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					       "Could not open DDL archive file %s - %s",
+				    if ((ddl_only_on_node < 1) || (ddl_only_on_node == rtcfg_nodeid)) {
+					
+					rc = open_log_archive(node->no_id, seqbuf);
+					if (rc < 0) {
+					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						     "Could not open DDL archive file %s - %s",
 					       node->no_id, archive_tmp, strerror(errno));
-				      slon_abort();
+					    slon_abort();
+					}
+					generate_archive_header(node->no_id, seqbuf);
+					if (rc < 0) {
+					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						     "Could not generate DDL archive header %s - %s",
+						     node->no_id, archive_tmp, strerror(errno));
+					    slon_abort();
+					}
+					rc = logarchive_tracking(rtcfg_namespace, ddl_setid, seqbuf, seqbuf);
+					if (rc < 0) {
+					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						     "Could not generate DDL archive tracker %s - %s",
+						     node->no_id, archive_tmp, strerror(errno));
+					    slon_abort();
+					}
+					rc = submit_string_to_archive(ddl_script);
+					if (rc < 0) {
+					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						     "Could not submit DDL Script %s - %s",
+						     node->no_id, archive_tmp, strerror(errno));
+					    slon_abort();
+					}
+					
+					rc = close_log_archive();
+					if (rc < 0) {
+					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						     "Could not close DDL Script %s - %s",
+						     node->no_id, archive_tmp, strerror(errno));
+					    slon_abort();
+					}
 				    }
-				    generate_archive_header(node->no_id, seqbuf);
-				    if (rc < 0) {
-				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					       "Could not generate DDL archive header %s - %s",
-					       node->no_id, archive_tmp, strerror(errno));
-				      slon_abort();
-				    }
-				    rc = logarchive_tracking(rtcfg_namespace, ddl_setid, seqbuf, seqbuf);
-				    if (rc < 0) {
-				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					       "Could not generate DDL archive tracker %s - %s",
-					       node->no_id, archive_tmp, strerror(errno));
-				      slon_abort();
-				    }
-				    rc = submit_string_to_archive(ddl_script);
-				    if (rc < 0) {
-				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					       "Could not submit DDL Script %s - %s",
-					       node->no_id, archive_tmp, strerror(errno));
-				      slon_abort();
-				    }
-
-				    rc = close_log_archive();
-				    if (rc < 0) {
-				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					       "Could not close DDL Script %s - %s",
-					       node->no_id, archive_tmp, strerror(errno));
-				      slon_abort();
-				    }
-				  }
 				}
 			}
 			else if (strcmp(event->ev_type, "RESET_CONFIG") == 0)
@@ -1087,11 +1230,15 @@ remoteWorkerThread_main(void *cdata)
 								 "select %s.updateReloid(%d, '%q', %d); ",
 								 rtcfg_namespace,
 							   reset_config_setid, reset_configonly_on_node);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- RESET_CONFIG");
 			}
 			else
 			{
 				printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d," INT64_FORMAT " %s - unknown event type\n",
 					   node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
+				if (archive_dir)
+					write_void_log (rtcfg_nodeid, seqbuf, "-- UNHANDLED EVENT!!!");
 			}
 
 			/*
@@ -2004,8 +2151,8 @@ static int
 copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 SlonWorkMsg_event * event)
 {
-	SlonSet    *set;
-	SlonConn   *pro_conn;
+        SlonSet    *set;
+        SlonConn   *pro_conn;
 	PGconn	   *pro_dbconn;
 	PGconn	   *loc_dbconn;
 	char	   *conninfo;
@@ -2029,10 +2176,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	char	   *ssy_xip = NULL;
 	SlonDString ssy_action_list;
 	char		seqbuf [64];
-
+	
 #ifdef HAVE_PQPUTCOPYDATA
 	char	   *copydata = NULL;
-
+	
 #else
 	char		copybuf[8192];
 	int			copydone;
@@ -2040,10 +2187,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	struct timeval tv_start;
 	struct timeval tv_start2;
 	struct timeval tv_now;
-
+	
 	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
 	gettimeofday(&tv_start, NULL);
-
+	
 	/*
 	 * Lookup the provider nodes conninfo
 	 */
@@ -2061,29 +2208,29 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	{
 		rtcfg_unlock();
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: set %d "
-				 "not found in runtime configuration\n",
-				 node->no_id, set_id);
+			 "not found in runtime configuration\n",
+			 node->no_id, set_id);
 		return -1;
 	}
 	if ((sub_node = rtcfg_findNode(sub_provider)) == NULL)
 	{
 		rtcfg_unlock();
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: node %d "
-				 "not found in runtime configuration\n",
-				 node->no_id, sub_provider);
+			 "not found in runtime configuration\n",
+			 node->no_id, sub_provider);
 		return -1;
 	}
 	if (sub_node->pa_conninfo == NULL)
 	{
 		rtcfg_unlock();
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: node %d "
-				 "has no pa_conninfo\n",
-				 node->no_id, sub_provider);
+			 "has no pa_conninfo\n",
+			 node->no_id, sub_provider);
 		return -1;
 	}
 	conninfo = strdup(sub_node->pa_conninfo);
 	rtcfg_unlock();
-
+	
 	/*
 	 * Connect to the provider DB
 	 */
@@ -2092,32 +2239,60 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	{
 		free(conninfo);
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				 "copy set %d - cannot connect to provider DB node %d\n",
-				 node->no_id, set_id, sub_node->no_id);
+			 "copy set %d - cannot connect to provider DB node %d\n",
+			 node->no_id, set_id, sub_node->no_id);
 		return -1;
 	}
 	free(conninfo);
 	conninfo = NULL;
 	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-			 "connected to provider DB\n",
-			 node->no_id);
-
+		 "connected to provider DB\n",
+		 node->no_id);
+	
 	pro_dbconn = pro_conn->dbconn;
 	loc_dbconn = local_conn->dbconn;
 	dstring_init(&query1);
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
+	
 
+	/* Log Shipping Support begins... */
+	/*  - Open the log, put the header in
+	    Isn't it convenient that seqbuf was just populated???  :-)
+	*/
+	if (archive_dir) {
+		rc = open_log_archive(rtcfg_nodeid, seqbuf);
+		if (rc < 0) {
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 "Could not open COPY SET archive file %s - %s",
+				 node->no_id, archive_tmp, strerror(errno));
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			terminate_log_archive();
+			return -1;
+		}
+		rc = generate_archive_header(rtcfg_nodeid, seqbuf);
+		if (rc < 0) {
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 "Could not generate COPY SET archive header %s - %s",
+				 node->no_id, archive_tmp, strerror(errno));
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			terminate_log_archive();
+			return -1;
+		}
+	}
 	/*
 	 * Listen on the special relation telling what node daemon this connection
 	 * belongs to.
 	 */
 	slon_mkquery(&query1,
-				 "listen \"_%s_Node_%d\"; ",
-				 rtcfg_cluster_name, rtcfg_nodeid);
+		     "listen \"_%s_Node_%d\"; ",
+		     rtcfg_cluster_name, rtcfg_nodeid);
 	if (query_execute(node, pro_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
 	}
 
@@ -2134,29 +2309,31 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	if (sub_provider == set_origin)
 	{
 		slon_mkquery(&query1,
-					 "start transaction; "
-					 "set transaction isolation level serializable; "
-					 "select %s.getMinXid() <= '%s'::%s.xxid; ",
-					 rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
+			     "start transaction; "
+			     "set transaction isolation level serializable; "
+			     "select %s.getMinXid() <= '%s'::%s.xxid; ",
+			     rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res1));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res1));
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		if (*(PQgetvalue(res1, 0, 0)) == 't')
 		{
 			slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-				  "transactions earlier than XID %s are still in progress\n",
-					 node->no_id, event->ev_maxxid_c);
+				 "transactions earlier than XID %s are still in progress\n",
+				 node->no_id, event->ev_maxxid_c);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		PQclear(res1);
@@ -2164,12 +2341,13 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	else
 	{
 		slon_mkquery(&query1,
-					 "start transaction; "
-					 "set transaction isolation level serializable; ");
+			     "start transaction; "
+			     "set transaction isolation level serializable; ");
 		if (query_execute(node, pro_dbconn, &query1) < 0)
 		{
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 	}
@@ -2178,27 +2356,28 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * Select the list of all tables the provider currently has in the set.
 	 */
 	slon_mkquery(&query1,
-				 "select T.tab_id, "
-				 "    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-				 "    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
-				 "    T.tab_idxname, T.tab_comment "
-				 "from %s.sl_table T, "
-				 "    \"pg_catalog\".pg_class PGC, "
-				 "    \"pg_catalog\".pg_namespace PGN "
-				 "where T.tab_set = %d "
-				 "    and T.tab_reloid = PGC.oid "
-				 "    and PGC.relnamespace = PGN.oid "
-				 "order by tab_id; ",
-				 rtcfg_namespace, set_id);
+		     "select T.tab_id, "
+		     "    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+		     "    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
+		     "    T.tab_idxname, T.tab_comment "
+		     "from %s.sl_table T, "
+		     "    \"pg_catalog\".pg_class PGC, "
+		     "    \"pg_catalog\".pg_namespace PGN "
+		     "where T.tab_set = %d "
+		     "    and T.tab_reloid = PGC.oid "
+		     "    and PGC.relnamespace = PGN.oid "
+		     "order by tab_id; ",
+		     rtcfg_namespace, set_id);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				 node->no_id, dstring_data(&query1),
-				 PQresultErrorMessage(res1));
+			 node->no_id, dstring_data(&query1),
+			 PQresultErrorMessage(res1));
 		PQclear(res1);
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
 	}
 	ntuples1 = PQntuples(res1);
@@ -2216,26 +2395,27 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 		gettimeofday(&tv_start2, NULL);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "copy table %s\n",
-				 node->no_id, tab_fqname);
+			 "copy table %s\n",
+			 node->no_id, tab_fqname);
 
 		/*
 		 * Find out if the table we're copying has the special slony serial
 		 * number key on the provider DB
 		 */
 		slon_mkquery(&query1,
-					 "select %s.tableHasSerialKey('%q');",
-					 rtcfg_namespace, tab_fqname);
+			     "select %s.tableHasSerialKey('%q');",
+			     rtcfg_namespace, tab_fqname);
 		res2 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res2));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		rc = *PQgetvalue(res2, 0, 0) == 't';
@@ -2247,18 +2427,19 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * It has, check if the table has this on the local DB too.
 			 */
 			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s requires Slony-I serial key\n",
-					 node->no_id, tab_fqname);
+				 "table %s requires Slony-I serial key\n",
+				 node->no_id, tab_fqname);
 			res2 = PQexec(loc_dbconn, dstring_data(&query1));
 			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-						 node->no_id, dstring_data(&query1),
-						 PQresultErrorMessage(res2));
+					 node->no_id, dstring_data(&query1),
+					 PQresultErrorMessage(res2));
 				PQclear(res2);
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
+				terminate_log_archive();
 				return -1;
 			}
 			rc = *PQgetvalue(res2, 0, 0) == 't';
@@ -2270,33 +2451,34 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 * Nope, so we gotta add the key here.
 				 */
 				slon_mkquery(&query1,
-							 "select %s.tableAddKey('%q'); "
-							 "select %s.determineAttkindSerial('%q'); ",
-							 rtcfg_namespace, tab_fqname,
-							 rtcfg_namespace, tab_fqname);
+					     "select %s.tableAddKey('%q'); "
+					     "select %s.determineAttkindSerial('%q'); ",
+					     rtcfg_namespace, tab_fqname,
+					     rtcfg_namespace, tab_fqname);
 				if (query_execute(node, loc_dbconn, &query1) < 0)
 				{
 					PQclear(res1);
 					slon_disconnectdb(pro_conn);
 					dstring_free(&query1);
+					terminate_log_archive();
 					return -1;
 				}
 				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-						 "table %s Slony-I serial key added local\n",
-						 node->no_id, tab_fqname);
+					 "table %s Slony-I serial key added local\n",
+					 node->no_id, tab_fqname);
 			}
 			else
 			{
 				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-						 "local table %s already has Slony-I serial key\n",
-						 node->no_id, tab_fqname);
+					 "local table %s already has Slony-I serial key\n",
+					 node->no_id, tab_fqname);
 			}
 		}
 		else
 		{
 			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s does not require Slony-I serial key\n",
-					 node->no_id, tab_fqname);
+				 "table %s does not require Slony-I serial key\n",
+				 node->no_id, tab_fqname);
 		}
 
 
@@ -2306,14 +2488,15 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * suppressed.
 		 */
 		slon_mkquery(&query1,
-					 "select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
-					 rtcfg_namespace,
-					 set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
+			     "select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
+			     rtcfg_namespace,
+			     set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 
@@ -2321,33 +2504,35 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * Copy the content of sl_trigger for this table
 		 */
 		slon_mkquery(&query1,
-					 "select trig_tgname from %s.sl_trigger "
-					 "where trig_tabid = %d; ",
-					 rtcfg_namespace, tab_id);
+			     "select trig_tgname from %s.sl_trigger "
+			     "where trig_tabid = %d; ",
+			     rtcfg_namespace, tab_id);
 		res2 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res2));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		ntuples2 = PQntuples(res2);
 		for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
 		{
 			slon_mkquery(&query1,
-						 "select %s.storeTrigger(%d, '%q'); ",
-					   rtcfg_namespace, tab_id, PQgetvalue(res2, tupno2, 0));
+				     "select %s.storeTrigger(%d, '%q'); ",
+				     rtcfg_namespace, tab_id, PQgetvalue(res2, tupno2, 0));
 			if (query_execute(node, loc_dbconn, &query1) < 0)
 			{
 				PQclear(res2);
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
+				terminate_log_archive();
 				return -1;
 			}
 		}
@@ -2356,37 +2541,57 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
 		 */
+		slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+			 "Begin COPY of table %s\n",
+			 node->no_id, tab_fqname);
+
 		slon_mkquery(&query1,
-					 "select %s.truncateTable('%s'); "
-					 "copy %s from stdin; ",
-					 rtcfg_namespace,
-					 tab_fqname, tab_fqname);
+			     "select %s.truncateTable('%s'); "
+			     "copy %s from stdin; ",
+			     rtcfg_namespace,
+			     tab_fqname, tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_COPY_IN)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s %s\n",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2),
-					 PQerrorMessage(loc_dbconn));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res2),
+				 PQerrorMessage(loc_dbconn));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
+		if (archive_dir) {
+			slon_log(SLON_DEBUG4, "start log ship copy of %s\n", tab_fqname);
+			slon_mkquery(&query1,
+				     "delete from %s;copy %s from stdin;", tab_fqname, tab_fqname);
+			rc = submit_query_to_archive(&query1);
+			if (rc < 0) {
+				slon_log(SLON_ERROR, "remoteWorkerThread_d: "
+					 "Could not generate copy_set request for %s - %s",
+					 node->no_id, tab_fqname, strerror(errno));
 
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				terminate_log_archive();
+				return -1;
+			}
+		}
 		/*
 		 * Begin a COPY to stdout for the table on the provider DB
 		 */
 		slon_mkquery(&query1,
-					 "copy %s to stdout; ", tab_fqname);
+			     "copy %s to stdout; ", tab_fqname);
 		res3 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res3) != PGRES_COPY_OUT)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s %s\n",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2),
-					 PQerrorMessage(pro_dbconn));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res2),
+				 PQerrorMessage(pro_dbconn));
 #ifdef HAVE_PQPUTCOPYDATA
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
 #else
@@ -2398,6 +2603,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 
@@ -2407,15 +2613,14 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 #ifdef HAVE_PQPUTCOPYDATA
 		while ((rc = PQgetCopyData(pro_dbconn, &copydata, 0)) > 0)
 		{
-			int			len = strlen(copydata);
+			int len = strlen(copydata);
 
 			copysize += (int64) len;
-
 			if (PQputCopyData(loc_dbconn, copydata, len) != 1)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-						 "PQputCopyData() - %s",
-						 node->no_id, PQerrorMessage(loc_dbconn));
+					 "PQputCopyData() - %s",
+					 node->no_id, PQerrorMessage(loc_dbconn));
 #ifdef SLON_MEMDEBUG
 				memset(copydata, 88, len);
 #endif
@@ -2426,7 +2631,29 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
+				terminate_log_archive();
 				return -1;
+			}
+			if (archive_dir) {
+				rc = fwrite(copydata, 1, len, archive_fp);
+				if (rc != len) {
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						 "PQputCopyData() - log shipping - %s",
+						 node->no_id, strerror(errno));
+#ifdef SLON_MEMDEBUG
+					memset(copydata, 88, len);
+#endif
+					PQfreemem(copydata);
+					PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation");
+					PQclear(res3);
+					PQclear(res2);
+					PQclear(res1);
+					slon_disconnectdb(pro_conn);
+					dstring_free(&query1);
+					terminate_log_archive();
+					return -1;
+					
+				}
 			}
 #ifdef SLON_MEMDEBUG
 			memset(copydata, 88, len);
@@ -2436,14 +2663,15 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (rc != -1)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGgetCopyData() %s",
-					 node->no_id, PQerrorMessage(pro_dbconn));
+				 "PGgetCopyData() %s",
+				 node->no_id, PQerrorMessage(pro_dbconn));
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
 			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 
@@ -2455,15 +2683,16 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (PQresultStatus(res3) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "copy to stdout on provider - %s %s",
-					 node->no_id, PQresStatus(PQresultStatus(res3)),
-					 PQresultErrorMessage(res3));
+				 "copy to stdout on provider - %s %s",
+				 node->no_id, PQresStatus(PQresultStatus(res3)),
+				 PQresultErrorMessage(res3));
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
 			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		PQclear(res3);
@@ -2474,26 +2703,31 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (PQputCopyEnd(loc_dbconn, NULL) != 1)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGputCopyEnd() %s",
-					 node->no_id, PQerrorMessage(loc_dbconn));
+				 "PGputCopyEnd() %s",
+				 node->no_id, PQerrorMessage(loc_dbconn));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		res2 = PQgetResult(loc_dbconn);
 		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "copy from stdin on local node - %s %s",
-					 node->no_id, PQresStatus(PQresultStatus(res2)),
-					 PQresultErrorMessage(res2));
+				 "copy from stdin on local node - %s %s",
+				 node->no_id, PQresStatus(PQresultStatus(res2)),
+				 PQresultErrorMessage(res2));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
+		}
+		if (archive_dir) {
+			rc = submit_string_to_archive("\\.");
 		}
 #else							/* ! HAVE_PQPUTCOPYDATA */
 		copydone = false;
@@ -2502,8 +2736,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			rc = PQgetline(pro_dbconn, copybuf, sizeof(copybuf));
 
 			if (copybuf[0] == '\\' &&
-				copybuf[1] == '.' &&
-				copybuf[2] == '\0')
+			    copybuf[1] == '.' &&
+			    copybuf[2] == '\0')
 			{
 				copydone = true;
 			}
@@ -2511,36 +2745,43 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			{
 				switch (rc)
 				{
-					case EOF:
-						copydone = true;
-						break;
-					case 0:
-						PQputline(loc_dbconn, copybuf);
-						PQputline(loc_dbconn, "\n");
-						break;
-					case 1:
-						PQputline(loc_dbconn, copybuf);
-						break;
+				case EOF:
+					copydone = true;
+					break;
+				case 0:
+					PQputline(loc_dbconn, copybuf);
+					PQputline(loc_dbconn, "\n");
+					if (archive_dir)
+						submit_string_to_archive(copybuf);
+					break;
+				case 1:
+					PQputline(loc_dbconn, copybuf);
+					if (archive_dir)
+						submit_raw_data_to_archive(copybuf);
+					break;
 
 				}
 			}
 		}
 		PQputline(loc_dbconn, "\\.\n");
-
+		if (archive_dir) {
+			rc = submit_string_to_archive("\\\.");
+		}
 		/*
 		 * End the COPY to stdout on the provider
 		 */
 		if (PQendcopy(pro_dbconn) != 0)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGendcopy() on provider%s",
-					 node->no_id, PQerrorMessage(pro_dbconn));
+				 "PGendcopy() on provider%s",
+				 node->no_id, PQerrorMessage(pro_dbconn));
 			PQclear(res3);
 			PQendcopy(loc_dbconn);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		PQclear(res3);
@@ -2556,20 +2797,21 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (PQendcopy(loc_dbconn) != 0)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGendcopy() on local DB%s",
-					 node->no_id, PQerrorMessage(loc_dbconn));
+				 "PGendcopy() on local DB%s",
+				 node->no_id, PQerrorMessage(loc_dbconn));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 #endif   /* HAVE_PQPUTCOPYDATA */
 
 		PQclear(res2);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 INT64_FORMAT " bytes copied for table %s\n",
-				 node->no_id, copysize, tab_fqname);
+			 INT64_FORMAT " bytes copied for table %s\n",
+			 node->no_id, copysize, tab_fqname);
 
 		/*
 		 * Analyze the table to update statistics
@@ -2580,13 +2822,18 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
+		if (archive_dir) {
+			submit_query_to_archive(&query1);
+		}
+
 		gettimeofday(&tv_now, NULL);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "%.3f seconds to copy table %s\n",
-				 node->no_id,
-				 TIMEVAL_DIFF(&tv_start2, &tv_now), tab_fqname);
+			 "%.3f seconds to copy table %s\n",
+			 node->no_id,
+			 TIMEVAL_DIFF(&tv_start2, &tv_now), tab_fqname);
 	}
 	PQclear(res1);
 
@@ -2596,26 +2843,27 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * Copy the sequences contained in the set
 	 */
 	slon_mkquery(&query1,
-				 "select SQ.seq_id, "
-		   "		\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-				 "		\"pg_catalog\".quote_ident(PGC.relname), "
-				 "		SQ.seq_comment "
-				 "	from %s.sl_sequence SQ, "
-				 "		\"pg_catalog\".pg_class PGC, "
-				 "		\"pg_catalog\".pg_namespace PGN "
-				 "	where SQ.seq_set = %d "
-				 "		and PGC.oid = SQ.seq_reloid "
-				 "		and PGN.oid = PGC.relnamespace; ",
-				 rtcfg_namespace, set_id);
+		     "select SQ.seq_id, "
+		     "		\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+		     "		\"pg_catalog\".quote_ident(PGC.relname), "
+		     "		SQ.seq_comment "
+		     "	from %s.sl_sequence SQ, "
+		     "		\"pg_catalog\".pg_class PGC, "
+		     "		\"pg_catalog\".pg_namespace PGN "
+		     "	where SQ.seq_set = %d "
+		     "		and PGC.oid = SQ.seq_reloid "
+		     "		and PGN.oid = PGC.relnamespace; ",
+		     rtcfg_namespace, set_id);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				 node->no_id, dstring_data(&query1),
-				 PQresultErrorMessage(res1));
+			 node->no_id, dstring_data(&query1),
+			 PQresultErrorMessage(res1));
 		PQclear(res1);
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
 	}
 	ntuples1 = PQntuples(res1);
@@ -2626,18 +2874,19 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		char	   *seq_comment = PQgetvalue(res1, tupno1, 2);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "copy sequence %s\n",
-				 node->no_id, seq_fqname);
+			 "copy sequence %s\n",
+			 node->no_id, seq_fqname);
 
 		slon_mkquery(&query1,
-					 "select %s.setAddSequence_int(%d, %s, '%q', '%q')",
-					 rtcfg_namespace, set_id, seq_id,
-					 seq_fqname, seq_comment);
+			     "select %s.setAddSequence_int(%d, %s, '%q', '%q')",
+			     rtcfg_namespace, set_id, seq_id,
+			     seq_fqname, seq_comment);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 	}
@@ -2648,28 +2897,29 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * ENABLE_SUBSCRIPTION event.
 	 */
 	slon_mkquery(&query1,
-				 "select SL.seql_seqid, SL.seql_last_value, "
-				 "	\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-				 "	\"pg_catalog\".quote_ident(PGC.relname) "
-				 "	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
-				 "		\"pg_catalog\".pg_class PGC, "
-				 "		\"pg_catalog\".pg_namespace PGN "
-				 "	where SQ.seq_set = %d "
-				 "		and SL.seql_seqid = SQ.seq_id "
-				 "		and SL.seql_ev_seqno = '%s' "
-				 "		and PGC.oid = SQ.seq_reloid "
-				 "		and PGN.oid = PGC.relnamespace; ",
-				 rtcfg_namespace, rtcfg_namespace,
-				 set_id, seqbuf);
+		     "select SL.seql_seqid, SL.seql_last_value, "
+		     "	\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+		     "	\"pg_catalog\".quote_ident(PGC.relname) "
+		     "	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
+		     "		\"pg_catalog\".pg_class PGC, "
+		     "		\"pg_catalog\".pg_namespace PGN "
+		     "	where SQ.seq_set = %d "
+		     "		and SL.seql_seqid = SQ.seq_id "
+		     "		and SL.seql_ev_seqno = '%s' "
+		     "		and PGC.oid = SQ.seq_reloid "
+		     "		and PGN.oid = PGC.relnamespace; ",
+		     rtcfg_namespace, rtcfg_namespace,
+		     set_id, seqbuf);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				 node->no_id, dstring_data(&query1),
-				 PQresultErrorMessage(res1));
+			 node->no_id, dstring_data(&query1),
+			 PQresultErrorMessage(res1));
 		PQclear(res1);
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
 	}
 	ntuples1 = PQntuples(res1);
@@ -2680,8 +2930,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		char	   *seq_fqname = PQgetvalue(res1, tupno1, 2);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "set last_value of sequence %s (%s) to %s\n",
-				 node->no_id, seql_seqid, seq_fqname, seql_last_value);
+			 "set last_value of sequence %s (%s) to %s\n",
+			 node->no_id, seql_seqid, seq_fqname, seql_last_value);
+
+		
 
 		/*
 		 * sequence with ID 0 is a nodes rowid ... only remember in seqlog.
@@ -2689,23 +2941,28 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (strtol(seql_seqid, NULL, 10) != 0)
 		{
 			slon_mkquery(&query1,
-						 "select \"pg_catalog\".setval('%q', '%s'); ",
-						 seq_fqname, seql_last_value);
+				     "select \"pg_catalog\".setval('%q', '%s'); ",
+				     seq_fqname, seql_last_value);
+
+			if (archive_dir) {
+				submit_query_to_archive(&query1);
+			}
 		}
 		else
 			dstring_reset(&query1);
 		slon_appendquery(&query1,
-						 "insert into %s.sl_seqlog "
-					"		(seql_seqid, seql_origin, seql_ev_seqno, "
-						 "		seql_last_value) values "
-						 "		(%s, %d, '%s', '%s'); ",
-						 rtcfg_namespace,
-						 seql_seqid, node->no_id, seqbuf, seql_last_value);
+				 "insert into %s.sl_seqlog "
+				 "		(seql_seqid, seql_origin, seql_ev_seqno, "
+				 "		seql_last_value) values "
+				 "		(%s, %d, '%s', '%s'); ",
+				 rtcfg_namespace,
+				 seql_seqid, node->no_id, seqbuf, seql_last_value);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 	}
@@ -2715,9 +2972,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	{
 		gettimeofday(&tv_now, NULL);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "%.3f seconds to copy sequences\n",
-				 node->no_id,
-				 TIMEVAL_DIFF(&tv_start2, &tv_now));
+			 "%.3f seconds to copy sequences\n",
+			 node->no_id,
+			 TIMEVAL_DIFF(&tv_start2, &tv_now));
 	}
 	gettimeofday(&tv_start2, NULL);
 
@@ -2736,29 +2993,31 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * and all
 		 */
 		slon_mkquery(&query1,
-					 "select max(ev_seqno) as ssy_seqno "
-					 "from %s.sl_event "
-					 "where ev_origin = %d and ev_type = 'SYNC'; ",
-					 rtcfg_namespace, node->no_id);
+			     "select max(ev_seqno) as ssy_seqno "
+			     "from %s.sl_event "
+			     "where ev_origin = %d and ev_type = 'SYNC'; ",
+			     rtcfg_namespace, node->no_id);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res1));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res1));
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		if (PQntuples(res1) != 1)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "query \"%s\" did not return a result\n",
-					 node->no_id, dstring_data(&query1));
+				 "query \"%s\" did not return a result\n",
+				 node->no_id, dstring_data(&query1));
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		if (PQgetisnull(res1, 0, 0))
@@ -2773,16 +3032,16 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			ssy_xip = event->ev_xip;
 
 			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-					 "copy_set no previous SYNC found, use enable event.\n",
-					 node->no_id);
+				 "copy_set no previous SYNC found, use enable event.\n",
+				 node->no_id);
 
 			slon_mkquery(&query1,
-						 "select log_actionseq "
-						 "from %s.sl_log_1 where log_origin = %d "
-						 "union select log_actionseq "
-						 "from %s.sl_log_2 where log_origin = %d; ",
-						 rtcfg_namespace, node->no_id,
-						 rtcfg_namespace, node->no_id);
+				     "select log_actionseq "
+				     "from %s.sl_log_1 where log_origin = %d "
+				     "union select log_actionseq "
+				     "from %s.sl_log_2 where log_origin = %d; ",
+				     rtcfg_namespace, node->no_id,
+				     rtcfg_namespace, node->no_id);
 		}
 		else
 		{
@@ -2791,30 +3050,32 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * sequence list to all actions after that.
 			 */
 			slon_mkquery(&query1,
-						 "select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
-						 "from %s.sl_event "
-						 "where ev_origin = %d and ev_seqno = '%s'; ",
-					   rtcfg_namespace, node->no_id, PQgetvalue(res1, 0, 0));
+				     "select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
+				     "from %s.sl_event "
+				     "where ev_origin = %d and ev_seqno = '%s'; ",
+				     rtcfg_namespace, node->no_id, PQgetvalue(res1, 0, 0));
 			PQclear(res1);
 			res1 = PQexec(pro_dbconn, dstring_data(&query1));
 			if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-						 node->no_id, dstring_data(&query1),
-						 PQresultErrorMessage(res1));
+					 node->no_id, dstring_data(&query1),
+					 PQresultErrorMessage(res1));
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
+				terminate_log_archive();
 				return -1;
 			}
 			if (PQntuples(res1) != 1)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-						 "query \"%s\" did not return a result\n",
-						 node->no_id, dstring_data(&query1));
+					 "query \"%s\" did not return a result\n",
+					 node->no_id, dstring_data(&query1));
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
+				terminate_log_archive();
 				return -1;
 			}
 			ssy_seqno = PQgetvalue(res1, 0, 0);
@@ -2824,24 +3085,24 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 			dstring_init(&query2);
 			slon_mkquery(&query2,
-						 "log_xid >= '%s' or (log_xid >= '%s'",
-						 ssy_maxxid, ssy_minxid);
+				     "log_xid >= '%s' or (log_xid >= '%s'",
+				     ssy_maxxid, ssy_minxid);
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(&query2, " and log_xid in (%s))", ssy_xip);
 			else
 				slon_appendquery(&query2, ")");
 
 			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-					 "copy_set SYNC found, use event seqno %s.\n",
-					 node->no_id, ssy_seqno);
+				 "copy_set SYNC found, use event seqno %s.\n",
+				 node->no_id, ssy_seqno);
 
 			slon_mkquery(&query1,
-						 "select log_actionseq "
-						 "from %s.sl_log_1 where log_origin = %d and %s "
-						 "union select log_actionseq "
-						 "from %s.sl_log_2 where log_origin = %d and %s; ",
-						 rtcfg_namespace, node->no_id, dstring_data(&query2),
-						 rtcfg_namespace, node->no_id, dstring_data(&query2));
+				     "select log_actionseq "
+				     "from %s.sl_log_1 where log_origin = %d and %s "
+				     "union select log_actionseq "
+				     "from %s.sl_log_2 where log_origin = %d and %s; ",
+				     rtcfg_namespace, node->no_id, dstring_data(&query2),
+				     rtcfg_namespace, node->no_id, dstring_data(&query2));
 			dstring_free(&query2);
 		}
 
@@ -2853,12 +3114,13 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res2));
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		ntuples1 = PQntuples(res2);
@@ -2886,29 +3148,31 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * setsync from him.
 		 */
 		slon_mkquery(&query1,
-					 "select ssy_seqno, ssy_minxid, ssy_maxxid, "
-					 "    ssy_xip, ssy_action_list "
-					 "from %s.sl_setsync where ssy_setid = %d; ",
-					 rtcfg_namespace, set_id);
+			     "select ssy_seqno, ssy_minxid, ssy_maxxid, "
+			     "    ssy_xip, ssy_action_list "
+			     "from %s.sl_setsync where ssy_setid = %d; ",
+			     rtcfg_namespace, set_id);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res1));
+				 node->no_id, dstring_data(&query1),
+				 PQresultErrorMessage(res1));
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		if (PQntuples(res1) != 1)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "sl_setsync entry for set %d not found on provider\n",
-					 node->no_id, set_id);
+				 "sl_setsync entry for set %d not found on provider\n",
+				 node->no_id, set_id);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
+			terminate_log_archive();
 			return -1;
 		}
 		dstring_init(&ssy_action_list);
@@ -2924,26 +3188,57 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * Create our own initial setsync entry
 	 */
 	slon_mkquery(&query1,
-				 "insert into %s.sl_setsync "
-				 "    (ssy_setid, ssy_origin, ssy_seqno, "
-				 "     ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) "
-				 "    values ('%d', '%d', '%s', '%s', '%s', '%q', '%q'); ",
-				 rtcfg_namespace,
-			 set_id, node->no_id, ssy_seqno, ssy_minxid, ssy_maxxid, ssy_xip,
-				 dstring_data(&ssy_action_list));
+		     "insert into %s.sl_setsync "
+		     "    (ssy_setid, ssy_origin, ssy_seqno, "
+		     "     ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) "
+		     "    values ('%d', '%d', '%s', '%s', '%s', '%q', '%q'); ",
+		     rtcfg_namespace,
+		     set_id, node->no_id, ssy_seqno, ssy_minxid, ssy_maxxid, ssy_xip,
+		     dstring_data(&ssy_action_list));
 	PQclear(res1);
 	dstring_free(&ssy_action_list);
 	if (query_execute(node, loc_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
+	}
+	if (archive_dir) {
+		slon_mkquery(&query1,
+			     "insert into %s.sl_setsync_offline () "
+			     "values ('%d', '%d');",
+			     rtcfg_namespace, set_id, ssy_seqno);
+		rc = submit_query_to_archive(&query1);
+		if (rc < 0) {
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 " could not insert to sl_setsync_offline",
+				 node->no_id);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			terminate_log_archive();
+			return -1;
+		}
 	}
 	gettimeofday(&tv_now, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-			 "%.3f seconds to build initial setsync status\n",
-			 node->no_id,
-			 TIMEVAL_DIFF(&tv_start2, &tv_now));
+		 "%.3f seconds to build initial setsync status\n",
+		 node->no_id,
+		 TIMEVAL_DIFF(&tv_start2, &tv_now));
+		
+	if (archive_dir) {
+		rc = close_log_archive();
+		if (rc < 0) {
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 " could not close archive log %s - %s",
+				 node->no_id, archive_tmp, strerror(errno));
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			terminate_log_archive();
+			return -1;
+		}
+	}
+		
 
 	/*
 	 * Roll back the transaction we used on the provider and close the
@@ -2954,22 +3249,21 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	{
 		slon_disconnectdb(pro_conn);
 		dstring_free(&query1);
+		terminate_log_archive();
 		return -1;
 	}
 	slon_disconnectdb(pro_conn);
 	dstring_free(&query1);
 
 	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-			 "disconnected from provider DB\n",
-			 node->no_id);
-
+		 "disconnected from provider DB\n",
+		 node->no_id);
+		
 	gettimeofday(&tv_now, NULL);
 	slon_log(SLON_DEBUG1, "copy_set %d done in %.3f seconds\n", set_id,
-			 TIMEVAL_DIFF(&tv_start, &tv_now));
-
+		 TIMEVAL_DIFF(&tv_start, &tv_now));
 	return 0;
 }
-
 
 static int
 sync_event(SlonNode * node, SlonConn * local_conn,
@@ -4021,36 +4315,36 @@ sync_helper(void *cdata)
 					if (wd->tab_forward[log_tableid])
 					{
 						slon_appendquery(&(line->log),
-										 "insert into %s.sl_log_1 "
-									"    (log_origin, log_xid, log_tableid, "
-										 "     log_actionseq, log_cmdtype, "
-										 "     log_cmddata) values "
-							   "    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
-										 rtcfg_namespace,
-										 log_origin, log_xid, log_tableid,
-									log_actionseq, log_cmdtype, log_cmddata);
+								 "insert into %s.sl_log_1 "
+								 "    (log_origin, log_xid, log_tableid, "
+								 "     log_actionseq, log_cmdtype, "
+								 "     log_cmddata) values "
+								 "    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
+								 rtcfg_namespace,
+								 log_origin, log_xid, log_tableid,
+								 log_actionseq, log_cmdtype, log_cmddata);
 					}
 					switch (*log_cmdtype)
 					{
 						case 'I':
 							slon_appendquery(&(line->data),
-											 "insert into %s %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
+									 "insert into %s %s;\n",
+									 wd->tab_fqname[log_tableid],
+									 log_cmddata);
 							break;
 
 						case 'U':
 							slon_appendquery(&(line->data),
-											 "update only %s set %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
+									 "update only %s set %s;\n",
+									 wd->tab_fqname[log_tableid],
+									 log_cmddata);
 							break;
 
 						case 'D':
 							slon_appendquery(&(line->data),
-											 "delete from only %s where %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
+									 "delete from only %s where %s;\n",
+									 wd->tab_fqname[log_tableid],
+									 log_cmddata);
 							break;
 					}
 				}
@@ -4197,68 +4491,78 @@ sync_helper(void *cdata)
    using close_log_archive(), which closes the file and renames it
    from ".tmp" form to the final name.
 */
-   
+
 
 /* Stores the archive name in archive_name (as .sql name) and archive_tmp (.tmp file) */
 int open_log_archive (int node_id, char *seqbuf) {
-  int i;
-  sprintf(archive_name, "%s/slony1_log_%d_", archive_dir, node_id);
-  for (i = strlen(seqbuf); i < 20; i++)
-    strcat(archive_name, "0");
-  strcat(archive_name, seqbuf);
-  strcat(archive_name, ".sql");
-  strcpy(archive_tmp, archive_name);
-  strcat(archive_tmp, ".tmp");
-  archive_fp = fopen(archive_tmp, "w");
-  if (archive_fp == NULL) {
-    return -1;
-  } else {
-    return 0;
-  }
+	int i;
+	sprintf(archive_name, "%s/slony1_log_%d_", archive_dir, node_id);
+	for (i = strlen(seqbuf); i < 20; i++)
+		strcat(archive_name, "0");
+	strcat(archive_name, seqbuf);
+	strcat(archive_name, ".sql");
+	strcpy(archive_tmp, archive_name);
+	strcat(archive_tmp, ".tmp");
+	archive_fp = fopen(archive_tmp, "w");
+	if (archive_fp == NULL) {
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 int close_log_archive () {
-  int rc;
-  rc = fprintf(archive_fp, "\n------------------------------------------------------------------\n-- End Of Archive Log\n------------------------------------------------------------------\ncommit;\n");
-  rc = fclose(archive_fp);
-  rc = rename(archive_tmp, archive_name);
-  return rc;
+	int rc;
+	if (archive_dir) {
+		rc = fprintf(archive_fp, "\n------------------------------------------------------------------\n-- End Of Archive Log\n------------------------------------------------------------------\ncommit;\n");
+		rc = fclose(archive_fp);
+		rc = rename(archive_tmp, archive_name);
+	}
+	return rc;
 }
 
 int logarchive_tracking (const char *namespace, int sub_set, const char *firstseq, const char *seqbuf) {
-  return fprintf(archive_fp, "\nselect %s.setsyncTracking_offline(%d, '%s', '%s');\n-- end of log archiving header\n------------------------------------------------------------------\n-- start of Slony-I data\n------------------------------------------------------------------\n",
-		 namespace, sub_set, firstseq, seqbuf);
+	return fprintf(archive_fp, "\nselect %s.setsyncTracking_offline(%d, '%s', '%s');\n-- end of log archiving header\n------------------------------------------------------------------\n-- start of Slony-I data\n------------------------------------------------------------------\n",
+		       namespace, sub_set, firstseq, seqbuf);
 }
 
 int submit_query_to_archive(SlonDString *ds) {
-  return fprintf(archive_fp, "%s\n", *ds->data);
+	return fprintf(archive_fp, "%s\n", ds->data);
 }
 
 int submit_string_to_archive (const char *s) {
-  return fprintf(archive_fp, "%s\n", s);
+	return fprintf(archive_fp, "%s\n", s);
+}
+
+/* Raw form used for COPY where we don't want any extra cr/lf output */
+int submit_raw_data_to_archive (const char *s) {
+	return fprintf(archive_fp, "%s", s);
 }
 
 void terminate_log_archive () {
-  if (archive_fp) { 
-    fclose(archive_fp); 
-  }
+	if (archive_fp) { 
+		fclose(archive_fp); 
+	}
 }
 
 int generate_archive_header (int node_id, char *seqbuf) {
-  time_t now;
-  now = time(NULL);
-  return fprintf(archive_fp, 
-	  "-- Slony-I sync log\n"
-	  "-- Node %d, Event %s\n"
-	  "-- at... %s\n"
-	  "start transaction;\n",
-	  node_id, seqbuf, ctime(&now));
+	time_t now;
+	now = time(NULL);
+	return fprintf(archive_fp, 
+		       "-- Slony-I log shipping archive\n"
+		       "-- Node %d, Event %s\n"
+		       "-- at... %s\n"
+		       "start transaction;\n",
+		       node_id, seqbuf, ctime(&now));
 }
 
-/*
- * Local Variables:
- *	tab-width: 4
- *	c-indent-level: 4
- *	c-basic-offset: 4
- * End:
- */
+/* write_void_log() writes out a "void" log consisting of the message
+ * which must either be a valid SQL query or a SQL comment. */
+
+int write_void_log (int node_id, char *seqbuf, const char *message) {
+	open_log_archive(node_id, seqbuf);
+	generate_archive_header(node_id, seqbuf);
+	submit_string_to_archive(message);
+	close_log_archive();
+}
+   

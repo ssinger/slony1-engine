@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.19 2005-01-12 17:27:09 darcyb Exp $
+ *	$Id: cleanup_thread.c,v 1.20 2005-03-07 23:27:03 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,7 +32,8 @@
  * ---------- Global data ----------
  */
 int			vac_frequency = SLON_VACUUM_FREQUENCY;
-
+static unsigned long earliest_xid = 0;
+static unsigned long get_earliest_xid (PGconn *dbconn);
 /*
  * ---------- cleanupThread_main
  *
@@ -55,6 +56,7 @@ cleanupThread_main(void *dummy)
 	int			n	  ,
 				t;
 	int			vac_count = 0;
+	char *vacuum_action;
 
 	slon_log(SLON_DEBUG1, "cleanupThread: thread starts\n");
 
@@ -166,28 +168,44 @@ cleanupThread_main(void *dummy)
 		 */
 		if (vac_frequency != 0 && ++vac_count >= vac_frequency)
 		{
+        unsigned long latest_xid;
 			vac_count = 0;
-
+			latest_xid = get_earliest_xid(dbconn);
+			if (earliest_xid != latest_xid) {
+			  vacuum_action = "vacuum analyze";
+			} else {
+			  vacuum_action = "analyze";
+			  slon_log(SLON_DEBUG4, "cleanupThread: xid %d still active - analyze instead\n",
+				   earliest_xid);
+			}
+            earliest_xid = latest_xid;
 			/*
 			 * Build the query string for vacuuming replication runtime data
 			 * and event tables
 			 */
 			dstring_init(&query3);
 			slon_mkquery(&query3,
-						 "vacuum analyze %s.sl_event; "
-						 "vacuum analyze %s.sl_confirm; "
-						 "vacuum analyze %s.sl_setsync; "
-						 "vacuum analyze %s.sl_log_1; "
-						 "vacuum analyze %s.sl_log_2;"
-						 "vacuum analyze %s.sl_seqlog;"
-						 "vacuum analyze pg_catalog.pg_listener;",
-						 rtcfg_namespace,
-						 rtcfg_namespace,
-						 rtcfg_namespace,
-						 rtcfg_namespace,
-						 rtcfg_namespace,
-						 rtcfg_namespace);
-
+				     "%s %s.sl_event; "
+				     "%s %s.sl_confirm; "
+				     "%s %s.sl_setsync; "
+				     "%s %s.sl_log_1; "
+				     "%s %s.sl_log_2;"
+				     "%s %s.sl_seqlog;"
+				     "%s pg_catalog.pg_listener;",
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action,
+				     rtcfg_namespace,
+				     vacuum_action
+				     );
 
 			gettimeofday(&tv_start, NULL);
 			res = PQexec(dbconn, dstring_data(&query3));
@@ -230,4 +248,42 @@ cleanupThread_main(void *dummy)
 	 */
 	slon_log(SLON_DEBUG1, "cleanupThread: thread done\n");
 	pthread_exit(NULL);
+}
+
+
+static unsigned long get_earliest_xid (PGconn *dbconn) {
+	unsigned long lo = 2147483647;
+	unsigned long minhi = -1;
+	unsigned long minlo = lo;
+	unsigned long xid;
+	long n,t;
+	PGresult   *res;
+	SlonDString query1;
+	dstring_init(&query1);
+	slon_mkquery(&query1, "select transaction from pg_catalog.pg_locks where transaction is not null;");
+	res = PQexec(dbconn, dstring_data(&query1));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+		slon_log(SLON_FATAL, "cleanupThread: could not read locks from pg_locks!");
+		PQclear(res);
+		slon_abort();
+		return -1;
+	} else {
+		n = PQntuples(res);
+		for (t = 0; t < n; t++) {
+			xid = atoi(PQgetvalue(res, t, 0));
+			printf ("xid: %d\n", xid);
+			if (xid > lo) {
+				if (xid < minlo)
+					minlo = xid;
+			} else {
+				if (xid < minhi)
+					minhi = xid;
+			}
+		}
+	}
+	printf("minhi: %d minlo: %d\n", minlo, minhi);
+	if ((minhi - lo) < minlo)
+		return minlo;
+	else 
+		return minhi;
 }

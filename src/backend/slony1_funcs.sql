@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.55 2005-02-16 22:51:22 smsimms Exp $
+-- $Id: slony1_funcs.sql,v 1.56 2005-03-07 23:27:02 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1875,6 +1875,21 @@ begin
 		loop
 			perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
 		end loop;
+	end if;
+
+	-- On the new origin, raise an event - ACCEPT_SET
+	if v_local_node_id = p_new_origin then
+		-- Find the event number from the origin
+		select max(ev_seqno) as seqno into v_sub_row 
+			from @NAMESPACE@.sl_event
+			where ev_type = ''MOVE_SET'' and
+			  ev_data1 = p_set_id and
+			  ev_data2 = p_old_origin and
+			  ev_data3 = p_new_origin and
+			  ev_origin = p_old_origin;
+		
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
+			p_set_id, p_old_origin, p_new_origin, v_sub_row.seqno);
 	end if;
 
 	-- ----
@@ -4894,6 +4909,36 @@ their respective FQN';
 --
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
+returns bool as '
+DECLARE
+  p_namespace alias for $1;
+  p_table     alias for $2;
+  p_field     alias for $3;
+  p_type      alias for $4;
+  v_row       record;
+  v_query     text;
+BEGIN
+  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
+     where quote_ident(n.nspname) = p_namespace and 
+         c.relnamespace = n.oid and
+         quote_ident(c.relname) = p_table and
+         a.attrelid = c.oid and
+         quote_ident(a.attname) = p_field;
+  if not found then
+    raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
+    v_query := ''alter table '' || p_namespace || ''.'' || p_table || '' add column '';
+    v_query := v_query || p_field || '' '' || p_type || '';'';
+    execute v_query;
+    return ''t'';
+  else
+    return ''f'';
+  end if;
+END;' language plpgsql;
+
+comment on function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
+is 'Add a column of a given type to a table if it is missing';
+
 create or replace function @NAMESPACE@.upgradeSchema(text)
 returns text as '
 
@@ -4945,7 +4990,6 @@ begin
 		execute ''alter table @NAMESPACE@.sl_node add column no_spool boolean'';
 		update @NAMESPACE@.sl_node set no_spool = false;
 	end if;
-
 	return p_old;
 end;
 ' language plpgsql;
@@ -4990,6 +5034,6 @@ create or replace view @NAMESPACE@.sl_status as select
 			where con_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
 			group by 1, 2
 		);
-comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.
-';
+
+comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.';
 
