@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.7 2004-02-26 22:26:59 wieck Exp $
+ *	$Id: local_listen.c,v 1.8 2004-02-27 06:03:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -230,6 +230,19 @@ localListenThread_main(void *dummy)
 				set_comment	= PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeSet(set_id, set_origin, set_comment);
+			}
+			else if (strcmp(ev_type, "SET_ADD_TABLE") == 0)
+			{
+				/*
+				 * SET_ADD_TABLE
+				 */
+
+				/*
+				 * Nothing to do ATM ... we don't support
+				 * adding tables to subscribed sets yet and
+				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
 			}
 			else if (strcmp(ev_type, "SUBSCRIBE_SET") == 0)
 			{

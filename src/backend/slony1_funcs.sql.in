@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.16 2004-02-26 22:26:59 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.17 2004-02-27 06:03:38 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -993,8 +993,6 @@ begin
 			and T.tab_reloid = PGT.tgrelid
 			and PGT.tgname = v_tgname)
 	then
-	    raise notice ''Slony-I: % already define for table %'',
-				v_tgname, p_tab_fqname;
 		return p_tab_id;
 	end if;
 

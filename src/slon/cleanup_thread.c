@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.6 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.7 2004-02-27 06:03:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -72,10 +72,12 @@ cleanupThread_main(void *dummy)
 	 */
 	dstring_init(&query2);
 	slon_mkquery(&query2, 
-			"vacuum %s.sl_event; "
-			"vacuum %s.sl_confirm; "
-			"vacuum %s.sl_log_1; "
-			"vacuum %s.sl_log_2;",
+			"vacuum analyze %s.sl_event; "
+			"vacuum analyze %s.sl_confirm; "
+			"vacuum analyze %s.sl_setsync; "
+			"vacuum analyze %s.sl_log_1; "
+			"vacuum analyze %s.sl_log_2;",
+			rtcfg_namespace, 
 			rtcfg_namespace, 
 			rtcfg_namespace, 
 			rtcfg_namespace, 

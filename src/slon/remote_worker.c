@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.4 2004-02-26 22:27:00 wieck Exp $
+ *	$Id: remote_worker.c,v 1.5 2004-02-27 06:03:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -742,6 +742,15 @@ remoteWorkerThread_main(void *cdata)
 						rtcfg_namespace,
 						set_id, set_origin, set_comment);
 			}
+			else if (strcmp(event->ev_type, "SET_ADD_TABLE") == 0)
+			{
+				/*
+				 * Nothing to do ATM ... we don't support
+				 * adding tables to subscribed sets yet and
+				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
+			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
 			{
 				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
@@ -1057,12 +1066,19 @@ remoteWorker_wakeup(int no_id)
 	SlonNode   *node;
 	SlonWorkMsg *msg;
 
+	/*
+	 * Can't wakeup myself, can I? No, we never have a 
+	 * "remote" worker for our own node ID. 
+	 */
+	if (no_id == rtcfg_nodeid)
+		return;
+
 	rtcfg_lock();
 	node = rtcfg_findNode(no_id);
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		slon_log(SLON_ERROR,
+		slon_log(SLON_DEBUG1,
 				"remoteWorker_wakeup: unknown node %d\n",
 				no_id);
 		return;
@@ -1791,7 +1807,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 		{
 			dstring_addchar(&ssy_action_list, ',');
 			dstring_addchar(&ssy_action_list, '\'');
-			dstring_append(&ssy_action_list, PQgetvalue(res2, 0, 0));
+			dstring_append(&ssy_action_list, PQgetvalue(res2, tupno1, 0));
 			dstring_addchar(&ssy_action_list, '\'');
 		}
 		dstring_terminate(&ssy_action_list);
@@ -1897,8 +1913,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	SlonDString		query;
 	SlonDString	   *provider_qual;
 
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC processing\n",
-			node->no_id);
+	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC %lld processing\n",
+			node->no_id, event->ev_seqno);
 
 	/*
 	 * Establish all required data provider connections
@@ -2099,18 +2115,18 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(provider_qual,
 						"(log_xid > '%s' or"
-						" (log_xid >= '%s' and log_xid in (%s))",
+						" (log_xid >= '%s' and log_xid in (%s)))",
 						ssy_maxxid, ssy_minxid, ssy_xip);
 			else
 				slon_appendquery(provider_qual,
-						"( log_xid >= '%s'",
+						"(log_xid >= '%s')",
 						ssy_minxid);
 			if (strlen(ssy_action_list) != 0)
 				slon_appendquery(provider_qual,
-						" and log_actionseq not in (%s))\n) ",
+						" and log_actionseq not in (%s)\n) ",
 						ssy_action_list);
 			else
-				slon_appendquery(provider_qual, ")\n) ");
+				slon_appendquery(provider_qual, "\n) ");
 
 
 			PQclear(res2);
@@ -2167,9 +2183,28 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			switch (wgline->code)
 			{
 				case SLON_WGLC_ACTION:
-					if (query_execute(node, local_dbconn,
-							&(wgline->data), PGRES_COMMAND_OK) < 0)
+					res1 = PQexec(local_dbconn, dstring_data(&(wgline->data)));
+					if (PQresultStatus(res1) != PGRES_COMMAND_OK)
+					{
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+								"\"%s\" %s",
+								node->no_id, dstring_data(&(wgline->data)),
+								PQresultErrorMessage(res1));
 						num_errors++;
+					}
+					else
+					{
+						if (strtol(PQcmdTuples(res1), NULL, 10) != 1)
+						{
+							slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+									"replication query did not affect "
+									"one data row (cmdTuples = %s) - "
+									"query was: %s",
+									node->no_id, PQcmdTuples(res1),
+									dstring_data(&(wgline->data)));
+							num_errors++;
+						}
+					}
 					break;
 
 				case SLON_WGLC_DONE:
@@ -2309,8 +2344,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Good job!
 	 */
 	dstring_free(&query);
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC done\n",
-			node->no_id);
+	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC %lld done\n",
+			node->no_id, event->ev_seqno);
 	return 0;
 }
 
@@ -2355,12 +2390,10 @@ sync_helper(void *cdata)
 			continue;
 		}
 
-		slon_log(SLON_DEBUG1, "remoteHelperThread_%d_%d: "
-				"got work to do for qualification\n%s\n",
-				node->no_id, provider->no_id,
-				dstring_data(&(provider->helper_qualification)));
+		/*
+		 * OK, we got work to do.
+		 */
 		dbconn = provider->conn->dbconn;
-
 		pthread_mutex_unlock(&(provider->helper_lock));
 
 		errors = 0;
@@ -2487,21 +2520,30 @@ sync_helper(void *cdata)
 					{
 						case 'I':
 							slon_mkquery(&(line->data),
+									"-- log_xid %s\n"
+									"-- log_actionseq %s\n"
 									"insert into %s %s;",
+									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
 
 						case 'U':
 							slon_mkquery(&(line->data),
+									"-- log_xid %s\n"
+									"-- log_actionseq %s\n"
 									"update %s set %s;",
+									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
 
 						case 'D':
 							slon_mkquery(&(line->data),
+									"-- log_xid %s\n"
+									"-- log_actionseq %s\n"
 									"delete from %s where %s;",
+									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
