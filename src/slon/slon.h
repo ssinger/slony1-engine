@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.41 2004-11-13 04:52:47 wieck Exp $
+ *	$Id: slon.h,v 1.42 2004-12-10 23:53:15 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "misc.h"
+#include "conf-file.h"
 
 #define SLON_MEMDEBUG	1
 
@@ -405,7 +406,6 @@ extern int		vac_frequency;
  * ----------
  */
 extern void	   *cleanupThread_main(void *dummy);
-
 
 /* ----------
  * Global variables in sync_thread.c
