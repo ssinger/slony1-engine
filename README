@@ -18,7 +18,7 @@ Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 Slony must be built and installed by the PostgreSQL Unix user.  The
 installation target must be identical to the existing PostgreSQL
 installation.  [[and the original PostgreSQL source tree must be
-available - soon to becom unnecessary]].  
+available - soon to become unnecessary]].  
 
 On certain platforms (AIX and Solaris are amongst these), PostgreSQL
 must be configured with the option --enable-thread-safety to provide
