@@ -3705,7 +3705,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile.global src/slon/Makefile"
+ac_config_files="$ac_config_files Makefile.global src/slon/Makefile src/slonik/Makefile"
 
 
 ac_config_links="$ac_config_links Makefile.port:makefiles/Makefile.${template}"
@@ -4187,6 +4187,7 @@ do
   # Handling of arguments.
   "Makefile.global" ) CONFIG_FILES="$CONFIG_FILES Makefile.global" ;;
   "src/slon/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/slon/Makefile" ;;
+  "src/slonik/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/slonik/Makefile" ;;
   "Makefile.port" ) CONFIG_LINKS="$CONFIG_LINKS Makefile.port:makefiles/Makefile.${template}" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
