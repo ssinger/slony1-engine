@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.18 2005-02-25 20:49:06 cbbrowne Exp $
+ *	$Id: scheduler.c,v 1.19 2005-03-10 23:11:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -15,10 +15,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -36,7 +36,6 @@
 #define PF_LOCAL PF_UNIX
 #endif
 
-
 /*
  * ---------- Static data ----------
  */
@@ -45,7 +44,6 @@ static int	sched_status = SCHED_STATUS_OK;
 static int	sched_numfd = 0;
 static fd_set sched_fdset_read;
 static fd_set sched_fdset_write;
-static int	sched_wakeuppipe[2];
 static SlonConn *sched_waitqueue_head = NULL;
 static SlonConn *sched_waitqueue_tail = NULL;
 
@@ -55,17 +53,14 @@ static pthread_t sched_scheduler_thread;
 static pthread_mutex_t sched_master_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t sched_master_cond = PTHREAD_COND_INITIALIZER;
 
-static sigset_t sched_sigset;
-
 
 /*
  * ---------- Local functions ----------
  */
 static void *sched_mainloop(void *);
-static void sched_sighandler(int signo);
-static void sched_sighuphandler(int signo);
 static void sched_add_fdset(int fd, fd_set * fds);
 static void sched_remove_fdset(int fd, fd_set * fds);
+static void sched_shutdown();
 
 
 /*
@@ -83,16 +78,6 @@ sched_start_mainloop(void)
 	 * Remember the main threads identifier
 	 */
 	sched_main_thread = pthread_self();
-
-	/*
-	 * Block signals. Since sched_start_mainloop() is called before any other
-	 * thread is created, this will be inherited by all threads in the system.
-	 */
-	sigemptyset(&sched_sigset);
-	sigaddset(&sched_sigset, SIGHUP);
-	sigaddset(&sched_sigset, SIGINT);
-	sigaddset(&sched_sigset, SIGTERM);
-	pthread_sigmask(SIG_BLOCK, &sched_sigset, NULL);
 
 	/*
 	 * Grab the scheduler master lock
@@ -153,32 +138,6 @@ sched_start_mainloop(void)
 int
 sched_wait_mainloop(void)
 {
-	int			signo;
-
-	/*
-	 * Wait for signal.
-	 */
-	sigemptyset(&sched_sigset);
-	sigaddset(&sched_sigset, SIGHUP);
-	sigaddset(&sched_sigset, SIGINT);
-	sigaddset(&sched_sigset, SIGTERM);
-	sigwait(&sched_sigset, &signo);
-
-	sigemptyset(&sched_sigset);
-	pthread_sigmask(SIG_SETMASK, &sched_sigset, NULL);
-
-	switch (signo)
-	{
-		case SIGHUP:
-			sched_sighuphandler(signo);
-			break;
-
-		case SIGINT:
-		case SIGTERM:
-			sched_sighandler(signo);
-			break;
-	}
-
 	/*
 	 * Wait for the scheduler to finish.
 	 */
@@ -413,17 +372,6 @@ sched_mainloop(void *dummy)
 	FD_ZERO(&sched_fdset_read);
 	FD_ZERO(&sched_fdset_write);
 
-	/*
-	 * Create a pipe used by the main thread to cleanly wakeup the scheduler
-	 * on signals.
-	 */
-	if (pipe(sched_wakeuppipe) < 0)
-	{
-		perror("sched_mainloop: pipe()");
-		sched_status = SCHED_STATUS_ERROR;
-		pthread_cond_signal(&sched_master_cond);
-		pthread_exit(NULL);
-	}
 	sched_add_fdset(sched_wakeuppipe[0], &sched_fdset_read);
 
 	/*
@@ -575,6 +523,11 @@ sched_mainloop(void *dummy)
 				sched_status = SCHED_STATUS_ERROR;
 				break;
 			}
+
+			if (buf[0] == 'p')
+			{
+				sched_status = SCHED_STATUS_SHUTDOWN;
+			}
 		}
 
 		/*
@@ -644,9 +597,13 @@ sched_mainloop(void *dummy)
 	 * close the scheduler heads-up socket pair so nobody will think we're
 	 * listening any longer.
 	 */
+
+	/*
 	close(sched_wakeuppipe[0]);
+	sched_wakeuppipe[0] = -1;
 	close(sched_wakeuppipe[1]);
-	sched_wakeuppipe[0] = sched_wakeuppipe[1] = -1;
+	sched_wakeuppipe[1] = -1;
+	*/
 
 	/*
 	 * Then we cond_signal all connections that are in the queue.
@@ -692,7 +649,7 @@ sched_mainloop(void *dummy)
  * conditions with signals. ----------
  */
 static void
-sched_sighandler(int signo)
+sched_shutdown()
 {
 	/*
 	 * Lock the master mutex and make sure that we are the main thread
@@ -732,13 +689,6 @@ sched_sighandler(int signo)
 	pthread_mutex_unlock(&sched_master_lock);
 }
 
-
-static void
-sched_sighuphandler(int signo)
-{
-	slon_restart_request = true;
-	sched_sighandler(signo);
-}
 
 
 /*

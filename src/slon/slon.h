@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.47 2005-03-08 22:52:37 darcyb Exp $
+ *	$Id: slon.h,v 1.48 2005-03-10 23:11:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -324,6 +324,8 @@ do { \
  * ----------
  */
 extern pid_t slon_pid;
+extern pid_t slon_ppid;
+extern pid_t slon_cpid;
 extern char *rtcfg_cluster_name;
 extern char *rtcfg_namespace;
 extern char *rtcfg_conninfo;
@@ -344,16 +346,18 @@ extern SlonSet *rtcfg_set_list_tail;
  */
 #define slon_abort() \
 do { \
-	kill(slon_pid, SIGTERM); \
+	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGTERM); \
 	pthread_exit(NULL); \
 } while (0)
 #define slon_restart() \
 do { \
-	kill(slon_pid, SIGHUP); \
+	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGHUP); \
 } while (0)
 extern void slon_exit(int code);
 
 extern int	slon_restart_request;
+extern int watchdog_pipe[];
+extern int sched_wakeuppipe[];
 extern pthread_mutex_t slon_wait_listen_lock;
 extern pthread_cond_t slon_wait_listen_cond;
 

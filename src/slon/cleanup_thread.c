@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.20 2005-03-07 23:27:03 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.21 2005-03-10 23:11:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -67,6 +67,7 @@ cleanupThread_main(void *dummy)
 	{
 		kill(getpid(), SIGTERM);
 		pthread_exit(NULL);
+		/* slon_abort(); */
 	}
 	dbconn = conn->dbconn;
 

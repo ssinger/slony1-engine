@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.45 2005-02-18 00:15:57 darcyb Exp $
+ *	$Id: slon.c,v 1.46 2005-03-10 23:11:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,11 +32,11 @@
 /*
  * ---------- Global data ----------
  */
-int			slon_restart_request = false;
+int			watchdog_pipe[2];
+int			sched_wakeuppipe[2];
 
 pthread_mutex_t slon_wait_listen_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t slon_wait_listen_cond = PTHREAD_COND_INITIALIZER;
-
 
 /*
  * ---------- Local data ----------
@@ -51,11 +51,16 @@ static pthread_t local_snmp_thread;
 
 static pthread_t main_thread;
 static char *const *main_argv;
-static void sigalrmhandler(int signo);
+
+static void sighandler(int signo);
+static void main_sigalrmhandler(int signo);
+static void slon_kill_child(void);
 
 int			slon_log_level;
 char	   *pid_file;
 char	   *archive_dir = NULL;
+int			child_status;
+
 
 /*
  * ---------- main ----------
@@ -72,12 +77,14 @@ main(int argc, char *const argv[])
 	PGconn	   *startup_conn;
 	int			c;
 	int			errors = 0;
+	int			signo;
+	char		pipe_c;
+	pid_t		pid;
 	extern int	optind;
 	extern char *optarg;
-
+	struct sigaction act;
 
 	InitializeConfOptions();
-
 
 	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:hv")) != EOF)
 	{
@@ -146,6 +153,9 @@ main(int argc, char *const argv[])
 	 * identifier
 	 */
 	slon_pid = getpid();
+	slon_cpid = 0;
+	slon_ppid = 0;
+	main_argv = argv;
 
 	if ((char *)argv[optind])
 	{
@@ -214,7 +224,7 @@ main(int argc, char *const argv[])
 	}
 	if (PQstatus(startup_conn) != CONNECTION_OK)
 	{
-		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s",
+		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s\n",
 				 PQerrorMessage(startup_conn));
 		PQfinish(startup_conn);
 		slon_exit(-1);
@@ -252,360 +262,604 @@ main(int argc, char *const argv[])
 		}
 	}
 
-
 	/*
-	 * Start the event scheduling system
+	 * Pipes to be used as communication devices between the parent (watchdog)
+	 * and child (worker) processes.
 	 */
-	slon_log(SLON_CONFIG, "main: launching sched_start_mainloop\n");
-	if (sched_start_mainloop() < 0)
-		slon_exit(-1);
-
-	slon_log(SLON_CONFIG, "main: loading current cluster configuration\n");
-
-	/*
-	 * Begin a transaction
-	 */
-	res = PQexec(startup_conn,
-				 "start transaction; "
-				 "set transaction isolation level serializable;");
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	if (pipe(watchdog_pipe) < 0)
 	{
-		slon_log(SLON_FATAL, "Cannot start transaction - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
+		slon_log(SLON_FATAL, "slon: parent pipe create failed -(%d) %s\n", errno,strerror(errno));
 		slon_exit(-1);
 	}
-	PQclear(res);
-
-	/*
-	 * Read configuration table sl_node
-	 */
-	dstring_init(&query);
-	slon_mkquery(&query,
-				 "select no_id, no_active, no_comment, "
-				 "    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
-				 "        where con_origin = no_id and con_received = %d) "
-				 "        as last_event "
-				 "from %s.sl_node "
-				 "order by no_id; ",
-				 rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	if (pipe(sched_wakeuppipe) < 0)
 	{
-		slon_log(SLON_FATAL, "main: Cannot get node list - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
+		slon_log(SLON_FATAL, "slon: sched_wakeuppipe create failed -(%d) %s\n", errno,strerror(errno));
 		slon_exit(-1);
 	}
-	for (i = 0, n = PQntuples(res); i < n; i++)
-	{
-		int			no_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int			no_active = (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
-		char	   *no_comment = PQgetvalue(res, i, 2);
-		int64		last_event;
 
-		if (no_id == rtcfg_nodeid)
+	/*
+	 * Fork here to allow parent process to trap signals and child process to 
+	 * handle real processing work creating a watchdog and worker process
+	 * hierarchy
+	 */
+	if ((slon_cpid = fork()) < 0)
+	{
+		slon_log(SLON_FATAL, "Fork failed -(%d) %s\n", errno,strerror(errno));
+		slon_exit(-1);
+	}
+	else if (slon_cpid == 0) /* child */
+	{
+		slon_pid = getpid();
+		slon_ppid = getppid();
+
+		slon_log(SLON_DEBUG2, "main: main process started\n");
+		/*
+		 * Wait for the parent process to initialize
+		 */
+		if (read(watchdog_pipe[0], &pipe_c, 1) != 1)
 		{
-			/*
-			 * Complete our own local node entry
-			 */
-			rtcfg_nodeactive = no_active;
-			rtcfg_nodecomment = strdup(no_comment);
+			slon_log(SLON_FATAL, "main: read from parent pipe failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
 		}
+
+		if (pipe_c != 'p')
+		{
+			slon_log(SLON_FATAL, "main: incorrect data from parent pipe -(%c)\n",pipe_c);
+			slon_exit(-1);
+		}
+
+		slon_log(SLON_DEBUG2, "main: begin signal handler setup\n");
+
+		if (signal(SIGHUP,SIG_IGN) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGHUP signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGINT,SIG_IGN) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGINT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGTERM,SIG_IGN) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGTERM signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGCHLD,SIG_IGN) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGCHLD signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGQUIT,SIG_IGN) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+
+		slon_log(SLON_DEBUG2, "main: end signal handler setup\n");
+
+		/*
+		 * Start the event scheduling system
+		 */
+		slon_log(SLON_CONFIG, "main: launching sched_start_mainloop\n");
+		if (sched_start_mainloop() < 0)
+			slon_exit(-1);
+
+		slon_log(SLON_CONFIG, "main: loading current cluster configuration\n");
+
+		/*
+		 * Begin a transaction
+		 */
+		res = PQexec(startup_conn,
+					 "start transaction; "
+					 "set transaction isolation level serializable;");
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_FATAL, "Cannot start transaction - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			slon_exit(-1);
+		}
+		PQclear(res);
+
+		/*
+		 * Read configuration table sl_node
+		 */
+		dstring_init(&query);
+		slon_mkquery(&query,
+					 "select no_id, no_active, no_comment, "
+					 "    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
+					 "        where con_origin = no_id and con_received = %d) "
+					 "        as last_event "
+					 "from %s.sl_node "
+					 "order by no_id; ",
+					 rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
+		res = PQexec(startup_conn, dstring_data(&query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_FATAL, "main: Cannot get node list - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			dstring_free(&query);
+			slon_exit(-1);
+		}
+		for (i = 0, n = PQntuples(res); i < n; i++)
+		{
+			int			no_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+			int			no_active = (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
+			char	   *no_comment = PQgetvalue(res, i, 2);
+			int64		last_event;
+
+			if (no_id == rtcfg_nodeid)
+			{
+				/*
+				 * Complete our own local node entry
+				 */
+				rtcfg_nodeactive = no_active;
+				rtcfg_nodecomment = strdup(no_comment);
+			}
+			else
+			{
+				/*
+				 * Add a remote node
+				 */
+				slon_scanint64(PQgetvalue(res, i, 3), &last_event);
+				rtcfg_storeNode(no_id, no_comment);
+				rtcfg_setNodeLastEvent(no_id, last_event);
+
+				/*
+				 * If it is active, remember for activation just before we start
+				 * processing events.
+				 */
+				if (no_active)
+					rtcfg_needActivate(no_id);
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Read configuration table sl_path - the interesting pieces
+		 */
+		slon_mkquery(&query,
+					 "select pa_server, pa_conninfo, pa_connretry "
+					 "from %s.sl_path where pa_client = %d",
+					 rtcfg_namespace, rtcfg_nodeid);
+		res = PQexec(startup_conn, dstring_data(&query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_FATAL, "main: Cannot get path config - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			dstring_free(&query);
+			slon_exit(-1);
+		}
+		for (i = 0, n = PQntuples(res); i < n; i++)
+		{
+			int			pa_server = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+			char	   *pa_conninfo = PQgetvalue(res, i, 1);
+			int			pa_connretry = (int)strtol(PQgetvalue(res, i, 2), NULL, 10);
+
+			rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+		}
+		PQclear(res);
+
+		/*
+		 * Load the initial listen configuration
+		 */
+		rtcfg_reloadListen(startup_conn);
+
+		/*
+		 * Read configuration table sl_set
+		 */
+		slon_mkquery(&query,
+					 "select set_id, set_origin, set_comment "
+					 "from %s.sl_set",
+					 rtcfg_namespace);
+		res = PQexec(startup_conn, dstring_data(&query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_FATAL, "main: Cannot get set config - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			dstring_free(&query);
+			slon_exit(-1);
+		}
+		for (i = 0, n = PQntuples(res); i < n; i++)
+		{
+			int			set_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+			int			set_origin = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+			char	   *set_comment = PQgetvalue(res, i, 2);
+
+			rtcfg_storeSet(set_id, set_origin, set_comment);
+		}
+		PQclear(res);
+
+		/*
+		 * Read configuration table sl_subscribe - only subscriptions for local node
+		 */
+		slon_mkquery(&query,
+					 "select sub_set, sub_provider, sub_forward, sub_active "
+					 "from %s.sl_subscribe "
+					 "where sub_receiver = %d",
+					 rtcfg_namespace, rtcfg_nodeid);
+		res = PQexec(startup_conn, dstring_data(&query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_FATAL, "main: Cannot get subscription config - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			dstring_free(&query);
+			slon_exit(-1);
+		}
+		for (i = 0, n = PQntuples(res); i < n; i++)
+		{
+			int			sub_set = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+			int			sub_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+			char	   *sub_forward = PQgetvalue(res, i, 2);
+			char	   *sub_active = PQgetvalue(res, i, 3);
+
+			rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
+			if (*sub_active == 't')
+				rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
+		}
+		PQclear(res);
+
+		/*
+		 * Remember the last known local event sequence
+		 */
+		slon_mkquery(&query,
+					 "select coalesce(max(ev_seqno), -1) from %s.sl_event "
+					 "where ev_origin = '%d'",
+					 rtcfg_namespace, rtcfg_nodeid);
+		res = PQexec(startup_conn, dstring_data(&query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_FATAL, "main: Cannot get last local eventid - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			dstring_free(&query);
+			slon_exit(-1);
+		}
+		if (PQntuples(res) == 0)
+			strcpy(rtcfg_lastevent, "-1");
+		else if (PQgetisnull(res, 0, 0))
+			strcpy(rtcfg_lastevent, "-1");
 		else
+			strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
+		PQclear(res);
+		dstring_free(&query);
+		slon_log(SLON_DEBUG2,
+				 "main: last local event sequence = %s\n",
+				 rtcfg_lastevent);
+
+		/*
+		 * Rollback the transaction we used to get the config snapshot
+		 */
+		res = PQexec(startup_conn, "rollback transaction;");
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
-			/*
-			 * Add a remote node
-			 */
-			slon_scanint64(PQgetvalue(res, i, 3), &last_event);
-			rtcfg_storeNode(no_id, no_comment);
-			rtcfg_setNodeLastEvent(no_id, last_event);
-
-			/*
-			 * If it is active, remember for activation just before we start
-			 * processing events.
-			 */
-			if (no_active)
-				rtcfg_needActivate(no_id);
+			slon_log(SLON_FATAL, "main: Cannot rollback transaction - %s\n",
+					 PQresultErrorMessage(res));
+			PQclear(res);
+			slon_exit(-1);
 		}
-	}
-	PQclear(res);
-
-	/*
-	 * Read configuration table sl_path - the interesting pieces
-	 */
-	slon_mkquery(&query,
-				 "select pa_server, pa_conninfo, pa_connretry "
-				 "from %s.sl_path where pa_client = %d",
-				 rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot get path config - %s",
-				 PQresultErrorMessage(res));
 		PQclear(res);
-		dstring_free(&query);
-		slon_exit(-1);
-	}
-	for (i = 0, n = PQntuples(res); i < n; i++)
-	{
-		int			pa_server = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		char	   *pa_conninfo = PQgetvalue(res, i, 1);
-		int			pa_connretry = (int)strtol(PQgetvalue(res, i, 2), NULL, 10);
 
-		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
-	}
-	PQclear(res);
+		/*
+		 * Done with the startup, don't need the local connection any more.
+		 */
+		PQfinish(startup_conn);
 
-	/*
-	 * Load the initial listen configuration
-	 */
-	rtcfg_reloadListen(startup_conn);
+		slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
-	/*
-	 * Read configuration table sl_set
-	 */
-	slon_mkquery(&query,
-				 "select set_id, set_origin, set_comment "
-				 "from %s.sl_set",
-				 rtcfg_namespace);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot get set config - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
-		slon_exit(-1);
-	}
-	for (i = 0, n = PQntuples(res); i < n; i++)
-	{
-		int			set_id = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int			set_origin = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
-		char	   *set_comment = PQgetvalue(res, i, 2);
+		/*
+		 * Create the local event thread that monitors the local node
+		 * for administrative events to adjust the configuration at
+		 * runtime. We wait here until the local listen thread has
+		 * checked that there is no other slon daemon running.
+		 */
+		pthread_mutex_lock(&slon_wait_listen_lock);
+		if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
+		{
+			slon_log(SLON_FATAL, "main: cannot create localListenThread - %s\n",
+					 strerror(errno));
+			slon_abort();
+		}
+		pthread_cond_wait(&slon_wait_listen_cond, &slon_wait_listen_lock);
+		pthread_mutex_unlock(&slon_wait_listen_lock);
 
-		rtcfg_storeSet(set_id, set_origin, set_comment);
-	}
-	PQclear(res);
+		/*
+		 * Enable all nodes that are active
+		 */
+		rtcfg_doActivate();
 
-	/*
-	 * Read configuration table sl_subscribe - only subscriptions for local node
-	 */
-	slon_mkquery(&query,
-				 "select sub_set, sub_provider, sub_forward, sub_active "
-				 "from %s.sl_subscribe "
-				 "where sub_receiver = %d",
-				 rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot get subscription config - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
-		slon_exit(-1);
-	}
-	for (i = 0, n = PQntuples(res); i < n; i++)
-	{
-		int			sub_set = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int			sub_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
-		char	   *sub_forward = PQgetvalue(res, i, 2);
-		char	   *sub_active = PQgetvalue(res, i, 3);
+		/*
+		 * Create the local cleanup thread that will remove old events and log
+		 * data.
+		 */
+		if (pthread_create(&local_cleanup_thread, NULL, cleanupThread_main, NULL) < 0)
+		{
+			slon_log(SLON_FATAL, "main: cannot create cleanupThread - %s\n",
+					 strerror(errno));
+			slon_abort();
+		}
 
-		rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
-		if (*sub_active == 't')
-			rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
-	}
-	PQclear(res);
-
-	/*
-	 * Remember the last known local event sequence
-	 */
-	slon_mkquery(&query,
-				 "select coalesce(max(ev_seqno), -1) from %s.sl_event "
-				 "where ev_origin = '%d'",
-				 rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot get last local eventid - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
-		slon_exit(-1);
-	}
-	if (PQntuples(res) == 0)
-		strcpy(rtcfg_lastevent, "-1");
-	else if (PQgetisnull(res, 0, 0))
-		strcpy(rtcfg_lastevent, "-1");
-	else
-		strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
-	PQclear(res);
-	dstring_free(&query);
-	slon_log(SLON_DEBUG2,
-			 "main: last local event sequence = %s\n",
-			 rtcfg_lastevent);
-
-	/*
-	 * Rollback the transaction we used to get the config snapshot
-	 */
-	res = PQexec(startup_conn, "rollback transaction;");
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot rollback transaction - %s",
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		slon_exit(-1);
-	}
-	PQclear(res);
-
-	/*
-	 * Done with the startup, don't need the local connection any more.
-	 */
-	PQfinish(startup_conn);
-
-	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
-
-	/*
-	 * Create the local event thread that monitors the local node
-	 * for administrative events to adjust the configuration at
-	 * runtime. We wait here until the local listen thread has
-	 * checked that there is no other slon daemon running.
-	 */
-	pthread_mutex_lock(&slon_wait_listen_lock);
-	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
-	{
-		slon_log(SLON_FATAL, "main: cannot create localListenThread - %s\n",
-				 strerror(errno));
-		slon_abort();
-	}
-	pthread_cond_wait(&slon_wait_listen_cond, &slon_wait_listen_lock);
-	pthread_mutex_unlock(&slon_wait_listen_lock);
-
-	/*
-	 * Enable all nodes that are active
-	 */
-	rtcfg_doActivate();
-
-	/*
-	 * Create the local cleanup thread that will remove old events and log
-	 * data.
-	 */
-	if (pthread_create(&local_cleanup_thread, NULL, cleanupThread_main, NULL) < 0)
-	{
-		slon_log(SLON_FATAL, "main: cannot create cleanupThread - %s\n",
-				 strerror(errno));
-		slon_abort();
-	}
-
-	/*
-	 * Create the local sync thread that will generate SYNC events if we had
-	 * local database updates.
-	 */
-	if (pthread_create(&local_sync_thread, NULL, syncThread_main, NULL) < 0)
-	{
-		slon_log(SLON_FATAL, "main: cannot create syncThread - %s\n",
-				 strerror(errno));
-		slon_abort();
-	}
+		/*
+		 * Create the local sync thread that will generate SYNC events if we had
+		 * local database updates.
+		 */
+		if (pthread_create(&local_sync_thread, NULL, syncThread_main, NULL) < 0)
+		{
+			slon_log(SLON_FATAL, "main: cannot create syncThread - %s\n",
+					 strerror(errno));
+			slon_abort();
+		}
 #ifdef HAVE_NETSNMP
-	if (pthread_create(&local_snmp_thread, NULL, snmpThread_main, NULL) < 0)
-	{
-		slon_log(SLON_FATAL, "main: cannot create snmpThread -%s\n",
-				strerror(errno));
-		slon_abort();
-	}
+		if (pthread_create(&local_snmp_thread, NULL, snmpThread_main, NULL) < 0)
+		{
+			slon_log(SLON_FATAL, "main: cannot create snmpThread -%s\n",
+					strerror(errno));
+			slon_abort();
+		}
 #endif
-	/*
-	 * Wait until the scheduler has shut down all remote connections
-	 */
-	slon_log(SLON_DEBUG1, "main: running scheduler mainloop\n");
-	if (sched_wait_mainloop() < 0)
-	{
-		slon_log(SLON_FATAL, "main: scheduler returned with error\n");
-		slon_abort();
-	}
-	slon_log(SLON_DEBUG1, "main: scheduler mainloop returned\n");
+		/*
+		 * Wait until the scheduler has shut down all remote connections
+		 */
+		slon_log(SLON_DEBUG1, "main: running scheduler mainloop\n");
+		if (sched_wait_mainloop() < 0)
+		{
+			slon_log(SLON_FATAL, "main: scheduler returned with error\n");
+			slon_abort();
+		}
+		slon_log(SLON_DEBUG1, "main: scheduler mainloop returned\n");
 
-	/*
-	 * Wait for all remote threads to finish
-	 */
-	main_thread = pthread_self();
-	main_argv = argv;
-	signal(SIGALRM, sigalrmhandler);
-	alarm(20);
+		/*
+		 * Wait for all remote threads to finish
+		 */
+		main_thread = pthread_self();
+		signal(SIGALRM, main_sigalrmhandler);
+		alarm(20);
 
-	rtcfg_joinAllRemoteThreads();
+		slon_log(SLON_DEBUG2, "main: wait for remote threads\n");
+		rtcfg_joinAllRemoteThreads();
 
-	alarm(0);
+		alarm(0);
 
-	/*
-	 * Wait for the local threads to finish
-	 */
-	if (pthread_join(local_event_thread, NULL) < 0)
-		slon_log(SLON_ERROR, "main: cannot join localListenThread - %s\n",
-				 strerror(errno));
+		/*
+		 * Wait for the local threads to finish
+		 */
+		if (pthread_join(local_event_thread, NULL) < 0)
+			slon_log(SLON_ERROR, "main: cannot join localListenThread - %s\n",
+					 strerror(errno));
 
-	if (pthread_join(local_cleanup_thread, NULL) < 0)
-		slon_log(SLON_ERROR, "main: cannot join cleanupThread - %s\n",
-				 strerror(errno));
+		if (pthread_join(local_cleanup_thread, NULL) < 0)
+			slon_log(SLON_ERROR, "main: cannot join cleanupThread - %s\n",
+					 strerror(errno));
 
-	if (pthread_join(local_sync_thread, NULL) < 0)
-		slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
-				 strerror(errno));
+		if (pthread_join(local_sync_thread, NULL) < 0)
+			slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
+					 strerror(errno));
 
 #ifdef HAVE_NETSNMP
-	if (pthread_kill(local_snmp_thread, SIGINT) < 0)
-		slon_log(SLON_ERROR, "main: cannot join snmpThread - %s\n",
-				strerror(errno));
+		if (pthread_kill(local_snmp_thread, SIGINT) < 0)
+			slon_log(SLON_ERROR, "main: cannot join snmpThread - %s\n",
+					strerror(errno));
 #endif
-	if (slon_restart_request)
-	{
-		slon_log(SLON_DEBUG1, "main: restart requested\n");
-		execvp(argv[0], argv);
-		slon_log(SLON_FATAL,
-				 "main: cannot restart via execvp(): %s\n", strerror(errno));
-		exit(-1);
+
+		/*
+		 * Tell parent that worker is done
+		 */
+		slon_log(SLON_DEBUG2, "main: notify parent that worker is done\n");
+
+		if (write(watchdog_pipe[1], "c", 1) != 1)
+		{
+			slon_log(SLON_FATAL, "main: write to watchdog pipe failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+
+		slon_log(SLON_DEBUG1, "main: done\n");
+
+		exit(0);
 	}
-
-	/*
-	 * That's it.
-	 */
-	slon_log(SLON_DEBUG1, "main: done\n");
-	return 0;
-}
-
-
-void
-slon_exit(int code)
-{
-	if (pid_file)
+	else /* parent */
 	{
-		unlink(pid_file);
+		slon_log(SLON_DEBUG2, "slon: watchdog process started\n");
+
+		/* 
+		 * Install signal handlers 
+		 */
+		
+		slon_log(SLON_DEBUG2, "slon: begin signal handler setup\n");
+
+		act.sa_handler = &sighandler; 
+		sigemptyset(&act.sa_mask);
+		act.sa_flags = SA_NOMASK;
+
+		if (sigaction(SIGHUP,&act,NULL) < 0)
+		{
+			slon_log(SLON_FATAL, "slon: SIGHUP signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGINT,sighandler) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGINT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGTERM,sighandler) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGTERM signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGCHLD,sighandler) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGCHLD signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		if (signal(SIGQUIT,sighandler) == SIG_ERR)
+		{
+			slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+		
+		slon_log(SLON_DEBUG2, "slon: end signal handler setup\n");
+
+		/*
+		 * Tell worker/scheduler that parent has completed initialization
+		 */
+		if (write(watchdog_pipe[1], "p", 1) != 1)
+		{
+			slon_log(SLON_FATAL, "slon: write to pipe failed -(%d) %s\n", errno,strerror(errno));
+			slon_exit(-1);
+		}
+
+		slon_log(SLON_DEBUG2, "slon: wait for main child process\n");
+
+		while ((pid = wait(&child_status)) != slon_cpid)
+		{
+			slon_log(SLON_DEBUG2, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_cpid);
+		}
+
+		slon_log(SLON_DEBUG1, "slon: done\n");
+	
+		/*
+		 * That's it.
+		 */
+		slon_exit(0);
 	}
-	exit(code);
 }
 
 
 static void
-sigalrmhandler(int signo)
+main_sigalrmhandler(int signo)
 {
 	if (main_thread == pthread_self())
 	{
 		alarm(0);
-
-		slon_log(SLON_WARN, "main: shutdown timeout\n");
-		if (slon_restart_request)
-		{
-			execvp(main_argv[0], main_argv);
-			slon_log(SLON_FATAL,
-				 "main: cannot restart via execvp(): %s\n", strerror(errno));
-		}
+		slon_log(SLON_WARN, "main: shutdown timeout exiting\n");
+		kill(slon_ppid,SIGQUIT);
 		exit(-1);
 	}
-	pthread_kill(main_thread, SIGALRM);
+	else
+	{
+		slon_log(SLON_WARN, "main: force SIGALRM the main thread\n");
+		pthread_kill(main_thread,SIGALRM);
+	}
 }
+
+static void
+sighandler(int signo)
+{
+	switch (signo)
+	{
+	case SIGALRM:
+	case SIGCHLD:
+		break;
+		
+	case SIGHUP:
+		slon_log(SLON_DEBUG1, "slon: restart requested\n");
+		slon_kill_child();
+		execvp(main_argv[0], main_argv);
+		slon_log(SLON_FATAL, "slon: cannot restart via execvp(): %s\n", strerror(errno));
+		slon_exit(-1);
+		break;
+
+	case SIGINT:
+	case SIGTERM:
+		slon_log(SLON_DEBUG1, "slon: shutdown requested\n");
+		slon_kill_child();
+		slon_exit(-1);
+		break;
+
+	case SIGQUIT:
+		slon_log(SLON_DEBUG1, "slon: shutdown now requested\n");
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+		break;
+	}
+}
+
+void
+slon_kill_child()
+{
+	char			pipe_c;
+	struct timeval	tv;
+	fd_set			fds;
+	int				rc;
+	int				fd;
+
+	if (slon_cpid == 0) return;
+
+	tv.tv_sec = 60;
+	tv.tv_usec = 0;
+
+	slon_log(SLON_DEBUG2, "slon: notify worker process to shutdown\n");
+
+	fd = sched_wakeuppipe[1];
+	FD_ZERO(&fds);
+	FD_SET(fd,&fds);
+
+	rc = select(fd + 1, NULL, &fds, NULL, &tv);
+
+	if (rc == 0 || rc < 0)
+	{
+		slon_log(SLON_DEBUG2, "slon: select write to worker timeout\n");
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+	}
+	
+	if (write(sched_wakeuppipe[1], "p", 1) != 1)
+	{
+		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno,strerror(errno));
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+	}
+
+	slon_log(SLON_DEBUG2, "slon: wait for worker process to shutdown\n");
+
+	fd = watchdog_pipe[0];
+	FD_ZERO(&fds);
+	FD_SET(fd,&fds);
+
+	rc = select(fd + 1, &fds, NULL, NULL, &tv);
+
+	if (rc == 0 || rc < 0)
+	{
+		slon_log(SLON_DEBUG2, "slon: select read from worker pipe timeout\n");
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+	}
+	
+	if (read(watchdog_pipe[0], &pipe_c, 1) != 1)
+	{
+		slon_log(SLON_FATAL, "slon: read from worker pipe failed -(%d) %s\n", errno,strerror(errno));
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+	}
+
+	if (pipe_c != 'c')
+	{
+		slon_log(SLON_FATAL, "slon: incorrect data from worker pipe -(%c)\n",pipe_c);
+		kill(slon_cpid,SIGKILL);
+		slon_exit(-1);
+	}
+
+	slon_log(SLON_DEBUG2, "slon: worker process shutdown ok\n");
+}
+
+void
+slon_exit(int code)
+{
+	if (slon_ppid == 0 && pid_file)
+	{
+		slon_log(SLON_DEBUG2, "slon: remove pid file\n");
+		unlink(pid_file);
+	}
+
+	slon_log(SLON_DEBUG2, "slon: exit(%d)\n",code);
+
+	exit(code);
+}
+
 
 /*
  * Local Variables:

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.29 2005-01-12 17:27:10 darcyb Exp $
+ *	$Id: local_listen.c,v 1.30 2005-03-10 23:11:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -160,7 +160,7 @@ localListenThread_main(void *dummy)
 			slon_log(SLON_INFO,
 					 "localListenThread: got restart notification - "
 					 "signal scheduler\n");
-			slon_restart();
+			kill(getppid(), SIGHUP);
 		}
 
 		/*
