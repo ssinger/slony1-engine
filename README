@@ -12,14 +12,16 @@ And now, the contents.
 
 1.  Build and install
 
-Slony currently supports PostgreSQL 7.3.x, 7.4.x, and 8.x.
+Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
 Slony must be built and installed by the PostgreSQL Unix user.  The
-installation target will be identical to the existing PostgreSQL
-installation and the original PostgreSQL source tree must be
-available.  On certain platforms (AIX and Solaris are amongst these),
-PostgreSQL must be configured with the option --enable-thread-safety
-to provide correct client libraries.  
+installation target must be identical to the existing PostgreSQL
+installation.  [[and the original PostgreSQL source tree must be
+available - soon to becom unnecessary]].  
+
+On certain platforms (AIX and Solaris are amongst these), PostgreSQL
+must be configured with the option --enable-thread-safety to provide
+correct client libraries.
 
 The location of the PostgreSQL source-tree is specified with the
 configure option --with-pgsourcetree=<dir>.  [[ An effort is ongoing
@@ -40,15 +42,17 @@ The complete list of files installed is:
     * $datadir/slony1_funcs.v74.sql
     * $datadir/xxid.v73.sql 
 
-The .sql files are not fully substituted yet.  And it is correct that
-both, the 7.3 and the 7.4 files get installed on a system regardless
-of its version.  The slonik admin utility will do the substitution and
-load these files when creating replication nodes.  At that time, the
-database being initialized might be remote and of a different version.
+The .sql files are not fully substituted yet.  And yes, both the 7.3
+and the 7.4 files get installed on a system, regardless of its
+version.  The slonik admin utility does namespace/cluster
+substitutions within the files, and loads them files when creating
+replication nodes.  At that point in time, the database being
+initialized may be remote and may run a different version of
+PostgreSQL than that of the local host.
 
-At least the two shared objects installed in the $libdir directory
-must be installed onto every computer that is supposed to become a
-Slony node.
+At the very least, the two shared objects installed in the $libdir
+directory must be installed onto every computer that is supposed to
+become a Slony node.
 
 2.  Creating a sample database with application
 
