@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.4 2004-02-22 15:15:32 wieck Exp $
+ *	$Id: runtime_config.c,v 1.5 2004-02-22 23:53:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -53,6 +53,8 @@ SlonNode			   *rtcfg_node_list_tail = NULL;
  * ----------
  */
 static pthread_mutex_t	config_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t	cfgseq_lock = PTHREAD_MUTEX_INITIALIZER;
+static int64			cfgseq = 0;
 
 struct to_activate {
 	int					no_id;
@@ -123,6 +125,11 @@ printf("rtcfg_storeNode: no_id=%d: UPD no_comment='%s'\n", no_id, no_comment);
 	 */
 printf("rtcfg_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 	node = (SlonNode *)malloc(sizeof(SlonNode));
+	if (node == NULL)
+	{
+		perror("rtcfg_storeNode: malloc()");
+		slon_abort();
+	}
 	memset (node, 0, sizeof(SlonNode));
 
 	node->no_id      = no_id;
@@ -135,6 +142,7 @@ printf("rtcfg_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 	DLLIST_ADD_TAIL(rtcfg_node_list_head, rtcfg_node_list_tail, node);
 
 	rtcfg_unlock();
+	rtcfg_seq_bump();
 }
 
 
@@ -228,6 +236,7 @@ printf("rtcfg_enableNode: no_id=%d\n", no_id);
 	node->no_active = true;
 
 	rtcfg_unlock();
+	rtcfg_seq_bump();
 
 	rtcfg_startStopNodeThread(node);
 }
@@ -295,6 +304,7 @@ pa_server, pa_conninfo, pa_connretry);
 	node->pa_connretry = pa_connretry;
 
 	rtcfg_unlock();
+	rtcfg_seq_bump();
 
 	/*
 	 * Eventually start communicating with that node
@@ -344,12 +354,18 @@ li_origin, li_provider);
 printf("rtcfg_storeListen: add li_origin=%d to li_provider=%d\n",
 li_origin, li_provider);
 	listen = (SlonListen *)malloc(sizeof(SlonListen));
+	if (listen == NULL)
+	{
+		perror("rtcfg_storeListen: malloc()");
+		slon_abort();
+	}
 	memset(listen, 0, sizeof(SlonListen));
 
 	listen->li_origin = li_origin;
 	DLLIST_ADD_TAIL(node->listen_head, node->listen_tail, listen);
 
 	rtcfg_unlock();
+	rtcfg_seq_bump();
 
 	/*
 	 * Eventually start communicating with that node
@@ -361,12 +377,9 @@ li_origin, li_provider);
 void
 rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 {
-printf("rtcfg_storeSet: new set_id=%d set_origin=%d set_comment='%s'\n",
-set_id, set_origin, set_comment);
-#if 0
 	SlonSet	   *set;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
 
 	/*
 	 * Try to update an existing set configuration
@@ -380,7 +393,8 @@ set_id, set_origin, set_comment);
 			free(set->set_comment);
 			set->set_origin = set_origin;
 			set->set_comment = strdup(set_comment);
-			pthread_mutex_unlock(&config_lock);
+			rtcfg_unlock();
+			rtcfg_seq_bump();
 			return;
 		}
 	}
@@ -391,6 +405,11 @@ set_id, set_origin, set_comment);
 printf("rtcfg_storeSet: new set_id=%d set_origin=%d set_comment='%s'\n",
 set_id, set_origin, set_comment);
 	set = (SlonSet *)malloc(sizeof(SlonSet));
+	if (set == NULL)
+	{
+		perror("rtcfg_storeSet: malloc()");
+		slon_abort();
+	}
 	memset(set, 0, sizeof(SlonSet));
 
 	set->set_id = set_id;
@@ -400,20 +419,17 @@ set_id, set_origin, set_comment);
 	set->sub_provider = -1;
 
 	DLLIST_ADD_TAIL(rtcfg_set_list_head, rtcfg_set_list_tail, set);
-	pthread_mutex_unlock(&config_lock);
-#endif
+	rtcfg_unlock();
+	rtcfg_seq_bump();
 }
 
 
 void
 rtcfg_storeSubscribe(int sub_set, int sub_provider, int sub_forward)
 {
-printf("rtcfg_storeSubscribe: sub_set=%d sub_provider=%d sub_forward=%d\n",
-sub_set, sub_provider, sub_forward);
-#if 0
 	SlonSet	   *set;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
 
 	/*
 	 * Find the set and store subscription information
@@ -428,26 +444,24 @@ sub_set, sub_provider, sub_forward);
 				set->sub_active = 0;
 			set->sub_provider = sub_provider;
 			set->sub_forward  = sub_forward;
-			pthread_mutex_unlock(&config_lock);
+			rtcfg_unlock();
+			rtcfg_seq_bump();
 			return;
 		}
 	}
 
 	fprintf(stderr, "rtcfg_storeSubscribe: set %d not found\n", sub_set);
-	pthread_mutex_unlock(&config_lock);
+	rtcfg_unlock();
 	slon_abort();
-#endif
 }
 
 
 void
 rtcfg_enableSubscription(int sub_set)
 {
-printf("rtcfg_enableSubscription: sub_set=%d\n", sub_set);
-#if 0
 	SlonSet	   *set;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
 
 	/*
 	 * Find the set and enable its subscription
@@ -459,15 +473,15 @@ printf("rtcfg_enableSubscription: sub_set=%d\n", sub_set);
 printf("rtcfg_enableSubscription: sub_set=%d\n", sub_set);
 			if (set->sub_provider >= 0)
 				set->sub_active = 1;
-			pthread_mutex_unlock(&config_lock);
+			rtcfg_unlock();
+			rtcfg_seq_bump();
 			return;
 		}
 	}
 
 	fprintf(stderr, "rtcfg_enableSubscription: set %d not found\n", sub_set);
-	pthread_mutex_unlock(&config_lock);
+	rtcfg_unlock();
 	slon_abort();
-#endif
 }
 
 
@@ -591,6 +605,11 @@ rtcfg_needActivate(int no_id)
 	struct to_activate	   *anode;
 
 	anode = (struct to_activate *)malloc(sizeof(struct to_activate));
+	if (anode == NULL)
+	{
+		perror("rtcfg_needActivate: malloc()");
+		slon_abort();
+	}
 	anode->no_id = no_id;
 	DLLIST_ADD_TAIL(to_activate_head, to_activate_tail, anode);
 }
@@ -644,3 +663,28 @@ node->no_id);
 
 	rtcfg_unlock();
 }
+
+
+void
+rtcfg_seq_bump(void)
+{
+	pthread_mutex_lock(&cfgseq_lock);
+	cfgseq++;
+	pthread_mutex_unlock(&cfgseq_lock);
+}
+
+
+int64
+rtcfg_seq_get(void)
+{
+	int64 retval;
+
+	pthread_mutex_lock(&cfgseq_lock);
+	retval = cfgseq;
+	pthread_mutex_unlock(&cfgseq_lock);
+
+	return retval;
+}
+
+
+

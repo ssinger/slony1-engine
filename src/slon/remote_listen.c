@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.2 2004-02-22 15:15:32 wieck Exp $
+ *	$Id: remote_listen.c,v 1.3 2004-02-22 23:53:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -69,6 +69,8 @@ remoteListenThread_main(void *cdata)
 
 	struct listat  *listat_head;
 	struct listat  *listat_tail;
+	int64			last_config_seq = 0;
+	int64			new_config_seq = 0;
 
 printf("slon_remoteListenThread: node %d - start\n",
 node->no_id);
@@ -81,55 +83,65 @@ node->no_id);
 
 	while (true)
 	{
-		/*
-		 * Lock the configuration and check if we are (still) supposed
-		 * to exist.
-		 */
-		rtcfg_lock();
-
-		/*
-		 * If we have a database connection to the remote node, check
-		 * if there was a change in the connection information.
-		 */
-		if (conn != NULL)
+		if (last_config_seq != (new_config_seq = rtcfg_seq_get()))
 		{
-			if (strcmp(conn_conninfo, node->pa_conninfo) != 0)
+printf("slon_remoteListenThread: node %d - adjusting to new runtime configuration\n",
+node->no_id);
+			/*
+			 * Lock the configuration and check if we are (still) supposed
+			 * to exist.
+			 */
+			rtcfg_lock();
+
+			/*
+			 * If we have a database connection to the remote node, check
+			 * if there was a change in the connection information.
+			 */
+			if (conn != NULL)
 			{
+				if (strcmp(conn_conninfo, node->pa_conninfo) != 0)
+				{
 printf("slon_remoteListenThread: node %d - disconnecting from '%s'\n",
 node->no_id, conn_conninfo);
-				slon_disconnectdb(conn);
-				free(conn_conninfo);
+					slon_disconnectdb(conn);
+					free(conn_conninfo);
 
-				conn = NULL;
-				conn_conninfo = NULL;
+					conn = NULL;
+					conn_conninfo = NULL;
+				}
 			}
-		}
 
-		/*
-		 * Check our node's listen_status
-		 */
-		if (node->listen_status == SLON_TSTAT_NONE ||
-			node->listen_status == SLON_TSTAT_SHUTDOWN)
-		{
-			rtcfg_unlock();
-			break;
-		}
-		if (node->listen_status == SLON_TSTAT_RESTART)
-			node->listen_status = SLON_TSTAT_RUNNING;
+			/*
+			 * Check our node's listen_status
+			 */
+			if (node->listen_status == SLON_TSTAT_NONE ||
+				node->listen_status == SLON_TSTAT_SHUTDOWN)
+			{
+				rtcfg_unlock();
+				break;
+			}
+			if (node->listen_status == SLON_TSTAT_RESTART)
+				node->listen_status = SLON_TSTAT_RUNNING;
 
-		/*
-		 * Adjust the listat list and see if there is anything to
-		 * listen for. If not, sleep for a while and check again,
-		 * some node reconfiguration must be going on here.
-		 */
-		remoteListen_adjust_listat(node, &listat_head, &listat_tail);
-		if (listat_head == NULL)
-		{
-			rtcfg_unlock();
+			/*
+			 * Adjust the listat list and see if there is anything to
+			 * listen for. If not, sleep for a while and check again,
+			 * some node reconfiguration must be going on here.
+			 */
+			remoteListen_adjust_listat(node, &listat_head, &listat_tail);
+
+			last_config_seq = new_config_seq;
+
+			if (listat_head == NULL)
+			{
+				rtcfg_unlock();
 printf("slon_remoteListenThread: node %d - nothing to listen for\n",
 node->no_id);
-			sched_msleep(node, 10000);
-			continue;
+				sched_msleep(node, 10000);
+				continue;
+			}
+
+			rtcfg_unlock();
 		}
 
 		/*
@@ -144,11 +156,13 @@ node->no_id);
 			/*
 			 * Make sure we have connection info
 			 */
+			rtcfg_lock();
 			if (node->pa_conninfo == NULL)
 			{
 printf("slon_remoteListenThread: node %d - no conninfo - sleep 10 seconds\n",
 node->no_id);
 
+				rtcfg_unlock();
 				rc = sched_msleep(node, 10000);
 				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
 					break;
@@ -208,8 +222,6 @@ node->no_id, pa_connretry);
 printf("slon_remoteListenThread: node %d - have DB connection to '%s'\n",
 node->no_id, conn_conninfo);
 		}
-		else
-			rtcfg_unlock();
 
 		/*
 		 * Receive events from the provider node
@@ -350,6 +362,11 @@ node->no_id, listat->li_origin);
 printf("remoteListenThread: node %d - add listen status for event origin %d\n",
 node->no_id, listen->li_origin);
 			listat = (struct listat *)malloc(sizeof(struct listat));
+			if (listat == NULL)
+			{
+				perror("remoteListen_adjust_listat: malloc()");
+				slon_abort();
+			}
 			memset(listat, 0, sizeof(struct listat));
 
 			listat->li_origin = listen->li_origin;

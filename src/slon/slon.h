@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.12 2004-02-22 15:15:32 wieck Exp $
+ *	$Id: slon.h,v 1.13 2004-02-22 23:53:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -129,51 +129,65 @@ typedef struct
 } SlonDString;
 
 #define		dstring_init(__ds) \
-{ \
+do { \
 	(__ds)->n_alloc = SLON_DSTRING_SIZE_INIT; \
 	(__ds)->n_used = 0; \
 	(__ds)->data = malloc(SLON_DSTRING_SIZE_INIT); \
-}
+	if ((__ds)->data == NULL) { \
+		perror("dstring_init: malloc()"); \
+		slon_abort(); \
+	} \
+} while (0)
 #define		dstring_reset(__ds) \
-{ \
+do { \
 	(__ds)->n_used = 0; \
 	(__ds)->data[0] = '\0'; \
-}
+} while (0)
 #define		dstring_free(__ds) \
-{ \
+do { \
 	free((__ds)->data); \
 	(__ds)->n_used = 0; \
 	(__ds)->data = NULL; \
-}
+} while (0)
 #define		dstring_nappend(__ds,__s,__n) \
-{ \
+do { \
 	if ((__ds)->n_used + (__n) >= (__ds)->n_alloc)  \
 	{ \
 		while ((__ds)->n_used + (__n) >= (__ds)->n_alloc) \
 			(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+		if ((__ds)->data == NULL) \
+		{ \
+			perror("dstring_nappend: realloc()"); \
+			slon_abort(); \
+		} \
 	} \
 	memcpy(&((__ds)->data[(__ds)->n_used]), (__s), (__n)); \
 	(__ds)->n_used += (__n); \
-}
+} while (0)
 #define		dstring_append(___ds,___s) \
-{ \
+do { \
 	register int ___n = strlen((___s)); \
 	dstring_nappend((___ds),(___s),___n); \
-}
+} while (0)
 #define		dstring_addchar(__ds,__c) \
-{ \
+do { \
 	if ((__ds)->n_used + 1 >= (__ds)->n_alloc)  \
 	{ \
 		(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+		if ((__ds)->data == NULL) \
+		{ \
+			perror("dstring_addchar: realloc()"); \
+			slon_abort(); \
+		} \
 	} \
 	(__ds)->data[(__ds)->n_used++] = (__c); \
-}
+} while (0)
 #define		dstring_terminate(__ds) \
-{ \
+do { \
 	(__ds)->data[(__ds)->n_used] = '\0'; \
-}
+} while (0)
 #define		dstring_data(__ds)	((__ds)->data)
 
 
@@ -182,6 +196,7 @@ typedef struct
  * ----------
  */
 #define	DLLIST_ADD_TAIL(_pf,_pl,_obj) \
+do { \
 	if ((_pl) == NULL) { \
 		(_obj)->prev = (_obj)->next = NULL; \
 		(_pf) = (_pl) = (_obj); \
@@ -190,9 +205,11 @@ typedef struct
 		(_obj)->next = NULL; \
 		(_pl)->next = (_obj); \
 		(_pl) = (_obj); \
-	}
+	} \
+} while (0)
 
 #define DLLIST_ADD_HEAD(_pf,_pl,_obj) \
+do { \
 	if ((_pf) == NULL) { \
 		(_obj)->prev = (_obj)->next = NULL; \
 		(_pf) = (_pl) = (_obj); \
@@ -201,9 +218,11 @@ typedef struct
 		(_obj)->next = (_pf); \
 		(_pf)->prev = (_obj); \
 		(_pf) = (_obj); \
-	}
+	} \
+} while (0)
 
 #define DLLIST_REMOVE(_pf,_pl,_obj) \
+do { \
 	if ((_obj)->prev == NULL) { \
 		(_pf) = (_obj)->next; \
 	} else { \
@@ -214,7 +233,8 @@ typedef struct
 	} else { \
 		(_obj)->next->prev = (_obj)->prev; \
 	} \
-	(_obj)->prev = (_obj)->next = NULL
+	(_obj)->prev = (_obj)->next = NULL; \
+} while (0)
 
 
 /* ----------
@@ -309,6 +329,9 @@ extern void		rtcfg_enableSubscription(int sub_set);
 extern void		rtcfg_needActivate(int no_id);
 extern void		rtcfg_doActivate(void);
 extern void		rtcfg_joinAllRemoteThreads(void);
+
+extern void		rtcfg_seq_bump(void);
+extern int64	rtcfg_seq_get(void);
 
 
 /* ----------

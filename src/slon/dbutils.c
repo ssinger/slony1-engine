@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.5 2004-02-22 03:10:47 wieck Exp $
+ *	$Id: dbutils.c,v 1.6 2004-02-22 23:53:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -104,6 +104,11 @@ slon_make_dummyconn(char *symname)
 	 * Allocate and initialize the SlonConn structure
 	 */
 	conn = (SlonConn *)malloc(sizeof(SlonConn));
+	if (conn == NULL)
+	{
+		perror("slon_make_dummyconn: malloc()");
+		slon_abort();
+	}
 	memset(conn, 0, sizeof(SlonConn));
 	conn->symname = strdup(symname);
 
