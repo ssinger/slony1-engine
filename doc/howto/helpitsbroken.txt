@@ -81,6 +81,9 @@ restart node 4;
 'restart node n' cleans this stuff up so that you can restart the
 node.
 
+In version 1.0.3 and above, the startup process of slon looks for this
+condition, and automatically cleans it up.
+
 5.  If I run a "ps" command, I, and everyone else, can see passwords
 on the command line.
 

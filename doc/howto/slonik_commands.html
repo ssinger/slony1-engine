@@ -709,13 +709,15 @@ manual on how to configure and set up a replication system.
 <p>
 	In the Slony-I replication system, every replicated table is
 	required to have at least one UNIQUE constraint who's columns
-	are declared NOT NULL. Any primary key satisfies this requirement.
+	are declared <tt>NOT NULL.</tt> Any primary key satisfies this
+	requirement.
 </p>
 <p>
-	As a last resort, this command can be used to add such an attribute
-	to a table that does not have a primary key. Since this modification
-	can have unwanted side effects, <b>it is strongly recommended to
-	add a unique and not null attribute by other means</b>.
+	As a last resort, this command can be used to add such an
+	attribute to a table that does not have a primary key. Since
+	this modification can have unwanted side effects, <b>it is
+	strongly recommended that users add a unique and not null
+	attribute by other means.</b>
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -756,18 +758,19 @@ manual on how to configure and set up a replication system.
 <p>
 	In the Slony-I replication system, replicated tables are
 	organized in sets. As a general rule of thumb, a set should
-	contain all the tables of one application, that have relationships.
-	In a well designed application, this is equal to all the tables
-	in one schema.
+	contain all the tables of one application, that have
+	relationships.  In a well designed application, this is equal
+	to all the tables in one schema.
 </p>
 <p>
 	The smallest unit one node can subscribe for replication from
-	another node is a set. A set always has an origin. In classical replication
-	terms, that would be the "master". Since in Slony-I a node can 
-	be the "master" over one set, while receiving replication data
-	in the "slave" role for another at the same time, this terminology
-	could easily be misleading and is replaced with <b>set origin</b> and
-	<b>subscriber</b>.
+	another node is a set. A set always has an origin. In
+	classical replication terms, that would be the "master."
+	Since in Slony-I a node can be the "master" over one set,
+	while receiving replication data in the "slave" role for
+	another at the same time, this terminology may easily become
+	misleading and should therefore be replaced with <b>set
+	origin</b> and <b>subscriber</b>.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1038,6 +1041,11 @@ manual on how to configure and set up a replication system.
 <p>
 	Drop an existing user table to a replication set.
 </p>
+
+<p>
+	  Note that this action will <em> not </em> drop a candidate
+	  primary key created using <TT> TABLE ADD KEY </tt>.
+</p>
 <table border="0" cellpadding="10">
 <tr>
 	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
@@ -1207,9 +1215,10 @@ manual on how to configure and set up a replication system.
 	STORE TRIGGER ( &lt;options&gt; );
 <h3>Description:</h3>
 <p>
-	By default, all user defined triggers and constraints are disabled
-	on all subscriber nodes while a table is replicated. This command
-	can be used to explicitly exclude a trigger from being disabled.
+	By default, all user defined triggers and constraints are
+	disabled on all subscriber nodes while a table is
+	replicated. This command can be used to explicitly exclude a
+	trigger from being disabled.
 </p>
 <table border="0" cellpadding="10">
 <tr>
