@@ -367,7 +367,7 @@ while (1) {
         print "\n\n$which connection successful\n";
 	if (check_version(which => $which))
         {
-          print "You need to upgrage PostgreSQL on $data{$which}{'hostname'}";
+          print "You need to upgrade PostgreSQL on $data{$which}{'hostname'}";
 	  clean_up();
         }
         get_databases(which => $which);
