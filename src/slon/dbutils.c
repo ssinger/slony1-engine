@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.8 2004-02-28 04:16:10 wieck Exp $
+ *	$Id: dbutils.c,v 1.9 2004-06-02 19:59:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -31,6 +31,18 @@
 
 static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
 
+/* 
+ * This mutex is used to wrap around PQconnectdb. There's a problem
+ * that occurs when your libpq is compiled with libkrb (kerberos)
+ * which is not threadsafe.  It is especially odd because I'm not using
+ * kerberos. 
+ * 
+ * This is fixed in libpq in 7.5, but for now (and for older versions
+ * we'll just use this mutex. 
+ *
+ */
+static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
+
 
 /* ----------
  * slon_connectdb
@@ -45,7 +57,9 @@ slon_connectdb(char *conninfo, char *symname)
 	/*
 	 * Create the native database connection
 	 */
+	pthread_mutex_lock(&slon_connect_lock);
 	dbconn = PQconnectdb(conninfo);
+	pthread_mutex_unlock(&slon_connect_lock);
 	if (dbconn == NULL)
 	{
 		slon_log(SLON_ERROR,
