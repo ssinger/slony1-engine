@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.11 2005-01-24 17:35:35 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.12 2005-02-02 17:23:33 cbbrowne Exp $ -->
 <article>
 <sect1 id="altperl">
 <title>Slony-I Administration Scripts</title>
@@ -30,7 +30,7 @@ cluster.</para>
 <para>What variables are set up.
 <itemizedlist>
 
-<listitem><para><envar>$SETNAME</envar>=orglogs;	# What is the name of the replication set?</para></listitem>
+<listitem><para><envar>$CLUSTER_NAME</envar>=orglogs;	# What is the name of the replication cluster?</para></listitem>
 <listitem><para><envar>$LOGDIR</envar>='/opt/OXRS/log/LOGDBS';	# What is the base directory for logs?</para></listitem>
 <listitem><para><envar>$SLON_BIN_PATH</envar>='/opt/dbs/pgsql74/bin';  # Where to look for Slony-I binaries</para></listitem>
 <listitem><para><envar>$APACHE_ROTATOR</envar>="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator</para></listitem>
@@ -228,7 +228,6 @@ cluster.</para>
 Listen Path Generation</link> for more details on how this
 works.</para>
 </sect2>
-
 
 </sect1>
 </article>
