@@ -155,3 +155,47 @@ The table IDs used in SET ADD TABLE are required to be unique ACROSS
 ALL SETS.  Thus, you can't restart numbering at 1 for a second set; if
 you are numbering them consecutively, a subsequent set has to start
 with IDs after where the previous set(s) left off.
+
+10.  I need to drop a table from a replication set, and I can't see
+how to do that.
+
+This can be accomplished several ways, not all equally desirable ;-).
+
+a) You could drop the whole replication set, and recreate it with just
+the tables that you need.  Alas, that means recopying a whole lot of
+data, and kills the usability of the cluster on the rest of the set
+while that's happening.
+
+b) Some day, someone will get around to implementing the Slonik
+command SET DROP TABLE, which will involve (roughly speaking) the
+following set of changes:
+
+ 1.  Need to augment the grammar to know about "set drop table"
+
+ 2.  Need to have a C function for set_drop_table
+
+ 3.  Need a stored procedure, droptable(), which initiates the event
+
+ 4.  Need another stored procedure, droptable_int() which does the
+      alterTableRestore(), tableDropKey()
+
+ 5.  I presume (haven't looked) that slon needs to have a case
+      statement added to allow it to propagate the "DROP_TABLE" 
+      event.
+
+That will happen when someone gets around to implementing it.  The
+likely "first volunteer" is Chris Browne <cbbrowne@acm.org>, but if
+somone gets to it first, he won't mind too much.
+
+c) The _essential_ functionality of SET DROP TABLE is the bits in step
+4, droptable_int().  You can fiddle this by hand by finding the table
+ID for the table you want to get rid of, which you can find in
+sl_table, and then run three queries, on each host:
+
+  select _slonyschema.alterTableRestore(40);
+  select _slonyschema.tableDropKey(40);
+  delete from _slonyschema.sl_table where tab_id = 40;
+
+The schema will obviously depend on how you defined the Slony-I
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.
