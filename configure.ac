@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.10 2004-03-11 03:17:51 wieck Exp $
+# $Id: configure.ac,v 1.11 2004-03-11 03:36:44 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -133,6 +133,7 @@ AC_CHECK_FUNCS([strchr strpbrk])
 AC_CONFIG_FILES([
 	Makefile.global 
 	src/slon/Makefile
+	src/slonik/Makefile
 ])
 
 AC_CONFIG_LINKS([
