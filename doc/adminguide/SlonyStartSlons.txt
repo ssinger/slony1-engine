@@ -1,0 +1,19 @@
+%META:TOPICINFO{author="guest" date="1097257140" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Slon Daemons
+
+The programs that actually perform Slony-I replication are the "slon" daemons.
+
+You need to run one "slon" instance for each node in a Slony-I cluster.  It is not essential that these daemons run on any particular host, but there are some principles worth considering:
+
+	* Each slon needs to be able to communicate quickly with the database whose "node controller" it is.  Therefore, if a Slony-I cluster runs across some form of Wide Area Network, the slon processes should run on or nearby the databases each is controlling.  If you break this rule, there is no immediate disaster, but the added latency introduced to monitoring events on the slon's "own node" will cause it to replicate in a somewhat less timely manner.
+
+	* The fastest results would be achieved by having each slon run on the database server that it is servicing.  If it runs somewhere within a fast local network, performance will not be noticeably degraded.
+
+	* It is an attractive idea to run many of the slon processes for a cluster on one machine, as this makes it easy to monitor them both in terms of log files and process tables from one location.  This eliminates the need to login to several hosts in order to look at log files or to restart slon instances.
+
+There are two "watchdog" scripts currently available:
+
+	* tools/altperl/slon_watchdog.pl  - an "early" version that basically wraps a loop around the invocation of slon, restarting any time it may fail
+	* tools/altperl/slon_watchdog2.pl - a somewhat more intelligent version that periodically polls the database, checking to see if a SYNC has taken place recently.  We have had VPN connections that occasionally fall over without signalling the application, so that the slon stops working, but doesn't actually die; this polling accounts for that...
+

@@ -1,0 +1,20 @@
+%META:TOPICINFO{author="guest" date="1099632840" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ sl_log_1 grows after dropping a node
+
+After dropping a node, sl_log_1 isn't getting purged out anymore.
+
+This is a common scenario in versions before 1.0.5, as the "clean up" that takes place when purging the node does not include purging out old entries from the Slony-I table, sl_confirm, for the recently departed node.
+
+The node is no longer around to update confirmations of what syncs have been applied on it, and therefore the cleanup thread that purges log entries thinks that it can't safely delete entries newer than the final sl_confirm entry, which rather curtails the ability to purge out old logs.
+
+In version 1.0.5, the "drop node" function purges out entries in sl_confirm for the departing node.  In earlier versions, this needs to be done manually.  Supposing the node number is 3, then the query would be:
+
+<verbatim>
+delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
+</verbatim>
+
+General "being careful" dictates starting with a BEGIN, looking at the contents of sl_confirm before, ensuring that only the expected records are purged, and then, only after that, confirming the change with a COMMIT.  If you delete confirm entries for the wrong node, that could ruin your whole day.
+
+You'll need to run this on each node that remains...
+

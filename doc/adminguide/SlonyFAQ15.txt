@@ -1,0 +1,20 @@
+%META:TOPICINFO{author="guest" date="1098327360" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ The slons spent the weekend out of commission [for some reason], and it's taking a long time to get a sync through.
+
+You might want to take a look at the sl_log_1/sl_log_2 tables, and do
+a summary to see if there are any really enormous Slony-I transactions
+in there.  Up until at least 1.0.2, there needs to be a slon connected
+to the master in order for SYNC events to be generated.
+
+If none are being generated, then all of the updates until the next
+one is generated will collect into one rather enormous Slony-I
+transaction.
+
+Conclusion: Even if there is not going to be a subscriber around, you
+_really_ want to have a slon running to service the "master" node.
+
+Some future version (probably 1.1) may provide a way for SYNC counts
+to be updated on the master by the stored function that is invoked by
+the table triggers.
+

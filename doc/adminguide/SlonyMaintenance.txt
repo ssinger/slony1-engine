@@ -1,0 +1,27 @@
+%META:TOPICINFO{author="guest" date="1099541824" format="1.0" version="1.4"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Slony-I Maintenance
+
+Slony-I actually does most of its necessary maintenance itself, in a "cleanup" thread:
+
+	* Deletes old data from various tables in the Slony-I cluster's namespace, notably entries in sl_log_1, sl_log_2 (not yet used), and sl_seqlog.
+
+	* Vacuum certain tables used by Slony-I.  As of 1.0.5, this includes pg_listener; in earlier versions, you must vacuum that table heavily, otherwise you'll find replication slowing down because Slony-I raises plenty of events, which leads to that table having plenty of dead tuples.
+
+	In some versions (1.1, for sure; possibly 1.0.5) there is the option of not bothering to vacuum any of these tables if you are using something like pg_autovacuum to handle vacuuming of these tables.  Unfortunately, it has been quite possible for pg_autovacuum to not vacuum quite frequently enough, so you probably want to use the internal vacuums.  Vacuuming pg_listener "too often" isn't nearly as hazardous as not vacuuming it frequently enough.
+
+	Unfortunately, if you have long-running transactions, vacuums cannot clear out dead tuples that are newer than the eldest transaction that is still running.  This will most notably lead to pg_listener growing large and will slow replication.
+
+---++ Watchdogs: Keeping Slons Running
+
+There are a couple of "watchdog" scripts available that monitor things, and restart the slon processes should they happen to die for some reason, such as a network "glitch" that causes loss of connectivity.
+
+You might want to run them...
+
+---++ Log Files
+
+Slon daemons generate some more-or-less verbose log files, depending on what debugging level is turned on.  You might assortedly wish to:
+
+	* Use a log rotator like Apache rotatelogs to have a sequence of log files so that no one of them gets too big;
+
+	* Purge out old log files, periodically.

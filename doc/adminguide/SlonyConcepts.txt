@@ -1,0 +1,51 @@
+%META:TOPICINFO{author="guest" date="1098328042" format="1.0" version="1.2"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Slony-I Concepts
+
+In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
+
+	* Cluster
+	* Node
+	* Replication Set
+	* Provider and Subscriber
+
+---+++ Cluster
+
+In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.
+
+The cluster name is specified in each and every Slonik script via the directive:
+<verbatim>
+cluster name = 'something';
+</verbatim>
+
+If the Cluster name is 'something', then Slony-I will create, in each database instance in the cluster, the namespace/schema '_something'.
+
+---+++ Node
+
+A Slony-I Node is a named PostgreSQL database that will be participating in replication.  
+
+It is defined, near the beginning of each Slonik script, using the directive:
+<verbatim>
+ NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
+</verbatim>
+
+The CONNINFO information indicates a string argument that will ultimately be passed to the PQconnectdb() libpq function.  
+
+Thus, a Slony-I cluster consists of:
+	* A cluster name
+	* A set of Slony-I nodes, each of which has a namespace based on that cluster name
+
+---+++ Replication Set
+
+A replication set is defined as a set of tables and sequences that are to be replicated between nodes in a Slony-I cluster.
+
+You may have several sets, and the "flow" of replication does not need to be identical between those sets.
+
+---+++ Provider and Subscriber
+
+Each replication set has some "master" node, which winds up being the _only_ place where user applications are permitted to modify data in the tables that are being replicated.  That "master" may be considered the master "provider node;" it is the main place from which data is provided.
+
+Other nodes in the cluster will subscribe to the replication set, indicating that they want to receive the data. 
+
+The "master" node will never be considered a "subscriber."  But Slony-I supports the notion of cascaded subscriptions, that is, a node that is subscribed to the "master" may also behave as a "provider" to other nodes in the cluster.
+

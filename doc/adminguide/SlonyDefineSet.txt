@@ -1,0 +1,37 @@
+%META:TOPICINFO{author="guest" date="1097702299" format="1.0" version="1.3"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Defining Slony-I Replication Sets
+
+Defining the nodes indicated the shape of the cluster of database servers; it is now time to determine what data is to be copied between them.  The groups of data that are copied are defined as "sets."
+
+A replication set consists of the following:
+
+	* Keys on tables that are to be replicated that have no suitable primary key
+
+	* Tables that are to be replicated
+
+	* Sequences that are to be replicated
+
+---+++ Primary Keys
+
+Slony-I *needs* to have a primary key on each table that is replicated.  PK values are used as the primary identifier for each tuple that is modified in the source system.  There are three ways that you can get Slony-I to use a primary key:
+
+	* If the table has a formally identified primary key, SET ADD TABLE can be used without any need to reference the primary key.  Slony-I will pick up that there is a primary key, and use it.
+
+	* If the table hasn't got a primary key, but has some *candidate* primary key, that is, some index on a combination of fields that is UNIQUE and NOT NULL, then you can specify the key, as in
+
+<verbatim>
+	  SET ADD TABLE (set id = 1, origin = 1, id = 42, full qualified name = 'public.this_table', key = 'this_by_that', comment='this_table has this_by_that as a candidate primary key');
+</verbatim>
+
+	  Notice that while you need to specify the namespace for the table, you must /not/ specify the namespace for the key, as it infers the namespace from the table.
+
+	* If the table hasn't even got a candidate primary key, you can ask Slony-I to provide one.  This is done by first using TABLE ADD KEY to add a column populated using a  Slony-I sequence, and then having the SET ADD TABLE include the directive key=serial, to indicate that Slony-I's own column should be used.
+
+It is not terribly important whether you pick a "true" primary key or a mere "candidate primary key;" it is, however, recommended that you have one of those instead of having Slony-I populate the PK column for you.  If you don't have a suitable primary key, that means that the table hasn't got any mechanism from your application's standpoint of keeping values unique.  Slony-I may therefore introduce a new failure mode for your application, and this implies that you had a way to enter confusing data into the database.
+
+---+++ Grouping tables into sets
+
+It will be vital to group tables together into a single set if those tables are related via foreign key constraints.  If tables that are thus related are _not_ replicated together, you'll find yourself in trouble if you switch the "master provider" from one node to another, and discover that the new "master" can't be updated properly because it is missing the contents of dependent tables.
+
+If a database schema has been designed cleanly, it is likely that replication sets will be virtually synonymous with namespaces.  All of the tables and sequences in a particular namespace will be sufficiently related that you will want to replicate them all.  Conversely, tables found in different schemas will likely NOT be related, and therefore should be replicated in separate sets.

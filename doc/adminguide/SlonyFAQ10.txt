@@ -1,0 +1,28 @@
+%META:TOPICINFO{author="guest" date="1099542035" format="1.0" version="1.2"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ I need to drop a table from a replication set
+
+This can be accomplished several ways, not all equally desirable ;-).
+
+	* You could drop the whole replication set, and recreate it with just the tables that you need.  Alas, that means recopying a whole lot of data, and kills the usability of the cluster on the rest of the set while that's happening.
+
+	* If you are running 1.0.5 or later, there is the command SET DROP TABLE, which will "do the trick."
+
+	* If you are still using 1.0.1 or 1.0.2, the _essential_ functionality of SET DROP TABLE involves the functionality in droptable_int().  You can fiddle this by hand by finding the table ID for the table you want to get rid of, which you can find in sl_table, and then run the following three queries, on each host:
+
+<verbatim>
+  select _slonyschema.alterTableRestore(40);
+  select _slonyschema.tableDropKey(40);
+  delete from _slonyschema.sl_table where tab_id = 40;
+</verbatim>
+
+The schema will obviously depend on how you defined the Slony-I
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.
+
+You'll have to run these three queries on all of the nodes, preferably
+firstly on the "master" node, so that the dropping of this propagates
+properly.  Implementing this via a SLONIK statement with a new Slony
+event would do that.  Submitting the three queries using EXECUTE
+SCRIPT could do that.  Also possible would be to connect to each
+database and submit the queries by hand.

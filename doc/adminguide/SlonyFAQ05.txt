@@ -1,0 +1,9 @@
+%META:TOPICINFO{author="guest" date="1098326597" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ ps finds passwords on command line
+
+ If I run a "ps" command, I, and everyone else, can see passwords
+on the command line.
+
+Take the passwords out of the Slony configuration, and put them into
+$(HOME)/.pgpass.

@@ -1,0 +1,15 @@
+%META:TOPICINFO{author="guest" date="1098327131" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ Slony-I: cannot add table to currently subscribed set 1
+
+ I tried to add a table to a set, and got the following message:
+
+<verbatim>
+	Slony-I: cannot add table to currently subscribed set 1
+</verbatim>
+
+You cannot add tables to sets that already have subscribers.
+
+The workaround to this is to create ANOTHER set, add the new tables to
+that new set, subscribe the same nodes subscribing to "set 1" to the
+new set, and then merge the sets together.

@@ -1,0 +1,12 @@
+%META:TOPICINFO{author="guest" date="1098326722" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ Table indexes with FQ namespace names
+
+<verbatim>
+set add table (set id = 1, origin = 1, id = 27, full qualified name = 'nspace.some_table', key = 'key_on_whatever', 
+	 comment = 'Table some_table in namespace nspace with a candidate primary key');
+</verbatim>
+
+If you have
+	key = 'nspace.key_on_whatever'
+the request will FAIL.

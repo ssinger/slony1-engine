@@ -1,0 +1,21 @@
+%META:TOPICINFO{author="guest" date="1099541323" format="1.0" version="1.2"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ Slonik fails - cannot load PostgreSQL library - PGRES_FATAL_ERROR load '$libdir/xxid';
+
+ When I run the sample setup script I get an error message similar
+to:
+
+<verbatim>
+<stdin>:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
+could not open file '$libdir/xxid': No such file or directory
+</verbatim>
+
+Evidently, you haven't got the xxid.so library in the $libdir directory that the PostgreSQL instance is using.  Note that the Slony-I components need to be installed in the PostgreSQL software installation for _each and every one_ of the nodes, not just on the "master node."
+
+This may also point to there being some other mismatch between the PostgreSQL binary instance and the Slony-I instance.  If you compiled
+Slony-I yourself, on a machine that may have multiple PostgreSQL builds "lying around," it's possible that the slon or slonik binaries
+are asking to load something that isn't actually in the library directory for the PostgreSQL database cluster that it's hitting.
+
+Long and short: This points to a need to "audit" what installations of PostgreSQL and Slony you have in place on the machine(s).
+Unfortunately, just about any mismatch will cause things not to link up quite right.  See also SlonyFAQ02 concerning threading issues on Solaris
+...

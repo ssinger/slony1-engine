@@ -1,0 +1,61 @@
+%META:TOPICINFO{author="guest" date="1097952716" format="1.0" version="1.6"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+Slon parameters:
+
+usage: slon [options] clustername conninfo
+
+<verbatim>
+Options:
+-d <debuglevel>		 verbosity of logging (1..8)
+-s <milliseconds>	  SYNC check interval (default 10000)
+-t <milliseconds>	  SYNC interval timeout (default 60000)
+-g <num>				  maximum SYNC group size (default 6)
+-c <num>				  how often to vacuum in cleanup cycles
+-p <filename>			slon pid file
+-f <filename>			slon configuration file
+</verbatim>
+
+*-d*
+<verbatim>
+The eight levels of logging are:
+- Error
+- Warn
+- Config
+- Info
+- Debug1
+- Debug2
+- Debug3
+- Debug4
+</verbatim>
+		  
+*-s*
+
+A SYNC event will be sent at least this often, regardless of whether update activity is detected.
+
+Short sync times keep the master on a "short leash," updating the slaves more frequently.  If you have replicated sequences that are frequently updated _without_ there being tables that are affected, this keeps there from being times when only sequences are updated, and therefore _no_ syncs take place.
+
+Longer sync times allow there to be fewer events, which allows somewhat better efficiency.
+
+*-t*
+
+The time before the SYNC check interval times out.
+
+*-g*
+
+Number of SYNC events to try to cram together.  The default is 6, which is probably suitable for small systems that can devote only very limited bits of memory to slon.  If you have plenty of memory, it would be reasonable to increase this, as it will increase the amount of work done in each transaction, and will allow a subscriber that is behind by a lot to catch up more quickly.
+
+Slon processes usually stay pretty small; even with large value for this option, slon would be expected to only grow to a few MB in size.
+
+*-c*
+
+How often to vacuum (_e.g._ - how many cleanup cycles to run before vacuuming). 
+ 
+Set this to zero to disable slon-initiated vacuuming.  If you are using something like pg_autovacuum to initiate vacuums, you may not need for slon to initiate vacuums itself.  If you are not, there are some tables Slony-I uses that collect a LOT of dead tuples that should be vacuumed frequently.
+
+*-p*
+
+The location of the PID file for the slon process.
+
+*-f*
+
+The location of the slon configuration file.

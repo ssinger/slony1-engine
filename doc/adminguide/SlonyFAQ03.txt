@@ -1,0 +1,14 @@
+%META:TOPICINFO{author="guest" date="1098326455" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ Cluster name with "-" in it
+
+I tried creating a CLUSTER NAME with a "-" in it.  That didn't work.
+
+Slony-I uses the same rules for unquoted identifiers as the PostgreSQL
+main parser, so no, you probably shouldn't put a "-" in your
+identifier name.
+
+You may be able to defeat this by putting "quotes" around identifier
+names, but it's liable to bite you some, so this is something that is
+probably not worth working around.
+

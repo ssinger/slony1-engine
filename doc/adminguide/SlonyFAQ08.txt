@@ -1,0 +1,57 @@
+%META:TOPICINFO{author="guest" date="1098326832" format="1.0" version="1.1"}%
+%META:TOPICPARENT{name="SlonyFAQ"}%
+---++ Subscription fails "transaction still in progress"
+
+I'm trying to get a slave subscribed, and get the following
+messages in the logs:
+
+<verbatim>
+DEBUG1 copy_set 1
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
+WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
+</verbatim>
+
+Oops.  What I forgot to mention, as well, was that I was trying to add
+TWO subscribers, concurrently.
+
+That doesn't work out: Slony-I won't work on the COPY commands
+concurrently.  See src/slon/remote_worker.c, function copy_set()
+
+This has the (perhaps unfortunate) implication that you cannot
+populate two slaves concurrently.  You have to subscribe one to the
+set, and only once it has completed setting up the subscription
+(copying table contents and such) can the second subscriber start
+setting up the subscription.
+
+It could also be possible for there to be an old outstanding
+transaction blocking Slony-I from processing the sync.  You might want
+to take a look at pg_locks to see what's up:
+
+<verbatim>
+sampledb=# select * from pg_locks where transaction is not null order by transaction;
+ relation | database | transaction |	pid	|	  mode		| granted 
+----------+----------+-------------+---------+---------------+---------
+			 |			 |	127314921 | 2605100 | ExclusiveLock | t
+			 |			 |	127326504 | 5660904 | ExclusiveLock | t
+(2 rows)
+</verbatim>
+
+See?  127314921 is indeed older than 127314958, and it's still running.
+
+<verbatim>
+$ ps -aef | egrep '[2]605100'
+postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
+</verbatim>
+
+This happens to be a COPY transaction involved in setting up the
+subscription for one of the nodes.  All is well; the system is busy
+setting up the first subscriber; it won't start on the second one
+until the first one has completed subscribing.
+
+By the way, if there is more than one database on the PostgreSQL
+cluster, and activity is taking place on the OTHER database, that will
+lead to there being "transactions earlier than XID whatever" being
+found to be still in progress.  The fact that it's a separate database
+on the cluster is irrelevant; Slony-I will wait until those old
+transactions terminate.

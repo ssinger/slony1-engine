@@ -1,0 +1,26 @@
+%META:TOPICINFO{author="guest" date="1099972260" format="1.0" version="1.3"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Frequently Asked Questions
+
+Not all of these are "frequently asked;" some represent _trouble found that seemed worth documenting_.
+
+Note that numerous of these items are version-specific, describing how to deal with error conditions that are dealt with automatically by later releases.  In particular, version 1.0.5 resolved numerous issues where changing replication configuration didn't quite work entirely right.  Many of these items should therefore ultimately get reorganized to indicate version specificity.  There are quite enough issues with 1.0.2 that people should probably prefer to use 1.0.5 unless there's very special reason to stay with 1.0.2 for the time being.
+
+	* SlonyFAQ01 I looked for the _clustername namespace, and it wasn't there.
+	* SlonyFAQ02 Some events moving around, but no replication
+	* SlonyFAQ03 Cluster name with "-" in it
+	* SlonyFAQ04 slon does not restart after crash
+	* SlonyFAQ05 ps finds passwords on command line
+	* SlonyFAQ06 Slonik fails - cannot load PostgreSQL library -  PGRES_FATAL_ERROR load '$libdir/xxid';
+	* SlonyFAQ07 Table indexes with FQ namespace names
+	* SlonyFAQ08 Subscription fails "transaction still in progress"
+	* SlonyFAQ09 ERROR:  duplicate key violates unique constraint "sl_table-pkey"
+	* SlonyFAQ10 I need to drop a table from a replication set
+	* SlonyFAQ11 I need to drop a sequence from a replication set
+	* SlonyFAQ12 Slony-I: cannot add table to currently subscribed set 1
+	* SlonyFAQ13 Some nodes start consistently falling behind
+	* SlonyFAQ14 I started doing a backup using pg_dump, and suddenly Slony stops
+	* SlonyFAQ15 The slons spent the weekend out of commission [for some reason], and it's taking a long time to get a sync through.
+	* SlonyFAQ16 I pointed a subscribing node to a different parent and it stopped replicating
+	* SlonyFAQ17 After dropping a node, sl_log_1 isn't getting purged out anymore
+	* SlonyFAQ18 Replication Fails - Unique Constraint Violation

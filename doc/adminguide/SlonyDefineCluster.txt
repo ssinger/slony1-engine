@@ -1,0 +1,13 @@
+%META:TOPICINFO{author="guest" date="1097952385" format="1.0" version="1.4"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Defining Slony-I Clusters
+
+A Slony-I cluster is the basic grouping of database instances in which replication takes place.  It consists of a set of PostgreSQL database instances in which is defined a namespace specific to that cluster.
+
+Each database instance in which replication is to take place is identified by a node number.
+
+For a simple install, it may be reasonable for the "master" to be node #1, and for the "slave" to be node #2.
+
+Some planning should be done, in more complex cases, to ensure that the numbering system is kept sane, lest the administrators be driven insane.  The node numbers should be chosen to somehow correspond to the shape of the environment, as opposed to (say) the order in which nodes were initialized.
+
+It may be that in version 1.1, nodes will also have a "name" attribute, so that they may be given more mnemonic names.  In that case, the node numbers can be cryptic; it will be the node name that is used to organize the cluster.

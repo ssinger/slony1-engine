@@ -1,0 +1,22 @@
+%META:TOPICINFO{author="guest" date="1098117183" format="1.0" version="1.2"}%
+%META:TOPICPARENT{name="SlonyIAdministration"}%
+---++ Slony Administration Scripts
+
+In the "altperl" directory in the CVS tree, there is a sizable set of Perl scripts that may be used to administer a set of Slony-I instances, which support having arbitrary numbers of nodes.
+
+Most of them generate Slonik scripts that are then to be passed on to the slonik utility to be submitted to all of the Slony-I nodes in a particular cluster.  At one time, this embedded running slonik on the slonik scripts.  Unfortunately, this turned out to be a pretty large calibre "foot gun," as minor typos on the command line led, on a couple of occasions, to pretty calamitous actions, so the behaviour has been changed so that the scripts simply submit output to standard output.  An administrator should review the slonik script before submitting it to Slonik.
+
+---+++ Node/Cluster Configuration - cluster.nodes
+
+The UNIX environment variable SLONYNODES is used to determine what Perl configuration file will be used to control the shape of the nodes in a Slony-I cluster.
+
+What variables are set up...
+
+---+++ Set configuration - cluster.set1, cluster.set2
+
+The UNIX environment variable SLONYSET is used to determine what Perl configuration file will be used to determine what objects will be contained in a particular replication set.
+
+Unlike SLONYNODES, which is essential for ALL of the slonik-generating scripts, this only needs to be set when running create_set.pl, to control what tables will be in a particular replication set.
+
+What variables are set up...
+
