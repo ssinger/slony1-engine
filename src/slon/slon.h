@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.38 2004-09-24 18:51:43 darcyb Exp $
+ *	$Id: slon.h,v 1.39 2004-09-29 22:15:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -498,3 +498,11 @@ extern int		slon_log_level;
 
 #endif /*  SLON_H_INCLUDED */
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

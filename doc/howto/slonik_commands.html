@@ -37,6 +37,8 @@
 		<li><a href="#stmt_merge_set">MERGE SET</a>
 		<li><a href="#stmt_set_add_table">SET ADD TABLE</a>
 		<li><a href="#stmt_set_add_sequence">SET ADD SEQUENCE</a>
+		<li><a href="#stmt_set_drop_table">SET DROP TABLE</a>
+		<li><a href="#stmt_set_drop_sequence">SET DROP SEQUENCE</a>
 		<li><a href="#stmt_store_trigger">STORE TRIGGER</a>
 		<li><a href="#stmt_drop_trigger">DROP TRIGGER</a>
 		<li><a href="#stmt_subscribe_set">SUBSCRIBE SET</a>
@@ -1018,6 +1020,77 @@ manual on how to configure and set up a replication system.
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket id sequence'
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_drop_table">
+<h3>SET DROP TABLE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET DROP TABLE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drop an existing user table to a replication set.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set. A future version of slonik
+		might figure out this information by itself.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the table. 
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET DROP TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_drop_sequence">
+<h3>SET DROP SEQUENCE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET DROP SEQUENCE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drops an existing user sequence from a replication set.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the sequence.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET DROP SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
 	<br>);
 </p>
 </div>

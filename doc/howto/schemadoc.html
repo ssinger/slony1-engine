@@ -1,4 +1,4 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.5 2004-09-23 14:50:18 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.6 2004-09-29 22:15:18 cbbrowne Exp $ -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -111,13 +111,13 @@
   <body>
 
     <!-- Primary Index -->
-	<p><br><br>Dumped on 2004-09-23</p>
+	<p><br><br>Dumped on 2004-09-29</p>
 <h1><a name="index">Index of database - schemadoc</a></h1>
 <ul>
     
     <li><a name="schemadoc.schema">schemadoc</a></li><ul>
     	<li><a href="#schemadoc.table.sl-config-lock">sl_config_lock</a></li><li><a href="#schemadoc.table.sl-confirm">sl_confirm</a></li><li><a href="#schemadoc.table.sl-event">sl_event</a></li><li><a href="#schemadoc.table.sl-listen">sl_listen</a></li><li><a href="#schemadoc.table.sl-log-1">sl_log_1</a></li><li><a href="#schemadoc.table.sl-log-2">sl_log_2</a></li><li><a href="#schemadoc.table.sl-node">sl_node</a></li><li><a href="#schemadoc.table.sl-path">sl_path</a></li><li><a href="#schemadoc.view.sl-seqlastvalue">sl_seqlastvalue</a></li><li><a href="#schemadoc.table.sl-seqlog">sl_seqlog</a></li><li><a href="#schemadoc.table.sl-sequence">sl_sequence</a></li><li><a href="#schemadoc.table.sl-set">sl_set</a></li><li><a href="#schemadoc.table.sl-setsync">sl_setsync</a></li><li><a href="#schemadoc.table.sl-subscribe">sl_subscribe</a></li><li><a href="#schemadoc.table.sl-table">sl_table</a></li><li><a href="#schemadoc.table.sl-trigger">sl_trigger</a></li>
-  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text-integer">ddlscript( integer, text, integer )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text-integer">ddlscript_int( integer, text, integer )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.slonyversion">slonyversion(  )</a></li><li><a href="#schemadoc.function.slonyversionmajor">slonyversionmajor(  )</a></li><li><a href="#schemadoc.function.slonyversionminor">slonyversionminor(  )</a></li><li><a href="#schemadoc.function.slonyversionpatchlevel">slonyversionpatchlevel(  )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
+  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text-integer">ddlscript( integer, text, integer )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text-integer">ddlscript_int( integer, text, integer )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setdropsequence-integer">setdropsequence( integer )</a></li><li><a href="#schemadoc.function.setdropsequence-int-integer">setdropsequence_int( integer )</a></li><li><a href="#schemadoc.function.setdroptable-integer">setdroptable( integer )</a></li><li><a href="#schemadoc.function.setdroptable-int-integer">setdroptable_int( integer )</a></li><li><a href="#schemadoc.function.slonyversion">slonyversion(  )</a></li><li><a href="#schemadoc.function.slonyversionmajor">slonyversionmajor(  )</a></li><li><a href="#schemadoc.function.slonyversionminor">slonyversionminor(  )</a></li><li><a href="#schemadoc.function.slonyversionpatchlevel">slonyversionpatchlevel(  )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
     </ul>
     
 </ul>
@@ -2671,8 +2671,20 @@ begin
 	-- ----
 	-- First remove all but the oldest confirm row per origin,receiver pair
 	-- ----
+	delete from schemadoc.sl_confirm
+				where con_origin not in (select no_id from schemadoc.sl_node);
+	delete from schemadoc.sl_confirm
+				where con_received not in (select no_id from schemadoc.sl_node);
+	-- ----
+	-- Next remove all but the oldest confirm row per origin,receiver pair.
+	-- Ignore confirmations that are younger than 10 minutes. We currently
+	-- have an not confirmed suspicion that a possibly lost transaction due
+	-- to a server crash might have been visible to another session, and
+	-- that this led to log data that is needed again got removed.
+	-- ----
 	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
 				from schemadoc.sl_confirm
+				where con_timestamp &lt; (CURRENT_TIMESTAMP - &#39;10 min&#39;::interval)
 				group by con_origin, con_received
 	loop
 		delete from schemadoc.sl_confirm
@@ -5026,6 +5038,259 @@ end;
 	
 		<hr>
 		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setdropsequence-integer">setdropsequence( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>setDropSequence (seq_id)
+
+On the origin node for the set, drop sequence seq_id from replication
+set, and raise SET_DROP_SEQUENCE to cause this to replicate to
+subscriber nodes.</p>
+        <pre>
+declare
+	p_seq_id		alias for $1;
+	v_set_id		int4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Determine set id for this sequence
+	-- ----
+	select seq_set into v_set_id from schemadoc.sl_sequence where seq_id = p_seq_id;
+
+	-- ----
+	-- Ensure sequence exists
+	-- ----
+	if not found then
+		raise exception &#39;Slony-I: setDropSequence_int(): sequence % not found&#39;,
+			p_seq_id;
+	end if;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setDropSequence(): set % not found&#39;, v_set_id;
+	end if;
+	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: setDropSequence(): set % has remote origin&#39;, v_set_id;
+	end if;
+
+	-- ----
+	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
+	-- ----
+	perform schemadoc.setDropSequence_int(p_seq_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_SEQUENCE&#39;,
+			p_seq_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setdropsequence-int-integer">setdropsequence_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>setDropSequence_int (seq_id)
+
+This processes the SET_DROP_SEQUENCE event.  On remote nodes that
+subscribe to the set containing sequence seq_id, drop the sequence
+from the replication set.</p>
+        <pre>
+declare
+	p_seq_id		alias for $1;
+	v_set_id		int4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_sync_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Determine set id for this sequence
+	-- ----
+	select seq_set into v_set_id from schemadoc.sl_sequence where seq_id = p_seq_id;
+
+	-- ----
+	-- Ensure sequence exists
+	-- ----
+	if not found then
+		return 0;
+	end if;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the sequence because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setDropSequence_int(): set % not found&#39;,
+				v_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from schemadoc.sl_subscribe
+				where sub_set = v_set_id
+				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+		if not found then
+			return 0;
+		end if;
+	end if;
+
+	-- ----
+	-- drop the sequence from sl_sequence, sl_seqlog
+	-- ----
+	delete from schemadoc.sl_seqlog where seql_seqid = p_seq_id;
+	delete from schemadoc.sl_sequence where seq_id = p_seq_id;
+
+	return p_seq_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setdroptable-integer">setdroptable( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>setDropTable (tab_id)
+
+Drop table tab_id from set on origin node, and generate SET_DROP_TABLE
+event to allow this to propagate to other nodes.</p>
+        <pre>
+declare
+	p_tab_id		alias for $1;
+	v_set_id		int4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+        -- ----
+	-- Determine the set_id
+        -- ----
+	select tab_set into v_set_id from schemadoc.sl_table where tab_id = p_tab_id;
+
+	-- ----
+	-- Ensure table exists
+	-- ----
+	if not found then
+		raise exception &#39;Slony-I: setDropTable_int(): table % not found&#39;,
+			p_tab_id;
+	end if;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setDropTable(): set % not found&#39;, v_set_id;
+	end if;
+	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: setDropTable(): set % has remote origin&#39;, v_set_id;
+	end if;
+
+	-- ----
+	-- Drop the table from the set and generate the SET_ADD_TABLE event
+	-- ----
+	perform schemadoc.setDropTable_int(p_tab_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_TABLE&#39;, p_tab_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setdroptable-int-integer">setdroptable_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>setDropTable_int (tab_id)
+
+This function processes the SET_DROP_TABLE event on remote nodes,
+dropping a table from replication if the remote node is subscribing to
+its replication set.</p>
+        <pre>
+declare
+	p_tab_id		alias for $1;
+	v_set_id		int4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_tab_reloid		oid;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+        -- ----
+	-- Determine the set_id
+        -- ----
+	select tab_set into v_set_id from schemadoc.sl_table where tab_id = p_tab_id;
+
+	-- ----
+	-- Ensure table exists
+	-- ----
+	if not found then
+		return 0;
+	end if;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the table because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setDropTable_int(): set % not found&#39;,
+				v_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from schemadoc.sl_subscribe
+				where sub_set = v_set_id
+				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+		if not found then
+			return 0;
+		end if;
+	end if;
+	
+	-- ----
+	-- Drop the table from sl_table and drop trigger from it.
+	-- ----
+	perform schemadoc.alterTableRestore(p_tab_id);
+	perform schemadoc.tableDropKey(p_tab_id);
+	delete from schemadoc.sl_table where tab_id = p_tab_id;
+	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
 			<a href="#schemadoc.schema"><a name="schemadoc.function.slonyversion">slonyversion(  )</a>
 		</h2>
 <h3>Returns: text</h3>
@@ -5946,12 +6211,14 @@ begin
 			where ssy_setid = p_sub_set;
 
 	-- ----
-	-- Remove all sl_table entries for this set.
+	-- Remove all sl_table and sl_sequence entries for this set.
 	-- Should we ever subscribe again, the initial data
 	-- copy process will create new ones.
 	-- ----
 	delete from schemadoc.sl_table
 			where tab_set = p_sub_set;
+	delete from schemadoc.sl_sequence
+			where seq_set = p_sub_set;
 
 	-- ----
 	-- Call the internal procedure to drop the subscription

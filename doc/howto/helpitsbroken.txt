@@ -52,7 +52,8 @@ main parser, so no, you probably shouldn't put a "-" in your
 identifier name.
 
 You may be able to defeat this by putting "quotes" around identifier
-names, but it's liable to bite you somewhere...
+names, but it's liable to bite you some, so this is something that is
+probably not worth working around.
 
 4.  After an immediate stop of postgresql (simulation of system crash)
 in pg_catalog.pg_listener a tuple with
@@ -187,31 +188,14 @@ the tables that you need.  Alas, that means recopying a whole lot of
 data, and kills the usability of the cluster on the rest of the set
 while that's happening.
 
-b) Some day, someone will get around to implementing the Slonik
-command SET DROP TABLE, which will involve (roughly speaking) the
-following set of changes:
+b) If you are running 1.0.3 or later, there is the command SET DROP
+TABLE, which will "do the trick."
 
- 1.  Need to augment the grammar to know about "set drop table"
-
- 2.  Need to have a C function for set_drop_table
-
- 3.  Need a stored procedure, droptable(), which initiates the event
-
- 4.  Need another stored procedure, droptable_int() which does the
-      alterTableRestore(), tableDropKey()
-
- 5.  I presume (haven't looked) that slon needs to have a case
-      statement added to allow it to propagate the "DROP_TABLE" 
-      event.
-
-That will happen when someone gets around to implementing it.  The
-likely "first volunteer" is Chris Browne <cbbrowne@acm.org>, but if
-somone gets to it first, he won't mind too much.
-
-c) The _essential_ functionality of SET DROP TABLE is the bits in step
-4, droptable_int().  You can fiddle this by hand by finding the table
-ID for the table you want to get rid of, which you can find in
-sl_table, and then run three queries, on each host:
+c) If you are still using 1.0.1 or 1.0.2, the _essential_
+functionality of SET DROP TABLE involves the functionality in
+droptable_int().  You can fiddle this by hand by finding the table ID
+for the table you want to get rid of, which you can find in sl_table,
+and then run the following three queries, on each host:
 
   select _slonyschema.alterTableRestore(40);
   select _slonyschema.tableDropKey(40);
@@ -228,21 +212,13 @@ event would do that.  Submitting the three queries using EXECUTE
 SCRIPT could do that.  Also possible would be to connect to each
 database and submit the queries by hand.
 
-11.  I tried to add a table to a set, and got the following message:
+11.  I want to stop replicating a sequence
 
-   Slony-I: cannot add table to currently subscribed set 1
+If you are running 1.0.3 or later, there is a SET DROP SEQUENCE
+command in Slonik to allow you to do this, parallelling SET DROP
+TABLE.
 
-You cannot add tables to sets that already have subscribers.
-
-The workaround to this is to create ANOTHER set, add the new tables to
-that new set, subscribe the same nodes subscribing to "set 1" to the
-new set, and then merge the sets together.
-
-12.  I want to stop replicating a sequence
-
-There is not at this point a SET DROP SEQUENCE command in Slonik to
-allow you to do this.  That should come in at the same time as SET
-DROP TABLE does (see #10).
+If you are running 1.0.2 or earlier, the process is a bit more manual.
 
 Supposing I want to get rid of the two sequences listed below,
 whois_cachemgmt_seq and epp_whoi_cach_seq_, we start by needing the
@@ -266,6 +242,19 @@ Those two queries could be submitted to all of the nodes via
 ddlscript() / EXECUTE SCRIPT, thus eliminating the sequence everywhere
 "at once."  Or they may be applied by hand to each of the nodes.
 
+Similarly to SET DROP TABLE, this should be in place for Slony-I version
+1.0.3 as SET DROP SEQUENCE.
+
+12.  I tried to add a table to a set, and got the following message:
+
+   Slony-I: cannot add table to currently subscribed set 1
+
+You cannot add tables to sets that already have subscribers.
+
+The workaround to this is to create ANOTHER set, add the new tables to
+that new set, subscribe the same nodes subscribing to "set 1" to the
+new set, and then merge the sets together.
+
 13.  Some nodes start consistently falling behind
 
 I have been running Slony-I on a node for a while, and am seeing
@@ -282,12 +271,12 @@ fall further and further behind.
 
 You quite likely need to do a VACUUM FULL on pg_listener, to
 vigorously clean it out, and need to vacuum pg_listener really
-frequently.  (Once every five minutes would likely be AOK.)
+frequently.  Once every five minutes would likely be AOK.
 
 Slon daemons already vacuum a bunch of tables, and cleanup_thread.c
 contains a list of tables that are frequently vacuumed automatically.
-In Slony-I 1.0.2, pg_listener is not included.  In later versions, it
-will be, so this may be an obsolete problem.
+In Slony-I 1.0.2, pg_listener is not included.  In 1.0.3 and later, it
+is regularly vacuumed, so this should cease to be an issue.
 
 14.  I started doing a backup using pg_dump, and suddenly Slony stops
 replicating anything.
@@ -329,6 +318,9 @@ There are a number of possible answers to this:
  b) It would be nice to add an "--exclude-schema" option to pg_dump to
     exclude the Slony cluster schema.  Maybe in 8.0 or 8.1...
 
+Note that 1.0.3 uses a more precise lock that is less exclusive that
+should relieve this problem.
+
 15.  The slons spent the weekend out of commission [for some reason],
 and it's taking a long time to get a sync through.
 
@@ -343,6 +335,10 @@ transaction.
 
 Conclusion: Even if there is not going to be a subscriber around, you
 _really_ want to have a slon running to service the "master" node.
+
+Some future version (probably 1.1) may provide a way for SYNC counts
+to be updated on the master by the stored function that is invoked by
+the table triggers.
 
 16.  I pointed a subscribing node to a different parent and it stopped
 replicating
@@ -382,3 +378,12 @@ try {
 
 Immediately after this script was run, SYNC events started propagating
 again to node 3.
+
+This points out two principles:
+
+ 1.  If you have multiple nodes, and cascaded subscribers, you need to
+     be quite careful in populating the STORE LISTEN entries, and in
+     modifying them if the structure of the replication "tree" changes.
+
+ 2.  Version 1.1 probably ought to provide better tools to help manage
+     this.

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.20 2004-09-24 22:12:36 darcyb Exp $
+ *	$Id: runtime_config.c,v 1.21 2004-09-29 22:15:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -610,7 +610,6 @@ rtcfg_dropSet(int set_id)
 	rtcfg_unlock();
 }
 
-
 void
 rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 {
@@ -1035,3 +1034,11 @@ rtcfg_seq_get(void)
 
 	return retval;
 }
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.63 2004-09-29 14:48:31 wieck Exp $
+ *	$Id: remote_worker.c,v 1.64 2004-09-29 22:15:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -685,6 +685,18 @@ remoteWorkerThread_main(void *cdata)
 				 * and sequences information is not
 				 * maintained in the runtime configuration.
 				 */
+			} else if (strcmp(event->ev_type, "SET_DROP_TABLE") == 0) 
+			{
+			  int tab_id = (int) strtol(event->ev_data1, NULL, 10);
+			  slon_appendquery(&query1, "select %s.setDropTable_int(%d);", 
+					   rtcfg_namespace,
+					   tab_id);
+			} else if (strcmp(event->ev_type, "SET_DROP_SEQUENCE") == 0)
+			{
+			  int seq_id = (int) strtol(event->ev_data1, NULL, 10);
+			  slon_appendquery(&query1, "select %s.setDropSequence_int(%d);", 
+					   rtcfg_namespace,
+					   seq_id);
 			} else if (strcmp(event->ev_type, "STORE_TRIGGER") == 0)
 			{
 				int             trig_tabid = (int)strtol(event->ev_data1, NULL, 10);
@@ -3866,3 +3878,11 @@ sync_helper(void *cdata)
 		pthread_mutex_unlock(&(provider->helper_lock));
 	}
 }
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
