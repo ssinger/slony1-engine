@@ -18,3 +18,5 @@ distdir: $(DISTFILES)
       cp $$file $(distdir)/$(subdir)/$$file ; \
     done
 
+clean:
+
