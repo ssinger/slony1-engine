@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.18 2004-08-30 21:16:33 wieck Exp $
+ *	$Id: scan.l,v 1.19 2004-09-07 17:10:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -76,6 +76,7 @@ node			{ return K_NODE;				}
 off				{ return K_OFF;					}
 old				{ return K_OLD;					}
 on				{ return K_ON;					}
+only			{ return K_ONLY;				}
 origin			{ return K_ORIGIN;				}
 path			{ return K_PATH;				}
 provider		{ return K_PROVIDER;			}

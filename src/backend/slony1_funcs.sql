@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.23 2004-09-06 04:49:48 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.24 2004-09-07 17:10:08 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2603,16 +2603,17 @@ Processes DROP_TRIGGER event to make sure that trigger trig_tgname on
 replicated table trig_tabid IS disabled.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlScript (set_id, script)
+-- FUNCTION ddlScript (set_id, script, only_on_node)
 --
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript (int4, text)
+create or replace function @NAMESPACE@.ddlScript (int4, text, int4)
 returns bigint
 as '
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
+	p_only_on_node		alias for $3;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -2639,29 +2640,30 @@ begin
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
-	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script);
+	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
-			p_set_id, p_script);
+			p_set_id, p_script, p_only_on_node);
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.ddlScript(int4, text) is
-'ddlScript(set_id, script)
+comment on function @NAMESPACE@.ddlScript(int4, text, int4) is
+'ddlScript(set_id, script, only_on_node)
 
 Generates a SYNC event, runs the script on the origin, and then
 generates a DDL_SCRIPT event to request it to be run on replicated
 slaves.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlScript_int (set_id, script)
+-- FUNCTION ddlScript_int (set_id, script, only_on_node)
 --
 --	Process the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript_int (int4, text)
+create or replace function @NAMESPACE@.ddlScript_int (int4, text, int4)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
+	p_only_on_node		alias for $3;
 	v_set_origin		int4;
 	v_no_id				int4;
 	v_row				record;
@@ -2692,6 +2694,14 @@ begin
 	end if;
 
 	-- ----
+	-- If execution on only one node is requested, check that
+	-- we are that node.
+	-- ----
+	if p_only_on_node > 0 and p_only_on_node <> v_no_id then
+		return 0;
+	end if;
+
+	-- ----
 	-- Restore all original triggers and rules
 	-- ----
 	for v_row in select * from @NAMESPACE@.sl_table
@@ -2717,8 +2727,8 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.ddlScript_int(int4, text) is
-'ddlScript_int(set_id, script)
+comment on function @NAMESPACE@.ddlScript_int(int4, text, int4) is
+'ddlScript_int(set_id, script, only_on_node)
 
 Processes the DDL_SCRIPT event.  On slave nodes, this restores
 original triggers/rules, runs the script, and then puts tables back

@@ -1473,6 +1473,17 @@ manual on how to configure and set up a replication system.
 		The default value is 1.
 	</p></td>
 </tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EXECUTE ONLY ON = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		<b>(Optional)</b>
+		The ID of the only node to actually execute the script.
+		This option causes the script to be propagated by all nodes
+		but executed only by one.
+		The default is to execute the script on all nodes that are
+		subscribed to the set.
+	</p></td>
+</tr>
 </table>
 <h3>Example:</h3>
 <p>

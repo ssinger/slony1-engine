@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.59 2004-08-27 13:24:43 wieck Exp $
+ *	$Id: remote_worker.c,v 1.60 2004-09-07 17:10:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -913,11 +913,12 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int		ddl_setid = (int) strtol(event->ev_data1, NULL, 10);
 				char   *ddl_script = event->ev_data2;
+				int		ddl_only_on_node = (int) strtol(event->ev_data3, NULL, 10);
 
 				slon_appendquery(&query1,
-						"select %s.ddlScript_int(%d, '%q'); ",
+						"select %s.ddlScript_int(%d, '%q', %d); ",
 						rtcfg_namespace,
-						ddl_setid, ddl_script);
+						ddl_setid, ddl_script, ddl_only_on_node);
 			}
 			else
 			{

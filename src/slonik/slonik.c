@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.29 2004-08-04 19:58:36 darcyb Exp $
+ *	$Id: slonik.c,v 1.30 2004-09-07 17:10:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3351,9 +3351,9 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 
 	dstring_init(&query);
 	slon_mkquery(&query,
-			"select \"_%s\".ddlScript(%d, '%q'); ",
+			"select \"_%s\".ddlScript(%d, '%q', %d); ",
 			stmt->hdr.script->clustername,
-			stmt->ddl_setid, dstring_data(&script));
+			stmt->ddl_setid, dstring_data(&script), stmt->only_on_node);
 	dstring_free(&script);
 	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo1, &query) < 0)
 	{

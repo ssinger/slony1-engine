@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.17 2004-06-12 03:27:46 wieck Exp $
+ *	$Id: slonik.h,v 1.18 2004-09-07 17:10:36 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -317,6 +317,7 @@ struct SlonikStmt_ddl_script_s {
 	int					ddl_setid;
 	char			   *ddl_fname;
 	int					ev_origin;
+	int					only_on_node;
 	int					ddl_fd;
 };
 

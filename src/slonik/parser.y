@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.16 2004-06-07 18:46:17 wieck Exp $
+ *	$Id: parser.y,v 1.17 2004-09-07 17:10:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,7 @@ typedef enum {
 	O_CONNINFO,
 	O_CONNRETRY,
 	O_EVENT_NODE,
+	O_EXECUTE_ONLY_ON,
 	O_FILENAME,
 	O_FORWARD,
 	O_FQNAME,
@@ -200,6 +201,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_OFF
 %token	K_OLD
 %token	K_ON
+%token	K_ONLY
 %token	K_ORIGIN
 %token	K_PATH
 %token	K_PROVIDER
@@ -1191,6 +1193,7 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 							STMT_OPTION_INT( O_SET_ID, -1 ),
 							STMT_OPTION_STR( O_FILENAME, NULL ),
 							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
 							STMT_OPTION_END
 						};
 
@@ -1206,6 +1209,7 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 							new->ddl_setid		= opt[0].ival;
 							new->ddl_fname		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
+							new->only_on_node	= opt[3].ival;
 							new->ddl_fd			= -1;
 						}
 						else
@@ -1449,6 +1453,11 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_TIMEOUT;
 						$$ = $3;
 					}
+					| K_EXECUTE K_ONLY K_ON '=' option_item_id
+					{
+						$5->opt_code	= O_EXECUTE_ONLY_ON;
+						$$ = $5;
+					}
 					;
 
 option_item_id		: id
@@ -1570,6 +1579,7 @@ option_str(option_code opt_code)
 		case O_CONNINFO:		return "conninfo";
 		case O_CONNRETRY:		return "connretry";
 		case O_EVENT_NODE:		return "event node";
+		case O_EXECUTE_ONLY_ON:	return "execute only on";
 		case O_FILENAME:		return "filename";
 		case O_FORWARD:			return "forward";
 		case O_FQNAME:			return "full qualified name";
