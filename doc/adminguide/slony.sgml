@@ -1,6 +1,4 @@
-<!--
-$PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian Exp $
--->
+<!-- $Id: slony.sgml,v 1.4 2004-12-17 23:30:03 darcyb Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
 
@@ -12,63 +10,74 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
 ]>
 
 <book id="slony">
- <title>Slony-I 1.1 Administration</title>
+  <title>Slony-I 1.1 Administration</title>
+  <bookinfo>
+    <corpauthor>The Slony Global Development Group</corpauthor>
+    <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
+    &legal;
+  </bookinfo>
 
- <bookinfo>
-  <corpauthor>The Slony Global Development Group</corpauthor>
-  <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
-  &legal;
- </bookinfo>
-<article id="slonyintro"> <title>Slony-I Introduction</title>
+  <article id="slonyintro">
+    <title>Slony-I Introduction</title>
 
- &intro;
- &prerequisites;
- &installation;
- &concepts;
- &cluster;
- &defineset;
-</article>
+    &intro;
+    &prerequisites;
+    &installation;
+    &concepts;
+    &cluster;
+    &defineset;
+  </article>
 
-&reference;
+    &reference;
 
-<article id="slonyadmin"> <title> Slony-I Administration </title>
+  <article id="slonyadmin">
+    <title>Slony-I Administration</title>
 
- &adminscripts;
- &startslons;
- &subscribenodes;
- &monitoring;
- &maintenance;
- &reshape;
- &failover;
- &listenpaths;
- &addthings;
- &dropthings;
- &ddlchanges;
- &firstdb;
- &help;
+    &adminscripts;
+    &startslons;
+    &subscribenodes;
+    &monitoring;
+    &maintenance;
+    &reshape;
+    &failover;
+    &listenpaths;
+    &addthings;
+    &dropthings;
+    &ddlchanges;
+    &firstdb;
+    &help;
+  </article>
 
-</article>
-
-<article id="faq"><title> Slony-I FAQ </title>
-
+  <article id="faq"><title>Slony-I FAQ</title>
     <articleinfo><title>Slony-I FAQ</title>
       <corpauthor>The Slony Global Development Group</corpauthor>
       <author> 
-	<firstname>Christopher </firstname> 
-	<surname>Browne</surname> 
+        <firstname>Christopher </firstname> 
+        <surname>Browne</surname> 
       </author> 
     </articleinfo>
 
-<para> Not all of these are, strictly speaking, <quote>frequently
-asked;</quote> some represent <emphasis>trouble found that seemed
-worth documenting</emphasis>.</para>
+    <para>Not all of these are, strictly speaking, <quote>frequently
+    asked;</quote> some represent <emphasis>trouble found that seemed
+    worth documenting</emphasis>.</para>
 
- &faq;
+    &faq;
+  </article>
 
-<!--   &errcodes; -->
+  <article id="developer"><title>Slony-I Internals</title>
+    <articleinfo>
+      <title>Slony-I Internals</title>
+      <corpauthor>The Slony Global Development Group</corpauthor>
+      <author>
+        <firstname>Christopher</firstname>
+        <surname>Browne</surname>
+      </author>
+    </articleinfo>
+  
+    &schemadoc;
+  </article>
 
-<!--  </part> -->
-
+<!--  &errcodes; -->
 <!--  &biblio; -->
 <!--  &bookindex; -->
 
