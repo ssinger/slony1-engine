@@ -51,10 +51,10 @@ trap '
 # Make sure the install is up to date
 #####
 WGM=`which gmake`
-if [[ $WGM == "" ]]; then
+if [ -z $WGM ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
-    if [[ $CGNU == "" ]]; then
+    if [ -z $CGNU ] ; then
 	echo "GNU Make not found - please install GNU Make"
 	exit 1
     fi
