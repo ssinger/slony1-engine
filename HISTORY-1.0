@@ -101,6 +101,13 @@
 
   ----------------------------
 
+  date: 2004/10/22 14:45:11;  author: wieck;
+  Prevent mergeSet(), setMoveTable() and setMoveSequence()
+  to work while pending subscriptions exist. This prevents
+  breaking of replication as reported per bug #896.
+
+  ----------------------------
+
 1.0.3	Version number skipped due to late patch application
 
   ----------------------------
