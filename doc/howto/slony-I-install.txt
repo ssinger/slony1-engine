@@ -9,14 +9,14 @@ Requirements:
 
 Any platform that can run PostgreSQL should be able to run Slony-I.  The
 platforms that have received specific testing at the time of this release are
-FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha, osX-10.3, Linux-2.4X-i386
-Linux-2.6X-i386 Linux-2.6X-amd64, Solaris-2.8-SPARC, Solaris-2.9-SPARC and
-OpenBSD-3.5-sparc64.
+FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha, OS/X-10.3, Linux-2.4X-i386
+Linux-2.6X-i386 Linux-2.6X-amd64, Solaris-2.8-SPARC, Solaris-2.9-SPARC,
+OpenBSD-3.5-i386 and OpenBSD-3.5-sparc64.
 
-All the servers used within the replication cluster need to have their Real 
-Time Clocks in sync. This is to ensure that slon doesn't error with messages 
-indicating that slave is already ahead of the master during replication.  
-We recommend you use ntpd running on the master, with the slaves using it as 
+All the servers used within the replication cluster need to have their Real
+Time Clocks in sync. This is to ensure that slon doesn't error with messages
+indicating that slave is already ahead of the master during replication.  We
+recommend you use ntpd running on the master, with the slaves using it as
 their time peer.
 
 The following software packages are required to build Slony-I:
@@ -24,8 +24,8 @@ The following software packages are required to build Slony-I:
 GNU make.  Other make programs will not work.  GNU make is often installed
 under the name gmake; this document will always refer to it by that name. (On
 some systems GNU make is the default tool with the name make) to test for GNU
-make enter gmake version.  Version 3.76 or later is good.  Previous versions
-may not be.
+make enter "gmake --version".  Version 3.76 or later is good.  Previous
+versions may not be.
 
 You need an ISO/ANSI C complier.  Recent versions of GCC work.
 
@@ -37,7 +37,7 @@ If you need to get a GNU package, it comes in the standard packaging for your
 operating system, or you can find it at your local GNU mirror (see
 http://www.gnu.org/order/ftp.html for a list) or at ftp://ftp.gnu.org/gnu.)
 
-If you need to obtain PostgreSQL source, you can download it form your
+If you need to obtain PostgreSQL source, you can download it from your
 favorite PostgreSQL mirror (see <http://www.postgresql.org/mirrors-www.html>
 for a list), or via BitTorrent at <http://bt.postgresql.org/>.
 
@@ -50,10 +50,10 @@ You can get the Slony-I source from <http://slony.org/>
 
 After you have obtained the file, unpack it.
 
-gunzip slony.tar.gz
-tar xf slony.tar
+gunzip slony1-1.0.0.tar.gz
+tar xf slony1-1.0.0.tar
 
-This will create a directory Slony-I under the current directory with the
+This will create a directory slony1-1.0.0 under the current directory with the
 Slony-I sources.  Change into that that directory for the rest of the
 installation procedure.
 
@@ -97,7 +97,7 @@ To install Slony-I, enter
 
 gmake install
 
-This will install files into postgresql install directory as specified by the
+This will install files into PostgreSQL install directory as specified by the
 --prefix option used in the PostgreSQL configuration.  Make sure you have
 appropriate permissions to write into that area.  Normally you need to do this
 as root.

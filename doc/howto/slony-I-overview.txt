@@ -22,7 +22,7 @@ a connection broker, and it doesn't make you coffee and toast in the morning.
 
 Why doesn't Slony-I do automatic fail-over/promotion?
 
-This is the job of network monitoring software, not Slony.  Every site's
+This is the job of network monitoring software, not Slony-I.  Every site's
 configuration and fail-over path is different.  For example, keep-alive
 monitoring with redundant NIC's and intelligent HA switches that guarantee
 race-condition-free takeover of a network address and disconnecting the
