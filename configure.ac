@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.20 2004-06-09 15:36:07 wieck Exp $
+# $Id: configure.ac,v 1.21 2004-06-09 22:41:12 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -149,7 +149,7 @@ CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 
 AC_CONFIG_FILES([
-	Makefile.global 
+	Makefile.global GNUmakefile
 ])
 
 AC_OUTPUT([
