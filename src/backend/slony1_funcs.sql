@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.52 2004-12-17 23:19:03 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.53 2005-02-16 21:02:01 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -361,7 +361,6 @@ comment on function @NAMESPACE@.initializeLocalNode (int4, text) is
 no_comment - Human-oriented comment
 
 Initializes the new node, no_id';
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeNode (no_id, no_comment, no_spool)
@@ -1230,11 +1229,11 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_server) then
-			perform @NAMESPACE@.storeNode_int (p_pa_server, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_pa_server, ''<event pending>'', ''f'');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_client) then
-			perform @NAMESPACE@.storeNode_int (p_pa_client, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_pa_client, ''<event pending>'', ''f'');
 		end if;
 		insert into @NAMESPACE@.sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry) values
@@ -1421,15 +1420,15 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_origin) then
-			perform @NAMESPACE@.storeNode_int (p_li_origin, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_origin, ''<event pending>'', ''f'');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_provider) then
-			perform @NAMESPACE@.storeNode_int (p_li_provider, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_provider, ''<event pending>'', ''f'');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_receiver) then
-			perform @NAMESPACE@.storeNode_int (p_li_receiver, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_receiver, ''<event pending>'', ''f'');
 		end if;
 
 		insert into @NAMESPACE@.sl_listen
@@ -1576,7 +1575,7 @@ begin
 	else
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_set_origin) then
-			perform @NAMESPACE@.storeNode_int (p_set_origin, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_set_origin, ''<event pending>'', ''f'');
 		end if;
 		insert into @NAMESPACE@.sl_set
 				(set_id, set_origin, set_comment) values
