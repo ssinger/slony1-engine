@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.17.2.1 2004-09-30 17:45:07 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.17.2.2 2004-10-08 16:30:13 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -34,6 +34,8 @@ typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
 typedef struct SlonikStmt_set_add_sequence_s	SlonikStmt_set_add_sequence;
 typedef struct SlonikStmt_set_drop_table_s		SlonikStmt_set_drop_table;
 typedef struct SlonikStmt_set_drop_sequence_s	SlonikStmt_set_drop_sequence;
+typedef struct SlonikStmt_set_move_table_s		SlonikStmt_set_move_table;
+typedef struct SlonikStmt_set_move_sequence_s	SlonikStmt_set_move_sequence;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
 typedef struct SlonikStmt_store_trigger_s		SlonikStmt_store_trigger;
 typedef struct SlonikStmt_drop_trigger_s		SlonikStmt_drop_trigger;
@@ -67,6 +69,8 @@ typedef enum {
 	STMT_SET_ADD_TABLE,
 	STMT_SET_DROP_SEQUENCE,
 	STMT_SET_DROP_TABLE,
+	STMT_SET_MOVE_SEQUENCE,
+	STMT_SET_MOVE_TABLE,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_STORE_PATH,
@@ -254,6 +258,7 @@ struct SlonikStmt_set_add_sequence_s {
 	char			   *seq_comment;
 };
 
+
 struct SlonikStmt_set_drop_table_s {
 	SlonikStmt			hdr;
 	int					set_origin;
@@ -265,6 +270,22 @@ struct SlonikStmt_set_drop_sequence_s {
 	SlonikStmt			hdr;
 	int					set_origin;
 	int					seq_id;
+};
+
+
+struct SlonikStmt_set_move_table_s {
+	SlonikStmt			hdr;
+	int					set_origin;
+	int					tab_id;
+	int					new_set_id;
+};
+
+
+struct SlonikStmt_set_move_sequence_s {
+	SlonikStmt			hdr;
+	int					set_origin;
+	int					seq_id;
+	int					new_set_id;
 };
 
 
@@ -461,6 +482,8 @@ extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
 extern int		slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt);
 extern int		slonik_set_drop_table(SlonikStmt_set_drop_table *stmt);
 extern int		slonik_set_drop_sequence(SlonikStmt_set_drop_sequence *stmt);
+extern int		slonik_set_move_table(SlonikStmt_set_move_table *stmt);
+extern int		slonik_set_move_sequence(SlonikStmt_set_move_sequence *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);
 extern int		slonik_store_trigger(SlonikStmt_store_trigger *stmt);
 extern int		slonik_drop_trigger(SlonikStmt_drop_trigger *stmt);

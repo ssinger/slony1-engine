@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.5 2004-09-30 17:45:05 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.6 2004-10-08 16:30:11 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2513,6 +2513,240 @@ comment on function @NAMESPACE@.setDropSequence_int(int4) is
 This processes the SET_DROP_SEQUENCE event.  On remote nodes that
 subscribe to the set containing sequence seq_id, drop the sequence
 from the replication set.';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setMoveTable (tab_id, new_set_id)
+--
+--	Generate the SET_MOVE_TABLE event.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setMoveTable (int4, int4)
+returns bigint
+as '
+declare
+	p_tab_id			alias for $1;
+	p_new_set_id		alias for $2;
+	v_old_set_id		int4;
+	v_origin			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the tables current set
+	-- ----
+	select tab_set into v_old_set_id from @NAMESPACE@.sl_table
+			where tab_id = p_tab_id;
+	if not found then
+		raise exception ''Slony-I: table %d not found'', p_tab_id;
+	end if;
+	
+	-- ----
+	-- Check that both sets exist and originate here
+	-- ----
+	if p_new_set_id = v_old_set_id then
+		raise exception ''Slony-I: set ids cannot be identical'';
+	end if;
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = p_new_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_new_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_new_set_id;
+	end if;
+
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = v_old_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', v_old_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				v_old_set_id;
+	end if;
+
+	-- ----
+	-- Check that both sets are subscribed by the same set of nodes
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = p_new_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = v_old_set_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				p_new_set_id, v_old_set_id;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = v_old_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = p_new_set_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				v_old_set_id, p_new_set_id;
+	end if;
+
+	-- ----
+	-- Change the set the table belongs to
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	perform @NAMESPACE@.setMoveTable_int(p_tab_id, p_new_set_id);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_TABLE'', 
+			p_tab_id, p_new_set_id);
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setMoveTable_int (tab_id, new_set_id)
+--
+--	Process the SET_MOVE_TABLE event.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setMoveTable_int (int4, int4)
+returns int4
+as '
+declare
+	p_tab_id			alias for $1;
+	p_new_set_id		alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	-- ----
+	-- Move the table to the new set
+	-- ----
+	update @NAMESPACE@.sl_table
+			set tab_set = p_new_set_id
+			where tab_id = p_tab_id;
+
+	return p_tab_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setMoveSequence (seq_id, new_set_id)
+--
+--	Generate the SET_MOVE_SEQUENCE event.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setMoveSequence (int4, int4)
+returns bigint
+as '
+declare
+	p_seq_id			alias for $1;
+	p_new_set_id		alias for $2;
+	v_old_set_id		int4;
+	v_origin			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the sequences current set
+	-- ----
+	select seq_set into v_old_set_id from @NAMESPACE@.sl_sequence
+			where seq_id = p_seq_id;
+	if not found then
+		raise exception ''Slony-I: sequence %d not found'', p_seq_id;
+	end if;
+	
+	-- ----
+	-- Check that both sets exist and originate here
+	-- ----
+	if p_new_set_id = v_old_set_id then
+		raise exception ''Slony-I: set ids cannot be identical'';
+	end if;
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = p_new_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_new_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_new_set_id;
+	end if;
+
+	select set_origin into v_origin from @NAMESPACE@.sl_set
+			where set_id = v_old_set_id;
+	if not found then
+		raise exception ''Slony-I: set % not found'', v_old_set_id;
+	end if;
+	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				v_old_set_id;
+	end if;
+
+	-- ----
+	-- Check that both sets are subscribed by the same set of nodes
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = p_new_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = v_old_set_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				p_new_set_id, v_old_set_id;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_subscribe SUB1
+				where SUB1.sub_set = v_old_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from @NAMESPACE@.sl_subscribe SUB2
+						where SUB2.sub_set = p_new_set_id))
+	then
+		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+				v_old_set_id, p_new_set_id;
+	end if;
+
+	-- ----
+	-- Change the set the sequence belongs to
+	-- ----
+	perform @NAMESPACE@.setMoveSequence_int(p_seq_id, p_new_set_id);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_SEQUENCE'', 
+			p_seq_id, p_new_set_id);
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setMoveSequence_int (seq_id, new_set_id)
+--
+--	Process the SET_MOVE_SEQUENCE event.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setMoveSequence_int (int4, int4)
+returns int4
+as '
+declare
+	p_seq_id			alias for $1;
+	p_new_set_id		alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+	
+	-- ----
+	-- Move the sequence to the new set
+	-- ----
+	update @NAMESPACE@.sl_sequence
+			set seq_set = p_new_set_id
+			where seq_id = p_seq_id;
+
+	return p_seq_id;
+end;
+' language plpgsql;
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
