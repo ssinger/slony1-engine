@@ -243,4 +243,25 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 
 Those two queries could be submitted to all of the nodes via
 ddlscript() / EXECUTE SCRIPT, thus eliminating the sequence everywhere
-"at once."
+"at once."  Or they may be applied by hand to each of the nodes.
+
+13.  Performance Sucks after a while
+
+I have been running Slony-I on a node for a while, and am seeing
+system performance suffering.
+
+I'm seeing long running queries of the form:
+
+   fetch 100 from LOG;
+
+This is characteristic of pg_listener (which is the table containing
+NOTIFY data) having plenty of dead tuples in it.
+
+You need to do a VACUUM FULL on pg_listener, and need to vacuum
+pg_listener really frequently.  (Once every five minutes would likely
+be AOK.)
+
+Slon daemons vacuum a bunch of tables, and cleanup_thread.c contains a
+list of tables that are frequently vacuumed automatically.  In Slony-I
+1.0.2, pg_listener is not included.  In later versions, it will be, so
+that you probably don't need to worry about this anymore.
