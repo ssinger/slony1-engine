@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.20 2005-01-12 17:27:10 darcyb Exp $
+ *	$Id: remote_listen.c,v 1.21 2005-01-28 22:45:26 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -86,8 +86,8 @@ remoteListenThread_main(void *cdata)
 	int64		new_config_seq = 0;
 
 	slon_log(SLON_DEBUG1,
-			 "remoteListenThread_%d: thread starts\n",
-			 node->no_id);
+		 "remoteListenThread_%d: thread starts\n",
+		 node->no_id);
 
 	/*
 	 * Initialize local data
@@ -122,9 +122,9 @@ remoteListenThread_main(void *cdata)
 					strcmp(conn_conninfo, node->pa_conninfo) != 0)
 				{
 					slon_log(SLON_DEBUG1,
-							 "remoteListenThread_%d: "
-							 "disconnecting from '%s'\n",
-							 node->no_id, conn_conninfo);
+						 "remoteListenThread_%d: "
+						 "disconnecting from '%s'\n",
+						 node->no_id, conn_conninfo);
 					slon_disconnectdb(conn);
 					free(conn_conninfo);
 
@@ -159,8 +159,8 @@ remoteListenThread_main(void *cdata)
 			{
 				rtcfg_unlock();
 				slon_log(SLON_DEBUG2,
-						 "remoteListenThread_%d: nothing to listen for\n",
-						 node->no_id);
+					 "remoteListenThread_%d: nothing to listen for\n",
+					 node->no_id);
 				rc = sched_msleep(node, 10000);
 				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
 					break;
@@ -183,9 +183,9 @@ remoteListenThread_main(void *cdata)
 			if (node->pa_conninfo == NULL)
 			{
 				slon_log(SLON_WARN,
-						 "remoteListenThread_%d: no conninfo - "
-						 "sleep 10 seconds\n",
-						 node->no_id);
+					 "remoteListenThread_%d: no conninfo - "
+					 "sleep 10 seconds\n",
+					 node->no_id);
 
 				rtcfg_unlock();
 				rc = sched_msleep(node, 10000);
@@ -210,9 +210,9 @@ remoteListenThread_main(void *cdata)
 				conn_conninfo = NULL;
 
 				slon_log(SLON_WARN,
-						 "remoteListenThread_%d: DB connection failed - "
-						 "sleep %d seconds\n",
-						 node->no_id, pa_connretry);
+					 "remoteListenThread_%d: DB connection failed - "
+					 "sleep %d seconds\n",
+					 node->no_id, pa_connretry);
 
 				rc = sched_msleep(node, pa_connretry * 1000);
 				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
@@ -226,18 +226,18 @@ remoteListenThread_main(void *cdata)
 			 * Listen on the connection for events and confirmations
 			 */
 			slon_mkquery(&query1,
-						 "listen \"_%s_Event\"; "
-						 "listen \"_%s_Confirm\"; "
-						 "listen \"_%s_Node_%d\"; ",
-						 rtcfg_cluster_name, rtcfg_cluster_name,
-						 rtcfg_cluster_name, rtcfg_nodeid);
+				     "listen \"_%s_Event\"; "
+				     "listen \"_%s_Confirm\"; "
+				     "listen \"_%s_Node_%d\"; ",
+				     rtcfg_cluster_name, rtcfg_cluster_name,
+				     rtcfg_cluster_name, rtcfg_nodeid);
 			res = PQexec(dbconn, dstring_data(&query1));
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				slon_log(SLON_ERROR,
-						 "remoteListenThread_%d: \"%s\" - %s",
-						 node->no_id,
-						 dstring_data(&query1), PQresultErrorMessage(res));
+					 "remoteListenThread_%d: \"%s\" - %s",
+					 node->no_id,
+					 dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -254,9 +254,9 @@ remoteListenThread_main(void *cdata)
 			if (rc != node->no_id)
 			{
 				slon_log(SLON_ERROR,
-						 "remoteListenThread_%d: db_getLocalNodeId() "
-						 "returned %d - wrong database?\n",
-						 node->no_id, rc);
+					 "remoteListenThread_%d: db_getLocalNodeId() "
+					 "returned %d - wrong database?\n",
+					 node->no_id, rc);
 
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -272,9 +272,9 @@ remoteListenThread_main(void *cdata)
 			if (db_checkSchemaVersion(dbconn) < 0)
 			{
 				slon_log(SLON_ERROR,
-						 "remoteListenThread_%d: db_checkSchemaVersion() "
-						 "failed\n",
-						 node->no_id);
+					 "remoteListenThread_%d: db_checkSchemaVersion() "
+					 "failed\n",
+					 node->no_id);
 
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -288,8 +288,8 @@ remoteListenThread_main(void *cdata)
 				continue;
 			}
 			slon_log(SLON_DEBUG1,
-					 "remoteListenThread_%d: connected to '%s'\n",
-					 node->no_id, conn_conninfo);
+				 "remoteListenThread_%d: connected to '%s'\n",
+				 node->no_id, conn_conninfo);
 
 		}
 
@@ -363,9 +363,9 @@ remoteListenThread_main(void *cdata)
 	if (conn != NULL)
 	{
 		slon_log(SLON_INFO,
-				 "remoteListenThread_%d: "
-				 "disconnecting from '%s'\n",
-				 node->no_id, conn_conninfo);
+			 "remoteListenThread_%d: "
+			 "disconnecting from '%s'\n",
+			 node->no_id, conn_conninfo);
 		slon_disconnectdb(conn);
 		free(conn_conninfo);
 		conn = NULL;
@@ -378,8 +378,8 @@ remoteListenThread_main(void *cdata)
 	rtcfg_unlock();
 
 	slon_log(SLON_DEBUG1,
-			 "remoteListenThread_%d: thread done\n",
-			 node->no_id);
+		 "remoteListenThread_%d: thread done\n",
+		 node->no_id);
 	pthread_exit(NULL);
 }
 
@@ -430,9 +430,9 @@ remoteListen_adjust_listat(SlonNode * node, struct listat **listat_head,
 		if (!found)
 		{
 			slon_log(SLON_DEBUG2,
-					 "remoteListenThread_%d: stop listening for "
-					 "event origin %d\n",
-					 node->no_id, listat->li_origin);
+				 "remoteListenThread_%d: stop listening for "
+				 "event origin %d\n",
+				 node->no_id, listat->li_origin);
 			DLLIST_REMOVE(*listat_head, *listat_tail, listat);
 			free(listat);
 		}
@@ -470,9 +470,9 @@ remoteListen_adjust_listat(SlonNode * node, struct listat **listat_head,
 		if (!found)
 		{
 			slon_log(SLON_DEBUG2,
-					 "remoteListenThread_%d: start listening for "
-					 "event origin %d\n",
-					 node->no_id, listen->li_origin);
+				 "remoteListenThread_%d: start listening for "
+				 "event origin %d\n",
+				 node->no_id, listen->li_origin);
 			listat = (struct listat *)malloc(sizeof(struct listat));
 			if (listat == NULL)
 			{
@@ -513,8 +513,8 @@ remoteListen_cleanup(struct listat **listat_head, struct listat **listat_tail)
  * ---------- remoteListen_forward_confirm
  *
  * Read the last confirmed event sequence for all nodes from the remote database
- * and forward it to the local database so that the cleanup process will know
- * when all nodes have confirmed an event and it can be thrown away (together
+ * and forward it to the local database so that the cleanup process can know
+ * when all nodes have confirmed an event so it may be safely thrown away (together
  * with its log data). ----------
  */
 static int
@@ -532,20 +532,20 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
 	 * the sl_confirm table.
 	 */
 	slon_mkquery(&query,
-				 "select con_origin, con_received, "
-				 "    max(con_seqno) as con_seqno, "
-				 "    max(con_timestamp) as con_timestamp "
-				 "from %s.sl_confirm "
-				 "where con_received <> %d "
-				 "group by con_origin, con_received",
-				 rtcfg_namespace, rtcfg_nodeid);
+		     "select con_origin, con_received, "
+		     "    max(con_seqno) as con_seqno, "
+		     "    max(con_timestamp) as con_timestamp "
+		     "from %s.sl_confirm "
+		     "where con_received <> %d "
+		     "group by con_origin, con_received",
+		     rtcfg_namespace, rtcfg_nodeid);
 	res = PQexec(conn->dbconn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-				 "remoteListenThread_%d: \"%s\" %s",
-				 node->no_id, dstring_data(&query),
-				 PQresultErrorMessage(res));
+			 "remoteListenThread_%d: \"%s\" %s",
+			 node->no_id, dstring_data(&query),
+			 PQresultErrorMessage(res));
 		dstring_free(&query);
 		PQclear(res);
 		return -1;
@@ -558,12 +558,12 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
 	ntuples = PQntuples(res);
 	for (tupno = 0; tupno < ntuples; tupno++)
 	{
-		remoteWorker_confirm(
-							 node->no_id,
-							 PQgetvalue(res, tupno, 0),
-							 PQgetvalue(res, tupno, 1),
-							 PQgetvalue(res, tupno, 2),
-							 PQgetvalue(res, tupno, 3));
+	  remoteWorker_confirm(
+			       node->no_id,
+			       PQgetvalue(res, tupno, 0),
+			       PQgetvalue(res, tupno, 1),
+			       PQgetvalue(res, tupno, 2),
+			       PQgetvalue(res, tupno, 3));
 	}
 
 	PQclear(res);
@@ -607,15 +607,15 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	 * for here.
 	 */
 	slon_mkquery(&query,
-				 "select ev_origin, ev_seqno, ev_timestamp, "
-				 "       ev_minxid, ev_maxxid, ev_xip, "
-				 "       ev_type, "
-				 "       ev_data1, ev_data2, "
-				 "       ev_data3, ev_data4, "
-				 "       ev_data5, ev_data6, "
-				 "       ev_data7, ev_data8 "
-				 "from %s.sl_event e",
-				 rtcfg_namespace);
+		     "select ev_origin, ev_seqno, ev_timestamp, "
+		     "       ev_minxid, ev_maxxid, ev_xip, "
+		     "       ev_type, "
+		     "       ev_data1, ev_data2, "
+		     "       ev_data3, ev_data4, "
+		     "       ev_data5, ev_data6, "
+		     "       ev_data7, ev_data8 "
+		     "from %s.sl_event e",
+		     rtcfg_namespace);
 
 	rtcfg_lock();
 
@@ -626,15 +626,15 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		{
 			rtcfg_unlock();
 			slon_log(SLON_ERROR,
-					 "remoteListenThread_%d: unknown node %d\n",
-					 node->no_id, listat->li_origin);
+				 "remoteListenThread_%d: unknown node %d\n",
+				 node->no_id, listat->li_origin);
 			dstring_free(&query);
 			return -1;
 		}
 		sprintf(seqno_buf, INT64_FORMAT, origin->last_event);
 		slon_appendquery(&query,
-						 " %s (e.ev_origin = '%d' and e.ev_seqno > '%s')",
-						 where_or_or, listat->li_origin, seqno_buf);
+				 " %s (e.ev_origin = '%d' and e.ev_seqno > '%s')",
+				 where_or_or, listat->li_origin, seqno_buf);
 
 		where_or_or = "or";
 		listat = listat->next;
@@ -646,9 +646,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	if (PQsendQuery(conn->dbconn, dstring_data(&query)) == 0)
 	{
 		slon_log(SLON_ERROR,
-				 "remoteListenThread_%d: \"%s\" - %s",
-				 node->no_id,
-				 dstring_data(&query), PQerrorMessage(conn->dbconn));
+			 "remoteListenThread_%d: \"%s\" - %s",
+			 node->no_id,
+			 dstring_data(&query), PQerrorMessage(conn->dbconn));
 		dstring_free(&query);
 		return -1;
 	}
@@ -660,17 +660,17 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		if (now >= timeout)
 		{
 			slon_log(SLON_ERROR,
-					 "remoteListenThread_%d: timeout for event selection\n",
-					 node->no_id);
+				 "remoteListenThread_%d: timeout for event selection\n",
+				 node->no_id);
 			dstring_free(&query);
 			return -1;
 		}
 		if (PQconsumeInput(conn->dbconn) == 0)
 		{
 			slon_log(SLON_ERROR,
-					 "remoteListenThread_%d: \"%s\" - %s",
-					 node->no_id,
-					 dstring_data(&query), PQerrorMessage(conn->dbconn));
+				 "remoteListenThread_%d: \"%s\" - %s",
+				 node->no_id,
+				 dstring_data(&query), PQerrorMessage(conn->dbconn));
 			dstring_free(&query);
 			return -1;
 		}
@@ -683,9 +683,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-				 "remoteListenThread_%d: \"%s\" - %s",
-				 node->no_id,
-				 dstring_data(&query), PQresultErrorMessage(res));
+			 "remoteListenThread_%d: \"%s\" - %s",
+			 node->no_id,
+			 dstring_data(&query), PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
 		return -1;
@@ -705,25 +705,25 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
 
 		slon_log(SLON_DEBUG2, "remoteListenThread_%d: "
-				 "queue event %d,%s %s\n",
-				 node->no_id, ev_origin, PQgetvalue(res, tupno, 1),
-				 PQgetvalue(res, tupno, 6));
+			 "queue event %d,%s %s\n",
+			 node->no_id, ev_origin, PQgetvalue(res, tupno, 1),
+			 PQgetvalue(res, tupno, 6));
 
 		remoteWorker_event(node->no_id,
-						   ev_origin, ev_seqno,
-						   PQgetvalue(res, tupno, 2),	/* ev_timestamp */
-						   PQgetvalue(res, tupno, 3),	/* ev_minxid */
-						   PQgetvalue(res, tupno, 4),	/* ev_maxxid */
-						   PQgetvalue(res, tupno, 5),	/* ev_xip */
-						   PQgetvalue(res, tupno, 6),	/* ev_type */
-			 (PQgetisnull(res, tupno, 7)) ? NULL : PQgetvalue(res, tupno, 7),
-			 (PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),
-			 (PQgetisnull(res, tupno, 9)) ? NULL : PQgetvalue(res, tupno, 9),
-		   (PQgetisnull(res, tupno, 10)) ? NULL : PQgetvalue(res, tupno, 10),
-		   (PQgetisnull(res, tupno, 11)) ? NULL : PQgetvalue(res, tupno, 11),
-		   (PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
-		   (PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
-		  (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14));
+				   ev_origin, ev_seqno,
+				   PQgetvalue(res, tupno, 2),	/* ev_timestamp */
+				   PQgetvalue(res, tupno, 3),	/* ev_minxid */
+				   PQgetvalue(res, tupno, 4),	/* ev_maxxid */
+				   PQgetvalue(res, tupno, 5),	/* ev_xip */
+				   PQgetvalue(res, tupno, 6),	/* ev_type */
+				   (PQgetisnull(res, tupno, 7)) ? NULL : PQgetvalue(res, tupno, 7),
+				   (PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),
+				   (PQgetisnull(res, tupno, 9)) ? NULL : PQgetvalue(res, tupno, 9),
+				   (PQgetisnull(res, tupno, 10)) ? NULL : PQgetvalue(res, tupno, 10),
+				   (PQgetisnull(res, tupno, 11)) ? NULL : PQgetvalue(res, tupno, 11),
+				   (PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
+				   (PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
+				   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14));
 	}
 
 	PQclear(res);
