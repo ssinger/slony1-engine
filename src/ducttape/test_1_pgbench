@@ -100,6 +100,7 @@ psql $DB1 >$TMPOUT 2>&1 <<_EOF_
 	-- needs at least one UNIQUE constraint on a replicated table.
 	-- ----
 	start transaction;
+	lock table public.history;
 	alter table public.history 
 			add column "_Slony-I_T1_rowID" bigint;
 	alter table public.history 

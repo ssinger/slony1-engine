@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.6 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: remote_worker.c,v 1.7 2004-02-27 20:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1442,14 +1442,52 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	pro_dbconn = pro_conn->dbconn;
 	loc_dbconn = local_conn->dbconn;
 	dstring_init(&query1);
+	sprintf(seqbuf, "%lld", event->ev_seqno);
 
 	/*
-	 * Begin a serialized transaction and select the list of all
-	 * tables the provider currently has in the set.
+	 * Begin a serialized transaction and check if our xmin
+	 * in the snapshot is > that ev_maxxid. This ensures that
+	 * all transactions that have been in progress when the
+	 * subscription got enabled (which is after the triggers
+	 * on the tables have been defined), have finished.
+	 * Otherwise a long running open transaction would not
+	 * have the trigger definitions yet, and an insert would
+	 * not get logged. But if it still runs when we start to
+	 * copy the set, then we don't see the row either and it
+	 * would get lost.
 	 */
 	slon_mkquery(&query1,
 			"start transaction; "
 			"set transaction isolation level serializable; "
+			"select %s.getMinXid() <= '%s'::%s.xxid; ",
+			rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
+	res1 = PQexec(pro_dbconn, dstring_data(&query1));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query1),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	if (*(PQgetvalue(res1, 0, 0)) == 't')
+	{
+		slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+				"transactions earlier that %s are still in progress\n",
+				node->no_id, event->ev_maxxid_c);
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	PQclear(res1);
+
+	/*
+	 * Select the list of all tables the provider currently has in the set.
+	 */
+	slon_mkquery(&query1,
 			"select T.tab_id, "
 			"    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
 			"    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
@@ -1716,7 +1754,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			 * No SYNC event found, so we initialize the setsync to
 			 * the event point of the ENABLE_SUBSCRIPTION 
 			 */
-			sprintf(seqbuf, "%lld", event->ev_seqno);
 			ssy_seqno	= seqbuf;
 			ssy_minxid	= event->ev_minxid_c;
 			ssy_maxxid	= event->ev_maxxid_c;
@@ -2188,6 +2225,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		pthread_mutex_lock(&(wd->workdata_lock));
 		while (wd->repldata_head == NULL)
 		{
+			slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: waiting for log data\n",
+					node->no_id);
 			pthread_cond_wait(&(wd->repldata_cond), &(wd->workdata_lock));
 		}
 		lines_head = wd->repldata_head;
@@ -2196,8 +2235,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		wd->repldata_tail = NULL;
 		pthread_mutex_unlock(&(wd->workdata_lock));
 
-		for (wgline = lines_head; wgline && num_errors == 0; 
-				wgline = wgline->next)
+		for (wgline = lines_head; wgline; wgline = wgline->next)
 		{
 			/*
 			 * Got a line ... process content
@@ -2205,6 +2243,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			switch (wgline->code)
 			{
 				case SLON_WGLC_ACTION:
+					if (num_errors > 0)
+						break;
+
 					res1 = PQexec(local_dbconn, dstring_data(&(wgline->data)));
 					if (PQresultStatus(res1) != PGRES_COMMAND_OK)
 					{
@@ -2226,6 +2267,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 									dstring_data(&(wgline->data)));
 							num_errors++;
 						}
+						else
+							slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: %s\n",
+									node->no_id, dstring_data(&(wgline->data)));
 					}
 					break;
 
@@ -2251,6 +2295,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		/*
 		 * Put the line buffers back into the pool.
 		 */
+		slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: returning lines to pool\n",
+				node->no_id);
 		pthread_mutex_lock(&(wd->workdata_lock));
 		for (wgline = lines_head; wgline; wgline = wgnext)
 		{
@@ -2264,8 +2310,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		pthread_mutex_unlock(&(wd->workdata_lock));
 	}
 
-	pthread_mutex_lock(&(wd->workdata_lock));
-
 	/*
 	 * Inform the helpers that the whole group is done with this
 	 * SYNC.
@@ -2273,14 +2317,20 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
 			"all helpers done.\n",
 			node->no_id);
+	pthread_mutex_lock(&(wd->workdata_lock));
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+		slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+				"changing helper %d to IDLE\n",
+				node->no_id, provider->no_id);
 		pthread_mutex_lock(&(provider->helper_lock));
 		provider->helper_status = SLON_WG_IDLE;
 		pthread_cond_signal(&(provider->helper_cond));
 		pthread_mutex_unlock(&(provider->helper_lock));
 	}
 
+	slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: cleanup\n",
+			node->no_id);
 	/*
 	 * Cleanup
 	 */
@@ -2310,11 +2360,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 */
 	sprintf(seqbuf, "%lld", event->ev_seqno);
 	slon_mkquery(&query,
-			"update %s.sl_setsync set ssy_origin = '%d', "
+			"update %s.sl_setsync set "
 			"    ssy_seqno = '%s', ssy_minxid = '%s', ssy_maxxid = '%s', "
 			"    ssy_xip = '%q', ssy_action_list = '' "
 			"where ssy_setid in (",
-			rtcfg_namespace, event->ev_origin,
+			rtcfg_namespace,
 			seqbuf, event->ev_minxid_c, event->ev_maxxid_c,
 			event->ev_xip);
 	i = 0;
@@ -2333,26 +2383,13 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		/*
  		 * ... if there could be any, that is.
 		 */
-		slon_appendquery(&query, "); ");
+		slon_appendquery(&query, ") and ssy_seqno < '%s'; ", seqbuf);
 		res1 = PQexec(local_dbconn, dstring_data(&query));
 		if (PQresultStatus(res1) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
 					node->no_id, dstring_data(&query),
 					PQresultErrorMessage(res1));
-			PQclear(res1);
-			dstring_free(&query);
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
-					node->no_id);
-			return 10;
-		}
-		if (strtol(PQcmdTuples(res1), NULL, 10) != i)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: update of sl_setsync "
-					"modified %s rows - expeced %d\n",
-					node->no_id, PQcmdTuples(res1), i);
-			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: query was: %s\n",
-					node->no_id, dstring_data(&query));
 			PQclear(res1);
 			dstring_free(&query);
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
@@ -2484,6 +2521,9 @@ sync_helper(void *cdata)
 				 */
 				while (alloc_lines == 0 && !errors)
 				{
+					slon_log(SLON_DEBUG4,
+							"remoteHelperThread_%d_%d: allocate lines\n",
+							node->no_id, provider->no_id);
 					/*
 					 * Wait until there are lines available in
 					 * the pool.
@@ -2501,6 +2541,9 @@ sync_helper(void *cdata)
 					 */
 					if (wd->workgroup_status != SLON_WG_BUSY)
 					{
+						slon_log(SLON_DEBUG4,
+								"remoteHelperThread_%d_%d: abort operation\n",
+								node->no_id, provider->no_id);
 						pthread_mutex_unlock(&(wd->workdata_lock));
 						errors++;
 						break;
@@ -2524,6 +2567,10 @@ sync_helper(void *cdata)
 				if (errors)
 					break;
 
+				slon_log(SLON_DEBUG4,
+						"remoteHelperThread_%d_%d: have %d line buffers\n",
+						node->no_id, provider->no_id, alloc_lines);
+
 				/*
 				 * Now that we have allocated some buffer space,
 				 * try to fetch that many rows from the cursor.
@@ -2545,6 +2592,9 @@ sync_helper(void *cdata)
 				 * retrieved log rows.
 				 */
 				ntuples = PQntuples(res);
+				slon_log(SLON_DEBUG4,
+						"remoteHelperThread_%d_%d: got %d log rows\n",
+						node->no_id, provider->no_id, ntuples);
 				for (tupno = 0; tupno < ntuples; tupno++)
 				{
 					char   *log_origin		= PQgetvalue(res, tupno, 0);
@@ -2612,8 +2662,15 @@ sync_helper(void *cdata)
 					pthread_cond_broadcast(&(wd->linepool_cond));
 				pthread_mutex_unlock(&(wd->workdata_lock));
 
+				slon_log(SLON_DEBUG4,
+						"remoteHelperThread_%d_%d: log rows deliverd\n",
+						node->no_id, provider->no_id);
+
 				if (ntuples < alloc_lines)
 				{
+					slon_log(SLON_DEBUG4,
+							"remoteHelperThread_%d_%d: no more log rows\n",
+							node->no_id, provider->no_id);
 					alloc_lines = 0;
 					break;
 				}
@@ -2627,6 +2684,9 @@ sync_helper(void *cdata)
 		 */
 		if (alloc_lines > 0)
 		{
+			slon_log(SLON_DEBUG4,
+					"remoteHelperThread_%d_%d: return unused line buffers\n",
+					node->no_id, provider->no_id);
 			pthread_mutex_lock(&(wd->workdata_lock));
 			while(alloc_lines > 0)
 			{
@@ -2652,10 +2712,17 @@ sync_helper(void *cdata)
 		 * Change our helper status to DONE and tell the worker 
 		 * thread about it.
 		 */
+		slon_log(SLON_DEBUG4,
+				"remoteHelperThread_%d_%d: change helper thread status\n",
+				node->no_id, provider->no_id);
 		pthread_mutex_lock(&(provider->helper_lock));
 		provider->helper_status = SLON_WG_DONE;
 		dstring_reset(&provider->helper_qualification);
+		pthread_mutex_unlock(&(provider->helper_lock));
 
+		slon_log(SLON_DEBUG4,
+				"remoteHelperThread_%d_%d: send DONE/ERROR line to worker\n",
+				node->no_id, provider->no_id);
 		pthread_mutex_lock(&(wd->workdata_lock));
 		while (wd->linepool_head == NULL)
 		{
@@ -2675,6 +2742,7 @@ sync_helper(void *cdata)
 		/*
 		 * Wait for the whole workgroup to be done.
 		 */
+		pthread_mutex_lock(&(provider->helper_lock));
 		while (provider->helper_status == SLON_WG_DONE)
 		{
 			slon_log(SLON_DEBUG3, "remoteHelperThread_%d_%d: "

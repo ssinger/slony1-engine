@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.5 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: misc.c,v 1.6 2004-02-27 20:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -41,7 +41,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 	int				off;
 	char		   *level_c = NULL;;
 
-	if (true && level >= SLON_DEBUG3)
+	if (level > SLON_DEBUG2)
 		return;
 
 	switch (level)

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.5 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: xxid.c,v 1.6 2004-02-27 20:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -16,6 +16,7 @@
 
 #include "access/xact.h"
 #include "access/transam.h"
+#include "executor/spi.h"
 
 
 #ifndef PG_GETARG_TRANSACTIONID
@@ -36,6 +37,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_xxidgt);
 PG_FUNCTION_INFO_V1(_Slony_I_xxidge);
 PG_FUNCTION_INFO_V1(_Slony_I_btxxidcmp);
 PG_FUNCTION_INFO_V1(_Slony_I_getCurrentXid);
+PG_FUNCTION_INFO_V1(_Slony_I_getMinXid);
 Datum           _Slony_I_xxidin(PG_FUNCTION_ARGS);
 Datum           _Slony_I_xxidout(PG_FUNCTION_ARGS);
 Datum           _Slony_I_xxideq(PG_FUNCTION_ARGS);
@@ -46,6 +48,7 @@ Datum           _Slony_I_xxidgt(PG_FUNCTION_ARGS);
 Datum           _Slony_I_xxidge(PG_FUNCTION_ARGS);
 Datum           _Slony_I_btxxidcmp(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getCurrentXid(PG_FUNCTION_ARGS);
+Datum           _Slony_I_getMinXid(PG_FUNCTION_ARGS);
 
 
 /*
@@ -190,6 +193,19 @@ Datum
 _Slony_I_getCurrentXid(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_TRANSACTIONID(GetCurrentTransactionId());
+}
+
+
+/*
+ *		getMinXid	- Return the minxid from the current snapshot
+ */
+Datum
+_Slony_I_getMinXid(PG_FUNCTION_ARGS)
+{
+	if (SerializableSnapshot == NULL)
+		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMinXid()");
+	
+	PG_RETURN_TRANSACTIONID(SerializableSnapshot->xmin);
 }
 
 
