@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.35 2004-03-25 02:22:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.36 2004-03-26 14:59:06 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -612,6 +612,15 @@ remoteWorkerThread_main(void *cdata)
 				 * Nothing to do ATM ... we don't support
 				 * adding tables to subscribed sets yet and
 				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
+			}
+			else if (strcmp(event->ev_type, "SET_ADD_SEQUENCE") == 0)
+			{
+				/*
+				 * Nothing to do ATM ... we don't support
+				 * adding sequences to subscribed sets yet and
+				 * sequences information is not maintained in
 				 * the runtime configuration.
 				 */
 			}
@@ -2175,6 +2184,117 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	PQclear(res1);
 
 	/*
+	 * Copy the sequences contained in the set
+	 */
+	slon_mkquery(&query1,
+			"select SQ.seq_id, "
+			"		\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+			"		\"pg_catalog\".quote_ident(PGC.relname), "
+			"		SQ.seq_comment "
+			"	from %s.sl_sequence SQ, "
+			"		\"pg_catalog\".pg_class PGC, "
+			"		\"pg_catalog\".pg_namespace PGN "
+			"	where SQ.seq_set = %d "
+			"		and PGC.oid = SQ.seq_reloid "
+			"		and PGN.oid = PGC.relnamespace; ",
+			rtcfg_namespace, set_id);
+	res1 = PQexec(pro_dbconn, dstring_data(&query1));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query1),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	ntuples1 = PQntuples(res1);
+	for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+	{
+		char   *seq_id		= PQgetvalue(res1, tupno1, 0);
+		char   *seq_fqname	= PQgetvalue(res1, tupno1, 1);
+		char   *seq_comment	= PQgetvalue(res1, tupno1, 2);
+
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"copy sequence %s\n",
+				node->no_id, seq_fqname);
+
+		slon_mkquery(&query1,
+				"select %s.setAddSequence_int(%d, %s, '%q', '%q')",
+				rtcfg_namespace, set_id, seq_id,
+				seq_fqname, seq_comment);
+		if (query_execute(node, loc_dbconn, &query1) < 0)
+		{
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+	}
+	PQclear(res1);
+
+	/*
+	 * And copy over the sequence last_value corresponding to the
+	 * ENABLE_SUBSCRIPTION event.
+	 */
+	slon_mkquery(&query1,
+			"select SL.seql_seqid, SL.seql_last_value, "
+			"	\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+			"	\"pg_catalog\".quote_ident(PGC.relname) "
+			"	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
+			"		\"pg_catalog\".pg_class PGC, "
+			"		\"pg_catalog\".pg_namespace PGN "
+			"	where SQ.seq_set = %d "
+			"		and SL.seql_seqid = SQ.seq_id "
+			"		and SL.seql_ev_seqno = '%s' "
+			"		and PGC.oid = SQ.seq_reloid "
+			"		and PGN.oid = PGC.relnamespace; ",
+			rtcfg_namespace, rtcfg_namespace,
+			set_id, seqbuf);
+	res1 = PQexec(pro_dbconn, dstring_data(&query1));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query1),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	ntuples1 = PQntuples(res1);
+	for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+	{
+		char   *seql_seqid		= PQgetvalue(res1, tupno1, 0);
+		char   *seql_last_value	= PQgetvalue(res1, tupno1, 1);
+		char   *seq_fqname		= PQgetvalue(res1, tupno1, 2);
+
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"set last_value of sequence %s (%s) to %s\n",
+				node->no_id, seql_seqid, seq_fqname, seql_last_value);
+
+		slon_mkquery(&query1,
+				"select \"pg_catalog\".setval('%q', '%s'); "
+				"insert into %s.sl_seqlog "
+				"		(seql_seqid, seql_origin, seql_ev_seqno, "
+				"		seql_last_value) values "
+				"		(%s, %d, '%s', '%s'); ",
+				seq_fqname, seql_last_value,
+				rtcfg_namespace,
+				seql_seqid, node->no_id, seqbuf, seql_last_value);
+		if (query_execute(node, loc_dbconn, &query1) < 0)
+		{
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+	}
+	PQclear(res1);
+
+
+	/*
 	 * It depends on who is our data provider how we construct
 	 * the initial setsync status.
 	 */
@@ -2527,6 +2647,61 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	}
 
 	dstring_init(&query);
+
+	/*
+	 * Get all sequence updates
+	 */
+	for (provider = wd->provider_head; provider; provider = provider->next)
+	{
+		int		ntuples1;
+		int		tupno1;
+
+		slon_mkquery(&query,
+				"select SL.seql_seqid, SL.seql_last_value "
+				"	from %s.sl_seqlog SL, "
+				"		%s.sl_sequence SQ "
+				"	where SQ.seq_id = SL.seql_seqid "
+				"		and SL.seql_origin = %d "
+				"		and SL.seql_ev_seqno = '%s' "
+				"		and SQ.seq_set in (",
+				rtcfg_namespace, rtcfg_namespace,
+				node->no_id, seqbuf);
+		for (pset = provider->set_head; pset; pset = pset->next)
+			slon_appendquery(&query, "%s%d",
+					(pset->prev == NULL) ? "" : ",",
+					pset->set_id);
+		slon_appendquery(&query, "); ");
+				
+		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query),
+					PQresultErrorMessage(res1));
+			PQclear(res1);
+			dstring_free(&query);
+			return 60;
+		}
+		ntuples1 = PQntuples(res1);
+		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+		{
+			char   *seql_seqid		= PQgetvalue(res1, tupno1, 0);
+			char   *seql_last_value	= PQgetvalue(res1, tupno1, 1);
+
+			slon_mkquery(&query,
+					"select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
+					rtcfg_namespace, 
+					seql_seqid, node->no_id, seqbuf, seql_last_value);
+			if (query_execute(node, local_dbconn, &query) < 0)
+			{
+				PQclear(res1);
+				dstring_free(&query);
+				return 60;
+			}
+		}
+		PQclear(res1);
+	}
+
 	dstring_init(&new_qual);
 
 

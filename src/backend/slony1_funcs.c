@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.11 2004-03-19 01:57:06 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.12 2004-03-26 14:59:05 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -75,6 +75,7 @@ typedef struct slony_I_cluster_status {
 	void		   *plan_insert_event;
 	void		   *plan_insert_log_1;
 	void		   *plan_insert_log_2;
+	void		   *plan_record_sequences;
 
 	text		   *cmdtype_I;
 	text		   *cmdtype_U;
@@ -99,6 +100,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	TransactionId	newXid = GetCurrentTransactionId();
 	Slony_I_ClusterStatus *cs;
 	text	   *ev_xip;
+	char	   *ev_type_c;
 	Datum		argv[12];
 	char		nulls[13];
 	char	   *buf;
@@ -194,6 +196,22 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		elog(ERROR, "Slony-I: INSERT plan did not return 1 result row");
 	retval = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
 			SPI_tuptable->tupdesc, 1, &isnull));
+
+	/*
+	 * For SYNC and ENABLE_SUBSCRIPTION events, we also
+	 * remember all current sequence values.
+	 */
+	if (PG_NARGS() > 1 && !PG_ARGISNULL(1))
+	{
+		ev_type_c = DatumGetPointer(DirectFunctionCall1(
+				textout, PG_GETARG_DATUM(1)));
+		if (strcmp(ev_type_c, "SYNC") == 0 ||
+			strcmp(ev_type_c, "ENABLE_SUBSCRIPTION") == 0)
+		{
+			if ((rc = SPI_execp(cs->plan_record_sequences, NULL, NULL, 0)) < 0)
+				elog(ERROR, "Slony-I: SPI_execp() failed for \"INSERT INTO sl_seqlog ...\"");
+		}
+	}
 
 	SPI_finish();
 
@@ -1014,6 +1032,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 								 makeString("xxid"));
 		xxid_typid = typenameTypeId(xxid_typename);
 
+		plan_types[0] = INT4OID;
 		/*
 		 * Create the saved plan
 		 */
@@ -1047,7 +1066,25 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->plan_insert_event = SPI_saveplan(SPI_prepare(query, 12, plan_types));
 		if (cs->plan_insert_event == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
-		
+
+		/*
+		 * Also prepare the plan to remember sequence numbers
+		 * on certain events.
+		 */
+		sprintf(query,
+			"insert into %s.sl_seqlog "
+			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+			"select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
+			"from %s.sl_seqlastvalue "
+			"where seq_origin = '%d'",
+			cs->clusterident, 
+			cs->localNodeId, cs->clusterident,
+			cs->clusterident, cs->localNodeId);
+
+		cs->plan_record_sequences = SPI_saveplan(SPI_prepare(query, 0, NULL));
+		if (cs->plan_record_sequences == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+			
 		cs->have_plan |= PLAN_INSERT_EVENT;
 	}
 

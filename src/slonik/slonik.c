@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.11 2004-03-23 21:37:30 wieck Exp $
+ *	$Id: slonik.c,v 1.12 2004-03-26 14:59:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -460,6 +460,59 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_SET_ADD_SEQUENCE:
+				{
+					SlonikStmt_set_add_sequence *stmt =
+							(SlonikStmt_set_add_sequence *)hdr;
+
+					/*
+					 * Check that we have the set_id and set_origin
+					 * and that we can reach the origin.
+					 */
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->set_origin < 0)
+					{
+						printf("%s:%d: Error: "
+								"origin must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					else
+					{
+						if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+							errors++;
+					}
+
+					/*
+					 * Check that we have the table id, name
+					 * and what to use for the key.
+					 */
+					if (stmt->seq_id < 0)
+					{
+						printf("%s:%d: Error: "
+								"sequence id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->seq_fqname == NULL)
+					{
+						printf("%s:%d: Error: "
+								"sequence FQ-name must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (stmt->seq_comment == NULL)
+						stmt->seq_comment = strdup(stmt->seq_fqname);
+				}
+				break;
+
 			case STMT_TABLE_ADD_KEY:
 				{
 					SlonikStmt_table_add_key *stmt =
@@ -850,6 +903,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_set_add_table *)hdr;
 
 					if (slonik_set_add_table(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_SET_ADD_SEQUENCE:
+				{
+					SlonikStmt_set_add_sequence *stmt =
+							(SlonikStmt_set_add_sequence *)hdr;
+
+					if (slonik_set_add_sequence(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1907,6 +1970,43 @@ slonik_set_add_table(SlonikStmt_set_add_table *stmt)
 
 	dstring_free(&query);
 	PQclear(res);
+	return 0;
+}
+
+
+int
+slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->set_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	/*
+	 * call setAddSequence()
+	 */
+	db_notice_silent = true;
+	slon_mkquery(&query,
+			"select \"_%s\".setAddSequence(%d, %d, '%q', '%q'); ",
+			stmt->hdr.script->clustername,
+			stmt->set_id, stmt->seq_id, stmt->seq_fqname,
+			stmt->seq_comment);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		db_notice_silent = false;
+		dstring_free(&query);
+		return -1;
+	}
+	db_notice_silent = false;
+
+	dstring_free(&query);
 	return 0;
 }
 

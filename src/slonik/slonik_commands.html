@@ -34,6 +34,7 @@
 		<li><a href="#stmt_table_add_key">TABLE ADD KEY</a>
 		<li><a href="#stmt_create_set">CREATE SET</a>
 		<li><a href="#stmt_set_add_table">SET ADD TABLE</a>
+		<li><a href="#stmt_set_add_sequence">SET ADD SEQUENCE</a>
 		<li><a href="#stmt_subscribe_set">SUBSCRIBE SET</a>
 		<li><a href="#stmt_unsubscribe_set">UNSUBSCRIBE SET</a>
 		<li><a href="#stmt_lock_set">LOCK SET</a>
@@ -819,6 +820,66 @@
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULL QUALIFIED NAME = 'public.tracker_ticket',
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket'
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_add_sequence">
+<h3>SET ADD SEQUENCE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET ADD SEQUENCE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Add an existing user sequence to a replication set. The set
+	cannot currently be subscribed by any other node (this
+	functionality will soon be implemented with a MERGE SET command).
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		ID of the set to which the sequence is added.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set. A future version of slonik
+		might figure out this information by itself.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the sequence.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FULL QUALIFIED NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The full sequence name as described in
+		<a href="#table_add_key">TABLE ADD KEY</a>.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><p>
+		A descriptive text added to the Slony-I configuration data.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET ADD SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULL QUALIFIED NAME = 'public.tracker_ticket_id_seq',
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket id sequence'
 	<br>);
 </p>
 </div>

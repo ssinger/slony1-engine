@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.8 2004-03-23 21:37:30 wieck Exp $
+ *	$Id: slonik.h,v 1.9 2004-03-26 14:59:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -28,6 +28,7 @@ typedef struct SlonikStmt_store_listen_s		SlonikStmt_store_listen;
 typedef struct SlonikStmt_drop_listen_s			SlonikStmt_drop_listen;
 typedef struct SlonikStmt_create_set_s			SlonikStmt_create_set;
 typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
+typedef struct SlonikStmt_set_add_sequence_s	SlonikStmt_set_add_sequence;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
 typedef struct SlonikStmt_subscribe_set_s		SlonikStmt_subscribe_set;
 typedef struct SlonikStmt_unsubscribe_set_s		SlonikStmt_unsubscribe_set;
@@ -47,6 +48,7 @@ typedef enum {
 	STMT_LOCK_SET,
 	STMT_MOVE_SET,
 	STMT_SET_ADD_TABLE,
+	STMT_SET_ADD_SEQUENCE,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_DROP_NODE,
@@ -200,6 +202,16 @@ struct SlonikStmt_set_add_table_s {
 };
 
 
+struct SlonikStmt_set_add_sequence_s {
+	SlonikStmt			hdr;
+	int					set_id;
+	int					set_origin;
+	int					seq_id;
+	char			   *seq_fqname;
+	char			   *seq_comment;
+};
+
+
 struct SlonikStmt_table_add_key_s {
 	SlonikStmt			hdr;
 	int					no_id;
@@ -347,6 +359,7 @@ extern int		slonik_store_listen(SlonikStmt_store_listen *stmt);
 extern int		slonik_drop_listen(SlonikStmt_drop_listen *stmt);
 extern int		slonik_create_set(SlonikStmt_create_set *stmt);
 extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
+extern int		slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);
 extern int		slonik_subscribe_set(SlonikStmt_subscribe_set *stmt);
 extern int		slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt);

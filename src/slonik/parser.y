@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.7 2004-03-23 21:37:30 wieck Exp $
+ *	$Id: parser.y,v 1.8 2004-03-26 14:59:06 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -126,6 +126,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_drop_listen
 %type <statement>	stmt_create_set
 %type <statement>	stmt_set_add_table
+%type <statement>	stmt_set_add_sequence
 %type <statement>	stmt_table_add_key
 %type <statement>	stmt_subscribe_set
 %type <statement>	stmt_unsubscribe_set
@@ -179,6 +180,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_QUALIFIED
 %token	K_RECEIVER
 %token	K_RESTART
+%token	K_SEQUENCE
 %token	K_SERIAL
 %token	K_SERVER
 %token	K_SET
@@ -340,6 +342,8 @@ try_stmt			: stmt_echo
 					| stmt_table_add_key
 						{ $$ = $1; }
 					| stmt_set_add_table
+						{ $$ = $1; }
+					| stmt_set_add_sequence
 						{ $$ = $1; }
 					| stmt_subscribe_set
 						{ $$ = $1; }
@@ -731,6 +735,38 @@ stmt_set_add_table	: lno K_SET K_ADD K_TABLE option_list
 							new->use_key		= opt[4].str;
 							new->use_serial		= opt[5].ival;
 							new->tab_comment	= opt[6].str;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_set_add_sequence : lno K_SET K_ADD K_SEQUENCE option_list
+					{
+						SlonikStmt_set_add_sequence *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_SET_ID, -1 ),
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_STR( O_FQNAME, NULL ),
+							STMT_OPTION_STR( O_COMMENT, NULL ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_set_add_sequence *)
+								malloc(sizeof(SlonikStmt_set_add_sequence));
+						memset(new, 0, sizeof(SlonikStmt_set_add_sequence));
+						new->hdr.stmt_type		= STMT_SET_ADD_SEQUENCE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $5) == 0)
+						{
+							new->set_id			= opt[0].ival;
+							new->set_origin		= opt[1].ival;
+							new->seq_id			= opt[2].ival;
+							new->seq_fqname		= opt[3].str;
+							new->seq_comment	= opt[4].str;
 						}
 
 						$$ = (SlonikStmt *)new;

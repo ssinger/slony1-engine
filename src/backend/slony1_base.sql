@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.10 2004-03-26 00:40:29 wieck Exp $
+-- $Id: slony1_base.sql,v 1.11 2004-03-26 14:59:05 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -84,6 +84,23 @@ create table @NAMESPACE@.sl_table (
 		PRIMARY KEY (tab_id),
 	CONSTRAINT "tab_set-set_id-ref"
 		FOREIGN KEY (tab_set)
+		REFERENCES @NAMESPACE@.sl_set (set_id)
+);
+
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_sequence
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_sequence (
+	seq_id				int4,
+	seq_reloid			oid,
+	seq_set				int4,
+	seq_comment			text,
+
+	CONSTRAINT "sl_sequence-pkey"
+		PRIMARY KEY (seq_id),
+	CONSTRAINT "seq_set-set_id-ref"
+		FOREIGN KEY (seq_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
 );
 
@@ -187,6 +204,55 @@ create index sl_confirm_idx1 on @NAMESPACE@.sl_confirm
 create index sl_confirm_idx2 on @NAMESPACE@.sl_confirm
 	(con_received, con_seqno);
 
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_seqlog
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_seqlog (
+	seql_seqid			int4,
+	seql_origin			int4,
+	seql_ev_seqno		int8,
+	seql_last_value		int8
+);
+create index sl_seqlog_idx on @NAMESPACE@.sl_seqlog
+	(seql_origin, seql_ev_seqno, seql_seqid);
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION sequenceLastValue (seqname)
+--
+--	Support function used in sl_seqlastvalue view
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.sequenceLastValue(text) returns int8
+as '
+declare
+	p_seqname	alias for $1;
+	v_seq_row	record;
+begin
+	for v_seq_row in execute ''select last_value from '' || p_seqname
+	loop
+		return v_seq_row.last_value;
+	end loop;
+
+	-- not reached
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- VIEW sl_seqlastvalue
+-- ----------------------------------------------------------------------
+create view @NAMESPACE@.sl_seqlastvalue as
+	select SQ.seq_id, SQ.seq_set, SQ.seq_reloid,
+			S.set_origin as seq_origin,
+			@NAMESPACE@.sequenceLastValue(
+					"pg_catalog".quote_ident(PGN.nspname) || '.' ||
+					"pg_catalog".quote_ident(PGC.relname)) as seq_last_value
+		from @NAMESPACE@.sl_sequence SQ, @NAMESPACE@.sl_set S,
+			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+		where S.set_id = SQ.seq_set
+			and PGC.oid = SQ.seq_reloid and PGN.oid = PGC.relnamespace;
+		
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_1

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.16 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: local_listen.c,v 1.17 2004-03-26 14:59:06 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -326,6 +326,25 @@ localListenThread_main(void *dummy)
 				 * adding tables to subscribed sets yet and
 				 * table information is not maintained in
 				 * the runtime configuration.
+				 */
+			}
+			else if (strcmp(ev_type, "SET_ADD_SEQUENCE") == 0)
+			{
+				/*
+				 * SET_ADD_SEQUENCE
+				 */
+
+				/*
+				 * Nothing to do ATM ... we don't support
+				 * adding sequences to subscribed sets yet and
+				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
+			}
+			else if (strcmp(ev_type, "ADJUST_SEQ") == 0)
+			{
+				/*
+				 * ADJUST_SEQ
 				 */
 			}
 			else if (strcmp(ev_type, "MOVE_SET") == 0)

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.37 2004-03-26 00:40:29 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.38 2004-03-26 14:59:05 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1121,6 +1121,8 @@ declare
 	v_local_node_id		int4;
 	v_set_row			record;
 	v_sub_row			record;
+	v_sync_seqno		int8;
+	v_lv_row			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -1171,18 +1173,27 @@ begin
 	end if;
 
 	-- ----
-	-- All right, we first generate a SYNC
-	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'');
-
-	-- ----
 	-- Reconfigure everything
 	-- ----
 	perform @NAMESPACE@.moveSet_int(p_set_id, v_local_node_id,
 			p_new_origin);
 
 	-- ----
-	-- Generate the real event
+	-- At this time we hold access exclusive locks for every table
+	-- in the set. But we did move the set to the new origin, so the
+	-- createEvent() we are doing now will not record the sequences.
+	-- ----
+	v_sync_seqno := @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'');
+	insert into @NAMESPACE@.sl_seqlog 
+			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
+			select seq_id, v_local_node_id, v_sync_seqno, seq_last_value
+			from @NAMESPACE@.sl_seqlastvalue
+			where seq_set = p_set_id;
+					
+
+
+	-- ----
+	-- Finally we generate the real event
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
 			p_set_id, v_local_node_id, p_new_origin);
@@ -1542,6 +1553,190 @@ begin
 	perform @NAMESPACE@.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.setAddSequence (int4, int4, text, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_seq_id			alias for $2;
+	p_fqname			alias for $3;
+	p_seq_comment		alias for $4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: setAddSequence(): set % not found'', p_set_id;
+	end if;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: setAddSequence(): set % has remote origin'', p_set_id;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_set = p_set_id)
+	then
+		raise exception ''Slony-I: cannot add sequence to currently subscribed set %'',
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
+	-- ----
+	perform @NAMESPACE@.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
+			p_seq_comment);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_SEQUENCE'',
+			p_set_id, p_seq_id, p_fqname, p_seq_comment);
+
+	return p_seq_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.setAddSequence_int(int4, int4, text, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_seq_id			alias for $2;
+	p_fqname			alias for $3;
+	p_seq_comment		alias for $4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_seq_reloid		oid;
+	v_sync_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the sequence because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: setAddSequence_int(): set % not found'',
+				p_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = p_set_id
+				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+		if not found then
+			return 0;
+		end if;
+	end if;
+	
+	-- ----
+	-- Get the sequences OID and check that it is a sequence
+	-- ----
+	select PGC.oid, PGC.relkind into v_seq_reloid, v_relkind
+			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+			where PGC.relnamespace = PGN.oid
+			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
+					''.'' || "pg_catalog".quote_ident(PGC.relname);
+	if not found then
+		raise exception ''Slony-I: setAddSequence_int(): sequence % not found'', 
+				p_fqname;
+	end if;
+	if v_relkind != ''S'' then
+		raise exception ''Slony-I: setAddSequence_int(): % is not a sequence'',
+				p_fqname;
+	end if;
+
+	-- ----
+	-- Add the sequence to sl_sequence
+	-- ----
+	insert into @NAMESPACE@.sl_sequence
+			(seq_id, seq_reloid, seq_set, seq_comment) values
+			(p_seq_id, v_seq_reloid, p_set_id, p_seq_comment);
+
+	-- ----
+	-- On the set origin, fake a sl_seqlog row for the last sync event
+	-- ----
+	if v_set_origin = v_local_node_id then
+		for v_sync_row in select coalesce (max(ev_seqno), 0) as ev_seqno
+				from @NAMESPACE@.sl_event
+				where ev_origin = v_local_node_id
+					and ev_type = ''SYNC''
+		loop
+			insert into @NAMESPACE@.sl_seqlog
+					(seql_seqid, seql_origin, seql_ev_seqno, 
+					seql_last_value) values
+					(p_seq_id, v_local_node_id, v_sync_row.ev_seqno,
+					@NAMESPACE@.sequenceLastValue(p_fqname));
+		end loop;
+	end if;
+
+	return p_seq_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) returns int4
+as '
+declare
+	p_seq_id			alias for $1;
+	p_seq_origin		alias for $2;
+	p_ev_seqno			alias for $3;
+	p_last_value		alias for $4;
+	v_fqname			text;
+begin
+	-- ----
+	-- Get the sequences full qualified name
+	-- ----
+	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			"pg_catalog".quote_ident(PGC.relname) into v_fqname
+		from @NAMESPACE@.sl_sequence SQ,
+			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+		where SQ.seq_id = p_seq_id
+			and SQ.seq_reloid = PGC.oid
+			and PGC.relnamespace = PGN.oid;
+	if not found then
+		raise exception ''Slony-I: sequence % not found'', p_seq_id;
+	end if;
+
+	-- ----
+	-- Update it to the new value
+	-- ----
+	execute ''select setval('''''' || v_fqname ||
+			'''''', '''''' || p_last_value || '''''')'';
+
+	insert into @NAMESPACE@.sl_seqlog
+			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
+			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
+
+	return p_seq_id;
 end;
 ' language plpgsql;
 
@@ -2157,6 +2352,9 @@ begin
 				delete from @NAMESPACE@.sl_log_2
 						where log_origin = v_max_row.ev_origin
 						and   log_xid    < v_max_row.ev_minxid;
+				delete from @NAMESPACE@.sl_seqlog
+						where seql_origin = v_max_row.ev_origin
+						and   seql_ev_seqno < v_max_row.ev_seqno;
 			end if;
 		end if;
 	end loop;

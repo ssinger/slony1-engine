@@ -200,6 +200,8 @@ slonik <<_EOF_
 		set add table (set id = 1, origin = 1,
 			id = 6, full qualified name = 'public.tellers_sum',
 			comment = 'Table tellers_sum');
+		set add sequence (set id = 1, origin = 1,
+			id = 7, full qualified name = 'public.accounts_audit_au_seqno_seq');
 	}
 	on error {
 		exit 1;
