@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.21 2005-03-11 03:52:50 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.22 2005-03-18 21:40:44 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -228,7 +228,8 @@ sub get_set {
     if ($SLONY_SETS->{$set}) {
 	$match = $SLONY_SETS->{$set};
     }
-    elsif ($set =~ /^\d+$/) {
+    elsif ($set =~ /^(?:set)?(\d+)$/) {
+	$set = $1;
 	my ($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
 	$match = $SLONY_SETS->{$name};
     }
@@ -247,7 +248,6 @@ sub get_set {
 
     return $match->{"set_id"};
 }
-
 
 # This function checks to see if there is a still-in-progress subscription
 # It does so by looking to see if there is a SUBSCRIBE_SET event corresponding
