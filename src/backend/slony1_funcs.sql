@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15 2004-06-23 23:29:43 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.16 2004-08-03 18:16:49 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -26,11 +26,21 @@ create or replace function @NAMESPACE@.createEvent (name, text)
 	language C
 	called on null input;
 
+comment on function @NAMESPACE@.createEvent (name, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
+
 create or replace function @NAMESPACE@.createEvent (name, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+comment on function @NAMESPACE@.createEvent (name, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (name, text, text, text)
 	returns bigint
@@ -38,11 +48,21 @@ create or replace function @NAMESPACE@.createEvent (name, text, text, text)
 	language C
 	called on null input;
 
+comment on function @NAMESPACE@.createEvent (name, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
+
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text)
 	returns bigint
@@ -50,11 +70,21 @@ create or replace function @NAMESPACE@.createEvent (name, text, text, text, text
 	language C
 	called on null input;
 
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
+
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text)
 	returns bigint
@@ -62,17 +92,32 @@ create or replace function @NAMESPACE@.createEvent (name, text, text, text, text
 	language C
 	called on null input;
 
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
+
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
+
 create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text) is
+'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+
+Create an sl_event entry';
 
 
 -- ----------------------------------------------------------------------
@@ -86,6 +131,10 @@ create or replace function @NAMESPACE@.denyAccess ()
 	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
 	language C
 	security definer;
+
+comment on function @NAMESPACE@.denyAccess () is 
+  'Trigger function to prevent modifications to a table on a subscriber';
+
 grant execute on function @NAMESPACE@.denyAccess () to public;
 
 
@@ -100,6 +149,8 @@ create or replace function @NAMESPACE@.lockedSet ()
 	as '$libdir/slony1_funcs', '_Slony_I_lockedSet'
 	language C;
 
+comment on function @NAMESPACE@.lockedSet () is 
+  'Trigger function to prevent modifications to a table before and after a moveSet()';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION getLocalNodeId (name)
@@ -112,6 +163,8 @@ create or replace function @NAMESPACE@.getLocalNodeId (name) returns int4
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (name) to public;
 
+comment on function @NAMESPACE@.getLocalNodeId (name) is 
+  'not yet documented';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setSessionRole (name, role)
@@ -122,6 +175,8 @@ create or replace function @NAMESPACE@.setSessionRole (name, text) returns text
     as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
 	language C
 	security definer;
+comment on function @NAMESPACE@.setSessionRole (name) is 
+  'not yet documented';
 grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 
 
@@ -134,6 +189,8 @@ create or replace function @NAMESPACE@.getSessionRole (name) returns text
     as '$libdir/slony1_funcs', '_Slony_I_getSessionRole'
 	language C
 	security definer;
+comment on function @NAMESPACE@.getSessionRole (name) is 
+  'not yet documented';
 grant execute on function @NAMESPACE@.getSessionRole (name) to public;
 
 
@@ -146,8 +203,9 @@ create or replace function @NAMESPACE@.logTrigger () returns trigger
     as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
 	language C
 	security definer;
+comment on function @NAMESPACE@.logTrigger () is 
+  'not yet documented';
 grant execute on function @NAMESPACE@.logTrigger () to public;
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION terminateNodeConnections (name)
@@ -157,6 +215,8 @@ grant execute on function @NAMESPACE@.logTrigger () to public;
 create or replace function @NAMESPACE@.terminateNodeConnections (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_terminateNodeConnections'
 	language C;
+comment on function @NAMESPACE@.terminateNodeConnections (name) is 
+  'not yet documented';
 
 
 -- **********************************************************************
@@ -205,6 +265,12 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.initializeLocalNode (int4, text) is 
+  'no_id - Node ID #
+no_comment - Human-oriented comment
+
+Initializes the new node, no_id';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeNode (no_id, no_comment)
@@ -225,6 +291,11 @@ end;
 ' language plpgsql
 	called on null input;
 
+comment on function @NAMESPACE@.storeNode(int4, text) is
+'no_id - Node ID #
+no_comment - Human-oriented comment
+
+Generate the STORE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeNode_int (no_id, no_comment)
@@ -271,6 +342,12 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.storeNode_int(int4, text) is
+'no_id - Node ID #
+no_comment - Human-oriented comment
+
+Internal function to process the STORE_NODE event for node no_id';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION enableNode (no_id)
@@ -315,6 +392,10 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.enableNode(int4) is
+'no_id - Node ID #
+
+Generate the ENABLE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION enableNode_int (no_id)
@@ -387,6 +468,10 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.enableNode_int(int4) is
+'no_id - Node ID #
+
+Internal funciton to process the ENABLE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION disableNode (no_id)
@@ -403,7 +488,8 @@ begin
 	raise exception ''Slony-I: disableNode() not implemented'';
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.disableNode(int4) is
+'generate DISABLE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION disableNode_int (no_id)
@@ -421,6 +507,10 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.disableNode(int4) is
+'process DISABLE_NODE event for node no_id
+
+NOTE: This is not yet implemented!';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropNode (no_id)
@@ -481,7 +571,8 @@ begin
 									p_no_id);
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.dropNode(int4) is
+'generate DROP_NODE event to drop node node_id from replication';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropNode_int (no_id)
@@ -536,13 +627,15 @@ begin
 	return p_no_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.dropNode_int(int4) is
+'internal function to process DROP_NODE event to drop node node_id from replication';
 
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode (failed_node, backup_node)
 --
 --	Initiate a failover. This function must be called on all nodes
---	and then waited for the restart of all node deamons.
+--	and then waited for the restart of all node daemons.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.failedNode(int4, int4)
 returns int4
@@ -747,7 +840,9 @@ raise notice ''failedNode: set % has other direct receivers - change providers o
 	return p_failed_node;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.failedNode(int4,int4) is
+'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
+and then waited for the restart of all node daemons.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
@@ -805,6 +900,11 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8) is
+'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
+
+On the node that has the highest sequence number of the failed node,
+fake the FAILED_NODE event.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failoverSet_int (failed_node, backup_node, set_id)
@@ -899,7 +999,10 @@ begin
 	return p_failed_node;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.failoverSet_int (int4, int4, int4) is
+'FUNCTION failoverSet_int (failed_node, backup_node, set_id)
 
+Finish failover for one set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION uninstallNode ()
@@ -932,6 +1035,9 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.uninstallNode() is
+'Reset the whole database to standalone by removing the whole
+replication system.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
@@ -953,6 +1059,12 @@ begin
 			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
 end;
 ' language plpgsql;
+
+comment on function @NAMESPACE@.storePath (int4, int4, text, int4) is
+'FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
+
+Generate the STORE_PATH event indicating that node pa_client can
+access node pa_server using DSN pa_conninfo';
 
 
 -- ----------------------------------------------------------------------
@@ -1016,7 +1128,11 @@ begin
 	return 0;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.storePath_int (int4, int4, text, int4) is
+'FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
 
+Process the STORE_PATH event indicating that node pa_client can
+access node pa_server using DSN pa_conninfo';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropPath (pa_server, pa_client)
@@ -1071,6 +1187,8 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.dropPath (int4, int4) is
+  'Generate DROP_PATH event to drop path from pa_server to pa_client';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropPath_int (pa_server, pa_client)
@@ -1110,6 +1228,8 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.dropPath_int (int4, int4) is
+'Process DROP_PATH event to drop path from pa_server to pa_client';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeListen (li_origin, li_provider, li_receiver)
@@ -1131,6 +1251,12 @@ end;
 ' language plpgsql
 	called on null input;
 
+comment on function @NAMESPACE@.storeListen(int4,int4,int4) is
+'FUNCTION storeListen (li_origin, li_provider, li_receiver)
+
+generate STORE_LISTEN event, indicating that receiver node li_receiver
+listens to node li_provider in order to get messages coming from node
+li_origin.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeListen_int (li_origin, li_provider, li_receiver)
@@ -1183,6 +1309,13 @@ begin
 	return 0;
 end;
 ' language plpgsql;
+
+comment on function @NAMESPACE@.storeListen_int(int4,int4,int4) is
+'FUNCTION storeListen_int (li_origin, li_provider, li_receiver)
+
+Process STORE_LISTEN event, indicating that receiver node li_receiver
+listens to node li_provider in order to get messages coming from node
+li_origin.';
 
 
 -- ----------------------------------------------------------------------
