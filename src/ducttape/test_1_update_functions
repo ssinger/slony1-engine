@@ -14,12 +14,13 @@ DB2=slony_test2
 # Move set 1 to node 2
 ######################################################################
 
-echo "**** Reloading the functions in node 2"
+echo "**** Reloading the functions in nodes 1 and 2"
 slonik <<_EOF_
 	cluster name = T1;
 	node 1 admin conninfo = 'dbname=$DB1';
 	node 2 admin conninfo = 'dbname=$DB2';
 
+	update functions (id = 1);
 	update functions (id = 2);
 _EOF_
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.33 2004-10-19 00:53:11 wieck Exp $
+ *	$Id: slonik.c,v 1.34 2004-12-01 20:26:08 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3680,8 +3680,6 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 
 	dstring_free(&query);
 	return 0;
-
-	return 0;
 }
 
 
@@ -3689,8 +3687,8 @@ int
 slonik_update_functions(SlonikStmt_update_functions *stmt)
 {
 	SlonikAdmInfo  *adminfo;
+	PGresult	   *res;
 	SlonDString		query;
-	int				rc;
 
 	adminfo = get_checked_adminfo((SlonikStmt *)stmt, stmt->no_id);
 	if (adminfo == NULL)
@@ -3699,21 +3697,97 @@ slonik_update_functions(SlonikStmt_update_functions *stmt)
 	if (db_begin_xact((SlonikStmt *)stmt, adminfo) < 0)
 		return -1;
 
-	rc = load_slony_functions((SlonikStmt *)stmt, stmt->no_id);
-	if (rc < 0)
-		return -1;
-
+	/*
+	 * Check if the currently loaded schema has the function
+	 * slonyVersion() defined.
+	 */
 	dstring_init(&query);
+	slon_mkquery(&query,
+			"select true from pg_proc P, pg_namespace N "
+			"    where P.proname = 'slonyversion' "
+			"    and P.pronamespace = N.oid "
+			"    and N.nspname = '_%s';",
+			stmt->hdr.script->clustername);
+	res = db_exec_select((SlonikStmt *)stmt, adminfo, &query);
+	if (res == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	if (PQntuples(res) == 0)
+	{
+		/*
+		 * No - this must be a 1.0.2 or earlier. Generate a query to
+		 * call upgradeSchema() from 1.0.2.
+		 */
+		PQclear(res);
+		slon_mkquery(&query,
+				"select \"_%s\".upgradeSchema('1.0.2'); ",
+				stmt->hdr.script->clustername);
+	}
+	else
+	{
+		/*
+		 * Yes - call the function and generate a query to call
+		 * upgradeSchema() from that version later.
+		 */
+		PQclear(res);
+		slon_mkquery(&query,
+				"select \"_%s\".slonyVersion(); ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo, &query);
+		if (res == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		if (PQntuples(res) != 1)
+		{
+			 printf("%s:%d: failed to determine current schema version\n",
+						 stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+			PQclear(res);
+			dstring_free(&query);
+			return -1;
+		}
+		slon_mkquery(&query,
+				"select \"_%s\".upgradeSchema('%s'); ",
+				 stmt->hdr.script->clustername,
+				 PQgetvalue(res, 0, 0));
+		PQclear(res);
+	}
+
+	/*
+	 * Load the new slony1_functions.sql
+	 */
+	if (load_slony_functions((SlonikStmt *)stmt, stmt->no_id) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	/*
+	 * Call the upgradeSchema() function
+	 */
+	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	/*
+	 * Finally restart the node.
+	 */
 	slon_mkquery(&query,
 			"notify \"_%s_Restart\"; ",
 			stmt->hdr.script->clustername);
 	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
-		rc = -1;
-	else
-		rc = 0;
-	dstring_free(&query);
+	{
+		dstring_free(&query);
+		return -1;
+	}
 
-	return rc;
+	dstring_free(&query);
+	return 0;
 }
 
 

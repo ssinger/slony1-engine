@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.46 2004-11-25 21:51:56 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.47 2004-12-01 20:26:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4708,64 +4708,32 @@ comment on function @NAMESPACE@.tableHasSerialKey(text) is
 Checks if a table has our special serial key column that is used if
 the table has no natural unique constraint.';
 
--- ----------------------------------------------------------------------
--- FUNCTION add_missing_table_field(text, text, text, text)
---
---  support function of only adding the fields to a table if they do not yet exist.
---
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
-returns bool as '
-DECLARE
-  p_namespace alias for $1;
-  p_table     alias for $2;
-  p_field     alias for $3;
-  p_type      alias for $4;
-  v_row       record;
-  v_query     text;
-BEGIN
-  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
-     where quote_ident(n.nspname) = p_namespace and 
-         c.relnamespace = n.oid and
-         quote_ident(c.relname) = p_table and
-         a.attrelid = c.oid and
-         quote_ident(a.attname) = p_field;
-  if not found then
-    raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
-    v_query := ''alter table '' || p_namespace || ''.'' || p_table || '' add column '';
-    v_query := v_query || p_field || '' '' || p_type || '';'';
-    execute v_query;
-    return ''t'';
-  else
-    return ''f'';
-  end if;
-END;' language plpgsql;
-
-comment on function @NAMESPACE@.add_missing_table_field(text,text,text,text) is
-  'add_missing_table_field(namespace, table, field, type)';
-
 
 -- ----------------------------------------------------------------------
--- FUNCTION upgrade_sl_node ()
+-- FUNCTION upgradeSchema(old_version)
 --
---  adds the no_spool  bool to sl_node
---
+--	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.upgrade_sl_node () returns bool
-as '
-DECLARE
-	v_row  record;
-	ret boolean;
-BEGIN
-	select @NAMESPACE@.add_missing_table_field(''@NAMESPACE@'', ''sl_node'', ''no_spool'', ''boolean'') into ret;
-	return ret;
+create or replace function @NAMESPACE@.upgradeSchema(text)
+returns text as '
+declare
+	p_old	alias for $1;
+begin
+	-- ----
+	-- Changes from 1.0.x to 1.1.0
+	-- ----
+	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+		-- Add new column sl_node.no_spool for virtual spool nodes
+		execute ''alter table @NAMESPACE@.sl_node add column no_spool boolean'';
+		update @NAMESPACE@.sl_node set no_spool = false;
+	end if;
 
-END;' 
-language plpgsql;
+	return p_old;
+end;
+' language plpgsql;
 
-comment on function @NAMESPACE@.upgrade_sl_node() is
-  'Schema changes required to upgrade to version 1.1';
-
+comment on function @NAMESPACE@.upgradeSchema(text) is
+    'Called during "update functions" by slonik to perform schema changes';
 
 -- ----------------------------------------------------------------------
 -- VIEW sl_status

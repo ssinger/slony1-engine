@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.23 2004-11-19 23:47:03 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.24 2004-12-01 20:26:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -22,6 +22,7 @@ create table @NAMESPACE@.sl_node (
 	no_id				int4,
 	no_active			bool,
 	no_comment			text,
+	no_spool			boolean,
 
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
