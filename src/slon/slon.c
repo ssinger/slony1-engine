@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.3 2003-12-13 17:02:03 wieck Exp $
+ *	$Id: slon.c,v 1.4 2003-12-13 17:13:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -69,6 +69,10 @@ static SlonNode	   *slon_findNode(int no_id);
 static void			slon_startStopNodeThread(SlonNode *node);
 
 
+/* ----------
+ * main
+ * ----------
+ */
 int
 main (int argc, const char *argv[])
 {
@@ -324,6 +328,10 @@ printf("main: done\n");
 }
 
 
+/* ----------
+ * slon_storeNode
+ * ----------
+ */
 void
 slon_storeNode(int no_id, char *no_comment)
 {
@@ -358,6 +366,10 @@ printf("slon_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 }
 
 
+/* ----------
+ * slon_enableNode
+ * ----------
+ */
 void
 slon_enableNode(int no_id)
 {
@@ -382,6 +394,10 @@ printf("slon_enableNode: no_id=%d\n", no_id);
 }
 
 
+/* ----------
+ * slon_dropNode
+ * ----------
+ */
 void
 slon_dropNode(int no_id)
 {
@@ -389,6 +405,10 @@ slon_dropNode(int no_id)
 }
 
 
+/* ----------
+ * slon_storePath
+ * ----------
+ */
 void
 slon_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 {
@@ -420,6 +440,10 @@ pa_server, pa_conninfo);
 }
 
 
+/* ----------
+ * slon_storeListen
+ * ----------
+ */
 void
 slon_storeListen(int li_origin, int li_provider)
 {
@@ -513,6 +537,10 @@ slon_exit(int code)
 }
 
 
+/* ----------
+ * slon_connectdb
+ * ----------
+ */
 SlonConn *
 slon_connectdb(char *conninfo, char *symname)
 {
@@ -548,6 +576,10 @@ slon_connectdb(char *conninfo, char *symname)
 }
 
 
+/* ----------
+ * slon_disconnectdb
+ * ----------
+ */
 void
 slon_disconnectdb(SlonConn *conn)
 {
@@ -559,6 +591,10 @@ slon_disconnectdb(SlonConn *conn)
 }
 
 
+/* ----------
+ * slon_make_dummyconn
+ * ----------
+ */
 SlonConn *
 slon_make_dummyconn(char *symname)
 {
@@ -576,6 +612,10 @@ slon_make_dummyconn(char *symname)
 }
 
 
+/* ----------
+ * slon_free_dummyconn
+ * ----------
+ */
 void
 slon_free_dummyconn(SlonConn *conn)
 {
@@ -586,6 +626,10 @@ slon_free_dummyconn(SlonConn *conn)
 }
 
 
+/* ----------
+ * slon_findNode
+ * ----------
+ */
 static SlonNode *
 slon_findNode(int no_id)
 {
@@ -608,6 +652,10 @@ slon_findNode(int no_id)
 }
 
 
+/* ----------
+ * slon_startStopNodeThread
+ * ----------
+ */
 static void
 slon_startStopNodeThread(SlonNode *node)
 {

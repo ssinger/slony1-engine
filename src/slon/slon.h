@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.2 2003-12-13 17:02:03 wieck Exp $
+ *	$Id: slon.h,v 1.3 2003-12-13 17:13:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -22,34 +22,18 @@
 #endif
 
 
+/* ----------
+ * In memory structures for cluster configuration
+ * ----------
+ */
 typedef struct SlonNode_s	SlonNode;
 typedef struct SlonConn_s	SlonConn;
 typedef struct SlonListen_s	SlonListen;
 
-
-struct SlonConn_s {
-	char			   *symname;		/* Symbolic name of connection */
-	struct SlonNode_s  *node;			/* remote node this belongs to */
-	PGconn			   *dbconn;			/* database connection */
-	pthread_mutex_t		conn_lock;		/* mutex for conn */
-	pthread_cond_t		conn_cond;		/* condition variable for conn */
-
-	int					condition;		/* what are we waiting for? */
-	struct timeval		timeout;		/* timeofday for timeout */
-
-	SlonConn		   *prev;
-	SlonConn		   *next;
-};
-
-
-struct SlonListen_s {
-	int					li_origin;		/* origin of events */
-
-	SlonListen		   *prev;
-	SlonListen		   *next;
-};
-
-
+/* ----
+ * SlonNode
+ * ----
+ */
 struct SlonNode_s {
 	int					no_id;			/* this nodes ID */
 	int					no_active;		/* it's active state */
@@ -70,7 +54,40 @@ struct SlonNode_s {
 	SlonNode		   *next;
 };
 
+/* ----
+ * SlonListen
+ * ----
+ */
+struct SlonListen_s {
+	int					li_origin;		/* origin of events */
 
+	SlonListen		   *prev;
+	SlonListen		   *next;
+};
+
+/* ----
+ * SlonConn
+ * ----
+ */
+struct SlonConn_s {
+	char			   *symname;		/* Symbolic name of connection */
+	struct SlonNode_s  *node;			/* remote node this belongs to */
+	PGconn			   *dbconn;			/* database connection */
+	pthread_mutex_t		conn_lock;		/* mutex for conn */
+	pthread_cond_t		conn_cond;		/* condition variable for conn */
+
+	int					condition;		/* what are we waiting for? */
+	struct timeval		timeout;		/* timeofday for timeout */
+
+	SlonConn		   *prev;
+	SlonConn		   *next;
+};
+
+
+/* ----------
+ * Macros to add and remove entries from double linked lists
+ * ----------
+ */
 #define	DLLIST_ADD_TAIL(_pf,_pl,_obj) \
 	if ((_pl) == NULL) { \
 		(_obj)->prev = (_obj)->next = NULL; \
@@ -107,19 +124,27 @@ struct SlonNode_s {
 	(_obj)->prev = (_obj)->next = NULL
 
 
+/* ----------
+ * Scheduler runmodes
+ * ----------
+ */
 #define SCHED_STATUS_OK			0
 #define SCHED_STATUS_SHUTDOWN	1
 #define SCHED_STATUS_DONE		2
 #define SCHED_STATUS_ERROR		3
 
+/* ----------
+ * Scheduler wait conditions
+ * ----------
+ */
 #define SCHED_WAIT_SOCK_READ	1
 #define SCHED_WAIT_SOCK_WRITE	2
 #define SCHED_WAIT_TIMEOUT		4
 
 
-/*
+/* ----------
  * Globals in slon.c
- *
+ * ----------
  */
 extern char	   *local_cluster_name;
 extern char	   *local_namespace;
@@ -131,9 +156,9 @@ extern char	   *local_nodecomment;
 extern PGconn  *local_eventconn;
 
 
-/*
+/* ----------
  * Functions in slon.c
- *
+ * ----------
  */
 extern int		slon_getLocalNodeId(PGconn *conn);
 
@@ -155,25 +180,25 @@ extern void		slon_free_dummyconn(SlonConn *conn);
 extern void		slon_exit(int code);
 
 
-/*
+/* ----------
  * Functions in local_node.c
- *
+ * ----------
  */
 extern void	   *slon_localEventThread(void *dummy);
 extern void	   *slon_localCleanupThread(void *dummy);
 extern void	   *slon_localSyncThread(void *dummy);
 
 
-/*
+/* ----------
  * Functions in remote_node.c
- *
+ * ----------
  */
 extern void	   *slon_remoteEventThread(void *cdata);
 
 
-/*
+/* ----------
  * Functions in scheduler.c
- *
+ * ----------
  */
 extern int		sched_start_mainloop(void);
 extern int		sched_wait_mainloop(void);
