@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.18 2004-10-14 22:05:32 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.19 2004-10-14 22:17:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -275,6 +275,8 @@ comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record
 				MOVE_SET			=
 				SET_DROP_TABLE			=
 				SET_DROP_SEQUENCE		=
+				SET_MOVE_TABLE			=
+				SET_MOVE_SEQUENCE		=
 				FAILOVER_SET		=
 				SUBSCRIBE_SET		=
 				ENABLE_SUBSCRIPTION	=

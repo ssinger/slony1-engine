@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.33 2004-10-14 22:05:32 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.34 2004-10-14 22:17:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2814,6 +2814,11 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.setMoveTable(int4,int4) is
+'This generates the SET_MOVE_TABLE event.  If the set that the table is
+in is identically subscribed to the set that the table is to be moved 
+into, then the SET_MOVE_TABLE event is raised.';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setMoveTable_int (tab_id, new_set_id)
@@ -2842,7 +2847,9 @@ begin
 	return p_tab_id;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.setMoveTable(int4,int4) is
+'This processes the SET_MOVE_TABLE event.  The table is moved 
+to the destination set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setMoveSequence (seq_id, new_set_id)
