@@ -1,14 +1,12 @@
-<article id="slonikcommands">
-  <title>Slonik Command Summary</title>
-  <sect1 id="slonikintro">
-   <title>Slonik Command Summary</title>
-   <sect2><title>Introduction</title>
+<article id="slonikref">
+<title>Slonik Command Summary</title>
+   <sect1><title>Introduction</title>
     
     <para>
      <application>Slonik</application> is a command line utility designed
      specifically to setup and modify configurations of the
      <productname>Slony-I</productname> replication system.
-    </para></sect2>
+    </para>
    
    <sect2 id="outline">
     <title>General outline</title>
@@ -1902,7 +1900,6 @@ WAIT FOR EVENT (
    </refsect1>
   </refentry>
  </reference>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
