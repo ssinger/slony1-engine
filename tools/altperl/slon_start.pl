@@ -1,5 +1,5 @@
 #!@@PERL@@ # -*- perl -*-
-# $Id: slon_start.pl,v 1.8 2005-01-26 19:42:25 darcyb Exp $
+# $Id: slon_start.pl,v 1.9 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -52,7 +52,7 @@ if ($node =~ /^(?:node)?(\d+)$/) {
 
 $pid = get_pid($node);
 if ($pid) {
-  die "Slon is already running for the '$SETNAME' set\n";
+  die "Slon is already running for the '$CLUSTER_NAME' cluster.\n";
 }
 
 my $dsn    = $DSN[$nodenum];
@@ -61,9 +61,9 @@ start_slon($nodenum);
 $pid = get_pid($node);
 
 unless ($pid) {
-  print "Slon failed to start for cluster $SETNAME, node $node\n";
+  print "Slon failed to start for cluster $CLUSTER_NAME, node $node\n";
 } else {
-  print "Slon successfully started for cluster $SETNAME, node $node\n";
+  print "Slon successfully started for cluster $CLUSTER_NAME, node $node\n";
   print "PID [$pid]\n";
   if ($START_WATCHDOG) {
     print "Start the watchdog process as well...\n";

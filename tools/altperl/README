@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.8 2005-01-10 17:06:21 cbbrowne Exp $
+$Id: README,v 1.9 2005-02-02 17:22:29 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -41,9 +41,9 @@ directly in slon.env.
 This configuration should be set up in the file represented in the
 environment variable SLONYNODES.
 
- $SETNAME represents the name of the cluster.  In each database
+ $CLUSTER_NAME represents the name of the cluster.  In each database
   involved in the replication set, you will find the namespace
-  "_$SETNAME" that contains Slony-I's configuration tables
+  "_$CLUSTER_NAME" that contains Slony-I's configuration tables
 
  $MASTERNODE is the number of the "master" node.  It defaults to 1, if
  not otherwise set.

@@ -1,5 +1,5 @@
 #!@@PERL@@ # -*- perl -*-
-# $Id: slon_watchdog2.pl,v 1.5 2005-01-26 19:42:25 darcyb Exp $
+# $Id: slon_watchdog2.pl,v 1.6 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -17,7 +17,7 @@ if ($node =~/^node(\d+)$/) {
   $nodenum = $1;
 }
 
-log_to_watchdog_log("Invoking watchdog for $SETNAME node $nodenum");
+log_to_watchdog_log("Invoking watchdog for $CLUSTER_NAME node $nodenum");
 while (1) {
   my $res = query_slony_status($nodenum);    # See where the node stands
   my $eventsOK;
@@ -53,7 +53,7 @@ while (1) {
 
   # If the node needs a swift kick in the "RESTART", then submit that to slonik
   if ($kick eq "YES") {
-    log_to_watchdog_log("submit slonik to restart $SETNAME node $nodenum");
+    log_to_watchdog_log("submit slonik to restart $CLUSTER_NAME node $nodenum");
     open(SLONIK, "|$SLON_BIN_PATH/slonik");
     print SLONIK genheader();
     print SLONIK "restart node $node\n";
@@ -61,7 +61,7 @@ while (1) {
   }
   if ($restart eq "YES") {
     if ($pid) {
-      log_to_watchdog_log("terminate slon daemon for $SETNAME node $nodenum");
+      log_to_watchdog_log("terminate slon daemon for $CLUSTER_NAME node $nodenum");
       # Kill slon until dead...
       kill 2, $pid;
       sleep 3;

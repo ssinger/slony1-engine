@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.15 2005-01-26 19:42:24 darcyb Exp $
+# $Id: slon-tools.pm,v 1.16 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -69,7 +69,7 @@ sub add_node {
 # This is the usual header to a slonik invocation that declares the
 # cluster name and the set of nodes and how to connect to them.
 sub genheader {
-  my $header = "cluster name = $SETNAME;\n";
+  my $header = "cluster name = $CLUSTER_NAME;\n";
   foreach my $node (@NODES) {
     if ($DSN[$node]) {
       my $dsn = $DSN[$node];
@@ -120,7 +120,7 @@ sub get_pid {
   my $tpid;
   my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  my $command =  ps_args() . "| egrep \"[s]lon .*$SETNAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
+  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
   #print "Command:\n$command\n";
   open(PSOUT, "$command|");
   while ($tpid = <PSOUT>) {
@@ -137,9 +137,11 @@ sub start_slon {
   my $cmd;
   `mkdir -p $LOGDIR/slony1/node$nodenum`;
   if ($APACHE_ROTATOR) {
-    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 $SETNAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" . $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M&";
+    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 $CLUSTER_NAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" . $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M&";
   } else {
-    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 $SETNAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname.log &";
+    my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
+    chomp $now;
+    $cmd = "$SLON_BIN_PATH/slon -s 1000 -d2 -g 80 $CLUSTER_NAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname-$now.log &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system $cmd;
@@ -154,10 +156,10 @@ sub query_slony_status {
 #   my $query = qq{
 #   select now() - ev_timestamp > '$killafter'::interval as event_old, now() - ev_timestamp as age,
 #        ev_timestamp, ev_seqno, ev_origin as origin
-# from _$SETNAME.sl_event events, _$SETNAME.sl_subscribe slony_master
+# from _$CLUSTER_NAME.sl_event events, _$CLUSTER_NAME.sl_subscribe slony_master
 #   where 
 #      events.ev_origin = slony_master.sub_provider and
-#      not exists (select * from _$SETNAME.sl_subscribe providers
+#      not exists (select * from _$CLUSTER_NAME.sl_subscribe providers
 #                   where providers.sub_receiver = slony_master.sub_provider and
 #                         providers.sub_set = slony_master.sub_set and
 #                         slony_master.sub_active = 't' and
@@ -172,23 +174,23 @@ sub query_slony_status {
 select * from 
 (select now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
        con_timestamp
-from _$SETNAME.sl_confirm c, _$SETNAME.sl_subscribe slony_master
+from _$CLUSTER_NAME.sl_confirm c, _$CLUSTER_NAME.sl_subscribe slony_master
   where c.con_origin = slony_master.sub_provider and
-             not exists (select * from _$SETNAME.sl_subscribe providers
+             not exists (select * from _$CLUSTER_NAME.sl_subscribe providers
                   where providers.sub_receiver = slony_master.sub_provider and
                         providers.sub_set = slony_master.sub_set and
                         slony_master.sub_active = 't' and
                         providers.sub_active = 't') and
-        c.con_received = _$SETNAME.getLocalNodeId('_$SETNAME') and
+        c.con_received = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
         now() - con_timestamp < '$killafter'::interval
 limit 1) as slave_confirmed_events
 union all (select
 now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
        con_timestamp
-from _$SETNAME.sl_confirm c, _$SETNAME.sl_subscribe slony_master
-  where c.con_origin = _$SETNAME.getLocalNodeId('_$SETNAME') and
-             exists (select * from _$SETNAME.sl_subscribe providers
-                  where providers.sub_provider = _$SETNAME.getLocalNodeId('_$SETNAME') and
+from _$CLUSTER_NAME.sl_confirm c, _$CLUSTER_NAME.sl_subscribe slony_master
+  where c.con_origin = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
+             exists (select * from _$CLUSTER_NAME.sl_subscribe providers
+                  where providers.sub_provider = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
                         slony_master.sub_active = 't') and
         now() - con_timestamp < '$killafter'::interval
 limit 1)
@@ -207,8 +209,8 @@ limit 1)
 # to a sl_subscribe entry that is not yet active.
 sub node_is_subscribing {
   my $see_if_subscribing = qq {
-select * from "_$SETNAME".sl_event e, "_$SETNAME".sl_subscribe s
-where ev_origin = "_$SETNAME".getlocalnodeid('_$SETNAME') and  -- Event on local node
+select * from "_$CLUSTER_NAME".sl_event e, "_$CLUSTER_NAME".sl_subscribe s
+where ev_origin = "_$CLUSTER_NAME".getlocalnodeid('_$CLUSTER_NAME') and  -- Event on local node
       ev_type = 'SUBSCRIBE_SET' and                            -- Event is SUBSCRIBE SET
       --- Then, match criteria against sl_subscribe
       sub_set = ev_data1 and sub_provider = ev_data2 and sub_receiver = ev_data3 and

@@ -1,5 +1,5 @@
 #!@@PERL@@ # -*- perl -*-
-# $Id: slon_watchdog.pl,v 1.5 2005-01-26 19:42:25 darcyb Exp $
+# $Id: slon_watchdog.pl,v 1.6 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -52,12 +52,12 @@ while (1) {
     # Next, restart the slon process to service the node
     start_slon($nodenum);
     $pid = get_pid($node);
-    print SLONLOG "WATCHDOG: Restarted slon for set $SETNAME, PID $pid\n";
+    print SLONLOG "WATCHDOG: Restarted slon for the $CLUSTER_NAME cluster, PID $pid\n";
   } else {
     open(LOG, ">>$LOGDIR/slon_watchdog.log");
     print LOG "\n";
     system "date >> $LOGDIR/slon_watchdog.log";
-    print LOG "Found slon daemon running for set $SETNAME, PID $pid\n";
+    print LOG "Found slon daemon running for the $CLUSTER_NAME cluster, PID $pid\n";
     print LOG "Looks Ok\n";
     print LOG "Sleeping for $sleep seconds\n";
   }

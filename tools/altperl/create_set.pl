@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: create_set.pl,v 1.10 2005-01-26 19:42:23 darcyb Exp $
+# $Id: create_set.pl,v 1.11 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -30,9 +30,9 @@ foreach my $table (@SERIALTABLES) {
 }
 print OUTFILE "
 try {
-      create set (id = $set, origin = $MASTERNODE, comment = 'Set $set for $SETNAME');
+      create set (id = $set, origin = $MASTERNODE, comment = 'Set $set for $CLUSTER_NAME');
 } on error {
-      echo 'Could not create subscription set $set for $SETNAME!';
+      echo 'Could not create subscription set $set for $CLUSTER_NAME!';
       exit -1;
 }
 ";

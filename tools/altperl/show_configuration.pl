@@ -1,5 +1,5 @@
 #!@@PERL@@ #-*- perl -*-
-# $Id: show_configuration.pl,v 1.2 2005-01-26 19:42:24 darcyb Exp $
+# $Id: show_configuration.pl,v 1.3 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -18,7 +18,7 @@ if ($ENV{"SLONYSET"}) {
 }
 
 print qq{
-Slony-I Cluster: $SETNAME
+Slony-I Cluster: $CLUSTER_NAME
 Logs stored under $LOGDIR
 Slony Binaries in: $SLON_BIN_PATH
 };

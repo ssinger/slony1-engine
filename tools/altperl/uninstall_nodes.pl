@@ -1,5 +1,5 @@
 #!@@PERL@@ # -*- perl -*-
-# $Id: uninstall_nodes.pl,v 1.4 2005-01-26 19:42:25 darcyb Exp $
+# $Id: uninstall_nodes.pl,v 1.5 2005-02-02 17:22:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -16,12 +16,12 @@ close SLONIK;
 run_slonik_script($FILE);
 
 foreach my $node (@NODES) {
-  foreach my $command ("drop schema _$SETNAME cascade;") {
+  foreach my $command ("drop schema _$CLUSTER_NAME cascade;") {
     print $command, "\n";
     print `echo "$command" | psql -h $HOST[$node] -U $USER[$node] -d $DBNAME[$node] -p $PORT[$node]`;
   }
   foreach my $t (@SERIALTABLES) {
-    my $command = "alter table $t drop column \\\"_Slony-I_" . $SETNAME . "_rowID\\\";";
+    my $command = "alter table $t drop column \\\"_Slony-I_" . $CLUSTER_NAME . "_rowID\\\";";
     print $command, "\n";
     print `echo "$command" | psql -h $HOST[$node] -U $USER[$node] -d $DBNAME[$node] -p $PORT[$node]`;
   }

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: regenerate-listens.pl,v 1.2 2005-01-26 19:42:23 darcyb Exp $
+# $Id: regenerate-listens.pl,v 1.3 2005-02-02 17:22:29 cbbrowne Exp $
 # Copyright 2005
 # Christopher B. Browne
 # cbbrowne@acm.org
@@ -96,7 +96,7 @@ foreach my $origin (sort keys %PROVIDER) {
 
 sub rebuildlistenentries {
   my ($origin, $receiver) = @_;
-  
+
   my $subquery = qq{ 
    select distinct sub_provider 
    from "_$cluster".sl_subscribe, "_$cluster".sl_set, "_$cluster".sl_path
@@ -138,7 +138,7 @@ sub rebuildlistenentries {
 								and pa_client = sub_provider)
 			) as S;
      };
-  
+
   $res = $conn->exec($providers_query);
   while (my @row = $res->fetchrow) {
     my ($provider) = @_;
