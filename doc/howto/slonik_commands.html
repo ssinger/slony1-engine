@@ -169,13 +169,18 @@ manual on how to configure and set up a replication system.
 	procedures, tables and sequences are defined. The namespace
 	name is built by prefixing the given string literal with an
 	underscore. This namespace will be identical in all databases
-	that participate in the same replication group. No user
-	objects are supposed to live in this namespace and the
-	namespace is not allowed to exist prior to adding a database
-	to the replication system.  Thus, if you add a new node using
-	<tt> pg_dump -s </tt> on a database that is already in the
-	cluster, you will need to drop the namespace via the SQL
-	command <tt> DROP SCHEMA _testcluster CASCADE; </tt>.
+	that participate in the same replication group. 
+</p>
+
+<p>
+                  No user objects are supposed to live in this
+                  namespace and the namespace is not allowed to exist
+                  prior to adding a database to the replication
+                  system.  Thus, if you add a new node using <tt>
+                  pg_dump -s </tt> on a database that is already in
+                  the cluster of replicated databases, you will need
+                  to drop the namespace via the SQL command <tt> DROP
+                  SCHEMA _testcluster CASCADE; </tt>.
 </p>
 <h3>Example:</h3>
 <p>
@@ -193,13 +198,13 @@ manual on how to configure and set up a replication system.
 	NODE &lt;ival&gt ADMIN CONNINFO = &lt;string&gt;;
 <h3>Description:</h3>
 <p>
-	Describes how the slonik utility can reach a nodes database in the cluster
-	from where it is run (usually the DBA's workstation). The conninfo
-	string is the string agrument given to the PQconnectdb() libpq
-	function. The user as to connect must be the special replication
-	superuser, as some of the actions performed later may include
-	operations that are strictly reserved for database superusers by
-	PostgreSQL.
+	Describes how the slonik utility can reach a nodes database in
+	the cluster from where it is run (likely the DBA's
+	workstation). The conninfo string is the string agrument given
+	to the PQconnectdb() libpq function. The user as to connect
+	must be the special replication superuser, as some of the
+	actions performed later may include operations that are
+	strictly reserved for database superusers by PostgreSQL.
 </p>
 <p>
 	The slonik utility will not try to connect to the databases
@@ -211,7 +216,8 @@ manual on how to configure and set up a replication system.
 	throughout the entire development that the database servers and
 	administrative workstations involved in replication and/or setup
 	and configuration activities can use simple authentication schemes
-	like trust. 
+	like <tt>trust</tt>.   Alternatively, libpq can read passwords from
+                 <tt> .pgpass </tt>.
 </p>
 
 <p>
@@ -219,9 +225,8 @@ manual on how to configure and set up a replication system.
 	would happen if the IP address for a host were to change, you
 	may submit the new information using this command, and that
 	configuration will be propagated.  Existing <tt> slon </tt>
-	processes <i>may </i> need to be restarted in order for them
-	to become aware of the configuration change.
-
+	processes will need to be restarted in order to become aware
+	of the configuration change.
 </p>
 <h3>Example:</h3>
 <p>
@@ -1133,6 +1138,18 @@ manual on how to configure and set up a replication system.
 	process. After successful subscription, the tables are guarded
 	on the subscriber using triggers against accidental updates by
 	the application.
+</p>
+
+<p>
+	Note: If you need to revise subscription information for a
+	node, you may submit the new information using this command,
+	and the new configuration will be propagated throughout the
+	replication network.  The normal reason to revise this
+	information is that you want a node to subscribe to a <i>
+	different </i> provider node, or for a node to become a
+	"forwarding" subscriber so it may later become the provider
+	for a later subscriber.
+
 </p>
 <table border="0" cellpadding="10">
 <tr>
