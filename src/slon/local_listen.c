@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.22 2004-06-02 14:08:45 wieck Exp $
+ *	$Id: local_listen.c,v 1.23 2004-06-23 19:28:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -115,7 +115,9 @@ localListenThread_main(void *dummy)
 	 * Flag the main thread that the coast is clear and he
 	 * can launch all other threads.
 	 */
+	pthread_mutex_lock(&slon_wait_listen_lock);
 	pthread_cond_signal(&slon_wait_listen_cond);
+	pthread_mutex_unlock(&slon_wait_listen_lock);
 			
 	/*
 	 * Process all events, then wait for notification and repeat
