@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.25 2004-12-11 00:08:34 darcyb Exp $
+#	$Id: Makefile,v 1.26 2004-12-11 00:56:21 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -30,7 +30,6 @@ OBJS		= 			\
 	remote_worker.o		\
 	sync_thread.o		\
 	cleanup_thread.o	\
-	stats_thread.o		\
 	scheduler.o			\
 	dbutils.o			\
 	conf-file.o	\
