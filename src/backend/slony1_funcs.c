@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.19 2004-09-07 16:40:24 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.20 2004-09-22 00:37:12 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1113,10 +1113,12 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 
 		plan_types[0] = INT4OID;
 		/*
-		 * Create the saved plan
+		 * Create the saved plan. We lock the sl_event table in exclusive
+		 * mode in order to ensure that all events are really assigned
+		 * sequence numbers in the order they get committed.
 		 */
 		sprintf(query,
-			"LOCK TABLE %s.sl_event; "
+			"LOCK TABLE %s.sl_event IN EXCLUSIVE MODE; "
 			"INSERT INTO %s.sl_event "
 			"(ev_origin, ev_seqno, "
 			"ev_timestamp, ev_minxid, ev_maxxid, ev_xip, "
