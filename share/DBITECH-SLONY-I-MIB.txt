@@ -1,0 +1,180 @@
+DBITECH-SLONY-I-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY, OBJECT-TYPE, Integer32
+		FROM SNMPv2-SMI
+	TEXTUAL-CONVENTION, DisplayString
+		FROM SNMPv2-TC
+	MODULE-COMPLIANCE, OBJECT-GROUP	
+		FROM SNMPv2-CONF;
+
+SlonyImib MODULE-IDENTITY
+	LAST-UPDATED	"200410010000Z"
+	ORGANIZATION	"Slony Development Group"
+	CONTACT-INFO	"Contact-person: DarcyB
+			 Contact-email:  darcy@dbitech.ca"
+	DESCRIPTION	"snmp managemnet interface for Slony-I"
+::= { 1 3 6 1 4 1 20366 32 }
+
+SlonyIobj OBJECT IDENTIFIER ::= { SlonyImib 1 }
+
+slonNumber OBJECT-TYPE
+	SYNTAX		Integer32
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"The number of slon processes present on this system."
+::= { SlonyIobj 2 }
+
+slony1Idx ::= TEXTUAL-CONVENTION
+	STATUS	current
+	SYNTAX	Integer32 (1..2147483647)
+
+slony1Table OBJECT-TYPE
+	SYNTAX		SEQUENCE OF slony1Entry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"A list of Slony-I  entries.  The number of entries is 
+		 given by the value of slonNumber."
+::= { SlonyIobj 3 }
+
+slony1Entry OBJECT-TYPE
+	SYNTAX		slony1Entry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"An entry containing management information applicable to a
+		 particular slon process."
+	INDEX { slony1Index }
+::= { slony1Table 1 }
+
+slony1Entry ::=
+	SEQUENCE {
+		slony1Index	slony1Idx,
+		clusterName	DisplayString,
+		connInfo	DisplayString,
+		pid		Integer32,
+		LogLevel	Integer32,
+		LogPath		Integer32,
+		LogPid		DisplayString,
+		LogTimestamp	DisplayString,
+		TimestampFormat	DisplayString,
+		LogFacility	DisplayString,
+		syncRate	Integer32,
+		groupSize	Integer32,
+		vaccumFrequency	Integer32
+}
+
+slony1Index  OBJECT-TYPE
+	SYNTAX	slony1Idx
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"A unique value, greater than zero, for each slon process"
+::= { slony1Entry 1 }
+
+clusterName OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..255))
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Name of the replication set"
+::= { slony1Entry 2 }
+
+connInfo OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "local node connection info"
+::= { slony1Entry 3 }
+
+pid	OBJECT-TYPE
+	SYNTAX		Integer32
+	MAX-ACCESS      read-only
+	STATUS		current
+	DESCRIPTION
+		"slon process ID"
+::= { slony1Entry 4 }
+
+SlonyLogObj OBJECT IDENTIFIER ::= { slony1Entry 32 }
+
+LogLevel	OBJECT-TYPE
+	SYNTAX		Integer32
+	MAX-ACCESS 	read-write
+	STATUS		current
+	DESCRIPTION
+		"Logining Detail"
+::= { SlonyLogObj 1 }
+
+
+LogPath		OBJECT-TYPE
+	SYNTAX		Integer32
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		"Logging Path 0, 1, 2"
+::= { SlonyLogObj 2 }
+
+LogPid         OBJECT-TYPE
+        SYNTAX          Integer32 
+        MAX-ACCESS      read-write 
+        STATUS          current
+        DESCRIPTION
+                "do you want to log pid"
+::= { SlonyLogObj 3 }
+
+LogTimestamp         OBJECT-TYPE
+        SYNTAX          Integer32
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "do you want to log timestamp"
+::= { SlonyLogObj 4 }
+
+TimestampFormat         OBJECT-TYPE 
+        SYNTAX          DisplayString (SIZE (1..255))
+        MAX-ACCESS      read-write 
+        STATUS          current 
+        DESCRIPTION 
+                "timestamp format"
+::= { SlonyLogObj 5 }
+
+slony1Syslog OBJECT IDENTIFIER ::= { slony1Entry 33 }
+
+LogFacility         OBJECT-TYPE  
+        SYNTAX          DisplayString (SIZE (1..255))
+        MAX-ACCESS      read-write  
+        STATUS          current  
+        DESCRIPTION  
+                "syslog facility name" 
+::= { slony1Syslog 1 }
+
+syncRate         OBJECT-TYPE  
+        SYNTAX          Integer32
+        MAX-ACCESS      read-write  
+        STATUS          current  
+        DESCRIPTION  
+                "Sync Rate" 
+::= {slony1Entry 64}
+
+groupSize         OBJECT-TYPE
+        SYNTAX          Integer32                    
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION  
+                "groupSize"
+::= {slony1Entry 65}
+
+vaccumFrequency         OBJECT-TYPE
+        SYNTAX          Integer32                    
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION  
+                "How often to vac"
+::= {slony1Entry 66}
+
+
+
+END
