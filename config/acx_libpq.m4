@@ -179,6 +179,8 @@ else
 	)
 fi
 
+LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
+
 have_pqputcopydata=no
 AC_CHECK_LIB(pq, [PQputCopyData], [have_pqputcopydata=yes])
 if test $have_pqputcopydata = yes ; then
