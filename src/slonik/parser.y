@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.15 2004-06-03 20:16:07 wieck Exp $
+ *	$Id: parser.y,v 1.16 2004-06-07 18:46:17 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -579,6 +579,8 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 							new->no_comment		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -605,6 +607,8 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 							new->no_id			= opt[0].ival;
 							new->ev_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -631,6 +635,8 @@ stmt_failed_node	: lno K_FAILOVER option_list
 							new->no_id			= opt[0].ival;
 							new->backup_node	= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -655,6 +661,8 @@ stmt_uninstall_node	: lno K_UNINSTALL K_NODE option_list
 						{
 							new->no_id			= opt[0].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -685,6 +693,8 @@ stmt_store_path		: lno K_STORE K_PATH option_list
 							new->pa_conninfo	= opt[2].str;
 							new->pa_connretry	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -713,6 +723,8 @@ stmt_drop_path		: lno K_DROP K_PATH option_list
 							new->pa_client		= opt[1].ival;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -741,6 +753,8 @@ stmt_store_listen	: lno K_STORE K_LISTEN option_list
 							new->li_receiver	= opt[1].ival;
 							new->li_provider	= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -769,6 +783,8 @@ stmt_drop_listen	: lno K_DROP K_LISTEN option_list
 							new->li_receiver	= opt[1].ival;
 							new->li_provider	= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -797,6 +813,8 @@ stmt_create_set		: lno K_CREATE K_SET option_list
 							new->set_origin		= opt[1].ival;
 							new->set_comment	= opt[2].str;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -823,6 +841,8 @@ stmt_drop_set		: lno K_DROP K_SET option_list
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -851,6 +871,8 @@ stmt_merge_set		: lno K_MERGE K_SET option_list
 							new->add_id			= opt[1].ival;
 							new->set_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -877,6 +899,8 @@ stmt_table_add_key	: lno K_TABLE K_ADD K_KEY option_list
 							new->no_id			= opt[0].ival;
 							new->tab_fqname		= opt[1].str;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -913,6 +937,8 @@ stmt_set_add_table	: lno K_SET K_ADD K_TABLE option_list
 							new->use_serial		= opt[5].ival;
 							new->tab_comment	= opt[6].str;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -945,6 +971,8 @@ stmt_set_add_sequence : lno K_SET K_ADD K_SEQUENCE option_list
 							new->seq_fqname		= opt[3].str;
 							new->seq_comment	= opt[4].str;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -973,6 +1001,8 @@ stmt_store_trigger	: lno K_STORE K_TRIGGER option_list
 							new->trig_tgname	= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1001,6 +1031,8 @@ stmt_drop_trigger	: lno K_DROP K_TRIGGER option_list
 							new->trig_tgname	= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1031,6 +1063,8 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 							new->sub_receiver	= opt[2].ival;
 							new->sub_forward	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1057,6 +1091,8 @@ stmt_unsubscribe_set	: lno K_UNSUBSCRIBE K_SET option_list
 							new->sub_setid		= opt[0].ival;
 							new->sub_receiver	= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1083,6 +1119,8 @@ stmt_lock_set		: lno K_LOCK K_SET option_list
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1109,6 +1147,8 @@ stmt_unlock_set		: lno K_UNLOCK K_SET option_list
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1137,6 +1177,8 @@ stmt_move_set		: lno K_MOVE K_SET option_list
 							new->old_origin		= opt[1].ival;
 							new->new_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1166,6 +1208,8 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 							new->ev_origin		= opt[2].ival;
 							new->ddl_fd			= -1;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1222,6 +1266,8 @@ stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 							new->wait_on		= opt[2].ival;
 							new->wait_timeout	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}

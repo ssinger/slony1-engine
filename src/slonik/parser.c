@@ -204,7 +204,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.c,v 1.13 2004-06-03 20:16:07 wieck Exp $
+ *	$Id: parser.c,v 1.14 2004-06-07 18:46:17 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -562,14 +562,14 @@ static const unsigned short yyrline[] =
      399,   401,   403,   405,   407,   409,   411,   413,   415,   417,
      419,   421,   423,   425,   427,   429,   431,   433,   435,   437,
      439,   441,   443,   445,   447,   449,   451,   453,   455,   455,
-     459,   476,   493,   510,   512,   516,   531,   559,   587,   613,
-     639,   663,   693,   721,   749,   777,   805,   831,   859,   885,
-     921,   953,   981,  1009,  1039,  1065,  1091,  1117,  1145,  1174,
-    1200,  1230,  1232,  1236,  1238,  1242,  1247,  1252,  1257,  1262,
-    1267,  1272,  1277,  1282,  1287,  1292,  1297,  1302,  1307,  1312,
-    1317,  1322,  1327,  1332,  1337,  1342,  1355,  1360,  1365,  1378,
-    1383,  1396,  1401,  1408,  1422,  1436,  1448,  1462,  1463,  1464,
-    1467,  1468,  1469,  1472,  1478,  1490,  1503
+     459,   476,   493,   510,   512,   516,   531,   559,   589,   617,
+     645,   671,   703,   733,   763,   793,   823,   851,   881,   909,
+     947,   981,  1011,  1041,  1073,  1101,  1129,  1157,  1187,  1218,
+    1244,  1276,  1278,  1282,  1284,  1288,  1293,  1298,  1303,  1308,
+    1313,  1318,  1323,  1328,  1333,  1338,  1343,  1348,  1353,  1358,
+    1363,  1368,  1373,  1378,  1383,  1388,  1401,  1406,  1411,  1424,
+    1429,  1442,  1447,  1454,  1468,  1482,  1494,  1508,  1509,  1510,
+    1513,  1514,  1515,  1518,  1524,  1536,  1549
 };
 #endif
 
@@ -1935,13 +1935,15 @@ yyreduce:
 							new->no_comment		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 58:
-#line 588 "parser.y"
+#line 590 "parser.y"
     {
 						SlonikStmt_drop_node *new;
 						statement_option opt[] = {
@@ -1962,13 +1964,15 @@ yyreduce:
 							new->no_id			= opt[0].ival;
 							new->ev_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 59:
-#line 614 "parser.y"
+#line 618 "parser.y"
     {
 						SlonikStmt_failed_node *new;
 						statement_option opt[] = {
@@ -1989,13 +1993,15 @@ yyreduce:
 							new->no_id			= opt[0].ival;
 							new->backup_node	= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 60:
-#line 640 "parser.y"
+#line 646 "parser.y"
     {
 						SlonikStmt_uninstall_node *new;
 						statement_option opt[] = {
@@ -2014,13 +2020,15 @@ yyreduce:
 						{
 							new->no_id			= opt[0].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 61:
-#line 664 "parser.y"
+#line 672 "parser.y"
     {
 						SlonikStmt_store_path *new;
 						statement_option opt[] = {
@@ -2045,13 +2053,15 @@ yyreduce:
 							new->pa_conninfo	= opt[2].str;
 							new->pa_connretry	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 62:
-#line 694 "parser.y"
+#line 704 "parser.y"
     {
 						SlonikStmt_drop_path *new;
 						statement_option opt[] = {
@@ -2074,13 +2084,15 @@ yyreduce:
 							new->pa_client		= opt[1].ival;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 63:
-#line 722 "parser.y"
+#line 734 "parser.y"
     {
 						SlonikStmt_store_listen *new;
 						statement_option opt[] = {
@@ -2103,13 +2115,15 @@ yyreduce:
 							new->li_receiver	= opt[1].ival;
 							new->li_provider	= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 64:
-#line 750 "parser.y"
+#line 764 "parser.y"
     {
 						SlonikStmt_drop_listen *new;
 						statement_option opt[] = {
@@ -2132,13 +2146,15 @@ yyreduce:
 							new->li_receiver	= opt[1].ival;
 							new->li_provider	= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 65:
-#line 778 "parser.y"
+#line 794 "parser.y"
     {
 						SlonikStmt_create_set *new;
 						statement_option opt[] = {
@@ -2161,13 +2177,15 @@ yyreduce:
 							new->set_origin		= opt[1].ival;
 							new->set_comment	= opt[2].str;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 66:
-#line 806 "parser.y"
+#line 824 "parser.y"
     {
 						SlonikStmt_drop_set *new;
 						statement_option opt[] = {
@@ -2188,13 +2206,15 @@ yyreduce:
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 67:
-#line 832 "parser.y"
+#line 852 "parser.y"
     {
 						SlonikStmt_merge_set *new;
 						statement_option opt[] = {
@@ -2217,13 +2237,15 @@ yyreduce:
 							new->add_id			= opt[1].ival;
 							new->set_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 68:
-#line 860 "parser.y"
+#line 882 "parser.y"
     {
 						SlonikStmt_table_add_key *new;
 						statement_option opt[] = {
@@ -2244,13 +2266,15 @@ yyreduce:
 							new->no_id			= opt[0].ival;
 							new->tab_fqname		= opt[1].str;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 69:
-#line 886 "parser.y"
+#line 910 "parser.y"
     {
 						SlonikStmt_set_add_table *new;
 						statement_option opt[] = {
@@ -2281,13 +2305,15 @@ yyreduce:
 							new->use_serial		= opt[5].ival;
 							new->tab_comment	= opt[6].str;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 70:
-#line 922 "parser.y"
+#line 948 "parser.y"
     {
 						SlonikStmt_set_add_sequence *new;
 						statement_option opt[] = {
@@ -2314,13 +2340,15 @@ yyreduce:
 							new->seq_fqname		= opt[3].str;
 							new->seq_comment	= opt[4].str;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 71:
-#line 954 "parser.y"
+#line 982 "parser.y"
     {
 						SlonikStmt_store_trigger *new;
 						statement_option opt[] = {
@@ -2343,13 +2371,15 @@ yyreduce:
 							new->trig_tgname	= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 72:
-#line 982 "parser.y"
+#line 1012 "parser.y"
     {
 						SlonikStmt_drop_trigger *new;
 						statement_option opt[] = {
@@ -2372,13 +2402,15 @@ yyreduce:
 							new->trig_tgname	= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 73:
-#line 1010 "parser.y"
+#line 1042 "parser.y"
     {
 						SlonikStmt_subscribe_set *new;
 						statement_option opt[] = {
@@ -2403,13 +2435,15 @@ yyreduce:
 							new->sub_receiver	= opt[2].ival;
 							new->sub_forward	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 74:
-#line 1040 "parser.y"
+#line 1074 "parser.y"
     {
 						SlonikStmt_unsubscribe_set *new;
 						statement_option opt[] = {
@@ -2430,13 +2464,15 @@ yyreduce:
 							new->sub_setid		= opt[0].ival;
 							new->sub_receiver	= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 75:
-#line 1066 "parser.y"
+#line 1102 "parser.y"
     {
 						SlonikStmt_lock_set *new;
 						statement_option opt[] = {
@@ -2457,13 +2493,15 @@ yyreduce:
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 76:
-#line 1092 "parser.y"
+#line 1130 "parser.y"
     {
 						SlonikStmt_unlock_set *new;
 						statement_option opt[] = {
@@ -2484,13 +2522,15 @@ yyreduce:
 							new->set_id			= opt[0].ival;
 							new->set_origin		= opt[1].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 77:
-#line 1118 "parser.y"
+#line 1158 "parser.y"
     {
 						SlonikStmt_move_set *new;
 						statement_option opt[] = {
@@ -2513,13 +2553,15 @@ yyreduce:
 							new->old_origin		= opt[1].ival;
 							new->new_origin		= opt[2].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 78:
-#line 1146 "parser.y"
+#line 1188 "parser.y"
     {
 						SlonikStmt_ddl_script *new;
 						statement_option opt[] = {
@@ -2543,13 +2585,15 @@ yyreduce:
 							new->ev_origin		= opt[2].ival;
 							new->ddl_fd			= -1;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 79:
-#line 1175 "parser.y"
+#line 1219 "parser.y"
     {
 						SlonikStmt_update_functions *new;
 						statement_option opt[] = {
@@ -2576,7 +2620,7 @@ yyreduce:
     break;
 
   case 80:
-#line 1201 "parser.y"
+#line 1245 "parser.y"
     {
 						SlonikStmt_wait_event *new;
 						statement_option opt[] = {
@@ -2601,33 +2645,35 @@ yyreduce:
 							new->wait_on		= opt[2].ival;
 							new->wait_timeout	= opt[3].ival;
 						}
+						else
+							parser_errors++;
 
 						yyval.statement = (SlonikStmt *)new;
 					}
     break;
 
   case 81:
-#line 1231 "parser.y"
+#line 1277 "parser.y"
     { yyval.opt_list = NULL; }
     break;
 
   case 82:
-#line 1233 "parser.y"
+#line 1279 "parser.y"
     { yyval.opt_list = yyvsp[-2].opt_list; }
     break;
 
   case 83:
-#line 1237 "parser.y"
+#line 1283 "parser.y"
     { yyval.opt_list = yyvsp[0].opt_list; }
     break;
 
   case 84:
-#line 1239 "parser.y"
+#line 1285 "parser.y"
     { yyvsp[-2].opt_list->next = yyvsp[0].opt_list; yyval.opt_list = yyvsp[-2].opt_list; }
     break;
 
   case 85:
-#line 1243 "parser.y"
+#line 1289 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_ID;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2635,7 +2681,7 @@ yyreduce:
     break;
 
   case 86:
-#line 1248 "parser.y"
+#line 1294 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_BACKUP_NODE;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2643,7 +2689,7 @@ yyreduce:
     break;
 
   case 87:
-#line 1253 "parser.y"
+#line 1299 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_EVENT_NODE;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2651,7 +2697,7 @@ yyreduce:
     break;
 
   case 88:
-#line 1258 "parser.y"
+#line 1304 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_SERVER;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2659,7 +2705,7 @@ yyreduce:
     break;
 
   case 89:
-#line 1263 "parser.y"
+#line 1309 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_CLIENT;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2667,7 +2713,7 @@ yyreduce:
     break;
 
   case 90:
-#line 1268 "parser.y"
+#line 1314 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_ORIGIN;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2675,7 +2721,7 @@ yyreduce:
     break;
 
   case 91:
-#line 1273 "parser.y"
+#line 1319 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_OLD_ORIGIN;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2683,7 +2729,7 @@ yyreduce:
     break;
 
   case 92:
-#line 1278 "parser.y"
+#line 1324 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_NEW_ORIGIN;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2691,7 +2737,7 @@ yyreduce:
     break;
 
   case 93:
-#line 1283 "parser.y"
+#line 1329 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_RECEIVER;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2699,7 +2745,7 @@ yyreduce:
     break;
 
   case 94:
-#line 1288 "parser.y"
+#line 1334 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_PROVIDER;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2707,7 +2753,7 @@ yyreduce:
     break;
 
   case 95:
-#line 1293 "parser.y"
+#line 1339 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_CONNRETRY;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2715,7 +2761,7 @@ yyreduce:
     break;
 
   case 96:
-#line 1298 "parser.y"
+#line 1344 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_COMMENT;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2723,7 +2769,7 @@ yyreduce:
     break;
 
   case 97:
-#line 1303 "parser.y"
+#line 1349 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_CONNINFO;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2731,7 +2777,7 @@ yyreduce:
     break;
 
   case 98:
-#line 1308 "parser.y"
+#line 1354 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_SET_ID;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2739,7 +2785,7 @@ yyreduce:
     break;
 
   case 99:
-#line 1313 "parser.y"
+#line 1359 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_ADD_ID;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2747,7 +2793,7 @@ yyreduce:
     break;
 
   case 100:
-#line 1318 "parser.y"
+#line 1364 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_NODE_ID;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2755,7 +2801,7 @@ yyreduce:
     break;
 
   case 101:
-#line 1323 "parser.y"
+#line 1369 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_TAB_ID;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2763,7 +2809,7 @@ yyreduce:
     break;
 
   case 102:
-#line 1328 "parser.y"
+#line 1374 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_TRIG_NAME;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2771,7 +2817,7 @@ yyreduce:
     break;
 
   case 103:
-#line 1333 "parser.y"
+#line 1379 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_FQNAME;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2779,7 +2825,7 @@ yyreduce:
     break;
 
   case 104:
-#line 1338 "parser.y"
+#line 1384 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_USE_KEY;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2787,7 +2833,7 @@ yyreduce:
     break;
 
   case 105:
-#line 1343 "parser.y"
+#line 1389 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2803,7 +2849,7 @@ yyreduce:
     break;
 
   case 106:
-#line 1356 "parser.y"
+#line 1402 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_FORWARD;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2811,7 +2857,7 @@ yyreduce:
     break;
 
   case 107:
-#line 1361 "parser.y"
+#line 1407 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_FILENAME;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2819,7 +2865,7 @@ yyreduce:
     break;
 
   case 108:
-#line 1366 "parser.y"
+#line 1412 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2835,7 +2881,7 @@ yyreduce:
     break;
 
   case 109:
-#line 1379 "parser.y"
+#line 1425 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_WAIT_CONFIRMED;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2843,7 +2889,7 @@ yyreduce:
     break;
 
   case 110:
-#line 1384 "parser.y"
+#line 1430 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2859,7 +2905,7 @@ yyreduce:
     break;
 
   case 111:
-#line 1397 "parser.y"
+#line 1443 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_WAIT_ON;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2867,7 +2913,7 @@ yyreduce:
     break;
 
   case 112:
-#line 1402 "parser.y"
+#line 1448 "parser.y"
     {
 						yyvsp[0].opt_list->opt_code	= O_TIMEOUT;
 						yyval.opt_list = yyvsp[0].opt_list;
@@ -2875,7 +2921,7 @@ yyreduce:
     break;
 
   case 113:
-#line 1409 "parser.y"
+#line 1455 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2890,7 +2936,7 @@ yyreduce:
     break;
 
   case 114:
-#line 1423 "parser.y"
+#line 1469 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2905,7 +2951,7 @@ yyreduce:
     break;
 
   case 115:
-#line 1437 "parser.y"
+#line 1483 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2920,7 +2966,7 @@ yyreduce:
     break;
 
   case 116:
-#line 1449 "parser.y"
+#line 1495 "parser.y"
     {
 						option_list *new;
 						new = (option_list *)malloc(sizeof(option_list));
@@ -2935,14 +2981,14 @@ yyreduce:
     break;
 
   case 123:
-#line 1473 "parser.y"
+#line 1519 "parser.y"
     {
 						yyval.ival = strtol(yytext, NULL, 10);
 					}
     break;
 
   case 124:
-#line 1479 "parser.y"
+#line 1525 "parser.y"
     {
 						char   *ret;
 
@@ -2955,7 +3001,7 @@ yyreduce:
     break;
 
   case 125:
-#line 1491 "parser.y"
+#line 1537 "parser.y"
     {
 						char   *ret;
 
@@ -2968,7 +3014,7 @@ yyreduce:
     break;
 
   case 126:
-#line 1503 "parser.y"
+#line 1549 "parser.y"
     { yyval.ival = yylineno; }
     break;
 
@@ -2976,7 +3022,7 @@ yyreduce:
     }
 
 /* Line 991 of yacc.c.  */
-#line 2979 "y.tab.c"
+#line 3025 "y.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -3185,7 +3231,7 @@ yyreturn:
 }
 
 
-#line 1506 "parser.y"
+#line 1552 "parser.y"
 
 
 

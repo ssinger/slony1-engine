@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.9 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: sync_thread.c,v 1.10 2004-06-07 18:46:17 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -169,8 +169,10 @@ syncThread_main(void *dummy)
 		 * Once every four hours we restart the node daemon to avoid
 		 * any possible resource leakage to pile up.
 		 */
+		/*
 		if (--restart_count == 0)
 			slon_restart();
+		*/
 	}
 
 	dstring_free(&query1);
