@@ -1,4 +1,4 @@
-1.0.4	Bugfixes and required minor features
+1.0.5	Bugfixes and required minor features
 
   date: 2004/08/26 19:28:07;  author: wieck;
   Since every notify causes a new row version for listeners, I added
