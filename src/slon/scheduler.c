@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.17 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: scheduler.c,v 1.18 2005-02-25 20:49:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -455,7 +455,7 @@ sched_mainloop(void *dummy)
 
 		/*
 		 * Check if any of the connections in the wait queue have reached
-		 * there timeout. While doing so, we also remember the closest timeout
+		 * their timeout. While doing so, we also remember the closest timeout
 		 * in the future.
 		 */
 		tv = NULL;
