@@ -1,5 +1,5 @@
 #!perl    # -*- perl -*-
-# $Id: build_env.pl,v 1.4 2004-09-09 17:04:07 cbbrowne Exp $
+# $Id: build_env.pl,v 1.5 2004-09-16 15:37:05 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
@@ -49,7 +49,7 @@ foreach my $node (@nodes)
   $nodeNumber++;
 
 }
-my $connectString = "dbi:Pg:dbname=$dataBase;host=$host";
+my $connectString = "dbi:Pg:dbname=$dataBase;host=$host;port=$dataBasePort";
 my $dbh = DBI->connect($connectString,$dataBaseUser,$dataBasePassword,
 		       {RaiseError => 0, PrintError => 0, AutoCommit => 1});
 die "connect: $DBI::errstr" if ( !defined($dbh) || $DBI::err );
