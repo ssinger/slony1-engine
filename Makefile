@@ -1,4 +1,4 @@
-all check install installdirs install-all-headers installcheck uninstall dep depend clean distclean maintainer-clean:
+all check install installdirs install-all-headers installcheck uninstall dep depend clean distclean maintainer-clean dist:
 	@if [ ! -f GNUmakefile ] ; then \
 		echo "You need to run the 'configure' program first. See the file"; \
 		echo "'README' for installation instructions." ; \
