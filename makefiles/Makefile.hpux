@@ -11,11 +11,11 @@ ifeq ($(HAVE_POSIX_SIGNALS), no)
    LIBS := -lBSD $(LIBS)
 endif
 
-# Embed 'libdir' as the shared library search path so that the executables
+# Embed 'pglibdir' as the shared library search path so that the executables
 # don't need SHLIB_PATH to be set.  (We do not observe the --enable-rpath
 # switch here because you'd get rather bizarre behavior if you leave this
 # option off.)
-LDFLAGS += -Wl,+b -Wl,$(libdir)
+LDFLAGS += -Wl,+b -Wl,$(pglibdir)
 
 # catch null pointer dereferences
 LDFLAGS += -Wl,-z
