@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.15 2004-09-02 18:07:59 darcyb Exp $
+# $Id: GNUmakefile.in,v 1.16 2004-11-02 17:54:53 darcyb Exp $
 # ----------
 
 top_builddir = .
@@ -33,7 +33,7 @@ all:
 	echo "All of Slony-I is successfully made. Ready to install"
 
 install	installdirs:
-	@for subdir in src doc tools ; do \
+	@for subdir in src doc tools share ; do \
 	  $(MAKE) -C $$subdir $@ || exit; \
     done && \
 	echo "All of Slony-I is successfully installed"
