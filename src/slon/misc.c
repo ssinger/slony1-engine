@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.8 2004-03-05 00:02:38 wieck Exp $
+ *	$Id: misc.c,v 1.9 2004-04-02 03:01:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -69,6 +69,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 
 	va_start(ap, fmt);
 
+	pthread_mutex_lock(&log_mutex);
 	if (outbuf == NULL)
 	{
 		outsize = 8192;
@@ -76,6 +77,7 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 		if (outbuf == NULL)
 		{
 			perror("slon_log: malloc()");
+			pthread_mutex_unlock(&log_mutex);
 			slon_abort();
 		}
 	}
@@ -94,7 +96,6 @@ slon_log(SlonLogLevel level, char *fmt, ...)
 		}
 	}
 
-	pthread_mutex_lock(&log_mutex);
 	fwrite(outbuf, strlen(outbuf), 1, stdout);
 	fflush(stdout);
 	pthread_mutex_unlock(&log_mutex);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.12 2004-03-31 17:19:24 wieck Exp $
+ *	$Id: scheduler.c,v 1.13 2004-04-02 03:01:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -168,6 +168,10 @@ sched_wait_mainloop(void)
 	sigaddset(&sched_sigset, SIGINT);
 	sigaddset(&sched_sigset, SIGTERM);
 	sigwait(&sched_sigset, &signo);
+
+	sigemptyset(&sched_sigset);
+	pthread_sigmask(SIG_SETMASK, &sched_sigset, NULL);
+
 	switch (signo)
 	{
 		case SIGHUP:	sched_sighuphandler(signo);
@@ -186,9 +190,6 @@ sched_wait_mainloop(void)
 		perror("sched_wait_mainloop: pthread_join()");
 		return -1;
 	}
-
-	signal(SIGINT, SIG_IGN);
-	signal(SIGTERM, SIG_IGN);
 
 	return 0;
 }

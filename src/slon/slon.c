@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.22 2004-03-31 17:19:25 wieck Exp $
+ *	$Id: slon.c,v 1.23 2004-04-02 03:01:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -412,7 +412,7 @@ main (int argc, char *const argv[])
 	main_thread = pthread_self();
 	main_argv = argv;
 	signal(SIGALRM, sigalrmhandler);
-	alarm(10);
+	alarm(20);
 
 	rtcfg_joinAllRemoteThreads();
 
