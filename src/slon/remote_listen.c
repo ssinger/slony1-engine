@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.7 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: remote_listen.c,v 1.8 2004-02-28 04:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -407,19 +407,19 @@ remoteListen_adjust_listat(SlonNode *node, struct listat **listat_head,
 					found = true;
 				break;
 			}
+		}
 
-			/* 
-		 	 * Remove obsolete item
-			 */
-			if (!found)
-			{
-				slon_log(SLON_DEBUG2,
-						"remoteListenThread_%d: stop listening for "
-						"event origin %d\n",
-						node->no_id, listat->li_origin);
-				DLLIST_REMOVE(*listat_head, *listat_tail, listat);
-				free(listat);
-			}
+		/* 
+		 * Remove obsolete item
+		 */
+		if (!found)
+		{
+			slon_log(SLON_DEBUG2,
+					"remoteListenThread_%d: stop listening for "
+					"event origin %d\n",
+					node->no_id, listat->li_origin);
+			DLLIST_REMOVE(*listat_head, *listat_tail, listat);
+			free(listat);
 		}
 
 		listat = linext;
@@ -484,18 +484,14 @@ static void
 remoteListen_cleanup(struct listat **listat_head, struct listat **listat_tail)
 {
 	struct listat  *listat;
-	struct listat  *linext;
 
 	/*
 	 * Free the listen status list
 	 */
-	for (listat = *listat_head; listat;)
+	while ((listat = *listat_head) != NULL)
 	{
-		linext = listat->next;
 		DLLIST_REMOVE(*listat_head, *listat_tail, listat);
 		free(listat);
-
-		listat = linext;
 	}
 }
 

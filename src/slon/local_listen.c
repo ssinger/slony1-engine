@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.9 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: local_listen.c,v 1.10 2004-02-28 04:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -148,6 +148,11 @@ localListenThread_main(void *dummy)
 			 * Get the event type and process configuration events
 			 */
 			ev_type = PQgetvalue(res, tupno, 5);
+			slon_log(SLON_DEBUG2, "localListenThread: "
+					"Received event %d,%s %s\n",
+					rtcfg_nodeid, PQgetvalue(res, tupno, 0),
+					ev_type);
+
 			if (strcmp(ev_type, "SYNC") == 0)
 			{
 				/*
@@ -338,6 +343,9 @@ localListenThread_main(void *dummy)
 	 */
 	dstring_free(&query1);
 	slon_disconnectdb(conn);
+#ifdef SLON_MEMDEBUG
+	conn = NULL;
+#endif
 
 	slon_log(SLON_DEBUG1, "localListenThread: thread done\n");
 	pthread_exit(NULL);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.10 2004-02-27 16:57:54 wieck Exp $
+ *	$Id: runtime_config.c,v 1.11 2004-02-28 04:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -519,9 +519,9 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 				set->sub_active = 0;
 			rtcfg_unlock();
 			rtcfg_seq_bump();
-			if (old_provider >= 0 && old_provider != sub_provider)
+			if (old_provider > 0 && old_provider != sub_provider)
 				sched_wakeup_node(old_provider);
-			if (sub_provider >= 0)
+			if (sub_provider > 0)
 				sched_wakeup_node(sub_provider);
 			return;
 		}

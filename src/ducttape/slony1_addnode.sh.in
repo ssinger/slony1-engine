@@ -6,7 +6,7 @@
 #	the base schema and support functions into the database, and
 #	establish path and listen information for it.
 #
-# $Id: slony1_addnode.sh.in,v 1.2 2004-02-24 23:03:49 wieck Exp $
+# $Id: slony1_addnode.sh.in,v 1.3 2004-02-28 04:16:10 wieck Exp $
 # ----------------------------------------------------------------------
 
 # ----
@@ -93,6 +93,10 @@ case $pgversion in
 				xfiles=v73
 				bfiles=v73
 				;;
+	7.5|7.5*)	base_version=7.5
+				xfiles=v73
+				bfiles=v73
+				;;
 	*)			echo "Unsupported database version $pgversion" >&2
 				exit 3
 				;;
@@ -120,7 +124,7 @@ echo ""
 # ----
 err=1
 case $base_version in
-	7.3|7.4)	#
+	7.3|7.4|7.5)	#
 				# Extract the current cluster config from PrimaryNode
 				#
 				echo "Extracting cluster configuration from node $PrimayNode"

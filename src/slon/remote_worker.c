@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.9 2004-02-27 21:27:26 wieck Exp $
+ *	$Id: remote_worker.c,v 1.10 2004-02-28 04:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -340,6 +340,9 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (msg->msg_type == WMSG_WAKEUP)
 		{
+#ifdef SLON_MEMDEBUG
+			memset(msg, 55, sizeof(SlonWorkMsg));
+#endif
 			free(msg);
 			check_config = true;
 			continue;
@@ -352,6 +355,9 @@ remoteWorkerThread_main(void *cdata)
 		{
 			store_confirm_forward(node, local_conn,
 					(SlonWorkMsg_confirm *)msg);
+#ifdef SLON_MEMDEBUG
+			memset(msg, 55, sizeof(SlonWorkMsg_confirm));
+#endif
 			free(msg);
 			continue;
 		}
@@ -370,6 +376,11 @@ remoteWorkerThread_main(void *cdata)
 		event = (SlonWorkMsg_event *)msg;
 		sprintf(seqbuf, "%lld", event->ev_seqno);
 
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"Received event %d,%s %s\n",
+				node->no_id, event->ev_origin, seqbuf,
+				event->ev_type);
+
 		/*
 		 * Construct the queries to begin a transaction, notify on
 		 * the event and confirm relations, insert the event into our
@@ -378,7 +389,9 @@ remoteWorkerThread_main(void *cdata)
 		 * node listening for events with us as a provider will pick
 		 * up the news.
 		 */
-		slon_mkquery(&query1, "begin transaction; ");
+		slon_mkquery(&query1, 
+				"begin transaction; "
+				"set transaction isolation level serializable; ");
 		query_append_event(&query1, event);
 		
 		/*
@@ -434,6 +447,15 @@ remoteWorkerThread_main(void *cdata)
 		}
 		else
 		{
+			/*
+			 * Avoid deadlock problems during configuration changes
+			 * by locking the central confiuration lock right from
+			 * the start.
+			 */
+			slon_appendquery(&query1,
+					"lock table %s.sl_config_lock; ",
+					rtcfg_namespace);
+
 			/*
 			 * Simple configuration events. Call the corresponding
 			 * runtime config function, add the query to call the
@@ -549,7 +571,8 @@ remoteWorkerThread_main(void *cdata)
 				 * event from the provider.
 				 */
 				if (sub_receiver == rtcfg_nodeid &&
-					sub_provider == node->no_id)
+					event->ev_origin == node->no_id &&
+					event->event_provider == sub_provider)
 				{
 					SlonDString	query2;
 					int			sched_rc;
@@ -620,6 +643,9 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 				slon_abort();
 		}
 
+#ifdef SLON_MEMDEBUG
+		memset(msg, 55, sizeof(SlonWorkMsg_event));
+#endif
 		free(msg);
 	}
 
@@ -639,6 +665,10 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 	dstring_free(&query2);
 	free(wd->tab_fqname);
 	free(wd->tab_forward);
+#ifdef SLON_MEMDEBUG
+	local_conn = NULL;
+	memset(wd, 66, sizeof(WorkerGroupData));
+#endif
 	free(wd);
 
 	slon_log(SLON_DEBUG1,
@@ -683,6 +713,9 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 		{
 			DLLIST_REMOVE(provider->set_head, provider->set_tail,
 					pset);
+#ifdef SLON_MEMDEBUG
+			memset(pset, 55, sizeof(ProviderSet));
+#endif
 			free(pset);
 		}
 	}
@@ -852,6 +885,10 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 				dstring_free(&(line->data));
 				DLLIST_REMOVE(wd->linepool_head, wd->linepool_tail,
 						line);
+#ifdef SLON_MEMDEBUG
+				memset(line, 55, sizeof(WorkerGroupLine));
+#endif
+				free(line);
 			}
 
 			/*
@@ -863,6 +900,7 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 						"disconnecting from data provider %d\n",
 						node->no_id, provider->no_id);
 				slon_disconnectdb(provider->conn);
+				provider->conn = NULL;
 			}
 
 			/*
@@ -870,8 +908,12 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 			 */
 			if (provider->pa_conninfo != NULL)
 				free(provider->pa_conninfo);
+			provider->pa_conninfo = NULL;
 			DLLIST_REMOVE(wd->provider_head, wd->provider_tail, provider);
 			dstring_free(&(provider->helper_qualification));
+#ifdef SLON_MEMDEBUG
+			memset(provider, 55, sizeof(ProviderInfo));
+#endif
 			free(provider);
 
 			continue;
@@ -1420,6 +1462,7 @@ static int
 copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		SlonWorkMsg_event *event)
 {
+	SlonSet		   *set;
 	SlonConn	   *pro_conn;
 	PGconn		   *pro_dbconn;
 	PGconn		   *loc_dbconn;
@@ -1434,7 +1477,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	PGresult	   *res3;
 	int				rc;
 	char		   *copydata = NULL;
-	int				set_origin;
+	int				set_origin = 0;
+	SlonNode	   *sub_node;
+	int				sub_provider = 0;
 	char		   *ssy_seqno = NULL;
 	char		   *ssy_minxid = NULL;
 	char		   *ssy_maxxid = NULL;
@@ -1445,11 +1490,49 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
 
 	/*
-	 * Connect to the provider DB
+	 * Lookup the provider nodes conninfo
 	 */
 	rtcfg_lock();
-	conninfo = strdup(node->pa_conninfo);
+	for (set = rtcfg_set_list_head; set; set = set->next)
+	{
+		if (set->set_id == set_id)
+		{
+			set_origin = set->set_origin;
+			sub_provider = set->sub_provider;
+			break;
+		}
+	}
+	if (set == NULL)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: set %d "
+				"not found in runtime configuration\n",
+				node->no_id, set_id);
+		return -1;
+	}
+
+	if ((sub_node = rtcfg_findNode(sub_provider)) == NULL)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: node %d "
+				"not found in runtime configuration\n",
+				node->no_id, sub_provider);
+		return -1;
+	}
+	if (sub_node->pa_conninfo == NULL)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: node %d "
+				"has no pa_conninfo\n",
+				node->no_id, sub_provider);
+		return -1;
+	}
+	conninfo = strdup(sub_node->pa_conninfo);
 	rtcfg_unlock();
+
+	/*
+	 * Connect to the provider DB
+	 */
 	sprintf(conn_symname, "copy_set_%d", set_id);
 	if ((pro_conn = slon_connectdb(conninfo, conn_symname)) == NULL)
 	{
@@ -1460,6 +1543,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		return -1;
 	}
 	free(conninfo);
+	conninfo = NULL;
 	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 			"connected to provider DB\n",
 			node->no_id);
@@ -1622,6 +1706,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						"PQputCopyData() - %s",
 						node->no_id, PQerrorMessage(loc_dbconn));
+#ifdef SLON_MEMDEBUG
+				memset(copydata, 88, len);
+#endif
 				PQfreemem(copydata);
 				PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
 				PQclear(res3);
@@ -1631,6 +1718,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				dstring_free(&query1);
 				return -1;
 			}
+#ifdef SLON_MEMDEBUG
+				memset(copydata, 88, len);
+#endif
 			PQfreemem(copydata);
 		}
 		if (rc != -1)
@@ -1701,36 +1791,6 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				"%lld bytes copied for table %s\n",
 				node->no_id, copysize, tab_fqname);
 	}
-	PQclear(res1);
-
-	/*
-	 * Determine the set origin
-	 */
-	slon_mkquery(&query1,
-			"select set_origin from %s.sl_set where set_id = %d; ",
-			rtcfg_namespace, set_id);
-	res1 = PQexec(pro_dbconn, dstring_data(&query1));
-	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				node->no_id, dstring_data(&query1),
-				PQresultErrorMessage(res1));
-		PQclear(res1);
-		slon_disconnectdb(pro_conn);
-		dstring_free(&query1);
-		return -1;
-	}
-	if (PQntuples(res1) != 1)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				"cannot determine origin of set %d\n",
-				node->no_id, set_id);
-		PQclear(res1);
-		slon_disconnectdb(pro_conn);
-		dstring_free(&query1);
-		return -1;
-	}
-	set_origin = strtol(PQgetvalue(res1, 0, 0), NULL, 10);
 	PQclear(res1);
 
 	/*

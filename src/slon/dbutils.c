@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.7 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: dbutils.c,v 1.8 2004-02-28 04:16:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -84,6 +84,9 @@ slon_disconnectdb(SlonConn *conn)
 	 * Disconnect the native database connection
 	 */
 	PQfinish(conn->dbconn);
+#ifdef SLON_MEMDEBUG
+	conn->dbconn = NULL;
+#endif
 
 	/*
 	 * Unlock and destroy the condition and mutex variables
@@ -143,6 +146,9 @@ slon_free_dummyconn(SlonConn *conn)
 	 * Free allocated memory
 	 */
 	free(conn->symname);
+#ifdef SLON_MEMDEBUG
+	conn->symname = NULL;
+#endif
 	free(conn);
 }
 

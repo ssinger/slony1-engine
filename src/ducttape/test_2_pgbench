@@ -5,10 +5,11 @@ export PATH
 TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
+DB3=slony_test3
 
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
-PGBENCH_TRANS=`expr 10000 / $PGBENCH_CLIENTS`
+PGBENCH_TRANS=`expr 20000 / $PGBENCH_CLIENTS`
 
 trap '
 	echo ""
@@ -24,6 +25,10 @@ trap '
 	if [ ! -z $slon2_pid ] ; then
 		echo "**** killing node daemon 2"
 		kill -15 $slon2_pid
+	fi
+	if [ ! -z $slon3_pid ] ; then
+		echo "**** killing node daemon 3"
+		kill -15 $slon3_pid
 	fi
 	exit -1
 ' 2 15
@@ -50,6 +55,8 @@ echo "**** remove old test databases"
 dropdb $DB1 || echo "**** ignored"
 sleep 1
 dropdb $DB2 || echo "**** ignored"
+sleep 1
+dropdb $DB3 || echo "**** ignored"
 sleep 1
 
 #####
@@ -201,6 +208,61 @@ echo "**** $DB2 should now be copying data and attempting to catch up."
 echo "**********************************************************************"
 echo ""
 
+######################################################################
+# Setup DB2 as a slave node and let it subscribe the replication
+# set of the running pgbench
+######################################################################
+sleep 30
+echo "**** creating database for Node 3"
+if ! createdb $DB3 ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	exit -1
+fi
+
+echo "**** initializing $DB3 as Node 3 of Slony-I cluster T1"
+if ! slony1_addnode T1 2 3 dbname=$DB3 "Slave Node 3" ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	exit -1
+fi
+
+echo "**** starting the Slony-I node deamon for $DB3"
+xterm -title "Slon node 3" -e sh -c "slon T1 dbname=$DB3; echo -n 'Enter>'; read" &
+slon3_pid=$!
+echo "slon[$slon3_pid] on dbname=$DB3"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	exit -1
+fi
+
+######################################################################
+# Create the pgbench tables and subscribe to set 1
+######################################################################
+echo "**** creating pgbench tables and subscribing Node 2 to set 1"
+(
+	pg_dump -s -t accounts $DB2
+	pg_dump -s -t branches $DB2
+	pg_dump -s -t tellers $DB2
+	pg_dump -s -t history $DB2
+	echo "select \"_T1\".subscribeSet (1, 2, 3, false);"
+) | psql -q $DB3
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB3 should now be copying data and attempting to catch up."
+echo "**********************************************************************"
+echo ""
+
+
+
 echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do
 	echo -n "."
@@ -210,10 +272,12 @@ echo "**** pgbench finished"
 echo "**** please terminate the replication engines when cought up."
 wait $slon1_pid
 wait $slon2_pid
+wait $slon3_pid
 
 kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
+kill $slon3_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
 psql $DB1 >dump.tmp.1.$$ <<_EOF_
@@ -236,10 +300,28 @@ psql $DB2 >dump.tmp.2.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
+psql $DB3 >dump.tmp.3.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
 
-if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
-	echo "success - databases are equal."
-	rm dump.tmp.?.$$
+if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_2.1-2.diff ; then
+	echo "success - databases 1 and 2 are equal."
+	rm dump.tmp.2.$$
 else
-	echo "FAILED - see test_1.diff for database differences"
+	echo "FAILED - see test_2.1-2.diff for database differences"
+fi
+echo -n "**** comparing databases ... "
+if diff dump.tmp.1.$$ dump.tmp.3.$$ >test_2.1-3.diff ; then
+	echo "success - databases 1 and 3 are equal."
+	rm dump.tmp.3.$$
+	rm dump.tmp.1.$$
+else
+	echo "FAILED - see test_2.1-3.diff for database differences"
 fi
