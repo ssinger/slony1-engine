@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.30 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: slon.h,v 1.31 2004-06-02 14:08:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -322,7 +322,9 @@ do { \
 } while (0)
 extern void		slon_exit(int code);
 
-extern int		slon_restart_request;
+extern int				slon_restart_request;
+extern pthread_mutex_t	slon_wait_listen_lock;
+extern pthread_cond_t	slon_wait_listen_cond;
 
 
 /* ----------

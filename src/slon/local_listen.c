@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.21 2004-05-27 16:32:49 wieck Exp $
+ *	$Id: local_listen.c,v 1.22 2004-06-02 14:08:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -83,6 +83,39 @@ localListenThread_main(void *dummy)
 		slon_abort();
 	}
 	PQclear(res);
+			
+	/*
+	 * Check that we are the only slon daemon connected.
+	 */
+	slon_mkquery(&query1, 
+			"select true from \"pg_catalog\".pg_listener "
+			"    where relname = '_%s_Restart';",
+			rtcfg_cluster_name, rtcfg_cluster_name);
+	res = PQexec(dbconn, dstring_data(&query1));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_FATAL,
+				"localListenThread: \"%s\" - %s",
+				dstring_data(&query1), PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query1);
+		slon_abort();
+	}
+	if (PQntuples(res) != 1)
+	{
+		slon_log(SLON_FATAL,
+				"localListenThread: Another slon daemon is serving this node already\n");
+		PQclear(res);
+		dstring_free(&query1);
+		slon_abort();
+	}
+	PQclear(res);
+
+	/*
+	 * Flag the main thread that the coast is clear and he
+	 * can launch all other threads.
+	 */
+	pthread_cond_signal(&slon_wait_listen_cond);
 			
 	/*
 	 * Process all events, then wait for notification and repeat

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.25 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: slon.c,v 1.26 2004-06-02 14:08:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -34,6 +34,9 @@
  * ----------
  */
 int slon_restart_request = false;
+
+pthread_mutex_t		slon_wait_listen_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t		slon_wait_listen_cond = PTHREAD_COND_INITIALIZER;
 
 
 /* ----------
@@ -417,21 +420,26 @@ main (int argc, char *const argv[])
 	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
 	/*
-	 * Enable all nodes that are active
-	 */
-	rtcfg_doActivate();
-
-	/*
 	 * Create the local event thread that is monitoring
 	 * the local node for administrative events to adjust the
 	 * configuration at runtime.
+	 * We wait here until the local listen thread has checked that
+	 * there is no other slon daemon running.
 	 */
+	pthread_mutex_lock(&slon_wait_listen_lock);
 	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: cannot create localListenThread - %s\n",
 				strerror(errno));
 		slon_abort();
 	}
+	pthread_cond_wait(&slon_wait_listen_cond, &slon_wait_listen_lock);
+	pthread_mutex_unlock(&slon_wait_listen_lock);
+
+	/*
+	 * Enable all nodes that are active
+	 */
+	rtcfg_doActivate();
 
 	/*
 	 * Create the local cleanup thread that will remove old
