@@ -6,12 +6,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.25 2004-07-12 18:48:43 xfade Exp $
+# $Id: configure.ac,v 1.26 2004-07-21 10:26:01 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
 
-AC_INIT(slony1-engine, 1.0.0)
+AC_INIT(postgresql-slony1-engine, 1.0.1)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
