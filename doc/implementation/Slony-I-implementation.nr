@@ -6,7 +6,7 @@
 .\"	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 .\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-implementation.nr,v 1.4 2004-02-20 15:13:28 wieck Exp $
+.\"	$Id: Slony-I-implementation.nr,v 1.5 2004-02-22 15:42:53 wieck Exp $
 .\" ----------
 .\" format this document with
 .\"
@@ -292,40 +292,24 @@ confirmations, it selects the new information from the respective
 tables and feeds them into the respective internal message queues
 for the worker threads.
 The engine starts one remote node specific worker thread (see
-below) per node that is the origin of one or more data sets, the
-local node is subscribed to.  If such a node specific worker
-thread exists, the event is forwarded into its message queue.
-Confirmations from all origins, as well as events originating on
-nodes where no specific thread exists for are forwarded to the
-default worker thread.
+below) per remote node. Messages are forwarded on an internal message
+queue to this node specific worker for processing and confirmation.
 .NH 2
 Remote Worker Threads
 .TCENT "Remote Worker Threads
 .PP
-There is one Remote Worker Thread per remote node, where the
-local node is subscribed to originating data set(s). A remote
+There is one Remote Worker Thread per remote node.  A remote
 worker thread maintains one local database connection to do the
 actual replication data application, the event storing and
-confirmation.
-Every Set origination on the remote node the worker is handling,
-has one data provider (which can but must not be identical to the
-event provider).  Per distinct data provider over these sets, the
-worker thread maintains one database connection to perform the
-actual replication data selection.
-A remote worker thread waits on its internal message queue for
+confirmation.  Every Set originating on the remote node the
+worker is handling, has one data provider (which can but must not
+be identical to the event provider).  Per distinct data provider
+over these sets, the worker thread maintains one database
+connection to perform the actual replication data selection.  A
+remote worker thread waits on its internal message queue for
 events forwarded by the remote listen thread(s). It then
 processes these events, including data selection and application,
 and confirmation. This also includes maintaining the engines in-
 memory configuration information.
-.NH 2
-Default Worker Thread
-.TCENT "Default Worker Thread
-.PP
-The Default Worker Thread maintains one local database
-connection.  It receives all confirmations as well as those
-remote events, where no specific worker thread exists, via an
-internal message queue. This handling includes forwarding and
-confirming the event into the local database and maintaining the
-engines in-memory cluster configuration information.
 .\" **********************************************************************
 .close idx
