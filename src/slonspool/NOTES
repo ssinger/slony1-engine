@@ -73,11 +73,25 @@ Q4: How do we configure it?
 
       SPOOLPATH
 
+      -p "/var/spool/slony1/something"
+
    b) Naming convention for the spool files, likely using a
       strftime()-conformant name string, also with the option of
       having it use the starting and/or ending SYNC ids.
 
+      -n "something"      
+
    c) There needs to be some sort of "subscribe" notion...
+
+      This is implemented _inside_ the spooler.
+
+      --> For each table, run pg_dump -s -t on the table
+
+      --> Then do a "copy from" on each table
+
+   d) How often to split between files???
+
+      --> Combo of time, number of syncs, size
 
 Q5: What should the logs consist of?
 
