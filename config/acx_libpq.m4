@@ -43,6 +43,10 @@ if test -n "$PG_CONFIG_LOCATION"; then
 	    a newer version.)
 	fi
     fi
+    if test "$PG_MAJOR_VERSION" = "8"; then
+      AC_MSG_RESULT($PG_VERSION)
+      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3 or later])
+    fi
 else
     dnl Specify the commandline options here.
     AC_MSG_ERROR(Cannot find pg_config. 
@@ -173,6 +177,24 @@ else
 	postgresql.conf.sample not found! Please specify the sharedir
 	with --with-pgsharedir=<dir>
 	)
+fi
+
+have_pqputcopydata=no
+AC_CHECK_LIB(pq, [PQputCopyData], [have_pqputcopydata=yes])
+if test $have_pqputcopydata = yes ; then
+        AC_DEFINE(HAVE_PQPUTCOPYDATA,1,[Postgresql PQputCopyData()])
+fi
+
+have_pqsetnoticereceiver=no
+AC_CHECK_LIB(pq, [PQsetNoticeReceiver], [have_pqsetnoticereceiver=yes])
+if test $have_pqsetnoticereceiver = yes; then
+	 AC_DEFINE(HAVE_PQSETNOTICERECEIVER,1,[Postgresql PQsetNoticeReceiver()])
+fi
+
+have_pqfreemem=no
+AC_CHECK_LIB(pq, [PQfreemem], [have_pqfreemem=yes])
+if test $have_pqfreemem = yes; then
+	AC_DEFINE(HAVE_PQFREEMEM,1,[Postgresql PQfreemem()])
 fi
 
 AC_LANG_RESTORE
