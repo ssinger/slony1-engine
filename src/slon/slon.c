@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.35 2004-10-18 17:06:33 darcyb Exp $
+ *	$Id: slon.c,v 1.36 2004-10-19 00:53:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -75,7 +75,7 @@ main(int argc, char *const argv[])
 	InitializeConfOptions();
 
 
-	while ((c = getopt(argc, argv, "f:d:s:t:g:c:p:h")) != EOF)
+	while ((c = getopt(argc, argv, "f:d:s:t:g:c:p:hv")) != EOF)
 	{
 		switch (c)
 		{
@@ -109,6 +109,11 @@ main(int argc, char *const argv[])
 
 		case 'h':
 			errors++;
+			break;
+
+		case 'v':
+			printf("slon version %s\n", SLONY_I_VERSION_STRING);
+			exit(0);
 			break;
 
 		default:
