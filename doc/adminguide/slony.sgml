@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.11 2005-02-02 23:08:50 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.12 2005-02-07 21:43:54 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -19,62 +19,69 @@
     &legal;
   </bookinfo>
 
-  <part id="slonyintro">
+  <article id="slonyintro">
     <title><productname>Slony-I</productname> Introduction</title>
+
     &intro;
     &prerequisites;
     &installation;
     &concepts;
     &cluster;
     &defineset;
-  </part>
+  </article>
 
-  <part id="slonyadmin">
-    <title><productname>Slony-I</productname> Administration</title>
+  &reference;
 
-  <article>
-    &adminscripts;
-    &startslons;
-    &subscribenodes;
-    &monitoring;
-    &maintenance;
-    &reshape;
-    &failover;
-    &listenpaths;
-    &addthings;
-    &dropthings;
-    &ddlchanges;
-    &firstdb;
-    &help;
-   </article>
-  </part>
+<article id="slonyadmin"> 
+<title> Slony-I Administration </title>
+ <articleinfo>
+  <corpauthor>The Slony Global Development Group</corpauthor>
+  <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
+ </articleinfo>
+ &firstdb;
+ &startslons;
+ &subscribenodes;
+ &monitoring;
+ &maintenance;
+ &reshape;
+ &failover;
+ &listenpaths;
+ &plainpaths;
+ &addthings;
+ &dropthings;
+ &ddlchanges;
+ &usingslonik;
+ &adminscripts;
+ &versionupgrade;
+ &help;
+</article>
 
-  <part id="faq">
-    <title>Slony-I FAQ</title>
-    <article>
-<para>Not all of these are, strictly speaking, <quote>frequently
+<article id="faq">
+
+<title>Slony-I FAQ</title>
+<articleinfo>
+      <corpauthor>The Slony Global Development Group</corpauthor>
+      <author> 
+	<firstname>Christopher </firstname> 
+	<surname>Browne</surname> 
+      </author> 
+    </articleinfo>
+
+<para> Not all of these are, strictly speaking, <quote>frequently
 asked;</quote> some represent <emphasis>trouble found that seemed
 worth documenting</emphasis>.</para>
 
-    &faq;
-</article>
-  </part>
+ &faq;
+ &schemadoc;
+</part>
 
-  <part id="commandreferencec">
+<part id="commandreferencec">
     <title>Core <productname>Slony-I</productname> Programs</title>
-     <chapter>
-	<title><productname>Slony-I</productname> binaries</title>
 	&slon;
 	&slonik;
         &usingslonik;
-     </chapter>
-     &slonikref;
-  </part>
+</part>
 
-  <part id="developer">
-    <title>Slony-I Internals</title>
-      &schemadoc;
-  </part>
 &bookindex;
 
 </book>
