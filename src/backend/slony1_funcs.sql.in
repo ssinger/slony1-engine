@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.17 2004-02-27 06:03:38 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.18 2004-02-27 16:57:54 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1123,6 +1123,7 @@ begin
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_SUBSCRIPTION'', 
 				p_sub_set, p_sub_provider, p_sub_receiver, 
 				case p_sub_forward when true then ''t'' else ''f'' end);
+		perform @NAMESPACE@.enableSubscription(p_sub_set, p_sub_receiver);
 	end if;
 
 	return p_sub_set;
@@ -1138,10 +1139,10 @@ returns int4
 as '
 declare
 	p_sub_set			alias for $1;
-	p_sub_receiver		alias for $3;
+	p_sub_receiver		alias for $2;
 begin
 	-- **** TODO ****
-	raise exception ''Slony-I: unsubscribeSet() not implemented'';
+	raise exception ''Slony-I: unsbscribeSet() not implemented'';
 end;
 ' language plpgsql;
 
@@ -1154,7 +1155,7 @@ returns int4
 as '
 declare
 	p_sub_set			alias for $1;
-	p_sub_receiver		alias for $3;
+	p_sub_receiver		alias for $2;
 begin
 	-- **** TODO ****
 	raise exception ''Slony-I: unsubscribeSet_int() not implemented'';
@@ -1170,10 +1171,18 @@ returns int4
 as '
 declare
 	p_sub_set			alias for $1;
-	p_sub_receiver		alias for $3;
+	p_sub_receiver		alias for $2;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: enableSubscription() not implemented'';
+	-- ----
+	-- The real work is done in the replication engine. All
+	-- we have to do here is remembering that it happened.
+	-- ----
+	update @NAMESPACE@.sl_subscribe
+			set sub_active = ''t''
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver;
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 

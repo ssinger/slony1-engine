@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.9 2004-02-26 22:27:00 wieck Exp $
+ *	$Id: runtime_config.c,v 1.10 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -183,7 +183,7 @@ rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 
 	rtcfg_unlock();
 
-	slon_log(SLON_DEBUG1,
+	slon_log(SLON_DEBUG2,
 			"setNodeLastEvent: no_id=%d event_seq=%lld\n",
 			no_id, retval);
 
@@ -356,7 +356,7 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	{
 		if (listen->li_origin == li_origin)
 		{
-			slon_log(SLON_DEBUG1,
+			slon_log(SLON_DEBUG2,
 					"storeListen: li_origin=%d li_receiver=%d "
 					"li_provider=%d - already listening\n",
 					li_origin, rtcfg_nodeid, li_provider);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.16 2004-02-26 22:27:00 wieck Exp $
+ *	$Id: slon.c,v 1.17 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -108,7 +108,7 @@ main (int argc, const char *argv[])
 		slon_log(SLON_FATAL, "main: Node is not initialized properly\n");
 		slon_exit(-1);
 	}
-	slon_log(SLON_INFO, "main: local node id = %d\n", rtcfg_nodeid);
+	slon_log(SLON_CONFIG, "main: local node id = %d\n", rtcfg_nodeid);
 
 	/*
 	 * Start the event scheduling system
@@ -116,7 +116,7 @@ main (int argc, const char *argv[])
 	if (sched_start_mainloop() < 0)
 		slon_exit(-1);
 
-	slon_log(SLON_DEBUG1, "main: loading current cluster configuration\n");
+	slon_log(SLON_CONFIG, "main: loading current cluster configuration\n");
 
 	/*
 	 * Begin a transaction
@@ -320,7 +320,7 @@ main (int argc, const char *argv[])
 			strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
 	PQclear(res);
 	dstring_free(&query);
-	slon_log(SLON_DEBUG1, 
+	slon_log(SLON_DEBUG2, 
 			"main: last local event sequence = %s\n", 
 			rtcfg_lastevent);
 
@@ -342,7 +342,7 @@ main (int argc, const char *argv[])
 	 */
 	PQfinish(startup_conn);
 
-	slon_log(SLON_DEBUG1, "main: configuration complete - starting threads\n");
+	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
 	/*
 	 * Enable all nodes that are active
@@ -417,7 +417,7 @@ main (int argc, const char *argv[])
 	/*
 	 * That's it.
 	 */
-	slon_log(SLON_INFO, "main: done\n");
+	slon_log(SLON_DEBUG1, "main: done\n");
 	return 0;
 }
 

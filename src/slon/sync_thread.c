@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.5 2004-02-27 06:03:38 wieck Exp $
+ *	$Id: sync_thread.c,v 1.6 2004-02-27 16:57:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -120,7 +120,7 @@ syncThread_main(void *dummy)
 				slon_abort();
 				break;
 			}
-			slon_log(SLON_DEBUG1,
+			slon_log(SLON_DEBUG2,
 					"syncThread: new sl_action_seq %s - SYNC %s\n", 
 					last_actseq_buf, PQgetvalue(res, 0, 0));
 			PQclear(res);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.5 2004-02-27 06:03:38 wieck Exp $
+ *	$Id: remote_worker.c,v 1.6 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -203,257 +203,19 @@ pthread_mutex_t						node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
  * Local functions
  * ----------
  */
+static void	adjust_provider_info(SlonNode *node,
+					WorkerGroupData *wd, int cleanup);
 static int	query_execute(SlonNode *node, PGconn *dbconn, 
 					SlonDString *dsp, int expected_rc);
 static void	query_append_event(SlonDString *dsp, 
 					SlonWorkMsg_event *event);
 static void	store_confirm_forward(SlonNode *node, SlonConn *conn,
 					SlonWorkMsg_confirm *confirm);
-static int	copy_set(SlonNode *node, SlonConn *local_conn, int set_id);
+static int	copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
+					SlonWorkMsg_event *event);
 static int	sync_event(SlonNode *node, SlonConn *local_conn,
 					WorkerGroupData *wd,SlonWorkMsg_event *event);
 static void	*sync_helper(void *cdata);
-
-
-static void
-adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
-{
-	ProviderInfo   *provider;
-	ProviderInfo   *provnext;
-	ProviderSet	   *pset;
-	SlonNode	   *rtcfg_node;
-	SlonSet		   *rtcfg_set;
-	int				i;
-
-	slon_log(SLON_DEBUG2, "remoteWorderThread_%d: "
-			"update provider configuration\n",
-			node->no_id);
-
-	/*
-	 * The runtime configuration has changed. 
-	 */
-
-	/*
-	 * Step 1. 
-	 *
-	 *	Remove all sets from the providers.
-	 */
-	for (provider = wd->provider_head; provider; provider = provider->next)
-	{
-		/*
-		 * We create a lock here and keep it until we made
-		 * our final decision about what to do with the helper thread.
-		 */
-		pthread_mutex_lock(&(provider->helper_lock));
-
-		while ((pset = provider->set_head) != NULL)
-		{
-			DLLIST_REMOVE(provider->set_head, provider->set_tail,
-					pset);
-			free(pset);
-		}
-	}
-
-	/*
-	 * Step 2.
-	 *
-	 *	Add all currently replicated sets (back) to the providers
-	 *	adding new providers as necessary. This step is skippen in
-	 *	cleanup mode, causing all providers to become obsolete
-	 *	and thus the whole provider info extinct.
-	 */
-	if (!cleanup)
-	{
-		for (rtcfg_set = rtcfg_set_list_head; rtcfg_set; 
-				rtcfg_set = rtcfg_set->next)
-		{
-			if (rtcfg_set->sub_provider >= 0 &&
-				rtcfg_set->sub_active)
-			{
-				/*
-				 * We need to replicate this set. Find or add
-				 * the provider to our in-thread data.
-				 */
-				for (provider = wd->provider_head; provider;
-						provider = provider->next)
-				{
-					if (provider->no_id == rtcfg_set->sub_provider)
-						break;
-				}
-				if (provider == NULL)
-				{
-					/*
-					 * No provider entry found. Create a new one.
-					 */
-					provider = (ProviderInfo *)
-							malloc(sizeof(ProviderInfo));
-					memset(provider, 0, sizeof(ProviderInfo));
-					provider->no_id = rtcfg_set->sub_provider;
-					provider->wd = wd;
-
-					/*
-					 * Also create a helper thread for this
-					 * provider, which will actually run the
-					 * log data selection for us.
-					 */
-					pthread_mutex_init(&(provider->helper_lock), NULL);
-					pthread_mutex_lock(&(provider->helper_lock));
-					pthread_cond_init(&(provider->helper_cond), NULL);
-					dstring_init(&(provider->helper_qualification));
-					provider->helper_status = SLON_WG_IDLE;
-					if (pthread_create(&(provider->helper_thread), NULL,
-							sync_helper, (void *)provider) != 0)
-					{
-						slon_log(SLON_FATAL, "remoteWorkerThread_%d: ",
-								"pthread_create() - %s\n",
-								node->no_id, strerror(errno));
-						slon_abort();
-					}
-					slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-							"helper thread for provider %d created\n",
-							node->no_id, provider->no_id);
-
-					/*
-					 * Add more workgroup data lines to the pool.
-					 */
-					for (i = 0; i < SLON_WORKLINES_PER_HELPER; i++)
-					{
-						WorkerGroupLine	   *line;
-
-						line = (WorkerGroupLine *)malloc(sizeof(WorkerGroupLine));
-						memset(line, 0, sizeof(WorkerGroupLine));
-						dstring_init(&(line->data));
-						DLLIST_ADD_TAIL(wd->linepool_head, wd->linepool_tail,
-								line);
-					}
-
-					/*
-					 * Add the provider to our work group
-					 */
-					DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
-							provider);
-					
-					/*
-					 * Copy the runtime configurations conninfo
-					 * into the provider info.
-					 */
-					rtcfg_node = rtcfg_findNode(provider->no_id);
-					if (rtcfg_node != NULL)
-					{
-						provider->pa_connretry = rtcfg_node->pa_connretry;
-						if (rtcfg_node->pa_conninfo != NULL)
-							provider->pa_conninfo =
-									strdup(rtcfg_node->pa_conninfo);
-					}
-				}
-
-				/*
-				 * Add the set to the list of sets we get
-				 * from this provider.
-				 */
-				pset = (ProviderSet *)
-						malloc(sizeof(ProviderSet));
-				memset(pset, 0, sizeof(ProviderSet));
-				pset->set_id      = rtcfg_set->set_id;
-				pset->sub_forward = rtcfg_set->sub_forward;
-
-				DLLIST_ADD_TAIL(provider->set_head,
-						provider->set_tail, pset);
-
-				slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-						"added active set %d to provider %d\n",
-						node->no_id, pset->set_id, provider->no_id);
-			}
-		}
-	}
-
-	/*
-	 * Step 3.
-	 *
-	 *	Remove all providers that we don't need any more.
-	 */
-	for (provider = wd->provider_head; provider; provider = provnext)
-	{
-		SlonNode	   *rtcfg_node;
-
-		provnext = provider->next;
-
-		/*
-		 * If the list of currently replicated sets we receive from
-		 * this provider is empty, we don't need to maintain a
-		 * connection to it.
-		 */
-		if (provider->set_head == NULL)
-		{
-			/*
-			 * Tell this helper thread to exit, join him and destroy
-			 * thread related data.
-			 */
-			provider->helper_status = SLON_WG_EXIT;
-			pthread_cond_signal(&(provider->helper_cond));
-			pthread_mutex_unlock(&(provider->helper_lock));
-			pthread_join(provider->helper_thread, NULL);
-			pthread_cond_destroy(&(provider->helper_cond));
-			pthread_mutex_destroy(&(provider->helper_lock));
-
-			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-					"helper thread for provider %d terminated\n",
-					node->no_id, provider->no_id);
-
-			/*
-			 * Disconnect from the database.
-			 */
-			if (provider->conn != NULL)
-			{
-				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-						"disconnecting from data provider %d\n",
-						node->no_id, provider->no_id);
-				slon_disconnectdb(provider->conn);
-			}
-
-			/*
-			 * Free other resources
-			 */
-			if (provider->pa_conninfo != NULL)
-				free(provider->pa_conninfo);
-			DLLIST_REMOVE(wd->provider_head, wd->provider_tail, provider);
-			dstring_free(&(provider->helper_qualification));
-			free(provider);
-
-			continue;
-		}
-
-		/*
-		 * If the connection info has changed, we have to reconnect.
-		 */
-		rtcfg_node = rtcfg_findNode(provider->no_id);
-		if (rtcfg_node == NULL || rtcfg_node->pa_conninfo == NULL ||
-				provider->pa_conninfo == NULL ||
-				strcmp(provider->pa_conninfo, rtcfg_node->pa_conninfo) != 0)
-		{
-			if (provider->conn != NULL)
-			{
-				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
-						"disconnecting from data provider %d\n",
-						node->no_id, provider->no_id);
-				slon_disconnectdb(provider->conn);
-				provider->conn = NULL;
-			}
-			if (provider->pa_conninfo != NULL)
-				free(provider->pa_conninfo);
-			if (rtcfg_node->pa_conninfo == NULL)
-				provider->pa_conninfo = NULL;
-			else
-				provider->pa_conninfo = strdup(rtcfg_node->pa_conninfo);
-		}
-
-		/*
-		 * Unlock the helper thread ... he should now go and wait
-		 * for work.
-		 */
-		pthread_mutex_unlock(&(provider->helper_lock));
-	}
-}
 
 
 /* ----------
@@ -526,11 +288,11 @@ remoteWorkerThread_main(void *cdata)
 		 * If we got the special WMSG_WAKEUP, check the current runmode
 		 * of the scheduler and the status of our node.
 		 */
+		if (sched_get_status() != SCHED_STATUS_OK)
+			break;
+
 		if (check_config)
 		{
-			if (sched_get_status() != SCHED_STATUS_OK)
-				break;
-
 			rtcfg_lock();
 			if (!node->no_active)
 				break;
@@ -773,6 +535,11 @@ remoteWorkerThread_main(void *cdata)
 				int		sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
 				char   *sub_forward  = event->ev_data4;
 
+				slon_appendquery(&query1,
+						"select %s.enableSubscription(%d, %d); ",
+						rtcfg_namespace,
+						sub_set, sub_receiver);
+
 				/*
 				 * Do the actual enabling of the set only if
 				 * we are the receiver and if we received this
@@ -788,6 +555,7 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
 					dstring_init(&query2);
 					slon_mkquery(&query2, "rollback transaction");
+					check_config = true;
 
 					while (true)
 					{
@@ -797,14 +565,14 @@ remoteWorkerThread_main(void *cdata)
 						 * the data now ...
 						 */
 						if (query_execute(node, local_dbconn, &query1,
-								PGRES_COMMAND_OK) < 0)
+								PGRES_TUPLES_OK) < 0)
 							slon_abort();
 
 						/*
 						 * If the copy succeeds, exit the loop and let
 						 * the transaction commit.
 						 */
-						if (copy_set(node, local_conn, sub_set) == 0)
+						if (copy_set(node, local_conn, sub_set, event) == 0)
 						{
 							dstring_free(&query2);
 							dstring_reset(&query1);
@@ -854,12 +622,6 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 
 	/*
 	 * Thread exit time has arrived.
-	 */
-	slon_log(SLON_DEBUG1,
-			"remoteWorkerThread_%d: thread exiting\n",
-			node->no_id);
-
-	/*
 	 * Disconnect from all data providers and free memory
 	 */
 	adjust_provider_info(node, wd, true);
@@ -879,6 +641,247 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			"remoteWorkerThread_%d: thread done\n",
 			node->no_id);
 	pthread_exit(NULL);
+}
+
+
+static void
+adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
+{
+	ProviderInfo   *provider;
+	ProviderInfo   *provnext;
+	ProviderSet	   *pset;
+	SlonNode	   *rtcfg_node;
+	SlonSet		   *rtcfg_set;
+	int				i;
+
+	slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+			"update provider configuration\n",
+			node->no_id);
+
+	/*
+	 * The runtime configuration has changed. 
+	 */
+
+	/*
+	 * Step 1. 
+	 *
+	 *	Remove all sets from the providers.
+	 */
+	for (provider = wd->provider_head; provider; provider = provider->next)
+	{
+		/*
+		 * We create a lock here and keep it until we made
+		 * our final decision about what to do with the helper thread.
+		 */
+		pthread_mutex_lock(&(provider->helper_lock));
+
+		while ((pset = provider->set_head) != NULL)
+		{
+			DLLIST_REMOVE(provider->set_head, provider->set_tail,
+					pset);
+			free(pset);
+		}
+	}
+
+	/*
+	 * Step 2.
+	 *
+	 *	Add all currently replicated sets (back) to the providers
+	 *	adding new providers as necessary. This step is skippen in
+	 *	cleanup mode, causing all providers to become obsolete
+	 *	and thus the whole provider info extinct.
+	 */
+	if (!cleanup)
+	{
+		for (rtcfg_set = rtcfg_set_list_head; rtcfg_set; 
+				rtcfg_set = rtcfg_set->next)
+		{
+			if (rtcfg_set->sub_provider >= 0 &&
+				rtcfg_set->sub_active)
+			{
+				/*
+				 * We need to replicate this set. Find or add
+				 * the provider to our in-thread data.
+				 */
+				for (provider = wd->provider_head; provider;
+						provider = provider->next)
+				{
+					if (provider->no_id == rtcfg_set->sub_provider)
+						break;
+				}
+				if (provider == NULL)
+				{
+					/*
+					 * No provider entry found. Create a new one.
+					 */
+					provider = (ProviderInfo *)
+							malloc(sizeof(ProviderInfo));
+					memset(provider, 0, sizeof(ProviderInfo));
+					provider->no_id = rtcfg_set->sub_provider;
+					provider->wd = wd;
+
+					/*
+					 * Also create a helper thread for this
+					 * provider, which will actually run the
+					 * log data selection for us.
+					 */
+					pthread_mutex_init(&(provider->helper_lock), NULL);
+					pthread_mutex_lock(&(provider->helper_lock));
+					pthread_cond_init(&(provider->helper_cond), NULL);
+					dstring_init(&(provider->helper_qualification));
+					provider->helper_status = SLON_WG_IDLE;
+					if (pthread_create(&(provider->helper_thread), NULL,
+							sync_helper, (void *)provider) != 0)
+					{
+						slon_log(SLON_FATAL, "remoteWorkerThread_%d: ",
+								"pthread_create() - %s\n",
+								node->no_id, strerror(errno));
+						slon_abort();
+					}
+					slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+							"helper thread for provider %d created\n",
+							node->no_id, provider->no_id);
+
+					/*
+					 * Add more workgroup data lines to the pool.
+					 */
+					for (i = 0; i < SLON_WORKLINES_PER_HELPER; i++)
+					{
+						WorkerGroupLine	   *line;
+
+						line = (WorkerGroupLine *)malloc(sizeof(WorkerGroupLine));
+						memset(line, 0, sizeof(WorkerGroupLine));
+						dstring_init(&(line->data));
+						DLLIST_ADD_TAIL(wd->linepool_head, wd->linepool_tail,
+								line);
+					}
+
+					/*
+					 * Add the provider to our work group
+					 */
+					DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
+							provider);
+					
+					/*
+					 * Copy the runtime configurations conninfo
+					 * into the provider info.
+					 */
+					rtcfg_node = rtcfg_findNode(provider->no_id);
+					if (rtcfg_node != NULL)
+					{
+						provider->pa_connretry = rtcfg_node->pa_connretry;
+						if (rtcfg_node->pa_conninfo != NULL)
+							provider->pa_conninfo =
+									strdup(rtcfg_node->pa_conninfo);
+					}
+				}
+
+				/*
+				 * Add the set to the list of sets we get
+				 * from this provider.
+				 */
+				pset = (ProviderSet *)
+						malloc(sizeof(ProviderSet));
+				memset(pset, 0, sizeof(ProviderSet));
+				pset->set_id      = rtcfg_set->set_id;
+				pset->sub_forward = rtcfg_set->sub_forward;
+
+				DLLIST_ADD_TAIL(provider->set_head,
+						provider->set_tail, pset);
+
+				slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+						"added active set %d to provider %d\n",
+						node->no_id, pset->set_id, provider->no_id);
+			}
+		}
+	}
+
+	/*
+	 * Step 3.
+	 *
+	 *	Remove all providers that we don't need any more.
+	 */
+	for (provider = wd->provider_head; provider; provider = provnext)
+	{
+		SlonNode	   *rtcfg_node;
+
+		provnext = provider->next;
+
+		/*
+		 * If the list of currently replicated sets we receive from
+		 * this provider is empty, we don't need to maintain a
+		 * connection to it.
+		 */
+		if (provider->set_head == NULL)
+		{
+			/*
+			 * Tell this helper thread to exit, join him and destroy
+			 * thread related data.
+			 */
+			provider->helper_status = SLON_WG_EXIT;
+			pthread_cond_signal(&(provider->helper_cond));
+			pthread_mutex_unlock(&(provider->helper_lock));
+			pthread_join(provider->helper_thread, NULL);
+			pthread_cond_destroy(&(provider->helper_cond));
+			pthread_mutex_destroy(&(provider->helper_lock));
+
+			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+					"helper thread for provider %d terminated\n",
+					node->no_id, provider->no_id);
+
+			/*
+			 * Disconnect from the database.
+			 */
+			if (provider->conn != NULL)
+			{
+				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+						"disconnecting from data provider %d\n",
+						node->no_id, provider->no_id);
+				slon_disconnectdb(provider->conn);
+			}
+
+			/*
+			 * Free other resources
+			 */
+			if (provider->pa_conninfo != NULL)
+				free(provider->pa_conninfo);
+			DLLIST_REMOVE(wd->provider_head, wd->provider_tail, provider);
+			dstring_free(&(provider->helper_qualification));
+			free(provider);
+
+			continue;
+		}
+
+		/*
+		 * If the connection info has changed, we have to reconnect.
+		 */
+		rtcfg_node = rtcfg_findNode(provider->no_id);
+		if (rtcfg_node == NULL || rtcfg_node->pa_conninfo == NULL ||
+				provider->pa_conninfo == NULL ||
+				strcmp(provider->pa_conninfo, rtcfg_node->pa_conninfo) != 0)
+		{
+			if (provider->conn != NULL)
+			{
+				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+						"disconnecting from data provider %d\n",
+						node->no_id, provider->no_id);
+				slon_disconnectdb(provider->conn);
+				provider->conn = NULL;
+			}
+			if (provider->pa_conninfo != NULL)
+				free(provider->pa_conninfo);
+			if (rtcfg_node->pa_conninfo == NULL)
+				provider->pa_conninfo = NULL;
+			else
+				provider->pa_conninfo = strdup(rtcfg_node->pa_conninfo);
+		}
+
+		/*
+		 * Unlock the helper thread ... he should now go and wait
+		 * for work.
+		 */
+		pthread_mutex_unlock(&(provider->helper_lock));
+	}
 }
 
 
@@ -1078,7 +1081,7 @@ remoteWorker_wakeup(int no_id)
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		slon_log(SLON_DEBUG1,
+		slon_log(SLON_DEBUG2,
 				"remoteWorker_wakeup: unknown node %d\n",
 				no_id);
 		return;
@@ -1133,7 +1136,7 @@ remoteWorker_confirm(int no_id,
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		slon_log(SLON_ERROR,
+		slon_log(SLON_DEBUG2,
 				"remoteWorker_confirm: unknown node %d\n",
 				no_id);
 		return;
@@ -1389,7 +1392,8 @@ store_confirm_forward(SlonNode *node, SlonConn *conn,
 
 
 static int
-copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
+copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
+		SlonWorkMsg_event *event)
 {
 	SlonConn	   *pro_conn;
 	PGconn		   *pro_dbconn;
@@ -1411,8 +1415,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 	char		   *ssy_maxxid = NULL;
 	char		   *ssy_xip = NULL;
 	SlonDString		ssy_action_list;
+	char			seqbuf[64];
 
-	slon_log(SLON_DEBUG1, "******* copy_set %d\n", set_id);
+	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
 
 	/*
 	 * Connect to the provider DB
@@ -1430,7 +1435,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 		return -1;
 	}
 	free(conninfo);
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 			"connected to provider DB\n",
 			node->no_id);
 
@@ -1482,9 +1487,8 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 		int64	copysize	= 0;
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				"tab_id=%d tab_fqname=%s tab_attkind=%s tab_comment='%s'\n",
-				node->no_id,
-				tab_id, tab_fqname, tab_attkind, tab_comment);
+				"copy table %s\n",
+				node->no_id, tab_fqname);
 
 		/*
 		 * Call the setAddTable_int() stored procedure. Up to now, while
@@ -1674,8 +1678,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 	{
 		/*
 		 * Our provider is the origin, so we have to construct
-		 * the setsync from scratch. Let's see if there is any
-		 * SYNC event known.
+		 * the setsync from scratch.
+		 * 
+		 * The problem at hand is that the data is something between
+		 * two SYNC points. So to get to the next sync point, we'll
+		 * have to take this and all 
 		 */
 		slon_mkquery(&query1,
 				"select max(ev_seqno) as ssy_seqno "
@@ -1707,12 +1714,17 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 		{
 			/*
 			 * No SYNC event found, so we initialize the setsync to
-			 * zeroes with ALL action sequences that exist.
+			 * the event point of the ENABLE_SUBSCRIPTION 
 			 */
-			ssy_seqno	= "0";
-			ssy_minxid	= "0";
-			ssy_maxxid	= "0";
-			ssy_xip		= "";
+			sprintf(seqbuf, "%lld", event->ev_seqno);
+			ssy_seqno	= seqbuf;
+			ssy_minxid	= event->ev_minxid_c;
+			ssy_maxxid	= event->ev_maxxid_c;
+			ssy_xip		= event->ev_xip;
+
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+					"copy_set no previous SYNC found, use enable event.\n",
+					node->no_id);
 
 			slon_mkquery(&query1,
 					"select log_actionseq "
@@ -1769,6 +1781,10 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 			else
 				slon_appendquery(&query2, ")");
 			
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+					"copy_set SYNC found, use event seqno %s.\n",
+					node->no_id, ssy_seqno);
+
 			slon_mkquery(&query1,
 					"select log_actionseq "
 					"from %s.sl_log_1 where log_origin = %d and %s "
@@ -1889,6 +1905,12 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
 	slon_disconnectdb(pro_conn);
 	dstring_free(&query1);
 
+	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+			"disconnected from provider DB\n",
+			node->no_id);
+
+	slon_log(SLON_DEBUG1, "copy_set %d done\n", set_id);
+
 	return 0;
 }
 
@@ -1913,7 +1935,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	SlonDString		query;
 	SlonDString	   *provider_qual;
 
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC %lld processing\n",
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC %lld processing\n",
 			node->no_id, event->ev_seqno);
 
 	/*
@@ -2144,7 +2166,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
 		pthread_mutex_lock(&(provider->helper_lock));
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
 				"activate helper %d\n",
 				node->no_id, provider->no_id);
 		provider->helper_status = SLON_WG_BUSY;
@@ -2209,7 +2231,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 				case SLON_WGLC_DONE:
 					provider = wgline->provider;
-					slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+					slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
 							"helper %d finished\n",
 							node->no_id, wgline->provider->no_id);
 					num_providers_active--;
@@ -2248,7 +2270,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Inform the helpers that the whole group is done with this
 	 * SYNC.
 	 */
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+	slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
 			"all helpers done.\n",
 			node->no_id);
 	for (provider = wd->provider_head; provider; provider = provider->next)
@@ -2340,12 +2362,32 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		PQclear(res1);
 	}
 
+	slon_mkquery(&query,
+			"select round((extract (epoch from timeofday()::timestamp) - "
+			"    extract (epoch from '%q'::timestamp))::numeric, 2); ",
+			event->ev_timestamp_c);
+	res1 = PQexec(local_dbconn, dstring_data(&query));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		dstring_free(&query);
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
+				node->no_id);
+		return 10;
+	}
+
 	/*
 	 * Good job!
 	 */
 	dstring_free(&query);
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: SYNC %lld done\n",
-			node->no_id, event->ev_seqno);
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC %lld done "
+			"with %s seconds delay\n",
+			node->no_id, event->ev_seqno,
+			PQgetvalue(res1, 0, 0));
+	PQclear(res1);
 	return 0;
 }
 
@@ -2371,7 +2413,7 @@ sync_helper(void *cdata)
 		pthread_mutex_lock(&(provider->helper_lock));
 		while (provider->helper_status == SLON_WG_IDLE)
 		{
-			slon_log(SLON_DEBUG1, "remoteHelperThread_%d_%d: "
+			slon_log(SLON_DEBUG4, "remoteHelperThread_%d_%d: "
 					"waiting for work\n",
 					node->no_id, provider->no_id);
 
@@ -2490,7 +2532,7 @@ sync_helper(void *cdata)
 				res = PQexec(dbconn, dstring_data(&query));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
-					slon_log(SLON_DEBUG1, "remoteHelperThread_%d_%d: \"%s\" %s",
+					slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: \"%s\" %s",
 							node->no_id, provider->no_id,
 							dstring_data(&query),
 							PQresultErrorMessage(res));
@@ -2635,7 +2677,7 @@ sync_helper(void *cdata)
 		 */
 		while (provider->helper_status == SLON_WG_DONE)
 		{
-			slon_log(SLON_DEBUG1, "remoteHelperThread_%d_%d: "
+			slon_log(SLON_DEBUG3, "remoteHelperThread_%d_%d: "
 					"waiting for workgroup to finish\n",
 					node->no_id, provider->no_id);
 

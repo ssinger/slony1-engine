@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.6 2004-02-26 22:27:00 wieck Exp $
+ *	$Id: remote_listen.c,v 1.7 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -122,7 +122,7 @@ remoteListenThread_main(void *cdata)
 			{
 				if (strcmp(conn_conninfo, node->pa_conninfo) != 0)
 				{
-					slon_log(SLON_INFO,
+					slon_log(SLON_DEBUG1,
 							"remoteListenThread_$d: "
 							"disconnecting from '%s'\n",
 							node->no_id, conn_conninfo);
@@ -158,7 +158,7 @@ remoteListenThread_main(void *cdata)
 			if (listat_head == NULL)
 			{
 				rtcfg_unlock();
-				slon_log(SLON_INFO,
+				slon_log(SLON_DEBUG2,
 						"remoteListenThread_%d: nothing to listen for\n",
 						node->no_id);
 				rc = sched_msleep(node, 10000);
@@ -270,7 +270,7 @@ remoteListenThread_main(void *cdata)
 				continue;
 			}
 
-			slon_log(SLON_INFO,
+			slon_log(SLON_DEBUG1,
 					"remoteListenThread_%d: connected to '%s'\n",
 					node->no_id, conn_conninfo);
 
@@ -343,10 +343,6 @@ remoteListenThread_main(void *cdata)
 	/*
 	 * Doomsday!
 	 */
-	slon_log(SLON_DEBUG1,
-			"remoteListenThread_%d: thread exiting\n",
-			node->no_id);
-
 	if (conn != NULL)
 	{
 		slon_log(SLON_INFO,
@@ -417,7 +413,7 @@ remoteListen_adjust_listat(SlonNode *node, struct listat **listat_head,
 			 */
 			if (!found)
 			{
-				slon_log(SLON_INFO,
+				slon_log(SLON_DEBUG2,
 						"remoteListenThread_%d: stop listening for "
 						"event origin %d\n",
 						node->no_id, listat->li_origin);
@@ -459,7 +455,7 @@ remoteListen_adjust_listat(SlonNode *node, struct listat **listat_head,
 		 */
 		if (!found)
 		{
-			slon_log(SLON_INFO,
+			slon_log(SLON_DEBUG2,
 					"remoteListenThread_%d: start listening for "
 					"event origin %d\n",
 					node->no_id, listen->li_origin);

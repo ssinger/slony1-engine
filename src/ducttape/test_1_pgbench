@@ -200,15 +200,12 @@ echo "**** $DB2 should now be copying data and attempting to catch up."
 echo "**********************************************************************"
 echo ""
 
+echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do
-	echo "**** pgbench is still running - sleep 60 seconds"
-	sleep 60
-	echo -n "**** vacuum $DB1 ... "
-	vacuumdb $DB1
-	echo -n "**** vacuum $DB2 ... "
-	vacuumdb $DB2
+	echo -n "."
+	sleep 10
 done
-echo "**** pgbench finished."
+echo "**** pgbench finished"
 echo "**** please terminate the replication engines when cought up."
 wait $slon1_pid
 wait $slon2_pid
@@ -241,7 +238,7 @@ _EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
 	echo "success - databases are equal."
+	rm dump.tmp.?.$$
 else
 	echo "FAILED - see test_1.diff for database differences"
 fi
-rm dump.tmp.?.$$

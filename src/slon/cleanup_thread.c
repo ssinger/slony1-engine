@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.7 2004-02-27 06:03:38 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.8 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -124,12 +124,10 @@ cleanupThread_main(void *dummy)
 		}
 		PQclear(res);
 		gettimeofday(&tv_end, NULL);
-		slon_log(SLON_DEBUG1,
+		slon_log(SLON_DEBUG2,
 				"cleanupThread: %8.3f seconds for vacuuming\n",
 				TIMEVAL_DIFF(&tv_start, &tv_end));
 	}
-
-	slon_log(SLON_DEBUG1, "cleanupThread: thread exiting\n");
 
 	/*
 	 * Free Resources

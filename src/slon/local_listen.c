@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.8 2004-02-27 06:03:38 wieck Exp $
+ *	$Id: local_listen.c,v 1.9 2004-02-27 16:57:54 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -48,6 +48,8 @@ localListenThread_main(void *dummy)
 	int			tupno;
 	PGnotify   *notification;
 
+	slon_log(SLON_DEBUG1, "localListenThread: thread starts\n");
+
 	/*
 	 * Connect to the local database
 	 */
@@ -76,10 +78,6 @@ localListenThread_main(void *dummy)
 	}
 	PQclear(res);
 			
-	slon_log(SLON_DEBUG1,
-			"localListenThread: listening for \"%s_Event\"\n",
-			rtcfg_cluster_name);
-
 	/*
 	 * Process all events, then wait for notification and repeat
 	 * until shutdown time has arrived.
@@ -340,6 +338,7 @@ localListenThread_main(void *dummy)
 	 */
 	dstring_free(&query1);
 	slon_disconnectdb(conn);
+
 	slon_log(SLON_DEBUG1, "localListenThread: thread done\n");
 	pthread_exit(NULL);
 }
