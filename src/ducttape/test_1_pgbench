@@ -39,7 +39,7 @@ trap '
 		echo "**** killing node daemon 2"
 		kill -15 $slon2_pid
 	fi
-	exit -1
+	exit 1
 ' 2 15
 
 ######################################################################
@@ -52,7 +52,7 @@ trap '
 #####
 echo -n "**** running 'gmake install' in src directory ... "
 if ! gmake -C .. install >$TMPOUT 2>&1 ; then
-    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit -1
+    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
 fi
 echo "done"
 rm $TMPOUT
@@ -71,7 +71,7 @@ sleep 1
 #####
 echo "**** creating database for Node 1"
 
-createdb $DB1 || exit -1
+createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
 
 #####
@@ -105,7 +105,7 @@ slonik <<_EOF_
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
-	exit -1
+	exit 1
 fi
 
 echo "**** starting the Slony-I node deamon for $DB1"
@@ -123,7 +123,7 @@ slonik <<_EOF_
 		table add key (node id = 1, full qualified name = 'public.history');
 	}
 	on error {
-		exit -1;
+		exit 1;
 	}
 
 	try {
@@ -142,7 +142,7 @@ slonik <<_EOF_
 			key = serial, comment = 'Table accounts');
 	}
 	on error {
-		exit -1;
+		exit 1;
 	}
 _EOF_
 
@@ -152,7 +152,7 @@ if [ $? -ne 0 ] ; then
 	kill $slon1_pid 2>/dev/null
 	cat $TMPOUT
 	rm $TMPOUT
-	exit -1
+	exit 1
 fi
 echo "**** set created"
 
@@ -162,7 +162,7 @@ echo "**** set created"
 if ! kill -0 $pgbench_pid 2>/dev/null ; then
 	echo "**** pgbench terminated ???"
 	kill $slon1_pid 2>/dev/null
-	exit -1
+	exit 1
 fi
 
 echo ""
@@ -179,7 +179,7 @@ echo "**** creating database for Node 2"
 if ! createdb $DB2 ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
-	exit -1
+	exit 1
 fi
 
 echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
@@ -200,7 +200,7 @@ _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
-	exit -1
+	exit 1
 fi
 
 echo "**** starting the Slony-I node deamon for $DB1"
@@ -214,7 +214,7 @@ echo "slon[$slon2_pid] on dbname=$DB2"
 if ! kill -0 $pgbench_pid 2>/dev/null ; then
 	echo "**** pgbench terminated ???"
 	kill $slon1_pid 2>/dev/null
-	exit -1
+	exit 1
 fi
 
 ######################################################################
