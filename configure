@@ -2768,18 +2768,18 @@ fi;
 
 if test "x$with_pgsourcetree" = "x" ; then
 	{ { echo "$as_me:$LINENO: error:
-        ********************
-		* Compiling Slony-I currently requires a source installation
-		* of PostgreSQL. Please specify the location of the tree you
-		* built as --with-pgsourcetree=<dir>
-        ********************
+    ********************
+    * Compiling Slony-I currently requires a source installation
+    * of PostgreSQL. Please specify the location of the tree you
+    * built as --with-pgsourcetree=<dir>
+    ********************
 	" >&5
 echo "$as_me: error:
-        ********************
-		* Compiling Slony-I currently requires a source installation
-		* of PostgreSQL. Please specify the location of the tree you
-		* built as --with-pgsourcetree=<dir>
-        ********************
+    ********************
+    * Compiling Slony-I currently requires a source installation
+    * of PostgreSQL. Please specify the location of the tree you
+    * built as --with-pgsourcetree=<dir>
+    ********************
 	" >&2;}
    { (exit 1); exit 1; }; }
 fi

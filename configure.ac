@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.17 2004-03-30 17:49:38 wieck Exp $
+# $Id: configure.ac,v 1.18 2004-03-31 13:46:09 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -64,11 +64,11 @@ AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL so
 
 if test "x$with_pgsourcetree" = "x" ; then
 	AC_MSG_ERROR([
-        ********************
-		* Compiling Slony-I currently requires a source installation
-		* of PostgreSQL. Please specify the location of the tree you
-		* built as --with-pgsourcetree=<dir>
-        ********************
+    ********************
+    * Compiling Slony-I currently requires a source installation
+    * of PostgreSQL. Please specify the location of the tree you
+    * built as --with-pgsourcetree=<dir>
+    ********************
 	])
 fi
 
