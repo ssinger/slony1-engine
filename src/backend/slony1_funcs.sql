@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.25 2004-09-14 02:49:57 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.26 2004-09-23 14:50:19 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -529,7 +529,7 @@ end;
 comment on function @NAMESPACE@.enableNode_int(int4) is
 'no_id - Node ID #
 
-Internal funciton to process the ENABLE_NODE event for node no_id';
+Internal function to process the ENABLE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION disableNode (no_id)

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.16 2004-09-06 03:42:21 wieck Exp $
+-- $Id: slony1_base.sql,v 1.17 2004-09-23 14:50:18 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -26,7 +26,10 @@ create table @NAMESPACE@.sl_node (
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 );
-comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with this namespace.  no_id is the unique ID number for the node; no_comment is a human-oriented description of the node';
+comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with this namespace.';
+comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the node';  
+comment on column @NAMESPACE@.sl_node.no_comment is 'A human-oriented description of the node';
+
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_set
@@ -43,13 +46,11 @@ create table @NAMESPACE@.sl_set (
 		FOREIGN KEY (set_origin)
 		REFERENCES @NAMESPACE@.sl_node (no_id)
 );
-comment on table @NAMESPACE@.sl_set is 'Holds definitions of replication sets.  
-
-set_id is a unique ID number for the set.
-set_origin is the ID number of the source node for the replication set.
-set_locked indicates whether or not the set is locked.
-set_comment is a human-oriented description of the set.
-';
+comment on table @NAMESPACE@.sl_set is 'Holds definitions of replication sets.';
+comment on column @NAMESPACE@.sl_set.set_id is 'A unique ID number for the set.';
+comment on column @NAMESPACE@.sl_set.set_origin is 'The ID number of the source node for the replication set.';
+comment on column @NAMESPACE@.sl_set.set_locked is 'Indicates whether or not the set is locked.';
+comment on column @NAMESPACE@.sl_set.set_comment is 'A human-oriented description of the set.';
 
 
 -- ----------------------------------------------------------------------
@@ -75,6 +76,14 @@ create table @NAMESPACE@.sl_setsync (
 );
 comment on table @NAMESPACE@.sl_setsync is 'Not documented yet';
 
+comment on column @NAMESPACE@.sl_setsync.ssy_setid is 'ID number of the replication set';
+comment on column @NAMESPACE@.sl_setsync.ssy_origin is 'ID number of the node';
+comment on column @NAMESPACE@.sl_setsync.ssy_seqno is 'Slony-I sequence number';
+comment on column @NAMESPACE@.sl_setsync.ssy_minxid is 'Earliest XID in provider system affected by SYNC';
+comment on column @NAMESPACE@.sl_setsync.ssy_maxxid is 'Latest XID in provider system affected by SYNC';
+comment on column @NAMESPACE@.sl_setsync.ssy_xip is 'TBD';
+comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'TBD';
+
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_table
@@ -93,12 +102,11 @@ create table @NAMESPACE@.sl_table (
 		FOREIGN KEY (tab_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
 );
-comment on table @NAMESPACE@.sl_table is 'Holds information about the tables being replicated.
-
-tab_id - unique key for Slony-I to use to identify the table
-tab_reloid - the OID of the table in pg_catalog.pg_class.oid
-tab_idxname - the name of the primary index of the table
-tab_comment - Human-oriented description of the table';
+comment on table @NAMESPACE@.sl_table is 'Holds information about the tables being replicated.';
+comment on column @NAMESPACE@.sl_table.tab_id is 'Unique key for Slony-I to use to identify the table';
+comment on column @NAMESPACE@.sl_table.tab_reloid is 'The OID of the table in pg_catalog.pg_class.oid';
+comment on column @NAMESPACE@.sl_table.tab_idxname is 'The name of the primary index of the table';
+comment on column @NAMESPACE@.sl_table.tab_comment is 'Human-oriented description of the table';
 
 
 -- ----------------------------------------------------------------------
@@ -115,7 +123,9 @@ create table @NAMESPACE@.sl_trigger (
 		REFERENCES @NAMESPACE@.sl_table (tab_id)
 		ON DELETE CASCADE
 );
-comment on table @NAMESPACE@.sl_trigger is 'Indicates the name of a trigger [for what purpose?]';
+comment on table @NAMESPACE@.sl_trigger is 'Holds information about triggers on tables managed using Slony-I';
+comment on column @NAMESPACE@.sl_trigger.trig_tabid is 'Slony-I ID number of table the trigger is on';
+comment on column @NAMESPACE@.sl_trigger.trig_tgname is 'Indicates the name of a trigger';
 
 
 -- ----------------------------------------------------------------------
@@ -133,11 +143,11 @@ create table @NAMESPACE@.sl_sequence (
 		FOREIGN KEY (seq_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
 );
-comment on table @NAMESPACE@.sl_sequence is 'Similar to sl_table, each entry identifies a sequence being replicated.
-seq_id is an internally-used ID for Slony-I to use in its sequencing of updates
-seq_reloid is the OID of the sequence object
-seq_set indicates which replication set the object is in
-seq_comment is a human-oriented comment';
+comment on table @NAMESPACE@.sl_sequence is 'Similar to sl_table, each entry identifies a sequence being replicated.';
+comment on column @NAMESPACE@.sl_sequence.seq_id is 'An internally-used ID for Slony-I to use in its sequencing of updates';
+comment on column @NAMESPACE@.sl_sequence.seq_reloid is 'The OID of the sequence object';
+comment on column @NAMESPACE@.sl_sequence.seq_set is 'Indicates which replication set the object is in';
+comment on column @NAMESPACE@.sl_sequence.seq_comment is 'A human-oriented comment';
 
 
 -- ----------------------------------------------------------------------
@@ -158,13 +168,11 @@ create table @NAMESPACE@.sl_path (
 		FOREIGN KEY (pa_client)
 		REFERENCES @NAMESPACE@.sl_node (no_id)
 );
-comment on table @NAMESPACE@.sl_path is 'Holds connection information for the paths between nodes, and the synchronisation delay
-
-pa_server - The Node ID # (from sl_node.no_id) of the data source
-pa_client - The Node ID # (from sl_node.no_id) of the data target
-pa_conninfo - The PostgreSQL connection string used to connect to the source node.
-pa_connretry - The synchronisation delay, in seconds
-';
+comment on table @NAMESPACE@.sl_path is 'Holds connection information for the paths between nodes, and the synchronisation delay';
+comment on column @NAMESPACE@.sl_path.pa_server is 'The Node ID # (from sl_node.no_id) of the data source';
+comment on column @NAMESPACE@.sl_path.pa_client is 'The Node ID # (from sl_node.no_id) of the data target';
+comment on column @NAMESPACE@.sl_path.pa_conninfo is 'The PostgreSQL connection string used to connect to the source node.';
+comment on column @NAMESPACE@.sl_path.pa_connretry is 'The synchronisation delay, in seconds';
 
 
 -- ----------------------------------------------------------------------
@@ -184,12 +192,10 @@ create table @NAMESPACE@.sl_listen (
 		FOREIGN KEY (li_provider, li_receiver)
 		REFERENCES @NAMESPACE@.sl_path (pa_server, pa_client)
 );
-comment on table @NAMESPACE@.sl_listen is 'Indicates how nodes listen to events from other nodes in the Slony-I network.
-
-li_origin		:	Integer.  The ID # (from sl_node.no_id) of the node this listener is operating on
-li_provider		:	Integer.  The ID # (from sl_node.no_id) of the source node for this listening event
-li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for this listening event
-';
+comment on table @NAMESPACE@.sl_listen is 'Indicates how nodes listen to events from other nodes in the Slony-I network.';
+comment on column @NAMESPACE@.sl_listen.li_origin is 'The ID # (from sl_node.no_id) of the node this listener is operating on';
+comment on column @NAMESPACE@.sl_listen.li_provider is 'The ID # (from sl_node.no_id) of the source node for this listening event';
+comment on column @NAMESPACE@.sl_listen.li_receiver is 'The ID # (from sl_node.no_id) of the target node for this listening event';
 
 
 -- ----------------------------------------------------------------------
@@ -211,7 +217,12 @@ create table @NAMESPACE@.sl_subscribe (
 		FOREIGN KEY (sub_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
 );
-comment on table @NAMESPACE@.sl_subscribe is 'Not documented yet';
+comment on table @NAMESPACE@.sl_subscribe is 'Holds a list of subscriptions on sets';
+comment on column @NAMESPACE@.sl_subscribe.sub_set is 'ID # (from sl_set) of the set being subscribed to';
+comment on column @NAMESPACE@.sl_subscribe.sub_provider is 'ID# (from sl_node) of the node providing data';
+comment on column @NAMESPACE@.sl_subscribe.sub_receiver is 'ID# (from sl_node) of the node receiving data from the provider';
+comment on column @NAMESPACE@.sl_subscribe.sub_forward is 'Does this provider keep data in sl_log_1/sl_log_2 to allow it to be a provider for other nodes?';
+comment on column @NAMESPACE@.sl_subscribe.sub_active is 'Has this subscription been activated?  This is not set until the subscriber has received COPY data from the provider';
 
 
 -- ----------------------------------------------------------------------
@@ -237,18 +248,15 @@ create table @NAMESPACE@.sl_event (
 	CONSTRAINT "sl_event-pkey"
 		PRIMARY KEY (ev_origin, ev_seqno)
 );
-comment on table @NAMESPACE@.sl_event is 'Holds information about replication events.
-
-After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.
-
-ev_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event
-ev_seqno		:	Integer.  The ID # for the event
-ev_timestamp	:	Timestamp.  When this event record was created
-ev_minxid		:
-ev_maxxid		:
-ev_xip			:	String.
-ev_type			:	String.  The type of event this record is for.
-
+comment on table @NAMESPACE@.sl_event is 'Holds information about replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.';
+comment on column @NAMESPACE@.sl_event.ev_origin is 'The ID # (from sl_node.no_id) of the source node for this event';
+comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
+comment on column @NAMESPACE@.sl_event.ev_timestamp is 'When this event record was created';
+comment on column @NAMESPACE@.sl_event.ev_minxid is 'Earliest XID on provider node for this event';
+comment on column @NAMESPACE@.sl_event.ev_maxxid is 'Latest XID on provider node for this event';
+comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
+comment on column @NAMESPACE@.sl_event.ev_xip is 'TBD';
+comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record is for.  
 				SYNC				= Synchronise
 				STORE_NODE			=
 				ENABLE_NODE			=
@@ -272,6 +280,14 @@ ev_type			:	String.  The type of event this record is for.
 				DDL_SCRIPT			=
 				ADJUST_SEQ			=
 ';
+comment on column @NAMESPACE@.sl_event.ev_data1 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data2 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data3 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data4 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data5 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data6 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data7 is 'Data field containing an argument needed to process the event';
+comment on column @NAMESPACE@.sl_event.ev_data8 is 'Data field containing an argument needed to process the event';
 
 
 -- ----------------------------------------------------------------------
@@ -283,15 +299,12 @@ create table @NAMESPACE@.sl_confirm (
 	con_seqno			int8,
 	con_timestamp		timestamp DEFAULT timeofday()::timestamp
 );
-comment on table @NAMESPACE@.sl_confirm is 'Holds confirmation of replication events.
+comment on table @NAMESPACE@.sl_confirm is 'Holds confirmation of replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_event table.';
 
-After a period of time, Slony removes old confirmed events from both this table and the sl_event table.
+comment on column @NAMESPACE@.sl_confirm.con_origin is 'The ID # (from sl_node.no_id) of the source node for this event';
+comment on column @NAMESPACE@.sl_confirm.con_seqno is 'The ID # for the event';
+comment on column @NAMESPACE@.sl_confirm.con_timestamp is 'When this event was confirmed';
 
-con_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event  
-con_received	:	Integer.
-con_seqno		:	Integer.  The ID # for the event
-con_timestamp	:	Timestamp.  When this event was confirmed
-';
 create index sl_confirm_idx1 on @NAMESPACE@.sl_confirm
 	(con_origin, con_received, con_seqno);
 create index sl_confirm_idx2 on @NAMESPACE@.sl_confirm
@@ -306,7 +319,13 @@ create table @NAMESPACE@.sl_seqlog (
 	seql_ev_seqno		int8,
 	seql_last_value		int8
 );
-comment on table @NAMESPACE@.sl_seqlog is 'Not documented yet';
+comment on table @NAMESPACE@.sl_seqlog is 'Log of Sequence updates';
+
+comment on column @NAMESPACE@.sl_seqlog.seql_seqid is 'Sequence ID';
+comment on column @NAMESPACE@.sl_seqlog.seql_origin is 'Publisher node at which the sequence originates';
+comment on column @NAMESPACE@.sl_seqlog.seql_ev_seqno is 'TBD';
+comment on column @NAMESPACE@.sl_seqlog.seql_last_value is 'Last value published for this sequence';
+
 create index sl_seqlog_idx on @NAMESPACE@.sl_seqlog
 	(seql_origin, seql_ev_seqno, seql_seqid);
 
@@ -361,13 +380,12 @@ create table @NAMESPACE@.sl_log_1 (
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
-comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes
-
-log_origin - origin node from which the change came
-log_xid - transaction ID on the origin node
-log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
-log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
-log_cmddata - the data needed to perform the log action';
+comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes';
+comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
+comment on column @NAMESPACE@.sl_log_1.log_xid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
+comment on column @NAMESPACE@.sl_log_1.log_cmddata is 'The data needed to perform the log action';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_2
@@ -380,13 +398,12 @@ create table @NAMESPACE@.sl_log_2 (
 	log_cmdtype			char,
 	log_cmddata			text
 );
-comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes
-
-log_origin - origin node from which the change came
-log_xid - transaction ID on the origin node
-log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
-log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
-log_cmddata - the data needed to perform the log action';
+comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
+comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
+comment on column @NAMESPACE@.sl_log_2.log_xid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
+comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perform the log action';
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
@@ -486,7 +503,6 @@ create table @NAMESPACE@.sl_config_lock (
 );
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
-
 
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.

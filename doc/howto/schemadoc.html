@@ -1,4 +1,4 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.4 2004-08-05 19:10:41 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.5 2004-09-23 14:50:18 cbbrowne Exp $ -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -111,13 +111,13 @@
   <body>
 
     <!-- Primary Index -->
-	<p><br><br>Dumped on 2004-08-05</p>
+	<p><br><br>Dumped on 2004-09-23</p>
 <h1><a name="index">Index of database - schemadoc</a></h1>
 <ul>
     
     <li><a name="schemadoc.schema">schemadoc</a></li><ul>
     	<li><a href="#schemadoc.table.sl-config-lock">sl_config_lock</a></li><li><a href="#schemadoc.table.sl-confirm">sl_confirm</a></li><li><a href="#schemadoc.table.sl-event">sl_event</a></li><li><a href="#schemadoc.table.sl-listen">sl_listen</a></li><li><a href="#schemadoc.table.sl-log-1">sl_log_1</a></li><li><a href="#schemadoc.table.sl-log-2">sl_log_2</a></li><li><a href="#schemadoc.table.sl-node">sl_node</a></li><li><a href="#schemadoc.table.sl-path">sl_path</a></li><li><a href="#schemadoc.view.sl-seqlastvalue">sl_seqlastvalue</a></li><li><a href="#schemadoc.table.sl-seqlog">sl_seqlog</a></li><li><a href="#schemadoc.table.sl-sequence">sl_sequence</a></li><li><a href="#schemadoc.table.sl-set">sl_set</a></li><li><a href="#schemadoc.table.sl-setsync">sl_setsync</a></li><li><a href="#schemadoc.table.sl-subscribe">sl_subscribe</a></li><li><a href="#schemadoc.table.sl-table">sl_table</a></li><li><a href="#schemadoc.table.sl-trigger">sl_trigger</a></li>
-  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
+  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text-integer">ddlscript( integer, text, integer )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text-integer">ddlscript_int( integer, text, integer )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.slonyversion">slonyversion(  )</a></li><li><a href="#schemadoc.function.slonyversionmajor">slonyversionmajor(  )</a></li><li><a href="#schemadoc.function.slonyversionminor">slonyversionminor(  )</a></li><li><a href="#schemadoc.function.slonyversionpatchlevel">slonyversionpatchlevel(  )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
     </ul>
     
 </ul>
@@ -190,15 +190,7 @@
 			<a name="schemadoc.table.sl-confirm">sl_confirm</a>
 		</h2>
         
-         <p>Holds confirmation of replication events.
-
-After a period of time, Slony removes old confirmed events from both this table and the sl_event table.
-
-con_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event  
-con_received	:	Integer.
-con_seqno		:	Integer.  The ID # for the event
-con_timestamp	:	Timestamp.  When this event was confirmed
-</p>
+         <p>Holds confirmation of replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_event table.</p>
         
 
 
@@ -223,7 +215,7 @@ con_timestamp	:	Timestamp.  When this event was confirmed
 				
 				
 				</i>
-				
+				<br><br>The ID # (from sl_node.no_id) of the source node for this event
 				</td>
 			 </tr>
             
@@ -255,7 +247,7 @@ con_timestamp	:	Timestamp.  When this event was confirmed
 				
 				
 				</i>
-				
+				<br><br>The ID # for the event
 				</td>
 			 </tr>
             
@@ -271,7 +263,7 @@ con_timestamp	:	Timestamp.  When this event was confirmed
 				
 				DEFAULT (timeofday())::timestamp without time zone
 				</i>
-				
+				<br><br>When this event was confirmed
 				</td>
 			 </tr>
             
@@ -303,41 +295,7 @@ con_timestamp	:	Timestamp.  When this event was confirmed
 			<a name="schemadoc.table.sl-event">sl_event</a>
 		</h2>
         
-         <p>Holds information about replication events.
-
-After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.
-
-ev_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event
-ev_seqno		:	Integer.  The ID # for the event
-ev_timestamp	:	Timestamp.  When this event record was created
-ev_minxid		:
-ev_maxxid		:
-ev_xip			:	String.
-ev_type			:	String.  The type of event this record is for.
-
-				SYNC				= Synchronise
-				STORE_NODE			=
-				ENABLE_NODE			=
-				DROP_NODE			=
-				STORE_PATH			=
-				DROP_PATH			=
-				STORE_LISTEN		=
-				DROP_LISTEN			=
-				STORE_SET			=
-				DROP_SET			=
-				MERGE_SET			=
-				SET_ADD_TABLE		=
-				SET_ADD_SEQUENCE	=
-				STORE_TRIGGER		=
-				DROP_TRIGGER		=
-				MOVE_SET			=
-				FAILOVER_SET		=
-				SUBSCRIBE_SET		=
-				ENABLE_SUBSCRIPTION	=
-				UNSUBSCRIBE_SET		=
-				DDL_SCRIPT			=
-				ADJUST_SEQ			=
-</p>
+         <p>Holds information about replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.</p>
         
 
 
@@ -369,7 +327,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>The ID # (from sl_node.no_id) of the source node for this event
 				</td>
 			 </tr>
             
@@ -392,7 +350,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>The ID # for the event
 				</td>
 			 </tr>
             
@@ -408,7 +366,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>When this event record was created
 				</td>
 			 </tr>
             
@@ -424,7 +382,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Earliest XID on provider node for this event
 				</td>
 			 </tr>
             
@@ -440,7 +398,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Latest XID on provider node for this event
 				</td>
 			 </tr>
             
@@ -456,7 +414,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>TBD
 				</td>
 			 </tr>
             
@@ -472,7 +430,30 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>The type of event this record is for.  
+				SYNC				= Synchronise
+				STORE_NODE			=
+				ENABLE_NODE			=
+				DROP_NODE			=
+				STORE_PATH			=
+				DROP_PATH			=
+				STORE_LISTEN		=
+				DROP_LISTEN			=
+				STORE_SET			=
+				DROP_SET			=
+				MERGE_SET			=
+				SET_ADD_TABLE		=
+				SET_ADD_SEQUENCE	=
+				STORE_TRIGGER		=
+				DROP_TRIGGER		=
+				MOVE_SET			=
+				FAILOVER_SET		=
+				SUBSCRIBE_SET		=
+				ENABLE_SUBSCRIPTION	=
+				UNSUBSCRIBE_SET		=
+				DDL_SCRIPT			=
+				ADJUST_SEQ			=
+
 				</td>
 			 </tr>
             
@@ -488,7 +469,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -504,7 +485,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -520,7 +501,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -536,7 +517,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -552,7 +533,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -568,7 +549,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -584,7 +565,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -600,7 +581,7 @@ ev_type			:	String.  The type of event this record is for.
 				
 				
 				</i>
-				
+				<br><br>Data field containing an argument needed to process the event
 				</td>
 			 </tr>
             
@@ -632,12 +613,7 @@ ev_type			:	String.  The type of event this record is for.
 			<a name="schemadoc.table.sl-listen">sl_listen</a>
 		</h2>
         
-         <p>Indicates how nodes listen to events from other nodes in the Slony-I network.
-
-li_origin		:	Integer.  The ID # (from sl_node.no_id) of the node this listener is operating on
-li_provider		:	Integer.  The ID # (from sl_node.no_id) of the source node for this listening event
-li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for this listening event
-</p>
+         <p>Indicates how nodes listen to events from other nodes in the Slony-I network.</p>
         
 
 
@@ -677,7 +653,7 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 				
 				
 				</i>
-				
+				<br><br>The ID # (from sl_node.no_id) of the node this listener is operating on
 				</td>
 			 </tr>
             
@@ -708,7 +684,7 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 				
 				
 				</i>
-				
+				<br><br>The ID # (from sl_node.no_id) of the source node for this listening event
 				</td>
 			 </tr>
             
@@ -739,7 +715,7 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 				
 				
 				</i>
-				
+				<br><br>The ID # (from sl_node.no_id) of the target node for this listening event
 				</td>
 			 </tr>
             
@@ -771,13 +747,7 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 			<a name="schemadoc.table.sl-log-1">sl_log_1</a>
 		</h2>
         
-         <p>Stores each change to be propagated to subscriber nodes
-
-log_origin - origin node from which the change came
-log_xid - transaction ID on the origin node
-log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
-log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
-log_cmddata - the data needed to perform the log action</p>
+         <p>Stores each change to be propagated to subscriber nodes</p>
         
 
 
@@ -802,7 +772,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Origin node from which the change came
 				</td>
 			 </tr>
             
@@ -818,7 +788,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Transaction ID on the origin node
 				</td>
 			 </tr>
             
@@ -834,7 +804,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>The table ID (from sl_table.tab_id) that this log entry is to affect
 				</td>
 			 </tr>
             
@@ -866,7 +836,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Replication action to take. U = Update, I = Insert, D = DELETE
 				</td>
 			 </tr>
             
@@ -882,7 +852,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>The data needed to perform the log action
 				</td>
 			 </tr>
             
@@ -914,13 +884,7 @@ log_cmddata - the data needed to perform the log action</p>
 			<a name="schemadoc.table.sl-log-2">sl_log_2</a>
 		</h2>
         
-         <p>Stores each change to be propagated to subscriber nodes
-
-log_origin - origin node from which the change came
-log_xid - transaction ID on the origin node
-log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
-log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
-log_cmddata - the data needed to perform the log action</p>
+         <p>Stores each change to be propagated to subscriber nodes</p>
         
 
 
@@ -945,7 +909,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Origin node from which the change came
 				</td>
 			 </tr>
             
@@ -961,7 +925,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Transaction ID on the origin node
 				</td>
 			 </tr>
             
@@ -977,7 +941,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>The table ID (from sl_table.tab_id) that this log entry is to affect
 				</td>
 			 </tr>
             
@@ -1009,7 +973,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>Replication action to take. U = Update, I = Insert, D = DELETE
 				</td>
 			 </tr>
             
@@ -1025,7 +989,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>The data needed to perform the log action
 				</td>
 			 </tr>
             
@@ -1057,7 +1021,7 @@ log_cmddata - the data needed to perform the log action</p>
 			<a name="schemadoc.table.sl-node">sl_node</a>
 		</h2>
         
-         <p>Holds the list of nodes associated with this namespace.  no_id is the unique ID number for the node; no_comment is a human-oriented description of the node</p>
+         <p>Holds the list of nodes associated with this namespace.</p>
         
 
 
@@ -1089,7 +1053,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>The unique ID number for the node
 				</td>
 			 </tr>
             
@@ -1121,7 +1085,7 @@ log_cmddata - the data needed to perform the log action</p>
 				
 				
 				</i>
-				
+				<br><br>A human-oriented description of the node
 				</td>
 			 </tr>
             
@@ -1172,13 +1136,7 @@ log_cmddata - the data needed to perform the log action</p>
 			<a name="schemadoc.table.sl-path">sl_path</a>
 		</h2>
         
-         <p>Holds connection information for the paths between nodes, and the synchronisation delay
-
-pa_server - The Node ID # (from sl_node.no_id) of the data source
-pa_client - The Node ID # (from sl_node.no_id) of the data target
-pa_conninfo - The PostgreSQL connection string used to connect to the source node.
-pa_connretry - The synchronisation delay, in seconds
-</p>
+         <p>Holds connection information for the paths between nodes, and the synchronisation delay</p>
         
 
 
@@ -1218,7 +1176,7 @@ pa_connretry - The synchronisation delay, in seconds
 				
 				
 				</i>
-				
+				<br><br>The Node ID # (from sl_node.no_id) of the data source
 				</td>
 			 </tr>
             
@@ -1249,7 +1207,7 @@ pa_connretry - The synchronisation delay, in seconds
 				
 				
 				</i>
-				
+				<br><br>The Node ID # (from sl_node.no_id) of the data target
 				</td>
 			 </tr>
             
@@ -1265,7 +1223,7 @@ pa_connretry - The synchronisation delay, in seconds
 				NOT NULL
 				
 				</i>
-				
+				<br><br>The PostgreSQL connection string used to connect to the source node.
 				</td>
 			 </tr>
             
@@ -1281,7 +1239,7 @@ pa_connretry - The synchronisation delay, in seconds
 				
 				
 				</i>
-				
+				<br><br>The synchronisation delay, in seconds
 				</td>
 			 </tr>
             
@@ -1471,7 +1429,7 @@ WHERE (
 			<a name="schemadoc.table.sl-seqlog">sl_seqlog</a>
 		</h2>
         
-         <p>Not documented yet</p>
+         <p>Log of Sequence updates</p>
         
 
 
@@ -1496,7 +1454,7 @@ WHERE (
 				
 				
 				</i>
-				
+				<br><br>Sequence ID
 				</td>
 			 </tr>
             
@@ -1512,7 +1470,7 @@ WHERE (
 				
 				
 				</i>
-				
+				<br><br>Publisher node at which the sequence originates
 				</td>
 			 </tr>
             
@@ -1528,7 +1486,7 @@ WHERE (
 				
 				
 				</i>
-				
+				<br><br>TBD
 				</td>
 			 </tr>
             
@@ -1544,7 +1502,7 @@ WHERE (
 				
 				
 				</i>
-				
+				<br><br>Last value published for this sequence
 				</td>
 			 </tr>
             
@@ -1576,11 +1534,7 @@ WHERE (
 			<a name="schemadoc.table.sl-sequence">sl_sequence</a>
 		</h2>
         
-         <p>Similar to sl_table, each entry identifies a sequence being replicated.
-seq_id is an internally-used ID for Slony-I to use in its sequencing of updates
-seq_reloid is the OID of the sequence object
-seq_set indicates which replication set the object is in
-seq_comment is a human-oriented comment</p>
+         <p>Similar to sl_table, each entry identifies a sequence being replicated.</p>
         
 
 
@@ -1612,7 +1566,7 @@ seq_comment is a human-oriented comment</p>
 				
 				
 				</i>
-				
+				<br><br>An internally-used ID for Slony-I to use in its sequencing of updates
 				</td>
 			 </tr>
             
@@ -1636,7 +1590,7 @@ seq_comment is a human-oriented comment</p>
 				NOT NULL
 				
 				</i>
-				
+				<br><br>The OID of the sequence object
 				</td>
 			 </tr>
             
@@ -1660,7 +1614,7 @@ seq_comment is a human-oriented comment</p>
 				
 				
 				</i>
-				
+				<br><br>Indicates which replication set the object is in
 				</td>
 			 </tr>
             
@@ -1676,7 +1630,7 @@ seq_comment is a human-oriented comment</p>
 				
 				
 				</i>
-				
+				<br><br>A human-oriented comment
 				</td>
 			 </tr>
             
@@ -1708,13 +1662,7 @@ seq_comment is a human-oriented comment</p>
 			<a name="schemadoc.table.sl-set">sl_set</a>
 		</h2>
         
-         <p>Holds definitions of replication sets.  
-
-set_id is a unique ID number for the set.
-set_origin is the ID number of the source node for the replication set.
-set_locked indicates whether or not the set is locked.
-set_comment is a human-oriented description of the set.
-</p>
+         <p>Holds definitions of replication sets.</p>
         
 
 
@@ -1746,7 +1694,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>A unique ID number for the set.
 				</td>
 			 </tr>
             
@@ -1770,7 +1718,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>The ID number of the source node for the replication set.
 				</td>
 			 </tr>
             
@@ -1786,7 +1734,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Indicates whether or not the set is locked.
 				</td>
 			 </tr>
             
@@ -1802,7 +1750,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>A human-oriented description of the set.
 				</td>
 			 </tr>
             
@@ -1893,7 +1841,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>ID number of the replication set
 				</td>
 			 </tr>
             
@@ -1917,7 +1865,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>ID number of the node
 				</td>
 			 </tr>
             
@@ -1933,7 +1881,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Slony-I sequence number
 				</td>
 			 </tr>
             
@@ -1949,7 +1897,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Earliest XID in provider system affected by SYNC
 				</td>
 			 </tr>
             
@@ -1965,7 +1913,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Latest XID in provider system affected by SYNC
 				</td>
 			 </tr>
             
@@ -1981,7 +1929,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>TBD
 				</td>
 			 </tr>
             
@@ -1997,7 +1945,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>TBD
 				</td>
 			 </tr>
             
@@ -2029,7 +1977,7 @@ set_comment is a human-oriented description of the set.
 			<a name="schemadoc.table.sl-subscribe">sl_subscribe</a>
 		</h2>
         
-         <p>Not documented yet</p>
+         <p>Holds a list of subscriptions on sets</p>
         
 
 
@@ -2069,7 +2017,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>ID # (from sl_set) of the set being subscribed to
 				</td>
 			 </tr>
             
@@ -2093,7 +2041,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>ID# (from sl_node) of the node providing data
 				</td>
 			 </tr>
             
@@ -2124,7 +2072,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>ID# (from sl_node) of the node receiving data from the provider
 				</td>
 			 </tr>
             
@@ -2140,7 +2088,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Does this provider keep data in sl_log_1/sl_log_2 to allow it to be a provider for other nodes?
 				</td>
 			 </tr>
             
@@ -2156,7 +2104,7 @@ set_comment is a human-oriented description of the set.
 				
 				
 				</i>
-				
+				<br><br>Has this subscription been activated?  This is not set until the subscriber has received COPY data from the provider
 				</td>
 			 </tr>
             
@@ -2188,12 +2136,7 @@ set_comment is a human-oriented description of the set.
 			<a name="schemadoc.table.sl-table">sl_table</a>
 		</h2>
         
-         <p>Holds information about the tables being replicated.
-
-tab_id - unique key for Slony-I to use to identify the table
-tab_reloid - the OID of the table in pg_catalog.pg_class.oid
-tab_idxname - the name of the primary index of the table
-tab_comment - Human-oriented description of the table</p>
+         <p>Holds information about the tables being replicated.</p>
         
 
 
@@ -2225,7 +2168,7 @@ tab_comment - Human-oriented description of the table</p>
 				
 				
 				</i>
-				
+				<br><br>Unique key for Slony-I to use to identify the table
 				</td>
 			 </tr>
             
@@ -2249,7 +2192,7 @@ tab_comment - Human-oriented description of the table</p>
 				NOT NULL
 				
 				</i>
-				
+				<br><br>The OID of the table in pg_catalog.pg_class.oid
 				</td>
 			 </tr>
             
@@ -2289,7 +2232,7 @@ tab_comment - Human-oriented description of the table</p>
 				NOT NULL
 				
 				</i>
-				
+				<br><br>The name of the primary index of the table
 				</td>
 			 </tr>
             
@@ -2321,7 +2264,7 @@ tab_comment - Human-oriented description of the table</p>
 				
 				
 				</i>
-				
+				<br><br>Human-oriented description of the table
 				</td>
 			 </tr>
             
@@ -2360,7 +2303,7 @@ tab_comment - Human-oriented description of the table</p>
 			<a name="schemadoc.table.sl-trigger">sl_trigger</a>
 		</h2>
         
-         <p>Indicates the name of a trigger [for what purpose?]</p>
+         <p>Holds information about triggers on tables managed using Slony-I</p>
         
 
 
@@ -2400,7 +2343,7 @@ tab_comment - Human-oriented description of the table</p>
 				
 				
 				</i>
-				
+				<br><br>Slony-I ID number of table the trigger is on
 				</td>
 			 </tr>
             
@@ -2423,7 +2366,7 @@ tab_comment - Human-oriented description of the table</p>
 				
 				
 				</i>
-				
+				<br><br>Indicates the name of a trigger
 				</td>
 			 </tr>
             
@@ -2764,11 +2707,11 @@ end;
 	
 		<hr>
 		<h2>Function: 
-			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a>
+			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-integer-text-integer">ddlscript( integer, text, integer )</a>
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        <p>ddlScript(set_id, script)
+        <p>ddlScript(set_id, script, only_on_node)
 
 Generates a SYNC event, runs the script on the origin, and then
 generates a DDL_SCRIPT event to request it to be run on replicated
@@ -2777,6 +2720,7 @@ slaves.</p>
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
+	p_only_on_node		alias for $3;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -2803,19 +2747,19 @@ begin
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
 	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
-	perform schemadoc.ddlScript_int(p_set_id, p_script);
+	perform schemadoc.ddlScript_int(p_set_id, p_script, p_only_on_node);
 	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
-			p_set_id, p_script);
+			p_set_id, p_script, p_only_on_node);
 end;
 </pre>
 	
 		<hr>
 		<h2>Function: 
-			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a>
+			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-int-integer-text-integer">ddlscript_int( integer, text, integer )</a>
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        <p>ddlScript_int(set_id, script)
+        <p>ddlScript_int(set_id, script, only_on_node)
 
 Processes the DDL_SCRIPT event.  On slave nodes, this restores
 original triggers/rules, runs the script, and then puts tables back
@@ -2824,6 +2768,7 @@ into replicated mode.</p>
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
+	p_only_on_node		alias for $3;
 	v_set_origin		int4;
 	v_no_id				int4;
 	v_row				record;
@@ -2850,6 +2795,14 @@ begin
 						where sub_set = p_set_id
 						and sub_receiver = v_no_id)
 	then
+		return 0;
+	end if;
+
+	-- ----
+	-- If execution on only one node is requested, check that
+	-- we are that node.
+	-- ----
+	if p_only_on_node &gt; 0 and p_only_on_node &lt;&gt; v_no_id then
 		return 0;
 	end if;
 
@@ -3667,7 +3620,7 @@ end;
 <h3>Language: PLPGSQL</h3>
         <p>no_id - Node ID #
 
-Internal funciton to process the ENABLE_NODE event for node no_id</p>
+Internal function to process the ENABLE_NODE event for node no_id</p>
         <pre>
 declare
 	p_no_id			alias for $1;
@@ -5068,6 +5021,60 @@ begin
 	perform schemadoc.alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.slonyversion">slonyversion(  )</a>
+		</h2>
+<h3>Returns: text</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Returns the version number of the slony schema</p>
+        <pre>
+begin
+	return &#39;&#39;	|| schemadoc.slonyVersionMajor() || &#39;.&#39;
+				|| schemadoc.slonyVersionMinor() || &#39;.&#39;
+				|| schemadoc.slonyVersionPatchlevel();
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.slonyversionmajor">slonyversionmajor(  )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Returns the major version number of the slony schema</p>
+        <pre>
+begin
+	return 1;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.slonyversionminor">slonyversionminor(  )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Returns the minor version number of the slony schema</p>
+        <pre>
+begin
+	return 1;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.slonyversionpatchlevel">slonyversionpatchlevel(  )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Returns the version patch level of the slony schema</p>
+        <pre>
+begin
+	return 0;
 end;
 </pre>
 	
