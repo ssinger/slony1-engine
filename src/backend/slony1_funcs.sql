@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.2 2004-04-13 20:00:20 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.3 2004-04-16 02:41:37 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2473,6 +2473,16 @@ begin
 	-- ----
 	-- Not found, insert a new one
 	-- ----
+	if not exists (select true from @NAMESPACE@.sl_path
+			where pa_server = p_sub_provider
+			and pa_client = p_sub_receiver)
+	then
+		insert into @NAMESPACE@.sl_path
+				(pa_server, pa_client, pa_conninfo, pa_connretry)
+				values 
+				(p_sub_provider, p_sub_receiver, 
+				''<event pending>'', 10);
+	end if;
 	insert into @NAMESPACE@.sl_subscribe
 			(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
 			values (p_sub_set, p_sub_provider, p_sub_receiver,
