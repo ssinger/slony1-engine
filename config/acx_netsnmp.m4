@@ -74,8 +74,8 @@ if test -n "${with_netsnmp}" ; then
    AC_CHECK_SIZEOF(int)
    AC_CHECK_SIZEOF(long)
    AC_CHECK_SIZEOF(long long)
-   AC_CHECK_HEADERS(net-snmp/net-snmp-includes.h, HAVE_SNMP_INCLUDES=1)
-   AC_CHECK_HEADERS(net-snmp/agent/net-snmp-agent-includes.h, HAVE_SNMP_AGENT_INCLUDES=1)
+   AC_CHECK_HEADERS(net-snmp/net-snmp-config.h, HAVE_SNMP_INCLUDES=1)
+   AC_CHECK_HEADERS(net-snmp/agent/mib_module_config.h net-snmp/agent/agent_module_config.h, HAVE_SNMP_AGENT_INCLUDES=1)
    CPPFLAGS="$TEMP_CPPFLAGS"
    LDFLAGS="${TEMP_LDFLAGS}"
  fi
