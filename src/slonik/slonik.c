@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.27.2.1 2004-07-09 13:43:01 wieck Exp $
+ *	$Id: slonik.c,v 1.27.2.2 2004-08-09 04:02:01 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1554,6 +1554,22 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 
 				case 4:
 				case 5:
+					use_minor = 4;
+					break;
+
+				default:
+					printf("%s:%d: unsupported PostgreSQL "
+							"version %d.%d\n",
+							stmt->stmt_filename, stmt->stmt_lno,
+							adminfo->version_major, adminfo->version_minor);
+			}
+			break;
+
+		case 8:
+			switch (adminfo->version_minor)
+			{
+				case 0:
+					use_major = 7;
 					use_minor = 4;
 					break;
 
