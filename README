@@ -12,7 +12,7 @@ And now, the contents.
 
 1.  Build and install
 
-Slony currently supports PostgreSQL 7.3.x and 7.4.x.
+Slony currently supports PostgreSQL 7.3.x, 7.4.x and 8.0.
 
 Slony must be built and installed by the PostgreSQL Unix user.  The
 installation target will be identical to the existing PostgreSQL
