@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.6 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.7 2005-02-24 19:35:32 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -365,7 +365,7 @@ the &slony1; stored functions.</para>
 <para> The developers of &slony1; anticipate that interested parties
 may wish to develop graphical tools as an alternative to Slonik; it
 would be entirely appropriate in such cases to submit configuration
-requests directly via the stored functions.
+requests directly via the stored functions.</para>
 
 <para> When debugging problems in <quote>troubled</quote> &slony1;
 clusters, it has also occasionally proven useful to use the stored
@@ -412,6 +412,32 @@ thus:
 (<emphasis>e.g.</emphasis> - without the <command>_int</command>
 suffix) is called on a <quote>relevant</quote> node in the &slony1;
 cluster.
+
+<para> In some cases, the function may be called on any node, and it
+can satisfactorily propagate to other nodes.  That is true for <xref
+linkend="function.storelisten-integer-integer-integer">, for instance.
+In other cases, the function needs to be called on some particular
+node because that is the only place where data may be reasonably
+validated.  For instance, <xref linkend=
+"function.subscribeset-integer-integer-integer-boolean"> must be
+called on the receivernode.
+
+<listitem><para> If that <quote>main</quote> function succeeds, then
+the configuration change is performed on the local node, and an event
+is created using <xref linkend="function.createevent-name-text"> to
+cause the configuration change to propagate to all of the other nodes
+in the &slony1; cluster.
+
+<listitem><para> Thirdly, the <command>_int</command> version of the
+function must be run.  
+
+<para> In some cases, where functions are idempotent, the node where
+the <quote>main</quote> function runs can do this fairly early in
+processing.
+
+<para> When the event propagates, the other nodes will run the
+<command>_int</command> version, we rather hope with good
+success. </para>
 
 </itemizedlist>
 
