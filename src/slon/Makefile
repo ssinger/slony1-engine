@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.24 2004-12-10 23:57:37 darcyb Exp $
+#	$Id: Makefile,v 1.25 2004-12-11 00:08:34 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -64,8 +64,11 @@ confoptions.o:		confoptions.c slon.h confoptions.h
 conf-file.c:		conf-file.l
 	$(FLEX) -o$(@) $<
 
-clean distclean maintainer-clean:
+clean distclean:
 	rm -f $(ALL) $(OBJS) $(PROG).core
+
+maintainer-clean: clean
+	rm -f conf-file.c
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(pgbindir) 
