@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.78 2005-03-16 17:15:40 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.79 2005-03-29 16:24:50 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -215,7 +215,7 @@ int sync_group_maxsize;
 int last_sync_group_size;
 int next_sync_group_size;
 
-int desired_sync_time = 60000;
+int desired_sync_time;
 int ideal_sync ;
 struct timeval  sync_start;
 struct timeval  sync_end;
@@ -476,14 +476,18 @@ remoteWorkerThread_main(void *cdata)
 					 * Estimate an "ideal" number of syncs based on how long
 					 * they took last time
 					 */
-					ideal_sync = (last_sync_group_size * desired_sync_time) / last_sync_length;
+					if (desired_sync_time != 0) {
+						ideal_sync = (last_sync_group_size * desired_sync_time) / last_sync_length;
+					} else {
+						ideal_sync = sync_group_maxsize;
+					}
 					max_sync = ((last_sync_group_size * 110) / 100) + 1;
 					next_sync_group_size = ideal_sync;
 					if (next_sync_group_size > max_sync)
 						next_sync_group_size = max_sync;
 					if (next_sync_group_size < 1)
 						next_sync_group_size = 1;
-					slon_log(SLON_DEBUG2, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
+					slon_log(SLON_DEBUG3, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
 						 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
 				}
 
