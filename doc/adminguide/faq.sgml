@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.14 2005-02-02 18:34:43 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.15 2005-02-07 21:47:28 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -14,7 +14,7 @@ it wasn't there.</para></question>
 <para>Recheck the connection configuration.  By the way, since <link
 linkend="slon"><application>slon</application></link> links to libpq, you could
 have password information stored in <filename>
-<envar>$HOME</envar>/.pgpass</filename>, partially filling in
+$HOME/.pgpass</filename>, partially filling in
 right/wrong authentication information there.</para>
 </answer>
 </qandaentry>
@@ -127,8 +127,7 @@ condition, and automatically cleans it up.</para>
 can see passwords on the command line.</para></question>
 
 <answer> <para>Take the passwords out of the Slony configuration, and
-put them into
-<filename><envar>$(HOME)</envar>/.pgpass.</filename></para>
+put them into <filename>$(HOME)/.pgpass.</filename></para>
 </answer></qandaentry>
 
 <qandaentry>
@@ -679,41 +678,26 @@ isn't quite obvious; what takes place is that
 to diminish the number of network round trips.</para></question>
 
 <answer><para> A <emphasis>certain</emphasis> cause for this has not
-yet been arrived at.  The factors that <emphasis>appear</emphasis> to
-go together to contribute to this scenario are as follows:
+yet been arrived at.
 
-<itemizedlist>
-
-<listitem><para> The <quote>glitch</quote> has occasionally coincided
-with some sort of outage; it has been observed both in cases where
-databases were suffering from periodic <quote>SIG 11</quote> problems,
-where backends were falling over, as well as when temporary network
-failure seemed likely.</para></listitem>
-
-<listitem><para> The scenario seems to involve a delete transaction
-having been missed by <productname>Slony-I</productname>. </para>
-</listitem>
-
-</itemizedlist></para>
-
-<para>By the time we notice that there is a problem, the missed delete
-transaction has been cleaned out of <envar>sl_log_1</envar>, so there
-is no recovery possible.</para>
-
-<para>What is necessary, at this point, is to drop the replication set
-(or even the node), and restart replication from scratch on that
+<para>By the time we notice that there is a problem, the seemingly
+missed delete transaction has been cleaned out of
+<envar>sl_log_1</envar>, so there appears to be no recovery possible.
+What has seemed necessary, at this point, is to drop the replication
+set (or even the node), and restart replication from scratch on that
 node.</para>
 
 <para>In <productname>Slony-I</productname> 1.0.5, the handling of
-purges of sl_log_1 are rather more conservative, refusing to purge
+purges of sl_log_1 became more conservative, refusing to purge
 entries that haven't been successfully synced for at least 10 minutes
-on all nodes.  It is not certain that that will prevent the
+on all nodes.  It was not certain that that will prevent the
 <quote>glitch</quote> from taking place, but it seems likely that it will
 leave enough sl_log_1 data to be able to do something about recovering
 from the condition or at least diagnosing it more exactly.  And
 perhaps the problem is that sl_log_1 was being purged too
 aggressively, and this will resolve the issue completely.</para>
 </answer>
+
 <answer><para> Unfortunately, this problem has been observed in 1.0.5,
 so this still appears to represent a bug still in existence.</para>
 
@@ -722,7 +706,21 @@ for this; if you discover that this problem recurs, it may be an idea
 to break replication down into multiple sets in order to diminish the
 work involved in restarting replication.  If only one set has broken,
 you only unsubscribe/drop and resubscribe the one set.
-</para></answer>
+</para>
+
+<para> In one case we found two lines in the SQL error message in the
+log file that contained <emphasis> identical </emphasis> insertions
+into <envar> sl_log_1 </envar>.  This <emphasis> ought </emphasis> to
+be impossible as is a primary key on <envar>sl_log_1</envar>.  The
+latest punctured theory that comes from <emphasis>that</emphasis> was
+that perhaps this PK index has been corrupted (representing a
+<productname>PostgreSQL</productname> bug), and that perhaps the
+problem might be alleviated by running the query:
+<programlisting>
+# reindex table _slonyschema.sl_log_1;
+</programlisting>
+
+</answer>
 </qandaentry>
 
 <qandaentry>
@@ -788,6 +786,7 @@ not a <command>delete only</command>, so the delete of the parent will
 delete the new rows in the child as well.
 </para>
 </answer>
+</qandaentry>
 
 <qandaentry><question><para> What happens with rules and triggers on
 <productname>Slony-I</productname>-replicated tables?</para>
