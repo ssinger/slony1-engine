@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.9 2004-03-18 17:29:16 wieck Exp $
+-- $Id: slony1_base.sql,v 1.10 2004-03-26 00:40:29 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -260,6 +260,7 @@ create sequence @NAMESPACE@.sl_action_seq;
 --	The values are assigned with a default from this sequence.
 -- ----------------------------------------------------------------------
 create sequence @NAMESPACE@.sl_rowid_seq;
+grant select, update on @NAMESPACE@.sl_rowid_seq to public;
 
 
 -- ----------------------------------------------------------------------
@@ -295,5 +296,11 @@ SELECT setval('@NAMESPACE@.sl_log_status', 0);
 create table @NAMESPACE@.sl_config_lock (
 	dummy				integer
 );
+
+
+-- ----------------------------------------------------------------------
+-- Last but not least grant USAGE to the replication schema objects.
+-- ----------------------------------------------------------------------
+grant usage on schema @NAMESPACE@ to public;
 
 

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.36 2004-03-25 12:40:28 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.37 2004-03-26 00:40:29 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -84,7 +84,9 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 create function @NAMESPACE@.denyAccess ()
 	returns trigger
 	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
-	language C;
+	language C
+	security definer;
+grant execute on function @NAMESPACE@.denyAccess () to public;
 
 
 -- ----------------------------------------------------------------------
@@ -108,6 +110,7 @@ create function @NAMESPACE@.getLocalNodeId (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_getLocalNodeId'
 	language C
 	security definer;
+grant execute on function @NAMESPACE@.getLocalNodeId (name) to public;
 
 
 -- ----------------------------------------------------------------------
@@ -119,6 +122,7 @@ create function @NAMESPACE@.setSessionRole (name, text) returns text
     as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
 	language C
 	security definer;
+grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 
 
 -- ----------------------------------------------------------------------
@@ -130,6 +134,7 @@ create function @NAMESPACE@.getSessionRole (name) returns text
     as '$libdir/slony1_funcs', '_Slony_I_getSessionRole'
 	language C
 	security definer;
+grant execute on function @NAMESPACE@.getSessionRole (name) to public;
 
 
 -- ----------------------------------------------------------------------
@@ -141,6 +146,7 @@ create function @NAMESPACE@.logTrigger () returns trigger
     as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
 	language C
 	security definer;
+grant execute on function @NAMESPACE@.logTrigger () to public;
 
 
 -- **********************************************************************
