@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v73.sql,v 1.1 2004-03-30 17:49:38 wieck Exp $
+-- $Id: xxid.v73.sql,v 1.2 2004-06-15 23:27:18 wieck Exp $
 -- ----------
 
 --
@@ -139,5 +139,48 @@ CREATE OPERATOR CLASS @NAMESPACE@."xxid_ops"
 	OPERATOR 4 >= (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
 	OPERATOR 5 >  (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
 	FUNCTION 1 @NAMESPACE@."btxxidcmp" (@NAMESPACE@."xxid", @NAMESPACE@."xxid");
+
+
+--
+-- A special transaction snapshot data type for faster visibility checks
+--
+CREATE FUNCTION @NAMESPACE@."xxid_snapshot_in"(cstring)
+RETURNS @NAMESPACE@."xxid_snapshot"
+	AS '$libdir/xxid', '_Slony_I_xxid_snapshot_in'
+	LANGUAGE C;
+CREATE FUNCTION @NAMESPACE@."xxid_snapshot_out"(@NAMESPACE@."xxid_snapshot")
+RETURNS cstring
+	AS '$libdir/xxid', '_Slony_I_xxid_snapshot_out'
+	LANGUAGE C;
+
+
+--
+-- The data type itself
+--
+CREATE TYPE @NAMESPACE@."xxid_snapshot" (
+	INPUT = @NAMESPACE@."xxid_snapshot_in",
+	OUTPUT = @NAMESPACE@."xxid_snapshot_out",
+	INTERNALLENGTH = variable,
+	ALIGNMENT = int4
+);
+
+
+--
+-- Special comparision functions used by the remote worker
+-- for sync chunk selection
+--
+CREATE FUNCTION @NAMESPACE@."xxid_lt_snapshot"(
+		@NAMESPACE@."xxid",
+		@NAMESPACE@."xxid_snapshot")
+RETURNS boolean
+	AS '$libdir/xxid', '_Slony_I_xxid_lt_snapshot'
+	LANGUAGE C;
+
+CREATE FUNCTION @NAMESPACE@."xxid_ge_snapshot"(
+		@NAMESPACE@."xxid",
+		@NAMESPACE@."xxid_snapshot")
+RETURNS boolean
+	AS '$libdir/xxid', '_Slony_I_xxid_ge_snapshot'
+	LANGUAGE C;
 
 

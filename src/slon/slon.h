@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.32 2004-06-08 15:15:49 wieck Exp $
+ *	$Id: slon.h,v 1.33 2004-06-15 23:27:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -25,8 +25,17 @@
 #endif
 
 
+#undef	SLON_CHECK_CMDTUPLES
+
+#ifdef	SLON_CHECK_CMDTUPLES
+#define SLON_COMMANDS_PER_LINE		1
 #define SLON_DATA_FETCH_SIZE		100
 #define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 4)
+#else
+#define SLON_COMMANDS_PER_LINE		25
+#define SLON_DATA_FETCH_SIZE		4
+#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 5)
+#endif
 
 
 typedef enum {

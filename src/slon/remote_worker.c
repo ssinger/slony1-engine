@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.50 2004-06-12 13:25:19 wieck Exp $
+ *	$Id: remote_worker.c,v 1.51 2004-06-15 23:27:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2952,7 +2952,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 	if (strlen(event->ev_xip) != 0)
 		slon_mkquery(&new_qual, 
-				"(log_xid < '%s' or (log_xid < '%s' and log_xid not in (%s)))",
+				"(log_xid < '%s' or (log_xid < '%s' and "
+				"%s.xxid_lt_snapshot(log_xid, '%s:%s:%q')))",
+				event->ev_minxid_c, event->ev_maxxid_c, 
+				rtcfg_namespace, 
 				event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip);
 	else
 		slon_mkquery(&new_qual, 
@@ -3139,8 +3142,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(provider_qual,
 						"(log_xid >='%s' or"
-						" (log_xid >= '%s' and log_xid in (%s)))",
-						ssy_maxxid, ssy_minxid, ssy_xip);
+						" (log_xid >= '%s' and "
+						"%s.xxid_ge_snapshot(log_xid, '%s:%s:%q')))",
+						ssy_maxxid, ssy_minxid, 
+						rtcfg_namespace,
+						ssy_minxid, ssy_maxxid, ssy_xip);
 			else
 				slon_appendquery(provider_qual,
 						"(log_xid >= '%s')",
@@ -3157,10 +3163,13 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		}
 		PQclear(res1);
 
-		/* We didn't add anything good in the provider clause. That shouldn't be! */
+		/* 
+		 * We didn't add anything good in the provider clause.
+		 * That shouldn't be!
+		 */
 		if(added_or_to_provider)
 		  {
-			// close out our OR block
+			/* close out our OR block */
 			slon_appendquery(provider_qual, ")"); 
 		  } else {
 			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: Didn't add or to provider\n", node->no_id);
@@ -3249,6 +3258,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 								dstring_data(&(wgline->provider->helper_qualification)));
 						num_errors++;
 					}
+#ifdef SLON_CHECK_CMDTUPLES
 					else
 					{
 						if (strtol(PQcmdTuples(res1), NULL, 10) != 1)
@@ -3266,6 +3276,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 							slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: %s\n",
 									node->no_id, dstring_data(&(wgline->data)));
 					}
+#endif
 					PQclear(res1);
 					break;
 
@@ -3471,7 +3482,8 @@ sync_helper(void *cdata)
 	WorkerGroupData	   *wd = provider->wd;
 	SlonNode		   *node = wd->node;
 	PGconn			   *dbconn;
-	WorkerGroupLine	   *line;
+	WorkerGroupLine	   *line = NULL;
+	int					line_no;
 	SlonDString			query;
 	PGresult		   *res;
 	int					ntuples;
@@ -3619,7 +3631,8 @@ sync_helper(void *cdata)
 				 * Now that we have allocated some buffer space,
 				 * try to fetch that many rows from the cursor.
 				 */
-				slon_mkquery(&query, "fetch %d from LOG; ", alloc_lines);
+				slon_mkquery(&query, "fetch %d from LOG; ", 
+						alloc_lines * SLON_COMMANDS_PER_LINE);
 				res = PQexec(dbconn, dstring_data(&query));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
@@ -3647,8 +3660,9 @@ sync_helper(void *cdata)
 				 * Fill the line buffers with queries from the
 				 * retrieved log rows.
 				 */
+				line_no = 0;
 				ntuples = PQntuples(res);
-				slon_log(SLON_DEBUG4,
+				slon_log(SLON_DEBUG3,
 						"remoteHelperThread_%d_%d: got %d log rows\n",
 						node->no_id, provider->no_id, ntuples);
 				for (tupno = 0; tupno < ntuples; tupno++)
@@ -3661,10 +3675,13 @@ sync_helper(void *cdata)
 					char   *log_cmdtype		= PQgetvalue(res, tupno, 4);
 					char   *log_cmddata		= PQgetvalue(res, tupno, 5);
 
-					line = data_line[tupno];
-					line->code = SLON_WGLC_ACTION;
-					line->provider = provider;
-					dstring_reset(&(line->data));
+					if (tupno % SLON_COMMANDS_PER_LINE == 0)
+					{
+						line = data_line[line_no++];
+						line->code = SLON_WGLC_ACTION;
+						line->provider = provider;
+						dstring_reset(&(line->data));
+					}
 
 					/*
 					 * This can happen if the table belongs to a
@@ -3723,24 +3740,24 @@ sync_helper(void *cdata)
 				pthread_mutex_lock(&(wd->workdata_lock));
 				for (tupno = 0; tupno < alloc_lines; tupno++)
 				{
-					if (tupno < ntuples)
+					if (tupno < line_no)
 						DLLIST_ADD_TAIL(wd->repldata_head, wd->repldata_tail,
 								data_line[tupno]);
 					else
 						DLLIST_ADD_HEAD(wd->linepool_head, wd->linepool_tail,
 								data_line[tupno]);
 				}
-				if (ntuples > 0)
+				if (line_no > 0)
 					pthread_cond_signal(&(wd->repldata_cond));
-				if (ntuples < alloc_lines)
+				if (line_no < alloc_lines)
 					pthread_cond_broadcast(&(wd->linepool_cond));
 				pthread_mutex_unlock(&(wd->workdata_lock));
 
-				slon_log(SLON_DEBUG4,
-						"remoteHelperThread_%d_%d: log rows deliverd\n",
-						node->no_id, provider->no_id);
+				slon_log(SLON_DEBUG3,
+						"remoteHelperThread_%d_%d: %d log buffers deliverd\n",
+						node->no_id, provider->no_id, line_no);
 
-				if (ntuples < alloc_lines)
+				if (line_no < alloc_lines)
 				{
 					slon_log(SLON_DEBUG4,
 							"remoteHelperThread_%d_%d: no more log rows\n",
