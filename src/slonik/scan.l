@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.17.2.1 2004-08-30 21:24:46 wieck Exp $
+ *	$Id: scan.l,v 1.17.2.2 2004-10-14 15:58:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -148,3 +148,11 @@ scan_new_input_file(FILE *in)
 
 	dstring_free(&ds);
 }
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

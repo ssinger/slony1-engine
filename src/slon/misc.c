@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.10 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: misc.c,v 1.10.2.1 2004-10-14 15:58:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -174,3 +174,10 @@ slon_scanint64(char *str, int64 *result)
 	return true;
 }
 
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.8 2004-06-15 23:27:18 wieck Exp $
+ *	$Id: xxid.c,v 1.8.2.1 2004-10-14 15:58:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -405,3 +405,10 @@ _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS)
 }
 
 
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

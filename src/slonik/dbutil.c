@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.6.2.1 2004-08-02 21:53:27 darcyb Exp $
+ *	$Id: dbutil.c,v 1.6.2.2 2004-10-14 15:58:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -666,3 +666,10 @@ slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
 }
 
 
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
