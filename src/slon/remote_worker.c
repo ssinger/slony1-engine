@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.22 2004-03-13 21:51:04 wieck Exp $
+ *	$Id: remote_worker.c,v 1.23 2004-03-14 16:38:01 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2306,6 +2306,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	/* TODO: tab_forward array to know if we need to store the log */
 	PGconn		   *local_dbconn = local_conn->dbconn;
 	PGresult	   *res1;
+	int				num_sets = 0;
 	int				num_providers_active = 0;
 	int				num_errors;
 	WorkerGroupLine *wgline;
@@ -2428,15 +2429,17 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		dstring_reset(provider_qual);
 
 		/*
-		 * Select all sets we receive from this provider
+		 * Select all sets we receive from this provider and which are
+		 * not synced better than this SYNC already.
 		 */
 		slon_mkquery(&query,
 				"select SSY.ssy_setid, SSY.ssy_seqno, "
 				"    SSY.ssy_minxid, SSY.ssy_maxxid, SSY.ssy_xip, "
 				"    SSY.ssy_action_list "
 				"from %s.sl_setsync SSY "
-				"where SSY.ssy_setid in (",
-				rtcfg_namespace);
+				"where SSY.ssy_seqno < '%s' "
+				"    and SSY.ssy_setid in (",
+				rtcfg_namespace, seqbuf);
 		for (pset = provider->set_head; pset; pset = pset->next)
 			slon_appendquery(&query, "%s%d",
 					(pset->prev == NULL) ? "" : ",",
@@ -2462,12 +2465,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		ntuples1 = PQntuples(res1);
 		if (ntuples1 == 0)
 		{
-			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: \"%s\" "
-					"returned no set\n",
-					node->no_id, dstring_data(&query));
 			PQclear(res1);
 			continue;
 		}
+		num_sets += ntuples1;
 
 		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
 		{
@@ -2603,6 +2604,19 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	dstring_free(&new_qual);
 
 	/*
+	 * If we have found no sets needing sync at all, why
+	 * bother the helpers?
+	 */
+	if (num_sets == 0)
+	{
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"no sets need syncing for this event\n",
+				node->no_id);
+		dstring_free(&query);
+		return 0;
+	}
+
+	/*
 	 * Time to get the helpers busy.
 	 */
 	wd->workgroup_status = SLON_WG_BUSY;
@@ -2654,6 +2668,12 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 						break;
 
 					res1 = PQexec(local_dbconn, dstring_data(&(wgline->data)));
+					if (PQresultStatus(res1) == PGRES_EMPTY_QUERY)
+					{
+						PQclear(res1);
+						break;
+					}
+
 					if (PQresultStatus(res1) != PGRES_COMMAND_OK)
 					{
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
@@ -2680,6 +2700,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 							slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: %s\n",
 									node->no_id, dstring_data(&(wgline->data)));
 					}
+					PQclear(res1);
 					break;
 
 				case SLON_WGLC_DONE:
@@ -3018,6 +3039,20 @@ sync_helper(void *cdata)
 					line = data_line[tupno];
 					line->code = SLON_WGLC_ACTION;
 					line->provider = provider;
+
+					/*
+					 * This can happen if the table belongs to a
+					 * set that already has a better sync status
+					 * than the event we're currently processing
+					 * as a result from another SYNC occuring before
+					 * we had started processing the copy_set.
+					 */
+					if (log_tableid >= wd->tab_fqname_size ||
+						wd->tab_fqname[log_tableid] == NULL)
+					{
+						dstring_reset(&(line->data));
+						continue;
+					}
 
 					slon_mkquery(&(line->data),
 							"-- log_xid %s\n"
