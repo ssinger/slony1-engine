@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.4 2004-12-17 23:26:06 darcyb Exp $
+# $Id: Makefile,v 1.5 2004-12-20 16:55:06 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -13,10 +13,6 @@ include $(slony_top_builddir)/Makefile.global
 
 .SECONDARY:
 .NOTPARALLEL:
-
-ifndef COLLATEINDEX
-COLLATEINDEX = /usr/bin/collateindex.pl
-endif
 
 
 GENERATED_SGML = bookindex.sgml 
