@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_start.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: slon_start.pl,v 1.2 2004-08-04 14:47:53 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -30,7 +30,7 @@ $node =~ /node(\d*)$/;
 $nodenum = $1;
 my $dsn = $DSN[$nodenum];
 my $dbname=$DBNAME[$nodenum];
-system "$SLON_BIN_PATH/slon $SETNAME -s 1000 -d2 '$dsn' 2>$LOGDIR/slon-$dbname-$node.err >$LOGDIR/slon-$dbname-$node.out &";
+system "$SLON_BIN_PATH/slon -d2 -s 1000 $SETNAME '$dsn' 2>$LOGDIR/slon-$dbname-$node.err >$LOGDIR/slon-$dbname-$node.out &";
 
 get_pid();
 
@@ -46,7 +46,7 @@ system " perl slon_watchdog.pl $node 30 &";
 sub get_pid {
   $node =~ /node(\d*)$/;
   my $nodenum = $1;
-  my ($dbname, $dbport) = ($DBNAME[$nodenum], $PORT[$nodenum]);
+  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
 #  print "Searching for PID for $dbname on port $dbport\n";
   open(PSOUT, "ps -auxww | egrep \"[s]lon $SETNAME\" | egrep \"dbname=$dbname .*port=$dbport\" | sort -n | awk '{print \$2}'|");
   $pid = <PSOUT>;
