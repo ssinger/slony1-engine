@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.14 2004-03-04 22:29:15 wieck Exp $
+ *	$Id: remote_worker.c,v 1.15 2004-03-04 22:41:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2024,7 +2024,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 
 			dstring_init(&query2);
 			slon_mkquery(&query2,
-					"log_xid > '%s' or (log_xid >= '%s'",
+					"log_xid >= '%s' or (log_xid >= '%s'",
 					ssy_maxxid, ssy_minxid);
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(&query2, " and log_xid in (%s))", ssy_xip);
