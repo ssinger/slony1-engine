@@ -243,5 +243,5 @@ else
 fi
 
 If this script returns "FAILED" please contact the developers at
-http://slony.org/
+http://slony.info/
 
