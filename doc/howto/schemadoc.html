@@ -1,4 +1,4 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.1 2004-07-30 19:35:46 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.2 2004-07-30 20:44:01 cbbrowne Exp $ -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -116,8 +116,8 @@
 <ul>
     
     <li><a name="schemadoc.schema">schemadoc</a></li><ul>
-    	<li><a href="#schemadoc.table.sl-config-lock">sl_config_lock</a></li><li><a href="#schemadoc.table.sl-confirm">sl_confirm</a></li><li><a href="#schemadoc.table.sl-listen">sl_listen</a></li><li><a href="#schemadoc.table.sl-node">sl_node</a></li><li><a href="#schemadoc.table.sl-path">sl_path</a></li><li><a href="#schemadoc.table.sl-seqlog">sl_seqlog</a></li>
-  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
+    	<li><a href="#schemadoc.table.sl-config-lock">sl_config_lock</a></li><li><a href="#schemadoc.table.sl-confirm">sl_confirm</a></li><li><a href="#schemadoc.table.sl-event">sl_event</a></li><li><a href="#schemadoc.table.sl-listen">sl_listen</a></li><li><a href="#schemadoc.table.sl-log-1">sl_log_1</a></li><li><a href="#schemadoc.table.sl-log-2">sl_log_2</a></li><li><a href="#schemadoc.table.sl-node">sl_node</a></li><li><a href="#schemadoc.table.sl-path">sl_path</a></li><li><a href="#schemadoc.view.sl-seqlastvalue">sl_seqlastvalue</a></li><li><a href="#schemadoc.table.sl-seqlog">sl_seqlog</a></li><li><a href="#schemadoc.table.sl-sequence">sl_sequence</a></li><li><a href="#schemadoc.table.sl-set">sl_set</a></li><li><a href="#schemadoc.table.sl-setsync">sl_setsync</a></li><li><a href="#schemadoc.table.sl-subscribe">sl_subscribe</a></li><li><a href="#schemadoc.table.sl-table">sl_table</a></li><li><a href="#schemadoc.table.sl-trigger">sl_trigger</a></li>
+  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
     </ul>
     
 </ul>
@@ -300,6 +300,335 @@ con_timestamp	:	Timestamp.  When this event was confirmed
 	
         <hr>
 		<h2>Table:
+			<a name="schemadoc.table.sl-event">sl_event</a>
+		</h2>
+        
+         <p>Holds information about replication events.
+
+After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.
+
+ev_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event
+ev_seqno		:	Integer.  The ID # for the event
+ev_timestamp	:	Timestamp.  When this event record was created
+ev_minxid		:
+ev_maxxid		:
+ev_xip			:	String.
+ev_type			:	String.  The type of event this record is for.
+
+				SYNC				= Synchronise
+				STORE_NODE			=
+				ENABLE_NODE			=
+				DROP_NODE			=
+				STORE_PATH			=
+				DROP_PATH			=
+				STORE_LISTEN		=
+				DROP_LISTEN			=
+				STORE_SET			=
+				DROP_SET			=
+				MERGE_SET			=
+				SET_ADD_TABLE		=
+				SET_ADD_SEQUENCE	=
+				STORE_TRIGGER		=
+				DROP_TRIGGER		=
+				MOVE_SET			=
+				FAILOVER_SET		=
+				SUBSCRIBE_SET		=
+				ENABLE_SUBSCRIPTION	=
+				UNSUBSCRIBE_SET		=
+				DDL_SCRIPT			=
+				ADJUST_SEQ			=
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_event Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>ev_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>ev_seqno</td>
+            	<td>bigint</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_timestamp</td>
+            	<td>timestamp without time zone</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_minxid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_maxxid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_xip</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_type</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_data1</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_data2</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_data3</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_data4</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_data5</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_data6</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ev_data7</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ev_data8</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
 			<a name="schemadoc.table.sl-listen">sl_listen</a>
 		</h2>
         
@@ -439,6 +768,292 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 	
         <hr>
 		<h2>Table:
+			<a name="schemadoc.table.sl-log-1">sl_log_1</a>
+		</h2>
+        
+         <p>Stores each change to be propagated to subscriber nodes
+
+log_origin - origin node from which the change came
+log_xid - transaction ID on the origin node
+log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
+log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
+log_cmddata - the data needed to perform the log action</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_log_1 Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_xid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_tableid</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_actionseq</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_cmdtype</td>
+            	<td>character(1)</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_cmddata</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-log-2">sl_log_2</a>
+		</h2>
+        
+         <p>Stores each change to be propagated to subscriber nodes
+
+log_origin - origin node from which the change came
+log_xid - transaction ID on the origin node
+log_table_id - the table ID (from sl_table.tab_id) that this log entry is to affect
+log_cmdtype - replication action to take. U = Update, I = Insert, D = DELETE
+log_cmddata - the data needed to perform the log action</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_log_2 Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_xid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_tableid</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_actionseq</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>log_cmdtype</td>
+            	<td>character(1)</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>log_cmddata</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
 			<a name="schemadoc.table.sl-node">sl_node</a>
 		</h2>
         
@@ -529,6 +1144,14 @@ li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for th
 		
 			<ul>	
 				<li><a href="#schemadoc.table.sl-path">sl_path</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-set">sl_set</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-setsync">sl_setsync</a></li>
 			</ul>
 		
 		
@@ -679,9 +1302,160 @@ pa_connretry - The synchronisation delay, in seconds
 				<li><a href="#schemadoc.table.sl-listen">sl_listen</a></li>
 			</ul>
 		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-subscribe">sl_subscribe</a></li>
+			</ul>
+		
 		
 
 	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>View:
+			<a name="schemadoc.view.sl-seqlastvalue">sl_seqlastvalue</a>
+		</h2>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_seqlastvalue Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>seq_id</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seq_set</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>seq_reloid</td>
+            	<td>oid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seq_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>seq_last_value</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+	<pre>
+SELECT sq.seq_id
+, sq.seq_set
+, sq.seq_reloid
+, s.set_origin AS seq_origin
+, schemadoc.sequencelastvalue
+(
+     (
+           (quote_ident
+                 (
+                       (pgn.nspname)::text
+                 ) || &#39;.&#39;::text
+           ) || quote_ident
+           (
+                 (pgc.relname)::text
+           )
+     )
+) AS seq_last_value 
+FROM schemadoc.sl_sequence sq
+, schemadoc.sl_set s
+, pg_class pgc
+, pg_namespace pgn 
+WHERE (
+     (
+           (s.set_id = sq.seq_set)
+         AND (pgc.oid = sq.seq_reloid)
+     )
+   AND (pgn.oid = pgc.relnamespace)
+);</pre>
 	
 
 	<!-- List off permissions -->
@@ -765,6 +1539,869 @@ pa_connretry - The synchronisation delay, in seconds
             	<td>seql_last_value</td>
             	<td>bigint</td>
                 <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-sequence">sl_sequence</a>
+		</h2>
+        
+         <p>Similar to sl_table, each entry identifies a sequence being replicated.
+seq_id is an internally-used ID for Slony-I to use in its sequencing of updates
+seq_reloid is the OID of the sequence object
+seq_set indicates which replication set the object is in
+seq_comment is a human-oriented comment</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_sequence Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>seq_id</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seq_reloid</td>
+            	<td>oid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-set">sl_set.set_id</a>
+                  
+                
+                </td>
+            	<td>seq_set</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seq_comment</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-set">sl_set</a>
+		</h2>
+        
+         <p>Holds definitions of replication sets.  
+
+set_id is a unique ID number for the set.
+set_origin is the ID number of the source node for the replication set.
+set_locked indicates whether or not the set is locked.
+set_comment is a human-oriented description of the set.
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_set Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>set_id</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-node">sl_node.no_id</a>
+                  
+                
+                </td>
+            	<td>set_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>set_locked</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>set_comment</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+			<p>Tables referencing this one via Foreign Key Constraints:</p>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-sequence">sl_sequence</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-setsync">sl_setsync</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-subscribe">sl_subscribe</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-table">sl_table</a></li>
+			</ul>
+		
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-setsync">sl_setsync</a>
+		</h2>
+        
+         <p>Not documented yet</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_setsync Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-set">sl_set.set_id</a>
+                  
+                
+                </td>
+            	<td>ssy_setid</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-node">sl_node.no_id</a>
+                  
+                
+                </td>
+            	<td>ssy_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ssy_seqno</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ssy_minxid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ssy_maxxid</td>
+            	<td>schemadoc.xxid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>ssy_xip</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>ssy_action_list</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-subscribe">sl_subscribe</a>
+		</h2>
+        
+         <p>Not documented yet</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_subscribe Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-set">sl_set.set_id</a>
+                  
+                
+                </td>
+            	<td>sub_set</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-path">sl_path.pa_server#1</a>
+                  
+                
+                </td>
+            	<td>sub_provider</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-path">sl_path.pa_client#1</a>
+                  
+                
+                </td>
+            	<td>sub_receiver</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>sub_forward</td>
+            	<td>boolean</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>sub_active</td>
+            	<td>boolean</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-table">sl_table</a>
+		</h2>
+        
+         <p>Holds information about the tables being replicated.
+
+tab_id - unique key for Slony-I to use to identify the table
+tab_reloid - the OID of the table in pg_catalog.pg_class.oid
+tab_idxname - the name of the primary index of the table
+tab_comment - Human-oriented description of the table</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_table Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>tab_id</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>tab_reloid</td>
+            	<td>oid</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-set">sl_set.set_id</a>
+                  
+                
+                </td>
+            	<td>tab_set</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>tab_idxname</td>
+            	<td>name</td>
+                <td><i>
+				
+
+				NOT NULL
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>tab_altered</td>
+            	<td>boolean</td>
+                <td><i>
+				
+
+				NOT NULL
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>tab_comment</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+			<p>Tables referencing this one via Foreign Key Constraints:</p>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-trigger">sl_trigger</a></li>
+			</ul>
+		
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-trigger">sl_trigger</a>
+		</h2>
+        
+         <p>Indicates the name of a trigger [for what purpose?]</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_trigger Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-table">sl_table.tab_id</a>
+                  
+                
+                </td>
+            	<td>trig_tabid</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>trig_tgname</td>
+            	<td>name</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
 				
 
 				
@@ -2091,7 +3728,8 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
+and then waited for the restart of all node daemons.</p>
         <pre>
 declare
 	p_failed_node		alias for $1;
@@ -2291,6 +3929,64 @@ raise notice &#39;failedNode: set % has other direct receivers - change provider
 	-- That is it - so far.
 	-- ----
 	return p_failed_node;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.failednode2-integer-integer-integer-bigint-bigint">failednode2( integer, integer, integer, bigint, bigint )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
+
+On the node that has the highest sequence number of the failed node,
+fake the FAILED_NODE event.</p>
+        <pre>
+declare
+	p_failed_node		alias for $1;
+	p_backup_node		alias for $2;
+	p_set_id			alias for $3;
+	p_ev_seqno			alias for $4;
+	p_ev_seqfake		alias for $5;
+	v_row				record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	select * into v_row
+			from schemadoc.sl_event
+			where ev_origin = p_failed_node
+			and ev_seqno = p_ev_seqno;
+	if not found then
+		raise exception &#39;Slony-I: event %,% not found&#39;,
+				p_failed_node, p_ev_seqno;
+	end if;
+
+	insert into schemadoc.sl_event
+			(ev_origin, ev_seqno, ev_timestamp,
+			ev_minxid, ev_maxxid, ev_xip,
+			ev_type, ev_data1, ev_data2, ev_data3)
+			values 
+			(p_failed_node, p_ev_seqfake, CURRENT_TIMESTAMP,
+			v_row.ev_minxid, v_row.ev_maxxid, v_row.ev_xip,
+			&#39;FAILOVER_SET&#39;, p_failed_node::text, p_backup_node::text,
+			p_set_id::text);
+	insert into schemadoc.sl_confirm
+			(con_origin, con_received, con_seqno, con_timestamp)
+			values
+			(p_failed_node, schemadoc.getLocalNodeId(&#39;_schemadoc&#39;),
+			p_ev_seqfake, CURRENT_TIMESTAMP);
+	notify &quot;_schemadoc_Event&quot;;
+	notify &quot;_schemadoc_Confirm&quot;;
+	notify &quot;_schemadoc_Restart&quot;;
+
+	perform schemadoc.failoverSet_int(p_failed_node,
+			p_backup_node, p_set_id);
+
+	return p_ev_seqfake;
 end;
 </pre>
 	
@@ -3267,7 +4963,11 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>FUNCTION storeListen (li_origin, li_provider, li_receiver)
+
+generate STORE_LISTEN event, indicating that receiver node li_receiver
+listens to node li_provider in order to get messages coming from node
+li_origin.</p>
         <pre>
 declare
 	p_li_origin		alias for $1;
@@ -3286,7 +4986,11 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>FUNCTION storeListen_int (li_origin, li_provider, li_receiver)
+
+Process STORE_LISTEN event, indicating that receiver node li_receiver
+listens to node li_provider in order to get messages coming from node
+li_origin.</p>
         <pre>
 declare
 	p_li_origin		alias for $1;

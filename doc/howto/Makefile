@@ -32,18 +32,20 @@ distdir: $(DISTFILES)
 BASEDIR=../../src/backend
 BASESQL=$(BASEDIR)/slony1_base.sql 
 BASEFUNS=$(BASEDIR)/slony1_funcs.sql 
+XIDSQL=localxid.sql
 # Might want to add version-specific functions, too...
 TEMPDB=schemadoc
 TEMPSCHEMA=schemadoc
 CREATELANG=/usr/lib/postgresql/bin/createlang   # That's how it is for me...
 AUTODOC=postgresql_autodoc
 
-schemadoc.html: $(BASESQL) $(BASEFUNS)
+schemadoc.html: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	createdb $(TEMPDB)
 	$(CREATELANG) plpgsql $(TEMPDB)
 	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | psql $(TEMPDB)
-	cat $(BASESQL) $(BASEFUNS) |  sed "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  | sed "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | psql $(TEMPDB)
+	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  | sed "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | psql $(TEMPDB)
 	$(AUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t html
 
 clean:
-
+	dropdb $(TEMPDB)
+	rm schemadoc.html
