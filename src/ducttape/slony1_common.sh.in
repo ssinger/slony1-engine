@@ -48,7 +48,10 @@ function get_conninfo_src () {
 			port)		echo "PGPORT=$val"
 						echo "export PGPORT"
 						;;
-			*)			echo "unknown conninfo part $val" >&2
+			user)		echo "PGUSER=$val"
+						echo "export PGUSER"
+						;;
+			*)			echo "unknown conninfo part $key=$val" >&2
 						err=1
 						;;
 		esac

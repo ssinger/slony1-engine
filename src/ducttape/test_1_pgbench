@@ -214,6 +214,7 @@ _EOF_
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
 	echo "success - databases are equal."
 	rm dump.tmp.?.$$
+	rm test_1.diff
 else
 	echo "FAILED - see test_1.diff for database differences"
 fi
