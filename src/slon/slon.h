@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.44 2005-02-17 23:42:09 cbbrowne Exp $
+ *	$Id: slon.h,v 1.45 2005-02-18 00:15:57 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -432,6 +432,12 @@ extern int	sync_interval_timeout;
  * ----------
  */
 extern void *syncThread_main(void *dummy);
+
+/* ----------
+ * Functions in snmp_thread.c
+ * ----------
+ */
+extern void *snmpThread_main(void *dummy);
 
 
 /* ----------

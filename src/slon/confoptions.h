@@ -267,6 +267,7 @@ static struct config_string ConfigureNamesString[] =
 		{
 			(const char *)"log_timestamp_format",
 			gettext_noop("A strftime()-style log timestamp format string."),
+			NULL,
 			SLON_C_STRING
 		},
 		&log_timestamp_format,

@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.41 2005-02-01 19:33:31 darcyb Exp $
+# $Id: configure.ac,v 1.42 2005-02-18 00:15:55 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -56,7 +56,8 @@ esac
 AC_MSG_RESULT([$template])
 
 # Checks for programs.
-AC_PROG_CC
+#AC_PROG_CC
+SLON_AC_COMPILER()
 AC_PROG_LD
 PGAC_PATH_PERL
 AC_PATH_PROG(TAR, tar)
@@ -75,7 +76,6 @@ AC_SUBST(with_gnu_ld)
 AC_SUBST(PERL)
 AC_SUBST(SED)
 
-SLON_AC_COMPILER()
 
 ACX_PTHREAD()
 
@@ -97,20 +97,24 @@ AC_CHECK_FUNCS([strdup])
 AC_CHECK_FUNCS([strerror])
 AC_CHECK_FUNCS([strtol])
 AC_CHECK_FUNCS([strtoul])
-				
+
+AC_CHECK_TYPES([int32_t, uint32_t, u_int32_t])
+AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
+AC_CHECK_TYPES([ssize_t])
 
 # ----
 # Locate PostgreSQL paths
 # ----
 
-AC_ARG_WITH(pgconfigdir, [  --with-pgconfigdir=<dir>	     Location of the PostgreSQL pg_config program. ])
-AC_ARG_WITH(pgbindir, [  --with-pgbindir=<dir>	     Location of the PostgreSQL postmaster. ])
-AC_ARG_WITH(pgincludedir, [  --with-pgincludedir=<dir>          Location of the PostgreSQL headers. ])
-AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>    Location of the PostgreSQL server headers. ])
-AC_ARG_WITH(pglibdir, [  --with-pglibdir=<dir>              Location of the PostgreSQL libs. ])
-AC_ARG_WITH(pgpkglibdir, [  --with-pgpkglibdir=<dir>           Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
-AC_ARG_WITH(pgsharedir, [  --with-pgsharedir=<dir>            Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
-
+AC_ARG_WITH(pgconfigdir,        [  --with-pgconfigdir=<dir>         Location of the PostgreSQL pg_config program. ])
+AC_ARG_WITH(pgbindir,           [  --with-pgbindir=<dir>            Location of the PostgreSQL postmaster. ])
+AC_ARG_WITH(pgincludedir,       [  --with-pgincludedir=<dir>        Location of the PostgreSQL headers. ])
+AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>  Location of the PostgreSQL server headers. ])
+AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of the PostgreSQL libs. ])
+AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
+AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
+AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. ])
+AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
 #Our current path
 SLONYPATH=`pwd`
 
@@ -118,6 +122,8 @@ SLONYPATH=`pwd`
 # PostgreSQL checks
 # ----
 ACX_LIBPQ()
+ACX_LIBSNMP()
+ACX_SLONYTOOLS()
 
 AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
 AC_SUBST(PGINCLUDESERVERDIR, $PG_INCLUDESERVERDIR)
@@ -125,6 +131,11 @@ AC_SUBST(PGLIBDIR, $PG_LIBDIR)
 AC_SUBST(PGPKGLIBDIR, $PG_PKGLIBDIR)
 AC_SUBST(PGSHAREDIR, $PG_SHAREDIR)
 AC_SUBST(PGBINDIR, $PG_BINDIR)
+AC_SUBST(HAVE_NETSNMP, $HAVE_NETSNMP)
+AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
+AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
+AC_SUBST(TOOLSBIN, $TOOLSBIN)
+
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)

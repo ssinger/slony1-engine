@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.44 2005-02-17 23:42:09 cbbrowne Exp $
+ *	$Id: slon.c,v 1.45 2005-02-18 00:15:57 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,6 +45,9 @@ static pthread_t local_event_thread;
 static pthread_t local_cleanup_thread;
 static pthread_t local_sync_thread;
 
+#ifdef HAVE_NETSNMP
+static pthread_t local_snmp_thread;
+#endif
 
 static pthread_t main_thread;
 static char *const *main_argv;
@@ -253,6 +256,7 @@ main(int argc, char *const argv[])
 	/*
 	 * Start the event scheduling system
 	 */
+	slon_log(SLON_CONFIG, "main: launching sched_start_mainloop\n");
 	if (sched_start_mainloop() < 0)
 		slon_exit(-1);
 
@@ -505,7 +509,14 @@ main(int argc, char *const argv[])
 				 strerror(errno));
 		slon_abort();
 	}
-
+#ifdef HAVE_NETSNMP
+	if (pthread_create(&local_snmp_thread, NULL, snmpThread_main, NULL) < 0)
+	{
+		slon_log(SLON_FATAL, "main: cannot create snmpThread -%s\n",
+				strerror(errno));
+		slon_abort();
+	}
+#endif
 	/*
 	 * Wait until the scheduler has shut down all remote connections
 	 */
@@ -544,6 +555,11 @@ main(int argc, char *const argv[])
 		slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
 				 strerror(errno));
 
+#ifdef HAVE_NETSNMP
+	if (pthread_kill(local_snmp_thread, SIGINT) < 0)
+		slon_log(SLON_ERROR, "main: cannot join snmpThread - %s\n",
+				strerror(errno));
+#endif
 	if (slon_restart_request)
 	{
 		slon_log(SLON_DEBUG1, "main: restart requested\n");

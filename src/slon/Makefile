@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.27 2005-01-26 18:30:07 darcyb Exp $
+#	$Id: Makefile,v 1.28 2005-02-18 00:15:57 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -13,8 +13,9 @@ include $(slony_top_builddir)/Makefile.global
 
 CC = $(PTHREAD_CC)
 
-override CFLAGS +=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
-override LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
+CFLAGS+=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
+LDFLAGS+= $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
+
 
 PROG		= slon
 
@@ -22,19 +23,25 @@ ifeq ($(PORTNAME), win)
 PROG            = slon.exe
 endif
 
-OBJS		= 			\
-	slon.o				\
+OBJS		= \
+	slon.o			\
 	runtime_config.o	\
 	local_listen.o		\
 	remote_listen.o		\
 	remote_worker.o		\
 	sync_thread.o		\
 	cleanup_thread.o	\
-	scheduler.o			\
-	dbutils.o			\
-	conf-file.o	\
-	confoptions.o	\
+	scheduler.o		\
+	dbutils.o		\
+	conf-file.o		\
+	confoptions.o		\
 	misc.o
+
+ifdef HAVE_NETSNMP
+OBJS+= snmp_thread.o
+LDFLAGS+= ${NETSNMP_AGENTLIBS}
+endif
+
 
 DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h)
 
@@ -45,7 +52,7 @@ ALL =				\
 all:	$(ALL)
 
 $(PROG):	$(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(PTHREAD_LDFLAGS) $(LDFLAGS) -o $(PROG)
+	$(CC) $(CFLAGS) -o $(PROG) $(OBJS) $(PTHREAD_CFLAGS) $(LDFLAGS)
 
 cleanup_thread.o:	cleanup_thread.c slon.h
 dbutils.o:			dbutils.c slon.h
@@ -59,6 +66,9 @@ slon.o:				slon.c slon.h
 sync_thread.o:		sync_thread.c slon.h
 conf-file.o:		conf-file.c slon.h confoptions.h
 confoptions.o:		confoptions.c slon.h confoptions.h
+
+snmp_thread.o:		snmp_thread.c slon.h
+	$(CC) $(PTHREAD_CFLAGS) $(CFLAGS) $(NETSNMP_CFLAGS) -DHAVE_NETSNMP -c $< -o $@
 
 conf-file.c:		conf-file.l
 ifdef FLEX

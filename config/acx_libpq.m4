@@ -106,6 +106,15 @@ echo "Overriding pgincludeserverdir with" ${with_pgincludeserverdir}
 PG_INCLUDESERVERDIR=${with_pgincludeserverdir}
 fi
 
+if test -n "${with_toolsdir}"; then
+_pwd=`pwd`
+cd ${with_toolsdir}
+with_toolsdir=`pwd`
+cd ${_pwd}
+echo "Overriding toolsdir with" ${with_toolsdir}
+TOOLSBINDIR=${with_pgincludeserverdir}
+fi
+
 dnl -----------------------------------------
 dnl Make sure we have found the right values!
 dnl -----------------------------------------

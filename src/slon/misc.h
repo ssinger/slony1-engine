@@ -5,7 +5,7 @@
  * ----------
  */
 #include "config.h"
-#include "c.h"
+#include "server/c.h"
 
 typedef enum
 {
@@ -18,9 +18,9 @@ typedef enum
 	SLON_DEBUG2,
 	SLON_DEBUG3,
 	SLON_DEBUG4
-}	SlonLogLevel;
+}	Slon_Log_Level;
 
-extern void slon_log(SlonLogLevel level, char *fmt,...);
+extern void slon_log(Slon_Log_Level level, char *fmt,...);
 
 extern int	slon_scanint64(char *str, int64 * result);
 #endif

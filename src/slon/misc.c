@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.16 2005-01-12 17:27:10 darcyb Exp $
+ *	$Id: misc.c,v 1.17 2005-02-18 00:15:57 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -67,7 +67,7 @@ static void write_syslog(int level, const char *line);
 
 
 void
-slon_log(SlonLogLevel level, char *fmt,...)
+slon_log(Slon_Log_Level level, char *fmt,...)
 {
 	va_list		ap;
 	static char *outbuf = NULL;
