@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.24 2004-10-13 18:50:54 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.25 2004-10-14 16:01:04 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1352,3 +1352,10 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 }
 
 
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

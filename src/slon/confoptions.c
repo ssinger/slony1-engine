@@ -463,3 +463,11 @@ set_config_option(const char *name, const char *value)
 	}
 	return true;
 }
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

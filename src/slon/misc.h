@@ -24,3 +24,11 @@ extern void             slon_log(SlonLogLevel level, char * fmt, ...);
 extern int              slon_scanint64(char *str, int64 *result);
 
 #endif
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

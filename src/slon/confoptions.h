@@ -33,10 +33,10 @@ char *log_timestamp_format;
 
 enum config_type
 {
-        SLON_C_BOOL,
-        SLON_C_INT,
-        SLON_C_REAL,
-        SLON_C_STRING
+	SLON_C_BOOL,
+	SLON_C_INT,
+	SLON_C_REAL,
+	SLON_C_STRING
 };
 
 struct config_generic
@@ -283,3 +283,11 @@ static struct config_string ConfigureNamesString[] =
 };
 
 #endif
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
+
