@@ -777,7 +777,65 @@ delete the new rows in the child as well.
 </para>
 </answer>
 
+<qandaentry><question><para> What happens with rules and triggers on
+<productname>Slony-I</productname>-replicated tables?</para>
+</question>
+
+<answer><para> Firstly, let's look at how it is handled
+<emphasis>absent</emphasis> of the special handling of the <link
+linkend="stmtstoretrigger"> <command>STORE TRIGGER</command> </link>
+Slonik command.  </para>
+
+<para> The function <link
+linkend="t1.function.altertableforreplication-integer">
+altertableforreplication(table id) </link> prepares each table for
+replication.
+
+<itemizedlist>
+
+<listitem><para> On the origin node, this involves adding a trigger
+that uses the <link linkend="t1.function.logtrigger">
+<function>logTrigger</function>() </link> function to the
+table.</para>
+
+<para> That trigger initiates the action of logging all updates to the
+table to <productname>Slony-I</productname> <envar>sl_log</envar>
+tables.</para></listitem>
+
+<listitem><para> On a subscriber node, this involves disabling
+triggers and rules, then adding in the trigger that denies write
+access using the <function>denyAccess()</function> function to
+replicated tables.</para>
+
+<para> Up until 1.1 (and perhaps onwards), the
+<quote>disabling</quote> is done by modifying the
+<envar>pg_trigger</envar> or <envar>pg_rewrite</envar>
+<envar>tgrelid</envar> to point to the OID of the <quote>primary
+key</quote> index on the table rather than to the table
+itself.</para></listitem>
+
+</itemizedlist></para>
+
+<para> A somewhat unfortunate side-effect is that this handling of the
+rules and triggers somewhat <quote>tramples</quote> on them.  The
+rules and triggers are still there, but are no longer properly tied to
+their tables.  If you do a <command>pg_dump</command> on the
+<quote>subscriber</quote> node, it won't find the rules and triggers
+because it does not expect them to be associated with an index.</para>
+
+</answer>
+
+<answer> <para> Now, consider how <link linkend="stmtstoretrigger">
+<command>STORE TRIGGER</command> </link> enters into things.</para>
+
+<para> Simply put, this command causes
+<productname>Slony-I</productname> to restore the trigger using
+<function>alterTableRestore(table id)</function>, which restores the
+table's OID into the <envar>pg_trigger</envar> or
+<envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
+affected node.</para></answer>
 </qandaentry>
+
 </qandaset>
 
 <!-- Keep this comment at the end of the file
