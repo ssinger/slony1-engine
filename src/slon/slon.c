@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.34 2004-10-15 22:11:38 darcyb Exp $
+ *	$Id: slon.c,v 1.35 2004-10-18 17:06:33 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -61,7 +61,6 @@ main(int argc, char *const argv[])
 {
 	char           *cp1;
 	char           *cp2;
-	char	       *scratch;
 	SlonDString     query;
 	PGresult       *res;
 	int             i, n;
