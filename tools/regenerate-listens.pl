@@ -1,5 +1,5 @@
-#!@@PERL@@
-# $Id: regenerate-listens.pl,v 1.1 2005-02-14 22:24:08 smsimms Exp $
+#!/usr/bin/env perl
+# $Id: regenerate-listens.pl,v 1.2 2005-02-23 17:41:02 smsimms Exp $
 # Copyright 2005
 # Christopher B. Browne
 # cbbrowne@acm.org
