@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.47 2004-05-27 16:32:49 wieck Exp $
+ *	$Id: remote_worker.c,v 1.48 2004-06-01 20:18:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3446,6 +3446,9 @@ sync_helper(void *cdata)
 	int					errors;
 	WorkerGroupLine	   *data_line[SLON_DATA_FETCH_SIZE];
 	int					alloc_lines = 0;
+	struct timeval		tv_start;
+	struct timeval		tv_now;
+	int					first_fetch;
 
 	dstring_init(&query);
 
@@ -3506,6 +3509,9 @@ sync_helper(void *cdata)
 					rtcfg_namespace, 
 					dstring_data(&(provider->helper_qualification)));
 			
+			gettimeofday(&tv_start, NULL);
+			first_fetch = true;
+
 			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
@@ -3591,6 +3597,17 @@ sync_helper(void *cdata)
 					PQclear(res);
 					errors++;
 					break;
+				}
+
+				if (first_fetch)
+				{
+					gettimeofday(&tv_now, NULL);
+					slon_log(SLON_DEBUG2,
+						"remoteHelperThread_%d_%d: %.3f seconds delay for first row\n",
+						node->no_id, provider->no_id, 
+						TIMEVAL_DIFF(&tv_start, &tv_now));
+							
+					first_fetch = false;
 				}
 
 				/*
@@ -3731,6 +3748,12 @@ sync_helper(void *cdata)
 		slon_mkquery(&query, "rollback transaction; ");
 		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
+
+		gettimeofday(&tv_now, NULL);
+		slon_log(SLON_DEBUG2,
+			"remoteHelperThread_%d_%d: %.3f seconds until close cursor\n",
+			node->no_id, provider->no_id, 
+			TIMEVAL_DIFF(&tv_start, &tv_now));
 
 		/*
 		 * Change our helper status to DONE and tell the worker 
