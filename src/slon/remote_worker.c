@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.75 2005-02-25 20:59:04 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.76 2005-02-25 22:36:52 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -244,7 +244,7 @@ static char archive_name[SLON_MAX_PATH];
 static char archive_tmp[SLON_MAX_PATH];
 static FILE *archive_fp = NULL;
 static int open_log_archive (int node_id, char *seqbuf);
-static void close_log_archive ();
+static int close_log_archive ();
 static void terminate_log_archive ();
 static int generate_archive_header (int node_id, char *seqbuf);
 static int submit_query_to_archive(SlonDString *ds);
@@ -275,6 +275,7 @@ remoteWorkerThread_main(void *cdata)
 	char		seqbuf [64];
 	int			event_ok;
 	int			need_reloadListen = false;
+	int rc;
 
 	slon_log(SLON_DEBUG1,
 			 "remoteWorkerThread_%d: thread starts\n",
@@ -1027,11 +1028,55 @@ remoteWorkerThread_main(void *cdata)
 				int			ddl_setid = (int)strtol(event->ev_data1, NULL, 10);
 				char	   *ddl_script = event->ev_data2;
 				int			ddl_only_on_node = (int)strtol(event->ev_data3, NULL, 10);
-
+				
+				
 				slon_appendquery(&query1,
-								 "select %s.ddlScript_int(%d, '%q', %d); ",
-								 rtcfg_namespace,
-								 ddl_setid, ddl_script, ddl_only_on_node);
+						 "select %s.ddlScript_int(%d, '%q', %d); ",
+						 rtcfg_namespace,
+						 ddl_setid, ddl_script, ddl_only_on_node);
+				
+				/* DDL_SCRIPT needs to be turned into a log shipping script */
+				if (archive_dir) {
+				  if ((ddl_only_on_node < 1) || (ddl_only_on_node == rtcfg_nodeid)) {
+				    
+				    rc = open_log_archive(node->no_id, seqbuf);
+				    if (rc < 0) {
+				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					       "Could not open DDL archive file %s - %s",
+					       node->no_id, archive_tmp, strerror(errno));
+				      slon_abort();
+				    }
+				    generate_archive_header(node->no_id, seqbuf);
+				    if (rc < 0) {
+				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					       "Could not generate DDL archive header %s - %s",
+					       node->no_id, archive_tmp, strerror(errno));
+				      slon_abort();
+				    }
+				    rc = logarchive_tracking(rtcfg_namespace, ddl_setid, seqbuf, seqbuf);
+				    if (rc < 0) {
+				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					       "Could not generate DDL archive tracker %s - %s",
+					       node->no_id, archive_tmp, strerror(errno));
+				      slon_abort();
+				    }
+				    rc = submit_string_to_archive(ddl_script);
+				    if (rc < 0) {
+				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					       "Could not submit DDL Script %s - %s",
+					       node->no_id, archive_tmp, strerror(errno));
+				      slon_abort();
+				    }
+
+				    rc = close_log_archive();
+				    if (rc < 0) {
+				      slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					       "Could not close DDL Script %s - %s",
+					       node->no_id, archive_tmp, strerror(errno));
+				      slon_abort();
+				    }
+				  }
+				}
 			}
 			else if (strcmp(event->ev_type, "RESET_CONFIG") == 0)
 			{
@@ -3327,8 +3372,15 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 "no sets need syncing for this event\n",
 				 node->no_id);
 		dstring_free(&query);
-		if (archive_dir)
-		  close_log_archive();
+		if (archive_dir) {
+		  rc = close_log_archive();
+		  if (rc < 0) {
+		    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+			     "Could not close out archive file %s - %s",
+			     node->no_id, archive_tmp, strerror(errno));
+		    return 60;
+		  }
+		}
 		return 0;
 	}
 
@@ -4165,10 +4217,12 @@ int open_log_archive (int node_id, char *seqbuf) {
   }
 }
 
-void close_log_archive () {
-  fprintf(archive_fp, "\n------------------------------------------------------------------\n-- End Of Archive Log\n------------------------------------------------------------------\ncommit;\n");
-  fclose(archive_fp);
-  rename(archive_tmp, archive_name);
+int close_log_archive () {
+  int rc;
+  rc = fprintf(archive_fp, "\n------------------------------------------------------------------\n-- End Of Archive Log\n------------------------------------------------------------------\ncommit;\n");
+  rc = fclose(archive_fp);
+  rc = rename(archive_tmp, archive_name);
+  return rc;
 }
 
 int logarchive_tracking (const char *namespace, int sub_set, const char *firstseq, const char *seqbuf) {
