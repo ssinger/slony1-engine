@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.19 2005-02-23 20:30:51 smsimms Exp $
+# $Id: slon-tools.pm,v 1.20 2005-03-11 03:49:49 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -174,23 +174,23 @@ sub query_slony_status {
 select * from 
 (select now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
        con_timestamp
-from _$CLUSTER_NAME.sl_confirm c, _$CLUSTER_NAME.sl_subscribe slony_master
+from "_$CLUSTER_NAME".sl_confirm c, "_$CLUSTER_NAME".sl_subscribe slony_master
   where c.con_origin = slony_master.sub_provider and
-             not exists (select * from _$CLUSTER_NAME.sl_subscribe providers
+             not exists (select * from "_$CLUSTER_NAME".sl_subscribe providers
                   where providers.sub_receiver = slony_master.sub_provider and
                         providers.sub_set = slony_master.sub_set and
                         slony_master.sub_active = 't' and
                         providers.sub_active = 't') and
-        c.con_received = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
+        c.con_received = "_$CLUSTER_NAME".getLocalNodeId('_$CLUSTER_NAME') and
         now() - con_timestamp < '$killafter'::interval
 limit 1) as slave_confirmed_events
 union all (select
 now() - con_timestamp < '$killafter'::interval, now() - con_timestamp as age,
        con_timestamp
-from _$CLUSTER_NAME.sl_confirm c, _$CLUSTER_NAME.sl_subscribe slony_master
-  where c.con_origin = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
-             exists (select * from _$CLUSTER_NAME.sl_subscribe providers
-                  where providers.sub_provider = _$CLUSTER_NAME.getLocalNodeId('_$CLUSTER_NAME') and
+from "_$CLUSTER_NAME".sl_confirm c, "_$CLUSTER_NAME".sl_subscribe slony_master
+  where c.con_origin = "_$CLUSTER_NAME".getLocalNodeId('_$CLUSTER_NAME') and
+             exists (select * from "_$CLUSTER_NAME".sl_subscribe providers
+                  where providers.sub_provider = "_$CLUSTER_NAME".getLocalNodeId('_$CLUSTER_NAME') and
                         slony_master.sub_active = 't') and
         now() - con_timestamp < '$killafter'::interval
 limit 1)
