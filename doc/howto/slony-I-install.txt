@@ -2,27 +2,28 @@ Getting started with Slony-I
 
 Installation
 
-Before you can begin replicating your databases with Slony, you need to
+Before you can begin replicating your databases with Slony-I, you need to
 install it.
 
 Requirements:
 
 Any platform that can run PostgreSQL should be able to run Slony-I.  The
 platforms that have received specific testing at the time of this release are
-FreeBSD4X-i368, FreeBSD5X-i386 FreeBSD5X-alpha, OSX10.3, Linux2.4X-i386
+FreeBSD4X-i368, FreeBSD5X-i386, FreeBSD5X-alpha, OSX10.3, Linux2.4X-i386
 Linux2.6X-i386 Linux2.6X-amd64, Solaris2.8-SPARC, SOLARIS2.9-SPARC and
-OpenBSD-sparc64.
+OpenBSD3.5-sparc64.
 
 The following software packages are required to build Slony-I:
 
 GNU make.  Other make programs will not work.  GNU make is often installed
 under the name gmake; this document will always refer to it by that name. (On
 some systems GNU make is the default tool with the name make) to test for GNU
-make enter gmake version  It is recommended to use version 3.76 or later.
+make enter gmake version.  Version 3.76 or later is good.  Previous versions
+may not be.
 
 You need an ISO/ANSI C complier.  Recent versions of GCC work.
 
-A recent version of PostgreSQL *source* is also required.  Slony-I depends on
+You also need a recent version of PostgreSQL *source*.  Slony-I depends on
 namespace support so you must have version 7.3 or newer to be able to build
 and use Slony-I.
 
@@ -31,66 +32,66 @@ operating system, or you can find it at your local GNU mirror (see
 http://www.gnu.org/order/ftp.html for a list) or at ftp://ftp.gnu.org/gnu.)
 
 If you need to obtain PostgreSQL source, you can download it form your
-favorite PostgreSQL mirror (see http://www.postgresql.org/mirrors.php for a
-list), from http://www.postgresql.org/download or via BitTorrent at
-http://bt.postgresql.org/ .
+favorite PostgreSQL mirror (see <http://www.postgresql.org/mirrors-www.html>
+for a list), or via BitTorrent at <http://bt.postgresql.org/>.
 
 Also check to make sure you have sufficient disk space.  You will need
-approximately 5MB  for the source tree during build and installation.
+approximately 5MB for the source tree during build and installation.
 
-Getting Slony-I source
+Getting Slony-I Source
 
-You can get the Slony-I source from
-http://slony.org/
+You can get the Slony-I source from <http://slony.org/>
 
 After you have obtained the file, unpack it.
 
 gunzip slony.tar.gz
 tar xf slony.tar
 
-This will create a directory Slony under the current directory with the Slony
-sources.  Change into that that directory for the rest of the installation
-procedure.
+This will create a directory Slony-I under the current directory with the
+Slony-I sources.  Change into that that directory for the rest of the
+installation procedure.
 
 
 Short Version
 
-./configure with-pgsourcetree=<path/to/your/pgsql/source>
-make all
-make install
+./configure --with-pgsourcetree=<path/to/your/pgsql/source>
+gmake all
+gmake install
 
 1.  Configuration
 
 The first step of the installation procedure is to configure the source tree
 for your system.  This is done by running the configure script.  Configure
 needs to know where your PostgreSQL source tree is, this is done with the
-with-pgsourcetree=</path/to/your/pg/sources> option.
+--with-pgsourcetree=</path/to/your/pg/sources> option.
 
-Example: ./configure with-pgsourcetree=/usr/local/src/postgresql-7.4.3
+Example:
+
+./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
 
 This script will run a number of tests to guess values for various dependent
-variables and try to detect some quirks of your system.  Slony is known to
+variables and try to detect some quirks of your system.  Slony-I is known to
 need a modified version of libpq on specific platforms such as Solaris2.X on
-SPARC this patch can be found at http://slony.org/ 
+SPARC this patch can be found at <http://slony.org/>.
 
 2.  Build
 
 To start the build process, type
 
-gmake
+gmake all
 
 (Remember to use GNU make) The build make take any ware from 30 seconds to 2
 minutes depending on your hardware.  The last line displayed should be
 
 All of Slony-I is successfully made.  Ready to install.
 
-3.  Installing Slony
+3.  Installing Slony-I
 
 To install Slony-I, enter
 
 gmake install
 
 This will install files into postgresql install directory as specified by the
---PREFIX  option used in the PostgreSQL configuration.  Make sure you have
-appropriate permisions to write into that area.  Normally you need to do this
+--prefix option used in the PostgreSQL configuration.  Make sure you have
+appropriate permissions to write into that area.  Normally you need to do this
 as root.

@@ -1,4 +1,4 @@
-What is Slony?
+What is Slony-I?
 
 Slony-I is a "master to multiple slaves" replication system with cascading and
 faultier.  The big picture for the development of Slony-I is a master-slave

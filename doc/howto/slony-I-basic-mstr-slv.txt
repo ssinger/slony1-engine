@@ -2,10 +2,10 @@ Replicating Your First Database
 
 In this example, we will be replicating a brand new pgbench database.  The
 mechanics of replicating an existing database are covered here, however we
-recommend that you learn how Slony functions by using a fresh new
+recommend that you learn how Slony-I functions by using a fresh new
 non-production database.
 
-The Slony replication engine is trigger-based, allowing us to replicate
+The Slony-I replication engine is trigger-based, allowing us to replicate
 databases (or portions there of) running under the same postmaster.
 
 This example will show how to replicate the pgbench database running on
@@ -59,7 +59,7 @@ pg_dump.
 
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
 
-To illustrate how Slony-1 allows for on the fly replication subscription, lets
+To illustrate how Slony-I allows for on the fly replication subscription, lets
 start up pgbench.  If you run the pgbench application in the foreground of a
 separate terminal window, you can stop and restart it with different
 parameters at any time.  You'll need to re-export the variables again so they
@@ -118,7 +118,7 @@ slonik <<_EOF_
 	table add key (node id = 1, full qualified name = 'public.history');
 
 	#--
-    # Slony organizes tables into sets.  The smallest unit a node can
+    # Slony-I organizes tables into sets.  The smallest unit a node can
     # subscribe is a set The following commands create one set containing all
     # 4 pgbench tables.  The master or origin of the set is note 1.
 	#--
