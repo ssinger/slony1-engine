@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: create_set.pl,v 1.2 2004-08-04 15:09:47 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 require 'slon-tools.pm';
@@ -19,10 +19,10 @@ print OUTFILE genheader();
 
 foreach my $table (@SERIALTABLES) {
  print OUTFILE "
-		echo '  Adding unique key to table public.$table...';
+		echo '  Adding unique key to table $table...';
 		table add key (
 		    node id=1,
-		    full qualified name='public.$table'
+		    full qualified name='$table'
 		);
 ";
 }
@@ -58,10 +58,10 @@ foreach my $table (@SERIALTABLES) {
   if ($table =~ /^(.*\..*)$/) {
     # Table has a namespace specified
   } else {
-    $table = "public.$table";
+    $table = "$table";
   }
     print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table public.$table', key=serial);
+		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table', key=serial);
                 echo 'Add unkeyed table $table';
 "; 
   $TABLE_ID++;
@@ -74,7 +74,7 @@ foreach my $table (@KEYEDTABLES) {
     $table = "public.$table";
   }
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table public.$table');
+		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table');
                 echo 'Add keyed table $table';
 ";
   $TABLE_ID++;
@@ -98,7 +98,7 @@ foreach my $seq (@SEQUENCES) {
     $seq = "public.$seq";
   }
   print OUTFILE "
-                set add sequence (set id = $set, origin = 1, id = $SEQID, full qualified name = '$seq', comment = 'Sequence public.$seq');
+                set add sequence (set id = $set, origin = 1, id = $SEQID, full qualified name = '$seq', comment = 'Sequence $seq');
                 echo 'Add sequence $seq';
 ";
   $SEQID++;
