@@ -4,14 +4,14 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.8 2004-09-02 18:08:00 darcyb Exp $
+#	$Id: Makefile,v 1.9 2004-12-11 00:44:22 darcyb Exp $
 # ----------
 
 slony_subdir = doc
 slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
-SUBDIRS = concept implementation howto
+SUBDIRS = concept implementation howto adminguide support
 
 DISTFILES = Makefile
 
