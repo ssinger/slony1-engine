@@ -44,14 +44,14 @@ Preparing the databases
 createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 
-pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDB
+pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 
 Because Slony-I depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME.
 
-createlang plpgsql -h $MASTERHOST $MASTERDBNAME
+createlang -h $MASTERHOST plpgsql $MASTERDBNAME
 
 Slony-I does not yet automatically copy table definitions from a master when a
 slave subscribes to it, so we need to import this data.  We do this with
@@ -95,8 +95,8 @@ slonik <<_EOF_
     # node on each side of the cluster, the syntax is that of PQconnectdb in
     # the C-API
 	# --
-	node 1 admin conninfo 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	node 2 admin conninfo 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
+	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
     # init the first node.  Its id MUST be 1.  This creates the schema
