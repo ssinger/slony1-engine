@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.6 2004-03-18 19:32:21 wieck Exp $
+#	$Id: Makefile,v 1.7 2004-07-01 02:24:35 wieck Exp $
 # ----------
 
 subdir = src/ducttape
@@ -26,7 +26,7 @@ install: all installdirs
 
 
 installdirs:
-	$(mkinstalldirs) $(bindir)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
 
 
 
