@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.16 2004-08-03 18:16:49 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.17 2004-08-04 15:53:26 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1339,6 +1339,10 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.dropListen(int4, int4, int4) is
+'dropListen (li_origin, li_provider, li_receiver)
+
+Generate the DROP_LISTEN event.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropListen_int (li_origin, li_provider, li_receiver)
@@ -1369,6 +1373,11 @@ begin
 	end if;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.dropListen_int(int4, int4, int4) is
+'dropListen (li_origin, li_provider, li_receiver)
+
+Process the DROP_LISTEN event, deleting the sl_listen entry for
+the indicated (origin,provider,receiver) combination.';
 
 
 -- ----------------------------------------------------------------------
@@ -1399,7 +1408,8 @@ begin
 			p_set_id, v_local_node_id, p_set_comment);
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.store_set(int4, text) is
+'Generate STORE_SET event for set set_id with human readable comment set_comment';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeSet_int (set_id, set_origin, set_comment)
@@ -1441,6 +1451,11 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.storeSet_int(int4, int4, text) is
+'storeSet_int (set_id, set_origin, set_comment)
+
+Process the STORE_SET event, indicating the new set with given ID,
+origin node, and human readable comment.';
 
 
 -- ----------------------------------------------------------------------
@@ -1512,6 +1527,11 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.lockSet(int4) is 
+'lockSet(set_id)
+
+Add a special trigger to all tables of a set that disables access to
+it.';
 
 
 -- ----------------------------------------------------------------------
@@ -1580,7 +1600,8 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.unlockSet(int4) is
+'Remove the special trigger from all tables of a set that disables access to it.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION moveSet (set_id, new_origin)
@@ -1672,7 +1693,10 @@ begin
 			p_set_id, v_local_node_id, p_new_origin);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.moveSet(int4, int4) is 
+'moveSet(set_id, new_origin)
 
+Generate MOVE_SET event to request that the origin for set set_id be moved to node new_origin';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION moveSet_int (set_id, old_origin, new_origin)
@@ -1849,7 +1873,11 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.moveSet_int(int4, int4) is 
+'moveSet(set_id, old_origin, new_origin)
 
+Process MOVE_SET event to request that the origin for set set_id be
+moved from old_origin to node new_origin';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropSet (set_id)
@@ -1889,7 +1917,8 @@ begin
 			p_set_id);
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.dropSet(int4) is 
+'Generate DROP_SET event to drop replication of set set_id';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropSet_int (set_id)
@@ -1937,7 +1966,10 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.dropSet(int4) is 
+'Process DROP_SET event to drop replication of set set_id.  This involves:
+- Restoring original triggers and rules
+- Removing all traces of the set configuration, including sequences, tables, subscribers, syncs, and the set itself';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION mergeSet (set_id, add_id)
@@ -2015,7 +2047,11 @@ begin
 			p_set_id, p_add_id);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.mergeSet(int4, int4) is 
+'Generate MERGE_SET event to request that sets be merged together.
 
+Both sets must exist, and originate on the same node.  They must be
+subscribed by the same set of nodes.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION mergeSet_int (set_id, add_id)
@@ -2050,7 +2086,9 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.mergeSet_int(int4,int4) is
+'mergeSet_int(set_id, add_id) - Perform MERGE_SET event, merging all objects from 
+set add_id into set set_id.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_idxname,
@@ -2102,7 +2140,13 @@ begin
 			p_tab_idxname, p_tab_comment);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.setAddTable(int4, int4, text, name, text) is
+'setAddTable (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
 
+Add table tab_fqname to replication set on origin node, and generate
+SET_ADD_TABLE event to allow this to propagate to other nodes.
+
+Note that the table id, tab_id, must be unique ACROSS ALL SETS.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname,
@@ -2191,7 +2235,12 @@ begin
 	return p_tab_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text) is
+'setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
 
+This function processes the SET_ADD_TABLE event on remote nodes,
+adding a table to replication if the remote node is subscribing to its
+replication set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
@@ -2240,7 +2289,12 @@ begin
 			p_set_id, p_seq_id, p_fqname, p_seq_comment);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.setAddSequence (int4, int4, text, text) is
+'setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
 
+On the origin node for set set_id, add sequence seq_fqname to the
+replication set, and raise SET_ADD_SEQUENCE to cause this to replicate
+to subscriber nodes.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment
@@ -2332,7 +2386,11 @@ begin
 	return p_seq_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.setAddSequence_int(int4, int4, text, text) is
+'setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment)
 
+This processes the SET_ADD_SEQUENCE event.  On remote nodes that
+subscribe to set_id, add the sequence to the replication set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
@@ -2373,7 +2431,10 @@ begin
 	return p_seq_id;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) is
+'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
+Set sequence seq_id to have new value last_value.
+';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeTrigger (trig_tabid, trig_tgname)
@@ -2390,7 +2451,11 @@ begin
 			p_trig_tabid, p_trig_tgname);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.storeTrigger (int4, name) is
+'storeTrigger (trig_tabid, trig_tgname)
 
+Submits STORE_TRIGGER event to indicate that trigger trig_tgname on
+replicated table trig_tabid will NOT be disabled.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storeTrigger_int (trig_tabid, trig_tgname)
@@ -2450,7 +2515,11 @@ begin
 	return p_trig_tabid;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.storeTrigger_int (int4, name) is
+'storeTrigger_int (trig_tabid, trig_tgname)
 
+Processes STORE_TRIGGER event to make sure that trigger trig_tgname on
+replicated table trig_tabid is NOT disabled.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION dropTrigger (trig_tabid, trig_tgname)
@@ -2467,6 +2536,11 @@ begin
 			p_trig_tabid, p_trig_tgname);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.dropTrigger (int4, name) is
+'dropTrigger (trig_tabid, trig_tgname)
+
+Submits DROP_TRIGGER event to indicate that trigger trig_tgname on
+replicated table trig_tabid WILL be disabled.';
 
 
 -- ----------------------------------------------------------------------
@@ -2522,7 +2596,11 @@ begin
 	return p_trig_tabid;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.dropTrigger_int (int4, name) is
+'dropTrigger_int (trig_tabid, trig_tgname)
 
+Processes DROP_TRIGGER event to make sure that trigger trig_tgname on
+replicated table trig_tabid IS disabled.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION ddlScript (set_id, script)
@@ -2566,7 +2644,12 @@ begin
 			p_set_id, p_script);
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.ddlScript(int4, text) is
+'ddlScript(set_id, script)
 
+Generates a SYNC event, runs the script on the origin, and then
+generates a DDL_SCRIPT event to request it to be run on replicated
+slaves.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION ddlScript_int (set_id, script)
@@ -2634,7 +2717,12 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.ddlScript_int(int4, text) is
+'ddlScript_int(set_id, script)
 
+Processes the DDL_SCRIPT event.  On slave nodes, this restores
+original triggers/rules, runs the script, and then puts tables back
+into replicated mode.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableForReplication (tab_id)
