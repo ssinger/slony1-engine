@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.6.2.1 2004-09-30 17:37:28 cbbrowne Exp $
+$Id: README,v 1.6.2.2 2004-10-01 20:43:25 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -45,6 +45,8 @@ environment variable SLONYNODES.
   involved in the replication set, you will find the namespace
   "_$SETNAME" that contains Slony-I's configuration tables
 
+ $MASTERNODE is the number of the "master" node.  It defaults to 1, if
+ not otherwise set.
 
  Set Level Configuration
 -----------------------------------

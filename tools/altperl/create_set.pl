@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.6.2.1 2004-09-30 17:37:28 cbbrowne Exp $
+# $Id: create_set.pl,v 1.6.2.2 2004-10-01 20:43:25 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -36,7 +36,7 @@ print OUTFILE genheader();
 
 print OUTFILE "
 try {
-      create set (id = $set, origin = 1, comment = 'Set $set for $SETNAME');
+      create set (id = $set, origin = $MASTERNODE, comment = 'Set $set for $SETNAME');
 } on error {
       echo 'Could not create subscription set $set for $SETNAME!';
       exit -1;
@@ -60,7 +60,7 @@ if ($TABLE_ID < 1) {
 foreach my $table (@SERIALTABLES) {
   $table = ensure_namespace($table);
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table without primary key', key=serial);
+		set add table (set id = $set, origin = $MASTERNODE, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table without primary key', key=serial);
                 echo 'Add unkeyed table $table';
 "; 
   $TABLE_ID++;
@@ -69,7 +69,7 @@ foreach my $table (@SERIALTABLES) {
 foreach my $table (@PKEYEDTABLES) {
   $table = ensure_namespace($table);
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table with primary key');
+		set add table (set id = $set, origin = $MASTERNODE, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table with primary key');
                 echo 'Add primary keyed table $table';
 ";
   $TABLE_ID++;
@@ -79,7 +79,7 @@ foreach my $table (keys %KEYEDTABLES) {
   my $key = $KEYEDTABLES{$table};
   $table = ensure_namespace($table);
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', key='$key', comment = 'Table $table with candidate primary key $key');
+		set add table (set id = $set, origin = $MASTERNODE, id = $TABLE_ID, full qualified name = '$table', key='$key', comment = 'Table $table with candidate primary key $key');
                 echo 'Add candidate primary keyed table $table';
 ";
   $TABLE_ID++;
@@ -99,7 +99,7 @@ $SEQID=1;
 foreach my $seq (@SEQUENCES) {
   $seq = ensure_namespace($seq);
   print OUTFILE "
-                set add sequence (set id = $set, origin = 1, id = $SEQID, full qualified name = '$seq', comment = 'Sequence $seq');
+                set add sequence (set id = $set, origin = $MASTERNODE, id = $SEQID, full qualified name = '$seq', comment = 'Sequence $seq');
                 echo 'Add sequence $seq';
 ";
   $SEQID++;
