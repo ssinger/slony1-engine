@@ -1,25 +1,18 @@
 /*-------------------------------------------------------------------------
- * slon.c
+ * slon.h
  *
- *	The control framework for the node daemon.
+ *	Global definitions for the main replication engine.
  *
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.2 2003-12-03 19:29:53 wieck Exp $
+ *	$Id: slon.h,v 1.1 2003-12-03 19:29:53 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
+#ifndef SLON_H_INCLUDED
+#define SLON_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
-#include "slon.h"
+#endif /*  SLON_H_INCLUDED */
 
-int
-main (int argc, const char *argv[])
-{
-	printf("hello world\n");
-	return 0;
-}
