@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: slon_pushsql.pl,v 1.4 2004-09-15 21:56:37 cbbrowne Exp $
+# $Id: slon_pushsql.pl,v 1.5 2004-09-15 22:00:08 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -19,7 +19,8 @@ if ($node =~ /^node(\d+)$/) {
   die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
 }
 
-if ($file !=~ /^\//) {
+if ($file =~ /^\//) {
+} else {
   print "SQL script path needs to be a full path, i.e. /tmp/my_script.sql\n";
   die "Usage: ./slon_pushsql.pl set[N] node[N] full_path_to_sql_script_file\n";
 }
