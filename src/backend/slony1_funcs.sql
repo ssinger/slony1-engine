@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.42 2004-11-13 04:52:39 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.43 2004-11-19 23:47:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4646,26 +4646,28 @@ Rebuilding of sl_listen entries for one origin, receiver pair.';
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION generate_sync_event ()
+-- FUNCTION generate_sync_event (interval)
 --
---	This code will be run from inside the logtrigger() function,
---      and will create SYNC events every once in a while...
+--	This code can be used to create SYNC events every once in a while
+--      even if the 'master' slon daemon is down
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.generate_sync_event()
+create or replace function @NAMESPACE@.generate_sync_event(interval)
 returns int4
 as '
 declare
-	v_leventtime		timestamptz;
+	p_interval     alias for $1;
+	v_node_row     record;
 
 BEGIN
-	-- When was the last SYNC on this node?
-        select ev_timestamp into v_leventtime from @NAMESPACE@.sl_event 
-          where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId()
-          order by ev_origin, ev_seqno desc limit 1;
-
-	-- If there has been no SYNC in the last 30 seconds, then push one
-	if ev_timestamp + ''30 s''::interval < now() then
-		select @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+	select 1 into v_node_row from @NAMESPACE@.sl_event 
+       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''@NAMESPACE@'')
+          and ev_timestamp > now() - p_interval limit 1;
+	if not found then
+		-- If there has been no SYNC in the last interval, then push one
+		perform @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+		return 1;
+	else
+		return 0;
 	end if;
 END' language plpgsql;
 
@@ -4710,22 +4712,43 @@ as '
 DECLARE
 	v_row  record;
 BEGIN
-   select 1 into v_row 
-     from pg_namespace n, pg_class c, pg_attribute a
-     where
-        n.nspname = ''@NAMESPACE@'' and
-        c.relnamespace = n.oid and
-        c.relname = ''sl_node'' and
-        a.attrelid = c.oid and
-        a.attname = ''no_spool'';
-   if not found then
-	raise notice ''Upgrade sl_node - add field no_spool'';
+   if add_missing_table_field(@NAMESPACE@, ''sl_node'', ''no_spool'', ''boolean'') then
 	alter table @NAMESPACE@.sl_node
-            add column no_spool boolean default ''f'';
+            alter column no_spool set default = ''f'';
         update @NAMESPACE@.sl_node set no_spool = ''f'';
         return ''t'';
    end if;
-   return ''f'';
+   return ''t'';
+END;' language plpgsql;
+
+comment on function @NAMESPACE@.upgrade_sl_node() is
+  'Schema changes required to upgrade to version 1.1';
+
+create or replace function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
+returns bool as '
+DECLARE
+  p_namespace alias for $1;
+  p_table     alias for $2;
+  p_field     alias for $3;
+  p_type      alias for $4;
+  v_row       record;
+  v_query     text;
+BEGIN
+  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
+   where n.nspname = p_namespace and
+         c.relname = n.oid and
+         c.relname = p_table and
+         a.attrelid = c.oid and
+         a.attname = p_field;
+  if not found then
+    raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
+    v_query := ''alter table "'' || p_namespace || ''".'' || p_table || ' add column '';
+    v_query := v_query || p_field || '' type '' || p_type || '';'';
+    execute v_query;
+    return ''t'';
+  else
+    return ''f'';
+  end if;
 END;' language plpgsql;
 
 -- ----------------------------------------------------------------------

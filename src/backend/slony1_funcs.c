@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.26 2004-11-10 20:54:14 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.27 2004-11-19 23:47:03 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -140,7 +140,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	 * has the SPI plans that we need here.
 	 */
 	cs = getClusterStatus(PG_GETARG_NAME(0), 
-				PLAN_NOTIFY_EVENT | PLAN_INSERT_EVENT);
+						  PLAN_NOTIFY_EVENT | PLAN_INSERT_EVENT);
 
 	buf_size = 8192;
 	buf = palloc(buf_size);
@@ -1299,11 +1299,11 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * Create the saved plan's
 		 */
 		sprintf(query, "INSERT INTO %s.sl_log_1 "
-			"(log_origin, log_xid, log_tableid, log_actionseq,"
-			" log_cmdtype, log_cmddata) "
-			"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
-			" $3, $4);",
-			cs->clusterident, cs->localNodeId, cs->clusterident);
+				"(log_origin, log_xid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
+				" $3, $4);",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
 		plan_types[0] = xxid_typid;
 		plan_types[1] = INT4OID;
 		plan_types[2] = TEXTOID;
