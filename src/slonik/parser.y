@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.6 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: parser.y,v 1.7 2004-03-23 21:37:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -119,6 +119,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
 %type <statement>	stmt_drop_node
+%type <statement>	stmt_uninstall_node
 %type <statement>	stmt_store_path
 %type <statement>	stmt_drop_path
 %type <statement>	stmt_store_listen
@@ -187,6 +188,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_TABLE
 %token	K_TRUE
 %token	K_TRY
+%token	K_UNINSTALL
 %token	K_UNLOCK
 %token	K_UNSUBSCRIBE
 %token	K_YES
@@ -322,6 +324,8 @@ try_stmt			: stmt_echo
 					| stmt_store_node
 						{ $$ = $1; }
 					| stmt_drop_node
+						{ $$ = $1; }
+					| stmt_uninstall_node
 						{ $$ = $1; }
 					| stmt_store_path
 						{ $$ = $1; }
@@ -499,6 +503,30 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						{
 							new->no_id			= opt[0].ival;
 							new->ev_origin		= opt[1].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_uninstall_node	: lno K_UNINSTALL K_NODE option_list
+					{
+						SlonikStmt_uninstall_node *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_uninstall_node *)
+								malloc(sizeof(SlonikStmt_uninstall_node));
+						memset(new, 0, sizeof(SlonikStmt_uninstall_node));
+						new->hdr.stmt_type		= STMT_UNINSTALL_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
 						}
 
 						$$ = (SlonikStmt *)new;

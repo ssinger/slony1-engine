@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.5 2004-03-20 02:25:47 wieck Exp $
+ *	$Id: scan.l,v 1.6 2004-03-23 21:37:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -82,6 +82,7 @@ success			{ return K_SUCCESS;				}
 table			{ return K_TABLE;				}
 true			{ return K_TRUE;				}
 try				{ return K_TRY;					}
+uninstall		{ return K_UNINSTALL;			}
 unlock			{ return K_UNLOCK;				}
 unsubscribe		{ return K_UNSUBSCRIBE;			}
 yes				{ return K_YES;					}
@@ -98,7 +99,6 @@ yes				{ return K_YES;					}
 <IN_STRING>\\.	{ }
 <IN_STRING>\\	{ }
 <IN_STRING>''	{ }
-<IN_STRING>\\.	{ }
 <IN_STRING>'	{
 				  yyleng += (yytext - start_charpos) - 2;
 				  yytext = start_charpos + 1;

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.10 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: slonik.c,v 1.11 2004-03-23 21:37:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -307,6 +307,16 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 						errors++;
 					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_UNINSTALL_NODE:
+				{
+					SlonikStmt_uninstall_node *stmt =
+							(SlonikStmt_uninstall_node *)hdr;
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
 				}
 				break;
@@ -770,6 +780,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_drop_node *)hdr;
 
 					if (slonik_drop_node(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_UNINSTALL_NODE:
+				{
+					SlonikStmt_uninstall_node *stmt =
+							(SlonikStmt_uninstall_node *)hdr;
+
+					if (slonik_uninstall_node(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1601,6 +1621,56 @@ slonik_drop_node(SlonikStmt_drop_node *stmt)
 
 
 int
+slonik_uninstall_node(SlonikStmt_uninstall_node *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".uninstallNode(); ",
+			stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	slon_mkquery(&query,
+			"drop schema \"_%s\" cascade; ",
+			stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	db_disconnect((SlonikStmt *)stmt, adminfo1);
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
 slonik_store_path(SlonikStmt_store_path *stmt)
 {
 	SlonikAdmInfo  *adminfo1;
@@ -1988,8 +2058,6 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 		return -1;
 	}
 
-	printf("lockSet(%d): waiting for xmin to become >= %s\n",
-			stmt->set_id, maxxid_lock);
 	slon_mkquery(&query,
 			"select \"_%s\".getMinXid() >= '%s'; ",
 			stmt->hdr.script->clustername, maxxid_lock);
@@ -2015,11 +2083,9 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 			return -1;
 		}
 
-		printf("    not yet\n");
 		sleep(1);
 	}
 
-	printf("    done\n");
 	PQclear(res1);
 	PQclear(res2);
 	dstring_free(&query);
