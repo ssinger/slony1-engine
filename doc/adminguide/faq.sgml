@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.10 2005-01-18 22:57:35 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.11 2005-01-18 23:03:27 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -928,6 +928,86 @@ the fact that the application imagins that numerous of them are left
 idle in transaction for hours at a time.  </para> </answer>
 
 </qandaentry> 
+
+<qandaentry>
+
+<question>
+<para> Behaviour - all the nodes fall behind, and all the logs have the following error message repeating in them (when I encountered it, there was a nice long sql statement above each entry):
+
+<screen>
+ERROR remoteWorkerThread_1: helper 1 finished with error
+ERROR remoteWorkerThread_1: SYNC aborted
+</screen>
+</question>
+
+<answer>
+<para>
+Cause: you have likely issued alter table statements directly on the
+databases instead of using the slonik <link linkend="stmtddlscript">
+execute script </link> command.
+
+<para>The solution is to rebuild the trigger on the affected table and
+fix the entries in <envar>sl_log_1 </envar> by hand.
+
+<itemizedlist>
+<listitem><para>
+You'll need to identify from either the slony logs, or the postgres db logs exactly what the statement is that is causing the error.
+
+<listitem><para>
+You need to fix the Slony-defined triggers on the table in question.  This is done with the following procedure.
+
+<screen>
+BEGIN;
+LOCK TABLE <table_name>;
+SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+COMMIT;
+</screen>
+
+<para>You then need to find the rows in <envar> sl_log_1 </envar> that
+have bad entries and fix them.  You may want to take down the slons
+for all nodes except the master, that way if you make a mistake, it
+won't propgate through to the slave.
+
+<para> Here is an example:
+
+<screen>
+BEGIN;
+
+LOCK TABLE customer_account;
+
+SELECT _app1.altertablerestore(31);
+SELECT _app1.altertableforreplication(31);
+COMMIT;
+
+BEGIN;
+LOCK TABLE txn_log;
+
+SELECT _app1.altertablerestore(41);
+SELECT _app1.altertableforreplication(41);
+
+COMMIT;
+
+--fixing customer_account, which had an attempt to insert a "" into a timestamp with timezone.
+BEGIN;
+
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67796036';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60690.00'' where pkey=''49''' where log_actionseq = '67796194';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67795881';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''1852.00'' where pkey=''57''' where log_actionseq = '67796403';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''87906.00'' where pkey=''8''' where log_actionseq = '68352967';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125180.00'' where pkey=''60''' where log_actionseq = '68386951';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125198.00'' where pkey=''60''' where log_actionseq = '68387055';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125174.00'' where pkey=''60''' where log_actionseq = '68386682';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125186.00'' where pkey=''60''' where log_actionseq = '68386992';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''' where log_actionseq = '68387029';
+
+</screen>
+
+</itemizedlist>
+</answer>
+
+</qandaentry>
 
 </qandaset>
 
