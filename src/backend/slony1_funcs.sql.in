@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.19 2004-03-02 21:49:13 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.20 2004-03-04 18:42:11 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -82,6 +82,39 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.getLocalNodeId (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_getLocalNodeId'
+	language C
+	security definer;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setSessionRole (name, role)
+--
+--	
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.setSessionRole (name, text) returns text
+    as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
+	language C
+	security definer;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION getSessionRole (name, role)
+--
+--	
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.getSessionRole (name) returns text
+    as '$libdir/slony1_funcs', '_Slony_I_getSessionRole'
+	language C
+	security definer;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logTrigger ()
+--
+--	
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.logTrigger () returns trigger
+    as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
 	language C
 	security definer;
 
@@ -1003,7 +1036,7 @@ begin
 	execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || p_tab_id || ''"
 			after insert or update or delete on '' || p_tab_fqname || ''
 			for each row execute procedure
-			@NAMESPACE@.logTrigger (''''@NAMESPACE@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
+			@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
 
 	return p_tab_id;
 end;

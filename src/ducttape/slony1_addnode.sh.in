@@ -6,7 +6,7 @@
 #	the base schema and support functions into the database, and
 #	establish path and listen information for it.
 #
-# $Id: slony1_addnode.sh.in,v 1.5 2004-03-03 21:52:46 wieck Exp $
+# $Id: slony1_addnode.sh.in,v 1.6 2004-03-04 18:42:11 wieck Exp $
 # ----------------------------------------------------------------------
 
 # ----
@@ -154,7 +154,6 @@ case $base_version in
 						${libdir}/slony1_base.$bfiles.sql				\
 						${libdir}/slony1_funcs.sql						\
 						${libdir}/slony1_funcs.$bfiles.sql				\
-						${libdir}/Prototype_log_trigger.sql				\
 						| sed -e "s/@CLUSTERNAME@/${clustername}/g"		\
 							  -e "s/@NAMESPACE@/\\\"${namespace}\\\"/g"
 

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.4 2004-02-25 19:47:37 wieck Exp $
+#	$Id: Makefile,v 1.5 2004-03-04 18:42:11 wieck Exp $
 # ----------
 
 subdir = src/backend
@@ -26,8 +26,7 @@ SQL_NAMES =				\
 	$(BASE_COMMON)		\
 	$(FUNCS_COMMON)		\
 	$(BASE_73)			\
-	$(FUNCS_73)			\
-	../ducttape/Prototype_log_trigger.sql
+	$(FUNCS_73)
 
 ALL = $(SQL_NAMES)		\
 	$(FUNCS_SONAME)
@@ -39,7 +38,6 @@ $(FUNCS_SONAME):	$(FUNCS_SOOBJS)
 
 clean distclean maintainer-clean:
 	rm -f $(FUNCS_SONAME) $(FUNCS_SOOBJS) $(FUNCS_COMMON)
-	rm -f ../ducttape/Prototype_log_trigger.sql
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(FUNCS_SONAME) $(libdir)
