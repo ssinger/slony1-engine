@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.18 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: local_listen.c,v 1.19 2004-05-19 19:38:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -345,6 +345,26 @@ localListenThread_main(void *dummy)
 			{
 				/*
 				 * ADJUST_SEQ
+				 */
+			}
+			else if (strcmp(ev_type, "STORE_TRIGGER") == 0)
+			{
+				/*
+				 * STORE_TRIGGER
+				 */
+
+				/*
+				 * Nothing to do ATM
+				 */
+			}
+			else if (strcmp(ev_type, "DROP_TRIGGER") == 0)
+			{
+				/*
+				 * DROP_TRIGGER
+				 */
+
+				/*
+				 * Nothing to do ATM
 				 */
 			}
 			else if (strcmp(ev_type, "MOVE_SET") == 0)

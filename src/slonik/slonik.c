@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.16 2004-05-18 23:15:50 wieck Exp $
+ *	$Id: slonik.c,v 1.17 2004-05-19 19:38:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -548,6 +548,64 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_STORE_TRIGGER:
+				{
+					SlonikStmt_store_trigger *stmt =
+							(SlonikStmt_store_trigger *)hdr;
+
+					if (stmt->ev_origin < 0)
+					{
+						stmt->ev_origin = 1;
+					}
+					if (stmt->trig_tabid < 0)
+					{
+						printf("%s:%d: Error: "
+								"table id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->trig_tgname == NULL)
+					{
+						printf("%s:%d: Error: "
+								"trigger name must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_TRIGGER:
+				{
+					SlonikStmt_drop_trigger *stmt =
+							(SlonikStmt_drop_trigger *)hdr;
+
+					if (stmt->ev_origin < 0)
+					{
+						stmt->ev_origin = 1;
+					}
+					if (stmt->trig_tabid < 0)
+					{
+						printf("%s:%d: Error: "
+								"table id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->trig_tgname == NULL)
+					{
+						printf("%s:%d: Error: "
+								"trigger name must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_SUBSCRIBE_SET:
 				{
 					SlonikStmt_subscribe_set *stmt =
@@ -933,6 +991,26 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_table_add_key *)hdr;
 
 					if (slonik_table_add_key(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_STORE_TRIGGER:
+				{
+					SlonikStmt_store_trigger *stmt =
+							(SlonikStmt_store_trigger *)hdr;
+
+					if (slonik_store_trigger(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DROP_TRIGGER:
+				{
+					SlonikStmt_drop_trigger *stmt =
+							(SlonikStmt_drop_trigger *)hdr;
+
+					if (slonik_drop_trigger(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -2601,6 +2679,66 @@ slonik_table_add_key(SlonikStmt_table_add_key *stmt)
 		return -1;
 	}
 	db_notice_silent = false;
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_store_trigger(SlonikStmt_store_trigger *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".storeTrigger(%d, '%q'); ",
+			stmt->hdr.script->clustername,
+			stmt->trig_tabid, stmt->trig_tgname);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_drop_trigger(SlonikStmt_drop_trigger *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".dropTrigger(%d, '%q'); ",
+			stmt->hdr.script->clustername,
+			stmt->trig_tabid, stmt->trig_tgname);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
 
 	dstring_free(&query);
 	return 0;

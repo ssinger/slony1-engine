@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.15 2004-04-14 20:18:12 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.16 2004-05-19 19:38:28 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -312,7 +312,11 @@ _Slony_I_getSessionRole(PG_FUNCTION_ARGS)
 	switch (cs->session_role)
 	{
 		case SLON_ROLE_UNSET:
-			elog(ERROR, "Slony-I: session_role not set");
+			cs->session_role = SLON_ROLE_NORMAL;
+			retval = palloc(VARHDRSZ + 6);
+			VARATT_SIZEP(retval) = VARHDRSZ + 6;
+			memcpy(VARDATA(retval), "normal", 6);
+			break;
 
 		case SLON_ROLE_NORMAL:
 			retval = palloc(VARHDRSZ + 6);

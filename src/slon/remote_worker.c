@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.42 2004-05-18 23:15:50 wieck Exp $
+ *	$Id: remote_worker.c,v 1.43 2004-05-19 19:38:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -627,6 +627,26 @@ remoteWorkerThread_main(void *cdata)
 				 * sequences information is not maintained in
 				 * the runtime configuration.
 				 */
+			}
+			else if (strcmp(event->ev_type, "STORE_TRIGGER") == 0)
+			{
+				int		trig_tabid = (int) strtol(event->ev_data1, NULL, 10);
+				char   *trig_tgname = event->ev_data2;
+
+				slon_appendquery(&query1,
+						"select %s.storeTrigger_int(%d, '%q'); ",
+						rtcfg_namespace,
+						trig_tabid, trig_tgname);
+			}
+			else if (strcmp(event->ev_type, "DROP_TRIGGER") == 0)
+			{
+				int		trig_tabid = (int) strtol(event->ev_data1, NULL, 10);
+				char   *trig_tgname = event->ev_data2;
+
+				slon_appendquery(&query1,
+						"select %s.dropTrigger_int(%d, '%q'); ",
+						rtcfg_namespace,
+						trig_tabid, trig_tgname);
 			}
 			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
 			{
@@ -1693,7 +1713,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	SlonDString		query1;
 	SlonDString		query2;
 	int				ntuples1;
+	int				ntuples2;
 	int				tupno1;
+	int				tupno2;
 	PGresult	   *res1;
 	PGresult	   *res2;
 	PGresult	   *res3;
@@ -1991,6 +2013,42 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			dstring_free(&query1);
 			return -1;
 		}
+
+		/*
+		 * Copy the content of sl_trigger for this table
+		 */
+		slon_mkquery(&query1,
+				"select trig_tgname from %s.sl_trigger "
+				"where trig_tabid = %d; ",
+				rtcfg_namespace, tab_id);
+		res2 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		ntuples2 = PQntuples(res2);
+		for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
+		{
+			slon_mkquery(&query1,
+					"select %s.storeTrigger(%d, '%q'); ",
+					rtcfg_namespace, tab_id, PQgetvalue(res2, tupno2, 0));
+			if (query_execute(node, loc_dbconn, &query1) < 0)
+			{
+				PQclear(res2);
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				return -1;
+			}
+		}
+		PQclear(res2);
 
 		/*
 		 * Begin a COPY from stdin for the table on the local DB

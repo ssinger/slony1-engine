@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.12 2004-05-18 23:15:50 wieck Exp $
+-- $Id: slony1_base.sql,v 1.13 2004-05-19 19:38:28 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -84,6 +84,22 @@ create table @NAMESPACE@.sl_table (
 	CONSTRAINT "tab_set-set_id-ref"
 		FOREIGN KEY (tab_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
+);
+
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_trigger
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_trigger (
+	trig_tabid			int4,
+	trig_tgname			name,
+
+	CONSTRAINT "sl_trigger-pkey"
+		PRIMARY KEY (trig_tabid, trig_tgname),
+	CONSTRAINT "trig_tabid-tab_id-ref"
+		FOREIGN KEY (trig_tabid)
+		REFERENCES @NAMESPACE@.sl_table (tab_id)
+		ON DELETE CASCADE
 );
 
 

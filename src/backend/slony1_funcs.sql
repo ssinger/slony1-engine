@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.6 2004-05-18 23:15:50 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.7 2004-05-19 19:38:28 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2116,6 +2116,159 @@ end;
 
 
 -- ----------------------------------------------------------------------
+-- FUNCTION storeTrigger (trig_tabid, trig_tgname)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeTrigger (int4, name)
+returns int4
+as '
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+begin
+	perform @NAMESPACE@.storeTrigger_int(p_trig_tabid, p_trig_tgname);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_TRIGGER'',
+			p_trig_tabid, p_trig_tgname);
+
+	return p_trig_tabid;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeTrigger_int (trig_tabid, trig_tgname)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeTrigger_int (int4, name)
+returns int4
+as '
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+	v_tab_altered		boolean;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the current table status (altered or not)
+	-- ----
+	select tab_altered into v_tab_altered
+			from @NAMESPACE@.sl_table where tab_id = p_trig_tabid;
+	if not found then
+		-- ----
+		-- Not found is no hard error here, because that might
+		-- mean that we are not subscribed to that set
+		-- ----
+		return 0;
+	end if;
+
+	-- ----
+	-- If the table is modified for replication, restore the original state
+	-- ----
+	if v_tab_altered then
+		perform @NAMESPACE@.alterTableRestore(p_trig_tabid);
+	end if;
+
+	-- ----
+	-- Make sure that an entry for this trigger exists
+	-- ----
+	delete from @NAMESPACE@.sl_trigger
+			where trig_tabid = p_trig_tabid
+			  and trig_tgname = p_trig_tgname;
+	insert into @NAMESPACE@.sl_trigger (
+				trig_tabid, trig_tgname
+			) values (
+				p_trig_tabid, p_trig_tgname
+			);
+
+	-- ----
+	-- Put the table back into replicated state if it was
+	-- ----
+	if v_tab_altered then
+		perform @NAMESPACE@.alterTableForReplication(p_trig_tabid);
+	end if;
+
+	return p_trig_tabid;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION dropTrigger (trig_tabid, trig_tgname)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.dropTrigger (int4, name)
+returns int4
+as '
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+begin
+	perform @NAMESPACE@.dropTrigger_int(p_trig_tabid, p_trig_tgname);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_TRIGGER'',
+			p_trig_tabid, p_trig_tgname);
+
+	return p_trig_tabid;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION dropTrigger_int (trig_tabid, trig_tgname)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.dropTrigger_int (int4, name)
+returns int4
+as '
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+	v_tab_altered		boolean;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the current table status (altered or not)
+	-- ----
+	select tab_altered into v_tab_altered
+			from @NAMESPACE@.sl_table where tab_id = p_trig_tabid;
+	if not found then
+		-- ----
+		-- Not found is no hard error here, because that might
+		-- mean that we are not subscribed to that set
+		-- ----
+		return 0;
+	end if;
+
+	-- ----
+	-- If the table is modified for replication, restore the original state
+	-- ----
+	if v_tab_altered then
+		perform @NAMESPACE@.alterTableRestore(p_trig_tabid);
+	end if;
+
+	-- ----
+	-- Remove the entry from sl_trigger
+	-- ----
+	delete from @NAMESPACE@.sl_trigger
+			where trig_tabid = p_trig_tabid
+			  and trig_tgname = p_trig_tgname;
+
+	-- ----
+	-- Put the table back into replicated state if it was
+	-- ----
+	if v_tab_altered then
+		perform @NAMESPACE@.alterTableForReplication(p_trig_tabid);
+	end if;
+
+	return p_trig_tabid;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
 -- FUNCTION alterTableForReplication (tab_id)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.alterTableForReplication (int4)
@@ -2198,7 +2351,14 @@ begin
 		-- ----
 		update "pg_catalog".pg_trigger
 				set tgrelid = v_tab_row.indexrelid
-				where tgrelid = v_tab_row.tab_reloid;
+				where tgrelid = v_tab_row.tab_reloid
+				and not exists (
+						select true from @NAMESPACE@.sl_table TAB,
+								@NAMESPACE@.sl_trigger TRIG
+								where TAB.tab_reloid = tgrelid
+								and TAB.tab_id = TRIG.trig_tabid
+								and TRIG.trig_tgname = tgname
+					);
 		get diagnostics v_n = row_count;
 		if v_n > 0 then
 			update "pg_catalog".pg_class

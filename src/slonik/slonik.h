@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.10 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: slonik.h,v 1.11 2004-05-19 19:38:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -31,6 +31,8 @@ typedef struct SlonikStmt_create_set_s			SlonikStmt_create_set;
 typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
 typedef struct SlonikStmt_set_add_sequence_s	SlonikStmt_set_add_sequence;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
+typedef struct SlonikStmt_store_trigger_s		SlonikStmt_store_trigger;
+typedef struct SlonikStmt_drop_trigger_s		SlonikStmt_drop_trigger;
 typedef struct SlonikStmt_subscribe_set_s		SlonikStmt_subscribe_set;
 typedef struct SlonikStmt_unsubscribe_set_s		SlonikStmt_unsubscribe_set;
 typedef struct SlonikStmt_lock_set_s			SlonikStmt_lock_set;
@@ -39,25 +41,27 @@ typedef struct SlonikStmt_move_set_s			SlonikStmt_move_set;
 
 typedef enum {
 	STMT_TRY = 1,
-	STMT_ECHO,
-	STMT_EXIT,
-	STMT_RESTART_NODE,
 	STMT_CREATE_SET,
 	STMT_DROP_LISTEN,
+	STMT_DROP_NODE,
 	STMT_DROP_PATH,
+	STMT_DROP_TRIGGER,
+	STMT_ECHO,
+	STMT_EXIT,
+	STMT_FAILED_NODE,
 	STMT_INIT_CLUSTER,
 	STMT_LOCK_SET,
 	STMT_MOVE_SET,
-	STMT_SET_ADD_TABLE,
+	STMT_RESTART_NODE,
 	STMT_SET_ADD_SEQUENCE,
+	STMT_SET_ADD_TABLE,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
-	STMT_DROP_NODE,
-	STMT_FAILED_NODE,
-	STMT_UNINSTALL_NODE,
 	STMT_STORE_PATH,
+	STMT_STORE_TRIGGER,
 	STMT_SUBSCRIBE_SET,
 	STMT_TABLE_ADD_KEY,
+	STMT_UNINSTALL_NODE,
 	STMT_UNLOCK_SET,
 	STMT_UNSUBSCRIBE_SET,
 	STMT_ERROR
@@ -228,6 +232,22 @@ struct SlonikStmt_table_add_key_s {
 };
 
 
+struct SlonikStmt_store_trigger_s {
+	SlonikStmt			hdr;
+	int					trig_tabid;
+	char			   *trig_tgname;
+	int					ev_origin;
+};
+
+
+struct SlonikStmt_drop_trigger_s {
+	SlonikStmt			hdr;
+	int					trig_tabid;
+	char			   *trig_tgname;
+	int					ev_origin;
+};
+
+
 struct SlonikStmt_subscribe_set_s {
 	SlonikStmt			hdr;
 	int					sub_setid;
@@ -371,6 +391,8 @@ extern int		slonik_create_set(SlonikStmt_create_set *stmt);
 extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
 extern int		slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);
+extern int		slonik_store_trigger(SlonikStmt_store_trigger *stmt);
+extern int		slonik_drop_trigger(SlonikStmt_drop_trigger *stmt);
 extern int		slonik_subscribe_set(SlonikStmt_subscribe_set *stmt);
 extern int		slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt);
 extern int		slonik_lock_set(SlonikStmt_lock_set *stmt);

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.10 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: parser.y,v 1.11 2004-05-19 19:38:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,6 +38,8 @@ typedef enum {
 	O_SERVER,
 	O_SER_KEY,
 	O_SET_ID,
+	O_TAB_ID,
+	O_TRIG_NAME,
 	O_USE_KEY,
 
 	END_OF_OPTIONS = -1
@@ -131,6 +133,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_set_add_table
 %type <statement>	stmt_set_add_sequence
 %type <statement>	stmt_table_add_key
+%type <statement>	stmt_store_trigger
+%type <statement>	stmt_drop_trigger
 %type <statement>	stmt_subscribe_set
 %type <statement>	stmt_unsubscribe_set
 %type <statement>	stmt_lock_set
@@ -193,6 +197,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
 %token	K_TABLE
+%token	K_TRIGGER
 %token	K_TRUE
 %token	K_TRY
 %token	K_UNINSTALL
@@ -400,6 +405,10 @@ try_stmt			: stmt_echo
 					| stmt_set_add_table
 						{ $$ = $1; }
 					| stmt_set_add_sequence
+						{ $$ = $1; }
+					| stmt_store_trigger
+						{ $$ = $1; }
+					| stmt_drop_trigger
 						{ $$ = $1; }
 					| stmt_subscribe_set
 						{ $$ = $1; }
@@ -855,6 +864,62 @@ stmt_set_add_sequence : lno K_SET K_ADD K_SEQUENCE option_list
 					}
 					;
 
+stmt_store_trigger	: lno K_STORE K_TRIGGER option_list
+					{
+						SlonikStmt_store_trigger *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_TAB_ID, -1 ),
+							STMT_OPTION_STR( O_TRIG_NAME, NULL ),
+							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_store_trigger *)
+								malloc(sizeof(SlonikStmt_store_trigger));
+						memset(new, 0, sizeof(SlonikStmt_store_trigger));
+						new->hdr.stmt_type		= STMT_STORE_TRIGGER;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->trig_tabid		= opt[0].ival;
+							new->trig_tgname	= opt[1].str;
+							new->ev_origin		= opt[2].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_drop_trigger	: lno K_DROP K_TRIGGER option_list
+					{
+						SlonikStmt_drop_trigger *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_TAB_ID, -1 ),
+							STMT_OPTION_STR( O_TRIG_NAME, NULL ),
+							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_drop_trigger *)
+								malloc(sizeof(SlonikStmt_drop_trigger));
+						memset(new, 0, sizeof(SlonikStmt_drop_trigger));
+						new->hdr.stmt_type		= STMT_DROP_TRIGGER;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->trig_tabid		= opt[0].ival;
+							new->trig_tgname	= opt[1].str;
+							new->ev_origin		= opt[2].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
 stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 					{
 						SlonikStmt_subscribe_set *new;
@@ -1078,6 +1143,16 @@ option_list_item	: K_ID '=' option_item_id
 						$4->opt_code	= O_NODE_ID;
 						$$ = $4;
 					}
+					| K_TABLE K_ID '=' option_item_id
+					{
+						$4->opt_code	= O_TAB_ID;
+						$$ = $4;
+					}
+					| K_TRIGGER K_NAME '=' option_item_literal
+					{
+						$4->opt_code	= O_TRIG_NAME;
+						$$ = $4;
+					}
 					| K_FULL K_QUALIFIED K_NAME '=' option_item_literal
 					{
 						$5->opt_code	= O_FQNAME;
@@ -1226,19 +1301,21 @@ option_str(option_code opt_code)
 		case O_CONNINFO:		return "conninfo";
 		case O_CONNRETRY:		return "connretry";
 		case O_EVENT_NODE:		return "event node";
+		case O_FORWARD:			return "forward";
 		case O_FQNAME:			return "full qualified name";
 		case O_ID:				return "id";
+		case O_NEW_ORIGIN:		return "new origin";
 		case O_NODE_ID:			return "node id";
+		case O_OLD_ORIGIN:		return "old origin";
 		case O_ORIGIN:			return "origin";
 		case O_PROVIDER:		return "provider";
 		case O_RECEIVER:		return "receiver";
 		case O_SERVER:			return "server";
 		case O_SER_KEY:			return "key";
 		case O_SET_ID:			return "set id";
+		case O_TAB_ID:			return "table id";
+		case O_TRIG_NAME:		return "trigger name";
 		case O_USE_KEY:			return "key";
-		case O_FORWARD:			return "forward";
-		case O_NEW_ORIGIN:		return "new origin";
-		case O_OLD_ORIGIN:		return "old origin";
 		case END_OF_OPTIONS:	return "???";
 	}
 	return "???";
