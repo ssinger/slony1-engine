@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.44 2005-03-23 22:59:22 darcyb Exp $
+# $Id: configure.ac,v 1.45 2005-04-06 19:00:54 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -128,7 +128,7 @@ AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>  Location of 
 AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of the PostgreSQL libs. ])
 AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
-AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. ])
+AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. **EXPERIMENTAL** ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation Default is $PREFIX/doc. ])
 #Our current path
