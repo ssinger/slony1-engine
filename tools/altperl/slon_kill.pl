@@ -1,5 +1,5 @@
 #!/usr/bin/perl # -*- perl -*-
-# $Id: slon_kill.pl,v 1.5 2005-01-10 17:03:16 cbbrowne Exp $
+# $Id: slon_kill.pl,v 1.6 2005-01-17 21:49:22 cbbrowne Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
@@ -9,8 +9,9 @@ use Getopt::Long;
 $SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
 $SHOW_USAGE    = 0;          # Show usage, then quit
 
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
+# Read command-line options
+GetOptions("config=s"  => \$SLON_ENV_FILE,
+	   "help"      => \$SHOW_USAGE);
 
 my $USAGE =
 "Usage: slon_kill.pl [--config file]
@@ -24,6 +25,9 @@ if ($SHOW_USAGE) {
   print $USAGE;
   exit 0;
 }
+
+require 'slon-tools.pm';
+require $SLON_ENV_FILE;
 
 print "slon_kill.pl...   Killing all slon and slon_watchdog instances for setname $SETNAME\n";
 print "1.  Kill slon watchdogs\n";
