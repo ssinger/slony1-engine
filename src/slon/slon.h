@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.26 2004-03-17 22:35:19 wieck Exp $
+ *	$Id: slon.h,v 1.27 2004-03-20 02:25:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -354,6 +354,7 @@ extern void		rtcfg_storeSubscribe(int sub_set, int sub_provider,
 							char *sub_forward);
 extern void		rtcfg_enableSubscription(int sub_set, int sub_provider,
 							char *sub_forward);
+extern void		rtcfg_unsubscribeSet(int sub_set);
 
 extern void		rtcfg_needActivate(int no_id);
 extern void		rtcfg_doActivate(void);

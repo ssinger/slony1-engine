@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.29 2004-03-18 17:29:17 wieck Exp $
+ *	$Id: remote_worker.c,v 1.30 2004-03-20 02:25:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -711,6 +711,21 @@ remoteWorkerThread_main(void *cdata)
 							sub_set, sub_receiver);
 				}
 
+			}
+			else if (strcmp(event->ev_type, "UNSUBSCRIBE_SET") == 0)
+			{
+				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
+				int		sub_receiver = (int) strtol(event->ev_data2, NULL, 10);
+
+				/*
+				 * All the real work is done when the config utility
+				 * calls unsubscribeSet() itself. Just propagate the
+				 * event here.
+				 */
+				slon_appendquery(&query1,
+						"select %s.unsubscribeSet_int(%d, %d); ",
+						rtcfg_namespace,
+						sub_set, sub_receiver);
 			}
 			else
 			{

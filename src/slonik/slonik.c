@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.8 2004-03-18 22:47:00 wieck Exp $
+ *	$Id: slonik.c,v 1.9 2004-03-20 02:25:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -493,6 +493,24 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_UNSUBSCRIBE_SET:
+				{
+					SlonikStmt_unsubscribe_set *stmt =
+							(SlonikStmt_unsubscribe_set *)hdr;
+
+					if (stmt->sub_setid < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->sub_receiver) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_LOCK_SET:
 				{
 					SlonikStmt_lock_set *stmt =
@@ -809,6 +827,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_UNSUBSCRIBE_SET:
+				{
+					SlonikStmt_unsubscribe_set *stmt =
+							(SlonikStmt_unsubscribe_set *)hdr;
+
+					if (slonik_unsubscribe_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_LOCK_SET:
 				{
 					SlonikStmt_lock_set *stmt =
@@ -956,6 +984,13 @@ get_active_adminfo(SlonikStmt *stmt, int no_id)
 			adminfo->dbconn = NULL;
 			return NULL;
 		}
+
+		if (db_rollback_xact(stmt, adminfo) < 0)
+		{
+			PQfinish(adminfo->dbconn);
+			adminfo->dbconn = NULL;
+			return NULL;
+		}
 	}
 
 	return adminfo;
@@ -967,12 +1002,15 @@ get_checked_adminfo(SlonikStmt *stmt, int no_id)
 {
 	SlonikAdmInfo  *adminfo;
 	int				db_no_id;
+	int				had_xact;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return NULL;
 
 	if (!adminfo->nodeid_checked)
 	{
+		had_xact = adminfo->have_xact;
+
 		if ((db_no_id = db_get_nodeid(stmt, adminfo)) != no_id)
 		{
 			printf("%s:%d: database specified in %s:%d reports no_id %d\n",
@@ -982,6 +1020,12 @@ get_checked_adminfo(SlonikStmt *stmt, int no_id)
 			return NULL;
 		}
 		adminfo->nodeid_checked = true;
+
+		if (!had_xact)
+		{
+			if (db_rollback_xact(stmt, adminfo) < 0)
+				return NULL;
+		}
 	}
 
 	return adminfo;
@@ -1809,6 +1853,36 @@ slonik_subscribe_set(SlonikStmt_subscribe_set *stmt)
 
 
 int
+slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->sub_receiver);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+			"select \"_%s\".subscribeSet(%d, %d); ",
+			stmt->hdr.script->clustername,
+			stmt->sub_setid, stmt->sub_receiver);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
 slonik_lock_set(SlonikStmt_lock_set *stmt)
 {
 	SlonikAdmInfo  *adminfo1;
@@ -1825,6 +1899,7 @@ slonik_lock_set(SlonikStmt_lock_set *stmt)
 	{
 		printf("%s:%d: cannot lock set - admin connection already in transaction\n",
 				stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+		return -1;
 	}
 
 	/*

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.32 2004-03-19 16:20:06 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.33 2004-03-20 02:25:46 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -626,13 +626,6 @@ begin
 	delete from @NAMESPACE@.sl_listen
 			where li_provider = p_pa_server
 			and li_receiver = p_pa_client;
-
-	-- ----
-	-- Same with subscriptions
-	-- ----
-	delete from @NAMESPACE@.sl_subscribe
-			where sub_provider = p_pa_server
-			and sub_receiver = p_pa_client;
 
 	delete from @NAMESPACE@.sl_path
 			where pa_server = p_pa_server
@@ -1776,9 +1769,70 @@ as '
 declare
 	p_sub_set			alias for $1;
 	p_sub_receiver		alias for $2;
+	v_tab_row			record;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: unsbscribeSet() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that this is called on the receiver node
+	-- ----
+	if p_sub_receiver != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: unsubscribeSet() must be called on receiver'';
+	end if;
+
+	-- ----
+	-- Check that this does not break any chains
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set
+				and sub_provider = p_sub_receiver)
+	then
+		raise exception ''Slony-I: Cannot unsubscibe set % while being provider'',
+				p_sub_set;
+	end if;
+
+	-- ----
+	-- Restore all tables original triggers and rules and remove
+	-- our replication stuff.
+	-- ----
+	for v_tab_row in select tab_id from @NAMESPACE@.sl_table
+			where tab_set = p_sub_set
+			order by tab_id
+	loop
+		perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Remove the setsync status. This will also cause the
+	-- worker thread to ignore the set and stop replicating
+	-- right now.
+	-- ----
+	delete from @NAMESPACE@.sl_setsync
+			where ssy_setid = p_sub_set;
+
+	-- ----
+	-- Remove all sl_table entries for this set.
+	-- Should we ever subscribe again, the initial data
+	-- copy process will create new ones.
+	-- ----
+	delete from @NAMESPACE@.sl_table
+			where tab_set = p_sub_set;
+
+	-- ----
+	-- Call the internal procedure to drop the subscription
+	-- ----
+	perform @NAMESPACE@.unsubscribeSet_int(p_sub_set, p_sub_receiver);
+
+	-- ----
+	-- Create the UNSUBSCRIBE_SET event
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''UNSUBSCRIBE_SET'', 
+			p_sub_set, p_sub_receiver);
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -1793,8 +1847,20 @@ declare
 	p_sub_set			alias for $1;
 	p_sub_receiver		alias for $2;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: unsubscribeSet_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- All the real work is done before event generation on the
+	-- subscriber.
+	-- ----
+	delete from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set
+				and sub_receiver = p_sub_receiver;
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 

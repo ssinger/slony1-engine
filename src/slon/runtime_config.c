@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.15 2004-03-17 22:35:19 wieck Exp $
+ *	$Id: runtime_config.c,v 1.16 2004-03-20 02:25:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -697,6 +697,46 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 
 	slon_log(SLON_FATAL,
 			"enableSubscription: set %d not found\n", sub_set);
+	rtcfg_unlock();
+	slon_abort();
+}
+
+
+void
+rtcfg_unsubscribeSet(int sub_set)
+{
+	SlonSet	   *set;
+	int			old_provider = -1;
+
+	rtcfg_lock();
+
+	/*
+	 * Find the set and store subscription information
+	 */
+	for (set = rtcfg_set_list_head; set; set = set->next)
+	{
+		if (set->set_id == sub_set)
+		{
+			slon_log(SLON_CONFIG,
+					"unsubscribeSet: sub_set=%d\n",
+					sub_set);
+			old_provider = set->sub_provider;
+			set->sub_provider = -1;
+			set->sub_active = false;
+			set->sub_forward = false;
+			rtcfg_unlock();
+			rtcfg_seq_bump();
+			/*
+			 * Wakeup the worker threads for the old and new provider
+			 */
+			if (old_provider >= 0)
+				sched_wakeup_node(old_provider);
+			return;
+		}
+	}
+
+	slon_log(SLON_FATAL,
+			"unsubscribeSet: set %d not found\n", sub_set);
 	rtcfg_unlock();
 	slon_abort();
 }

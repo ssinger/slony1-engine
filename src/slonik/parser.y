@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.4 2004-03-18 22:47:00 wieck Exp $
+ *	$Id: parser.y,v 1.5 2004-03-20 02:25:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -126,6 +126,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_set_add_table
 %type <statement>	stmt_table_add_key
 %type <statement>	stmt_subscribe_set
+%type <statement>	stmt_unsubscribe_set
 %type <statement>	stmt_lock_set
 %type <statement>	stmt_unlock_set
 %type <statement>	stmt_move_set
@@ -186,6 +187,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_TRUE
 %token	K_TRY
 %token	K_UNLOCK
+%token	K_UNSUBSCRIBE
 %token	K_YES
 
 /*
@@ -333,6 +335,8 @@ try_stmt			: stmt_echo
 					| stmt_set_add_table
 						{ $$ = $1; }
 					| stmt_subscribe_set
+						{ $$ = $1; }
+					| stmt_unsubscribe_set
 						{ $$ = $1; }
 					| stmt_lock_set
 						{ $$ = $1; }
@@ -700,6 +704,32 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 							new->sub_provider	= opt[1].ival;
 							new->sub_receiver	= opt[2].ival;
 							new->sub_forward	= opt[3].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_unsubscribe_set	: lno K_UNSUBSCRIBE K_SET option_list
+					{
+						SlonikStmt_unsubscribe_set *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_RECEIVER, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_unsubscribe_set *)
+								malloc(sizeof(SlonikStmt_unsubscribe_set));
+						memset(new, 0, sizeof(SlonikStmt_unsubscribe_set));
+						new->hdr.stmt_type		= STMT_UNSUBSCRIBE_SET;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->sub_setid		= opt[0].ival;
+							new->sub_receiver	= opt[1].ival;
 						}
 
 						$$ = (SlonikStmt *)new;
