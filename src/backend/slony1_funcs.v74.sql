@@ -6,7 +6,23 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v74.sql,v 1.2 2004-03-18 17:29:17 wieck Exp $
+-- $Id: slony1_funcs.v74.sql,v 1.3 2004-09-29 14:48:30 wieck Exp $
 -- ----------------------------------------------------------------------
 
+-- ----------------------------------------------------------------------
+-- FUNCTION truncateTable(tab_fqname)
+--
+--	Remove all content from a table before the subscription
+--	content is loaded via COPY.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.truncateTable(text)
+returns int4
+as '
+declare
+	p_tab_fqname		alias for $1;
+begin
+	execute ''truncate '' || p_tab_fqname;
+	return 1;
+end;
+' language plpgsql;
 
