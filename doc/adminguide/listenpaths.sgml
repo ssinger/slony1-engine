@@ -1,4 +1,4 @@
-<!-- $Id: listenpaths.sgml,v 1.8 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.9 2005-01-23 21:27:20 cbbrowne Exp $ -->
 <article>
 <sect1 id="listenpaths"><title><productname>Slony-I</productname> listen paths</title>
 <note><para> If you are running version
@@ -12,8 +12,9 @@ configuration.  For earlier versions, however, it is needful.</para>
 usage of cascaded subscribers (<emphasis>e.g.</emphasis> - subscribers
 that are subscribing through a subscriber node), you will have to be
 fairly careful about the configuration of <quote>listen paths</quote>
-via the Slonik <command> <link linkend="stmtstorelisten">STORE LISTEN</link></command> and
-<link linkend="stmtdroplisten"><command>DROP LISTEN</command></link>
+via the Slonik <command> <link linkend="stmtstorelisten">STORE
+LISTEN</link></command> and <link
+linkend="stmtdroplisten"><command>DROP LISTEN</command></link>
 statements that control the contents of the table sl_listen.</para>
 
 <para>The <quote>listener</quote> entries in this table control where
@@ -22,20 +23,20 @@ other nodes.  You might think that nodes only need to listen to the
 <quote>parent</quote> from whom they are getting updates, but in
 reality, they need to be able to receive messages from
 <emphasis>all</emphasis> nodes in order to be able to conclude that
-<command>sync</command>s have been received everywhere, and that, therefore,
-entries in sl_log_1 and sl_log_2 have been applied everywhere, and can
-therefore be purged.  this extra communication is needful so
-<productname>Slony-I</productname> is able to shift origins to other
-locations.</para>
+<command>sync</command>s have been received everywhere, and that,
+therefore, entries in sl_log_1 and sl_log_2 have been applied
+everywhere, and can therefore be purged.  this extra communication is
+needful so <productname>Slony-I</productname> is able to shift origins
+to other locations.</para>
 
 <sect2><title>how listening can break</title>
 
 <para>On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
 (#3) that was, in effect, a <quote>cascaded slave.</quote> Dropping
-the subscriber node initially didn't work, as
-<link linkend="slonik"><command>slonik</command></link> informed me that there was a
-dependant node.  I repointed the dependant node to the
+the subscriber node initially didn't work, as <link
+linkend="slonik"><command>slonik</command></link> informed me that
+there was a dependant node.  I repointed the dependant node to the
 <quote>master</quote> node for the subscription set, which, for a
 while, replicated without difficulties.</para>
 
@@ -126,10 +127,11 @@ store listen (origin = 6, receiver = 5, provider = 6);
 <para>When on the <quote>receiver</quote> node, look to the <quote>provider</quote>
 node to provide events coming from the <quote>origin</quote> node.</para>
 
-<para>The tool <filename>init_cluster.pl</filename> in the <filename>altperl</filename>
-scripts produces optimized listener networks in both the tabular form
-shown above as well as in the form of <link linkend="Slonik">
-<application>slonik</application></link> statements.</para>
+<para>The tool <filename>init_cluster.pl</filename> in the
+<filename>altperl</filename> scripts produces optimized listener
+networks in both the tabular form shown above as well as in the form
+of <link linkend="Slonik"> <application>slonik</application></link>
+statements.</para>
 
 <para>There are three <quote>thorns</quote> in this set of roses:
 
@@ -138,28 +140,30 @@ shown above as well as in the form of <link linkend="Slonik">
 <listitem><para> If you change the shape of the node set, so that the
 nodes subscribe differently to things, you need to drop sl_listen
 entries and create new ones to indicate the new preferred paths
-between nodes.  Until <productname>Slony-I</productname>, there is no automated way
-at this point to do this <quote>reshaping</quote>.</para></listitem>
+between nodes.  Until <productname>Slony-I</productname>, there is no
+automated way at this point to do this
+<quote>reshaping</quote>.</para></listitem>
 
-<listitem><para> If you <emphasis>don't</emphasis> change the sl_listen entries,
-events will likely continue to propagate so long as all of the nodes
-continue to run well.  the problem will only be noticed when a node is
-taken down, <quote>orphaning</quote> any nodes that are listening through it.</para></listitem>
+<listitem><para> If you <emphasis>don't</emphasis> change the
+sl_listen entries, events will likely continue to propagate so long as
+all of the nodes continue to run well.  the problem will only be
+noticed when a node is taken down, <quote>orphaning</quote> any nodes
+that are listening through it.</para></listitem>
 
 <listitem><para> you might have multiple replication sets that have
-<emphasis>different</emphasis> shapes for their respective trees of subscribers.
-there won't be a single <quote>best</quote> listener configuration in that
-case.</para></listitem>
+<emphasis>different</emphasis> shapes for their respective trees of
+subscribers.  there won't be a single <quote>best</quote> listener
+configuration in that case.</para></listitem>
 
 <listitem><para> In order for there to be an sl_listen path, there
-<emphasis>must</emphasis> be a series of sl_path entries connecting the origin
-to the receiver.  this means that if the contents of sl_path do not
-express a <quote>connected</quote> network of nodes, then some nodes will not
-be reachable.  this would typically happen, in practice, when you have
-two sets of nodes, one in one subnet, and another in another subnet,
-where there are only a couple of <quote>firewall</quote> nodes that can talk
-between the subnets.  cut out those nodes and the subnets stop
-communicating.</para></listitem>
+<emphasis>must</emphasis> be a series of sl_path entries connecting
+the origin to the receiver.  this means that if the contents of
+sl_path do not express a <quote>connected</quote> network of nodes,
+then some nodes will not be reachable.  this would typically happen,
+in practice, when you have two sets of nodes, one in one subnet, and
+another in another subnet, where there are only a couple of
+<quote>firewall</quote> nodes that can talk between the subnets.  cut
+out those nodes and the subnets stop communicating.</para></listitem>
 
 </itemizedlist>
 

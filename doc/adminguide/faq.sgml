@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.11 2005-01-18 23:03:27 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.12 2005-01-23 21:27:20 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -836,6 +836,56 @@ table's OID into the <envar>pg_trigger</envar> or
 <envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
 affected node.</para></answer>
 </qandaentry>
+<qandaentry>
+<question><para> After notification of a subscription on
+<emphasis>another</emphasis> node, replication falls over, starting
+with the following error message:
+
+<screen>
+ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
+DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
+</screen>
+
+<para> This is then followed by a series of failed syncs as the
+<application> <link linkend="slon"> slon </link> </application> shuts
+down:
+
+<screen>
+DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
+</screen>
+
+</para></question>
+
+<answer><para> If you see a <application> <link linkend="slon"> slon
+</link> </application> shutting down with <emphasis>ignore new events
+due to shutdown</emphasis> log entries, you'll typically have to step
+back to <emphasis>before</emphasis> they started failing to see
+indication of the root cause of the problem.
+
+</para></answer>
+
+<answer><para> In this particular case, the problem was that some of
+the <link linkend="stmtstorepath"> <command>STORE PATH </command>
+</link> commands had not yet made it to node 4 before the <link
+linkend="stmtsubscribeset"> <command>SUBSCRIBE SET </command> </link>
+command propagated. </para>
+
+<para>This is yet another example of the need to not do things too
+terribly quickly; you need to be sure things are working right
+<emphasis>before</emphasis> making further configuration changes.
+</para></answer>
+
+</qandaentry>
+
 
 <qandaentry>
 
