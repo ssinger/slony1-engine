@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.4 2004-03-12 23:17:32 wieck Exp $
+ *	$Id: slonik.c,v 1.5 2004-03-13 03:20:12 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -901,13 +901,19 @@ load_sql_script(SlonikStmt *stmt, SlonikAdmInfo *adminfo, char *fname, ...)
 		return -1;
 	}
 
+	/*
+	 * This little hoop is required because for some
+	 * reason, 7.3 returns total garbage as a result
+	 * code for such a big pile of commands. So we just
+	 * fire that off, and then do one extra select and
+	 * see if we have an aborted transaction.
+	 */
 	res = PQexec(adminfo->dbconn, dstring_data(&query));
 	dstring_free(&query);
+	PQclear(res);
+	res = PQexec(adminfo->dbconn, "select 1;");
 	rc = PQresultStatus(res);
-	if (rc != PGRES_COMMAND_OK &&
-		rc != PGRES_TUPLES_OK &&
-		rc != PGRES_EMPTY_QUERY &&
-		rc != PGRES_NONFATAL_ERROR)		/* for some reason, 7.3 does this */
+	if (rc != PGRES_TUPLES_OK)
 	{
 		printf("%s:%d: loading of file %s: %s %s%s",
 				stmt->stmt_filename, stmt->stmt_lno,
