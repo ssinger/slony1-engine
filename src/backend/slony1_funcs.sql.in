@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.24 2004-03-13 21:51:04 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.25 2004-03-13 21:53:21 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1495,7 +1495,7 @@ begin
 
 	--
 	-- If it does not have the special serial column, we
-	-- have to add it.
+	-- should not have been called in the first place.
 	--
 	if not v_have_serial then
 		raise exception ''Slony-I: table % does not have the serial key'',
