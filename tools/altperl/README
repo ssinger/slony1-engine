@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.5 2004-08-20 19:06:22 cbbrowne Exp $
+$Id: README,v 1.6 2004-09-09 14:59:21 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -8,21 +8,23 @@ Afilias Canada
 This is a "second system" set of scripts for managing a set of Slony-I
 instances.
 
-Unlike the shell scripts that have been used, previously, it allows
-having an arbitrary number of Slony-I nodes.  They are configured in
-slon.env by calling add_node() once for each node that is needed.
+Unlike the shell scripts that have previously been used, these scripts
+support having an arbitrary number of Slony-I nodes.  They are
+configured in the [cluster].nodes file (e.g. - environment variable
+SLONYNODES) by calling add_node() once indicating the configuration
+for each node that is needed.
 
 The following configuration is set up:
 
- $SETNAME represents the name of the cluster.  In each database
-  involved in the replication set, you will find the namespace
-  "_$SETNAME" that contains Slony-I's configuration tables
+ Host Level Configuration
+--------------------------------------
+
+This configuration will normally apply to all clusters being managed
+on a particular host, so it would probably make sense to modify it
+directly in slon.env.
 
  $SLON_BIN_PATH is the path to use to find the slon and slonik
    binaries.
-
- $LOGDIR is the directory in which to put log files.  The script will
-   generate a subdirectory for each node.
 
  $APACHE_ROTATOR is an optional reference to the location of the
    Apache log rotator; if you set it to a path to an Apache "rotatelog"
@@ -30,7 +32,33 @@ The following configuration is set up:
    roar".
   <http://httpd.apache.org/docs-2.0/programs/rotatelogs.html>
 
-slon.env also contains lists of tables that are to be replicated:
+ $LOGDIR is the directory in which to put log files.  The script will
+   generate a subdirectory for each node.
+
+ Node Level Configuration
+--------------------------------------
+
+This configuration should be set up in the file represented in the
+environment variable SLONYNODES.
+
+ $SETNAME represents the name of the cluster.  In each database
+  involved in the replication set, you will find the namespace
+  "_$SETNAME" that contains Slony-I's configuration tables
+
+
+ Set Level Configuration
+-----------------------------------
+
+The configuration of the tables, sequences and such are stored in the
+file pointed to by the environment variable SLONYSET, in the following
+Perl variables:
+
+  $TABLE_ID - where to start numbering table IDs
+
+   The table IDs are required to be unique across all sets in a
+   Slony-I cluster, so if you add extra sets, you need to set
+   $TABLE_ID to a value that won't conflict, typically something
+   higher than largest value used in earlier sets.
 
   @PKEYEDTABLES contains all of the tables that have primary keys
 
@@ -44,24 +72,31 @@ slon.env also contains lists of tables that are to be replicated:
   @SEQUENCES lists all of the application sequences that are to be
              replicated.
 
-Alas, this means that the values are "hardcoded" as far as the tools
-are concerned.
+The values in slon.env are "hardcoded" as far as the tools are
+concerned.
 
-To make this more flexible, slon.env looks at the environment variable
-SLONYENV as an alternative source for this configuration.  
+To make this more flexible, slon.env also looks at the environment
+variables SLONYNODES and SLONYSET as alternative sources for
+configuration.
 
 That way, you may do something like:
 
    for i in `seq 10`; do
-      SLONYENV="./set$i.config" ./init_cluster.pl
+      SLONYNODES="./node$i.config" ./init_cluster.pl
    done
 
-- Such an "alternative slon.env" might import Pg, and do queries
+- Such an "alternative cluster.nodes" might import Pg, and do queries
 against a database to be replicated in order to populate the sets of
 tables and such.
 
-- The "alternative slon.env" might search some sort of 'registry' for
+- The "alternative cluster.nodes" might search some sort of 'registry' for
 the set of nodes to be replicated.
+
+Parallel to SLONYNODES is the environment variable SLONYSET, which
+controls the contents of replication sets.  It looks as though it
+should be usual for there to be just one "intentionally active"
+subscription set at any given time, with other sets being set up in
+order to be merged with the "main" set.
 
 Steps to start up replication
 -------------------------------
