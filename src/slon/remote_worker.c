@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.55 2004-06-23 16:38:19 wieck Exp $
+ *	$Id: remote_worker.c,v 1.55.2.1 2004-07-07 16:33:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2963,7 +2963,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	else
 		slon_mkquery(&new_qual, 
 				"(log_xid < '%s')",
-				event->ev_minxid_c);
+				event->ev_maxxid_c);
 
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
