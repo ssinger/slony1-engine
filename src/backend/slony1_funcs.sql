@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.18 2004-08-04 15:58:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.19 2004-08-04 19:59:02 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -175,7 +175,7 @@ create or replace function @NAMESPACE@.setSessionRole (name, text) returns text
     as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
 	language C
 	security definer;
-comment on function @NAMESPACE@.setSessionRole (name) is 
+comment on function @NAMESPACE@.setSessionRole (name, text) is 
   'not yet documented';
 grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 
