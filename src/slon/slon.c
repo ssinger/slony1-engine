@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.33 2004-10-14 16:01:05 cbbrowne Exp $
+ *	$Id: slon.c,v 1.34 2004-10-15 22:11:38 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -61,6 +61,7 @@ main(int argc, char *const argv[])
 {
 	char           *cp1;
 	char           *cp2;
+	char	       *scratch;
 	SlonDString     query;
 	PGresult       *res;
 	int             i, n;
@@ -117,35 +118,6 @@ main(int argc, char *const argv[])
 			break;
 		}
 	}
-#if 0
-	fprintf(stderr, "config:   vac_frequency %d\n"
-		"          sync_group_maxsize %d\n"
-		"          sync_interval_timeout %d\n"
-		"          sync_interval %d\n"
-		"          slon_log_level %d\n"
-		"          log_pid %d\n"
-		"	   log_timestamp %d\n",
-		vac_frequency, sync_group_maxsize, sync_interval_timeout,
-		sync_interval, slon_log_level, logpid, logtimestamp);
-	fflush(NULL);
-#endif
-	if (argc - optind != 2)
-		errors++;
-
-	if (errors != 0)
-	{
-		fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "Options:\n");
-		fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
-		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
-		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
-		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
-		fprintf(stderr, "    -c <num>		   how often to vaccum in cleanup cycles\n");
-		fprintf(stderr, "    -p <filename>         slon pid file\n");
-		fprintf(stderr, "    -f <filename>	   slon configuration file\n");
-		return 1;
-	}
 	/*
 	 * Make sure the sync interval isn't too small.
 	 */
@@ -157,19 +129,32 @@ main(int argc, char *const argv[])
 	 * identifier
 	 */
 	slon_pid = getpid();
-	rtcfg_cluster_name = (char *)argv[optind];
-	rtcfg_namespace = malloc(strlen(argv[optind]) * 2 + 4);
-	cp2 = rtcfg_namespace;
-	*cp2++ = '"';
-	*cp2++ = '_';
-	for (cp1 = (char *)argv[optind]; *cp1; cp1++)
+
+	if ((char *)argv[optind])
 	{
+		set_config_option("cluster_name", (char *)argv[optind]);
+		set_config_option("conn_info", (char *)argv[++optind]);
+	}
+
+	if (rtcfg_cluster_name != NULL)
+	{
+	  rtcfg_namespace = malloc(strlen(rtcfg_cluster_name) * 2 + 4);
+	  cp2 = rtcfg_namespace;
+	  *cp2++ = '"';
+	  *cp2++ = '_';
+	  for (cp1 = (char *)rtcfg_cluster_name; *cp1; cp1++)
+	  {
 		if (*cp1 == '"')
 			*cp2++ = '"';
 		*cp2++ = *cp1;
+	  }
+	  *cp2++ = '"';
+	  *cp2 = '\0';
 	}
-	*cp2++ = '"';
-	*cp2 = '\0';
+	else
+	{
+	  errors++;
+	}
 
 	slon_log(SLON_CONFIG, "main: slon version %s starting up\n",
 			SLONY_I_VERSION_STRING);
@@ -177,12 +162,34 @@ main(int argc, char *const argv[])
 	/*
 	 * Remember the connection information for the local node.
 	 */
-	rtcfg_conninfo = (char *)argv[++optind];
 
+	if (rtcfg_conninfo == NULL)
+	{
+		errors++;
+	}
+
+        if (errors != 0)
+        {
+                fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
+                fprintf(stderr, "\n");
+                fprintf(stderr, "Options:\n");
+                fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
+                fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
+                fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
+                fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
+                fprintf(stderr, "    -c <num>              how often to vaccum in cleanup cycles\n");
+                fprintf(stderr, "    -p <filename>         slon pid file\n");
+                fprintf(stderr, "    -f <filename>         slon configuration file\n");
+                return 1;
+        }
+
+	
 	/*
 	 * Connect to the local database for reading the initial
 	 * configuration
 	 */
+
+
 	startup_conn = PQconnectdb(rtcfg_conninfo);
 	if (startup_conn == NULL)
 	{
