@@ -1,5 +1,5 @@
 #!perl     # -*- perl -*-
-# $Id: slon-tools.pm,v 1.11 2004-09-27 20:32:22 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.12 2004-12-04 00:21:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -139,20 +139,46 @@ sub start_slon {
   system $cmd;
 }
 
+
+$killafter="00:40:00";  # Restart slon after this interval, if there is no activity
 sub query_slony_status {
   my ($nodenum) = @_;
   my $query = qq{
-  select now() - ev_timestamp > '00:40:00'::interval as event_old, now() - ev_timestamp as age,
+  select now() - ev_timestamp > '$killafter'::interval as event_old, now() - ev_timestamp as age,
        ev_timestamp, ev_seqno, ev_origin as origin
 from _$SETNAME.sl_event events, _$SETNAME.sl_subscribe slony_master
   where 
      events.ev_origin = slony_master.sub_provider and
-     not exists (select * from _$SETNAME.sl_subscribe providers 
+     not exists (select * from _$SETNAME.sl_subscribe providers
                   where providers.sub_receiver = slony_master.sub_provider and
                         providers.sub_set = slony_master.sub_set and
                         slony_master.sub_active = 't' and
                         providers.sub_active = 't')
 order by ev_origin desc, ev_seqno desc limit 1;
+};
+  my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
+  my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  chomp $result;
+  #print "Query was: $query\n";
+  #print "Result was: $result\n";
+  return $result;
+}
+
+# This function checks to see if there is a still-in-progress subscription
+# It does so by looking to see if there is a SUBSCRIBE_SET event corresponding
+# to a sl_subscribe entry that is not yet active.
+sub node_is_subscribing {
+  my $see_if_subscribing = qq {
+select * from "_$SETNAME".sl_event e, "_$SETNAME".sl_subscribe s
+where ev_origin = "_$SETNAME".getlocalnodeid('_$SETNAME') and  -- Event on local node
+      ev_type = 'SUBSCRIBE_SET' and                            -- Event is SUBSCRIBE SET
+      --- Then, match criteria against sl_subscribe
+      sub_set = ev_data1 and sub_provider = ev_data2 and sub_receiver = ev_data3 and
+      (case sub_forward when 'f' then 'f'::text when 't' then 't'::text end) = ev_data4
+
+      --- And we're looking for a subscription that is not yet active
+      and not sub_active
+limit 1;   --- One such entry is sufficient...
 };
   my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
   my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;

@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: slon_watchdog2.pl,v 1.2 2004-09-27 20:32:22 cbbrowne Exp $
+# $Id: slon_watchdog2.pl,v 1.3 2004-12-04 00:21:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -24,7 +24,12 @@ while (1) {
   if ($res =~ /^\s*f\s*\|/) {
     $eventsOK = "YES";
   } else {
-    $eventsOK = "NO";
+    $res = node_is_subscribing();
+    if ($res =~ /SUBSCRIBE_SET/) {
+      $eventsOK = "YES";
+    } else {
+      $eventsOK = "NO";
+    }
   }
   my $pid = get_pid($node);                  # See if the slon process is alive
   my ($restart, $kick);
@@ -69,7 +74,6 @@ while (1) {
   }
   sleep $sleep;
 }
-
 
 sub log_to_watchdog_log {
   my ($message) = @_;
