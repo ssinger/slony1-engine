@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.57 2004-07-09 15:42:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.58 2004-08-17 04:20:14 dfetter Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2160,7 +2160,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 *       instead of delete.
 		 */
 		slon_mkquery(&query1,
-				"delete from %s; "
+				"delete from only %s; "
 				"copy %s from stdin; ", tab_fqname, tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_COPY_IN)
