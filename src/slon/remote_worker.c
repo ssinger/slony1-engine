@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.13 2004-03-04 19:37:44 wieck Exp $
+ *	$Id: remote_worker.c,v 1.14 2004-03-04 22:29:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2251,11 +2251,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 	if (strlen(event->ev_xip) != 0)
 		slon_mkquery(&new_qual, 
-				"(log_xid < '%s' or (log_xid <= '%s' and log_xid not in (%s)))",
+				"(log_xid < '%s' or (log_xid < '%s' and log_xid not in (%s)))",
 				event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip);
 	else
 		slon_mkquery(&new_qual, 
-				"(log_xid <= '%s')",
+				"(log_xid < '%s')",
 				event->ev_maxxid_c);
 
 	for (provider = wd->provider_head; provider; provider = provider->next)
@@ -2406,7 +2406,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			/* add the <snapshot_qual_of_setsync> */
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(provider_qual,
-						"(log_xid > '%s' or"
+						"(log_xid >='%s' or"
 						" (log_xid >= '%s' and log_xid in (%s)))",
 						ssy_maxxid, ssy_minxid, ssy_xip);
 			else
