@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.13 2004-06-12 12:34:03 wieck Exp $
+ *	$Id: remote_listen.c,v 1.14 2004-06-12 13:25:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -584,6 +584,8 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 	PGresult	   *res;
 	int				ntuples;
 	int				tupno;
+	time_t			timeout;
+	time_t			now;
 
 	dstring_init(&query);
 
@@ -636,7 +638,44 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 
 	rtcfg_unlock();
 
-	res = PQexec(conn->dbconn, dstring_data(&query));
+	if (PQsendQuery(conn->dbconn, dstring_data(&query)) == 0)
+	{
+		slon_log(SLON_ERROR,
+				"remoteListenThread_%d: \"%s\" - %s",
+				node->no_id,
+				dstring_data(&query), PQerrorMessage(conn->dbconn));
+		dstring_free(&query);
+		return -1;
+	}
+
+	time(&timeout);
+	timeout += 20;
+	while (PQisBusy(conn->dbconn) != 0)
+	{
+		time(&now);
+		if (now >= timeout)
+		{
+			slon_log(SLON_ERROR,
+					"remoteListenThread_%d: timeout for event selection\n",
+					node->no_id);
+			dstring_free(&query);
+			return -1;
+		}
+		if (PQconsumeInput(conn->dbconn) == 0)
+		{
+			slon_log(SLON_ERROR,
+					"remoteListenThread_%d: \"%s\" - %s",
+					node->no_id,
+					dstring_data(&query), PQerrorMessage(conn->dbconn));
+			dstring_free(&query);
+			return -1;
+		}
+		if (PQisBusy(conn->dbconn) != 0)
+			sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000);
+	}
+
+	res = PQgetResult(conn->dbconn);
+
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
