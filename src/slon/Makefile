@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.17 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.17.2.1 2004-10-19 18:17:37 wieck Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -16,7 +16,7 @@ CFLAGS += -g $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(PGSOURCETREE)/src/int
 ifeq ($(PORTNAME), solaris)
   CFLAGS += -D_POSIX_PTHREAD_SEMANTICS
 endif
-LDFLAGS += -g $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
+override LDFLAGS += -g $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
 
 PROG		= slon
 
