@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.21 2004-03-12 23:17:32 wieck Exp $
+ *	$Id: remote_worker.c,v 1.22 2004-03-13 21:51:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1646,10 +1646,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 * copy the set, then we don't see the row either and it
 	 * would get lost.
 	 */
-	if (node->no_id == sub_node->no_id)
-	/*
 	if (node->no_id == event->ev_origin)
-	*/
 	{
 		slon_mkquery(&query1,
 				"start transaction; "
@@ -1735,6 +1732,88 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				"copy table %s\n",
 				node->no_id, tab_fqname);
+
+		/*
+		 * Find out if the table we're copying has the special
+		 * slony serial number key on the provider DB
+		 */
+		slon_mkquery(&query1,
+				"select %s.tableHasSerialKey('%q');",
+				rtcfg_namespace, tab_fqname);
+		res2 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		rc = *PQgetvalue(res2, 0, 0) == 't';
+		PQclear(res2);
+
+		if (rc)
+		{
+			/*
+			 * It has, check if the table has this on the local
+			 * DB too.
+			 */
+			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
+					"table %s requires Slony-I serial key\n",
+					node->no_id, tab_fqname);
+			res2 = PQexec(loc_dbconn, dstring_data(&query1));
+			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+						node->no_id, dstring_data(&query1),
+						PQresultErrorMessage(res2));
+				PQclear(res2);
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				return -1;
+			}
+			rc = *PQgetvalue(res2, 0, 0) == 't';
+			PQclear(res2);
+			
+			if (!rc)
+			{
+				/*
+				 * Nope, so we gotta add the key here.
+				 */
+				slon_mkquery(&query1,
+						"select %s.tableAddKey('%q'); "
+						"select %s.determineAttkindSerial('%q'); ",
+						rtcfg_namespace, tab_fqname,
+						rtcfg_namespace, tab_fqname);
+				if (query_execute(node, loc_dbconn, &query1) < 0)
+				{
+					PQclear(res1);
+					slon_disconnectdb(pro_conn);
+					dstring_free(&query1);
+					return -1;
+				}
+				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
+						"table %s Slony-I serial key added local\n",
+						node->no_id, tab_fqname);
+			}
+			else
+			{
+				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
+						"local table %s already has Slony-I serial key\n",
+						node->no_id, tab_fqname);
+			}
+		}
+		else
+		{
+			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
+					"table %s does not require Slony-I serial key\n",
+					node->no_id, tab_fqname);
+		}
+
 
 		/*
 		 * Call the setAddTable_int() stored procedure. Up to now, while

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.23 2004-03-12 23:17:31 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.24 2004-03-13 21:51:04 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1451,7 +1451,8 @@ end;
 --	and finish the creation of the serial column. The return an
 --	attkind according to that.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.determineAttkindSerial(text) returns text
+create function @NAMESPACE@.determineAttkindSerial(text)
+returns text
 as '
 declare
 	p_tab_fqname	alias for $1;
@@ -1514,6 +1515,34 @@ begin
 	-- Return the resulting Slony-I attkind
 	--
 	return v_attkind;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION tableHasSerialKey (tab_fqname)
+--
+--	Checks if a table has our special serial key column that is
+--	used if the table has no natural unique constraint.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.tableHasSerialKey(text) 
+returns bool
+as '
+declare
+	p_tab_fqname	alias for $1;
+	v_attnum		int2;
+begin
+	select PGA.attnum into v_attnum
+			from "pg_catalog".pg_class PGC,
+				"pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_attribute PGA
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+				"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGC.relnamespace = PGN.oid
+				and PGA.attrelid = PGC.oid
+				and PGA.attname = ''_Slony-I_@CLUSTERNAME@_rowID''
+				and not PGA.attisdropped;
+	return found;
 end;
 ' language plpgsql;
 
