@@ -44,6 +44,7 @@
 		<li><a href="#stmt_lock_set">LOCK SET</a>
 		<li><a href="#stmt_unlock_set">UNLOCK SET</a>
 		<li><a href="#stmt_move_set">MOVE SET</a>
+		<li><a href="#stmt_failover">FAILOVER</a>
 		<li><a href="#stmt_ddl_script">EXECUTE SCRIPT</a>
 		<li><a href="#stmt_wait_event">WAIT FOR EVENT</a>
 	</ul>
@@ -1311,6 +1312,59 @@
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;OLD ORIGIN = 1,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW ORIGIN = 3
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_failover">
+<h3>FAILOVER</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	FAILOVER ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	WARNING: This command will abandon the status of the failed node.
+	There is no other possibility to let the failed node join the
+	cluster again than rebuilding it from scratch as a slave.
+</p>
+<p>
+	The failover command causes the backup node to take over all sets
+	that currently originate on the failed node. Slonik will contact
+	all other direct subscribers of the failed node to determine which
+	node has the highest sync status for each set. If another node has
+	a higher sync status than the backup node, the replication will
+	first be redirected so that the backup node replicates against that
+	other node, before assuming the origin role and allowing update
+	activity.
+</p>
+<p>
+	After successfull failover, all former direct subscribers of the
+	failed node are direct subscribers of the backup node. The failed
+	node can and should be removed from the configuration with
+	DROP NODE.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		ID of the failed node.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>BACKUP NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		ID of the node that will take over all sets.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	FAILOVER (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;BACKUP NODE = 1,
 	<br>);
 </p>
 </div>
