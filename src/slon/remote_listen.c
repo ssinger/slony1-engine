@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.12 2004-04-13 20:00:20 wieck Exp $
+ *	$Id: remote_listen.c,v 1.13 2004-06-12 12:34:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -325,7 +325,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Wait for notification.
 		 */
-		rc = sched_wait_conn(conn, SCHED_WAIT_SOCK_READ);
+		rc = sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000);
 		if (rc == SCHED_STATUS_CANCEL)
 			continue;
 		if (rc != SCHED_STATUS_OK)
