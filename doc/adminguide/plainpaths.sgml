@@ -1,0 +1,33 @@
+<!-- $Id: plainpaths.sgml,v 1.1 2005-02-07 21:49:52 cbbrowne Exp $ -->
+<sect1 id="plainpaths"><title><productname>Slony-I</productname> Path Communications</title>
+
+<para>To Do...
+
+<para> Basically need to discuss what STORE PATHs are about, and
+distinguish them from the admin conninfo entries in the slonik
+preamble.
+
+<para> This isn't an issue for people with simple networks; it matters
+for those with complex firewall configurations, nodes at multiple
+locations, and the issue where nodes may not be able to all talk to
+one another at a uniform set of network addresses.
+
+<para> There is also room for discussion of SSH tunnelling here...
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:"./reference.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->

@@ -1,4 +1,4 @@
-<!-- $Id: slonik.sgml,v 1.8 2005-02-02 19:41:55 cbbrowne Exp $ -->
+<!-- $Id: slonik.sgml,v 1.9 2005-02-07 21:49:52 cbbrowne Exp $ -->
 <refentry id="app-slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -65,7 +65,7 @@
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</para>
   
-  <para>See also <link linkend="slonikcommands"> Slonik Commands
+  <para>See also <link linkend="slonikref"> Slonik Command Summary
   </link>. </para>
 
  </refsect1>
@@ -79,7 +79,6 @@
   </para>
  </refsect1>
 </refentry>
-
 
 <!-- Keep this comment at the end of the file
 Local variables:

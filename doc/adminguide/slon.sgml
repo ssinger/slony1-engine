@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.7 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.8 2005-02-07 21:49:52 cbbrowne Exp $ -->
 <refentry id="app-slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -111,7 +111,7 @@
       Since they are not actually generating any data to replicate to
       other nodes, such SYNC events are of little value.  You might
       want to increase this parameter to something quite a bit higher
-      than the <option>-s</option SYNC check interval, so that
+      than the <option>-s</option> SYNC check interval, so that
       subscriber nodes won't generate and propagate as many SYNC
       events.  The once per minute that is the default seems amply
       often.

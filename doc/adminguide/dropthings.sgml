@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.9 2005-02-07 21:49:52 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from Slony Replication</title>
 
 <para>There are several things you might want to do involving dropping
@@ -11,10 +11,11 @@ linkend="slonik">slonik</link> command <command><link
 linkend="stmtdropnode">DROP NODE</link></command> should do the
 trick.</para>
 
-<para>This will lead to <productname>Slony-I</productname> dropping the triggers
-(generally that deny the ability to update data), restoring the
-<quote>>native</quote> triggers, dropping the schema used by
-<productname>Slony-I</productname>, and the slon process for that node terminating
+<para>This will lead to <productname>Slony-I</productname> dropping
+the triggers (generally that deny the ability to update data),
+restoring the <quote>native</quote> triggers, dropping the schema used
+by <productname>Slony-I</productname>, and the <link linkend="slon">
+<command>slon</command> </link> process for that node terminating
 itself.</para>
 
 <para>As a result, the database should be available for whatever use
