@@ -1,4 +1,4 @@
-Slony-I has been tested and reposrted to work on the following architectures.
+Slony-I has been tested and reported to work on the following architectures.
 
 OS		Version		Processor series	Date last reported
 ==========================================================================
@@ -10,8 +10,11 @@ Solaris		2.8		ULTRA SPARC		Aug 31, 2004
 Solaris		2.5		HYPER SPARC		Aug 31, 2004
 
 AIX		4.3		PPC			Aug 31, 2004
+AIX		5.1		PPC			Aug 31, 2004
 
 Linux		2.4.26		MIPS/Sel		Aug 31, 2004
+Linux		2.4.26		IA-32		Aug 31, 2004
+Linux		2.4.26		AMD64		Feb 2, 2005
 
 OpenBSD		3.5		SPARC 64		Aug 15, 2004
 OpenBSD		3.5		x86			Aug 15, 2004
