@@ -60,28 +60,28 @@ createuser -A -D $PGBENCHUSER
 
 <sect2><title/ Preparing the databases/
 
-<para><command>
+<programlisting>
 createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
-</command>
+</programlisting>
 
 <para>Because Slony-I depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME.
 
-<command>
+<programlisting>
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
-</command>
+</programlisting>
 
 <para>Slony-I does not yet automatically copy table definitions from a master when a
 slave subscribes to it, so we need to import this data.  We do this with
 pg_dump.
 
-<para><command>
+<programlisting>
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
-</command>
+</programlisting>
 
 <para>To illustrate how Slony-I allows for on the fly replication subscription, lets
 start up pgbench.  If you run the pgbench application in the foreground of a
@@ -91,9 +91,9 @@ are available in this session as well.
 
 <para>The typical command to run pgbench would look like:
 
-<para><command>
+<programlisting>
 pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
-</command>
+</programlisting>
 
 <para>This will run pgbench with 5 concurrent clients each processing 1000
 transactions against the pgbench database running on localhost as the pgbench
@@ -107,7 +107,7 @@ scripting aid that mostly calls stored procedures in the master/salve (node)
 databases.  The script to create the initial configuration for the simple
 master-slave setup of our pgbench database looks like this:
 
-<para><command>
+<programlisting>
 #!/bin/sh
 
 slonik <<_EOF_
@@ -166,36 +166,37 @@ slonik <<_EOF_
 	store listen (origin=1, provider = 1, receiver =2);
 	store listen (origin=2, provider = 2, receiver =1);
 _EOF_
-</command>
-
+</programlisting>
 
 <para>Is the pgbench still running?  If not start it again.
 
-<para>At this point we have 2 databases that are fully prepared.  One is the master
-database in which bgbench is busy accessing and changing rows.  It's now time
-to start the replication daemons.
+<para>At this point we have 2 databases that are fully prepared.  One
+is the master database in which bgbench is busy accessing and changing
+rows.  It's now time to start the replication daemons.
 
 <para>On $MASTERHOST the command to start the replication engine is
 
-<para><command>
+<programlisting>
 slon $CLUSTERNAME "dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST"
-</command>
+</programlisting>
 
 <para>Likewise we start the replication system on node 2 (the slave)
 
-<para><command>
+<programlisting>
 slon $CLUSTERNAME "dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST"
-</command>
+</programlisting>
 
-<para>Even though we have the slon running on both the master and slave and they are
-both spitting out diagnostics and other messages, we aren't replicating any
-data yet.  The notices you are seeing is the synchronization of cluster
-configurations between the 2 slon processes.
+<para>Even though we have the <application/slon/ running on both the
+master and slave, and they are both spitting out diagnostics and other
+messages, we aren't replicating any data yet.  The notices you are
+seeing is the synchronization of cluster configurations between the 2
+<application/slon/ processes.
 
-<para>To start replicating the 4 pgbench tables (set 1) from the master (node id 1)
-the the slave (node id 2), execute the following script.
+<para>To start replicating the 4 pgbench tables (set 1) from the
+master (node id 1) the the slave (node id 2), execute the following
+script.
 
-<para><command>
+<programlisting>
 #!/bin/sh
 slonik <<_EOF_
 	 # ----
@@ -217,29 +218,31 @@ slonik <<_EOF_
 	 # ----
 	 subscribe set ( id = 1, provider = 1, receiver = 2, forward = no);
 _EOF_
-</command>
+</programlisting>
 
-<para>Any second here, the replication daemon on $SLAVEHOST will start to copy the
-current content of all 4 replicated tables.  While doing so, of course, the
-pgbench application will continue to modify the database.  When the copy
-process is finished, the replication daemon on $SLAVEHOST will start to catch
-up by applying the accumulated replication log.  It will do this in little
-steps, 10 seconds worth of application work at a time.  Depending on the
-performance of the two systems involved, the sizing of the two databases, the
-actual transaction load and how well the two databases are tuned and
-maintained, this catchup process can be a matter of minutes, hours, or
-eons.
+<para>Any second now, the replication daemon on $SLAVEHOST will start
+to copy the current content of all 4 replicated tables.  While doing
+so, of course, the pgbench application will continue to modify the
+database.  When the copy process is finished, the replication daemon
+on <envar/$SLAVEHOST/ will start to catch up by applying the
+accumulated replication log.  It will do this in little steps, 10
+seconds worth of application work at a time.  Depending on the
+performance of the two systems involved, the sizing of the two
+databases, the actual transaction load and how well the two databases
+are tuned and maintained, this catchup process can be a matter of
+minutes, hours, or eons.
 
-<para>You have now successfully set up your first basic master/slave replication
-system, and the 2 databases once the slave has caught up contain identical
-data.  That's the theory.  In practice, it's good to check that the datasets
+<para>You have now successfully set up your first basic master/slave
+replication system, and the 2 databases should, once the slave has
+caught up, contain identical data.  That's the theory, at least.  In
+practice, it's good to build confidence by verifying that the datasets
 are in fact the same.
 
 <para>The following script will create ordered dumps of the 2 databases and compare
 them.  Make sure that pgbench has completed it's testing, and that your slon
 sessions have caught up.
 
-<para><command>
+<programlisting>
 #!/bin/sh
 echo -n "**** comparing sample1 ... "
 psql -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
@@ -272,9 +275,11 @@ if diff dump.tmp.1.$$ dump.tmp.2.$$ >$CLUSTERNAME.diff ; then
 else
 	 echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
-</command>
+</programlisting>
 
-<para>Note that there is somewhat more sophisticated documentation of the process in the Slony-I source code tree in a file called slony-I-basic-mstr-slv.txt.
+<para>Note that there is somewhat more sophisticated documentation of
+the process in the Slony-I source code tree in a file called
+slony-I-basic-mstr-slv.txt.
 
 <para>If this script returns "FAILED" please contact the developers at
 <ulink url="http://slony.org/"> http://slony.org/</ulink>

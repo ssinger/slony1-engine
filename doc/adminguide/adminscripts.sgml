@@ -25,9 +25,17 @@
 
 <para>The set of parameters for <function/add_node()/ are thus:
 
-<para> <literallayout><literal remap="tt"><inlinegraphic
-fileref="params.txt"
-format="linespecific"></literal></literallayout></para>
+<programlisting>
+my %PARAMS =   (host=> undef,		# Host name
+	   	dbname => 'template1',	# database name
+		port => 5432,		# Port number
+		user => 'postgres',	# user to connect as
+		node => undef,		# node number
+		password => undef,	# password for user
+		parent => 1,		# which node is parent to this node
+		noforward => undef	# shall this node be set up to forward results?
+);
+</programlisting>
      
 <sect2><title> Set configuration - cluster.set1, cluster.set2</title>
 

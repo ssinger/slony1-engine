@@ -32,22 +32,27 @@ primary key.  <application/Slony-I/ will pick up that there is a
 primary key, and use it.
 
 <listitem><para> If the table hasn't got a primary key, but has some
-<emphasis>candidate</emphasis> primary key, that is, some index on a combination
-of fields that is UNIQUE and NOT NULL, then you can specify the key,
-as in
+<emphasis>candidate</emphasis> primary key, that is, some index on a
+combination of fields that is UNIQUE and NOT NULL, then you can
+specify the key, as in
 
-<para><command>SET ADD TABLE (set id = 1, origin = 1, id = 42, full qualified name = 'public.this_table', key = 'this_by_that', comment='this_table has this_by_that as a candidate primary key');
-</command>
+<programlisting>
+SET ADD TABLE (set id = 1, origin = 1, id = 42, 
+               full qualified name = 'public.this_table', 
+               key = 'this_by_that', 
+     comment='this_table has this_by_that as a candidate primary key');
+</programlisting>
 
-<para>	  Notice that while you need to specify the namespace for the table, you must <emphasis>not</emphasis> specify the namespace for the key, as it infers the namespace from the table.
+<para> Notice that while you need to specify the namespace for the
+table, you must <emphasis>not</emphasis> specify the namespace for the
+key, as it infers the namespace from the table.
 
 <listitem><para> If the table hasn't even got a candidate primary key,
 you can ask Slony-I to provide one.  This is done by first using
 <command/TABLE ADD KEY/ to add a column populated using a Slony-I
 sequence, and then having the <command/SET ADD TABLE/ include the
 directive <option/key=serial/, to indicate that
-<application/Slony-I/'s own column should be
-used.</para></listitem>
+<application/Slony-I/'s own column should be used.</para></listitem>
 
 </itemizedlist>
 

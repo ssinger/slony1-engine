@@ -62,11 +62,11 @@ without forcing the user to drop the entire replication set.
 table you want to get rid of, which you can find in sl_table, and then
 run the following three queries, on each host:
 
-<para><command>
+<programlisting>
   select _slonyschema.alterTableRestore(40);
   select _slonyschema.tableDropKey(40);
   delete from _slonyschema.sl_table where tab_id = 40;
-</command>
+</programlisting>
 
 <para>The schema will obviously depend on how you defined the Slony-I
 cluster.  The table ID, in this case, 40, will need to change to the
@@ -91,10 +91,10 @@ to how to drop sequences:
 to replicate the two sequences identified with Sequence IDs 93 and 59
 are thus:
 
-<para><command>
+<programlisting>
 delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
 delete from _oxrsorg.sl_sequence where seq_id in (93,59);
-</command>
+</programlisting>
 
 <para> Those two queries could be submitted to all of the nodes via
 <function/ddlscript()/ / <command/EXECUTE SCRIPT/, thus eliminating

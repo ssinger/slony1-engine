@@ -8,7 +8,7 @@
 
 <para>Here are some typical entries that you will probably run into in your logs:
 
-<para><command>
+<screen>
 CONFIG main: local node id = 1
 CONFIG main: loading current cluster configuration
 CONFIG storeNode: no_id=3 no_comment='Node 3'
@@ -16,19 +16,19 @@ CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo
 CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
 CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
 CONFIG main: configuration complete - starting threads
-</command>
+</screen>
 
 <sect2><title/DEBUG Notices/
 
 <para>Debug notices are always prefaced by the name of the thread that the notice originates from. You will see messages from the following threads:
 
-<para><command>
+<screen>
 localListenThread: This is the local thread that listens for events on the local node.
 remoteWorkerThread_X: The thread processing remote events.
 remoteListenThread_X: Listens for events on a remote node database.
 cleanupThread: Takes care of things like vacuuming, cleaning out the confirm and event tables, and deleting logs.
 syncThread: Generates sync events.
-</command>
+</screen>
 
 <para> WriteMe: I can't decide the format for the rest of this. I
 think maybe there should be a "how it works" page, explaining more

@@ -1,18 +1,39 @@
 <sect1 id="reshape"> <title/Reshaping a Cluster/
 
-<para>If you rearrange the nodes so that they serve different purposes, this will likely lead to the subscribers changing a bit.
+<para>If you rearrange the nodes so that they serve different
+purposes, this will likely lead to the subscribers changing a bit.
 
 <para>This will require doing several things:
 <itemizedlist>
 
-<listitem><para> If you want a node that is a subscriber to become the "master" provider for a particular replication set, you will have to issue the slonik MOVE SET operation to change that "master" provider node.
+<listitem><para> If you want a node that is a subscriber to become the
+"master" provider for a particular replication set, you will have to
+issue the slonik MOVE SET operation to change that "master" provider
+node.
 
-<listitem><para> You may subsequently, or instead, wish to modify the subscriptions of other nodes.  You might want to modify a node to get its data from a different provider, or to change it to turn forwarding on or off.  This can be accomplished by issuing the slonik SUBSCRIBE SET operation with the new subscription information for the node; Slony-I will change the configuration.
+<listitem><para> You may subsequently, or instead, wish to modify the
+subscriptions of other nodes.  You might want to modify a node to get
+its data from a different provider, or to change it to turn forwarding
+on or off.  This can be accomplished by issuing the slonik SUBSCRIBE
+SET operation with the new subscription information for the node;
+Slony-I will change the configuration.
 
-<listitem><para> If the directions of data flows have changed, it is doubtless appropriate to issue a set of DROP LISTEN operations to drop out obsolete paths between nodes and SET LISTEN to add the new ones.  At present, this is not changed automatically; at some point, MOVE SET and SUBSCRIBE SET might change the paths as a side-effect.  See SlonyListenPaths for more information about this.  In version 1.1 and later, it is likely that the generation of sl_listen entries will be entirely automated, where they will be regenerated when changes are made to sl_path or sl_subscribe, thereby making it unnecessary to even think about SET LISTEN.
+<listitem><para> If the directions of data flows have changed, it is
+doubtless appropriate to issue a set of DROP LISTEN operations to drop
+out obsolete paths between nodes and SET LISTEN to add the new ones.
+At present, this is not changed automatically; at some point, MOVE SET
+and SUBSCRIBE SET might change the paths as a side-effect.  See
+SlonyListenPaths for more information about this.  In version 1.1 and
+later, it is likely that the generation of sl_listen entries will be
+entirely automated, where they will be regenerated when changes are
+made to sl_path or sl_subscribe, thereby making it unnecessary to even
+think about SET LISTEN.
 
 </itemizedlist>
-<para> The "altperl" toolset includes a "init_cluster.pl" script that is quite up to the task of creating the new SET LISTEN commands; it isn't smart enough to know what listener paths should be dropped.
+
+<para> The "altperl" toolset includes a "init_cluster.pl" script that
+is quite up to the task of creating the new SET LISTEN commands; it
+isn't smart enough to know what listener paths should be dropped.
 
 <!-- Keep this comment at the end of the file
 Local variables:

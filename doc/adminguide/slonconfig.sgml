@@ -2,10 +2,9 @@
 
 <para>Slon parameters:
 
-<para> usage: slon [options] clustername conninfo
+<screen>
+usage: slon [options] clustername conninfo
 
-<para>
-<command>
 Options:
 -d debuglevel		 verbosity of logging (1..8)
 -s milliseconds	  SYNC check interval (default 10000)
@@ -14,7 +13,7 @@ Options:
 -c num				  how often to vacuum in cleanup cycles
 -p filename			slon pid file
 -f filename			slon configuration file
-</command>
+</screen>
 
 <itemizedlist>
 
