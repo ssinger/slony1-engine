@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.12 2004-07-26 19:03:32 xfade Exp $
+# $Id: GNUmakefile.in,v 1.13 2004-08-18 23:38:28 darcyb Exp $
 # ----------
 
 top_builddir = .
@@ -40,7 +40,8 @@ install	installdirs:
 clean:
 	for subdir in src doc tools ; do \
 	  $(MAKE) -C $$subdir $@ ; \
-    done
+    done ;\
+      rm -f postgresql.imp
 
 distclean: clean
 	rm -f Makefile.global Makefile.port
@@ -49,7 +50,7 @@ distclean: clean
 	rm -f @PACKAGE_NAME@.spec
 	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 	rm -rf autom4te.cache
-
+	
 maintainer-clean: distclean
 	rm -rf configure autom4te.cache
 
