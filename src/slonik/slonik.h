@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.16 2004-06-03 20:16:07 wieck Exp $
+ *	$Id: slonik.h,v 1.17 2004-06-12 03:27:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -498,6 +498,8 @@ int				slon_appendquery(SlonDString *dsp, char *fmt, ...);
 extern int		yylineno;
 extern char	   *yytext;
 extern FILE	   *yyin;
+
+extern void		scan_new_input_file(FILE *in);
 
 extern void		yyerror(const char *str);
 extern int		yyparse(void);

@@ -7,10 +7,9 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.13 2004-06-03 20:16:07 wieck Exp $
+ *	$Id: scan.l,v 1.14 2004-06-12 03:27:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
-
 %}
 
 %option 8bit
@@ -128,3 +127,25 @@ wait			{ return K_WAIT;				}
 
 %%
 
+void
+scan_new_input_file(FILE *in)
+{
+	SlonDString		ds;
+	char			buf[8192];
+	int				len;
+
+	if (YY_CURRENT_BUFFER)
+		yy_delete_buffer(YY_CURRENT_BUFFER);
+
+	dstring_init(&ds);
+	while ((len = fread(&buf, 1, 8192, in)) > 0)
+	{
+		dstring_nappend(&ds, buf, len);
+	}
+	
+	printf("switch to new input of %d bytes\n", strlen(dstring_data(&ds)));
+	sleep(2);
+	yy_switch_to_buffer(yy_scan_string(dstring_data(&ds)));
+
+	dstring_free(&ds);
+}

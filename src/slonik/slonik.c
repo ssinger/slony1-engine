@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.23 2004-06-08 12:52:52 wieck Exp $
+ *	$Id: slonik.c,v 1.24 2004-06-12 03:27:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -89,11 +89,13 @@ main(int argc, const char *argv[])
 	{
 		while (optind < argc)
 		{
-			yyin = fopen(argv[optind], "r");
+			FILE *fp;
+			fp = fopen(argv[optind], "r");
+			scan_new_input_file(fp);
 			current_file = (char *)argv[optind++];
 			yylineno = 1;
 			yyparse();
-			fclose(yyin);
+			fclose(fp);
 
 			if (parser_errors != 0)
 				return -1;
@@ -106,7 +108,7 @@ main(int argc, const char *argv[])
 	}
 	else
 	{
-		yyin = stdin;
+		scan_new_input_file(stdin);
 		yyparse();
 
 		if (parser_errors != 0)
