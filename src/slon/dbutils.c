@@ -1,12 +1,12 @@
 /*-------------------------------------------------------------------------
  * slon.c
  *
- *	The control framework for the node daemon.
+ *	Database utility functions for Slony-I
  *
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.2 2004-02-20 15:13:28 wieck Exp $
+ *	$Id: dbutils.c,v 1.3 2004-02-20 15:46:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,9 +29,9 @@
 #include "slon.h"
 
 
-/* ----------
+/* ----
  * slon_connectdb
- * ----------
+ * ----
  */
 SlonConn *
 slon_connectdb(char *conninfo, char *symname)
@@ -39,6 +39,9 @@ slon_connectdb(char *conninfo, char *symname)
 	PGconn	   *dbconn;
 	SlonConn   *conn;
 
+	/*
+	 * Create the native database connection
+	 */
 	dbconn = PQconnectdb(conninfo);
 	if (dbconn == NULL)
 	{
@@ -54,48 +57,56 @@ slon_connectdb(char *conninfo, char *symname)
 		return NULL;
 	}
 
-	conn = (SlonConn *)malloc(sizeof(SlonConn));
-	memset(conn, 0, sizeof(SlonConn));
-	conn->symname = strdup(symname);
-
-	pthread_mutex_init(&(conn->conn_lock), NULL);
-	pthread_cond_init(&(conn->conn_cond), NULL);
-	pthread_mutex_lock(&(conn->conn_lock));
-	
+	/*
+	 * Embed it into a SlonConn structure used to exchange it with
+	 * the scheduler. On return this new connection object is locked.
+	 */
+	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
 
 	return conn;
 }
 
 
-/* ----------
+/* ----
  * slon_disconnectdb
- * ----------
+ * ----
  */
 void
 slon_disconnectdb(SlonConn *conn)
 {
+	/*
+	 * Disconnect the native database connection
+	 */
 	PQfinish(conn->dbconn);
-	pthread_mutex_unlock(&(conn->conn_lock));
-	pthread_mutex_destroy(&(conn->conn_lock));
-	free(conn->symname);
-	free(conn);
+
+	/*
+	 * Unlock and destroy the condition and mutex variables
+	 * and free memory.
+	 */
+	slon_free_dummyconn(conn);
 }
 
 
-/* ----------
+/* ----
  * slon_make_dummyconn
- * ----------
+ * ----
  */
 SlonConn *
 slon_make_dummyconn(char *symname)
 {
 	SlonConn   *conn;
 
+	/*
+	 * Allocate and initialize the SlonConn structure
+	 */
 	conn = (SlonConn *)malloc(sizeof(SlonConn));
 	memset(conn, 0, sizeof(SlonConn));
 	conn->symname = strdup(symname);
 
+	/* 
+	 * Initialize and lock the condition and mutex variables
+	 */
 	pthread_mutex_init(&(conn->conn_lock), NULL);
 	pthread_cond_init(&(conn->conn_cond), NULL);
 	pthread_mutex_lock(&(conn->conn_lock));
@@ -104,15 +115,23 @@ slon_make_dummyconn(char *symname)
 }
 
 
-/* ----------
+/* ----
  * slon_free_dummyconn
- * ----------
+ * ----
  */
 void
 slon_free_dummyconn(SlonConn *conn)
 {
+	/*
+	 * Destroy and unlock the condition and mutex variables
+	 */
+	pthread_cond_destroy(&(conn->conn_cond));
 	pthread_mutex_unlock(&(conn->conn_lock));
 	pthread_mutex_destroy(&(conn->conn_lock));
+
+	/*
+	 * Free allocated memory
+	 */
 	free(conn->symname);
 	free(conn);
 }
@@ -131,6 +150,9 @@ db_getLocalNodeId(PGconn *conn)
 	PGresult   *res;
 	int			retval;
 
+	/*
+	 * Select the last_value from the sl_local_node_id sequence
+	 */
 	snprintf(query, 1024, "select last_value::int4 from %s.sl_local_node_id",
 			rtcfg_namespace);
 	res = PQexec(conn, query);
@@ -149,6 +171,9 @@ db_getLocalNodeId(PGconn *conn)
 		return -1;
 	}
 
+	/*
+	 * Return the result as an integer value
+	 */
 	retval = strtol(PQgetvalue(res, 0, 0), NULL, 10);
 	PQclear(res);
 	
@@ -156,6 +181,17 @@ db_getLocalNodeId(PGconn *conn)
 }
 
 
+/* ----
+ * slon_mkquery
+ *
+ *	A simple query formatting and quoting function using dynamic string
+ *	buffer allocation.
+ *	Similar to sprintf() it uses formatting symbols:
+ *		%s		String argument
+ *		%q		Quoted literal (\ and ' will be escaped)
+ *		%d		Integer argument
+ * ----
+ */
 int
 slon_mkquery(SlonDString *dsp, char *fmt, ...)
 {
