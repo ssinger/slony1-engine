@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.27 2004-06-08 15:15:49 wieck Exp $
+ *	$Id: slon.c,v 1.28 2004-08-30 16:47:45 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -72,7 +72,8 @@ main (int argc, char *const argv[])
 	extern char *optarg;
 	int			group_size_set = 0;
 
-	while ((c = getopt(argc, argv, "d:s:t:g:h")) != EOF)
+
+	while ((c = getopt(argc, argv, "d:s:t:g:c:h")) != EOF)
 	{
 		switch(c)
 		{
@@ -119,8 +120,16 @@ main (int argc, char *const argv[])
 						group_size_set = 1;
 						break;
 
-			case 'h':	errors++;
+			case 'c':	vac_frequency = strtol(optarg, NULL, 10);
+						if (vac_frequency < 0 || vac_frequency > 10)
+						{
+							fprintf(stderr, "Vaccum frequency must be between 0 (disable) and 10\n");
+							errors++;
+						}
 						break;
+
+                        case 'h':       errors++;
+                                                break;
 
 			default:	fprintf(stderr, "unknown option '%c'\n", c);
 						errors++;
@@ -140,6 +149,7 @@ main (int argc, char *const argv[])
 		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
 		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
+		fprintf(stderr, "    -c <num>		   how often to vaccum in cleanup cycles\n");
 		return 1;
 	}
 

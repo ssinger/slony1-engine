@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.15 2004-08-27 19:04:35 darcyb Exp $
+ *	$Id: cleanup_thread.c,v 1.16 2004-08-30 16:47:45 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,12 @@
 
 #include "slon.h"
 
+
+/* ----------
+ * Global data
+ * ----------
+ */
+int		vac_frequency = SLON_VACUUM_FREQUENCY;
 
 /* ----------
  * cleanupThread_main
@@ -70,26 +76,6 @@ cleanupThread_main(void *dummy)
 	dstring_init(&query1);
 	slon_mkquery(&query1, "select %s.cleanupEvent(); ", rtcfg_namespace);
 	dstring_init(&query2);
-
-	/*
-	 * Build the query string for vacuuming replication
-	 * runtime data and event tables
-	 */
-	dstring_init(&query3);
-	slon_mkquery(&query3, 
-			"vacuum analyze %s.sl_event; "
-			"vacuum analyze %s.sl_confirm; "
-			"vacuum analyze %s.sl_setsync; "
-			"vacuum analyze %s.sl_log_1; "
-			"vacuum analyze %s.sl_log_2;"
-			"vacuum analyze %s.sl_seqlog;"
-			"vacuum analyze pg_catalog.pg_listener;",
-			rtcfg_namespace, 
-			rtcfg_namespace, 
-			rtcfg_namespace, 
-			rtcfg_namespace, 
-			rtcfg_namespace, 
-			rtcfg_namespace);
 
 	/*
 	 * Loop until shutdown time arrived
@@ -180,9 +166,29 @@ cleanupThread_main(void *dummy)
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
 		 */
-		if (++vac_count >= SLON_VACUUM_FREQUENCY)
+		if (vac_frequency != 0 && ++vac_count >= vac_frequency)
 		{
 			vac_count = 0;
+			/*
+			 * Build the query string for vacuuming replication
+         		 * runtime data and event tables
+         		*/
+        		dstring_init(&query3);
+        		slon_mkquery(&query3, 
+                        	"vacuum analyze %s.sl_event; "
+                        	"vacuum analyze %s.sl_confirm; "
+                        	"vacuum analyze %s.sl_setsync; "
+                        	"vacuum analyze %s.sl_log_1; "
+                        	"vacuum analyze %s.sl_log_2;"
+                        	"vacuum analyze %s.sl_seqlog;"
+                        	"vacuum analyze pg_catalog.pg_listener;",
+                        	rtcfg_namespace,
+                        	rtcfg_namespace,
+                        	rtcfg_namespace,
+                        	rtcfg_namespace,
+                        	rtcfg_namespace,
+                        	rtcfg_namespace);
+
 
 			gettimeofday(&tv_start, NULL);
 			res = PQexec(dbconn, dstring_data(&query3));
@@ -200,6 +206,11 @@ cleanupThread_main(void *dummy)
 			slon_log(SLON_DEBUG2,
 					"cleanupThread: %8.3f seconds for vacuuming\n",
 					TIMEVAL_DIFF(&tv_start, &tv_end));
+			/*
+			 * Free Resources
+			 */
+			dstring_free(&query3);
+
 		}
 	}
 
@@ -208,7 +219,6 @@ cleanupThread_main(void *dummy)
 	 */
 	dstring_free(&query1);
 	dstring_free(&query2);
-	dstring_free(&query3);
 
 	/*
 	 * Disconnect from the database

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.36 2004-06-29 12:07:14 wieck Exp $
+ *	$Id: slon.h,v 1.37 2004-08-30 16:47:45 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -387,6 +387,13 @@ extern int64	rtcfg_seq_get(void);
  */
 extern void	   *slon_localEventThread(void *dummy);
 
+/*
+ * ----------
+ * Global variables in cleanup_thread.c
+ * ----------
+ */
+
+extern int		vac_frequency;
 
 /* ----------
  * Functions in cleanup_thread.c
@@ -484,7 +491,6 @@ extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);
  * ----------
  */
 extern int		slon_log_level;
-
 
 /* ----------
  * Functions in misc.c
