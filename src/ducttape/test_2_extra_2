@@ -1,0 +1,27 @@
+#!/bin/sh
+
+#
+# script test_2_extra_2
+#
+#	This script demonstrates how to switch the provider for node 2
+#	to be node 3, making it a cascaded node.
+#
+#	It can only be run after node 2 has been reconfigured to be a
+#	direct slave. The required configuration checks are not yet
+#	implemented, so running it too early breaks the replication
+#	cluster.
+#
+
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=slony_test1';
+	node 2 admin conninfo = 'dbname=slony_test2';
+	node 3 admin conninfo = 'dbname=slony_test3';
+
+	store listen (origin = 1, provider = 3, receiver = 2);
+	store listen (origin = 2, provider = 3, receiver = 1);
+	drop listen (origin = 1, provider = 1, receiver = 2);
+	drop listen (origin = 2, provider = 2, receiver = 1);
+
+	subscribe set (id = 1, provider = 3, receiver = 2, forward = no);
+_EOF_

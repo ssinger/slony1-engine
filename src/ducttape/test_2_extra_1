@@ -1,0 +1,26 @@
+#!/bin/sh
+
+#
+# script test_2_extra_1
+#
+#	This script demonstrates how to switch the provider for node 3
+#	to be the primary node (master). This makes node 3 logically
+#	identical to node 2.
+#
+#	It can only be run after node 3 has completed copying the entire
+#	data set from node 2.
+#
+
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=slony_test1';
+	node 2 admin conninfo = 'dbname=slony_test2';
+	node 3 admin conninfo = 'dbname=slony_test3';
+
+	subscribe set (id = 1, provider = 1, receiver = 3, forward = yes);
+
+	store listen (origin = 1, provider = 1, receiver = 3);
+	store listen (origin = 3, provider = 3, receiver = 1);
+	drop listen (origin = 1, provider = 2, receiver = 3);
+	drop listen (origin = 3, provider = 2, receiver = 1);
+_EOF_

@@ -1,13 +1,27 @@
 #!/bin/sh
 
-PATH=/usr/local/slony1/bin:$PATH
+# **********
+# test_1_pgbench
+#
+# 	This test script creates a standalone pgbench database 
+#	as slony_test1 and then:
+#
+#	- initializes a primary node and starts the node daemon
+#	- creates a set containing all 4 pgbench tables
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- creates the pgbench tables (schema only)
+#	- subscribes the replication set from the primary node
+# **********
+
 export PATH
 TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
 
-PGBENCH_SCALE=2
-PGBENCH_CLIENTS=6
+PGBENCH_SCALE=1
+PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
 
 trap '
@@ -82,7 +96,14 @@ echo ""
 ######################################################################
 
 echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
-if ! slony1_initcluster -f T1 "dbname=$DB1" "Primary node" ; then
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	init cluster (id = 1, comment = 'Node 1');
+	echo 'Database $DB1 initialized as Node 1';
+_EOF_
+if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
 	exit -1
 fi
@@ -93,11 +114,37 @@ slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
 echo "**** creating a replication set containing the 4 pgbench tables ... "
-slony1_makeset T1 1 1 "pgbench tables" 			\
-	1	public.accounts		"Table accounts"	\
-	2	public.branches		"Table branches"	\
-	3	public.tellers		"Table tellers"	\
-	4	public.history		"Table history"	\
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		table add key (node id = 1, full qualified name = 'public.history');
+	}
+	on error {
+		exit -1;
+	}
+
+	try {
+		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 1,
+			id = 1, full qualified name = 'public.accounts',
+			comment = 'Table accounts');
+		set add table (set id = 1, origin = 1,
+			id = 2, full qualified name = 'public.branches',
+			comment = 'Table branches');
+		set add table (set id = 1, origin = 1,
+			id = 3, full qualified name = 'public.tellers',
+			comment = 'Table tellers');
+		set add table (set id = 1, origin = 1,
+			id = 4, full qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
+	}
+	on error {
+		exit -1;
+	}
+_EOF_
 
 if [ $? -ne 0 ] ; then
 	echo "failed"
@@ -136,7 +183,21 @@ if ! createdb $DB2 ; then
 fi
 
 echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
-if ! slony1_addnode T1 1 2 dbname=$DB2 "Slave Node 2" ; then
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	try {
+		store node (id = 2, comment = 'Node 2');
+		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
+		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
+		store listen (origin = 1, receiver = 2);
+		store listen (origin = 2, receiver = 1);
+	}
+	on error { exit -1; }
+	echo 'Database $DB2 added as Node 2';
+_EOF_
+if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	exit -1

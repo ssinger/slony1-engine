@@ -1,5 +1,25 @@
 #!/bin/sh
 
+# **********
+# test_2_pgbench
+#
+# 	This test script creates a standalone pgbench database 
+#	as slony_test1 and then:
+#
+#	- initializes a primary node and starts the node daemon
+#	- creates a set containing all 4 pgbench tables
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- creates the pgbench tables (schema only)
+#	- subscribes the replication set from the primary node
+#	- creates a 3rd database node similar that replicates
+#	  cascaded from the second node.
+#	- waits until the pgbench is terminated and the user
+#	  stopped all 3 replication engines.
+#	- compares the 3 database.
+# **********
+
 PATH=/usr/local/slony1/bin:$PATH
 export PATH
 TMPOUT=/tmp/output.$$
@@ -9,7 +29,7 @@ DB3=slony_test3
 
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
-PGBENCH_TRANS=`expr 20000 / $PGBENCH_CLIENTS`
+PGBENCH_TRANS=`expr 50000 / $PGBENCH_CLIENTS`
 
 trap '
 	echo ""
@@ -89,7 +109,15 @@ echo ""
 ######################################################################
 
 echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
-if ! slony1_initcluster -f T1 "dbname=$DB1" "Primary node" ; then
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB1';
+	node 3 admin conninfo = 'dbname=$DB1';
+	init cluster (id = 1, comment = 'Node 1');
+	echo 'Database $DB1 initialized as Node 1';
+_EOF_
+if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
 	exit -1
 fi
@@ -100,12 +128,38 @@ slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
 echo "**** creating a replication set containing the 4 pgbench tables ... "
-slony1_makeset T1 1 1 "pgbench tables" 			\
-	1	public.accounts		"Table accounts"	\
-	2	public.branches		"Table branches"	\
-	3	public.tellers		"Table tellers"	\
-	4	public.history		"Table history"	\
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
 
+	try {
+		table add key (node id = 1, full qualified name = 'public.history');
+	}
+	on error {
+		exit -1;
+	}
+
+	try {
+		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 1,
+			id = 1, full qualified name = 'public.accounts',
+			comment = 'Table accounts');
+		set add table (set id = 1, origin = 1,
+			id = 2, full qualified name = 'public.branches',
+			comment = 'Table branches');
+		set add table (set id = 1, origin = 1,
+			id = 3, full qualified name = 'public.tellers',
+			comment = 'Table tellers');
+		set add table (set id = 1, origin = 1,
+			id = 4, full qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
+	}
+	on error {
+		exit -1;
+	}
+_EOF_
 if [ $? -ne 0 ] ; then
 	echo "failed"
 	kill $pgbench_pid 2>/dev/null
@@ -143,7 +197,24 @@ if ! createdb $DB2 ; then
 fi
 
 echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
-if ! slony1_addnode T1 1 2 dbname=$DB2 "Slave Node 2" ; then
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	try {
+		store node (id = 2, comment = 'Node 2');
+		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
+		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
+		store listen (origin = 1, receiver = 2);
+		store listen (origin = 2, receiver = 1);
+	}
+	on error { exit -1; }
+	echo 'Database $DB2 added as Node 2';
+_EOF_
+
+if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	exit -1
@@ -173,8 +244,15 @@ echo "**** creating pgbench tables and subscribing Node 2 to set 1"
 	pg_dump -s -t branches $DB1
 	pg_dump -s -t tellers $DB1
 	pg_dump -s -t history $DB1
-	echo "select \"_T1\".subscribeSet (1, 1, 2, true);"
 ) | psql -q $DB2
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
+_EOF_
 
 echo ""
 echo "**********************************************************************"
@@ -186,7 +264,9 @@ echo ""
 # Setup DB2 as a slave node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-sleep 30
+# echo -n "**** Hit enter when node 2 is done with copy set"
+# read line
+sleep `expr 60 \* $PGBENCH_SCALE`
 echo "**** creating database for Node 3"
 if ! createdb $DB3 ; then
 	kill $pgbench_pid 2>/dev/null
@@ -196,7 +276,28 @@ if ! createdb $DB3 ; then
 fi
 
 echo "**** initializing $DB3 as Node 3 of Slony-I cluster T1"
-if ! slony1_addnode T1 2 3 dbname=$DB3 "Slave Node 3" ; then
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	store node (id = 3, comment = 'Node 3');
+
+	store path (server = 1, client = 3, conninfo = 'dbname=$DB1');
+	store path (server = 2, client = 3, conninfo = 'dbname=$DB2');
+	store path (server = 3, client = 1, conninfo = 'dbname=$DB3');
+	store path (server = 3, client = 2, conninfo = 'dbname=$DB3');
+
+	store listen (origin = 1, receiver = 3, provider = 2);
+	store listen (origin = 2, receiver = 3);
+	store listen (origin = 3, receiver = 2);
+	store listen (origin = 3, receiver = 1, provider = 2);
+
+	echo 'Database $DB2 added as Node 2';
+_EOF_
+
+if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	kill $slon2_pid 2>/dev/null
@@ -226,8 +327,15 @@ echo "**** creating pgbench tables and subscribing Node 2 to set 1"
 	pg_dump -s -t branches $DB2
 	pg_dump -s -t tellers $DB2
 	pg_dump -s -t history $DB2
-	echo "select \"_T1\".subscribeSet (1, 2, 3, false);"
 ) | psql -q $DB3
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	subscribe set ( id = 1, provider = 2, receiver = 3, forward = no );
+_EOF_
 
 echo ""
 echo "**********************************************************************"
