@@ -29,17 +29,13 @@ versions may not be.
 
 You need an ISO/ANSI C complier.  Recent versions of GCC work.
 
-You also need a recent version of PostgreSQL *source*.  Slony-I depends on
-namespace support so you must have version 7.3 or newer to be able to build
-and use Slony-I.
+You also need a recent version of PostgreSQL with server headers installed.
+Slony-I depends on namespace support so you must have version 7.3 or newer to 
+be able to build and use Slony-I.
 
 If you need to get a GNU package, it comes in the standard packaging for your
 operating system, or you can find it at your local GNU mirror (see
 http://www.gnu.org/order/ftp.html for a list) or at ftp://ftp.gnu.org/gnu.)
-
-If you need to obtain PostgreSQL source, you can download it from your
-favorite PostgreSQL mirror (see <http://www.postgresql.org/mirrors-www.html>
-for a list), or via BitTorrent at <http://bt.postgresql.org/>.
 
 Also check to make sure you have sufficient disk space.  You will need
 approximately 5MB for the source tree during build and installation.
@@ -60,20 +56,12 @@ installation procedure.
 
 Short Version
 
-./configure --with-pgsourcetree=<path/to/your/pgsql/source>
+./configure
 gmake all
 gmake install
 
-1.  Configuration
-
-The first step of the installation procedure is to configure the source tree
-for your system.  This is done by running the configure script.  Configure
-needs to know where your PostgreSQL source tree is, this is done with the
---with-pgsourcetree=</path/to/your/pg/sources> option.
-
-Example:
-
-./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
+1. Configure
+./configure
 
 This script will run a number of tests to guess values for various dependent
 variables and try to detect some quirks of your system.  Slony-I is known to
@@ -98,6 +86,6 @@ To install Slony-I, enter
 gmake install
 
 This will install files into PostgreSQL install directory as specified by the
---prefix option used in the PostgreSQL configuration.  Make sure you have
-appropriate permissions to write into that area.  Normally you need to do this
-as root.
+--prefix option used in the PostgreSQL configuration (as returned by pg_config).
+Make sure you have appropriate permissions to write into that area.  Normally 
+you need to do this as root.
