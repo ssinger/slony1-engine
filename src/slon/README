@@ -1,3 +1,4 @@
+$Id: README,v 1.7 2004-12-02 21:41:43 cbbrowne Exp $
 
 Directory src/slon
 
@@ -19,3 +20,120 @@ TODO:
 
 	Use forward data for PITR.
 
+Major components:
+
+ - slon.c
+
+   Main program file:
+
+   - processes command line options
+   - loads configuration for the local node from its database
+   - starts various threads:
+     - main loop thread
+     - cleanup thread
+     - SYNC event generator thread
+
+ - cleanup_thread.c
+
+  This thread runs every so often and does various forms of cleanup:
+   - Cleans up event table to remove old entries
+   - Removes obsolete entries from sl_log_1, sl_seqlog
+   - Vacuums tables that Slony-I uses
+
+ - conf-file.l
+   A lex grammar for slon configuration files
+
+ - dbutils.c
+
+   Tools for database access that provide abstractions to simplify
+   usage of libpq functions.  For instance, slon_mkquery() provides a
+   way to paste together queries using dynamic string buffer
+   allocation.
+
+ - local_listen.c
+
+   Thread function that listens for events on the local node's
+   database and takes action based on them.  This mostly involves
+   requests for reconfiguration of the node.
+
+ - remote_listen.c
+
+   An "remote listener" thread is created for each node this node
+   listens to.  The thread is in effect looking for configuration
+   changes and SYNC events on sets to which the local node is
+   subscribing to.  When events are received, they are forwarded to a
+   queue on the remote worker for the node to be worked on.
+
+ - remote_worker.c
+
+   A "remote worker" thread is created for each node this node listens
+   to.  When events are received by the remote listener, they are
+   queued by the worker thread which then, in order, acts on them.
+
+   Configuration changes are typically passed on to the runtime
+   configuration system.  The two events that "do replication" are
+   ENABLE_SUBSCRIPTION, which copies existing data from a provider to
+   the subscriber, and SYNC, which leads to the worker thread reading
+   updates from sl_log_1/sl_log_2 and sl_seqlog.
+
+ - runtime_config.c
+
+   Each slon process has a set of in-memory configuration information;
+   these functions manage this information.
+
+   The data includes:
+
+   SlonNode - a linked list of nodes
+
+    For each node, the following is stored:
+      no_id         - node ID
+      no_active     - its active state
+      no_comment    - Comment field
+      pa_conninfo   - path (libpq style DSN) to the node
+      pa_connretry  - connection retry interval
+      last_event    - last event received for this node
+      listen_status - status of the listen thread
+      listen_thread - thread ID of listen thread
+      listen_head   - list of origins we listen for
+      listen_tail   - tail of list of origins we listen for
+      worker_status - status of worker thread
+      worker_thread - thread ID of worker thread
+      message_lock  - mutex for message queue
+      message_cond  - condition variable for queue
+      message_head  - list of work messages
+      message_tail  - tail of list of work messages
+
+   listen - a linked list of listen entries
+
+   SlonSet - a linked list of sets
+
+     For each node, the following is tracked:
+
+      set_id        - ID of set
+      set_origin    - node that is the origin for the set
+      set_comment   - comment about the set
+      sub_provider  - node from which this node receives data
+      sub_forward   - does this node forward data?
+      sub_active    - is the subscription active yet?
+
+ - scheduler.c
+
+   Event scheduler subsystem
+
+ - sync_thread.c
+
+   This thread periodically generates a SYNC event if local database
+   activity has created new log information in sl_log_1/sl_log_2.  
+
+   A SYNC is the basic "unit of replicated data."
+
+ - misc.c
+
+   Miscellaneous support functions.  Mostly about log file processing.
+
+Work threads:
+  - main
+  - cleanup thread
+  - sync thread
+  - remote_listen thread - for each node being monitored
+  - remote_worker thread - for each node being monitored
