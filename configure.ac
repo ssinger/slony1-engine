@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.43 2005-03-17 22:54:23 darcyb Exp $
+# $Id: configure.ac,v 1.44 2005-03-23 22:59:22 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -35,7 +35,9 @@ case $host_os in
  freebsd*) template=freebsd ;;
     hpux*) template=hpux ;;
     irix*) template=irix ;;
-   linux*) template=linux ;;
+   linux*|gnu*|k*bsd*-gnu) 
+           template=linux ;;
+   mingw*) template=win ;;
   netbsd*) template=netbsd ;;
 nextstep*) template=nextstep ;;
  openbsd*) template=openbsd ;;
@@ -53,6 +55,18 @@ nextstep*) template=nextstep ;;
   ultrix*) template=ultrix4 ;;
 esac
 
+if test x"$template" = x"" ; then
+  AC_MSG_ERROR([[
+*******************************************************************
+Slony-I has apparently not been ported to your platform yet.
+To try a manual configuration, look into the src/template directory
+for a similar platform and use the '--with-template=' option.
+
+Please also contact <slony1-general@gborg.postgresql.org> to see about
+rectifying this.  Include the above 'checking host system type...'
+line.
+*******************************************************************]])
+fi
 AC_MSG_RESULT([$template])
 
 # Checks for programs.
@@ -116,6 +130,7 @@ AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of 
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
 AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
+AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation Default is $PREFIX/doc. ])
 #Our current path
 SLONYPATH=`pwd`
 
@@ -125,6 +140,7 @@ SLONYPATH=`pwd`
 ACX_LIBPQ()
 ACX_LIBSNMP()
 ACX_SLONYTOOLS()
+ACX_SLONYDOCS()
 
 AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
 AC_SUBST(PGINCLUDESERVERDIR, $PG_INCLUDESERVERDIR)
@@ -136,6 +152,7 @@ AC_SUBST(HAVE_NETSNMP, $HAVE_NETSNMP)
 AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
 AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
 AC_SUBST(TOOLSBIN, $TOOLSBIN)
+AC_SUBST(DOCDIR, $DOCDIR)
 
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
@@ -159,8 +176,7 @@ SLON_AC_PROG_JADE
 SLON_AC_CHECK_DOCBOOK(4.2)
 SLON_AC_PATH_DOCBOOK_STYLESHEETS
 SLON_AC_PATH_COLLATEINDEX
-AC_CHECK_PROGS(SGMLSPL, sgmlspl)
-
+AC_SUBST(SGMLSPL, $SGMLSPL)
 
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile

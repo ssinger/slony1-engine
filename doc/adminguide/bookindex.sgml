@@ -19,17 +19,136 @@
       sequences of pages into a range.
 -->
 
+<indexdiv><title>C</title>
+
+<indexentry>
+  <primaryie>cluster_name configuration parameter,
+    <ulink url="slon-config-connection.html" role="AEN2950">Connection settings</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>configuration
+  </primaryie>
+  <secondaryie>of the slon daemon,
+    <ulink url="runtime-config.html" role="AEN2853">Run-time Configuration</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>conn_info configuration parameter,
+    <ulink url="slon-config-connection.html" role="AEN2959">Connection settings</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>D</title>
+
+<indexentry>
+  <primaryie>desired_sync_time configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN3017">Event Tuning</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>L</title>
+
+<indexentry>
+  <primaryie>log_level configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2902">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>log_pid configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2911">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>log_timestamp configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2920">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>log_timestamp_format configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2929">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>P</title>
+
+<indexentry>
+  <primaryie>pid_file configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2938">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
 <indexdiv><title>S</title>
 
 <indexentry>
   <primaryie>slon,
-    <ulink url="app-slon.html" role="app-slon">slon</ulink>
+    <ulink url="slon.html" role="slon">slon</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>slonik,
-    <ulink url="app-slonik.html" role="app-slonik">slonik</ulink>
+    <ulink url="slonik.html" role="slonik">slonik</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>sql_on_connection configuration parameter,
+    <ulink url="slon-config-connection.html" role="AEN2968">Connection settings</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>sync_group_maxsize configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN2998">Event Tuning</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>sync_interval configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN2980">Event Tuning</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>sync_interval_timeout configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN2989">Event Tuning</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>syslog configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2875">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>syslog_facility configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2884">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>syslog_ident configuration parameter,
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN2893">Logging</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>V</title>
+
+<indexentry>
+  <primaryie>vac_frequency configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN3007">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 

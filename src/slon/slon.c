@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.47 2005-03-17 22:54:23 darcyb Exp $
+ *	$Id: slon.c,v 1.48 2005-03-23 22:59:24 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -82,8 +82,10 @@ main(int argc, char *const argv[])
 	pid_t		pid;
 	extern int	optind;
 	extern char *optarg;
-	struct sigaction act;
 
+#ifndef CYGWIN
+	struct sigaction act;
+#endif
 	InitializeConfOptions();
 
 	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:hv")) != EOF)
@@ -671,15 +673,20 @@ main(int argc, char *const argv[])
 		
 		slon_log(SLON_DEBUG2, "slon: begin signal handler setup\n");
 
+#ifndef (CYGWIN)
 		act.sa_handler = &sighandler; 
 		sigemptyset(&act.sa_mask);
 		act.sa_flags = SA_NODEFER;
 
 		if (sigaction(SIGHUP,&act,NULL) < 0)
+#else
+		if (signal(SIGHUP,sighandler) == SIG_ERR)
+#endif
 		{
 			slon_log(SLON_FATAL, "slon: SIGHUP signal handler setup failed -(%d) %s\n", errno,strerror(errno));
 			slon_exit(-1);
 		}
+
 		if (signal(SIGINT,sighandler) == SIG_ERR)
 		{
 			slon_log(SLON_FATAL, "slon: SIGINT signal handler setup failed -(%d) %s\n", errno,strerror(errno));

@@ -18,3 +18,25 @@ AC_DEFUN([SLON_AC_PROG_PNMTOPS],
 
 AC_DEFUN([SLON_AC_PROG_PGAUTODOC],
 [AC_CHECK_PROGS([PGAUTODOC],[postgresql_autodoc pgautodoc])])
+
+AC_DEFUN([ACX_SLONYDOCS], [
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  AC_LANG_SAVE
+  AC_LANG_C
+  if test -n "${with_docdir}" ; then
+    if test ${with_docdir} != "yes"; then
+      LOCATION="${with_docdir}"
+    else
+      if test ${prefix} = "NONE"; then
+        LOCATION="${ac_default_prefix}/doc"
+      else
+        LOCATION="${prefix}/doc"
+      fi
+    fi
+  fi
+  if test x"${LOCATION}" != x; then
+   DOCDIR="${LOCATION}"
+  fi
+  AC_LANG_RESTORE
+]) dnl ACX_SLONYDOCS
+

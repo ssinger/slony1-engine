@@ -1,4 +1,4 @@
-# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win,v 1.4 2004-07-17 18:24:33 xfade Exp $
+# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win,v 1.5 2005-03-23 22:59:23 darcyb Exp $
 LDFLAGS+= -g
 DLLTOOL= dlltool
 DLLWRAP= dllwrap
@@ -14,7 +14,7 @@ LIBS:=$(filter-out -lm -lc, $(LIBS))
 AROPT = crs
 DLSUFFIX = .dll
 CFLAGS_SL =
-override CFLAGS += -I/usr/include/postgresql/server -DCYGWIN=1
+override CFLAGS += -DCYGWIN=1
 
 %.dll: %.o
 	$(DLLTOOL) --export-all --output-def $*.def $<

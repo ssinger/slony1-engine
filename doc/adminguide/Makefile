@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.9 2005-03-23 20:12:54 cbbrowne Exp $
+# $Id: Makefile,v 1.10 2005-03-23 22:59:22 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -40,19 +40,48 @@ override SPFLAGS += -wall -wno-unused-param -wno-empty
 DEFAULTSECTION := $(sqlmansect_dummy)
 
 man: slony.sgml $(ALLSGML)
+ifdef NSGMLS
+ifdef SGMLSPL
+ifdef D2MSCRIPT
 	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --section $(DEFAULTSECTION) --date "`date '+%Y-%m-%d'`"
 # One more time, to resolve cross-references
 	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --section $(DEFAULTSECTION) --date "`date '+%Y-%m-%d'`"
 	mkdir -p man1 man$(DEFAULTSECTION)
 	mv *.1 man1/
 	mv *.$(DEFAULTSECTION) man$(DEFAULTSECTION)/
-
+endif
+endif
+endif
 
 ##
 ## HTML
 ##
 
 all: html man
+
+installdirs:
+ifdef DOCDIR
+	$(mkinstalldirs) $(DOCDIR)/sgml
+	$(mkinstalldirs) $(DOCDIR)/html
+	$(mkinstalldirs) $(DOCDIR)/man1
+	$(mkinstalldirs) $(DOCDIR)/man$(DEFAULTSECTION)
+endif
+
+install: all man installdirs
+ifdef DOCDIR
+	for file in $(ALLSGML) ; do \
+	  $(INSTALL_DATA) $$file $(DOCDIR)/sgml; \
+	done
+	for file in $(wildcard man1/*) ; do \
+	   $(INSTALL_DATA) $$file $(DOCDIR)/man1 ;\
+	done
+	for file in $(wildcard man$(DEFAULTSECTION)/*) ; do \
+	  $(INSTALL_DATA) $$file $(DOCDIR)/man$(DEFAULTSECTION) ;\
+	done
+	for file in $(wildcard *.html) stylesheet.css ; do \
+	  $(INSTALL_DATA) $$file $(DOCDIR)/html ;\
+	done
+endif
 
 .PHONY: html
 
@@ -61,7 +90,7 @@ html:
 	@echo "You must have jade installed to build the documentation." && exit;
 else
 html: slony.sgml $(ALLSGML) stylesheet.dsl
-	@rm -f *.html
+	@rm -f *.html ;\
 	$(JADE) $(JADEFLAGS) $(SGMLINCLUDE) $(CATALOG) -d stylesheet.dsl -ioutput-html -t sgml $<
 ifeq ($(vpath_build), yes)
 	@cp $(srcdir)/stylesheet.css .
