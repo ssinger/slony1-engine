@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.3 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: runtime_config.c,v 1.4 2004-02-22 15:15:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -529,6 +529,13 @@ node->no_id);
 			case SLON_TSTAT_RESTART:
 				need_wakeup = true;
 				break;
+
+			case SLON_TSTAT_DONE:
+				pthread_join(node->listen_thread, NULL);
+printf("rtcfg_startStopNodeThread(): node %d - listen thread done and joined\n",
+node->no_id);
+				node->listen_status = SLON_TSTAT_NONE;
+				break;
 		}
 	}
 	else
@@ -557,6 +564,13 @@ node->no_id);
 				need_wakeup = true;
 printf("rtcfg_startStopNodeThread(): node %d - listen thread changed to shutdown\n",
 node->no_id);
+				break;
+
+			case SLON_TSTAT_DONE:
+				pthread_join(node->listen_thread, NULL);
+printf("rtcfg_startStopNodeThread(): node %d - listen thread done and joined\n",
+node->no_id);
+				node->listen_status = SLON_TSTAT_NONE;
 				break;
 		}
 	}
@@ -599,17 +613,34 @@ rtcfg_doActivate(void)
 void
 rtcfg_joinAllRemoteThreads(void)
 {
-#if 0
 	SlonNode   *node;
 
-	pthread_mutex_lock(&config_lock);
+	rtcfg_lock();
+
 	for (node = rtcfg_node_list_head; node; node = node->next)
 	{
-		pthread_join(node->event_thread, NULL);
-		pthread_mutex_lock(&(node->node_lock));
-		node->have_thread = false;
-		pthread_mutex_unlock(&(node->node_lock));
+		switch (node->listen_status)
+		{
+			case SLON_TSTAT_NONE:
+				break;
+
+			case SLON_TSTAT_RUNNING:
+			case SLON_TSTAT_SHUTDOWN:
+			case SLON_TSTAT_RESTART:
+				node->listen_status = SLON_TSTAT_SHUTDOWN;
+
+			case SLON_TSTAT_DONE:
+printf("rtcfg_joinAllRemoteThreads: waiting for remote listen node %d\n",
+node->no_id);
+				rtcfg_unlock();
+				sched_wakeup_node(node->no_id);
+				pthread_join(node->listen_thread, NULL);
+				rtcfg_lock();
+				node->listen_status = SLON_TSTAT_NONE;
+printf("rtcfg_joinAllRemoteThreads: joined remote listen node %d\n",
+node->no_id);
+		}
 	}
-	pthread_mutex_unlock(&config_lock);
-#endif
+
+	rtcfg_unlock();
 }

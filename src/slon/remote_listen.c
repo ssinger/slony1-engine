@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.1 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: remote_listen.c,v 1.2 2004-02-22 15:15:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -260,7 +260,7 @@ node->no_id);
 	remoteListen_cleanup(&listat_head, &listat_tail);
 
 	rtcfg_lock();
-	node->listen_status = SLON_TSTAT_NONE;
+	node->listen_status = SLON_TSTAT_DONE;
 	rtcfg_unlock();
 
 printf("slon_remoteListenThread: node %d - done\n",

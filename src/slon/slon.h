@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.11 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: slon.h,v 1.12 2004-02-22 15:15:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,7 @@ typedef enum {
 	SLON_TSTAT_RUNNING,
 	SLON_TSTAT_SHUTDOWN,
 	SLON_TSTAT_RESTART,
+	SLON_TSTAT_DONE
 } SlonThreadStatus;
 
 
