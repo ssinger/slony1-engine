@@ -1,5 +1,5 @@
-#!perl # -*- perl -*-
-# $Id: update_nodes.pl,v 1.2 2004-09-09 17:04:08 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: update_nodes.pl,v 1.3 2005-01-26 19:42:26 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

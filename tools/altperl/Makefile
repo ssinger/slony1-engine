@@ -1,8 +1,8 @@
 # ----------
-# Makefile for the HOWTOs
+# Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.1 2004-07-26 19:05:24 xfade Exp $
+#       $Id: Makefile,v 1.2 2005-01-26 19:42:23 darcyb Exp $
 #
 # ----------
 
@@ -10,7 +10,7 @@ slony_subdir = tools/altperl
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-DISTFILES = Makefile ToDo README $(wildcard *.pl*) $(wildcard *.pm*) $(wildcard *.env*)
+DISTFILES = Makefile ToDo README $(wildcard *.pl) $(wildcard *.pm) $(wildcard *.env)
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
@@ -20,4 +20,22 @@ distdir: $(DISTFILES)
     done
 
 clean distclean maintainer-clean:
-
+	@for file in $(wildcard *.pl); do \
+		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+		rm $$tmpname ; \
+	done
+all:
+ifndef PERL
+	@echo "You need perl to make use of these tools"
+else
+ifndef SED
+		@echo "You need sed to use slony"
+		exit 1;
+else
+		@for file in $(wildcard *.pl) ; do \
+			tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
+			$(SED) -e "s#@@PERL@@#$(PERL)#" $$file > $$tmpname; \
+			chmod 755 $$tmpname; \
+		done
+endif
+endif

@@ -1,5 +1,5 @@
-#!perl # -*- perl -*-
-# $Id: slon_pushsql.pl,v 1.5 2004-09-15 22:00:08 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: slon_pushsql.pl,v 1.6 2005-01-26 19:42:25 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: merge_sets.pl,v 1.5 2005-01-10 18:22:55 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: merge_sets.pl,v 1.6 2005-01-26 19:42:23 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

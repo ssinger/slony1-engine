@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: init_cluster.pl,v 1.7 2005-01-10 17:17:17 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: init_cluster.pl,v 1.8 2005-01-26 19:42:23 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

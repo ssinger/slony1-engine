@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: regenerate-listens.pl,v 1.1 2004-12-15 18:46:08 cbbrowne Exp $
+#!@@PERL@@
+# $Id: regenerate-listens.pl,v 1.2 2005-01-26 19:42:23 darcyb Exp $
 # Copyright 2005
 # Christopher B. Browne
 # cbbrowne@acm.org

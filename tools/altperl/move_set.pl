@@ -1,5 +1,5 @@
-#!perl # -*- perl -*-
-# $Id: move_set.pl,v 1.4 2004-12-02 21:44:12 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: move_set.pl,v 1.5 2005-01-26 19:42:23 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

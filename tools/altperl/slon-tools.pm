@@ -1,5 +1,5 @@
-#!perl     # -*- perl -*-
-# $Id: slon-tools.pm,v 1.14 2005-01-04 22:19:12 cbbrowne Exp $
+# -*- perl -*-
+# $Id: slon-tools.pm,v 1.15 2005-01-26 19:42:24 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

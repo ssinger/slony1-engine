@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: create_set.pl,v 1.9 2005-01-10 16:46:44 cbbrowne Exp $
+#!@@PERL@@
+# $Id: create_set.pl,v 1.10 2005-01-26 19:42:23 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

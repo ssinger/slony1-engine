@@ -1,5 +1,5 @@
-#!/usr/bin/perl # -*- perl -*-
-# $Id: slon_kill.pl,v 1.6 2005-01-17 21:49:22 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: slon_kill.pl,v 1.7 2005-01-26 19:42:25 darcyb Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada

@@ -1,5 +1,5 @@
-#!perl # -*- perl -*-
-# $Id: show_nodes.pl,v 1.1 2004-09-27 20:26:29 cbbrowne Exp $
+#!@@PERL@@ # -*- perl -*-
+# $Id: show_nodes.pl,v 1.2 2005-01-26 19:42:24 darcyb Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
