@@ -25,7 +25,7 @@ are available
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
-./configure --bindir /usr/bin --libdir /usr/lib/pgsql --includedir /usr/include/pgsql --datadir /usr/share/pgsql
+./configure --with_pgbindir /usr/bin --with_pglibdir /usr/lib/pgsql --with_pgincludedir /usr/include/pgsql --with_pgsharedir /usr/share/pgsql
 
 %build
 make CFLAGS="-I /usr/kerberos/include"
