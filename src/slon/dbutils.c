@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.10 2004-08-02 21:57:33 darcyb Exp $
+ *	$Id: dbutils.c,v 1.11 2004-08-04 19:58:32 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -37,7 +37,7 @@ static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
  * which is not threadsafe.  It is especially odd because I'm not using
  * kerberos. 
  * 
- * This is fixed in libpq in 7.5, but for now (and for older versions
+ * This is fixed in libpq in 8.0, but for now (and for older versions
  * we'll just use this mutex. 
  *
  */
