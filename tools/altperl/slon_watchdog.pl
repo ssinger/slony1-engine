@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_watchdog.pl,v 1.1 2004-07-25 04:02:51 cbbrowne Exp $
+# $Id: slon_watchdog.pl,v 1.2 2004-08-12 22:14:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -13,32 +13,27 @@ if ( scalar(@ARGV) < 2 ) {
   die "Usage: ./slon_watchdog node sleep-time\n";
 }
 
-slon_watchdog();
+if ($node =~/^node(\d+)$/) {
+  $nodenum = $1;
+}
+
+slon_watchdog($node, $nodenum);
 
 sub slon_watchdog {
-  get_pid();
+  my ($node, $nodenum) = @_;
+  $pid = get_pid($node);
   if (!($pid)) {
-    if ($node eq "node1") {
-      open (SLONLOG, ">>$LOGDIR/slon-$DBNAME1.out");
-      print SLONLOG "WATCHDOG: No Slon is running for set $SETNAME!\n";
-      print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
-      print SLONLOG "WATCHDOG: I'm going to restart slon for $node...\n";
-      #first restart the node
-      system "./restart_node.sh";
-      system "$SLON_BIN_PATH/slon $SETNAME -s 1000 -d2 'dbname=$DBNAME1 port=$DBPORT1' 2>$LOGDIR/slon-$DBNAME1.err >$LOGDIR/slon-$DBNAME1.out &";
-      get_pid();
-      print SLONLOG "WATCHDOG: Restarted slon for set $SETNAME, PID $pid\n";
-    } elsif ($node eq "node2") {
-      open (SLONLOG, ">>$LOGDIR/slon-$DBNAME2.out");
-      print SLONLOG "WATCHDOG: No Slon is running for set $SETNAME!\n";
-      print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
-      print SLONLOG "WATCHDOG: I'm going to restart slon for $node...\n";
-      #first restart the node
-      system "./restart_node.sh";
-      system "$SLON_BIN_PATH/slon $SETNAME -s 1000 -d2 'dbname=$DBNAME2 port=$DBPORT2' 2>$LOGDIR/slon-$DBNAME2.err >$LOGDIR/slon-$DBNAME2.out &";
-      get_pid();
-      print SLONLOG "Restarted slon for set $SETNAME, PID $pid\n";
-    }
+    my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
+    open (SLONLOG, ">>$LOGDIR/slon-$dbname-$node.err");
+    print SLONLOG "WATCHDOG: No Slon is running for node $node!\n";
+    print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
+    print SLONLOG "WATCHDOG: I'm going to restart slon for $node...\n";
+    # First, restart the node using slonik
+    system "./restart_node.sh $node";
+    # Next, restart the slon process to service the node
+    start_slon($nodenum);
+    $pid = get_pid($node);
+    print SLONLOG "WATCHDOG: Restarted slon for set $SETNAME, PID $pid\n";
   } else {
     open(LOG, ">>$LOGDIR/slon_watchdog.log");
     print LOG "\n";
@@ -50,11 +45,4 @@ sub slon_watchdog {
   close(PSOUT);
   sleep $sleep;
   slon_watchdog();
-}
-
-sub get_pid {
-  open(PSOUT, "ps -auxww | grep -v grep | grep \"slon $SETNAME\" | sort -n | awk '{print \$2}'|");
-  $pid = <PSOUT>;
-  chop $pid;
-  close(PSOUT);
 }

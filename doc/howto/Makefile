@@ -50,4 +50,3 @@ schemadoc.html: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 
 clean:
 	@$(pgbindir)/dropdb $(TEMPDB) || echo "unable to dropdb $(TEMPDB)" 
-

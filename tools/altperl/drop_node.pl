@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: drop_node.pl,v 1.2 2004-08-10 20:55:32 cbbrowne Exp $
+# $Id: drop_node.pl,v 1.3 2004-08-12 22:14:30 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -18,14 +18,13 @@ my $OUTPUTFILE="/tmp/slonik-drop.$$";
 open(SLONIK, ">$OUTPUTFILE");
 print SLONIK genheader();
 print SLONIK qq{
-        try {
-                drop node (id = $node);
-        }
-        on error {
-                echo 'Failed to drop node $node from cluster';
-                exit 1;
-        }
-        echo 'dropped node $node cluster';
+try {
+      drop node (id = $node);
+} on error {
+      echo 'Failed to drop node $node from cluster';
+      exit 1;
+}
+echo 'dropped node $node cluster';
 };
 close SLONIK;
 run_slonik_script($OUTPUTFILE);

@@ -12,15 +12,19 @@ And now, the contents.
 
 1.  Build and install
 
-Slony currently supports PostgreSQL 7.3.x and 7.4.x.
+Slony currently supports PostgreSQL 7.3.x, 7.4.x, and 8.x.
 
 Slony must be built and installed by the PostgreSQL Unix user.  The
 installation target will be identical to the existing PostgreSQL
 installation and the original PostgreSQL source tree must be
-available.  On certain platforms (AIX is one of these), PostgreSQL must
-be configured with the option --enable-thread-safety to provide
-correct client libraries.  The location of the PostgreSQL source-tree is
-specified with the configure option --with-pgsourcetree=<dir>.
+available.  On certain platforms (AIX and Solaris are amongst these),
+PostgreSQL must be configured with the option --enable-thread-safety
+to provide correct client libraries.  
+
+The location of the PostgreSQL source-tree is specified with the
+configure option --with-pgsourcetree=<dir>.  [[ An effort is ongoing
+to eliminate the need for the source tree; AIX is a conspicuous
+platform where this doesn't yet work... ]]
 
 The complete list of files installed is:
 
@@ -58,11 +62,12 @@ database
 LOCAL WILL BE REMOTE
 
 The Slony replication system is based on triggers.  One of the nice
-side effects of this is that you can replicate between two databases
-under the same postmaster.  Things can get a little confusing when
-we're talking about local vs. remote database in that context.  To
-avoid confusion, from here on we will strictly use the term "node" to
-mean one database and its replication daemon program slon.
+side effects of this is that you may, in theory, replicate between two
+databases under the same postmaster.  Things can get a little
+confusing when we're talking about local vs. remote database in that
+context.  To avoid confusion, from here on we will strictly use the
+term "node" to mean one database and its replication daemon program
+slon.
 
 To make this example work for people with one or two computer systems
 at their disposal, we will define a few shell variables that will be

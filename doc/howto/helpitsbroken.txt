@@ -1,0 +1,94 @@
+Help!  It's broken!
+------------------------------
+
+You're having trouble getting it to work, and are scratching your head
+as to what might be wrong.
+
+Here are some things other people have stumbled over that might help
+you to "stumble more quickly."
+
+1.  I looked for the _clustername namespace, and it wasn't there!
+
+If the DSNs are wrong, then slon instances can't connect to the nodes.
+
+This will generally lead to nodes remaining entirely untouched.
+
+Recheck the connection configuration.  By the way, since slon links to
+libpq, you could have password information stored in $HOME/.pgpass,
+partially filling in right/wrong authentication information there.
+
+2.  Everything in my script _looks_ OK, and some data is getting
+pushed around, but not all of it.
+
+Slony logs might look like the following:
+
+DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
+ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,        ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,        ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
+
+On AIX and Solaris (and possibly elsewhere), both Slony-I _and
+PostgreSQL_ must be compiled with the --enable-thread-safety option.
+The above results when PostgreSQL isn't so compiled.
+
+What happens is that the libc (threadsafe) and libpq (non-threadsafe)
+use different memory locations for errno, thereby leading to the
+request failing.
+
+3.  I tried creating a CLUSTER NAME with a "-" in it.  That didn't work.
+
+Slony-I uses the same rules for unquoted identifiers as the PostgreSQL
+main parser, so no, you probably shouldn't put a "-" in your
+identifier name.
+
+You may be able to defeat this by putting "quotes" around identifier
+names, but it's liable to bite you somewhere...
+
+
+4.  After an immediate stop of postgresql (simulation of system crash)
+in pg_catalog.pg_listener a tuple with
+relname='_${cluster_name}_Restart' exists. slon doesn't start cause it
+thinks another process is serving the cluster on this node.  What can
+I do? The tuples can't be droped from this relation.
+
+Answer:  
+
+Before starting slon, do a 'restart node'. PostgreSQL tries to notify
+the listeners and drop those are not anwsering. Slon then starts
+cleanly.
+
+5.  If I run a "ps" command, I, and everyone else, can see passwords
+on the command line.
+
+Take the passwords out of the Slony configuration, and put them into
+$(HOME)/.pgpass.
+
+6.  When I run the sample setup script I get an error message similar
+to:
+
+<stdin>:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
+could not open file '$libdir/xxid': No such file or directory
+
+Evidently, you haven't got the xxid.so library in the $libdir
+directory that the PostgreSQL instance is using.  Note that the Slony
+components need to be installed on ALL of the nodes, not just on the
+"master."
+
+This may also point to there being some other mismatch between the
+PostgreSQL binary instance and the Slony-I instance.  If you compiled
+Slony-I yourself, on a machine that may have multiple PostgreSQL
+builds "lying around," it's possible that the slon or slonik binaries
+are asking to load something that isn't actually in the library
+directory for the PostgreSQL database cluster that it's hitting.
+
+Long and short: This points to a need to "audit" what installations of
+PostgreSQL and Slony you have in place on the machine(s).
+Unfortunately, just about any mismatch will cause things not to link
+up quite right.
+
+7.  An oddity - no need for Fully Qualified Name for table keys...
+
+set add table (set id = 1, origin = 1, id = 27, full qualified name = 'nspace.some_table', key = 'key_on_whatever', 
+    comment = 'Table some_table in namespace nspace with a candidate primary key');
+
+If you have
+   key = 'nspace.key_on_whatever'
+the request will FAIL.

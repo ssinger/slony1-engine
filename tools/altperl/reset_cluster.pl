@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: reset_cluster.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
+# $Id: reset_cluster.pl,v 1.3 2004-08-12 22:14:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -12,7 +12,7 @@ print SLONIK genheader();
 
 my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
 print SLONIK "
-        try {
+try {
 ";
 
 foreach my $node (@NODES) {
@@ -36,13 +36,12 @@ foreach my $nodea (@NODES) {
 }
 
 print SLONIK qq[
-        }
-        on error {
-                exit 1;
-        }
-        echo 'Replication nodes prepared';
-        echo 'Please start the replication daemon on both systems';
-
+} on error {
+  echo 'Remapping of cluster failed...';
+  exit 1;
+}
+echo 'Replication nodes prepared';
+echo 'Please start the replication daemon on both systems';
 ];
 
 close SLONIK;

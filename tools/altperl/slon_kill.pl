@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_kill.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
+# $Id: slon_kill.pl,v 1.3 2004-08-12 22:14:32 cbbrowne Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
@@ -11,7 +11,7 @@ print "slon_kill.pl...   Killing all slon and slon_watchdog instances for setnam
 print "1.  Kill slon watchdogs\n";
 #kill the watchdog
 
-open(PSOUT, "ps auxww | egrep '[s]lon_watchdog' | sort -n | awk '{print \$2}'|");
+open(PSOUT, ps_args() . " | egrep '[s]lon_watchdog' | sort -n | awk '{print \$2}'|");
 $found="n";
 while ($pid = <PSOUT>) {
   chomp $pid;
@@ -19,7 +19,7 @@ while ($pid = <PSOUT>) {
     print "No slon_watchdog is running for set $SETNAME!\n";
   } else {
     $found="y";
-    system "kill $pid";
+    kill 9, $pid;
     print "slon_watchdog for set $SETNAME killed - PID [$pid]\n";
   }
 }
@@ -30,13 +30,13 @@ if ($found eq 'n') {
 print "\n2. Kill slon processes\n";
 #kill the slon daemon
 $found="n";
-open(PSOUT, "ps auxww | egrep \"[s]lon .*$SETNAME\" | sort -n | awk '{print \$2}'|");
+open(PSOUT, ps_args() . " | egrep \"[s]lon .*$SETNAME\" | sort -n | awk '{print \$2}'|");
 while ($pid = <PSOUT>) {
   chomp $pid;
   if (!($pid)) {
     print "No Slon is running for set $SETNAME!\n";
   } else {
-    system "kill -9 $pid";
+    kill 9, $pid;
     print "Slon for set $SETNAME killed - PID [$pid]\n";
     $found="y";
   }

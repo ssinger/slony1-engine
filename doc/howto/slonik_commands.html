@@ -568,7 +568,7 @@
 	A <b>listen</b> entry causes a node (receiver) to query an event
 	provider for events that originate from a specific node, as well
 	as confirmations from every existing node. It requires a <b>path</b>
-	to exist so that the receiver (as client> can connect to the provider
+	to exist so that the receiver (as client) can connect to the provider
 	(as server).
 </p>
 <p>
@@ -898,7 +898,8 @@
 		to be used as the row identifier for replication purposes. Or the
 		keyword SERIAL to use the special column added with a previous
 		<a href="#table_add_key">TABLE ADD KEY</a> command. Default
-		is to use the tables primary key.
+		is to use the table's primary key.  The index name is <i> not </i> 
+		fully qualified; you must omit the namespace.
 	</p></td>
 </tr>
 <tr>

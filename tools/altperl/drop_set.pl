@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: drop_set.pl,v 1.2 2004-08-10 20:55:32 cbbrowne Exp $
+# $Id: drop_set.pl,v 1.3 2004-08-12 22:14:30 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -18,13 +18,12 @@ open(SLONIK, ">>$OUTFILE");
 print SLONIK genheader();
 
 print SLONIK qq{
-        try {
-                drop set (id = $set, origin=1);
-        }
-        on error {
-                exit 1;
-        }
-        echo 'Dropped set $set';
+try {
+      drop set (id = $set, origin=1);
+} on error {
+      exit 1;
+}
+echo 'Dropped set $set';
 };
 close SLONIK;
 run_slonik_script($OUTFILE);

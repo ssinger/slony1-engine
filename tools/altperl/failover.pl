@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: failover.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
+# $Id: failover.pl,v 1.3 2004-08-12 22:14:30 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -30,14 +30,13 @@ open(SLONIK, ">/tmp/slonik.$$");
 print SLONIK genheader();
 my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
 print SLONIK qq[
-        try {
-                failover (id = $node1, backup node = $node2);
-        }
-        on error {
-                echo 'Failure to fail node $node1 over to $node2';
-                exit 1;
-        }
-        echo 'Replication sets originating on $node1 failed over to $node2';
+try {
+      failover (id = $node1, backup node = $node2);
+} on error {
+      echo 'Failure to fail node $node1 over to $node2';
+      exit 1;
+}
+      echo 'Replication sets originating on $node1 failed over to $node2';
 ];
 
 close SLONIK;

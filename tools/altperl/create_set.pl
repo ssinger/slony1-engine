@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.4 2004-08-10 20:55:32 cbbrowne Exp $
+# $Id: create_set.pl,v 1.5 2004-08-12 22:14:29 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -36,13 +36,12 @@ open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
 
 print OUTFILE "
-	try {
-		create set (id = $set, origin = 1, comment = 'Set for slony tables');
-	}
-	on error {
-		echo 'Could not create subscription set!';
-		exit -1;
-	}
+try {
+      create set (id = $set, origin = 1, comment = 'Set $set for $SETNAME');
+} on error {
+      echo 'Could not create subscription set $set for $SETNAME!';
+      exit -1;
+}
 ";
 
 close OUTFILE;
@@ -51,7 +50,7 @@ run_slonik_script($OUTPUTFILE);
 open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
 print OUTFILE "
-	echo 'Subscription set created';
+	echo 'Subscription set $set created';
 	echo 'Adding tables to the subscription set';
 
 ";
@@ -60,17 +59,27 @@ $TABLE_ID=1;
 foreach my $table (@SERIALTABLES) {
   $table = ensure_namespace($table);
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table', key=serial);
+		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table without primary key', key=serial);
                 echo 'Add unkeyed table $table';
 "; 
   $TABLE_ID++;
 }
 
-foreach my $table (@KEYEDTABLES) {
+foreach my $table (@PKEYEDTABLES) {
   $table = ensure_namespace($table);
   print OUTFILE "
-		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table');
-                echo 'Add keyed table $table';
+		set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', comment = 'Table $table with primary key');
+                echo 'Add primary keyed table $table';
+";
+  $TABLE_ID++;
+}
+
+foreach my $table (keys %KEYEDTABLES) {
+  $table = ensure_namespace($table);
+  $key = $KEYEDTABLES{$table};
+  print OUTFILE "
+                set add table (set id = $set, origin = 1, id = $TABLE_ID, full qualified name = '$table', key='$key', comment = 'Table $table with candidate primary key $key');
+                echo 'Add candidate primary keyed table $table';
 ";
   $TABLE_ID++;
 }

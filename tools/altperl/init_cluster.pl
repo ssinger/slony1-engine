@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: init_cluster.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
+# $Id: init_cluster.pl,v 1.3 2004-08-12 22:14:31 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
@@ -14,22 +14,22 @@ print SLONIK genheader();
 
 my ($dbname, $dbhost)=($DBNAME[1], $HOST[1]);
 print SLONIK "
-try {
-   init cluster (id = 1, comment = 'Node $dbname@$dbhost');
+   init cluster (id = 1, comment = 'Node $dbname\@$dbhost');
 ";
+close SLONIK;
+run_slonik_script($FILE);
+
+open(SLONIK, ">$FILE");
+print SLONIK genheader();
 
 foreach my $node (@NODES) {
-    if ($node > 1) {  # skip the first one; it's already initialized!
-	my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
-	print SLONIK "   store node (id = $node, comment = 'Node $dbname@$dbhost');\n";
-    }
+  if ($node > 1) {		# skip the first one; it's already initialized!
+    my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
+    print SLONIK "   store node (id = $node, comment = 'Node $node - $dbname\@$dbhost');\n";
+  }
 }
 
-print SLONIK "} on error {
-        echo 'Could not set up all nodes as slonik nodes';
-        exit 1;
-}
-echo 'Set up replication nodes';
+print SLONIK "echo 'Set up replication nodes';
 ";
 close SLONIK;
 run_slonik_script($FILE);
@@ -44,16 +44,22 @@ print SLONIK qq[
 echo 'Next: configure paths for each node/origin';
 ];
 foreach my $nodea (@NODES) {
-    my $dsna = $DSN[$nodea];
-    foreach my $nodeb (@NODES) {
-      if ($nodea != $nodeb) {
-	  my $dsnb = $DSN[$nodeb];
-	  my $providerba = $VIA[$nodea][$nodeb];
-	  my $providerab = $VIA[$nodeb][$nodea];
-	  print SLONIK "      store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
-	  print SLONIK "      store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
-	  print SLONIK "echo 'configured path between $nodea and $nodeb';\n";
+  my $dsna = $DSN[$nodea];
+  foreach my $nodeb (@NODES) {
+    if ($nodea != $nodeb) {
+      my $dsnb = $DSN[$nodeb];
+      my $providerba = $VIA[$nodea][$nodeb];
+      my $providerab = $VIA[$nodeb][$nodea];
+      if (!$printed[$nodea][$nodeb]) {
+	print SLONIK "      store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
+	$printed[$nodea][$nodeb] = "done";
       }
+      if (!$printed[$nodeb][$nodea]) {
+	print SLONIK "      store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
+	$printed[$nodeb][$nodea] = "done";
+      }
+      print SLONIK "echo 'configured path between $nodea and $nodeb';\n";
+    }
   }
 }
 
