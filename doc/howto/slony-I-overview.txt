@@ -1,4 +1,10 @@
-What is Slony-I?
+Why yet another replication system?
+
+Slony-I was born, with the idea to create a replication system that was not
+tied to a specific version of PostgreSQL, and allowed to be started and
+stopped on an existing database with out the need for a dump/reload cycle.
+
+What Slony-I is:
 
 Slony-I is a "master to multiple slaves" replication system with cascading and
 faultier.  The big picture for the development of Slony-I is a master-slave
@@ -7,15 +13,9 @@ databases to a reasonably limited number of slave systems.  Slony-I is a
 system for data centers and backup sites, where the normal mode of operation
 is that all nodes are available. 
 
-Why yet another replication system?
+What Slony-I is not:
 
-Slony-I was born, with the idea to create a replication system that was not
-tied to a specific version of PostgreSQL, and allowed to be started and stopped
-on an existing database with out the need for a dump/reload cycle.
-
-What Slony-I is not.
-
-Slony-I is not a network management system. Slony-I does not have any
+Slony-I is not a network management system.  Slony-I does not have any
 functionality within it to detect a node failure, or automatically promote a
 node to a master or other data origin.  Slony-I is not multi-master; it's not
 a connection broker, and it doesn't make you coffee and toast in the morning.
@@ -23,12 +23,12 @@ a connection broker, and it doesn't make you coffee and toast in the morning.
 Why doesn't Slony-I do automatic fail-over/promotion?
 
 This is the job of network monitoring software, not Slony.  Every site's
-configuration and fail-over path is different. For example keep-alive monitoring 
-with redundant NIC's and intelligent HA switches that guarantee race-condition 
-free takeover of a network address and disconnecting the "failed" node vary
-in every network setup, vendor choice, hardware/software combination.  This 
-is clearly the realm of network management software and not Slony-I. Let 
-Slony-I do what it does best, and that is provide database replication.
+configuration and fail-over path is different.  For example, keep-alive
+monitoring with redundant NIC's and intelligent HA switches that guarantee
+race-condition-free takeover of a network address and disconnecting the
+"failed" node vary in every network setup, vendor choice, hardware/software
+combination.  This is clearly the realm of network management software and not
+Slony-I.  Let Slony-I do what it does best: provide database replication.
 
 Current Limitations:
 
