@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.54 2004-06-23 12:46:22 wieck Exp $
+ *	$Id: remote_worker.c,v 1.55 2004-06-23 16:38:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2766,11 +2766,14 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	WorkerGroupLine *wgline;
 	int				i;
 	char			seqbuf[64];
+	struct timeval	tv_start;
+	struct timeval	tv_now;
 
 	SlonDString		new_qual;
 	SlonDString		query;
 	SlonDString	   *provider_qual;
 
+	gettimeofday(&tv_start, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT 
 			" processing\n",
 			node->no_id, event->ev_seqno);
@@ -3467,9 +3470,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 * Good job!
 	 */
 	dstring_free(&query);
+	gettimeofday(&tv_now, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC "
-			INT64_FORMAT " done\n",
-			node->no_id, event->ev_seqno);
+			INT64_FORMAT " done in %.3f seconds\n",
+			node->no_id, event->ev_seqno,
+			TIMEVAL_DIFF(&tv_start, &tv_now));
 	return 0;
 }
 
