@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@BASH_PATH@
 # ----------------------------------------------------------------------
 # slony1_addnode.sh.in
 #
@@ -6,7 +6,7 @@
 #	the base schema and support functions into the database, and
 #	establish path and listen information for it.
 #
-# $Id: slony1_addnode.sh.in,v 1.3 2004-02-28 04:16:10 wieck Exp $
+# $Id: slony1_addnode.sh.in,v 1.4 2004-03-02 18:07:52 wieck Exp $
 # ----------------------------------------------------------------------
 
 # ----

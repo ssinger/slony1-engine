@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.5 2004-03-02 15:07:45 wieck Exp $
+# $Id: configure.ac,v 1.6 2004-03-02 18:07:52 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -56,6 +56,8 @@ AC_PROG_CC
 AC_PROG_LD
 AC_SUBST(LD)
 AC_SUBST(with_gnu_ld)
+AC_PATH_PROG(bash_path,bash)
+AC_SUBST(bash_path)
 
 # Checks for libraries.
 
