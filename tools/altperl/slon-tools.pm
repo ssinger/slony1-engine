@@ -1,5 +1,5 @@
 #!perl     # -*- perl -*-
-# $Id: slon-tools.pm,v 1.9 2004-09-09 17:04:07 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.10 2004-09-23 16:03:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -134,6 +134,33 @@ sub start_slon {
   system $cmd;
 }
 
+sub query_slony_status {
+  my ($nodenum) = @_;
+  my $query = qq{
+  select now() - ev_timestamp > '00:20:00'::interval as event_old, now() - ev_timestamp as age,
+       ev_timestamp, ev_seqno, ev_origin as origin
+from _$SETNAME.sl_event events, _$SETNAME.sl_subscribe slony_master
+  where 
+     events.ev_origin = slony_master.sub_provider and
+     not exists (select * from _$SETNAME.sl_subscribe providers 
+                  where providers.sub_receiver = slony_master.sub_provider and
+                        providers.sub_set = slony_master.sub_set and
+                        slony_master.sub_active = 't' and
+                        providers.sub_active = 't')
+order by ev_origin desc, ev_seqno desc limit 1;
+};
+  my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
+  my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  return $result;
+}
 
+sub query_slon_connections {
+  my ($nodenum) = @_;
+  my $query = "select count(*) from pg_catalog.pg_listener where relname = '_" . $SETNAME . "_Restart';";
+  my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
+  my $result=`$SLON_BIN_PATH/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  chomp $result;
+  return $result;
+}
 
-return 1;
+1;
