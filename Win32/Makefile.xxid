@@ -1,0 +1,14 @@
+# $Id: Makefile.xxid,v 1.1 2005-03-11 20:09:47 cbbrowne Exp $
+
+MODULES=xxid
+slony_subdir = src/xxid
+slony_top_builddir = ../..
+include $(slony_top_builddir)/Makefile.global
+
+ifdef USE_PGXS
+PGXS = $(shell pg_config --pgxs)
+include $(PGXS)
+else
+top_builddir = $(PGSOURCETREE)
+include $(PGSOURCETREE)/contrib/contrib-global.mk
+endif

@@ -1,0 +1,45 @@
+Preliminary Win32 Support
+------------------------------------
+$Id: README,v 1.1 2005-03-11 20:09:47 cbbrowne Exp $
+
+As per the README.compiling documentation, Andreas Pflug has
+contributed Makefiles that may be useful for those that wish to
+compile Slony-I components on Win32.
+
+I haven't included his address.  If you want to assist in providing
+Win32 support, it may be worth contacting him.  Otherwise, it seems
+inappropriate to pester him about problems compiling this.
+
+There are two files provided:
+
+ 1.  Makefile.backend
+
+     This makefile should be suitable for building the C components
+     found in the src/backend directory.
+
+ 2.  Makefile.xxid
+
+     This should be suitable for building the C components found in
+     src/xxid.
+
+These files would replace those that ./configure would produce in
+those directories.
+
+There are no makefiles for building slon or slonik:
+
+ - In the case of slon, there appears to be some issue with linking
+   in a pthreads library.  Someone who is familiar with the use of
+   pthreads on Win32 may be able to resolve this.
+
+   In the absence of a slon that runs on Win32, you ought to be able
+   to run slon processes on Unix-like operating systems.
+
+ - In the case of slonik, the use of fork() apparently makes the port
+   more challenging.  
+
+   Andreas has been working on adding Slony-I management tools to
+   pgAdmin III, which does run on Microsoft Windows(tm).  That may be
+   an alternative to slonik.
+
+cbbrowne@acm.org
+Christopher Browne

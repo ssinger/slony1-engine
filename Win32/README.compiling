@@ -1,0 +1,18 @@
+$Id: README.compiling,v 1.1 2005-03-11 20:09:47 cbbrowne Exp $
+
+I created new makefiles for slony_funcs and xxid using the contrib
+infrastructure, which makes them win32 compatible. IMHO the attached
+versions should replace the current ones.
+
+After some short tests, Slony-I 1.0.5 seems to be able to replicate
+with win32 servers using those modules correctly.
+
+The slon process currently refuses to link, the thread lib seems to be
+the problem.
+
+Apparently slonik uses fork(), which would make porting it much more
+expensive. I won't spent more time on that, pgAdmin will do that
+anyway.
+
+Regards,
+Andreas Pflug
