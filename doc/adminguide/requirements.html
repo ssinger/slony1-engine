@@ -1,34 +1,35 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
-> Requirements</TITLE
+>System Requirements</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="UP"
+TITLE="Slony-I Introduction"
 HREF="slonyintro.html"><LINK
 REL="PREVIOUS"
-HREF="slonyintro.html"><LINK
+TITLE=" Slony-I Communications
+Costs"
+HREF="slonylistenercosts.html"><LINK
 REL="NEXT"
-TITLE=" Slony-I Installation"
+TITLE="Slony-I Installation"
 HREF="installation.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
-CLASS="SECT1"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
+CLASS="ARTICLE"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -39,29 +40,49 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="slonyintro.html"
+HREF="slonylistenercosts.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="introduction.html"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Fast Forward</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
 ><A
 HREF="installation.html"
 ACCESSKEY="N"
@@ -73,19 +94,31 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
+CLASS="ARTICLE"
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="REQUIREMENTS"
+>System Requirements</A
+></H1
+><HR></DIV
+><DIV
 CLASS="SECT1"
 ><H1
 CLASS="SECT1"
 ><A
-NAME="REQUIREMENTS"
->2. Requirements</A
+NAME="AEN113"
+>1. System Requirements</A
 ></H1
 ><P
->Any platform that can run PostgreSQL should be able to run
+>Any platform that can run
+PostgreSQL should be able to run
 <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
->.&#13;</P
+>.</P
 ><P
 >The platforms that have received specific testing at the time of
 this release are FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha,
@@ -97,7 +130,7 @@ CLASS="TRADEMARK"
 CLASS="TRADEMARK"
 >Solaris</SPAN
 >&#8482;-2.9-SPARC, AIX 5.1
-and OpenBSD-3.5-sparc64.&#13;</P
+and OpenBSD-3.5-sparc64.</P
 ><P
 >There have been reports of success at running
 <SPAN
@@ -118,48 +151,48 @@ CLASS="EMPHASIS"
 >e.g.</I
 ></SPAN
 > -
-<B
+<SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slonik.html#SLONIK"
-> slonik </A
-></B
+>slonik</A
+></SPAN
 >,
-<B
+<SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slon.html#SLON"
-> slon </A
-></B
+>slon</A
+></SPAN
 >) do not
 run on <SPAN
 CLASS="TRADEMARK"
 >Windows</SPAN
->&#8482;, but a <B
+>&#8482;, but a <SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slon.html#SLON"
-> slon </A
-></B
+>slon</A
+></SPAN
 > running on one of the
 Unix-like systems has no reason to have difficulty connect to a
 PostgreSQL instance running on <SPAN
 CLASS="TRADEMARK"
 >Windows</SPAN
->&#8482;.&#13;</P
+>&#8482;.</P
 ><P
-> It ought to be possible to port <B
+> It ought to be possible to port <SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slon.html#SLON"
 > slon </A
-></B
-> and <B
+></SPAN
+> and <SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slonik.html#SLONIK"
 > slonik </A
-></B
+></SPAN
 > to run on
 <SPAN
 CLASS="TRADEMARK"
@@ -169,12 +202,12 @@ a POSIX-like <TT
 CLASS="FILENAME"
 >pthreads</TT
 > implementation for
-<B
+<SPAN
 CLASS="APPLICATION"
 ><A
 HREF="app-slon.html#SLON"
 > slon </A
-></B
+></SPAN
 >, as it
 uses that to have multiple threads of execution.  There are reports of
 there being a <TT
@@ -191,13 +224,13 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN117"
->2.1. Software needed</A
+NAME="AEN144"
+>1.1. Software needed</A
 ></H2
 ><P
 ><P
 ></P
-><UL
+></P><UL
 ><LI
 ><P
 > GNU make.  Other make programs will not work.  GNU
@@ -215,15 +248,15 @@ make enter <TT
 CLASS="COMMAND"
 >make version</TT
 >.  Version 3.76 or later
-will suffice; previous versions may not.&#13;</P
+will suffice; previous versions may not.</P
 ></LI
 ><LI
 ><P
 > You need an ISO/ANSI C compiler.  Recent versions of
-<B
+<SPAN
 CLASS="APPLICATION"
->GCC</B
-> work.&#13;</P
+>GCC</SPAN
+> work.</P
 ></LI
 ><LI
 ><P
@@ -238,7 +271,7 @@ CLASS="EMPHASIS"
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 >
-depends on namespace support so you must have version 7.3.3 or newer
+depends on namespace support so you must have PostgreSQL version 7.3.3 or newer
 to be able to build and use <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
@@ -253,14 +286,14 @@ CLASS="PRODUCTNAME"
 > that works with version 7.2; if you
 desperately need that, look for him on the PostgreSQL Hackers mailing
 list.  It is not anticipated that 7.2 will be supported by any
-official <B
+official <SPAN
 CLASS="APPLICATION"
 ><SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
-></B
+></SPAN
 >
-release.&#13;</P
+release.</P
 ></LI
 ><LI
 ><P
@@ -274,7 +307,7 @@ TARGET="_top"
 HREF="ftp://ftp.gnu.org/gnu"
 TARGET="_top"
 > ftp://ftp.gnu.org/gnu </A
-> .)&#13;</P
+> .)</P
 ></LI
 ><LI
 ><P
@@ -286,23 +319,22 @@ TARGET="_top"
 > for a list.</P
 ></LI
 ></UL
->&#13;</P
+><P></P
 ><P
 >Also check to make sure you have sufficient disk space.  You
 will need approximately 5MB for the source tree during build and
-installation.&#13;</P
+installation.</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN146"
->2.2. Getting <SPAN
+NAME="AEN173"
+>1.2. Getting <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
->
-Source</A
+>Source</A
 ></H2
 ><P
 >You can get the <SPAN
@@ -320,8 +352,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN152"
->2.3. Time Synchronization</A
+NAME="AEN179"
+>1.3. Time Synchronization</A
 ></H2
 ><P
 > All the servers used within the replication cluster need to
@@ -332,7 +364,7 @@ all nodes, with subscriber nodes using the <SPAN
 CLASS="QUOTE"
 >"master"</SPAN
 >
-provider node as their time server.&#13;</P
+provider node as their time server.</P
 ><P
 > It is possible for <SPAN
 CLASS="PRODUCTNAME"
@@ -343,22 +375,22 @@ having systems <SPAN
 CLASS="QUOTE"
 >"in sync"</SPAN
 > is usually pretty important for
-distributed applications.&#13;</P
+distributed applications.</P
 ><P
 > See <A
 HREF="http://www.ntp.org/"
 TARGET="_top"
 > www.ntp.org </A
 > for
-more details about NTP (Network Time Protocol).&#13;</P
+more details about NTP (Network Time Protocol).</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN161"
->2.4. Network Connectivity</A
+NAME="AEN188"
+>1.4. Network Connectivity</A
 ></H2
 ><P
 >It is necessary that the hosts that are to replicate between one
@@ -377,7 +409,7 @@ CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 > cluster allow this sort of
 bidirection communications from any node in the cluster to any other
-node in the cluster.&#13;</P
+node in the cluster.</P
 ><P
 >Note that the network addresses need to be consistent across all
 of the nodes.  Thus, if there is any need to use a
@@ -394,33 +426,33 @@ CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 >
 cluster, as the address is propagated throughout the cluster in table
-<CODE
+<TT
 CLASS="ENVAR"
->sl_path</CODE
->.&#13;</P
+>sl_path</TT
+>.</P
 ><P
 >A possible workaround for this, in environments where firewall
 rules are particularly difficult to implement, may be to establish SSH
 Tunnels that are created on each host that allow remote access through
-IP address 127.0.0.1, with a different port for each destination.&#13;</P
+IP address 127.0.0.1, with a different port for each destination.</P
 ><P
-> Note that <B
+> Note that <SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 > and the
-<B
+<SPAN
 CLASS="APPLICATION"
->slon</B
+>slon</SPAN
 > instances need no special connections
 or protocols to communicate with one another; they just need to be
-able to get access to the <B
+able to get access to the <SPAN
 CLASS="APPLICATION"
->PostgreSQL</B
+>PostgreSQL</SPAN
 >
 databases, connecting as a <SPAN
 CLASS="QUOTE"
 >"superuser"</SPAN
->.&#13;</P
+>.</P
 ><P
 > An implication of the communications model is that the entire
 extended network in which a <SPAN
@@ -451,7 +483,7 @@ CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 > node at a branch
 location that can't be kept secure compromises security for the
-cluster.&#13;</P
+cluster.</P
 ><P
 >In the future plans is a feature whereby updates for a
 particular replication set would be serialized via a scheme called
@@ -481,6 +513,7 @@ CLASS="PRODUCTNAME"
 > nodes.</P
 ></DIV
 ></DIV
+></DIV
 ><DIV
 CLASS="NAVFOOTER"
 ><HR
@@ -497,7 +530,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="slonyintro.html"
+HREF="slonylistenercosts.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -506,7 +539,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -525,7 +558,11 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
-></TD
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Communications
+Costs</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

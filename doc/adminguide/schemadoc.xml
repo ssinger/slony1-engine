@@ -1,11 +1,19 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.2 2004-12-21 15:12:57 darcyb Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.3 2004-12-22 23:09:59 darcyb Exp $ -->
 
+
+
+
+
+
+  <chapter id="schema"
+           xreflabel="schemadoc">
+    <title>Schema schemadoc</title>
     <para></para>
 
 
-      <section id="schemadoc.table.sl-config-lock"
-               xreflabel="schemadoc.sl_config_lock">
-        <title id="schemadoc.table.sl-config-lock-title">
+      <section id="table.sl-config-lock"
+               xreflabel="sl_config_lock">
+        <title id="table.sl-config-lock-title">
          Table:
          
          <structname>sl_config_lock</structname>
@@ -55,9 +63,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-confirm"
-               xreflabel="schemadoc.sl_confirm">
-        <title id="schemadoc.table.sl-confirm-title">
+      <section id="table.sl-confirm"
+               xreflabel="sl_confirm">
+        <title id="table.sl-confirm-title">
          Table:
          
          <structname>sl_confirm</structname>
@@ -187,9 +195,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-event"
-               xreflabel="schemadoc.sl_event">
-        <title id="schemadoc.table.sl-event-title">
+      <section id="table.sl-event"
+               xreflabel="sl_event">
+        <title id="table.sl-event-title">
          Table:
          
          <structname>sl_event</structname>
@@ -289,7 +297,7 @@
             <varlistentry>
               <term><structfield>ev_minxid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -309,7 +317,7 @@
             <varlistentry>
               <term><structfield>ev_maxxid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -568,9 +576,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-listen"
-               xreflabel="schemadoc.sl_listen">
-        <title id="schemadoc.table.sl-listen-title">
+      <section id="table.sl-listen"
+               xreflabel="sl_listen">
+        <title id="table.sl-listen-title">
          Table:
          
          <structname>sl_listen</structname>
@@ -612,7 +620,7 @@
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-node"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-node"/>
 
 
 
@@ -651,7 +659,7 @@
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-path"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-path"/>
 
 
               </para>
@@ -688,7 +696,7 @@
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-path"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-path"/>
 
 
               </para>
@@ -714,9 +722,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-log-1"
-               xreflabel="schemadoc.sl_log_1">
-        <title id="schemadoc.table.sl-log-1-title">
+      <section id="table.sl-log-1"
+               xreflabel="sl_log_1">
+        <title id="table.sl-log-1-title">
          Table:
          
          <structname>sl_log_1</structname>
@@ -758,7 +766,7 @@
             <varlistentry>
               <term><structfield>log_xid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -865,9 +873,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-log-2"
-               xreflabel="schemadoc.sl_log_2">
-        <title id="schemadoc.table.sl-log-2-title">
+      <section id="table.sl-log-2"
+               xreflabel="sl_log_2">
+        <title id="table.sl-log-2-title">
          Table:
          
          <structname>sl_log_2</structname>
@@ -909,7 +917,7 @@
             <varlistentry>
               <term><structfield>log_xid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -1016,9 +1024,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-node"
-               xreflabel="schemadoc.sl_node">
-        <title id="schemadoc.table.sl-node-title">
+      <section id="table.sl-node"
+               xreflabel="sl_node">
+        <title id="table.sl-node-title">
          Table:
          
          <structname>sl_node</structname>
@@ -1137,7 +1145,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-listen"/>
+              <xref linkend="table.sl-listen"/>
             </para>
           </listitem>
 
@@ -1145,7 +1153,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-path"/>
+              <xref linkend="table.sl-path"/>
             </para>
           </listitem>
 
@@ -1153,7 +1161,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-set"/>
+              <xref linkend="table.sl-set"/>
             </para>
           </listitem>
 
@@ -1161,7 +1169,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-setsync"/>
+              <xref linkend="table.sl-setsync"/>
             </para>
           </listitem>
 
@@ -1175,9 +1183,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-path"
-               xreflabel="schemadoc.sl_path">
-        <title id="schemadoc.table.sl-path-title">
+      <section id="table.sl-path"
+               xreflabel="sl_path">
+        <title id="table.sl-path-title">
          Table:
          
          <structname>sl_path</structname>
@@ -1219,7 +1227,7 @@
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-node"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-node"/>
 
 
 
@@ -1256,7 +1264,7 @@
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-node"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-node"/>
 
 
 
@@ -1327,7 +1335,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-listen"/>
+              <xref linkend="table.sl-listen"/>
             </para>
           </listitem>
 
@@ -1335,7 +1343,7 @@
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-subscribe"/>
+              <xref linkend="table.sl-subscribe"/>
             </para>
           </listitem>
 
@@ -1349,9 +1357,9 @@
       </para>
     </section>
 
-      <section id="schemadoc.view.sl-seqlastvalue"
-               xreflabel="schemadoc.sl_seqlastvalue">
-        <title id="schemadoc.view.sl-seqlastvalue-title">
+      <section id="view.sl-seqlastvalue"
+               xreflabel="sl_seqlastvalue">
+        <title id="view.sl-seqlastvalue-title">
          View:
          
          <structname>sl_seqlastvalue</structname>
@@ -1462,7 +1470,7 @@ SELECT sq.seq_id
 , sq.seq_set
 , sq.seq_reloid
 , s.set_origin AS seq_origin
-, schemadoc.sequencelastvalue
+, sequencelastvalue
 (
      (
            (quote_ident
@@ -1475,8 +1483,8 @@ SELECT sq.seq_id
            )
      )
 ) AS seq_last_value 
-FROM schemadoc.sl_sequence sq
-, schemadoc.sl_set s
+FROM sl_sequence sq
+, sl_set s
 , pg_class pgc
 , pg_namespace pgn 
 WHERE (
@@ -1493,9 +1501,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-seqlog"
-               xreflabel="schemadoc.sl_seqlog">
-        <title id="schemadoc.table.sl-seqlog-title">
+      <section id="table.sl-seqlog"
+               xreflabel="sl_seqlog">
+        <title id="table.sl-seqlog-title">
          Table:
          
          <structname>sl_seqlog</structname>
@@ -1620,9 +1628,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-sequence"
-               xreflabel="schemadoc.sl_sequence">
-        <title id="schemadoc.table.sl-sequence-title">
+      <section id="table.sl-sequence"
+               xreflabel="sl_sequence">
+        <title id="table.sl-sequence-title">
          Table:
          
          <structname>sl_sequence</structname>
@@ -1760,7 +1768,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-set"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-set"/>
 
 
               </para>
@@ -1806,9 +1814,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-set"
-               xreflabel="schemadoc.sl_set">
-        <title id="schemadoc.table.sl-set-title">
+      <section id="table.sl-set"
+               xreflabel="sl_set">
+        <title id="table.sl-set-title">
          Table:
          
          <structname>sl_set</structname>
@@ -1872,7 +1880,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-node"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-node"/>
 
 
               </para>
@@ -1887,7 +1895,7 @@ WHERE (
             <varlistentry>
               <term><structfield>set_locked</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -1939,7 +1947,7 @@ WHERE (
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-sequence"/>
+              <xref linkend="table.sl-sequence"/>
             </para>
           </listitem>
 
@@ -1947,7 +1955,7 @@ WHERE (
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-setsync"/>
+              <xref linkend="table.sl-setsync"/>
             </para>
           </listitem>
 
@@ -1955,7 +1963,7 @@ WHERE (
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-subscribe"/>
+              <xref linkend="table.sl-subscribe"/>
             </para>
           </listitem>
 
@@ -1963,7 +1971,7 @@ WHERE (
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-table"/>
+              <xref linkend="table.sl-table"/>
             </para>
           </listitem>
 
@@ -1977,9 +1985,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-setsync"
-               xreflabel="schemadoc.sl_setsync">
-        <title id="schemadoc.table.sl-setsync-title">
+      <section id="table.sl-setsync"
+               xreflabel="sl_setsync">
+        <title id="table.sl-setsync-title">
          Table:
          
          <structname>sl_setsync</structname>
@@ -2023,7 +2031,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-set"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-set"/>
 
 
               </para>
@@ -2051,7 +2059,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-node"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-node"/>
 
 
               </para>
@@ -2086,7 +2094,7 @@ WHERE (
             <varlistentry>
               <term><structfield>ssy_minxid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -2106,7 +2114,7 @@ WHERE (
             <varlistentry>
               <term><structfield>ssy_maxxid</structfield></term>
               <listitem><para>
-                <type>schemadoc.xxid</type>
+                <type>xxid</type>
 
 
 
@@ -2177,9 +2185,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-subscribe"
-               xreflabel="schemadoc.sl_subscribe">
-        <title id="schemadoc.table.sl-subscribe-title">
+      <section id="table.sl-subscribe"
+               xreflabel="sl_subscribe">
+        <title id="table.sl-subscribe-title">
          Table:
          
          <structname>sl_subscribe</structname>
@@ -2223,7 +2231,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-set"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-set"/>
 
 
               </para>
@@ -2251,7 +2259,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-path"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-path"/>
 
 
               </para>
@@ -2288,7 +2296,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-path"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-path"/>
 
 
               </para>
@@ -2354,9 +2362,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-table"
-               xreflabel="schemadoc.sl_table">
-        <title id="schemadoc.table.sl-table-title">
+      <section id="table.sl-table"
+               xreflabel="sl_table">
+        <title id="table.sl-table-title">
          Table:
          
          <structname>sl_table</structname>
@@ -2494,7 +2502,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-set"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-set"/>
 
 
               </para>
@@ -2585,7 +2593,7 @@ WHERE (
 
           <listitem>
             <para>
-              <xref linkend="schemadoc.table.sl-trigger"/>
+              <xref linkend="table.sl-trigger"/>
             </para>
           </listitem>
 
@@ -2599,9 +2607,9 @@ WHERE (
       </para>
     </section>
 
-      <section id="schemadoc.table.sl-trigger"
-               xreflabel="schemadoc.sl_trigger">
-        <title id="schemadoc.table.sl-trigger-title">
+      <section id="table.sl-trigger"
+               xreflabel="sl_trigger">
+        <title id="table.sl-trigger-title">
          Table:
          
          <structname>sl_trigger</structname>
@@ -2645,7 +2653,7 @@ WHERE (
 
 
 
-                <literal>REFERENCES</literal> <xref linkend="schemadoc.table.sl-table"/>
+                <literal>REFERENCES</literal> <xref linkend="table.sl-table"/>
 
 
               </para>
@@ -2703,12 +2711,12 @@ WHERE (
 
 
 <!-- Function altertableforreplication( integer ) -->
-    <section id="schemadoc.function.altertableforreplication-integer"
+    <section id="function.altertableforreplication-integer"
              xreflabel="schemadocaltertableforreplication( integer )">
-      <title id="schemadoc.function.altertableforreplication-integer-title">
+      <title id="function.altertableforreplication-integer-title">
        altertableforreplication( integer )
       </title>
-      <titleabbrev id="schemadoc.function.altertableforreplication-integer-titleabbrev">
+      <titleabbrev id="function.altertableforreplication-integer-titleabbrev">
        altertableforreplication( integer )
       </titleabbrev>
 
@@ -2744,12 +2752,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_no_id := getLocalNodeId(&#39;_schemadoc&#39;);
 
 	-- ----
 	-- Get the sl_table row and the current origin of the table. 
@@ -2760,7 +2768,7 @@ begin
 			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
 			into v_tab_row
-			from schemadoc.sl_table T, schemadoc.sl_set S,
+			from sl_table T, sl_set S,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_index PGX, &quot;pg_catalog&quot;.pg_class PGXC
 			where T.tab_id = p_tab_id
@@ -2780,7 +2788,7 @@ begin
 				v_tab_fqname;
 	end if;
 
-	v_tab_attkind := schemadoc.determineAttKindUnique(v_tab_row.tab_fqname, 
+	v_tab_attkind := determineAttKindUnique(v_tab_row.tab_fqname, 
 						v_tab_row.tab_idxname);
 
 	execute &#39;lock table &#39; || v_tab_fqname || &#39; in access exclusive mode&#39;;
@@ -2795,7 +2803,7 @@ begin
 		execute &#39;create trigger &quot;_schemadoc_logtrigger_&#39; || 
 				p_tab_id || &#39;&quot; after insert or update or delete on &#39; ||
 				v_tab_fqname || &#39; for each row execute procedure
-				schemadoc.logTrigger (&#39;&#39;_schemadoc&#39;&#39;, &#39;&#39;&#39; || 
+				logTrigger (&#39;&#39;_schemadoc&#39;&#39;, &#39;&#39;&#39; || 
 					p_tab_id || &#39;&#39;&#39;, &#39;&#39;&#39; || 
 					v_tab_attkind || &#39;&#39;&#39;);&#39;;
 	else
@@ -2812,8 +2820,8 @@ begin
 				set tgrelid = v_tab_row.indexrelid
 				where tgrelid = v_tab_row.tab_reloid
 				and not exists (
-						select true from schemadoc.sl_table TAB,
-								schemadoc.sl_trigger TRIG
+						select true from sl_table TAB,
+								sl_trigger TRIG
 								where TAB.tab_reloid = tgrelid
 								and TAB.tab_id = TRIG.trig_tabid
 								and TRIG.trig_tgname = tgname
@@ -2844,13 +2852,13 @@ begin
 		execute &#39;create trigger &quot;_schemadoc_denyaccess_&#39; || 
 				p_tab_id || &#39;&quot; before insert or update or delete on &#39; ||
 				v_tab_fqname || &#39; for each row execute procedure
-				schemadoc.denyAccess (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
+				denyAccess (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
 	end if;
 
 	-- ----
 	-- Mark the table altered in our configuration
 	-- ----
-	update schemadoc.sl_table
+	update sl_table
 			set tab_altered = true where tab_id = p_tab_id;
 
 	return p_tab_id;
@@ -2860,12 +2868,12 @@ end;
     </section>
 
 <!-- Function altertablerestore( integer ) -->
-    <section id="schemadoc.function.altertablerestore-integer"
+    <section id="function.altertablerestore-integer"
              xreflabel="schemadocaltertablerestore( integer )">
-      <title id="schemadoc.function.altertablerestore-integer-title">
+      <title id="function.altertablerestore-integer-title">
        altertablerestore( integer )
       </title>
-      <titleabbrev id="schemadoc.function.altertablerestore-integer-titleabbrev">
+      <titleabbrev id="function.altertablerestore-integer-titleabbrev">
        altertablerestore( integer )
       </titleabbrev>
 
@@ -2900,12 +2908,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_no_id := getLocalNodeId(&#39;_schemadoc&#39;);
 
 	-- ----
 	-- Get the sl_table row and the current tables origin. Check
@@ -2916,7 +2924,7 @@ begin
 			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
 			into v_tab_row
-			from schemadoc.sl_table T, schemadoc.sl_set S,
+			from sl_table T, sl_set S,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_index PGX, &quot;pg_catalog&quot;.pg_class PGXC
 			where T.tab_id = p_tab_id
@@ -2985,7 +2993,7 @@ begin
 	-- ----
 	-- Mark the table not altered in our configuration
 	-- ----
-	update schemadoc.sl_table
+	update sl_table
 			set tab_altered = false where tab_id = p_tab_id;
 
 	return p_tab_id;
@@ -2995,12 +3003,12 @@ end;
     </section>
 
 <!-- Function cleanupevent(  ) -->
-    <section id="schemadoc.function.cleanupevent"
+    <section id="function.cleanupevent"
              xreflabel="schemadoccleanupevent(  )">
-      <title id="schemadoc.function.cleanupevent-title">
+      <title id="function.cleanupevent-title">
        cleanupevent(  )
       </title>
-      <titleabbrev id="schemadoc.function.cleanupevent-titleabbrev">
+      <titleabbrev id="function.cleanupevent-titleabbrev">
        cleanupevent(  )
       </titleabbrev>
 
@@ -3029,10 +3037,10 @@ begin
 	-- ----
 	-- First remove all but the oldest confirm row per origin,receiver pair
 	-- ----
-	delete from schemadoc.sl_confirm
-				where con_origin not in (select no_id from schemadoc.sl_node);
-	delete from schemadoc.sl_confirm
-				where con_received not in (select no_id from schemadoc.sl_node);
+	delete from sl_confirm
+				where con_origin not in (select no_id from sl_node);
+	delete from sl_confirm
+				where con_received not in (select no_id from sl_node);
 	-- ----
 	-- Next remove all but the oldest confirm row per origin,receiver pair.
 	-- Ignore confirmations that are younger than 10 minutes. We currently
@@ -3041,11 +3049,11 @@ begin
 	-- that this led to log data that is needed again got removed.
 	-- ----
 	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
-				from schemadoc.sl_confirm
+				from sl_confirm
 				where con_timestamp &lt; (CURRENT_TIMESTAMP - &#39;10 min&#39;::interval)
 				group by con_origin, con_received
 	loop
-		delete from schemadoc.sl_confirm
+		delete from sl_confirm
 				where con_origin = v_max_row.con_origin
 				and con_received = v_max_row.con_received
 				and con_seqno &lt; v_max_row.con_seqno;
@@ -3056,16 +3064,16 @@ begin
 	-- whole cluster up to the last SYNC
 	-- ----
 	for v_min_row in select con_origin, min(con_seqno) as con_seqno
-				from schemadoc.sl_confirm
+				from sl_confirm
 				group by con_origin
 	loop
 		select coalesce(max(ev_seqno), 0) into v_max_sync
-				from schemadoc.sl_event
+				from sl_event
 				where ev_origin = v_min_row.con_origin
 				and ev_seqno &lt;= v_min_row.con_seqno
 				and ev_type = &#39;SYNC&#39;;
 		if v_max_sync &gt; 0 then
-			delete from schemadoc.sl_event
+			delete from sl_event
 					where ev_origin = v_min_row.con_origin
 					and ev_seqno &lt; v_max_sync;
 		end if;
@@ -3078,12 +3086,12 @@ end;
     </section>
 
 <!-- Function cleanuplistener(  ) -->
-    <section id="schemadoc.function.cleanuplistener"
+    <section id="function.cleanuplistener"
              xreflabel="schemadoccleanuplistener(  )">
-      <title id="schemadoc.function.cleanuplistener-title">
+      <title id="function.cleanuplistener-title">
        cleanuplistener(  )
       </title>
-      <titleabbrev id="schemadoc.function.cleanuplistener-titleabbrev">
+      <titleabbrev id="function.cleanuplistener-titleabbrev">
        cleanuplistener(  )
       </titleabbrev>
 
@@ -3105,12 +3113,12 @@ end;
     </section>
 
 <!-- Function createevent( name, text ) -->
-    <section id="schemadoc.function.createevent-name-text"
+    <section id="function.createevent-name-text"
              xreflabel="schemadoccreateevent( name, text )">
-      <title id="schemadoc.function.createevent-name-text-title">
+      <title id="function.createevent-name-text-title">
        createevent( name, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-titleabbrev">
        createevent( name, text )
       </titleabbrev>
 
@@ -3134,12 +3142,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text"
+    <section id="function.createevent-name-text-text"
              xreflabel="schemadoccreateevent( name, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-title">
+      <title id="function.createevent-name-text-text-title">
        createevent( name, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-titleabbrev">
        createevent( name, text, text )
       </titleabbrev>
 
@@ -3163,12 +3171,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text"
+    <section id="function.createevent-name-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-title">
        createevent( name, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-titleabbrev">
        createevent( name, text, text, text )
       </titleabbrev>
 
@@ -3192,12 +3200,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-title">
        createevent( name, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text )
       </titleabbrev>
 
@@ -3221,12 +3229,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-text-title">
        createevent( name, text, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text, text )
       </titleabbrev>
 
@@ -3250,12 +3258,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-text-text-title">
        createevent( name, text, text, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text, text, text )
       </titleabbrev>
 
@@ -3279,12 +3287,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-text-text-text-title">
        createevent( name, text, text, text, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text, text, text, text )
       </titleabbrev>
 
@@ -3308,12 +3316,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-text-text-text-text-title">
        createevent( name, text, text, text, text, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text, text, text, text, text )
       </titleabbrev>
 
@@ -3337,12 +3345,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function createevent( name, text, text, text, text, text, text, text, text, text ) -->
-    <section id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text-text"
+    <section id="function.createevent-name-text-text-text-text-text-text-text-text-text"
              xreflabel="schemadoccreateevent( name, text, text, text, text, text, text, text, text, text )">
-      <title id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text-text-title">
+      <title id="function.createevent-name-text-text-text-text-text-text-text-text-text-title">
        createevent( name, text, text, text, text, text, text, text, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.createevent-name-text-text-text-text-text-text-text-text-text-titleabbrev">
+      <titleabbrev id="function.createevent-name-text-text-text-text-text-text-text-text-text-titleabbrev">
        createevent( name, text, text, text, text, text, text, text, text, text )
       </titleabbrev>
 
@@ -3366,12 +3374,12 @@ Create an sl_event entry
     </section>
 
 <!-- Function ddlscript( integer, text, integer ) -->
-    <section id="schemadoc.function.ddlscript-integer-text-integer"
+    <section id="function.ddlscript-integer-text-integer"
              xreflabel="schemadocddlscript( integer, text, integer )">
-      <title id="schemadoc.function.ddlscript-integer-text-integer-title">
+      <title id="function.ddlscript-integer-text-integer-title">
        ddlscript( integer, text, integer )
       </title>
-      <titleabbrev id="schemadoc.function.ddlscript-integer-text-integer-titleabbrev">
+      <titleabbrev id="function.ddlscript-integer-text-integer-titleabbrev">
        ddlscript( integer, text, integer )
       </titleabbrev>
 
@@ -3402,19 +3410,19 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that the set exists and originates here
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
 	end if;
-	if v_set_origin &lt;&gt; schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_set_origin &lt;&gt; getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_set_id;
 	end if;
@@ -3422,10 +3430,10 @@ begin
 	-- ----
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
-	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
-	perform schemadoc.ddlScript_int(p_set_id, p_script, p_only_on_node);
-	perform schemadoc.updateRelname(p_set_id, p_only_on_node);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
+	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	perform ddlScript_int(p_set_id, p_script, p_only_on_node);
+	perform updateRelname(p_set_id, p_only_on_node);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
 			p_set_id, p_script, p_only_on_node);
 end;
 </programlisting>
@@ -3433,12 +3441,12 @@ end;
     </section>
 
 <!-- Function ddlscript_int( integer, text, integer ) -->
-    <section id="schemadoc.function.ddlscript-int-integer-text-integer"
+    <section id="function.ddlscript-int-integer-text-integer"
              xreflabel="schemadocddlscript_int( integer, text, integer )">
-      <title id="schemadoc.function.ddlscript-int-integer-text-integer-title">
+      <title id="function.ddlscript-int-integer-text-integer-title">
        ddlscript_int( integer, text, integer )
       </title>
-      <titleabbrev id="schemadoc.function.ddlscript-int-integer-text-integer-titleabbrev">
+      <titleabbrev id="function.ddlscript-int-integer-text-integer-titleabbrev">
        ddlscript_int( integer, text, integer )
       </titleabbrev>
 
@@ -3471,22 +3479,22 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
 	-- ----
-	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_no_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
 	end if;
 	if v_set_origin &lt;&gt; v_no_id
-			and not exists (select 1 from schemadoc.sl_subscribe
+			and not exists (select 1 from sl_subscribe
 						where sub_set = p_set_id
 						and sub_receiver = v_no_id)
 	then
@@ -3504,10 +3512,10 @@ begin
 	-- ----
 	-- Restore all original triggers and rules
 	-- ----
-	for v_row in select * from schemadoc.sl_table
+	for v_row in select * from sl_table
 			where tab_set = p_set_id
 	loop
-		perform schemadoc.alterTableRestore(v_row.tab_id);
+		perform alterTableRestore(v_row.tab_id);
 	end loop;
 
 	-- ----
@@ -3518,10 +3526,10 @@ begin
 	-- ----
 	-- Put all tables back into replicated mode
 	-- ----
-	for v_row in select * from schemadoc.sl_table
+	for v_row in select * from sl_table
 			where tab_set = p_set_id
 	loop
-		perform schemadoc.alterTableForReplication(v_row.tab_id);
+		perform alterTableForReplication(v_row.tab_id);
 	end loop;
 
 	return p_set_id;
@@ -3531,12 +3539,12 @@ end;
     </section>
 
 <!-- Function denyaccess(  ) -->
-    <section id="schemadoc.function.denyaccess"
+    <section id="function.denyaccess"
              xreflabel="schemadocdenyaccess(  )">
-      <title id="schemadoc.function.denyaccess-title">
+      <title id="function.denyaccess-title">
        denyaccess(  )
       </title>
-      <titleabbrev id="schemadoc.function.denyaccess-titleabbrev">
+      <titleabbrev id="function.denyaccess-titleabbrev">
        denyaccess(  )
       </titleabbrev>
 
@@ -3558,12 +3566,12 @@ end;
     </section>
 
 <!-- Function determineattkindserial( text ) -->
-    <section id="schemadoc.function.determineattkindserial-text"
+    <section id="function.determineattkindserial-text"
              xreflabel="schemadocdetermineattkindserial( text )">
-      <title id="schemadoc.function.determineattkindserial-text-title">
+      <title id="function.determineattkindserial-text-title">
        determineattkindserial( text )
       </title>
-      <titleabbrev id="schemadoc.function.determineattkindserial-text-titleabbrev">
+      <titleabbrev id="function.determineattkindserial-text-titleabbrev">
        determineattkindserial( text )
       </titleabbrev>
 
@@ -3636,7 +3644,7 @@ begin
 
 	execute &#39;update &#39; || p_tab_fqname ||
 		&#39; set &quot;_Slony-I_schemadoc_rowID&quot; =&#39; ||
-		&#39; &quot;pg_catalog&quot;.nextval(&#39;&#39;schemadoc.sl_rowid_seq&#39;&#39;);&#39;;
+		&#39; &quot;pg_catalog&quot;.nextval(&#39;&#39;sl_rowid_seq&#39;&#39;);&#39;;
 	execute &#39;alter table only &#39; || p_tab_fqname ||
 		&#39; add unique (&quot;_Slony-I_schemadoc_rowID&quot;);&#39;;
 	execute &#39;alter table only &#39; || p_tab_fqname ||
@@ -3653,12 +3661,12 @@ end;
     </section>
 
 <!-- Function determineattkindunique( text, name ) -->
-    <section id="schemadoc.function.determineattkindunique-text-name"
+    <section id="function.determineattkindunique-text-name"
              xreflabel="schemadocdetermineattkindunique( text, name )">
-      <title id="schemadoc.function.determineattkindunique-text-name-title">
+      <title id="function.determineattkindunique-text-name-title">
        determineattkindunique( text, name )
       </title>
-      <titleabbrev id="schemadoc.function.determineattkindunique-text-name-titleabbrev">
+      <titleabbrev id="function.determineattkindunique-text-name-titleabbrev">
        determineattkindunique( text, name )
       </titleabbrev>
 
@@ -3765,12 +3773,12 @@ end;
     </section>
 
 <!-- Function determineidxnameserial( text ) -->
-    <section id="schemadoc.function.determineidxnameserial-text"
+    <section id="function.determineidxnameserial-text"
              xreflabel="schemadocdetermineidxnameserial( text )">
-      <title id="schemadoc.function.determineidxnameserial-text-title">
+      <title id="function.determineidxnameserial-text-title">
        determineidxnameserial( text )
       </title>
-      <titleabbrev id="schemadoc.function.determineidxnameserial-text-titleabbrev">
+      <titleabbrev id="function.determineidxnameserial-text-titleabbrev">
        determineidxnameserial( text )
       </titleabbrev>
 
@@ -3819,12 +3827,12 @@ end;
     </section>
 
 <!-- Function determineidxnameunique( text, name ) -->
-    <section id="schemadoc.function.determineidxnameunique-text-name"
+    <section id="function.determineidxnameunique-text-name"
              xreflabel="schemadocdetermineidxnameunique( text, name )">
-      <title id="schemadoc.function.determineidxnameunique-text-name-title">
+      <title id="function.determineidxnameunique-text-name-title">
        determineidxnameunique( text, name )
       </title>
-      <titleabbrev id="schemadoc.function.determineidxnameunique-text-name-titleabbrev">
+      <titleabbrev id="function.determineidxnameunique-text-name-titleabbrev">
        determineidxnameunique( text, name )
       </titleabbrev>
 
@@ -3901,12 +3909,12 @@ end;
     </section>
 
 <!-- Function disablenode( integer ) -->
-    <section id="schemadoc.function.disablenode-integer"
+    <section id="function.disablenode-integer"
              xreflabel="schemadocdisablenode( integer )">
-      <title id="schemadoc.function.disablenode-integer-title">
+      <title id="function.disablenode-integer-title">
        disablenode( integer )
       </title>
-      <titleabbrev id="schemadoc.function.disablenode-integer-titleabbrev">
+      <titleabbrev id="function.disablenode-integer-titleabbrev">
        disablenode( integer )
       </titleabbrev>
 
@@ -3937,12 +3945,12 @@ end;
     </section>
 
 <!-- Function disablenode_int( integer ) -->
-    <section id="schemadoc.function.disablenode-int-integer"
+    <section id="function.disablenode-int-integer"
              xreflabel="schemadocdisablenode_int( integer )">
-      <title id="schemadoc.function.disablenode-int-integer-title">
+      <title id="function.disablenode-int-integer-title">
        disablenode_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.disablenode-int-integer-titleabbrev">
+      <titleabbrev id="function.disablenode-int-integer-titleabbrev">
        disablenode_int( integer )
       </titleabbrev>
 
@@ -3971,12 +3979,12 @@ end;
     </section>
 
 <!-- Function droplisten( integer, integer, integer ) -->
-    <section id="schemadoc.function.droplisten-integer-integer-integer"
+    <section id="function.droplisten-integer-integer-integer"
              xreflabel="schemadocdroplisten( integer, integer, integer )">
-      <title id="schemadoc.function.droplisten-integer-integer-integer-title">
+      <title id="function.droplisten-integer-integer-integer-title">
        droplisten( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.droplisten-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.droplisten-integer-integer-integer-titleabbrev">
        droplisten( integer, integer, integer )
       </titleabbrev>
 
@@ -4003,10 +4011,10 @@ declare
 begin
 	return -1;
 
-	perform schemadoc.dropListen_int(p_li_origin, 
+	perform dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
-	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;DROP_LISTEN&#39;,
+	return  createEvent (&#39;_schemadoc&#39;, &#39;DROP_LISTEN&#39;,
 			p_li_origin, p_li_provider, p_li_receiver);
 end;
 </programlisting>
@@ -4014,12 +4022,12 @@ end;
     </section>
 
 <!-- Function droplisten_int( integer, integer, integer ) -->
-    <section id="schemadoc.function.droplisten-int-integer-integer-integer"
+    <section id="function.droplisten-int-integer-integer-integer"
              xreflabel="schemadocdroplisten_int( integer, integer, integer )">
-      <title id="schemadoc.function.droplisten-int-integer-integer-integer-title">
+      <title id="function.droplisten-int-integer-integer-integer-title">
        droplisten_int( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.droplisten-int-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.droplisten-int-integer-integer-integer-titleabbrev">
        droplisten_int( integer, integer, integer )
       </titleabbrev>
 
@@ -4050,9 +4058,9 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
-	delete from schemadoc.sl_listen
+	delete from sl_listen
 			where li_origin = p_li_origin
 			and li_provider = p_li_provider
 			and li_receiver = p_li_receiver;
@@ -4067,12 +4075,12 @@ end;
     </section>
 
 <!-- Function dropnode( integer ) -->
-    <section id="schemadoc.function.dropnode-integer"
+    <section id="function.dropnode-integer"
              xreflabel="schemadocdropnode( integer )">
-      <title id="schemadoc.function.dropnode-integer-title">
+      <title id="function.dropnode-integer-title">
        dropnode( integer )
       </title>
-      <titleabbrev id="schemadoc.function.dropnode-integer-titleabbrev">
+      <titleabbrev id="function.dropnode-integer-titleabbrev">
        dropnode( integer )
       </titleabbrev>
 
@@ -4097,16 +4105,16 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that this got called on a different node
 	-- ----
-	if p_no_id = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if p_no_id = getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: DROP_NODE cannot initiate on the dropped node&#39;;
 	end if;
 
-	select * into v_node_row from schemadoc.sl_node
+	select * into v_node_row from sl_node
 			where no_id = p_no_id
 			for update;
 	if not found then
@@ -4116,7 +4124,7 @@ begin
 	-- ----
 	-- Make sure we do not break other nodes subscriptions with this
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe
+	if exists (select true from sl_subscribe
 			where sub_provider = p_no_id)
 	then
 		raise exception &#39;Slony-I: Node % is still configured as data provider&#39;,
@@ -4126,7 +4134,7 @@ begin
 	-- ----
 	-- Make sure no set originates there any more
 	-- ----
-	if exists (select true from schemadoc.sl_set
+	if exists (select true from sl_set
 			where set_origin = p_no_id)
 	then
 		raise exception &#39;Slony-I: Node % is still origin of one or more sets&#39;,
@@ -4136,8 +4144,8 @@ begin
 	-- ----
 	-- Call the internal drop functionality and generate the event
 	-- ----
-	perform schemadoc.dropNode_int(p_no_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_NODE&#39;,
+	perform dropNode_int(p_no_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_NODE&#39;,
 									p_no_id);
 end;
 </programlisting>
@@ -4145,12 +4153,12 @@ end;
     </section>
 
 <!-- Function dropnode_int( integer ) -->
-    <section id="schemadoc.function.dropnode-int-integer"
+    <section id="function.dropnode-int-integer"
              xreflabel="schemadocdropnode_int( integer )">
-      <title id="schemadoc.function.dropnode-int-integer-title">
+      <title id="function.dropnode-int-integer-title">
        dropnode_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.dropnode-int-integer-titleabbrev">
+      <titleabbrev id="function.dropnode-int-integer-titleabbrev">
        dropnode_int( integer )
       </titleabbrev>
 
@@ -4175,28 +4183,28 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- If the dropped node is a remote node, clean the configuration
 	-- from all traces for it.
 	-- ----
-	if p_no_id &lt;&gt; schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-		delete from schemadoc.sl_subscribe
+	if p_no_id &lt;&gt; getLocalNodeId(&#39;_schemadoc&#39;) then
+		delete from sl_subscribe
 				where sub_receiver = p_no_id;
-		delete from schemadoc.sl_listen
+		delete from sl_listen
 				where li_origin = p_no_id
 					or li_provider = p_no_id
 					or li_receiver = p_no_id;
-		delete from schemadoc.sl_path
+		delete from sl_path
 				where pa_server = p_no_id
 					or pa_client = p_no_id;
-		delete from schemadoc.sl_confirm
+		delete from sl_confirm
 				where con_origin = p_no_id
 					or con_received = p_no_id;
-		delete from schemadoc.sl_event
+		delete from sl_event
 				where ev_origin = p_no_id;
-		delete from schemadoc.sl_node
+		delete from sl_node
 				where no_id = p_no_id;
 
 		return p_no_id;
@@ -4206,12 +4214,12 @@ begin
 	-- This is us ... deactivate the node for now, the daemon
 	-- will call uninstallNode() in a separate transaction.
 	-- ----
-	update schemadoc.sl_node
+	update sl_node
 			set no_active = false
 			where no_id = p_no_id;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return p_no_id;
 end;
@@ -4220,12 +4228,12 @@ end;
     </section>
 
 <!-- Function droppath( integer, integer ) -->
-    <section id="schemadoc.function.droppath-integer-integer"
+    <section id="function.droppath-integer-integer"
              xreflabel="schemadocdroppath( integer, integer )">
-      <title id="schemadoc.function.droppath-integer-integer-title">
+      <title id="function.droppath-integer-integer-title">
        droppath( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.droppath-integer-integer-titleabbrev">
+      <titleabbrev id="function.droppath-integer-integer-titleabbrev">
        droppath( integer, integer )
       </titleabbrev>
 
@@ -4251,14 +4259,14 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- There should be no existing subscriptions. Auto unsubscribing
 	-- is considered too dangerous. 
 	-- ----
 	for v_row in select sub_set, sub_provider, sub_receiver
-			from schemadoc.sl_subscribe
+			from sl_subscribe
 			where sub_provider = p_pa_server
 			and sub_receiver = p_pa_client
 	loop
@@ -4271,23 +4279,23 @@ begin
 	-- Drop all sl_listen entries that depend on this path
 	-- ----
 	for v_row in select li_origin, li_provider, li_receiver
-			from schemadoc.sl_listen
+			from sl_listen
 			where li_provider = p_pa_server
 			and li_receiver = p_pa_client
 	loop
-		perform schemadoc.dropListen(
+		perform dropListen(
 				v_row.li_origin, v_row.li_provider, v_row.li_receiver);
 	end loop;
 
 	-- ----
 	-- Now drop the path and create the event
 	-- ----
-	perform schemadoc.dropPath_int(p_pa_server, p_pa_client);
+	perform dropPath_int(p_pa_server, p_pa_client);
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
-	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;DROP_PATH&#39;,
+	return  createEvent (&#39;_schemadoc&#39;, &#39;DROP_PATH&#39;,
 			p_pa_server, p_pa_client);
 end;
 </programlisting>
@@ -4295,12 +4303,12 @@ end;
     </section>
 
 <!-- Function droppath_int( integer, integer ) -->
-    <section id="schemadoc.function.droppath-int-integer-integer"
+    <section id="function.droppath-int-integer-integer"
              xreflabel="schemadocdroppath_int( integer, integer )">
-      <title id="schemadoc.function.droppath-int-integer-integer-title">
+      <title id="function.droppath-int-integer-integer-title">
        droppath_int( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.droppath-int-integer-integer-titleabbrev">
+      <titleabbrev id="function.droppath-int-integer-integer-titleabbrev">
        droppath_int( integer, integer )
       </titleabbrev>
 
@@ -4325,29 +4333,29 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Remove any dangling sl_listen entries with the server
 	-- as provider and the client as receiver. This must have
 	-- been cleared out before, but obviously was not.
 	-- ----
-	delete from schemadoc.sl_listen
+	delete from sl_listen
 			where li_provider = p_pa_server
 			and li_receiver = p_pa_client;
 
-	delete from schemadoc.sl_path
+	delete from sl_path
 			where pa_server = p_pa_server
 			and pa_client = p_pa_client;
 
 	if found then
 		-- Rewrite sl_listen table
-		perform schemadoc.RebuildListenEntries();
+		perform RebuildListenEntries();
 
 		return 1;
 	else
 		-- Rewrite sl_listen table
-		perform schemadoc.RebuildListenEntries();
+		perform RebuildListenEntries();
 
 		return 0;
 	end if;
@@ -4357,12 +4365,12 @@ end;
     </section>
 
 <!-- Function dropset( integer ) -->
-    <section id="schemadoc.function.dropset-integer"
+    <section id="function.dropset-integer"
              xreflabel="schemadocdropset( integer )">
-      <title id="schemadoc.function.dropset-integer-title">
+      <title id="function.dropset-integer-title">
        dropset( integer )
       </title>
-      <titleabbrev id="schemadoc.function.dropset-integer-titleabbrev">
+      <titleabbrev id="function.dropset-integer-titleabbrev">
        dropset( integer )
       </titleabbrev>
 
@@ -4389,17 +4397,17 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
 	-- ----
 	-- Check that the set exists and originates here
 	-- ----
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_set_id;
 	end if;
@@ -4407,8 +4415,8 @@ begin
 	-- ----
 	-- Call the internal drop set functionality and generate the event
 	-- ----
-	perform schemadoc.dropSet_int(p_set_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_SET&#39;, 
+	perform dropSet_int(p_set_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_SET&#39;, 
 			p_set_id);
 end;
 </programlisting>
@@ -4416,12 +4424,12 @@ end;
     </section>
 
 <!-- Function dropset_int( integer ) -->
-    <section id="schemadoc.function.dropset-int-integer"
+    <section id="function.dropset-int-integer"
              xreflabel="schemadocdropset_int( integer )">
-      <title id="schemadoc.function.dropset-int-integer-title">
+      <title id="function.dropset-int-integer-title">
        dropset_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.dropset-int-integer-titleabbrev">
+      <titleabbrev id="function.dropset-int-integer-titleabbrev">
        dropset_int( integer )
       </titleabbrev>
 
@@ -4446,36 +4454,36 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
 	-- ----
 	-- Restore all tables original triggers and rules and remove
 	-- our replication stuff.
 	-- ----
-	for v_tab_row in select tab_id from schemadoc.sl_table
+	for v_tab_row in select tab_id from sl_table
 			where tab_set = p_set_id
 			order by tab_id
 	loop
-		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
-		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+		perform alterTableRestore(v_tab_row.tab_id);
+		perform tableDropKey(v_tab_row.tab_id);
 	end loop;
 
 	-- ----
 	-- Remove all traces of the set configuration
 	-- ----
-	delete from schemadoc.sl_sequence
+	delete from sl_sequence
 			where seq_set = p_set_id;
-	delete from schemadoc.sl_table
+	delete from sl_table
 			where tab_set = p_set_id;
-	delete from schemadoc.sl_subscribe
+	delete from sl_subscribe
 			where sub_set = p_set_id;
-	delete from schemadoc.sl_setsync
+	delete from sl_setsync
 			where ssy_setid = p_set_id;
-	delete from schemadoc.sl_set
+	delete from sl_set
 			where set_id = p_set_id;
 
 	-- Regenerate sl_listen since we revised the subscriptions
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return p_set_id;
 end;
@@ -4484,12 +4492,12 @@ end;
     </section>
 
 <!-- Function droptrigger( integer, name ) -->
-    <section id="schemadoc.function.droptrigger-integer-name"
+    <section id="function.droptrigger-integer-name"
              xreflabel="schemadocdroptrigger( integer, name )">
-      <title id="schemadoc.function.droptrigger-integer-name-title">
+      <title id="function.droptrigger-integer-name-title">
        droptrigger( integer, name )
       </title>
-      <titleabbrev id="schemadoc.function.droptrigger-integer-name-titleabbrev">
+      <titleabbrev id="function.droptrigger-integer-name-titleabbrev">
        droptrigger( integer, name )
       </titleabbrev>
 
@@ -4514,8 +4522,8 @@ declare
 	p_trig_tabid		alias for $1;
 	p_trig_tgname		alias for $2;
 begin
-	perform schemadoc.dropTrigger_int(p_trig_tabid, p_trig_tgname);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_TRIGGER&#39;,
+	perform dropTrigger_int(p_trig_tabid, p_trig_tgname);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_TRIGGER&#39;,
 			p_trig_tabid, p_trig_tgname);
 end;
 </programlisting>
@@ -4523,12 +4531,12 @@ end;
     </section>
 
 <!-- Function droptrigger_int( integer, name ) -->
-    <section id="schemadoc.function.droptrigger-int-integer-name"
+    <section id="function.droptrigger-int-integer-name"
              xreflabel="schemadocdroptrigger_int( integer, name )">
-      <title id="schemadoc.function.droptrigger-int-integer-name-title">
+      <title id="function.droptrigger-int-integer-name-title">
        droptrigger_int( integer, name )
       </title>
-      <titleabbrev id="schemadoc.function.droptrigger-int-integer-name-titleabbrev">
+      <titleabbrev id="function.droptrigger-int-integer-name-titleabbrev">
        droptrigger_int( integer, name )
       </titleabbrev>
 
@@ -4557,13 +4565,13 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get the current table status (altered or not)
 	-- ----
 	select tab_altered into v_tab_altered
-			from schemadoc.sl_table where tab_id = p_trig_tabid;
+			from sl_table where tab_id = p_trig_tabid;
 	if not found then
 		-- ----
 		-- Not found is no hard error here, because that might
@@ -4576,13 +4584,13 @@ begin
 	-- If the table is modified for replication, restore the original state
 	-- ----
 	if v_tab_altered then
-		perform schemadoc.alterTableRestore(p_trig_tabid);
+		perform alterTableRestore(p_trig_tabid);
 	end if;
 
 	-- ----
 	-- Remove the entry from sl_trigger
 	-- ----
-	delete from schemadoc.sl_trigger
+	delete from sl_trigger
 			where trig_tabid = p_trig_tabid
 			  and trig_tgname = p_trig_tgname;
 
@@ -4590,7 +4598,7 @@ begin
 	-- Put the table back into replicated state if it was
 	-- ----
 	if v_tab_altered then
-		perform schemadoc.alterTableForReplication(p_trig_tabid);
+		perform alterTableForReplication(p_trig_tabid);
 	end if;
 
 	return p_trig_tabid;
@@ -4600,12 +4608,12 @@ end;
     </section>
 
 <!-- Function enablenode( integer ) -->
-    <section id="schemadoc.function.enablenode-integer"
+    <section id="function.enablenode-integer"
              xreflabel="schemadocenablenode( integer )">
-      <title id="schemadoc.function.enablenode-integer-title">
+      <title id="function.enablenode-integer-title">
        enablenode( integer )
       </title>
-      <titleabbrev id="schemadoc.function.enablenode-integer-titleabbrev">
+      <titleabbrev id="function.enablenode-integer-titleabbrev">
        enablenode( integer )
       </titleabbrev>
 
@@ -4633,15 +4641,15 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select * into v_node_row
-			from schemadoc.sl_node
+			from sl_node
 			where no_id = p_no_id
 			for update;
 	if not found then 
@@ -4654,8 +4662,8 @@ begin
 	-- ----
 	-- Activate this node and generate the ENABLE_NODE event
 	-- ----
-	perform schemadoc.enableNode_int (p_no_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_NODE&#39;,
+	perform enableNode_int (p_no_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_NODE&#39;,
 									p_no_id);
 end;
 </programlisting>
@@ -4663,12 +4671,12 @@ end;
     </section>
 
 <!-- Function enablenode_int( integer ) -->
-    <section id="schemadoc.function.enablenode-int-integer"
+    <section id="function.enablenode-int-integer"
              xreflabel="schemadocenablenode_int( integer )">
-      <title id="schemadoc.function.enablenode-int-integer-title">
+      <title id="function.enablenode-int-integer-title">
        enablenode_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.enablenode-int-integer-titleabbrev">
+      <titleabbrev id="function.enablenode-int-integer-titleabbrev">
        enablenode_int( integer )
       </titleabbrev>
 
@@ -4697,13 +4705,13 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that the node is inactive
 	-- ----
 	select * into v_node_row
-			from schemadoc.sl_node
+			from sl_node
 			where no_id = p_no_id
 			for update;
 	if not found then 
@@ -4716,17 +4724,17 @@ begin
 	-- ----
 	-- Activate the node and generate sl_confirm status rows for it.
 	-- ----
-	update schemadoc.sl_node
+	update sl_node
 			set no_active = &#39;t&#39;
 			where no_id = p_no_id;
-	insert into schemadoc.sl_confirm
+	insert into sl_confirm
 			(con_origin, con_received, con_seqno)
-			select no_id, p_no_id, 0 from schemadoc.sl_node
+			select no_id, p_no_id, 0 from sl_node
 				where no_id != p_no_id
 				and no_active;
-	insert into schemadoc.sl_confirm
+	insert into sl_confirm
 			(con_origin, con_received, con_seqno)
-			select p_no_id, no_id, 0 from schemadoc.sl_node
+			select p_no_id, no_id, 0 from sl_node
 				where no_id != p_no_id
 				and no_active;
 
@@ -4734,16 +4742,16 @@ begin
 	-- Generate ENABLE_SUBSCRIPTION events for all sets that
 	-- origin here and are subscribed by the just enabled node.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	for v_sub_row in select SUB.sub_set, SUB.sub_provider from
-			schemadoc.sl_set S,
-			schemadoc.sl_subscribe SUB
+			sl_set S,
+			sl_subscribe SUB
 			where S.set_origin = v_local_node_id
 			and S.set_id = SUB.sub_set
 			and SUB.sub_receiver = p_no_id
 			for update of S
 	loop
-		perform schemadoc.enableSubscription (v_sub_row.sub_set,,
+		perform enableSubscription (v_sub_row.sub_set,,
 				v_sub_row.sub_provider, p_no_id);
 	end loop;
 
@@ -4754,12 +4762,12 @@ end;
     </section>
 
 <!-- Function enablesubscription( integer, integer, integer ) -->
-    <section id="schemadoc.function.enablesubscription-integer-integer-integer"
+    <section id="function.enablesubscription-integer-integer-integer"
              xreflabel="schemadocenablesubscription( integer, integer, integer )">
-      <title id="schemadoc.function.enablesubscription-integer-integer-integer-title">
+      <title id="function.enablesubscription-integer-integer-integer-title">
        enablesubscription( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.enablesubscription-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.enablesubscription-integer-integer-integer-titleabbrev">
        enablesubscription( integer, integer, integer )
       </titleabbrev>
 
@@ -4786,7 +4794,7 @@ declare
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 begin
-	return  schemadoc.enableSubscription_int (p_sub_set, 
+	return  enableSubscription_int (p_sub_set, 
 			p_sub_provider, p_sub_receiver);
 end;
 </programlisting>
@@ -4794,12 +4802,12 @@ end;
     </section>
 
 <!-- Function enablesubscription_int( integer, integer, integer ) -->
-    <section id="schemadoc.function.enablesubscription-int-integer-integer-integer"
+    <section id="function.enablesubscription-int-integer-integer-integer"
              xreflabel="schemadocenablesubscription_int( integer, integer, integer )">
-      <title id="schemadoc.function.enablesubscription-int-integer-integer-integer-title">
+      <title id="function.enablesubscription-int-integer-integer-integer-title">
        enablesubscription_int( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.enablesubscription-int-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.enablesubscription-int-integer-integer-integer-titleabbrev">
        enablesubscription_int( integer, integer, integer )
       </titleabbrev>
 
@@ -4833,7 +4841,7 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- The real work is done in the replication engine. All
@@ -4843,24 +4851,24 @@ begin
 	-- ----
 	-- Well, not only ... we might be missing an important event here
 	-- ----
-	if not exists (select true from schemadoc.sl_path
+	if not exists (select true from sl_path
 			where pa_server = p_sub_provider
 			and pa_client = p_sub_receiver)
 	then
-		insert into schemadoc.sl_path
+		insert into sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry)
 				values 
 				(p_sub_provider, p_sub_receiver, 
 				&#39;&lt;event pending&gt;&#39;, 10);
 	end if;
 
-	update schemadoc.sl_subscribe
+	update sl_subscribe
 			set sub_active = &#39;t&#39;
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	get diagnostics v_n = row_count;
 	if v_n = 0 then
-		insert into schemadoc.sl_subscribe
+		insert into sl_subscribe
 				(sub_set, sub_provider, sub_receiver,
 				sub_forward, sub_active)
 				values
@@ -4869,7 +4877,7 @@ begin
 	end if;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return p_sub_set;
 end;
@@ -4878,12 +4886,12 @@ end;
     </section>
 
 <!-- Function failednode( integer, integer ) -->
-    <section id="schemadoc.function.failednode-integer-integer"
+    <section id="function.failednode-integer-integer"
              xreflabel="schemadocfailednode( integer, integer )">
-      <title id="schemadoc.function.failednode-integer-integer-title">
+      <title id="function.failednode-integer-integer-title">
        failednode( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.failednode-integer-integer-titleabbrev">
+      <titleabbrev id="function.failednode-integer-integer-titleabbrev">
        failednode( integer, integer )
       </titleabbrev>
 
@@ -4912,7 +4920,7 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- All consistency checks first
@@ -4920,10 +4928,10 @@ begin
 	-- also has a path to the backup node.
 	-- ----
 	for v_row in select P.pa_client
-			from schemadoc.sl_path P
+			from sl_path P
 			where P.pa_server = p_failed_node
 				and P.pa_client &lt;&gt; p_backup_node
-				and not exists (select true from schemadoc.sl_path PP
+				and not exists (select true from sl_path PP
 							where PP.pa_server = p_backup_node
 								and PP.pa_client = P.pa_client)
 	loop
@@ -4935,7 +4943,7 @@ begin
 	-- Check all sets originating on the failed node
 	-- ----
 	for v_row in select set_id
-			from schemadoc.sl_set
+			from sl_set
 			where set_origin = p_failed_node
 	loop
 		-- ----
@@ -4943,7 +4951,7 @@ begin
 		-- that origin on the failed node
 		-- ----
 		select into v_row2 sub_forward, sub_active
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = v_row.set_id
 					and sub_receiver = p_backup_node;
 		if not found then
@@ -4964,7 +4972,7 @@ begin
 		-- be a forwarder too.
 		-- ----
 		select into v_n count(*)
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = v_row.set_id
 					and sub_receiver &lt;&gt; p_backup_node;
 		if v_n &gt; 0 and not v_row2.sub_forward then
@@ -4976,7 +4984,7 @@ begin
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
-	perform schemadoc.terminateNodeConnections(
+	perform terminateNodeConnections(
 			&#39;_schemadoc_Node_&#39; || p_failed_node);
 
 -- Note that the following code should all become obsolete in the wake
@@ -4987,11 +4995,11 @@ if false then
 	-- Let every node that listens for something on the failed node
 	-- listen for that on the backup node instead.
 	-- ----
-	for v_row in select * from schemadoc.sl_listen
+	for v_row in select * from sl_listen
 			where li_provider = p_failed_node
 				and li_receiver &lt;&gt; p_backup_node
 	loop
-		perform schemadoc.storeListen_int(v_row.li_origin,
+		perform storeListen_int(v_row.li_origin,
 				p_backup_node, v_row.li_receiver);
 	end loop;
 
@@ -5000,11 +5008,11 @@ if false then
 	-- failed node did listen for it.
 	-- ----
 	for v_row in select li_origin, li_provider
-			from schemadoc.sl_listen
+			from sl_listen
 			where li_receiver = p_failed_node
 				and li_provider &lt;&gt; p_backup_node
 	loop
-		perform schemadoc.storeListen_int(v_row.li_origin,
+		perform storeListen_int(v_row.li_origin,
 				v_row.li_provider, p_backup_node);
 	end loop;
 
@@ -5012,7 +5020,7 @@ if false then
 	-- Remove all sl_listen entries that receive anything from the
 	-- failed node.
 	-- ----
-	delete from schemadoc.sl_listen
+	delete from sl_listen
 			where li_provider = p_failed_node
 				or li_receiver = p_failed_node;
 end if;
@@ -5021,12 +5029,12 @@ end if;
 	-- Move the sets
 	-- ----
 	for v_row in select S.set_id, (select count(*)
-					from schemadoc.sl_subscribe SUB
+					from sl_subscribe SUB
 					where S.set_id = SUB.sub_set
 						and SUB.sub_receiver &lt;&gt; p_backup_node
 						and SUB.sub_provider = p_failed_node)
 					as num_direct_receivers 
-			from schemadoc.sl_set S
+			from sl_set S
 			where S.set_origin = p_failed_node
 			for update
 	loop
@@ -5042,29 +5050,29 @@ raise notice &#39;failedNode: set % has no other direct receivers - move now&#39
 			-- adding the log trigger, removing the subscription and the
 			-- obsolete setsync status.
 			-- ----
-			if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-				for v_row2 in select * from schemadoc.sl_table
+			if p_backup_node = getLocalNodeId(&#39;_schemadoc&#39;) then
+				for v_row2 in select * from sl_table
 						where tab_set = v_row.set_id
 				loop
-					perform schemadoc.alterTableRestore(v_row2.tab_id);
+					perform alterTableRestore(v_row2.tab_id);
 				end loop;
 			end if;
 
-			update schemadoc.sl_set set set_origin = p_backup_node
+			update sl_set set set_origin = p_backup_node
 					where set_id = v_row.set_id;
 
-			if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-				delete from schemadoc.sl_setsync
+			if p_backup_node = getLocalNodeId(&#39;_schemadoc&#39;) then
+				delete from sl_setsync
 						where ssy_setid = v_row.set_id;
 
-				for v_row2 in select * from schemadoc.sl_table
+				for v_row2 in select * from sl_table
 						where tab_set = v_row.set_id
 				loop
-					perform schemadoc.alterTableForReplication(v_row2.tab_id);
+					perform alterTableForReplication(v_row2.tab_id);
 				end loop;
 			end if;
 
-			delete from schemadoc.sl_subscribe
+			delete from sl_subscribe
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
@@ -5079,16 +5087,16 @@ raise notice &#39;failedNode: set % has other direct receivers - change provider
 			-- the highest SYNC and redirect this to it on
 			-- backup node later.
 			-- ----
-			update schemadoc.sl_subscribe
+			update sl_subscribe
 					set sub_provider = (select min(SS.sub_receiver)
-							from schemadoc.sl_subscribe SS
+							from sl_subscribe SS
 							where SS.sub_set = v_row.set_id
 								and SS.sub_provider = p_failed_node
 								and SS.sub_receiver &lt;&gt; p_backup_node
 								and SS.sub_forward)
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
-			update schemadoc.sl_subscribe
+			update sl_subscribe
 					set sub_provider = p_backup_node
 					where sub_set = v_row.set_id
 						and sub_provider = p_failed_node
@@ -5097,7 +5105,7 @@ raise notice &#39;failedNode: set % has other direct receivers - change provider
 	end loop;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	-- ----
 	-- Make sure the node daemon will restart
@@ -5114,12 +5122,12 @@ end;
     </section>
 
 <!-- Function failednode2( integer, integer, integer, bigint, bigint ) -->
-    <section id="schemadoc.function.failednode2-integer-integer-integer-bigint-bigint"
+    <section id="function.failednode2-integer-integer-integer-bigint-bigint"
              xreflabel="schemadocfailednode2( integer, integer, integer, bigint, bigint )">
-      <title id="schemadoc.function.failednode2-integer-integer-integer-bigint-bigint-title">
+      <title id="function.failednode2-integer-integer-integer-bigint-bigint-title">
        failednode2( integer, integer, integer, bigint, bigint )
       </title>
-      <titleabbrev id="schemadoc.function.failednode2-integer-integer-integer-bigint-bigint-titleabbrev">
+      <titleabbrev id="function.failednode2-integer-integer-integer-bigint-bigint-titleabbrev">
        failednode2( integer, integer, integer, bigint, bigint )
       </titleabbrev>
 
@@ -5151,10 +5159,10 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	select * into v_row
-			from schemadoc.sl_event
+			from sl_event
 			where ev_origin = p_failed_node
 			and ev_seqno = p_ev_seqno;
 	if not found then
@@ -5162,7 +5170,7 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	insert into schemadoc.sl_event
+	insert into sl_event
 			(ev_origin, ev_seqno, ev_timestamp,
 			ev_minxid, ev_maxxid, ev_xip,
 			ev_type, ev_data1, ev_data2, ev_data3)
@@ -5171,16 +5179,16 @@ begin
 			v_row.ev_minxid, v_row.ev_maxxid, v_row.ev_xip,
 			&#39;FAILOVER_SET&#39;, p_failed_node::text, p_backup_node::text,
 			p_set_id::text);
-	insert into schemadoc.sl_confirm
+	insert into sl_confirm
 			(con_origin, con_received, con_seqno, con_timestamp)
 			values
-			(p_failed_node, schemadoc.getLocalNodeId(&#39;_schemadoc&#39;),
+			(p_failed_node, getLocalNodeId(&#39;_schemadoc&#39;),
 			p_ev_seqfake, CURRENT_TIMESTAMP);
 	notify &quot;_schemadoc_Event&quot;;
 	notify &quot;_schemadoc_Confirm&quot;;
 	notify &quot;_schemadoc_Restart&quot;;
 
-	perform schemadoc.failoverSet_int(p_failed_node,
+	perform failoverSet_int(p_failed_node,
 			p_backup_node, p_set_id);
 
 	return p_ev_seqfake;
@@ -5190,12 +5198,12 @@ end;
     </section>
 
 <!-- Function failoverset_int( integer, integer, integer ) -->
-    <section id="schemadoc.function.failoverset-int-integer-integer-integer"
+    <section id="function.failoverset-int-integer-integer-integer"
              xreflabel="schemadocfailoverset_int( integer, integer, integer )">
-      <title id="schemadoc.function.failoverset-int-integer-integer-integer-title">
+      <title id="function.failoverset-int-integer-integer-integer-title">
        failoverset_int( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.failoverset-int-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.failoverset-int-integer-integer-integer-titleabbrev">
        failoverset_int( integer, integer, integer )
       </titleabbrev>
 
@@ -5225,73 +5233,73 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Change the origin of the set now to the backup node.
 	-- On the backup node this includes changing all the
 	-- trigger and protection stuff
 	-- ----
-	if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-		for v_row in select * from schemadoc.sl_table
+	if p_backup_node = getLocalNodeId(&#39;_schemadoc&#39;) then
+		for v_row in select * from sl_table
 				where tab_set = p_set_id
 		loop
-			perform schemadoc.alterTableRestore(v_row.tab_id);
+			perform alterTableRestore(v_row.tab_id);
 		end loop;
 
-		delete from schemadoc.sl_setsync
+		delete from sl_setsync
 				where ssy_setid = p_set_id;
-		delete from schemadoc.sl_subscribe
+		delete from sl_subscribe
 				where sub_set = p_set_id
 					and sub_receiver = p_backup_node;
-		update schemadoc.sl_set
+		update sl_set
 				set set_origin = p_backup_node
 				where set_id = p_set_id;
 
-		for v_row in select * from schemadoc.sl_table
+		for v_row in select * from sl_table
 				where tab_set = p_set_id
 		loop
-			perform schemadoc.alterTableForReplication(v_row.tab_id);
+			perform alterTableForReplication(v_row.tab_id);
 		end loop;
 	else
-		delete from schemadoc.sl_subscribe
+		delete from sl_subscribe
 				where sub_set = p_set_id
 					and sub_receiver = p_backup_node;
-		update schemadoc.sl_set
+		update sl_set
 				set set_origin = p_backup_node
 				where set_id = p_set_id;
 	end if;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	-- ----
 	-- If we are a subscriber of the set ourself, change our
 	-- setsync status to reflect the new set origin.
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe
+	if exists (select true from sl_subscribe
 			where sub_set = p_set_id
-				and sub_receiver = schemadoc.getLocalNodeId(
+				and sub_receiver = getLocalNodeId(
 						&#39;_schemadoc&#39;))
 	then
-		delete from schemadoc.sl_setsync
+		delete from sl_setsync
 				where ssy_setid = p_set_id;
 
 		select coalesce(max(ev_seqno), 0) into v_last_sync
-				from schemadoc.sl_event
+				from sl_event
 				where ev_origin = p_backup_node
 					and ev_type = &#39;SYNC&#39;;
 		if v_last_sync &gt; 0 then
-			insert into schemadoc.sl_setsync
+			insert into sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 					select p_set_id, p_backup_node, v_last_sync,
 					ev_minxid, ev_maxxid, ev_xip, NULL
-					from schemadoc.sl_event
+					from sl_event
 					where ev_origin = p_backup_node
 						and ev_seqno = v_last_sync;
 		else
-			insert into schemadoc.sl_setsync
+			insert into sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 					values (p_set_id, p_backup_node, &#39;0&#39;,
@@ -5307,12 +5315,12 @@ end;
     </section>
 
 <!-- Function forwardconfirm( integer, integer, bigint, timestamp without time zone ) -->
-    <section id="schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone"
+    <section id="function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone"
              xreflabel="schemadocforwardconfirm( integer, integer, bigint, timestamp without time zone )">
-      <title id="schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone-title">
+      <title id="function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone-title">
        forwardconfirm( integer, integer, bigint, timestamp without time zone )
       </title>
-      <titleabbrev id="schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone-titleabbrev">
+      <titleabbrev id="function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone-titleabbrev">
        forwardconfirm( integer, integer, bigint, timestamp without time zone )
       </titleabbrev>
 
@@ -5342,11 +5350,11 @@ declare
 	v_max_seqno		bigint;
 begin
 	select into v_max_seqno coalesce(max(con_seqno), 0)
-			from schemadoc.sl_confirm
+			from sl_confirm
 			where con_origin = p_con_origin
 			and con_received = p_con_received;
 	if v_max_seqno &lt; p_con_seqno then
-		insert into schemadoc.sl_confirm 
+		insert into sl_confirm 
 				(con_origin, con_received, con_seqno, con_timestamp)
 				values (p_con_origin, p_con_received, p_con_seqno,
 					p_con_timestamp);
@@ -5361,12 +5369,12 @@ end;
     </section>
 
 <!-- Function generate_sync_event( interval ) -->
-    <section id="schemadoc.function.generate-sync-event-interval"
+    <section id="function.generate-sync-event-interval"
              xreflabel="schemadocgenerate_sync_event( interval )">
-      <title id="schemadoc.function.generate-sync-event-interval-title">
+      <title id="function.generate-sync-event-interval-title">
        generate_sync_event( interval )
       </title>
-      <titleabbrev id="schemadoc.function.generate-sync-event-interval-titleabbrev">
+      <titleabbrev id="function.generate-sync-event-interval-titleabbrev">
        generate_sync_event( interval )
       </titleabbrev>
 
@@ -5389,12 +5397,12 @@ declare
 	v_node_row     record;
 
 BEGIN
-	select 1 into v_node_row from schemadoc.sl_event 
-       	  where ev_type = &#39;SYNC&#39; and ev_origin = schemadoc.getLocalNodeId(&#39;schemadoc&#39;)
+	select 1 into v_node_row from sl_event 
+       	  where ev_type = &#39;SYNC&#39; and ev_origin = getLocalNodeId(&#39;schemadoc&#39;)
           and ev_timestamp &gt; now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform schemadoc.createEvent(&#39;schemadoc&#39;, &#39;SYNC&#39;, NULL);
+		perform createEvent(&#39;schemadoc&#39;, &#39;SYNC&#39;, NULL);
 		return 1;
 	else
 		return 0;
@@ -5405,12 +5413,12 @@ end;
     </section>
 
 <!-- Function getlocalnodeid( name ) -->
-    <section id="schemadoc.function.getlocalnodeid-name"
+    <section id="function.getlocalnodeid-name"
              xreflabel="schemadocgetlocalnodeid( name )">
-      <title id="schemadoc.function.getlocalnodeid-name-title">
+      <title id="function.getlocalnodeid-name-title">
        getlocalnodeid( name )
       </title>
-      <titleabbrev id="schemadoc.function.getlocalnodeid-name-titleabbrev">
+      <titleabbrev id="function.getlocalnodeid-name-titleabbrev">
        getlocalnodeid( name )
       </titleabbrev>
 
@@ -5432,12 +5440,12 @@ end;
     </section>
 
 <!-- Function getmoduleversion(  ) -->
-    <section id="schemadoc.function.getmoduleversion"
+    <section id="function.getmoduleversion"
              xreflabel="schemadocgetmoduleversion(  )">
-      <title id="schemadoc.function.getmoduleversion-title">
+      <title id="function.getmoduleversion-title">
        getmoduleversion(  )
       </title>
-      <titleabbrev id="schemadoc.function.getmoduleversion-titleabbrev">
+      <titleabbrev id="function.getmoduleversion-titleabbrev">
        getmoduleversion(  )
       </titleabbrev>
 
@@ -5459,12 +5467,12 @@ end;
     </section>
 
 <!-- Function getsessionrole( name ) -->
-    <section id="schemadoc.function.getsessionrole-name"
+    <section id="function.getsessionrole-name"
              xreflabel="schemadocgetsessionrole( name )">
-      <title id="schemadoc.function.getsessionrole-name-title">
+      <title id="function.getsessionrole-name-title">
        getsessionrole( name )
       </title>
-      <titleabbrev id="schemadoc.function.getsessionrole-name-titleabbrev">
+      <titleabbrev id="function.getsessionrole-name-titleabbrev">
        getsessionrole( name )
       </titleabbrev>
 
@@ -5486,12 +5494,12 @@ end;
     </section>
 
 <!-- Function initializelocalnode( integer, text ) -->
-    <section id="schemadoc.function.initializelocalnode-integer-text"
+    <section id="function.initializelocalnode-integer-text"
              xreflabel="schemadocinitializelocalnode( integer, text )">
-      <title id="schemadoc.function.initializelocalnode-integer-text-title">
+      <title id="function.initializelocalnode-integer-text-title">
        initializelocalnode( integer, text )
       </title>
-      <titleabbrev id="schemadoc.function.initializelocalnode-integer-text-titleabbrev">
+      <titleabbrev id="function.initializelocalnode-integer-text-titleabbrev">
        initializelocalnode( integer, text )
       </titleabbrev>
 
@@ -5522,12 +5530,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Make sure this node is uninitialized or got reset
 	-- ----
-	select last_value::int4 into v_old_node_id from schemadoc.sl_local_node_id;
+	select last_value::int4 into v_old_node_id from sl_local_node_id;
 	if v_old_node_id != -1 then
 		raise exception &#39;Slony-I: This node is already initialized&#39;;
 	end if;
@@ -5536,10 +5544,10 @@ begin
 	-- Set sl_local_node_id to the requested value and add our
 	-- own system to sl_node.
 	-- ----
-	perform setval(&#39;schemadoc.sl_local_node_id&#39;, p_local_node_id);
-	perform setval(&#39;schemadoc.sl_rowid_seq&#39;, 
+	perform setval(&#39;sl_local_node_id&#39;, p_local_node_id);
+	perform setval(&#39;sl_rowid_seq&#39;, 
 			p_local_node_id::int8 * &#39;1000000000000000&#39;::int8);
-	perform schemadoc.storeNode_int (p_local_node_id, p_comment, false);
+	perform storeNode_int (p_local_node_id, p_comment, false);
 	
 	return p_local_node_id;
 end;
@@ -5548,12 +5556,12 @@ end;
     </section>
 
 <!-- Function lockedset(  ) -->
-    <section id="schemadoc.function.lockedset"
+    <section id="function.lockedset"
              xreflabel="schemadoclockedset(  )">
-      <title id="schemadoc.function.lockedset-title">
+      <title id="function.lockedset-title">
        lockedset(  )
       </title>
-      <titleabbrev id="schemadoc.function.lockedset-titleabbrev">
+      <titleabbrev id="function.lockedset-titleabbrev">
        lockedset(  )
       </titleabbrev>
 
@@ -5575,12 +5583,12 @@ end;
     </section>
 
 <!-- Function lockset( integer ) -->
-    <section id="schemadoc.function.lockset-integer"
+    <section id="function.lockset-integer"
              xreflabel="schemadoclockset( integer )">
-      <title id="schemadoc.function.lockset-integer-title">
+      <title id="function.lockset-integer-title">
        lockset( integer )
       </title>
-      <titleabbrev id="schemadoc.function.lockset-integer-titleabbrev">
+      <titleabbrev id="function.lockset-integer-titleabbrev">
        lockset( integer )
       </titleabbrev>
 
@@ -5610,14 +5618,14 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
-	select * into v_set_row from schemadoc.sl_set
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
@@ -5637,7 +5645,7 @@ begin
 	for v_tab_row in select T.tab_id,
 			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
-			from schemadoc.sl_table T,
+			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where T.tab_set = p_set_id
 				and T.tab_reloid = PGC.oid
@@ -5648,14 +5656,14 @@ begin
 				v_tab_row.tab_id || 
 				&#39;&quot; before insert or update or delete on &#39; ||
 				v_tab_row.tab_fqname || &#39; for each row execute procedure
-				schemadoc.lockedSet (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
+				lockedSet (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
 	end loop;
 
 	-- ----
 	-- Remember our snapshots xmax as for the set locking
 	-- ----
-	update schemadoc.sl_set
-			set set_locked = schemadoc.getMaxXid()
+	update sl_set
+			set set_locked = getMaxXid()
 			where set_id = p_set_id;
 
 	return p_set_id;
@@ -5665,12 +5673,12 @@ end;
     </section>
 
 <!-- Function logtrigger(  ) -->
-    <section id="schemadoc.function.logtrigger"
+    <section id="function.logtrigger"
              xreflabel="schemadoclogtrigger(  )">
-      <title id="schemadoc.function.logtrigger-title">
+      <title id="function.logtrigger-title">
        logtrigger(  )
       </title>
-      <titleabbrev id="schemadoc.function.logtrigger-titleabbrev">
+      <titleabbrev id="function.logtrigger-titleabbrev">
        logtrigger(  )
       </titleabbrev>
 
@@ -5693,12 +5701,12 @@ updates to be recorded in sl_log_1/sl_log_2.
     </section>
 
 <!-- Function mergeset( integer, integer ) -->
-    <section id="schemadoc.function.mergeset-integer-integer"
+    <section id="function.mergeset-integer-integer"
              xreflabel="schemadocmergeset( integer, integer )">
-      <title id="schemadoc.function.mergeset-integer-integer-title">
+      <title id="function.mergeset-integer-integer-title">
        mergeset( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.mergeset-integer-integer-titleabbrev">
+      <titleabbrev id="function.mergeset-integer-integer-titleabbrev">
        mergeset( integer, integer )
       </titleabbrev>
 
@@ -5727,7 +5735,7 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
 	-- ----
 	-- Check that both sets exist and originate here
@@ -5735,22 +5743,22 @@ begin
 	if p_set_id = p_add_id then
 		raise exception &#39;Slony-I: merged set ids cannot be identical&#39;;
 	end if;
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_set_id;
 	end if;
 
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = p_add_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_add_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_add_id;
 	end if;
@@ -5758,20 +5766,20 @@ begin
 	-- ----
 	-- Check that both sets are subscribed by the same set of nodes
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = p_set_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = p_add_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
 				p_set_id, p_add_id;
 	end if;
 
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = p_add_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = p_set_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
@@ -5781,9 +5789,9 @@ begin
 	-- ----
 	-- Create a SYNC event, merge the sets, create a MERGE_SET event
 	-- ----
-	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
-	perform schemadoc.mergeSet_int(p_set_id, p_add_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;MERGE_SET&#39;, 
+	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	perform mergeSet_int(p_set_id, p_add_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;MERGE_SET&#39;, 
 			p_set_id, p_add_id);
 end;
 </programlisting>
@@ -5791,12 +5799,12 @@ end;
     </section>
 
 <!-- Function mergeset_int( integer, integer ) -->
-    <section id="schemadoc.function.mergeset-int-integer-integer"
+    <section id="function.mergeset-int-integer-integer"
              xreflabel="schemadocmergeset_int( integer, integer )">
-      <title id="schemadoc.function.mergeset-int-integer-integer-title">
+      <title id="function.mergeset-int-integer-integer-title">
        mergeset_int( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.mergeset-int-integer-integer-titleabbrev">
+      <titleabbrev id="function.mergeset-int-integer-integer-titleabbrev">
        mergeset_int( integer, integer )
       </titleabbrev>
 
@@ -5822,19 +5830,19 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
-	update schemadoc.sl_sequence
+	update sl_sequence
 			set seq_set = p_set_id
 			where seq_set = p_add_id;
-	update schemadoc.sl_table
+	update sl_table
 			set tab_set = p_set_id
 			where tab_set = p_add_id;
-	delete from schemadoc.sl_subscribe
+	delete from sl_subscribe
 			where sub_set = p_add_id;
-	delete from schemadoc.sl_setsync
+	delete from sl_setsync
 			where ssy_setid = p_add_id;
-	delete from schemadoc.sl_set
+	delete from sl_set
 			where set_id = p_add_id;
 
 	return p_set_id;
@@ -5844,12 +5852,12 @@ end;
     </section>
 
 <!-- Function moveset( integer, integer ) -->
-    <section id="schemadoc.function.moveset-integer-integer"
+    <section id="function.moveset-integer-integer"
              xreflabel="schemadocmoveset( integer, integer )">
-      <title id="schemadoc.function.moveset-integer-integer-title">
+      <title id="function.moveset-integer-integer-title">
        moveset( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.moveset-integer-integer-titleabbrev">
+      <titleabbrev id="function.moveset-integer-integer-titleabbrev">
        moveset( integer, integer )
       </titleabbrev>
 
@@ -5881,14 +5889,14 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that the set is locked and that this locking
 	-- happened long enough ago.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
-	select * into v_set_row from schemadoc.sl_set
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
@@ -5901,7 +5909,7 @@ begin
 	if v_set_row.set_locked isnull then
 		raise exception &#39;Slony-I: set % is not locked&#39;, p_set_id;
 	end if;
-	if v_set_row.set_locked &gt; schemadoc.getMinXid() then
+	if v_set_row.set_locked &gt; getMinXid() then
 		raise exception &#39;Slony-I: cannot move set % yet, transactions &lt; % are still in progress&#39;,
 				p_set_id, v_set_row.set_locked;
 	end if;
@@ -5909,12 +5917,12 @@ begin
 	-- ----
 	-- Unlock the set
 	-- ----
-	perform schemadoc.unlockSet(p_set_id);
+	perform unlockSet(p_set_id);
 
 	-- ----
 	-- Check that the new_origin is an active subscriber of the set
 	-- ----
-	select * into v_sub_row from schemadoc.sl_subscribe
+	select * into v_sub_row from sl_subscribe
 			where sub_set = p_set_id
 			and sub_receiver = p_new_origin;
 	if not found then
@@ -5929,27 +5937,27 @@ begin
 	-- ----
 	-- Reconfigure everything
 	-- ----
-	perform schemadoc.moveSet_int(p_set_id, v_local_node_id,
+	perform moveSet_int(p_set_id, v_local_node_id,
 			p_new_origin);
 
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	-- ----
 	-- At this time we hold access exclusive locks for every table
 	-- in the set. But we did move the set to the new origin, so the
 	-- createEvent() we are doing now will not record the sequences.
 	-- ----
-	v_sync_seqno := schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;);
-	insert into schemadoc.sl_seqlog 
+	v_sync_seqno := createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;);
+	insert into sl_seqlog 
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			select seq_id, v_local_node_id, v_sync_seqno, seq_last_value
-			from schemadoc.sl_seqlastvalue
+			from sl_seqlastvalue
 			where seq_set = p_set_id;
 					
 	-- ----
 	-- Finally we generate the real event
 	-- ----
-	return schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;MOVE_SET&#39;, 
+	return createEvent(&#39;_schemadoc&#39;, &#39;MOVE_SET&#39;, 
 			p_set_id, v_local_node_id, p_new_origin);
 end;
 </programlisting>
@@ -5957,12 +5965,12 @@ end;
     </section>
 
 <!-- Function moveset_int( integer, integer, integer ) -->
-    <section id="schemadoc.function.moveset-int-integer-integer-integer"
+    <section id="function.moveset-int-integer-integer-integer"
              xreflabel="schemadocmoveset_int( integer, integer, integer )">
-      <title id="schemadoc.function.moveset-int-integer-integer-integer-title">
+      <title id="function.moveset-int-integer-integer-integer-title">
        moveset_int( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.moveset-int-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.moveset-int-integer-integer-integer-titleabbrev">
        moveset_int( integer, integer, integer )
       </titleabbrev>
 
@@ -5998,23 +6006,23 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 
 	-- ----
 	-- If we are the old or new origin of the set, we need to
 	-- remove the log trigger from all tables first.
 	-- ----
 	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
-		for v_tab_row in select tab_id from schemadoc.sl_table
+		for v_tab_row in select tab_id from sl_table
 				where tab_set = p_set_id
 				order by tab_id
 		loop
-			perform schemadoc.alterTableRestore(v_tab_row.tab_id);
+			perform alterTableRestore(v_tab_row.tab_id);
 		end loop;
 	end if;
 
@@ -6023,7 +6031,7 @@ begin
 	-- ----
 	v_sub_last = p_new_origin;
 	select sub_provider into v_sub_node
-			from schemadoc.sl_subscribe
+			from sl_subscribe
 			where sub_receiver = p_new_origin;
 	if not found then
 		raise exception &#39;Slony-I: subscription path broken in moveSet_int&#39;;
@@ -6040,14 +6048,14 @@ begin
 		-- the reverse chain.
 		-- ----
 		select sub_provider into v_sub_next
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = p_set_id
 					and sub_receiver = v_sub_node
 				for update;
 		if not found then
 			raise exception &#39;Slony-I: subscription path broken in moveSet_int&#39;;
 		end if;
-		update schemadoc.sl_subscribe
+		update sl_subscribe
 				set sub_provider = v_sub_last
 				where sub_set = p_set_id
 					and sub_receiver = v_sub_node;
@@ -6059,26 +6067,26 @@ begin
 	-- ----
 	-- This includes creating a subscription for the old origin
 	-- ----
-	insert into schemadoc.sl_subscribe
+	insert into sl_subscribe
 			(sub_set, sub_provider, sub_receiver,
 			sub_forward, sub_active)
 			values (p_set_id, v_sub_last, p_old_origin, true, true);
 	if v_local_node_id = p_old_origin then
 		select coalesce(max(ev_seqno), 0) into v_last_sync 
-				from schemadoc.sl_event
+				from sl_event
 				where ev_origin = p_new_origin
 					and ev_type = &#39;SYNC&#39;;
 		if v_last_sync &gt; 0 then
-			insert into schemadoc.sl_setsync
+			insert into sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 					select p_set_id, p_new_origin, v_last_sync,
 					ev_minxid, ev_maxxid, ev_xip, NULL
-					from schemadoc.sl_event
+					from sl_event
 					where ev_origin = p_new_origin
 						and ev_seqno = v_last_sync;
 		else
-			insert into schemadoc.sl_setsync
+			insert into sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 					values (p_set_id, p_new_origin, &#39;0&#39;,
@@ -6089,7 +6097,7 @@ begin
 	-- ----
 	-- Now change the ownership of the set.
 	-- ----
-	update schemadoc.sl_set
+	update sl_set
 			set set_origin = p_new_origin
 			where set_id = p_set_id;
 
@@ -6098,7 +6106,7 @@ begin
 	-- and the subscription.
 	-- ----
 	if v_local_node_id = p_new_origin then
-		delete from schemadoc.sl_setsync
+		delete from sl_setsync
 				where ssy_setid = p_set_id;
 	else
 		if v_local_node_id &lt;&gt; p_old_origin then
@@ -6106,23 +6114,23 @@ begin
 			-- On every other node, change the setsync so that it will
 			-- pick up from the new origins last known sync.
 			--
-			delete from schemadoc.sl_setsync
+			delete from sl_setsync
 					where ssy_setid = p_set_id;
 			select coalesce(max(ev_seqno), 0) into v_last_sync
-					from schemadoc.sl_event
+					from sl_event
 					where ev_origin = p_new_origin
 						and ev_type = &#39;SYNC&#39;;
 			if v_last_sync &gt; 0 then
-				insert into schemadoc.sl_setsync
+				insert into sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 						select p_set_id, p_new_origin, v_last_sync,
 						ev_minxid, ev_maxxid, ev_xip, NULL
-						from schemadoc.sl_event
+						from sl_event
 						where ev_origin = p_new_origin
 							and ev_seqno = v_last_sync;
 			else
-				insert into schemadoc.sl_setsync
+				insert into sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
 						values (p_set_id, p_new_origin, &#39;0&#39;,
@@ -6130,23 +6138,23 @@ begin
 			end if;
 		end if;
 	end if;
-	delete from schemadoc.sl_subscribe
+	delete from sl_subscribe
 			where sub_set = p_set_id
 			and sub_receiver = p_new_origin;
 
 	-- Regenerate sl_listen since we revised the subscriptions
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	-- ----
 	-- If we are the new or old origin, we have to
 	-- put all the tables into altered state again.
 	-- ----
 	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
-		for v_tab_row in select tab_id from schemadoc.sl_table
+		for v_tab_row in select tab_id from sl_table
 				where tab_set = p_set_id
 				order by tab_id
 		loop
-			perform schemadoc.alterTableForReplication(v_tab_row.tab_id);
+			perform alterTableForReplication(v_tab_row.tab_id);
 		end loop;
 	end if;
 
@@ -6157,12 +6165,12 @@ end;
     </section>
 
 <!-- Function rebuildlistenentries(  ) -->
-    <section id="schemadoc.function.rebuildlistenentries"
+    <section id="function.rebuildlistenentries"
              xreflabel="schemadocrebuildlistenentries(  )">
-      <title id="schemadoc.function.rebuildlistenentries-title">
+      <title id="function.rebuildlistenentries-title">
        rebuildlistenentries(  )
       </title>
-      <titleabbrev id="schemadoc.function.rebuildlistenentries-titleabbrev">
+      <titleabbrev id="function.rebuildlistenentries-titleabbrev">
        rebuildlistenentries(  )
       </titleabbrev>
 
@@ -6188,14 +6196,14 @@ declare
 	v_row			record;
 begin
 	-- First remove the entire configuration
-	delete from schemadoc.sl_listen;
+	delete from sl_listen;
 
 	-- The loop over every possible pair of origin, receiver
 	for v_row in select N1.no_id as origin, N2.no_id as receiver
-			from schemadoc.sl_node N1, schemadoc.sl_node N2
+			from sl_node N1, sl_node N2
 			where N1.no_id &lt;&gt; N2.no_id
 	loop
-		perform schemadoc.RebuildListenEntriesOne(v_row.origin, v_row.receiver);
+		perform RebuildListenEntriesOne(v_row.origin, v_row.receiver);
 	end loop;
 
 	return 0;
@@ -6205,12 +6213,12 @@ end;
     </section>
 
 <!-- Function rebuildlistenentriesone( integer, integer ) -->
-    <section id="schemadoc.function.rebuildlistenentriesone-integer-integer"
+    <section id="function.rebuildlistenentriesone-integer-integer"
              xreflabel="schemadocrebuildlistenentriesone( integer, integer )">
-      <title id="schemadoc.function.rebuildlistenentriesone-integer-integer-title">
+      <title id="function.rebuildlistenentriesone-integer-integer-title">
        rebuildlistenentriesone( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.rebuildlistenentriesone-integer-integer-titleabbrev">
+      <titleabbrev id="function.rebuildlistenentriesone-integer-integer-titleabbrev">
        rebuildlistenentriesone( integer, integer )
       </titleabbrev>
 
@@ -6238,15 +6246,15 @@ begin
 	-- 1. If the receiver is subscribed to any set from the origin,
 	--    listen on the same provider(s).
 	for v_row in select distinct sub_provider
-			from schemadoc.sl_subscribe, schemadoc.sl_set,
-				schemadoc.sl_path
+			from sl_subscribe, sl_set,
+				sl_path
 			where sub_set = set_id
 			and set_origin = p_origin
 			and sub_receiver = p_receiver
 			and sub_provider = pa_server
 			and sub_receiver = pa_client
 	loop
-		perform schemadoc.storeListen_int(p_origin, 
+		perform storeListen_int(p_origin, 
 				v_row.sub_provider, p_receiver);
 	end loop;
 	if found then
@@ -6256,11 +6264,11 @@ begin
 	-- 2. If the receiver has a direct path to the provider,
 	--    use that.
 	if exists (select true
-			from schemadoc.sl_path
+			from sl_path
 			where pa_server = p_origin
 			and pa_client = p_receiver)
 	then
-		perform schemadoc.storeListen_int(p_origin, p_origin, p_receiver);
+		perform storeListen_int(p_origin, p_origin, p_receiver);
 		return 1;
 	end if;
 
@@ -6269,18 +6277,18 @@ begin
 	--    normal subscription routes).
 	for v_row in select distinct provider from (
 			select sub_provider as provider
-					from schemadoc.sl_subscribe
+					from sl_subscribe
 					where sub_receiver = p_receiver
 			union
 			select sub_receiver as provider
-					from schemadoc.sl_subscribe
+					from sl_subscribe
 					where sub_provider = p_receiver
-					and exists (select true from schemadoc.sl_path
+					and exists (select true from sl_path
 								where pa_server = sub_receiver
 								and pa_client = sub_provider)
 			) as S
 	loop
-		perform schemadoc.storeListen_int(p_origin,
+		perform storeListen_int(p_origin,
 				v_row.provider, p_receiver);
 	end loop;
 	if found then
@@ -6293,10 +6301,10 @@ begin
 	--    is built or a new node added. This brute force fallback
 	--    ensures that events will propagate if possible at all.
 	for v_row in select pa_server as provider
-			from schemadoc.sl_path
+			from sl_path
 			where pa_client = p_receiver
 	loop
-		perform schemadoc.storeListen_int(p_origin, 
+		perform storeListen_int(p_origin, 
 				v_row.provider, p_receiver);
 	end loop;
 	if found then
@@ -6310,12 +6318,12 @@ end;
     </section>
 
 <!-- Function sequencelastvalue( text ) -->
-    <section id="schemadoc.function.sequencelastvalue-text"
+    <section id="function.sequencelastvalue-text"
              xreflabel="schemadocsequencelastvalue( text )">
-      <title id="schemadoc.function.sequencelastvalue-text-title">
+      <title id="function.sequencelastvalue-text-title">
        sequencelastvalue( text )
       </title>
-      <titleabbrev id="schemadoc.function.sequencelastvalue-text-titleabbrev">
+      <titleabbrev id="function.sequencelastvalue-text-titleabbrev">
        sequencelastvalue( text )
       </titleabbrev>
 
@@ -6349,12 +6357,12 @@ end;
     </section>
 
 <!-- Function sequencesetvalue( integer, integer, bigint, bigint ) -->
-    <section id="schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint"
+    <section id="function.sequencesetvalue-integer-integer-bigint-bigint"
              xreflabel="schemadocsequencesetvalue( integer, integer, bigint, bigint )">
-      <title id="schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint-title">
+      <title id="function.sequencesetvalue-integer-integer-bigint-bigint-title">
        sequencesetvalue( integer, integer, bigint, bigint )
       </title>
-      <titleabbrev id="schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint-titleabbrev">
+      <titleabbrev id="function.sequencesetvalue-integer-integer-bigint-bigint-titleabbrev">
        sequencesetvalue( integer, integer, bigint, bigint )
       </titleabbrev>
 
@@ -6386,7 +6394,7 @@ begin
 	-- ----
 	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 			&quot;pg_catalog&quot;.quote_ident(PGC.relname) into v_fqname
-		from schemadoc.sl_sequence SQ,
+		from sl_sequence SQ,
 			&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 		where SQ.seq_id = p_seq_id
 			and SQ.seq_reloid = PGC.oid
@@ -6401,7 +6409,7 @@ begin
 	execute &#39;select setval(&#39;&#39;&#39; || v_fqname ||
 			&#39;&#39;&#39;, &#39;&#39;&#39; || p_last_value || &#39;&#39;&#39;)&#39;;
 
-	insert into schemadoc.sl_seqlog
+	insert into sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
 
@@ -6412,12 +6420,12 @@ end;
     </section>
 
 <!-- Function setaddsequence( integer, integer, text, text ) -->
-    <section id="schemadoc.function.setaddsequence-integer-integer-text-text"
+    <section id="function.setaddsequence-integer-integer-text-text"
              xreflabel="schemadocsetaddsequence( integer, integer, text, text )">
-      <title id="schemadoc.function.setaddsequence-integer-integer-text-text-title">
+      <title id="function.setaddsequence-integer-integer-text-text-title">
        setaddsequence( integer, integer, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.setaddsequence-integer-integer-text-text-titleabbrev">
+      <titleabbrev id="function.setaddsequence-integer-integer-text-text-titleabbrev">
        setaddsequence( integer, integer, text, text )
       </titleabbrev>
 
@@ -6449,22 +6457,22 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setAddSequence(): set % not found&#39;, p_set_id;
 	end if;
-	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: setAddSequence(): set % has remote origin&#39;, p_set_id;
 	end if;
 
-	if exists (select true from schemadoc.sl_subscribe
+	if exists (select true from sl_subscribe
 			where sub_set = p_set_id)
 	then
 		raise exception &#39;Slony-I: cannot add sequence to currently subscribed set %&#39;,
@@ -6474,9 +6482,9 @@ begin
 	-- ----
 	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
 	-- ----
-	perform schemadoc.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
+	perform setAddSequence_int(p_set_id, p_seq_id, p_fqname,
 			p_seq_comment);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_SEQUENCE&#39;,
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_SEQUENCE&#39;,
 			p_set_id, p_seq_id, p_fqname, p_seq_comment);
 end;
 </programlisting>
@@ -6484,12 +6492,12 @@ end;
     </section>
 
 <!-- Function setaddsequence_int( integer, integer, text, text ) -->
-    <section id="schemadoc.function.setaddsequence-int-integer-integer-text-text"
+    <section id="function.setaddsequence-int-integer-integer-text-text"
              xreflabel="schemadocsetaddsequence_int( integer, integer, text, text )">
-      <title id="schemadoc.function.setaddsequence-int-integer-integer-text-text-title">
+      <title id="function.setaddsequence-int-integer-integer-text-text-title">
        setaddsequence_int( integer, integer, text, text )
       </title>
-      <titleabbrev id="schemadoc.function.setaddsequence-int-integer-integer-text-text-titleabbrev">
+      <titleabbrev id="function.setaddsequence-int-integer-integer-text-text-titleabbrev">
        setaddsequence_int( integer, integer, text, text )
       </titleabbrev>
 
@@ -6527,16 +6535,16 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the sequence because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setAddSequence_int(): set % not found&#39;,
@@ -6544,9 +6552,9 @@ begin
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = p_set_id
-				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+				and sub_receiver = getLocalNodeId(&#39;_schemadoc&#39;);
 		if not found then
 			return 0;
 		end if;
@@ -6573,7 +6581,7 @@ begin
 	-- ----
 	-- Add the sequence to sl_sequence
 	-- ----
-	insert into schemadoc.sl_sequence
+	insert into sl_sequence
 		(seq_id, seq_reloid, seq_relname, seq_nspname, seq_set, seq_comment) 
 		values
 		(p_seq_id, v_seq_reloid, v_seq_relname, v_seq_nspname,  p_set_id, p_seq_comment);
@@ -6583,15 +6591,15 @@ begin
 	-- ----
 	if v_set_origin = v_local_node_id then
 		for v_sync_row in select coalesce (max(ev_seqno), 0) as ev_seqno
-				from schemadoc.sl_event
+				from sl_event
 				where ev_origin = v_local_node_id
 					and ev_type = &#39;SYNC&#39;
 		loop
-			insert into schemadoc.sl_seqlog
+			insert into sl_seqlog
 					(seql_seqid, seql_origin, seql_ev_seqno, 
 					seql_last_value) values
 					(p_seq_id, v_local_node_id, v_sync_row.ev_seqno,
-					schemadoc.sequenceLastValue(p_fqname));
+					sequenceLastValue(p_fqname));
 		end loop;
 	end if;
 
@@ -6602,12 +6610,12 @@ end;
     </section>
 
 <!-- Function setaddtable( integer, integer, text, name, text ) -->
-    <section id="schemadoc.function.setaddtable-integer-integer-text-name-text"
+    <section id="function.setaddtable-integer-integer-text-name-text"
              xreflabel="schemadocsetaddtable( integer, integer, text, name, text )">
-      <title id="schemadoc.function.setaddtable-integer-integer-text-name-text-title">
+      <title id="function.setaddtable-integer-integer-text-name-text-title">
        setaddtable( integer, integer, text, name, text )
       </title>
-      <titleabbrev id="schemadoc.function.setaddtable-integer-integer-text-name-text-titleabbrev">
+      <titleabbrev id="function.setaddtable-integer-integer-text-name-text-titleabbrev">
        setaddtable( integer, integer, text, name, text )
       </titleabbrev>
 
@@ -6641,22 +6649,22 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setAddTable(): set % not found&#39;, p_set_id;
 	end if;
-	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: setAddTable(): set % has remote origin&#39;, p_set_id;
 	end if;
 
-	if exists (select true from schemadoc.sl_subscribe
+	if exists (select true from sl_subscribe
 			where sub_set = p_set_id)
 	then
 		raise exception &#39;Slony-I: cannot add table to currently subscribed set %&#39;,
@@ -6666,9 +6674,9 @@ begin
 	-- ----
 	-- Add the table to the set and generate the SET_ADD_TABLE event
 	-- ----
-	perform schemadoc.setAddTable_int(p_set_id, p_tab_id, p_fqname,
+	perform setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_TABLE&#39;,
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_TABLE&#39;,
 			p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
 end;
@@ -6677,12 +6685,12 @@ end;
     </section>
 
 <!-- Function setaddtable_int( integer, integer, text, name, text ) -->
-    <section id="schemadoc.function.setaddtable-int-integer-integer-text-name-text"
+    <section id="function.setaddtable-int-integer-integer-text-name-text"
              xreflabel="schemadocsetaddtable_int( integer, integer, text, name, text )">
-      <title id="schemadoc.function.setaddtable-int-integer-integer-text-name-text-title">
+      <title id="function.setaddtable-int-integer-integer-text-name-text-title">
        setaddtable_int( integer, integer, text, name, text )
       </title>
-      <titleabbrev id="schemadoc.function.setaddtable-int-integer-integer-text-name-text-titleabbrev">
+      <titleabbrev id="function.setaddtable-int-integer-integer-text-name-text-titleabbrev">
        setaddtable_int( integer, integer, text, name, text )
       </titleabbrev>
 
@@ -6722,16 +6730,16 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the table because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setAddTable_int(): set % not found&#39;,
@@ -6739,9 +6747,9 @@ begin
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = p_set_id
-				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+				and sub_receiver = getLocalNodeId(&#39;_schemadoc&#39;);
 		if not found then
 			return 0;
 		end if;
@@ -6777,13 +6785,13 @@ begin
 	-- ----
 	-- Add the table to sl_table and create the trigger on it.
 	-- ----
-	insert into schemadoc.sl_table
+	insert into sl_table
 			(tab_id, tab_reloid, tab_relname, tab_nspname, 
 			tab_set, tab_idxname, tab_altered, tab_comment) 
 			values
 			(p_tab_id, v_tab_reloid, v_tab_relname, v_tab_nspname,
 			p_set_id, p_tab_idxname, false, p_tab_comment);
-	perform schemadoc.alterTableForReplication(p_tab_id);
+	perform alterTableForReplication(p_tab_id);
 
 	return p_tab_id;
 end;
@@ -6792,12 +6800,12 @@ end;
     </section>
 
 <!-- Function setdropsequence( integer ) -->
-    <section id="schemadoc.function.setdropsequence-integer"
+    <section id="function.setdropsequence-integer"
              xreflabel="schemadocsetdropsequence( integer )">
-      <title id="schemadoc.function.setdropsequence-integer-title">
+      <title id="function.setdropsequence-integer-title">
        setdropsequence( integer )
       </title>
-      <titleabbrev id="schemadoc.function.setdropsequence-integer-titleabbrev">
+      <titleabbrev id="function.setdropsequence-integer-titleabbrev">
        setdropsequence( integer )
       </titleabbrev>
 
@@ -6827,12 +6835,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Determine set id for this sequence
 	-- ----
-	select seq_set into v_set_id from schemadoc.sl_sequence where seq_id = p_seq_id;
+	select seq_set into v_set_id from sl_sequence where seq_id = p_seq_id;
 
 	-- ----
 	-- Ensure sequence exists
@@ -6846,20 +6854,20 @@ begin
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = v_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setDropSequence(): set % not found&#39;, v_set_id;
 	end if;
-	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: setDropSequence(): set % has remote origin&#39;, v_set_id;
 	end if;
 
 	-- ----
 	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
 	-- ----
-	perform schemadoc.setDropSequence_int(p_seq_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_SEQUENCE&#39;,
+	perform setDropSequence_int(p_seq_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_SEQUENCE&#39;,
 			p_seq_id);
 end;
 </programlisting>
@@ -6867,12 +6875,12 @@ end;
     </section>
 
 <!-- Function setdropsequence_int( integer ) -->
-    <section id="schemadoc.function.setdropsequence-int-integer"
+    <section id="function.setdropsequence-int-integer"
              xreflabel="schemadocsetdropsequence_int( integer )">
-      <title id="schemadoc.function.setdropsequence-int-integer-title">
+      <title id="function.setdropsequence-int-integer-title">
        setdropsequence_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.setdropsequence-int-integer-titleabbrev">
+      <titleabbrev id="function.setdropsequence-int-integer-titleabbrev">
        setdropsequence_int( integer )
       </titleabbrev>
 
@@ -6906,12 +6914,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Determine set id for this sequence
 	-- ----
-	select seq_set into v_set_id from schemadoc.sl_sequence where seq_id = p_seq_id;
+	select seq_set into v_set_id from sl_sequence where seq_id = p_seq_id;
 
 	-- ----
 	-- Ensure sequence exists
@@ -6925,9 +6933,9 @@ begin
 	-- to that set. Otherwise we ignore the sequence because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = v_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setDropSequence_int(): set % not found&#39;,
@@ -6935,9 +6943,9 @@ begin
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = v_set_id
-				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+				and sub_receiver = getLocalNodeId(&#39;_schemadoc&#39;);
 		if not found then
 			return 0;
 		end if;
@@ -6946,8 +6954,8 @@ begin
 	-- ----
 	-- drop the sequence from sl_sequence, sl_seqlog
 	-- ----
-	delete from schemadoc.sl_seqlog where seql_seqid = p_seq_id;
-	delete from schemadoc.sl_sequence where seq_id = p_seq_id;
+	delete from sl_seqlog where seql_seqid = p_seq_id;
+	delete from sl_sequence where seq_id = p_seq_id;
 
 	return p_seq_id;
 end;
@@ -6956,12 +6964,12 @@ end;
     </section>
 
 <!-- Function setdroptable( integer ) -->
-    <section id="schemadoc.function.setdroptable-integer"
+    <section id="function.setdroptable-integer"
              xreflabel="schemadocsetdroptable( integer )">
-      <title id="schemadoc.function.setdroptable-integer-title">
+      <title id="function.setdroptable-integer-title">
        setdroptable( integer )
       </title>
-      <titleabbrev id="schemadoc.function.setdroptable-integer-titleabbrev">
+      <titleabbrev id="function.setdroptable-integer-titleabbrev">
        setdroptable( integer )
       </titleabbrev>
 
@@ -6990,12 +6998,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
         -- ----
 	-- Determine the set_id
         -- ----
-	select tab_set into v_set_id from schemadoc.sl_table where tab_id = p_tab_id;
+	select tab_set into v_set_id from sl_table where tab_id = p_tab_id;
 
 	-- ----
 	-- Ensure table exists
@@ -7009,32 +7017,32 @@ begin
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = v_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setDropTable(): set % not found&#39;, v_set_id;
 	end if;
-	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: setDropTable(): set % has remote origin&#39;, v_set_id;
 	end if;
 
 	-- ----
 	-- Drop the table from the set and generate the SET_ADD_TABLE event
 	-- ----
-	perform schemadoc.setDropTable_int(p_tab_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_TABLE&#39;, p_tab_id);
+	perform setDropTable_int(p_tab_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_TABLE&#39;, p_tab_id);
 end;
 </programlisting>
       </para>
     </section>
 
 <!-- Function setdroptable_int( integer ) -->
-    <section id="schemadoc.function.setdroptable-int-integer"
+    <section id="function.setdroptable-int-integer"
              xreflabel="schemadocsetdroptable_int( integer )">
-      <title id="schemadoc.function.setdroptable-int-integer-title">
+      <title id="function.setdroptable-int-integer-title">
        setdroptable_int( integer )
       </title>
-      <titleabbrev id="schemadoc.function.setdroptable-int-integer-titleabbrev">
+      <titleabbrev id="function.setdroptable-int-integer-titleabbrev">
        setdroptable_int( integer )
       </titleabbrev>
 
@@ -7067,12 +7075,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
         -- ----
 	-- Determine the set_id
         -- ----
-	select tab_set into v_set_id from schemadoc.sl_table where tab_id = p_tab_id;
+	select tab_set into v_set_id from sl_table where tab_id = p_tab_id;
 
 	-- ----
 	-- Ensure table exists
@@ -7086,9 +7094,9 @@ begin
 	-- to that set. Otherwise we ignore the table because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = v_set_id;
 	if not found then
 		raise exception &#39;Slony-I: setDropTable_int(): set % not found&#39;,
@@ -7096,9 +7104,9 @@ begin
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
-				from schemadoc.sl_subscribe
+				from sl_subscribe
 				where sub_set = v_set_id
-				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+				and sub_receiver = getLocalNodeId(&#39;_schemadoc&#39;);
 		if not found then
 			return 0;
 		end if;
@@ -7107,9 +7115,9 @@ begin
 	-- ----
 	-- Drop the table from sl_table and drop trigger from it.
 	-- ----
-	perform schemadoc.alterTableRestore(p_tab_id);
-	perform schemadoc.tableDropKey(p_tab_id);
-	delete from schemadoc.sl_table where tab_id = p_tab_id;
+	perform alterTableRestore(p_tab_id);
+	perform tableDropKey(p_tab_id);
+	delete from sl_table where tab_id = p_tab_id;
 	return p_tab_id;
 end;
 </programlisting>
@@ -7117,12 +7125,12 @@ end;
     </section>
 
 <!-- Function setmovesequence( integer, integer ) -->
-    <section id="schemadoc.function.setmovesequence-integer-integer"
+    <section id="function.setmovesequence-integer-integer"
              xreflabel="schemadocsetmovesequence( integer, integer )">
-      <title id="schemadoc.function.setmovesequence-integer-integer-title">
+      <title id="function.setmovesequence-integer-integer-title">
        setmovesequence( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.setmovesequence-integer-integer-titleabbrev">
+      <titleabbrev id="function.setmovesequence-integer-integer-titleabbrev">
        setmovesequence( integer, integer )
       </titleabbrev>
 
@@ -7149,12 +7157,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get the sequences current set
 	-- ----
-	select seq_set into v_old_set_id from schemadoc.sl_sequence
+	select seq_set into v_old_set_id from sl_sequence
 			where seq_id = p_seq_id;
 	if not found then
 		raise exception &#39;Slony-I: sequence %d not found&#39;, p_seq_id;
@@ -7166,22 +7174,22 @@ begin
 	if p_new_set_id = v_old_set_id then
 		raise exception &#39;Slony-I: set ids cannot be identical&#39;;
 	end if;
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = p_new_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_new_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_new_set_id;
 	end if;
 
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = v_old_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, v_old_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				v_old_set_id;
 	end if;
@@ -7189,20 +7197,20 @@ begin
 	-- ----
 	-- Check that both sets are subscribed by the same set of nodes
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = p_new_set_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = v_old_set_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
 				p_new_set_id, v_old_set_id;
 	end if;
 
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = v_old_set_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = p_new_set_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
@@ -7212,8 +7220,8 @@ begin
 	-- ----
 	-- Change the set the sequence belongs to
 	-- ----
-	perform schemadoc.setMoveSequence_int(p_seq_id, p_new_set_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_SEQUENCE&#39;, 
+	perform setMoveSequence_int(p_seq_id, p_new_set_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_SEQUENCE&#39;, 
 			p_seq_id, p_new_set_id);
 end;
 </programlisting>
@@ -7221,12 +7229,12 @@ end;
     </section>
 
 <!-- Function setmovesequence_int( integer, integer ) -->
-    <section id="schemadoc.function.setmovesequence-int-integer-integer"
+    <section id="function.setmovesequence-int-integer-integer"
              xreflabel="schemadocsetmovesequence_int( integer, integer )">
-      <title id="schemadoc.function.setmovesequence-int-integer-integer-title">
+      <title id="function.setmovesequence-int-integer-integer-title">
        setmovesequence_int( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.setmovesequence-int-integer-integer-titleabbrev">
+      <titleabbrev id="function.setmovesequence-int-integer-integer-titleabbrev">
        setmovesequence_int( integer, integer )
       </titleabbrev>
 
@@ -7251,12 +7259,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
 	-- ----
 	-- Move the sequence to the new set
 	-- ----
-	update schemadoc.sl_sequence
+	update sl_sequence
 			set seq_set = p_new_set_id
 			where seq_id = p_seq_id;
 
@@ -7267,12 +7275,12 @@ end;
     </section>
 
 <!-- Function setmovetable( integer, integer ) -->
-    <section id="schemadoc.function.setmovetable-integer-integer"
+    <section id="function.setmovetable-integer-integer"
              xreflabel="schemadocsetmovetable( integer, integer )">
-      <title id="schemadoc.function.setmovetable-integer-integer-title">
+      <title id="function.setmovetable-integer-integer-title">
        setmovetable( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.setmovetable-integer-integer-titleabbrev">
+      <titleabbrev id="function.setmovetable-integer-integer-titleabbrev">
        setmovetable( integer, integer )
       </titleabbrev>
 
@@ -7300,12 +7308,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get the tables current set
 	-- ----
-	select tab_set into v_old_set_id from schemadoc.sl_table
+	select tab_set into v_old_set_id from sl_table
 			where tab_id = p_tab_id;
 	if not found then
 		raise exception &#39;Slony-I: table %d not found&#39;, p_tab_id;
@@ -7317,22 +7325,22 @@ begin
 	if p_new_set_id = v_old_set_id then
 		raise exception &#39;Slony-I: set ids cannot be identical&#39;;
 	end if;
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = p_new_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_new_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				p_new_set_id;
 	end if;
 
-	select set_origin into v_origin from schemadoc.sl_set
+	select set_origin into v_origin from sl_set
 			where set_id = v_old_set_id;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, v_old_set_id;
 	end if;
-	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
 				v_old_set_id;
 	end if;
@@ -7340,20 +7348,20 @@ begin
 	-- ----
 	-- Check that both sets are subscribed by the same set of nodes
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = p_new_set_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = v_old_set_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
 				p_new_set_id, v_old_set_id;
 	end if;
 
-	if exists (select true from schemadoc.sl_subscribe SUB1
+	if exists (select true from sl_subscribe SUB1
 				where SUB1.sub_set = v_old_set_id
 				and SUB1.sub_receiver not in (select SUB2.sub_receiver
-						from schemadoc.sl_subscribe SUB2
+						from sl_subscribe SUB2
 						where SUB2.sub_set = p_new_set_id))
 	then
 		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
@@ -7363,9 +7371,9 @@ begin
 	-- ----
 	-- Change the set the table belongs to
 	-- ----
-	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
-	perform schemadoc.setMoveTable_int(p_tab_id, p_new_set_id);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_TABLE&#39;, 
+	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	perform setMoveTable_int(p_tab_id, p_new_set_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_TABLE&#39;, 
 			p_tab_id, p_new_set_id);
 end;
 </programlisting>
@@ -7373,12 +7381,12 @@ end;
     </section>
 
 <!-- Function setmovetable_int( integer, integer ) -->
-    <section id="schemadoc.function.setmovetable-int-integer-integer"
+    <section id="function.setmovetable-int-integer-integer"
              xreflabel="schemadocsetmovetable_int( integer, integer )">
-      <title id="schemadoc.function.setmovetable-int-integer-integer-title">
+      <title id="function.setmovetable-int-integer-integer-title">
        setmovetable_int( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.setmovetable-int-integer-integer-titleabbrev">
+      <titleabbrev id="function.setmovetable-int-integer-integer-titleabbrev">
        setmovetable_int( integer, integer )
       </titleabbrev>
 
@@ -7403,12 +7411,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 	
 	-- ----
 	-- Move the table to the new set
 	-- ----
-	update schemadoc.sl_table
+	update sl_table
 			set tab_set = p_new_set_id
 			where tab_id = p_tab_id;
 
@@ -7419,12 +7427,12 @@ end;
     </section>
 
 <!-- Function setsessionrole( name, text ) -->
-    <section id="schemadoc.function.setsessionrole-name-text"
+    <section id="function.setsessionrole-name-text"
              xreflabel="schemadocsetsessionrole( name, text )">
-      <title id="schemadoc.function.setsessionrole-name-text-title">
+      <title id="function.setsessionrole-name-text-title">
        setsessionrole( name, text )
       </title>
-      <titleabbrev id="schemadoc.function.setsessionrole-name-text-titleabbrev">
+      <titleabbrev id="function.setsessionrole-name-text-titleabbrev">
        setsessionrole( name, text )
       </titleabbrev>
 
@@ -7446,12 +7454,12 @@ end;
     </section>
 
 <!-- Function slonyversion(  ) -->
-    <section id="schemadoc.function.slonyversion"
+    <section id="function.slonyversion"
              xreflabel="schemadocslonyversion(  )">
-      <title id="schemadoc.function.slonyversion-title">
+      <title id="function.slonyversion-title">
        slonyversion(  )
       </title>
-      <titleabbrev id="schemadoc.function.slonyversion-titleabbrev">
+      <titleabbrev id="function.slonyversion-titleabbrev">
        slonyversion(  )
       </titleabbrev>
 
@@ -7470,21 +7478,21 @@ end;
        Returns the version number of the slony schema
         <programlisting>
 begin
-	return &#39;&#39;	|| schemadoc.slonyVersionMajor() || &#39;.&#39;
-				|| schemadoc.slonyVersionMinor() || &#39;.&#39;
-				|| schemadoc.slonyVersionPatchlevel();
+	return &#39;&#39;	|| slonyVersionMajor() || &#39;.&#39;
+				|| slonyVersionMinor() || &#39;.&#39;
+				|| slonyVersionPatchlevel();
 end;
 </programlisting>
       </para>
     </section>
 
 <!-- Function slonyversionmajor(  ) -->
-    <section id="schemadoc.function.slonyversionmajor"
+    <section id="function.slonyversionmajor"
              xreflabel="schemadocslonyversionmajor(  )">
-      <title id="schemadoc.function.slonyversionmajor-title">
+      <title id="function.slonyversionmajor-title">
        slonyversionmajor(  )
       </title>
-      <titleabbrev id="schemadoc.function.slonyversionmajor-titleabbrev">
+      <titleabbrev id="function.slonyversionmajor-titleabbrev">
        slonyversionmajor(  )
       </titleabbrev>
 
@@ -7510,12 +7518,12 @@ end;
     </section>
 
 <!-- Function slonyversionminor(  ) -->
-    <section id="schemadoc.function.slonyversionminor"
+    <section id="function.slonyversionminor"
              xreflabel="schemadocslonyversionminor(  )">
-      <title id="schemadoc.function.slonyversionminor-title">
+      <title id="function.slonyversionminor-title">
        slonyversionminor(  )
       </title>
-      <titleabbrev id="schemadoc.function.slonyversionminor-titleabbrev">
+      <titleabbrev id="function.slonyversionminor-titleabbrev">
        slonyversionminor(  )
       </titleabbrev>
 
@@ -7541,12 +7549,12 @@ end;
     </section>
 
 <!-- Function slonyversionpatchlevel(  ) -->
-    <section id="schemadoc.function.slonyversionpatchlevel"
+    <section id="function.slonyversionpatchlevel"
              xreflabel="schemadocslonyversionpatchlevel(  )">
-      <title id="schemadoc.function.slonyversionpatchlevel-title">
+      <title id="function.slonyversionpatchlevel-title">
        slonyversionpatchlevel(  )
       </title>
-      <titleabbrev id="schemadoc.function.slonyversionpatchlevel-titleabbrev">
+      <titleabbrev id="function.slonyversionpatchlevel-titleabbrev">
        slonyversionpatchlevel(  )
       </titleabbrev>
 
@@ -7572,12 +7580,12 @@ end;
     </section>
 
 <!-- Function storelisten( integer, integer, integer ) -->
-    <section id="schemadoc.function.storelisten-integer-integer-integer"
+    <section id="function.storelisten-integer-integer-integer"
              xreflabel="schemadocstorelisten( integer, integer, integer )">
-      <title id="schemadoc.function.storelisten-integer-integer-integer-title">
+      <title id="function.storelisten-integer-integer-integer-title">
        storelisten( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.storelisten-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.storelisten-integer-integer-integer-titleabbrev">
        storelisten( integer, integer, integer )
       </titleabbrev>
 
@@ -7606,8 +7614,8 @@ declare
 begin
 	return -1;
 
-	perform schemadoc.storeListen_int (p_origin, p_provider, p_receiver);
-	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;STORE_LISTEN&#39;,
+	perform storeListen_int (p_origin, p_provider, p_receiver);
+	return  createEvent (&#39;_schemadoc&#39;, &#39;STORE_LISTEN&#39;,
 			p_origin, p_provider, p_receiver);
 end;
 </programlisting>
@@ -7615,12 +7623,12 @@ end;
     </section>
 
 <!-- Function storelisten_int( integer, integer, integer ) -->
-    <section id="schemadoc.function.storelisten-int-integer-integer-integer"
+    <section id="function.storelisten-int-integer-integer-integer"
              xreflabel="schemadocstorelisten_int( integer, integer, integer )">
-      <title id="schemadoc.function.storelisten-int-integer-integer-integer-title">
+      <title id="function.storelisten-int-integer-integer-integer-title">
        storelisten_int( integer, integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.storelisten-int-integer-integer-integer-titleabbrev">
+      <titleabbrev id="function.storelisten-int-integer-integer-integer-titleabbrev">
        storelisten_int( integer, integer, integer )
       </titleabbrev>
 
@@ -7651,10 +7659,10 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	select 1 into v_exists
-			from schemadoc.sl_listen
+			from sl_listen
 			where li_origin = p_li_origin
 			and li_provider = p_li_provider
 			and li_receiver = p_li_receiver;
@@ -7664,20 +7672,20 @@ begin
 		-- about the nodes involved in this, we generate those nodes
 		-- as pending.
 		-- ----
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_li_origin) then
-			perform schemadoc.storeNode_int (p_li_origin, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_origin, &#39;&lt;event pending&gt;&#39;);
 		end if;
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_li_provider) then
-			perform schemadoc.storeNode_int (p_li_provider, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_provider, &#39;&lt;event pending&gt;&#39;);
 		end if;
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_li_receiver) then
-			perform schemadoc.storeNode_int (p_li_receiver, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_receiver, &#39;&lt;event pending&gt;&#39;);
 		end if;
 
-		insert into schemadoc.sl_listen
+		insert into sl_listen
 				(li_origin, li_provider, li_receiver) values
 				(p_li_origin, p_li_provider, p_li_receiver);
 	end if;
@@ -7689,12 +7697,12 @@ end;
     </section>
 
 <!-- Function storenode( integer, text, boolean ) -->
-    <section id="schemadoc.function.storenode-integer-text-boolean"
+    <section id="function.storenode-integer-text-boolean"
              xreflabel="schemadocstorenode( integer, text, boolean )">
-      <title id="schemadoc.function.storenode-integer-text-boolean-title">
+      <title id="function.storenode-integer-text-boolean-title">
        storenode( integer, text, boolean )
       </title>
-      <titleabbrev id="schemadoc.function.storenode-integer-text-boolean-titleabbrev">
+      <titleabbrev id="function.storenode-integer-text-boolean-titleabbrev">
        storenode( integer, text, boolean )
       </titleabbrev>
 
@@ -7727,8 +7735,8 @@ begin
 	else
 		v_no_spool_txt = &#39;f&#39;;
 	end if;
-	perform schemadoc.storeNode_int (p_no_id, p_no_comment, p_no_spool);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_NODE&#39;,
+	perform storeNode_int (p_no_id, p_no_comment, p_no_spool);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_NODE&#39;,
 									p_no_id, p_no_comment, v_no_spool_txt);
 end;
 </programlisting>
@@ -7736,12 +7744,12 @@ end;
     </section>
 
 <!-- Function storenode_int( integer, text, boolean ) -->
-    <section id="schemadoc.function.storenode-int-integer-text-boolean"
+    <section id="function.storenode-int-integer-text-boolean"
              xreflabel="schemadocstorenode_int( integer, text, boolean )">
-      <title id="schemadoc.function.storenode-int-integer-text-boolean-title">
+      <title id="function.storenode-int-integer-text-boolean-title">
        storenode_int( integer, text, boolean )
       </title>
-      <titleabbrev id="schemadoc.function.storenode-int-integer-text-boolean-titleabbrev">
+      <titleabbrev id="function.storenode-int-integer-text-boolean-titleabbrev">
        storenode_int( integer, text, boolean )
       </titleabbrev>
 
@@ -7772,20 +7780,20 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check if the node exists
 	-- ----
 	select * into v_old_row
-			from schemadoc.sl_node
+			from sl_node
 			where no_id = p_no_id
 			for update;
 	if found then 
 		-- ----
 		-- Node exists, update the existing row.
 		-- ----
-		update schemadoc.sl_node
+		update sl_node
 				set no_comment = p_no_comment,
 				no_spool = p_no_spool
 				where no_id = p_no_id;
@@ -7793,7 +7801,7 @@ begin
 		-- ----
 		-- New node, insert the sl_node row
 		-- ----
-		insert into schemadoc.sl_node
+		insert into sl_node
 				(no_id, no_active, no_comment, no_spool) values
 				(p_no_id, &#39;f&#39;, p_no_comment, p_no_spool);
 	end if;
@@ -7805,12 +7813,12 @@ end;
     </section>
 
 <!-- Function storepath( integer, integer, text, integer ) -->
-    <section id="schemadoc.function.storepath-integer-integer-text-integer"
+    <section id="function.storepath-integer-integer-text-integer"
              xreflabel="schemadocstorepath( integer, integer, text, integer )">
-      <title id="schemadoc.function.storepath-integer-integer-text-integer-title">
+      <title id="function.storepath-integer-integer-text-integer-title">
        storepath( integer, integer, text, integer )
       </title>
-      <titleabbrev id="schemadoc.function.storepath-integer-integer-text-integer-titleabbrev">
+      <titleabbrev id="function.storepath-integer-integer-text-integer-titleabbrev">
        storepath( integer, integer, text, integer )
       </titleabbrev>
 
@@ -7837,9 +7845,9 @@ declare
 	p_pa_conninfo	alias for $3;
 	p_pa_connretry	alias for $4;
 begin
-	perform schemadoc.storePath_int(p_pa_server, p_pa_client,
+	perform storePath_int(p_pa_server, p_pa_client,
 			p_pa_conninfo, p_pa_connretry);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_PATH&#39;, 
+	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_PATH&#39;, 
 			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
 end;
 </programlisting>
@@ -7847,12 +7855,12 @@ end;
     </section>
 
 <!-- Function storepath_int( integer, integer, text, integer ) -->
-    <section id="schemadoc.function.storepath-int-integer-integer-text-integer"
+    <section id="function.storepath-int-integer-integer-text-integer"
              xreflabel="schemadocstorepath_int( integer, integer, text, integer )">
-      <title id="schemadoc.function.storepath-int-integer-integer-text-integer-title">
+      <title id="function.storepath-int-integer-integer-text-integer-title">
        storepath_int( integer, integer, text, integer )
       </title>
-      <titleabbrev id="schemadoc.function.storepath-int-integer-integer-text-integer-titleabbrev">
+      <titleabbrev id="function.storepath-int-integer-integer-text-integer-titleabbrev">
        storepath_int( integer, integer, text, integer )
       </titleabbrev>
 
@@ -7883,13 +7891,13 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check if the path already exists
 	-- ----
 	select 1 into v_dummy
-			from schemadoc.sl_path
+			from sl_path
 			where pa_server = p_pa_server
 			and pa_client = p_pa_client
 			for update;
@@ -7897,7 +7905,7 @@ begin
 		-- ----
 		-- Path exists, update pa_conninfo
 		-- ----
-		update schemadoc.sl_path
+		update sl_path
 				set pa_conninfo = p_pa_conninfo,
 					pa_connretry = p_pa_connretry
 				where pa_server = p_pa_server
@@ -7910,21 +7918,21 @@ begin
 		-- about the nodes involved in this, we generate those nodes
 		-- as pending.
 		-- ----
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_pa_server) then
-			perform schemadoc.storeNode_int (p_pa_server, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_pa_server, &#39;&lt;event pending&gt;&#39;);
 		end if;
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_pa_client) then
-			perform schemadoc.storeNode_int (p_pa_client, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_pa_client, &#39;&lt;event pending&gt;&#39;);
 		end if;
-		insert into schemadoc.sl_path
+		insert into sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry) values
 				(p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
 	end if;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return 0;
 end;
@@ -7933,12 +7941,12 @@ end;
     </section>
 
 <!-- Function storeset( integer, text ) -->
-    <section id="schemadoc.function.storeset-integer-text"
+    <section id="function.storeset-integer-text"
              xreflabel="schemadocstoreset( integer, text )">
-      <title id="schemadoc.function.storeset-integer-text-title">
+      <title id="function.storeset-integer-text-title">
        storeset( integer, text )
       </title>
-      <titleabbrev id="schemadoc.function.storeset-integer-text-titleabbrev">
+      <titleabbrev id="function.storeset-integer-text-titleabbrev">
        storeset( integer, text )
       </titleabbrev>
 
@@ -7964,15 +7972,15 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
 
-	insert into schemadoc.sl_set
+	insert into sl_set
 			(set_id, set_origin, set_comment) values
 			(p_set_id, v_local_node_id, p_set_comment);
 
-	return schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_SET&#39;, 
+	return createEvent(&#39;_schemadoc&#39;, &#39;STORE_SET&#39;, 
 			p_set_id, v_local_node_id, p_set_comment);
 end;
 </programlisting>
@@ -7980,12 +7988,12 @@ end;
     </section>
 
 <!-- Function storeset_int( integer, integer, text ) -->
-    <section id="schemadoc.function.storeset-int-integer-integer-text"
+    <section id="function.storeset-int-integer-integer-text"
              xreflabel="schemadocstoreset_int( integer, integer, text )">
-      <title id="schemadoc.function.storeset-int-integer-integer-text-title">
+      <title id="function.storeset-int-integer-integer-text-title">
        storeset_int( integer, integer, text )
       </title>
-      <titleabbrev id="schemadoc.function.storeset-int-integer-integer-text-titleabbrev">
+      <titleabbrev id="function.storeset-int-integer-integer-text-titleabbrev">
        storeset_int( integer, integer, text )
       </titleabbrev>
 
@@ -8015,22 +8023,22 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	select 1 into v_dummy
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_set_id
 			for update;
 	if found then 
-		update schemadoc.sl_set
+		update sl_set
 				set set_comment = p_set_comment
 				where set_id = p_set_id;
 	else
-		if not exists (select 1 from schemadoc.sl_node
+		if not exists (select 1 from sl_node
 						where no_id = p_set_origin) then
-			perform schemadoc.storeNode_int (p_set_origin, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_set_origin, &#39;&lt;event pending&gt;&#39;);
 		end if;
-		insert into schemadoc.sl_set
+		insert into sl_set
 				(set_id, set_origin, set_comment) values
 				(p_set_id, p_set_origin, p_set_comment);
 	end if;
@@ -8042,12 +8050,12 @@ end;
     </section>
 
 <!-- Function storetrigger( integer, name ) -->
-    <section id="schemadoc.function.storetrigger-integer-name"
+    <section id="function.storetrigger-integer-name"
              xreflabel="schemadocstoretrigger( integer, name )">
-      <title id="schemadoc.function.storetrigger-integer-name-title">
+      <title id="function.storetrigger-integer-name-title">
        storetrigger( integer, name )
       </title>
-      <titleabbrev id="schemadoc.function.storetrigger-integer-name-titleabbrev">
+      <titleabbrev id="function.storetrigger-integer-name-titleabbrev">
        storetrigger( integer, name )
       </titleabbrev>
 
@@ -8072,8 +8080,8 @@ declare
 	p_trig_tabid		alias for $1;
 	p_trig_tgname		alias for $2;
 begin
-	perform schemadoc.storeTrigger_int(p_trig_tabid, p_trig_tgname);
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_TRIGGER&#39;,
+	perform storeTrigger_int(p_trig_tabid, p_trig_tgname);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_TRIGGER&#39;,
 			p_trig_tabid, p_trig_tgname);
 end;
 </programlisting>
@@ -8081,12 +8089,12 @@ end;
     </section>
 
 <!-- Function storetrigger_int( integer, name ) -->
-    <section id="schemadoc.function.storetrigger-int-integer-name"
+    <section id="function.storetrigger-int-integer-name"
              xreflabel="schemadocstoretrigger_int( integer, name )">
-      <title id="schemadoc.function.storetrigger-int-integer-name-title">
+      <title id="function.storetrigger-int-integer-name-title">
        storetrigger_int( integer, name )
       </title>
-      <titleabbrev id="schemadoc.function.storetrigger-int-integer-name-titleabbrev">
+      <titleabbrev id="function.storetrigger-int-integer-name-titleabbrev">
        storetrigger_int( integer, name )
       </titleabbrev>
 
@@ -8115,13 +8123,13 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Get the current table status (altered or not)
 	-- ----
 	select tab_altered into v_tab_altered
-			from schemadoc.sl_table where tab_id = p_trig_tabid;
+			from sl_table where tab_id = p_trig_tabid;
 	if not found then
 		-- ----
 		-- Not found is no hard error here, because that might
@@ -8134,16 +8142,16 @@ begin
 	-- If the table is modified for replication, restore the original state
 	-- ----
 	if v_tab_altered then
-		perform schemadoc.alterTableRestore(p_trig_tabid);
+		perform alterTableRestore(p_trig_tabid);
 	end if;
 
 	-- ----
 	-- Make sure that an entry for this trigger exists
 	-- ----
-	delete from schemadoc.sl_trigger
+	delete from sl_trigger
 			where trig_tabid = p_trig_tabid
 			  and trig_tgname = p_trig_tgname;
-	insert into schemadoc.sl_trigger (
+	insert into sl_trigger (
 				trig_tabid, trig_tgname
 			) values (
 				p_trig_tabid, p_trig_tgname
@@ -8153,7 +8161,7 @@ begin
 	-- Put the table back into replicated state if it was
 	-- ----
 	if v_tab_altered then
-		perform schemadoc.alterTableForReplication(p_trig_tabid);
+		perform alterTableForReplication(p_trig_tabid);
 	end if;
 
 	return p_trig_tabid;
@@ -8163,12 +8171,12 @@ end;
     </section>
 
 <!-- Function subscribeset( integer, integer, integer, boolean ) -->
-    <section id="schemadoc.function.subscribeset-integer-integer-integer-boolean"
+    <section id="function.subscribeset-integer-integer-integer-boolean"
              xreflabel="schemadocsubscribeset( integer, integer, integer, boolean )">
-      <title id="schemadoc.function.subscribeset-integer-integer-integer-boolean-title">
+      <title id="function.subscribeset-integer-integer-integer-boolean-title">
        subscribeset( integer, integer, integer, boolean )
       </title>
-      <titleabbrev id="schemadoc.function.subscribeset-integer-integer-integer-boolean-titleabbrev">
+      <titleabbrev id="function.subscribeset-integer-integer-integer-boolean-titleabbrev">
        subscribeset( integer, integer, integer, boolean )
       </titleabbrev>
 
@@ -8200,12 +8208,12 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
-	if p_sub_provider != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if p_sub_provider != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: subscribeSet() must be called on provider&#39;;
 	end if;
 
@@ -8213,7 +8221,7 @@ begin
 	-- Check that the origin and provider of the set are remote
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_sub_set;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
@@ -8230,20 +8238,20 @@ begin
 	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
-	v_ev_seqno :=  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SUBSCRIBE_SET&#39;, 
+	v_ev_seqno :=  createEvent(&#39;_schemadoc&#39;, &#39;SUBSCRIBE_SET&#39;, 
 			p_sub_set, p_sub_provider, p_sub_receiver, 
 			case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
 
 	-- ----
 	-- Call the internal procedure to store the subscription
 	-- ----
-	perform schemadoc.subscribeSet_int(p_sub_set, p_sub_provider,
+	perform subscribeSet_int(p_sub_set, p_sub_provider,
 			p_sub_receiver, p_sub_forward);
 
 	-- ----
 	-- Submit listen management events
 	-- ----
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return v_ev_seqno;
 end;
@@ -8252,12 +8260,12 @@ end;
     </section>
 
 <!-- Function subscribeset_int( integer, integer, integer, boolean ) -->
-    <section id="schemadoc.function.subscribeset-int-integer-integer-integer-boolean"
+    <section id="function.subscribeset-int-integer-integer-integer-boolean"
              xreflabel="schemadocsubscribeset_int( integer, integer, integer, boolean )">
-      <title id="schemadoc.function.subscribeset-int-integer-integer-integer-boolean-title">
+      <title id="function.subscribeset-int-integer-integer-integer-boolean-title">
        subscribeset_int( integer, integer, integer, boolean )
       </title>
-      <titleabbrev id="schemadoc.function.subscribeset-int-integer-integer-integer-boolean-titleabbrev">
+      <titleabbrev id="function.subscribeset-int-integer-integer-integer-boolean-titleabbrev">
        subscribeset_int( integer, integer, integer, boolean )
       </titleabbrev>
 
@@ -8289,13 +8297,13 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Provider change is only allowed for active sets
 	-- ----
-	if p_sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-		select sub_active into v_sub_row from schemadoc.sl_subscribe
+	if p_sub_receiver = getLocalNodeId(&#39;_schemadoc&#39;) then
+		select sub_active into v_sub_row from sl_subscribe
 				where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
 		if found then
@@ -8309,7 +8317,7 @@ begin
 	-- ----
 	-- Try to change provider and/or forward for an existing subscription
 	-- ----
-	update schemadoc.sl_subscribe
+	update sl_subscribe
 			set sub_provider = p_sub_provider,
 				sub_forward = p_sub_forward
 			where sub_set = p_sub_set
@@ -8321,17 +8329,17 @@ begin
 	-- ----
 	-- Not found, insert a new one
 	-- ----
-	if not exists (select true from schemadoc.sl_path
+	if not exists (select true from sl_path
 			where pa_server = p_sub_provider
 			and pa_client = p_sub_receiver)
 	then
-		insert into schemadoc.sl_path
+		insert into sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry)
 				values 
 				(p_sub_provider, p_sub_receiver, 
 				&#39;&lt;event pending&gt;&#39;, 10);
 	end if;
-	insert into schemadoc.sl_subscribe
+	insert into sl_subscribe
 			(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
 			values (p_sub_set, p_sub_provider, p_sub_receiver,
 				p_sub_forward, false);
@@ -8340,22 +8348,22 @@ begin
 	-- If the set origin is here, then enable the subscription
 	-- ----
 	select set_origin into v_set_origin
-			from schemadoc.sl_set
+			from sl_set
 			where set_id = p_sub_set;
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
 	end if;
 
-	if v_set_origin = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
-		perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_SUBSCRIPTION&#39;, 
+	if v_set_origin = getLocalNodeId(&#39;_schemadoc&#39;) then
+		perform createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_SUBSCRIPTION&#39;, 
 				p_sub_set, p_sub_provider, p_sub_receiver, 
 				case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
-		perform schemadoc.enableSubscription(p_sub_set, 
+		perform enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
 	end if;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return p_sub_set;
 end;
@@ -8364,12 +8372,12 @@ end;
     </section>
 
 <!-- Function tableaddkey( text ) -->
-    <section id="schemadoc.function.tableaddkey-text"
+    <section id="function.tableaddkey-text"
              xreflabel="schemadoctableaddkey( text )">
-      <title id="schemadoc.function.tableaddkey-text-title">
+      <title id="function.tableaddkey-text-title">
        tableaddkey( text )
       </title>
-      <titleabbrev id="schemadoc.function.tableaddkey-text-titleabbrev">
+      <titleabbrev id="function.tableaddkey-text-titleabbrev">
        tableaddkey( text )
       </titleabbrev>
 
@@ -8442,7 +8450,7 @@ begin
 			&#39; add column &quot;_Slony-I_schemadoc_rowID&quot; bigint;&#39;;
 		execute &#39;alter table only &#39; || p_tab_fqname ||
 			&#39; alter column &quot;_Slony-I_schemadoc_rowID&quot; &#39; ||
-			&#39; set default &quot;pg_catalog&quot;.nextval(&#39;&#39;schemadoc.sl_rowid_seq&#39;&#39;);&#39;;
+			&#39; set default &quot;pg_catalog&quot;.nextval(&#39;&#39;sl_rowid_seq&#39;&#39;);&#39;;
 
 		v_attkind := v_attkind || &#39;k&#39;;
 	end if;
@@ -8457,12 +8465,12 @@ end;
     </section>
 
 <!-- Function tabledropkey( integer ) -->
-    <section id="schemadoc.function.tabledropkey-integer"
+    <section id="function.tabledropkey-integer"
              xreflabel="schemadoctabledropkey( integer )">
-      <title id="schemadoc.function.tabledropkey-integer-title">
+      <title id="function.tabledropkey-integer-title">
        tabledropkey( integer )
       </title>
-      <titleabbrev id="schemadoc.function.tabledropkey-integer-titleabbrev">
+      <titleabbrev id="function.tabledropkey-integer-titleabbrev">
        tabledropkey( integer )
       </titleabbrev>
 
@@ -8491,7 +8499,7 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Construct the tables fully qualified name and get its oid
@@ -8499,7 +8507,7 @@ begin
 	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 				&quot;pg_catalog&quot;.quote_ident(PGC.relname),
 				PGC.oid into v_tab_fqname, v_tab_oid
-			from schemadoc.sl_table T,
+			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC,
 				&quot;pg_catalog&quot;.pg_namespace PGN
 			where T.tab_id = p_tab_id
@@ -8529,12 +8537,12 @@ end;
     </section>
 
 <!-- Function tablehasserialkey( text ) -->
-    <section id="schemadoc.function.tablehasserialkey-text"
+    <section id="function.tablehasserialkey-text"
              xreflabel="schemadoctablehasserialkey( text )">
-      <title id="schemadoc.function.tablehasserialkey-text-title">
+      <title id="function.tablehasserialkey-text-title">
        tablehasserialkey( text )
       </title>
-      <titleabbrev id="schemadoc.function.tablehasserialkey-text-titleabbrev">
+      <titleabbrev id="function.tablehasserialkey-text-titleabbrev">
        tablehasserialkey( text )
       </titleabbrev>
 
@@ -8576,12 +8584,12 @@ end;
     </section>
 
 <!-- Function terminatenodeconnections( name ) -->
-    <section id="schemadoc.function.terminatenodeconnections-name"
+    <section id="function.terminatenodeconnections-name"
              xreflabel="schemadocterminatenodeconnections( name )">
-      <title id="schemadoc.function.terminatenodeconnections-name-title">
+      <title id="function.terminatenodeconnections-name-title">
        terminatenodeconnections( name )
       </title>
-      <titleabbrev id="schemadoc.function.terminatenodeconnections-name-titleabbrev">
+      <titleabbrev id="function.terminatenodeconnections-name-titleabbrev">
        terminatenodeconnections( name )
       </titleabbrev>
 
@@ -8603,12 +8611,12 @@ end;
     </section>
 
 <!-- Function uninstallnode(  ) -->
-    <section id="schemadoc.function.uninstallnode"
+    <section id="function.uninstallnode"
              xreflabel="schemadocuninstallnode(  )">
-      <title id="schemadoc.function.uninstallnode-title">
+      <title id="function.uninstallnode-title">
        uninstallnode(  )
       </title>
-      <titleabbrev id="schemadoc.function.uninstallnode-titleabbrev">
+      <titleabbrev id="function.uninstallnode-titleabbrev">
        uninstallnode(  )
       </titleabbrev>
 
@@ -8633,15 +8641,15 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- This is us ... time for suicide! Restore all tables to
 	-- their original status.
 	-- ----
-	for v_tab_row in select * from schemadoc.sl_table loop
-		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
-		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+	for v_tab_row in select * from sl_table loop
+		perform alterTableRestore(v_tab_row.tab_id);
+		perform tableDropKey(v_tab_row.tab_id);
 	end loop;
 
 	raise notice &#39;Slony-I: Please drop schema &quot;_schemadoc&quot;&#39;;
@@ -8652,12 +8660,12 @@ end;
     </section>
 
 <!-- Function unlockset( integer ) -->
-    <section id="schemadoc.function.unlockset-integer"
+    <section id="function.unlockset-integer"
              xreflabel="schemadocunlockset( integer )">
-      <title id="schemadoc.function.unlockset-integer-title">
+      <title id="function.unlockset-integer-title">
        unlockset( integer )
       </title>
-      <titleabbrev id="schemadoc.function.unlockset-integer-titleabbrev">
+      <titleabbrev id="function.unlockset-integer-titleabbrev">
        unlockset( integer )
       </titleabbrev>
 
@@ -8684,14 +8692,14 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
-	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
-	select * into v_set_row from schemadoc.sl_set
+	v_local_node_id := getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
@@ -8711,7 +8719,7 @@ begin
 	for v_tab_row in select T.tab_id,
 			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
 			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
-			from schemadoc.sl_table T,
+			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where T.tab_set = p_set_id
 				and T.tab_reloid = PGC.oid
@@ -8725,7 +8733,7 @@ begin
 	-- ----
 	-- Clear out the set_locked field
 	-- ----
-	update schemadoc.sl_set
+	update sl_set
 			set set_locked = NULL
 			where set_id = p_set_id;
 
@@ -8736,12 +8744,12 @@ end;
     </section>
 
 <!-- Function unsubscribeset( integer, integer ) -->
-    <section id="schemadoc.function.unsubscribeset-integer-integer"
+    <section id="function.unsubscribeset-integer-integer"
              xreflabel="schemadocunsubscribeset( integer, integer )">
-      <title id="schemadoc.function.unsubscribeset-integer-integer-title">
+      <title id="function.unsubscribeset-integer-integer-title">
        unsubscribeset( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.unsubscribeset-integer-integer-titleabbrev">
+      <titleabbrev id="function.unsubscribeset-integer-integer-titleabbrev">
        unsubscribeset( integer, integer )
       </titleabbrev>
 
@@ -8774,19 +8782,19 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
-	if p_sub_receiver != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+	if p_sub_receiver != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: unsubscribeSet() must be called on receiver&#39;;
 	end if;
 
 	-- ----
 	-- Check that this does not break any chains
 	-- ----
-	if exists (select true from schemadoc.sl_subscribe
+	if exists (select true from sl_subscribe
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
@@ -8798,12 +8806,12 @@ begin
 	-- Restore all tables original triggers and rules and remove
 	-- our replication stuff.
 	-- ----
-	for v_tab_row in select tab_id from schemadoc.sl_table
+	for v_tab_row in select tab_id from sl_table
 			where tab_set = p_sub_set
 			order by tab_id
 	loop
-		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
-		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+		perform alterTableRestore(v_tab_row.tab_id);
+		perform tableDropKey(v_tab_row.tab_id);
 	end loop;
 
 	-- ----
@@ -8811,7 +8819,7 @@ begin
 	-- worker thread to ignore the set and stop replicating
 	-- right now.
 	-- ----
-	delete from schemadoc.sl_setsync
+	delete from sl_setsync
 			where ssy_setid = p_sub_set;
 
 	-- ----
@@ -8819,23 +8827,23 @@ begin
 	-- Should we ever subscribe again, the initial data
 	-- copy process will create new ones.
 	-- ----
-	delete from schemadoc.sl_table
+	delete from sl_table
 			where tab_set = p_sub_set;
-	delete from schemadoc.sl_sequence
+	delete from sl_sequence
 			where seq_set = p_sub_set;
 
 	-- ----
 	-- Call the internal procedure to drop the subscription
 	-- ----
-	perform schemadoc.unsubscribeSet_int(p_sub_set, p_sub_receiver);
+	perform unsubscribeSet_int(p_sub_set, p_sub_receiver);
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	-- ----
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
-	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;UNSUBSCRIBE_SET&#39;, 
+	return  createEvent(&#39;_schemadoc&#39;, &#39;UNSUBSCRIBE_SET&#39;, 
 			p_sub_set, p_sub_receiver);
 end;
 </programlisting>
@@ -8843,12 +8851,12 @@ end;
     </section>
 
 <!-- Function unsubscribeset_int( integer, integer ) -->
-    <section id="schemadoc.function.unsubscribeset-int-integer-integer"
+    <section id="function.unsubscribeset-int-integer-integer"
              xreflabel="schemadocunsubscribeset_int( integer, integer )">
-      <title id="schemadoc.function.unsubscribeset-int-integer-integer-title">
+      <title id="function.unsubscribeset-int-integer-integer-title">
        unsubscribeset_int( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.unsubscribeset-int-integer-integer-titleabbrev">
+      <titleabbrev id="function.unsubscribeset-int-integer-integer-titleabbrev">
        unsubscribeset_int( integer, integer )
       </titleabbrev>
 
@@ -8877,18 +8885,18 @@ begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
-	lock table schemadoc.sl_config_lock;
+	lock table sl_config_lock;
 
 	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
-	delete from schemadoc.sl_subscribe
+	delete from sl_subscribe
 			where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
 
 	-- Rewrite sl_listen table
-	perform schemadoc.RebuildListenEntries();
+	perform RebuildListenEntries();
 
 	return p_sub_set;
 end;
@@ -8897,12 +8905,12 @@ end;
     </section>
 
 <!-- Function updaterelname( integer, integer ) -->
-    <section id="schemadoc.function.updaterelname-integer-integer"
+    <section id="function.updaterelname-integer-integer"
              xreflabel="schemadocupdaterelname( integer, integer )">
-      <title id="schemadoc.function.updaterelname-integer-integer-title">
+      <title id="function.updaterelname-integer-integer-title">
        updaterelname( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.updaterelname-integer-integer-titleabbrev">
+      <titleabbrev id="function.updaterelname-integer-integer-titleabbrev">
        updaterelname( integer, integer )
       </titleabbrev>
 
@@ -8929,22 +8937,22 @@ begin
         -- ----
         -- Grab the central configuration lock
         -- ----
-        lock table schemadoc.sl_config_lock;
+        lock table sl_config_lock;
 
         -- ----
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
-        v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+        v_no_id := getLocalNodeId(&#39;_schemadoc&#39;);
         select set_origin into v_set_origin
-                        from schemadoc.sl_set
+                        from sl_set
                         where set_id = p_set_id
                         for update;
         if not found then
                 raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
         end if;
         if v_set_origin &lt;&gt; v_no_id
-                and not exists (select 1 from schemadoc.sl_subscribe
+                and not exists (select 1 from sl_subscribe
                         where sub_set = p_set_id
                         and sub_receiver = v_no_id)
         then
@@ -8958,15 +8966,15 @@ begin
         if p_only_on_node &gt; 0 and p_only_on_node &lt;&gt; v_no_id then
                 return 0;
         end if;
-        update schemadoc.sl_table set 
+        update sl_table set 
                 tab_relname = PGC.relname, tab_nspname = PGN.nspname
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN 
-                where schemadoc.sl_table.tab_reloid = PGC.oid
+                where sl_table.tab_reloid = PGC.oid
                         and PGC.relnamespace = PGN.oid;
-        update schemadoc.sl_sequence set
+        update sl_sequence set
                 seq_relname = PGC.relname, seq_nspname = PGN.nspname
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where schemadoc.sl_sequence.seq_reloid = PGC.oid
+                where sl_sequence.seq_reloid = PGC.oid
                 and PGC.relnamespace = PGN.oid;
         return p_set_id;
 end;
@@ -8975,12 +8983,12 @@ end;
     </section>
 
 <!-- Function updatereloid( integer, integer ) -->
-    <section id="schemadoc.function.updatereloid-integer-integer"
+    <section id="function.updatereloid-integer-integer"
              xreflabel="schemadocupdatereloid( integer, integer )">
-      <title id="schemadoc.function.updatereloid-integer-integer-title">
+      <title id="function.updatereloid-integer-integer-title">
        updatereloid( integer, integer )
       </title>
-      <titleabbrev id="schemadoc.function.updatereloid-integer-integer-titleabbrev">
+      <titleabbrev id="function.updatereloid-integer-integer-titleabbrev">
        updatereloid( integer, integer )
       </titleabbrev>
 
@@ -9010,22 +9018,22 @@ begin
         -- ----
         -- Grab the central configuration lock
         -- ----
-        lock table schemadoc.sl_config_lock;
+        lock table sl_config_lock;
 
         -- ----
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
-        v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+        v_no_id := getLocalNodeId(&#39;_schemadoc&#39;);
         select set_origin into v_set_origin
-                        from schemadoc.sl_set
+                        from sl_set
                         where set_id = p_set_id
                         for update;
         if not found then
                 raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
         end if;
         if v_set_origin &lt;&gt; v_no_id
-                and not exists (select 1 from schemadoc.sl_subscribe
+                and not exists (select 1 from sl_subscribe
                         where sub_set = p_set_id
                         and sub_receiver = v_no_id)
         then
@@ -9039,21 +9047,21 @@ begin
         if p_only_on_node &gt; 0 and p_only_on_node &lt;&gt; v_no_id then
                 return 0;
         end if;
-        update schemadoc.sl_table set
+        update sl_table set
                 tab_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(schemadoc.sl_table.tab_relname) = pg_catalog.quote_ident(PGC.relname)
+                where pg_catalog.quote_ident(sl_table.tab_relname) = pg_catalog.quote_ident(PGC.relname)
                         and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(schemadoc.sl_table.tab_nspname);
+			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(sl_table.tab_nspname);
 
-        update schemadoc.sl_sequence set
+        update sl_sequence set
                 seq_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(schemadoc.sl_sequence.seq_relname) = pg_catalog.quote_ident(PGC.relname)
+                where pg_catalog.quote_ident(sl_sequence.seq_relname) = pg_catalog.quote_ident(PGC.relname)
                 	and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(schemadoc.sl_sequence.seq_nspname);
+			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(sl_sequence.seq_nspname);
 
-        return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;RESET_CONFIG&#39;,
+        return  createEvent(&#39;_schemadoc&#39;, &#39;RESET_CONFIG&#39;,
                         p_set_id, p_only_on_node);
 end;
 </programlisting>
@@ -9061,12 +9069,12 @@ end;
     </section>
 
 <!-- Function upgradeschema( text ) -->
-    <section id="schemadoc.function.upgradeschema-text"
+    <section id="function.upgradeschema-text"
              xreflabel="schemadocupgradeschema( text )">
-      <title id="schemadoc.function.upgradeschema-text-title">
+      <title id="function.upgradeschema-text-title">
        upgradeschema( text )
       </title>
-      <titleabbrev id="schemadoc.function.upgradeschema-text-titleabbrev">
+      <titleabbrev id="function.upgradeschema-text-titleabbrev">
        upgradeschema( text )
       </titleabbrev>
 
@@ -9091,38 +9099,38 @@ begin
 	-- upgrade sl_table
 	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
 		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
-		execute &#39;alter table schemadoc.sl_table add column tab_relname name&#39;;
-		execute &#39;alter table schemadoc.sl_table add column tab_nspname name&#39;;
+		execute &#39;alter table sl_table add column tab_relname name&#39;;
+		execute &#39;alter table sl_table add column tab_nspname name&#39;;
 
 		-- populate the colums with data
-		update schemadoc.sl_table set
+		update sl_table set
 			tab_relname = PGC.relname, tab_nspname = PGN.nspname
 			from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-			where schemadoc.sl_table.tab_reloid = PGC.oid
+			where sl_table.tab_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 
 		-- constrain the colums
-		execute &#39;alter table schemadoc.sl_table alter column tab_relname set NOT NULL&#39;;
-		execute &#39;alter table schemadoc.sl_table alter column tab_nspname set NOT NULL&#39;;
+		execute &#39;alter table sl_table alter column tab_relname set NOT NULL&#39;;
+		execute &#39;alter table sl_table alter column tab_nspname set NOT NULL&#39;;
 
 	end if;
 
 	-- upgrade sl_sequence
 	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
 		-- Add new column(s) sl_sequence.seq_relname, sl_sequence.seq_nspname
-		execute &#39;alter table schemadoc.sl_sequence add column seq_relname name&#39;;
-		execute &#39;alter table schemadoc.sl_sequence add column seq_nspname name&#39;;
+		execute &#39;alter table sl_sequence add column seq_relname name&#39;;
+		execute &#39;alter table sl_sequence add column seq_nspname name&#39;;
 
 		-- populate the columns with data
-		update schemadoc.sl_sequence set
+		update sl_sequence set
 			seq_relname = PGC.relname, seq_nspname = PGN.nspname
 			from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-			where schemadoc.sl_sequence.seq_reloid = PGC.oid
+			where sl_sequence.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 
 		-- constrain the data
-		execute &#39;alter table schemadoc.sl_sequence alter column seq_relname set NOT NULL&#39;;
-		execute &#39;alter table schemadoc.sl_sequence alter column seq_nspname set NOT NULL&#39;;
+		execute &#39;alter table sl_sequence alter column seq_relname set NOT NULL&#39;;
+		execute &#39;alter table sl_sequence alter column seq_nspname set NOT NULL&#39;;
 	end if;
 
 	-- ----
@@ -9130,12 +9138,17 @@ begin
 	-- ----
 	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
 		-- Add new column sl_node.no_spool for virtual spool nodes
-		execute &#39;alter table schemadoc.sl_node add column no_spool boolean&#39;;
-		update schemadoc.sl_node set no_spool = false;
+		execute &#39;alter table sl_node add column no_spool boolean&#39;;
+		update sl_node set no_spool = false;
 	end if;
 
 	return p_old;
 end;
 </programlisting>
       </para>
+    </section>
+
+  </chapter>
+
+
 

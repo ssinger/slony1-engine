@@ -1,33 +1,31 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
 >Slony-I Introduction</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="NEXT"
-TITLE=" Requirements"
-HREF="requirements.html"><LINK
+TITLE="Introduction to Slony-I"
+HREF="introduction.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
-CLASS="ARTICLE"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
+CLASS="PART"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -38,31 +36,51 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="index.html#AEN4"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="requirements.html"
+HREF="commandreferencec.html"
+>Fast Forward</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="introduction.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -72,16 +90,18 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="ARTICLE"
+CLASS="PART"
+><A
+NAME="SLONYINTRO"
+></A
 ><DIV
 CLASS="TITLEPAGE"
 ><H1
 CLASS="TITLE"
-><A
-NAME="SLONYINTRO"
->Slony-I Introduction</A
-></H1
-><HR></DIV
+>I. <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Introduction</H1
 ><DIV
 CLASS="TOC"
 ><DL
@@ -90,295 +110,132 @@ CLASS="TOC"
 >Table of Contents</B
 ></DT
 ><DT
+><A
+HREF="introduction.html"
+>Introduction to <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+></A
+></DT
+><DD
+><DL
+><DT
 >1. <A
-HREF="slonyintro.html#INTRODUCTION"
->Introduction to Slony-I</A
+HREF="introduction.html#AEN31"
+>Why yet another replication system?</A
 ></DT
 ><DT
 >2. <A
-HREF="requirements.html"
->Requirements</A
+HREF="x35.html"
+>What <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> is</A
 ></DT
 ><DT
 >3. <A
-HREF="installation.html"
->Slony-I Installation</A
+HREF="x51.html"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> is not</A
 ></DT
 ><DT
 >4. <A
-HREF="concepts.html"
->Slony-I Concepts</A
+HREF="x64.html"
+>Why doesn't <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> do automatic fail-over/promotion?</A
 ></DT
 ><DT
 >5. <A
+HREF="x72.html"
+>Current Limitations</A
+></DT
+><DT
+>6. <A
+HREF="slonylistenercosts.html"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Communications
+Costs</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="requirements.html"
+>System Requirements</A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="requirements.html#AEN113"
+>System Requirements</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="installation.html"
+>Slony-I Installation</A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="installation.html#AEN218"
+>Slony-I Installation</A
+></DT
+><DT
+>2. <A
+HREF="x225.html"
+>Short Version</A
+></DT
+><DT
+>3. <A
+HREF="x229.html"
+>Configuration</A
+></DT
+><DT
+>4. <A
+HREF="x238.html"
+>Example</A
+></DT
+><DT
+>5. <A
+HREF="x244.html"
+>Build</A
+></DT
+><DT
+>6. <A
+HREF="x253.html"
+>Installing Slony-I</A
+></DT
+><DT
+>7. <A
+HREF="concepts.html"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Concepts</A
+></DT
+><DT
+>8. <A
 HREF="cluster.html"
 >Defining Slony-I Clusters</A
 ></DT
 ><DT
->6. <A
+>9. <A
 HREF="definingsets.html"
->Defining Slony-I Replication
-Sets</A
+>Defining Slony-I Replication Sets</A
 ></DT
 ></DL
-></DIV
-><DIV
-CLASS="SECT1"
-><H1
-CLASS="SECT1"
-><A
-NAME="INTRODUCTION"
->1. Introduction to Slony-I</A
-></H1
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN28"
->1.1. Why yet another replication system?</A
-></H2
-><P
->Slony-I was born from an idea to create a replication system that was not tied
-to a specific version of PostgreSQL, which is allowed to be started and stopped on
-an existing database with out the need for a dump/reload cycle.</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN31"
->1.2. What Slony-I is</A
-></H2
-><P
->Slony-I is a <SPAN
-CLASS="QUOTE"
->"master to multiple slaves"</SPAN
-> replication
-system supporting cascading and slave promotion.  The big picture for
-the development of Slony-I is as a master-slave system that includes
-all features and capabilities needed to replicate large databases to a
-reasonably limited number of slave systems.  <SPAN
-CLASS="QUOTE"
->"Reasonable,"</SPAN
-> in this
-context, is probably no more than a few dozen servers.  If the number
-of servers grows beyond that, the cost of communications becomes
-prohibitively high.</P
-><P
-> See also <A
-HREF="slonyintro.html#SLONYLISTENERCOSTS"
-> SlonyListenerCosts</A
-> for a further analysis.</P
-><P
-> Slony-I is a system intended for data centers and backup sites,
-where the normal mode of operation is that all nodes are available all
-the time, and where all nodes can be secured.  If you have nodes that
-are likely to regularly drop onto and off of the network, or have
-nodes that cannot be kept secure, Slony-I may not be the ideal
-replication solution for you.</P
-><P
-> There are plans for a <SPAN
-CLASS="QUOTE"
->"file-based log shipping"</SPAN
->
-extension where updates would be serialized into files.  Given that,
-log files could be distributed by any means desired without any need
-of feedback between the provider node and those nodes subscribing via
-<SPAN
-CLASS="QUOTE"
->"log shipping."</SPAN
-></P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN42"
->1.3. Slony-I is not</A
-></H2
-><P
->Slony-I is not a network management system.</P
-><P
-> Slony-I does not have any functionality within it to detect a
-node failure, or automatically promote a node to a master or other
-data origin.</P
-><P
->Slony-I is not multi-master; it's not a connection broker, and
-it doesn't make you coffee and toast in the morning.</P
-><P
->(That being said, the plan is for a subsequent system, Slony-II,
-to provide "multimaster" capabilities, and be "bootstrapped" using
-Slony-I.  But that is a separate project, and expectations for Slony-I
-should not be based on hopes for future projects.)</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN48"
->1.4. Why doesn't Slony-I do automatic fail-over/promotion?</A
-></H2
-><P
->This is the job of network monitoring software, not Slony.
-Every site's configuration and fail-over path is different.  For
-example, keep-alive monitoring with redundant NIC's and intelligent HA
-switches that guarantee race-condition-free takeover of a network
-address and disconnecting the <SPAN
-CLASS="QUOTE"
->"failed"</SPAN
-> node vary in every
-network setup, vendor choice, hardware/software combination.  This is
-clearly the realm of network management software and not
-Slony-I.</P
-><P
->Let Slony-I do what it does best: provide database replication.</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN53"
->1.5. Current Limitations</A
-></H2
-><P
->Slony-I does not automatically propagate schema changes, nor
-does it have any ability to replicate large objects.  There is a
-single common reason for these limitations, namely that Slony-I
-operates using triggers, and neither schema changes nor large object
-operations can raise triggers suitable to tell Slony-I when those
-kinds of changes take place.</P
-><P
->There is a capability for Slony-I to propagate DDL changes if
-you submit them as scripts via the <B
-CLASS="APPLICATION"
->slonik</B
->
-<TT
-CLASS="COMMAND"
->EXECUTE SCRIPT</TT
-> operation.  That is not
-<SPAN
-CLASS="QUOTE"
->"automatic;"</SPAN
-> you have to construct an SQL DDL script and submit
-it.</P
-><P
->If you have those sorts of requirements, it may be worth
-exploring the use of <B
-CLASS="APPLICATION"
->PostgreSQL</B
-> 8.0 PITR (Point In Time
-Recovery), where <ACRONYM
-CLASS="ACRONYM"
->WAL</ACRONYM
-> logs are replicated to remote
-nodes.  Unfortunately, that has two attendant limitations:
-
-<P
-></P
-><UL
-><LI
-><P
-> PITR replicates <SPAN
-CLASS="emphasis"
-><I
-CLASS="EMPHASIS"
->all</I
-></SPAN
-> changes in
-<SPAN
-CLASS="emphasis"
-><I
-CLASS="EMPHASIS"
->all</I
-></SPAN
-> databases; you cannot exclude data that isn't
-relevant;</P
-></LI
-><LI
-><P
-> A PITR replica remains dormant until you apply logs
-and start up the database.  You cannot use the database and apply
-updates simultaneously.  It is like having a <SPAN
-CLASS="QUOTE"
->"standby
-server"</SPAN
-> which cannot be used without it ceasing to be
-<SPAN
-CLASS="QUOTE"
->"standby."</SPAN
-></P
-></LI
-></UL
-></P
-><P
->There are a number of distinct models for database replication;
-it is impossible for one replication system to be all things to all
-people.</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="SLONYLISTENERCOSTS"
->1.6. Slony-I Communications
-Costs</A
-></H2
-><P
->The cost of communications grows in a quadratic fashion in
-several directions as the number of replication nodes in a cluster
-increases.  Note the following relationships:
-
-<P
-></P
-><UL
-><LI
-><P
-> It is necessary to have a sl_path entry allowing
-connection from each node to every other node.  Most will normally not
-need to be used for a given replication configuration, but this means
-that there needs to be n(n-1) paths.  It is probable that there will
-be considerable repetition of entries, since the path to "node n" is
-likely to be the same from everywherein the network.</P
-></LI
-><LI
-><P
-> It is similarly necessary to have a sl_listen entry
-indicating how data flows from every node to every other node.  This
-again requires configuring n(n-1) "listener paths."</P
-></LI
-><LI
-><P
-> Each SYNC applied needs to be reported back to all of
-the other nodes participating in the set so that the nodes all know
-that it is safe to purge sl_log_1 and sl_log_2 data, as any
-<SPAN
-CLASS="QUOTE"
->"forwarding"</SPAN
-> node could potentially take over as <SPAN
-CLASS="QUOTE"
->"master"</SPAN
->
-at any time.  One might expect SYNC messages to need to travel through
-n/2 nodes to get propagated to their destinations; this means that
-each SYNC is expected to get transmitted n(n/2) times.  Again, this
-points to a quadratic growth in communications costs as the number of
-nodes increases.</P
-></LI
-></UL
-></P
-><P
->This points to it being a bad idea to have the large
-communications network resulting from the number of nodes being large.
-Up to a half dozen nodes seems pretty reasonable; every time the
-number of nodes doubles, this can be expected to quadruple
-communications overheads.</P
+></DD
+></DL
 ></DIV
 ></DIV
 ></DIV
@@ -398,7 +255,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -407,7 +264,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -416,7 +273,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="requirements.html"
+HREF="introduction.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -426,7 +283,10 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Slony-I 1.1 Administration</TD
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -436,7 +296,10 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Requirements</TD
+>Introduction to <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+></TD
 ></TR
 ></TABLE
 ></DIV

@@ -1,3 +1,4 @@
+<!-- $Id: slonik_ref.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
 <article id="slonikcommands">
   <title>Slonik Command Summary</title>
   <sect1 id="slonikintro">
@@ -1886,7 +1887,7 @@ WAIT FOR EVENT (
    </refsect1>
   </refentry>
  </reference>
-</article>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

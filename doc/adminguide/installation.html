@@ -1,35 +1,34 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
-> Slony-I Installation</TITLE
+>Slony-I Installation</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="UP"
+TITLE="Slony-I Introduction"
 HREF="slonyintro.html"><LINK
 REL="PREVIOUS"
-TITLE=" Requirements"
+TITLE="System Requirements"
 HREF="requirements.html"><LINK
 REL="NEXT"
-TITLE="Slony-I Concepts"
-HREF="concepts.html"><LINK
+TITLE="Short Version"
+HREF="x225.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
-CLASS="SECT1"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
+CLASS="ARTICLE"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -40,31 +39,51 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
 HREF="requirements.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="requirements.html"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="concepts.html"
+HREF="commandreferencec.html"
+>Fast Forward</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x225.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -74,12 +93,23 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
+CLASS="ARTICLE"
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="INSTALLATION"
+>Slony-I Installation</A
+></H1
+><HR></DIV
+><DIV
 CLASS="SECT1"
 ><H1
 CLASS="SECT1"
 ><A
-NAME="INSTALLATION"
->3. Slony-I Installation</A
+NAME="AEN218"
+>1. Slony-I Installation</A
 ></H1
 ><P
 >You should have obtained the <SPAN
@@ -87,19 +117,10 @@ CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 > source from
 the previous step. Unpack it.</P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
 ><PRE
 CLASS="SCREEN"
->    gunzip slony.tar.gz;
-    tar xf slony.tar</PRE
-></TD
-></TR
-></TABLE
+>gunzip slony.tar.gz;
+tar xf slony.tar</PRE
 ><P
 > This will create a directory under the current directory with
 the <SPAN
@@ -107,166 +128,6 @@ CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 > sources.  Head into that that directory for the rest of
 the installation procedure.</P
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN196"
->3.1. Short Version</A
-></H2
-><P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><PRE
-CLASS="SCREEN"
->    ./configure --with-pgsourcetree=/whereever/the/source/is 
-    gmake all; gmake install </PRE
-></TD
-></TR
-></TABLE
->&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN200"
->3.2. Configuration</A
-></H2
-><P
->The first step of the installation procedure is to configure the
-source tree for your system.  This is done by running the
-<B
-CLASS="APPLICATION"
->configure</B
-> script.  In early versions,
-<B
-CLASS="APPLICATION"
->Configure</B
-> needed to know where your
-<SPAN
-CLASS="PRODUCTNAME"
->PostgreSQL</SPAN
-> source tree is, is done with the
-<CODE
-CLASS="OPTION"
->--with-pgsourcetree=</CODE
-> option.  As of version 1.1,
-<SPAN
-CLASS="PRODUCTNAME"
->Slony-I</SPAN
-> is configured by pointing it to the various
-library, binary, and include directories; for a full list of these
-options, use the command <TT
-CLASS="COMMAND"
-> ./configure --help </TT
-></P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN209"
->3.3. Example</A
-></H2
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><PRE
-CLASS="SCREEN"
->    ./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3</PRE
-></TD
-></TR
-></TABLE
-><P
->This script will run a number of tests to guess values for
-various dependent variables and try to detect some quirks of your
-system.  Slony-I is known to need a modified version of libpq on
-specific platforms such as Solaris2.X on SPARC this patch can be found
-at <A
-HREF="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz"
-TARGET="_top"
->http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</A
-></P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN214"
->3.4. Build</A
-></H2
-><P
->To start the build process, type
-
-<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><PRE
-CLASS="SCREEN"
->    gmake all</PRE
-></TD
-></TR
-></TABLE
-></P
-><P
-> Be sure to use GNU make; on BSD systems, it is called
-<B
-CLASS="APPLICATION"
->gmake</B
->; on Linux, GNU make is typically the native
-<B
-CLASS="APPLICATION"
->make</B
->, so the name of the command you type in may vary
-somewhat. The build may take anywhere from a few seconds to 2 minutes
-depending on how fast your hardware is at compiling things.  The last
-line displayed should be</P
-><P
-> <TT
-CLASS="COMMAND"
-> All of Slony-I is successfully made.  Ready to
-install.  </TT
-></P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN223"
->3.5. Installing Slony-I</A
-></H2
-><P
-> To install Slony-I, enter
-
-<TT
-CLASS="COMMAND"
->gmake install</TT
-></P
-><P
->This will install files into postgresql install directory as
-specified by the <CODE
-CLASS="OPTION"
->--prefix</CODE
-> option used in the
-PostgreSQL configuration.  Make sure you have appropriate permissions
-to write into that area.  Normally you need to do this either as root
-or as the postgres user.  </P
 ></DIV
 ></DIV
 ><DIV
@@ -294,7 +155,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -303,7 +164,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="concepts.html"
+HREF="x225.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -313,7 +174,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Requirements</TD
+>System Requirements</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -327,7 +188,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Slony-I Concepts</TD
+>Short Version</TD
 ></TR
 ></TABLE
 ></DIV

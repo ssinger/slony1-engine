@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: slon.sgml,v 1.4 2004-12-22 23:09:59 darcyb Exp $ -->
 <refentry id="app-slon">
 	<refmeta>
 		<refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>

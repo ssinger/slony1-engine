@@ -1,35 +1,34 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
 >slonik</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="UP"
-TITLE="Slony-I Commands"
-HREF="slony-commands.html"><LINK
+TITLE="Slony-I binaries"
+HREF="c383.html"><LINK
 REL="PREVIOUS"
 TITLE="slon"
 HREF="app-slon.html"><LINK
 REL="NEXT"
-HREF="slonyadmin.html"><LINK
+TITLE="Slonik Command Summary"
+HREF="slonikcommands.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
 CLASS="REFENTRY"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -40,31 +39,51 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
 HREF="app-slon.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-slon.html"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="slonyadmin.html"
+HREF="slonikcommands.html"
+>Fast Forward</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="slonikcommands.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -77,29 +96,32 @@ WIDTH="100%"></DIV
 ><A
 NAME="APP-SLONIK"
 ></A
-><B
+><SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 ></H1
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN454"
+NAME="AEN503"
 ></A
 ><H2
 >Name</H2
-><B
+><SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 >&nbsp;--&nbsp;      <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 > command processor
     </DIV
+><A
+NAME="AEN508"
+></A
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN461"
+NAME="AEN510"
 ></A
 ><H2
 >Synopsis</H2
@@ -107,25 +129,22 @@ NAME="AEN461"
 ><TT
 CLASS="COMMAND"
 >slonik</TT
-> [<TT
+> [<VAR
 CLASS="REPLACEABLE"
-><I
->filename</I
-></TT
->
-  ]</P
+>filename</VAR
+>]</P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN466"
+NAME="AEN515"
 ></A
 ><H2
 >Description</H2
 ><P
->     <B
+>     <SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 > is the command processor
      application that is used to set up and modify configurations of
      <SPAN
@@ -137,14 +156,14 @@ CLASS="PRODUCTNAME"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN471"
+NAME="AEN520"
 ></A
 ><H2
-> Outline</H2
+>Outline</H2
 ><P
->The <B
+>The <SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 > command line utility is
   supposed to be used embedded into shell scripts and reads commands
   from files or stdin.</P
@@ -159,20 +178,20 @@ CLASS="APPLICATION"
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
 >
-  support base into a database.  <B
+  support base into a database.  <SPAN
 CLASS="APPLICATION"
->Slonik</B
+>Slonik</SPAN
 > was created
   because these stored procedures have special requirements as to on
   which particular node in the replication system they are called.
   The absence of named parameters for stored procedures makes it
-  rather hard to do this from the <B
+  rather hard to do this from the <SPAN
 CLASS="APPLICATION"
->psql</B
+>psql</SPAN
 > prompt, and
-  <B
+  <SPAN
 CLASS="APPLICATION"
->psql</B
+>psql</SPAN
 > lacks the ability to maintain multiple
   connections with open transactions to multiple databases.</P
 ><P
@@ -201,23 +220,23 @@ CLASS="EMPHASIS"
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</P
 ><P
->A detailed list of Slonik commands can be found here: <A
-HREF="http://gborg.postgresql.org/project/slony1/genpage.php?slonik_commands"
-TARGET="_top"
->  slonik commands </A
-></P
+>See also <A
+HREF="slonikcommands.html"
+> Slonik Commands
+  </A
+>. </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN487"
+NAME="AEN536"
 ></A
 ><H2
 >Exit Status</H2
 ><P
->   <B
+>   <SPAN
 CLASS="APPLICATION"
->slonik</B
+>slonik</SPAN
 > returns 0 to the shell if it
    finished normally.  Scripts may specify return codes.   
   </P
@@ -247,7 +266,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -256,7 +275,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="slonyadmin.html"
+HREF="slonikcommands.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -266,16 +285,16 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
-><B
+><SPAN
 CLASS="APPLICATION"
->slon</B
+>slon</SPAN
 ></TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony-commands.html"
+HREF="c383.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -283,7 +302,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
-></TD
+>Slonik Command Summary</TD
 ></TR
 ></TABLE
 ></DIV

@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: ddlchanges.sgml,v 1.6 2004-12-22 23:09:58 darcyb Exp $ -->
 <article>
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>

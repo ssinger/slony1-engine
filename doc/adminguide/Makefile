@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.7 2004-12-21 17:44:46 darcyb Exp $
+# $Id: Makefile,v 1.8 2004-12-22 23:09:57 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -216,6 +216,9 @@ schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | $(pgbindir)/psql $(TEMPDB) && \
 	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed -e "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  -e "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | $(pgbindir)/psql $(TEMPDB) && \
 	$(PGAUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t xml -f schemadoc ;\
+	sed -i.bak -e "s/$(TEMPSCHEMA)\.//g" \
+	  -e "s@<book.*>@@g" -e "s@</book.*>@@g" schemadoc.xml ;\
+	rm  schemadoc.xml.bak ;\
 	$(pgbindir)/dropdb $(TEMPDB) >/dev/null 2>&1 \
 	) || echo "unable to createdb $(TEMPDB)"
 

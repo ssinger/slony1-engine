@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: intro.sgml,v 1.5 2004-12-22 23:09:59 darcyb Exp $ -->
 <article id="introduction">
 	<title>Introduction to <productname>Slony-I</productname></title>
 	<sect1>

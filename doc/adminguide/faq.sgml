@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: faq.sgml,v 1.8 2004-12-22 23:09:58 darcyb Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -787,14 +787,14 @@ linkend="stmtstoretrigger"> <command>STORE TRIGGER</command> </link>
 Slonik command.  </para>
 
 <para> The function <link
-linkend="t1.function.altertableforreplication-integer">
+linkend="function.altertableforreplication-integer">
 altertableforreplication(table id) </link> prepares each table for
 replication.
 
 <itemizedlist>
 
 <listitem><para> On the origin node, this involves adding a trigger
-that uses the <link linkend="t1.function.logtrigger">
+that uses the <link linkend="function.logtrigger">
 <function>logTrigger</function>() </link> function to the
 table.</para>
 

@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: listenpaths.sgml,v 1.8 2004-12-22 23:09:59 darcyb Exp $ -->
 <article>
 <sect1 id="listenpaths"><title><productname>Slony-I</productname> listen paths</title>
 <note><para> If you are running version

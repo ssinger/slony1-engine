@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: cluster.sgml,v 1.7 2004-12-22 23:09:58 darcyb Exp $ -->
 <sect1 id="cluster">
 <title>Defining Slony-I Clusters</title>
 

@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: failover.sgml,v 1.7 2004-12-22 23:09:58 darcyb Exp $ -->
 <article>
 <sect1 id="failover">
 <title>Doing switchover and failover with Slony-I</title>

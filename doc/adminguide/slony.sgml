@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: slony.sgml,v 1.8 2004-12-22 23:09:59 darcyb Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -65,9 +65,7 @@ worth documenting</emphasis>.</para>
 
   <part id="developer">
     <title>Slony-I Internals</title>
-    <article id="schemadoc">  
       &schemadoc;
-    </article>
   </part>
 &bookindex;
 

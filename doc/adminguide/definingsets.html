@@ -1,36 +1,34 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
->Defining Slony-I Replication
-Sets</TITLE
+>Defining Slony-I Replication Sets</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="UP"
-HREF="slonyintro.html"><LINK
+TITLE="Slony-I Installation"
+HREF="installation.html"><LINK
 REL="PREVIOUS"
 TITLE="Defining Slony-I Clusters"
 HREF="cluster.html"><LINK
 REL="NEXT"
-TITLE="Slony-I Commands"
-HREF="slony-commands.html"><LINK
+TITLE="Core Slony-I Programs"
+HREF="commandreferencec.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
 CLASS="SECT1"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -41,31 +39,51 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
 HREF="cluster.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
+>Slony-I Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Fast Forward</A
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="slony-commands.html"
+HREF="commandreferencec.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -80,8 +98,7 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="DEFININGSETS"
->6. Defining Slony-I Replication
-Sets</A
+>9. Defining Slony-I Replication Sets</A
 ></H1
 ><P
 >Defining the nodes indicated the shape of the cluster of
@@ -90,34 +107,33 @@ copied between them.  The groups of data that are copied are defined
 as <SPAN
 CLASS="QUOTE"
 >"sets."</SPAN
->&#13;</P
+></P
 ><P
->A replication set consists of the following:
-<P
+>A replication set consists of the following:</P
+><P
 ></P
 ><UL
 ><LI
 ><P
-> Keys on tables that are to be replicated that have no
+>Keys on tables that are to be replicated that have no
 suitable primary key</P
 ></LI
 ><LI
 ><P
-> Tables that are to be replicated</P
+>Tables that are to be replicated</P
 ></LI
 ><LI
 ><P
-> Sequences that are to be replicated</P
+>Sequences that are to be replicated</P
 ></LI
 ></UL
->&#13;</P
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN297"
->6.1. Primary Keys</A
+NAME="AEN339"
+>9.1. Primary Keys</A
 ></H2
 ><P
 ><SPAN
@@ -136,23 +152,25 @@ modified in the source system.  There are three ways that you can get
 <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
-> to use a primary key:
-
-<P
+> to use a primary key:</P
+><P
 ></P
 ><UL
 ><LI
 ><P
-> If the table has a formally identified primary key,
-<TT
+> If the table has a formally identified primary key, <TT
 CLASS="COMMAND"
->SET ADD TABLE</TT
-> can be used without any need to
-reference the primary key.  <SPAN
+><A
+HREF="stmtsetaddtable.html"
+>SET ADD
+TABLE</A
+></TT
+> can be used without any need to reference the
+primary key.  <SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
-> will pick up that
-there is a primary key, and use it.&#13;</P
+> will pick up that there is a
+primary key, and use it.</P
 ></LI
 ><LI
 ><P
@@ -165,24 +183,13 @@ CLASS="EMPHASIS"
 ></SPAN
 > primary key, that is, some index on a
 combination of fields that is UNIQUE and NOT NULL, then you can
-specify the key, as in
-
-<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="90%"
-><TR
-><TD
+specify the key, as in</P
 ><PRE
 CLASS="PROGRAMLISTING"
->    SET ADD TABLE (set id = 1, origin = 1, id = 42, 
-                   full qualified name = 'public.this_table', 
-                   key = 'this_by_that', 
-         comment='this_table has this_by_that as a candidate primary key');</PRE
-></TD
-></TR
-></TABLE
->&#13;</P
+>SET ADD TABLE (set id = 1, origin = 1, id = 42, 
+               full qualified name = 'public.this_table', 
+               key = 'this_by_that', 
+     comment='this_table has this_by_that as a candidate primary key');</PRE
 ><P
 > Notice that while you need to specify the namespace for the
 table, you must <SPAN
@@ -192,7 +199,7 @@ CLASS="EMPHASIS"
 >not</I
 ></SPAN
 > specify the namespace for the
-key, as it infers the namespace from the table.&#13;</P
+key, as it infers the namespace from the table.</P
 ></LI
 ><LI
 ><P
@@ -203,27 +210,31 @@ CLASS="PRODUCTNAME"
 > to provide one.  This is done by
 first using <TT
 CLASS="COMMAND"
->TABLE ADD KEY</TT
-> to add a column populated
-using a <SPAN
+><A
+HREF="stmttableaddkey.html"
+> TABLE ADD KEY</A
+> </TT
+> to add a column populated using a
+<SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
-> sequence, and then having the
-<TT
+> sequence, and then having the <TT
 CLASS="COMMAND"
->SET ADD TABLE</TT
-> include the directive
-<CODE
+> <A
+HREF="stmtsetaddtable.html"
+> SET ADD TABLE</A
+></TT
+> include the
+directive <TT
 CLASS="OPTION"
->key=serial</CODE
->, to indicate that <SPAN
+>key=serial</TT
+>, to indicate that
+<SPAN
 CLASS="PRODUCTNAME"
 >Slony-I</SPAN
->'s
-own column should be used.</P
+>'s own column should be used.</P
 ></LI
 ></UL
->&#13;</P
 ><P
 > It is not terribly important whether you pick a
 <SPAN
@@ -252,8 +263,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN327"
->6.2. Grouping tables into sets</A
+NAME="AEN372"
+>9.2. Grouping tables into sets</A
 ></H2
 ><P
 > It will be vital to group tables together into a single set if
@@ -316,7 +327,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -325,7 +336,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="slony-commands.html"
+HREF="commandreferencec.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -341,7 +352,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slonyintro.html"
+HREF="installation.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -349,7 +360,10 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Slony-I Commands</TD
+>Core <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Programs</TD
 ></TR
 ></TABLE
 ></DIV

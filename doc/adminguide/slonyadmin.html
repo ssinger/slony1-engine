@@ -1,33 +1,30 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML
 ><HEAD
 ><TITLE
-> Slony-I Administration </TITLE
+>Slony-I Administration</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REV="MADE"
-HREF="mailto:cbbrowne@gmail.com"><LINK
+HREF="mailto:slony1-general@gborg.postgresql.org"><LINK
 REL="HOME"
-TITLE="Slony-I 1.1 Administration"
-HREF="slony.html"><LINK
+TITLE="Slony-I HEAD_20041221 Documentation"
+HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="slonik"
-HREF="app-slonik.html"><LINK
+TITLE="WAIT FOR EVENT"
+HREF="stmtwaitevent.html"><LINK
 REL="NEXT"
-TITLE="Slon daemons"
-HREF="slonstart.html"><LINK
+HREF="t1741.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
-HREF="stdstyle.css"><META
-HTTP-EQUIV="Content-Type"></HEAD
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2004-12-22T22:53:46"></HEAD
 ><BODY
-CLASS="ARTICLE"
-BGCOLOR="#FFFFFF"
-TEXT="#000000"
-LINK="#0000FF"
-VLINK="#840084"
-ALINK="#0000FF"
+CLASS="PART"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
@@ -38,31 +35,51 @@ CELLPADDING="0"
 CELLSPACING="0"
 ><TR
 ><TH
-COLSPAN="3"
+COLSPAN="5"
 ALIGN="center"
->Slony-I 1.1 Administration</TH
+VALIGN="bottom"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> HEAD_20041221 Documentation</TH
 ></TR
 ><TR
 ><TD
 WIDTH="10%"
 ALIGN="left"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="app-slonik.html"
+HREF="stmtwaitevent.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
-WIDTH="80%"
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="commandreferencec.html"
+>Fast Backward</A
+></TD
+><TD
+WIDTH="60%"
 ALIGN="center"
 VALIGN="bottom"
 ></TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
-VALIGN="bottom"
+VALIGN="top"
 ><A
-HREF="slonstart.html"
+HREF="faq.html"
+>Fast Forward</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="t1741.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -72,16 +89,18 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="ARTICLE"
+CLASS="PART"
+><A
+NAME="SLONYADMIN"
+></A
 ><DIV
 CLASS="TITLEPAGE"
 ><H1
 CLASS="TITLE"
-><A
-NAME="SLONYADMIN"
->Slony-I Administration</A
-></H1
-><HR></DIV
+>III. <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> Administration</H1
 ><DIV
 CLASS="TOC"
 ><DL
@@ -90,599 +109,191 @@ CLASS="TOC"
 >Table of Contents</B
 ></DT
 ><DT
+><A
+HREF="t1741.html"
+></A
+></DT
+><DD
+><DL
+><DT
 >1. <A
-HREF="slonyadmin.html#ALTPERL"
+HREF="t1741.html#ALTPERL"
 >Slony-I Administration Scripts</A
 ></DT
+></DL
+></DD
 ><DT
->2. <A
-HREF="slonstart.html"
+><A
+HREF="t1898.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t1898.html#SLONSTART"
 >Slon daemons</A
 ></DT
+></DL
+></DD
 ><DT
->3. <A
-HREF="subscribenodes.html"
+><A
+HREF="t1949.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t1949.html#SUBSCRIBENODES"
 >Subscribing Nodes</A
 ></DT
+></DL
+></DD
 ><DT
->4. <A
-HREF="monitoring.html"
+><A
+HREF="t1980.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t1980.html#MONITORING"
 >Monitoring</A
 ></DT
+></DL
+></DD
 ><DT
->5. <A
-HREF="maintenance.html"
+><A
+HREF="t2015.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2015.html#MAINTENANCE"
 >Slony-I Maintenance</A
 ></DT
+></DL
+></DD
 ><DT
->6. <A
-HREF="reshape.html"
+><A
+HREF="t2071.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2071.html#RESHAPE"
 >Reshaping a Cluster</A
 ></DT
+></DL
+></DD
 ><DT
->7. <A
-HREF="failover.html"
+><A
+HREF="t2103.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2103.html#FAILOVER"
 >Doing switchover and failover with Slony-I</A
 ></DT
+></DL
+></DD
 ><DT
->8. <A
-HREF="listenpaths.html"
->Slony Listen Paths</A
+><A
+HREF="t2185.html"
+></A
 ></DT
+><DD
+><DL
 ><DT
->9. <A
-HREF="addthings.html"
+>1. <A
+HREF="t2185.html#LISTENPATHS"
+><SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> listen paths</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="t2287.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2287.html#ADDTHINGS"
 >Adding Things to Replication</A
 ></DT
+></DL
+></DD
 ><DT
->10. <A
-HREF="dropthings.html"
+><A
+HREF="t2313.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2313.html#DROPTHINGS"
 >Dropping things from Slony Replication</A
 ></DT
+></DL
+></DD
 ><DT
->11. <A
-HREF="ddlchanges.html"
+><A
+HREF="t2409.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2409.html#DDLCHANGES"
 >Database Schema Changes (DDL)</A
 ></DT
+></DL
+></DD
 ><DT
->12. <A
-HREF="firstdb.html"
+><A
+HREF="t2447.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2447.html#FIRSTDB"
 >Replicating Your First Database</A
 ></DT
+></DL
+></DD
 ><DT
->13. <A
-HREF="help.html"
+><A
+HREF="t2563.html"
+></A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="t2563.html#HELP"
 >More Slony-I Help</A
 ></DT
 ></DL
-></DIV
-><DIV
-CLASS="SECT1"
-><H1
-CLASS="SECT1"
-><A
-NAME="ALTPERL"
->1. Slony-I Administration Scripts</A
-></H1
-><P
->In the <TT
-CLASS="FILENAME"
->altperl</TT
-> directory in the <B
-CLASS="APPLICATION"
->CVS</B
->
-tree, there is a sizable set of <B
-CLASS="APPLICATION"
->Perl</B
-> scripts that may be
-used to administer a set of <SPAN
-CLASS="PRODUCTNAME"
->Slony-I</SPAN
-> instances, which
-support having arbitrary numbers of nodes.&#13;</P
-><P
->Most of them generate Slonik scripts that are then to be passed
-on to the <A
-HREF="app-slonik.html#SLONIK"
-> <B
-CLASS="APPLICATION"
->slonik</B
-> </A
-> utility
-to be submitted to all of the <SPAN
-CLASS="PRODUCTNAME"
->Slony-I</SPAN
-> nodes in a
-particular cluster.  At one time, this embedded running <A
-HREF="app-slonik.html#SLONIK"
-> slonik </A
-> on the slonik scripts.
-Unfortunately, this turned out to be a pretty large calibre
-<SPAN
-CLASS="QUOTE"
->"foot gun,"</SPAN
-> as minor typos on the command line led, on a couple
-of occasions, to pretty calamitous actions, so the behaviour has been
-changed so that the scripts simply submit output to standard output.
-An administrator should review the script <SPAN
-CLASS="emphasis"
-><I
-CLASS="EMPHASIS"
->before</I
-></SPAN
-> submitting
-it to <A
-HREF="app-slonik.html#SLONIK"
-> slonik </A
->.&#13;</P
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN508"
->1.1. Node/Cluster Configuration - cluster.nodes</A
-></H2
-><P
->The UNIX environment variable <CODE
-CLASS="ENVAR"
->SLONYNODES</CODE
-> is used to
-determine what Perl configuration file will be used to control the
-shape of the nodes in a <SPAN
-CLASS="PRODUCTNAME"
->Slony-I</SPAN
-> cluster.&#13;</P
-><P
->What variables are set up...
-<P
-></P
-><UL
-><LI
-><P
-> <CODE
-CLASS="ENVAR"
->$SETNAME</CODE
->=orglogs;	# What is the name of the replication set?&#13;</P
-></LI
-><LI
-><P
-> <CODE
-CLASS="ENVAR"
->$LOGDIR</CODE
->='/opt/OXRS/log/LOGDBS';  # What is the base directory for logs?&#13;</P
-></LI
-><LI
-><P
-> <CODE
-CLASS="ENVAR"
->$SLON_BIN_PATH</CODE
->='/opt/dbs/pgsql74/bin';  # Where to look for slony binaries&#13;</P
-></LI
-><LI
-><P
-> <CODE
-CLASS="ENVAR"
->$APACHE_ROTATOR</CODE
->="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator</P
-></LI
-></UL
->&#13;</P
-><P
->You then define the set of nodes that are to be replicated using
-a set of calls to <CODE
-CLASS="FUNCTION"
->add_node()</CODE
->.&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->  add_node (host =&#62; '10.20.30.40', dbname =&#62; 'orglogs', port =&#62; 5437,
-			  user =&#62; 'postgres', node =&#62; 4, parent =&#62; 1);</TT
-></P
-><P
->The set of parameters for <CODE
-CLASS="FUNCTION"
->add_node()</CODE
-> are thus:
-
-<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><PRE
-CLASS="PROGRAMLISTING"
->    my %PARAMS =   (host=&#62; undef,		# Host name
-    	   	dbname =&#62; 'template1',	# database name
-    		port =&#62; 5432,		# Port number
-    		user =&#62; 'postgres',	# user to connect as
-    		node =&#62; undef,		# node number
-    		password =&#62; undef,	# password for user
-    		parent =&#62; 1,		# which node is parent to this node
-    		noforward =&#62; undef	# shall this node be set up to forward results?
-    );</PRE
-></TD
-></TR
-></TABLE
->
-     </P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN534"
->1.2. Set configuration - cluster.set1, cluster.set2</A
-></H2
-><P
->The UNIX environment variable <CODE
-CLASS="ENVAR"
->SLONYSET</CODE
-> is used to
-determine what Perl configuration file will be used to determine what
-objects will be contained in a particular replication set.&#13;</P
-><P
->Unlike <CODE
-CLASS="ENVAR"
->SLONYNODES</CODE
->, which is essential for
-<SPAN
-CLASS="emphasis"
-><I
-CLASS="EMPHASIS"
->all</I
-></SPAN
-> of the <A
-HREF="app-slonik.html#SLONIK"
-> slonik</A
->-generating scripts, this only needs to be set when running
-<TT
-CLASS="FILENAME"
->create_set.pl</TT
->, as that is the only script used to
-control what tables will be in a particular replication set.</P
-><P
->What variables are set up...
-<P
-></P
-><UL
-><LI
-><P
-> $TABLE_ID = 44;	 </P
-><P
-> Each table must be identified by a unique number; this variable controls where numbering starts</P
-></LI
-><LI
-><P
-> @PKEYEDTABLES		&#13;</P
-><P
-> An array of names of tables to be replicated that have a
-defined primary key so that Slony-I can automatically select its key&#13;</P
-></LI
-><LI
-><P
-> %KEYEDTABLES&#13;</P
-><P
-> A hash table of tables to be replicated, where the hash index
-is the table name, and the hash value is the name of a unique not null
-index suitable as a "candidate primary key."&#13;</P
-></LI
-><LI
-><P
-> @SERIALTABLES&#13;</P
-><P
-> An array of names of tables to be replicated that have no
-candidate for primary key.  Slony-I will add a key field based on a
-sequence that Slony-I generates&#13;</P
-></LI
-><LI
-><P
-> @SEQUENCES&#13;</P
-><P
-> An array of names of sequences that are to be replicated&#13;</P
-></LI
-></UL
->&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN560"
->1.3. build_env.pl</A
-></H2
-><P
->Queries a database, generating output hopefully suitable for
-<TT
-CLASS="FILENAME"
->slon.env</TT
-> consisting of:
-<P
-></P
-><UL
-><LI
-><P
-> a set of <CODE
-CLASS="FUNCTION"
->add_node()</CODE
-> calls to configure the cluster</P
-></LI
-><LI
-><P
-> The arrays <CODE
-CLASS="ENVAR"
->@KEYEDTABLES</CODE
->, <CODE
-CLASS="ENVAR"
->@SERIALTABLES</CODE
->, and <CODE
-CLASS="ENVAR"
->@SEQUENCES</CODE
-></P
-></LI
-></UL
->&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN573"
->1.4. create_set.pl</A
-></H2
-><P
->This requires <CODE
-CLASS="ENVAR"
->SLONYSET</CODE
-> to be set as well as
-<CODE
-CLASS="ENVAR"
->SLONYNODES</CODE
->; it is used to generate the Slonik script to set up
-a replication set consisting of a set of tables and sequences that are
-to be replicated.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN578"
->1.5. drop_node.pl</A
-></H2
-><P
->Generates Slonik script to drop a node from a Slony-I cluster.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN581"
->1.6. drop_set.pl</A
-></H2
-><P
->Generates Slonik script to drop a replication set (<SPAN
-CLASS="emphasis"
-><I
-CLASS="EMPHASIS"
->e.g.</I
-></SPAN
-> - set of tables and sequences) from a Slony-I cluster.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN585"
->1.7. failover.pl</A
-></H2
-><P
->Generates Slonik script to request failover from a dead node to some new origin&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN588"
->1.8. init_cluster.pl</A
-></H2
-><P
->Generates Slonik script to initialize a whole Slony-I cluster,
-including setting up the nodes, communications paths, and the listener
-routing.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN591"
->1.9. merge_sets.pl</A
-></H2
-><P
->Generates Slonik script to merge two replication sets together.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN594"
->1.10. move_set.pl</A
-></H2
-><P
->Generates Slonik script to move the origin of a particular set to a different node.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN597"
->1.11. replication_test.pl</A
-></H2
-><P
->Script to test whether Slony-I is successfully replicating data.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN600"
->1.12. restart_node.pl</A
-></H2
-><P
->Generates Slonik script to request the restart of a node.  This was
-particularly useful pre-1.0.5 when nodes could get snarled up when
-slon daemons died.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN603"
->1.13. restart_nodes.pl</A
-></H2
-><P
->Generates Slonik script to restart all nodes in the cluster.  Not
-particularly useful...&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN606"
->1.14. show_configuration.pl</A
-></H2
-><P
->Displays an overview of how the environment (e.g. - <CODE
-CLASS="ENVAR"
->SLONYNODES</CODE
->) is set
-to configure things.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN610"
->1.15. slon_kill.pl</A
-></H2
-><P
->Kills slony watchdog and all slon daemons for the specified set.  It
-only works if those processes are running on the local host, of
-course!&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN613"
->1.16. slon_pushsql.pl</A
-></H2
-><P
->Generates Slonik script to push DDL changes to a replication set.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN616"
->1.17. slon_start.pl</A
-></H2
-><P
->This starts a slon daemon for the specified cluster and node, and uses
-slon_watchdog.pl to keep it running.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN619"
->1.18. slon_watchdog.pl</A
-></H2
-><P
->Used by slon_start.pl...&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN622"
->1.19. slon_watchdog2.pl</A
-></H2
-><P
->This is a somewhat smarter watchdog; it monitors a particular Slony-I
-node, and restarts the slon process if it hasn't seen updates go in in
-20 minutes or more.&#13;</P
-><P
->This is helpful if there is an unreliable network connection such that
-the slon sometimes stops working without becoming aware of it...&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN626"
->1.20. subscribe_set.pl</A
-></H2
-><P
->Generates Slonik script to subscribe a particular node to a particular replication set.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN629"
->1.21. uninstall_nodes.pl</A
-></H2
-><P
->This goes through and drops the Slony-I schema from each node; use
-this if you want to destroy replication throughout a cluster.  This is
-a VERY unsafe script!&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN632"
->1.22. unsubscribe_set.pl</A
-></H2
-><P
->Generates Slonik script to unsubscribe a node from a replication set.&#13;</P
-></DIV
-><DIV
-CLASS="SECT2"
-><H2
-CLASS="SECT2"
-><A
-NAME="AEN635"
->1.23. update_nodes.pl</A
-></H2
-><P
->Generates Slonik script to tell all the nodes to update the Slony-I
-functions.  This will typically be needed when you upgrade from one
-version of Slony-I to another.&#13;</P
+></DD
+></DL
 ></DIV
 ></DIV
 ></DIV
@@ -702,7 +313,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="app-slonik.html"
+HREF="stmtwaitevent.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -711,7 +322,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="slony.html"
+HREF="index.html"
 ACCESSKEY="H"
 >Home</A
 ></TD
@@ -720,7 +331,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="slonstart.html"
+HREF="t1741.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -730,10 +341,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
-><B
-CLASS="APPLICATION"
->slonik</B
-></TD
+>WAIT FOR EVENT</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -743,7 +351,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Slon daemons</TD
+></TD
 ></TR
 ></TABLE
 ></DIV

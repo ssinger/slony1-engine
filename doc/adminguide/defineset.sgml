@@ -1,4 +1,4 @@
-<!-- $Id -->
+<!-- $Id: defineset.sgml,v 1.8 2004-12-22 23:09:58 darcyb Exp $ -->
 <sect1 id="definingsets">
 <title>Defining Slony-I Replication Sets</title>
 
