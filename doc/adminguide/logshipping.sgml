@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.3 2005-02-25 20:59:40 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.4 2005-02-25 22:38:09 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
@@ -118,25 +118,16 @@ only SYNC events.  This should be sufficient to cope with
 <emphasis>some</emphasis> changes in cluster configuration, but not
 others.  </para>
 
-<para> Log shipping does <emphasis>not</emphasis> submit events for
-<command> DDL_SCRIPT </command>, so if you do a DDL change via <link
-linkend="stmtddlscript"> <command>EXECUTE SCRIPT</command></link>, the
-script is not propagated.  It ought to be possible to address this via
-some changes to the <command>DDL_SCRIPT</command> event; a Simple
-Matter Of Programming... </para> 
-
-<para> But at present, the implication of this limitation is that the
-introduction of any of the following events can invalidate the
-relationship between the SYNCs and the dump created using
+<para> Log shipping does <emphasis>not</emphasis> process certain
+additional events, with the implication that the introduction of any
+of the following events can invalidate the relationship between the
+SYNCs and the dump created using
 <application>slony1_dump.sh</application> so that you'll likely need
 to rerun <application>slony1_dump.sh</application>:
 
 <itemizedlist>
 <listitem><para><command> SUBSCRIBE_SET </command> 
-<listitem><para><command> DDL_SCRIPT </command> 
 
-<para> It ought to be a <acronym>SMOP</acronym> to add a DDL script to
-the log shipping stream.
 </itemizedlist>
 
 <para> A number of event types <emphasis> are </emphasis> handled in
@@ -147,12 +138,14 @@ such a way that log shipping copes with them:
 <listitem><para><command>SYNC </command> events are, of course,
 handled.
 
+<listitem><para><command>DDL_SCRIPT</command> is handled.
+
 <listitem><para><command> UNSUBSCRIBE_SET </command> 
 
 <para> This event, much like <command>SUBSCRIBE_SET</command> is not
-handled by the log shipping code.  But its effect is, namely that SYNC
-events on the subscriber node will no longer contain updates to the
-set.
+handled by the log shipping code.  But its effect is, namely that
+<command>SYNC</command> events on the subscriber node will no longer
+contain updates to the set.
 
 <para> Similarly, <command>SET_DROP_TABLE</command>,
 <command>SET_DROP_SEQUENCE</command>,
