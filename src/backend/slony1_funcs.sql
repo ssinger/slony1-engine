@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.53 2005-02-16 21:02:01 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.54 2005-02-16 22:18:32 smsimms Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1883,7 +1883,8 @@ begin
 	v_sub_last = p_new_origin;
 	select sub_provider into v_sub_node
 			from @NAMESPACE@.sl_subscribe
-			where sub_receiver = p_new_origin;
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
 	if not found then
 		raise exception ''Slony-I: subscription path broken in moveSet_int'';
 	end if;
