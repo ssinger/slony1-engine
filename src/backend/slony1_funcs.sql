@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.2 2004-09-23 17:28:24 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.3 2004-09-24 17:32:05 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3004,12 +3004,14 @@ begin
 			where ssy_setid = p_sub_set;
 
 	-- ----
-	-- Remove all sl_table entries for this set.
+	-- Remove all sl_table and sl_sequence entries for this set.
 	-- Should we ever subscribe again, the initial data
 	-- copy process will create new ones.
 	-- ----
 	delete from @NAMESPACE@.sl_table
 			where tab_set = p_sub_set;
+	delete from @NAMESPACE@.sl_sequence
+			where seq_set = p_sub_set;
 
 	-- ----
 	-- Call the internal procedure to drop the subscription
