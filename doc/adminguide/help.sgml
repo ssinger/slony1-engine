@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.13 2005-03-07 19:31:02 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.14 2005-03-30 15:32:02 cbbrowne Exp $ -->
 <sect1 id="help">
 <title>More &slony1; Help</title>
 
@@ -39,6 +39,11 @@ url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink></para><
 then <ulink url="http://kirov.lug.ru/wiki/Slony">
 KirovOpenSourceCommunity: Slony</ulink> may be the place to
 go.</para></listitem> 
+
+<listitem><para> A <ulink
+url="http://www.kuzin.net/work/sloniki-privet.html"> Russian Setup /
+Example / HOWTO </ulink> is available for Russian readers. </para>
+</listitem>
 
 <listitem><para> <ulink url="http://pgpool.projects.postgresql.org/"
 id="pgpool"> <application> pgpool </application> </ulink> </para>
