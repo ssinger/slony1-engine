@@ -103,7 +103,7 @@ $SIG{KILL} = \&clean_up;
 
 my $exitcode = -1;
 my $tmpdir = "/tmp/slony.$$";
-mkdir $tmpdir or &death ("Can't create temporary working directory: $!");
+mkdir $tmpdir,0700 or &death ("Can't create temporary working directory: $!");
 
 my $pgpassfile = $ENV{"HOME"} . "/.pgpass";
 my $pgpassbackup = "$tmpdir/.pgpass.backup";
