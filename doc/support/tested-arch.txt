@@ -2,9 +2,9 @@ Slony-I has been tested and reposrted to work on the following architectures.
 
 OS		Version		Processor series	Date last reported
 ==========================================================================
-FreeBSD		4.X		i386			Aug 31, 2004
-FreeBSD		5.3		i386			Aug 31, 2004
-FreeBSD		6-CURRENT	i386			Aug 31, 2004
+FreeBSD		4.X		x86			Aug 31, 2004
+FreeBSD		5.3		x86			Aug 31, 2004
+FreeBSD		6-CURRENT	x86			Aug 31, 2004
 
 Solaris		2.8		ULTRA SPARC		Aug 31, 2004
 Solaris		2.5		HYPER SPARC		Aug 31, 2004
@@ -12,3 +12,7 @@ Solaris		2.5		HYPER SPARC		Aug 31, 2004
 AIX		4.3		PPC			Aug 31, 2004
 
 Linux		2.4.26		MIPS/Sel		Aug 31, 2004
+
+OpenBSD		3.5		SPARC 64		Aug 15, 2004
+OpenBSD		3.5		x86			Aug 15, 2004
+OpenBSD		3.6		x86			Aug 15, 2004
