@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.1 2004-06-09 22:30:52 darcyb Exp $
+# $Id: GNUmakefile.in,v 1.2 2004-06-10 03:09:18 darcyb Exp $
 # ----------
 
 top_builddir = .
@@ -27,7 +27,19 @@ DISTFILES = aclocal.m4 \
 
 SUBDIRS = src doc
 
-all install installdirs clean:
+all:
+	for subdir in $(SUBDIRS) ; do \
+	  $(MAKE) -C $$subdir $@ ; \
+    done && \
+	echo "All of Slony-I is successfully made. Ready to install"
+
+install	installdirs:
+	for subdir in $(SUBDIRS) ; do \
+	  $(MAKE) -C $$subdir $@ ; \
+    done && \
+	echo "All of Slony-I is successfully installed"
+
+clean:
 	for subdir in $(SUBDIRS) ; do \
 	  $(MAKE) -C $$subdir $@ ; \
     done
@@ -38,7 +50,7 @@ distclean: clean
 	rm -f src/slonik/Makefile
 	rm -f config.log config.status config.h
 	rm -f postgresql-$(PACKAGE).spec
-	rm -f $(PACKAGE)-$(VERSION).tar.gz
+	rm -f -- $(PACKAGE)-$(VERSION).tar.gz
 	rm -rf autom4te.cache
 
 maintainer-clean: distclean
