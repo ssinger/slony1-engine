@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.14 2004-07-20 09:15:30 dfetter Exp $
+# $Id: Makefile.global.in,v 1.15 2004-08-28 21:20:10 darcyb Exp $
 # ----------
 
 pgincludedir = @PGINCLUDEDIR@
@@ -31,7 +31,13 @@ LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq
 PTHREAD_CFLAGS	= @PTHREAD_CFLAGS@
 PTHREAD_LIBS	= @PTHREAD_LIBS@
 PTHREAD_CC		= @PTHREAD_CC@
+
 CC = @CC@
+YACC = @YACC@
+YFLAGS = @YFLAGS@
+FLEX = @LEX@
+FLEXFLAGS = @LEXFLAGS@ $(LFLAGS)
+
 
 # Installation.
 

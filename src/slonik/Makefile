@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.10 2004-07-20 09:15:31 dfetter Exp $
+#	$Id: Makefile,v 1.11 2004-08-28 21:20:10 darcyb Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -42,8 +42,23 @@ $(PROG):	$(OBJS)
 slonik.o:			slonik.c slonik.h
 dbutil.o:			dbutil.c slonik.h
 parser.o:			parser.c scan.c
+
 parser.c:			parser.y slonik.h
+ifdef YACC
+	$(YACC) -d $(YFLAGS) $<
+	mv -f y.tab.c parser.c
+else
+	@echo "Missing yacc $< $@"
+	@exit 1
+endif
+
 scan.c:				scan.l slonik.h
+ifdef FLEX
+	$(FLEX) $(FLEXFLAGS) -o'$@' $<
+else
+	@echo "Missing flex $< $@"
+	@exit
+endif
 
 clean distclean:
 	rm -f $(ALL) $(OBJS)
