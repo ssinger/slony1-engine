@@ -1,0 +1,4147 @@
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.1 2004-07-30 19:35:46 cbbrowne Exp $ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+    <title>Index for schemadoc</title>
+    <style type="text/css">
+	BODY {
+		color:	#000000; 
+		background-color: #FFFFFF;
+		font-family: Helvetica, sans-serif; 
+	}
+
+	P {
+		margin-top: 5px;
+		margin-bottom: 5px;
+	}
+
+	P.w3ref {
+		font-size: 8pt;
+		font-style: italic;
+		text-align: right;
+	}
+
+	P.detail {
+		font-size: 10pt;
+	}
+
+	.error {
+		color: #FFFFFF;
+		background-color: #FF0000;
+	}
+
+	H1, H2, H3, H4, H5, H6 {
+	}
+
+	OL {
+		list-style-type: upper-alpha;
+	}
+
+	UL.topic {
+		list-style-type: upper-alpha;
+	}
+
+	LI.topic {
+		font-weight : bold;
+	}
+
+	HR {
+		color: #00FF00;
+		background-color: #808080;
+	}
+
+	TABLE {
+		border-width: medium;
+		padding: 3px;
+		background-color: #000000;
+		width: 90%;
+	}
+
+	CAPTION {
+		text-transform: capitalize;
+		font-weight : bold;
+		font-size: 14pt;
+	}
+
+	TH {
+		color: #FFFFFF;
+		background-color: #000000;
+		text-align: left;
+	}
+
+	TR {
+		color: #000000;
+		background-color: #000000;
+		vertical-align: top;
+	}
+
+	TR.tr0 {
+		background-color: #F0F0F0;
+	}
+
+	TR.tr1 {
+		background-color: #D8D8D8;
+	}
+
+	TD {
+		font-size: 12pt;
+	}
+
+	TD.col0 {
+		font-weight : bold;
+		width: 20%;
+	}
+
+	TD.col1 {
+		font-style: italic;
+		width: 15%;
+	}
+
+	TD.col2 {
+		font-size: 12px;
+	}
+    </style>
+    <link rel="stylesheet" type="text/css" media="all" href="all.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="screen.css">
+    <link rel="stylesheet" type="text/css" media="print" href="print.css">
+    <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  </head>
+  <body>
+
+    <!-- Primary Index -->
+	<p><br><br>Dumped on 2004-07-30</p>
+<h1><a name="index">Index of database - schemadoc</a></h1>
+<ul>
+    
+    <li><a name="schemadoc.schema">schemadoc</a></li><ul>
+    	<li><a href="#schemadoc.table.sl-config-lock">sl_config_lock</a></li><li><a href="#schemadoc.table.sl-confirm">sl_confirm</a></li><li><a href="#schemadoc.table.sl-listen">sl_listen</a></li><li><a href="#schemadoc.table.sl-node">sl_node</a></li><li><a href="#schemadoc.table.sl-path">sl_path</a></li><li><a href="#schemadoc.table.sl-seqlog">sl_seqlog</a></li>
+  	<li><a href="#schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a></li><li><a href="#schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a></li><li><a href="#schemadoc.function.cleanupevent">cleanupevent(  )</a></li><li><a href="#schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a></li><li><a href="#schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a></li><li><a href="#schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a></li><li><a href="#schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a></li><li><a href="#schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a></li><li><a href="#schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a></li><li><a href="#schemadoc.function.disablenode-integer">disablenode( integer )</a></li><li><a href="#schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a></li><li><a href="#schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.dropnode-integer">dropnode( integer )</a></li><li><a href="#schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a></li><li><a href="#schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a></li><li><a href="#schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a></li><li><a href="#schemadoc.function.dropset-integer">dropset( integer )</a></li><li><a href="#schemadoc.function.dropset-int-integer">dropset_int( integer )</a></li><li><a href="#schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a></li><li><a href="#schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.enablenode-integer">enablenode( integer )</a></li><li><a href="#schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a></li><li><a href="#schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a></li><li><a href="#schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a></li><li><a href="#schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a></li><li><a href="#schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a></li><li><a href="#schemadoc.function.lockset-integer">lockset( integer )</a></li><li><a href="#schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a></li><li><a href="#schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a></li><li><a href="#schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a></li><li><a href="#schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a></li><li><a href="#schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a></li><li><a href="#schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a></li><li><a href="#schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a></li><li><a href="#schemadoc.function.storenode-integer-text">storenode( integer, text )</a></li><li><a href="#schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a></li><li><a href="#schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a></li><li><a href="#schemadoc.function.storeset-integer-text">storeset( integer, text )</a></li><li><a href="#schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a></li><li><a href="#schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a></li><li><a href="#schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a></li><li><a href="#schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a></li><li><a href="#schemadoc.function.tableaddkey-text">tableaddkey( text )</a></li><li><a href="#schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a></li><li><a href="#schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a></li><li><a href="#schemadoc.function.uninstallnode">uninstallnode(  )</a></li><li><a href="#schemadoc.function.unlockset-integer">unlockset( integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a></li><li><a href="#schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a></li>
+    </ul>
+    
+</ul>
+
+    <!-- Schema Creation -->
+    <!-- schemadocschemadoc -->
+
+		
+		
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-config-lock">sl_config_lock</a>
+		</h2>
+        
+         <p>This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_config_lock Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>dummy</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-confirm">sl_confirm</a>
+		</h2>
+        
+         <p>Holds confirmation of replication events.
+
+After a period of time, Slony removes old confirmed events from both this table and the sl_event table.
+
+con_origin		:	Integer.  The ID # (from sl_node.no_id) of the source node for this event  
+con_received	:	Integer.
+con_seqno		:	Integer.  The ID # for the event
+con_timestamp	:	Timestamp.  When this event was confirmed
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_confirm Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>con_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>con_received</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>con_seqno</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>con_timestamp</td>
+            	<td>timestamp without time zone</td>
+                <td><i>
+				
+
+				
+				DEFAULT (timeofday())::timestamp without time zone
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-listen">sl_listen</a>
+		</h2>
+        
+         <p>Indicates how nodes listen to events from other nodes in the Slony-I network.
+
+li_origin		:	Integer.  The ID # (from sl_node.no_id) of the node this listener is operating on
+li_provider		:	Integer.  The ID # (from sl_node.no_id) of the source node for this listening event
+li_receiver		:	Integer.  The ID # (from sl_node.no_id) of the target node for this listening event
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_listen Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-node">sl_node.no_id</a>
+                  
+                
+                  
+                
+                </td>
+            	<td>li_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-path">sl_path.pa_server#1</a>
+                  
+                
+                </td>
+            	<td>li_provider</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                  
+                  <a href="#schemadoc.table.sl-path">sl_path.pa_client#1</a>
+                  
+                
+                </td>
+            	<td>li_receiver</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-node">sl_node</a>
+		</h2>
+        
+         <p>Holds the list of nodes associated with this namespace.  no_id is the unique ID number for the node; no_comment is a human-oriented description of the node</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_node Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                
+                </td>
+            	<td>no_id</td>
+            	<td>integer</td>
+                <td><i>
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>no_active</td>
+            	<td>boolean</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>no_comment</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+			<p>Tables referencing this one via Foreign Key Constraints:</p>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-listen">sl_listen</a></li>
+			</ul>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-path">sl_path</a></li>
+			</ul>
+		
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-path">sl_path</a>
+		</h2>
+        
+         <p>Holds connection information for the paths between nodes, and the synchronisation delay
+
+pa_server - The Node ID # (from sl_node.no_id) of the data source
+pa_client - The Node ID # (from sl_node.no_id) of the data target
+pa_conninfo - The PostgreSQL connection string used to connect to the source node.
+pa_connretry - The synchronisation delay, in seconds
+</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_path Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-node">sl_node.no_id</a>
+                  
+                
+                  
+                
+                </td>
+            	<td>pa_server</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                  
+                  <a href="#schemadoc.table.sl-node">sl_node.no_id</a>
+                  
+                
+                  
+                
+                </td>
+            	<td>pa_client</td>
+            	<td>integer</td>
+                <td><i>
+				
+					
+
+					
+				
+					PRIMARY KEY
+					
+
+					
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>pa_conninfo</td>
+            	<td>text</td>
+                <td><i>
+				
+
+				NOT NULL
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>pa_connretry</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+			<p>Tables referencing this one via Foreign Key Constraints:</p>
+		
+			<ul>	
+				<li><a href="#schemadoc.table.sl-listen">sl_listen</a></li>
+			</ul>
+		
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+        <hr>
+		<h2>Table:
+			<a name="schemadoc.table.sl-seqlog">sl_seqlog</a>
+		</h2>
+        
+         <p>Not documented yet</p>
+        
+
+
+        <table width="100%" cellspacing="0" cellpadding="3">
+                <caption>sl_seqlog Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>seql_seqid</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seql_origin</td>
+            	<td>integer</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr0">
+				<td>
+                
+                </td>
+            	<td>seql_ev_seqno</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+            <tr class="tr1">
+				<td>
+                
+                </td>
+            	<td>seql_last_value</td>
+            	<td>bigint</td>
+                <td><i>
+				
+
+				
+				
+				</i>
+				
+				</td>
+			 </tr>
+            
+        </table>
+
+		
+		
+		
+
+        <!-- Constraint List -->
+		
+
+        <!-- Foreign Key Discovery -->
+		
+
+	<!-- View Definition -->
+	
+
+	<!-- List off permissions -->
+	
+
+	<p>
+		<a href="#index">Index</a> -
+		<a href="#schemadoc.schema">Schema schemadoc</a>
+    </p>
+	
+
+	<!-- We've gone through the table structure, now lets take a look at user functions -->
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.altertableforreplication-integer">altertableforreplication( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_id			alias for $1;
+	v_no_id				int4;
+	v_tab_row			record;
+	v_tab_fqname		text;
+	v_tab_attkind		text;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Get our local node ID
+	-- ----
+	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+
+	-- ----
+	-- Get the sl_table row and the current tables origin. Check
+	-- that the table currently is NOT in altered state.
+	-- ----
+	select T.tab_reloid, T.tab_set, T.tab_idxname, T.tab_altered,
+			S.set_origin, PGX.indexrelid,
+			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			into v_tab_row
+			from schemadoc.sl_table T, schemadoc.sl_set S,
+				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_index PGX, &quot;pg_catalog&quot;.pg_class PGXC
+			where T.tab_id = p_tab_id
+				and T.tab_set = S.set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+				and PGX.indrelid = T.tab_reloid
+				and PGX.indexrelid = PGXC.oid
+				and PGXC.relname = T.tab_idxname
+				for update;
+	if not found then
+		raise exception &#39;Slony-I: Table with id % not found&#39;, p_tab_id;
+	end if;
+	v_tab_fqname = v_tab_row.tab_fqname;
+	if v_tab_row.tab_altered then
+		raise exception &#39;Slony-I: Table % is already in altered state&#39;,
+				v_tab_fqname;
+	end if;
+
+	v_tab_attkind := schemadoc.determineAttKindUnique(v_tab_row.tab_fqname, 
+						v_tab_row.tab_idxname);
+
+	execute &#39;lock table &#39; || v_tab_fqname || &#39; in access exclusive mode&#39;;
+
+	-- ----
+	-- Procedures are different on origin and subscriber
+	-- ----
+	if v_no_id = v_tab_row.set_origin then
+		-- ----
+		-- On the Origin we add the log trigger to the table and done
+		-- ----
+		execute &#39;create trigger &quot;_schemadoc_logtrigger_&#39; || 
+				p_tab_id || &#39;&quot; after insert or update or delete on &#39; ||
+				v_tab_fqname || &#39; for each row execute procedure
+				schemadoc.logTrigger (&#39;&#39;_schemadoc&#39;&#39;, &#39;&#39;&#39; || 
+					p_tab_id || &#39;&#39;&#39;, &#39;&#39;&#39; || 
+					v_tab_attkind || &#39;&#39;&#39;);&#39;;
+	else
+		-- ----
+		-- On the subscriber the thing is a bit more difficult. We want
+		-- to disable all user- and foreign key triggers and rules.
+		-- ----
+
+
+		-- ----
+		-- Disable all existing triggers
+		-- ----
+		update &quot;pg_catalog&quot;.pg_trigger
+				set tgrelid = v_tab_row.indexrelid
+				where tgrelid = v_tab_row.tab_reloid
+				and not exists (
+						select true from schemadoc.sl_table TAB,
+								schemadoc.sl_trigger TRIG
+								where TAB.tab_reloid = tgrelid
+								and TAB.tab_id = TRIG.trig_tabid
+								and TRIG.trig_tgname = tgname
+					);
+		get diagnostics v_n = row_count;
+		if v_n &gt; 0 then
+			update &quot;pg_catalog&quot;.pg_class
+					set reltriggers = reltriggers - v_n
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+		-- ----
+		-- Disable all existing rules
+		-- ----
+		update &quot;pg_catalog&quot;.pg_rewrite
+				set ev_class = v_tab_row.indexrelid
+				where ev_class = v_tab_row.tab_reloid;
+		get diagnostics v_n = row_count;
+		if v_n &gt; 0 then
+			update &quot;pg_catalog&quot;.pg_class
+					set relhasrules = false
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+		-- ----
+		-- Add the trigger that denies write access to replicated tables
+		-- ----
+		execute &#39;create trigger &quot;_schemadoc_denyaccess_&#39; || 
+				p_tab_id || &#39;&quot; before insert or update or delete on &#39; ||
+				v_tab_fqname || &#39; for each row execute procedure
+				schemadoc.denyAccess (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
+	end if;
+
+	-- ----
+	-- Mark the table altered in our configuration
+	-- ----
+	update schemadoc.sl_table
+			set tab_altered = true where tab_id = p_tab_id;
+
+	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.altertablerestore-integer">altertablerestore( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_id			alias for $1;
+	v_no_id				int4;
+	v_tab_row			record;
+	v_tab_fqname		text;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Get our local node ID
+	-- ----
+	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+
+	-- ----
+	-- Get the sl_table row and the current tables origin. Check
+	-- that the table currently IS in altered state.
+	-- ----
+	select T.tab_reloid, T.tab_set, T.tab_altered,
+			S.set_origin, PGX.indexrelid,
+			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			into v_tab_row
+			from schemadoc.sl_table T, schemadoc.sl_set S,
+				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_index PGX, &quot;pg_catalog&quot;.pg_class PGXC
+			where T.tab_id = p_tab_id
+				and T.tab_set = S.set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+				and PGX.indrelid = T.tab_reloid
+				and PGX.indexrelid = PGXC.oid
+				and PGXC.relname = T.tab_idxname
+				for update;
+	if not found then
+		raise exception &#39;Slony-I: Table with id % not found&#39;, p_tab_id;
+	end if;
+	v_tab_fqname = v_tab_row.tab_fqname;
+	if not v_tab_row.tab_altered then
+		raise exception &#39;Slony-I: Table % is not in altered state&#39;,
+				v_tab_fqname;
+	end if;
+
+	execute &#39;lock table &#39; || v_tab_fqname || &#39; in access exclusive mode&#39;;
+
+	-- ----
+	-- Procedures are different on origin and subscriber
+	-- ----
+	if v_no_id = v_tab_row.set_origin then
+		-- ----
+		-- On the Origin we just drop the trigger we originally added
+		-- ----
+		execute &#39;drop trigger &quot;_schemadoc_logtrigger_&#39; || 
+				p_tab_id || &#39;&quot; on &#39; || v_tab_fqname;
+	else
+		-- ----
+		-- On the subscriber drop the denyAccess trigger
+		-- ----
+		execute &#39;drop trigger &quot;_schemadoc_denyaccess_&#39; || 
+				p_tab_id || &#39;&quot; on &#39; || v_tab_fqname;
+				
+		-- ----
+		-- Restore all original triggers
+		-- ----
+		update &quot;pg_catalog&quot;.pg_trigger
+				set tgrelid = v_tab_row.tab_reloid
+				where tgrelid = v_tab_row.indexrelid;
+		get diagnostics v_n = row_count;
+		if v_n &gt; 0 then
+			update &quot;pg_catalog&quot;.pg_class
+					set reltriggers = reltriggers + v_n
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+		-- ----
+		-- Restore all original rewrite rules
+		-- ----
+		update &quot;pg_catalog&quot;.pg_rewrite
+				set ev_class = v_tab_row.tab_reloid
+				where ev_class = v_tab_row.indexrelid;
+		get diagnostics v_n = row_count;
+		if v_n &gt; 0 then
+			update &quot;pg_catalog&quot;.pg_class
+					set relhasrules = true
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+	end if;
+
+	-- ----
+	-- Mark the table not altered in our configuration
+	-- ----
+	update schemadoc.sl_table
+			set tab_altered = false where tab_id = p_tab_id;
+
+	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.cleanupevent">cleanupevent(  )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	v_max_row	record;
+	v_min_row	record;
+	v_max_sync	int8;
+begin
+	-- ----
+	-- First remove all but the oldest confirm row per origin,receiver pair
+	-- ----
+	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
+				from schemadoc.sl_confirm
+				group by con_origin, con_received
+	loop
+		delete from schemadoc.sl_confirm
+				where con_origin = v_max_row.con_origin
+				and con_received = v_max_row.con_received
+				and con_seqno &lt; v_max_row.con_seqno;
+	end loop;
+
+	-- ----
+	-- Then remove all events that are confirmed by all nodes in the
+	-- whole cluster up to the last SYNC
+	-- ----
+	for v_min_row in select con_origin, min(con_seqno) as con_seqno
+				from schemadoc.sl_confirm
+				group by con_origin
+	loop
+		select coalesce(max(ev_seqno), 0) into v_max_sync
+				from schemadoc.sl_event
+				where ev_origin = v_min_row.con_origin
+				and ev_seqno &lt;= v_min_row.con_seqno
+				and ev_type = &#39;SYNC&#39;;
+		if v_max_sync &gt; 0 then
+			delete from schemadoc.sl_event
+					where ev_origin = v_min_row.con_origin
+					and ev_seqno &lt; v_max_sync;
+		end if;
+	end loop;
+
+	return 0;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-integer-text">ddlscript( integer, text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_script			alias for $2;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and originates here
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_set_origin &lt;&gt; schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
+	-- ----
+	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	perform schemadoc.ddlScript_int(p_set_id, p_script);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
+			p_set_id, p_script);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.ddlscript-int-integer-text">ddlscript_int( integer, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_script			alias for $2;
+	v_set_origin		int4;
+	v_no_id				int4;
+	v_row				record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that we either are the set origin or a current
+	-- subscriber of the set.
+	-- ----
+	v_no_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_set_origin &lt;&gt; v_no_id
+			and not exists (select 1 from schemadoc.sl_subscribe
+						where sub_set = p_set_id
+						and sub_receiver = v_no_id)
+	then
+		return 0;
+	end if;
+
+	-- ----
+	-- Restore all original triggers and rules
+	-- ----
+	for v_row in select * from schemadoc.sl_table
+			where tab_set = p_set_id
+	loop
+		perform schemadoc.alterTableRestore(v_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Run the script
+	-- ----
+	execute p_script;
+
+	-- ----
+	-- Put all tables back into replicated mode
+	-- ----
+	for v_row in select * from schemadoc.sl_table
+			where tab_set = p_set_id
+	loop
+		perform schemadoc.alterTableForReplication(v_row.tab_id);
+	end loop;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.determineattkindserial-text">determineattkindserial( text )</a>
+		</h2>
+<h3>Returns: text</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	v_attkind		text default &#39;&#39;;
+	v_attrow		record;
+	v_have_serial	bool default &#39;f&#39;;
+begin
+	--
+	-- Loop over the attributes of this relation
+	-- and add a &quot;v&quot; for every user column, and a &quot;k&quot;
+	-- if we find the Slony-I special serial column.
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from &quot;pg_catalog&quot;.pg_class PGC,
+			    &quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_attribute PGA
+			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum &gt; 0
+			order by attnum
+	loop
+		if v_attrow.attname = &#39;_Slony-I_schemadoc_rowID&#39; then
+		    v_attkind := v_attkind || &#39;k&#39;;
+			v_have_serial := &#39;t&#39;;
+		else
+			v_attkind := v_attkind || &#39;v&#39;;
+		end if;
+	end loop;
+	
+	--
+	-- A table must have at least one attribute, so not finding
+	-- anything means the table does not exist.
+	--
+	if not found then
+		raise exception &#39;Slony-I: table % not found&#39;, p_tab_fqname;
+	end if;
+
+	--
+	-- If it does not have the special serial column, we
+	-- should not have been called in the first place.
+	--
+	if not v_have_serial then
+		raise exception &#39;Slony-I: table % does not have the serial key&#39;,
+				p_tab_fqname;
+	end if;
+
+	execute &#39;update &#39; || p_tab_fqname ||
+		&#39; set &quot;_Slony-I_schemadoc_rowID&quot; =&#39; ||
+		&#39; &quot;pg_catalog&quot;.nextval(&#39;&#39;schemadoc.sl_rowid_seq&#39;&#39;);&#39;;
+	execute &#39;alter table only &#39; || p_tab_fqname ||
+		&#39; add unique (&quot;_Slony-I_schemadoc_rowID&quot;);&#39;;
+	execute &#39;alter table only &#39; || p_tab_fqname ||
+		&#39; alter column &quot;_Slony-I_schemadoc_rowID&quot; &#39; ||
+		&#39; set not null;&#39;;
+
+	--
+	-- Return the resulting Slony-I attkind
+	--
+	return v_attkind;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.determineattkindunique-text-name">determineattkindunique( text, name )</a>
+		</h2>
+<h3>Returns: text</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	p_idx_name		alias for $2;
+	v_idxrow		record;
+	v_attrow		record;
+	v_i				integer;
+	v_attno			int2;
+	v_attkind		text default &#39;&#39;;
+	v_attfound		bool;
+begin
+	--
+	-- Lookup the tables primary key or the specified unique index
+	--
+	if p_idx_name isnull then
+		raise exception &#39;Slony-I: index name must be specified&#39;;
+	else
+		select PGXC.relname, PGX.indexrelid, PGX.indkey
+				into v_idxrow
+				from &quot;pg_catalog&quot;.pg_class PGC,
+					&quot;pg_catalog&quot;.pg_namespace PGN,
+					&quot;pg_catalog&quot;.pg_index PGX,
+					&quot;pg_catalog&quot;.pg_class PGXC
+				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisunique
+					and PGXC.relname = p_idx_name;
+		if not found then
+			raise exception &#39;Slony-I: table % has no unique index %&#39;,
+					p_tab_fqname, p_idx_name;
+		end if;
+	end if;
+
+	--
+	-- Loop over the tables attributes and check if they are
+	-- index attributes. If so, add a &quot;k&quot; to the return value,
+	-- otherwise add a &quot;v&quot;.
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from &quot;pg_catalog&quot;.pg_class PGC,
+			    &quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_attribute PGA
+			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum &gt; 0
+			order by attnum
+	loop
+		v_attfound = &#39;f&#39;;
+
+		v_i := 0;
+		loop
+			select indkey[v_i] into v_attno from &quot;pg_catalog&quot;.pg_index
+					where indexrelid = v_idxrow.indexrelid;
+			if v_attno = 0 then
+				exit;
+			end if;
+			if v_attrow.attnum = v_attno then
+				v_attfound = &#39;t&#39;;
+				exit;
+			end if;
+			v_i := v_i + 1;
+		end loop;
+
+		if v_attfound then
+			v_attkind := v_attkind || &#39;k&#39;;
+		else
+			v_attkind := v_attkind || &#39;v&#39;;
+		end if;
+	end loop;
+
+	--
+	-- Return the resulting attkind
+	--
+	return v_attkind;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.determineidxnameserial-text">determineidxnameserial( text )</a>
+		</h2>
+<h3>Returns: name</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	v_row			record;
+begin
+	--
+	-- Lookup the table name alone
+	--
+	select PGC.relname
+			into v_row
+			from &quot;pg_catalog&quot;.pg_class PGC,
+				&quot;pg_catalog&quot;.pg_namespace PGN
+			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+				&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace;
+	if not found then
+		raise exception &#39;Slony-I: table % not found&#39;,
+				p_tab_fqname;
+	end if;
+
+	--
+	-- Return the found index name
+	--
+	return v_row.relname || &#39;__Slony-I_schemadoc_rowID_key&#39;;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.determineidxnameunique-text-name">determineidxnameunique( text, name )</a>
+		</h2>
+<h3>Returns: name</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	p_idx_name		alias for $2;
+	v_idxrow		record;
+begin
+	--
+	-- Lookup the tables primary key or the specified unique index
+	--
+	if p_idx_name isnull then
+		select PGXC.relname
+				into v_idxrow
+				from &quot;pg_catalog&quot;.pg_class PGC,
+					&quot;pg_catalog&quot;.pg_namespace PGN,
+					&quot;pg_catalog&quot;.pg_index PGX,
+					&quot;pg_catalog&quot;.pg_class PGXC
+				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisprimary;
+		if not found then
+			raise exception &#39;Slony-I: table % has no primary key&#39;,
+					p_tab_fqname;
+		end if;
+	else
+		select PGXC.relname
+				into v_idxrow
+				from &quot;pg_catalog&quot;.pg_class PGC,
+					&quot;pg_catalog&quot;.pg_namespace PGN,
+					&quot;pg_catalog&quot;.pg_index PGX,
+					&quot;pg_catalog&quot;.pg_class PGXC
+				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisunique
+					and PGXC.relname = p_idx_name;
+		if not found then
+			raise exception &#39;Slony-I: table % has no unique index %&#39;,
+					p_tab_fqname, p_idx_name;
+		end if;
+	end if;
+
+	--
+	-- Return the found index name
+	--
+	return v_idxrow.relname;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.disablenode-integer">disablenode( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>process DISABLE_NODE event for node no_id
+
+NOTE: This is not yet implemented!</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+begin
+	-- **** TODO ****
+	raise exception &#39;Slony-I: disableNode() not implemented&#39;;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.disablenode-int-integer">disablenode_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_no_id			alias for $1;
+begin
+	-- **** TODO ****
+	raise exception &#39;Slony-I: disableNode_int() not implemented&#39;;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droplisten-integer-integer-integer">droplisten( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+begin
+	perform schemadoc.dropListen_int(p_li_origin, 
+			p_li_provider, p_li_receiver);
+	
+	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;DROP_LISTEN&#39;,
+			p_li_origin, p_li_provider, p_li_receiver);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droplisten-int-integer-integer-integer">droplisten_int( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	delete from schemadoc.sl_listen
+			where li_origin = p_li_origin
+			and li_provider = p_li_provider
+			and li_receiver = p_li_receiver;
+	if found then
+		return 1;
+	else
+		return 0;
+	end if;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.dropnode-integer">dropnode( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>generate DROP_NODE event to drop node node_id from replication</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	v_node_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that this got called on a different node
+	-- ----
+	if p_no_id = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: DROP_NODE cannot initiate on the dropped node&#39;;
+	end if;
+
+	select * into v_node_row from schemadoc.sl_node
+			where no_id = p_no_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: unknown node ID %&#39;, p_no_id;
+	end if;
+
+	-- ----
+	-- Make sure we do not break other nodes subscriptions with this
+	-- ----
+	if exists (select true from schemadoc.sl_subscribe
+			where sub_provider = p_no_id)
+	then
+		raise exception &#39;Slony-I: Node % is still configured as data provider&#39;,
+				p_no_id;
+	end if;
+
+	-- ----
+	-- Make sure no set originates there any more
+	-- ----
+	if exists (select true from schemadoc.sl_set
+			where set_origin = p_no_id)
+	then
+		raise exception &#39;Slony-I: Node % is still origin of one or more sets&#39;,
+				p_no_id;
+	end if;
+
+	-- ----
+	-- Call the internal drop functionality and generate the event
+	-- ----
+	perform schemadoc.dropNode_int(p_no_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_NODE&#39;,
+									p_no_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.dropnode-int-integer">dropnode_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>internal function to process DROP_NODE event to drop node node_id from replication</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	v_tab_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- If the dropped node is a remote node, clean the configuration
+	-- from all traces for it.
+	-- ----
+	if p_no_id &lt;&gt; schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		delete from schemadoc.sl_subscribe
+				where sub_receiver = p_no_id;
+		delete from schemadoc.sl_listen
+				where li_origin = p_no_id
+					or li_provider = p_no_id
+					or li_receiver = p_no_id;
+		delete from schemadoc.sl_path
+				where pa_server = p_no_id
+					or pa_client = p_no_id;
+		delete from schemadoc.sl_confirm
+				where con_origin = p_no_id
+					or con_received = p_no_id;
+		delete from schemadoc.sl_event
+				where ev_origin = p_no_id;
+		delete from schemadoc.sl_node
+				where no_id = p_no_id;
+
+		return p_no_id;
+	end if;
+
+	-- ----
+	-- This is us ... deactivate the node for now, the daemon
+	-- will call uninstallNode() in a separate transaction.
+	-- ----
+	update schemadoc.sl_node
+			set no_active = false
+			where no_id = p_no_id;
+
+	return p_no_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droppath-integer-integer">droppath( integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Generate DROP_PATH event to drop path from pa_server to pa_client</p>
+        <pre>
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+	v_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- There should be no existing subscriptions. Auto unsubscribing
+	-- is considered too dangerous. 
+	-- ----
+	for v_row in select sub_set, sub_provider, sub_receiver
+			from schemadoc.sl_subscribe
+			where sub_provider = p_pa_server
+			and sub_receiver = p_pa_client
+	loop
+		raise exception 
+			&#39;Slony-I: Path cannot be dropped, subscription of set % needs it&#39;,
+			v_row.sub_set;
+	end loop;
+
+	-- ----
+	-- Drop all sl_listen entries that depend on this path
+	-- ----
+	for v_row in select li_origin, li_provider, li_receiver
+			from schemadoc.sl_listen
+			where li_provider = p_pa_server
+			and li_receiver = p_pa_client
+	loop
+		perform schemadoc.dropListen(
+				v_row.li_origin, v_row.li_provider, v_row.li_receiver);
+	end loop;
+
+	-- ----
+	-- Now drop the path and create the event
+	-- ----
+	perform schemadoc.dropPath_int(p_pa_server, p_pa_client);
+	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;DROP_PATH&#39;,
+			p_pa_server, p_pa_client);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droppath-int-integer-integer">droppath_int( integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Process DROP_PATH event to drop path from pa_server to pa_client</p>
+        <pre>
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Remove any dangling sl_listen entries with the server
+	-- as provider and the client as receiver. This must have
+	-- been cleared out before, but obviously was not.
+	-- ----
+	delete from schemadoc.sl_listen
+			where li_provider = p_pa_server
+			and li_receiver = p_pa_client;
+
+	delete from schemadoc.sl_path
+			where pa_server = p_pa_server
+			and pa_client = p_pa_client;
+
+	if found then
+		return 1;
+	else
+		return 0;
+	end if;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.dropset-integer">dropset( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	v_origin			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+	
+	-- ----
+	-- Check that the set exists and originates here
+	-- ----
+	select set_origin into v_origin from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Call the internal drop set functionality and generate the event
+	-- ----
+	perform schemadoc.dropSet_int(p_set_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_SET&#39;, 
+			p_set_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.dropset-int-integer">dropset_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+	
+	-- ----
+	-- Restore all tables original triggers and rules and remove
+	-- our replication stuff.
+	-- ----
+	for v_tab_row in select tab_id from schemadoc.sl_table
+			where tab_set = p_set_id
+			order by tab_id
+	loop
+		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
+		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Remove all traces of the set configuration
+	-- ----
+	delete from schemadoc.sl_sequence
+			where seq_set = p_set_id;
+	delete from schemadoc.sl_table
+			where tab_set = p_set_id;
+	delete from schemadoc.sl_subscribe
+			where sub_set = p_set_id;
+	delete from schemadoc.sl_setsync
+			where ssy_setid = p_set_id;
+	delete from schemadoc.sl_set
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droptrigger-integer-name">droptrigger( integer, name )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+begin
+	perform schemadoc.dropTrigger_int(p_trig_tabid, p_trig_tgname);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;DROP_TRIGGER&#39;,
+			p_trig_tabid, p_trig_tgname);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.droptrigger-int-integer-name">droptrigger_int( integer, name )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+	v_tab_altered		boolean;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Get the current table status (altered or not)
+	-- ----
+	select tab_altered into v_tab_altered
+			from schemadoc.sl_table where tab_id = p_trig_tabid;
+	if not found then
+		-- ----
+		-- Not found is no hard error here, because that might
+		-- mean that we are not subscribed to that set
+		-- ----
+		return 0;
+	end if;
+
+	-- ----
+	-- If the table is modified for replication, restore the original state
+	-- ----
+	if v_tab_altered then
+		perform schemadoc.alterTableRestore(p_trig_tabid);
+	end if;
+
+	-- ----
+	-- Remove the entry from sl_trigger
+	-- ----
+	delete from schemadoc.sl_trigger
+			where trig_tabid = p_trig_tabid
+			  and trig_tgname = p_trig_tgname;
+
+	-- ----
+	-- Put the table back into replicated state if it was
+	-- ----
+	if v_tab_altered then
+		perform schemadoc.alterTableForReplication(p_trig_tabid);
+	end if;
+
+	return p_trig_tabid;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.enablenode-integer">enablenode( integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>no_id - Node ID #
+
+Generate the ENABLE_NODE event for node no_id</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	v_local_node_id	int4;
+	v_node_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that we are the node to activate and that we are
+	-- currently disabled.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_node_row
+			from schemadoc.sl_node
+			where no_id = p_no_id
+			for update;
+	if not found then 
+		raise exception &#39;Slony-I: node % not found&#39;, p_no_id;
+	end if;
+	if v_node_row.no_active then
+		raise exception &#39;Slony-I: node % is already active&#39;, p_no_id;
+	end if;
+
+	-- ----
+	-- Activate this node and generate the ENABLE_NODE event
+	-- ----
+	perform schemadoc.enableNode_int (p_no_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_NODE&#39;,
+									p_no_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.enablenode-int-integer">enablenode_int( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>no_id - Node ID #
+
+Internal funciton to process the ENABLE_NODE event for node no_id</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	v_local_node_id	int4;
+	v_node_row		record;
+	v_sub_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that the node is inactive
+	-- ----
+	select * into v_node_row
+			from schemadoc.sl_node
+			where no_id = p_no_id
+			for update;
+	if not found then 
+		raise exception &#39;Slony-I: node % not found&#39;, p_no_id;
+	end if;
+	if v_node_row.no_active then
+		return p_no_id;
+	end if;
+
+	-- ----
+	-- Activate the node and generate sl_confirm status rows for it.
+	-- ----
+	update schemadoc.sl_node
+			set no_active = &#39;t&#39;
+			where no_id = p_no_id;
+	insert into schemadoc.sl_confirm
+			(con_origin, con_received, con_seqno)
+			select no_id, p_no_id, 0 from schemadoc.sl_node
+				where no_id != p_no_id
+				and no_active;
+	insert into schemadoc.sl_confirm
+			(con_origin, con_received, con_seqno)
+			select p_no_id, no_id, 0 from schemadoc.sl_node
+				where no_id != p_no_id
+				and no_active;
+
+	-- ----
+	-- Generate ENABLE_SUBSCRIPTION events for all sets that
+	-- origin here and are subscribed by the just enabled node.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	for v_sub_row in select SUB.sub_set, SUB.sub_provider from
+			schemadoc.sl_set S,
+			schemadoc.sl_subscribe SUB
+			where S.set_origin = v_local_node_id
+			and S.set_id = SUB.sub_set
+			and SUB.sub_receiver = p_no_id
+			for update of S
+	loop
+		perform schemadoc.enableSubscription (v_sub_row.sub_set,,
+				v_sub_row.sub_provider, p_no_id);
+	end loop;
+
+	return p_no_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.enablesubscription-integer-integer-integer">enablesubscription( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+begin
+	return  schemadoc.enableSubscription_int (p_sub_set, 
+			p_sub_provider, p_sub_receiver);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.enablesubscription-int-integer-integer-integer">enablesubscription_int( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- The real work is done in the replication engine. All
+	-- we have to do here is remembering that it happened.
+	-- ----
+	update schemadoc.sl_subscribe
+			set sub_active = &#39;t&#39;
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver;
+	get diagnostics v_n = row_count;
+	if v_n = 0 then
+		insert into schemadoc.sl_subscribe
+				(sub_set, sub_provider, sub_receiver,
+				sub_forward, sub_active)
+				values
+				(p_sub_set, p_sub_provider, p_sub_receiver,
+				false, true);
+	end if;
+
+	return p_sub_set;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.failednode-integer-integer">failednode( integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_failed_node		alias for $1;
+	p_backup_node		alias for $2;
+	v_row				record;
+	v_row2				record;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- All consistency checks first
+	-- Check that every system that has a path to the failed node
+	-- also has a path to the backup node.
+	-- ----
+	for v_row in select P.pa_client
+			from schemadoc.sl_path P
+			where P.pa_server = p_failed_node
+				and P.pa_client &lt;&gt; p_backup_node
+				and not exists (select true from schemadoc.sl_path PP
+							where PP.pa_server = p_backup_node
+								and PP.pa_client = P.pa_client)
+	loop
+		raise exception &#39;Slony-I: cannot failover - node % has no path to the backup node&#39;,
+				v_row.pa_client;
+	end loop;
+
+	-- ----
+	-- Check all sets originating on the failed node
+	-- ----
+	for v_row in select set_id
+			from schemadoc.sl_set
+			where set_origin = p_failed_node
+	loop
+		-- ----
+		-- Check that the backup node is subscribed to all sets
+		-- that origin on the failed node
+		-- ----
+		select into v_row2 sub_forward, sub_active
+				from schemadoc.sl_subscribe
+				where sub_set = v_row.set_id
+					and sub_receiver = p_backup_node;
+		if not found then
+			raise exception &#39;Slony-I: cannot failover - node % is not subscribed to set %&#39;,
+					p_backup_node, v_row.set_id;
+		end if;
+
+		-- ----
+		-- Check that the subscription is active
+		-- ----
+		if not v_row2.sub_active then
+			raise exception &#39;Slony-I: cannot failover - subscription for set % is not active&#39;,
+					v_row.set_id;
+		end if;
+
+		-- ----
+		-- If there are other subscribers, the backup node needs to
+		-- be a forwarder too.
+		-- ----
+		select into v_n count(*)
+				from schemadoc.sl_subscribe
+				where sub_set = v_row.set_id
+					and sub_receiver &lt;&gt; p_backup_node;
+		if v_n &gt; 0 and not v_row2.sub_forward then
+			raise exception &#39;Slony-I: cannot failover - node % is not a forwarder of set %&#39;,
+					p_backup_node, v_row.set_id;
+		end if;
+	end loop;
+
+	-- ----
+	-- Terminate all connections of the failed node the hard way
+	-- ----
+	perform schemadoc.terminateNodeConnections(
+			&#39;_schemadoc_Node_&#39; || p_failed_node);
+
+	-- ----
+	-- Let every node that listens for something on the failed node
+	-- listen for that on the backup node instead.
+	-- ----
+	for v_row in select * from schemadoc.sl_listen
+			where li_provider = p_failed_node
+				and li_receiver &lt;&gt; p_backup_node
+	loop
+		perform schemadoc.storeListen_int(v_row.li_origin,
+				p_backup_node, v_row.li_receiver);
+	end loop;
+
+	-- ----
+	-- Let the backup node listen for all events where the
+	-- failed node did listen for it.
+	-- ----
+	for v_row in select li_origin, li_provider
+			from schemadoc.sl_listen
+			where li_receiver = p_failed_node
+				and li_provider &lt;&gt; p_backup_node
+	loop
+		perform schemadoc.storeListen_int(v_row.li_origin,
+				v_row.li_provider, p_backup_node);
+	end loop;
+
+	-- ----
+	-- Remove all sl_listen entries that receive anything from the
+	-- failed node.
+	-- ----
+	delete from schemadoc.sl_listen
+			where li_provider = p_failed_node
+				or li_receiver = p_failed_node;
+
+	-- ----
+	-- Move the sets
+	-- ----
+	for v_row in select S.set_id, (select count(*)
+					from schemadoc.sl_subscribe SUB
+					where S.set_id = SUB.sub_set
+						and SUB.sub_receiver &lt;&gt; p_backup_node
+						and SUB.sub_provider = p_failed_node)
+					as num_direct_receivers 
+			from schemadoc.sl_set S
+			where S.set_origin = p_failed_node
+			for update
+	loop
+		-- ----
+		-- If the backup node is the only direct subscriber ...
+		-- ----
+		if v_row.num_direct_receivers = 0 then
+raise notice &#39;failedNode: set % has no other direct receivers - move now&#39;, v_row.set_id;
+			-- ----
+			-- backup_node is the only direct subscriber, move the set
+			-- right now. On the backup node itself that includes restoring
+			-- all user mode triggers, removing the protection trigger,
+			-- adding the log trigger, removing the subscription and the
+			-- obsolete setsync status.
+			-- ----
+			if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+				for v_row2 in select * from schemadoc.sl_table
+						where tab_set = v_row.set_id
+				loop
+					perform schemadoc.alterTableRestore(v_row2.tab_id);
+				end loop;
+			end if;
+
+			update schemadoc.sl_set set set_origin = p_backup_node
+					where set_id = v_row.set_id;
+
+			if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+				delete from schemadoc.sl_setsync
+						where ssy_setid = v_row.set_id;
+
+				for v_row2 in select * from schemadoc.sl_table
+						where tab_set = v_row.set_id
+				loop
+					perform schemadoc.alterTableForReplication(v_row2.tab_id);
+				end loop;
+			end if;
+
+			delete from schemadoc.sl_subscribe
+					where sub_set = v_row.set_id
+						and sub_receiver = p_backup_node;
+		else
+raise notice &#39;failedNode: set % has other direct receivers - change providers only&#39;, v_row.set_id;
+			-- ----
+			-- Backup node is not the only direct subscriber. This
+			-- means that at this moment, we redirect all direct
+			-- subscribers to receive from the backup node, and the
+			-- backup node itself to receive from another one.
+			-- The admin utility will wait for the slon engine to
+			-- restart and then call failedNode2() on the node with
+			-- the highest SYNC and redirect this to it on
+			-- backup node later.
+			-- ----
+			update schemadoc.sl_subscribe
+					set sub_provider = (select min(SS.sub_receiver)
+							from schemadoc.sl_subscribe SS
+							where SS.sub_set = v_row.set_id
+								and SS.sub_provider = p_failed_node
+								and SS.sub_receiver &lt;&gt; p_backup_node
+								and SS.sub_forward)
+					where sub_set = v_row.set_id
+						and sub_receiver = p_backup_node;
+			update schemadoc.sl_subscribe
+					set sub_provider = p_backup_node
+					where sub_set = v_row.set_id
+						and sub_provider = p_failed_node
+						and sub_receiver &lt;&gt; p_backup_node;
+		end if;
+	end loop;
+
+	-- ----
+	-- Make sure the node daemon will restart
+	-- ----
+	notify &quot;_schemadoc_Restart&quot;;
+
+	-- ----
+	-- That is it - so far.
+	-- ----
+	return p_failed_node;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.failoverset-int-integer-integer-integer">failoverset_int( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>FUNCTION failoverSet_int (failed_node, backup_node, set_id)
+
+Finish failover for one set.</p>
+        <pre>
+declare
+	p_failed_node		alias for $1;
+	p_backup_node		alias for $2;
+	p_set_id			alias for $3;
+	v_row				record;
+	v_last_sync			int8;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Change the origin of the set now to the backup node.
+	-- On the backup node this includes changing all the
+	-- trigger and protection stuff
+	-- ----
+	if p_backup_node = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		for v_row in select * from schemadoc.sl_table
+				where tab_set = p_set_id
+		loop
+			perform schemadoc.alterTableRestore(v_row.tab_id);
+		end loop;
+
+		delete from schemadoc.sl_setsync
+				where ssy_setid = p_set_id;
+		delete from schemadoc.sl_subscribe
+				where sub_set = p_set_id
+					and sub_receiver = p_backup_node;
+		update schemadoc.sl_set
+				set set_origin = p_backup_node
+				where set_id = p_set_id;
+
+		for v_row in select * from schemadoc.sl_table
+				where tab_set = p_set_id
+		loop
+			perform schemadoc.alterTableForReplication(v_row.tab_id);
+		end loop;
+	else
+		delete from schemadoc.sl_subscribe
+				where sub_set = p_set_id
+					and sub_receiver = p_backup_node;
+		update schemadoc.sl_set
+				set set_origin = p_backup_node
+				where set_id = p_set_id;
+	end if;
+
+	-- ----
+	-- If we are a subscriber of the set ourself, change our
+	-- setsync status to reflect the new set origin.
+	-- ----
+	if exists (select true from schemadoc.sl_subscribe
+			where sub_set = p_set_id
+				and sub_receiver = schemadoc.getLocalNodeId(
+						&#39;_schemadoc&#39;))
+	then
+		delete from schemadoc.sl_setsync
+				where ssy_setid = p_set_id;
+
+		select coalesce(max(ev_seqno), 0) into v_last_sync
+				from schemadoc.sl_event
+				where ev_origin = p_backup_node
+					and ev_type = &#39;SYNC&#39;;
+		if v_last_sync &gt; 0 then
+			insert into schemadoc.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					select p_set_id, p_backup_node, v_last_sync,
+					ev_minxid, ev_maxxid, ev_xip, NULL
+					from schemadoc.sl_event
+					where ev_origin = p_backup_node
+						and ev_seqno = v_last_sync;
+		else
+			insert into schemadoc.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					values (p_set_id, p_backup_node, &#39;0&#39;,
+					&#39;0&#39;, &#39;0&#39;, &#39;&#39;, NULL);
+		end if;
+				
+	end if;
+
+	return p_failed_node;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.forwardconfirm-integer-integer-bigint-timestamp-without-time-zone">forwardconfirm( integer, integer, bigint, timestamp without time zone )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_con_origin	alias for $1;
+	p_con_received	alias for $2;
+	p_con_seqno		alias for $3;
+	p_con_timestamp	alias for $4;
+	v_max_seqno		bigint;
+begin
+	select into v_max_seqno coalesce(max(con_seqno), 0)
+			from schemadoc.sl_confirm
+			where con_origin = p_con_origin
+			and con_received = p_con_received;
+	if v_max_seqno &lt; p_con_seqno then
+		insert into schemadoc.sl_confirm 
+				(con_origin, con_received, con_seqno, con_timestamp)
+				values (p_con_origin, p_con_received, p_con_seqno,
+					p_con_timestamp);
+		notify &quot;_schemadoc_Confirm&quot;;
+		v_max_seqno = p_con_seqno;
+	end if;
+
+	return v_max_seqno;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.initializelocalnode-integer-text">initializelocalnode( integer, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>no_id - Node ID #
+no_comment - Human-oriented comment
+
+Initializes the new node, no_id</p>
+        <pre>
+declare
+	p_local_node_id		alias for $1;
+	p_comment			alias for $2;
+	v_old_node_id		int4;
+	v_first_log_no		int4;
+	v_event_seq			int8;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Make sure this node is uninitialized or got reset
+	-- ----
+	select last_value::int4 into v_old_node_id from schemadoc.sl_local_node_id;
+	if v_old_node_id != -1 then
+		raise exception &#39;Slony-I: This node is already initialized&#39;;
+	end if;
+
+	-- ----
+	-- Set sl_local_node_id to the requested value and add our
+	-- own system to sl_node.
+	-- ----
+	perform setval(&#39;schemadoc.sl_local_node_id&#39;, p_local_node_id);
+	perform setval(&#39;schemadoc.sl_rowid_seq&#39;, 
+			p_local_node_id::int8 * &#39;1000000000000000&#39;::int8);
+	perform schemadoc.storeNode_int (p_local_node_id, p_comment);
+	
+	return p_local_node_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.lockset-integer">lockset( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	v_local_node_id		int4;
+	v_set_row			record;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and that we are the origin
+	-- and that it is not already locked.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_set_row.set_origin &lt;&gt; v_local_node_id then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+	if v_set_row.set_locked notnull then
+		raise exception &#39;Slony-I: set % is already locked&#39;, p_set_id;
+	end if;
+
+	-- ----
+	-- Place the lockedSet trigger on all tables in the set.
+	-- ----
+	for v_tab_row in select T.tab_id,
+			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			from schemadoc.sl_table T,
+				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
+			where T.tab_set = p_set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+			order by tab_id
+	loop
+		execute &#39;create trigger &quot;_schemadoc_lockedset_&#39; || 
+				v_tab_row.tab_id || 
+				&#39;&quot; before insert or update or delete on &#39; ||
+				v_tab_row.tab_fqname || &#39; for each row execute procedure
+				schemadoc.lockedSet (&#39;&#39;_schemadoc&#39;&#39;);&#39;;
+	end loop;
+
+	-- ----
+	-- Remember our snapshots xmax as for the set locking
+	-- ----
+	update schemadoc.sl_set
+			set set_locked = schemadoc.getMaxXid()
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.mergeset-integer-integer">mergeset( integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_add_id			alias for $2;
+	v_origin			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+	
+	-- ----
+	-- Check that both sets exist and originate here
+	-- ----
+	if p_set_id = p_add_id then
+		raise exception &#39;Slony-I: merged set ids cannot be identical&#39;;
+	end if;
+	select set_origin into v_origin from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+
+	select set_origin into v_origin from schemadoc.sl_set
+			where set_id = p_add_id;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_add_id;
+	end if;
+	if v_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_add_id;
+	end if;
+
+	-- ----
+	-- Check that both sets are subscribed by the same set of nodes
+	-- ----
+	if exists (select true from schemadoc.sl_subscribe SUB1
+				where SUB1.sub_set = p_set_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from schemadoc.sl_subscribe SUB2
+						where SUB2.sub_set = p_add_id))
+	then
+		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
+				p_set_id, p_add_id;
+	end if;
+
+	if exists (select true from schemadoc.sl_subscribe SUB1
+				where SUB1.sub_set = p_add_id
+				and SUB1.sub_receiver not in (select SUB2.sub_receiver
+						from schemadoc.sl_subscribe SUB2
+						where SUB2.sub_set = p_set_id))
+	then
+		raise exception &#39;Slony-I: subscriber lists of set % and % are different&#39;,
+				p_add_id, p_set_id;
+	end if;
+
+	-- ----
+	-- Create a SYNC event, merge the sets, create a MERGE_SET event
+	-- ----
+	perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	perform schemadoc.mergeSet_int(p_set_id, p_add_id);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;MERGE_SET&#39;, 
+			p_set_id, p_add_id);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.mergeset-int-integer-integer">mergeset_int( integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_add_id			alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+	
+	update schemadoc.sl_sequence
+			set seq_set = p_set_id
+			where seq_set = p_add_id;
+	update schemadoc.sl_table
+			set tab_set = p_set_id
+			where tab_set = p_add_id;
+	delete from schemadoc.sl_subscribe
+			where sub_set = p_add_id;
+	delete from schemadoc.sl_setsync
+			where ssy_setid = p_add_id;
+	delete from schemadoc.sl_set
+			where set_id = p_add_id;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.moveset-integer-integer">moveset( integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_new_origin		alias for $2;
+	v_local_node_id		int4;
+	v_set_row			record;
+	v_sub_row			record;
+	v_sync_seqno		int8;
+	v_lv_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that the set is locked and that this locking
+	-- happened long enough ago.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_set_row.set_origin &lt;&gt; v_local_node_id then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+	if v_set_row.set_locked isnull then
+		raise exception &#39;Slony-I: set % is not locked&#39;, p_set_id;
+	end if;
+	if v_set_row.set_locked &gt; schemadoc.getMinXid() then
+		raise exception &#39;Slony-I: cannot move set % yet, transactions &lt; % are still in progress&#39;,
+				p_set_id, v_set_row.set_locked;
+	end if;
+
+	-- ----
+	-- Unlock the set
+	-- ----
+	perform schemadoc.unlockSet(p_set_id);
+
+	-- ----
+	-- Check that the new_origin is an active subscriber of the set
+	-- ----
+	select * into v_sub_row from schemadoc.sl_subscribe
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
+	if not found then
+		raise exception &#39;Slony-I: set % is not subscribed by node %&#39;,
+				p_set_id, p_new_origin;
+	end if;
+	if not v_sub_row.sub_active then
+		raise exception &#39;Slony-I: subsctiption of node % for set % is inactive&#39;,
+				p_new_origin, p_set_id;
+	end if;
+
+	-- ----
+	-- Reconfigure everything
+	-- ----
+	perform schemadoc.moveSet_int(p_set_id, v_local_node_id,
+			p_new_origin);
+
+	-- ----
+	-- At this time we hold access exclusive locks for every table
+	-- in the set. But we did move the set to the new origin, so the
+	-- createEvent() we are doing now will not record the sequences.
+	-- ----
+	v_sync_seqno := schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;);
+	insert into schemadoc.sl_seqlog 
+			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
+			select seq_id, v_local_node_id, v_sync_seqno, seq_last_value
+			from schemadoc.sl_seqlastvalue
+			where seq_set = p_set_id;
+					
+	-- ----
+	-- Finally we generate the real event
+	-- ----
+	return schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;MOVE_SET&#39;, 
+			p_set_id, v_local_node_id, p_new_origin);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.moveset-int-integer-integer-integer">moveset_int( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_old_origin		alias for $2;
+	p_new_origin		alias for $3;
+	v_local_node_id		int4;
+	v_tab_row			record;
+	v_sub_row			record;
+	v_sub_node			int4;
+	v_sub_last			int4;
+	v_sub_next			int4;
+	v_last_sync			int8;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Get our local node ID
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+
+	-- ----
+	-- If we are the old or new origin of the set, we need to
+	-- remove the log trigger from all tables first.
+	-- ----
+	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
+		for v_tab_row in select tab_id from schemadoc.sl_table
+				where tab_set = p_set_id
+				order by tab_id
+		loop
+			perform schemadoc.alterTableRestore(v_tab_row.tab_id);
+		end loop;
+	end if;
+
+	-- ----
+	-- Next we have to reverse the subscription path
+	-- ----
+	v_sub_last = p_new_origin;
+	select sub_provider into v_sub_node
+			from schemadoc.sl_subscribe
+			where sub_receiver = p_new_origin;
+	if not found then
+		raise exception &#39;Slony-I: subscription path broken in moveSet_int&#39;;
+	end if;
+	while v_sub_node &lt;&gt; p_old_origin loop
+		-- ----
+		-- Tracing node by node, the old receiver is now in
+		-- v_sub_last and the old provider is in v_sub_node.
+		-- ----
+
+		-- ----
+		-- Get the current provider of this node as next
+		-- and change the provider to the previous one in
+		-- the reverse chain.
+		-- ----
+		select sub_provider into v_sub_next
+				from schemadoc.sl_subscribe
+				where sub_set = p_set_id
+					and sub_receiver = v_sub_node
+				for update;
+		if not found then
+			raise exception &#39;Slony-I: subscription path broken in moveSet_int&#39;;
+		end if;
+		update schemadoc.sl_subscribe
+				set sub_provider = v_sub_last
+				where sub_set = p_set_id
+					and sub_receiver = v_sub_node;
+
+		v_sub_last = v_sub_node;
+		v_sub_node = v_sub_next;
+	end loop;
+
+	-- ----
+	-- This includes creating a subscription for the old origin
+	-- ----
+	insert into schemadoc.sl_subscribe
+			(sub_set, sub_provider, sub_receiver,
+			sub_forward, sub_active)
+			values (p_set_id, v_sub_last, p_old_origin, true, true);
+	if v_local_node_id = p_old_origin then
+		select coalesce(max(ev_seqno), 0) into v_last_sync 
+				from schemadoc.sl_event
+				where ev_origin = p_new_origin
+					and ev_type = &#39;SYNC&#39;;
+		if v_last_sync &gt; 0 then
+			insert into schemadoc.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					select p_set_id, p_new_origin, v_last_sync,
+					ev_minxid, ev_maxxid, ev_xip, NULL
+					from schemadoc.sl_event
+					where ev_origin = p_new_origin
+						and ev_seqno = v_last_sync;
+		else
+			insert into schemadoc.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					values (p_set_id, p_new_origin, &#39;0&#39;,
+					&#39;0&#39;, &#39;0&#39;, &#39;&#39;, NULL);
+		end if;
+	end if;
+
+	-- ----
+	-- Now change the ownership of the set.
+	-- ----
+	update schemadoc.sl_set
+			set set_origin = p_new_origin
+			where set_id = p_set_id;
+
+	-- ----
+	-- On the new origin, delete the obsolete setsync information
+	-- and the subscription.
+	-- ----
+	if v_local_node_id = p_new_origin then
+		delete from schemadoc.sl_setsync
+				where ssy_setid = p_set_id;
+	else
+		if v_local_node_id &lt;&gt; p_old_origin then
+			--
+			-- On every other node, change the setsync so that it will
+			-- pick up from the new origins last known sync.
+			--
+			delete from schemadoc.sl_setsync
+					where ssy_setid = p_set_id;
+			select coalesce(max(ev_seqno), 0) into v_last_sync
+					from schemadoc.sl_event
+					where ev_origin = p_new_origin
+						and ev_type = &#39;SYNC&#39;;
+			if v_last_sync &gt; 0 then
+				insert into schemadoc.sl_setsync
+						(ssy_setid, ssy_origin, ssy_seqno,
+						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+						select p_set_id, p_new_origin, v_last_sync,
+						ev_minxid, ev_maxxid, ev_xip, NULL
+						from schemadoc.sl_event
+						where ev_origin = p_new_origin
+							and ev_seqno = v_last_sync;
+			else
+				insert into schemadoc.sl_setsync
+						(ssy_setid, ssy_origin, ssy_seqno,
+						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+						values (p_set_id, p_new_origin, &#39;0&#39;,
+						&#39;0&#39;, &#39;0&#39;, &#39;&#39;, NULL);
+			end if;
+		end if;
+	end if;
+	delete from schemadoc.sl_subscribe
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
+
+	-- ----
+	-- If we are the new or old origin, we have to
+	-- put all the tables into altered state again.
+	-- ----
+	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
+		for v_tab_row in select tab_id from schemadoc.sl_table
+				where tab_set = p_set_id
+				order by tab_id
+		loop
+			perform schemadoc.alterTableForReplication(v_tab_row.tab_id);
+		end loop;
+	end if;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.sequencelastvalue-text">sequencelastvalue( text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_seqname	alias for $1;
+	v_seq_row	record;
+begin
+	for v_seq_row in execute &#39;select last_value from &#39; || p_seqname
+	loop
+		return v_seq_row.last_value;
+	end loop;
+
+	-- not reached
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.sequencesetvalue-integer-integer-bigint-bigint">sequencesetvalue( integer, integer, bigint, bigint )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_seq_id			alias for $1;
+	p_seq_origin		alias for $2;
+	p_ev_seqno			alias for $3;
+	p_last_value		alias for $4;
+	v_fqname			text;
+begin
+	-- ----
+	-- Get the sequences fully qualified name
+	-- ----
+	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			&quot;pg_catalog&quot;.quote_ident(PGC.relname) into v_fqname
+		from schemadoc.sl_sequence SQ,
+			&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
+		where SQ.seq_id = p_seq_id
+			and SQ.seq_reloid = PGC.oid
+			and PGC.relnamespace = PGN.oid;
+	if not found then
+		raise exception &#39;Slony-I: sequence % not found&#39;, p_seq_id;
+	end if;
+
+	-- ----
+	-- Update it to the new value
+	-- ----
+	execute &#39;select setval(&#39;&#39;&#39; || v_fqname ||
+			&#39;&#39;&#39;, &#39;&#39;&#39; || p_last_value || &#39;&#39;&#39;)&#39;;
+
+	insert into schemadoc.sl_seqlog
+			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
+			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
+
+	return p_seq_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setaddsequence-integer-integer-text-text">setaddsequence( integer, integer, text, text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_seq_id			alias for $2;
+	p_fqname			alias for $3;
+	p_seq_comment		alias for $4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setAddSequence(): set % not found&#39;, p_set_id;
+	end if;
+	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: setAddSequence(): set % has remote origin&#39;, p_set_id;
+	end if;
+
+	if exists (select true from schemadoc.sl_subscribe
+			where sub_set = p_set_id)
+	then
+		raise exception &#39;Slony-I: cannot add sequence to currently subscribed set %&#39;,
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
+	-- ----
+	perform schemadoc.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
+			p_seq_comment);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_SEQUENCE&#39;,
+			p_set_id, p_seq_id, p_fqname, p_seq_comment);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setaddsequence-int-integer-integer-text-text">setaddsequence_int( integer, integer, text, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_seq_id			alias for $2;
+	p_fqname			alias for $3;
+	p_seq_comment		alias for $4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_seq_reloid		oid;
+	v_sync_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the sequence because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setAddSequence_int(): set % not found&#39;,
+				p_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from schemadoc.sl_subscribe
+				where sub_set = p_set_id
+				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+		if not found then
+			return 0;
+		end if;
+	end if;
+	
+	-- ----
+	-- Get the sequences OID and check that it is a sequence
+	-- ----
+	select PGC.oid, PGC.relkind into v_seq_reloid, v_relkind
+			from &quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
+			where PGC.relnamespace = PGN.oid
+			and p_fqname = &quot;pg_catalog&quot;.quote_ident(PGN.nspname) ||
+					&#39;.&#39; || &quot;pg_catalog&quot;.quote_ident(PGC.relname);
+	if not found then
+		raise exception &#39;Slony-I: setAddSequence_int(): sequence % not found&#39;, 
+				p_fqname;
+	end if;
+	if v_relkind != &#39;S&#39; then
+		raise exception &#39;Slony-I: setAddSequence_int(): % is not a sequence&#39;,
+				p_fqname;
+	end if;
+
+	-- ----
+	-- Add the sequence to sl_sequence
+	-- ----
+	insert into schemadoc.sl_sequence
+			(seq_id, seq_reloid, seq_set, seq_comment) values
+			(p_seq_id, v_seq_reloid, p_set_id, p_seq_comment);
+
+	-- ----
+	-- On the set origin, fake a sl_seqlog row for the last sync event
+	-- ----
+	if v_set_origin = v_local_node_id then
+		for v_sync_row in select coalesce (max(ev_seqno), 0) as ev_seqno
+				from schemadoc.sl_event
+				where ev_origin = v_local_node_id
+					and ev_type = &#39;SYNC&#39;
+		loop
+			insert into schemadoc.sl_seqlog
+					(seql_seqid, seql_origin, seql_ev_seqno, 
+					seql_last_value) values
+					(p_seq_id, v_local_node_id, v_sync_row.ev_seqno,
+					schemadoc.sequenceLastValue(p_fqname));
+		end loop;
+	end if;
+
+	return p_seq_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setaddtable-integer-integer-text-name-text">setaddtable( integer, integer, text, name, text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_tab_id			alias for $2;
+	p_fqname			alias for $3;
+	p_tab_idxname		alias for $4;
+	p_tab_comment		alias for $5;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setAddTable(): set % not found&#39;, p_set_id;
+	end if;
+	if v_set_origin != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: setAddTable(): set % has remote origin&#39;, p_set_id;
+	end if;
+
+	if exists (select true from schemadoc.sl_subscribe
+			where sub_set = p_set_id)
+	then
+		raise exception &#39;Slony-I: cannot add table to currently subscribed set %&#39;,
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Add the table to the set and generate the SET_ADD_TABLE event
+	-- ----
+	perform schemadoc.setAddTable_int(p_set_id, p_tab_id, p_fqname,
+			p_tab_idxname, p_tab_comment);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_TABLE&#39;,
+			p_set_id, p_tab_id, p_fqname,
+			p_tab_idxname, p_tab_comment);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.setaddtable-int-integer-integer-text-name-text">setaddtable_int( integer, integer, text, name, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_tab_id			alias for $2;
+	p_fqname			alias for $3;
+	p_tab_idxname		alias for $4;
+	p_tab_comment		alias for $5;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_tab_reloid		oid;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the table because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception &#39;Slony-I: setAddTable_int(): set % not found&#39;,
+				p_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from schemadoc.sl_subscribe
+				where sub_set = p_set_id
+				and sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+		if not found then
+			return 0;
+		end if;
+	end if;
+	
+	-- ----
+	-- Get the tables OID and check that it is a real table
+	-- ----
+	select PGC.oid, PGC.relkind into v_tab_reloid, v_relkind
+			from &quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
+			where PGC.relnamespace = PGN.oid
+			and p_fqname = &quot;pg_catalog&quot;.quote_ident(PGN.nspname) ||
+					&#39;.&#39; || &quot;pg_catalog&quot;.quote_ident(PGC.relname);
+	if not found then
+		raise exception &#39;Slony-I: setAddTable(): table % not found&#39;, 
+				p_fqname;
+	end if;
+	if v_relkind != &#39;r&#39; then
+		raise exception &#39;Slony-I: setAddTable(): % is not a regular table&#39;,
+				p_fqname;
+	end if;
+
+	if not exists (select indexrelid
+			from &quot;pg_catalog&quot;.pg_index PGX, &quot;pg_catalog&quot;.pg_class PGC
+			where PGX.indrelid = v_tab_reloid
+				and PGX.indexrelid = PGC.oid
+				and PGC.relname = p_tab_idxname)
+	then
+		raise exception &#39;Slony-I: setAddTable(): table % has no index %&#39;,
+				p_fqname, p_tab_idxname;
+	end if;
+
+	-- ----
+	-- Add the table to sl_table and create the trigger on it.
+	-- ----
+	insert into schemadoc.sl_table
+			(tab_id, tab_reloid, tab_set, tab_idxname, 
+			tab_altered, tab_comment) values
+			(p_tab_id, v_tab_reloid, p_set_id, p_tab_idxname,
+			false, p_tab_comment);
+	perform schemadoc.alterTableForReplication(p_tab_id);
+
+	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storelisten-integer-integer-integer">storelisten( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+begin
+	perform schemadoc.storeListen_int (p_li_origin, p_li_provider, p_li_receiver);
+	return  schemadoc.createEvent (&#39;_schemadoc&#39;, &#39;STORE_LISTEN&#39;,
+			p_li_origin, p_li_provider, p_li_receiver);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storelisten-int-integer-integer-integer">storelisten_int( integer, integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+	v_exists		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	select 1 into v_exists
+			from schemadoc.sl_listen
+			where li_origin = p_li_origin
+			and li_provider = p_li_provider
+			and li_receiver = p_li_receiver;
+	if not found then
+		-- ----
+		-- In case we receive STORE_LISTEN events before we know
+		-- about the nodes involved in this, we generate those nodes
+		-- as pending.
+		-- ----
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_li_origin) then
+			perform schemadoc.storeNode_int (p_li_origin, &#39;&lt;event pending&gt;&#39;);
+		end if;
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_li_provider) then
+			perform schemadoc.storeNode_int (p_li_provider, &#39;&lt;event pending&gt;&#39;);
+		end if;
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_li_receiver) then
+			perform schemadoc.storeNode_int (p_li_receiver, &#39;&lt;event pending&gt;&#39;);
+		end if;
+
+		insert into schemadoc.sl_listen
+				(li_origin, li_provider, li_receiver) values
+				(p_li_origin, p_li_provider, p_li_receiver);
+	end if;
+
+	return 0;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storenode-integer-text">storenode( integer, text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>no_id - Node ID #
+no_comment - Human-oriented comment
+
+Generate the STORE_NODE event for node no_id</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	p_no_comment	alias for $2;
+begin
+	perform schemadoc.storeNode_int (p_no_id, p_no_comment);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_NODE&#39;,
+									p_no_id, p_no_comment);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storenode-int-integer-text">storenode_int( integer, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>no_id - Node ID #
+no_comment - Human-oriented comment
+
+Internal function to process the STORE_NODE event for node no_id</p>
+        <pre>
+declare
+	p_no_id			alias for $1;
+	p_no_comment	alias for $2;
+	v_old_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check if the node exists
+	-- ----
+	select * into v_old_row
+			from schemadoc.sl_node
+			where no_id = p_no_id
+			for update;
+	if found then 
+		-- ----
+		-- Node exists, update the existing row.
+		-- ----
+		update schemadoc.sl_node
+				set no_comment = p_no_comment
+				where no_id = p_no_id;
+	else
+		-- ----
+		-- New node, insert the sl_node row
+		-- ----
+		insert into schemadoc.sl_node
+				(no_id, no_active, no_comment) values
+				(p_no_id, &#39;f&#39;, p_no_comment);
+	end if;
+
+	return p_no_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storepath-integer-integer-text-integer">storepath( integer, integer, text, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
+
+Generate the STORE_PATH event indicating that node pa_client can
+access node pa_server using DSN pa_conninfo</p>
+        <pre>
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+	p_pa_conninfo	alias for $3;
+	p_pa_connretry	alias for $4;
+begin
+	perform schemadoc.storePath_int(p_pa_server, p_pa_client,
+			p_pa_conninfo, p_pa_connretry);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_PATH&#39;, 
+			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storepath-int-integer-integer-text-integer">storepath_int( integer, integer, text, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
+
+Process the STORE_PATH event indicating that node pa_client can
+access node pa_server using DSN pa_conninfo</p>
+        <pre>
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+	p_pa_conninfo	alias for $3;
+	p_pa_connretry	alias for $4;
+	v_dummy			int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check if the path already exists
+	-- ----
+	select 1 into v_dummy
+			from schemadoc.sl_path
+			where pa_server = p_pa_server
+			and pa_client = p_pa_client
+			for update;
+	if found then
+		-- ----
+		-- Path exists, update pa_conninfo
+		-- ----
+		update schemadoc.sl_path
+				set pa_conninfo = p_pa_conninfo,
+					pa_connretry = p_pa_connretry
+				where pa_server = p_pa_server
+				and pa_client = p_pa_client;
+	else
+		-- ----
+		-- New path
+		--
+		-- In case we receive STORE_PATH events before we know
+		-- about the nodes involved in this, we generate those nodes
+		-- as pending.
+		-- ----
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_pa_server) then
+			perform schemadoc.storeNode_int (p_pa_server, &#39;&lt;event pending&gt;&#39;);
+		end if;
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_pa_client) then
+			perform schemadoc.storeNode_int (p_pa_client, &#39;&lt;event pending&gt;&#39;);
+		end if;
+		insert into schemadoc.sl_path
+				(pa_server, pa_client, pa_conninfo, pa_connretry) values
+				(p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
+	end if;
+
+	return 0;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storeset-integer-text">storeset( integer, text )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_set_comment		alias for $2;
+	v_local_node_id		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+
+	insert into schemadoc.sl_set
+			(set_id, set_origin, set_comment) values
+			(p_set_id, v_local_node_id, p_set_comment);
+
+	return schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_SET&#39;, 
+			p_set_id, v_local_node_id, p_set_comment);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storeset-int-integer-integer-text">storeset_int( integer, integer, text )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	p_set_origin		alias for $2;
+	p_set_comment		alias for $3;
+	v_dummy				int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	select 1 into v_dummy
+			from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if found then 
+		update schemadoc.sl_set
+				set set_comment = p_set_comment
+				where set_id = p_set_id;
+	else
+		if not exists (select 1 from schemadoc.sl_node
+						where no_id = p_set_origin) then
+			perform schemadoc.storeNode_int (p_set_origin, &#39;&lt;event pending&gt;&#39;);
+		end if;
+		insert into schemadoc.sl_set
+				(set_id, set_origin, set_comment) values
+				(p_set_id, p_set_origin, p_set_comment);
+	end if;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storetrigger-integer-name">storetrigger( integer, name )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+begin
+	perform schemadoc.storeTrigger_int(p_trig_tabid, p_trig_tgname);
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;STORE_TRIGGER&#39;,
+			p_trig_tabid, p_trig_tgname);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.storetrigger-int-integer-name">storetrigger_int( integer, name )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_trig_tabid		alias for $1;
+	p_trig_tgname		alias for $2;
+	v_tab_altered		boolean;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Get the current table status (altered or not)
+	-- ----
+	select tab_altered into v_tab_altered
+			from schemadoc.sl_table where tab_id = p_trig_tabid;
+	if not found then
+		-- ----
+		-- Not found is no hard error here, because that might
+		-- mean that we are not subscribed to that set
+		-- ----
+		return 0;
+	end if;
+
+	-- ----
+	-- If the table is modified for replication, restore the original state
+	-- ----
+	if v_tab_altered then
+		perform schemadoc.alterTableRestore(p_trig_tabid);
+	end if;
+
+	-- ----
+	-- Make sure that an entry for this trigger exists
+	-- ----
+	delete from schemadoc.sl_trigger
+			where trig_tabid = p_trig_tabid
+			  and trig_tgname = p_trig_tgname;
+	insert into schemadoc.sl_trigger (
+				trig_tabid, trig_tgname
+			) values (
+				p_trig_tabid, p_trig_tgname
+			);
+
+	-- ----
+	-- Put the table back into replicated state if it was
+	-- ----
+	if v_tab_altered then
+		perform schemadoc.alterTableForReplication(p_trig_tabid);
+	end if;
+
+	return p_trig_tabid;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.subscribeset-integer-integer-integer-boolean">subscribeset( integer, integer, integer, boolean )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+	p_sub_forward		alias for $4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that this is called on the receiver node
+	-- ----
+	if p_sub_receiver != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: subscribeSet() must be called on receiver&#39;;
+	end if;
+
+	-- ----
+	-- Check that the origin and provider of the set are remote
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_sub_set;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
+	end if;
+	if v_set_origin = p_sub_receiver then
+		raise exception 
+				&#39;Slony-I: set origin and receiver cannot be identical&#39;;
+	end if;
+	if p_sub_receiver = p_sub_provider then
+		raise exception 
+				&#39;Slony-I: set provider and receiver cannot be identical&#39;;
+	end if;
+
+	-- ----
+	-- Call the internal procedure to store the subscription
+	-- ----
+	perform schemadoc.subscribeSet_int(p_sub_set, p_sub_provider,
+			p_sub_receiver, p_sub_forward);
+
+	-- ----
+	-- Create the SUBSCRIBE_SET event
+	-- ----
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;SUBSCRIBE_SET&#39;, 
+			p_sub_set, p_sub_provider, p_sub_receiver, 
+			case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.subscribeset-int-integer-integer-integer-boolean">subscribeset_int( integer, integer, integer, boolean )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+	p_sub_forward		alias for $4;
+	v_set_origin		int4;
+	v_sub_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Provider change is only allowed for active sets
+	-- ----
+	if p_sub_receiver = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		select sub_active into v_sub_row from schemadoc.sl_subscribe
+				where sub_set = p_sub_set
+				and sub_receiver = p_sub_receiver;
+		if found then
+			if not v_sub_row.sub_active then
+				raise exception &#39;Slony-I: set % is not active, cannot change provider&#39;,
+						p_sub_set;
+			end if;
+		end if;
+	end if;
+
+	-- ----
+	-- Try to change provider and/or forward for an existing subscription
+	-- ----
+	update schemadoc.sl_subscribe
+			set sub_provider = p_sub_provider,
+				sub_forward = p_sub_forward
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver;
+	if found then
+		return p_sub_set;
+	end if;
+
+	-- ----
+	-- Not found, insert a new one
+	-- ----
+	if not exists (select true from schemadoc.sl_path
+			where pa_server = p_sub_provider
+			and pa_client = p_sub_receiver)
+	then
+		insert into schemadoc.sl_path
+				(pa_server, pa_client, pa_conninfo, pa_connretry)
+				values 
+				(p_sub_provider, p_sub_receiver, 
+				&#39;&lt;event pending&gt;&#39;, 10);
+	end if;
+	insert into schemadoc.sl_subscribe
+			(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
+			values (p_sub_set, p_sub_provider, p_sub_receiver,
+				p_sub_forward, false);
+
+	-- ----
+	-- If the set origin is here, then enable the subscription
+	-- ----
+	select set_origin into v_set_origin
+			from schemadoc.sl_set
+			where set_id = p_sub_set;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
+	end if;
+
+	if v_set_origin = schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		perform schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_SUBSCRIPTION&#39;, 
+				p_sub_set, p_sub_provider, p_sub_receiver, 
+				case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
+		perform schemadoc.enableSubscription(p_sub_set, 
+				p_sub_provider, p_sub_receiver);
+	end if;
+
+	return p_sub_set;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.tableaddkey-text">tableaddkey( text )</a>
+		</h2>
+<h3>Returns: text</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	v_attkind		text default &#39;&#39;;
+	v_attrow		record;
+	v_have_serial	bool default &#39;f&#39;;
+begin
+	--
+	-- Loop over the attributes of this relation
+	-- and add a &quot;v&quot; for every user column, and a &quot;k&quot;
+	-- if we find the Slony-I special serial column.
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from &quot;pg_catalog&quot;.pg_class PGC,
+			    &quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_attribute PGA
+			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum &gt; 0
+			order by attnum
+	loop
+		if v_attrow.attname = &#39;_Slony-I_schemadoc_rowID&#39; then
+		    v_attkind := v_attkind || &#39;k&#39;;
+			v_have_serial := &#39;t&#39;;
+		else
+			v_attkind := v_attkind || &#39;v&#39;;
+		end if;
+	end loop;
+	
+	--
+	-- A table must have at least one attribute, so not finding
+	-- anything means the table does not exist.
+	--
+	if not found then
+		raise exception &#39;Slony-I: table % not found&#39;, p_tab_fqname;
+	end if;
+
+	--
+	-- If it does not have the special serial column, we
+	-- have to add it. This will be only half way done.
+	-- The function to add the table to the set must finish
+	-- these definitions with NOT NULL and UNIQUE after
+	-- updating all existing rows.
+	--
+	if not v_have_serial then
+		execute &#39;lock table &#39; || p_tab_fqname ||
+			&#39; in access exclusive mode&#39;;
+		execute &#39;alter table only &#39; || p_tab_fqname ||
+			&#39; add column &quot;_Slony-I_schemadoc_rowID&quot; bigint;&#39;;
+		execute &#39;alter table only &#39; || p_tab_fqname ||
+			&#39; alter column &quot;_Slony-I_schemadoc_rowID&quot; &#39; ||
+			&#39; set default &quot;pg_catalog&quot;.nextval(&#39;&#39;schemadoc.sl_rowid_seq&#39;&#39;);&#39;;
+
+		v_attkind := v_attkind || &#39;k&#39;;
+	end if;
+
+	--
+	-- Return the resulting Slony-I attkind
+	--
+	return v_attkind;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.tabledropkey-integer">tabledropkey( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_id		alias for $1;
+	v_tab_fqname	text;
+	v_tab_oid		oid;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Construct the tables fully qualified name and get its oid
+	-- ----
+	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+				&quot;pg_catalog&quot;.quote_ident(PGC.relname),
+				PGC.oid into v_tab_fqname, v_tab_oid
+			from schemadoc.sl_table T,
+				&quot;pg_catalog&quot;.pg_class PGC,
+				&quot;pg_catalog&quot;.pg_namespace PGN
+			where T.tab_id = p_tab_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid;
+	if not found then
+		raise exception &#39;Slony-I: table with ID % not found&#39;, p_tab_id;
+	end if;
+
+	-- ----
+	-- Drop the special serial ID column if the table has it
+	-- ----
+	if exists (select true from &quot;pg_catalog&quot;.pg_attribute
+			where attrelid = v_tab_oid
+				and attname = &#39;_Slony-I_schemadoc_rowID&#39;)
+	then
+		execute &#39;lock table &#39; || v_tab_fqname ||
+				&#39; in access exclusive mode&#39;;
+		execute &#39;alter table &#39; || v_tab_fqname ||
+				&#39; drop column &quot;_Slony-I_schemadoc_rowID&quot;&#39;;
+	end if;
+
+	return p_tab_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.tablehasserialkey-text">tablehasserialkey( text )</a>
+		</h2>
+<h3>Returns: boolean</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_tab_fqname	alias for $1;
+	v_attnum		int2;
+begin
+	select PGA.attnum into v_attnum
+			from &quot;pg_catalog&quot;.pg_class PGC,
+				&quot;pg_catalog&quot;.pg_namespace PGN,
+				&quot;pg_catalog&quot;.pg_attribute PGA
+			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+				&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				and PGC.relnamespace = PGN.oid
+				and PGA.attrelid = PGC.oid
+				and PGA.attname = &#39;_Slony-I_schemadoc_rowID&#39;
+				and not PGA.attisdropped;
+	return found;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.uninstallnode">uninstallnode(  )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        <p>Reset the whole database to standalone by removing the whole
+replication system.</p>
+        <pre>
+declare
+	v_tab_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- This is us ... time for suicide! Restore all tables to
+	-- their original status.
+	-- ----
+	for v_tab_row in select * from schemadoc.sl_table loop
+		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
+		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+	end loop;
+
+	raise notice &#39;Slony-I: Please drop schema &quot;_schemadoc&quot;&#39;;
+	return 0;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.unlockset-integer">unlockset( integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_set_id			alias for $1;
+	v_local_node_id		int4;
+	v_set_row			record;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and that we are the origin
+	-- and that it is not already locked.
+	-- ----
+	v_local_node_id := schemadoc.getLocalNodeId(&#39;_schemadoc&#39;);
+	select * into v_set_row from schemadoc.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
+	end if;
+	if v_set_row.set_origin &lt;&gt; v_local_node_id then
+		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+	end if;
+	if v_set_row.set_locked isnull then
+		raise exception &#39;Slony-I: set % is not locked&#39;, p_set_id;
+	end if;
+
+	-- ----
+	-- Drop the lockedSet trigger from all tables in the set.
+	-- ----
+	for v_tab_row in select T.tab_id,
+			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
+			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			from schemadoc.sl_table T,
+				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
+			where T.tab_set = p_set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+			order by tab_id
+	loop
+		execute &#39;drop trigger &quot;_schemadoc_lockedset_&#39; || 
+				v_tab_row.tab_id || &#39;&quot; on &#39; || v_tab_row.tab_fqname;
+	end loop;
+
+	-- ----
+	-- Clear out the set_locked field
+	-- ----
+	update schemadoc.sl_set
+			set set_locked = NULL
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.unsubscribeset-integer-integer">unsubscribeset( integer, integer )</a>
+		</h2>
+<h3>Returns: bigint</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_receiver		alias for $2;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- Check that this is called on the receiver node
+	-- ----
+	if p_sub_receiver != schemadoc.getLocalNodeId(&#39;_schemadoc&#39;) then
+		raise exception &#39;Slony-I: unsubscribeSet() must be called on receiver&#39;;
+	end if;
+
+	-- ----
+	-- Check that this does not break any chains
+	-- ----
+	if exists (select true from schemadoc.sl_subscribe
+			where sub_set = p_sub_set
+				and sub_provider = p_sub_receiver)
+	then
+		raise exception &#39;Slony-I: Cannot unsubscibe set % while being provider&#39;,
+				p_sub_set;
+	end if;
+
+	-- ----
+	-- Restore all tables original triggers and rules and remove
+	-- our replication stuff.
+	-- ----
+	for v_tab_row in select tab_id from schemadoc.sl_table
+			where tab_set = p_sub_set
+			order by tab_id
+	loop
+		perform schemadoc.alterTableRestore(v_tab_row.tab_id);
+		perform schemadoc.tableDropKey(v_tab_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Remove the setsync status. This will also cause the
+	-- worker thread to ignore the set and stop replicating
+	-- right now.
+	-- ----
+	delete from schemadoc.sl_setsync
+			where ssy_setid = p_sub_set;
+
+	-- ----
+	-- Remove all sl_table entries for this set.
+	-- Should we ever subscribe again, the initial data
+	-- copy process will create new ones.
+	-- ----
+	delete from schemadoc.sl_table
+			where tab_set = p_sub_set;
+
+	-- ----
+	-- Call the internal procedure to drop the subscription
+	-- ----
+	perform schemadoc.unsubscribeSet_int(p_sub_set, p_sub_receiver);
+
+	-- ----
+	-- Create the UNSUBSCRIBE_SET event
+	-- ----
+	return  schemadoc.createEvent(&#39;_schemadoc&#39;, &#39;UNSUBSCRIBE_SET&#39;, 
+			p_sub_set, p_sub_receiver);
+end;
+</pre>
+	
+		<hr>
+		<h2>Function: 
+			<a href="#schemadoc.schema"><a name="schemadoc.function.unsubscribeset-int-integer-integer">unsubscribeset_int( integer, integer )</a>
+		</h2>
+<h3>Returns: integer</h3>
+<h3>Language: PLPGSQL</h3>
+        
+        <pre>
+declare
+	p_sub_set			alias for $1;
+	p_sub_receiver		alias for $2;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table schemadoc.sl_config_lock;
+
+	-- ----
+	-- All the real work is done before event generation on the
+	-- subscriber.
+	-- ----
+	delete from schemadoc.sl_subscribe
+			where sub_set = p_sub_set
+				and sub_receiver = p_sub_receiver;
+
+	return p_sub_set;
+end;
+</pre>
+	
+
+
+<p class="w3ref">Generated by <a href="http://www.rbt.ca/autodoc/">PostgreSQL Autodoc</a></p>
+<p class="w3ref"><a href="http://validator.w3.org/check/referer">W3C HTML 4.01 Strict</a></p>
+</body></html>
