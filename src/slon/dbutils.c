@@ -1,12 +1,12 @@
 /*-------------------------------------------------------------------------
- * slon.c
+ * dbutils.c
  *
  *	Database utility functions for Slony-I
  *
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.3 2004-02-20 15:46:15 wieck Exp $
+ *	$Id: dbutils.c,v 1.4 2004-02-20 15:48:45 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
