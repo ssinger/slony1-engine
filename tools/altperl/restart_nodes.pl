@@ -1,5 +1,5 @@
-#!@@PERL@@ # -*- perl -*-
-# $Id: restart_nodes.pl,v 1.4 2005-02-02 17:22:29 cbbrowne Exp $
+#!@@PERL@@
+# $Id: restart_nodes.pl,v 1.5 2005-02-10 04:32:50 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

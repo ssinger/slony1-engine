@@ -1,5 +1,5 @@
-#!@@PERl@@    # -*- perl -*-
-# $Id: build_env.pl,v 1.6 2005-01-26 19:42:23 darcyb Exp $
+#!@@PERl@@
+# $Id: build_env.pl,v 1.7 2005-02-10 04:32:49 smsimms Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net

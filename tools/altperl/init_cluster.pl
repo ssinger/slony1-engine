@@ -1,5 +1,5 @@
-#!@@PERL@@ # -*- perl -*-
-# $Id: init_cluster.pl,v 1.8 2005-01-26 19:42:23 darcyb Exp $
+#!@@PERL@@
+# $Id: init_cluster.pl,v 1.9 2005-02-10 04:32:49 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
