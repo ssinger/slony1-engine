@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.14 2004-06-12 03:27:46 wieck Exp $
+ *	$Id: scan.l,v 1.15 2004-06-12 04:59:32 wieck Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -142,9 +142,6 @@ scan_new_input_file(FILE *in)
 	{
 		dstring_nappend(&ds, buf, len);
 	}
-	
-	printf("switch to new input of %d bytes\n", strlen(dstring_data(&ds)));
-	sleep(2);
 	yy_switch_to_buffer(yy_scan_string(dstring_data(&ds)));
 
 	dstring_free(&ds);
