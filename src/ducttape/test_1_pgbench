@@ -92,39 +92,14 @@ xterm -title "Slon node 1" -e sh -c "slon T1 dbname=$DB1; echo -n 'Enter>'; read
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
-echo -n "**** creating a replication set containing the 4 pgbench tables ... "
-psql $DB1 >$TMPOUT 2>&1 <<_EOF_
+echo "**** creating a replication set containing the 4 pgbench tables ... "
+slony1_makeset T1 1 1 "pgbench tables" 			\
+	1	public.accounts		"Table accounts"	\
+	2	public.branches		"Table branches"	\
+	3	public.tellers		"Table tellers"	\
+	4	public.history		"Table history"	\
 
-	-- ----
-	-- The history table does not have a primary key, Slony-I
-	-- needs at least one UNIQUE constraint on a replicated table.
-	-- ----
-	start transaction;
-	lock table public.history;
-	alter table public.history 
-			add column "_Slony-I_T1_rowID" bigint;
-	alter table public.history 
-			alter column "_Slony-I_T1_rowID"
-			set default "pg_catalog".nextval('"_T1".sl_rowid_seq');
-	commit transaction;
-	update public.history set 
-			"_Slony-I_T1_rowID" = nextval('"_T1".sl_rowid_seq')
-			where "_Slony-I_T1_rowID" isnull;
-	alter table public.history 
-			alter column "_Slony-I_T1_rowID"
-			set not null;
-	alter table public.history 
-			add unique ("_Slony-I_T1_rowID");
-
-	start transaction;
-	select "_T1".storeSet(1, 'pgbench tables');
-	select "_T1".setAddTable(1, 1, 'public.accounts', 'kvvv', 'Table accounts');
-	select "_T1".setAddTable(1, 2, 'public.branches', 'kvv', 'Table branches');
-	select "_T1".setAddTable(1, 3, 'public.tellers', 'kvvv', 'Table tellers');
-	select "_T1".setAddTable(1, 4, 'public.history', 'vvvvvvk', 'Table history');
-	commit transaction;
-_EOF_
-if grep ^ERROR $TMPOUT >/dev/null ; then
+if [ $? -ne 0 ] ; then
 	echo "failed"
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
@@ -132,8 +107,7 @@ if grep ^ERROR $TMPOUT >/dev/null ; then
 	rm $TMPOUT
 	exit -1
 fi
-rm $TMPOUT
-echo "done"
+echo "**** set created"
 
 #####
 # Check that pgbench is still running
