@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_start.pl,v 1.2 2004-08-04 14:47:53 cbbrowne Exp $
+# $Id: slon_start.pl,v 1.3 2004-08-04 16:38:34 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -48,7 +48,7 @@ sub get_pid {
   my $nodenum = $1;
   my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
 #  print "Searching for PID for $dbname on port $dbport\n";
-  open(PSOUT, "ps -auxww | egrep \"[s]lon $SETNAME\" | egrep \"dbname=$dbname .*port=$dbport\" | sort -n | awk '{print \$2}'|");
+  open(PSOUT, "ps -auxww | egrep \"[s]lon $SETNAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'|");
   $pid = <PSOUT>;
   chop $pid;
   close(PSOUT);

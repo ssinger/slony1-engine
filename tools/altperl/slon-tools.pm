@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.2 2004-08-04 16:38:34 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -41,6 +41,8 @@ sub add_node {
   if ($port) {
     $loginstr .= " port=$port";
     $PORT[$node] = $port;
+  } else {
+    die ("I need a port number");
   }
   my $password = $PARAMS{'password'};
   if ($password) {
