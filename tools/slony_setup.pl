@@ -615,12 +615,8 @@ rm -f $setup_log
                 (($data{'master'}{'users'}{$user}{'valuntil'}) ? "'" . $data{'master'}{'users'}{$user}{'valuntil'} . "'": "null") . "," .
                 (($data{'master'}{'users'}{$user}{'useconfig'}) ? "'" . $data{'master'}{'users'}{$user}{'useconfig'} . "'": "null") . ")\"" .
                 " 2>> $setup_log 1>> $setup_log\n";
-            print F "\nif [ \$? -ne 0 ]\n";
-            print F "then\n";
-            print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-            print F "\texit -1\n";
-            print F "fi\n\n";
-        }
+		generate_abend("Adding user $user on slave $slave");
+               }
         #
         # Create all the groups that exist on the master database on each slave
         #
@@ -635,11 +631,7 @@ rm -f $setup_log
                 "'" . $data{'master'}{'groups'}{$group}{'grosysid'} . "'," .
                 "'" . $data{'master'}{'groups'}{$group}{'grolist'} . "')\"" .
                 " 2>> $setup_log 1>> $setup_log\n";
-            print F "\nif [ \$? -ne 0 ]\n";
-            print F "then\n";
-            print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-            print F "\texit -1\n";
-            print F "fi\n\n";
+		generate_abend("Creating group $group on slave $slave");
         }
         #
         # Make sure plpgsql is created in template1 on all slaves
@@ -650,11 +642,7 @@ rm -f $setup_log
             " -U " . $data{'slaves'}{$slave}{'username'} .
             " plpgsql template1" .
             " 2>> $setup_log 1>> $setup_log\n";
-        print F "\nif [ \$? -ne 0 ]\n";
-        print F "then\n";
-        print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-        print F "\texit -1\n";
-        print F "fi\n\n";
+	generate_abend("Creating language plpgsql on slave $slave");
         foreach my $database (keys %{$data{'master'}{'databases'}}) {
             #
             # Create the databases to be replicated on all slaves
@@ -665,11 +653,7 @@ rm -f $setup_log
                 " -U " . $data{'slaves'}{$slave}{'username'} .
                 " -O " . $data{'master'}{'databases'}{$database}{'owner'} .
                 " $database 2>> $setup_log 1>> $setup_log\n";
-            print F "\nif [ \$? -ne 0 ]\n";
-            print F "then\n";
-            print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-            print F "\texit -1\n";
-            print F "fi\n\n";
+		 generate_abend("Create database $database on slave $slave");
             #
             # Use the command that copies the entire schema at once, as this assures us
             # that dependencies will be done in order
@@ -687,11 +671,7 @@ rm -f $setup_log
                     " -U " . $data{'slaves'}{$slave}{'username'} .
                     " -d " . $database .
                     " 2>> $setup_log 1>> $setup_log\n";
-                print F "\nif [ \$? -ne 0 ]\n";
-                print F "then\n";
-                print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-                print F "\texit -1\n";
-                print F "fi\n\n";
+		generate_abend("Create schema for $database on slave $slave");
             #
             # Else, do it the hard way, and hope no dependencies are broken
             #
@@ -712,11 +692,7 @@ rm -f $setup_log
                         " -U " . $data{'slaves'}{$slave}{'username'} .
                         " -d " . $database .
                         " 2>> $setup_log 1>> $setup_log\n";
-                    print F "\nif [ \$? -ne 0 ]\n";
-                    print F "then\n";
-                    print F "\techo Errors were detected.  Please review $setup_log and fix the errors.\n";
-                    print F "\texit -1\n";
-                    print F "fi\n\n";
+		generate_abend("Create table $table in schema $schema on slave $slave");
                 }
             }
         }
@@ -960,8 +936,9 @@ sub check_version {
         " -d template1 | " 
         || death( message => "Can't open pipe to $psql: $!");
     while (<P>) {
-        $_ =~ /postgresql\s+(\d+)\.(\d+)/i;
-        ($major, $minor) = ($1, $2);
+        if($_ =~ /postgresql\s+(\d+)\.(\d+)/i){
+	        ($major, $minor) = ($1, $2);
+	}
     }
     close P;
     if ($major >= 7 && $minor >= 3) {
@@ -1241,4 +1218,17 @@ sub death {
     );
     print "$params{'message'}\n";
     clean_up();
+}
+
+sub generate_abend {
+  my %params = ( descr => undef , @_);
+
+  print F "if [ \$? -ne 0 ]\n";
+  print F "then\n";
+  if ($params{'descr'}) {
+    print F "\techo \"$params{'descr'}\"\n";  
+  }
+  print F "\techo Errors were detected. Please review $setup_log and fix the errors.\n";
+  print F "\texit -1;\n";
+  print F "fi\n\n";
 }
