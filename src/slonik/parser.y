@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.16 2004-06-07 18:46:17 wieck Exp $
+ *	$Id: parser.y,v 1.16.2.1 2004-09-27 20:48:03 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -452,8 +452,9 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_wait_event
 						{ $$ = $1; }
-					| stmt_error ';' { yyerrok; }
-						{ $$ = $1; }
+					| stmt_error ';'
+						{ yyerrok;
+						  $$ = $1; }
 					;
 
 stmt_echo			: lno K_ECHO literal ';'
