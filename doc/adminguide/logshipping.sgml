@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.1 2005-02-21 04:45:47 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.2 2005-02-21 18:35:26 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
@@ -16,13 +16,39 @@ of some sort of <quote>avian transport</quote> system.
 in this form, including:
 
 <itemizedlist>
-  <listitem><para> Using it to replicate to nodes that <emphasis>aren't</emphasis> securable
-  <listitem><para> Supporting a different form of PITR
-  <listitem><para> If disaster strikes, you can look at the logs of queries
-     themselves
-  <listitem><para> This is a neat scheme for building load for tests...
-  <listitem><para> We have a data <quote>escrow</quote> system that would become incredibly
-     cheaper given log shipping
+  
+  <listitem><para> Replicating to nodes that
+  <emphasis>aren't</emphasis> securable
+
+  <listitem><para> Replicating to destinations where it is not
+  possible to set up bidirection communications
+
+  <listitem><para> Supporting a different form of <acronym/PITR/
+  (Point In Time Recovery) that filters out read-only transactions and
+  updates to tables that are not of interest.
+
+  <listitem><para> If some disaster strikes, you can look at the logs
+  of queries in detail
+
+  <para> This makes log shipping potentially useful even though you
+  might not intend to actually create a log-shipped node.
+
+  <listitem><para> This is a really slick scheme for building load for
+  doing tests
+
+  <listitem><para> We have a data <quote>escrow</quote> system that
+  would become incredibly cheaper given log shipping
+
+  <listitem><para> You may apply triggers on the <quote>disconnected
+  node </quote> to do additional processing on the data
+
+  <para> For instance, you might take a fairly <quote>stateful</quote>
+  database and turn it into a <quote>temporal</quote> one by use of
+  triggers that implement the techniques described in
+  <citation>Developing Time-Oriented Database Applications in SQL
+  </citation> by <ulink url= "http://www.cs.arizona.edu/people/rts/">
+  Richard T. Snodgrass</ulink>.
+
 </itemizedlist>
 
 <qandaset>
@@ -39,9 +65,8 @@ generate them by adding the <option>-a</option> option.
 <qandaentry>
 <question> <para> What takes place when a failover/MOVE SET takes place?</para></question>
 
-<answer><para> Nothing special.  So long as the archiving node remains a
-		subscriber, it will continue to generate
-		logs.</para></answer>
+<answer><para> Nothing special.  So long as the archiving node remains
+a subscriber, it will continue to generate logs.</para></answer>
 </qandaentry>
 
 <qandaentry>
@@ -49,13 +74,12 @@ generate them by adding the <option>-a</option> option.
 </para></question>
 
 <answer><para> The node will stop accepting SYNCs until this problem
-		is alleviated.  The database being subscribed to
-		will also fall behind.
-</para></answer>
+is alleviated.  The database being subscribed to will also fall
+behind.  </para></answer>
 </qandaentry>
+
 <qandaentry>
-<question> <para> How do we set up a subscription?
-</para></question>
+<question> <para> How do we set up a subscription?  </para></question>
 
 <answer><para> The script in <filename>tools</filename> called
 <application>slony1_dump.sh</application> is a shell script that dumps
@@ -70,6 +94,108 @@ all the SYNC logs generated from the time that dump
 <emphasis>started</emphasis> may be added to the dump in order to get
 a <quote>log shipping subscriber.</quote> </para></answer>
 </qandaentry>
+
+<qandaentry> <question><para> What are the limitations of log
+shipping? </para>
+</question>
+
+<answer><para> In the initial release, there are rather a lot of
+limitations.  As releases progress, hopefully some of these
+limitations may be alleviated/eliminated. </para> </answer>
+
+<answer><para> The log shipping functionality amounts to
+<quote>sniffing</quote> the data applied at a particular subscriber
+node.  As a result, you must have at least one <quote>regular</quote>
+node; you cannot have a cluster that consists solely of an origin and
+a set of <quote>log shipping nodes.</quote>. </para></answer>
+
+<answer><para> The <quote>log shipping node</quote> tracks the
+entirety of the traffic going to a subscriber.  You cannot separate
+things out if there are multiple replication sets.  </para></answer>
+
+<answer><para> The <quote>log shipping node</quote> presently tracks
+only SYNC events.  This should be sufficient to cope with
+<emphasis>some</emphasis> changes in cluster configuration, but not
+others.  </para>
+
+<para> Log shipping does <emphasis>not</emphasis> submit events for
+<command> DDL_SCRIPT </command>, so if you do a DDL change via <link
+linkend="stmtddlscript"> <command>EXECUTE SCRIPT</command></link>, the
+script is not propagated.  It ought to be possible to address this via
+some changes to the <command>DDL_SCRIPT</command> event; a Simple
+Matter Of Programming... </para> 
+
+<para> But at present, the implication of this limitation is that the
+introduction of any of the following events can invalidate the
+relationship between the SYNCs and the dump created using
+<application>slony1_dump.sh</application> so that you'll likely need
+to rerun <application>slony1_dump.sh</application>:
+
+<itemizedlist>
+<listitem><para><command> SUBSCRIBE_SET </command> 
+<listitem><para><command> DDL_SCRIPT </command> 
+
+<para> It ought to be a <acronym>SMOP</acronym> to add a DDL script to
+the log shipping stream.
+</itemizedlist>
+
+<para> A number of event types <emphasis> are </emphasis> handled in
+such a way that log shipping copes with them:
+
+<itemizedlist>
+
+<listitem><para><command>SYNC </command> events are, of course,
+handled.
+
+<listitem><para><command> UNSUBSCRIBE_SET </command> 
+
+<para> This event, much like <command>SUBSCRIBE_SET</command> is not
+handled by the log shipping code.  But its effect is, namely that SYNC
+events on the subscriber node will no longer contain updates to the
+set.
+
+<para> Similarly, <command>SET_DROP_TABLE</command>,
+<command>SET_DROP_SEQUENCE</command>,
+<command>SET_MOVE_TABLE</command>,
+<command>SET_MOVE_SEQUENCE</command> <command>DROP_SET</command>,
+<command>MERGE_SET</command>, will be handled
+<quote>appropriately</quote>.
+
+<listitem><para> The various events involved in node configuration are
+irrelevant to log shipping:
+
+<command>STORE_NODE</command>,
+<command>ENABLE_NODE</command>,
+<command>DROP_NODE</command>,
+<command>STORE_PATH</command>,
+<command>DROP_PATH</command>,
+<command>STORE_LISTEN</command>,
+<command>DROP_LISTEN</command>
+
+<listitem><para> Events involved in describing how particular sets are
+to be initially configured are similarly irrelevant:
+
+<command>STORE_SET</command>,
+<command>SET_ADD_TABLE</command>,
+<command>SET_ADD_SEQUENCE</command>,
+<command>STORE_TRIGGER</command>,
+<command>DROP_TRIGGER</command>,
+
+</itemizedlist>
+</para>
+</answer>
+
+<answer><para> It would be nice to be able to turn a <quote>log
+shipped</quote> node into a fully communicating &slony1; node that you
+could failover to.  This would be quite useful if you were trying to
+construct a cluster of (say) 6 nodes; you could start by creating one
+subscriber, and then use log shipping to populate the other 4 in
+parallel.
+
+<para> This usage is not supported, but presumably one could add the
+&slony1; configuration to the node, and promote it into being a new
+node.  Again, a Simple Matter Of Programming (that might not
+necessarily be all that simple)... </para></answer>
 
 </qandaset>
 </sect1>
