@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.19 2005-02-22 17:37:58 darcyb Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.20 2005-02-22 19:02:25 smsimms Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -130,6 +130,10 @@ to be replicated.</para>
 (<emphasis>e.g.</emphasis> - set of tables and sequences) from a
 &slony1; cluster.</para>
 </sect2>
+<sect2><title>execute_script</title>
+
+<para>Generates Slonik script to push DDL changes to a replication set.</para>
+</sect2>
 <sect2><title>failover</title>
 
 <para>Generates Slonik script to request failover from a dead node to some new origin</para>
@@ -174,10 +178,6 @@ to configure things.</para>
 <para>Kills slony watchdog and all slon daemons for the specified set.  It
 only works if those processes are running on the local host, of
 course!</para>
-</sect2>
-<sect2><title>slon_pushsql</title>
-
-<para>Generates Slonik script to push DDL changes to a replication set.</para>
 </sect2>
 <sect2><title>slon_start</title>
 

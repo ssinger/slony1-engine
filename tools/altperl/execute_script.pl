@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_pushsql.pl,v 1.9 2005-02-22 16:51:10 smsimms Exp $
+# $Id: execute_script.pl,v 1.1 2005-02-22 19:02:25 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: slon_pushsql [--config file] set# node# full_path_to_sql_script_file
+"Usage: execute_script [--config file] set# node# full_path_to_sql_script_file
 
     Executes the contents of a SQL script file on the specified set and node.
 
