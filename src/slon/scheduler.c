@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.11 2004-03-28 19:09:05 wieck Exp $
+ *	$Id: scheduler.c,v 1.12 2004-03-31 17:19:24 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -90,18 +90,12 @@ sched_start_mainloop(void)
 	/*
 	 * Block signals. Since sched_start_mainloop() is called before
 	 * any other thread is created, this will be inherited by all
-	 * threads in the system. The two signals will explicitly be
-	 * unblocked again while we're waiting for the scheduler thread.
+	 * threads in the system. 
 	 */
-	signal(SIGHUP, sched_sighuphandler);
-	signal(SIGINT, sched_sighandler);
-	signal(SIGTERM, sched_sighandler);
-	
 	sigemptyset(&sched_sigset);
 	sigaddset(&sched_sigset, SIGHUP);
 	sigaddset(&sched_sigset, SIGINT);
 	sigaddset(&sched_sigset, SIGTERM);
-	sigaddset(&sched_sigset, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &sched_sigset, NULL);
 
 	/*
@@ -164,10 +158,25 @@ sched_start_mainloop(void)
 int
 sched_wait_mainloop(void)
 {
+	int		signo;
+
 	/*
-	 * Unblock signals.
+	 * Wait for signal.
 	 */
-	pthread_sigmask(SIG_UNBLOCK, &sched_sigset, NULL);
+	sigemptyset(&sched_sigset);
+	sigaddset(&sched_sigset, SIGHUP);
+	sigaddset(&sched_sigset, SIGINT);
+	sigaddset(&sched_sigset, SIGTERM);
+	sigwait(&sched_sigset, &signo);
+	switch (signo)
+	{
+		case SIGHUP:	sched_sighuphandler(signo);
+						break;
+
+		case SIGINT:
+		case SIGTERM:	sched_sighandler(signo);
+						break;
+	}
 
 	/*
 	 * Wait for the scheduler to finish.

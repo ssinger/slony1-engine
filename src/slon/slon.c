@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.21 2004-03-29 20:34:11 wieck Exp $
+ *	$Id: slon.c,v 1.22 2004-03-31 17:19:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -46,8 +46,8 @@ static pthread_t        local_sync_thread;
 
 
 static pthread_t		main_thread;
-static void				sigalrmhandler(int signo);
 static char *const	   *main_argv;
+static void				sigalrmhandler(int signo);
 
 
 /* ----------
@@ -474,8 +474,7 @@ sigalrmhandler(int signo)
 		exit(-1);
 	}
 
-	slon_log(SLON_DEBUG1, "SIGALRM for non-main thread\n");
-	pthread_exit(NULL);
+	pthread_kill(main_thread, SIGALRM);
 }
 
 
