@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.2 2005-02-21 18:35:26 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.3 2005-02-25 20:59:40 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
@@ -198,6 +198,61 @@ node.  Again, a Simple Matter Of Programming (that might not
 necessarily be all that simple)... </para></answer>
 
 </qandaset>
+
+<sect2><title> Usage Hints </title>
+
+<note> <para> Here are some more-or-less disorganized notes about how
+you might want to use log shipping...</para> </note>
+
+<itemizedlist>
+
+<listitem><para> You <emphasis>don't</emphasis> want to blindly apply
+SYNC files because any given SYNC file may <emphasis>not</emphasis> be
+the right one.  If it's wrong, then the result will be that the call
+to <function> setsyncTracking_offline() </function> will fail, and
+your <application> psql</application> session will <command> ABORT
+</command>, and then run through the remainder of that SYNC file
+looking for a <command>COMMIT</command> or <command>ROLLBACK</command>
+so that it can try to move on to the next transaction.
+
+<para> But we <emphasis> know </emphasis> that the entire remainder of
+the file will fail!  It is futile to go through the parsing effort of
+reading the remainder of the file.</para>
+
+<para> Better idea: 
+
+<itemizedlist>
+
+<listitem><para> Read the first few lines of the file, up to and
+including the <function> setsyncTracking_offline() </function> call.  
+
+<listitem><para> Try to apply it that far.
+
+<listitem><para> If that failed, then it is futile to continue;
+<command>ROLLBACK</command> the transaction, and perhaps consider
+trying the next file.
+
+<listitem><para> If the <function> setsyncTracking_offline()
+</function> call succeeds, then you have the right next SYNC file, and
+should apply it.  You should probably <command>ROLLBACK</command> the
+transaction, and then use <application>psql</application> to apply the
+entire file full of updates.
+
+</itemizedlist>
+
+<para> In order to support the approach of grabbing just the first few
+lines of the sync file, the format has been set up to have a line of
+dashes at the end of the <quote>header</quote> material:
+
+<programlisting>
+-- Slony-I sync log
+-- Node 11, event 745
+start transaction;
+select "_T1".setsyncTracking_offline(1, '744', '745');
+--------------------------------------------------------------------
+</programlisting>
+
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
