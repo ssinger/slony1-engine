@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_base.sql,v 1.2 2003-12-03 17:38:27 wieck Exp $
+-- $Id: slony1_base.sql,v 1.3 2003-12-03 18:21:45 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -260,12 +260,21 @@ create sequence @NAMESPACE@.sl_action_seq;
 
 
 -- ----------------------------------------------------------------------
--- SEQUENCE sl_rowid_seq
+-- SEQUENCE sl_log_status
 --
---	The sequence to generate row identifiers for tables that do not
---	have any natural primary key.
+--	Bit 0x01 determines the currently active log table
+--	Bit 0x02 tells if the engine needs to read both logs
+--	after switching until the old log is clean and truncated.
+--
+--	Possible values:
+--		0		sl_log_1 active, sl_log_2 clean
+--		1		sl_log_2 active, sl_log_1 clean
+--		2		sl_log_1 active, sl_log_2 unknown - cleanup
+--		3		sl_log_2 active, sl_log_1 unknown - cleanup
 -- ----------------------------------------------------------------------
-create sequence @NAMESPACE@.sl_rowid_seq;
+create sequence @NAMESPACE@.sl_log_status
+	MINVALUE 0 MAXVALUE 3;
+SELECT setval('@NAMESPACE@.sl_log_status', 0);
 
 
 -- **********************************************************************
