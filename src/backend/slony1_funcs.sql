@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.24 2004-09-07 17:10:08 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.25 2004-09-14 02:49:57 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -222,6 +222,64 @@ comment on function @NAMESPACE@.terminateNodeConnections (name) is
 -- **********************************************************************
 -- * PL/pgSQL functions for administrative tasks
 -- **********************************************************************
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slonyVersionMajor()
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.slonyVersionMajor()
+returns int4
+as '
+begin
+	return 1;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.slonyVersionMajor () is 
+  'Returns the major version number of the slony schema';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slonyVersionMinor()
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.slonyVersionMinor()
+returns int4
+as '
+begin
+	return 1;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.slonyVersionMinor () is 
+  'Returns the minor version number of the slony schema';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slonyVersionPatchlevel()
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.slonyVersionPatchlevel()
+returns int4
+as '
+begin
+	return 0;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
+  'Returns the version patch level of the slony schema';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slonyVersion()
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.slonyVersion()
+returns text
+as '
+begin
+	return ''''	|| @NAMESPACE@.slonyVersionMajor() || ''.''
+				|| @NAMESPACE@.slonyVersionMinor() || ''.''
+				|| @NAMESPACE@.slonyVersionPatchlevel();
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.slonyVersion() is 
+  'Returns the version number of the slony schema';
 
 
 -- ----------------------------------------------------------------------
