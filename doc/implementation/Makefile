@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.1 2004-01-17 17:26:06 wieck Exp $
+# $Id: Makefile,v 1.2 2004-01-19 03:28:44 wieck Exp $
 # ----------
 
 
@@ -22,6 +22,7 @@ IMG_HT	= 720
 SRC_CONCEPT =	Slony-I-implementation.nr	\
 				Makefile			\
 				figure-1.pic		\
+				figure-2.pic		\
 				Slon.eps
 
 PDF		= Slony-I-implementation.pdf

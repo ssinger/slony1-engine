@@ -6,7 +6,7 @@
 .\"		Copyright (c) 2003, PostgreSQL Global Development Group
 .\"		Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-implementation.nr,v 1.1 2004-01-17 17:26:06 wieck Exp $
+.\"	$Id: Slony-I-implementation.nr,v 1.2 2004-01-19 03:28:44 wieck Exp $
 .\" ----------
 .\" format this document with
 .\"
@@ -78,12 +78,74 @@ the \*[Slony1] replication engine and related components.
 .af PN 1
 .bp 1
 .NH 1
-Replication Engine Architecture
-.TCENT "Replication Engine Architecture
+Control data
+.TCENT "Control data
 .PP
 .pso pic figure-1.pic
 .PP
-Figure 1 illustrates the thread architecture of the Slony replication
+Figure 1 shows the Entity Relationship Diagram of the \*[Slony1]
+configuration and runtime data. Although \*[Slony1] is a master
+slave replication technology, the nodes building a cluster do not
+have any particular role. All nodes contain the same
+configuration data and are running the same replication engine
+process. At any given time, a collection of tables, called set,
+has one node as its origin. The origin of a table is the only
+node that permits updates by regular client applications. The
+fact that all nodes are functionally identical and share the entire
+configuration data makes failover and failback a lot easier.
+.NH 2
+Table sl_node
+.TCENT "Table sl_node
+.PP
+.NH 2
+Table sl_path
+.TCENT "Table sl_path
+.PP
+.NH 2
+Table sl_listen
+.TCENT "Table sl_listen
+.PP
+.NH 2
+Table sl_set
+.TCENT "Table sl_set
+.PP
+.NH 2
+Table sl_table
+.TCENT "Table sl_table
+.PP
+.NH 2
+Table sl_subscribe
+.TCENT "Table sl_subscribe
+.PP
+.NH 2
+Table sl_event
+.TCENT "Table sl_event
+.PP
+.NH 2
+Table sl_confirm
+.TCENT "Table sl_confirm
+.PP
+.NH 2
+Table sl_setsync
+.TCENT "Table sl_setsync
+.PP
+.NH 2
+Table sl_log_1
+.TCENT "Table sl_log_1
+.PP
+.NH 2
+Table sl_log_2
+.TCENT "Table sl_log_2
+.PP
+.\" **********************************************************************
+.bp
+.NH 1
+Replication Engine Architecture
+.TCENT "Replication Engine Architecture
+.PP
+.pso pic figure-2.pic
+.PP
+Figure 2 illustrates the thread architecture of the Slony replication
 engine.
 .NH 2
 Sync Thread
