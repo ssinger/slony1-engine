@@ -9,7 +9,9 @@ void InitializeConfOptions(void);
 bool set_config_option(const char *name, const char *value);
 
 extern double real_placeholder;
-extern char *string_placeholder;
+
+extern char *rtcfg_cluster_name;
+extern char *rtcfg_conninfo;
 
 extern char *pid_file;
 
@@ -216,14 +218,24 @@ static struct config_string ConfigureNamesString[] =
 {
         {
                 {
-                        (const char *)"string_placeholder",                                                           /* conf name */
-                        gettext_noop("place holder"),                                                   /* short desc */
-                        gettext_noop("place holder"),                                                   /* long desc */
+                        (const char *)"cluster_name",                                                           /* conf name */
+                        gettext_noop("Name of the replication cluster"),                                                   /* short desc */
+                        NULL,                                                   /* long desc */
                         SLON_C_STRING                                                                   /* config type */
                 },
-                &string_placeholder,                                                                    /* var_name */
-                "default"                                                                               /* default value */
+                &rtcfg_cluster_name,                                                                    /* var_name */
+                NULL                                                                               /* default value */
         },
+	{
+		{
+			(const char *)"conn_info",
+			gettext_noop("connection info string"),
+			NULL,
+			SLON_C_STRING
+		},
+		&rtcfg_conninfo,
+		NULL
+	},
 	{
 		{
 			(const char *)"pid_file",
