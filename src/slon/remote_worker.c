@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.65 2004-10-08 16:30:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.66 2004-11-13 04:52:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -257,6 +257,7 @@ remoteWorkerThread_main(void *cdata)
 	int64           curr_config = -1;
 	char            seqbuf[64];
 	int             event_ok;
+	int				need_reloadListen = false;
 
 	slon_log(SLON_DEBUG1,
 		 "remoteWorkerThread_%d: thread starts\n",
@@ -526,6 +527,8 @@ remoteWorkerThread_main(void *cdata)
 				      "select %s.storeNode_int(%d, '%q'); ",
 						 rtcfg_namespace,
 						 no_id, no_comment);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "ENABLE_NODE") == 0)
 			{
 				int             no_id = (int)strtol(event->ev_data1, NULL, 10);
@@ -537,6 +540,8 @@ remoteWorkerThread_main(void *cdata)
 					   "select %s.enableNode_int(%d); ",
 						 rtcfg_namespace,
 						 no_id);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
 				int             no_id = (int)strtol(event->ev_data1, NULL, 10);
@@ -584,6 +589,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1,
 						 "notify \"_%s_Restart\"; ",
 						 rtcfg_cluster_name);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "STORE_PATH") == 0)
 			{
 				int             pa_server = (int)strtol(event->ev_data1, NULL, 10);
@@ -598,6 +605,8 @@ remoteWorkerThread_main(void *cdata)
 						 "select %s.storePath_int(%d, %d, '%q', %d); ",
 						 rtcfg_namespace,
 						 pa_server, pa_client, pa_conninfo, pa_connretry);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "DROP_PATH") == 0)
 			{
 				int             pa_server = (int)strtol(event->ev_data1, NULL, 10);
@@ -610,6 +619,8 @@ remoteWorkerThread_main(void *cdata)
 					 "select %s.dropPath_int(%d, %d); ",
 						 rtcfg_namespace,
 						 pa_server, pa_client);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "STORE_LISTEN") == 0)
 			{
 				int             li_origin = (int)strtol(event->ev_data1, NULL, 10);
@@ -781,6 +792,8 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_moveSet(set_id, old_origin, new_origin, sub_provider);
 
 				dstring_reset(&query1);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "FAILOVER_SET") == 0)
 			{
 				int             failed_node = (int)strtol(event->ev_data1, NULL, 10);
@@ -793,6 +806,8 @@ remoteWorkerThread_main(void *cdata)
 				  "select %s.failoverSet_int(%d, %d, %d); ",
 						 rtcfg_namespace,
 					  failed_node, backup_node, set_id);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
 			{
 				int             sub_set = (int)strtol(event->ev_data1, NULL, 10);
@@ -807,6 +822,8 @@ remoteWorkerThread_main(void *cdata)
 						 "select %s.subscribeSet_int(%d, %d, %d, '%q'); ",
 						 rtcfg_namespace,
 						 sub_set, sub_provider, sub_receiver, sub_forward);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "ENABLE_SUBSCRIPTION") == 0)
 			{
 				int             sub_set = (int)strtol(event->ev_data1, NULL, 10);
@@ -918,6 +935,7 @@ remoteWorkerThread_main(void *cdata)
 					sub_set, sub_provider, sub_receiver);
 				}
 
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "UNSUBSCRIBE_SET") == 0)
 			{
 				int             sub_set = (int)strtol(event->ev_data1, NULL, 10);
@@ -932,6 +950,8 @@ remoteWorkerThread_main(void *cdata)
 				   "select %s.unsubscribeSet_int(%d, %d); ",
 						 rtcfg_namespace,
 						 sub_set, sub_receiver);
+
+				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "DDL_SCRIPT") == 0)
 			{
 				int             ddl_setid = (int)strtol(event->ev_data1, NULL, 10);
@@ -962,6 +982,12 @@ remoteWorkerThread_main(void *cdata)
 			}
 			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_abort();
+
+			if (need_reloadListen)
+			{
+				rtcfg_reloadListen(local_dbconn);
+				need_reloadListen = false;
+			}
 		}
 
 #ifdef SLON_MEMDEBUG

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.41 2004-11-12 20:09:19 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.42 2004-11-13 04:52:39 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -814,6 +814,7 @@ begin
 -- Note that the following code should all become obsolete in the wake
 -- of the availability of RebuildListenEntries()...
 
+if false then
 	-- ----
 	-- Let every node that listens for something on the failed node
 	-- listen for that on the backup node instead.
@@ -846,6 +847,7 @@ begin
 	delete from @NAMESPACE@.sl_listen
 			where li_provider = p_failed_node
 				or li_receiver = p_failed_node;
+end if;
 
 	-- ----
 	-- Move the sets
@@ -1360,6 +1362,8 @@ declare
 	p_provider	alias for $2;
 	p_receiver	alias for $3;
 begin
+	return -1;
+
 	perform @NAMESPACE@.storeListen_int (p_origin, p_provider, p_receiver);
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
 			p_origin, p_provider, p_receiver);
@@ -1447,6 +1451,8 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
+	return -1;
+
 	perform @NAMESPACE@.dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
@@ -1473,6 +1479,8 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
+	return -1;
+
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
@@ -3940,6 +3948,21 @@ begin
 	-- The real work is done in the replication engine. All
 	-- we have to do here is remembering that it happened.
 	-- ----
+
+	-- ----
+	-- Well, not only ... we might be missing an important event here
+	-- ----
+	if not exists (select true from @NAMESPACE@.sl_path
+			where pa_server = p_sub_provider
+			and pa_client = p_sub_receiver)
+	then
+		insert into @NAMESPACE@.sl_path
+				(pa_server, pa_client, pa_conninfo, pa_connretry)
+				values 
+				(p_sub_provider, p_sub_receiver, 
+				''<event pending>'', 10);
+	end if;
+
 	update @NAMESPACE@.sl_subscribe
 			set sub_active = ''t''
 			where sub_set = p_sub_set
@@ -4498,7 +4521,7 @@ that.';
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION RebuildListenEntries (provider, receiver)
+-- FUNCTION RebuildListenEntries ()
 --
 --	Revises sl_listen rules based on contents of sl_path and
 --              sl_subscribe
@@ -4508,61 +4531,18 @@ returns int
 as '
 declare
 	v_row			record;
-	v_origin		int4;
-	v_receiver		int4;
-	v_done			boolean;
-
 begin
-	return 0;
-	-- 0.  Drop out listens
+	-- First remove the entire configuration
 	delete from @NAMESPACE@.sl_listen;
 
-	-- 1.  Add listens pointed out by subscriptions - sl_listen
-	-- @NAMESPACE@.storelisten(origin, provider, receiver)
-	for v_row in select sub_provider, sub_receiver 
-                     from @NAMESPACE@.sl_subscribe s
-			where exists (select true from @NAMESPACE@.sl_path p where 
-                                 p.pa_server = s.sub_provider and
-                                 p.pa_client = s.sub_receiver)
+	-- The loop over every possible pair of origin, receiver
+	for v_row in select N1.no_id as origin, N2.no_id as receiver
+			from @NAMESPACE@.sl_node N1, @NAMESPACE@.sl_node N2
+			where N1.no_id <> N2.no_id
 	loop
-	--	raise notice ''Listen based on subscription: server % client %'', v_row.sub_provider, v_row.sub_receiver;
-		perform @NAMESPACE@.storelisten(v_row.sub_provider, v_row.sub_provider, v_row.sub_receiver);
+		perform @NAMESPACE@.RebuildListenEntriesOne(v_row.origin, v_row.receiver);
 	end loop;
 
-	-- 2.  Add direct listens pointed out in sl_path
-	for v_row in select pa_server, pa_client 
-		from @NAMESPACE@.sl_path path
-		where not exists (select true from @NAMESPACE@.sl_listen listen
-					where path.pa_server = listen.li_origin and
-					      path.pa_client = listen.li_receiver)
-	loop
-	--	raise notice ''Listen based on path: server % client %'', v_row.pa_server, v_row.pa_client;
-		perform @NAMESPACE@.storelisten(v_row.pa_server, v_row.pa_server, v_row.pa_client);
-	end loop;
-
-	-- 3.  Iterate until we cannot iterate any more...
-	--     Add in indirect listens based on what is in sl_listen and sl_path
-	v_done := ''f'';
-	while not v_done loop
-		v_done := ''t'';
-		for v_row in select  li_origin, pa_server, pa_client
-			from @NAMESPACE@.sl_path path, @NAMESPACE@.sl_listen listen
-			where
-				li_receiver = pa_server
-                                and li_origin <> pa_client
-				and not exists (select true from @NAMESPACE@.sl_listen listen2
-					where listen2.li_origin = listen.li_origin and
-					      listen2.li_receiver = path.pa_client)
-                                and exists (select true from @NAMESPACE@.sl_path p
-                                        where p.pa_server = path.pa_server and
-                                              p.pa_client = path.pa_client )
-
-		loop
-	--		raise notice ''Listen based on listen/path - ORG: % PROV:% REC:%'', v_row.li_origin,v_row.pa_server,v_row.pa_client;
-			perform @NAMESPACE@.storelisten(v_row.li_origin,v_row.pa_server,v_row.pa_client);
-			v_done := ''f'';
-		end loop;		
-	end loop;
 	return 0;
 end;
 ' language plpgsql;
@@ -4573,6 +4553,97 @@ comment on function @NAMESPACE@.RebuildListenEntries() is
 Invoked by various subscription and path modifying functions, this
 rewrites the sl_listen entries, adding in all the ones required to
 allow communications between nodes in the Slony-I cluster.';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION RebuildListenEntriesOne (origin, receiver)
+--
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.RebuildListenEntriesOne(int4, int4)
+returns int4
+as '
+declare
+	p_origin		alias for $1;
+	p_receiver		alias for $2;
+	v_row			record;
+begin
+	-- 1. If the receiver is subscribed to any set from the origin,
+	--    listen on the same provider(s).
+	for v_row in select distinct sub_provider
+			from @NAMESPACE@.sl_subscribe, @NAMESPACE@.sl_set,
+				@NAMESPACE@.sl_path
+			where sub_set = set_id
+			and set_origin = p_origin
+			and sub_receiver = p_receiver
+			and sub_provider = pa_server
+			and sub_receiver = pa_client
+	loop
+		perform @NAMESPACE@.storeListen_int(p_origin, 
+				v_row.sub_provider, p_receiver);
+	end loop;
+	if found then
+		return 1;
+	end if;
+
+	-- 2. If the receiver has a direct path to the provider,
+	--    use that.
+	if exists (select true
+			from @NAMESPACE@.sl_path
+			where pa_server = p_origin
+			and pa_client = p_receiver)
+	then
+		perform @NAMESPACE@.storeListen_int(p_origin, p_origin, p_receiver);
+		return 1;
+	end if;
+
+	-- 3. Listen on every node that is either provider for the
+	--    receiver or is using the receiver as provider (follow the
+	--    normal subscription routes).
+	for v_row in select distinct provider from (
+			select sub_provider as provider
+					from @NAMESPACE@.sl_subscribe
+					where sub_receiver = p_receiver
+			union
+			select sub_receiver as provider
+					from @NAMESPACE@.sl_subscribe
+					where sub_provider = p_receiver
+					and exists (select true from @NAMESPACE@.sl_path
+								where pa_server = sub_receiver
+								and pa_client = sub_provider)
+			) as S
+	loop
+		perform @NAMESPACE@.storeListen_int(p_origin,
+				v_row.provider, p_receiver);
+	end loop;
+	if found then
+		return 1;
+	end if;
+
+	-- 4. If all else fails - meaning there are no subscriptions to
+	--    guide us to the right path - use every node we have a path
+	--    to as provider. This normally only happens when the cluster
+	--    is built or a new node added. This brute force fallback
+	--    ensures that events will propagate if possible at all.
+	for v_row in select pa_server as provider
+			from @NAMESPACE@.sl_path
+			where pa_client = p_receiver
+	loop
+		perform @NAMESPACE@.storeListen_int(p_origin, 
+				v_row.provider, p_receiver);
+	end loop;
+	if found then
+		return 1;
+	end if;
+
+	return 0;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.RebuildListenEntriesOne(int4, int4) is
+'RebuildListenEntriesOne(p_origin, p_receiver)
+
+Rebuilding of sl_listen entries for one origin, receiver pair.';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION generate_sync_event ()

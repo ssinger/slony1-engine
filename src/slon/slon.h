@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.40 2004-10-13 18:50:55 wieck Exp $
+ *	$Id: slon.h,v 1.41 2004-11-13 04:52:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -363,6 +363,7 @@ extern void		rtcfg_storePath(int pa_server, char *pa_conninfo,
 							int pa_connretry);
 extern void		rtcfg_dropPath(int pa_server);
 
+extern void		rtcfg_reloadListen(PGconn *db);
 extern void		rtcfg_storeListen(int li_origin, int li_provider);
 extern void		rtcfg_dropListen(int li_origin, int li_provider);
 

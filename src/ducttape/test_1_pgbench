@@ -203,8 +203,6 @@ slonik <<_EOF_
 		store node (id = 2, comment = 'Node 2');
 		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
 		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
-		store listen (origin = 1, receiver = 2);
-		store listen (origin = 2, receiver = 1);
 	}
 	on error { exit -1; }
 	echo 'Database $DB2 added as Node 2';

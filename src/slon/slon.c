@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.36 2004-10-19 00:53:11 wieck Exp $
+ *	$Id: slon.c,v 1.37 2004-11-13 04:52:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -344,29 +344,9 @@ main(int argc, char *const argv[])
 	PQclear(res);
 
 	/*
-	 * Read configuration table sl_listen - the interesting pieces
+	 * Load the initial listen configuration
 	 */
-	slon_mkquery(&query,
-		     "select li_origin, li_provider "
-		     "from %s.sl_listen where li_receiver = %d",
-		     rtcfg_namespace, rtcfg_nodeid);
-	res = PQexec(startup_conn, dstring_data(&query));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_FATAL, "main: Cannot get listen config - %s",
-			 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
-		slon_exit(-1);
-	}
-	for (i = 0, n = PQntuples(res); i < n; i++)
-	{
-		int             li_origin = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int             li_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
-
-		rtcfg_storeListen(li_origin, li_provider);
-	}
-	PQclear(res);
+	rtcfg_reloadListen(startup_conn);
 
 	/*
 	 * Read configuration table sl_set

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.26 2004-10-08 16:30:59 wieck Exp $
+ *	$Id: local_listen.c,v 1.27 2004-11-13 04:52:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -227,6 +227,8 @@ localListenThread_main(void *dummy)
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_storeNode(no_id, no_comment);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "ENABLE_NODE") == 0)
 			{
@@ -239,6 +241,8 @@ localListenThread_main(void *dummy)
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_enableNode(no_id);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "DROP_NODE") == 0)
 			{
@@ -272,6 +276,8 @@ localListenThread_main(void *dummy)
 					slon_abort();
 				}
 				PQclear(notify_res);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "STORE_PATH") == 0)
 			{
@@ -290,6 +296,8 @@ localListenThread_main(void *dummy)
 
 				if (pa_client == rtcfg_nodeid)
 					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "DROP_PATH") == 0)
 			{
@@ -304,6 +312,8 @@ localListenThread_main(void *dummy)
 
 				if (pa_client == rtcfg_nodeid)
 					rtcfg_dropPath(pa_server);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "STORE_LISTEN") == 0)
 			{
@@ -523,6 +533,8 @@ localListenThread_main(void *dummy)
 				dstring_free(&query2);
 
 				rtcfg_moveSet(set_id, old_origin, new_origin, sub_provider);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "FAILOVER_SET") == 0)
 			{
@@ -552,6 +564,8 @@ localListenThread_main(void *dummy)
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "ENABLE_SUBSCRIPTION") == 0)
 			{
@@ -570,6 +584,8 @@ localListenThread_main(void *dummy)
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "UNSUBSCRIBE_SET") == 0)
 			{
@@ -584,6 +600,8 @@ localListenThread_main(void *dummy)
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_unsubscribeSet(sub_set);
+
+				rtcfg_reloadListen(dbconn);
 			}
 			else if (strcmp(ev_type, "DDL_SCRIPT") == 0)
 			{

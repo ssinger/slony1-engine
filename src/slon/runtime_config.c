@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.21 2004-09-29 22:15:23 cbbrowne Exp $
+ *	$Id: runtime_config.c,v 1.22 2004-11-13 04:52:47 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -397,6 +397,69 @@ rtcfg_dropPath(int pa_server)
  * ---------- rtcfg_storeListen ----------
  */
 void
+rtcfg_reloadListen(PGconn *db)
+{
+	SlonDString		query;
+	PGresult	   *res;
+	int				i, n;
+	SlonNode       *node;
+	SlonListen     *listen;
+
+	/*
+	 * Clear out the entire Listen configuration
+	 */
+	rtcfg_lock();
+	for (node = rtcfg_node_list_head; node; node = node->next)
+	{
+		while((listen = node->listen_head) != NULL)
+		{
+			DLLIST_REMOVE(node->listen_head, node->listen_tail, listen);
+			free(listen);
+		}
+	}
+	rtcfg_unlock();
+	rtcfg_seq_bump();
+
+	/*
+	 * Read configuration table sl_listen - the interesting pieces
+	 */
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+		     "select li_origin, li_provider "
+		     "from %s.sl_listen where li_receiver = %d",
+		     rtcfg_namespace, rtcfg_nodeid);
+	res = PQexec(db, dstring_data(&query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_FATAL, "Cannot get listen config - %s",
+			 PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query);
+		slon_exit(-1);
+	}
+	for (i = 0, n = PQntuples(res); i < n; i++)
+	{
+		int li_origin = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int li_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+
+		rtcfg_storeListen(li_origin, li_provider);
+	}
+	PQclear(res);
+
+	dstring_free(&query);
+
+	for (node = rtcfg_node_list_head; node; node = node->next)
+	{
+		rtcfg_startStopNodeThread(node);
+	}
+}
+
+
+/*
+ * ---------- rtcfg_storeListen ----------
+ */
+void
 rtcfg_storeListen(int li_origin, int li_provider)
 {
 	SlonNode       *node;
@@ -412,6 +475,7 @@ rtcfg_storeListen(int li_origin, int li_provider)
 		slon_abort();
 		return;
 	}
+
 	/*
 	 * Check if we already listen for events from that origin at this
 	 * provider.
@@ -476,6 +540,7 @@ rtcfg_dropListen(int li_origin, int li_provider)
 		slon_abort();
 		return;
 	}
+
 	/*
 	 * Find that listen entry at this provider.
 	 */
@@ -501,6 +566,7 @@ rtcfg_dropListen(int li_origin, int li_provider)
 			return;
 		}
 	}
+
 	rtcfg_unlock();
 
 	/*
