@@ -40,7 +40,7 @@ fi
 # which indicates that we try without any flags at all, and "pthread-config"
 # which is a program returning the flags for the Pth emulation library.
 
-acx_pthread_flags="pthreads none -Kthread -kthread lthread -pthread -pthreads -mthreads pthread --thread-safe -mt pthread-config"
+acx_pthread_flags="pthreads none -Kthread -lpthread -kthread lthread -pthread -lpthreads -pthread -mthreads pthread --thread-safe -mt pthread-config"
 
 # The ordering *is* (sometimes) important.  Some notes on the
 # individual items follow:
@@ -49,6 +49,7 @@ acx_pthread_flags="pthreads none -Kthread -kthread lthread -pthread -pthreads -m
 # none: in case threads are in libc; should be tried before -Kthread and
 #       other compiler flags to prevent continual compiler warnings
 # -Kthread: Sequent (threads in libc, but -Kthread needed for pthread.h)
+# -lpthread: FreeBSD prefered threads (5.x)
 # -kthread: FreeBSD kernel threads (preferred to -pthread since SMP-able)
 # lthread: LinuxThreads port on FreeBSD (also preferred to -pthread)
 # -pthread: Linux/gcc (kernel threads), BSD/gcc (userland threads)
@@ -74,7 +75,7 @@ case "${host_cpu}-${host_os}" in
 
         acx_pthread_flags="-pthread -pthreads pthread -mt $acx_pthread_flags"
         ;;
-esac
+	esac
 
 if test x"$acx_pthread_ok" = xno; then
 for flag in $acx_pthread_flags; do
