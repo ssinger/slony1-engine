@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.22 2004-09-06 04:46:12 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.23 2004-09-06 04:49:48 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3890,8 +3890,8 @@ create or replace view @NAMESPACE@.sl_status as select
 	C.con_seqno as st_last_received,
 	C.con_timestamp as st_last_received_ts,
 	CE.ev_timestamp as st_last_received_event_ts,
-	E.ev_seqno - C.con_seqno as lag_num_events,
-	current_timestamp - CE.ev_timestamp as lag_time
+	E.ev_seqno - C.con_seqno as st_lag_num_events,
+	current_timestamp - CE.ev_timestamp as st_lag_time
 	from @NAMESPACE@.sl_event E, @NAMESPACE@.sl_confirm C,
 		@NAMESPACE@.sl_event CE
 	where E.ev_origin = C.con_origin
