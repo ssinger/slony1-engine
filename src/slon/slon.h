@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.33 2004-06-15 23:27:18 wieck Exp $
+ *	$Id: slon.h,v 1.34 2004-06-21 21:42:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,9 +32,9 @@
 #define SLON_DATA_FETCH_SIZE		100
 #define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 4)
 #else
-#define SLON_COMMANDS_PER_LINE		25
-#define SLON_DATA_FETCH_SIZE		4
-#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 5)
+#define SLON_COMMANDS_PER_LINE		10
+#define SLON_DATA_FETCH_SIZE		10
+#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 50)
 #endif
 
 
