@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.11 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.12 2005-02-14 16:23:02 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -18,12 +18,12 @@ changes, but if you want to do upgrades that take place while
 transactions are still winding their way through your systems, this is
 necessary.  </para>
 
-<para>It is also necessary to use <command> EXECUTE SCRIPT</command>
-if you alter tables so as to change their schemas.  If you do not,
-then you may run into the problems <link linkend="neededexecddl">
-described here </link> where triggers on modified tables do not take
-account of the schema change.  This has the potential to corrupt data
-on subscriber nodes.  </para>
+<para>It is also necessary to use <command>EXECUTE SCRIPT</command> if
+you alter tables so as to change their schemas.  If you do not, then
+you may run into the problems <link linkend="neededexecddl"> described
+here </link> where triggers on modified tables do not take account of
+the schema change.  This has the potential to corrupt data on
+subscriber nodes.  </para>
 
 <para>It's worth making a couple of comments on <quote>special
 things</quote> about <command><link linkend="stmtddlscript">EXECUTE
@@ -148,7 +148,7 @@ subscribe all the appropriate nodes to it, and use <command>EXECUTE
 SCRIPT</command>, specifying that <quote>empty set.</quote></para></listitem>
 
 <listitem><para> You may want an extra index on some replicated
-node(s) in order to improve performance there.</para>  
+node(s) in order to improve performance there.</para>
 
 <para> For instance, a table consisting of transactions may only need
 indices related to referential integrity on the <quote>origin</quote>
@@ -176,7 +176,8 @@ an exclusive lock for the time it takes to build the index; that will
 implicitly stop replication, while the index builds, but shouldn't
 cause any particular problems.  If you add an index on a table that
 takes 20 minutes to build, replication will block for 20 minutes, but
-should catch up quickly once the index is created.</para></listitem>
+should catch up quickly enough once the index is
+created.</para></listitem>
 
 </itemizedlist></para></sect2>
 
