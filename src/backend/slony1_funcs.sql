@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.54 2005-02-16 22:18:32 smsimms Exp $
+-- $Id: slony1_funcs.sql,v 1.55 2005-02-16 22:51:22 smsimms Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4271,6 +4271,18 @@ declare
 	v_idxrow		record;
 begin
 	--
+	-- Ensure that the table exists
+	--
+	if (select PGC.relname
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace) is null then
+		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+	end if;
+
+	--
 	-- Lookup the tables primary key or the specified unique index
 	--
 	if p_idx_name isnull then
@@ -4380,6 +4392,18 @@ declare
 	v_attkind		text default '''';
 	v_attfound		bool;
 begin
+	--
+	-- Ensure that the table exists
+	--
+	if (select PGC.relname
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace) is null then
+		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+	end if;
+
 	--
 	-- Lookup the tables primary key or the specified unique index
 	--
