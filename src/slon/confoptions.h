@@ -7,6 +7,7 @@
 void InitializeConfOptions(void);
 
 bool set_config_option(const char *name, const char *value);
+void *get_config_option(const char *name);
 
 extern double real_placeholder;
 

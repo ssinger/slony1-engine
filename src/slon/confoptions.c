@@ -15,7 +15,7 @@ static int      conf_var_compare(const void *a, const void *b);
 static int      conf_name_compare(const char *namea, const char *nameb);
 
 bool            set_config_option(const char *name, const char *value);
-
+void		*get_config_option(const char *name);
 
 bool            bool_placeholder;
 double          real_placeholder;
@@ -353,6 +353,45 @@ conf_name_compare(const char *namea, const char *nameb)
 	return 0;
 }
 
+void *get_config_option(const char *name)
+{
+	struct config_generic *record;
+	int	elevel;
+
+	record = find_option(name, elevel);
+	if (record == NULL)
+	{	slon_log(elevel, "unrecognized configuration parameter \"%s\"\n", name);
+		return NULL;
+	}
+	switch (record->vartype)
+	{
+		case SLON_C_BOOL:
+		{
+			struct config_bool *conf = (struct config_bool *) record;
+			return (void *)conf->variable;
+			break;
+		}
+		case SLON_C_INT:
+		{
+			struct config_int *conf = (struct config_int *) record;
+			return (void *)*conf->variable;
+			break;
+		}
+		case SLON_C_REAL:
+		{
+			struct config_real *conf = (struct config_real *) record;
+			return (void *)conf->variable;
+			break;			
+		}
+		case SLON_C_STRING:
+		{
+			struct config_string *conf = (struct config_string *)record;
+			return (void *)*conf->variable;
+			break;
+		}
+	}
+	return NULL;
+}
 
 bool 
 set_config_option(const char *name, const char *value)
