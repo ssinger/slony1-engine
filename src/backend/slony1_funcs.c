@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.22 2004-10-06 15:09:14 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.23 2004-10-11 19:16:20 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -31,6 +31,7 @@
 #include "mb/pg_wchar.h"
 
 #include <signal.h>
+#include <errno.h>
 
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
