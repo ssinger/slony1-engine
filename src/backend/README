@@ -8,6 +8,12 @@ support functions, procedures and triggers.
 
 TODO:
 
+	general
+
+		*	Add functionality for sequence replication
+		*	Add functionality for trigger steering
+
+
 	slony1_base.sql
 
 		*	Change structures to enable logswitching
