@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.5 2004-07-20 09:15:30 dfetter Exp $
+# $Id: Makefile,v 1.6 2004-08-31 21:41:54 darcyb Exp $
 # ----------
 
 slony_subdir = doc/concept
@@ -38,7 +38,7 @@ TXT		= Slony-I-concept.txt
 
 DISTFILES = Makefile $(wildcard *.pic) Slon_900x720.jpg Slony-I-concept.nr
 
-all:	all-ps all-pdf
+all:	all-ps all-pdf all-txt
 
 all-ps:	$(PS)
 

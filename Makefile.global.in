@@ -6,38 +6,51 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.15 2004-08-28 21:20:10 darcyb Exp $
+# $Id: Makefile.global.in,v 1.16 2004-08-31 21:41:52 darcyb Exp $
 # ----------
 
-pgincludedir = @PGINCLUDEDIR@
-pgincludeserverdir = @PGINCLUDESERVERDIR@
-pglibdir = @PGLIBDIR@
-pgpkglibdir = @PGPKGLIBDIR@
-pgsharedir = @PGSHAREDIR@
-pgbindir = @PGBINDIR@
+#location subsitutions
 
-host_os = @HOST_OS@
-PORTNAME  = @PORTNAME@
+pgincludedir=		@PGINCLUDEDIR@
+pgincludeserverdir=	@PGINCLUDESERVERDIR@
+pglibdir= 		@PGLIBDIR@
+pgpkglibdir=		@PGPKGLIBDIR@
+pgsharedir=		@PGSHAREDIR@
+pgbindir=		@PGBINDIR@
+distdir=		@SLONYPATH@/@PACKAGE_NAME@-@PACKAGE_VERSION@
 
-PACKAGE_NAME	= @PACKAGE_NAME@
-PACKAGE		= @PACKAGE@
+
+host_os= 		@HOST_OS@
+PORTNAME= 		@PORTNAME@
+PACKAGE_NAME=		@PACKAGE_NAME@
+PACKAGE=		@PACKAGE@
+
+#build tools
+CC=			@CC@
+PTHREAD_CC=		@PTHREAD_CC@
+YACC=			@YACC@
+FLEX=			@LEX@
+GROFF=			@GROFF@
+PS2PDF=			@PS2PDF@
+DJPEG=			@DJPEG@
+PNMTOPS=		@PNMTOPS@
+
+#build tool flags
+CFLAGS=			@CFLAGS@
+PTHREAD_CFLAGS= 	@PTHREAD_CFLAGS@
+YFLAGS=			@YFLAGS@
+FLEXFLAGS=		@LEXFLAGS@ $(LFLAGS)
+
+#libs
+PTHREAD_LIBS=		@PTHREAD_LIBS@
+
 
 subdir=$(slony_subdir)
-distdir=@SLONYPATH@/@PACKAGE_NAME@-@PACKAGE_VERSION@
 
 override CPPFLAGS := -I$(top_builddir) -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
 LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq
 
-PTHREAD_CFLAGS	= @PTHREAD_CFLAGS@
-PTHREAD_LIBS	= @PTHREAD_LIBS@
-PTHREAD_CC		= @PTHREAD_CC@
-
-CC = @CC@
-YACC = @YACC@
-YFLAGS = @YFLAGS@
-FLEX = @LEX@
-FLEXFLAGS = @LEXFLAGS@ $(LFLAGS)
-
+CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations
 
 # Installation.
 

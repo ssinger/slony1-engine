@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.31 2004-08-28 21:20:10 darcyb Exp $
+# $Id: configure.ac,v 1.32 2004-08-31 21:41:52 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -89,6 +89,7 @@ AC_CHECK_FUNCS([strtoul])
 # ----
 # Locate PostgreSQL paths
 # ----
+
 AC_ARG_WITH(pgconfigdir, [  --with-pgconfigdir=<dir>	     Location of the PostgreSQL pg_config program. ])
 AC_ARG_WITH(pgbindir, [  --with-pgbindir=<dir>	     Location of the PostgreSQL postmaster. ])
 AC_ARG_WITH(pgincludedir, [  --with-pgincludedir=<dir>          Location of the PostgreSQL headers. ])
@@ -111,9 +112,20 @@ AC_SUBST(PGLIBDIR, $PG_LIBDIR)
 AC_SUBST(PGPKGLIBDIR, $PG_PKGLIBDIR)
 AC_SUBST(PGSHAREDIR, $PG_SHAREDIR)
 AC_SUBST(PGBINDIR, $PG_BINDIR)
-AC_SUBST(SLONYPATH, $SLONYPATH)
+AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
+
+# ----
+# Tools for building docs
+# ---
+#SLON_DOCS()
+
+AC_SUBST(GROFF)
+AC_SUBST(PS2PDF)
+AC_SUBST(DJPEG)
+AC_SUBST(PNMTOPS)
+
 
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile
