@@ -261,7 +261,7 @@ PACKAGE_STRING='FULL-PACKAGE-NAME VERSION'
 PACKAGE_BUGREPORT='BUG-REPORT-ADDRESS'
 
 ac_unique_file="src"
-ac_default_prefix=/usr/local/slony1
+ac_default_prefix=/usr/local/pgsql
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -832,7 +832,6 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
-  --with-pghome=<dir> Location of postgres home directory
 
 Some influential environment variables:
   CC          C compiler command
@@ -2232,39 +2231,22 @@ fi
 
 # Checks for header files.
 
-
-# Check whether --with-pghome or --without-pghome was given.
-if test "${with_pghome+set}" = set; then
-  withval="$with_pghome"
-  PGHOME=$with_pghome
-
-fi;
-
-if test "x$with_pghome" = x ; then
-  { { echo "$as_me:$LINENO: error:
-                ********************************************
-                Location of postgres home directory required
-
-                       Use --with-pghome option
-                ********************************************" >&5
-echo "$as_me: error:
-                ********************************************
-                Location of postgres home directory required
-
-                       Use --with-pghome option
-                ********************************************" >&2;}
-   { (exit 1); exit 1; }; }
-else
-  if test ! -f "$with_pghome/include/server/executor/spi.h" ; then
+# The installation prefix must be the postgres home. Otherwise
+# we will never be able to administer a box remote.
+pghome=$prefix
+test "x$pghome" = xNONE && pghome=$ac_default_prefix
+if test ! -f "$pghome/include/server/executor/spi.h" ; then
     { { echo "$as_me:$LINENO: error:
-           $with_pghome/include/server/executor/spi.h NOT found
+           $pghome/include/server/executor/spi.h NOT found
            Was PostgreSQL installed including 'make install-all-headers'?" >&5
 echo "$as_me: error:
-           $with_pghome/include/server/executor/spi.h NOT found
+           $pghome/include/server/executor/spi.h NOT found
            Was PostgreSQL installed including 'make install-all-headers'?" >&2;}
    { (exit 1); exit 1; }; }
-  fi
 fi
+PGHOME=$pghome
+
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 

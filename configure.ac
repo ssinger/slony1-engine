@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.6 2004-03-02 18:07:52 wieck Exp $
+# $Id: configure.ac,v 1.7 2004-03-02 21:49:13 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -14,7 +14,7 @@ AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADER([config.h])
-AC_PREFIX_DEFAULT(/usr/local/slony1)
+AC_PREFIX_DEFAULT(/usr/local/pgsql)
 
 AC_CANONICAL_HOST
 
@@ -63,22 +63,17 @@ AC_SUBST(bash_path)
 
 # Checks for header files.
 
-AC_ARG_WITH(pghome, [  --with-pghome=<dir> Location of postgres home directory], AC_SUBST(PGHOME, $with_pghome))
-
-if test "x$with_pghome" = x ; then
-  AC_MSG_ERROR([
-                ********************************************
-                Location of postgres home directory required
-                
-                       Use --with-pghome option                    
-                ********************************************])
-else
-  if test ! -f "$with_pghome/include/server/executor/spi.h" ; then
+# The installation prefix must be the postgres home. Otherwise
+# we will never be able to administer a box remote.
+pghome=$prefix
+test "x$pghome" = xNONE && pghome=$ac_default_prefix
+if test ! -f "$pghome/include/server/executor/spi.h" ; then
     AC_MSG_ERROR([
-           $with_pghome/include/server/executor/spi.h NOT found
+           $pghome/include/server/executor/spi.h NOT found
            Was PostgreSQL installed including 'make install-all-headers'?])
-  fi
 fi
+AC_SUBST(PGHOME, $pghome)
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
