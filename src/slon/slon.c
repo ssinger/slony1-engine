@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.27.2.2 2004-10-13 18:49:53 wieck Exp $
+ *	$Id: slon.c,v 1.27.2.3 2004-10-18 15:11:29 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -72,7 +72,7 @@ main (int argc, char *const argv[])
 	extern char *optarg;
 	int			group_size_set = 0;
 
-	while ((c = getopt(argc, argv, "d:s:t:g:h")) != EOF)
+	while ((c = getopt(argc, argv, "d:s:t:g:hv")) != EOF)
 	{
 		switch(c)
 		{
@@ -120,6 +120,10 @@ main (int argc, char *const argv[])
 						break;
 
 			case 'h':	errors++;
+						break;
+
+			case 'v':	printf("slon version %s\n", SLONY_I_VERSION_STRING);
+						exit(0);
 						break;
 
 			default:	fprintf(stderr, "unknown option '%c'\n", c);
