@@ -91,4 +91,4 @@ if test -n "$DOCBOOKSTYLE"; then
                 [$DOCBOOKSTYLE/bin $PATH])
 else
   AC_PATH_PROGS(COLLATEINDEX, collateindex.pl)
-fi])# PGAC_PATH_COLLATEINDEX
+fi])# SLON_AC_PATH_COLLATEINDEX

@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.34 2004-12-07 00:50:39 darcyb Exp $
+# $Id: configure.ac,v 1.35 2004-12-07 05:12:46 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -70,11 +70,14 @@ AC_SUBST(with_gnu_ld)
 ACX_PTHREAD()
 
 ##Portability checks
+AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS([limits.h])
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_HEADERS([sys/socket.h]) 
 AC_CHECK_HEADERS([sys/time.h])
+AC_CHECK_HEADERS([inttypes.h])
+
 AC_CHECK_FUNCS([gettimeofday])
 AC_CHECK_FUNCS([dup2])
 AC_CHECK_FUNCS([alarm])
@@ -120,10 +123,10 @@ AC_SUBST(PORTNAME,$template)
 # Tools for building docs
 # ---
 
-AC_SUBST(GROFF)
-AC_SUBST(PS2PDF)
-AC_SUBST(DJPEG)
-AC_SUBST(PNMTOPS)
+SLON_AC_PROG_GROFF
+SLON_AC_PROG_PS2PDF
+SLON_AC_PROG_DJPEG
+SLON_AC_PROG_PNMTOPS
 
 #
 # Check for DocBook and tools
@@ -134,7 +137,6 @@ SLON_AC_CHECK_DOCBOOK(3.1)
 SLON_AC_PATH_DOCBOOK_STYLESHEETS
 SLON_AC_PATH_COLLATEINDEX
 AC_CHECK_PROGS(SGMLSPL, sgmlspl)
-
 
 
 AC_CONFIG_FILES([
