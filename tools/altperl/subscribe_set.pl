@@ -1,29 +1,51 @@
-#!perl # -*- perl -*-
-# $Id: subscribe_set.pl,v 1.4 2004-09-29 22:09:38 cbbrowne Exp $
+#!/usr/bin/perl
+# $Id: subscribe_set.pl,v 1.5 2005-01-10 18:21:36 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
+use Getopt::Long;
+
+$SLON_ENV_FILE = 'slon.env'; # Where to find the slon.env file
+$SHOW_USAGE    = 0;          # Show usage, then quit
+
+# Read command-line options
+GetOptions("config=s"  => \$SLON_ENV_FILE,
+	   "help"      => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: subscribe_set.pl [--config file] set# node#
+
+    Begins replicating a set to the specified node.
+
+";
+
+if ($SHOW_USAGE) {
+  print $USAGE;
+  exit 0;
+}
+
 require 'slon-tools.pm';
-require 'slon.env';
+require $SLON_ENV_FILE;
+
 my ($set, $node) = @ARGV;
-if ($node =~ /^node(\d+)$/) {
+if ($node =~ /^(?:node)?(\d+)$/) {
   $node = $1;
 } else {
   print "Need to specify node!\n";
-  die "subscribe_set setM nodeN\n";
+  die $USAGE;
 }
 
-if ($set =~ /^set(\d+)$/) {
+if ($set =~ /^(?:set)?(\d+)$/) {
   $set = $1;
 } else {
   print "Need to specify set!\n";
-  die "subscribe_set setM nodeN\n";
+  die $USAGE;
 }
 
 $FILE="/tmp/slonik-subscribe.$$";
 open(SLONIK, ">$FILE");
 print SLONIK genheader();
-print SLONIK "try {\n";
+print SLONIK "  try {\n";
 
 if ($DSN[$node]) {
   my $parent = 1;
@@ -36,18 +58,15 @@ if ($DSN[$node]) {
   } else {
     $forward = "yes";
   }
-  print SLONIK "   subscribe set (id = $set, provider = $parent, receiver = $node, forward = $forward);\n";
+  print SLONIK "    subscribe set (id = $set, provider = $parent, receiver = $node, forward = $forward);\n";
 } else {
   die "Node $node not found\n";
 }
 
-print SLONIK "}\n";
-print SLONIK qq{
-        on error {
-                exit 1;
-        }
-        echo 'Subscribed nodes to set $set';
-};
-
+print SLONIK "  }\n";
+print SLONIK "  on error {\n";
+print SLONIK "    exit 1;\n";
+print SLONIK "  }\n";
+print SLONIK "  echo 'Subscribed nodes to set $set';\n";
 close SLONIK;
 run_slonik_script($FILE);
