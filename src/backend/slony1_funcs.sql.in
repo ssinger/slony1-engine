@@ -1,0 +1,876 @@
+-- ----------------------------------------------------------------------
+-- slony1_funcs.sql
+--
+--    Declaration of replication support functions.
+--
+-- Copyright (c) 2003, PostgreSQL Global Development Group
+-- Author: Jan Wieck, Afilias USA LLC.
+--
+-- $Id: slony1_funcs.sql.in,v 1.1 2003-11-28 14:59:44 wieck Exp $
+-- ----------------------------------------------------------------------
+
+
+-- **********************************************************************
+-- * C functions in src/backend/slony1_base.c
+-- **********************************************************************
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
+--
+--	Create an sl_event entry
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.createEvent (name, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text)
+	returns int4
+	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+
+-- **********************************************************************
+-- * PL/pgSQL functions for administrative tasks
+-- **********************************************************************
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION initializeLocalNode (no_id, no_comment)
+--
+--	Initializes a new node.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.initializeLocalNode (int4, text)
+returns int4
+as '
+declare
+	p_local_node_id		alias for $1;
+	p_comment			alias for $2;
+	v_old_node_id		int4;
+	v_first_log_no		int4;
+	v_event_seq			int8;
+begin
+	-- ----
+	-- Make sure this system is uninitialized or got reset
+	-- ----
+	select last_value::int4 into v_old_node_id from @NAMESPACE@.sl_local_node_id;
+	if v_old_node_id != -1 then
+		raise exception ''Slony-I: This node is already initialized'';
+	end if;
+
+	-- ----
+	-- Set sl_local_node_id to the requested value and add our
+	-- own system to sl_node.
+	-- ----
+	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
+	perform @NAMESPACE@.storeNode_int (p_local_node_id, ''t'', p_comment);
+	
+	return p_local_node_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION resetLocalNode ()
+--
+--	Reset all replication information after DB restore
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.resetLocalNode ()
+returns int4
+as '
+begin
+	raise exception ''Slony-I: resetLocalNode() not implemented'';
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeNode (no_id, no_active, no_comment)
+--
+--	Create or update a node and create the STORE_NODE event.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeNode (int4, bool, text)
+returns int4
+as '
+declare
+	p_no_id			alias for $1;
+	p_no_active		alias for $2;
+	p_no_comment	alias for $3;
+	v_no_active		text;
+begin
+	if p_no_active then
+		v_no_active = ''t'';
+	else
+		v_no_active = ''f'';
+	end if;
+
+	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_active, p_no_comment);
+	perform @NAMESPACE@.createEvent(''@CLUSTERNAME@'', ''STORE_NODE'',
+									p_no_id, v_no_active, p_no_comment);
+
+	return p_no_id;
+end;
+' language plpgsql
+	called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeNode_int (no_id, no_active, no_comment)
+--
+--	Internal function for new node creation. Called from storeNode()
+--	and from the replication engine.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeNode_int (int4, bool, text)
+returns int4
+as '
+declare
+	p_no_id			alias for $1;
+	p_no_active		alias for $2;
+	p_no_comment	alias for $3;
+	v_old_row		record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check if the node exists
+	-- ----
+	select * into v_old_row
+			from @NAMESPACE@.sl_node
+			where no_id = p_no_id
+			for update;
+	if found then 
+		-- ----
+		-- Node exists, update the existing row.
+		-- ----
+		update @NAMESPACE@.sl_node
+				set no_comment = p_no_comment,
+					no_active  = p_no_active
+				where no_id = p_no_id;
+		-- ----
+		-- If the node comes active, create confirm rows for it.
+		-- If node is deactive make sure no confirm rows exist.
+		-- ----
+		if not v_old_row.no_active and p_no_active then
+			insert into @NAMESPACE@.sl_confirm
+					(con_origin, con_received, con_seqno)
+					select no_id, p_no_id, 0 from @NAMESPACE@.sl_node
+						where no_id != p_no_id
+						and no_active;
+			insert into @NAMESPACE@.sl_confirm
+					(con_origin, con_received, con_seqno)
+					select p_no_id, no_id, 0 from @NAMESPACE@.sl_node
+						where no_id != p_no_id
+						and no_active;
+		else
+			if not p_no_active then
+				delete from @NAMESPACE@.sl_confirm
+						where con_origin = p_no_id
+						or con_received = p_no_id;
+			end if;
+		end if;
+	else
+		-- ----
+		-- New node, insert the sl_node row and create sl_confirm
+		-- entries if node is active.
+		-- ----
+		insert into @NAMESPACE@.sl_node
+				(no_id, no_active, no_comment) values
+				(p_no_id, p_no_active, p_no_comment);
+		if p_no_active then
+			insert into @NAMESPACE@.sl_confirm
+					(con_origin, con_received, con_seqno)
+					select no_id, p_no_id, 0 from @NAMESPACE@.sl_node
+						where no_id != p_no_id
+						and no_active;
+			insert into @NAMESPACE@.sl_confirm
+					(con_origin, con_received, con_seqno)
+					select p_no_id, no_id, 0 from @NAMESPACE@.sl_node
+						where no_id != p_no_id
+						and no_active;
+		end if;
+	end if;
+
+	return p_no_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storePath (pa_server, pa_client, pa_conninfo)
+--
+--	Create or update the conninfo for Slon to contact a server.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storePath (int4, int4, text)
+returns int4
+as '
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+	p_pa_conninfo	alias for $3;
+begin
+	lock table @NAMESPACE@.sl_path in exclusive mode;
+
+	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client, p_pa_conninfo);
+	perform @NAMESPACE@.createEvent(''STORE_PATH'', 
+			p_pa_server, p_pa_client, p_pa_conninfo);
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storePath_int (pa_server, pa_client, pa_conninfo)
+--
+--	Internal function to store connection information for Slon 
+--	to contact a server
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storePath_int (int4, int4, text)
+returns int4
+as '
+declare
+	p_pa_server		alias for $1;
+	p_pa_client		alias for $2;
+	p_pa_conninfo	alias for $3;
+	v_dummy			int4;
+begin
+	lock table @NAMESPACE@.sl_path in exclusive mode;
+
+	select 1 into v_dummy
+			from @NAMESPACE@.sl_path
+			where pa_server = p_pa_server
+			and pa_client = p_pa_client
+			for update;
+	if found then
+		update @NAMESPACE@.sl_path
+				set pa_conninfo = p_pa_conninfo
+				where pa_server = p_pa_server
+				and pa_client = p_pa_client;
+	else
+		insert into @NAMESPACE@.sl_path
+				(pa_server, pa_client, pa_conninfo) values
+				(p_pa_server, p_pa_client, p_pa_conninfo);
+	end if;
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeListen (li_origin, li_server, li_client)
+--
+--	Store information about who is listening on which nodes event queue
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeListen (int4, int4, int4)
+returns int4
+as '
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+begin
+	lock table @NAMESPACE@.sl_node in exclusive mode;
+	lock table @NAMESPACE@.sl_listen in exclusive mode;
+
+	if not exists (select 1 from @NAMESPACE@.sl_node
+					where no_id = p_li_origin) then
+		perform @NAMESPACE@.storeNode_int (p_li_origin, ''<event pending>'');
+	end if;
+	if not exists (select 1 from @NAMESPACE@.sl_node
+					where no_id = p_li_provider) then
+		perform @NAMESPACE@.storeNode_int (p_li_provider, ''<event pending>'');
+	end if;
+	if not exists (select 1 from @NAMESPACE@.sl_node
+					where no_id = p_li_receiver) then
+		perform @NAMESPACE@.storeNode_int (p_li_receiver, ''<event pending>'');
+	end if;
+	perform @NAMESPACE@.storeListen_int (p_li_origin, p_li_provider, p_li_receiver);
+	perform @NAMESPACE@.createEvent (''STORE_LISTEN'',
+			p_li_origin, p_li_provider, p_li_receiver);
+
+	return 0;
+end;
+' language plpgsql
+	called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeListen_int (li_origin, li_server, li_client)
+--
+--	Internal function to store an sl_listen record.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeListen_int (int4, int4, int4)
+returns int4
+as '
+declare
+	p_li_origin		alias for $1;
+	p_li_provider	alias for $2;
+	p_li_receiver	alias for $3;
+	v_exists		int4;
+begin
+	lock table @NAMESPACE@.sl_path in exclusive mode;
+	lock table @NAMESPACE@.sl_listen in exclusive mode;
+
+	select 1 into v_exists
+			from @NAMESPACE@.sl_listen
+			where li_origin = p_li_origin
+			and li_provider = p_li_provider
+			and li_receiver = p_li_receiver;
+	if not found then
+		insert into @NAMESPACE@.sl_listen
+				(li_origin, li_provider, li_receiver) values
+				(p_li_origin, p_li_provider, p_li_receiver);
+	end if;
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeConfirm_int (con_origin, con_received, con_seqno)
+--
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeConfirm_int (int4, int4, int8)
+returns int4
+as '
+declare
+	p_con_origin	alias for $1;
+	p_con_received	alias for $2;
+	p_con_seqno		alias for $3;
+	v_con_seqno		int8;
+begin
+	--
+	-- The test if the newly reported seqno uses the side effect
+	-- that the max() aggregate might return NULL if there is no
+	-- sl_confirm row for this node pair at all yet. In that case
+	-- the condition is false and we do not try to insert a row
+	-- which could lead to a foreign key conflict.
+	--
+	select max(con_seqno) into v_con_seqno
+			from @NAMESPACE@.sl_confirm
+			where con_origin = p_con_origin
+			and con_received = p_con_received;
+	if v_con_seqno < p_con_seqno then
+		insert into @NAMESPACE@.sl_confirm
+				(con_origin, con_received, con_seqno) values
+				(p_con_origin, p_con_received, p_con_seqno);
+		notify _Slony_I_sl_confirm;
+		return 1;
+	end if;
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION createSet (set_id, set_comment)
+--
+--	Create a new replication set. The local node automatically
+--	becomes the origin of the set and a create_set event
+--	will be generated.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.createSet (int4, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_set_comment		alias for $2;
+	v_local_node_id		int4;
+begin
+	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+
+	lock table @NAMESPACE@.sl_set in exclusive mode;
+
+	insert into @NAMESPACE@.sl_set
+			(set_id, set_origin, set_comment) values
+			(p_set_id, v_local_node_id, p_set_comment);
+	insert into @NAMESPACE@.sl_setsync
+			(ssy_setid, ssy_origin, ssy_seqno,
+			ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) values
+			(p_set_id, v_local_node_id, ''0'',
+			''0'', ''0'', '''', '''');
+
+	perform @NAMESPACE@.createEvent(''CREATE_SET'', 
+			p_set_id, v_local_node_id, p_set_comment);
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION storeSet_int (set_id, set_origin, set_comment)
+--
+--	Store set information.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.storeSet_int (int4, int4, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_set_origin		alias for $2;
+	p_set_comment		alias for $3;
+	v_dummy				int4;
+begin
+	lock table @NAMESPACE@.sl_set in exclusive mode;
+
+	select 1 into v_dummy
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id
+			for update;
+	if found then 
+		update @NAMESPACE@.sl_set
+				set set_origin = p_set_origin,
+					set_comment = p_set_comment
+				where set_id = p_set_id;
+	else
+		insert into @NAMESPACE@.sl_set
+				(set_id, set_origin, set_comment) values
+				(p_set_id, p_set_origin, p_set_comment);
+		insert into @NAMESPACE@.sl_setsync
+				(ssy_setid, ssy_origin, ssy_seqno) values
+				(p_set_id, p_set_origin, 0);
+	end if;
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.setAddTable(int4, int4, text, text, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_tab_id			alias for $2;
+	p_fqname			alias for $3;
+	p_tab_attkind		alias for $4;
+	p_tab_comment		alias for $5;
+	v_set_origin		int4;
+	v_tab_attkind		text;
+begin
+	--
+	-- Check that we are the origin of the set
+	--
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: setAddTable(): set % not found'', p_set_id;
+	end if;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId() then
+		raise exception ''Slony-I: setAddTable(): set % has remote origin'', p_set_id;
+	end if;
+
+	--
+	-- Add the table to the set and generate the SET_ADD_TABLE event
+	--
+	v_tab_attkind := @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
+			p_tab_attkind, p_tab_comment);
+	perform @NAMESPACE@.createEvent(''SET_ADD_TABLE'',
+			p_set_id, p_tab_id, p_fqname, v_tab_attkind, p_tab_comment);
+
+	--
+	-- Tell the caller if we added the pseudo-key column
+	--
+	if p_tab_attkind != v_tab_attkind then
+		return 1;
+	else
+		return 0;
+	end if;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.setAddTable_int(int4, int4, text, text, text)
+returns text
+as '
+declare
+	p_set_id			alias for $1;
+	p_tab_id			alias for $2;
+	p_fqname			alias for $3;
+	p_tab_attkind		alias for $4;
+	p_tab_comment		alias for $5;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_tab_reloid		oid;
+	v_tab_attkind		text;
+begin
+	--
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the table because it might 
+	-- not even exist in our database.
+	--
+	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id;
+	if not found then
+		raise exception ''Slony-I: setAddTable_int(): set % not found'',
+				p_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = p_set_id
+				and sub_receiver = @NAMESPACE@.getLocalNodeId();
+		if not found then
+			return '''';
+		end if;
+	end if;
+	
+	--
+	-- Get the tables OID and check that it is a real table
+	--
+	select PGC.oid, PGC.relkind into v_tab_reloid, v_relkind
+			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+			where PGC.relnamespace = PGN.oid
+			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
+					''.'' || "pg_catalog".quote_ident(PGC.relname);
+	if not found then
+		raise exception ''Slony-I: setAddTable(): table % not found'', 
+				p_fqname;
+	end if;
+	if v_relkind != ''r'' then
+		raise exception ''Slony-I: setAddTable(): % is not a regular table'',
+				p_fqname;
+	end if;
+
+	--
+	-- Add the table to sl_table and create the trigger on it.
+	--
+	insert into @NAMESPACE@.sl_table
+			(tab_id, tab_reloid, tab_set, tab_attkind, tab_comment) values
+			(p_tab_id, v_tab_reloid, p_set_id, p_tab_attkind, p_tab_comment);
+	v_tab_attkind := @NAMESPACE@.tableAddTrigger(p_tab_id, p_fqname, p_tab_attkind);
+
+	return v_tab_attkind;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION tableAddTrigger (tab_id, tab_fqname, attkind)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.tableAddTrigger (int4, text, text)
+returns text
+as '
+declare
+	p_tab_id			alias for $1;
+	p_tab_fqname		alias for $2;
+	p_attkind			alias for $3;
+	v_tab_attkind		text;
+begin
+	-- ----
+	-- If the table does not have a key field specified, add
+	-- a unique serial column and use that instead.
+	-- ----
+	v_tab_attkind = p_attkind;
+	if not v_tab_attkind ~ ''k'' then
+		perform \@NAMESPACE@.setSessionRole(''slon'');
+
+		execute ''alter table '' || p_tab_fqname || '' add column
+				@NAMESPACE@.sl_rowId" int8;'';
+		execute ''alter table '' || p_tab_fqname || '' alter column
+				@NAMESPACE@.sl_rowId" set default nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
+		execute ''create index @NAMESPACE@.sl_rowId_idx.'' || p_tab_id || ''"
+				on '' || p_tab_fqname || '' (@NAMESPACE@.sl_rowId");'';
+		v_tab_attkind := v_tab_attkind || ''k'';
+	end if;
+
+	-- ----
+	-- Define the trigger on the table
+	-- ----
+	execute ''create trigger @NAMESPACE@.logtrigger_'' || p_tab_id || ''"
+			after insert or update or delete on '' || p_tab_fqname || ''
+			for each row execute procedure
+			@NAMESPACE@.logtrigger ('''''' || p_tab_id || '''''', '''''' || v_tab_attkind || '''''');'';
+
+	-- ----
+	-- Return the eventually corrected tab_attkind;
+	-- ----
+	return v_tab_attkind;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
+returns int4
+as '
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+	p_sub_forward		alias for $4;
+	v_no_id				int4;
+	v_set_origin		int4;
+	v_row				record;
+	v_sub_forward		char;
+begin
+	if p_sub_forward then
+		v_sub_forward := ''t'';
+	else
+		v_sub_forward := ''f'';
+	end if;
+
+	-- ----
+	-- Lookup our own node id
+	-- ----
+	v_no_id = @NAMESPACE@.getLocalNodeId();
+
+	-- ----
+	-- Check that we are the sets origin
+	-- ----
+	select set_origin into v_set_origin
+		from @NAMESPACE@.sl_set
+		where set_id = p_sub_set;
+	if not found then
+		raise exception ''Slony-I: subscribeSet(): set % not found'',
+				p_sub_set;
+	end if;
+	if v_set_origin <> v_no_id then
+		raise exception ''Slony-I: subscribeSet(): set % has remote origin'',
+				p_sub_set;
+	end if;
+
+	-- ----
+	-- Check that the choosen set provider is a subscriber of the set.
+	-- ----
+	if p_sub_provider <> v_set_origin then
+		if not exists (select 1 from @NAMESPACE@.sl_subscribe
+				where sub_set = p_sub_set and sub_receiver = p_sub_provider)
+		then
+			raise exception ''Slony-I: provider % not subscribed to set %'',
+					p_sub_provider, p_sub_set;
+		end if;
+	end if;
+
+	-- ----
+	-- See if we have a subscription for this set already
+	-- ----
+	lock table @NAMESPACE@.sl_subscribe in exclusive mode;
+	select * into v_row from @NAMESPACE@.sl_subscribe
+		where sub_receiver = p_sub_receiver
+		and   sub_set = p_sub_set;
+	if found then
+		-- ----
+		-- The node is already a subscriber, so this is a change request.
+		-- ----
+		raise exception ''Slony-I: subscription change not implemented yet'';
+	else
+		-- ----
+		-- New subscriber for this set
+		-- ----
+		perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
+				p_sub_receiver, p_sub_forward);
+		perform @NAMESPACE@.createEvent(''SUBSCRIBE'',
+				p_sub_set, p_sub_provider, p_sub_receiver, v_sub_forward);
+	end if;
+
+	-- ----
+	-- Return
+	-- ----
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool)
+returns int4
+as '
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+	p_sub_forward		alias for $4;
+	v_set_origin		int4;
+	v_sub_forward		bool;
+	v_dummy				int4;
+begin
+
+	-- ----
+	-- Check that the choosen set provider is a subscriber of the set
+	-- and that he does store forward infomation.
+	-- ----
+	select set_origin into v_set_origin
+		from @NAMESPACE@.sl_set
+		where set_id = p_sub_set;
+	if not found then
+		raise exception ''Slony-I: subscribeSet(): set % not found'',
+				p_sub_set;
+	end if;
+
+	if v_set_origin != p_sub_provider then
+		select sub_forward into v_sub_forward
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = p_sub_set
+				and sub_receiver = p_sub_provider;
+		if not found then
+			raise exception ''Slony-I: subscribeSet(): set % not subscribed by node %'',
+					p_sub_set, p_sub_provider;
+		end if;
+		if not v_sub_forward then
+			raise exception ''Slony-I: subscribeSet(): set % not forwarded by node %'',
+					p_sub_set, p_sub_provider;
+		end if;
+	end if;
+
+	-- ----
+	-- Store the sl_subscribe row.
+	-- ----
+	lock table @NAMESPACE@.sl_subscribe in exclusive mode;
+
+	select 1 into v_dummy
+			from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver
+			for update;
+	if found then
+		update @NAMESPACE@.sl_subscribe
+				set sub_provider = p_sub_provider,
+					sub_forward  = p_sub_forward
+				where sub_set = p_sub_set
+				and sub_receiver = p_sub_receiver;
+	else
+		insert into @NAMESPACE@.sl_subscribe
+				(sub_set, sub_provider, sub_receiver, sub_forward) values
+				(p_sub_set, p_sub_provider, p_sub_receiver, p_sub_forward);
+	end if;
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cleanupEvent ()
+--
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.cleanupEvent ()
+returns int4
+as '
+declare
+	v_max_row	record;
+	v_min_row	record;
+	v_max_sync	int8;
+begin
+	--
+	-- First remove all but the oldest confirm row per origin,receiver pair
+	--
+	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
+				from @NAMESPACE@.sl_confirm
+				group by con_origin, con_received
+	loop
+		delete from @NAMESPACE@.sl_confirm
+				where con_origin = v_max_row.con_origin
+				and con_received = v_max_row.con_received
+				and con_seqno < v_max_row.con_seqno;
+	end loop;
+
+	--
+	-- Then remove all events that are confirmed by all nodes in the
+	-- whole cluster up to the last SYNC
+	--
+	for v_min_row in select con_origin, min(con_seqno) as con_seqno
+				from @NAMESPACE@.sl_confirm
+				group by con_origin
+	loop
+		select max(ev_seqno) into v_max_sync
+				from @NAMESPACE@.sl_event
+				where ev_origin = v_min_row.con_origin
+				and ev_seqno <= v_min_row.con_seqno
+				and ev_type = ''SYNC'';
+		if found then
+			delete from @NAMESPACE@.sl_event
+					where ev_origin = v_min_row.con_origin
+					and ev_seqno < v_max_sync;
+			--
+			-- Get the full SYNC row and remove all log data that
+			-- is older than it. We ignore the fancy xip stuff here
+			-- because it does not matter if we leave some rows
+			-- for the next run or not. But it matters that we can
+			-- use a prepared plan without a horribly expensive NOT IN
+			-- clause.
+			--
+			select * into v_max_row
+					from @NAMESPACE@.sl_event
+					where ev_origin = v_min_row.con_origin
+					and ev_seqno = v_max_sync;
+			if found then
+				delete from @NAMESPACE@.sl_log
+						where log_origin = v_max_row.ev_origin
+						and   log_xid    < v_max_row.ev_minxid;
+			end if;
+		end if;
+	end loop;
+
+	return 0;
+end;
+' language plpgsql;
+
+

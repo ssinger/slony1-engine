@@ -1,0 +1,21 @@
+
+Directory src/backend
+
+This directory contains the part of the system that is
+implemented inside of the database. These are the passive objects
+like sequences and tables, as well as the active parts like
+support functions, procedures and triggers.
+
+TODO:
+
+	slony1_funcs.c
+
+		*	Add the C version of the log trigger
+
+	slony1_funcs.sqh
+
+		*	Convert all admin support procedures to their
+			final versions.
+
+
+		
