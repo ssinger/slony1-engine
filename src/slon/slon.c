@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.42 2005-01-28 22:31:52 cbbrowne Exp $
+ *	$Id: slon.c,v 1.43 2005-02-17 06:59:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -52,6 +52,7 @@ static void sigalrmhandler(int signo);
 
 int			slon_log_level;
 char	   *pid_file;
+char	   *archive_dir = NULL;
 
 /*
  * ---------- main ----------
@@ -75,7 +76,7 @@ main(int argc, char *const argv[])
 	InitializeConfOptions();
 
 
-	while ((c = getopt(argc, argv, "f:d:s:t:g:c:p:o:hv")) != EOF)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:hv")) != EOF)
 	{
 		switch (c)
 		{
@@ -83,6 +84,10 @@ main(int argc, char *const argv[])
 				ProcessConfigFile(optarg);
 				break;
 
+			case 'a':
+				set_config_option("archive_dir", optarg);
+				break;
+				
 			case 'd':
 				set_config_option("log_level", optarg);
 				break;

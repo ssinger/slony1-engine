@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.71 2005-01-28 22:51:11 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.72 2005-02-17 06:59:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,6 +26,7 @@
 #include "c.h"
 
 #include "slon.h"
+#include "confoptions.h"
 
 
 /*
@@ -185,6 +186,7 @@ struct WorkerGroupLine_s
 	WorkGroupLineCode code;
 	ProviderInfo *provider;
 	SlonDString data;
+	SlonDString log;
 
 	WorkerGroupLine *prev;
 	WorkerGroupLine *next;
@@ -1210,6 +1212,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 						line = (WorkerGroupLine *) malloc(sizeof(WorkerGroupLine));
 						memset(line, 0, sizeof(WorkerGroupLine));
 						dstring_init(&(line->data));
+						dstring_init(&(line->log));
 						DLLIST_ADD_TAIL(wd->linepool_head, wd->linepool_tail,
 										line);
 					}
@@ -1295,6 +1298,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 				if ((line = wd->linepool_head) == NULL)
 					break;
 				dstring_free(&(line->data));
+				dstring_free(&(line->log));
 				DLLIST_REMOVE(wd->linepool_head, wd->linepool_tail,
 							  line);
 #ifdef SLON_MEMDEBUG
@@ -2934,6 +2938,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString query;
 	SlonDString *provider_qual;
 
+	/* FIXME: must determine and use OS specific max path length */
+	char		archive_name[1024];
+	char		archive_tmp[1024];
+	FILE	   *archive_fp = NULL;
+
 	gettimeofday(&tv_start, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT
 			 " processing\n",
@@ -2941,6 +2950,36 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 	dstring_init(&query);
+
+	/*
+	 * If this slon is running in log archiving mode, open a
+	 * temporary file for it.
+	 */
+	if (archive_dir)
+	{
+		int			i;
+
+		sprintf(archive_name, "%s/slony1_log_%d_", archive_dir, node->no_id);
+		for (i = strlen(seqbuf); i < 20; i++)
+			strcat(archive_name, "0");
+		strcat(archive_name, seqbuf);
+		strcat(archive_name, ".sql");
+		strcpy(archive_tmp, archive_name);
+		strcat(archive_tmp, ".tmp");
+
+		if ((archive_fp = fopen(archive_tmp, "w")) == NULL)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						"Cannot open archive file %s - %s\n",
+						node->no_id, archive_tmp, strerror(errno));
+			dstring_free(&query);
+			return 60;
+		}
+		fprintf(archive_fp, "-- Slony-I sync log\n"
+				"-- Event %d,%s\n"
+				"start transaction;\n",
+				node->no_id, seqbuf);
+	}
 
 	/*
 	 * Establish all required data provider connections
@@ -2955,6 +2994,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 "No pa_conninfo for data provider %d\n",
 						 node->no_id, provider->no_id);
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				return 10;
 			}
 			sprintf(conn_symname, "subscriber_%d_provider_%d",
@@ -2968,6 +3012,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 provider->pa_conninfo);
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				return provider->pa_connretry;
 			}
 
@@ -2980,6 +3029,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			if (query_execute(node, provider->conn->dbconn, &query) < 0)
 			{
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				slon_disconnectdb(provider->conn);
 				provider->conn = NULL;
 				return provider->pa_connretry;
@@ -3016,6 +3070,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 event->ev_origin);
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				return 10;
 			}
 			if (prov_seqno < event->ev_seqno)
@@ -3026,6 +3085,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 prov_seqno, event->ev_origin);
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				return 10;
 			}
 			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
@@ -3036,77 +3100,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
-	/*
-	 * Get all sequence updates
-	 */
-	for (provider = wd->provider_head; provider; provider = provider->next)
-	{
-		int			ntuples1;
-		int			tupno1;
-
-		slon_mkquery(&query,
-					 "select SL.seql_seqid, SL.seql_last_value "
-					 "	from %s.sl_seqlog SL, "
-					 "		%s.sl_sequence SQ "
-					 "	where SQ.seq_id = SL.seql_seqid "
-					 "		and SL.seql_origin = %d "
-					 "		and SL.seql_ev_seqno = '%s' "
-					 "		and SQ.seq_set in (",
-					 rtcfg_namespace, rtcfg_namespace,
-					 node->no_id, seqbuf);
-		for (pset = provider->set_head; pset; pset = pset->next)
-			slon_appendquery(&query, "%s%d",
-							 (pset->prev == NULL) ? "" : ",",
-							 pset->set_id);
-		slon_appendquery(&query, "); ");
-
-		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
-		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query),
-					 PQresultErrorMessage(res1));
-			PQclear(res1);
-			dstring_free(&query);
-			slon_disconnectdb(provider->conn);
-			provider->conn = NULL;
-			return 20;
-		}
-		ntuples1 = PQntuples(res1);
-		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
-		{
-			char	   *seql_seqid = PQgetvalue(res1, tupno1, 0);
-			char	   *seql_last_value = PQgetvalue(res1, tupno1, 1);
-
-			slon_mkquery(&query,
-						 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
-						 rtcfg_namespace,
-						 seql_seqid, node->no_id, seqbuf, seql_last_value);
-			if (query_execute(node, local_dbconn, &query) < 0)
-			{
-				PQclear(res1);
-				dstring_free(&query);
-				return 60;
-			}
-		}
-		PQclear(res1);
-
-		/*
-		 * Start listening on the special relation that will cause our local
-		 * connection to be killed when the provider node fails.
-		 */
-		slon_mkquery(&query,
-					 "listen \"_%s_Node_%d\"; ",
-					 rtcfg_cluster_name, provider->no_id);
-		if (query_execute(node, local_dbconn, &query) < 0)
-		{
-			dstring_free(&query);
-			return 60;
-		}
-	}
-
 	dstring_init(&new_qual);
-
 
 	if (strlen(event->ev_xip) != 0)
 		slon_mkquery(&new_qual,
@@ -3162,6 +3156,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			PQclear(res1);
 			dstring_free(&new_qual);
 			dstring_free(&query);
+			if (archive_fp)
+			{
+				fclose(archive_fp);
+				unlink(archive_tmp);
+			}
 			return 60;
 		}
 
@@ -3208,6 +3207,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				PQclear(res1);
 				dstring_free(&new_qual);
 				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
 				return 60;
 			}
 			ntuples2 = PQntuples(res2);
@@ -3310,8 +3314,19 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			else
 				slon_appendquery(provider_qual, "\n) ");
 
-
 			PQclear(res2);
+
+			/*
+			 * Add a call to the setsync tracking function to
+			 * the archive log. This function ensures that all
+			 * archive log files are applied in the right order.
+			 */
+			if (archive_fp)
+			{
+				fprintf(archive_fp, "select %s.setsyncTracking_offline(%d, '%s', '%s');\n",
+						rtcfg_namespace,
+						sub_set, PQgetvalue(res1, tupno1, 1), seqbuf);
+			}
 		}
 		PQclear(res1);
 
@@ -3341,6 +3356,12 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 "no sets need syncing for this event\n",
 				 node->no_id);
 		dstring_free(&query);
+		if (archive_fp)
+		{
+			fprintf(archive_fp, "commit;\n");
+			fclose(archive_fp);
+			rename(archive_tmp, archive_name);
+		}
 		return 0;
 	}
 
@@ -3395,6 +3416,26 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					if (num_errors > 0)
 						break;
 
+					if (wgline->log.n_used > 0)
+					{
+						res1 = PQexec(local_dbconn, dstring_data(&(wgline->log)));
+						if (PQresultStatus(res1) == PGRES_EMPTY_QUERY)
+						{
+							PQclear(res1);
+							break;
+						}
+						if (PQresultStatus(res1) != PGRES_COMMAND_OK)
+						{
+							slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+									 "\"%s\" %s - qualification was: %s\n",
+									 node->no_id, dstring_data(&(wgline->data)),
+									 PQresultErrorMessage(res1),
+									 dstring_data(&(wgline->provider->helper_qualification)));
+							num_errors++;
+						}
+						PQclear(res1);
+					}
+
 					res1 = PQexec(local_dbconn, dstring_data(&(wgline->data)));
 					if (PQresultStatus(res1) == PGRES_EMPTY_QUERY)
 					{
@@ -3430,6 +3471,16 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					}
 #endif
 					PQclear(res1);
+
+					/*
+					 * Add the user data modification part to
+					 * the archive log.
+					 */
+					if (archive_fp)
+					{
+						fprintf(archive_fp, "%s", dstring_data(&(wgline->data)));
+					}
+
 					break;
 
 				case SLON_WGLC_DONE:
@@ -3461,6 +3512,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		{
 			wgnext = wgline->next;
 			dstring_reset(&(wgline->data));
+			dstring_reset(&(wgline->log));
 			DLLIST_ADD_HEAD(wd->linepool_head, wd->linepool_tail, wgline);
 		}
 		if (num_errors == 1)
@@ -3509,9 +3561,105 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	if (num_errors != 0)
 	{
 		dstring_free(&query);
+		if (archive_fp)
+		{
+			fclose(archive_fp);
+			unlink(archive_tmp);
+		}
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 				 node->no_id);
 		return 10;
+	}
+
+	/*
+	 * Get all sequence updates
+	 */
+	for (provider = wd->provider_head; provider; provider = provider->next)
+	{
+		int			ntuples1;
+		int			tupno1;
+
+		slon_mkquery(&query,
+					 "select SL.seql_seqid, SL.seql_last_value "
+					 "	from %s.sl_seqlog SL, "
+					 "		%s.sl_sequence SQ "
+					 "	where SQ.seq_id = SL.seql_seqid "
+					 "		and SL.seql_origin = %d "
+					 "		and SL.seql_ev_seqno = '%s' "
+					 "		and SQ.seq_set in (",
+					 rtcfg_namespace, rtcfg_namespace,
+					 node->no_id, seqbuf);
+		for (pset = provider->set_head; pset; pset = pset->next)
+			slon_appendquery(&query, "%s%d",
+							 (pset->prev == NULL) ? "" : ",",
+							 pset->set_id);
+		slon_appendquery(&query, "); ");
+
+		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					 node->no_id, dstring_data(&query),
+					 PQresultErrorMessage(res1));
+			PQclear(res1);
+			dstring_free(&query);
+			if (archive_fp)
+			{
+				fclose(archive_fp);
+				unlink(archive_tmp);
+			}
+			slon_disconnectdb(provider->conn);
+			provider->conn = NULL;
+			return 20;
+		}
+		ntuples1 = PQntuples(res1);
+		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+		{
+			char	   *seql_seqid = PQgetvalue(res1, tupno1, 0);
+			char	   *seql_last_value = PQgetvalue(res1, tupno1, 1);
+
+			slon_mkquery(&query,
+						 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
+						 rtcfg_namespace,
+						 seql_seqid, node->no_id, seqbuf, seql_last_value);
+			if (query_execute(node, local_dbconn, &query) < 0)
+			{
+				PQclear(res1);
+				dstring_free(&query);
+				if (archive_fp)
+				{
+					fclose(archive_fp);
+					unlink(archive_tmp);
+				}
+				return 60;
+			}
+
+			/*
+			 * Add the sequence number adjust call to the archive log.
+			 */
+			if (archive_fp)
+			{
+				slon_mkquery(&query,
+						 "select %s.sequenceSetValue_offline(%s,'%s');\n",
+						 rtcfg_namespace,
+						 seql_seqid, seql_last_value);
+				fprintf(archive_fp, dstring_data(&query));
+			}
+		}
+		PQclear(res1);
+
+		/*
+		 * Start listening on the special relation that will cause our local
+		 * connection to be killed when the provider node fails.
+		 */
+		slon_mkquery(&query,
+					 "listen \"_%s_Node_%d\"; ",
+					 rtcfg_cluster_name, provider->no_id);
+		if (query_execute(node, local_dbconn, &query) < 0)
+		{
+			dstring_free(&query);
+			return 60;
+		}
 	}
 
 	/*
@@ -3551,6 +3699,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
 			dstring_free(&query);
+			if (archive_fp)
+			{
+				fclose(archive_fp);
+				unlink(archive_tmp);
+			}
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 					 node->no_id);
 			return 10;
@@ -3569,6 +3722,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (query_execute(node, local_dbconn, &query) < 0)
 		{
 			dstring_free(&query);
+			if (archive_fp)
+			{
+				fclose(archive_fp);
+				unlink(archive_tmp);
+			}
 			return 60;
 		}
 	}
@@ -3592,6 +3750,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 PQresultErrorMessage(res1));
 		PQclear(res1);
 		dstring_free(&query);
+		if (archive_fp)
+		{
+			fclose(archive_fp);
+			unlink(archive_tmp);
+		}
 		return 60;
 	}
 	if (PQntuples(res1) > 0)
@@ -3606,6 +3769,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		{
 			PQclear(res1);
 			dstring_free(&query);
+			if (archive_fp)
+			{
+				fclose(archive_fp);
+				unlink(archive_tmp);
+			}
 			return 60;
 		}
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
@@ -3613,6 +3781,17 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 node->no_id, PQgetvalue(res1, 0, 0));
 	}
 	PQclear(res1);
+
+	/*
+	 * Add the final commit to the archive log, close it and rename
+	 * the temporary file to the real log chunk filename.
+	 */
+	if (archive_fp)
+	{
+		fprintf(archive_fp, "commit;\n");
+		fclose(archive_fp);
+		rename(archive_tmp, archive_name);
+	}
 
 	/*
 	 * Good job!
@@ -3833,6 +4012,7 @@ sync_helper(void *cdata)
 						line->code = SLON_WGLC_ACTION;
 						line->provider = provider;
 						dstring_reset(&(line->data));
+						dstring_reset(&(line->log));
 					}
 
 					/*
@@ -3847,7 +4027,7 @@ sync_helper(void *cdata)
 
 					if (wd->tab_forward[log_tableid])
 					{
-						slon_appendquery(&(line->data),
+						slon_appendquery(&(line->log),
 										 "insert into %s.sl_log_1 "
 									"    (log_origin, log_xid, log_tableid, "
 										 "     log_actionseq, log_cmdtype, "
@@ -3861,21 +4041,21 @@ sync_helper(void *cdata)
 					{
 						case 'I':
 							slon_appendquery(&(line->data),
-											 "insert into %s %s;",
+											 "insert into %s %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
 							break;
 
 						case 'U':
 							slon_appendquery(&(line->data),
-											 "update only %s set %s;",
+											 "update only %s set %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
 							break;
 
 						case 'D':
 							slon_appendquery(&(line->data),
-											 "delete from only %s where %s;",
+											 "delete from only %s where %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
 							break;

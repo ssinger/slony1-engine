@@ -15,7 +15,7 @@ extern char *rtcfg_cluster_name;
 extern char *rtcfg_conninfo;
 
 extern char *pid_file;
-
+extern char *archive_dir;
 
 extern int	vac_frequency;
 extern int	slon_log_level;
@@ -267,11 +267,20 @@ static struct config_string ConfigureNamesString[] =
 		{
 			(const char *)"log_timestamp_format",
 			gettext_noop("A strftime()-style log timestamp format string."),
-			gettext_noop("A strftime()-style log timestamp format string."),
 			SLON_C_STRING
 		},
 		&log_timestamp_format,
 		"%Y-%m-%d %H:%M:%S %Z"
+	},
+	{
+		{
+			(const char *)"archive_dir",
+			gettext_noop("Where to drop the sync archive files"),
+			NULL,
+			SLON_C_STRING
+		},
+		&archive_dir,
+		NULL
 	},
 #ifdef HAVE_SYSLOG
 	{
