@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-# $Id: reset_cluster.pl,v 1.3 2004-08-12 22:14:31 cbbrowne Exp $
+#!perl # -*- perl -*-
+# $Id: reset_cluster.pl,v 1.4 2004-09-09 14:38:57 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -41,7 +41,7 @@ print SLONIK qq[
   exit 1;
 }
 echo 'Replication nodes prepared';
-echo 'Please start the replication daemon on both systems';
+echo 'Please start a slon replication daemon for each node';
 ];
 
 close SLONIK;
