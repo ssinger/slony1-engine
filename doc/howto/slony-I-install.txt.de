@@ -17,10 +17,10 @@ Solaris-2.9-SPARC sowie OpenBSD-3.5-sparc64.
 
 Alle am Replikationssystem teilnehmenden Knoten benötigen korrekt
 syncronisierte Systemzeiten, um Fehlfunktionen des "slon"-Dämons zu
-vermeiden der dadurch unter Umständen zum Schluss kommen kann das ein
-Slave bereits mehr Updates als der Master selbst erhalten hat.  Zur
-Syncronisation der Uhrzeiten ist die Verwendung des "ntpd" empfohlen,
-wobei die Slaves den Master als ihre Zeitquelle verwenden.
+vermeiden der dadurch unter Umständen zum Schluss kommen könnte das
+ein Slave bereits mehr Updates als der Master selbst erhalten hat.
+Zur Syncronisation der Uhrzeiten ist die Verwendung des "ntpd"
+empfohlen, wobei die Slaves den Master als ihre Zeitquelle verwenden.
 
 Die folgenden Softwarepakete sind für eine erfolgreich Übersetzung des
 Slony-I Quellcodes nötig:
@@ -30,8 +30,8 @@ ist auf vielen Systemen als "gmake" vorinstalliert und daher wird in
 diesem Dokument immer diese Bezeichnung verwendet.  Auf manchen
 Systemen ist GNU make das standardmässige make-Tool und ist dort unter
 dem Namen "make" installiert. Zum überprüfen der installierten GNU
-make version kann der Befehl "gmake --version" verwendet werden. Die
-Version 3.76 oder spätere sollten problemlos funktionieren, ältere
+make Version kann der Befehl "gmake --version" verwendet werden.
+Die Version 3.76 oder spätere sollten problemlos funktionieren, ältere
 Versionen können unter Umstände Probleme verursachen. 
 
 Ein ISO/ANSI kompatibler C-Kompiler ist erforderlich, aktuelle
@@ -39,13 +39,13 @@ Versionen des gcc sollten problemlos funktionieren.
 
 Weiters ist eine aktuelle Version des PostgreSQL Quellcodes
 erforderlich. Da Slony-I Namespaceunterstützung benötigt ist
-PostgreSQL 7.3 die Minimalanforderung für eine erfolgreiche
-Übersetzung.
+PostgreSQL in der Version 7.3 die Minimalanforderung für eine
+erfolgreiche Übersetzung.
 
-Sollte ein benötigtes GNU Package fehlen so sind diese im Lieferumfang
+Sollte ein benötigtes GNU Package fehlen so ist dieses im Lieferumfang
 des jeweiligen Betriebssystems oder auch auf dem lokalen GNU
 Spiegelserver (Liste unter http://www.gnu.org/order/ftp.html) bzw.
-direkte auf ftp://ftp.gnu.org/gnu zu finden.
+direkt auf ftp://ftp.gnu.org/gnu zu finden.
 
 Sollte der PostgreSQL Quellcode benötigt werden, so kann dieser vom
 bevorzugten PostgreSQL Spiegelserver (Liste unter
@@ -60,7 +60,7 @@ Download des Slony-I Quellcodes
 
 Der Slony-I Quellcode ist unter http://slony.info verfügbar.
 
-nach dem erfolgreichen download kann der Quellecode folgendermassen
+nach dem erfolgreichen Download kann der Quellecode folgendermassen
 entpackt werden:
 
 gunzip slony1-1.0.0.tar.gz
@@ -72,7 +72,7 @@ in dieses Verzeichnis wechseln.
 
 Kurzversion der Installation:
 
-./configure --with-pgsourcetree=<path/to/your/pgsql/source>
+./configure --with-pgsourcetree=<Pfad/zu/den/PostgreSQL/Quellen>
 gmake all
 gmake install
 
@@ -80,10 +80,11 @@ gmake install
 
 Der erste Schritt der Installationsprozedur besteht in der
 Vorbereitung des Quellcodeverzeichnisses. Diese erfolgt mit Hilfe des
-"configure" Skriptes.  Dieses Skript benötigt die Information wo sich
-Ihr PostgreSQl Quellcodeverzeichnis befindet.  Zur uebergabe dieser
-Information an das Skript dient die
---with-pgsourcetree=<pfad/zu/ihren/pg/quellen> Kommandozeilenoption.
+"configure" Skriptes. 
+Dieses Skript benötigt die Information wo sich Ihr PostgreSQl
+Quellcodeverzeichnis befindet.  Zur Übergabe dieser Information an das
+Skript dient die --with-pgsourcetree=<Pfad/zu/den/PostgreSQL/Quellen>
+Kommandozeilenoption.
 
 Ein Beispiel:
 
@@ -102,7 +103,7 @@ Zum starten der Übersetzung ist folgendes Kommando erforderlich:
 
 gmake all
 
-Vergessen Sie bitte nicht unbedingt GNU make zu verwenden. Die
+Vergessen Sie bitte nicht, unbedingt GNU make zu verwenden. Die
 tatsächlich nötige Zeit zur Übersetzung der Quellen kann zwischen 30
 Sekunden und mehr als 2 Minuten liegen, abhängig von der jeweils
 verwendeten Hardware. Im Anschluss an die erfolgreiche Übersetzung
@@ -117,7 +118,7 @@ Um Slony-I zu installieren verwenden Sie bitte
 
 gmake install
 
-Dieses Kommando wird die nötigen Dateinen in das PostgreSQL
+Dieses Kommando wird die nötigen Dateien in das PostgreSQL
 Installationverzeichnis kopieren.  Beachten Sie bitte das Sie die
 nötigen Schreibberechtigungen auf den entsprechenden Bereich besitzen.
 Üblicherweise sind für diesen Schritt daher "root"-Berechtigungen
