@@ -1,0 +1,240 @@
+<article id="runtime-config">
+  <title>Run-time Configuration</title>
+  <indexterm>
+    <primary>configuration</primary>
+    <secondary>of the slon daemon</secondary>
+  </indexterm>
+
+  <para>
+    There are several configuration parameters that affect the behavior of the 
+    replication system.  In this section, we describe how to set the slon daemon's
+    configuration parameters; the following subsections discuss each parameter 
+    in detail.
+  </para>
+
+  <para>
+    All parameter names are case-insensitive. Every parameter takes a value of 
+    one of four types: boolean, integer, floating point, or string.
+    Boolean values may be written as <literal>ON</literal>, <literal>OFF</literal>,
+    <literal>FALSE</literal>, <literal>YES</literal>, <literal>NO</literal>, 
+    <literal>1</literal>, <literal>0</literal> (all case-insensitive) or any 
+    unambiguous prefix of these.
+  </para>
+
+  <para>
+    One parameter is specified per line. The equal sign between name and 
+    value is optional. Whitespace is insignificant and blank lines are
+    ignored. Hash marks (<literal>#</literal>) introduce comments
+    anywhere.  Parameter values that are not simple identifiers or
+    numbers must be single-quoted.
+  </para>
+
+  <para>
+    Some options may be set through the Command-line, these options override any
+    conflicting settings in the conf file.
+  </para>
+
+
+<sect1 id="slon-config-logging">
+  <title>Logging</title>
+  <variablelist>
+    <varlistentry id="slon-config-logging-syslog" xreflabel="slon_conf_syslog">
+      <term><varname>syslog</varname> (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>syslog</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Sets up logging to syslog. If this parameter is 1, messages go both 
+          to syslog and the standard output. A value of 2 sends output only to syslog 
+          (some messages will still go to the standard output/error).  The default 
+          is 0, which means syslog is off.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-syslog-facility" xreflabel="slon_conf_syslog_facility">
+      <term><varname>syslog_facility</varname> (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>syslog_facility</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Sets the syslog "facility" to be used when syslog enabled.  Valid
+          values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, LOCAL4, LOCAL5, LOCAL6, LOCAL7.
+          The default is LOCAL0.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-syslog-ident" xreflabel="slon_conf_syslog_ident">
+      <term><varname>syslog_ident</varname> (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>syslog_ident</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Sets the program name used to identify slon messages in syslog. 
+          The default is slon.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-log-level" xreflabel="lon_conf_log_level">
+      <term><varname>log_level</varname> (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>log_level</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 4</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-log-pid" xreflabel="slon_conf_log_pid">
+      <term><varname>log_pid</varname> (<type>boolean</type>)</term>
+      <indexterm>
+        <primary><varname>log_pid</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Determins, if you would like the pid of the (parent) slon process to
+          apear in each log line entry.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-log-timestamp" xreflabel="slon_conf_log_timestamp">
+      <term><varname>log_timestamp</varname> (<type>boolean</type>)</term>
+      <indexterm>          
+        <primary><varname>log_timestamp</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Determins, if you would like the timestamp of the event being logged to 
+          apear in each log line entry.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-log-timestamp-format" xreflabel="slon_conf_log_timestamp_format">
+      <term><varname>log_timestamp_format</varname> (<type>string</type>)</term>
+      <indexterm>          
+        <primary><varname>log_timestamp_format</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>A strftime()-conformant format string for use if log_timestamp is enabled. 
+          The default is '%Y-%m-%d %H:%M:%S %Z'
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-pid-file" xreflabel="slon_conf_log_pid_file">
+      <term><varname>pid_file</varname> (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>pid_file</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Location and filename you would like for the pid file. The default 
+          is not defined in which case no pid file is written.
+        </para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+</sect1>
+
+<sect1 id="slon-config-connection">
+  <title>Connection settings</title>
+  <variablelist>
+    <varlistentry id="slon-config-connection-cluster-name" xreflabel="slon_conf_cluster_name">
+      <term><varname>cluster_name  (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>cluster_name</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Set the cluster name that this instance of slon is running against. 
+          The default is to read it off the command line.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-connection-conn-info" xreflabel="slon_conf_conn_info">
+      <term><varname>conn_info  (<type>string</type>)</term>
+      <indexterm>
+        <primary><varname>conn_info</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Set slon's connection info, default is to read it off the command line.
+        </para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+</sect1>
+<sect1 id="slon-config-interval">
+  <title>Event Tuning</title>
+  <variablelist>
+    <varlistentry id="slon-config-sync-interval" xreflabel="slon_conf_sync_interval">
+      <term><varname>sync_interval (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>sync_interval</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Check for updates at least this often in milliseconds. 
+          Range: [10-60000], default 100
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-sync-interval-timeout" xreflabel="slon_conf_sync_interval_timeout">
+      <term><varname>sync_interval_timeout (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>sync_interval_timeout</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Maximum amount of time in milliseconds before issuing a SYNC event,
+          This prevents a possible race condition in which the action sequence
+          is bumped by the trigger while inserting the log row, which makes
+          this bump is immediately visible to the sync thread, but
+          the resulting log rows are not visible yet.  If the sync is picked
+          up by the subscriber, processed and finished before the transaction
+          commits, this transaction's changes will not be replicated until the
+          next SYNC.  But if all application activity suddenly stops,
+          there will be no more sequence bumps, so the high frequent -s check
+          won't detect that.  Thus, the need for sync_interval_timeout. 
+          Range: [0-120000], default 1000
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-sync-group-maxsize" xreflabel="slon_conf_sync_group_maxsize">
+      <term><varname>sync_group_maxsize (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>sync_group_maxsize</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Maximum number of SYNC events to group together when/if a subscriber
+          falls behind.  SYNCs are batched only if there are that many available 
+          and if they are contiguous. Every other event type in between leads to 
+          a smaller batch.  And if there is only one SYNC available, even -g60 
+          will apply just that one. As soon as a subscriber catches up, it will 
+          apply every single SYNC by itself.
+          Range:  [0,100], default: 6
+        </para>
+      </listitem>
+    </varlistentry>
+    
+    <varlistentry id="slon-config-vac-frequency" xreflabel="slon_conf_vac_frequency">
+      <term><varname>vac_frequency (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>vac_frequency</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Sets how many cleanup cycles to run before a vacuum is done.  0 disables the builtin vacuum, 
+          intended to be used with the <application>pg_autovacuum</application> daemon.
+          Range: [0,100], default: 3
+        </para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+</sect1>
+</article>

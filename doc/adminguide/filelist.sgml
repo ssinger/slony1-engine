@@ -1,4 +1,4 @@
-<!-- $Id: filelist.sgml,v 1.6 2004-12-21 17:44:46 darcyb Exp $ -->
+<!-- $Id: filelist.sgml,v 1.7 2005-01-10 23:31:34 darcyb Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
@@ -25,12 +25,14 @@
 <!entity slonik             SYSTEM "slonik.sgml">
 <!entity slonikref          SYSTEM "slonik_ref.sgml">
 <!entity slon               SYSTEM "slon.sgml">
+<!entity slonconf	    SYSTEM "slonconf.sgml">
 <!entity schemadoc          SYSTEM "schemadoc.xml">
 
 <!entity history            SYSTEM "history.sgml">
 <!entity legal              SYSTEM "legal.sgml">
 <!entity notation           SYSTEM "notation.sgml">
 <!entity problems           SYSTEM "problems.sgml">
+<!entity slonybook          SYSTEM "slony.sgml">
 
 
 <!-- back matter -->
