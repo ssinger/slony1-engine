@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.15 2004-06-12 04:59:32 wieck Exp $
+ *	$Id: scan.l,v 1.16 2004-06-18 19:52:36 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -60,6 +60,7 @@ filename		{ return K_FILENAME;			}
 for				{ return K_FOR;					}
 forward			{ return K_FORWARD;				}
 full			{ return K_FULL;				}
+fully			{ return K_FULL;				}
 functions		{ return K_FUNCTIONS;			}
 id				{ return K_ID;					}
 init			{ return K_INIT;				}
