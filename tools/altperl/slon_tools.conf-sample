@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.4 2005-02-23 20:30:51 smsimms Exp $
+# $Id: slon_tools.conf-sample,v 1.5 2005-03-10 17:50:03 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -78,7 +78,7 @@ if ($ENV{"SLONYNODES"}) {
 # The $SLONY_SETS variable contains information about all of the sets
 # in your cluster.
 
-my $SLONY_SETS = {
+$SLONY_SETS = {
 
     # A unique name for the set
     "set1" => {
