@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.14 2004-06-12 13:25:19 wieck Exp $
+ *	$Id: remote_listen.c,v 1.15 2004-06-16 11:34:31 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -649,7 +649,7 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 	}
 
 	time(&timeout);
-	timeout += 20;
+	timeout += 300;
 	while (PQisBusy(conn->dbconn) != 0)
 	{
 		time(&now);
