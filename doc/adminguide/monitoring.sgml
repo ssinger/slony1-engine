@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.14 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.15 2005-02-22 17:37:59 darcyb Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -62,7 +62,7 @@ about how the threads work, what to expect in the logs after you run a
 </para>
 </sect2>
 
-<sect2 id="testslonystate"> <title> test_slony_state.pl </title>
+<sect2 id="testslonystate"> <title> test_slony_state</title>
 
 <para> This script is in preliminary stages, and may be used to do
 some analysis of the state of a <productname>Slony-I</productname>

@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.18 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.19 2005-02-22 17:37:58 darcyb Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -69,7 +69,7 @@ objects will be contained in a particular replication set.</para>
 <para>Unlike <envar>SLONYNODES</envar>, which is essential for
 <emphasis>all</emphasis> of the <xref linkend="slonik">-generating
 scripts, this only needs to be set when running
-<filename>create_set.pl</filename>, as that is the only script used to
+<filename>create_set</filename>, as that is the only script used to
 control what tables will be in a particular replication set.</para>
 
 <para>What variables are set up.</para>
@@ -102,7 +102,7 @@ sequence that &slony1; generates</para>
 </listitem>
 </itemizedlist>
 </sect2>
-<sect2><title>build_env.pl</title>
+<sect2><title>build_env</title>
 
 <para>Queries a database, generating output hopefully suitable for
 <filename>slon_tools.conf</filename> consisting of:</para>
@@ -113,82 +113,82 @@ sequence that &slony1; generates</para>
 <envar>nvar>@SERIALT</envar>nvar>, and <envar>@SEQUENCES</envar></para></listitem>
 </itemizedlist>
 </sect2>
-<sect2><title>create_set.pl</title>
+<sect2><title>create_set</title>
 
 <para>This requires <envar>SLONYSET</envar> to be set as well as
 <envar>SLONYNODES</envar>; it is used to generate the <command>slonik</command> script to set up
 a replication set consisting of a set of tables and sequences that are
 to be replicated.</para>
 </sect2>
-<sect2><title>drop_node.pl</title>
+<sect2><title>drop_node</title>
 
 <para>Generates Slonik script to drop a node from a &slony1; cluster.</para>
 </sect2>
-<sect2><title>drop_set.pl</title>
+<sect2><title>drop_set</title>
 
 <para>Generates Slonik script to drop a replication set
 (<emphasis>e.g.</emphasis> - set of tables and sequences) from a
 &slony1; cluster.</para>
 </sect2>
-<sect2><title>failover.pl</title>
+<sect2><title>failover</title>
 
 <para>Generates Slonik script to request failover from a dead node to some new origin</para>
 </sect2>
-<sect2><title>init_cluster.pl</title>
+<sect2><title>init_cluster</title>
 
 <para>Generates Slonik script to initialize a whole &slony1; cluster,
 including setting up the nodes, communications paths, and the listener
 routing.</para>
 </sect2>
-<sect2><title>merge_sets.pl</title>
+<sect2><title>merge_sets</title>
 
 <para>Generates Slonik script to merge two replication sets together.</para>
 </sect2>
-<sect2><title>move_set.pl</title>
+<sect2><title>move_set</title>
 
 <para>Generates Slonik script to move the origin of a particular set to a different node.</para>
 </sect2>
-<sect2><title>replication_test.pl</title>
+<sect2><title>replication_test</title>
 
 <para>Script to test whether &slony1; is successfully replicating
 data.</para>
 </sect2>
-<sect2><title>restart_node.pl</title>
+<sect2><title>restart_node</title>
 
 <para>Generates Slonik script to request the restart of a node.  This was
 particularly useful pre-1.0.5 when nodes could get snarled up when
 slon daemons died.</para>
 </sect2>
-<sect2><title>restart_nodes.pl</title>
+<sect2><title>restart_nodes</title>
 
 <para>Generates Slonik script to restart all nodes in the cluster.  Not
 particularly useful.</para>
 </sect2>
-<sect2><title>show_configuration.pl</title>
+<sect2><title>show_configuration</title>
 
 <para>Displays an overview of how the environment (e.g. - <envar>SLONYNODES</envar>) is set
 to configure things.</para>
 </sect2>
-<sect2><title>slon_kill.pl</title>
+<sect2><title>slon_kill</title>
 
 <para>Kills slony watchdog and all slon daemons for the specified set.  It
 only works if those processes are running on the local host, of
 course!</para>
 </sect2>
-<sect2><title>slon_pushsql.pl</title>
+<sect2><title>slon_pushsql</title>
 
 <para>Generates Slonik script to push DDL changes to a replication set.</para>
 </sect2>
-<sect2><title>slon_start.pl</title>
+<sect2><title>slon_start</title>
 
 <para>This starts a slon daemon for the specified cluster and node, and uses
-slon_watchdog.pl to keep it running.</para>
+slon_watchdog to keep it running.</para>
 </sect2>
-<sect2><title>slon_watchdog.pl</title>
+<sect2><title>slon_watchdog</title>
 
-<para>Used by <command>slon_start.pl</command>.</para>
+<para>Used by <command>slon_start</command>.</para>
 
-</sect2><sect2><title>slon_watchdog2.pl</title>
+</sect2><sect2><title>slon_watchdog2</title>
 
 <para>This is a somewhat smarter watchdog; it monitors a particular
 &slony1; node, and restarts the slon process if it hasn't seen updates
@@ -198,28 +198,28 @@ go in in 20 minutes or more.</para>
 the slon sometimes stops working without becoming aware of it.</para>
 
 </sect2>
-<sect2><title>subscribe_set.pl</title>
+<sect2><title>subscribe_set</title>
 
 <para>Generates Slonik script to subscribe a particular node to a particular replication set.</para>
 
-</sect2><sect2><title>uninstall_nodes.pl</title>
+</sect2><sect2><title>uninstall_nodes</title>
 
 <para>This goes through and drops the &slony1; schema from each node;
 use this if you want to destroy replication throughout a cluster.
 This is a <emphasis>VERY</emphasis> unsafe script!</para>
 
-</sect2><sect2><title>unsubscribe_set.pl</title>
+</sect2><sect2><title>unsubscribe_set</title>
 
 <para>Generates Slonik script to unsubscribe a node from a replication set.</para>
 
 </sect2>
-<sect2><title>update_nodes.pl</title>
+<sect2><title>update_nodes</title>
 
 <para>Generates Slonik script to tell all the nodes to update the
 &slony1; functions.  This will typically be needed when you upgrade
 from one version of &slony1; to another.</para>
 </sect2>
-<sect2 id="regenlisten"><title>regenerate-listens.pl</title>
+<sect2 id="regenlisten"><title>regenerate-listens</title>
 
 <para>This script connects to a &slony1; node, and queries various
 tables (sl_set, sl_node, sl_subscribe, sl_path) to compute what <xref

@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.12 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.13 2005-02-22 17:37:59 darcyb Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -81,7 +81,7 @@ scripts that may be used to do monitoring of &slony1; instances:
 
 <itemizedlist>
 
-<listitem><para> <command>test_slony_replication.pl</command> is a
+<listitem><para> <command>test_slony_replication</command> is a
 Perl script to which you can pass connection information to get to a
 &slony1; node.  It then queries <envar>sl_path</envar> and other
 information on that node in order to determine the shape of the
@@ -114,13 +114,13 @@ something about the state of your application.</para></listitem>
 for the Perl scripts.</para></listitem>
 
 <listitem><para><command>run_rep_tests.sh</command> is a <quote>wrapper</quote> script
-that runs <command>test_slony_replication.pl</command>.</para>
+that runs <command>test_slony_replication</command>.</para>
 
 <para> If you have several &slony1; clusters, you might set up
 configuration in this file to connect to all those
 clusters.</para></listitem>
 
-<listitem><para><command>nagios_slony_test.pl</command> is a script
+<listitem><para><command>nagios_slony_test</command> is a script
 that was constructed to query the log files so that you might run the
 replication tests every so often (we run them every 6 minutes), and
 then a system monitoring tool such as <ulink

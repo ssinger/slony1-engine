@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.13 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.14 2005-02-22 17:37:59 darcyb Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <para>If you rearrange the nodes so that they serve different
@@ -38,7 +38,7 @@ linkend="stmtstorelisten">.</para></listitem>
 </itemizedlist>
 </para>
 <para> The <filename>altperl</filename> toolset includes a
-<application>regenerate-listens.pl</application> script that is up to
+<application>regenerate-listens</application> script that is up to
 the task of creating the new <xref linkend="stmtstorelisten">
 commands; it isn't, however, smart enough to know what listener paths
 should be dropped.

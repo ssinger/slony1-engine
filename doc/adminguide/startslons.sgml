@@ -1,4 +1,4 @@
-<!-- $Id: startslons.sgml,v 1.10 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Id: startslons.sgml,v 1.11 2005-02-22 17:37:59 darcyb Exp $ -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
 <para>The programs that actually perform &slony1; replication are the
@@ -43,13 +43,13 @@ restart <application>slon</application> instances.</para></listitem>
 
 <itemizedlist>
 
-<listitem><para> <filename>tools/altperl/slon_watchdog.pl</filename> -
+<listitem><para> <filename>tools/altperl/slon_watchdog</filename> -
 an <quote>early</quote> version that basically wraps a loop around the
 invocation of <xref linkend="slon">, restarting any time it falls
 over</para>
 </listitem>
 
-<listitem><para> <filename>tools/altperl/slon_watchdog2.pl</filename>
+<listitem><para> <filename>tools/altperl/slon_watchdog2</filename>
 - a somewhat more intelligent version that periodically polls the
 database, checking to see if a <command>SYNC</command> has taken place
 recently.  We have had VPN connections that occasionally fall over
@@ -59,7 +59,7 @@ issue.</para></listitem>
 
 </itemizedlist></para>
 
-<para>The <filename>slon_watchdog2.pl</filename> script is probably
+<para>The <filename>slon_watchdog2</filename> script is probably
 <emphasis>usually</emphasis> the preferable thing to run.  It was at
 one point not preferable to run it whilst subscribing a very large
 replication set where it is expected to take many hours to do the
