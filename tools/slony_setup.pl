@@ -828,7 +828,7 @@ sub check_version () {
 	if (-x $psql) {
 		open P, "$psql --version |";
 		while (<P>) {
-			$_ =~ m/\s+(\d+)\.(\d+)(\.(\d+))?\s+/;
+			$_ =~ m/\s+(\d+)\.(\d+)((\w+)||(\.(\d+)))?\s+/;
 			$pgversion_major = $1;
 			$pgversion_minor = $2;
 		}
