@@ -1,0 +1,135 @@
+--
+-- xxid.v73.sql.in
+--
+-- Copyright (c) 2003, PostgreSQL Global Development Group
+-- Author: Jan Wieck, Afilias USA INC.
+--
+-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/src/xxid/Attic/xxid.v73.sql.in,v 1.1 2003-11-17 17:29:00 wieck Exp $
+--
+
+--
+-- Type specific input and output functions
+--
+CREATE FUNCTION "@CLUSTER@"."xxidin"(cstring) RETURNS "@CLUSTER@"."xxid"
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidin'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidout"("@CLUSTER@"."xxid") RETURNS cstring
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidout'
+	LANGUAGE C;
+
+
+--
+-- The data type itself
+--
+CREATE TYPE "@CLUSTER@"."xxid" (
+	INPUT = "@CLUSTER@"."xxidin",
+	OUTPUT = "@CLUSTER@"."xxidout",
+	EXTERNALLENGTH = 12,
+	INTERNALLENGTH = 4,
+	PASSEDBYVALUE,
+	ALIGNMENT = int4
+);
+
+
+--
+-- Since our xxid type has special cases for values 0-3, it
+-- in fact IS xid, so allow implicit type casting to and from.
+--
+CREATE CAST (xid AS "@CLUSTER@".xxid)
+	WITHOUT FUNCTION AS IMPLICIT;
+CREATE CAST ("@CLUSTER@".xxid AS xid)
+	WITHOUT FUNCTION AS IMPLICIT;
+
+
+--
+-- Comparision functions for the new datatype
+--
+CREATE FUNCTION "@CLUSTER@"."xxideq"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxideq'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidne"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidne'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidlt"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidlt'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidle"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidle'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidgt"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidgt'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."xxidge"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidge'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@"."btxxidcmp"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS int4
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_btxxidcmp'
+	LANGUAGE C;
+CREATE FUNCTION "@CLUSTER@".getCurrentXid() RETURNS "@CLUSTER@"."xxid"
+	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_getCurrentXid'
+	LANGUAGE C;
+
+
+--
+-- Operators on these comparision functions
+--
+CREATE OPERATOR < (
+	PROCEDURE = "@CLUSTER@"."xxidlt",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = >, NEGATOR = >=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR = (
+	PROCEDURE = "@CLUSTER@"."xxideq",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = =, NEGATOR = <>,
+	RESTRICT = eqsel, JOIN = eqjoinsel,
+	SORT1 = <, SORT2 = <,
+	HASHES
+);
+CREATE OPERATOR <> (
+	PROCEDURE = "@CLUSTER@"."xxidne",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = <>, NEGATOR = =,
+	RESTRICT = neqsel, JOIN = neqjoinsel
+);
+CREATE OPERATOR > (
+	PROCEDURE = "@CLUSTER@"."xxidgt",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = <, NEGATOR = <=,
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+CREATE OPERATOR <= (
+	PROCEDURE = "@CLUSTER@"."xxidle",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = >=, NEGATOR = >,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR >= (
+	PROCEDURE = "@CLUSTER@"."xxidge",
+	LEFTARG = "@CLUSTER@"."xxid",
+	RIGHTARG = "@CLUSTER@"."xxid",
+	COMMUTATOR = <=, NEGATOR = <,
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+
+
+--
+-- Finally the default operator class so that we can use our
+-- new data type in btree indexes.
+--
+CREATE OPERATOR CLASS "@CLUSTER@"."xxid_ops"
+	DEFAULT FOR TYPE "@CLUSTER@"."xxid" USING btree AS
+	OPERATOR 1 <  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
+	OPERATOR 2 <= ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
+	OPERATOR 3 =  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
+	OPERATOR 4 >= ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
+	OPERATOR 5 >  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
+	FUNCTION 1 "@CLUSTER@"."btxxidcmp" ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid");
+
+
