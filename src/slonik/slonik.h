@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.9 2004-03-26 14:59:07 wieck Exp $
+ *	$Id: slonik.h,v 1.10 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -21,6 +21,7 @@ typedef struct SlonikStmt_restart_node_s		SlonikStmt_restart_node;
 typedef struct SlonikStmt_init_cluster_s		SlonikStmt_init_cluster;
 typedef struct SlonikStmt_store_node_s			SlonikStmt_store_node;
 typedef struct SlonikStmt_drop_node_s			SlonikStmt_drop_node;
+typedef struct SlonikStmt_failed_node_s			SlonikStmt_failed_node;
 typedef struct SlonikStmt_uninstall_node_s		SlonikStmt_uninstall_node;
 typedef struct SlonikStmt_store_path_s			SlonikStmt_store_path;
 typedef struct SlonikStmt_drop_path_s			SlonikStmt_drop_path;
@@ -52,6 +53,7 @@ typedef enum {
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_DROP_NODE,
+	STMT_FAILED_NODE,
 	STMT_UNINSTALL_NODE,
 	STMT_STORE_PATH,
 	STMT_SUBSCRIBE_SET,
@@ -140,6 +142,13 @@ struct SlonikStmt_drop_node_s {
 	SlonikStmt			hdr;
 	int					no_id;
 	int					ev_origin;
+};
+
+
+struct SlonikStmt_failed_node_s {
+	SlonikStmt			hdr;
+	int					no_id;
+	int					backup_node;
 };
 
 
@@ -352,6 +361,7 @@ extern int		slonik_restart_node(SlonikStmt_restart_node *stmt);
 extern int		slonik_init_cluster(SlonikStmt_init_cluster *stmt);
 extern int		slonik_store_node(SlonikStmt_store_node *stmt);
 extern int		slonik_drop_node(SlonikStmt_drop_node *stmt);
+extern int		slonik_failed_node(SlonikStmt_failed_node *stmt);
 extern int		slonik_uninstall_node(SlonikStmt_uninstall_node *stmt);
 extern int		slonik_store_path(SlonikStmt_store_path *stmt);
 extern int		slonik_drop_path(SlonikStmt_drop_path *stmt);
@@ -366,6 +376,8 @@ extern int		slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt);
 extern int		slonik_lock_set(SlonikStmt_lock_set *stmt);
 extern int		slonik_unlock_set(SlonikStmt_unlock_set *stmt);
 extern int		slonik_move_set(SlonikStmt_move_set *stmt);
+
+extern int		slon_scanint64(char *str, int64 *result);
 
 
 /*

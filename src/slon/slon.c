@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.23 2004-04-02 03:01:18 wieck Exp $
+ *	$Id: slon.c,v 1.24 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -151,7 +151,7 @@ main (int argc, char *const argv[])
 	dstring_init(&query);
 	slon_mkquery(&query, 
 			"select no_id, no_active, no_comment, "
-			"    (select max(con_seqno) from %s.sl_confirm "
+			"    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
 			"        where con_origin = no_id and con_received = %d) "
 			"        as last_event "
 			"from %s.sl_node "

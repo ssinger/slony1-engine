@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.12 2004-03-26 14:59:07 wieck Exp $
+ *	$Id: slonik.c,v 1.13 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -245,17 +246,6 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_init_cluster *)hdr;
 
 					/*
-					 * Initial primary cluster node must be no_id 1
-					 */
-					if (stmt->no_id != 1)
-					{
-						printf("%s:%d: Error: "
-								"Primary cluster node must be no_id 1\n",
-								hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
-					}
-
-					/*
 					 * Check that we have conninfo to that
 					 */
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
@@ -271,13 +261,6 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 					if (stmt->ev_origin < 0)
 					{
 						stmt->ev_origin = 1;
-					}
-					if (stmt->no_id < 2)
-					{
-						printf("%s:%d: Error: "
-								"no_id must be >= 2\n",
-								hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
 					}
 					if (stmt->no_id == stmt->ev_origin)
 					{
@@ -307,6 +290,23 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 						errors++;
 					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_FAILED_NODE:
+				{
+					SlonikStmt_failed_node *stmt =
+							(SlonikStmt_failed_node *)hdr;
+
+					if (stmt->backup_node == stmt->no_id)
+					{
+						printf("%s:%d: Error: "
+								"Node ID and backup node cannot be identical\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (script_check_adminfo(hdr, stmt->backup_node) < 0)
 						errors++;
 				}
 				break;
@@ -833,6 +833,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_drop_node *)hdr;
 
 					if (slonik_drop_node(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_FAILED_NODE:
+				{
+					SlonikStmt_failed_node *stmt =
+							(SlonikStmt_failed_node *)hdr;
+
+					if (slonik_failed_node(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -1621,9 +1631,57 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 		if (*sub_active == 't')
 		{
 			slon_mkquery(&query,
-				"select \"_%s\".enableSubscription_int(%s, %s); ",
+				"select \"_%s\".enableSubscription_int(%s, %s, %s); ",
 				stmt->hdr.script->clustername, 
-				sub_set, sub_receiver);
+				sub_set, sub_provider, sub_receiver);
+		}
+
+		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+		{
+			dstring_free(&query);
+			PQclear(res);
+			return -1;
+		}
+	}
+	PQclear(res);
+
+	/*
+	 * Set our own event seqno in case the node id was used before
+	 * and our confirms.
+	 */
+	slon_mkquery(&query,
+			"select ev_origin, max(ev_seqno) "
+			"    from \"_%s\".sl_event "
+			"    group by ev_origin; ",
+			stmt->hdr.script->clustername);
+	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+	if (res == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	ntuples = PQntuples(res);
+	for (tupno = 0; tupno < ntuples; tupno++)
+	{
+		char   *ev_origin_c = PQgetvalue(res, tupno, 0);
+		char   *ev_seqno_c = PQgetvalue(res, tupno, 1);
+
+		if (stmt->no_id == (int)strtol(ev_origin_c, NULL, 10))
+		{
+			slon_mkquery(&query,
+				"select \"pg_catalog\".setval('\"_%s\".sl_event_seq', "
+				"'%s'::int8 + 1); ",
+				stmt->hdr.script->clustername, ev_seqno_c);
+		}
+		else
+		{
+			slon_appendquery(&query,
+				"insert into \"_%s\".sl_confirm "
+				"    (con_origin, con_received, con_seqno, con_timestamp) "
+				"    values "
+				"    (%s, %d, '%s', CURRENT_TIMESTAMP); ",
+				stmt->hdr.script->clustername, 
+				ev_origin_c, stmt->no_id, ev_seqno_c);
 		}
 
 		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
@@ -1680,6 +1738,491 @@ slonik_drop_node(SlonikStmt_drop_node *stmt)
 
 	dstring_free(&query);
 	return 0;
+}
+
+
+typedef struct {
+	int				no_id;
+	SlonikAdmInfo  *adminfo;
+	int				has_slon;
+	int				slon_pid;
+	int				num_sets;
+} failnode_node;
+
+
+typedef struct {
+	int				set_id;
+	int				num_subscribers;
+	failnode_node **subscribers;
+	failnode_node  *max_node;
+	int64			max_seqno;
+} failnode_set;
+
+
+int
+slonik_failed_node(SlonikStmt_failed_node *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+
+	int				num_nodes;
+	int				num_sets;
+	int				n, i, j, k;
+
+	failnode_node  *nodeinfo;
+	failnode_set   *setinfo;
+	char		   *configbuf;
+
+	PGresult	   *res1;
+	PGresult	   *res2;
+	PGresult	   *res3;
+	int64			max_seqno_total = 0;
+	failnode_node  *max_node_total = NULL;
+
+	int				rc = 0;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->backup_node);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	/*
+	 * On the backup node select a list of all active nodes except
+	 * for the failed node.
+	 */
+	slon_mkquery(&query,
+			"select no_id from \"_%s\".sl_node "
+			"    where no_id <> %d "
+			"    and no_active "
+			"    order by no_id; ",
+			stmt->hdr.script->clustername,
+			stmt->no_id);
+	res1 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+	if (res1 == NULL)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	num_nodes = PQntuples(res1);
+
+	/*
+	 * Get a list of all sets that are subscribed more than once
+	 * directly from the origin
+	 */
+	slon_mkquery(&query,
+			"select S.set_id, count(S.set_id) "
+			"    from \"_%s\".sl_set S, \"_%s\".sl_subscribe SUB "
+			"    where S.set_id = SUB.sub_set "
+			"    and S.set_origin = %d "
+			"    and SUB.sub_provider = %d "
+			"    and SUB.sub_active "
+			"    group by set_id "
+			"    having count(S.set_id) > 1",
+			stmt->hdr.script->clustername,
+			stmt->hdr.script->clustername,
+			stmt->no_id, stmt->no_id);
+	res2 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+	if (res2 == NULL)
+	{
+		PQclear(res1);
+		dstring_free(&query);
+		return -1;
+	}
+	num_sets = PQntuples(res2);
+
+	/*
+	 * Allocate and initialize memory to hold some config info
+	 */
+	configbuf = malloc(
+				MAXALIGN(sizeof(failnode_node) * num_nodes) +
+				MAXALIGN(sizeof(failnode_set) * num_sets) +
+				sizeof(failnode_node *) * num_nodes * num_sets);
+	memset(configbuf, 0, 
+				MAXALIGN(sizeof(failnode_node) * num_nodes) +
+				MAXALIGN(sizeof(failnode_set) * num_sets) +
+				sizeof(failnode_node *) * num_nodes * num_sets);
+
+	nodeinfo = (failnode_node *)configbuf;
+	setinfo  = (failnode_set *)(configbuf + 
+				MAXALIGN(sizeof(failnode_node) * num_nodes));
+	for (i = 0; i < num_sets; i++)
+	{
+		setinfo[i].subscribers = (failnode_node **)
+				(configbuf + MAXALIGN(sizeof(failnode_node) * num_nodes) +
+							MAXALIGN(sizeof(failnode_set) * num_sets) +
+							sizeof(failnode_node *) * num_nodes * i);
+	}
+
+	/*
+	 * Connect to all these nodes and determine if there is a node
+	 * daemon running on that node.
+	 */
+	for (i = 0; i < num_nodes; i++)
+	{
+		nodeinfo[i].no_id = (int)strtol(PQgetvalue(res1, i, 0), NULL, 10);
+		nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *)stmt, 
+												nodeinfo[i].no_id);
+		if (nodeinfo[i].adminfo == NULL)
+		{
+			PQclear(res1);
+			free(configbuf);
+			dstring_free(&query);
+			return -1;
+		}
+		
+		slon_mkquery(&query,
+				"lock table \"_%s\".sl_config_lock; "
+				"select listenerpid from \"pg_catalog\".pg_listener "
+				"    where relname = '_%s_Restart'; ",
+				stmt->hdr.script->clustername,
+				stmt->hdr.script->clustername);
+		res3 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+		if (res3 == NULL)
+		{
+			PQclear(res1);
+			PQclear(res2);
+			free(configbuf);
+			dstring_free(&query);
+			return -1;
+		}
+		if (PQntuples(res3) == 0)
+		{
+			nodeinfo[i].has_slon = false;
+			nodeinfo[i].slon_pid = 0;
+		}
+		else
+		{
+			nodeinfo[i].has_slon = true;
+			nodeinfo[i].slon_pid = (int)strtol(PQgetvalue(res3, 0, 0), NULL, 10);
+		}
+		PQclear(res3);
+	}
+	PQclear(res1);
+
+	/*
+	 * For every set we're interested in lookup the direct
+	 * subscriber nodes.
+	 */
+	for (i = 0; i < num_sets; i++)
+	{
+		setinfo[i].set_id = (int)strtol(PQgetvalue(res2, i, 0), NULL, 10);
+
+		slon_mkquery(&query,
+				"select sub_receiver "
+				"    from \"_%s\".sl_subscribe "
+				"    where sub_set = %d "
+				"    and sub_provider = %d "
+				"    and sub_active and sub_forward; ",
+				stmt->hdr.script->clustername,
+				setinfo[i].set_id,
+				stmt->no_id);
+				
+		res3 = db_exec_select((SlonikStmt *)stmt, adminfo1, &query);
+		if (res3 == NULL)
+		{
+			free(configbuf);
+			dstring_free(&query);
+			return -1;
+		}
+		n = PQntuples(res3);
+
+		for (j = 0; j < n; j++)
+		{
+			int sub_receiver = (int)strtol(PQgetvalue(res3, j, 0), NULL, 10);
+
+			for (k = 0; k < num_nodes; k++)
+			{
+				if (nodeinfo[k].no_id == sub_receiver)
+				{
+					setinfo[i].subscribers[setinfo[i].num_subscribers] =
+							&nodeinfo[k];
+					setinfo[i].num_subscribers++;
+					break;
+				}
+			}
+			if (k == num_nodes)
+			{
+				printf("node %d not found - inconsistent configuration\n",
+						sub_receiver);
+				free(configbuf);
+				PQclear(res3);
+				PQclear(res2);
+				dstring_free(&query);
+				return -1;
+			}
+		}
+		PQclear(res3);
+	}
+	PQclear(res2);
+
+	/*
+	 * Execute the failedNode() procedure, first on the backup
+	 * node, then on all other nodes.
+	 */
+	slon_mkquery(&query,
+			"select \"_%s\".failedNode(%d, %d); ",
+			stmt->hdr.script->clustername,
+			stmt->no_id, stmt->backup_node);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		free(configbuf);
+		dstring_free(&query);
+		return -1;
+	}
+	for (i = 0; i < num_nodes; i++)
+	{
+		if (nodeinfo[i].no_id == stmt->backup_node)
+			continue;
+
+		if (db_exec_command((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query) < 0)
+		{
+			free(configbuf);
+			dstring_free(&query);
+			return -1;
+		}
+	}
+
+	/*
+	 * Big danger from now on, we commit the work done so far
+	 */
+	for (i = 0; i < num_nodes; i++)
+	{
+		if (db_commit_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+		{
+			free(configbuf);
+			dstring_free(&query);
+			return -1;
+		}
+	}
+
+	/*
+	 * Wait until all slon replication engines that where running
+	 * have restarted.
+	 */
+	n = 0;
+	while (n < num_nodes)
+	{
+		sleep(1);
+		n = 0;
+		for (i = 0; i < num_nodes; i++)
+		{
+			if (!nodeinfo[i].has_slon)
+			{
+				n++;
+				continue;
+			}
+
+			slon_mkquery(&query,
+					"select listenerpid from \"pg_catalog\".pg_listener "
+					"    where relname = '_%s_Restart' "
+					"    and listenerpid <> %d; ",
+					stmt->hdr.script->clustername,
+					nodeinfo[i].slon_pid);
+			res1 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+			if (res1 == NULL)
+			{
+				free(configbuf);
+				dstring_free(&query);
+				return -1;
+			}
+			if (PQntuples(res1) == 1)
+			{
+				nodeinfo[i].has_slon = false;
+				n++;
+			}
+			
+			PQclear(res1);
+			if (db_rollback_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+			{
+				free(configbuf);
+				dstring_free(&query);
+				return -1;
+			}
+		}
+	}
+
+	/*
+	 * Determine the absolutely last event sequence known from the
+	 * failed node.
+	 */
+	slon_mkquery(&query,
+			"select max(ev_seqno) "
+			"    from \"_%s\".sl_event "
+			"    where ev_origin = %d; ",
+			stmt->hdr.script->clustername,
+			stmt->no_id);
+	for (i = 0; i < num_nodes; i++)
+	{
+		res1 = db_exec_select((SlonikStmt *)stmt, nodeinfo[i].adminfo, &query);
+		if (res1 != NULL)
+		{
+			if (PQntuples(res1) == 1)
+			{
+				int64	max_seqno;
+
+				slon_scanint64(PQgetvalue(res1, 0, 0), &max_seqno);
+				if (max_seqno > max_seqno_total)
+				{
+					max_seqno_total = max_seqno;
+					max_node_total = &nodeinfo[i];
+				}
+			}
+			PQclear(res1);
+		}
+		else
+			rc = -1;
+	}
+
+	/*
+	 * For every set determine the direct subscriber with the highest
+	 * applied sync, preferring the backup node.
+	 */
+	for (i = 0; i < num_sets; i++)
+	{
+		setinfo[i].max_node = NULL;
+		setinfo[i].max_seqno  = 0;
+
+		slon_mkquery(&query,
+				"select ssy_seqno "
+				"    from \"_%s\".sl_setsync "
+				"    where ssy_setid = %d; ",
+				stmt->hdr.script->clustername,
+				setinfo[i].set_id);
+
+		for (j = 0; j < setinfo[i].num_subscribers; j++)
+		{
+			int64	ssy_seqno;
+
+			res1 = db_exec_select((SlonikStmt *)stmt, 
+					setinfo[i].subscribers[j]->adminfo, &query);
+			if (res1 == NULL)
+			{
+				free(configbuf);
+				dstring_free(&query);
+				return -1;
+			}
+			if (PQntuples(res1) == 1)
+			{
+				slon_scanint64(PQgetvalue(res1, 0, 0), &ssy_seqno);
+
+				if (setinfo[i].subscribers[j]->no_id == stmt->backup_node)
+				{
+					if (ssy_seqno >= setinfo[i].max_seqno)
+					{
+						setinfo[i].max_node = setinfo[i].subscribers[j];
+						setinfo[i].max_seqno = ssy_seqno;
+					}
+				}
+				else
+				{
+					if (ssy_seqno > setinfo[i].max_seqno)
+					{
+						setinfo[i].max_node = setinfo[i].subscribers[j];
+						setinfo[i].max_seqno = ssy_seqno;
+					}
+				}
+
+				if (ssy_seqno > max_seqno_total)
+					max_seqno_total = ssy_seqno;
+			}
+			else
+			{
+				printf("can't get setsync status for set %d from node %d\n",
+						setinfo[i].set_id, setinfo[i].subscribers[j]->no_id);
+				rc = -1;
+			}
+
+			PQclear(res1);
+		}
+	}
+
+	/*
+	 * Now switch the backup node to receive all sets from those
+	 * highest nodes.
+	 */
+	for (i = 0; i < num_sets; i++)
+	{
+		int				use_node;
+		SlonikAdmInfo  *use_adminfo;
+
+		if (setinfo[i].max_node == NULL)
+		{
+			printf("no setsync status for set %d found at all\n", 
+					setinfo[i].set_id);
+			rc = -1;
+			use_node = stmt->backup_node;
+			use_adminfo = adminfo1;
+		}
+		else
+		{
+			use_node = setinfo[i].max_node->no_id;
+			use_adminfo = setinfo[i].max_node->adminfo;
+
+			setinfo[i].max_node->num_sets++;
+		}
+
+		if (use_node != stmt->backup_node)
+		{
+			slon_mkquery(&query,
+					"select \"_%s\".storeListen(%d,%d,%d); "
+					"select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
+					stmt->hdr.script->clustername,
+					stmt->no_id, use_node, stmt->backup_node,
+					stmt->hdr.script->clustername,
+					setinfo[i].set_id, use_node, stmt->backup_node);
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				rc = -1;
+		}
+	}
+
+	/*
+	 * Commit the transaction on the backup node to activate
+	 * those changes.
+	 */
+	if (db_commit_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		rc = -1;
+
+	/*
+	 * Now execute all FAILED_NODE events on the node that
+	 * had the highest of all events alltogether.
+	 */
+	if (max_node_total != NULL)
+	{
+		for (i = 0; i < num_sets; i++)
+		{
+			char			ev_seqno_c[64];
+			char			ev_seqfake_c[64];
+
+			sprintf(ev_seqno_c, INT64_FORMAT, setinfo[i].max_seqno);
+			sprintf(ev_seqfake_c, INT64_FORMAT, ++max_seqno_total);
+
+			slon_mkquery(&query,
+					"select \"_%s\".failedNode2(%d,%d,%d,'%s','%s'); ",
+					stmt->hdr.script->clustername,
+					stmt->no_id, stmt->backup_node,
+					setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);
+			if (db_exec_command((SlonikStmt *)stmt, 
+						max_node_total->adminfo, &query) < 0)
+				rc = -1;
+		}
+	}
+
+	/*
+	 * commit all open transactions despite of all possible errors
+	 */
+	for (i = 0; i < num_nodes; i++)
+	{
+		if (db_commit_xact((SlonikStmt *)stmt, nodeinfo[i].adminfo) < 0)
+			rc = -1;
+	}
+
+	free(configbuf);
+	dstring_free(&query);
+	return rc;
 }
 
 
@@ -2252,4 +2795,71 @@ slonik_move_set(SlonikStmt_move_set *stmt)
 	return 0;
 }
 
+
+/*
+ * scanint8 --- try to parse a string into an int8.
+ *
+ * If errorOK is false, ereport a useful error message if the string is bad.
+ * If errorOK is true, just return "false" for bad input.
+ */
+int
+slon_scanint64(char *str, int64 *result)
+{
+	char	   *ptr = str;
+	int64		tmp = 0;
+	int			sign = 1;
+
+	/*
+	 * Do our own scan, rather than relying on sscanf which might be
+	 * broken for long long.
+	 */
+
+	/* skip leading spaces */
+	while (*ptr && isspace((unsigned char) *ptr))
+		ptr++;
+
+	/* handle sign */
+	if (*ptr == '-')
+	{
+		ptr++;
+		sign = -1;
+
+		/*
+		 * Do an explicit check for INT64_MIN.	Ugly though this is, it's
+		 * cleaner than trying to get the loop below to handle it
+		 * portably.
+		 */
+#ifndef INT64_IS_BUSTED
+		if (strcmp(ptr, "9223372036854775808") == 0)
+		{
+			*result = -INT64CONST(0x7fffffffffffffff) - 1;
+			return true;
+		}
+#endif
+	}
+	else if (*ptr == '+')
+		ptr++;
+
+	/* require at least one digit */
+	if (!isdigit((unsigned char) *ptr))
+		return false;
+
+	/* process digits */
+	while (*ptr && isdigit((unsigned char) *ptr))
+	{
+		int64		newtmp = tmp * 10 + (*ptr++ - '0');
+
+		if ((newtmp / 10) != tmp)		/* overflow? */
+			return false;
+		tmp = newtmp;
+	}
+
+	/* trailing junk? */
+	if (*ptr)
+		return false;
+
+	*result = (sign < 0) ? -tmp : tmp;
+
+	return true;
+}
 

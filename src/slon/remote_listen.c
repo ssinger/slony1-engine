@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.11 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: remote_listen.c,v 1.12 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -230,8 +230,10 @@ remoteListenThread_main(void *cdata)
 			 */
 			slon_mkquery(&query1,
 					"listen \"_%s_Event\"; "
-					"listen \"_%s_Confirm\"; ",
-					rtcfg_cluster_name, rtcfg_cluster_name);
+					"listen \"_%s_Confirm\"; "
+					"listen \"_%s_Node_%d\"; ",
+					rtcfg_cluster_name, rtcfg_cluster_name,
+					rtcfg_cluster_name, rtcfg_nodeid);
 			res = PQexec(dbconn, dstring_data(&query1));
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
@@ -658,6 +660,11 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 
 		ev_origin = strtol(PQgetvalue(res, tupno, 0), NULL, 10);
 		slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
+
+		slon_log(SLON_DEBUG2, "remoteListenThread_%d: "
+				"queue event %d,%s %s\n",
+				node->no_id, ev_origin, PQgetvalue(res, tupno, 1),
+				PQgetvalue(res, tupno, 6));
 
 		remoteWorker_event(node->no_id,
 				ev_origin, ev_seqno,

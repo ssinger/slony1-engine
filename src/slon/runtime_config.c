@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.17 2004-03-23 12:38:56 wieck Exp $
+ *	$Id: runtime_config.c,v 1.18 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -554,15 +554,23 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	{
 		if (set->set_id == set_id)
 		{
+			int old_origin = set->set_origin;
+
 			slon_log(SLON_CONFIG,
 					"storeSet: set_id=%d set_origin=%d "
 					"set_comment='%s' - update set\n",
-					set_id, set_origin, set_comment);
-			free(set->set_comment);
+					set_id, set_origin, 
+					(set_comment == NULL) ? "<unchanged>" : set_comment);
 			set->set_origin = set_origin;
-			set->set_comment = strdup(set_comment);
+			if (set_comment != NULL)
+			{
+				free(set->set_comment);
+				set->set_comment = strdup(set_comment);
+			}
 			rtcfg_unlock();
 			rtcfg_seq_bump();
+			if (old_origin != set_origin)
+				sched_wakeup_node(old_origin);
 			sched_wakeup_node(set_origin);
 			return;
 		}
@@ -584,7 +592,7 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 
 	set->set_id = set_id;
 	set->set_origin = set_origin;
-	set->set_comment = strdup(set_comment);
+	set->set_comment = strdup((set_comment == NULL) ? "<unknown>" : set_comment);
 
 	set->sub_provider = -1;
 

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.9 2004-03-27 03:02:25 wieck Exp $
+ *	$Id: parser.y,v 1.10 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -20,6 +20,7 @@
  * Common option types
  */
 typedef enum {
+	O_BACKUP_NODE,
 	O_CLIENT,
 	O_COMMENT,
 	O_CONNINFO,
@@ -75,6 +76,7 @@ typedef struct statement_option {
  * Global data
  */
 char   *current_file = "<stdin>";
+extern int yyleng;
 
 
 /*
@@ -119,6 +121,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
 %type <statement>	stmt_drop_node
+%type <statement>	stmt_failed_node
 %type <statement>	stmt_uninstall_node
 %type <statement>	stmt_store_path
 %type <statement>	stmt_drop_path
@@ -146,6 +149,7 @@ static int	assign_options(statement_option *so, option_list *ol);
  */
 %token	K_ADD
 %token	K_ADMIN
+%token	K_BACKUP
 %token	K_CLIENT
 %token	K_CLUSTER
 %token	K_CLUSTERNAME
@@ -158,6 +162,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_ERROR
 %token	K_EVENT
 %token	K_EXIT
+%token	K_FAILOVER
 %token	K_FALSE
 %token	K_FORWARD
 %token	K_FULL
@@ -376,6 +381,8 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_drop_node
 						{ $$ = $1; }
+					| stmt_failed_node
+						{ $$ = $1; }
 					| stmt_uninstall_node
 						{ $$ = $1; }
 					| stmt_store_path
@@ -556,6 +563,32 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						{
 							new->no_id			= opt[0].ival;
 							new->ev_origin		= opt[1].ival;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_failed_node	: lno K_FAILOVER option_list
+					{
+						SlonikStmt_failed_node *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_failed_node *)
+								malloc(sizeof(SlonikStmt_failed_node));
+						memset(new, 0, sizeof(SlonikStmt_failed_node));
+						new->hdr.stmt_type		= STMT_FAILED_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $3) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->backup_node	= opt[1].ival;
 						}
 
 						$$ = (SlonikStmt *)new;
@@ -975,6 +1008,11 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_ID;
 						$$ = $3;
 					}
+					| K_BACKUP K_NODE '=' option_item_id
+					{
+						$4->opt_code	= O_BACKUP_NODE;
+						$$ = $4;
+					}
 					| K_EVENT K_NODE '=' option_item_id
 					{
 						$4->opt_code	= O_EVENT_NODE;
@@ -1182,6 +1220,7 @@ option_str(option_code opt_code)
 {
 	switch (opt_code)
 	{
+		case O_BACKUP_NODE:		return "backup node";
 		case O_CLIENT:			return "client";
 		case O_COMMENT:			return "comment";
 		case O_CONNINFO:		return "conninfo";

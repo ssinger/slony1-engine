@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.17 2004-03-26 14:59:06 wieck Exp $
+ *	$Id: local_listen.c,v 1.18 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -398,6 +398,17 @@ localListenThread_main(void *dummy)
 				dstring_free(&query2);
 
 				rtcfg_moveSet(set_id, old_origin, new_origin, sub_provider);
+			}
+			else if (strcmp(ev_type, "FAILOVER_SET") == 0)
+			{
+				/*
+				 * FAILOVER_SET
+				 */
+
+				/*
+				 * Nothing to do. The stored procedure will restart
+				 * this daemon anyway.
+				 */
 			}
 			else if (strcmp(ev_type, "SUBSCRIBE_SET") == 0)
 			{

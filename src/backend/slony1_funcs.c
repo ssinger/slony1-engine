@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.13 2004-03-29 20:34:11 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.14 2004-04-13 20:00:20 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -25,6 +25,8 @@
 #endif
 #include "mb/pg_wchar.h"
 
+#include <signal.h>
+
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
 PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
@@ -34,6 +36,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
+PG_FUNCTION_INFO_V1(_Slony_I_terminateNodeConnections);
 
 Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -43,6 +46,7 @@ Datum           _Slony_I_getSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum           _Slony_I_lockedSet(PG_FUNCTION_ARGS);
+Datum           _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
 
 
 #define PLAN_NONE			0
@@ -876,6 +880,47 @@ _Slony_I_lockedSet(PG_FUNCTION_ARGS)
 		"Slony-I: Table %s is currently locked against updates "
 		"because of MOVE_SET operation in progress",
 		NameStr(tg->tg_relation->rd_rel->relname));
+
+	return (Datum)0;
+}
+
+
+Datum
+_Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
+{
+	Name		relname = PG_GETARG_NAME(0);
+	void	   *plan;
+	Oid			argtypes[1];
+	Datum		args[1];
+	int			i;
+	int32		pid;
+	bool		isnull;
+
+	if (SPI_connect() < 0)
+		elog(ERROR, "Slony-I: SPI_connect() failed in terminateNodeConnections()");
+
+	argtypes[0] = NAMEOID;
+	plan = SPI_prepare("select listenerpid "
+			"    from \"pg_catalog\".pg_listener "
+			"    where relname = $1; ",
+			1, argtypes);
+	if (plan == NULL)
+		elog(ERROR, "Slony-I: SPI_prepare() failed in terminateNodeConnections()");
+
+	args[0] = NameGetDatum(relname);
+	if (SPI_execp(plan, args, NULL, 0) != SPI_OK_SELECT)
+		elog(ERROR, "Slony-I: SPI_execp() failed in terminateNodeConnections()");
+
+	for (i = 0; i < SPI_processed; i++)
+	{
+		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
+				SPI_tuptable->tupdesc, 1, &isnull));
+		elog(NOTICE, "Slony-I: terminating DB connection with pid %d of "
+				"failed node", pid);
+		kill(pid, SIGTERM);
+	}
+
+	SPI_finish();
 
 	return (Datum)0;
 }

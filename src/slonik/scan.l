@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.7 2004-03-26 14:59:07 wieck Exp $
+ *	$Id: scan.l,v 1.8 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,6 +40,7 @@ identifier		({ident_start}{ident_cont}*)
 
 add				{ return K_ADD;					}
 admin			{ return K_ADMIN;				}
+backup			{ return K_BACKUP;				}
 client			{ return K_CLIENT;				}
 cluster			{ return K_CLUSTER;				}
 comment			{ return K_COMMENT;				}
@@ -51,6 +52,7 @@ echo			{ return K_ECHO;				}
 error			{ return K_ERROR;				}
 event			{ return K_EVENT;				}
 exit			{ return K_EXIT;				}
+failover		{ return K_FAILOVER;			}
 false			{ return K_FALSE;				}
 forward			{ return K_FORWARD;				}
 full			{ return K_FULL;				}

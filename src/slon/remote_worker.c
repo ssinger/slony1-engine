@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.37 2004-04-01 23:45:48 wieck Exp $
+ *	$Id: remote_worker.c,v 1.38 2004-04-13 20:00:20 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -276,11 +276,15 @@ remoteWorkerThread_main(void *cdata)
 	local_dbconn = local_conn->dbconn;
 
 	/*
-	 * Put the connection into replication mode.
+	 * Put the connection into replication mode and listen on the
+	 * special relation telling what node daemon this connection
+	 * belongs to.
 	 */
 	slon_mkquery(&query1,
-			"select %s.setSessionRole('_%s', 'slon'); ",
-			rtcfg_namespace, rtcfg_cluster_name);
+			"select %s.setSessionRole('_%s', 'slon'); "
+			"listen \"_%s_Node_%d\"; ",
+			rtcfg_namespace, rtcfg_cluster_name,
+			rtcfg_cluster_name, rtcfg_nodeid);
 	if (query_execute(node, local_dbconn, &query1) < 0)
 		slon_abort();
 
@@ -395,7 +399,7 @@ remoteWorkerThread_main(void *cdata)
 		slon_mkquery(&query1, 
 				"begin transaction; "
 				"set transaction isolation level serializable; ");
-		
+
 		/*
 		 * Event type specific processing
 		 */
@@ -672,6 +676,19 @@ remoteWorkerThread_main(void *cdata)
 
 				dstring_reset(&query1);
 			}
+			else if (strcmp(event->ev_type, "FAILOVER_SET") == 0)
+			{
+				int		failed_node = (int) strtol(event->ev_data1, NULL, 10);
+				int		backup_node = (int) strtol(event->ev_data2, NULL, 10);
+				int		set_id		= (int) strtol(event->ev_data3, NULL, 10);
+
+				rtcfg_storeSet(set_id, backup_node, NULL);
+
+				slon_appendquery(&query1,
+						"select %s.failoverSet_int(%d, %d, %d); ",
+						rtcfg_namespace,
+						failed_node, backup_node, set_id);
+			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
 			{
 				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
@@ -727,9 +744,9 @@ remoteWorkerThread_main(void *cdata)
 						{
 							rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
 							slon_mkquery(&query1,
-									"select %s.enableSubscription(%d, %d); ",
+									"select %s.enableSubscription(%d, %d, %d); ",
 									rtcfg_namespace,
-									sub_set, sub_receiver);
+									sub_set, sub_provider, sub_receiver);
 							sched_rc = SCHED_STATUS_OK;
 							break;
 						}
@@ -762,9 +779,9 @@ remoteWorkerThread_main(void *cdata)
 					 * Somebody else got enabled, just remember it
 					 */
 					slon_appendquery(&query1,
-							"select %s.enableSubscription(%d, %d); ",
+							"select %s.enableSubscription(%d, %d, %d); ",
 							rtcfg_namespace,
-							sub_set, sub_receiver);
+							sub_set, sub_provider, sub_receiver);
 				}
 
 			}
@@ -1764,6 +1781,20 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 	/*
+	 * Listen on the special relation telling what node daemon this
+	 * connection belongs to.
+	 */
+	slon_mkquery(&query1, 
+			"listen \"_%s_Node_%d\"; ",
+			rtcfg_cluster_name, rtcfg_nodeid);
+	if (query_execute(node, pro_dbconn, &query1) < 0)
+	{
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+
+	/*
 	 * Begin a serialized transaction and check if our xmin
 	 * in the snapshot is > than ev_maxxid. This ensures that
 	 * all transactions that have been in progress when the
@@ -2565,6 +2596,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			node->no_id, event->ev_seqno);
 
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
+	dstring_init(&query);
 
 	/*
 	 * Establish all required data provider connections
@@ -2578,6 +2610,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						"No pa_conninfo for data provider %d\n",
 						node->no_id, provider->no_id);
+				dstring_free(&query);
 				return 10;
 			}
 
@@ -2591,6 +2624,22 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 						"cannot connect to data provider %d on '%s'\n",
 						node->no_id, provider->no_id,
 						provider->pa_conninfo);
+				dstring_free(&query);
+				return provider->pa_connretry;
+			}
+
+			/*
+			 * Listen on the special relation telling our node
+			 * relationship
+			 */
+			slon_mkquery(&query,
+					"listen \"_%s_Node_%d\"; ",
+					rtcfg_cluster_name, rtcfg_nodeid);
+			if (query_execute(node, provider->conn->dbconn, &query) < 0)
+			{
+				dstring_free(&query);
+				slon_disconnectdb(provider->conn);
+				provider->conn = NULL;
 				return provider->pa_connretry;
 			}
 
@@ -2626,6 +2675,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 						"for ev_origin %d\n",
 						node->no_id, provider->no_id,
 						event->ev_origin);
+				dstring_free(&query);
 				return 10;
 			}
 			if (prov_seqno < event->ev_seqno)
@@ -2635,6 +2685,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 						"ev_seqno " INT64_FORMAT " for ev_origin %d\n",
 						node->no_id, provider->no_id,
 						prov_seqno, event->ev_origin);
+				dstring_free(&query);
 				return 10;
 			}
 
@@ -2645,8 +2696,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 						seqbuf, event->ev_origin);
 		}
 	}
-
-	dstring_init(&query);
 
 	/*
 	 * Get all sequence updates
@@ -2700,6 +2749,20 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			}
 		}
 		PQclear(res1);
+
+		/*
+		 * Start listening on the special relation that will cause
+		 * our local connection to be killed when the provider node
+		 * fails.
+		 */
+		slon_mkquery(&query,
+				"listen \"_%s_Node_%d\"; ",
+				rtcfg_cluster_name, provider->no_id);
+		if (query_execute(node, local_dbconn, &query) < 0)
+		{
+			dstring_free(&query);
+			return 60;
+		}
 	}
 
 	dstring_init(&new_qual);
@@ -3142,6 +3205,23 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 				node->no_id);
 		return 10;
+	}
+
+	for (provider = wd->provider_head; provider; provider = provider->next)
+	{
+		/*
+		 * Stop listening on the special relations that will cause
+		 * our local connection to be killed when the provider node
+		 * fails.
+		 */
+		slon_mkquery(&query,
+				"listen \"_%s_Node_%d\"; ",
+				rtcfg_cluster_name, provider->no_id);
+		if (query_execute(node, local_dbconn, &query) < 0)
+		{
+			dstring_free(&query);
+			return 60;
+		}
 	}
 
 	/*
