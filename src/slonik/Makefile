@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.11 2004-08-28 21:20:10 darcyb Exp $
+#	$Id: Makefile,v 1.12 2004-12-01 17:59:12 darcyb Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -61,7 +61,7 @@ else
 endif
 
 clean distclean:
-	rm -f $(ALL) $(OBJS)
+	rm -f $(ALL) $(OBJS) $(PROG).core
 
 maintainer-clean:	clean
 	rm -f parser.c scan.c
