@@ -1,8 +1,5 @@
 <!-- $Id -->
-<article id="requirements">
-<title>System Requirements</title>
-
-<sect1>
+<sect1 id="requirements">
 <title>System Requirements</title> <para>Any platform that can run
 PostgreSQL should be able to run
 <productname>Slony-I</productname>.</para>
@@ -59,14 +56,9 @@ will suffice; previous versions may not.</para></listitem>
 
 <listitem><para> You also need a recent version of PostgreSQL
 <emphasis>source</emphasis>.  <productname>Slony-I</productname>
-depends on namespace support so you must have PostgreSQL version 7.3.3 or newer
-to be able to build and use <productname>Slony-I</productname>.  Rod
-Taylor has <quote>hacked up</quote> a version of
-<productname>Slony-I</productname> that works with version 7.2; if you
-desperately need that, look for him on the PostgreSQL Hackers mailing
-list.  It is not anticipated that 7.2 will be supported by any
-official <application><productname>Slony-I</productname></application>
-release.</para></listitem>
+depends on namespace support so you must have PostgreSQL version 7.3.3
+or newer to be able to build and use
+<productname>Slony-I</productname>.  </para></listitem>
 
 <listitem><para> GNU packages may be included in the standard
 packaging for your operating system, or you may need to look for
@@ -224,7 +216,6 @@ that subscribers that use log shipping have no need of access to other
 
 </sect2>
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
