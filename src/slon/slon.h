@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.39 2004-09-29 22:15:23 cbbrowne Exp $
+ *	$Id: slon.h,v 1.40 2004-10-13 18:50:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -485,6 +485,7 @@ extern SlonConn *slon_make_dummyconn(char *symname);
 extern void		slon_free_dummyconn(SlonConn *conn);
 
 extern int		db_getLocalNodeId(PGconn *conn);
+extern int		db_checkSchemaVersion(PGconn *conn);
 
 extern int		slon_mkquery(SlonDString *ds, char *fmt, ...);
 extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);

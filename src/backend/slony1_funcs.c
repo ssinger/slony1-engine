@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.23 2004-10-11 19:16:20 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.24 2004-10-13 18:50:54 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -36,6 +36,7 @@
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
 PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
+PG_FUNCTION_INFO_V1(_Slony_I_getModuleVersion);
 
 PG_FUNCTION_INFO_V1(_Slony_I_setSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
@@ -47,6 +48,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_cleanupListener);
 
 Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
+Datum           _Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
 
 Datum           _Slony_I_setSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getSessionRole(PG_FUNCTION_ARGS);
@@ -256,6 +258,28 @@ _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS)
 	SPI_finish();
 
 	PG_RETURN_INT32(cs->localNodeId);
+}
+
+
+/*
+ * _Slony_I_getModuleVersion -
+ *    
+ *    SQL callable function to determine the version number
+ *    of this shared object during the startup checks.
+ *
+ */
+Datum
+_Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
+{
+	text   *retval;
+	int		len;
+
+	len = strlen(SLONY_I_VERSION_STRING);
+	retval = palloc(VARHDRSZ + len);
+	VARATT_SIZEP(retval) = VARHDRSZ + len;
+	memcpy(VARDATA(retval), SLONY_I_VERSION_STRING, len);
+
+	PG_RETURN_TEXT_P(retval);
 }
 
 

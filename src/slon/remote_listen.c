@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.16 2004-09-24 22:12:35 darcyb Exp $
+ *	$Id: remote_listen.c,v 1.17 2004-10-13 18:50:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -261,6 +261,24 @@ remoteListenThread_main(void *cdata)
 				"remoteListenThread_%d: db_getLocalNodeId() "
 					 "returned %d - wrong database?\n",
 					 node->no_id, rc);
+
+				slon_disconnectdb(conn);
+				free(conn_conninfo);
+				conn = NULL;
+				conn_conninfo = NULL;
+
+				rc = sched_msleep(node, pa_connretry * 1000);
+				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+					break;
+
+				continue;
+			}
+			if (db_checkSchemaVersion(dbconn) < 0)
+			{
+				slon_log(SLON_ERROR,
+				"remoteListenThread_%d: db_checkSchemaVersion() "
+					 "failed\n",
+					 node->no_id);
 
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
