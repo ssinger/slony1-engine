@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.4 2004-08-12 22:14:31 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.5 2004-08-20 18:03:49 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -81,6 +81,7 @@ sub run_slonik_script {
   open(OUT, ">>$LOGDIR/slonik_scripts.log");
   my $now = `date`;
   chomp $now;
+  print OUT "/* ------------------------------------------------------------- */\n";
   print OUT "/* Script: $script submitted at $now */\n";
   print OUT "/* ------------------------------------------------------------- */\n";
   close OUT;
@@ -91,6 +92,7 @@ sub run_slonik_script {
 
 sub ps_args {
   my $sys=`uname`;
+  chomp $sys;    # Strip off cruft
   if ($sys eq "Linux") {
     return "/bin/ps -auxww";
   } elsif ($sys eq "FreeBSD") {
@@ -99,23 +101,24 @@ sub ps_args {
     return "/usr/ucb/ps -auxww";
   } elsif ($sys eq "AIX") {
     return "/usr/bin/ps auxww";
-  } 
-  return "/usr/bin/ps -auxww";    # This may be questionable for other systems; extend as needed!    
+  }
+  return "/usr/bin/ps -auxww";    # This may be questionable for other systems; extend as needed!
 }
 
 sub get_pid {
   my ($node) = @_;
   $node =~ /node(\d*)$/;
   my $nodenum = $1;
-  my $pid;
+  my ($retpid, $pid);
   my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  open(PSOUT, ps_args() . "| egrep \"[s]lon $SETNAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'|");
+  open(PSOUT, ps_args() . "| egrep \"[s]lon .*$SETNAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'|");
   while ($pid = <PSOUT>) {
-    chop $pid;
+    chomp $pid;
+    $retpid = $pid;
   }
   close(PSOUT);
-  return $pid;
+  return $retpid;
 }
 
 sub start_slon {
