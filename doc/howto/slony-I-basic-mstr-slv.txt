@@ -1,4 +1,5 @@
 Replicating Your First Database
+--------------------------------
 
 In this example, we will be replicating a brand new pgbench database.  The
 mechanics of replicating an existing database are covered here, however we
@@ -6,17 +7,19 @@ recommend that you learn how Slony-I functions by using a fresh new
 non-production database.
 
 The Slony-I replication engine is trigger-based, allowing us to replicate
-databases (or portions thereof) running under the same postmaster.
+databases (or portions thereof) running under the same postmaster.  More
+commonly, databases are replicated from one host to another.
 
-This example will show how to replicate the pgbench database running on
-localhost (master) to the pgbench slave database also running on localhost
-(slave).  We make a couple of assumptions about your PostgreSQL configuration:
+This example shows how to replicate a master database, created with pgbench,
+to a slave database.  The master and slave can both be on the same cluster
+or on separate hosts.  We make a couple of assumptions about your PostgreSQL 
+configuration:
 
 1. You have tcpip_socket=true in your postgresql.conf and
-2. You have localhost set to trust in pg_hba.conf
+2. You have enabled access in your cluster(s) via pg_hba.conf.
 
-The REPLICATIONUSER needs to be PostgreSQL superuser.  This is typically
-postgres or pgsql.
+The MASTERDBA (and SLAVEDBA) users need to be PostgreSQL 
+superusers.  This is typically postgres or pgsql.
 
 You should also set the following shell variables:
 
@@ -25,7 +28,10 @@ MASTERDBNAME=pgbench
 SLAVEDBNAME=pgbenchslave
 MASTERHOST=localhost
 SLAVEHOST=localhost
-REPLICATIONUSER=pgsql
+MASTERPORT=5432
+SLAVEPORT=5432
+MASTERDBA=postgres
+SLAVEDBA=postgres
 PGBENCHUSER=pgbench
 
 Here are a couple of examples for setting variables in common shells:
@@ -37,27 +43,29 @@ bash/sh:
 
 Creating the pgbenchuser
 
-createuser -A -D $PGBENCHUSER
+    createuser -A -D -U $MASTERDBA -h $MASTERHOST -p $MASTERPORT $PGBENCHUSER
+
+    #  And if you're replicating to separate cluster, create the user there...
+    createuser -A -D -U $SLAVEDBA -h $SLAVEHOST -p $SLAVEPORT $PGBENCHUSER
 
 Preparing the databases
 
-createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
-createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
-
-pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
+    createdb -O $PGBENCHUSER -h $MASTERHOST -p $MASTERPORT $MASTERDBNAME
+    createdb -O $PGBENCHUSER -h $SLAVEHOST -p $SLAVEPORT $SLAVEDBNAME
+    pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST -p $MASTERPORT $MASTERDBNAME
 
 Because Slony-I depends on the databases having the pl/pgSQL procedural
 language installed, we better install it now.  It is possible that you have
 installed pl/pgSQL into the template1 database in which case you can skip this
 step because it's already installed into the $MASTERDBNAME.
 
-createlang -h $MASTERHOST plpgsql $MASTERDBNAME
+    createlang -h $MASTERHOST -p $MASTERPORT plpgsql $MASTERDBNAME
 
 Slony-I does not yet automatically copy table definitions from a master when a
 slave subscribes to it, so we need to import this data.  We do this with
 pg_dump.
 
-pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
+    pg_dump -s -U $MASTERDBA -h $MASTERHOST -p $MASTERPORT $MASTERDBNAME | psql -U $SLAVEDBA -h $SLAVEHOST -p $SLAVEPORT $SLAVEDBNAME
 
 To illustrate how Slony-I allows for on the fly replication subscription, lets
 start up pgbench.  If you run the pgbench application in the foreground of a
@@ -67,9 +75,9 @@ are available in this session as well.
 
 The typical command to run pgbench would look like:
 
-pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
+    pgbench -s 1 -c 5 -t 10 -U $PGBENCHUSER -h $MASTERHOST -p $MASTERPORT $MASTERDBNAME
 
-This will run pgbench with 5 concurrent clients each processing 1000
+This will run pgbench with 5 concurrent clients each processing 10
 transactions against the pgbench database running on localhost as the pgbench
 user.
 
@@ -95,8 +103,8 @@ slonik <<_EOF_
     # node on each side of the cluster, the syntax is that of PQconnectdb in
     # the C-API
 	# --
-	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST port=$MASTERPORT user=$MASTERDBA';
+	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST port=$SLAVEPORT user=$SLAVEDBA';
 
 	#--
     # init the first node.  Its id MUST be 1.  This creates the schema
@@ -136,8 +144,8 @@ slonik <<_EOF_
 	#--
 
 	store node (id=2, comment = 'Slave node');
-	store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER');
-	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
+	store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST port=$MASTERPORT user=$MASTERDBA');
+	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST port=$SLAVEPORT user=$SLAVEDBA');
 	store listen (origin=1, provider = 1, receiver =2);
 	store listen (origin=2, provider = 2, receiver =1);
 _EOF_
@@ -151,11 +159,13 @@ to start the replication daemons.
 
 On $MASTERHOST the command to start the replication engine is
 
-slon $CLUSTERNAME "dbname=$MASTERDBNAME user=$REPLICATIONUSER host=$MASTERHOST"
+    slon $CLUSTERNAME "dbname=$MASTERDBNAME user=$MASTERDBA host=$MASTERHOST port=$MASTERPORT"
 
 Likewise we start the replication system on node 2 (the slave)
 
-slon $CLUSTERNAME "dbname=$SLAVEDBNAME user=$REPLICATIONUSER host=$SLAVEHOST"
+    #  And if you're replicating to separate host, you might want to run
+    #  this on the slave host, but not necessary for this example ...
+    slon $CLUSTERNAME "dbname=$SLAVEDBNAME user=$SLAVEDBA host=$SLAVEHOST port=$SLAVEPORT"
 
 Even though we have the slon running on both the master and slave and they are
 both spitting out diagnostics and other messages, we aren't replicating any
@@ -178,8 +188,8 @@ slonik <<_EOF_
     # that connect from the administrators workstation (where
     # slonik is executed).
     # ----
-    node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-    node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+    node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST port=$MASTERPORT user=$MASTERDBA';
+    node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST port=$SLAVEPORT user=$SLAVEDBA';
 
     # ----
     # Node 2 subscribes set 1
@@ -211,7 +221,7 @@ sessions have caught up.
 
 #!/bin/sh
 echo -n "**** comparing sample1 ... "
-psql -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
+psql -U $MASTERDBA -h $MASTERHOST -p $MASTERPORT $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
     select 'accounts:'::text, aid, bid, abalance, filler
         from accounts order by aid;
     select 'branches:'::text, bid, bbalance, filler
@@ -222,7 +232,7 @@ psql -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
         "_Slony-I_${CLUSTERNAME}_rowID"
         from history order by "_Slony-I_${CLUSTERNAME}_rowID";
 _EOF_
-psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME >dump.tmp.2.$$ <<_EOF_
+psql -U $SLAVEDBA -h $SLAVEHOST -p $SLAVEPORT $SLAVEDBNAME >dump.tmp.2.$$ <<_EOF_
     select 'accounts:'::text, aid, bid, abalance, filler
         from accounts order by aid;
     select 'branches:'::text, bid, bbalance, filler
