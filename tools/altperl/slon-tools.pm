@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.7 2004-08-23 18:35:39 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.8 2004-08-24 19:10:51 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -81,9 +81,9 @@ sub run_slonik_script {
   open(OUT, ">>$LOGDIR/slonik_scripts.log");
   my $now = `date`;
   chomp $now;
-  print OUT "/* ------------------------------------------------------------- */\n";
-  print OUT "/* Script: $script submitted at $now */\n";
-  print OUT "/* ------------------------------------------------------------- */\n";
+  print OUT "# ------------------------------------------------------------- \n";
+  print OUT "# Script: $script submitted at $now \n";
+  print OUT "# ------------------------------------------------------------- \n";
   close OUT;
   `cat $script >> $LOGDIR/slonik_scripts.log`;
   print `$SLON_BIN_PATH/slonik < $script`;
