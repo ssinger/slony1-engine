@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.8 2004-03-11 22:00:45 wieck Exp $
+ *	$Id: scheduler.c,v 1.9 2004-03-23 18:53:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,14 @@
 #include "c.h"
 
 #include "slon.h"
+
+
+/*
+ * If PF_LOCAL is not defined, use the old BSD name PF_UNIX
+ */
+#ifndef PF_LOCAL
+#define PF_LOCAL PF_UNIX
+#endif
 
 
 /* ----------
