@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v73.sql.in,v 1.6 2004-03-02 21:49:13 wieck Exp $
+-- $Id: xxid.v73.sql.in,v 1.7 2004-03-18 02:05:14 wieck Exp $
 -- ----------
 
 --
@@ -72,6 +72,9 @@ CREATE FUNCTION @NAMESPACE@.getCurrentXid() RETURNS @NAMESPACE@."xxid"
 	LANGUAGE C;
 CREATE FUNCTION @NAMESPACE@.getMinXid() RETURNS @NAMESPACE@."xxid"
 	AS '$libdir/xxid', '_Slony_I_getMinXid'
+	LANGUAGE C;
+CREATE FUNCTION @NAMESPACE@.getMaxXid() RETURNS @NAMESPACE@."xxid"
+	AS '$libdir/xxid', '_Slony_I_getMaxXid'
 	LANGUAGE C;
 
 

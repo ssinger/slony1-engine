@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.9 2004-03-17 17:56:34 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.10 2004-03-18 02:05:13 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -32,6 +32,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_setSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
+PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 
 Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -40,6 +41,7 @@ Datum           _Slony_I_setSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getSessionRole(PG_FUNCTION_ARGS);
 Datum           _Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
+Datum           _Slony_I_lockedSet(PG_FUNCTION_ARGS);
 
 
 #define PLAN_NONE			0
@@ -769,7 +771,7 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 	 * Get the trigger call context
 	 */
 	if (!CALLED_AS_TRIGGER(fcinfo))
-		elog(ERROR, "Slony-I: logTrigger() not called as trigger");
+		elog(ERROR, "Slony-I: denyAccess() not called as trigger");
 	tg = (TriggerData *)(fcinfo->context);
 
 	/*
@@ -823,6 +825,37 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 		return PointerGetDatum(tg->tg_newtuple);
 	else
 		return PointerGetDatum(tg->tg_trigtuple);
+}
+
+
+Datum
+_Slony_I_lockedSet(PG_FUNCTION_ARGS)
+{
+	TriggerData	   *tg;
+
+	/*
+	 * Get the trigger call context
+	 */
+	if (!CALLED_AS_TRIGGER(fcinfo))
+		elog(ERROR, "Slony-I: lockedSet() not called as trigger");
+	tg = (TriggerData *)(fcinfo->context);
+
+	/*
+	 * Check all logTrigger() calling conventions
+	 */
+	if (!TRIGGER_FIRED_BEFORE(tg->tg_event))
+		elog(ERROR, "Slony-I: denyAccess() must be fired BEFORE");
+	if (!TRIGGER_FIRED_FOR_ROW(tg->tg_event))
+		elog(ERROR, "Slony-I: denyAccess() must be fired FOR EACH ROW");
+	if (tg->tg_trigger->tgnargs != 1)
+		elog(ERROR, "Slony-I: denyAccess() must be defined with 1 arg");
+
+	elog(ERROR,
+		"Slony-I: Table %s is currently locked against updates "
+		"because of MOVE_SET operation in progress",
+		NameStr(tg->tg_relation->rd_rel->relname));
+
+	return (Datum)0;
 }
 
 

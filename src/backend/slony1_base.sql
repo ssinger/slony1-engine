@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.7 2004-03-17 17:56:34 wieck Exp $
+-- $Id: slony1_base.sql,v 1.8 2004-03-18 02:05:13 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -34,6 +34,7 @@ create table @NAMESPACE@.sl_node (
 create table @NAMESPACE@.sl_set (
 	set_id				int4,
 	set_origin			int4,
+	set_locked			@NAMESPACE@.xxid,
 	set_comment			text,
 
 	CONSTRAINT "sl_set-pkey"

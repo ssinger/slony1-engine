@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.29 2004-03-17 22:35:19 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.30 2004-03-18 02:05:13 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -84,6 +84,18 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 create function @NAMESPACE@.denyAccess ()
 	returns trigger
 	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
+	language C;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION lockedSet (cluster_name)
+--
+--	Trigger function to prevent modifications to a table before
+--	and after a moveSet().
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.lockedSet ()
+	returns trigger
+	as '$libdir/slony1_funcs', '_Slony_I_lockedSet'
 	language C;
 
 
@@ -169,6 +181,8 @@ begin
 	-- own system to sl_node.
 	-- ----
 	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
+	perform setval(''@NAMESPACE@.sl_rowid_seq'', 
+			p_local_node_id::int8 * ''1000000000000000''::int8);
 	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment);
 	
 	return p_local_node_id;
@@ -840,6 +854,145 @@ end;
 
 
 -- ----------------------------------------------------------------------
+-- FUNCTION lockSet (set_id)
+--
+--	Add a special trigger to all tables of a set that disables
+--	access to it.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.lockSet (int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	v_local_node_id		int4;
+	v_set_row			record;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and that we are the origin
+	-- and that it is not already locked.
+	-- ----
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select * into v_set_row from @NAMESPACE@.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_set_row.set_origin <> v_local_node_id then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+	end if;
+	if v_set_row.set_locked notnull then
+		raise exception ''Slony-I: set % is already locked'', p_set_id;
+	end if;
+
+	-- ----
+	-- Place the lockedSet trigger on all tables in the set.
+	-- ----
+	for v_tab_row in select T.tab_id,
+			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			from @NAMESPACE@.sl_table T,
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+			where T.tab_set = p_set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+			order by tab_id
+	loop
+		execute ''create trigger "_@CLUSTERNAME@_lockedset_'' || 
+				v_tab_row.tab_id || 
+				''" before insert or update or delete on '' ||
+				v_tab_row.tab_fqname || '' for each row execute procedure
+				@NAMESPACE@.lockedSet (''''_@CLUSTERNAME@'''');'';
+	end loop;
+
+	-- ----
+	-- Remember our snapshots xmax as for the set locking
+	-- ----
+	update @NAMESPACE@.sl_set
+			set set_locked = @NAMESPACE@.getMaxXid()
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION unlockSet (set_id)
+--
+--	Remove the special trigger from all tables of a set that disables
+--	access to it.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.unlockSet (int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	v_local_node_id		int4;
+	v_set_row			record;
+	v_tab_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and that we are the origin
+	-- and that it is not already locked.
+	-- ----
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select * into v_set_row from @NAMESPACE@.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_set_row.set_origin <> v_local_node_id then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+	end if;
+	if v_set_row.set_locked isnull then
+		raise exception ''Slony-I: set % is not locked'', p_set_id;
+	end if;
+
+	-- ----
+	-- Drop the lockedSet trigger from all tables in the set.
+	-- ----
+	for v_tab_row in select T.tab_id,
+			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			from @NAMESPACE@.sl_table T,
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
+			where T.tab_set = p_set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+			order by tab_id
+	loop
+		execute ''drop trigger "_@CLUSTERNAME@_lockedset_'' || 
+				v_tab_row.tab_id || ''" on '' || v_tab_row.tab_fqname;
+	end loop;
+
+	-- ----
+	-- Clear out the set_locked field
+	-- ----
+	update @NAMESPACE@.sl_set
+			set set_locked = NULL
+			where set_id = p_set_id;
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
 -- FUNCTION moveSet (set_id, new_origin)
 --
 --	Generate the MOVE_SET event.
@@ -860,7 +1013,8 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Check that the set exists and that we are the origin
+	-- Check that the set is locked and that this locking
+	-- happened long enough ago.
 	-- ----
 	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	select * into v_set_row from @NAMESPACE@.sl_set
@@ -873,6 +1027,18 @@ begin
 		raise exception ''Slony-I: set % does not originate on local node'',
 				p_set_id;
 	end if;
+	if v_set_row.set_locked isnull then
+		raise exception ''Slony-I: set % is not locked'', p_set_id;
+	end if;
+	if v_set_row.set_locked > @NAMESPACE@.getMinXid() then
+		raise exception ''Slony-I: cannot move set % yet, transactions < % are still in progress'',
+				p_set_id, v_set_row.set_locked;
+	end if;
+
+	-- ----
+	-- Unlock the set
+	-- ----
+	perform @NAMESPACE@.unlockSet(p_set_id);
 
 	-- ----
 	-- Check that the new_origin is an active subscriber of the set
@@ -940,10 +1106,10 @@ begin
 	-- ----
 	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 
-	--
+	-- ----
 	-- If we are the old or new origin of the set, we need to
 	-- remove the log trigger from all tables first.
-	--
+	-- ----
 	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
 		for v_tab_row in select tab_id from @NAMESPACE@.sl_table
 				where tab_set = p_set_id
@@ -953,9 +1119,9 @@ begin
 		end loop;
 	end if;
 
-	--
+	-- ----
 	-- Next we have to reverse the subscription path
-	--
+	-- ----
 	v_sub_last = p_new_origin;
 	select sub_provider into v_sub_node
 			from @NAMESPACE@.sl_subscribe
@@ -964,16 +1130,16 @@ begin
 		raise exception ''Slony-I: subscription path broken in moveSet_int'';
 	end if;
 	while v_sub_node <> p_old_origin loop
-		--
+		-- ----
 		-- Tracing node by node, the old receiver is now in
 		-- v_sub_last and the old provider is in v_sub_node.
-		--
+		-- ----
 
-		--
+		-- ----
 		-- Get the current provider of this node as next
 		-- and change the provider to the previous one in
 		-- the reverse chain.
-		--
+		-- ----
 		select sub_provider into v_sub_next
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
@@ -991,9 +1157,9 @@ begin
 		v_sub_node = v_sub_next;
 	end loop;
 
-	--
+	-- ----
 	-- This includes creating a subscription for the old origin
-	--
+	-- ----
 	insert into @NAMESPACE@.sl_subscribe
 			(sub_set, sub_provider, sub_receiver,
 			sub_forward, sub_active)
@@ -1006,16 +1172,16 @@ begin
 				''0'', ''0'', '''', NULL);
 	end if;
 
-	--
+	-- ----
 	-- Now change the ownership of the set.
-	--
+	-- ----
 	update @NAMESPACE@.sl_set
 			set set_origin = p_new_origin
 			where set_id = p_set_id;
 
-	--
+	-- ----
 	-- On the new origin, delete the obsolete setsync information
-	--
+	-- ----
 	if v_local_node_id = p_new_origin then
 		delete from @NAMESPACE@.sl_setsync
 				where ssy_setid = p_set_id;
@@ -1034,10 +1200,10 @@ begin
 		end if;
 	end if;
 
-	--
-	-- Finally, if we are the new or old origin, we have to
+	-- ----
+	-- If we are the new or old origin, we have to
 	-- put all the tables into altered state again.
-	--
+	-- ----
 	if v_local_node_id = p_old_origin or v_local_node_id = p_new_origin then
 		for v_tab_row in select tab_id from @NAMESPACE@.sl_table
 				where tab_set = p_set_id

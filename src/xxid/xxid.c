@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.6 2004-02-27 20:16:10 wieck Exp $
+ *	$Id: xxid.c,v 1.7 2004-03-18 02:05:14 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,6 +38,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_xxidge);
 PG_FUNCTION_INFO_V1(_Slony_I_btxxidcmp);
 PG_FUNCTION_INFO_V1(_Slony_I_getCurrentXid);
 PG_FUNCTION_INFO_V1(_Slony_I_getMinXid);
+PG_FUNCTION_INFO_V1(_Slony_I_getMaxXid);
 Datum           _Slony_I_xxidin(PG_FUNCTION_ARGS);
 Datum           _Slony_I_xxidout(PG_FUNCTION_ARGS);
 Datum           _Slony_I_xxideq(PG_FUNCTION_ARGS);
@@ -49,6 +50,7 @@ Datum           _Slony_I_xxidge(PG_FUNCTION_ARGS);
 Datum           _Slony_I_btxxidcmp(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getCurrentXid(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getMinXid(PG_FUNCTION_ARGS);
+Datum           _Slony_I_getMaxXid(PG_FUNCTION_ARGS);
 
 
 /*
@@ -206,6 +208,19 @@ _Slony_I_getMinXid(PG_FUNCTION_ARGS)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMinXid()");
 	
 	PG_RETURN_TRANSACTIONID(SerializableSnapshot->xmin);
+}
+
+
+/*
+ *		getMaxXid	- Return the maxxid from the current snapshot
+ */
+Datum
+_Slony_I_getMaxXid(PG_FUNCTION_ARGS)
+{
+	if (SerializableSnapshot == NULL)
+		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMaxXid()");
+	
+	PG_RETURN_TRANSACTIONID(SerializableSnapshot->xmax);
 }
 
 
