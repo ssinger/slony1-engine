@@ -169,7 +169,7 @@ static struct config_int ConfigureNamesInt[] =
 #endif
         NULL
 };
-static struct config_int ConfigureNamesBool[] =
+static struct config_bool ConfigureNamesBool[] =
 {
         {
                 {
@@ -182,19 +182,19 @@ static struct config_int ConfigureNamesBool[] =
                 false                                                                                    /* default_value */
         },
         {
-		{
-			(const char *)"log_timestamp",
-			gettext_noop("place holder"),
-			gettext_noop("place holder"),
-			SLON_C_BOOL
+			{
+				(const char *)"log_timestamp",
+				gettext_noop("place holder"),
+				gettext_noop("place holder"),
+				SLON_C_BOOL
+			},
+			&logtimestamp,
+			true
 		},
-		&logtimestamp,
-		true
-	},
-	NULL
+		NULL
 };
 
-static struct config_int ConfigureNamesReal[] =
+static struct config_real ConfigureNamesReal[] =
 {
         {
                 {
@@ -211,7 +211,7 @@ static struct config_int ConfigureNamesReal[] =
         NULL
 };
 
-static struct config_int ConfigureNamesString[] =
+static struct config_string ConfigureNamesString[] =
 {
         {
                 {

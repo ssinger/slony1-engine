@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <string.h>
 #include "libpq-fe.h"
 #include "confoptions.h"
 #include "postgres.h"
@@ -164,14 +165,14 @@ InitializeConfOptions(void)
 			}
 		case SLON_C_REAL:
 			{
-				struct config_int *conf = (struct config_int *) gconf;
+				struct config_real *conf = (struct config_real *) gconf;
 				*conf->variable = conf->default_val;
 				break;
 			}
 		case SLON_C_STRING:
 			{
 				char           *str;
-				struct config_int *conf = (struct config_int *) gconf;
+				struct config_string *conf = (struct config_string *) gconf;
 				*conf->variable = NULL;
 				if (conf->default_val)
 				{
