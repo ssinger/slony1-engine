@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_replication.pl,v 1.1 2005-01-07 23:25:51 cbbrowne Exp $
+# $Id: test_slony_replication.pl,v 1.2 2005-02-22 20:51:28 smsimms Exp $
 # Christopher Browne
 # Copyright 2004
 # Afilias Canada
@@ -77,7 +77,6 @@ my $dsnsquery =
                           s.sub_set = $set and 
                           (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
                           sub_active = 't')
-   and p.pa_conninfo not like '%32.85.68.246%'
    group by pa_server, pa_conninfo;
 ";
 
