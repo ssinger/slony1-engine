@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_node.c,v 1.2 2003-12-16 17:00:34 wieck Exp $
+ *	$Id: local_node.c,v 1.3 2003-12-17 21:21:13 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,11 +40,12 @@ void *
 slon_localEventThread(void *dummy)
 {
 	SlonConn   *conn;
-	char		query[256];
+	char		query1[1024];
 	PGresult   *res;
 	PGnotify   *notify;
 	int			rc;
 	int			have_notify;
+	int			i, n;
 
 	/*
 	 * Connect to the local database
@@ -58,11 +59,13 @@ slon_localEventThread(void *dummy)
 	/*
 	 * Execute the statement 'listen "_@CLUSTER_NAME@_Event"'
 	 */
-	snprintf(query, sizeof(query), "listen \"_%s_Event\"", local_cluster_name);
-	res = PQexec(conn->dbconn, query);
+	snprintf(query1, sizeof(query1),
+			"listen \"_%s_Event\"",
+			local_cluster_name);
+	res = PQexec(conn->dbconn, query1);
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		fprintf(stderr, "cannot %s - %s", query,
+		fprintf(stderr, "cannot %s - %s", query1,
 				PQresultErrorMessage(res));
 		PQclear(res);
 		slon_disconnectdb(conn);
@@ -97,7 +100,118 @@ slon_localEventThread(void *dummy)
 		 * seen yet.
 		 */
 		have_notify = 0;
-printf("localEventThread: need to scan for configuration changes\n");
+
+		snprintf(query1, sizeof(query1),
+				"select ev_seqno, ev_type, "
+				"		ev_data1, ev_data2, ev_data3, ev_data4, "
+				"		ev_data5, ev_data6, ev_data7, ev_data8 "
+				"	from %s.sl_event "
+				"	where ev_origin = %d and ev_seqno > '%s' "
+				"   order by ev_origin, ev_seqno",
+				local_namespace, local_nodeid, local_lastevent);
+		res = PQexec(conn->dbconn, query1);
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			fprintf(stderr, "slon_localEventThread: cannot %s - %s", query1,
+					PQresultErrorMessage(res));
+			PQclear(res);
+			slon_disconnectdb(conn);
+
+			kill(getpid(), SIGTERM);
+			pthread_exit(NULL);
+		}
+		for (i = 0, n = PQntuples(res); i < n; i++)
+		{
+			char	   *ev_seqno = PQgetvalue(res, i, 0);
+			char	   *ev_type  = PQgetvalue(res, i, 1);
+			char	   *ev_data1 = PQgetvalue(res, i, 2);
+			char	   *ev_data2 = PQgetvalue(res, i, 3);
+			char	   *ev_data3 = PQgetvalue(res, i, 4);
+			char	   *ev_data4 = PQgetvalue(res, i, 5);
+
+			/* Not needed yet
+			char	   *ev_data5 = PQgetvalue(res, i, 6);
+			char	   *ev_data6 = PQgetvalue(res, i, 7);
+			char	   *ev_data7 = PQgetvalue(res, i, 8);
+			char	   *ev_data8 = PQgetvalue(res, i, 9);
+			*/
+
+			if (strcmp(ev_type, "SYNC") != 0)
+				/*
+				 * We don't have any use for local SYNC events,
+				 * but we don't want to compare them against every case
+				 * as they are the far most often event in production.
+				 */
+			if (strcmp(ev_type, "STORE_NODE") == 0)
+			{
+				int		no_id		= strtol(ev_data1, NULL, 10);
+				char   *no_comment	= ev_data2;
+
+printf("slon_localEventThread: ev_seqno=%s %s no_id=%d no_comment='%s'\n", 
+ev_seqno, ev_type, no_id, no_comment);
+
+				slon_storeNode(no_id, no_comment);
+			}
+			else if (strcmp(ev_type, "ENABLE_NODE") == 0)
+			{
+				int		no_id		= strtol(ev_data1, NULL, 10);
+
+printf("slon_localEventThread: ev_seqno=%s %s no_id=%d\n", 
+ev_seqno, ev_type, no_id);
+
+				slon_enableNode(no_id);
+			}
+			else if (strcmp(ev_type, "STORE_PATH") == 0)
+			{
+				int		pa_server	= strtol(ev_data1, NULL, 10);
+				int		pa_client	= strtol(ev_data2, NULL, 10);
+				char   *pa_conninfo	= ev_data3;
+				int		pa_connretry = strtol(ev_data4, NULL, 10);
+
+if (pa_client == local_nodeid)
+printf("slon_localEventThread: ev_seqno=%s %s pa_server=%s pa_client=%s pa_conninfo=%s pa_connretry=%s\n", 
+ev_seqno, ev_type, ev_data1, ev_data2, ev_data3, ev_data4);
+
+				if (pa_client == local_nodeid)
+					slon_storePath(pa_server, pa_conninfo, pa_connretry);
+			}
+			else if (strcmp(ev_type, "STORE_LISTEN") == 0)
+			{
+				int		li_origin	= strtol(ev_data1, NULL, 10);
+				int		li_provider	= strtol(ev_data2, NULL, 10);
+				int		li_receiver	= strtol(ev_data3, NULL, 10);
+
+if (li_receiver == local_nodeid)
+printf("slon_localEventThread: ev_seqno=%s %s li_origin=%s li_provider=%s li_receiver=%s\n",
+ev_seqno, ev_type, ev_data1, ev_data2, ev_data3);
+
+				if (li_receiver == local_nodeid)
+					slon_storeListen(li_origin, li_provider);
+			}
+			else if (strcmp(ev_type, "STORE_SET") == 0)
+			{
+				int		set_id		= strtol(ev_data1, NULL, 10);
+				int		set_origin	= strtol(ev_data2, NULL, 10);
+				char   *set_comment	= ev_data3;
+
+printf("slon_localEventThread: ev_seqno=%s %s set_id=%s set_origin=%s set_comment=%s\n",
+ev_seqno, ev_type, ev_data1, ev_data2, ev_data3);
+
+				slon_storeSet(set_id, set_origin, set_comment);
+			}
+			else
+			{
+printf("slon_localEventThread: ev_seqno=%s unknown event type %s\n", 
+ev_seqno, ev_type);
+			}
+
+			if (i == n - 1)
+			{
+				free(local_lastevent);
+				local_lastevent = strdup(ev_seqno);
+			}
+		}
+		PQclear(res);
 
 		/*
 		 * Check for new notifications.

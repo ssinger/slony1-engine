@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.4 2003-12-16 17:00:34 wieck Exp $
+ *	$Id: slon.h,v 1.5 2003-12-17 21:21:13 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -188,6 +188,7 @@ extern char	   *local_conninfo;
 extern int		local_nodeid;
 extern int		local_nodeactive;
 extern char	   *local_nodecomment;
+extern char	   *local_lastevent;
 
 extern SlonSet *set_list_head;
 extern SlonSet *set_list_tail;

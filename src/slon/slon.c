@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.5 2003-12-16 17:00:34 wieck Exp $
+ *	$Id: slon.c,v 1.6 2003-12-17 21:21:13 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,6 +38,7 @@ char				   *local_conninfo = NULL;
 int						local_nodeid = -1;
 int						local_nodeactive = 0;
 char				   *local_nodecomment = NULL;
+char				   *local_lastevent = NULL;
 
 SlonSet				   *set_list_head = NULL;
 SlonSet				   *set_list_tail = NULL;
@@ -152,6 +153,21 @@ printf("main: local node id = %d\n", local_nodeid);
 	 */
 	if (sched_start_mainloop() < 0)
 		slon_exit(-1);
+
+	/*
+	 * Begin a transaction
+	 */
+	res = PQexec(startup_conn, 
+			"start transaction; "
+			"set transaction isolation level serializable;");
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+		fprintf(stderr, "Cannot start transaction - %s",
+				PQresultErrorMessage(res));
+		PQclear(res);
+		slon_exit(-1);
+	}
+	PQclear(res);
 
 	/*
 	 * Read configuration table sl_node
@@ -302,6 +318,41 @@ printf("main: local node id = %d\n", local_nodeid);
 		slon_storeSubscribe(sub_set, sub_provider, sub_forward);
 		if (sub_active)
 			slon_enableSubscription(sub_set);
+	}
+	PQclear(res);
+
+	/*
+	 * Remember the last known local event sequence
+	 */
+	snprintf(query, sizeof(query),
+			"select max(ev_seqno) from %s.sl_event "
+			"    where ev_origin = %d",
+			local_namespace, local_nodeid);
+	res = PQexec(startup_conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "Cannot get last local eventid - %s",
+				PQresultErrorMessage(res));
+		PQclear(res);
+		slon_exit(-1);
+	}
+	if (PQntuples(res) == 0)
+		local_lastevent = strdup("-1");
+	else
+		local_lastevent = strdup(PQgetvalue(res, 0, 0));
+	PQclear(res);
+printf("main: last local event sequence = %s\n", local_lastevent);
+
+	/*
+	 * Rollback the transaction we used to get the config snapshot
+	 */
+	res = PQexec(startup_conn, "rollback transaction;");
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+		fprintf(stderr, "Cannot rollback transaction - %s",
+				PQresultErrorMessage(res));
+		PQclear(res);
+		slon_exit(-1);
 	}
 	PQclear(res);
 
@@ -484,7 +535,7 @@ slon_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 	/*
 	 * Store the (new) conninfo to the node
 	 */
-printf("slon_storePath: pa_server=%d pa_conndinfo=\"%s\"\n", 
+printf("slon_storePath: pa_server=%d pa_conninfo=\"%s\"\n", 
 pa_server, pa_conninfo);
 	if (node->pa_conninfo != NULL)
 		free(node->pa_conninfo);

@@ -6,7 +6,7 @@
  * Copyright (c) 2003, PostgreSQL Global Development Group
  * Author: Jan Wieck, Afilias USA LLC.
  *
- *	$Id: slony1_funcs.c,v 1.1 2003-11-28 14:59:44 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.2 2003-12-17 21:21:13 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -92,7 +92,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 			/*
 			 * Prepare and save the plan to create the event notification
 			 */
-			sprintf(buf, "NOTIFY %s_event;", NameStr(cs->clustername));
+			sprintf(buf, "NOTIFY \"%s_Event\";", NameStr(cs->clustername));
 			cs->plan_notify_event = SPI_saveplan(SPI_prepare(buf, 0, NULL));
 			if (cs->plan_notify_event == NULL)
 				elog(ERROR, "Slony-I: SPI_prepare() failed");
