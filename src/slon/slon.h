@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.43 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: slon.h,v 1.44 2005-02-17 23:42:09 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,6 +40,13 @@
 #define SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 50)
 #endif
 
+#define SLON_MAX_PATH 1024
+/* Maximum path length - set to 1024, consistent with PostgreSQL */
+/* See: http://archives.postgresql.org/pgsql-hackers/1999-10/msg00754.php */
+/* Also  view src/include/pg_config.h.win32 src/include/pg_config_manual.h */
+
+	/* FIXME: must determine and use OS specific max path length */
+	/* cbb: Not forcibly necessary; note that MAXPGPATH is 1024 */
 
 #define SLON_CLEANUP_SLEEP			600 /* sleep 10 minutes between */
  /* cleanup calls */

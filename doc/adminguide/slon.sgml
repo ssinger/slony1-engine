@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.10 2005-02-09 20:08:43 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.11 2005-02-17 23:42:07 cbbrowne Exp $ -->
 <refentry id="app-slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -223,6 +223,15 @@
     <listitem>
      <para>
       File from which to read <application>slon</application> configuration.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-a</option><replaceable class="parameter">archive directory</replaceable></term>
+    <listitem>
+     <para>
+      Directory in which to place a sequence of SYNC archive files for
+      use in <quote>log shipping</quote> mode.
      </para>
     </listitem>
    </varlistentry>

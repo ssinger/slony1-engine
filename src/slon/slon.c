@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.43 2005-02-17 06:59:04 wieck Exp $
+ *	$Id: slon.c,v 1.44 2005-02-17 23:42:09 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -193,6 +193,7 @@ main(int argc, char *const argv[])
 		fprintf(stderr, "    -c <num>              how often to vaccum in cleanup cycles\n");
 		fprintf(stderr, "    -p <filename>         slon pid file\n");
 		fprintf(stderr, "    -f <filename>         slon configuration file\n");
+		fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
 		return 1;
 	}
 

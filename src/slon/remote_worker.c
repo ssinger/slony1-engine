@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.72 2005-02-17 06:59:04 wieck Exp $
+ *	$Id: remote_worker.c,v 1.73 2005-02-17 23:42:08 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -240,6 +240,7 @@ static int sync_event(SlonNode * node, SlonConn * local_conn,
 		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 static void *sync_helper(void *cdata);
 
+#define TERMINATE_QUERY_AND_ARCHIVE dstring_free(&query); if (archive_fp) { fclose(archive_fp); unlink(archive_tmp); }
 
 /*
  * ---------- slon_remoteWorkerThread
@@ -281,7 +282,7 @@ remoteWorkerThread_main(void *cdata)
 	wd->workgroup_status = SLON_WG_IDLE;
 	wd->node = node;
 
-	wd->tab_fqname_size = 1024;
+	wd->tab_fqname_size = SLON_MAX_PATH
 	wd->tab_fqname = (char **)malloc(sizeof(char *) * wd->tab_fqname_size);
 	memset(wd->tab_fqname, 0, sizeof(char *) * wd->tab_fqname_size);
 	wd->tab_forward = malloc(wd->tab_fqname_size);
@@ -2938,9 +2939,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString query;
 	SlonDString *provider_qual;
 
-	/* FIXME: must determine and use OS specific max path length */
-	char		archive_name[1024];
-	char		archive_tmp[1024];
+	char		archive_name[SLON_MAX_PATH];
+	char		archive_tmp[SLON_MAX_PATH];
 	FILE	   *archive_fp = NULL;
 
 	gettimeofday(&tv_start, NULL);
@@ -2993,12 +2993,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						 "No pa_conninfo for data provider %d\n",
 						 node->no_id, provider->no_id);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return 10;
 			}
 			sprintf(conn_symname, "subscriber_%d_provider_%d",
@@ -3011,12 +3006,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 "cannot connect to data provider %d on '%s'\n",
 						 node->no_id, provider->no_id,
 						 provider->pa_conninfo);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return provider->pa_connretry;
 			}
 
@@ -3028,12 +3018,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 rtcfg_cluster_name, rtcfg_nodeid);
 			if (query_execute(node, provider->conn->dbconn, &query) < 0)
 			{
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				slon_disconnectdb(provider->conn);
 				provider->conn = NULL;
 				return provider->pa_connretry;
@@ -3069,12 +3054,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 "for ev_origin %d\n",
 						 node->no_id, provider->no_id,
 						 event->ev_origin);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return 10;
 			}
 			if (prov_seqno < event->ev_seqno)
@@ -3084,12 +3064,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 "ev_seqno " INT64_FORMAT " for ev_origin %d\n",
 						 node->no_id, provider->no_id,
 						 prov_seqno, event->ev_origin);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return 10;
 			}
 			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
@@ -3155,12 +3130,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
 			dstring_free(&new_qual);
-			dstring_free(&query);
-			if (archive_fp)
-			{
-				fclose(archive_fp);
-				unlink(archive_tmp);
-			}
+			TERMINATE_QUERY_AND_ARCHIVE;
 			return 60;
 		}
 
@@ -3206,12 +3176,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				PQclear(res2);
 				PQclear(res1);
 				dstring_free(&new_qual);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return 60;
 			}
 			ntuples2 = PQntuples(res2);
@@ -3560,12 +3525,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	if (num_errors != 0)
 	{
-		dstring_free(&query);
-		if (archive_fp)
-		{
-			fclose(archive_fp);
-			unlink(archive_tmp);
-		}
+		TERMINATE_QUERY_AND_ARCHIVE;
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 				 node->no_id);
 		return 10;
@@ -3602,12 +3562,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 node->no_id, dstring_data(&query),
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
-			dstring_free(&query);
-			if (archive_fp)
-			{
-				fclose(archive_fp);
-				unlink(archive_tmp);
-			}
+			TERMINATE_QUERY_AND_ARCHIVE;
 			slon_disconnectdb(provider->conn);
 			provider->conn = NULL;
 			return 20;
@@ -3625,12 +3580,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			if (query_execute(node, local_dbconn, &query) < 0)
 			{
 				PQclear(res1);
-				dstring_free(&query);
-				if (archive_fp)
-				{
-					fclose(archive_fp);
-					unlink(archive_tmp);
-				}
+				TERMINATE_QUERY_AND_ARCHIVE;
 				return 60;
 			}
 
@@ -3698,12 +3648,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 node->no_id, dstring_data(&query),
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
-			dstring_free(&query);
-			if (archive_fp)
-			{
-				fclose(archive_fp);
-				unlink(archive_tmp);
-			}
+			TERMINATE_QUERY_AND_ARCHIVE;
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 					 node->no_id);
 			return 10;
@@ -3721,12 +3666,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 rtcfg_cluster_name, provider->no_id);
 		if (query_execute(node, local_dbconn, &query) < 0)
 		{
-			dstring_free(&query);
-			if (archive_fp)
-			{
-				fclose(archive_fp);
-				unlink(archive_tmp);
-			}
+			TERMINATE_QUERY_AND_ARCHIVE;
 			return 60;
 		}
 	}
@@ -3749,12 +3689,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 node->no_id, dstring_data(&query),
 				 PQresultErrorMessage(res1));
 		PQclear(res1);
-		dstring_free(&query);
-		if (archive_fp)
-		{
-			fclose(archive_fp);
-			unlink(archive_tmp);
-		}
+		TERMINATE_QUERY_AND_ARCHIVE;
 		return 60;
 	}
 	if (PQntuples(res1) > 0)
@@ -3768,12 +3703,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (query_execute(node, local_dbconn, &query) < 0)
 		{
 			PQclear(res1);
-			dstring_free(&query);
-			if (archive_fp)
-			{
-				fclose(archive_fp);
-				unlink(archive_tmp);
-			}
+			TERMINATE_QUERY_AND_ARCHIVE;
 			return 60;
 		}
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
