@@ -73,6 +73,7 @@ echo "**** creating database for Node 1"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
+pg_dump -s $DB1 >pgbench_schema.sql
 
 #####
 # Start pgbench in the background and give it rampup time
@@ -223,10 +224,7 @@ fi
 ######################################################################
 echo "**** creating pgbench tables and subscribing Node 2 to set 1"
 (
-	pg_dump -s -t accounts $DB1
-	pg_dump -s -t branches $DB1
-	pg_dump -s -t tellers $DB1
-	pg_dump -s -t history $DB1
+	cat pgbench_schema.sql
 	echo "select \"_T1\".subscribeSet (1, 1, 2, true);"
 ) | psql -q $DB2
 
