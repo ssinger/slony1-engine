@@ -1904,6 +1904,46 @@ EXECUTE SCRIPT (
 
 <!-- **************************************** -->
 
+  <refentry id="stmtupdatefunctions"><refmeta><refentrytitle>UPDATE FUNCTIONS</refentrytitle> </refmeta>
+
+   <refnamediv><refname>UPDATE FUNCTIONS</refname>
+    
+    <refpurpose> Reload stored functions </refpurpose></refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>UPDATE FUNCTIONS (options);</command>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    
+    <para> Reloads stored functions for a node.</para>
+    
+    <para>Reloads all stored procedure and function definitions in the
+    &slony1; schema for the specified node. This command is usually
+    part of the &slony1; software upgrade procedure.
+    </para>
+
+     <variablelist>
+      <varlistentry><term><literal> ID = ival </literal></term>
+       
+       <listitem><para> The node to refresh.</para></listitem>
+       
+      </varlistentry>
+     </variablelist></para>
+
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+UPDATE FUNCTIONS (
+    ID = 3        # Update functions on node 3
+);
+    </programlisting>
+   </refsect1>
+  </refentry>
+
+<!-- **************************************** -->
+
   <refentry id="stmtwaitevent"><refmeta><refentrytitle>WAIT FOR EVENT</refentrytitle> </refmeta>
 
    <refnamediv><refname>WAIT FOR EVENT</refname>
