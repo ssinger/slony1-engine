@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.15 2004-06-23 23:29:43 wieck Exp $
+ *	$Id: scheduler.c,v 1.16 2004-09-24 22:12:36 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -37,47 +37,44 @@
 #endif
 
 
-/* ----------
- * Static data
- * ----------
+/*
+ * ---------- Static data ----------
  */
-static int				sched_status = SCHED_STATUS_OK;
+static int      sched_status = SCHED_STATUS_OK;
 
-static int				sched_numfd = 0;
-static fd_set			sched_fdset_read;
-static fd_set			sched_fdset_write;
-static int				sched_wakeuppipe[2];
-static SlonConn		   *sched_waitqueue_head = NULL;
-static SlonConn		   *sched_waitqueue_tail = NULL;
+static int      sched_numfd = 0;
+static fd_set   sched_fdset_read;
+static fd_set   sched_fdset_write;
+static int      sched_wakeuppipe[2];
+static SlonConn *sched_waitqueue_head = NULL;
+static SlonConn *sched_waitqueue_tail = NULL;
 
-static pthread_t		sched_main_thread;
-static pthread_t		sched_scheduler_thread;
+static pthread_t sched_main_thread;
+static pthread_t sched_scheduler_thread;
 
-static pthread_mutex_t	sched_master_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t	sched_master_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t sched_master_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t sched_master_cond = PTHREAD_COND_INITIALIZER;
 
-static sigset_t			sched_sigset;
+static sigset_t sched_sigset;
 
 
-/* ----------
- * Local functions
- * ----------
+/*
+ * ---------- Local functions ----------
  */
-static void			   *sched_mainloop(void *);
-static void				sched_sighandler(int signo);
-static void				sched_sighuphandler(int signo);
-static void				sched_add_fdset(int fd, fd_set *fds);
-static void				sched_remove_fdset(int fd, fd_set *fds);
+static void    *sched_mainloop(void *);
+static void     sched_sighandler(int signo);
+static void     sched_sighuphandler(int signo);
+static void     sched_add_fdset(int fd, fd_set * fds);
+static void     sched_remove_fdset(int fd, fd_set * fds);
 
 
-/* ----------
- * sched_start_mainloop
- *
- *	Called from main() before starting up any worker thread.
- *
- *	This will spawn the event scheduling thread that does the
- *	central select(2) system call.
- * ----------
+/*
+ * ---------- sched_start_mainloop
+ * 
+ * Called from main() before starting up any worker thread.
+ * 
+ * This will spawn the event scheduling thread that does the central select(2)
+ * system call. ----------
  */
 int
 sched_start_mainloop(void)
@@ -88,9 +85,9 @@ sched_start_mainloop(void)
 	sched_main_thread = pthread_self();
 
 	/*
-	 * Block signals. Since sched_start_mainloop() is called before
-	 * any other thread is created, this will be inherited by all
-	 * threads in the system. 
+	 * Block signals. Since sched_start_mainloop() is called before any
+	 * other thread is created, this will be inherited by all threads in
+	 * the system.
 	 */
 	sigemptyset(&sched_sigset);
 	sigaddset(&sched_sigset, SIGHUP);
@@ -106,7 +103,6 @@ sched_start_mainloop(void)
 		perror("sched_start_mainloop: pthread_mutex_lock()");
 		return -1;
 	}
-
 	/*
 	 * Start the scheduler thread
 	 */
@@ -115,7 +111,6 @@ sched_start_mainloop(void)
 		perror("sched_start_mainloop: pthread_create()");
 		return -1;
 	}
-
 	/*
 	 * When the scheduler is ready, he'll signal the scheduler cond
 	 */
@@ -124,7 +119,6 @@ sched_start_mainloop(void)
 		perror("sched_start_mainloop: pthread_cond_wait()");
 		return -1;
 	}
-
 	/*
 	 * Release the scheduler lock
 	 */
@@ -133,7 +127,6 @@ sched_start_mainloop(void)
 		perror("sched_start_mainloop: pthread_mutex_unlock()");
 		return -1;
 	}
-
 	/*
 	 * Check for errors
 	 */
@@ -147,18 +140,17 @@ sched_start_mainloop(void)
 }
 
 
-/* ----------
- * sched_wait_mainloop
- *
- *	Called from main() after all working threads according to the
- *	initial configuration are started. Will wait until the scheduler
- *	mainloop terminates.
- * ----------
+/*
+ * ---------- sched_wait_mainloop
+ * 
+ * Called from main() after all working threads according to the initial
+ * configuration are started. Will wait until the scheduler mainloop
+ * terminates. ----------
  */
 int
 sched_wait_mainloop(void)
 {
-	int		signo;
+	int             signo;
 
 	/*
 	 * Wait for signal.
@@ -174,12 +166,14 @@ sched_wait_mainloop(void)
 
 	switch (signo)
 	{
-		case SIGHUP:	sched_sighuphandler(signo);
-						break;
+	case SIGHUP:
+		sched_sighuphandler(signo);
+		break;
 
-		case SIGINT:
-		case SIGTERM:	sched_sighandler(signo);
-						break;
+	case SIGINT:
+	case SIGTERM:
+		sched_sighandler(signo);
+		break;
 	}
 
 	/*
@@ -190,24 +184,22 @@ sched_wait_mainloop(void)
 		perror("sched_wait_mainloop: pthread_join()");
 		return -1;
 	}
-
 	return 0;
 }
 
 
-/* ----------
- * sched_wait_conn
- *
- *	Assumes that the thread holds the lock on conn->conn_lock.
- *
- *	Adds the connection to the central wait queue and wakes up
- *	the scheduler thread to reloop onto the select(2) call.
- * ----------
+/*
+ * ---------- sched_wait_conn
+ * 
+ * Assumes that the thread holds the lock on conn->conn_lock.
+ * 
+ * Adds the connection to the central wait queue and wakes up the scheduler
+ * thread to reloop onto the select(2) call. ----------
  */
 int
-sched_wait_conn(SlonConn *conn, int condition)
+sched_wait_conn(SlonConn * conn, int condition)
 {
-	int		rc;
+	int             rc;
 
 	/*
 	 * Grab the master lock and check that we're in normal runmode
@@ -218,9 +210,8 @@ sched_wait_conn(SlonConn *conn, int condition)
 		pthread_mutex_unlock(&sched_master_lock);
 		return -1;
 	}
-
 	/*
-	 * Remember the event we're waiting for and add the database 
+	 * Remember the event we're waiting for and add the database
 	 * connection to the fdset(s)
 	 */
 	conn->condition = condition;
@@ -235,8 +226,8 @@ sched_wait_conn(SlonConn *conn, int condition)
 	DLLIST_ADD_HEAD(sched_waitqueue_head, sched_waitqueue_tail, conn);
 
 	/*
-	 * Give the scheduler thread a heads up, release the master lock
-	 * and wait for it to tell us that the event we're waiting for happened.
+	 * Give the scheduler thread a heads up, release the master lock and
+	 * wait for it to tell us that the event we're waiting for happened.
 	 */
 	if (write(sched_wakeuppipe[1], "x", 1) < 0)
 	{
@@ -264,18 +255,17 @@ sched_wait_conn(SlonConn *conn, int condition)
 }
 
 
-/* ----------
- * sched_wait_time
- *
- *	Assumes that the thread holds the lock on conn->conn_lock.
- *
- *	Like sched_wait_conn() but with a timeout. Can be called without
- *	any read/write condition to wait for to resemble a pure timeout
- *	mechanism.
+/*
+ * ---------- sched_wait_time
+ * 
+ * Assumes that the thread holds the lock on conn->conn_lock.
+ * 
+ * Like sched_wait_conn() but with a timeout. Can be called without any
+ * read/write condition to wait for to resemble a pure timeout mechanism.
  * ----------
  */
 int
-sched_wait_time(SlonConn *conn, int condition, int msec)
+sched_wait_time(SlonConn * conn, int condition, int msec)
 {
 	struct timeval *tv = &(conn->timeout);
 
@@ -283,8 +273,8 @@ sched_wait_time(SlonConn *conn, int condition, int msec)
 	 * Calculate the end-time of the desired timeout.
 	 */
 	gettimeofday(tv, NULL);
-	tv->tv_sec += (long)(msec / 1000) + 
-					(((msec % 1000) * 1000) + tv->tv_usec) / 1000000;
+	tv->tv_sec += (long)(msec / 1000) +
+		(((msec % 1000) * 1000) + tv->tv_usec) / 1000000;
 	tv->tv_usec = (tv->tv_usec + (msec % 1000) * 1000) % 1000000;
 
 	/*
@@ -294,25 +284,23 @@ sched_wait_time(SlonConn *conn, int condition, int msec)
 }
 
 
-/* ----------
- * sched_msleep
- *
- *	Use the schedulers event loop to sleep for msec milliseconds.
- * ----------
+/*
+ * ---------- sched_msleep
+ * 
+ * Use the schedulers event loop to sleep for msec milliseconds. ----------
  */
 int
-sched_msleep(SlonNode *node, int msec)
+sched_msleep(SlonNode * node, int msec)
 {
-	SlonConn   *conn;
-	char		dummyconn_name[64];
-	int			rc;
+	SlonConn       *conn;
+	char            dummyconn_name[64];
+	int             rc;
 
 	if (node)
 	{
 		snprintf(dummyconn_name, 64, "msleep_node_%d", node->no_id);
 		conn = slon_make_dummyconn(dummyconn_name);
-	}
-	else
+	} else
 		conn = slon_make_dummyconn("msleep_local");
 
 	rc = sched_wait_time(conn, 0, msec);
@@ -322,16 +310,15 @@ sched_msleep(SlonNode *node, int msec)
 }
 
 
-/* ----------
- * sched_get_status
- *
- *	Return the current scheduler status in a thread safe fashion
- * ----------
+/*
+ * ---------- sched_get_status
+ * 
+ * Return the current scheduler status in a thread safe fashion ----------
  */
 int
 sched_get_status(void)
 {
-	int		status;
+	int             status;
 
 	pthread_mutex_lock(&sched_master_lock);
 	status = sched_status;
@@ -340,19 +327,18 @@ sched_get_status(void)
 }
 
 
-/* ----------
- * sched_wakeup_node
- *
- *	Wakeup the threads (listen and worker) of one or all remote
- *	nodes to cause them rechecking the current runtime status or
- *	adjust their configuration to changes.
- * ----------
+/*
+ * ---------- sched_wakeup_node
+ * 
+ * Wakeup the threads (listen and worker) of one or all remote nodes to cause
+ * them rechecking the current runtime status or adjust their configuration
+ * to changes. ----------
  */
 int
-sched_wakeup_node (int no_id)
+sched_wakeup_node(int no_id)
 {
-	SlonConn   *conn;
-	int			num_wakeup = 0;
+	SlonConn       *conn;
+	int             num_wakeup = 0;
 
 	pthread_mutex_lock(&sched_master_lock);
 
@@ -382,39 +368,37 @@ sched_wakeup_node (int no_id)
 			slon_abort();
 		}
 	}
-
 	pthread_mutex_unlock(&sched_master_lock);
 
 	remoteWorker_wakeup(no_id);
 
 	slon_log(SLON_DEBUG2, "sched_wakeup_node(): no_id=%d "
-			"(%d threads + worker signaled)\n", no_id, num_wakeup);
+		 "(%d threads + worker signaled)\n", no_id, num_wakeup);
 
 	return num_wakeup;
 }
 
 
-/* ----------
- * sched_mainloop
- *
- *	The thread handling the master scheduling.
- * ----------
+/*
+ * ---------- sched_mainloop
+ * 
+ * The thread handling the master scheduling. ----------
  */
-static void *
+static void    *
 sched_mainloop(void *dummy)
 {
-	fd_set			rfds;
-	fd_set			wfds;
-	int				rc;
-	SlonConn	   *conn;
-	SlonConn	   *next;
-	struct timeval	min_timeout;
+	fd_set          rfds;
+	fd_set          wfds;
+	int             rc;
+	SlonConn       *conn;
+	SlonConn       *next;
+	struct timeval  min_timeout;
 	struct timeval *tv;
-	int				i;
+	int             i;
 
 	/*
-	 * Grab the scheduler master lock. This will wait until the
-	 * main thread acutally blocks on the master cond.
+	 * Grab the scheduler master lock. This will wait until the main
+	 * thread acutally blocks on the master cond.
 	 */
 	pthread_mutex_lock(&sched_master_lock);
 
@@ -425,8 +409,8 @@ sched_mainloop(void *dummy)
 	FD_ZERO(&sched_fdset_write);
 
 	/*
-	 * Create a pipe used by the main thread to cleanly
-	 * wakeup the scheduler on signals.
+	 * Create a pipe used by the main thread to cleanly wakeup the
+	 * scheduler on signals.
 	 */
 	if (pipe(sched_wakeuppipe) < 0)
 	{
@@ -438,18 +422,18 @@ sched_mainloop(void *dummy)
 	sched_add_fdset(sched_wakeuppipe[0], &sched_fdset_read);
 
 	/*
-	 * Done with all initialization. Let the main thread go
-	 * ahead and get everyone else dancing.
+	 * Done with all initialization. Let the main thread go ahead and get
+	 * everyone else dancing.
 	 */
 	pthread_cond_signal(&sched_master_cond);
 
 	/*
 	 * And we are now entering the endless loop of scheduling events
 	 */
-	while(sched_status == SCHED_STATUS_OK)
+	while (sched_status == SCHED_STATUS_OK)
 	{
-		struct timeval	now;
-		struct timeval	timeout;
+		struct timeval  now;
+		struct timeval  timeout;
 
 		/*
 		 * Make copies of the file descriptor sets for select(2)
@@ -465,9 +449,9 @@ sched_mainloop(void *dummy)
 		}
 
 		/*
-		 * Check if any of the connections in the wait queue
-		 * have reached there timeout. While doing so, we also
-		 * remember the closest timeout in the future.
+		 * Check if any of the connections in the wait queue have
+		 * reached there timeout. While doing so, we also remember
+		 * the closest timeout in the future.
 		 */
 		tv = NULL;
 		gettimeofday(&now, NULL);
@@ -481,15 +465,15 @@ sched_mainloop(void *dummy)
 				 * Some other thread wants this thread to
 				 * wake up.
 				 */
-				DLLIST_REMOVE(sched_waitqueue_head, 
-							sched_waitqueue_tail, conn);
+				DLLIST_REMOVE(sched_waitqueue_head,
+					      sched_waitqueue_tail, conn);
 
 				if (conn->condition & SCHED_WAIT_SOCK_READ)
-					sched_remove_fdset(PQsocket(conn->dbconn), 
-									&sched_fdset_read);
+					sched_remove_fdset(PQsocket(conn->dbconn),
+							 &sched_fdset_read);
 				if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 					sched_remove_fdset(PQsocket(conn->dbconn),
-									&sched_fdset_write);
+							&sched_fdset_write);
 
 				pthread_mutex_lock(&(conn->conn_lock));
 				pthread_cond_signal(&(conn->conn_cond));
@@ -498,14 +482,13 @@ sched_mainloop(void *dummy)
 				conn = next;
 				continue;
 			}
-
 			if (conn->condition & SCHED_WAIT_TIMEOUT)
 			{
 				/*
-				 * This connection has a timeout. Calculate the
-				 * time until that.
+				 * This connection has a timeout. Calculate
+				 * the time until that.
 				 */
-				timeout.tv_sec  = conn->timeout.tv_sec  - now.tv_sec;
+				timeout.tv_sec = conn->timeout.tv_sec - now.tv_sec;
 				timeout.tv_usec = conn->timeout.tv_usec - now.tv_usec;
 				while (timeout.tv_usec < 0)
 				{
@@ -517,45 +500,45 @@ sched_mainloop(void *dummy)
 				 * Check if the timeout has elapsed
 				 */
 				if (timeout.tv_sec < 0 ||
-						(timeout.tv_sec == 0 && timeout.tv_usec < 20000))
+				    (timeout.tv_sec == 0 && timeout.tv_usec < 20000))
 				{
 					/*
-					 * Remove the connection from the wait queue. We
-					 * consider everything closer than 20 msec being
-					 * elapsed to avoid a full scheduler round just
-					 * for one kernel tick.
+					 * Remove the connection from the
+					 * wait queue. We consider everything
+					 * closer than 20 msec being elapsed
+					 * to avoid a full scheduler round
+					 * just for one kernel tick.
 					 */
-					DLLIST_REMOVE(sched_waitqueue_head, 
-								sched_waitqueue_tail, conn);
+					DLLIST_REMOVE(sched_waitqueue_head,
+						sched_waitqueue_tail, conn);
 
 					if (conn->condition & SCHED_WAIT_SOCK_READ)
-						sched_remove_fdset(PQsocket(conn->dbconn), 
-										&sched_fdset_read);
+						sched_remove_fdset(PQsocket(conn->dbconn),
+							 &sched_fdset_read);
 					if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 						sched_remove_fdset(PQsocket(conn->dbconn),
-										&sched_fdset_write);
+							&sched_fdset_write);
 
 					pthread_mutex_lock(&(conn->conn_lock));
 					pthread_cond_signal(&(conn->conn_cond));
 					pthread_mutex_unlock(&(conn->conn_lock));
-				}
-				else
+				} else
 				{
 					/*
-					 * Timeout not elapsed. Remember the nearest.
+					 * Timeout not elapsed. Remember the
+					 * nearest.
 					 */
 					if (tv == NULL ||
-							timeout.tv_sec < min_timeout.tv_sec ||
-							(timeout.tv_sec == min_timeout.tv_sec &&
-								timeout.tv_usec < min_timeout.tv_usec))
+					    timeout.tv_sec < min_timeout.tv_sec ||
+					    (timeout.tv_sec == min_timeout.tv_sec &&
+					     timeout.tv_usec < min_timeout.tv_usec))
 					{
 						tv = &min_timeout;
-						min_timeout.tv_sec  = timeout.tv_sec;
+						min_timeout.tv_sec = timeout.tv_sec;
 						min_timeout.tv_usec = timeout.tv_usec;
 					}
 				}
 			}
-
 			conn = next;
 		}
 
@@ -575,13 +558,12 @@ sched_mainloop(void *dummy)
 			sched_status = SCHED_STATUS_ERROR;
 			break;
 		}
-
 		/*
 		 * Check the special pipe for a heads up.
 		 */
 		if (FD_ISSET(sched_wakeuppipe[0], &rfds))
 		{
-			char	buf[1];
+			char            buf[1];
 
 			rc--;
 			if (read(sched_wakeuppipe[0], buf, 1) != 1)
@@ -591,13 +573,12 @@ sched_mainloop(void *dummy)
 				break;
 			}
 		}
-
 		/*
 		 * Check all remaining connections if the IO condition the
 		 * thread is waiting for has occured.
 		 */
 		conn = sched_waitqueue_head;
-		while(rc > 0 && conn)
+		while (rc > 0 && conn)
 		{
 			if (conn->condition & SCHED_WAIT_SOCK_READ)
 			{
@@ -610,21 +591,20 @@ sched_mainloop(void *dummy)
 					pthread_mutex_unlock(&(conn->conn_lock));
 					rc--;
 
-					DLLIST_REMOVE(sched_waitqueue_head, 
-								sched_waitqueue_tail, conn);
+					DLLIST_REMOVE(sched_waitqueue_head,
+						sched_waitqueue_tail, conn);
 
 					if (conn->condition & SCHED_WAIT_SOCK_READ)
-						sched_remove_fdset(PQsocket(conn->dbconn), 
-										&sched_fdset_read);
+						sched_remove_fdset(PQsocket(conn->dbconn),
+							 &sched_fdset_read);
 					if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 						sched_remove_fdset(PQsocket(conn->dbconn),
-										&sched_fdset_write);
+							&sched_fdset_write);
 
 					conn = next;
 					continue;
 				}
 			}
-
 			if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 			{
 				if (FD_ISSET(PQsocket(conn->dbconn), &wfds))
@@ -636,30 +616,29 @@ sched_mainloop(void *dummy)
 					pthread_mutex_unlock(&(conn->conn_lock));
 					rc--;
 
-					DLLIST_REMOVE(sched_waitqueue_head, 
-								sched_waitqueue_tail, conn);
+					DLLIST_REMOVE(sched_waitqueue_head,
+						sched_waitqueue_tail, conn);
 
 					if (conn->condition & SCHED_WAIT_SOCK_READ)
-						sched_remove_fdset(PQsocket(conn->dbconn), 
-										&sched_fdset_read);
+						sched_remove_fdset(PQsocket(conn->dbconn),
+							 &sched_fdset_read);
 					if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 						sched_remove_fdset(PQsocket(conn->dbconn),
-										&sched_fdset_write);
+							&sched_fdset_write);
 
 					conn = next;
 					continue;
 				}
 			}
-
 			conn = conn->next;
 		}
 	}
 
 	/*
-	 * If we reach here the scheduler runmode has been changed by
-	 * by the main threads signal handler. We currently hold the
-	 * master lock. First we close the scheduler heads-up socket
-	 * pair so nobody will think we're listening any longer.
+	 * If we reach here the scheduler runmode has been changed by by the
+	 * main threads signal handler. We currently hold the master lock.
+	 * First we close the scheduler heads-up socket pair so nobody will
+	 * think we're listening any longer.
 	 */
 	close(sched_wakeuppipe[0]);
 	close(sched_wakeuppipe[1]);
@@ -676,15 +655,15 @@ sched_mainloop(void *dummy)
 		pthread_cond_signal(&(conn->conn_cond));
 		pthread_mutex_unlock(&(conn->conn_lock));
 
-		DLLIST_REMOVE(sched_waitqueue_head, 
-					sched_waitqueue_tail, conn);
+		DLLIST_REMOVE(sched_waitqueue_head,
+			      sched_waitqueue_tail, conn);
 
 		if (conn->condition & SCHED_WAIT_SOCK_READ)
-			sched_remove_fdset(PQsocket(conn->dbconn), 
-							&sched_fdset_read);
+			sched_remove_fdset(PQsocket(conn->dbconn),
+					   &sched_fdset_read);
 		if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 			sched_remove_fdset(PQsocket(conn->dbconn),
-							&sched_fdset_write);
+					   &sched_fdset_write);
 
 		conn = next;
 	}
@@ -697,17 +676,16 @@ sched_mainloop(void *dummy)
 }
 
 
-/* ----------
- * sched_sighandler
- *
- *	After starting up the sole purpose of the main thread (the original
- *	process) is to respond to signals while waiting for the scheduler to
- *	finish. The signal handler is here because it is actually
- *	sched_start_mainloop() that arranges for the signal handling and
- *	sched_wait_mainloop() that enables them. And the only one really
- *	interested in the signals is the scheduler thread ... but that's doing
- *	select(2) mainly and we have to avoid race conditions with signals.
- * ----------
+/*
+ * ---------- sched_sighandler
+ * 
+ * After starting up the sole purpose of the main thread (the original process)
+ * is to respond to signals while waiting for the scheduler to finish. The
+ * signal handler is here because it is actually sched_start_mainloop() that
+ * arranges for the signal handling and sched_wait_mainloop() that enables
+ * them. And the only one really interested in the signals is the scheduler
+ * thread ... but that's doing select(2) mainly and we have to avoid race
+ * conditions with signals. ----------
  */
 static void
 sched_sighandler(int signo)
@@ -721,7 +699,6 @@ sched_sighandler(int signo)
 		slon_log(SLON_FATAL, "sched_sighandler: called in non-main thread\n");
 		slon_abort();
 	}
-
 	/*
 	 * Set the scheduling status to shutdown
 	 */
@@ -743,7 +720,6 @@ sched_sighandler(int signo)
 		pthread_mutex_unlock(&sched_master_lock);
 		exit(-1);
 	}
-
 	/*
 	 * Unlock the master mutex
 	 */
@@ -759,15 +735,14 @@ sched_sighuphandler(int signo)
 }
 
 
-/* ----------
- * sched_add_fdset
- *
- *	Add a file descriptor to one of the global scheduler sets and
- *	adjust sched_numfd accordingly.
- * ----------
+/*
+ * ---------- sched_add_fdset
+ * 
+ * Add a file descriptor to one of the global scheduler sets and adjust
+ * sched_numfd accordingly. ----------
  */
 static void
-sched_add_fdset(int fd, fd_set *fds)
+sched_add_fdset(int fd, fd_set * fds)
 {
 	FD_SET(fd, fds);
 	if (fd >= sched_numfd)
@@ -775,15 +750,14 @@ sched_add_fdset(int fd, fd_set *fds)
 }
 
 
-/* ----------
- * sched_add_fdset
- *
- *	Remove a file descriptor from one of the global scheduler sets and
- *	adjust sched_numfd accordingly.
- * ----------
+/*
+ * ---------- sched_add_fdset
+ * 
+ * Remove a file descriptor from one of the global scheduler sets and adjust
+ * sched_numfd accordingly. ----------
  */
 static void
-sched_remove_fdset(int fd, fd_set *fds)
+sched_remove_fdset(int fd, fd_set * fds)
 {
 	FD_CLR(fd, fds);
 	if (sched_numfd == (fd + 1))
@@ -798,5 +772,3 @@ sched_remove_fdset(int fd, fd_set *fds)
 		}
 	}
 }
-
-

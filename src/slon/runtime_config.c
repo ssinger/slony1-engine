@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.19 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: runtime_config.c,v 1.20 2004-09-24 22:12:36 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,35 +29,34 @@
 #include "slon.h"
 
 
-/* ----------
- * Global data
- * ----------
+/*
+ * ---------- Global data ----------
  */
-pid_t					slon_pid;
-char				   *rtcfg_cluster_name = NULL;
-char				   *rtcfg_namespace = NULL;
-char				   *rtcfg_conninfo = NULL;
-int						rtcfg_nodeid = -1;
-int						rtcfg_nodeactive = 0;
-char				   *rtcfg_nodecomment = NULL;
-char					rtcfg_lastevent[64];
+pid_t           slon_pid;
+char           *rtcfg_cluster_name = NULL;
+char           *rtcfg_namespace = NULL;
+char           *rtcfg_conninfo = NULL;
+int             rtcfg_nodeid = -1;
+int             rtcfg_nodeactive = 0;
+char           *rtcfg_nodecomment = NULL;
+char            rtcfg_lastevent[64];
 
-SlonSet				   *rtcfg_set_list_head = NULL;
-SlonSet				   *rtcfg_set_list_tail = NULL;
-SlonNode			   *rtcfg_node_list_head = NULL;
-SlonNode			   *rtcfg_node_list_tail = NULL;
+SlonSet        *rtcfg_set_list_head = NULL;
+SlonSet        *rtcfg_set_list_tail = NULL;
+SlonNode       *rtcfg_node_list_head = NULL;
+SlonNode       *rtcfg_node_list_tail = NULL;
 
 
-/* ----------
- * Local data
- * ----------
+/*
+ * ---------- Local data ----------
  */
-static pthread_mutex_t	config_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t	cfgseq_lock = PTHREAD_MUTEX_INITIALIZER;
-static int64			cfgseq = 0;
+static pthread_mutex_t config_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t cfgseq_lock = PTHREAD_MUTEX_INITIALIZER;
+static int64    cfgseq = 0;
 
-struct to_activate {
-	int					no_id;
+struct to_activate
+{
+	int             no_id;
 
 	struct to_activate *prev;
 	struct to_activate *next;
@@ -66,16 +65,14 @@ static struct to_activate *to_activate_head = NULL;
 static struct to_activate *to_activate_tail = NULL;
 
 
-/* ----------
- * Local functions
- * ----------
+/*
+ * ---------- Local functions ----------
  */
-static void			rtcfg_startStopNodeThread(SlonNode *node);
+static void     rtcfg_startStopNodeThread(SlonNode * node);
 
 
-/* ----------
- * rtcfg_lock
- * ----------
+/*
+ * ---------- rtcfg_lock ----------
  */
 void
 rtcfg_lock(void)
@@ -84,9 +81,8 @@ rtcfg_lock(void)
 }
 
 
-/* ----------
- * rtcfg_unlock
- * ----------
+/*
+ * ---------- rtcfg_unlock ----------
  */
 void
 rtcfg_unlock(void)
@@ -95,14 +91,13 @@ rtcfg_unlock(void)
 }
 
 
-/* ----------
- * rtcfg_storeNode
- * ----------
+/*
+ * ---------- rtcfg_storeNode ----------
  */
 void
 rtcfg_storeNode(int no_id, char *no_comment)
 {
-	SlonNode	   *node;
+	SlonNode       *node;
 
 	rtcfg_lock();
 
@@ -113,8 +108,8 @@ rtcfg_storeNode(int no_id, char *no_comment)
 	if (node)
 	{
 		slon_log(SLON_CONFIG,
-				"storeNode: no_id=%d no_comment='%s' - update node\n", 
-				no_id, no_comment);
+		      "storeNode: no_id=%d no_comment='%s' - update node\n",
+			 no_id, no_comment);
 
 		free(node->no_comment);
 		node->no_comment = strdup(no_comment);
@@ -122,24 +117,23 @@ rtcfg_storeNode(int no_id, char *no_comment)
 		rtcfg_unlock();
 		return;
 	}
-
 	/*
 	 * Add the new node to our in-memory configuration.
 	 */
 	slon_log(SLON_CONFIG,
-			"storeNode: no_id=%d no_comment='%s'\n",
-			no_id, no_comment);
+		 "storeNode: no_id=%d no_comment='%s'\n",
+		 no_id, no_comment);
 
-	node = (SlonNode *)malloc(sizeof(SlonNode));
+	node = (SlonNode *) malloc(sizeof(SlonNode));
 	if (node == NULL)
 	{
 		perror("rtcfg_storeNode: malloc()");
 		slon_abort();
 	}
-	memset (node, 0, sizeof(SlonNode));
+	memset(node, 0, sizeof(SlonNode));
 
-	node->no_id      = no_id;
-	node->no_active  = false;
+	node->no_id = no_id;
+	node->no_active = false;
 	node->no_comment = strdup(no_comment);
 	pthread_mutex_init(&(node->message_lock), NULL);
 	pthread_cond_init(&(node->message_cond), NULL);
@@ -151,21 +145,19 @@ rtcfg_storeNode(int no_id, char *no_comment)
 }
 
 
-/* ----------
- * rtcfg_setNodeLastEvent()
- *
- *	Set the last_event field in the node runtime structure.
- *
- *	Returns:	0 if the event_seq is <= the known value
- *				-1 if the node is not known
- *				event_seq otherwise
- * ----------
+/*
+ * ---------- rtcfg_setNodeLastEvent()
+ * 
+ * Set the last_event field in the node runtime structure.
+ * 
+ * Returns:	0 if the event_seq is <= the known value -1 if the node is
+ * not known event_seq otherwise ----------
  */
 int64
 rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 {
-	SlonNode   *node;
-	int64		retval;
+	SlonNode       *node;
+	int64           retval;
 
 	rtcfg_lock();
 	if ((node = rtcfg_findNode(no_id)) != NULL)
@@ -174,41 +166,37 @@ rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 		{
 			node->last_event = event_seq;
 			retval = event_seq;
-		}
-		else
+		} else
 			retval = 0;
-	}
-	else
+	} else
 		retval = -1;
 
 	rtcfg_unlock();
 
 	slon_log(SLON_DEBUG2,
-			"setNodeLastEvent: no_id=%d event_seq=" INT64_FORMAT "\n",
-			no_id, retval);
+		 "setNodeLastEvent: no_id=%d event_seq=" INT64_FORMAT "\n",
+		 no_id, retval);
 
 	return retval;
 }
 
 
-/* ----------
- * rtcfg_getNodeLastEvent
- *
- *	Read the nodes last_event field
- * ----------
+/*
+ * ---------- rtcfg_getNodeLastEvent
+ * 
+ * Read the nodes last_event field ----------
  */
 int64
 rtcfg_getNodeLastEvent(int no_id)
 {
-	SlonNode   *node;
-	int64		retval;
+	SlonNode       *node;
+	int64           retval;
 
 	rtcfg_lock();
 	if ((node = rtcfg_findNode(no_id)) != NULL)
 	{
 		retval = node->last_event;
-	}
-	else
+	} else
 		retval = -1;
 
 	rtcfg_unlock();
@@ -217,14 +205,13 @@ rtcfg_getNodeLastEvent(int no_id)
 }
 
 
-/* ----------
- * rtcfg_enableNode
- * ----------
+/*
+ * ---------- rtcfg_enableNode ----------
  */
 void
 rtcfg_enableNode(int no_id)
 {
-	SlonNode	   *node;
+	SlonNode       *node;
 
 	rtcfg_lock();
 
@@ -234,16 +221,15 @@ rtcfg_enableNode(int no_id)
 		rtcfg_unlock();
 
 		slon_log(SLON_FATAL,
-				"enableNode: unknown node ID %d\n", no_id);
+			 "enableNode: unknown node ID %d\n", no_id);
 		slon_abort();
 		return;
 	}
-
 	/*
 	 * Activate the node
 	 */
 	slon_log(SLON_CONFIG,
-			"enableNode: no_id=%d\n", no_id);
+		 "enableNode: no_id=%d\n", no_id);
 	node->no_active = true;
 
 	rtcfg_unlock();
@@ -253,14 +239,13 @@ rtcfg_enableNode(int no_id)
 }
 
 
-/* ----------
- * slon_disableNode
- * ----------
+/*
+ * ---------- slon_disableNode ----------
  */
 void
 rtcfg_disableNode(int no_id)
 {
-	SlonNode	   *node;
+	SlonNode       *node;
 
 	rtcfg_lock();
 
@@ -270,35 +255,33 @@ rtcfg_disableNode(int no_id)
 		rtcfg_unlock();
 
 		slon_log(SLON_FATAL,
-				"enableNode: unknown node ID %d\n", no_id);
+			 "enableNode: unknown node ID %d\n", no_id);
 		slon_abort();
 		return;
 	}
-
 	/*
 	 * Deactivate the node
 	 */
 	slon_log(SLON_CONFIG,
-			"disableNode: no_id=%d\n", no_id);
+		 "disableNode: no_id=%d\n", no_id);
 	node->no_active = false;
 
 	rtcfg_unlock();
 	rtcfg_seq_bump();
 
 	/*
-	rtcfg_startStopNodeThread(node);
-	*/
+	 * rtcfg_startStopNodeThread(node);
+	 */
 }
 
 
-/* ----------
- * rtcfg_findNode
- * ----------
+/*
+ * ---------- rtcfg_findNode ----------
  */
-SlonNode *
+SlonNode       *
 rtcfg_findNode(int no_id)
 {
-	SlonNode	   *node;
+	SlonNode       *node;
 
 	for (node = rtcfg_node_list_head; node; node = node->next)
 	{
@@ -310,14 +293,13 @@ rtcfg_findNode(int no_id)
 }
 
 
-/* ----------
- * rtcfg_storePath
- * ----------
+/*
+ * ---------- rtcfg_storePath ----------
  */
 void
 rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 {
-	SlonNode	   *node;
+	SlonNode       *node;
 
 	rtcfg_lock();
 
@@ -327,24 +309,23 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 
 		rtcfg_unlock();
 
-		slon_log(SLON_WARN, 
-				"storePath: unknown node ID %d - event pending\n", pa_server);
+		slon_log(SLON_WARN,
+			 "storePath: unknown node ID %d - event pending\n", pa_server);
 		rtcfg_storeNode(pa_server, "<event pending>");
 
 		rtcfg_lock();
 		node = rtcfg_findNode(pa_server);
 	}
-
 	/*
 	 * Store the (new) conninfo to the node
 	 */
 	slon_log(SLON_CONFIG,
-			"storePath: pa_server=%d pa_client=%d "
-			"pa_conninfo=\"%s\" pa_connretry=%d\n", 
-			pa_server, rtcfg_nodeid, pa_conninfo, pa_connretry);
+		 "storePath: pa_server=%d pa_client=%d "
+		 "pa_conninfo=\"%s\" pa_connretry=%d\n",
+		 pa_server, rtcfg_nodeid, pa_conninfo, pa_connretry);
 	if (node->pa_conninfo != NULL)
 		free(node->pa_conninfo);
-	node->pa_conninfo  = strdup(pa_conninfo);
+	node->pa_conninfo = strdup(pa_conninfo);
 	node->pa_connretry = pa_connretry;
 
 	rtcfg_unlock();
@@ -357,15 +338,14 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 }
 
 
-/* ----------
- * rtcfg_dropPath
- * ----------
+/*
+ * ---------- rtcfg_dropPath ----------
  */
 void
 rtcfg_dropPath(int pa_server)
 {
-	SlonNode	   *node;
-	SlonListen	   *listen;
+	SlonNode       *node;
+	SlonListen     *listen;
 
 	rtcfg_lock();
 
@@ -375,16 +355,14 @@ rtcfg_dropPath(int pa_server)
 
 		rtcfg_unlock();
 
-		slon_log(SLON_WARN, 
-				"dropPath: unknown node ID %d\n", pa_server);
+		slon_log(SLON_WARN,
+			 "dropPath: unknown node ID %d\n", pa_server);
 
 		return;
 	}
-
 	/*
-	 * Drop all listen information as well
-	 * at this provider. Without a path we
-	 * cannot listen.
+	 * Drop all listen information as well at this provider. Without a
+	 * path we cannot listen.
 	 */
 	while (node->listen_head != NULL)
 	{
@@ -398,11 +376,11 @@ rtcfg_dropPath(int pa_server)
 	 * Remove the conninfo.
 	 */
 	slon_log(SLON_CONFIG,
-			"dropPath: pa_server=%d pa_client=%d\n",
-			pa_server, rtcfg_nodeid);
+		 "dropPath: pa_server=%d pa_client=%d\n",
+		 pa_server, rtcfg_nodeid);
 	if (node->pa_conninfo != NULL)
 		free(node->pa_conninfo);
-	node->pa_conninfo  = NULL;
+	node->pa_conninfo = NULL;
 	node->pa_connretry = 0;
 
 	rtcfg_unlock();
@@ -415,15 +393,14 @@ rtcfg_dropPath(int pa_server)
 }
 
 
-/* ----------
- * rtcfg_storeListen
- * ----------
+/*
+ * ---------- rtcfg_storeListen ----------
  */
 void
 rtcfg_storeListen(int li_origin, int li_provider)
 {
-	SlonNode	   *node;
-	SlonListen	   *listen;
+	SlonNode       *node;
+	SlonListen     *listen;
 
 	rtcfg_lock();
 
@@ -431,23 +408,22 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	if (!node)
 	{
 		slon_log(SLON_FATAL,
-				"storeListen: unknown node ID %d\n", li_provider);
+			 "storeListen: unknown node ID %d\n", li_provider);
 		slon_abort();
 		return;
 	}
-
 	/*
-	 * Check if we already listen for events from that origin
-	 * at this provider.
+	 * Check if we already listen for events from that origin at this
+	 * provider.
 	 */
 	for (listen = node->listen_head; listen; listen = listen->next)
 	{
 		if (listen->li_origin == li_origin)
 		{
 			slon_log(SLON_DEBUG2,
-					"storeListen: li_origin=%d li_receiver=%d "
-					"li_provider=%d - already listening\n",
-					li_origin, rtcfg_nodeid, li_provider);
+				 "storeListen: li_origin=%d li_receiver=%d "
+				 "li_provider=%d - already listening\n",
+				 li_origin, rtcfg_nodeid, li_provider);
 			rtcfg_unlock();
 			return;
 		}
@@ -457,10 +433,10 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	 * Add the new event origin to the provider (this node)
 	 */
 	slon_log(SLON_CONFIG,
-			"storeListen: li_origin=%d li_receiver=%d li_provider=%d\n",
-			li_origin, rtcfg_nodeid, li_provider);
+		 "storeListen: li_origin=%d li_receiver=%d li_provider=%d\n",
+		 li_origin, rtcfg_nodeid, li_provider);
 
-	listen = (SlonListen *)malloc(sizeof(SlonListen));
+	listen = (SlonListen *) malloc(sizeof(SlonListen));
 	if (listen == NULL)
 	{
 		perror("rtcfg_storeListen: malloc()");
@@ -481,15 +457,14 @@ rtcfg_storeListen(int li_origin, int li_provider)
 }
 
 
-/* ----------
- * rtcfg_dropListen
- * ----------
+/*
+ * ---------- rtcfg_dropListen ----------
  */
 void
 rtcfg_dropListen(int li_origin, int li_provider)
 {
-	SlonNode	   *node;
-	SlonListen	   *listen;
+	SlonNode       *node;
+	SlonListen     *listen;
 
 	rtcfg_lock();
 
@@ -497,23 +472,21 @@ rtcfg_dropListen(int li_origin, int li_provider)
 	if (!node)
 	{
 		slon_log(SLON_FATAL,
-				"dropListen: unknown node ID %d\n", li_provider);
+			 "dropListen: unknown node ID %d\n", li_provider);
 		slon_abort();
 		return;
 	}
-
 	/*
-	 * Find that listen entry
-	 * at this provider.
+	 * Find that listen entry at this provider.
 	 */
 	for (listen = node->listen_head; listen; listen = listen->next)
 	{
 		if (listen->li_origin == li_origin)
 		{
 			slon_log(SLON_CONFIG,
-					"dropListen: li_origin=%d li_receiver=%d "
-					"li_provider=%d\n",
-					li_origin, rtcfg_nodeid, li_provider);
+				 "dropListen: li_origin=%d li_receiver=%d "
+				 "li_provider=%d\n",
+				 li_origin, rtcfg_nodeid, li_provider);
 
 			DLLIST_REMOVE(node->listen_head, node->listen_tail, listen);
 			free(listen);
@@ -534,16 +507,16 @@ rtcfg_dropListen(int li_origin, int li_provider)
 	 * Add the new event origin to the provider (this node)
 	 */
 	slon_log(SLON_DEBUG1,
-			"storeListen: li_origin=%d li_receiver=%d li_provider=%d "
-			"- not listening\n",
-			li_origin, rtcfg_nodeid, li_provider);
+		 "storeListen: li_origin=%d li_receiver=%d li_provider=%d "
+		 "- not listening\n",
+		 li_origin, rtcfg_nodeid, li_provider);
 }
 
 
 void
 rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 {
-	SlonSet	   *set;
+	SlonSet        *set;
 
 	rtcfg_lock();
 
@@ -554,13 +527,13 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	{
 		if (set->set_id == set_id)
 		{
-			int old_origin = set->set_origin;
+			int             old_origin = set->set_origin;
 
 			slon_log(SLON_CONFIG,
-					"storeSet: set_id=%d set_origin=%d "
-					"set_comment='%s' - update set\n",
-					set_id, set_origin, 
-					(set_comment == NULL) ? "<unchanged>" : set_comment);
+				 "storeSet: set_id=%d set_origin=%d "
+				 "set_comment='%s' - update set\n",
+				 set_id, set_origin,
+			(set_comment == NULL) ? "<unchanged>" : set_comment);
 			set->set_origin = set_origin;
 			if (set_comment != NULL)
 			{
@@ -580,9 +553,9 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	 * Add a new set to the configuration
 	 */
 	slon_log(SLON_CONFIG,
-			"storeSet: set_id=%d set_origin=%d set_comment='%s'\n",
-			set_id, set_origin, set_comment);
-	set = (SlonSet *)malloc(sizeof(SlonSet));
+		 "storeSet: set_id=%d set_origin=%d set_comment='%s'\n",
+		 set_id, set_origin, set_comment);
+	set = (SlonSet *) malloc(sizeof(SlonSet));
 	if (set == NULL)
 	{
 		perror("rtcfg_storeSet: malloc()");
@@ -606,7 +579,7 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 void
 rtcfg_dropSet(int set_id)
 {
-	SlonSet	   *set;
+	SlonSet        *set;
 
 	rtcfg_lock();
 
@@ -617,10 +590,10 @@ rtcfg_dropSet(int set_id)
 	{
 		if (set->set_id == set_id)
 		{
-			int old_origin = set->set_origin;
+			int             old_origin = set->set_origin;
 
 			slon_log(SLON_CONFIG,
-					"dropSet: set_id=%d\n", set_id);
+				 "dropSet: set_id=%d\n", set_id);
 			DLLIST_REMOVE(rtcfg_set_list_head, rtcfg_set_list_tail, set);
 			free(set->set_comment);
 			free(set);
@@ -633,7 +606,7 @@ rtcfg_dropSet(int set_id)
 	}
 
 	slon_log(SLON_CONFIG,
-			"dropSet: set_id=%d - set not found\n", set_id);
+		 "dropSet: set_id=%d - set not found\n", set_id);
 	rtcfg_unlock();
 }
 
@@ -641,7 +614,7 @@ rtcfg_dropSet(int set_id)
 void
 rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 {
-	SlonSet	   *set;
+	SlonSet        *set;
 
 	rtcfg_lock();
 
@@ -653,10 +626,10 @@ rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 		if (set->set_id == set_id)
 		{
 			slon_log(SLON_CONFIG,
-					"moveSet: set_id=%d old_origin=%d "
-					"new_origin=%d\n",
-					set_id, old_origin, new_origin);
-				
+				 "moveSet: set_id=%d old_origin=%d "
+				 "new_origin=%d\n",
+				 set_id, old_origin, new_origin);
+
 			set->set_origin = new_origin;
 			set->sub_provider = sub_provider;
 			if (rtcfg_nodeid == old_origin)
@@ -689,8 +662,8 @@ rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 void
 rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 {
-	SlonSet	   *set;
-	int			old_provider = -1;
+	SlonSet        *set;
+	int             old_provider = -1;
 
 	rtcfg_lock();
 
@@ -702,18 +675,19 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 		if (set->set_id == sub_set)
 		{
 			slon_log(SLON_CONFIG,
-					"storeSubscribe: sub_set=%d sub_provider=%d "
-					"sub_forward='%s'\n",
-					sub_set, sub_provider, sub_forward);
+			       "storeSubscribe: sub_set=%d sub_provider=%d "
+				 "sub_forward='%s'\n",
+				 sub_set, sub_provider, sub_forward);
 			old_provider = set->sub_provider;
 			if (set->sub_provider < 0)
 				set->sub_active = 0;
 			set->sub_provider = sub_provider;
-			set->sub_forward  = (*sub_forward == 't');
+			set->sub_forward = (*sub_forward == 't');
 			rtcfg_unlock();
 			rtcfg_seq_bump();
 			/*
-			 * Wakeup the worker threads for the old and new provider
+			 * Wakeup the worker threads for the old and new
+			 * provider
 			 */
 			if (old_provider >= 0 && old_provider != sub_provider)
 				sched_wakeup_node(old_provider);
@@ -724,7 +698,7 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 	}
 
 	slon_log(SLON_FATAL,
-			"storeSubscribe: set %d not found\n", sub_set);
+		 "storeSubscribe: set %d not found\n", sub_set);
 	rtcfg_unlock();
 	slon_abort();
 }
@@ -733,8 +707,8 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 void
 rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 {
-	SlonSet	   *set;
-	int			old_provider = -1;
+	SlonSet        *set;
+	int             old_provider = -1;
 
 	rtcfg_lock();
 
@@ -746,11 +720,11 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 		if (set->set_id == sub_set)
 		{
 			slon_log(SLON_CONFIG,
-					"enableSubscription: sub_set=%d\n",
-					sub_set);
+				 "enableSubscription: sub_set=%d\n",
+				 sub_set);
 			old_provider = set->sub_provider;
 			set->sub_provider = sub_provider;
-			set->sub_forward  = (*sub_forward == 't');
+			set->sub_forward = (*sub_forward == 't');
 			if (set->sub_provider >= 0)
 				set->sub_active = 1;
 			else
@@ -766,7 +740,7 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 	}
 
 	slon_log(SLON_FATAL,
-			"enableSubscription: set %d not found\n", sub_set);
+		 "enableSubscription: set %d not found\n", sub_set);
 	rtcfg_unlock();
 	slon_abort();
 }
@@ -775,8 +749,8 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 void
 rtcfg_unsubscribeSet(int sub_set)
 {
-	SlonSet	   *set;
-	int			old_provider = -1;
+	SlonSet        *set;
+	int             old_provider = -1;
 
 	rtcfg_lock();
 
@@ -788,8 +762,8 @@ rtcfg_unsubscribeSet(int sub_set)
 		if (set->set_id == sub_set)
 		{
 			slon_log(SLON_CONFIG,
-					"unsubscribeSet: sub_set=%d\n",
-					sub_set);
+				 "unsubscribeSet: sub_set=%d\n",
+				 sub_set);
 			old_provider = set->sub_provider;
 			set->sub_provider = -1;
 			set->sub_active = false;
@@ -797,7 +771,8 @@ rtcfg_unsubscribeSet(int sub_set)
 			rtcfg_unlock();
 			rtcfg_seq_bump();
 			/*
-			 * Wakeup the worker threads for the old and new provider
+			 * Wakeup the worker threads for the old and new
+			 * provider
 			 */
 			if (old_provider >= 0)
 				sched_wakeup_node(old_provider);
@@ -806,21 +781,20 @@ rtcfg_unsubscribeSet(int sub_set)
 	}
 
 	slon_log(SLON_FATAL,
-			"unsubscribeSet: set %d not found\n", sub_set);
+		 "unsubscribeSet: set %d not found\n", sub_set);
 	rtcfg_unlock();
 	slon_abort();
 }
 
 
-/* ----------
- * rtcfg_startStopNodeThread
- * ----------
+/*
+ * ---------- rtcfg_startStopNodeThread ----------
  */
 static void
-rtcfg_startStopNodeThread(SlonNode *node)
+rtcfg_startStopNodeThread(SlonNode * node)
 {
-	int		need_listen = false;
-	int		need_wakeup = false;
+	int             need_listen = false;
+	int             need_wakeup = false;
 
 	rtcfg_lock();
 
@@ -831,38 +805,37 @@ rtcfg_startStopNodeThread(SlonNode *node)
 		 */
 		switch (node->worker_status)
 		{
-			case SLON_TSTAT_NONE:
-				if (pthread_create(&(node->worker_thread), NULL,
-						remoteWorkerThread_main, (void *)node) < 0)
-				{
-					slon_log(SLON_FATAL,
-							"startStopNodeThread: cannot create "
-							"remoteWorkerThread - %s\n",
-							strerror(errno));
-					rtcfg_unlock();
-					slon_abort();
-				}
-				node->worker_status = SLON_TSTAT_RUNNING;
-				break;
-			
-			case SLON_TSTAT_RUNNING:
-				break;
+		case SLON_TSTAT_NONE:
+			if (pthread_create(&(node->worker_thread), NULL,
+				 remoteWorkerThread_main, (void *)node) < 0)
+			{
+				slon_log(SLON_FATAL,
+				       "startStopNodeThread: cannot create "
+					 "remoteWorkerThread - %s\n",
+					 strerror(errno));
+				rtcfg_unlock();
+				slon_abort();
+			}
+			node->worker_status = SLON_TSTAT_RUNNING;
+			break;
 
-			default:
-printf("TODO: ********** rtcfg_startStopNodeThread: restart node worker\n");
+		case SLON_TSTAT_RUNNING:
+			break;
+
+		default:
+			printf("TODO: ********** rtcfg_startStopNodeThread: restart node worker\n");
 		}
-	}
-	else
+	} else
 	{
 		/*
 		 * Make sure there is no node worker
 		 */
 		switch (node->worker_status)
 		{
-			case SLON_TSTAT_NONE:
-				break;
-			default:
-				break;
+		case SLON_TSTAT_NONE:
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -884,67 +857,66 @@ printf("TODO: ********** rtcfg_startStopNodeThread: restart node worker\n");
 		 */
 		switch (node->listen_status)
 		{
-			case SLON_TSTAT_NONE:
-				node->listen_status = SLON_TSTAT_RUNNING;
-				if (pthread_create(&(node->listen_thread), NULL,
-						remoteListenThread_main, (void *)node) < 0)
-				{
-					slon_log(SLON_FATAL,
-							"startStopNodeThread: cannot create "
-							"remoteListenThread - %s\n",
-							strerror(errno));
-					rtcfg_unlock();
-					slon_abort();
-				}
-				break;
+		case SLON_TSTAT_NONE:
+			node->listen_status = SLON_TSTAT_RUNNING;
+			if (pthread_create(&(node->listen_thread), NULL,
+				 remoteListenThread_main, (void *)node) < 0)
+			{
+				slon_log(SLON_FATAL,
+				       "startStopNodeThread: cannot create "
+					 "remoteListenThread - %s\n",
+					 strerror(errno));
+				rtcfg_unlock();
+				slon_abort();
+			}
+			break;
 
-			case SLON_TSTAT_RUNNING:
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_RUNNING:
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_SHUTDOWN:
-				node->listen_status = SLON_TSTAT_RESTART;
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_SHUTDOWN:
+			node->listen_status = SLON_TSTAT_RESTART;
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_RESTART:
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_RESTART:
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_DONE:
-				pthread_join(node->listen_thread, NULL);
-				node->listen_status = SLON_TSTAT_NONE;
-				break;
+		case SLON_TSTAT_DONE:
+			pthread_join(node->listen_thread, NULL);
+			node->listen_status = SLON_TSTAT_NONE;
+			break;
 		}
-	}
-	else
+	} else
 	{
 		/*
 		 * Node specific listen thread not required
 		 */
 		switch (node->listen_status)
 		{
-			case SLON_TSTAT_NONE:
-				break;
+		case SLON_TSTAT_NONE:
+			break;
 
-			case SLON_TSTAT_RUNNING:
-				node->listen_status = SLON_TSTAT_SHUTDOWN;
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_RUNNING:
+			node->listen_status = SLON_TSTAT_SHUTDOWN;
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_SHUTDOWN:
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_SHUTDOWN:
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_RESTART:
-				node->listen_status = SLON_TSTAT_SHUTDOWN;
-				need_wakeup = true;
-				break;
+		case SLON_TSTAT_RESTART:
+			node->listen_status = SLON_TSTAT_SHUTDOWN;
+			need_wakeup = true;
+			break;
 
-			case SLON_TSTAT_DONE:
-				pthread_join(node->listen_thread, NULL);
-				node->listen_status = SLON_TSTAT_NONE;
-				break;
+		case SLON_TSTAT_DONE:
+			pthread_join(node->listen_thread, NULL);
+			node->listen_status = SLON_TSTAT_NONE;
+			break;
 		}
 	}
 
@@ -961,9 +933,9 @@ printf("TODO: ********** rtcfg_startStopNodeThread: restart node worker\n");
 void
 rtcfg_needActivate(int no_id)
 {
-	struct to_activate	   *anode;
+	struct to_activate *anode;
 
-	anode = (struct to_activate *)malloc(sizeof(struct to_activate));
+	anode = (struct to_activate *) malloc(sizeof(struct to_activate));
 	if (anode == NULL)
 	{
 		perror("rtcfg_needActivate: malloc()");
@@ -977,7 +949,7 @@ rtcfg_needActivate(int no_id)
 void
 rtcfg_doActivate(void)
 {
-    while (to_activate_head != NULL)
+	while (to_activate_head != NULL)
 	{
 		struct to_activate *anode = to_activate_head;
 
@@ -991,7 +963,7 @@ rtcfg_doActivate(void)
 void
 rtcfg_joinAllRemoteThreads(void)
 {
-	SlonNode   *node;
+	SlonNode       *node;
 
 	rtcfg_lock();
 
@@ -999,42 +971,42 @@ rtcfg_joinAllRemoteThreads(void)
 	{
 		switch (node->listen_status)
 		{
-			case SLON_TSTAT_NONE:
-				break;
+		case SLON_TSTAT_NONE:
+			break;
 
-			case SLON_TSTAT_RUNNING:
-			case SLON_TSTAT_SHUTDOWN:
-			case SLON_TSTAT_RESTART:
-				node->listen_status = SLON_TSTAT_SHUTDOWN;
-				/* fall through */
+		case SLON_TSTAT_RUNNING:
+		case SLON_TSTAT_SHUTDOWN:
+		case SLON_TSTAT_RESTART:
+			node->listen_status = SLON_TSTAT_SHUTDOWN;
+			/* fall through */
 
-			case SLON_TSTAT_DONE:
-				rtcfg_unlock();
-				sched_wakeup_node(node->no_id);
-				pthread_join(node->listen_thread, NULL);
-				rtcfg_lock();
-				node->listen_status = SLON_TSTAT_NONE;
-				break;
+		case SLON_TSTAT_DONE:
+			rtcfg_unlock();
+			sched_wakeup_node(node->no_id);
+			pthread_join(node->listen_thread, NULL);
+			rtcfg_lock();
+			node->listen_status = SLON_TSTAT_NONE;
+			break;
 		}
 
 		switch (node->worker_status)
 		{
-			case SLON_TSTAT_NONE:
-				break;
+		case SLON_TSTAT_NONE:
+			break;
 
-			case SLON_TSTAT_RUNNING:
-			case SLON_TSTAT_SHUTDOWN:
-			case SLON_TSTAT_RESTART:
-				node->worker_status = SLON_TSTAT_SHUTDOWN;
-				/* fall through */
+		case SLON_TSTAT_RUNNING:
+		case SLON_TSTAT_SHUTDOWN:
+		case SLON_TSTAT_RESTART:
+			node->worker_status = SLON_TSTAT_SHUTDOWN;
+			/* fall through */
 
-			case SLON_TSTAT_DONE:
-				rtcfg_unlock();
-				remoteWorker_wakeup(node->no_id);
-				pthread_join(node->worker_thread, NULL);
-				rtcfg_lock();
-				node->worker_status = SLON_TSTAT_NONE;
-				break;
+		case SLON_TSTAT_DONE:
+			rtcfg_unlock();
+			remoteWorker_wakeup(node->no_id);
+			pthread_join(node->worker_thread, NULL);
+			rtcfg_lock();
+			node->worker_status = SLON_TSTAT_NONE;
+			break;
 		}
 
 	}
@@ -1055,7 +1027,7 @@ rtcfg_seq_bump(void)
 int64
 rtcfg_seq_get(void)
 {
-	int64 retval;
+	int64           retval;
 
 	pthread_mutex_lock(&cfgseq_lock);
 	retval = cfgseq;
@@ -1063,6 +1035,3 @@ rtcfg_seq_get(void)
 
 	return retval;
 }
-
-
-

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.11 2004-08-04 19:58:32 darcyb Exp $
+ *	$Id: dbutils.c,v 1.12 2004-09-24 22:12:35 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,30 +29,28 @@
 #include "slon.h"
 
 
-static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
+static int      slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 
-/* 
- * This mutex is used to wrap around PQconnectdb. There's a problem
- * that occurs when your libpq is compiled with libkrb (kerberos)
- * which is not threadsafe.  It is especially odd because I'm not using
- * kerberos. 
+/*
+ * This mutex is used to wrap around PQconnectdb. There's a problem that
+ * occurs when your libpq is compiled with libkrb (kerberos) which is not
+ * threadsafe.  It is especially odd because I'm not using kerberos.
  * 
- * This is fixed in libpq in 8.0, but for now (and for older versions
- * we'll just use this mutex. 
- *
+ * This is fixed in libpq in 8.0, but for now (and for older versions we'll just
+ * use this mutex.
+ * 
  */
 static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
-/* ----------
- * slon_connectdb
- * ----------
+/*
+ * ---------- slon_connectdb ----------
  */
-SlonConn *
+SlonConn       *
 slon_connectdb(char *conninfo, char *symname)
 {
-	PGconn	   *dbconn;
-	SlonConn   *conn;
+	PGconn         *dbconn;
+	SlonConn       *conn;
 
 	/*
 	 * Create the native database connection
@@ -63,22 +61,21 @@ slon_connectdb(char *conninfo, char *symname)
 	if (dbconn == NULL)
 	{
 		slon_log(SLON_ERROR,
-				"slon_connectdb: PQconnectdb(\"%s\") failed\n",
-				conninfo);
+			 "slon_connectdb: PQconnectdb(\"%s\") failed\n",
+			 conninfo);
 		return NULL;
 	}
 	if (PQstatus(dbconn) != CONNECTION_OK)
 	{
 		slon_log(SLON_ERROR,
-				"slon_connectdb: PQconnectdb(\"%s\") failed - %s",
-				conninfo, PQerrorMessage(dbconn));
+			 "slon_connectdb: PQconnectdb(\"%s\") failed - %s",
+			 conninfo, PQerrorMessage(dbconn));
 		PQfinish(dbconn);
 		return NULL;
 	}
-
 	/*
-	 * Embed it into a SlonConn structure used to exchange it with
-	 * the scheduler. On return this new connection object is locked.
+	 * Embed it into a SlonConn structure used to exchange it with the
+	 * scheduler. On return this new connection object is locked.
 	 */
 	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
@@ -87,12 +84,11 @@ slon_connectdb(char *conninfo, char *symname)
 }
 
 
-/* ----------
- * slon_disconnectdb
- * ----------
+/*
+ * ---------- slon_disconnectdb ----------
  */
 void
-slon_disconnectdb(SlonConn *conn)
+slon_disconnectdb(SlonConn * conn)
 {
 	/*
 	 * Disconnect the native database connection
@@ -103,26 +99,25 @@ slon_disconnectdb(SlonConn *conn)
 #endif
 
 	/*
-	 * Unlock and destroy the condition and mutex variables
-	 * and free memory.
+	 * Unlock and destroy the condition and mutex variables and free
+	 * memory.
 	 */
 	slon_free_dummyconn(conn);
 }
 
 
-/* ----------
- * slon_make_dummyconn
- * ----------
+/*
+ * ---------- slon_make_dummyconn ----------
  */
-SlonConn *
+SlonConn       *
 slon_make_dummyconn(char *symname)
 {
-	SlonConn   *conn;
+	SlonConn       *conn;
 
 	/*
 	 * Allocate and initialize the SlonConn structure
 	 */
-	conn = (SlonConn *)malloc(sizeof(SlonConn));
+	conn = (SlonConn *) malloc(sizeof(SlonConn));
 	if (conn == NULL)
 	{
 		perror("slon_make_dummyconn: malloc()");
@@ -131,23 +126,22 @@ slon_make_dummyconn(char *symname)
 	memset(conn, 0, sizeof(SlonConn));
 	conn->symname = strdup(symname);
 
-	/* 
+	/*
 	 * Initialize and lock the condition and mutex variables
 	 */
 	pthread_mutex_init(&(conn->conn_lock), NULL);
 	pthread_cond_init(&(conn->conn_cond), NULL);
 	pthread_mutex_lock(&(conn->conn_lock));
-	
+
 	return conn;
 }
 
 
-/* ----------
- * slon_free_dummyconn
- * ----------
+/*
+ * ---------- slon_free_dummyconn ----------
  */
 void
-slon_free_dummyconn(SlonConn *conn)
+slon_free_dummyconn(SlonConn * conn)
 {
 	/*
 	 * Destroy and unlock the condition and mutex variables
@@ -167,67 +161,62 @@ slon_free_dummyconn(SlonConn *conn)
 }
 
 
-/* ----------
- * db_getLocalNodeId
- *
- *	Query a connection for the value of sequence sl_local_node_id
- * ----------
+/*
+ * ---------- db_getLocalNodeId
+ * 
+ * Query a connection for the value of sequence sl_local_node_id ----------
  */
 int
-db_getLocalNodeId(PGconn *conn)
+db_getLocalNodeId(PGconn * conn)
 {
-	char		query[1024];
-	PGresult   *res;
-	int			retval;
+	char            query[1024];
+	PGresult       *res;
+	int             retval;
 
 	/*
 	 * Select the last_value from the sl_local_node_id sequence
 	 */
 	snprintf(query, 1024, "select last_value::int4 from %s.sl_local_node_id",
-			rtcfg_namespace);
+		 rtcfg_namespace);
 	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,
-				"cannot get sl_local_node_id - %s",
-				PQresultErrorMessage(res));
+			 "cannot get sl_local_node_id - %s",
+			 PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
 	if (PQntuples(res) != 1)
 	{
 		slon_log(SLON_ERROR,
-				"query '%s' returned %d rows (expected 1)\n",
-				query, PQntuples(res));
+			 "query '%s' returned %d rows (expected 1)\n",
+			 query, PQntuples(res));
 		PQclear(res);
 		return -1;
 	}
-
 	/*
 	 * Return the result as an integer value
 	 */
 	retval = strtol(PQgetvalue(res, 0, 0), NULL, 10);
 	PQclear(res);
-	
+
 	return retval;
 }
 
 
-/* ----------
- * slon_mkquery
- *
- *	A simple query formatting and quoting function using dynamic string
- *	buffer allocation.
- *	Similar to sprintf() it uses formatting symbols:
- *		%s		String argument
- *		%q		Quoted literal (\ and ' will be escaped)
- *		%d		Integer argument
- * ----------
+/*
+ * ---------- slon_mkquery
+ * 
+ * A simple query formatting and quoting function using dynamic string buffer
+ * allocation. Similar to sprintf() it uses formatting symbols: %s
+ * tring argument %q		Quoted literal (\ and ' will be escaped) %d
+ * nteger argument ----------
  */
 int
-slon_mkquery(SlonDString *dsp, char *fmt, ...)
+slon_mkquery(SlonDString * dsp, char *fmt,...)
 {
-	va_list		ap;
+	va_list         ap;
 
 	dstring_reset(dsp);
 
@@ -241,16 +230,15 @@ slon_mkquery(SlonDString *dsp, char *fmt, ...)
 }
 
 
-/* ----------
- * slon_appendquery
- *
- *	Append query string material to an existing dynamic string.
- * ----------
+/*
+ * ---------- slon_appendquery
+ * 
+ * Append query string material to an existing dynamic string. ----------
  */
 int
-slon_appendquery(SlonDString *dsp, char *fmt, ...)
+slon_appendquery(SlonDString * dsp, char *fmt,...)
 {
-	va_list		ap;
+	va_list         ap;
 
 	va_start(ap, fmt);
 	slon_appendquery_int(dsp, fmt, ap);
@@ -262,71 +250,76 @@ slon_appendquery(SlonDString *dsp, char *fmt, ...)
 }
 
 
-/* ----------
- * slon_appendquery_int
- *
- *	Implementation of slon_mkquery() and slon_appendquery().
- * ----------
+/*
+ * ---------- slon_appendquery_int
+ * 
+ * Implementation of slon_mkquery() and slon_appendquery(). ----------
  */
 static int
-slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
+slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
-	char	   *s;
-	char		buf[64];
+	char           *s;
+	char            buf[64];
 
 	while (*fmt)
 	{
-		switch(*fmt)
+		switch (*fmt)
 		{
-			case '%':
+		case '%':
+			fmt++;
+			switch (*fmt)
+			{
+			case 's':
+				s = va_arg(ap, char *);
+				dstring_append(dsp, s);
 				fmt++;
-				switch(*fmt)
-				{
-					case 's':	s = va_arg(ap, char *);
-								dstring_append(dsp, s);
-								fmt++;
-								break;
-
-					case 'q':	s = va_arg(ap, char *);
-								while (s && *s != '\0')
-								{
-									switch (*s)
-									{
-										case '\'':
-											dstring_addchar(dsp, '\'');
-											break;
-										case '\\':
-											dstring_addchar(dsp, '\\');
-											break;
-										default:
-											break;
-									}
-									dstring_addchar(dsp, *s);
-									s++;
-								}
-								fmt++;
-								break;
-
-					case 'd':	sprintf(buf, "%d", va_arg(ap, int));
-								dstring_append(dsp, buf);
-								fmt++;
-								break;
-
-					default:	dstring_addchar(dsp, '%');
-								dstring_addchar(dsp, *fmt);
-								fmt++;
-								break;
-				}
 				break;
 
-			case '\\':	fmt++;
-						dstring_addchar(dsp, *fmt);
-						fmt++;
+			case 'q':
+				s = va_arg(ap, char *);
+				while (s && *s != '\0')
+				{
+					switch (*s)
+					{
+					case '\'':
+						dstring_addchar(dsp, '\'');
 						break;
+					case '\\':
+						dstring_addchar(dsp, '\\');
+						break;
+					default:
+						break;
+					}
+					dstring_addchar(dsp, *s);
+					s++;
+				}
+				fmt++;
+				break;
 
-			default:	dstring_addchar(dsp, *fmt);
-						fmt++;
-						break;
+			case 'd':
+				sprintf(buf, "%d", va_arg(ap, int));
+				dstring_append(dsp, buf);
+				fmt++;
+				break;
+
+			default:
+				dstring_addchar(dsp, '%');
+				dstring_addchar(dsp, *fmt);
+				fmt++;
+				break;
+			}
+			break;
+
+		case '\\':
+			fmt++;
+			dstring_addchar(dsp, *fmt);
+			fmt++;
+			break;
+
+		default:
+			dstring_addchar(dsp, *fmt);
+			fmt++;
+			break;
 		}
 	}
 
@@ -334,5 +327,3 @@ slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
 
 	return 0;
 }
-
-

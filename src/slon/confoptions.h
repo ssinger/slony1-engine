@@ -11,6 +11,8 @@ bool set_config_option(const char *name, const char *value);
 extern double real_placeholder;
 extern char *string_placeholder;
 
+extern char *pid_file;
+
 
 extern int vac_frequency;
 extern int slon_log_level;
@@ -19,6 +21,9 @@ extern int sync_interval_timeout;
 
 extern int sync_group_maxsize;
 
+char *Syslog_ident;
+char *Syslog_facility;
+int Use_syslog;
 bool logpid;
 bool logtimestamp;
 
@@ -145,7 +150,23 @@ static struct config_int ConfigureNamesInt[] =
 		0,
 		100
 	},
-
+#ifdef HAVE_SYSLOG
+	{
+		{
+			(const char *)"syslog",
+			gettext_noop("Uses syslog for logging."),
+			gettext_noop("If this parameter is 1, messages go both to syslog "
+					"and the standard output. A value of 2 sends output only to syslog. "
+					"(Some messages will still go to the standard output/error.) The "
+					"default is 0, which means syslog is off."),
+			SLON_C_INT
+		},
+		&Use_syslog,
+		0,
+		0,
+		2
+	},
+#endif
         NULL
 };
 static struct config_int ConfigureNamesBool[] =
@@ -202,6 +223,39 @@ static struct config_int ConfigureNamesString[] =
                 &string_placeholder,                                                                    /* var_name */
                 "default"                                                                               /* default value */
         },
+	{
+		{
+			(const char *)"pid_file",
+			gettext_noop("Where to write the pid file"),
+			NULL,
+			SLON_C_STRING
+		},
+		&pid_file,
+		NULL
+	},
+#ifdef HAVE_SYSLOG
+	{
+		{
+			(const char *)"syslog_facility",
+			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
+			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
+				"LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
+			SLON_C_STRING
+		},
+		&Syslog_ident,
+		"LOCAL0"
+	},
+	{
+		{
+			(const char *)"syslog_ident",
+			gettext_noop("Sets the program name used to identify slon messages in syslog."),
+			NULL,
+			SLON_C_STRING
+		},
+		&Syslog_ident,
+		"slon"
+	},
+#endif
 	NULL
 };
 
