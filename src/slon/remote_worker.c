@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.39 2004-04-14 20:18:12 wieck Exp $
+ *	$Id: remote_worker.c,v 1.40 2004-05-11 13:58:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2794,11 +2794,12 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		PGresult   *res2;
 		int			ntuples2;
 		int			tupno2;
+		int         added_or_to_provider = 0; 
 
 		provider_qual = &(provider->helper_qualification);
 		dstring_reset(provider_qual);
 		slon_mkquery(provider_qual,
-				"where log_origin = %d ",
+				"where log_origin = %d and ( ",
 				node->no_id);
 
 		/*
@@ -2892,13 +2893,26 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			/*
 			 * ... and build up a query qualification that is
 			 * 
-			 *  and (log_tableid in (<tables_in_set>) 
-			 *         and (<snapshot_qual_of_new_sync>)
-			 *         and (<snapshot_qual_of_setsync>)
-			 *      )
-			 *  and ( <next_set_from_this_provider> )
+			 *  and (
+             *        (log_tableid in (<tables_in_set>) 
+			 *          and (<snapshot_qual_of_new_sync>)
+			 *          and (<snapshot_qual_of_setsync>)
+			 *        )
+			 *        OR 
+             *        ( <next_set_from_this_provider> )
+			 *  )
+			 * 
+			 * If we were using AND's there then no rows will ever end
+             * up being selected when you have multiple sets. 
 			 */
-			slon_appendquery(provider_qual, "and (\n    log_tableid in (");
+
+			if(added_or_to_provider)
+			  {
+				slon_appendquery(provider_qual, "or (\n    log_tableid in (");
+			  } else {
+				slon_appendquery(provider_qual, " (\n log_tableid in (");
+				added_or_to_provider = 1;
+			  }
 
 			/* the <tables_in_set> tab_id list */
 			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
@@ -2970,6 +2984,15 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			PQclear(res2);
 		}
 		PQclear(res1);
+
+		/* We didn't add anything good in the provider clause. That shouldn't be! */
+		if(added_or_to_provider)
+		  {
+			// close out our OR block
+			slon_appendquery(provider_qual, ")"); 
+		  } else {
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: Didn't add or to provider\n", node->no_id);
+		  }
 	}
 
 	dstring_free(&new_qual);
@@ -3343,6 +3366,7 @@ sync_helper(void *cdata)
 					"from %s.sl_log_1 %s order by log_actionseq; ",
 					rtcfg_namespace, 
 					dstring_data(&(provider->helper_qualification)));
+			
 			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
