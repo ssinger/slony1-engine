@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.23 2005-03-17 19:43:30 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.24 2005-03-29 16:33:53 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -43,8 +43,12 @@ static char *table_list [] = {"%s.sl_event",
 			      "%s.sl_log_1",
 			      "%s.sl_log_2",
 			      "%s.sl_seqlog",
-			      "pg_catalog.pg_listener"};
-static char tstring[255];
+			      "pg_catalog.pg_listener",
+                              "pg_catalog.pg_statistic"};
+
+#define MAX_VAC_TABLE 9           /* Add to this if additional tables are added above */
+
+static char tstring[255];         /* string used to store table names for the VACUUM statements */
 
 /*
  * ---------- cleanupThread_main
@@ -75,7 +79,7 @@ cleanupThread_main(void *dummy)
 	/* Want the vacuum time bias to be between 0 and 100 seconds,
 	 * hence between 0 and 100000 */
 	if (vac_bias == 0) {
-		vac_bias = rand() % 100000;
+		vac_bias = rand() % ( SLON_CLEANUP_SLEEP * 166 );
 	}
 	slon_log(SLON_DEBUG4, "cleanupThread: bias = %d\n", vac_bias);
 
@@ -105,7 +109,7 @@ cleanupThread_main(void *dummy)
 	 * slons hitting the same cluster will run into conflicts due
 	 * to trying to vacuum pg_listener concurrently
 	 */
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % 100000)) == SCHED_STATUS_OK)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
@@ -210,7 +214,7 @@ cleanupThread_main(void *dummy)
 			 */
 			dstring_init(&query3);
 			gettimeofday(&tv_start, NULL);
-			for (t=0; t < 8; t++) {
+			for (t=0; t < MAX_VAC_TABLE; t++) {
 				sprintf(tstring, table_list[t], rtcfg_namespace);
 				slon_mkquery(&query3,
 					     "%s %s;",
@@ -260,7 +264,13 @@ cleanupThread_main(void *dummy)
 	pthread_exit(NULL);
 }
 
-/* "_T1".getMinXid(); */
+/* get_earliest_xid() reads the earliest XID that is still active.
+
+   The idea is that if, between cleanupThread iterations, this XID has
+   not changed, then an old transaction is still in progress,
+   PostgreSQL is holding onto the tuples, and there is no value in
+   doing VACUUMs of the various Slony-I tables.
+*/
 
 static unsigned long get_earliest_xid (PGconn *dbconn) {
 	long long xid;
@@ -271,7 +281,7 @@ static unsigned long get_earliest_xid (PGconn *dbconn) {
 	slon_mkquery(&query1, "select %s.getMinXid();", rtcfg_namespace);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-		slon_log(SLON_FATAL, "cleanupThread: could not read locks from pg_locks!");
+		slon_log(SLON_FATAL, "cleanupThread: could not getMinXid()!\n");
 		PQclear(res);
 		slon_abort();
 		return -1;
