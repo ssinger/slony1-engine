@@ -1,6 +1,4 @@
-This will become an "administrative guide" to the use of Slony-I.
-
-At present, it consists of copies of the Wiki at
+This was sourced from the Wiki at
 http://cbbrowne.dyndns.info:8741/cgi-bin/twiki/view/Sandbox/SlonyIAdministration
 
-That will eventually be transformed into DocBook.
+It has been transformed into DocBook SGML as is used for PostgreSQL documentation.
