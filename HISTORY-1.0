@@ -91,6 +91,11 @@
 
   ----------------------------
 
+  date: 2004/10/18 15:11:29;  author: wieck;
+  Added -v option to slon and slonik to show version number and exit.
+
+  ----------------------------
+
 1.0.2	Bugfix and 8.0 compatibility release
 
   date: 2004/07/09 13:43:09;  author: wieck;
