@@ -1,0 +1,66 @@
+# Sets how many cleanup cycles to run before a vacuum is done.
+# Range: [0,100], default: 3
+#vac_frequency=3
+
+# Debug log level (higher value ==> more output).  Range: [0,4], default 4
+#log_level=4
+
+# Check for updates at least this often in milliseconds.
+# Range: [10-60000], default 100
+#sync_interval=100
+
+# Maximum amount of time in milliseconds before issuing a SYNC event, 
+# This prevents a possible race condition in which the action sequence 
+# is bumped by the trigger while inserting the log row, which makes 
+# this bump is immediately visible to the sync thread, but 
+# the resulting log rows are not visible yet.  If the sync is picked 
+# up by the subscriber, processed and finished before the transaction 
+# commits, this transaction's changes will not be replicated until the 
+# next SYNC.  But if all application activity suddenly stops, 
+# there will be no more sequence bumps, so the high frequent -s check 
+# won't detect that.  Thus, the need for sync_interval_timeout.
+# Range: [0-120000], default 1000
+#sync_interval_timeout=1000
+
+# Maximum number of SYNC events to group together when/if a subscriber
+# falls behind.  SYNCs are batched only if there are that many available 
+# and if they are contiguous. Every other event type in between leads to 
+# a smaller batch.  And if there is only one SYNC available, even -g60 
+# will apply just that one. As soon as a subscriber catches up, it will 
+# apply every single SYNC by itself.
+# Range:  [0,100], default: 6
+#sync_group_maxsize=6
+
+# If this parameter is 1, messages go both to syslog and the standard 
+# output. A value of 2 sends output only to syslog (some messages will 
+# still go to the standard output/error).  The default is 0, which means 
+# syslog is off.  
+# Range:  [0-2], default: 0
+#syslog=0
+
+# If true, include the process ID on each log line.  Default is false.
+#log_pid=false
+
+# If true, include the timestamp on each log line.  Default is true.
+#log_timestamp=true
+
+# A strftime()-conformant format string for use with log timestamps.
+# Default is '%Y-%m-%d %H:%M:%S %Z'
+#log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'
+
+# Where to write the pid file.  Default:  no pid file
+#pid_file='/path/to/your/pidfile'
+
+# Sets the syslog "facility" to be used when syslog enabled.  Valid 
+# values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, LOCAL4, LOCAL5, LOCAL6, LOCAL7.
+#syslog_facility=LOCAL0
+
+# Sets the program name used to identify slon messages in syslog.
+#syslog_ident=slon
+
+# Set the clsuter name that this instance of slon is running against
+# default is to read it off the command line
+#cluster_name='sloncluster'
+
+# Set slon's connection info, default is to read it off the command line
+#conn_info='host=/tmp port=5432 user=slony'
