@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.6 2004-08-20 19:06:22 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.7 2004-08-23 18:35:39 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -86,7 +86,7 @@ sub run_slonik_script {
   print OUT "/* ------------------------------------------------------------- */\n";
   close OUT;
   `cat $script >> $LOGDIR/slonik_scripts.log`;
-  print `slonik < $script`;
+  print `$SLON_BIN_PATH/slonik < $script`;
   unlink($script);
 }
 
