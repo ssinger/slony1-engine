@@ -1,0 +1,44 @@
+<!-- $PostgreSQL: pgsql/doc/src/sgml/filelist.sgml,v 1.40 2004/12/03 05:50:18 momjian Exp $ -->
+
+<!entity intro              SYSTEM "intro.sgml">
+<!entity prerequisites      SYSTEM "prerequisites.sgml">
+<!entity installation       SYSTEM "installation.sgml">
+<!entity slonik              SYSTEM "slonik.sgml">
+<!entity concepts           SYSTEM "concepts.sgml">
+<!entity cluster           SYSTEM "cluster.sgml">
+<!entity defineset           SYSTEM "defineset.sgml">
+<!entity adminscripts           SYSTEM "adminscripts.sgml">
+<!entity startslons           SYSTEM "startslons.sgml">
+<!entity slonconfig           SYSTEM "slonconfig.sgml">
+<!entity subscribenodes           SYSTEM "subscribenodes.sgml">
+<!entity monitoring           SYSTEM "monitoring.sgml">
+<!entity maintenance           SYSTEM "maintenance.sgml">
+<!entity reshape           SYSTEM "reshape.sgml">
+<!entity failover           SYSTEM "failover.sgml">
+<!entity listenpaths           SYSTEM "listenpaths.sgml">
+<!entity addthings           SYSTEM "addthings.sgml">
+<!entity dropthings           SYSTEM "dropthings.sgml">
+<!entity ddlchanges           SYSTEM "ddlchanges.sgml">
+<!entity firstdb           SYSTEM "firstdb.sgml">
+<!entity help           SYSTEM "help.sgml">
+
+
+
+<!entity history    SYSTEM "history.sgml">
+<!entity legal      SYSTEM "legal.sgml">
+<!entity notation   SYSTEM "notation.sgml">
+<!entity problems   SYSTEM "problems.sgml">
+
+
+<!-- back matter -->
+<!entity biblio     SYSTEM "biblio.sgml">
+<!entity bookindex  SYSTEM "bookindex.sgml">
+
+<!--
+ Some parts of the documentation are also source for some plain-text
+ files used during installation.  To selectively ignore or include
+ some parts (e.g., external xref's) when generating these files we use
+ these parameter entities.  See also standalone-install.sgml.
+ -->
+<!entity % standalone-ignore  "INCLUDE">
+<!entity % standalone-include "IGNORE">

@@ -1,0 +1,87 @@
+<sect1><title/ Requirements/
+
+<para>Any platform that can run PostgreSQL should be able to run Slony-I.  
+
+<para>The platforms that have received specific testing at the time of this release are
+FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha, osX-10.3, Linux-2.4X-i386
+Linux-2.6X-i386 Linux-2.6X-amd64, Solaris-2.8-SPARC, Solaris-2.9-SPARC, AIX 5.1 and
+OpenBSD-3.5-sparc64.
+
+<para>There have been reports of success at running Slony-I hosts that are running PostgreSQL on Microsoft Windows(tm).  At this time, the "binary" applications (e.g. - slonik, slon) do not run on Windows(tm), but a slon running on one of the Unix-like systems has no reason to have difficulty connect to a PostgreSQL instance running on Windows(tm).
+
+<para> It ought to be possible to port slon and slonik to run on Windows; the conspicuous challenge is of having a POSIX-like pthreads implementation for slon, as it uses that to have multiple threads of execution.  There are reports of there being a pthreads library for Windows(tm), so nothing should prevent some interested party from volunteering to do the port.
+
+<sect2><title/ Software needed/
+<para>
+<itemizedlist>
+	<listitem><Para> GNU make.  Other make programs will not work.  GNU make is often installed under the name gmake; this document will therefore always refer to it by that name. (On Linux-based systems GNU make is typically the default make, and is called "make")  To test to see if your make is GNU make enter "make version."  Version 3.76 or later will suffice; previous versions may not.
+
+	<listitem><Para> You need an ISO/ANSI C compiler.  Recent versions of GCC work.
+
+	<listitem><Para> You also need a recent version of PostgreSQL *source*.  Slony-I depends on namespace support so you must have version 7.3 or newer to be able to build and use Slony-I.  Rod Taylor has "hacked up" a version of Slony-I that works with version 7.2; if you desperately need that, look for him on the PostgreSQL Hackers mailing list.  It is not anticipated that 7.2 will be supported by any official Slony-I release.
+
+	<listitem><Para> GNU packages may be included in the standard packaging for your operating system, or you may need to look for source code at your local GNU mirror (see <ulink url="http://www.gnu.org/order/ftp.html"> http://www.gnu.org/order/ftp.html</ulink>  for a list) or at <ulink url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu</ulink> .)
+
+	<listitem><Para> If you need to obtain PostgreSQL source, you can download it from your favorite PostgreSQL mirror (see <ulink url="http://www.postgresql.org/mirrors-www.html"> http://www.postgresql.org/mirrors-www.html </ulink>  for a list), or via <ulink url="http://bt.postgresql.org/"> BitTorrent</ulinK>.
+</itemizedlist>
+
+<para>Also check to make sure you have sufficient disk space.  You will need
+approximately 5MB for the source tree during build and installation.
+
+<sect2><title/ Getting Slony-I Source/
+
+<para>You can get the Slony-I source from <ulink
+url="http://developer.postgresql.org/~wieck/slony1/download/">
+http://developer.postgresql.org/~wieck/slony1/download/</ulinK>
+
+<sect2><title/ Time Synchronization/
+
+<para> All the servers used within the replication cluster need to have their Real Time Clocks in sync. This is to ensure that slon doesn't error with messages indicating that slave is already ahead of the master during replication.  We recommend you have ntpd running on all nodes, with subscriber nodes using the "master" provider node as their time server.
+
+<para> It is possible for Slony-I to function even in the face of there being some time discrepancies, but having systems "in sync" is usually pretty important for distributed applications.
+
+<Para> See <ulink url="http://www.ntp.org/"> www.ntp.org </ulink> for
+more details about NTP (Network Time Protocol).
+
+<sect2><title/ Network Connectivity/
+
+<para>It is necessary that the hosts that are to replicate between one another have <emphasis/bidirectional/ network communications to the PostgreSQL instances.  That is, if node B is replicating data from node A, it is necessary that there be a path from A to B and from B to A.  It is recommended that all nodes in a Slony-I cluster allow this sort of bidirection communications from any node in the cluster to any other node in the cluster.
+
+<para>Note that the network addresses need to be consistent across all
+of the nodes.  Thus, if there is any need to use a "public" address
+for a node, to allow remote/VPN access, that "public" address needs to
+be able to be used consistently throughout the Slony-I cluster, as the
+address is propagated throughout the cluster in table <envar/sl_path/.
+
+<para>A possible workaround for this, in environments where firewall
+rules are particularly difficult to implement, may be to establish
+SSHTunnels that are created on each host that allow remote access
+through IP address 127.0.0.1, with a different port for each
+destination.
+
+<para> Note that slonik and the slon instances need no special
+connections to communicate with one another; they just need to be able
+to get access to the PostgreSQL databases.
+
+<para> An implication of the communications model is that the extended
+network in which a Slony-I cluster operates must be able to be treated
+as being secure.  If there is a remote location where you cannot trust
+the Slony-I node to be considered "secured," this represents a
+vulnerability that affects <emphasis/all/ the nodes throughout the
+cluster.  In effect, the security policies throughout the cluster can
+only be considered as stringent as those applied at the
+<emphasis/weakest/ link.  Running a full-blown Slony-I node at a
+branch location that can't be kept secure compromises security for
+<emphasis/every node/ in the cluster.
+
+<para>In the future plans is a feature whereby updates for a
+particular replication set would be serialized via a scheme called
+"log shipping."  The data stored in sl_log_1 and sl_log_2 would be
+written out to log files on disk.  These files could be transmitted in
+any manner desired, whether via scp, FTP, burning them onto DVD-ROMs
+and mailing them, or even by recording them on a USB "flash device"
+and attaching them to birds, allowing a sort of "avian transmission
+protocol."  This will allow one way communications so that
+"subscribers" that use log shipping would have no need for access to
+other Slony-I nodes.
+
