@@ -1,0 +1,160 @@
+STORE_NODE
+	ev_data1		no_id
+	ev_data2		no_comment
+
+	storeNode (no_id, no_comment)
+	storeNode_int (no_id, no_comment)
+
+	A new initially deactivated node is created. If the node already
+	exists, the no_comment field is updated only.
+
+
+ENABLE_NODE
+	ev_data1		no_id
+
+	enableNode (no_id)
+	enableNode_int (no_id)
+
+	Enabling a node in turn enables all subscriptions. The
+	ENABLE_NODE event must be generated on the local node. When
+	processing the event the origin of a set the newly activated node
+	is subscribed to will generate an ENABLE_SUBSCRIPTION event.
+
+	Every node will also create sl_confirm rows for the node.
+	
+
+DISABLE_NODE
+	ev_data1		no_id
+
+	disableNode (no_id)
+	disableNode_int (no_id)
+
+	Disabling a node also disables all its subscriptions.
+
+
+DROP_NODE
+	ev_data1		no_id
+
+	dropNode (no_id)
+	dropNode_int (no_id)
+
+	This completely removes a node with all its subscriptions, path
+	and listen information from the configuration.
+
+
+STORE_PATH
+	ev_data1		pa_server
+	ev_data2		pa_client
+	ev_data3		pa_conninfo
+	ev_data4		pa_connretry
+
+	storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
+	storePath_int (pa_server, pa_client, pa_conninfo, pa_connretry)
+
+
+DROP_PATH
+	ev_data1		pa_server
+	ev_data2		pa_client
+
+	storePath (pa_server, pa_client)
+	storePath_int (pa_server, pa_client)
+
+
+STORE_LISTEN
+	ev_data1		li_origin
+	ev_data2		li_provider
+	ev_data3		li_receiver
+
+	storeListen (li_origin, li_provider, li_receiver)
+	storeListen_int (li_origin, li_provider, li_receiver)
+
+
+DROP_LISTEN
+	ev_data1		li_origin
+	ev_data2		li_provider
+	ev_data3		li_receiver
+
+	dropListen (li_origin, li_provider, li_receiver)
+	dropListen_int (li_origin, li_provider, li_receiver)
+
+
+STORE_SET
+	ev_data1		set_id
+	ev_data2		set_origin
+	ev_data3		set_comment
+
+	storeSet (set_id, set_comment)
+	storeSet_int (set_id, set_origin, set_comment)
+
+	The node on which storeSet is called is automatically the origin
+	of the new set.
+
+
+MOVE_SET
+	ev_data1		set_id
+	ev_data2		new_set_origin
+
+	moveSet (set_id)
+	moveSet_int (set_id, new_set_origin)
+
+	The node on which moveSet is called is the one taking over the
+	origin of the set.
+
+
+DROP_SET
+	ev_data1		set_id
+
+	dropSet (set_id)
+	dropSet_int (set_id)
+
+
+SET_ADD_TABLE
+	ev_data1		set_id
+	ev_data2		tab_id
+	ev_data3		tab_fqname
+	ev_data4		tab_attkind
+	ev_data5		tab_comment
+
+	setAddTable (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+	setAddTable_int (set_id, tab_id, tab_fqname, tab_attkind, tab_comment)
+	tableAddTrigger (tab_id, tab_fqname, tab_attkind)
+
+	Only nodes that are currently subscribed to the set will add the
+	table to their configuration data. The call also adds the
+	replication log trigger to the table.
+
+
+SUBSCRIBE_SET
+	ev_data1		sub_set
+	ev_data2		sub_provider
+	ev_data3		sub_receiver
+	ev_data4		sub_forward
+
+	subscribeSet (sub_set, sub_provider, sub_forward)
+	subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
+
+	The subscribeSet() function is called on the origin.  This will
+	cascade through the system so that all nodes that store
+	forwarding information for this set are aware of the new
+	subscriber before it actually joins the set.
+	
+	
+UNSUBSCRIBE_SET
+	ev_data1		sub_set
+	ev_data2		sub_receiver
+
+	unsubscribeSet (sub_set, sub_receiver)
+	unsubscribeSet_int (sub_set, sub_receiver)
+
+
+ENABLE_SUBSCRIPTION
+	ev_data1		sub_set
+	ev_data2		sub_receiver
+
+	enableSubscription (sub_set, sub_receiver)
+	enableSubscription_int (sub_set, sub_receiver)
+
+	This is a special message issued by the origin of a set when a
+	deactivated node gets reenabled.
+
+

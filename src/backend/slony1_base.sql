@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_base.sql,v 1.1 2003-11-28 14:59:44 wieck Exp $
+-- $Id: slony1_base.sql,v 1.2 2003-12-03 17:38:27 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -33,7 +33,7 @@ create table @NAMESPACE@.sl_node (
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_set (
 	set_id				int4,
-	set_origin			int4 NOT NULL,
+	set_origin			int4,
 	set_comment			text,
 
 	CONSTRAINT "sl_set-pkey"
@@ -84,8 +84,6 @@ create table @NAMESPACE@.sl_table (
 		REFERENCES @NAMESPACE@.sl_set (set_id)
 );
 
--- ************** Need trigger for sl_table here ***************
-
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_path
@@ -94,6 +92,7 @@ create table @NAMESPACE@.sl_path (
 	pa_server			int4,
 	pa_client			int4,
 	pa_conninfo			text NOT NULL,
+	pa_connretry		int4,
 
 	CONSTRAINT "sl_path-pkey"
 		PRIMARY KEY (pa_server, pa_client),
@@ -133,6 +132,7 @@ create table @NAMESPACE@.sl_subscribe (
 	sub_provider		int4,
 	sub_receiver		int4,
 	sub_forward			bool,
+	sub_active			bool,
 
 	CONSTRAINT "sl_subscribe-pkey"
 		PRIMARY KEY (sub_receiver, sub_set),
