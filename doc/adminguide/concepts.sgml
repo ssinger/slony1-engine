@@ -1,7 +1,7 @@
-<sect1 id="concepts"> <title>Slony-I Concepts</title>
+<sect1 id="concepts"> <title><productname/Slony-I/ Concepts</title>
 
 
-<para>In order to set up a set of Slony-I replicas, it is necessary to
+<para>In order to set up a set of <productname/Slony-I/ replicas, it is necessary to
 understand the following major abstractions that it uses:
 
 <itemizedlist>
@@ -13,7 +13,7 @@ understand the following major abstractions that it uses:
 
 <sect2><title>Cluster</title>
 
-<para>In Slony-I terms, a Cluster is a named set of PostgreSQL
+<para>In <productname/Slony-I/ terms, a Cluster is a named set of PostgreSQL
 database instances; replication takes place between those databases.
 
 <para>The cluster name is specified in each and every Slonik script via the directive:
@@ -21,33 +21,33 @@ database instances; replication takes place between those databases.
 cluster name = 'something';
 </programlisting>
 
-<para>If the Cluster name is <envar/something/, then Slony-I will
+<para>If the Cluster name is <envar/something/, then <productname/Slony-I/ will
 create, in each database instance in the cluster, the namespace/schema
 <envar/_something/.
 
 <sect2><title> Node</title>
 
-<para>A Slony-I Node is a named PostgreSQL database that will be participating in replication.  
+<para>A <productname/Slony-I/ Node is a named PostgreSQL database that will be participating in replication.  
 
 <para>It is defined, near the beginning of each Slonik script, using the directive:
 <programlisting>
  NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
 </programlisting>
 
-<para>The CONNINFO information indicates a string argument that will
-ultimately be passed to the <function>PQconnectdb()</function> libpq
-function.
+<para>The <link linkend="admconninfo"> <command/CONNINFO/</link>
+information indicates a string argument that will ultimately be passed
+to the <function>PQconnectdb()</function> libpq function.
 
-<para>Thus, a Slony-I cluster consists of:
+<para>Thus, a <productname/Slony-I/ cluster consists of:
 <itemizedlist>
 	<listitem><para> A cluster name
-	<listitem><para> A set of Slony-I nodes, each of which has a namespace based on that cluster name
+	<listitem><para> A set of <productname/Slony-I/ nodes, each of which has a namespace based on that cluster name
 </itemizedlist>
 
 <sect2><title> Replication Set</title>
 
 <para>A replication set is defined as a set of tables and sequences
-that are to be replicated between nodes in a Slony-I cluster.
+that are to be replicated between nodes in a <productname/Slony-I/ cluster.
 
 <para>You may have several sets, and the <quote/flow/ of replication does
 not need to be identical between those sets.
@@ -65,7 +65,7 @@ set, indicating that they want to receive the data.
 
 <para>The origin node will never be considered a <quote/subscriber./
 (Ignoring the case where the cluster is reshaped, and the origin is
-moved to another node.)  But Slony-I supports the notion of cascaded
+moved to another node.)  But <productname/Slony-I/ supports the notion of cascaded
 subscriptions, that is, a node that is subscribed to the origin may
 also behave as a <quote/provider/ to other nodes in the cluster.
 

@@ -6,28 +6,31 @@ you wish you were replicating.
 <para>This can be fairly easily remedied.
 
 <para>You cannot directly use <link linkend="slonik"> slonik </link>
-commands <command/SET ADD TABLE/ or <command/SET ADD SEQUENCE/ in
-order to add tables and sequences to a replication set that is
-presently replicating; you must instead create a new replication set.
-Once it is identically subscribed (e.g. - the set of providers and
-subscribers is <emphasis/entirely identical/ to that for the set it is
-to merge with), the sets may be merged together using <command/MERGE
-SET/.
+commands <command><link linkend="stmtsetaddtable"> SET ADD
+TABLE</link></command> or <command><link linkend="stmtsetaddsequence">
+SET ADD SEQUENCE</link></command> in order to add tables and sequences
+to a replication set that is presently replicating; you must instead
+create a new replication set.  Once it is identically subscribed
+(e.g. - the set of providers and subscribers is <emphasis>entirely
+identical</emphasis> to that for the set it is to merge with), the
+sets may be merged together using <command><link
+linkend="stmtmergeset"> MERGE SET</link></command>.</para>
 
 <para>Up to and including 1.0.2, there was a potential problem where
-if <command/MERGE_SET/ is issued while other subscription-related
-events are pending, it is possible for things to get pretty confused
-on the nodes where other things were pending.  This problem was
-resolved in 1.0.5.
+if <command><link linkend="stmtmergeset"> MERGE SET</linK></command>
+is issued while other subscription-related events are pending, it is
+possible for things to get pretty confused on the nodes where other
+things were pending.  This problem was resolved in 1.0.5.</para>
 
 <para>It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
-particular set in one <link linkend="Slonik"> slonik </link> script
-often turns out quite badly.  If it is <emphasis/truly/ necessary to
-automate this, you'll probably want to submit <command/WAIT FOR EVENT/
+particular set in one <link linkend="slonik"> slonik </link> script
+often turns out quite badly.  If it is <emphasis>truly</emphasis>
+necessary to automate this, you'll probably want to submit <command>
+<link linkend="stmtwaitevent"> WAIT FOR EVENT</link></command>
 requests in between subscription requests in order that the <link
 linkend="slonik"> slonik </link> script wait for one subscription to
-complete processing before requesting the next one.
+complete processing before requesting the next one.</para>
 
 <para>But in general, it is likely to be easier to cope with complex
 node reconfigurations by making sure that one change has been

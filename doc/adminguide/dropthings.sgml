@@ -6,13 +6,15 @@ things from <productname/Slony-I/ replication.
 <sect2><title/ Dropping A Whole Node/
 
 <para>If you wish to drop an entire node from replication, the <link
-linkend="slonik"> slonik </link> command <command/DROP NODE/ should do
-the trick.
+linkend="slonik"> slonik </link> command <command><link
+linkend="stmtdropnode"> DROP NODE</link></command> should do the
+trick.</para>
 
 <para>This will lead to <productname/Slony-I/ dropping the triggers
 (generally that deny the ability to update data), restoring the
-"native" triggers, dropping the schema used by <productname/Slony-I/,
-and the slon process for that node terminating itself.
+<quote/native/ triggers, dropping the schema used by
+<productname/Slony-I/, and the slon process for that node terminating
+itself.
 
 <para>As a result, the database should be available for whatever use
 your application makes of the database.
@@ -31,50 +33,58 @@ sl_confirm if you are running versions prior to 1.0.5.
 <sect2><title/ Dropping An Entire Set/
 
 <para>If you wish to stop replicating a particular replication set,
-the <link linkend="slonik"> slonik </link> command <command/DROP SET/
-is what you need to use.
+the <link linkend="slonik"> slonik </link> command <command> <link
+linkend="stmtdropset"> DROP SET</link> </command> is what you need to
+use.</para>
 
-<para>Much as with <command/DROP NODE/, this leads to
-<productname/Slony-I/ dropping the <productname/Slony-I/ triggers on
-the tables and restoring <quote/native/ triggers.  One difference is
-that this takes place on <emphasis/all/ nodes in the cluster, rather
-than on just one node.  Another difference is that this does not clear
-out the <productname/Slony-I/ cluster's namespace, as there might be
-other sets being serviced.
+<para>Much as with <command><link linkend="stmtdropnode"> DROP NODE
+</link></command>, this leads to <productname>Slony-I</productname>
+dropping the <productname>Slony-I</productname> triggers on the tables
+and restoring <quote>native</quote> triggers.  One difference is that
+this takes place on <emphasis>all</emphasis> nodes in the cluster,
+rather than on just one node.  Another difference is that this does
+not clear out the <productname>Slony-I</productname> cluster's
+namespace, as there might be other sets being serviced.</para>
 
-<para>This operation is quite a bit more dangerous than <command/DROP
-NODE/, as there <emphasis/isn't/ the same sort of <quote/failsafe./ If
-you tell <command/DROP SET/ to drop the <emphasis/wrong/ set, there
+<para>This operation is quite a bit more dangerous than <command>
+<link linkend="stmtdropnode"> DROP NODE </link></command>, as there
+<emphasis>isn't</emphasis> the same sort of <quote>failsafe.</quote>
+If you tell <command> <link linkend="stmtdropset"> DROP
+SET</link></command> to drop the <emphasis>wrong</emphasis> set, there
 isn't anything to prevent potentially career-limiting
-<quote/unfortunate results./ Handle with care...
+<quote>unfortunate results.</quote> Handle with care...</para>
 
 <sect2><title/ Unsubscribing One Node From One Set/
 
-<para>The <command/UNSUBSCRIBE SET/ operation is a little less
-invasive than either <command/DROP SET/ or <command/DROP NODE/; it
-involves dropping <productname/Slony-I/ triggers and restoring
-"native" triggers on one node, for one replication set.
+<para>The <command> <link linkend="stmtunsubscribeset"> UNSUBSCRIBE
+SET </link> </command> operation is a little less invasive than either
+<command> <link linkend="stmtdropset"> DROP SET </link> </command> or
+<command> <link linkend="stmtdropnode"> DROP NODE </link></command>; it involves dropping
+<productname>Slony-I</productname> triggers and restoring
+<quote/native/ triggers on one node, for one replication set.</para>
 
-<para>Much like with <command/DROP NODE/, this operation will fail if
-there is a node subscribing to the set on this node.
+<para>Much like with <command> <link linkend="stmtdropnode"> DROP NODE
+</link></command>, this operation will fail if there is a node
+subscribing to the set on this node.
 
 <warning>
-<para>For all of the above operations, <quote/turning replication back
-on/ will require that the node copy in a <emphasis/full/ fresh set of
-the data on a provider.  The fact that the data was recently being
-replicated isn't good enough; <productname/Slony-I/ will expect to
-refresh the data from scratch.
-</warning>
+<para>For all of the above operations, <quote>turning replication back
+on</quote> will require that the node copy in a
+<emphasis>full</emphasis> fresh set of the data on a provider.  The
+fact that the data was recently being replicated isn't good enough;
+<productname>Slony-I</productname> will expect to refresh the data
+from scratch.</para> </warning></para>
 
-<sect2><title/ Dropping A Table From A Set/
+<sect2><title> Dropping A Table From A Set</title>
 
-<para>In <productname/Slony-I/ 1.0.5 and above, there is a Slonik
-command <command/SET DROP TABLE/ that allows dropping a single table
-from replication without forcing the user to drop the entire
-replication set.
+<para>In <productname>Slony-I</productname> 1.0.5 and above, there is
+a Slonik command <command> <link linkend="stmtsetdroptable"> SET DROP
+TABLE </link> </command> that allows dropping a single table from
+replication without forcing the user to drop the entire replication
+set.</para>
 
-<para>If you are running an earlier version, there is a <quote/hack/
-to do this:
+<para>If you are running an earlier version, there is a <quote>hack</quote>
+to do this:</para>
 
 <para>You can fiddle this by hand by finding the table ID for the
 table you want to get rid of, which you can find in sl_table, and then
@@ -84,25 +94,30 @@ run the following three queries, on each host:
   select _slonyschema.alterTableRestore(40);
   select _slonyschema.tableDropKey(40);
   delete from _slonyschema.sl_table where tab_id = 40;
-</programlisting>
+</programlisting></para>
 
 <para>The schema will obviously depend on how you defined the
-<productname/Slony-I/ cluster.  The table ID, in this case, 40, will
-need to change to the ID of the table you want to have go away.
+<productname>Slony-I</productname> cluster.  The table ID, in this
+case, 40, will need to change to the ID of the table you want to have
+go away.</para>
 
 <para>You'll have to run these three queries on all of the nodes,
 preferably firstly on the origin node, so that the dropping of this
 propagates properly.  Implementing this via a <link linkend="slonik">
-slonik </link> statement with a new <productname/Slony-I/ event would
-do that.  Submitting the three queries using <command/EXECUTE SCRIPT/
-could do that; see <link linkend="ddlchanges"> Database Schema Changes
-</link> for more details.  Also possible would be to connect to each
-database and submit the queries by hand.
+slonik </link> statement with a new <productname>Slony-I</productname>
+event would do that.  Submitting the three queries using
+<command><link linkend="stmtddlscript"> EXECUTE SCRIPT </link>
+</command> could do that; see <link linkend="ddlchanges"> Database
+Schema Changes </link> for more details.  Also possible would be to
+connect to each database and submit the queries by
+hand.</para></sect2>
 
 <sect2><title/ Dropping A Sequence From A Set/
 
-<para>Just as with <command/SET DROP TABLE/, version 1.0.5 introduces
-the operation <command/SET DROP SEQUENCE/.
+<para>Just as with <command> <link linkend="stmtsetdroptable"> SET
+DROP TABLE </link> </command>, version 1.0.5 introduces the operation
+<command> <link linkend="stmtsetdropsequence"> SET DROP
+SEQUENCE</link> </command>.</para>
 
 <para>If you are running an earlier version, here are instructions as
 to how to drop sequences:
@@ -117,9 +132,10 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting>
 
 <para> Those two queries could be submitted to all of the nodes via
-<function>ddlscript()</function> / <command>EXECUTE SCRIPT</command>,
-thus eliminating the sequence everywhere <quote>at once.</quote> Or
-they may be applied by hand to each of the nodes.</para>
+<function>ddlscript()</function> / <command> <link
+linkend="stmtddlscript"> EXECUTE SCRIPT</link> </command>, thus
+eliminating the sequence everywhere <quote>at once.</quote> Or they
+may be applied by hand to each of the nodes.</para>
 </sect1>
 
 <!-- Keep this comment at the end of the file

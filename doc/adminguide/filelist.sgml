@@ -23,6 +23,7 @@
 <!entity faq           SYSTEM "faq.sgml">
 <!entity reference     SYSTEM "reference.sgml">
 <!entity slonik SYSTEM "slonik.sgml">
+<!entity slonikref SYSTEM "slonik_ref.sgml">
 <!entity slon SYSTEM "slon.sgml">
 
 <!entity history    SYSTEM "history.sgml">

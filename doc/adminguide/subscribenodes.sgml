@@ -7,8 +7,9 @@ you don't have slons running, nothing will happen, and you'll beat
 your head against a wall trying to figure out what is going on.
 
 <para>Subscribing a node to a set is done by issuing the <link
-linkend="slonik"> slonik </link> command <command/subscribe set/. It
-may seem tempting to try to subscribe several nodes to a set within a
+linkend="slonik"> slonik </link> command <command> <link
+linkend="stmtsubscribeset"> subscribe set </link> </command>. It may
+seem tempting to try to subscribe several nodes to a set within a
 single try block like this:
 
 <programlisting>
@@ -21,27 +22,29 @@ try {
   echo 'Could not subscribe the sets!';
   exit -1;
 }
-</programlisting>
+</programlisting></para>
 
 
 <para> But you are just asking for trouble if you try to subscribe
 sets in that fashion. The proper procedure is to subscribe one node at
 a time, and to check the logs and databases before you move onto
 subscribing the next node to the set. It is also worth noting that the
-<quote/success/ within the above <link linkend="slonik">
-<application/slonik/ </link> try block does not imply that nodes 2, 3,
-and 4 have all been successfully subscribed. It merely indicates that
-the slonik commands were successfully received by the
-<application/slon/ running on the origin node.
+<quote>success</quote> within the above <link linkend="slonik">
+<application>slonik</application> </link> try block does not imply
+that nodes 2, 3, and 4 have all been successfully subscribed. It
+merely indicates that the slonik commands were successfully received
+by the <application>slon</application> running on the origin
+node.</para>
 
 <para>A typical sort of problem that will arise is that a cascaded
 subscriber is looking for a provider that is not ready yet.  In that
-failure case, that subscriber node will <emphasis/never/ pick up the
-subscriber.  It will get <quote/stuck/ waiting for a past event to
-take place.  The other nodes will be convinced that it is successfully
-subscribed (because no error report ever made it back to them); a
-request to unsubscribe the node will be <quote/blocked/ because the
-node is stuck on the attempt to subscribe it.
+failure case, that subscriber node will <emphasis>never</emphasis>
+pick up the subscriber.  It will get <quote>stuck</quote> waiting for
+a past event to take place.  The other nodes will be convinced that it
+is successfully subscribed (because no error report ever made it back
+to them); a request to unsubscribe the node will be
+<quote>blocked</quote> because the node is stuck on the attempt to
+subscribe it.</para>
 
 <para>When you subscribe a node to a set, you should see something
 like this in your <application/slon/ logs for the provider node:

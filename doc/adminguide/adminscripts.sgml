@@ -204,15 +204,17 @@ a VERY unsafe script!
 Slony-I functions.  This will typically be needed when you upgrade
 from one version of <productname/Slony-I/ to another.
 
-<sect2 id="regenlisten"><title/ regenerate-listens.pl/
+<sect2 id="regenlisten"><title> regenerate-listens.pl</title>
 
-<para> This script connects to a <productname/Slony-I/ node, and
-queries various tables (sl_set, sl_node, sl_subscribe, sl_path) to
-compute what <command/SET LISTEN/ requests should be submitted to the
-cluster.
+<para> This script connects to a <productname>Slony-I</productname>
+node, and queries various tables (sl_set, sl_node, sl_subscribe,
+sl_path) to compute what <command><link linkend="stmtstorelisten">
+STORE LISTEN </link> </command> requests should be submitted to the
+cluster.</para>
 
 <para> See the documentation on <link linkend="autolisten"> Automated
-Listen Path Generation </link> for more details on how this works.
+Listen Path Generation </link> for more details on how this
+works.</para></sect2>
 
 </sect1>
 

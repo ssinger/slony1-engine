@@ -17,12 +17,12 @@ leads to that table having plenty of dead tuples.
 
 <para> In some versions (1.1, for sure; possibly 1.0.5) there is the
 option of not bothering to vacuum any of these tables if you are using
-something like <application/pg_autovacuum/ to handle vacuuming of
-these tables.  Unfortunately, it has been quite possible for
-<application/pg_autovacuum/ to not vacuum quite frequently enough, so
-you probably want to use the internal vacuums.  Vacuuming pg_listener
-"too often" isn't nearly as hazardous as not vacuuming it frequently
-enough.
+something like <application>pg_autovacuum</application> to handle
+vacuuming of these tables.  Unfortunately, it has been quite possible
+for <application>pg_autovacuum</application> to not vacuum quite
+frequently enough, so you probably want to use the internal vacuums.
+Vacuuming pg_listener <quote>too often</quote> isn't nearly as
+hazardous as not vacuuming it frequently enough.</para>
 
 <para>Unfortunately, if you have long-running transactions, vacuums
 cannot clear out dead tuples that are newer than the eldest
@@ -46,9 +46,9 @@ that causes loss of connectivity.
 <application/generate_syncs.sh/, which addresses the following kind of
 situation.
 
-<para>Supposing you have some possibly-flakey server where the <application/slon/
-daemon that might not run all the time, you might return from a
-weekend away only to discover the following situation...
+<para>Supposing you have some possibly-flakey server where the
+<application/slon/ daemon that might not run all the time, you might
+return from a weekend away only to discover the following situation...
 
 <para>On Friday night, something went <quote/bump/ and while the
 database came back up, none of the <application/slon/ daemons
@@ -59,14 +59,14 @@ reasonably heavy transaction load.
 master since Friday, so that the next <quote/SYNC set/ comprises all
 of the updates between Friday and Monday.  Yuck.
 
-<para>If you run <application/generate_syncs.sh/ as a cron job every 20 minutes, it
-will force in a periodic SYNC on the origin, which means that
-between Friday and Monday, the numerous updates are split into more
-than 100 syncs, which can be applied incrementally, making the cleanup
-a lot less unpleasant.
+<para>If you run <application/generate_syncs.sh/ as a cron job every
+20 minutes, it will force in a periodic <command/SYNC/ on the origin, which
+means that between Friday and Monday, the numerous updates are split
+into more than 100 syncs, which can be applied incrementally, making
+the cleanup a lot less unpleasant.
 
-<para>Note that if SYNCs <emphasis>are</emphasis> running regularly,
-this script won't bother doing anything.
+<para>Note that if <command/SYNC/s <emphasis>are</emphasis> running
+regularly, this script won't bother doing anything.
 
 <sect2><title> Log Files</title>
 

@@ -1,9 +1,10 @@
 <sect1 id="cluster"> <title>Defining Slony-I Clusters</title>
 
-<para>A <productname/Slony-I/ cluster is the basic grouping of
-database instances in which replication takes place.  It consists of a
-set of <productname/PostgreSQL/ database instances in which is defined
-a namespace specific to that cluster.
+<para>A <productname>Slony-I</productname> cluster is the basic
+grouping of database instances in which replication takes place.  It
+consists of a set of <productname>PostgreSQL</productname> database
+instances in which is defined a namespace specific to that
+cluster.</para>
 
 <para>Each database instance in which replication is to take place is
 identified by a node number.
@@ -17,10 +18,10 @@ driven insane.  The node numbers should be chosen to somehow
 correspond to the shape of the environment, as opposed to (say) the
 order in which nodes were initialized.
 
-<para>It may be that in version 1.1, nodes will also have a "name"
-attribute, so that they may be given more mnemonic names.  In that
-case, the node numbers can be cryptic; it will be the node name that
-is used to organize the cluster.
+<para>It may be that in version 1.1, nodes will also have a
+<quote/name/ attribute, so that they may be given more mnemonic names.
+In that case, the node numbers might remain somewhat cryptic; it will
+be the node name that is used to organize the cluster.
 </sect1>
 
 <!-- Keep this comment at the end of the file

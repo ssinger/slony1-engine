@@ -1,21 +1,25 @@
 <sect1 id="ddlchanges"> <title/Database Schema Changes (DDL)/
 
-<para>When changes are made to the database schema, <emphasis/e.g./ -
-adding fields to a table, it is necessary for this to be handled
-rather carefully, otherwise different nodes may get rather deranged
-because they disagree on how particular tables are built.
+<para>When changes are made to the database schema,
+<emphasis>e.g.</emphasis> - adding fields to a table, it is necessary
+for this to be handled rather carefully, otherwise different nodes may
+get rather deranged because they disagree on how particular tables are
+built.</para>
 
-<para>If you pass the changes through <productname/Slony-I/ via the
-<command/EXECUTE SCRIPT/ (slonik) /
-<function/ddlscript(set,script,node)/ (stored function), this allows
-you to be certain that the changes take effect at the same point in
-the transaction streams on all of the nodes.  That may not be too
-important if you can take something of an outage to do schema changes,
-but if you want to do upgrades that take place while transactions are
-still winding their way through your systems, this is necessary.
+<para>If you pass the changes through
+<productname>Slony-I</productname> via the <command><link
+linkend="stmtddlscript"> EXECUTE SCRIPT</link> </command> (slonik) /
+<function>ddlscript(set,script,node)</function> (stored function),
+this allows you to be certain that the changes take effect at the same
+point in the transaction streams on all of the nodes.  That may not be
+too important if you can take something of an outage to do schema
+changes, but if you want to do upgrades that take place while
+transactions are still winding their way through your systems, this is
+necessary.</para>
 
 <para>It's worth making a couple of comments on <quote/special things/
-about <command/EXECUTE SCRIPT/:
+about <command><link linkend="stmtddlscript"> EXECUTE SCRIPT</link>
+</command>:
 
 <itemizedlist>
 

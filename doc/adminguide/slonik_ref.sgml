@@ -1,12 +1,12 @@
-<article id="slonikcommands><title/Slonik Command Summary/
-<sect1 id="introduction"><title/Slonik Command Summary/
+<article id="slonikcommands"><title/Slonik Command Summary/
+<sect1 id="slonikintro"><title/Slonik Command Summary/
 <sect2><title/Introduction/
 
 <para>
 	<application/Slonik/ is a command line utility designed
 	specifically to setup and modify configurations of the
 	<productname/Slony-I/ replication system.
-
+</para>
 
 <sect2 id="outline">
 <title>General outline</title>
@@ -18,9 +18,9 @@
 	<emphasis>real</emphasis> configuration work is done by
 	calling stored procedures after loading the
 	<productname/Slony-I/ support base into a database.  You may
-	find documentation for those procedures in the <a
-	href="schemadoc.html"> <productname/Slony-I/ Schema
-	Documentation </a>, as well as in comments associated with
+	find documentation for those procedures in the <ulink
+	url="schemadoc.html"> <productname/Slony-I/ Schema
+	Documentation </ulink>, as well as in comments associated with
 	them in the database.
 </para>
 
@@ -28,15 +28,16 @@
 	<Application/Slonik/ was created because:
       <itemizedlist>
 
-	<listitem><para> The stored procedures have special requirements as to on
-	which particular node in the replication system they are
-	called,
+	<listitem><para> The stored procedures have special
+	requirements as to on which particular node in the replication
+	system they are called,
 
-	<listitem><para> the lack of named parameters for stored procedures makes
-	it rather hard to do this from the psql prompt, and
+	<listitem><para> The lack of named parameters for stored
+	procedures makes it rather difficult to do this from the
+	<application/psql/ prompt, and
 
-	<listitem><para> psql lacks the ability to maintain multiple connections
-	with open transactions.
+	<listitem><para> <application/psql/ lacks the ability to
+	maintain multiple connections with open transactions.
       </itemizedlist>
 </para>
 <para>
@@ -71,40 +72,44 @@
 	Commands can be combined into groups of commands with optional
 	<command>on error</command> and <command>on success</command> conditionals.
 	The syntax for this is:
-	<br>
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;try {
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;commands&gt;
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;}
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;[on error { &lt;commands&gt; }]
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;[on success { &lt;commands&gt; }]
-	<br>
-	<br>
-	Those commands are grouped together into one transaction per
+<programlisting>
+try {
+   commands;
+} 
+[on error { commands; }
+[on success { commands; }
+</programlisting>
+<para>	Those commands are grouped together into one transaction per
 	participating node.
 </para>
 
-</div>
-
 <!-- ************************************************************ -->
-<sect2 id="hdrcmds">
-<title>Commands affecting Slonik</title>
-</a>
 
+<reference id="hdrcmds"> 
+<title>Slonik Header Commands</title>
+<partintro>
 <para>
 	The following commands must appear as a <quote/preamble/ at the very
 	top of every <application/slonik/ command script. They do not cause any
 	direct action on any of the nodes in the replication system,
 	but affect the execution of the entire script.
 </para>
-
+</partintro>
 <!-- **************************************** -->
 
-<sect3 ="clustername"><title>CLUSTER NAME</title>
+<refentry id ="clustername"><refmeta><refentrytitle>CLUSTER NAME</refentrytitle> </refmeta>
 
+<refnamediv><refname>CLUSTER NAME</refname>
 
-<sect3><title>Synopsis:</title>
-	CLUSTER NAME = &lt;string&gt;;
-<sect3><title>Description:</title>
+<refpurpose> preamble - identifying <productname/Slony-I/ cluster </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>CLUSTER NAME = </command>
+<arg><replaceable class="parameter"> 'clustername';</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 <para>
 	Must be the very first command in every <application/slonik/ script. Defines
 	the namespace in which all <productname/Slony-I/ specific functions,
@@ -118,589 +123,646 @@
                   No user objects are supposed to live in this
                   namespace and the namespace is not allowed to exist
                   prior to adding a database to the replication
-                  system.  Thus, if you add a new node using <tt>
-                  pg_dump -s </tt> on a database that is already in
+                  system.  Thus, if you add a new node using <command>
+                  pg_dump -s </command> on a database that is already in
                   the cluster of replicated databases, you will need
-                  to drop the namespace via the SQL command <tt> DROP
-                  SCHEMA _testcluster CASCADE; </tt>.
+                  to drop the namespace via the SQL command <command> DROP
+                  SCHEMA _testcluster CASCADE; </command>.
 </para>
-<sect3><title>Example:</title>
-<para>
+</refsect1>
+<refsect1><title>Example</title>
+<programlisting>
 	CLUSTER NAME = 'testcluster';
-</para>
-
+</programlisting>
+</refsect1>
+</refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="admconninfo"><title>ADMIN CONNINFO</title>
+<refentry id ="admconninfo"><refmeta><refentrytitle>ADMIN CONNINFO</refentrytitle> </refmeta>
 
-<sect3><title>Synopsis:</title>
-	NODE &lt;ival&gt ADMIN CONNINFO = &lt;string&gt;;
-<sect3><title>Description:</title>
+<refnamediv><refname>ADMIN CONNINFO</refname>
 
+<refpurpose> preamble - identifying <productname/PostgreSQL/ database </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>NODE ival ADMIN CONNINFO = 'DSN';</command>
+<arg><replaceable class="parameter"> ival;</replaceable></arg>
+<arg><replaceable class="parameter"> 'conninfo'</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 <para>
 	Describes how the <application/slonik/ utility can reach a nodes database in
 	the cluster from where it is run (likely the DBA's
 	workstation). The conninfo string is the string agrument given
-	to the PQconnectdb() libpq function. The user as to connect
+	to the <function/PQconnectdb()/ libpq function. The user used to connect
 	must be the special replication superuser, as some of the
 	actions performed later may include operations that are
 	strictly reserved for database superusers by PostgreSQL.
 </para>
+
 <para>
 	The <application/slonik/ utility will not try to connect to the databases
 	unless some subsequent command requires the connection.
-</para>
+ </Para>
+
 <para>
 	Note: As mentioned in the original documents, <productname/Slony-I/ is designed as an
-	enterprise replication system for data centers. It has been assumed
-	throughout the entire development that the database servers and
-	administrative workstations involved in replication and/or setup
-	and configuration activities can use simple authentication schemes
-	like <tt>trust</tt>.   Alternatively, libpq can read passwords from
-                 <tt> .pgpass </tt>.
+	enterprise replication system for data centers. It has been
+	assumed throughout the entire development that the database
+	servers and administrative workstations involved in
+	replication and/or setup and configuration activities can use
+	simple authentication schemes like <quote>trust</quote>.
+	Alternatively, libpq can read passwords from <filename>
+	.pgpass </filename>.
 </para>
-
 <para>
 	Note: If you need to change the DSN information for a node, as
 	would happen if the IP address for a host were to change, you
 	may submit the new information using this command, and that
-	configuration will be propagated.  Existing <tt> slon </tt>
+	configuration will be propagated.  Existing <application/>
+	slon </application>
 	processes will need to be restarted in order to become aware
 	of the configuration change.
 </para>
-<sect3><title>Example:</title>
-<para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
 	NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
-</para>
-</div>
-
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_echo"><title>ECHO</title>
+<refentry id ="stmtecho"><refmeta><refentrytitle>ECHO</refentrytitle> </refmeta>
 
+<refnamediv><refname>ECHO</refname>
 
-<sect3><title>Synopsis:</title>
-	ECHO &lt;string&gt;;
-<sect3><title>Description:</title>
+<refpurpose> Generic debugging tool </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>echo </command>
+<arg><replaceable class="parameter"> 'string'</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 <para>
 	Prints the string literal on standard output.
 </para>
-<sect3><title>Example:</title>
-<para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
 	ECHO 'Node 1 initialized successfully';
-</para>
-</div>
-
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 id="stmt_exit"><title>EXIT</title>
+<refentry id ="stmtexit"><refmeta><refentrytitle>EXIT</refentrytitle> </refmeta>
 
-<sect3><title>Synopsis:</title>
-	EXIT [-]&lt;ival&gt;;
-<sect3><title>Description:</title>
+<refnamediv><refname>EXIT</refname>
+
+<refpurpose> Generic debugging tool </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>exit</command>
+<arg><replaceable class="parameter"> [-]ival</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 <para>
 	Terminates script execution immediately, rolling back every
-	open transaction on all database connections. The <application/slonik/ utility
+	open transaction on all database connections. The
+	<application/slonik/ utility
 	will return the given value as its program termination code.
 </para>
-<sect3><title>Example:</title>
-<para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
 	EXIT 0;
-</para>
-</div>
-
-
-</div>
-
+</Programlisting>
+</Refsect1>
+</Refentry>
+</reference>
 <!-- ************************************************************ -->
-<sect2 id="cmds">
-<title>Configuration and Action commmands</title>
-
-<div style="margin-left:40px; margin-right:80px;">
-
-<!-- **************************************** -->
-
-<sect3 id="stmt_init_cluster"><title>INIT CLUSTER</title>
-
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	INIT CLUSTER ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Initialize the first node in a new <productname/Slony-I/ replication cluster.
-	The initialization process consists of creating the cluster
-	namespace, loading all the base tables, functions, procedures
-	and initializing the node.
-</para>
-<para>
-	For this process to work, the SQL scripts of the <productname/Slony-I/ system
-	must be installed on the DBA workstation (the computer currently
-	executing the <application/slonik/ utility), while on the system where the
-	node database is running the shared objects of the <productname/Slony-I/ system 
-	must be installed in the PostgreSQL library directory. Also the
-	procedural language PL/pgSQL is assumed to be installed in the
-	target database already.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The unique, numeric ID number of the node. This MUST be 1.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		A descriptive text added to the node entry in the
-		table sl_node.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	INIT CLUSTER (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Node 1'
-	<br>);
-</para>
-</div>
 
 
 <!-- **************************************** -->
+<reference id="cmds"><title>Configuration and Action commmands</title>
 
-<sect3 id="stmt_store_node"><title>STORE NODE</title>
+<refentry id ="stmtinitcluster"><refmeta><refentrytitle>INIT CLUSTER</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	STORE NODE ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Initialize a new node and add it to the configuration of
-	an existing cluster.
-</para>
-<para>
-	The initialization process consists of creating the cluster
-	namespace in the new node (the database itself must already
-	exist), loading all the base tables, functions, procedures
-	and initializing the node. The existing configuration of the
-	rest of the cluster is copied from the <b>event node</b>.
-</para>
-<para>
-	The same installation requirements as for the <command>init cluster</command>
-	command apply.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The unique, numeric ID number of the new node.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		A descriptive text added to the node entry in the
-		table sl_node.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>SPOOLNODE = &lt;boolean&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Specifies that the new node is a virtual spool node for
-		file archiving of replication log. If true <application/slonik/ will not
-		attempt to initialize a database with the replication
-		schema.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the node used to create the configuration event
-		that tells all existing nodes about the new node. Default
-		value is 1.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	STORE NODE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Node 2'
-	<br>);
-</para>
-</div>
+<refnamediv><refname>INIT CLUSTER</refname>
 
+<refpurpose> Initialize <productname/Slony-I/ cluster </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>INIT CLUSTER </command> 
+<arg>ID = <replaceable class="parameter">integer</replaceable></arg>
+<arg>COMMENT = <replaceable class="parameter">'string'</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Initialize the first node in a new <productname/Slony-I/
+replication cluster.  The initialization process consists of creating
+the cluster namespace, loading all the base tables, functions,
+procedures and initializing the node.
+
+<variablelist>
+ <varlistentry><term><literal> ID </literal></term>
+  <listitem><para> The unique, numeric ID number of the node. </para>
+ </varlistentry>
+
+ <varlistentry><term><literal> COMMENT = 'comment text' </literal></term>
+  <listitem><para> A descriptive text added to the node entry in the table sl_node.</para>
+ </varlistentry>
+</variablelist>
+
+</para>
+
+<para> For this process to work, the SQL scripts of the
+<productname>Slony-I</productname> system must be installed on the DBA workstation
+(the computer currently executing the <application>slonik</application> utility),
+while on the system where the node database is running the shared
+objects of the <productname>Slony-I</productname> system must be installed in the
+PostgreSQL library directory. Also the procedural language PL/pgSQL is
+assumed to already be installed in the target database.  </para>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  INIT CLUSTER (
+      ID = 1,
+      COMMENT = 'Node 1'
+  );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_drop_node"><title>DROP NODE</title>
+<refentry id ="stmtstorenode"><refmeta><refentrytitle>STORE NODE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	DROP NODE ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>STORE NODE</refname>
+
+
+<refpurpose> Initialize <productname/Slony-I/ node </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>STORE NODE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Initialize a new node and add it to the configuration of an
+existing cluster.
+
+<para> The initialization process consists of creating the cluster
+namespace in the new node (the database itself must already exist),
+loading all the base tables, functions, procedures and initializing
+the node. The existing configuration of the rest of the cluster is
+copied from the <quote>event node</quote>.
+
+<variablelist>
+ <varlistentry><term><literal> ID  = ival </literal></term>
+  <listitem><para> The unique, numeric ID number of the new node. </para>
+ </varlistentry>
+
+ <varlistentry><term><literal> COMMENT = 'description' </literal></term>
+  <listitem><para> A descriptive text added to the node entry in the table sl_node.</para>
+ </varlistentry>
+
+ <varlistentry><term><literal> SPOOLNODE = boolean </literal></term>
+
+  <listitem><para> Specifies that the new node is a virtual spool node
+  for file archiving of replication log. If true <application/slonik/
+  will not attempt to initialize a database with the replication
+  schema. </para>
+
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+
+  <listitem><para> The ID of the node used to create the configuration
+  event that tells all existing nodes about the new node. Default
+  value is 1. </para>
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  STORE NODE ( ID = 2, COMMENT = 'Node 2');
+</Programlisting>
+</Refsect1>
+</Refentry>
+
+<!-- **************************************** -->
+<refentry id ="stmtdropnode"><refmeta><refentrytitle>DROP NODE</refentrytitle> </refmeta>
+
+<refnamediv><refname>DROP NODE</refname>
+
+<refpurpose> Decommission <productname/Slony-I/ node </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>DROP NODE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Drop a node. This command removes the specified node entirely from
 	the replication systems configuration. If the replication daemon
 	is still running on that node (and processing events), it will
 	attempt to uninstall the replication system and terminate itself.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the system to remove.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the system to generate the event.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	DROP NODE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2
-	<br>);
-</para>
-</div>
 
+<variablelist>
+ <varlistentry><term><literal> ID  = ival </literal></term>
+  <listitem><para> Node ID of the node to remove. </para>
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+  <listitem><para> Node ID of the node to generate the event. </para>
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  DROP NODE ( ID = 2 );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
+<refentry id ="stmtuninstallnode"><refmeta><refentrytitle>UNINSTALL NODE</refentrytitle> </refmeta>
 
-<sect3 ="stmt_uninstall_node"><title>UNINSTALL NODE</title>
+<refnamediv><refname>UNINSTALL NODE</refname>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	UNINSTALL NODE ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refpurpose> Decommission <productname/Slony-I/ node </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>UNINSTALL NODE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Restores all tables to the unlocked state, with all original
 	user triggers, constraints and rules, eventually added <productname/Slony-I/
 	specific serial key columns dropped and the <productname/Slony-I/ schema
 	dropped. The node becomes a standalone database. The data is
 	left untouched.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the system to uninstall.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	UNINSTALL NODE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 3
-	<br>);
-</para>
-</div>
 
+<variablelist>
+ <varlistentry><term><literal> ID  = ival </literal></term>
+  <listitem><para> Node ID of the node to uninstall. </para>
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  UNINSTALL NODE ( ID = 2 );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_restart_node"><title>RESTART NODE</title>
+<refentry id ="stmtrestartnode"><refmeta><refentrytitle>RESTART NODE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	RESTART NODE &lt;ival&gt;;
-<sect3><title>Description:</title>
-<para>
-	Causes an eventually running replication daemon on the specified
-	node to shutdown and restart itself. Theoretically this command
-	should be obsolete. In practice, TCP timeouts can delay critical
-	configuration changes to actually happen in the case where a former
-	forwarding node failed and needs to be bypassed by subscribers.
-</para>
-<sect3><title>Example:</title>
-<para>
-	RESTART NODE 2;
-</para>
-</div>
+<refnamediv><refname>RESTART NODE</refname>
 
+<refpurpose> Restart <productname/Slony-I/ node </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>RESTART NODE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Causes an eventually running replication daemon on the
+specified node to shutdown and restart itself. Theoretically this
+command should be obsolete. In practice, TCP timeouts can delay
+critical configuration changes to actually happen in the case where a
+former forwarding node failed and needs to be bypassed by subscribers.
+
+<variablelist>
+ <varlistentry><term><literal> ID  = ival </literal></term>
+  <listitem><para> Node ID of the node to restart. </para>
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  RESTART NODE ( ID = 2 );
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_store_path"><title>STORE PATH</title>
+<refentry id ="stmtstorepath"><refmeta><refentrytitle>STORE PATH</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	STORE PATH ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Configures how the replication daemon of one node connects to the
-	database of another node. If the replication system is supposed
-	to use a special backbone network segment, this is the place to
-	user the special IP addresses or hostnames. An existing
-	configuration can be overwritten.
-</para>
-<para>
-	The conninfo string must contain all information to connect to the
-	database as the replication superuser. The names <b>server</b> or
-	<b>client</b> have nothing to do with the particular role of a node
+<refnamediv><refname>STORE PATH</refname>
+
+<refpurpose> Configure <productname/Slony-I/ node </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>STORE PATH (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Configures how the replication daemon of one node connects to
+the database of another node. If the replication system is supposed to
+use a special backbone network segment, this is the place to user the
+special IP addresses or hostnames. An existing configuration can be
+overwritten.</para>
+
+<para>	The conninfo string must contain all information to connect to the
+	database as the replication superuser. The names <quote/server/ or
+	<quote/client/ have nothing to do with the particular role of a node
 	within the cluster configuration. It should be simply viewed as
-	"the <b>server</b> has the message or data that the <b>client</b>
-	is supposed to get". For a simple 2 node setup, paths into both
+	<quote/the server/ has the message or data that <quote/the client
+	is supposed to get./  For a simple 2 node setup, paths into both
 	directions must be configured.
 </para>
 <para>
 	It does not do any harm to configure path information from every
 	node to every other node (full cross product). The connections
 	are not established unless they are required to actually transfer
-	events or confirmations because of <b>listen</b> entries or data
-	because of <b>subscriptions</b>.
+	events or confirmations because of <emphasis/listen/ entries or data
+	because of <emphasis/subscriptions/.
+
+<variablelist>
+ <varlistentry><term><literal> SERVER  = ival </literal></term>
+  <listitem><para> Node ID of the database to connect to. </para>
+ </varlistentry>
+ <varlistentry><term><literal> CLIENT  = ival </literal></term>
+  <listitem><para> Node ID of the replication daemon connecting. </para>
+ </varlistentry>
+ <varlistentry><term><literal> CONNINFO  = string </literal></term>
+  <listitem><para> <function/PQconnectdb()/ argument to establish the connection. </para>
+ </varlistentry>
+ <varlistentry><term><literal> CONNRETRY  = ival </literal></term>
+  <listitem><para> Number of seconds to wait before another attempt to
+  connect is made in case the server is unavailable. Default is 10.
+ </para>
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>SERVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the database to connect to.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>CLIENT = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the replication daemon connecting.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>CONNINFO = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		PQconnectdb() argument to establish the connection.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>CONNRETRY = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		Number of seconds to wait before another attempt to connect
-		is made in case the server is unavailable. Default is 10.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	STORE PATH (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;SERVER = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;CONNINFO = 'dbname=testdb host=server1 user=slony'
-	<br>);
-</para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  STORE PATH ( SERVER = 1, CLIENT = 2, 
+               CONNINFO = 'dbname=testdb host=server1 user=slony'
+             );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_drop_path"><title>DROP PATH</title>
+<refentry id ="stmtdroppath"><refmeta><refentrytitle>DROP PATH</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	DROP PATH ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Remove the connection information between <b>server</b> and
-	<b>client</b>. 
+<refnamediv><refname>DROP PATH</refname>
+
+<refpurpose> Configure <productname/Slony-I/ node </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>DROP PATH (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> 	Remove the connection information between <quote/server/ and
+	<quote/client/.
+
+
+
+<variablelist>
+ <varlistentry><term><literal> SERVER  = ival </literal></term>
+  <listitem><para> Node ID of the database to connect to. </para>
+ </varlistentry>
+ <varlistentry><term><literal> CLIENT  = ival </literal></term>
+  <listitem><para> Node ID of the replication daemon connecting. </para>
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+
+  <listitem><para> The ID of the node used to create the configuration
+  event that tells all existing nodes about dropping the path.
+  Defaults to the <quote/client/, if omitted.
+ </para>
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>SERVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the server of this connection.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>CLIENT = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the client.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the node used to create the configuration event
-		that tells all existing nodes about dropping the path.
-		Defaults to the <b>client</b>.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	DROP PATH (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;SERVER = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2
-	<br>);
-</para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  DROP PATH ( SERVER = 1, CLIENT = 2 );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_store_listen"><title>STORE LISTEN</title>
+<refentry id ="stmtstorelisten"><refmeta><refentrytitle>STORE LISTEN</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	STORE LISTEN ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>STORE LISTEN</refname>
+
+<refpurpose> Configure <productname/Slony-I/ node </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>STORE LISTEN (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> A <quote/listen/ entry causes a node (receiver) to query an
+event provider for events that originate from a specific node, as well
+as confirmations from every existing node. It requires a <quote/path/
+to exist so that the receiver (as client) can connect to the provider
+(as server).
+
 <para>
-	A <b>listen</b> entry causes a node (receiver) to query an event
-	provider for events that originate from a specific node, as well
-	as confirmations from every existing node. It requires a <b>path</b>
-	to exist so that the receiver (as client) can connect to the provider
-	(as server).
+	Every node in the system must listen for events from every
+	other node in the system. As a general rule of thumb, a
+	subscriber (see <link linkend="stmtsubscribeset">SUBSCRIBE
+	SET</link>) should listen for events of the set's origin on
+	the same provider, where it receives the data from. In turn,
+	the origin of the data set should listen for events from the
+	origin in the opposite direction. A node can listen for events
+	from one and the same origin on different providers at the
+	same time. However, to process <command/SYNC/ events from that
+	origin, all data providers must have the same or higher sync
+	status, so this will not result in any faster replication
+	behaviour.
 </para>
-<para>
-	Every node in the system must listen for events from every other
-	node in the system. As a general rule of thumb, a subscriber (see
-	<a href="#stmt_subscribe_set">SUBSCRIBE SET</a>) should listen for
-	events of the set's origin on the same provider, where it receives
-	the data from. In turn, the origin of the data set should listen
-	for events from the origin in the opposite direction. A node can
-	listen for events from one and the same origin on different
-	providers at the same time. However, to process SYNC events from
-	that origin, all data providers must have the same or higher sync
-	status, so this will not result in any faster replication behaviour.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the event origin the receiver is listening for.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		ID of the node from which the receiver gets events from
-		the origin. Default is the origin.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the node receiving the events.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	STORE LISTEN (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 2,
-	<br>);
-</para>
-</div>
+
+<variablelist>
+ <varlistentry><term><literal> ORIGIN  = ival </literal></term>
+  <listitem><para> Node ID of the event origin the receiver is listening for. </para>
+ </varlistentry>
+ <varlistentry><term><literal> PROVIDER  = ival </literal></term>
+  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para>
+ </varlistentry>
+ <varlistentry><term><literal> RECEIVER = ival </literal></term>
+
+  <listitem><para> The ID of the node receiving the events. </para>
+ </varlistentry>
+</variablelist>
+
+<para> For more details, see the section on <link
+linkend="listenpaths"> Slony-I Listen Paths. </link>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  STORE LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
+
+<!-- **************************************** -->
+
+<refentry id ="stmtdroplisten"><refmeta><refentrytitle>DROP LISTEN</refentrytitle> </refmeta>
+
+<refnamediv><refname>DROP LISTEN</refname>
+
+<refpurpose> Configure <productname/Slony-I/ node </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>DROP LISTEN (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Remove a <quote/listen/ configuration entry. </para>
+
+<variablelist>
+ <varlistentry><term><literal> ORIGIN  = ival </literal></term>
+  <listitem><para> Node ID of the event origin the receiver is listening for. </para>
+ </varlistentry>
+ <varlistentry><term><literal> PROVIDER  = ival </literal></term>
+  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para>
+ </varlistentry>
+ <varlistentry><term><literal> RECEIVER = ival </literal></term>
+
+  <listitem><para> The ID of the node receiving the events. </para>
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  DROP LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_drop_listen"><title>DROP LISTEN</title>
+<refentry id ="stmttableaddkey"><refmeta><refentrytitle>TABLE ADD KEY</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	DROP LISTEN ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Remove a <b>listen</b> configuration entry.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the event origin the receiver is listening for.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		ID of the node from which the receiver gets events from
-		the origin. Default is the origin.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the node receiving the events.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	DROP LISTEN (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 2,
-	<br>);
-</para>
-</div>
+<refnamediv><refname>TABLE ADD KEY</refname>
 
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
 
-<!-- **************************************** -->
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>TABLE ADD KEY (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 
-<sect3 ="stmt_table_add_key"><title>TABLE ADD KEY</title>
-
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	TABLE ADD KEY ( &lt;options&gt; );
-<sect3><title>Description:</title>
 <para>
 	In the <productname/Slony-I/ replication system, every replicated table is
-	required to have at least one UNIQUE constraint who's columns
-	are declared <tt>NOT NULL.</tt> Any primary key satisfies this
+	required to have at least one <command/UNIQUE/ constraint
+	whose columns are declared <command>NOT NULL.</command> Any
+	primary key satisfies this
 	requirement.
 </para>
 <para>
 	As a last resort, this command can be used to add such an
 	attribute to a table that does not have a primary key. Since
-	this modification can have unwanted side effects, <b>it is
+	this modification can have unwanted side effects, <emphasis>it is
 	strongly recommended that users add a unique and not null
-	attribute by other means.</b>
+	attribute by other means.</emphasis>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>NODE ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set origin where the table will be added as
-		set member (See <a href="stmt_set_add_table">SET ADD TABLE</a>).
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The full name of the table consisting of the schema and table name
-		as the expression
-		<br><emphasis>quote_ident(nspname) || '.' || quote_ident(relname)</emphasis>
-		<br>would return it.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	TABLE ADD KEY (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;NODE ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.history'
-	<br>);
-</para>
-</div>
 
+
+<variablelist>
+ <varlistentry><term><literal> NODE ID = ival </literal></term>
+  <listitem><para> Node ID of the set origin where the table will be
+  added as a set member. (See <link linkend="stmtsetaddtable">
+  <command/ SET ADD TABLE / </link>.)  </para>
+ </varlistentry>
+ <varlistentry><term><literal> FULLY QUALIFIED NAME  = 'string' </literal></term>
+  <listitem><para> The full name of the table consisting of the schema
+  and table name as the SQL expression <command>quote_ident(nspname)
+  || '.' || quote_ident(relname)</command>
+   would return it.  </para>
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  TABLE ADD KEY ( NODE ID = 1, 
+                  FULLY QUALIFIED NAME = 'public.history' );
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_create_set"><title>CREATE SET</title>
+<refentry id ="stmtcreateset"><refmeta><refentrytitle>CREATE SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	CREATE SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>CREATE SET</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>CREATE SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	In the <productname/Slony-I/ replication system, replicated tables are
 	organized in sets. As a general rule of thumb, a set should
@@ -711,89 +773,95 @@
 <para>
 	The smallest unit one node can subscribe for replication from
 	another node is a set. A set always has an origin. In
-	classical replication terms, that would be the "master."
-	Since in <productname/Slony-I/ a node can be the "master" over one set,
-	while receiving replication data in the "slave" role for
+	classical replication terms, that would be the <quote/master./
+	Since in <productname/Slony-I/ a node can be the <quote/master/ over one set,
+	while receiving replication data in the <quote/slave/ role for
 	another at the same time, this terminology may easily become
-	misleading and should therefore be replaced with <b>set
-	origin</b> and <b>subscriber</b>.
+	misleading and should therefore be replaced with <quote>set
+	origin</quote> and <quote>subscriber</quote>.
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the set to be created.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Initial origin of the set.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		A descriptive text added to the set entry.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	CREATE SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Tables of ticket system'
-	<br>);
-</para>
-</div>
+
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to be created.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Initial origin node of the set.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> COMMENT = 'string' </literal></term>
+  <listitem><para> A descriptive text added to the set entry.  </para>
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  CREATE SET ( ID = 1, 
+               ORIGIN = 1,
+               COMMENT = 'Tables for ticketing system' );
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_drop_set"><title>DROP SET</title>
+<refentry id ="stmtdropset"><refmeta><refentrytitle>DROP SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	DROP SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>DROP SET</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>DROP SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Drop a set of tables from the <productname/Slony-I/ configuration. This
 	automatically unsubscribes all nodes from the set and restores
 	the original triggers and rules on all subscribers.
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the set to be dropped.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	DROP SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 5,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
-	<br>);
-</para>
-</div>
 
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to be dropped.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Current origin node of the set.  </para>
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  DROP SET ( ID = 5, 
+             ORIGIN = 2 );
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_merge_set"><title>MERGE SET</title>
+<refentry id ="stmtmergeset"><refmeta><refentrytitle>MERGE SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	MERGE SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>MERGE SET</refname>
+
+<refpurpose> Reconfigure <productname/Slony-I/ sets </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>MERGE SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Merge a set of tables and sequences into another one. This
 	function is a workaround for the problem that it is not
@@ -803,664 +871,730 @@
 	set to this new one, and then merge the two together.
 </para>
 <para>
-	This request will fail if the two sets do not have exactly the
-	same set of subscribers.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the set to contain the union of the two separate sets.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ADD ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the set whos objects should be transferred.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the two sets.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	MERGE SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ADD ID = 9999,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
-	<br>);
-</para>
-</div>
+	This request will fail if the two sets do not have
+	<emphasis/exactly/ the same set of subscribers.  </para>
 
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> Unique ID of the set to contain the union of the two separate sets.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ADD ID = ival </literal></term>
+  <listitem><para> Unique ID of the set whose objects should be transferred.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Current origin node for both sets.  </para>
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+  MERGE SET ( ID = 2, 
+              ADD ID = 9999,
+              ORIGIN = 1 );
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_set_add_table"><title>SET ADD TABLE</title>
+<refentry id ="stmtsetaddtable"><refmeta><refentrytitle>SET ADD TABLE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET ADD TABLE ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>SET ADD TABLE</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET ADD TABLE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Add an existing user table to a replication set. The set
 	cannot currently be subscribed by any other node - that
-	functionality is supported by the<tt>MERGE SET</tt> command.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to which the table is added.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set. A future version of <application/slonik/
-		might figure out this information by itself.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the table. These ID's are not only used to
-		uniquely identify the individual table within the replication
-		system. The numeric value of this ID also determines the order
-		in which the tables are locked in a 
-		<a href="#stmt_lock_set">LOCK SET</a> command for example. So these
-		numbers should represent any applicable table hierarchy to
-		make sure the <application/slonik/ command scripts do not deadlock at any
-		critical moment.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The full table name as described in
-		<a href="#table_add_key">TABLE ADD KEY</a>.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>KEY = { &lt;string&gt; | SERIAL }</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
+	functionality is supported by the <command><link
+	linkend="stmtmergeset"> MERGE SET</link> </command> command.
+
+<variablelist>
+ <varlistentry><term><literal> SET ID = ival </literal></term>
+  <listitem><para> ID of the set to which the table is to be added.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Origin node for the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the table. These ID's are not only
+  used to uniquely identify the individual table within the
+  replication system. The numeric value of this ID also determines the
+  order in which the tables are locked in a <link
+  linkend="stmtlockset">LOCK SET</link> command for example. So
+  these numbers should represent any applicable table hierarchy to
+  make sure the <application/slonik/ command scripts do not deadlock
+  at any critical moment.
+ </varlistentry>
+ <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
+  <listitem><para> The full table name as described in
+		<link linkend="stmttableaddkey">TABLE ADD KEY</link>.</para>
+ </varlistentry>
+ <varlistentry><term><literal> KEY = { 'string' | SERIAL } </literal></term>
+  <listitem><para> 
+		<emphasis>(Optional)</emphasis>
 		The index name that covers the unique and not null column set
 		to be used as the row identifier for replication purposes. Or the
 		keyword SERIAL to use the special column added with a previous
-		<a href="#table_add_key">TABLE ADD KEY</a> command. Default
+		<link linkend="stmttableaddkey">TABLE ADD KEY</link> command. Default
 		is to use the table's primary key.  The index name is <emphasis> not </emphasis> 
 		fully qualified; you must omit the namespace.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		A descriptive text added to the <productname/Slony-I/ configuration data.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	SET ADD TABLE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket',
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket'
-	<br>);
+
+ </varlistentry>
+ <varlistentry><term><literal> COMMENT = 'string' </literal></term>
+  <listitem><para> A descriptive text added to the table entry.  </para>
+ </varlistentry>
+</variablelist>
 </para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET ADD TABLE (
+    SET ID = 1,
+    ORIGIN = 1,
+    ID = 20,
+    FULLY QUALIFIED NAME = 'public.tracker_ticket',
+    COMMENT = 'Support ticket'
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_set_add_sequence"><title>SET ADD SEQUENCE</title>
+<refentry id ="stmtsetaddsequence"><refmeta><refentrytitle>SET ADD SEQUENCE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET ADD SEQUENCE ( &lt;options&gt; );
-<sect3><title>Description:</title>
+<refnamediv><refname>SET ADD SEQUENCE</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET ADD SEQUENCE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	Add an existing user sequence to a replication set. The set
 	cannot currently be subscribed by any other node - that
-	functionality is supported by the MERGE SET command.
+	functionality is supported by the <command><link
+	linkend="stmtmergeset"> MERGE SET</link> </command> command.
+
+<variablelist>
+ <varlistentry><term><literal> SET ID = ival </literal></term>
+  <listitem><para> ID of the set to which the sequence is to be added.  </para>
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Origin node for the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the sequence.  <note><para> Note that this ID needs to be unique <emphasis/across sequences/ throughout the cluster; the numbering of tables is separate, so you might have a table with ID 20 and a sequence with ID 20, and they would be recognized as separate. </note>
+
+ </varlistentry>
+ <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
+  <listitem><para> The full sequence name as described in
+		<link linkend="stmttableaddkey">TABLE ADD KEY</link>.</para>
+ </varlistentry>
+ <varlistentry><term><literal> COMMENT = 'string' </literal></term>
+  <listitem><para> A descriptive text added to the sequence entry.  </para>
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to which the sequence is added.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set. A future version of <application/slonik/
-		might figure out this information by itself.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the sequence.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The full sequence name as described in
-		<a href="#table_add_key">TABLE ADD KEY</a>.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		A descriptive text added to the <productname/Slony-I/ configuration data.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET ADD SEQUENCE (
+    SET ID = 1,
+    ORIGIN = 1,
+    ID = 20,
+    FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
+    COMMENT = 'Support ticket ID sequence'
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
+ 
+
+<!-- **************************************** -->
+
+<refentry id ="stmtsetdroptable"><refmeta><refentrytitle>SET DROP TABLE</refentrytitle> </refmeta>
+
+<refnamediv><refname>SET DROP TABLE</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET DROP TABLE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
-	SET ADD SEQUENCE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket id sequence'
-	<br>);
+	Drop a table from a replication set.
 </para>
-</div>
+<para>
+	  Note that this action will <emphasis> not </emphasis> drop a candidate
+	  primary key created using <link
+	  linkend="stmttableaddkey"> <command> TABLE ADD KEY
+	  </command></link>.
+
+<variablelist>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Origin node for the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the table.
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET DROP TABLE (
+    ORIGIN = 1,
+    ID = 20,
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
+
+<!-- **************************************** -->
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_set_drop_table"><title>SET DROP TABLE</title>
+<refentry id ="stmtsetdropsequence"><refmeta><refentrytitle>SET DROP SEQUENCE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET DROP TABLE ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Drop an existing user table to a replication set.
-</para>
+<refnamediv><refname>SET DROP SEQUENCE</refname>
 
-<para>
-	  Note that this action will <em> not </em> drop a candidate
-	  primary key created using <TT> TABLE ADD KEY </tt>.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set. A future version of <application/slonik/
-		might figure out this information by itself.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the table. 
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	SET DROP TABLE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
-	<br>);
-</para>
-</div>
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
 
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET DROP SEQUENCE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 
-<!-- **************************************** -->
-
-<sect3 ="stmt_set_drop_sequence"><title>SET DROP SEQUENCE</title>
-
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET DROP SEQUENCE ( &lt;options&gt; );
-<sect3><title>Description:</title>
 <para>
 	Drops an existing user sequence from a replication set.
+<variablelist>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Origin node for the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the sequence.
+
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the sequence.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET DROP SEQUENCE (
+    ORIGIN = 1,
+    ID = 20,
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
+
+<!-- **************************************** -->
+
+<refentry id ="stmtsetmovetable"><refmeta><refentrytitle>SET MOVE TABLE</refentrytitle> </refmeta>
+
+<refnamediv><refname>SET MOVE TABLE</refname>
+
+<refpurpose> Reconfigure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET MOVE TABLE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
-	SET DROP SEQUENCE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
-	<br>);
+	Change the set a table belongs to. The current set and the new
+	set must origin on the same node and subscribed by the same
+	nodes.  <caution><para> Due to the way subscribing to new sets
+	works make absolutely sure that the subscription of all nodes
+	to the sets is completely processed before moving
+	tables. Moving a table too early to a new set causes the
+	subscriber to try and add the table already during the
+	subscription process, which fails with a duplicate key error
+	and breaks replication.</para></caution>
+
+<variablelist>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Current origin of the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the table.
+ <varlistentry><term><literal> NEW SET = ival </literal></term>
+
+  <listitem><para> Unique ID of the set to which the table should be added.
+</variablelist>
 </para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET MOVE TABLE (
+    ORIGIN = 1,
+    ID = 20,
+    NEW SET = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_set_move_table"><title>SET MOVE TABLE</title>
+<refentry id ="stmtsetmovesequence"><refmeta><refentrytitle>SET MOVE SEQUENCE</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET MOVE TABLE ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Change the set a table belongs to. The current set and the new set
-	must origin on the same node and subscribed by the same nodes.
-	CAUTION: Due to the way subscribing to new sets works make
-	absolutely sure that the subscription of all nodes to the sets
-	is completely processed before moving tables. Moving a table too
-	early to a new set causes the subscriber to try and add the table
-	already during the subscription process, which fails with a duplicate
-	key error and breaks replication.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set. A future version of <application/slonik/
-		might figure out this information by itself.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the table. 
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the new set. 
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	SET MOVE TABLE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
-	<br>);
-</para>
-</div>
+<refnamediv><refname>SET MOVE SEQUENCE</refname>
 
+<refpurpose> Reconfigure <productname/Slony-I/ set </refpurpose>
 
-<!-- **************************************** -->
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SET MOVE SEQUENCE (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 
-<sect3 ="stmt_set_move_sequence"><title>SET MOVE SEQUENCE</title>
-
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SET MOVE SEQUENCE ( &lt;options&gt; );
-<sect3><title>Description:</title>
 <para>
 	Change the set a sequence belongs to. The current set and the new set
-	must origin on the same node and subscribed by the same nodes.
-	CAUTION: Due to the way subscribing to new sets works make
+	must originate on the same node and subscribed by the same
+	nodes.
+
+	<caution><Para> Due to the way subscribing to new sets works make
 	absolutely sure that the subscription of all nodes to the sets
 	is completely processed before moving sequences. Moving a sequence too
 	early to a new set causes the subscriber to try and add the sequence
 	already during the subscription process, which fails with a duplicate
-	key error and breaks replication.
+	key error and breaks replication.</para></caution>
+
+<variablelist>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+  <listitem><para> Origin node for the set.  A future version of <application/slonik/
+		might figure out this information by itself.</para>
+ </varlistentry>
+ <varlistentry><term><literal> ID = ival </literal></term>
+
+  <listitem><para> Unique ID of the sequence.
+
+ </varlistentry>
+ <varlistentry><term><literal> NEW SET = ival </literal></term>
+
+  <listitem><para> Unique ID of the set to which the sequence should be moved.
+
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The current origin of the set. A future version of <application/slonik/
-		might figure out this information by itself.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the sequence. 
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Unique ID of the new set. 
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	SET MOVE SEQUENCE (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 54,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
-	<br>);
-</para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SET MOVE SEQUENCE (
+    ORIGIN = 1,
+    ID = 20,
+    NEW SET = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_store_trigger"><title>STORE TRIGGER</title>
+<refentry id ="stmtstoretrigger"><refmeta><refentrytitle>STORE TRIGGER</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	STORE TRIGGER ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	By default, all user defined triggers and constraints are
-	disabled on all subscriber nodes while a table is
-	replicated. This command can be used to explicitly exclude a
-	trigger from being disabled.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>TABLE ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The unique, numeric ID number of the table the trigger is defined for.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>TRIGGER NAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The name of the trigger as it appears in the pg_trigger
-		system catalog.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the node used to create the configuration event
+<refnamediv><refname>STORE TRIGGER</refname>
+
+<refpurpose> Configure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>STORE TRIGGER (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> By default, all user defined triggers and constraints are
+disabled on all subscriber nodes while a table is replicated. This
+command can be used to explicitly exclude a trigger from being
+disabled.
+
+<variablelist>
+ <varlistentry><term><literal> TABLE ID = ival </literal></term>
+  <listitem><para> The unique, numeric ID number of the table the trigger is defined for.
+
+ </varlistentry>
+ <varlistentry><term><literal> TRIGGER NAME = 'string' </literal></term>
+
+  <listitem><para> The name of the trigger as it appears in the
+  <envar/pg_trigger/ system catalog.
+
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+
+  <listitem><para> (Optional) The ID of the node used to create the
+  configuration event
 		that tells all existing nodes about the special trigger. Default
 		value is 1.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	STORE TRIGGER (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;TABLE ID = 2,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;TRIGGER NAME = 'cache_invalidation'
-	<br>);
-</para>
-</div>
 
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+STORE TRIGGER (
+    TABLE ID = 2,
+    TRIGGER NAME = 'cache_invalidation'
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_drop_trigger"><title>DROP TRIGGER</title>
+<refentry id ="stmtdroptrigger"><refmeta><refentrytitle>DROP TRIGGER</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	DROP TRIGGER ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Remove the special handling for the specified trigger.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>TABLE ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The unique, numeric ID number of the table the trigger is defined for.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>TRIGGER NAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The name of the trigger as it appears in the pg_trigger
-		system catalog.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the node used to create the configuration event
-		that tells all existing nodes about removing the special trigger. Default
+<refnamediv><refname>DROP TRIGGER</refname>
+
+<refpurpose> Reconfigure <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>DROP TRIGGER (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> 	Remove the special handling for the specified trigger.
+
+<variablelist>
+ <varlistentry><term><literal> TABLE ID = ival </literal></term>
+  <listitem><para> The unique, numeric ID number of the table the trigger is defined for.
+
+ </varlistentry>
+ <varlistentry><term><literal> TRIGGER NAME = 'string' </literal></term>
+
+  <listitem><para> The name of the trigger as it appears in the
+  <envar/pg_trigger/ system catalog.
+
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+
+  <listitem><para> (Optional) The ID of the node used to create the
+  configuration event
+		that tells all existing nodes about the special trigger. Default
 		value is 1.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	DROP TRIGGER (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;TABLE ID = 2,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;TRIGGER NAME = 'cache_invalidation'
-	<br>);
-</para>
-</div>
 
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+DROP TRIGGER (
+    TABLE ID = 2,
+    TRIGGER NAME = 'cache_invalidation'
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
+<refentry id ="stmtsubscribeset"><refmeta><refentrytitle>SUBSCRIBE SET</refentrytitle> </refmeta>
 
-<sect3 ="stmt_subscribe_set"><title>SUBSCRIBE SET</title>
+<refnamediv><refname>SUBSCRIBE SET</refname>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	SUBSCRIBE SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Causes a node (subscriber) to start replicating a set of
-	tables either from the origin or from another provider node,
-	which must be a currently forwarding subscriber itself.
+<refpurpose> Start replication of <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>SUBSCRIBE SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Causes a node (subscriber) to start replicating a set of tables
+either from the origin or from another provider node, which must be an
+active, forwarding subscriber itself.
+
+<para> The application tables contained in the set must already exist
+and should ideally be empty. The current version of
+<productname/Slony-I/ will <emphasis/not/ attempt to copy the schema
+of the set. The replication daemon will start copying the current
+content of the set from the given provider and then try to catch up
+with any update activity that happened during that copy process. After
+successful subscription, the tables are guarded on the subscriber,
+using triggers, against accidental updates by the application.
 </para>
-<para>
-	The application tables contained in the set must already exist
-	and should ideally be currently empty. The current version of
-	<productname/Slony-I/ will not attempt to copy the schema of the set. The
-	replication daemon will start copying the current content of
-	the set from the given provider and then try to catch up with
-	any update activity that happened during that copy
-	process. After successful subscription, the tables are guarded
-	on the subscriber using triggers against accidental updates by
-	the application.
-</para>
 
-<para>
-	Note: If you need to revise subscription information for a
+<para> If the tables on the subscriber are <emphasis/not/ empty, then
+the <command/COPY SET/ process winds up doing more work than should be
+strictly necessary:
+<itemizedlist>
+<listitem><para> It deletes all <quote/old/ entries in the table
+<listitem><para> Those old entries clutter up the table until it is next <command/VACUUM/ed <emphasis/after/ the subscription process is complete
+<listitem><para> The indices for the table will contain entries for the old, deleted entries, which will slow the process of inserting new entries into the index.
+</itemizedlist>
+
+
+<note><para>
+	If you need to revise subscription information for a
 	node, you may submit the new information using this command,
 	and the new configuration will be propagated throughout the
 	replication network.  The normal reason to revise this
 	information is that you want a node to subscribe to a <emphasis>
 	different </emphasis> provider node, or for a node to become a
-	"forwarding" subscriber so it may later become the provider
-	for a later subscriber.
+	<quote/forwarding/ subscriber so it may later become the
+	provider
+	for a later subscriber. </note>
 
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to subscribe
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the data provider where this set is subscribed from.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the new subscriber.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>FORWARD = &lt;boolean&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Flag whether or not the new subscriber should store
+
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to subscribe
+
+ </varlistentry>
+ <varlistentry><term><literal> PROVIDER = ival </literal></term>
+
+  <listitem><para> Node ID of the data provider from which this node draws data.
+
+ </varlistentry>
+ <varlistentry><term><literal> RECEIVER = ival </literal></term>
+
+  <listitem><para> Node ID of the new subscriber
+
+ </varlistentry>
+ <varlistentry><term><literal> FORWARD = boolean </literal></term>
+
+  <listitem><para> Flag whether or not the new subscriber should store
 		the log information during replication to make it
 		possible candidate for the provider role for future
 		nodes.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	SUBSCRIBE SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;PROVIDER = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 3,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;FORWARD = YES
-	<br>);
-</para>
-</div>
 
+
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+SUBSCRIBE SET (
+   ID = 1,
+   PROVIDER = 1,
+   RECEIVER = 3,
+   FORWARD = YES
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_unsubscribe_set"><title>UNSUBSCRIBE SET</title>
+<refentry id ="stmtunsubscribeset"><refmeta><refentrytitle>UNSUBSCRIBE SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	UNSUBSCRIBE SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
+<refnamediv><refname>UNSUBSCRIBE SET</refname>
+
+<refpurpose> End replication of <productname/Slony-I/ set </refpurpose>
+
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>UNSUBSCRIBE SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> 
 	Stops the subscriber from replicating the set. The tables are
 	opened up for full access by the client application on the
 	former subscriber. The tables are not truncated or otherwise
 	modified. All original triggers, rules and constraints are
 	restored.
+
+<warning><para> Resubscribing an unsubscribed set requires a
+<emphasis>complete fresh copy</emphasis> of data from the provider to
+be transferred since the tables have been subject to possible
+independent modifications.  </para></warning>
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to unsubscribe
+
+ </varlistentry>
+ <varlistentry><term><literal> RECEIVER = ival </literal></term>
+
+  <listitem><para> Node ID of the (former) subscriber
+
+ </varlistentry>
+</variablelist>
 </para>
-<para>
-	<b>Warning!</b> Resubscribing an unsubscribed set requires a
-	<emphasis>complete fresh copy</emphasis> of data from the provider to be
-	transferred since the tables have been subject to possible
-	independent modifications.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to unsubscribe.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the subscriber.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	UNSUBSCRIBE SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 3
-	<br>);
-</para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+UNSUBSCRIBE SET (
+   ID = 1,
+   RECEIVER = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_lock_set"><title>LOCK SET</title>
+<refentry id ="stmtlockset"><refmeta><refentrytitle>LOCK SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	LOCK SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
+<refnamediv><refname>LOCK SET</refname>
+
+<refpurpose> Configuration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>LOCK SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> 
 	Guards a replication set against client application updates in
-	preparation for a <a href="#stmt_move_set">MOVE SET</a>
+	preparation for a <link linkend="stmtmoveset">MOVE SET</link>
 	command.
 </para>
 <para>
 	This command must be the first in a possible statement group
-	(<tt>try</tt>).  The reason for this is that it needs to
+	(<command>try</command>).  The reason for this is that it needs to
 	commit the changes made to the tables (adding a special
 	trigger function) before it can wait for every concurrent
 	transaction to finish. At the same time it cannot hold an open
 	transaction to the same database itself since this would
 	result in blocking itself forever.
+
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to lock
+
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+
+  <listitem><para> Node ID of the current set origin
+
+ </varlistentry>
+</variablelist>
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to lock.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the current set origin.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	LOCK SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
-	<br>);
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+LOCK SET (
+   ID = 1,
+   RECEIVER = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
+
+<!-- **************************************** -->
+
+<refentry id ="stmtunlockset"><refmeta><refentrytitle>UNLOCK SET</refentrytitle> </refmeta>
+
+<refnamediv><refname>UNLOCK SET</refname>
+
+<refpurpose> Configuration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>UNLOCK SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> 
+	Unlocks a previously locked set.
+
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to unlock
+
+ </varlistentry>
+ <varlistentry><term><literal> ORIGIN = ival </literal></term>
+
+  <listitem><para> Node ID of the current set origin
+
+ </varlistentry>
+</variablelist>
 </para>
-</div>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+UNLOCK SET (
+   ID = 1,
+   RECEIVER = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_unlock_set"><title>UNLOCK SET</title>
+<refentry id ="stmtmoveset"><refmeta><refentrytitle>MOVE SET</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	UNLOCK SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Unlock a previously locked set.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to unlock.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the current set origin.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	UNLOCK SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
-	<br>);
-</para>
-</div>
+<refnamediv><refname>MOVE SET</refname>
 
+<refpurpose> Reconfiguration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>MOVE SET (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
 
-<!-- **************************************** -->
+<para> 
+	Changes the origin of a set from one node to another. The new
+	origin must be a current subscriber of the set. The set must
+	currently be locked on the old origin. </para> 
 
-<sect3 ="stmt_move_set"><title>MOVE SET</title>
-
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	MOVE SET ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Changes the origin of a set from one node to another. The new origin
-	must be a current subscriber of the set. The set must currently be
-	locked on the old origin. 
-</para>
 <para>
 	After this command, the set cannot be unlocked on the old
 	origin any more. The old origin will continue as a forwarding
@@ -1468,59 +1602,64 @@
 	origin to the new origin will be reversed, hop by hop. As soon
 	as the new origin has finished processing the event (that
 	includes any outstanding sync events that happened before,
-	<emphasis>i.e.</i> fully catching up), the new origin will take over
-	and open all tables in the set for client application update
+	<emphasis>i.e.</emphasis> fully catching up), the new origin
+	will take over and open all tables in the set for client
+	application update
 	activity.
 </para>
 <para>
-	This is not failover, as it requires a fully functional old
-	origin node.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the set to transfer.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>OLD ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the current set origin.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>NEW ORIGIN = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		Node ID of the new set origin.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	MOVE SET (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;OLD ORIGIN = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW ORIGIN = 3
-	<br>);
-</para>
-</div>
+	This is <emphasis/not/ failover, as it requires a functioning
+	old origin node (you needed to lock the set on the old
+	origin).  You would probably prefer to <command/MOVE SET/
+	instead of <command/FAILOVER/, if at all possible, as
+	<command/FAILOVER/ winds up discarding the old origin node as
+	being corrupted.
 
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the set to transfer
+
+ </varlistentry>
+ <varlistentry><term><literal> OLD ORIGIN = ival </literal></term>
+
+  <listitem><para> Node ID of the current set origin
+
+ </varlistentry>
+ <varlistentry><term><literal> NEW ORIGIN = ival </literal></term>
+
+  <listitem><para> Node ID of the new set origin
+
+ </varlistentry>
+</variablelist>
+</para>
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+MOVE SET (
+   ID = 1,
+   OLD ORIGIN = 1,
+   NEW ORIGIN = 3
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_failover"><title>FAILOVER</title>
+<refentry id ="stmtfailover"><refmeta><refentrytitle>FAILOVER</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	FAILOVER ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	WARNING: This command will abandon the status of the failed
-	node.  There is no possibility to let the failed node join the
-	cluster again without rebuilding it from scratch as a slave
-	slave.
-</para>
+<refnamediv><refname>FAILOVER</refname>
+
+<refpurpose> Reconfiguration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>FAILOVER (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
 <para>
 	The failover command causes the backup node to take over all
 	sets that currently originate on the failed node. <Application/Slonik/ will
@@ -1535,168 +1674,195 @@
 	After successful failover, all former direct subscribers of
 	the failed node become direct subscribers of the backup
 	node. The failed node can and should be removed from the
-	configuration with <tt>DROP NODE</tt>.
+	configuration with <command><link linkend="stmtdropnode"> DROP NODE</link> </command>.
 </para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the failed node.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>BACKUP NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		ID of the node that will take over all sets.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	FAILOVER (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;BACKUP NODE = 1,
-	<br>);
-</para>
-</div>
+
+<warning><para> This command will abandon the status of the failed
+	node.  There is no possibility to let the failed node join the
+	cluster again without rebuilding it from scratch as a slave
+	slave.  It would often be highly preferable to use <command> <link linkend="stmtmoveset"> MOVE SET </link> </command> instead.
+</para></warning>
+
+<variablelist>
+ <varlistentry><term><literal> ID = ival </literal></term>
+  <listitem><para> ID of the failed node
+
+ </varlistentry>
+ <varlistentry><term><literal> BACKUP NODE = ival </literal></term>
+
+  <listitem><para> Node ID of the node that will take over all sets originating on the failed node
+
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+FAILOVER (
+   ID = 1,
+   BACKUP NODE = 2
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_ddl_script"><title>EXECUTE SCRIPT</title>
+<refentry id ="stmtddlscript"><refmeta><refentrytitle>EXECUTE SCRIPT</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	EXECUTE SCRIPT ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Executes a script containing arbitrary SQL statements on all
-	nodes that are subscribed to a set at a common controlled
-	point within the replication transaction stream.
-</para>
-<para>
-	The specified event origin must be the origin of the set.  The
-	script file must not contain any START or COMMIT TRANSACTION
-	calls.  (This may change in PostgreSQL 8.0 once nested
-	transactions, aka savepoints, are supported)  In addition,
-	non-deterministic DML statements (like updating a field with
-	CURRENT_TIMESTAMP) must be avoided, since the data changes
-	done by the script are explicitly not replicated.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The unique, numeric ID number of the set affected by the script.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>FILENAME = &lt;string&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The name of the file containing the SQL script to execute.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the current origin of the set.
-		The default value is 1.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>EXECUTE ONLY ON = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		<b>(Optional)</b>
-		The ID of the only node to actually execute the script.
+<refnamediv><refname>EXECUTE SCRIPT</refname>
+
+<refpurpose> Reconfiguration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>EXECUTE SCRIPT (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Executes a script containing arbitrary SQL statements on all
+nodes that are subscribed to a set at a common controlled point within
+the replication transaction stream.</para>
+
+<para> The specified event origin must be the origin of the set.  The
+script file must not contain any <command/START/ or <command/COMMIT
+TRANSACTION/ calls.  (This may change in PostgreSQL 8.0 once nested
+transactions, aka savepoints, are supported) In addition,
+non-deterministic DML statements (like updating a field with
+<function/CURRENT_TIMESTAMP/) must be avoided, since the data changes
+done by the script are explicitly not replicated. </para>
+
+<variablelist>
+ <varlistentry><term><literal> SET ID = ival </literal></term>
+  <listitem><para> The unique numeric ID number of the set affected by the script
+
+ </varlistentry>
+ <varlistentry><term><literal> FILENAME = '/path/to/file' </literal></term>
+
+  <listitem><para> The name of the file containing the SQL script to
+  execute.  This might be a relative path, relative to the location of
+  the <application/slonik/ instance you are running, or, preferably,
+  an absolute path on the system where <application/slonik/ is to run.
+
+  <para> The <emphasis/contents/ of the file are propagated as part of
+  the event, so the file does not need to be accessible on any of the
+  nodes.
+
+ </varlistentry>
+ <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+  <listitem><para> (Optional) The ID of the current origin of the set.  Default value is 1.
+
+ </varlistentry>
+ <varlistentry><term><literal> EXECUTE ONLY ON = ival </literal></term>
+  <listitem><para> (Optional)		The ID of the only node to actually execute the script.
 		This option causes the script to be propagated by all nodes
 		but executed only by one.
 		The default is to execute the script on all nodes that are
 		subscribed to the set.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	EXECUTE SCRIPT (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;FILENAME = 'changes_20040510.sql',
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;EVENT NODE = 1
-	<br>);
-</para>
-</div>
+
+
+ </varlistentry>
+</variablelist>
+
+<para> See also the warnings in <link linkend="ddlchanges"> Database
+Schema Changes (DDL)</link>.
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+EXECUTE SCRIPT (
+   SET ID = 1,
+   FILENAME = '/tmp/changes_2004-05-01.sql',
+   EVENT NODE = 1
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
 
 
 <!-- **************************************** -->
 
-<sect3 ="stmt_wait_event"><title>WAIT FOR EVENT</title>
+<refentry id ="stmtwaitevent"><refmeta><refentrytitle>WAIT FOR EVENT</refentrytitle> </refmeta>
 
-<div style="margin-left:40px; margin-right:0px;">
-<sect3><title>Synopsis:</title>
-	WAIT FOR EVENT ( &lt;options&gt; );
-<sect3><title>Description:</title>
-<para>
-	Waits for event confirmation.
+<refnamediv><refname>WAIT FOR EVENT</refname>
+
+<refpurpose> Reconfiguration of <productname/Slony-I/ set </refpurpose>
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>WAIT FOR EVENT (options);</command>
+</cmdsynopsis>
+</refsynopsisdiv>
+<refsect1>
+<title>Description</title>
+
+<para> Waits for event Confirmation.
+
+<para> <Application/Slonik/ remembers the last event generated on
+every node during script execution (events generated by earlier calls
+are currently not checked). In certain situations it is necessary that
+events generated on one node (such as <command>CREATE SET</command>)
+are processed on another node before issuing more commands (for
+instance, <link linkend="stmtsubscribeset"><command/SUBSCRIBE
+SET/</link>).  <COMMAND>WAIT FOR EVENT</COMMAND> may be used to cause
+the <application/slonik/ script to wait until the subscriber node is
+ready for the next action.
 </para>
-<para>
-	<Application/Slonik/ remembers the last event generated on every node during
-	script execution (events generated by earlier calls are
-	currently not checked). In certain situations it is necessary
-	that events generated on one node (such as <tt>CREATE
-	SET</tt>) are processed on another node before issuing more
-	commands (for instance, <a
-	href="#stmt_subscribe_set">SUBSCRIBE SET</a>).  <tt>WAIT FOR
-	EVENT</tt> may be used to cause the <application/slonik/ script to wait
-	until the subscriber node is ready for the next action.
-</para>
-<para>
-	<tt>WAIT FOR EVENT</tt> must be called outside of any try
-	block in order to work, since new confirm messages don't
-	become visible within a transaction.
-</para>
-<table border="0" cellpadding="10">
-<tr>
-	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;|ALL</b></td>
-	<td align="left" valign="top"><para>
-		The origin of the event(s) to wait for.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>CONFIRMED = &lt;ival&gt;|ALL</b></td>
-	<td align="left" valign="top"><para>
-		The node ID of the receiver that must have confirmed the event(s).
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>WAIT ON = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The ID of the node where to check the sl_confirm table.
-		The default value is 1.
-	</para></td>
-</tr>
-<tr>
-	<td align="left" valign="top" nowrap><b>TIMEOUT = &lt;ival&gt;</b></td>
-	<td align="left" valign="top"><para>
-		The number of seconds to wait. Default is 600 (10 minutes),
-		0 means wait forever.
-	</para></td>
-</tr>
-</table>
-<sect3><title>Example:</title>
-<para>
-	WAIT FOR EVENT (
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = ALL,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;CONFIRMED = ALL,
-	<br>&nbsp;&nbsp;&nbsp;&nbsp;WAIT ON = 1
-	<br>);
 
+<para> <command>WAIT FOR EVENT</command> must be called outside of any
+<command/try/ block in order to work, since new confirm messages don't
+become visible within a transaction.
 
-<sect1 id="slonikprocs"> <title/Slonik Stored Procedures/
+<variablelist>
+ <varlistentry><term><literal> ORIGIN = ival | ALL </literal></term>
+  <listitem><para> The origin of the event(s) to wait for.
 
-<para> The commands used in <Application/Slonik/ invoke stored procedures in the
-namespace created for the replication instance.  <Application/Slonik/ provides one
-convenient way to invoke these procedures; it is just as possible to
-invoke them directly to manage the <productname/Slony-I/ instances. </para>
+ </varlistentry>
+ <varlistentry><term><literal> CONFIRMED = ival | ALL </literal></term>
 
-<para> See the <a href= "schemadoc.html"> Schema Documentation </a> for
-more details. </para>
+  <listitem><para> The node ID of the receiver that must confirm the event(s).
+
+ </varlistentry>
+ <varlistentry><term><literal> WAIT ON = ival </literal></term>
+  <listitem><para> The ID of the node where the sl_confirm table is to be checked.  The default value is 1.
+
+ </varlistentry>
+ <varlistentry><term><literal> TIMEOUT = ival </literal></term>
+
+  <listitem><para> The number of seconds to wait.  Default is 600 (10
+  minutes).  <command/TIMEOUT = 0/ causes the script to wait
+  indefinitely.
+
+ </varlistentry>
+</variablelist>
+
+</Refsect1>
+<Refsect1><Title>Example</Title>
+<Programlisting>
+WAIT FOR EVENT (
+  ORIGIN = ALL,
+  CONFIRMED = ALL,
+  WAIT ON = 1
+);
+</Programlisting>
+</Refsect1>
+</Refentry>
+</reference>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:"./reference.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->

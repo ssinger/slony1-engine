@@ -28,9 +28,10 @@ modified in the source system.  There are three ways that you can get
 <itemizedlist>
 
 <listitem><para> If the table has a formally identified primary key,
-<command>SET ADD TABLE</command> can be used without any need to
-reference the primary key.  <productname/Slony-I/ will pick up that
-there is a primary key, and use it.
+<command> <link linkend="stmtsetaddtable"> SET ADD
+TABLE</link></command> can be used without any need to reference the
+primary key.  <productname/Slony-I/ will pick up that there is a
+primary key, and use it.
 
 <listitem><para> If the table hasn't got a primary key, but has some
 <emphasis>candidate</emphasis> primary key, that is, some index on a
@@ -50,11 +51,12 @@ key, as it infers the namespace from the table.
 
 <listitem><para> If the table hasn't even got a candidate primary key,
 you can ask <productname/Slony-I/ to provide one.  This is done by
-first using <command>TABLE ADD KEY</command> to add a column populated
-using a <productname/Slony-I/ sequence, and then having the
-<command>SET ADD TABLE</command> include the directive
-<option>key=serial</option>, to indicate that <productname/Slony-I/'s
-own column should be used.</para></listitem>
+first using <command><link linkend="stmttableaddkey"> TABLE ADD KEY
+</link> </command> to add a column populated using a
+<productname/Slony-I/ sequence, and then having the <command> <link
+linkend="stmtsetaddtable"> SET ADD TABLE</link></command> include the
+directive <option>key=serial</option>, to indicate that
+<productname/Slony-I/'s own column should be used.</para></listitem>
 
 </itemizedlist>
 

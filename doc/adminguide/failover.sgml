@@ -31,7 +31,8 @@ system with <productname>Slony-I</productname>.</para></sect2>
 <quote>subscriber</quote> as node2 (<emphasis>e.g.</emphasis> -
 slave).  A web application on a third server is accessing the database
 on node1.  Both databases are up and running and replication is more
-or less in sync.
+or less in sync.  We do controlled switchover using <command> <link
+linkend="stmtmoveset"> MOVE SET </link> </command>.
 
 <itemizedlist>
 
@@ -41,7 +42,8 @@ order to avoid any complications, we simply shut down the web server.
 Users who use <application>pg_pool</application> for the applications database
 connections merely have to shut down the pool.</para></listitem>
 
-<listitem><para> A small slonik script executes the following commands:
+<listitem><para> A small <link linkend="slonik"> Slonik </link> script
+executes the following commands:
 
 <programlisting>
 lock set (id = 1, origin = 1);
@@ -61,13 +63,15 @@ switched roles completely.</para></listitem>
 server is restarted and resumes normal operation.</para>
 
 <para> Done in one shell script, that does the application shutdown,
-<application>slonik</application>, move config files and startup all together, this
-entire procedure is likely to take less than 10 seconds.</para></listitem>
+<application>slonik</application>, move config files and startup all
+together, this entire procedure is likely to take less than 10
+seconds.</para></listitem>
 
 </itemizedlist></para>
 
 <para> You may now simply shutdown the server hosting node1 and do
-whatever is required to maintain the server.  When <application><link linkend="slon"> slon </link></application> node1 is restarted later,
+whatever is required to maintain the server.  When <application><link
+linkend="slon"> slon </link></application> node1 is restarted later,
 it will start replicating again, and soon catch up.  At this point the
 procedure to switch origins is executed again to restore the original
 configuration.</para>
@@ -78,25 +82,29 @@ be any loss of data.</para></sect2>
 
 <sect2><title> Failover</title>
 
-<para> If some more serious problem occurs on the <quote>origin</quote>
-server, it may be necessary to failover to a backup server.  This is a
-highly undesirable circumstance, as transactions <quote>committed</quote> on
-the origin, but not applied to the subscribers, will be lost.  You may
-have reported these transactions as <quote>successful</quote> to outside
-users.  As a result, failover should be considered a <emphasis>last
-resort</emphasis>.  If the <quote>injured</quote> origin server can be brought up to
-the point where it can limp along long enough to do a controlled
-switchover, that is <emphasis>greatly</emphasis> preferable.</para>
+<para> If some more serious problem occurs on the
+<quote>origin</quote> server, it may be necessary to <command> <link
+linkend="stmtfailover"> FAILOVER </link> </command> to a backup
+server.  This is a highly undesirable circumstance, as transactions
+<quote>committed</quote> on the origin, but not applied to the
+subscribers, will be lost.  You may have reported these transactions
+as <quote>successful</quote> to outside users.  As a result, failover
+should be considered a <emphasis>last resort</emphasis>.  If the
+<quote>injured</quote> origin server can be brought up to the point
+where it can limp along long enough to do a controlled switchover,
+that is <emphasis>greatly</emphasis> preferable.</para>
 
 <para> Slony does not provide any automatic detection for failed
 systems.  Abandoning committed transactions is a business decision
 that cannot be made by a database.  If someone wants to put the
 commands below into a script executed automatically from the network
-monitoring system, well ... it's <emphasis>your</emphasis> data, and it's <emphasis>your</emphasis> failover policy.
+monitoring system, well ... it's <emphasis>your</emphasis> data, and
+it's <emphasis>your</emphasis> failover policy.
 
 <itemizedlist>
 
-<listitem><para> The <link linkend="slonik"> <application>slonik</application> </link> command
+<listitem><para> The <link linkend="slonik">
+<application>slonik</application> </link> command
 
 <programlisting>
 failover (id = 1, backup node = 2);
@@ -104,25 +112,29 @@ failover (id = 1, backup node = 2);
 
 <para> causes node2 to assume the ownership (origin) of all sets that
 have node1 as their current origin.  If there should happen to be
-additional nodes in the <productname>Slony-I</productname> cluster, all direct
-subscribers of node1 are instructed that this is happening.
-<application>Slonik</application> will also query all direct subscribers in order
-to determine out which node has the highest replication status
-(<emphasis>e.g.</emphasis> - the latest committed transaction) for each set, and
-the configuration will be changed in a way that node2 first applies
-those final before actually allowing write access to the tables.</para>
+additional nodes in the <productname>Slony-I</productname> cluster,
+all direct subscribers of node1 are instructed that this is happening.
+<application>Slonik</application> will also query all direct
+subscribers in order to determine out which node has the highest
+replication status (<emphasis>e.g.</emphasis> - the latest committed
+transaction) for each set, and the configuration will be changed in a
+way that node2 first applies those final before actually allowing
+write access to the tables.</para>
 
 <para> In addition, all nodes that subscribed directly to node1 will
 now use node2 as data provider for the set.  This means that after the
 failover command succeeded, no node in the entire replication setup
 will receive anything from node1 any more.</para></listitem>
 
-<listitem><para> Reconfigure and restart the application (or <application>pgpool</application>)
-to cause it to reconnect to node2.</para></listitem>
+<listitem><para> Reconfigure and restart the application (or
+<application>pgpool</application>) to cause it to reconnect to
+node2.</para></listitem>
 
 <listitem><para> After the failover is complete and node2 accepts
 write operations against the tables, remove all remnants of node1's
-configuration information with the <link linkend="slonik"> <application>slonik</application> </link> command
+configuration information with the <link linkend="slonik">
+<application>slonik</application> </link> <command> <link
+linkend="stmtdropnode"> DROP NODE </link> </command> command:
 
 <programlisting>
 drop node (id = 1, event node = 2);

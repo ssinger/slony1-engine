@@ -108,7 +108,9 @@ restart node 3;
 restart node 4;
 </programlisting></para>
 
-<para> <command>restart node n</command> cleans up dead notifications so that you can restart the node.</para>
+<para> <command> <link linkend="stmtrestartnode"> RESTART NODE </link>
+</command> cleans up dead notifications so that you can restart the
+node.</para>
 
 <para>As of version 1.0.5, the startup process of slon looks for this
 condition, and automatically cleans it up.</para>
@@ -124,7 +126,9 @@ put them into
 <filename><envar>$(HOME)</envar>/.pgpass.</filename></para>
 
 <qandaentry>
-<question><para>Slonik fails - cannot load <productname>PostgreSQL</productname> library - <command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
+<question><para>Slonik fails - cannot load
+<productname>PostgreSQL</productname> library -
+<command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
 
 <para> When I run the sample setup script I get an error message similar
 to:
@@ -152,11 +156,12 @@ binaries are asking to load something that isn't actually in the
 library directory for the <productname>PostgreSQL</productname>
 database cluster that it's hitting.</para>
 
-<para>Long and short: This points to a need to <quote>audit</quote> what
-installations of <productname>PostgreSQL</productname> and <productname>Slony-I</productname>
-you have in place on the machine(s).  Unfortunately, just about any
-mismatch will cause things not to link up quite right.  See also <link linkend="slonyfaq02"> SlonyFAQ02 </link> concerning threading issues
-on Solaris ...</para>
+<para>Long and short: This points to a need to <quote>audit</quote>
+what installations of <productname>PostgreSQL</productname> and
+<productname>Slony-I</productname> you have in place on the
+machine(s).  Unfortunately, just about any mismatch will cause things
+not to link up quite right.  See also <link linkend="slonyfaq02">
+SlonyFAQ02 </link> concerning threading issues on Solaris ...</para>
 
 <qandaentry>
 <question><para>Table indexes with FQ namespace names
@@ -168,13 +173,13 @@ set add table (set id = 1, origin = 1, id = 27,
                comment = 'Table some_table in namespace nspace with a candidate primary key');
 </programlisting></para></question>
 
-<answer><para> If you have <command> key = 'nspace.key_on_whatever'</command>
-the request will <emphasis>FAIL</emphasis>.</para>
+<answer><para> If you have <command> key =
+'nspace.key_on_whatever'</command> the request will
+<emphasis>FAIL</emphasis>.</para>
 
 <qandaentry>
-<question><para>
-I'm trying to get a slave subscribed, and get the following
-messages in the logs:
+<question><para> I'm trying to get a slave subscribed, and get the
+following messages in the logs:
 
 <screen>
 DEBUG1 copy_set 1
@@ -244,22 +249,36 @@ stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_
 CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
 </screen></para></question>
 
-<answer><para>
-The table IDs used in SET ADD TABLE are required to be unique <emphasis>ACROSS
-ALL SETS</emphasis>.  Thus, you can't restart numbering at 1 for a second set; if
-you are numbering them consecutively, a subsequent set has to start
-with IDs after where the previous set(s) left off.</para>
+<answer><para> The table IDs used in <command> <link
+linkend="stmtsetaddtable"> SET ADD TABLE </link> </command> are
+required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus, you
+can't restart numbering at 1 for a second set; if you are numbering
+them consecutively, a subsequent set has to start with IDs after where
+the previous set(s) left off.</para>
+</answer> </qandaentry>
+
 <qandaentry>
 <question><para>I need to drop a table from a replication set</para></question>
 <answer><para>
 This can be accomplished several ways, not all equally desirable ;-).
 
 <itemizedlist>
-<listitem><para> You could drop the whole replication set, and recreate it with just the tables that you need.  Alas, that means recopying a whole lot of data, and kills the usability of the cluster on the rest of the set while that's happening.</para></listitem>
 
-<listitem><para> If you are running 1.0.5 or later, there is the command SET DROP TABLE, which will "do the trick."</para></listitem>
+<listitem><para> You could drop the whole replication set, and
+recreate it with just the tables that you need.  Alas, that means
+recopying a whole lot of data, and kills the usability of the cluster
+on the rest of the set while that's happening.</para></listitem>
 
-<listitem><para> If you are still using 1.0.1 or 1.0.2, the _essential_ functionality of SET DROP TABLE involves the functionality in droptable_int().  You can fiddle this by hand by finding the table ID for the table you want to get rid of, which you can find in sl_table, and then run the following three queries, on each host:
+<listitem><para> If you are running 1.0.5 or later, there is the
+command SET DROP TABLE, which will "do the trick."</para></listitem>
+
+<listitem><para> If you are still using 1.0.1 or 1.0.2, the
+<emphasis>essential functionality of <command> <link
+linkend="stmtsetdroptable"> SET DROP TABLE</link></command> involves
+the functionality in <function>droptable_int()</function>.  You can
+fiddle this by hand by finding the table ID for the table you want to
+get rid of, which you can find in sl_table, and then run the following
+three queries, on each host:</emphasis>
 
 <programlisting>
   select _slonyschema.alterTableRestore(40);
@@ -267,30 +286,35 @@ This can be accomplished several ways, not all equally desirable ;-).
   delete from _slonyschema.sl_table where tab_id = 40;
 </programlisting></para>
 
-<para>The schema will obviously depend on how you defined the <productname>Slony-I</productname>
-cluster.  The table ID, in this case, 40, will need to change to the
-ID of the table you want to have go away.
+<para>The schema will obviously depend on how you defined the
+<productname>Slony-I</productname> cluster.  The table ID, in this
+case, 40, will need to change to the ID of the table you want to have
+go away.</para>
 
-You'll have to run these three queries on all of the nodes, preferably
+<para> You'll have to run these three queries on all of the nodes, preferably
 firstly on the origin node, so that the dropping of this propagates
 properly.  Implementing this via a <link linkend="slonik"> slonik
-</link> statement with a new <productname>Slony-I</productname> event would do
-that.  Submitting the three queries using <command>EXECUTE SCRIPT</command>
-could do that.  Also possible would be to connect to each database and
-submit the queries by hand.</para></listitem>
-</itemizedlist></para>
+</link> statement with a new <productname>Slony-I</productname> event
+would do that.  Submitting the three queries using <command> <link linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command> could do
+that.  Also possible would be to connect to each database and submit
+the queries by hand.</para></listitem> </itemizedlist></para>
+</answer>
+</qandaentry>
 <qandaentry>
 <question><para>I need to drop a sequence from a replication set</para></question>
 
-<answer><para></para><para>If you are running 1.0.5 or later, there is a
-<command>SET DROP SEQUENCE</command> command in Slonik to allow you to do this,
-parallelling <command>SET DROP TABLE.</command></para>
+<answer><para></para><para>If you are running 1.0.5 or later, there is
+a <command> <link linkend="stmtsetdropsequence"> SET DROP SEQUENCE
+</link></command> command in Slonik to allow you to do this,
+parallelling <command> <link linkend="stmtsetdroptable"> SET DROP
+TABLE</link></command>.</para>
 
 <para>If you are running 1.0.2 or earlier, the process is a bit more manual.</para>
 
 <para>Supposing I want to get rid of the two sequences listed below,
-<envar>whois_cachemgmt_seq</envar> and <envar>epp_whoi_cach_seq_</envar>, we start
-by needing the <envar>seq_id</envar> values.
+<envar>whois_cachemgmt_seq</envar> and
+<envar>epp_whoi_cach_seq_</envar>, we start by needing the
+<envar>seq_id</envar> values.
 
 <screen>
 oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
@@ -310,12 +334,16 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting></para>
 
 <para>Those two queries could be submitted to all of the nodes via
-<function>ddlscript()</function> / <command>EXECUTE SCRIPT</command>, thus eliminating
-the sequence everywhere <quote>at once.</quote> Or they may be applied by
-hand to each of the nodes.</para>
+<function>ddlscript()</function> / <command> <link
+linkend="stmtddlscript"> EXECUTE SCRIPT </link> </command>, thus
+eliminating the sequence everywhere <quote>at once.</quote> Or they
+may be applied by hand to each of the nodes.</para>
 
-<para>Similarly to <command>SET DROP TABLE</command>, this should be in place for <productname>Slony-I</productname> version
-1.0.5 as <command>SET DROP SEQUENCE.</command></para>
+<para>Similarly to <command> <link linkend="stmtsetdroptable"> SET
+DROP TABLE </link> </command>, this is implemented
+<productname>Slony-I</productname> version 1.0.5 as <command> <link
+linkend="stmtsetdropsequence"> SET DROP
+SEQUENCE</link></command>.</para>
 <qandaentry>
 <question><para><productname>Slony-I</productname>: cannot add table to currently subscribed set 1</para>
 
@@ -328,9 +356,10 @@ hand to each of the nodes.</para>
 <answer><para> You cannot add tables to sets that already have
 subscribers.</para>
 
-<para>The workaround to this is to create <emphasis>ANOTHER</emphasis> set, add
-the new tables to that new set, subscribe the same nodes subscribing
-to "set 1" to the new set, and then merge the sets together.</para>
+<para>The workaround to this is to create <emphasis>ANOTHER</emphasis>
+set, add the new tables to that new set, subscribe the same nodes
+subscribing to "set 1" to the new set, and then merge the sets
+together.</para>
 
 <qandaentry>
 <question><para>Some nodes start consistently falling behind</para>
@@ -343,18 +372,23 @@ system performance suffering.</para>
 	fetch 100 from LOG;
 </screen></para></question>
 
-<answer><para> This is characteristic of pg_listener (which is the table containing
-<command>NOTIFY</command> data) having plenty of dead tuples in it.  That makes <command>NOTIFY</command>
-events take a long time, and causes the affected node to gradually
-fall further and further behind.</para>
+<answer><para> This is characteristic of pg_listener (which is the
+table containing <command>NOTIFY</command> data) having plenty of dead
+tuples in it.  That makes <command>NOTIFY</command> events take a long
+time, and causes the affected node to gradually fall further and
+further behind.</para>
 
-<para>You quite likely need to do a <command>VACUUM FULL</command> on <envar>pg_listener</envar>, to vigorously clean it out, and need to vacuum <envar>pg_listener</envar> really frequently.  Once every five minutes would likely be AOK.</para>
+<para>You quite likely need to do a <command>VACUUM FULL</command> on
+<envar>pg_listener</envar>, to vigorously clean it out, and need to
+vacuum <envar>pg_listener</envar> really frequently.  Once every five
+minutes would likely be AOK.</para>
 
 <para> Slon daemons already vacuum a bunch of tables, and
-<filename>cleanup_thread.c</filename> contains a list of tables that are
-frequently vacuumed automatically.  In <productname>Slony-I</productname> 1.0.2,
-<envar>pg_listener</envar> is not included.  In 1.0.5 and later, it is
-regularly vacuumed, so this should cease to be a direct issue.</para>
+<filename>cleanup_thread.c</filename> contains a list of tables that
+are frequently vacuumed automatically.  In
+<productname>Slony-I</productname> 1.0.2, <envar>pg_listener</envar>
+is not included.  In 1.0.5 and later, it is regularly vacuumed, so
+this should cease to be a direct issue.</para>
 
 <para>There is, however, still a scenario where this will still
 "bite."  Vacuums cannot delete tuples that were made "obsolete" at any
@@ -363,14 +397,20 @@ open.  Long running transactions will cause trouble, and should be
 avoided, even on "slave" nodes.</para>
 
 <qandaentry>
-<question><para>I started doing a backup using pg_dump, and suddenly Slony stops</para></question>
+<question><para>I started doing a backup using <application/pg_dump/,
+and suddenly Slony stops</para></question>
 
 <answer><para>Ouch.  What happens here is a conflict between:
 <itemizedlist>
 
-<listitem><para> <application>pg_dump</application>, which has taken out an <command>AccessShareLock</command> on all of the tables in the database, including the <productname>Slony-I</productname> ones, and</para></listitem>
+<listitem><para> <application>pg_dump</application>, which has taken
+out an <command>AccessShareLock</command> on all of the tables in the
+database, including the <productname>Slony-I</productname> ones,
+and</para></listitem>
 
-<listitem><para> A <productname>Slony-I</productname> sync event, which wants to grab a <command>AccessExclusiveLock</command> on	 the table <envar>sl_event</envar>.</para></listitem>
+<listitem><para> A <productname>Slony-I</productname> sync event,
+which wants to grab a <command>AccessExclusiveLock</command> on the
+table <envar>sl_event</envar>.</para></listitem>
 </itemizedlist></para>
 
 <para>The initial query that will be blocked is thus:
@@ -379,12 +419,14 @@ avoided, even on "slave" nodes.</para>
 select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  
 </screen></para>
 
-<para>(You can see this in <envar>pg_stat_activity</envar>, if you have query
-display turned on in <filename>postgresql.conf</filename>)</para>
+<para>(You can see this in <envar>pg_stat_activity</envar>, if you
+have query display turned on in
+<filename>postgresql.conf</filename>)</para>
 
 <para>The actual query combination that is causing the lock is from
 the function <function>Slony_I_ClusterStatus()</function>, found in
-<filename>slony1_funcs.c</filename>, and is localized in the code that does:
+<filename>slony1_funcs.c</filename>, and is localized in the code that
+does:
 
 <programlisting>
   LOCK TABLE %s.sl_event;
@@ -392,46 +434,54 @@ the function <function>Slony_I_ClusterStatus()</function>, found in
   SELECT currval('%s.sl_event_seq');
 </programlisting></para>
 
-<para>The <command>LOCK</command> statement will sit there and wait until <command>pg_dump</command> (or whatever else has pretty much any kind of access lock on <envar>sl_event</envar>) completes.</para>  
+<para>The <command>LOCK</command> statement will sit there and wait
+until <command>pg_dump</command> (or whatever else has pretty much any
+kind of access lock on <envar>sl_event</envar>) completes.</para>
 
-<para>Every subsequent query submitted that touches <envar>sl_event</envar> will block behind the <function>createEvent</function> call.</para>
+<para>Every subsequent query submitted that touches
+<envar>sl_event</envar> will block behind the
+<function>createEvent</function> call.</para>
 
 <para>There are a number of possible answers to this:
 <itemizedlist>
 
-<listitem><para> Have pg_dump specify the schema dumped using
---schema=whatever, and don't try dumping the cluster's schema.</para></listitem>
+<listitem><para> Have <application>pg_dump</application> specify the
+schema dumped using <option>--schema=whatever</option>, and don't try
+dumping the cluster's schema.</para></listitem>
 
-<listitem><para> It would be nice to add an "--exclude-schema" option
-to pg_dump to exclude the Slony cluster schema.  Maybe in 8.0 or
-8.1...</para></listitem>
+<listitem><para> It would be nice to add an <option/--exclude-schema/
+option to pg_dump to exclude the Slony cluster schema.  Maybe in 8.0
+or 8.1...</para></listitem>
 
 <listitem><para>Note that 1.0.5 uses a more precise lock that is less
 exclusive that alleviates this problem.</para></listitem>
 </itemizedlist></para>
 <qandaentry>
 
-<question><para>The slons spent the weekend out of commission [for
-some reason], and it's taking a long time to get a sync through.</para></question>
+<question><para>The <application/slon/s spent the weekend out of
+commission [for some reason], and it's taking a long time to get a
+sync through.</para></question>
 
 <answer><para> You might want to take a look at the sl_log_1/sl_log_2
 tables, and do a summary to see if there are any really enormous
-<productname>Slony-I</productname> transactions in there.  Up until at least 1.0.2,
-there needs to be a slon connected to the origin in order for
-<command>SYNC</command> events to be generated.</para>
+<productname>Slony-I</productname> transactions in there.  Up until at
+least 1.0.2, there needs to be a slon connected to the origin in order
+for <command>SYNC</command> events to be generated.</para>
 
-<para>If none are being generated, then all of the updates until the next
-one is generated will collect into one rather enormous <productname>Slony-I</productname>
-transaction.</para>
+<para>If none are being generated, then all of the updates until the
+next one is generated will collect into one rather enormous
+<productname>Slony-I</productname> transaction.</para>
 
 <para>Conclusion: Even if there is not going to be a subscriber
-around, you <emphasis>really</emphasis> want to have a slon running to service
-the origin node.</para>
+around, you <emphasis>really</emphasis> want to have a
+<application>slon</application> running to service the origin
+node.</para>
 
-<para><productname>Slony-I</productname> 1.1 provides a stored procedure that
-allows <command>SYNC</command> counts to be updated on the origin based on a
-<application>cron</application> job even if there is no <link linkend="slon"> slon
-</link> daemon running.</para>
+<para><productname>Slony-I</productname> 1.1 provides a stored
+procedure that allows <command>SYNC</command> counts to be updated on
+the origin based on a <application>cron</application> job even if
+there is no <link linkend="slon"> <application/slon/ </link> daemon
+running.</para>
 
 <qandaentry>
 <question><para>I pointed a subscribing node to a different provider
@@ -448,19 +498,23 @@ where we had configuration thus:
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as
-provider, and we did <command>DROP SET</command>/<command>SUBSCRIBE SET</command> for
-node 2 to get it repopulating.</para>
+provider, and we did <command> <link linkend="stmtdropset"> DROP
+SET</link></command>/<command> <link linkend="stmtsubscribeset">
+SUBSCRIBE SET</link> </command> for node 2 to get it
+repopulating.</para>
 
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
 
-<para>The problem was that there was not a suitable set of <quote>listener paths</quote>
-in sl_listen to allow the events from node 1 to propagate to node 3.
-The events were going through node 2, and blocking behind the
-<command>SUBSCRIBE SET</command> event that node 2 was working on.</para>
+<para>The problem was that there was not a suitable set of
+<quote>listener paths</quote> in sl_listen to allow the events from
+node 1 to propagate to node 3.  The events were going through node 2,
+and blocking behind the <command> <link linkend="stmtsubscribeset">
+SUBSCRIBE SET </link> </command> event that node 2 was working
+on.</para>
 
-<para>The following slonik script dropped out the listen paths where node 3
-had to go through node 2, and added in direct listens between nodes 1
-and 3.
+<para>The following slonik script dropped out the listen paths where
+node 3 had to go through node 2, and added in direct listens between
+nodes 1 and 3.
 
 <programlisting>
 cluster name = oxrslive;
@@ -476,15 +530,16 @@ try {
 }
 </programlisting></para>
 
-<para>Immediately after this script was run, <command>SYNC</command> events started propagating
-again to node 3.
+<para>Immediately after this script was run, <command>SYNC</command>
+events started propagating again to node 3.
 
 This points out two principles:
 <itemizedlist>
 
 <listitem><para> If you have multiple nodes, and cascaded subscribers,
-you need to be quite careful in populating the <command>STORE LISTEN</command>
-entries, and in modifying them if the structure of the replication
+you need to be quite careful in populating the <command> <link
+linkend="stmtstorelisten"> STORE LISTEN </link></command> entries, and
+in modifying them if the structure of the replication
 <quote>tree</quote> changes.</para></listitem>
 
 <listitem><para> Version 1.1 should provide better tools to help
@@ -507,12 +562,14 @@ generate the listen path network.</para></listitem>
 </qandaentry>
 
 <qandaentry id="faq17">
-<question><para>After dropping a node, sl_log_1 isn't getting purged out anymore.</para></question>
+<question><para>After dropping a node, sl_log_1 isn't getting purged
+out anymore.</para></question>
 
 <answer><para> This is a common scenario in versions before 1.0.5, as
-the <quote>clean up</quote> that takes place when purging the node does not
-include purging out old entries from the <productname>Slony-I</productname> table,
-sl_confirm, for the recently departed node.</para>
+the <quote>clean up</quote> that takes place when purging the node
+does not include purging out old entries from the
+<productname>Slony-I</productname> table, sl_confirm, for the recently
+departed node.</para>
 
 <para> The node is no longer around to update confirmations of what
 syncs have been applied on it, and therefore the cleanup thread that
@@ -536,10 +593,10 @@ oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_i
 (6 rows)
 </screen></para>
 
-<para>In version 1.0.5, the <command>drop node</command> function purges out
-entries in sl_confirm for the departing node.  In earlier versions,
-this needs to be done manually.  Supposing the node number is 3, then
-the query would be:
+<para>In version 1.0.5, the <command><link linkend="stmtdropnode">
+drop node </link> </command> function purges out entries in sl_confirm
+for the departing node.  In earlier versions, this needs to be done
+manually.  Supposing the node number is 3, then the query would be:
 
 <screen>
 delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
@@ -552,11 +609,11 @@ DELETE 6
 </screen></para>
 
 <para>General <quote>due diligance</quote> dictates starting with a
-<command>BEGIN</command>, looking at the contents of sl_confirm before,
-ensuring that only the expected records are purged, and then, only
-after that, confirming the change with a <command>COMMIT</command>.  If you
-delete confirm entries for the wrong node, that could ruin your whole
-day.</para>
+<command>BEGIN</command>, looking at the contents of sl_confirm
+before, ensuring that only the expected records are purged, and then,
+only after that, confirming the change with a
+<command>COMMIT</command>.  If you delete confirm entries for the
+wrong node, that could ruin your whole day.</para>
 
 <para>You'll need to run this on each node that remains...</para>
 
@@ -565,7 +622,10 @@ purges unneeded entries from sl_confirm in two places:
 
 <itemizedlist>
 <listitem><para> At the time a node is dropped</para></listitem>
-<listitem><para> At the start of each "cleanupEvent" run, which is the event in which old data is purged from sl_log_1 and sl_seqlog</para></listitem>
+
+<listitem><para> At the start of each <function/cleanupEvent/ run,
+which is the event in which old data is purged from sl_log_1 and
+sl_seqlog</para></listitem> 
 </itemizedlist></para>
 </answer>
 </qandaentry>
@@ -574,7 +634,7 @@ purges unneeded entries from sl_confirm in two places:
 <question><para>Replication Fails - Unique Constraint Violation</para>
 
 <para>Replication has been running for a while, successfully, when a
-node encounters a "glitch," and replication logs are filled with
+node encounters a <quote/glitch,/ and replication logs are filled with
 repetitions of the following:
 
 <screen>
@@ -599,11 +659,13 @@ delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  dupl
 ERROR  remoteWorkerThread_1: SYNC aborted
 </screen></para>
 
-<para>The transaction rolls back, and <productname>Slony-I</productname> tries again, and again,
-and again.  The problem is with one of the <emphasis>last</emphasis> SQL statements, the
-one with <command>log_cmdtype = 'I'</command>.  That isn't quite obvious; what takes
-place is that <productname>Slony-I</productname> groups 10 update queries together to diminish
-the number of network round trips.</para></question>
+<para>The transaction rolls back, and
+<productname>Slony-I</productname> tries again, and again, and again.
+The problem is with one of the <emphasis>last</emphasis> SQL
+statements, the one with <command>log_cmdtype = 'I'</command>.  That
+isn't quite obvious; what takes place is that
+<productname>Slony-I</productname> groups 10 update queries together
+to diminish the number of network round trips.</para></question>
 
 <answer><para> A <emphasis>certain</emphasis> cause for this has not
 yet been arrived at.  The factors that <emphasis>appear</emphasis> to
@@ -611,10 +673,11 @@ go together to contribute to this scenario are as follows:
 
 <itemizedlist>
 
-<listitem><para> The "glitch" seems to coincide with some sort of
-outage; it has been observed both in cases where databases were
+<listitem><para> The <quote/glitch/ seems to coincide with some sort
+of outage; it has been observed both in cases where databases were
 suffering from periodic "SIG 11" problems, where backends were falling
-over, as well as when temporary network failure seemed likely.</para></listitem>
+over, as well as when temporary network failure seemed
+likely.</para></listitem>
 
 <listitem><para> The scenario seems to involve a delete transaction
 having been missed by <productname>Slony-I</productname>.</para></listitem>
@@ -626,7 +689,8 @@ transaction has been cleaned out of sl_log_1, so there is no recovery
 possible.</para>
 
 <para>What is necessary, at this point, is to drop the replication set
-(or even the node), and restart replication from scratch on that node.</para>
+(or even the node), and restart replication from scratch on that
+node.</para>
 
 <para>In <productname>Slony-I</productname> 1.0.5, the handling of
 purges of sl_log_1 are rather more conservative, refusing to purge
@@ -640,12 +704,12 @@ aggressively, and this will resolve the issue completely.</para>
 
 <qandaentry>
 
-<question><para> If you have a slonik script something like this, it
-will hang on you and never complete, because you can't have
-<command>wait for event</command> inside a <command>try</command>
-block. A <command>try</command> block is executed as one transaction,
-and the event that you are waiting for can never arrive inside the
-scope of the transaction.
+<question><para> If you have a <link linkend="slonik"> slonik </link>
+script something like this, it will hang on you and never complete,
+because you can't have <command>wait for event</command> inside a
+<command>try</command> block. A <command>try</command> block is
+executed as one transaction, and the event that you are waiting for
+can never arrive inside the scope of the transaction.
 
 <programlisting>
 try {
@@ -665,7 +729,8 @@ try {
 }
 </programlisting></para></question>
 
-<answer><para> You must not invoke <command>wait for event</command> inside a
+<answer><para> You must not invoke <command> <link
+linkend="stmtwaitevent"> wait for event</link> </command> inside a
 <quote>try</quote> block.</para></answer>
 
 </qandaentry>
@@ -680,21 +745,24 @@ in some foreign key relationship; that <emphasis>isn't</emphasis> the case since
 foreign key constraint triggers are turned off on subscriber nodes.
 </para>
 </answer>
+
 <answer> <para>(Jan Wieck comments:) The order of table ID's is only
-significant during a <command>LOCK SET</command> in preparation of
-switchover. If that order is different from the order in which an
-application is acquiring its locks, it can lead to deadlocks that
-abort either the application or <application>slon</application>.
+significant during a <command> <link linkend="stmtlockset"> LOCK
+SET</link> </command> in preparation of switchover. If that order is
+different from the order in which an application is acquiring its
+locks, it can lead to deadlocks that abort either the application or
+<application>slon</application>.
 </para>
 </answer>
+
 <answer> <para> (David Parker) I ran into one other case where the
 ordering of tables in the set was significant: in the presence of
 inherited tables. If a child table appears before its parent in a set,
 then the initial subscription will end up deleting that child table
 after it has possibly already received data, because the
-<command>copy_set</command> logic does a <command>delete</command>, not a
-<command>delete only</command>, so the delete of the parent will delete the new
-rows in the child as well.
+<command>copy_set</command> logic does a <command>delete</command>,
+not a <command>delete only</command>, so the delete of the parent will
+delete the new rows in the child as well.
 
 </para>
 </answer></qandaentry>

@@ -1,4 +1,4 @@
-<sect1 id="listenpaths"> <title/ Slony Listen Paths/
+<sect1 id="listenpaths"> <title/ Slony-I Listen Paths/
 
 <note> <para> If you are running version
 <productname>Slony-I</productname> 1.1, it should be
@@ -11,9 +11,10 @@ configuration.  For earlier versions, however, it is needful...</para>
 usage of cascaded subscribers (<emphasis>e.g.</emphasis> - subscribers
 that are subscribing through a subscriber node), you will have to be
 fairly careful about the configuration of <quote>listen paths</quote>
-via the Slonik <command>STORE LISTEN</command> and <command>DROP
-LISTEN</command> statements that control the contents of the table
-sl_listen.</para>
+via the Slonik <command> <link
+linkend="stmtstorelisten"> STORE LISTEN </link> </command>  and
+<link linkend="stmtdroplisten"> <command>DROP LISTEN</command> </link>
+statements that control the contents of the table sl_listen.</para>
 
 <para>The <quote>listener</quote> entries in this table control where
 each node expects to listen in order to get events propagated from
@@ -21,9 +22,9 @@ other nodes.  You might think that nodes only need to listen to the
 <quote>parent</quote> from whom they are getting updates, but in
 reality, they need to be able to receive messages from
 <emphasis>all</emphasis> nodes in order to be able to conclude that
-SYNCs have been received everywhere, and that, therefore, entries in
-sl_log_1 and sl_log_2 have been applied everywhere, and can therefore
-be purged.  This extra communication is needful so
+<command/SYNC/s have been received everywhere, and that, therefore,
+entries in sl_log_1 and sl_log_2 have been applied everywhere, and can
+therefore be purged.  This extra communication is needful so
 <productname>Slony-I</productname> is able to shift origins to other
 locations.</para>
 

@@ -14,30 +14,35 @@ operation.
 <listitem><para> You may subsequently, or instead, wish to modify the
 subscriptions of other nodes.  You might want to modify a node to get
 its data from a different provider, or to change it to turn forwarding
-on or off.  This can be accomplished by issuing the slonik
-<command/SUBSCRIBE SET/ operation with the new subscription
-information for the node; <productname/Slony-I/ will change the
-configuration.
+on or off.  This can be accomplished by issuing the slonik <command>
+<link linkend="stmtsubscribeset"> SUBSCRIBE SET</link> </command>
+operation with the new subscription information for the node;
+<productname>Slony-I</productname> will change the
+configuration.</para></listitem>
 
 <listitem><para> If the directions of data flows have changed, it is
-doubtless appropriate to issue a set of <command/DROP LISTEN/
-operations to drop out obsolete paths between nodes and <command/SET
-LISTEN/ to add the new ones.  At present, this is not changed
-automatically; at some point, <command/MOVE SET/ and
-<command/SUBSCRIBE SET/ might change the paths as a side-effect.  See
-<link linkend="ListenPaths"> Slony Listen Paths </link> for more
-information about this.  In version 1.1 and later, it is likely that
-the generation of sl_listen entries will be entirely automated, where
-they will be regenerated when changes are made to sl_path or
-sl_subscribe, thereby making it unnecessary to even think about
-<command/SET LISTEN/.
+doubtless appropriate to issue a set of <command><link
+linkend="stmtdroplisten"> DROP LISTEN</link></command> operations to
+drop out obsolete paths between nodes and <command><link
+linkend="stmtstorelisten">STORE LISTEN </link></command> to add the
+new ones.  At present, this is not changed automatically; at some
+point, <command> <link linkend="stmtmoveset"> MOVE
+SET</link></command> and <command> <link linkend="stmtsubscribeset">
+SUBSCRIBE SET</link> </command> might change the paths as a
+side-effect.  See <link linkend="listenpaths"> Slony Listen Paths
+</link> for more information about this.  In version 1.1 and later, it
+is likely that the generation of sl_listen entries will be entirely
+automated, where they will be regenerated when changes are made to
+sl_path or sl_subscribe, thereby making it unnecessary to even think
+about <command> <link linkend="stmtstorelisten"> STORE LISTEN
+</link></command>.</para></listitem>
 
 </itemizedlist>
 
 <para> The <filename/altperl/ toolset includes a
 <application/init_cluster.pl/ script that is quite up to the task of
-creating the new <command/SET LISTEN/ commands; it isn't, however,
-smart enough to know what listener paths should be dropped.
+creating the new <command>STORE LISTEN</command> commands; it isn't,
+however, smart enough to know what listener paths should be dropped.
 </sect1>
 
 <!-- Keep this comment at the end of the file

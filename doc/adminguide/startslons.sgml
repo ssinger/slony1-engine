@@ -14,30 +14,32 @@ some principles worth considering:
 
 <itemizedlist>
 
-<listitem><Para> Each <application/slon/ needs to be able to
-communicate quickly with the database whose <quote/node controller/ it
-is.  Therefore, if a <productname/Slony-I/ cluster runs across some
-form of Wide Area Network, each slon process should run on or nearby
-the databases each is controlling.  If you break this rule, no
-particular disaster should ensue, but the added latency introduced to
-monitoring events on the slon's <quote/own node/ will cause it to
-replicate in a <emphasis/somewhat/ less timely manner.
+<listitem><para> Each <application>slon</application> needs to be able
+to communicate quickly with the database whose <quote>node
+controller</quote> it is.  Therefore, if a
+<productname>Slony-I</productname> cluster runs across some form of
+Wide Area Network, each slon process should run on or nearby the
+databases each is controlling.  If you break this rule, no particular
+disaster should ensue, but the added latency introduced to monitoring
+events on the slon's <quote>own node</quote> will cause it to
+replicate in a <emphasis>somewhat</emphasis> less timely
+manner.</para></listitem>
 
-<listitem><Para> The very fastest results would be achieved by having
-each <application/slon/ run on the database server that it is
-servicing.  If it runs somewhere within a fast local network,
-performance will not be noticeably degraded.
+<listitem><para> The very fastest results would be achieved by having
+each <application>slon</application> run on the database server that
+it is servicing.  If it runs somewhere within a fast local network,
+performance will not be noticeably degraded.</para></listitem>
 
-<listitem><Para> It is an attractive idea to run many of the
-<application/slon/ processes for a cluster on one machine, as this
-makes it easy to monitor them both in terms of log files and process
-tables from one location.  This also eliminates the need to login to
-several hosts in order to look at log files or to restart
-<application/slon/ instances.
+<listitem><para> It is an attractive idea to run many of the
+<application>slon</application> processes for a cluster on one
+machine, as this makes it easy to monitor them both in terms of log
+files and process tables from one location.  This also eliminates the
+need to login to several hosts in order to look at log files or to
+restart <application>slon</application> instances.</para></listitem>
 
 </itemizedlist>
 
-<para>There are two <quote/watchdog/ scripts currently available:
+<para>There are two <quote>watchdog</quote> scripts currently available:
 
 <itemizedlist>
 
@@ -47,15 +49,15 @@ invocation of <application><link linkend="slon"> slon
 </link></application>, restarting any time it falls over</para>
 </listitem>
 
-<listitem><Para> <filename>tools/altperl/slon_watchdog2.pl</filename>
+<listitem><para> <filename>tools/altperl/slon_watchdog2.pl</filename>
 - a somewhat more intelligent version that periodically polls the
-database, checking to see if a <command/SYNC/ has taken place
+database, checking to see if a <command>SYNC</command> has taken place
 recently.  We have had VPN connections that occasionally fall over
 without signalling the application, so that the <application><link
 linkend="slon"> slon </link></application> stops working, but doesn't
-actually die; this polling addresses that issue.
+actually die; this polling addresses that issue.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para>The <filename>slon_watchdog2.pl</filename> script is probably
 <emphasis>usually</emphasis> the preferable thing to run.  It was at
