@@ -14,4 +14,7 @@ slony1_schema.sh	<dbname> <clustername>
 	After loading the database will be an uninitialized Slony-I
 	node. The local_node_id is -1. No configuration data exists.
 
+slony1_initcluster.sh [-f] <clustername> <conninfo> <comment>
+
+
 

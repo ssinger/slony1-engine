@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.7 2004-01-09 02:17:48 wieck Exp $
+ *	$Id: slon.c,v 1.8 2004-01-09 21:33:14 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -861,6 +862,109 @@ slon_quote(char *buf, char *value, char **endp)
 
 	if (endp != NULL)
 		*endp = buf;
+}
+
+
+static void
+slon_quote2(char *buf, char *value, char **endp)
+{
+	while (*value != '\0')
+	{
+		switch (*value)
+		{
+			case '\'':
+			case '\\':	*buf++ = '\'';
+						break;
+		}
+		*buf++ = *value++;
+	}
+	*buf = '\0';
+
+	if (endp != NULL)
+		*endp = buf;
+}
+
+
+int
+slon_mkquery(slon_querybuf *buf, char *fmt, ...)
+{
+	int			pos;
+	va_list		ap;
+	char	   *s;
+	int			len;
+
+	if (buf->size == 0) {
+		buf->size = 128;
+		buf->buf = malloc(128);
+	}
+
+	pos = 0;
+
+	va_start(ap, fmt);
+	while (*fmt)
+	{
+		if (buf->size - pos < 64)
+		{
+			buf->size *= 2;
+			buf->buf = realloc(buf->buf, buf->size);
+		}
+
+		switch(*fmt)
+		{
+			case '%':	fmt++;
+						switch(*fmt)
+						{
+							case 's':	s = va_arg(ap, char *);
+										len = strlen(s);
+										if (buf->size - pos < len + 2)
+										{
+											buf->size *= 2;
+											buf->buf = realloc(buf->buf, buf->size);
+										}
+										strcpy(&(buf->buf[pos]), s);
+										pos += strlen(&(buf->buf[pos]));
+										fmt++;
+										break;
+
+							case 'q':	s = va_arg(ap, char *);
+										len = strlen(s);
+										if (buf->size - pos < len * 2 + 2)
+										{
+											buf->size *= 2;
+											buf->buf = realloc(buf->buf, buf->size);
+										}
+										slon_quote2(&(buf->buf[pos]), s, NULL);
+										pos += strlen(&(buf->buf[pos]));
+										fmt++;
+										break;
+
+							case 'd':	sprintf(&(buf->buf[pos]), "%d", va_arg(ap, int));
+										pos += strlen(&(buf->buf[pos]));
+										fmt++;
+										break;
+
+							default:	buf->buf[pos++] = '%';
+										buf->buf[pos++] = *fmt;
+										fmt++;
+										break;
+						}
+						break;
+
+			case '\\':	fmt++;
+						buf->buf[pos++] = *fmt;
+						fmt++;
+						break;
+
+			default:	buf->buf[pos++] = *fmt;
+						fmt++;
+						break;
+		}
+	}
+	va_end(ap);
+
+	buf->buf[pos] = '\0';
+
+	return 0;
 }
 
 

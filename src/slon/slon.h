@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.6 2004-01-09 02:17:48 wieck Exp $
+ *	$Id: slon.h,v 1.7 2004-01-09 21:33:14 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -223,6 +223,12 @@ extern void		slon_free_dummyconn(SlonConn *conn);
 #define slon_abort() {kill(slon_pid, SIGTERM);}
 extern void		slon_exit(int code);
 extern void		slon_quote(char *buf, char *value, char **endp);
+
+typedef struct {
+	size_t	size;
+	char   *buf;
+} slon_querybuf;
+extern int		slon_mkquery(slon_querybuf *buf, char *fmt, ...);
 
 
 /* ----------

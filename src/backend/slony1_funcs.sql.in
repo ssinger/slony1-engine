@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.9 2004-01-09 02:17:47 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.10 2004-01-09 21:33:13 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1164,3 +1164,24 @@ end;
 ' language plpgsql;
 
 
+create function @NAMESPACE@.createListenNetwork(int4, int4, int4)
+returns int4
+as '
+declare
+	p_origin	alias for $1;
+	p_node		alias for $2;
+	p_provider	alias for $3;
+	v_row		record;
+begin
+	if p_origin <> p_node then
+		perform @NAMESPACE@.storeListen(p_origin, p_provider, p_node);
+	end if;
+	for v_row in select * from @NAMESPACE@.sl_path PA
+			where PA.pa_server = p_node
+			and PA.pa_client <> p_provider
+	loop
+		perform @NAMESPACE@.createListenNetwork(p_origin, v_row.pa_client, p_node);
+	end loop;
+	return 0;
+end;
+' language plpgsql;

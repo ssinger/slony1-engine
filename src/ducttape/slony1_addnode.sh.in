@@ -1,0 +1,202 @@
+#!/bin/sh
+# ----------------------------------------------------------------------
+# slony1_addnode.sh.in
+#
+#	Shell script to add a new node to an existing cluster, load
+#	the base schema and support functions into the database, and
+#	establish path and listen information for it.
+#
+# $Id: slony1_addnode.sh.in,v 1.1 2004-01-09 21:33:14 wieck Exp $
+# ----------------------------------------------------------------------
+
+# ----
+# Get commandline options
+# ----
+Errors=0
+
+while true ; do
+	case $1 in
+		-*)	echo "unknown option $1" >&2
+			shift
+			Errors=1
+			;;
+
+		*)	break
+			;;
+	esac
+done
+
+# ----
+# Check usage
+# ----
+if [ $# -ne 5 ] ; then
+	echo "usage: `basename $0` cluster-name provider-nodeid new-nodeid conninfo node-comment" >&2
+	exit 1
+fi
+
+clustername="$1"
+namespace="_$1"
+no_provider="$2"
+no_id="$3"
+no_conninfo="$4"
+no_comment="$5"
+libdir=@LIBDIR@
+
+SLONY1_CLUSTERNAME="$1"
+export SLONY1_CLUSTERNAME
+
+# ----
+# Special treatment of the cluster .rc file in initcluster.
+# We allways want to initialize a new rc file, so if one exists we
+# must be called with switch -f.
+# ----
+CLUSTER_INFO=@LIBDIR@/ducttape_cluster_info-$SLONY1_CLUSTERNAME
+if [ ! -f $CLUSTER_INFO ] ; then
+	echo "ERROR: cluster $SLONY1_CLUSTERNAME not found" >&2
+	exit 2
+fi
+
+# ----
+# Source in common functions and override the eventually existing
+# ducttape_cluster_info
+# ----
+. @LIBDIR@/slony1_common.sh
+
+# ----
+# Setup all conninfo strings we need and check if the nodes
+# exist or not exist as required
+# ----
+conninfo_provider=`get_conninfo_src $no_provider`
+if [ "$conninfo_provider" = "" ] ; then
+	echo "provider_nodeid $no_provider not configured - abort" >&2
+	exit 2
+fi
+conninfo_node=`get_conninfo_src $no_id 2>/dev/null`
+if [ ! "$conninfo_node" = "" ] ; then
+	echo "nodeid $no_id already exists - abort" >&2
+	exit 2
+fi
+conninfo_primary=`get_conninfo_src $PrimaryNode` || exit 2
+eval ConnInfo_${no_id}=\"$no_conninfo\"
+conninfo_node=`get_conninfo_src $no_id` || exit 2
+
+# ----
+# Determine the postgres version and check if supported
+# ----
+pgversion=`get_postgres_version $no_id` || exit 2
+case $pgversion in
+	7.3|7.3.*)	base_version=7.3
+				xfiles=v73
+				bfiles=v73
+				;;
+	7.4|7.4.*)	base_version=7.4
+				xfiles=v73
+				bfiles=v73
+				;;
+	*)			echo "Unsupported database version $pgversion" >&2
+				exit 3
+				;;
+esac
+
+# ----
+# Check that the namespace doesn't exist yet
+# ----
+eval $conninfo_node
+exists=`psql -Aqt -c "select nspname from pg_namespace where nspname = '${namespace}';" $DBNAME`
+if [ "x${exists}" = "x${namespace}" ] ; then
+	echo "Namespace \"$namespace\" already exists" >&2
+	exit 4
+fi
+
+echo "PostgreSQL version is $pgversion"
+echo "Using database verion specific xfiles $xfiles"
+echo "Using database verion specific bfiles $bfiles"
+echo "Namespace is \"$namespace\""
+echo ""
+
+# ----
+# Load the xxid data type, the base schema, functions and
+# call the initializeLocalNode() and enableNode() procedures.
+# ----
+err=1
+case $base_version in
+	7.3|7.4)	#
+				# Extract the current cluster config from PrimaryNode
+				#
+				echo "Extracting cluster configuration from node $PrimayNode"
+				eval $conninfo_primary
+				TMPDATA=/tmp/slony_tmp_$$
+				pg_dump -a -n "${namespace}" -t "sl_node" $DBNAME >$TMPDATA
+				pg_dump -a -n "${namespace}" -t "sl_path" $DBNAME >>$TMPDATA
+				pg_dump -a -n "${namespace}" -t "sl_listen" $DBNAME >>$TMPDATA
+				pg_dump -a -n "${namespace}" -t "sl_set" $DBNAME >>$TMPDATA
+				pg_dump -a -n "${namespace}" -t "sl_subscribe" $DBNAME >>$TMPDATA
+
+				#
+				# Initialize the new node
+				#
+				echo "Initializing database for node $no_id"
+				eval $conninfo_node
+				(
+					echo "start transaction;"
+					echo "create schema \"${namespace}\";"
+
+					cat ${libdir}/xxid.$xfiles.sql						\
+						${libdir}/slony1_base.sql						\
+						${libdir}/slony1_base.$bfiles.sql				\
+						${libdir}/slony1_funcs.sql						\
+						${libdir}/slony1_funcs.$bfiles.sql				\
+						| sed -e "s/@CLUSTERNAME@/${clustername}/g"		\
+							  -e "s/@NAMESPACE@/\\\"${namespace}\\\"/g"
+
+					echo "select \"${namespace}\".initializeLocalNode($no_id,'${no_comment}');"
+					echo "select \"${namespace}\".enableNode_int($no_id);"
+
+					cat $TMPDATA
+					rm -f $TMPDATA
+
+					echo "select \"${namespace}\".storePath_int($no_provider, $no_id, '`get_conninfo $no_provider`', 10);"
+					echo "select \"${namespace}\".storePath_int($no_id, $no_provider, '`get_conninfo $no_id`', 10);"
+					echo "select \"${namespace}\".storeListen_int($PrimaryNode, $no_provider, $no_id);"
+					echo "commit transaction;"
+				) | psql -e $DBNAME 2>&1 | grep "^ERROR" || err=0
+
+				#
+				# Then do the rest of the configuration on the primary node
+				#
+				echo "Adding node $no_id to primary cluster node"
+				eval $conninfo_primary
+				(
+					echo "start transaction;"
+					echo "select \"${namespace}\".storeNode($no_id, '$no_comment');"
+					echo "insert into \"${namespace}\".sl_confirm select $PrimaryNode, $no_id, last_value, now() from \"${namespace}\".sl_event_seq;"
+					echo "select \"${namespace}\".enableNode($no_id);"
+					echo "select \"${namespace}\".storePath($no_provider, $no_id, '`get_conninfo $no_provider`', 10);"
+					echo "select \"${namespace}\".storePath($no_id, $no_provider, '`get_conninfo $no_id`', 10);"
+					echo "insert into \"${namespace}\".sl_confirm select con_origin, $no_id, con_seqno, now() from \"${namespace}\".sl_confirm where con_received = $PrimaryNode and con_origin <> $no_id;"
+					echo "select \"${namespace}\".storeListen(NO.no_id, $no_provider, $no_id) from \"${namespace}\".sl_node NO where NO.no_id != $no_id;"
+					echo "select \"${namespace}\".createListenNetwork($no_id, $no_id, -1);"
+					echo "commit transaction;"
+				) | psql -e $DBNAME 2>&1 | grep "^ERROR" || err=0
+
+				eval $conninfo_primary
+				TMPDATA=/tmp/slony_tmp_$$
+				pg_dump -a -n "${namespace}" -t "sl_confirm" $DBNAME >$TMPDATA
+				eval $conninfo_node
+				psql -e $DBNAME 2>&1 <$TMPDATA | grep "^ERROR" || err=0
+				rm -f $TMPDATA
+
+				;;
+esac
+
+if [ $err -eq 0 ] ; then
+	echo "New node $no_id added to cluster $clustername"
+else
+	exit 5
+fi
+
+# ----
+# Add the conninfo to the .slony1.<clustername>.rc file
+# ----
+echo "ConnInfo_${no_id}=\"$no_conninfo\""	>>$CLUSTER_INFO
+

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_node.c,v 1.2 2004-01-09 02:17:47 wieck Exp $
+ *	$Id: remote_node.c,v 1.3 2004-01-09 21:33:14 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -56,7 +56,9 @@ slon_remoteEventThread(void *cdata)
 	char		buf[256];
 	char		confirm_notify_name[64];
 	char		query[1024];
+	static slon_querybuf qbuf = {0, NULL};
 	PGresult   *res;
+	PGresult   *res2;
 	PGnotify   *notify;
 	int			rc;
 	int			have_notify;
@@ -386,6 +388,9 @@ slon_remoteEventThread(void *cdata)
 				char	   *ev_data8     = PQgetvalue(res, rownum, 14);
 				*/
 
+				/****************************************
+				 * Event SYNC
+				 ****************************************/
 				if (strcmp(ev_type, "SYNC") == 0)
 				{
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s SYNC min=%s max=%s xip=%s\n",
@@ -398,6 +403,9 @@ ev_origin, ev_seqno, ev_minxid, ev_maxxid, ev_xip);
 								NULL, NULL, NULL, NULL) < 0)
 						iserror = true;
 				}
+				/****************************************
+				 * Event STORE_NODE
+				 ****************************************/
 				else if (strcmp(ev_type, "STORE_NODE") == 0)
 				{
 					int		no_id		= strtol(ev_data1, NULL, 10);
@@ -406,8 +414,31 @@ ev_origin, ev_seqno, ev_minxid, ev_maxxid, ev_xip);
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s %s no_id=%d no_comment='%s'\n",
 ev_origin, ev_seqno, ev_type, no_id, no_comment);
 
+					/*
+					 * Call the function storeNode_int() on the local database
+					 */
+					slon_mkquery(&qbuf, 
+							"select %s.storeNode_int(%d, '%q')",
+							local_namespace, no_id, no_comment);
+					res2 = PQexec(node->local_dbconn, qbuf.buf);
+					if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+					{
+						fprintf(stderr, "cannot %s - %s", qbuf.buf,
+								PQresultErrorMessage(res2));
+						PQclear(res2);
+						iserror = true;
+						break;
+					}
+					PQclear(res2);
+
+					/*
+					 * Add the node to our in memory configuration
+					 */
 					slon_storeNode(no_id, no_comment);
 
+					/*
+					 * Forward the STORE_NODE event
+					 */
 					if (slon_local_storeevent(node,
 								ev_origin, ev_seqno, ev_timestamp,
 								ev_minxid, ev_maxxid, ev_xip, ev_type,
@@ -415,6 +446,9 @@ ev_origin, ev_seqno, ev_type, no_id, no_comment);
 								NULL, NULL, NULL, NULL) < 0)
 						iserror = true;
 				}
+				/****************************************
+				 * Event ENABLE_NODE
+				 ****************************************/
 				else if (strcmp(ev_type, "ENABLE_NODE") == 0)
 				{
 					int		no_id		= strtol(ev_data1, NULL, 10);
@@ -422,8 +456,32 @@ ev_origin, ev_seqno, ev_type, no_id, no_comment);
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s %s no_id=%d\n",
 ev_origin, ev_seqno, ev_type, no_id);
 
-					slon_enableNode(no_id);
+					/*
+					 * Call the function enableNode_int() on the local database
+					 */
+					slon_mkquery(&qbuf, 
+							"select %s.enableNode_int(%d)",
+							local_namespace, no_id);
+					res2 = PQexec(node->local_dbconn, qbuf.buf);
+					if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+					{
+						fprintf(stderr, "cannot %s - %s", qbuf.buf,
+								PQresultErrorMessage(res2));
+						PQclear(res2);
+						iserror = true;
+						break;
+					}
+					PQclear(res2);
 
+					/*
+					 * Enable our in memory configuration of the node
+					 */
+					if (no_id != local_nodeid)
+						slon_enableNode(no_id);
+
+					/*
+					 * Forward the ENABLE_NODE event
+					 */
 					if (slon_local_storeevent(node,
 								ev_origin, ev_seqno, ev_timestamp,
 								ev_minxid, ev_maxxid, ev_xip, ev_type,
@@ -431,6 +489,9 @@ ev_origin, ev_seqno, ev_type, no_id);
 								NULL, NULL, NULL, NULL) < 0)
 						iserror = true;
 				}
+				/****************************************
+				 * Event STORE_PATH
+				 ****************************************/
 				else if (strcmp(ev_type, "STORE_PATH") == 0)
 				{
 					int		pa_server	= strtol(ev_data1, NULL, 10);
@@ -438,13 +499,37 @@ ev_origin, ev_seqno, ev_type, no_id);
 					char   *pa_conninfo	= ev_data3;
 					int		pa_connretry = strtol(ev_data4, NULL, 10);
 
-if (pa_client == local_nodeid)
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s %s pa_server=%d pa_client=%d pa_connifo='%s' pa_connretry=%d\n",
 ev_origin, ev_seqno, ev_type, pa_server, pa_client, pa_conninfo, pa_connretry);
 
+					/*
+					 * Call the function storePath_int() on the local database
+					 */
+					slon_mkquery(&qbuf, 
+							"select %s.storePath_int(%d, %d, '%q', %d)",
+							local_namespace, pa_server, pa_client,
+							pa_conninfo, pa_connretry);
+					res2 = PQexec(node->local_dbconn, qbuf.buf);
+					if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+					{
+						fprintf(stderr, "cannot %s - %s", qbuf.buf,
+								PQresultErrorMessage(res2));
+						PQclear(res2);
+						iserror = true;
+						break;
+					}
+					PQclear(res2);
+
+					/*
+					 * If we are the client of the path, add it
+					 * to our in memory configuration
+					 */
 					if (pa_client == local_nodeid)
 						slon_storePath(pa_server, pa_conninfo, pa_connretry);
 
+					/*
+					 * Forward the STORE_PATH event
+					 */
 					if (slon_local_storeevent(node,
 								ev_origin, ev_seqno, ev_timestamp,
 								ev_minxid, ev_maxxid, ev_xip, ev_type,
@@ -452,19 +537,46 @@ ev_origin, ev_seqno, ev_type, pa_server, pa_client, pa_conninfo, pa_connretry);
 								NULL, NULL, NULL, NULL) < 0)
 						iserror = true;
 				}
+				/****************************************
+				 * Event STORE_LISTEN
+				 ****************************************/
 				else if (strcmp(ev_type, "STORE_LISTEN") == 0)
 				{
 					int		li_origin	= strtol(ev_data1, NULL, 10);
 					int		li_provider	= strtol(ev_data2, NULL, 10);
 					int		li_receiver	= strtol(ev_data3, NULL, 10);
 
-if (li_receiver == local_nodeid)
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s %s li_origin=%d li_provider=%d li_receiver=%d\n",
 ev_origin, ev_seqno, ev_type, li_origin, li_provider, li_receiver);
 
+					/*
+					 * Call the function storeListen_int() on the local database
+					 */
+					slon_mkquery(&qbuf, 
+							"select %s.storeListen_int(%d, %d, %d)",
+							local_namespace, li_origin,
+							li_provider, li_receiver);
+					res2 = PQexec(node->local_dbconn, qbuf.buf);
+					if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+					{
+						fprintf(stderr, "cannot %s - %s", qbuf.buf,
+								PQresultErrorMessage(res2));
+						PQclear(res2);
+						iserror = true;
+						break;
+					}
+					PQclear(res2);
+
+					/*
+					 * If we are the receiver, add the information to
+					 * our in memory configuration
+					 */
 					if (li_receiver == local_nodeid)
 						slon_storeListen(li_origin, li_provider);
 
+					/*
+					 * Forward the STORE_LISTEN event
+					 */
 					if (slon_local_storeevent(node,
 								ev_origin, ev_seqno, ev_timestamp,
 								ev_minxid, ev_maxxid, ev_xip, ev_type,
@@ -472,6 +584,9 @@ ev_origin, ev_seqno, ev_type, li_origin, li_provider, li_receiver);
 								NULL, NULL, NULL, NULL) < 0)
 						iserror = true;
 				}
+				/****************************************
+				 * Event STORE_SET
+				 ****************************************/
 				else if (strcmp(ev_type, "STORE_SET") == 0)
 				{
 					int		set_id		= strtol(ev_data1, NULL, 10);
@@ -481,8 +596,32 @@ ev_origin, ev_seqno, ev_type, li_origin, li_provider, li_receiver);
 printf("slon_remoteEventThread: ev_origin=%s ev_seqno=%s %s set_id=%d, set_origin=%d set_comment='%s'\n",
 ev_origin, ev_seqno, ev_type, set_id, set_origin, set_comment);
 
+					/*
+					 * Call the function storeSet_int() on the local database
+					 */
+					slon_mkquery(&qbuf, 
+							"select %s.storeSet_int(%d, %d, '%q')",
+							local_namespace, set_id,
+							set_origin, set_comment);
+					res2 = PQexec(node->local_dbconn, qbuf.buf);
+					if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+					{
+						fprintf(stderr, "cannot %s - %s", qbuf.buf,
+								PQresultErrorMessage(res2));
+						PQclear(res2);
+						iserror = true;
+						break;
+					}
+					PQclear(res2);
+
+					/*
+					 * Add the set to our in memory configuration
+					 */
 					slon_storeSet(set_id, set_origin, set_comment);
 
+					/*
+					 * Forward the STORE_SET event
+					 */
 					if (slon_local_storeevent(node,
 								ev_origin, ev_seqno, ev_timestamp,
 								ev_minxid, ev_maxxid, ev_xip, ev_type,
@@ -641,13 +780,17 @@ slon_forward_confirm(PGconn *src_dbconn, PGconn *dest_dbconn)
 				"	(con_origin, con_received, con_seqno, con_timestamp) "
 				"	select '%s'::int4, '%s'::int4, "
 				"			'%s'::int8, '%s'::timestamp "
-				"	where not exists "
+				"		from %s.sl_node N1, %s.sl_node N2 "
+				"	where N1.no_id = '%s' and N2.no_id = '%s' "
+				"	and not exists "
 				"		(select 1 from %s.sl_confirm L"
 				"			where L.con_origin = '%s' "
 				"			and L.con_received = '%s' "
 				"			and L.con_seqno >= '%s')",
 				local_namespace,
 				con_origin, con_received, con_seqno, con_timestamp,
+				local_namespace, local_namespace,
+				con_origin, con_received,
 				local_namespace,
 				con_origin, con_received, con_seqno);
 		res2 = PQexec(dest_dbconn, query);
@@ -793,9 +936,12 @@ slon_local_storeevent(SlonNode *node, char *ev_origin,
 	if (ev_data7 != NULL) {strcpy(cp, ", ev_data7"); cp += 10;}
 	if (ev_data8 != NULL) {strcpy(cp, ", ev_data8"); cp += 10;}
 	sprintf(cp, ") values ('%s', '%s', '%s', "
-			"		'%s', '%s', '%s', '%s'",
+			"		'%s', '%s', ",
 			ev_origin, ev_seqno, ev_timestamp,
-			ev_minxid, ev_maxxid, ev_xip, ev_type);
+			ev_minxid, ev_maxxid);
+	cp += strlen(cp);
+	slon_quote(cp, ev_xip, &cp);
+	sprintf(cp, ", '%s'", ev_type);
 	cp += strlen(cp);
 	
 	if (ev_data1 != NULL) {*cp++ = ','; slon_quote(cp, ev_data1, &cp);}
