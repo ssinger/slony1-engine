@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.8 2004-02-25 19:47:37 wieck Exp $
+ *	$Id: runtime_config.c,v 1.9 2004-02-26 22:27:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -416,6 +416,7 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 			set->set_comment = strdup(set_comment);
 			rtcfg_unlock();
 			rtcfg_seq_bump();
+			sched_wakeup_node(set_origin);
 			return;
 		}
 	}
@@ -443,6 +444,7 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	DLLIST_ADD_TAIL(rtcfg_set_list_head, rtcfg_set_list_tail, set);
 	rtcfg_unlock();
 	rtcfg_seq_bump();
+	sched_wakeup_node(set_origin);
 }
 
 
@@ -491,9 +493,10 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 
 
 void
-rtcfg_enableSubscription(int sub_set)
+rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 {
 	SlonSet	   *set;
+	int			old_provider = -1;
 
 	rtcfg_lock();
 
@@ -507,12 +510,19 @@ rtcfg_enableSubscription(int sub_set)
 			slon_log(SLON_CONFIG,
 					"enableSubscription: sub_set=%d\n",
 					sub_set);
+			old_provider = set->sub_provider;
+			set->sub_provider = sub_provider;
+			set->sub_forward  = (*sub_forward == 't');
 			if (set->sub_provider >= 0)
 				set->sub_active = 1;
+			else
+				set->sub_active = 0;
 			rtcfg_unlock();
 			rtcfg_seq_bump();
-			if (set->sub_provider >= 0)
-				sched_wakeup_node(set->sub_provider);
+			if (old_provider >= 0 && old_provider != sub_provider)
+				sched_wakeup_node(old_provider);
+			if (sub_provider >= 0)
+				sched_wakeup_node(sub_provider);
 			return;
 		}
 	}

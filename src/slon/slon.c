@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.15 2004-02-25 19:47:37 wieck Exp $
+ *	$Id: slon.c,v 1.16 2004-02-26 22:27:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -291,7 +291,7 @@ main (int argc, const char *argv[])
 
 		rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 		if (*sub_active == 't')
-			rtcfg_enableSubscription(sub_set);
+			rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
 	}
 	PQclear(res);
 

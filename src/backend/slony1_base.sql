@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.4 2004-02-20 15:13:28 wieck Exp $
+-- $Id: slony1_base.sql,v 1.5 2004-02-26 22:26:59 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -257,6 +257,16 @@ create sequence @NAMESPACE@.sl_event_seq;
 --	statements.
 -- ----------------------------------------------------------------------
 create sequence @NAMESPACE@.sl_action_seq;
+
+
+-- ----------------------------------------------------------------------
+-- SEQUENCE sl_rowid_seq
+--
+--	Application tables that do not have a natural primary key must
+--	be modified and an int8 column added that serves as a rowid for us.
+--	The values are assigned with a default from this sequence.
+-- ----------------------------------------------------------------------
+create sequence @NAMESPACE@.sl_rowid_seq;
 
 
 -- ----------------------------------------------------------------------

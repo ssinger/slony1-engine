@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.5 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: remote_listen.c,v 1.6 2004-02-26 22:27:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -665,7 +665,8 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 		ev_origin = strtol(PQgetvalue(res, tupno, 0), NULL, 10);
 		sscanf(PQgetvalue(res, tupno, 1), "%lld", &ev_seqno);
 
-		remoteWorker_event(ev_origin, ev_seqno,
+		remoteWorker_event(node->no_id,
+				ev_origin, ev_seqno,
 				PQgetvalue(res, tupno, 2),		/* ev_timestamp */
 				PQgetvalue(res, tupno, 3),		/* ev_minxid */
 				PQgetvalue(res, tupno, 4),		/* ev_maxxid */

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.16 2004-02-25 19:47:37 wieck Exp $
+ *	$Id: slon.h,v 1.17 2004-02-26 22:27:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -22,6 +22,10 @@
 #endif
 
 
+#define SLON_DATA_FETCH_SIZE		2
+#define	SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 2)
+
+
 typedef enum {
 	SLON_TSTAT_NONE,
 	SLON_TSTAT_RUNNING,
@@ -29,7 +33,6 @@ typedef enum {
 	SLON_TSTAT_RESTART,
 	SLON_TSTAT_DONE
 } SlonThreadStatus;
-
 
 
 /* ----------
@@ -40,6 +43,8 @@ typedef struct SlonNode_s	SlonNode;
 typedef struct SlonListen_s	SlonListen;
 typedef struct SlonSet_s	SlonSet;
 typedef struct SlonConn_s	SlonConn;
+
+typedef struct SlonWorkMsg_s SlonWorkMsg;
 
 /* ----------
  * SlonNode
@@ -67,8 +72,8 @@ struct SlonNode_s {
 	pthread_t			worker_thread;	/* thread id of worker thread */
 	pthread_mutex_t		message_lock;	/* mutex for the message queue */
 	pthread_cond_t		message_cond;	/* condition variable for queue */
-	struct slon_work_message *message_head;
-	struct slon_work_message *message_tail;
+	SlonWorkMsg		   *message_head;
+	SlonWorkMsg		   *message_tail;
 
 	SlonNode		   *prev;
 	SlonNode		   *next;
@@ -334,7 +339,8 @@ extern void		rtcfg_storeSet(int set_id, int set_origin, char *set_comment);
 
 extern void		rtcfg_storeSubscribe(int sub_set, int sub_provider,
 							char *sub_forward);
-extern void		rtcfg_enableSubscription(int sub_set);
+extern void		rtcfg_enableSubscription(int sub_set, int sub_provider,
+							char *sub_forward);
 
 extern void		rtcfg_needActivate(int no_id);
 extern void		rtcfg_doActivate(void);
@@ -384,7 +390,8 @@ extern void	   *remoteListenThread_main(void *cdata);
  * ----------
  */
 extern void	   *remoteWorkerThread_main(void *cdata);
-extern void		remoteWorker_event(int ev_origin, int64 ev_seqno,
+extern void		remoteWorker_event(int event_provider,
+							int ev_origin, int64 ev_seqno,
 							char *ev_timestamp,
 							char *ev_minxid, char *ev_maxxid, char *ev_xip,
 							char *ev_type,

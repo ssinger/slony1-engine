@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.6 2004-02-25 19:47:37 wieck Exp $
+ *	$Id: local_listen.c,v 1.7 2004-02-26 22:26:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -265,7 +265,7 @@ localListenThread_main(void *dummy)
 				sub_forward		= PQgetvalue(res, tupno, 9);
 
 				if (sub_receiver == rtcfg_nodeid)
-					rtcfg_enableSubscription(sub_set);
+					rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
 			}
 			else
 			{

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.15 2004-02-25 19:47:37 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.16 2004-02-26 22:26:59 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -972,6 +972,7 @@ declare
 	p_tab_id			alias for $1;
 	p_tab_fqname		alias for $2;
 	p_tab_attkind		alias for $3;
+	v_tgname			name;
 begin
 	-- ----
 	-- The table must have a primary key
@@ -980,6 +981,23 @@ begin
 		raise exception ''Slony-I: table % does not have a primary key'',
 				p_tab_fqname;
 	end if;
+
+	-- ----
+	-- Check if the log trigger exists already
+	-- ----
+	v_tgname := ''_@CLUSTERNAME@_logtrigger_'' || p_tab_id;
+	if exists (select true 
+			from @NAMESPACE@.sl_table T,
+			"pg_catalog".pg_trigger PGT
+			where T.tab_id = p_tab_id
+			and T.tab_reloid = PGT.tgrelid
+			and PGT.tgname = v_tgname)
+	then
+	    raise notice ''Slony-I: % already define for table %'',
+				v_tgname, p_tab_fqname;
+		return p_tab_id;
+	end if;
+
 
 	-- ----
 	-- Define the trigger on the table

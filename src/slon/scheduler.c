@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.5 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: scheduler.c,v 1.6 2004-02-26 22:27:00 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -362,6 +362,11 @@ sched_wakeup_node (int no_id)
 	}
 
 	pthread_mutex_unlock(&sched_master_lock);
+
+	remoteWorker_wakeup(no_id);
+
+	slon_log(SLON_DEBUG3, "sched_wakeup_node(): no_id=%d "
+			"(%d threads + worker signaled)\n", no_id, num_wakeup);
 
 	return num_wakeup;
 }
