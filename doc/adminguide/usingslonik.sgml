@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.1 2005-02-02 23:08:50 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.2 2005-02-07 21:49:10 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -84,7 +84,7 @@ supposed to do.  </para></listitem>
 
 </itemizedlist>
 
-<sect2><title> Using m4 to rewrite slonik scripts </title>
+<sect1 id="slonikm4"><title> Using m4 to rewrite slonik scripts </title>
 
 <para> This needs to be prefaced with something of a warning, from the
 GNU M4 documentation:
@@ -135,7 +135,7 @@ those deemed to be reasonable choices for <quote>best
 practices.</quote>
 </itemizedlist>
 
-<sect3><title> An m4 example </title>
+<sect2><title> An m4 example </title>
 
 <para> Without further ado, here is an example where you set up a
 central file, <filename> cluster.m4 </filename> containing some M4
@@ -189,7 +189,7 @@ of nodes.  As mentioned earlier, if you wish to do such things, it is
 highly preferable to do this by using a scripting language like the
 Bourne Shell or Perl.
 
-<sect2><title> Embedding Slonik in Shell Scripts </title>
+<sect1 id="slonikshell"><title> Embedding Slonik in Shell Scripts </title>
 
 <para> As mentioned earlier, there are numerous
 <productname>Slony-I</productname> test scripts in
@@ -355,7 +355,6 @@ option rather than a default.</para>
 scripting languages, of which Perl is the most ubiquitous, being
 widely available on Linux, <trademark/UNIX/, and BSD.
 
-</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
