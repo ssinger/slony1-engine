@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.1 2004-07-26 19:05:16 xfade Exp $
+#	$Id: Makefile,v 1.2 2004-11-25 21:57:18 cbbrowne Exp $
 # ----------
 
 slony_subdir = tools
@@ -13,7 +13,7 @@ include $(slony_top_builddir)/Makefile.global
 
 SUBDIRS = altperl
 
-DISTFILES = Makefile slony_setup.pl
+DISTFILES = Makefile slony_setup.pl generate_syncs.sh
 
 all install installdirs:
 
