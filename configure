@@ -5107,7 +5107,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 echo "$as_me:$LINENO: checking for pg_config" >&5
 echo $ECHO_N "checking for pg_config... $ECHO_C" >&6
 
-PGCONFIG_POSSIBLE_LOCATIONS="/usr/local/pgsql/bin /usr/local/bin /usr/bin /bin /usr/lib/postgresql/bin /opt/local/pgsql/bin /opt/pgsql/bin/ ${with_pgconfigdir}"
+PGCONFIG_POSSIBLE_LOCATIONS="${with_pgconfigdir} /usr/local/pgsql/bin /usr/local/bin /usr/bin /bin /usr/lib/postgresql/bin /opt/local/pgsql/bin /opt/pgsql/bin/"
 for i in $PGCONFIG_POSSIBLE_LOCATIONS; do
     if test -x $i/pg_config; then
 	PG_CONFIG_LOCATION="$i/pg_config"
