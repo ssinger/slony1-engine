@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.47 2004-12-01 20:26:06 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.48 2004-12-02 21:43:17 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -350,7 +350,7 @@ begin
 	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
 	perform setval(''@NAMESPACE@.sl_rowid_seq'', 
 			p_local_node_id::int8 * ''1000000000000000''::int8);
-	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment);
+	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment, false);
 	
 	return p_local_node_id;
 end;
@@ -364,41 +364,50 @@ Initializes the new node, no_id';
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION storeNode (no_id, no_comment)
+-- FUNCTION storeNode (no_id, no_comment, no_spool)
 --
 --	Generate the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode (int4, text)
+create or replace function @NAMESPACE@.storeNode (int4, text, boolean)
 returns bigint
 as '
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
+	p_no_spool		alias for $3;
+	v_no_spool_txt	text;
 begin
-	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment);
+	if p_no_spool then
+		v_no_spool_txt = ''t'';
+	else
+		v_no_spool_txt = ''f'';
+	end if;
+	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment, p_no_spool);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
-									p_no_id, p_no_comment);
+									p_no_id, p_no_comment, v_no_spool_txt);
 end;
 ' language plpgsql
 	called on null input;
 
-comment on function @NAMESPACE@.storeNode(int4, text) is
+comment on function @NAMESPACE@.storeNode(int4, text, boolean) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
+no_spool - Flag for virtual spool nodes
 
 Generate the STORE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
--- FUNCTION storeNode_int (no_id, no_comment)
+-- FUNCTION storeNode_int (no_id, no_comment, no_spool)
 --
 --	Process the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode_int (int4, text)
+create or replace function @NAMESPACE@.storeNode_int (int4, text, boolean)
 returns int4
 as '
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
+	p_no_spool		alias for $3;
 	v_old_row		record;
 begin
 	-- ----
@@ -418,24 +427,26 @@ begin
 		-- Node exists, update the existing row.
 		-- ----
 		update @NAMESPACE@.sl_node
-				set no_comment = p_no_comment
+				set no_comment = p_no_comment,
+				no_spool = p_no_spool
 				where no_id = p_no_id;
 	else
 		-- ----
 		-- New node, insert the sl_node row
 		-- ----
 		insert into @NAMESPACE@.sl_node
-				(no_id, no_active, no_comment) values
-				(p_no_id, ''f'', p_no_comment);
+				(no_id, no_active, no_comment, no_spool) values
+				(p_no_id, ''f'', p_no_comment, p_no_spool);
 	end if;
 
 	return p_no_id;
 end;
 ' language plpgsql;
 
-comment on function @NAMESPACE@.storeNode_int(int4, text) is
+comment on function @NAMESPACE@.storeNode_int(int4, text, boolean) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
+no_spool - Flag for virtual spool nodes
 
 Internal function to process the STORE_NODE event for node no_id';
 

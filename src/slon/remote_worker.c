@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.66 2004-11-13 04:52:46 wieck Exp $
+ *	$Id: remote_worker.c,v 1.67 2004-12-02 21:43:17 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -519,14 +519,15 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int             no_id = (int)strtol(event->ev_data1, NULL, 10);
 				char           *no_comment = event->ev_data2;
+				char           *no_spool = event->ev_data3;
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_storeNode(no_id, no_comment);
 
 				slon_appendquery(&query1,
-				      "select %s.storeNode_int(%d, '%q'); ",
+				      "select %s.storeNode_int(%d, '%q', '%s'); ",
 						 rtcfg_namespace,
-						 no_id, no_comment);
+						 no_id, no_comment, no_spool);
 
 				need_reloadListen = true;
 			} else if (strcmp(event->ev_type, "ENABLE_NODE") == 0)

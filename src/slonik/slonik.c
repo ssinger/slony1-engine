@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.34 2004-12-01 20:26:08 wieck Exp $
+ *	$Id: slonik.c,v 1.35 2004-12-02 21:43:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -278,8 +278,11 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 								hdr->stmt_filename, hdr->stmt_lno);
 					}
 
-					if (script_check_adminfo(hdr, stmt->no_id) < 0)
-						errors++;
+					if (!stmt->no_spool)
+					{
+						if (script_check_adminfo(hdr, stmt->no_id) < 0)
+							errors++;
+					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 				}
@@ -1958,7 +1961,7 @@ slonik_init_cluster(SlonikStmt_init_cluster *stmt)
 int
 slonik_store_node(SlonikStmt_store_node *stmt)
 {
-	SlonikAdmInfo  *adminfo1;
+	SlonikAdmInfo  *adminfo1 = NULL;
 	SlonikAdmInfo  *adminfo2;
 	SlonDString		query;
 	int				rc;
@@ -1966,305 +1969,321 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 	int				ntuples;
 	int				tupno;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
-	if (adminfo1 == NULL)
-		return -1;
+	if (!stmt->no_spool)
+	{
+		adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->no_id);
+		if (adminfo1 == NULL)
+			return -1;
+	}
 
 	adminfo2 = get_checked_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
 	if (adminfo2 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
-		return -1;
 	if (db_begin_xact((SlonikStmt *)stmt, adminfo2) < 0)
 		return -1;
 
-	/* Load the slony base tables */
-	rc = load_slony_base((SlonikStmt *)stmt, stmt->no_id);
-	if (rc < 0)
-		return -1;
-
-	/* call initializeLocalNode() and enableNode_int() */
 	dstring_init(&query);
-	slon_mkquery(&query,
-			"select \"_%s\".initializeLocalNode(%d, '%q'); "
-			"select \"_%s\".enableNode_int(%d); ",
-			stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
-			stmt->hdr.script->clustername, stmt->no_id);
-	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
-	{
-		dstring_free(&query);
-		return -1;
-	}
 
-	/*
-	 * Duplicate the content of sl_node
-	 */
-	slon_mkquery(&query,
-			"select no_id, no_active, no_comment "
-			"from \"_%s\".sl_node; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
+	if (!stmt->no_spool)
 	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *no_id = PQgetvalue(res, tupno, 0);
-		char   *no_active = PQgetvalue(res, tupno, 1);
-		char   *no_comment = PQgetvalue(res, tupno, 2);
-
-		slon_mkquery(&query,
-				"select \"_%s\".storeNode_int(%s, '%q'); ",
-				stmt->hdr.script->clustername, no_id, no_comment);
-		if (*no_active == 't') 
+		if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
 		{
-			slon_appendquery(&query,
-				"select \"_%s\".enableNode_int(%s); ",
-				stmt->hdr.script->clustername, no_id);
+			dstring_free(&query);
+			return -1;
 		}
 
+		/* Load the slony base tables */
+		rc = load_slony_base((SlonikStmt *)stmt, stmt->no_id);
+		if (rc < 0)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+
+		/* call initializeLocalNode() and enableNode_int() */
+		slon_mkquery(&query,
+				"select \"_%s\".initializeLocalNode(%d, '%q'); "
+				"select \"_%s\".enableNode_int(%d); ",
+				stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				stmt->hdr.script->clustername, stmt->no_id);
 		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 		{
 			dstring_free(&query);
-			PQclear(res);
 			return -1;
 		}
-	}
-	PQclear(res);
 
-	/*
-	 * Duplicate the content of sl_path
-	 */
-	slon_mkquery(&query,
-			"select pa_server, pa_client, pa_conninfo, pa_connretry "
-			"from \"_%s\".sl_path; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *pa_server = PQgetvalue(res, tupno, 0);
-		char   *pa_client = PQgetvalue(res, tupno, 1);
-		char   *pa_conninfo = PQgetvalue(res, tupno, 2);
-		char   *pa_connretry = PQgetvalue(res, tupno, 3);
-
+		/*
+		 * Duplicate the content of sl_node
+		 */
 		slon_mkquery(&query,
-				"select \"_%s\".storePath_int(%s, %s, '%q', %s); ",
-				stmt->hdr.script->clustername, 
-				pa_server, pa_client, pa_conninfo, pa_connretry);
-
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				"select no_id, no_active, no_comment, no_spool "
+				"from \"_%s\".sl_node; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
 		{
 			dstring_free(&query);
-			PQclear(res);
 			return -1;
 		}
-	}
-	PQclear(res);
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
+		{
+			char   *no_id = PQgetvalue(res, tupno, 0);
+			char   *no_active = PQgetvalue(res, tupno, 1);
+			char   *no_comment = PQgetvalue(res, tupno, 2);
+			char   *no_spool = PQgetvalue(res, tupno, 3);
 
-	/*
-	 * Duplicate the content of sl_listen
-	 */
-	slon_mkquery(&query,
-			"select li_origin, li_provider, li_receiver "
-			"from \"_%s\".sl_listen; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *li_origin = PQgetvalue(res, tupno, 0);
-		char   *li_provider = PQgetvalue(res, tupno, 1);
-		char   *li_receiver = PQgetvalue(res, tupno, 2);
+			slon_mkquery(&query,
+					"select \"_%s\".storeNode_int(%s, '%q', '%s'); ",
+					stmt->hdr.script->clustername, no_id, no_comment, no_spool);
+			if (*no_active == 't') 
+			{
+				slon_appendquery(&query,
+					"select \"_%s\".enableNode_int(%s); ",
+					stmt->hdr.script->clustername, no_id);
+			}
 
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Duplicate the content of sl_path
+		 */
 		slon_mkquery(&query,
-				"select \"_%s\".storeListen_int(%s, %s, %s); ",
-				stmt->hdr.script->clustername, 
-				li_origin, li_provider, li_receiver);
-
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				"select pa_server, pa_client, pa_conninfo, pa_connretry "
+				"from \"_%s\".sl_path; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
 		{
 			dstring_free(&query);
-			PQclear(res);
 			return -1;
 		}
-	}
-	PQclear(res);
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
+		{
+			char   *pa_server = PQgetvalue(res, tupno, 0);
+			char   *pa_client = PQgetvalue(res, tupno, 1);
+			char   *pa_conninfo = PQgetvalue(res, tupno, 2);
+			char   *pa_connretry = PQgetvalue(res, tupno, 3);
 
-	/*
-	 * Duplicate the content of sl_set
-	 */
-	slon_mkquery(&query,
-			"select set_id, set_origin, set_comment "
-			"from \"_%s\".sl_set; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *set_id = PQgetvalue(res, tupno, 0);
-		char   *set_origin = PQgetvalue(res, tupno, 1);
-		char   *set_comment = PQgetvalue(res, tupno, 2);
+			slon_mkquery(&query,
+					"select \"_%s\".storePath_int(%s, %s, '%q', %s); ",
+					stmt->hdr.script->clustername, 
+					pa_server, pa_client, pa_conninfo, pa_connretry);
 
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Duplicate the content of sl_listen
+		 */
 		slon_mkquery(&query,
-				"select \"_%s\".storeSet_int(%s, %s, '%q'); ",
-				stmt->hdr.script->clustername, 
-				set_id, set_origin, set_comment);
-
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+				"select li_origin, li_provider, li_receiver "
+				"from \"_%s\".sl_listen; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
 		{
 			dstring_free(&query);
-			PQclear(res);
 			return -1;
 		}
-	}
-	PQclear(res);
-
-	/*
-	 * Duplicate the content of sl_subscribe
-	 */
-	slon_mkquery(&query,
-			"select sub_set, sub_provider, sub_receiver, "
-			"	sub_forward, sub_active "
-			"from \"_%s\".sl_subscribe; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *sub_set = PQgetvalue(res, tupno, 0);
-		char   *sub_provider = PQgetvalue(res, tupno, 1);
-		char   *sub_receiver = PQgetvalue(res, tupno, 2);
-		char   *sub_forward = PQgetvalue(res, tupno, 3);
-		char   *sub_active = PQgetvalue(res, tupno, 4);
-
-		slon_mkquery(&query,
-				"select \"_%s\".subscribeSet_int(%s, %s, %s, '%q'); ",
-				stmt->hdr.script->clustername, 
-				sub_set, sub_provider, sub_receiver, sub_forward);
-		if (*sub_active == 't')
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			slon_appendquery(&query,
-				"select \"_%s\".enableSubscription_int(%s, %s, %s); ",
-				stmt->hdr.script->clustername, 
-				sub_set, sub_provider, sub_receiver);
-		}
+			char   *li_origin = PQgetvalue(res, tupno, 0);
+			char   *li_provider = PQgetvalue(res, tupno, 1);
+			char   *li_receiver = PQgetvalue(res, tupno, 2);
 
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			slon_mkquery(&query,
+					"select \"_%s\".storeListen_int(%s, %s, %s); ",
+					stmt->hdr.script->clustername, 
+					li_origin, li_provider, li_receiver);
+
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Duplicate the content of sl_set
+		 */
+		slon_mkquery(&query,
+				"select set_id, set_origin, set_comment "
+				"from \"_%s\".sl_set; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
 		{
 			dstring_free(&query);
-			PQclear(res);
 			return -1;
 		}
-	}
-	PQclear(res);
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
+		{
+			char   *set_id = PQgetvalue(res, tupno, 0);
+			char   *set_origin = PQgetvalue(res, tupno, 1);
+			char   *set_comment = PQgetvalue(res, tupno, 2);
 
-	/*
-	 * Set our own event seqno in case the node id was used before
-	 * and our confirms.
-	 */
-	slon_mkquery(&query,
-			"select ev_origin, max(ev_seqno) "
-			"    from \"_%s\".sl_event "
-			"    group by ev_origin; ",
-			stmt->hdr.script->clustername);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	ntuples = PQntuples(res);
-	for (tupno = 0; tupno < ntuples; tupno++)
-	{
-		char   *ev_origin_c = PQgetvalue(res, tupno, 0);
-		char   *ev_seqno_c = PQgetvalue(res, tupno, 1);
+			slon_mkquery(&query,
+					"select \"_%s\".storeSet_int(%s, %s, '%q'); ",
+					stmt->hdr.script->clustername, 
+					set_id, set_origin, set_comment);
 
-		if (stmt->no_id == (int)strtol(ev_origin_c, NULL, 10))
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Duplicate the content of sl_subscribe
+		 */
+		slon_mkquery(&query,
+				"select sub_set, sub_provider, sub_receiver, "
+				"	sub_forward, sub_active "
+				"from \"_%s\".sl_subscribe; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
+		{
+			char   *sub_set = PQgetvalue(res, tupno, 0);
+			char   *sub_provider = PQgetvalue(res, tupno, 1);
+			char   *sub_receiver = PQgetvalue(res, tupno, 2);
+			char   *sub_forward = PQgetvalue(res, tupno, 3);
+			char   *sub_active = PQgetvalue(res, tupno, 4);
+
+			slon_mkquery(&query,
+					"select \"_%s\".subscribeSet_int(%s, %s, %s, '%q'); ",
+					stmt->hdr.script->clustername, 
+					sub_set, sub_provider, sub_receiver, sub_forward);
+			if (*sub_active == 't')
+			{
+				slon_appendquery(&query,
+					"select \"_%s\".enableSubscription_int(%s, %s, %s); ",
+					stmt->hdr.script->clustername, 
+					sub_set, sub_provider, sub_receiver);
+			}
+
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * Set our own event seqno in case the node id was used before
+		 * and our confirms.
+		 */
+		slon_mkquery(&query,
+				"select ev_origin, max(ev_seqno) "
+				"    from \"_%s\".sl_event "
+				"    group by ev_origin; ",
+				stmt->hdr.script->clustername);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
+		{
+			char   *ev_origin_c = PQgetvalue(res, tupno, 0);
+			char   *ev_seqno_c = PQgetvalue(res, tupno, 1);
+
+			if (stmt->no_id == (int)strtol(ev_origin_c, NULL, 10))
+			{
+				slon_mkquery(&query,
+					"select \"pg_catalog\".setval('\"_%s\".sl_event_seq', "
+					"'%s'::int8 + 1); ",
+					stmt->hdr.script->clustername, ev_seqno_c);
+			}
+			else
+			{
+				slon_appendquery(&query,
+					"insert into \"_%s\".sl_confirm "
+					"    (con_origin, con_received, con_seqno, con_timestamp) "
+					"    values "
+					"    (%s, %d, '%s', CURRENT_TIMESTAMP); ",
+					stmt->hdr.script->clustername, 
+					ev_origin_c, stmt->no_id, ev_seqno_c);
+			}
+
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
+		}
+		PQclear(res);
+
+		/*
+		 * If available, bump the rowid sequence to the last known
+		 * value.
+		 */
+		slon_mkquery(&query,
+				"select max(seql_last_value) from \"_%s\".sl_seqlog "
+				"	where seql_seqid = 0 "
+				"	and seql_origin = %d; ",
+				stmt->hdr.script->clustername, stmt->no_id);
+		res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
+		if (res == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		if (PQntuples(res) == 1 && !PQgetisnull(res, 0, 0))
 		{
 			slon_mkquery(&query,
-				"select \"pg_catalog\".setval('\"_%s\".sl_event_seq', "
-				"'%s'::int8 + 1); ",
-				stmt->hdr.script->clustername, ev_seqno_c);
+					"select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
+					stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
+			if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+			{
+				dstring_free(&query);
+				PQclear(res);
+				return -1;
+			}
 		}
-		else
-		{
-			slon_appendquery(&query,
-				"insert into \"_%s\".sl_confirm "
-				"    (con_origin, con_received, con_seqno, con_timestamp) "
-				"    values "
-				"    (%s, %d, '%s', CURRENT_TIMESTAMP); ",
-				stmt->hdr.script->clustername, 
-				ev_origin_c, stmt->no_id, ev_seqno_c);
-		}
-
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
-		{
-			dstring_free(&query);
-			PQclear(res);
-			return -1;
-		}
+		PQclear(res);
 	}
-	PQclear(res);
-
-	/*
-	 * If available, bump the rowid sequence to the last known
-	 * value.
-	 */
-	slon_mkquery(&query,
-			"select max(seql_last_value) from \"_%s\".sl_seqlog "
-			"	where seql_seqid = 0 "
-			"	and seql_origin = %d; ",
-			stmt->hdr.script->clustername, stmt->no_id);
-	res = db_exec_select((SlonikStmt *)stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	if (PQntuples(res) == 1 && !PQgetisnull(res, 0, 0))
-	{
-		slon_mkquery(&query,
-				"select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
-				stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
-		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
-		{
-			dstring_free(&query);
-			PQclear(res);
-			return -1;
-		}
-	}
-	PQclear(res);
 
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
-			"select \"_%s\".storeNode(%d, '%q'); "
+			"select \"_%s\".storeNode(%d, '%q', '%s'); "
 			"select \"_%s\".enableNode(%d); ",
 			stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+			(stmt->no_spool != 0) ? "t" : "f",
 			stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_evcommand((SlonikStmt *)stmt, adminfo2, &query) < 0)
 	{

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.20 2004-10-14 16:01:05 cbbrowne Exp $
+ *	$Id: scan.l,v 1.21 2004-12-02 21:43:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 %}
@@ -88,6 +88,7 @@ sequence		{ return K_SEQUENCE;			}
 serial			{ return K_SERIAL;				}
 server			{ return K_SERVER;				}
 set				{ return K_SET;					}
+spoolnode		{ return K_SPOOLNODE;			}
 store			{ return K_STORE;				}
 subscribe		{ return K_SUBSCRIBE;			}
 success			{ return K_SUCCESS;				}
