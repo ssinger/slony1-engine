@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.8 2005-01-07 23:25:50 cbbrowne Exp $ -->
 <article>
 <sect1 id="maintenance"> <title>Slony-I Maintenance</title>
 
@@ -43,7 +43,7 @@ that causes loss of connectivity.</para>
 
 <para>You might want to run them...</para>
 </sect2>
-<sect2><title>Alternative to Watchdog: generate_syncs.sh</title>
+<sect2><title>Parallel to Watchdog: generate_syncs.sh</title>
 
 <para>A new script for <productname>Slony-I</productname> 1.1 is
 <application>generate_syncs.sh</application>, which addresses the following kind of
@@ -71,6 +71,74 @@ the cleanup a lot less unpleasant.</para>
 <para>Note that if <command>SYNC</command>s <emphasis>are</emphasis> running
 regularly, this script won't bother doing anything.</para>
 </sect2>
+
+<sect2><title>Replication Test Scripts </title>
+
+<para> In the directory <filename>tools</filename> may be found four scripts
+that may be used to do monitoring of <productname> Slony-I
+</productname> instances:
+
+<itemizedlist>
+
+<listitem><para> <command>test_slony_replication.pl</command> is a Perl script
+to which you can pass connection information to get to a
+<productname>Slony-I</productname> node.  It then queries <envar>sl_path</envar> and other
+information on that node in order to determine the shape of the
+requested replication set.</para>
+
+<para> It then injects some test queries to a test table called
+<envar>slony_test</envar> which is defined as follows, and which needs to be
+added to the set of tables being replicated:
+
+<programlisting>
+CREATE TABLE slony_test (
+    description text,
+    mod_date timestamp with time zone,
+    "_Slony-I_testcluster_rowID" bigint DEFAULT nextval('"_testcluster".sl_rowid_seq'::text) NOT NULL
+);
+</programlisting></para>
+
+<para> The last column in that table was defined by
+<productname>Slony-I</productname> as one lacking a primary key...</para>
+
+<para> This script generates a line of output for each
+<productname>Slony-I</productname> node that is active for the requested
+replication set in a file called
+<filename>cluster.fact.log</filename>.</para>
+
+<para> There is an additional <option>finalquery</option> option that allows
+you to pass in an application-specific SQL query that can determine
+something about the state of your application.</para></listitem>
+
+<listitem><para><command>log.pm</command> is a Perl module that manages logging
+for the Perl scripts.</para></listitem>
+
+<listitem><para><command>run_rep_tests.sh</command> is a <quote>wrapper</quote> script
+that runs <command>test_slony_replication.pl</command>.</para>
+
+<para> If you have several <productname>Slony-I</productname> clusters, you might
+set up configuration in this file to connect to all those clusters.</para></listitem>
+
+<listitem><para><command>nagios_slony_test.pl</command> is a script
+that was constructed to query the log files so that you might run the
+replication tests every so often (we run them every 6 minutes), and
+then a system monitoring tool such as <ulink
+url="http://www.nagios.org/"> <productname>Nagios</productname>
+</ulink> can be set up to use this script to query the state indicated
+in those logs.</para>
+
+<para> It seemed rather more efficient to have a
+<application>cron</application> job run the tests and have
+<productname>Nagios</productname> check the results rather than having
+<productname>Nagios</productname> run the tests directly.  The tests
+can exercise the whole <productname>Slony-I</productname> cluster at
+once rather than <productname>Nagios</productname> invoking updates
+over and over again.</para></listitem>
+
+</itemizedlist></para>
+
+</sect2>
+
 <sect2><title> Log Files</title>
 
 <para><link linkend="slon"> <application>slon</application></link> daemons
