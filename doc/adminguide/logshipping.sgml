@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.4 2005-02-25 22:38:09 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.5 2005-03-23 20:12:54 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
@@ -62,20 +62,31 @@ subscription set generated?
 generate them by adding the <option>-a</option> option.
 </answer>
 </qandaentry>
-<qandaentry>
-<question> <para> What takes place when a failover/MOVE SET takes place?</para></question>
 
-<answer><para> Nothing special.  So long as the archiving node remains
-a subscriber, it will continue to generate logs.</para></answer>
+<qandaentry>
+
+<question> <para> What takes place when a failover/MOVE SET takes
+place?</para></question>
+
+<answer><para> Nothing too special.  So long as the archiving node
+remains a subscriber, it will continue to generate
+logs.</para></answer>
 </qandaentry>
 
 <qandaentry>
 <question> <para> What if we run out of <quote>spool space</quote>?
 </para></question>
 
-<answer><para> The node will stop accepting SYNCs until this problem
-is alleviated.  The database being subscribed to will also fall
-behind.  </para></answer>
+<answer><para> The node will stop accepting <command>SYNC</command>s
+until this problem is alleviated.  The database being subscribed to
+will also fall behind.
+
+<para> There will be the further side-effect on the cluster that
+confirmations won't be able to propagate (because the node has not
+processed the updates), which will cause <xref
+linkend="table.sl-log-1"> and <xref linkend="table.sl-seqlog"> to
+grow.
+
 </qandaentry>
 
 <qandaentry>
@@ -107,38 +118,26 @@ limitations may be alleviated/eliminated. </para> </answer>
 <quote>sniffing</quote> the data applied at a particular subscriber
 node.  As a result, you must have at least one <quote>regular</quote>
 node; you cannot have a cluster that consists solely of an origin and
-a set of <quote>log shipping nodes.</quote>. </para></answer>
-
-<answer><para> The <quote>log shipping node</quote> tracks the
-entirety of the traffic going to a subscriber.  You cannot separate
-things out if there are multiple replication sets.  </para></answer>
-
-<answer><para> The <quote>log shipping node</quote> presently tracks
-only SYNC events.  This should be sufficient to cope with
-<emphasis>some</emphasis> changes in cluster configuration, but not
-others.  </para>
+a set of <quote>log shipping nodes.</quote>. </para>
 
 <para> Log shipping does <emphasis>not</emphasis> process certain
 additional events, with the implication that the introduction of any
 of the following events can invalidate the relationship between the
 SYNCs and the dump created using
-<application>slony1_dump.sh</application> so that you'll likely need
-to rerun <application>slony1_dump.sh</application>:
-
-<itemizedlist>
-<listitem><para><command> SUBSCRIBE_SET </command> 
-
-</itemizedlist>
+<application>slony1_dump.sh</application> so that you may need to
+rerun <application>slony1_dump.sh</application>.
 
 <para> A number of event types <emphasis> are </emphasis> handled in
 such a way that log shipping copes with them:
 
 <itemizedlist>
 
-<listitem><para><command>SYNC </command> events are, of course,
+<listitem><para><command> SYNC </command> events are, of course,
 handled.
 
-<listitem><para><command>DDL_SCRIPT</command> is handled.
+<listitem><para><command> DDL_SCRIPT</command> is handled.
+
+<listitem><para><command> SUBSCRIBE_SET </command> 
 
 <listitem><para><command> UNSUBSCRIBE_SET </command> 
 
@@ -226,10 +225,11 @@ including the <function> setsyncTracking_offline() </function> call.
 trying the next file.
 
 <listitem><para> If the <function> setsyncTracking_offline()
-</function> call succeeds, then you have the right next SYNC file, and
-should apply it.  You should probably <command>ROLLBACK</command> the
-transaction, and then use <application>psql</application> to apply the
-entire file full of updates.
+</function> call succeeds, then you have the right next
+<command>SYNC</command> file, and should apply it.  You should
+probably <command>ROLLBACK</command> the transaction, and then use
+<application>psql</application> to apply the entire file full of
+updates.
 
 </itemizedlist>
 

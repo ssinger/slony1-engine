@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.13 2005-03-15 20:12:01 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.14 2005-03-23 20:12:54 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -44,8 +44,9 @@
     <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable></term>
     <listitem>
      <para>
-      Specifies the level of verbosity that <application>slon</application> should
-      use when logging its activity.
+      The <envar>log_level</envar> specifies the level of verbosity
+      that <application>slon</application> should use when logging its
+      activity.
      </para>
      <para>
       The eight levels of logging are:
@@ -68,14 +69,16 @@
     <listitem>
 
      <para>
-      Specifies the interval, in milliseconds, in which
-      <application>slon</application> should check to see if a SYNC
-      should be introduced even if none has been mandated by data
-      creation.  Default is 10000 ms.
+      The <envar>sync_interval</envar>, measured in milliseconds,
+      indicates how often <application>slon</application> should check
+      to see if a <command>SYNC</command> should be introduced.
+      Default is 10000 ms.  The main loop in
+      <function>sync_Thread_main() sleeps for intervals of
+      <envar>sync_interval</envar> milliseconds between iterations.
      </para>
      
      <para>
-      Short sync times keep the origin on a <quote>short
+      Short sync check intervals keep the origin on a <quote>short
       leash</quote>, updating its subscribers more frequently.  If you
       have replicated sequences that are frequently updated
       <emphasis>without</emphasis> there being tables that are
@@ -85,9 +88,9 @@
      </para>
 
      <para>
-      If the node is not an origin, so no updates are coming in, it
-      will continue on to the <option>-t</option> timeout and generate
-      a SYNC anyways.
+      If the node is not an origin for any replication set, so no
+      updates are coming in, it is somewhat wasteful for this value to
+      be much less the <envar>sync_interval_timeout</envar> value.
      </para>
 
     </listitem>
@@ -99,22 +102,22 @@
     <listitem>
 
      <para>
-      At the end of each such timeout period, a SYNC will be generated
-      on the <quote>local</quote> node even if there has been no
-      replicatable data updated that would have pushed out a SYNC.
+      At the end of each <envar>sync_interval_timeout</envar> timeout
+      period, a <command>SYNC</command> will be generated on the
+      <quote>local</quote> node even if there has been no replicatable
+      data updated that would have pushed out a
+      <command>SYNC</command>.
      </para>
      <para>
-      Default is 60000 ms.
+      Default, and maximum, is 60000 ms, so that you can expect each
+      node to <quote>report in</quote> with a <command>SYNC</command>
+      once each minute.
      </para>
      <para>
-      Note that SYNC events are also generated on subscriber nodes.
-      Since they are not actually generating any data to replicate to
-      other nodes, such SYNC events are of little value.  You might
-      want to increase this parameter to something quite a bit higher
-      than the <option>-s</option> SYNC check interval, so that
-      subscriber nodes won't generate and propagate as many SYNC
-      events.  The once per minute that is the default seems amply
-      often.
+      Note that <command>SYNC</command> events are also generated on
+      subscriber nodes.  Since they are not actually generating any
+      data to replicate to other nodes, these <command>SYNC</command>
+      events are of not terribly much value.
      </para>
     </listitem>
    </varlistentry>
@@ -123,50 +126,84 @@
     <term><option>-g</option><replaceable class="parameter">group size</replaceable></term>
     <listitem>
      <para>
-      Maximum SYNC group size; defaults to 6.  Thus, if a particular
-      node is behind by 200 SYNCs, it will try to group them together
-      into groups of 6.  This would be expected to reduce transaction
-      overhead due to having fewer transactions to <command>COMMIT</command>.
+      This controls the maximum <command>SYNC</command> group size,
+      <envar>sync_group_maxsize</envar>; defaults to 6.  Thus, if a
+      particular node is behind by 200 <command>SYNC</command>s, it
+      will try to group them together into groups of a maximum size of
+      <envar>sync_group_maxsize</envar>.  This can be expected to
+      reduce transaction overhead due to having fewer transactions to
+      <command>COMMIT</command>.
      </para>
      <para>
-      The default of 6 is probably suitable for small systems
-      that can devote only very limited bits of memory to slon.  If you
-      have plenty of memory, it would be reasonable to increase this,
-      as it will increase the amount of work done in each transaction,
-      and will allow a subscriber that is behind by a lot to catch up
-      more quickly.
+      The default of 6 is probably suitable for small systems that can
+      devote only very limited bits of memory to
+      <application>slon</application>.  If you have plenty of memory,
+      it would be reasonable to increase this, as it will increase the
+      amount of work done in each transaction, and will allow a
+      subscriber that is behind by a lot to catch up more quickly.
      </para>
      <para>
-      Slon processes usually stay pretty small; even with large
-      value for this option, slon would be expected to only grow to a
-      few MB in size.
+      Slon processes usually stay pretty small; even with large value
+      for this option, <application>slon</application> would be
+      expected to only grow to a few MB in size.
      </para>
      <para>
       The big advantage in increasing this parameter comes from
       cutting down on the number of transaction
-      <command>COMMIT</command>s; moving from 1 to 2 should provide
-      substantial benefit, but the benefits will progressively fall
+      <command>COMMIT</command>s; moving from 1 to 2 will provide
+      considerable benefit, but the benefits will progressively fall
       off once the transactions being processed get to be reasonably
       large.  There isn't likely to be a material difference in
       performance between 80 and 90; at that point, whether
       <quote>bigger is better</quote> will depend on whether the
-      bigger set of SYNCs makes the LOG cursor behave badly due to
-      consuming more memory and requiring more time to sortt.
+      bigger set of <command>SYNC</command>s makes the
+      <envar>LOG</envar> cursor behave badly due to consuming more
+      memory and requiring more time to sortt.
+     </para>
+     <para>
+      In &slony1; version 1.0, <application>slon</application> will
+      always attempt to group <command>SYNC</command>s together to
+      this maximum, which <emphasis>won't</emphasis> be ideal if
+      replication has been somewhat destabilized by there being very
+      large updates (<emphasis>e.g.</emphasis> - a single transaction
+      that updates hundreds of thousands of rows) or by
+      <command>SYNC</command>s being disrupted on an origin node with
+      the result that there are a few <command>SYNC</command>s that
+      are very large.  You might run into the problem that grouping
+      together some very large <command>SYNC</command>s knocks over a
+      <application>slon</application> process.  When it picks up
+      again, it will try to process the same large grouped set of
+      <command>SYNC</command>s, and run into the same problem over and
+      over until an administrator interrupts this and changes the
+      <option>-g</option> value to break this <quote>deadlock.</quote>
+     </para> 
+     <para>
+      In &slony1; version 1.0, the <application>slon</application>
+      instead adaptively <quote>ramps up</quote> from doing 1
+      <command>SYNC</command> at a time towards the maximum group
+      size.  As a result, if there are a couple of
+      <command>SYNC</command>s that cause problems, the
+      <application>slon</application> will (with any relevant watchdog
+      assistance) always be able to get to the point where it
+      processes the troublesome <command>SYNC</command>s one by one,
+      hopefully making operator assistance unnecessary.
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry>
     <term><option>-o</option><replaceable class="parameter">desired sync time</replaceable></term>
-    <listitem><para> A <quote>maximum</quote> time planned for grouped SYNCs.</para>
+    <listitem><para> A <quote>maximum</quote> time planned for grouped <command>SYNC</command>s.</para>
 
      <para> If replication is running behind, slon will gradually
-      increase the numbers of SYNCs grouped together, targetting that
-      (based on the time taken for the <emphasis>last</emphasis> group
-      of SYNCs) they shouldn't take more than ths specified
-      <quote>desired sync time</quote>.</para>
+     increase the numbers of <command>SYNC</command>s grouped
+     together, targetting that (based on the time taken for the
+     <emphasis>last</emphasis> group of <command>SYNC</command>s) they
+     shouldn't take more than the specified
+     <envar>desired_sync_time</envar> value.</para>
 
-     <para> The default value is 60000ms, equal to one minute. </para>
+     <para> The default value for <envar>desired_sync_time</envar> is
+     60000ms, equal to one minute. </para>
 
      <para> That way, you can expect (or at least hope!) that you'll
       get a <command>COMMIT</command> roughly once per minute. </para>
@@ -174,13 +211,14 @@
      <para> It isn't <emphasis>totally</emphasis> predictable, as it
      is entirely possible for someone to request a <emphasis>very
      large update,</emphasis> all as one transaction, that can
-     <quote>blow up</quote> the length of the resulting SYNC to be
-     nearly arbitrarily long.  In such a case, the heuristic will back
-     off for the <emphasis>next</emphasis> group.</para>
+     <quote>blow up</quote> the length of the resulting
+     <command>SYNC</command> to be nearly arbitrarily long.  In such a
+     case, the heuristic will back off for the
+     <emphasis>next</emphasis> group.</para>
 
      <para> The overall effect is to improve
       <productname>Slony-I</productname>'s ability to cope with
-      variations in traffic.  By starting with 1 SYNC, and gradually
+      variations in traffic.  By starting with 1 <command>SYNC</command>, and gradually
       moving to more, even if there turn out to be variations large
       enough to cause <productname>PostgreSQL</productname> backends to
       crash, <productname>Slony-I</productname> will back off down to
@@ -193,7 +231,8 @@
     <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable></term>
     <listitem>
      <para>
-      How often to <command>VACUUM</command> in cleanup cycles.
+      The value <envar>vac_frequency</envar> indicates how often to
+      <command>VACUUM</command> in cleanup cycles.
      </para>
      <para>
       Set this to zero to disable
@@ -205,15 +244,31 @@
       <emphasis>lot</emphasis> of dead tuples that should be vacuumed
       frequently.
      </para>
+
+     <para> In &slony1; version 1.1, this changes a little; the
+     cleanup thread tracks, from iteration to iteration, the earliest
+     transaction ID still active in the system.  If this doesn't
+     change, from one iteration to the next, then an old transaction
+     is still active, and therefore a <command>VACUUM</command> will
+     do no good.  The cleanup thread instead merely does an
+     <command>ANALYZE</command> on these tables to update the
+     statistics in <envar>pg_statistics</envar>.
+     </para>
     </listitem>
    </varlistentry>
-   
    
    <varlistentry>
     <term><option>-p</option><replaceable class="parameter">PID filename</replaceable></term>
     <listitem>
      <para>
-      Filename in which the PID (process ID) of the <application>slon</application> is stored.
+      <envar>pid_file</envar> contains the filename in which the PID
+      (process ID) of the <application>slon</application> is stored.
+     </para>
+
+     <para>
+      This may make it easier to construct scripts to monitor multiple
+      <application>slon</application> processes running on a single
+      host.
      </para>
     </listitem>
    </varlistentry>
@@ -234,8 +289,9 @@
     <term><option>-a</option><replaceable class="parameter">archive directory</replaceable></term>
     <listitem>
      <para>
-      Directory in which to place a sequence of SYNC archive files for
-      use in <quote>log shipping</quote> mode.
+      <envar>archive_dir</envar> indicates a directory in which to
+      place a sequence of <command>SYNC</command> archive files for
+      use in <link linkend="logshipping"> log shipping</link> mode.
      </para>
     </listitem>
    </varlistentry>

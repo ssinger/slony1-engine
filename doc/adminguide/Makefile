@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.8 2004-12-22 23:09:57 darcyb Exp $
+# $Id: Makefile,v 1.9 2005-03-23 20:12:54 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ man: slony.sgml $(ALLSGML)
 ## HTML
 ##
 
-all: html
+all: html man
 
 .PHONY: html
 
