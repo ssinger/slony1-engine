@@ -25,6 +25,7 @@
 		<li><a href="#stmt_init_cluster">INIT CLUSTER</a>
 		<li><a href="#stmt_store_node">STORE NODE</a>
 		<li><a href="#stmt_drop_node">DROP NODE</a>
+		<li><a href="#stmt_uninstall_node">UNINSTALL NODE</a>
 		<li><a href="#stmt_restart_node">RESTART NODE</a>
 		<li><a href="#stmt_store_path">STORE PATH</a>
 		<li><a href="#stmt_drop_path">DROP PATH</a>
@@ -367,6 +368,38 @@
 <p>
 	DROP NODE (
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_uninstall_node">
+<h3>UNINSTALL NODE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	UNINSTALL NODE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Restores all tables to the unlocked state, with all original
+	user triggers, constraints and rules, eventually added Slony-I
+	specific serial key columns dropped and the Slony-I schema
+	dropped. The node becomes a standalone database. The data is
+	left untouched.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Node ID of the system to uninstall.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	UNINSTALL NODE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 3
 	<br>);
 </p>
 </div>
