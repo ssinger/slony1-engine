@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.7 2004-01-09 21:33:14 wieck Exp $
+ *	$Id: slon.h,v 1.8 2004-01-22 21:26:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -20,6 +20,12 @@
 #ifndef true
 #define   true (~false)
 #endif
+
+
+#define	SLON_TSTAT_NONE		0
+#define	SLON_TSTAT_RUNNING	1
+#define	SLON_TSTAT_SHUTDOWN	2
+
 
 
 /* ----------
@@ -41,20 +47,13 @@ struct SlonNode_s {
 	char			   *no_comment;		/* comment field */
 	pthread_mutex_t		node_lock;		/* mutex for node */
 
-	int					have_thread;	/* flag if event thread exists */
-	pthread_t			event_thread;	/* thread listening for events */
-	SlonConn		   *event_conn;		/* connection event thread uses */
-	PGconn			   *local_dbconn;	/* connection for forwarding data */
+	int64				last_event;		/* last event we have received */
 
-	char			   *pa_conninfo;	/* conninfo to connect to it */
-	int					pa_connretry;	/* connect retry interval in seconds */
+	int					listen_status;	/* status of the listen thread */
+	pthread_t			listen_thread;	/* thread id of listen thread */
+	SlonListen		   *listen_head;	/* list of origins we listen for */
+	SlonListen		   *listen_tail;
 
-	SlonListen		   *li_list_head;	/* list of event origins we receive */
-	SlonListen		   *li_list_tail;	/* from this provider */
-
-	pthread_mutex_t		data_dblock;	/* lock and DB connection to get */
-	PGconn			   *data_dbconn;	/* data from the remote node */
-	
 	SlonNode		   *prev;
 	SlonNode		   *next;
 };
@@ -105,6 +104,68 @@ struct SlonConn_s {
 	SlonConn		   *prev;
 	SlonConn		   *next;
 };
+
+/* ----
+ * SlonDString
+ * ----
+ */
+#define		SLON_DSTRING_SIZE_INIT	64
+#define		SLON_DSTRING_SIZE_INC	64
+
+typedef struct
+{
+	size_t		n_alloc;
+	size_t		n_used;
+	char	   *data;
+} SlonDString;
+
+#define		dstring_init(__ds) \
+{ \
+	(__ds)->n_alloc = SLON_DSTRING_SIZE_INIT; \
+	(__ds)->n_used = 0; \
+	(__ds)->data = malloc(SLON_DSTRING_SIZE_INIT); \
+}
+#define		dstring_reset(__ds) \
+{ \
+	(__ds)->n_used = 0; \
+	(__ds)->data[0] = '\0'; \
+}
+#define		dstring_free(__ds) \
+{ \
+	free((__ds)->data); \
+	(__ds)->n_used = 0; \
+	(__ds)->data = NULL; \
+}
+#define		dstring_nappend(__ds,__s,__n) \
+{ \
+	if ((__ds)->n_used + (__n) >= (__ds)->n_alloc)  \
+	{ \
+		while ((__ds)->n_used + (__n) >= (__ds)->n_alloc) \
+			(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
+		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+	} \
+	memcpy(&((__ds)->data[(__ds)->n_used]), (__s), (__n)); \
+	(__ds)->n_used += (__n); \
+}
+#define		dstring_append(___ds,___s) \
+{ \
+	register int ___n = strlen((___s)); \
+	dstring_nappend((___ds),(___s),___n); \
+}
+#define		dstring_addchar(__ds,__c) \
+{ \
+	if ((__ds)->n_used + 1 >= (__ds)->n_alloc)  \
+	{ \
+		(__ds)->n_alloc += SLON_DSTRING_SIZE_INC; \
+		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+	} \
+	(__ds)->data[(__ds)->n_used++] = (__c); \
+}
+#define		dstring_terminate(__ds) \
+{ \
+	(__ds)->data[(__ds)->n_used] = '\0'; \
+}
+#define		dstring_data(__ds)	((__ds)->data)
 
 
 /* ----------
@@ -179,56 +240,53 @@ struct SlonConn_s {
 
 
 /* ----------
- * Globals in slon.c
+ * Globals in runtime_config.c
  * ----------
  */
 extern pid_t	slon_pid;
-extern char	   *local_cluster_name;
-extern char	   *local_namespace;
-extern char	   *local_conninfo;
-extern int		local_nodeid;
-extern int		local_nodeactive;
-extern char	   *local_nodecomment;
-extern char	   *local_lastevent;
+extern char	   *rtcfg_cluster_name;
+extern char	   *rtcfg_namespace;
+extern char	   *rtcfg_conninfo;
+extern int		rtcfg_nodeid;
+extern int		rtcfg_nodeactive;
+extern char	   *rtcfg_nodecomment;
+extern char	   *rtcfg_lastevent;
 
-extern SlonSet *set_list_head;
-extern SlonSet *set_list_tail;
+extern SlonSet *rtcfg_set_list_head;
+extern SlonSet *rtcfg_set_list_tail;
 
 
 /* ----------
  * Functions in slon.c
  * ----------
  */
-extern int		slon_getLocalNodeId(PGconn *conn);
-
-extern void		slon_storeNode(int no_id, char *no_comment);
-extern void		slon_enableNode(int no_id);		
-extern void		slon_dropNode(int no_id);
-
-extern void		slon_storePath(int pa_server, char *pa_conninfo,
-							int pa_connretry);
-
-extern void		slon_storeListen(int li_origin, int li_provider);
-
-extern void		slon_storeSet(int set_id, int set_origin, char *set_comment);
-extern void		slon_storeSubscribe(int sub_set, int sub_provider,
-							int sub_forward);
-extern void		slon_enableSubscription(int sub_set);
-
-extern SlonConn *slon_connectdb(char *conninfo, char *symname);
-extern void		slon_disconnectdb(SlonConn *conn);
-extern SlonConn *slon_make_dummyconn(char *symname);
-extern void		slon_free_dummyconn(SlonConn *conn);
-
 #define slon_abort() {kill(slon_pid, SIGTERM);}
 extern void		slon_exit(int code);
-extern void		slon_quote(char *buf, char *value, char **endp);
 
-typedef struct {
-	size_t	size;
-	char   *buf;
-} slon_querybuf;
-extern int		slon_mkquery(slon_querybuf *buf, char *fmt, ...);
+
+/* ----------
+ * Functions in runtime_config.c
+ * ----------
+ */
+extern void		rtcfg_storeNode(int no_id, char *no_comment);
+extern void		rtcfg_enableNode(int no_id);		
+extern void		rtcfg_dropNode(int no_id);
+extern void		rtcfg_setNodeLastEvent(int no_id, int64 last_event);
+
+extern void		rtcfg_storePath(int pa_server, char *pa_conninfo,
+							int pa_connretry);
+
+extern void		rtcfg_storeListen(int li_origin, int li_provider);
+
+extern void		rtcfg_storeSet(int set_id, int set_origin, char *set_comment);
+
+extern void		rtcfg_storeSubscribe(int sub_set, int sub_provider,
+							int sub_forward);
+extern void		rtcfg_enableSubscription(int sub_set);
+
+extern void		rtcfg_needActivate(int no_id);
+extern void		rtcfg_doActivate(void);
+extern void		rtcfg_joinAllRemoteThreads(void);
 
 
 /* ----------
@@ -236,8 +294,20 @@ extern int		slon_mkquery(slon_querybuf *buf, char *fmt, ...);
  * ----------
  */
 extern void	   *slon_localEventThread(void *dummy);
-extern void	   *slon_localCleanupThread(void *dummy);
-extern void	   *slon_localSyncThread(void *dummy);
+
+
+/* ----------
+ * Functions in cleanup_thread.c
+ * ----------
+ */
+extern void	   *cleanupThread_main(void *dummy);
+
+
+/* ----------
+ * Functions in sync_thread.c
+ * ----------
+ */
+extern void	   *syncThread_main(void *dummy);
 
 
 /* ----------
@@ -256,6 +326,26 @@ extern int		sched_wait_mainloop(void);
 extern int		sched_wait_conn(SlonConn *conn, int condition);
 extern int		sched_wait_time(SlonConn *conn, int condition, int msec);
 extern int		sched_get_status(void);
+
+
+/* ----------
+ * Functions in dbutils.c
+ * ----------
+ */
+extern SlonConn *slon_connectdb(char *conninfo, char *symname);
+extern void		slon_disconnectdb(SlonConn *conn);
+extern SlonConn *slon_make_dummyconn(char *symname);
+extern void		slon_free_dummyconn(SlonConn *conn);
+
+extern int		db_getLocalNodeId(PGconn *conn);
+
+extern int		slon_mkquery(SlonDString *ds, char *fmt, ...);
+
+
+/* ----------
+ * Functions in misc.c
+ * ----------
+ */
 
 
 #endif /*  SLON_H_INCLUDED */

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.3 2003-12-13 17:02:03 wieck Exp $
+#	$Id: Makefile,v 1.4 2004-01-22 21:26:51 wieck Exp $
 # ----------
 
 subdir = src/slon
@@ -16,11 +16,14 @@ LDFLAGS += -lpthread
 
 PROG		= slon
 
-OBJS		= 		\
-	slon.o			\
-	local_node.o	\
-	remote_node.o	\
-	scheduler.o
+OBJS		= 			\
+	slon.o				\
+	runtime_config.o	\
+	sync_thread.o		\
+	cleanup_thread.o	\
+	scheduler.o			\
+	dbutils.o			\
+	misc.o
 
 ALL =				\
 	$(PROG)
@@ -32,11 +35,15 @@ $(PROG):	$(OBJS)
 
 slon.o:		slon.c slon.h
 
-local_node.o:	local_node.c slon.h
+sync_thread.o:	sync_thread.c slon.h
 
-remote_node.o:	remote_node.c slon.h
+cleanup_thread.o:	cleanup_thread.c slon.h
 
 scheduler.o:	scheduler.c slon.h
+
+dbutils.o:	dbutils.c slon.h
+
+misc.o:	misc.c slon.h
 
 clean distclean maintainer-clean:
 	rm -f $(ALL) $(OBJS)

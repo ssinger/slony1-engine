@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.1 2003-12-13 17:02:03 wieck Exp $
+ *	$Id: scheduler.c,v 1.2 2004-01-22 21:26:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -24,6 +24,7 @@
 #include <sys/socket.h>
 
 #include "libpq-fe.h"
+#include "c.h"
 
 #include "slon.h"
 
