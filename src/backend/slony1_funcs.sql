@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.50 2004-12-13 22:08:49 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.51 2004-12-13 23:25:45 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4871,7 +4871,10 @@ the table has no natural unique constraint.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.upgradeSchema(text)
 returns text as '
+
 declare
+        p_old   alias for $1;
+begin
 	-- upgrade sl_table
 	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
 		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
@@ -4908,8 +4911,7 @@ declare
 		execute ''alter table @NAMESPACE@.sl_sequence alter column seq_relname set NOT NULL'';
 		execute ''alter table @NAMESPACE@.sl_sequence alter column seq_nspname set NOT NULL'';
 	end if;
-	p_old	alias for $1;
-begin
+
 	-- ----
 	-- Changes from 1.0.x to 1.1.0
 	-- ----
