@@ -352,7 +352,7 @@ _EOF_
 done
 
 for node in 1 2 3 4 5 6; do
-    echo "delete from \"_T1\".sl_listen;select  \"_T1\".rebuildlistenentries();" | psql slony_test$node
+    echo "select  \"_T1\".rebuildlistenentries();" | psql slony_test$node
 done
 
 echo -n "**** waiting for pgbench to finish "
@@ -362,17 +362,22 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 done
 echo "**** pgbench finished"
 echo "**** please terminate the replication engines when cought up."
-wait $slon1_pid
-wait $slon2_pid
-wait $slon3_pid
+
+for node in 1 2 3 4 5 6; do
+    pid=$PID[$node]
+    wait $pid
+done
 
 kill $pgbench_pid 2>/dev/null
-kill $slon1_pid 2>/dev/null
-kill $slon2_pid 2>/dev/null
-kill $slon3_pid 2>/dev/null
+
+for node in 1 2 3 4 5 6; do
+    pid=$PID[$node]
+    kill $pid 2> /dev/null
+done
 
 echo -n "**** comparing databases ... "
-psql $DB1 >dump.tmp.1.$$ <<_EOF_
+for node in 1 2 3 4 5 6 ; do
+  psql slony_test$node >dump.tmp.$node.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler
@@ -382,40 +387,14 @@ psql $DB1 >dump.tmp.1.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
-psql $DB2 >dump.tmp.2.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
-			from accounts order by aid;
-	select 'branches:'::text, bid, bbalance, filler
-			from branches order by bid;
-	select 'tellers:'::text, tid, bid, tbalance, filler
-			from tellers order by tid;
-	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
-_EOF_
-psql $DB3 >dump.tmp.3.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
-			from accounts order by aid;
-	select 'branches:'::text, bid, bbalance, filler
-			from branches order by bid;
-	select 'tellers:'::text, tid, bid, tbalance, filler
-			from tellers order by tid;
-	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
-_EOF_
+done
 
-if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_2.1-2.diff ; then
-	echo "success - databases 1 and 2 are equal."
-	rm dump.tmp.2.$$
-	rm test_2.1-2.diff
-else
-	echo "FAILED - see test_2.1-2.diff for database differences"
-fi
-echo -n "**** comparing databases ... "
-if diff dump.tmp.1.$$ dump.tmp.3.$$ >test_2.1-3.diff ; then
-	echo "success - databases 1 and 3 are equal."
-	rm dump.tmp.3.$$
-	rm dump.tmp.1.$$
-	rm test_2.1-3.diff
-else
-	echo "FAILED - see test_2.1-3.diff for database differences"
-fi
+for node in 2 3 4 5 6; do
+    if diff dump.tmp.1.$$ dump.tmp.$node.$$ >test_$node.1-$node.diff ; then
+	echo "success - databases 1 and $node are equal."
+	rm dump.tmp.$node.$$
+	rm test_$node.1-$node.diff
+    else
+	echo "FAILED - see test_$node.1-$node.diff for database differences"
+    fi
+done
