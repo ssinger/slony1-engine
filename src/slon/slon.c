@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.37 2004-11-13 04:52:47 wieck Exp $
+ *	$Id: slon.c,v 1.38 2004-12-13 18:58:04 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -69,7 +69,6 @@ main(int argc, char *const argv[])
 	int             errors = 0;
 	extern int      optind;
 	extern char    *optarg;
-	int             group_size_set = 0;
 
 
 	InitializeConfOptions();

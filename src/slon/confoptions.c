@@ -302,10 +302,8 @@ parse_real(const char *value, double *result)
 static struct config_generic *
 find_option(const char *name, int elevel)
 {
-	const char     *dot;
 	const char    **key = &name;
 	struct config_generic **res;
-	int             i;
 
 	res = (struct config_generic **)
 		bsearch((void *)&key,
@@ -314,7 +312,13 @@ find_option(const char *name, int elevel)
 			sizeof(struct config_generic *),
 			conf_var_compare);
 	if (res)
+	{
 		return *res;
+	}
+	else
+	{
+		return NULL;
+	}
 }
 
 static int
