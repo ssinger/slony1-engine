@@ -235,6 +235,19 @@
         </para>
       </listitem>
     </varlistentry>
+    <varlistentry id="slon-config-desired-sync-time" xreflabel="desired_sync_time">
+      <term><varname>desired_sync_time  (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>desired_sync_time</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Maximum time planned for grouped SYNCs. If replication is behind, 
+          <application>slon</application> will try to increase numbers of syncs 
+          done targetting that they should take this quantity of time to process.
+          This is in ms Range [10000,600000], default 60000.
+        </para>
+      </listitem>
+    </varlistentry>
   </variablelist>
 </sect1>
 </article>
