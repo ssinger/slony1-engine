@@ -50,8 +50,19 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-echo -n "**** running 'gmake install' in src directory ... "
-if ! gmake -C .. install >$TMPOUT 2>&1 ; then
+WGM=`which gmake`
+if [[ $WGM == "" ]]; then
+    MAKE=make
+    CGNU=`make -v | grep GNU`
+    if [[ $CGNU == "" ]]; then
+	echo "GNU Make not found - please install GNU Make"
+	exit 1
+    fi
+else
+    MAKE=gmake
+fi
+echo -n "**** running 'make install' in src directory ... "
+if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
     echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
 fi
 echo "done"
