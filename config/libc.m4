@@ -11,7 +11,7 @@ AC_DEFUN([SLON_AC_FUNC_POSIX_SIGNALS],
     AC_DEFINE(HAVE_POSIX_SIGNALS,, [Define to 1 if you have the POSIX signal interface.])
     HAVE_POSIX_SIGNALS=$slonac_cv_func_posix_signals  
   else
-    if x"$template" = xwin ; then
+    if test x"$template" = "xwin" ; then
       AC_MSG_RESULT("Skipping Error on win32")
     else
       AC_MSG_RESULT("error")
