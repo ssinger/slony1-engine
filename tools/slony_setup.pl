@@ -21,30 +21,30 @@
 
 =head1 NAME
 
-slony_setup.pl - A script for setting up Slony postgres replication
+slony_setup.pl - A script for setting up Slony-I PostgreSQL replication
 
 =head1 DESCRIPTION
 
-Slony setup is intended to facilitate the installation of the slony
+Slony-I setup is intended to facilitate the installation of the Slony-I
 replication engine.  Basically it asks a bunch of questions and creates
 a shell (bash) script which can then be run on the master and also
 provides the commands to be run on slaves.
 
-The initial goal for slony_setup.pl is to allow a postgres DBA to start
+The initial goal for slony_setup.pl is to allow a PostgreSQL DBA to start
 with:
 
-1.  A postgres master host that needs replication.
+1.  A PostgreSQL master host that needs replication.
 
 2.  N slaves hosts.
 
-3.  Every postgres host allows authenticated connections from all
+3.  Every PostgreSQL host allows authenticated connections from all
 participating hosts over TCP/IP.
 
-4.  A "slony" postgres superuser and a "slony" system user on every
+4.  A "slony" PostgreSQL superuser and a "slony" system user on every
 participating host.
 
 Given the above, the setup script should then create the necessary
-script to effect complete slony replication.
+script to effect complete Slony-I replication.
 
 =head1 BUGS
 
@@ -133,11 +133,11 @@ $SIG{KILL} = \&clean_up;
 #                                                #
 ##################################################
 
-if ($ARGV[0] =~ m/-h|--h|\?/) {
+if (($ARGV[0]) && ($ARGV[0] =~ m/-h|--h|\?/)) {
     print <<TEXT;
 usage: perl slony_setup.pl
 
-Run this as the user you plan to run slony.  For now, this script
+Run this as the user you plan to run Slony-I.  For now, this script
 takes no arguments.  Just run it.
 
 If you want to know more about it, run the following command:
@@ -169,26 +169,12 @@ my $pgpassbackup = "$tmpdir/.pgpass.backup";
 #########################################
 
 chomp(my $psql = `which psql`);
+if (!$psql){
+  print "\n\n * * * pgsql not found in your path * * *\n\n";
+  clean_up();
+  exit;
+}
 my $pager = $ENV{'PAGER'} || 'less' || 'more';
-
-#my $ret = check_version();
-
-#if ($ret == 1) {
-#    print <<TEXT;
-#You must have PostgreSQL version 7.3 or greater to use Slony-I
-
-#TEXT
-#    clean_up();
-#} elsif ($ret == 2) {
-#    print <<'TEXT';
-#The psql executable was not found.  PostgreSQL must be installed and
-#its executables should be in your $PATH
-
-#TEXT
-#    clean_up();
-#} else {
-#    # Keep going--we're OK.
-#}
 
 ####################
 #                  #
@@ -197,23 +183,23 @@ my $pager = $ENV{'PAGER'} || 'less' || 'more';
 ####################
 
 my $text = <<TEXT;
-Slony setup will guide you through the process of setting up the slony-engine
+Slony-I setup will guide you through the process of setting up the Slony-I
 replication system.  Some presumptions will be made in order to keep this
 installation process as simple as possible.  The default values may be over-
-ridden.  Slony requires, and the install process presumes that:
+ridden.  Slony-I requires, and the install process presumes that:
 
 1.  Your master server listens on TCP/IP.
 2.  At least one slave listens on TCP/IP.
-3.  You have a "slony" postgres superuser (createuser -a -d -P slony) as well
+3.  You have a "slony" PostgreSQL superuser (createuser -a -d -P slony) as well
    as a "slony" system user on all participating hosts.
 4.  Each host participating in replication allows every other host that is
-   participating in the replication to connect and authenticate to postgres
-   as the slony postgres user over TCP/IP.
-5.  Slony binaries have been installed on all participating hosts.
+   participating in the replication to connect and authenticate to PostgreSQL
+   as the "slony" PostgreSQL user over TCP/IP.
+5.  Slony-I binaries have been installed on all participating hosts.
 
 Optional, but helpful:
 
-1.  The user that will run the slony processes on all hosts has remote ssh
+1.  The user that will run the Slony-I processes on all hosts has remote ssh
    access from the host slony_setup.sh runs.
 
 You will be prompted for the following information:
@@ -228,8 +214,8 @@ databases and their tables into replication.
 
 When all the information needed to complete the setup is obtained, the process
 will then prompt the user to run the commands to finalize the installation.
-The user need not finalize the installation at that time, for the process will
-write a perl script to a file that can then be run to create the replication
+The user need not finalize the installation at that time, for that the process will
+write a shell script to a file that can then be run to create the replication
 without running slony_setup.pl again.
 TEXT
 
@@ -378,10 +364,10 @@ while (1) {
         print "\n\nConnection to $which failed.  Try again? (Answering NO will abort) (Y|n) ";
         clean_up() if ! get_one_bool();
     } else {
-        print "\n\n$which connection successfull\n";
+        print "\n\n$which connection successful\n";
 	if (check_version(which => $which))
         {
-          print "You need to upgrage pgsql on $data{$which}{'hostname'}";
+          print "You need to upgrage PostgreSQL on $data{$which}{'hostname'}";
 	  clean_up();
         }
         get_databases(which => $which);
@@ -559,7 +545,7 @@ if (get_one_bool()) {
         uninstall node (id = 1);
     }
     on error {
-        echo 'Could not uninstall slony on node 1';
+        echo 'Could not uninstall Slony-I on node 1';
         exit -1;
     }
 ";
@@ -569,13 +555,13 @@ if (get_one_bool()) {
         uninstall node (id = " . ($slave + 1) . ");
     }
     on error {
-        echo 'Could not uninstall Slony on node " . ($slave + 1) . "';
+        echo 'Could not uninstall Slony-I on node " . ($slave + 1) . "';
         exit -1;
     }
 ";
         }
     
-        print F "\techo 'Slony successfully uninstalled on database $database';
+        print F "\techo 'Slony-I successfully uninstalled on database $database';
 _EOF_
 
 if [ \$? -ne 0 ]
@@ -610,7 +596,7 @@ rm -f $setup_log
     foreach my $slave (keys %{$data{'slaves'}}) {
         #
         # Create all the users that exist on the master database on each slave, except the
-        # postgres and slony users
+        # PostgreSQL and Slony-I users
         #
         foreach my $user (sort keys %{$data{'master'}{'users'}}) {
             print F "$psql" .
@@ -756,7 +742,7 @@ rm -f $setup_log
         store node (id = " . ($slave + 1) . ", comment = 'Node " . ($slave + 1) . "');
     }
     on error {
-        echo 'Could not create node " . ($slave + 1) . "!';
+        echo 'Could not create Node " . ($slave + 1) . "!';
         exit -1;
     }
     echo 'Node " . ($slave + 1) . " created';";
@@ -911,7 +897,7 @@ close F;
 
 my $end = "
 The setup script was saved as '$slony_master_setup'.  This script must
-be executed on the master as the slony system user.  If all goes well, slony
+be executed on the master as the \"slony\" system user.  If all goes well, Slony-I
 will be setup.  If not, errors should be reported in '$setup_log'.
 
 Additionally, a data dump of all data collected by this script has been stored
@@ -921,8 +907,8 @@ slony_setup.pl looks for the dumpfile in the working target directory.  This dum
 file only contains the server names and login credentials for now.  Since it
 contains sensitive information, it should be safe-guarded.
 
-You must also run the following command(s) on each slave as the slony system
-user.  These commands should be also set to start and stop when postgres starts
+You must also run the following command(s) on each slave as the \"slony\" system
+user.  These commands should be also set to start and stop when PostgreSQL starts
 and stops:
 
 $slave_commands
@@ -1037,8 +1023,8 @@ sub get_databases {
     open P, "$psql -h " . $data{$params{'which'}}{'hostname'} .
         " -p " . $data{$params{'which'}}{'port'} .
         " -U " . $data{$params{'which'}}{'username'} .
-        " -d template1" .
-        " -t -l |"
+        " -t -d template1" .
+        " -l |"
         || death( message => "Can't open pipe to $psql: $!");
     while (<P>) {
         $_ =~ m/\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+/;
@@ -1059,16 +1045,18 @@ sub get_tables {
     , database => undef
     , @_
     );
-    open P, "$psql -h " . $data{$params{'which'}}{'hostname'} .
+    open P, "$psql -t -h " . $data{$params{'which'}}{'hostname'} .
         " -p " . $data{$params{'which'}}{'port'} .
         " -U " . $data{$params{'which'}}{'username'} .
         " -d $params{'database'} " .
-        " -t" .
         " -c " . qq("select "pg_catalog".quote_ident(schemaname), "pg_catalog".quote_ident(tablename), "pg_catalog".quote_ident(tableowner) from pg_tables where schemaname not in ('information_schema', 'pg_catalog')") . " |"
         || death( message => "Can't open pipe to $psql: $!");
     while (<P>) {
         my ($schema, $table, $owner) = $_ =~ m/\s+(\S+)\s+\|\s+(\S+)\s+\|\s+(\S+)\s+/;
-        $data{$params{'which'}}{'databases'}{$params{'database'}}{'tables'}{$schema . "." . $table} = 1;
+	if ($schema && $table && $owner) {
+
+    	    $data{$params{'which'}}{'databases'}{$params{'database'}}{'tables'}{$schema . "." . $table} = 1;
+	}
     }
     close P;
 }
@@ -1217,8 +1205,8 @@ sub backup_file {
     , backup => undef
     , @_
     );
-    open F, $params{'orig'} or death( message => "Count not open $params{'orig'}: $!");
-    open FH, ">$params{'backup'}" or death( message => "Count not open $params{'backup'}: $!");
+    open F, $params{'orig'} or death( message => "Could not open $params{'orig'}: $!");
+    open FH, ">$params{'backup'}" or death( message => "Could not open $params{'backup'}: $!");
     while (<F>) {
         print FH $_;
     }
