@@ -1,9 +1,10 @@
 <!-- $Id -->
 <article id="requirements">
 <title>System Requirements</title>
+
 <sect1>
-<title>System Requirements</title>
-<para>Any platform that can run PostgreSQL should be able to run
+<title>System Requirements</title> <para>Any platform that can run
+PostgreSQL should be able to run
 <productname>Slony-I</productname>.</para>
 
 <para>The platforms that have received specific testing at the time of
@@ -33,9 +34,8 @@ uses that to have multiple threads of execution.  There are reports of
 there being a <filename>pthreads</filename> library for
 <trademark>Windows</trademark>, so nothing should prevent some
 interested party from volunteering to do the port.</para>
-</sect1>
 
-<sect1>
+<sect2>
 <title> Software needed</title>
 <para>
 <itemizedlist>
@@ -76,10 +76,9 @@ http://www.postgresql.org/mirrors-www.html </ulink> for a list.</para></listitem
 </para>
 <para>Also check to make sure you have sufficient disk space.  You
 will need approximately 5MB for the source tree during build and
-installation.</para>
-</sect1>
+installation.</para></sect2>
 
-<sect1>
+<sect2>
 <title> Getting <productname>Slony-I</productname>Source</title>
 
 <para>You can get the <productname>Slony-I</productname> source from
@@ -87,9 +86,9 @@ installation.</para>
 http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 </para>
 
-</sect1>
+</sect2>
 
-<sect1>
+<sect2>
 <title> Time Synchronization</title>
 
 <para> All the servers used within the replication cluster need to
@@ -107,9 +106,9 @@ distributed applications.</para>
 <para> See <ulink url="http://www.ntp.org/"> www.ntp.org </ulink> for
 more details about NTP (Network Time Protocol).</para>
 
-</sect1>
+</sect2>
 
-<sect1><title> Network Connectivity</title>
+<sect2><title> Network Connectivity</title>
 
 <para>It is necessary that the hosts that are to replicate between one
 another have <emphasis>bidirectional</emphasis> network communications
@@ -163,6 +162,7 @@ sort of <quote>avian transmission protocol.</quote> This will allow
 one way communications so that <quote>subscribers</quote> that use log
 shipping would have no need for access to other
 <productname>Slony-I</productname> nodes.</para>
+</sect2>
 </sect1>
 </article>
 <!-- Keep this comment at the end of the file
