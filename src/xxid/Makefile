@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.5 2004-03-12 23:55:02 wieck Exp $
+#	$Id: Makefile,v 1.6 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
 subdir = src/xxid
@@ -24,6 +24,7 @@ ALL =					\
 	$(SO_NAME)			\
 	$(SQL_NAMES)		\
 
+DISTFILES = Makefile xxid.c xxid.v73.sql.in
 
 all:	$(ALL)
 
@@ -45,5 +46,13 @@ install: all installdirs
 
 installdirs:
 	$(mkinstalldirs) $(libdir)
+	$(mkinstalldirs) $(datadir)
 
+
+distdir: $(DISTFILES)
+	mkdir $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	for file in $(DISTFILES) ; do \
+      cp $$file $(distdir)/$(subdir)/$$file ; \
+    done
 

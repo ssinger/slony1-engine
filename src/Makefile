@@ -4,16 +4,27 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.6 2004-03-10 21:27:32 wieck Exp $
+#	$Id: Makefile,v 1.7 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
 subdir = src
 top_builddir = ..
 include $(top_builddir)/Makefile.global
 
+DISTFILES = Makefile
+SUBDIRS = xxid slon slonik backend ducttape
+
 all install installdirs clean distclean maintainer-clean:
-	$(MAKE) -C xxid $@
-	$(MAKE) -C slon $@
-	$(MAKE) -C slonik $@
-	$(MAKE) -C backend $@
-	$(MAKE) -C ducttape $@
+	for subdir in $(SUBDIRS) ; do \
+	  $(MAKE) -C $$subdir $@ ; \
+    done
+
+distdir: $(DISTFILES)
+	mkdir $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	for file in $(DISTFILES) ; do \
+      cp $$file $(distdir)/$(subdir)/$$file ; \
+    done
+	for subdir in $(SUBDIRS) ; do \
+	  $(MAKE) -C $$subdir distdir ; \
+    done

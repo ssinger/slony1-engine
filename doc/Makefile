@@ -4,15 +4,31 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.3 2004-02-20 15:13:27 wieck Exp $
+#	$Id: Makefile,v 1.4 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
-subdir = src
+subdir = doc
 top_builddir = ..
 include $(top_builddir)/Makefile.global
+
+SUBDIRS = concept implementation
+
+DISTFILES = Makefile
 
 all install installdirs:
 
 clean distclean maintainer-clean:
-	$(MAKE) -C concept $@
-	$(MAKE) -C implementation $@
+	for subdir in $(SUBDIRS) ; do \
+		$(MAKE) -C $$subdir $@ ; \
+	done
+
+
+distdir: $(DISTFILES)
+	mkdir $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	for file in $(DISTFILES) ; do \
+		cp $$file $(distdir)/$(subdir)/$$file ; \
+	done
+	for subdir in $(SUBDIRS) ; do \
+		$(MAKE) -C $$subdir distdir ; \
+	done

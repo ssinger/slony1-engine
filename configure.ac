@@ -6,11 +6,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.14 2004-03-12 23:55:02 wieck Exp $
+# $Id: configure.ac,v 1.15 2004-03-18 19:32:21 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
-AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
+
+AC_INIT(slony1-engine, 20040318)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
@@ -188,4 +189,6 @@ AC_CONFIG_LINKS([
 ])
 
 
-AC_OUTPUT
+AC_OUTPUT([
+    postgresql-slony1-engine.spec
+])

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.7 2004-03-12 23:17:31 wieck Exp $
+#	$Id: Makefile,v 1.8 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
 subdir = src/backend
@@ -33,6 +33,8 @@ SQL_NAMES =				\
 	$(BASE_74)			\
 	$(FUNCS_74)
 
+DISTFILES = Makefile README README.events $(wildcard *.sql) $(wildcard *.in) $(wildcard *.c)
+
 ALL = $(SQL_NAMES)		\
 	$(FUNCS_SONAME)
 
@@ -53,5 +55,14 @@ install: all installdirs
 
 installdirs:
 	$(mkinstalldirs) $(libdir)
+	$(mkinstalldirs) $(datadir)
 
+
+
+distdir: $(DISTFILES)
+	mkdir $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	for file in $(DISTFILES) ; do \
+      cp $$file $(distdir)/$(subdir)/$$file ; \
+    done
 

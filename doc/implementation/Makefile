@@ -4,9 +4,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.3 2004-02-20 15:13:27 wieck Exp $
+# $Id: Makefile,v 1.4 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
+subdir = doc/implementation
+top_builddir = ../..
+include $(top_builddir)/Makefile.global
 
 GROFF	= groff
 GOPTS	= -U -t -p -ms -mpspic
@@ -31,6 +34,7 @@ PS		= Slony-I-implementation.ps
 
 TXT		= Slony-I-implementation.txt
 
+DISTFILES = Makefile $(wildcard *.pic) Slon_900x720.jpg Slony-I-implementation.nr
 
 all:	all-ps all-pdf
 
@@ -86,4 +90,11 @@ Slon.eps:	Slon_$(IMG_WID)x$(IMG_HT).jpg
 
 %.pdf:	%.ps
 	$(PS2PDF) $<
+
+distdir: $(DISTFILES)
+	mkdir $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	for file in $(DISTFILES) ; do \
+      cp $$file $(distdir)/$(subdir)/$$file ; \
+    done
 

@@ -1,0 +1,52 @@
+Summary: A "master to multiple slaves" replication system with cascading and failover.
+Name: postgresql-@PACKAGE_NAME@
+Version: @PACKAGE_VERSION@
+Release: 1
+License: Berkeley/BSD
+Group: Applications/Databases
+URL: http://gborg.postgresql.org/project/slony1/projdisplay.php
+Source0: @PACKAGE_NAME@-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires: postgresql-devel
+Requires: postgresql
+
+%description
+Slony-I will be a "master to multiple slaves" replication 
+system with cascading and failover.
+
+The big picture for the development of Slony-I is to build 
+a master-slave system that includes all features and 
+capabilities needed to replicate large databases to a 
+reasonably limited number of slave systems.
+
+Slony-I is planned as a system for data centers and backup 
+sites, where the normal mode of operation is that all nodes 
+are available
+
+%prep
+%setup -q -n @PACKAGE_NAME@-%{version}
+./configure --bindir /usr/bin --libdir /usr/lib/pgsql --includedir /usr/include/pgsql --datadir /usr/share/pgsql
+
+%build
+make CFLAGS="-I /usr/kerberos/include"
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DISTDIR=$RPM_BUILD_ROOT
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc COPYRIGHT
+/usr/bin/slon
+/usr/bin/slonik
+/usr/lib/pgsql/slony1_funcs.so
+/usr/lib/pgsql/xxid.so
+/usr/share/pgsql/*.sql
+
+
+%changelog
+* Thu Mar 18 2004 Daniel Berrange <berrange@redhat.com> postgresql-slony1-engine
+- Initial RPM packaging

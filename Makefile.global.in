@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.9 2004-03-12 18:36:58 wieck Exp $
+# $Id: Makefile.global.in,v 1.10 2004-03-18 19:32:21 wieck Exp $
 # ----------
 
 ##########################################################################
@@ -34,6 +34,12 @@ top_srcdir = $(abs_top_srcdir)
 srcdir = $(top_srcdir)
 endif
 
+PACKAGE = @PACKAGE_NAME@
+VERSION = @PACKAGE_VERSION@
+
+distdir = $(top_srcdir)/$(PACKAGE)-$(VERSION)
+
+DISTDIR = 
 
 ##########################################################################
 #
@@ -46,13 +52,13 @@ endif
 # Installation directories
 #
 
-prefix := @prefix@
+prefix := $(DISTDIR)@prefix@
 exec_prefix := ${prefix}
 
-libdir := @libdir@
-datadir := @datadir@
-bindir := @bindir@
-includedir := @includedir@
+libdir := $(DISTDIR)@libdir@
+datadir := $(DISTDIR)@datadir@
+bindir := $(DISTDIR)@bindir@
+includedir := $(DISTDIR)@includedir@
 
 
 
