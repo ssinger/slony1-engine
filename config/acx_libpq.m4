@@ -9,7 +9,7 @@ AC_LANG_C
 AC_MSG_CHECKING(for pg_config)
 
 dnl Checking for pg_config in a list of possible locations.
-PGCONFIG_POSSIBLE_LOCATIONS="/usr/local/pgsql/bin /usr/local/bin /usr/bin /bin /usr/lib/postgresql/bin /opt/local/pgsql/bin /opt/pgsql/bin/ ${with_pgconfigdir}"
+PGCONFIG_POSSIBLE_LOCATIONS="${with_pgconfigdir} /usr/local/pgsql/bin /usr/local/bin /usr/bin /bin /usr/lib/postgresql/bin /opt/local/pgsql/bin /opt/pgsql/bin/"
 for i in $PGCONFIG_POSSIBLE_LOCATIONS; do
     if test -x $i/pg_config; then
 	PG_CONFIG_LOCATION="$i/pg_config"
@@ -166,7 +166,7 @@ else
 fi
 
 AC_MSG_CHECKING(for postgresql.conf.sample)
-PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir} ${PG_BINDIR}/../share"
+PGSHARE_POSSIBLE_LOCATIONS="${with_pgsharedir} /usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${PG_BINDIR}/../share"
 for i in $PGSHARE_POSSIBLE_LOCATIONS; do
     if test -s "$i/postgresql.conf.sample" ; then
 	PG_SHAREDIR=$i/
