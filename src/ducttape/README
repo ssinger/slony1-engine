@@ -1,0 +1,17 @@
+
+Directory src/ducttape
+
+This directory contains primitive scripts and support programs to
+aid in the process of development. All components found here
+should be replaced by production grade utilities before release.
+
+
+slony1_schema.sh	<dbname> <clustername>
+
+	Loads the whole Slony-I system into database <dbname>. The
+	namespace used and created for this is "_<clustername>".
+
+	After loading the database will be an uninitialized Slony-I
+	node. The local_node_id is -1. No configuration data exists.
+
+
