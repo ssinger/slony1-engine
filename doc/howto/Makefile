@@ -9,10 +9,10 @@ slony_subdir = doc/howto
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-DISTFILES = Makefile $(wildcard *.txt*) $(wildcard *.html*) schemadoc.html
+DISTFILES = Makefile $(wildcard *.txt*) $(wildcard *.html*)
 
 distdir: $(DISTFILES)
-	mkdir $(distdir)/$(subdir)
+	mkdir -p $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
       cp $$file $(distdir)/$(subdir)/$$file ; \
@@ -29,23 +29,25 @@ distdir: $(DISTFILES)
 #  - "make clean" should really drop the database
 #  - you need to manually drop the database before regenning the docs
 
-BASEDIR=../../src/backend
+BASEDIR=$(slony_top_builddir)/src/backend
 BASESQL=$(BASEDIR)/slony1_base.sql 
 BASEFUNS=$(BASEDIR)/slony1_funcs.sql 
 XIDSQL=localxid.sql
 # Might want to add version-specific functions, too...
 TEMPDB=schemadoc
 TEMPSCHEMA=schemadoc
-CREATELANG=/usr/lib/postgresql/bin/createlang   # That's how it is for me...
+CREATELANG=$(pgbindir)/createlang   # That's how it is for me...
 AUTODOC=postgresql_autodoc
 
 schemadoc.html: $(BASESQL) $(BASEFUNS) $(XIDDIR)
-	createdb $(TEMPDB)
-	$(CREATELANG) plpgsql $(TEMPDB)
-	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | psql $(TEMPDB)
-	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  | sed "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | psql $(TEMPDB)
-	$(AUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t html
+	$(pgbindir)/createdb $(TEMPDB) && ( \
+	$(CREATELANG) plpgsql $(TEMPDB) && \
+	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | $(pgbindir)/psql $(TEMPDB) && \
+	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed -e "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  -e "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | $(pgbindir)/psql $(TEMPDB) && \
+	$(AUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t html ;\
+	@$(pgbindir)/dropdb $(TEMPDB) >/dev/null 2>&1
+	) || echo "unable to createdb $(TEMPDB)"
 
 clean:
-	dropdb $(TEMPDB)
-	rm schemadoc.html
+	@$(pgbindir)/dropdb $(TEMPDB) || echo "unable to dropdb $(TEMPDB)" 
+
