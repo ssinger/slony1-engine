@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: installation.sgml,v 1.8 2005-02-07 21:48:23 cbbrowne Exp $ -->
 <article id="installation">
 <title>Slony-I Installation</title>
 <sect1>
@@ -14,9 +14,8 @@ tar xf slony.tar
 <para> This will create a directory under the current directory with
 the <productname>Slony-I</productname> sources.  Head into that that directory for the rest of
 the installation procedure.</para>
-</sect1>
 
-<sect1>
+<sect2>
 <title>Short Version</title>
 
 <para>
@@ -26,8 +25,7 @@ gmake all; gmake install
 </screen>
 </para>
 
-</sect1>
-<sect1>
+<sect2>
 <title>Configuration</title>
 
 <para>The first step of the installation procedure is to configure the
@@ -40,9 +38,9 @@ source tree for your system.  This is done by running the
 library, binary, and include directories; for a full list of these
 options, use the command <command>./configure --help</command>
 </para>
-</sect1>
+</sect2>
 
-<sect1>
+<sect2>
 <title>Example</title>
 
 <screen>
@@ -56,10 +54,10 @@ specific platforms such as Solaris2.X on SPARC this patch can be found
 at <ulink
 url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
 http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulink></para>
-</sect1>
+</sect2>
 
 
-<sect1>
+<sect2>
 <title>Build</title>
 
 <para>To start the build process, type
@@ -77,9 +75,9 @@ line displayed should be</para>
 
 <para> <command> All of Slony-I is successfully made.  Ready to
 install.  </command></para>
-</sect1>
+</sect2>
 
-<sect1>
+<sect2>
 <title> Installing Slony-I</title>
 
 <para> To install Slony-I, enter
@@ -93,6 +91,7 @@ specified by the <option>--prefix</option> option used in the
 PostgreSQL configuration.  Make sure you have appropriate permissions
 to write into that area.  Normally you need to do this either as root
 or as the postgres user.  </para>
+</sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file

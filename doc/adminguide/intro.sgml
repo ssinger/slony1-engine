@@ -1,7 +1,6 @@
-<!-- $Id: intro.sgml,v 1.7 2005-01-24 17:35:35 cbbrowne Exp $ -->
-<article id="introduction">
+<!-- $Id: intro.sgml,v 1.8 2005-02-07 21:48:23 cbbrowne Exp $ -->
+<sect1 id="introduction">
 <title>Introduction to <productname>Slony-I</productname></title>
-<sect1><title>Introduction to <productname>Slony-I</productname></title>
 <sect2><title>Why yet another replication system?</title>
 
 <para><productname>Slony-I</productname> was born from an idea to
@@ -197,7 +196,6 @@ number of nodes doubles, this can be expected to quadruple
 communications overheads.</para>
 </sect1>
 
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
