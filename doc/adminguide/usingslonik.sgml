@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.3 2005-02-09 14:42:45 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.4 2005-02-09 20:08:43 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -358,10 +358,32 @@ Functions </title>
 
 <para> There are cases where it may make sense to directly use the
 stored functions that implement the various pieces of &slony1;.
-Slonik doesn't do terribly much <quote/magic;/ it is common for Slonik
-commands to simply involve deciding on a node at which to apply a
-command, and then submit a SQL query consisting of a call to one of
+Slonik doesn't do terribly much <quote>magic;</quote> it is common for
+Slonik commands to simply involve deciding on a node at which to apply
+a command, and then submit a SQL query consisting of a call to one of
 the &slony1; stored functions.</para>
+
+<para> The developers of &slony1; anticipate that interested parties
+may wish to develop graphical tools as an alternative to Slonik; it
+would be entirely appropriate in such cases to submit configuration
+requests directly via the stored functions.
+
+<para> When debugging problems in <quote>troubled</quote> &slony1;
+clusters, it has also occasionally proven useful to use the stored
+functions.  This has been particularly useful for cases where
+<envar>sl_listen</envar> configuration has been broken, and events
+have not been propagating properly.  The <quote>easiest</quote> fix
+was to:</para>
+
+<para> <command> select
+_slonycluster.droplisten(li_origin,li_provider,li_receiver) from
+_slonycluster.sl_listen;</command></para>
+
+<para> <command> select _slonycluster.storelisten(pa_server,
+pa_server, pa_client) from _slonycluster.sl_path;</command></para>
+
+<para> 
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

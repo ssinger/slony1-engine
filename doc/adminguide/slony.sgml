@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.13 2005-02-09 14:42:45 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.14 2005-02-09 20:08:43 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -13,7 +13,7 @@
 <book id="slony">
   <title>&slony1; &version; Documentation</title>
   <bookinfo>
-    <corpauthor>The &postgres; Global Development Group</corpauthor>
+    <corpauthor>The PostgreSQL Global Development Group</corpauthor>
     <author>
       <firstname>Christopher</firstname>
       <surname>Browne</surname>
@@ -75,13 +75,12 @@ worth documenting</emphasis>.</para>
 
  &faq;
  &schemadoc;
-</part>
 
-<part id="commandreferencec">
+<part id="commandreference">
     <title>Core &slony1; Programs</title>
 	&slon;
 	&slonik;
-        &usingslonik;
+        &slonikref;
 </part>
 
 &bookindex;
