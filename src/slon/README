@@ -5,12 +5,14 @@ This directory contains the main replication engine.
 
 STATUS:
 	
-	Slon can process several events up to ENABLE_SUBSCRIPTION which
-	include the data copy process.
+	Slon can subscribe to a data set, copy the initial data from
+	the provider and sync. That is usually called "replication".
 
 TODO:
 
-	SYNC
-
 	All other admin events (especially drop)
+
+	Forwarding for cascade and backup.
+
+	Free linebuffers when terminating sync helper threads.
 
