@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.4 2004-02-20 15:13:27 wieck Exp $
+# $Id: configure.ac,v 1.5 2004-03-02 15:07:45 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -84,10 +84,12 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_HEADER_STDC
+ACX_PTHREAD()
 AC_CHECK_FUNCS([strchr strpbrk])
 
 AC_CONFIG_FILES([
 	Makefile.global 
+	src/slon/Makefile
 ])
 
 AC_CONFIG_LINKS([
