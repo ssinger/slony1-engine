@@ -405,6 +405,17 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
+   <warning><para> If you are using connections that cache query plans
+   (this is particularly common for Java application frameworks with
+   connection pools), the connections may cache query plans that
+   include the pre-<command>DROP NODE</command> state of things, and
+   you will get <link linkend="missingoids"> error messages indicating
+   missing OIDs</link>.</para>
+
+   <para>After dropping a node, you may also need to recycle
+   connections in your application.</para></warning>
+
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -440,6 +451,17 @@ INIT CLUSTER (
       </varlistentry>
      </variablelist>
     </para>
+
+   <warning><para> If you are using connections that cache query plans
+   (this is particularly common for Java application frameworks with
+   connection pools), the connections may cache query plans that
+   include the pre-<command>UNINSTALL NODE</command> state of things,
+   and you will get <link linkend="missingoids"> error messages
+   indicating missing OIDs</link>.</para>
+
+   <para>After dropping a node, you may also need to recycle
+   connections in your application.</para></warning>
+
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>

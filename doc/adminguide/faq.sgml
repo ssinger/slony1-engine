@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.19 2005-02-15 17:10:59 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.20 2005-02-15 17:17:02 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -1224,22 +1224,21 @@ WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
 <answer><para> The problem is fairly self-evident; permission is being
 denied on the system table, <envar>pg_class</envar>.</para></answer>
 
-<answer><para> The <quote>fix</fix> is thus:
+<answer><para> The <quote>fix</quote> is thus:
 <programlisting>
 update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
 </programlisting>
 </answer>
 </qandaentry>
 
-<qandaentry>
-<question> <para>
-We just got bitten by something we didn't foresee when completely
-uninstalling a slony replication cluster from the master and slave...</para>
+<qandaentry id="missingoids"> <question> <para> We got bitten by
+something we didn't foresee when completely uninstalling a slony
+replication cluster from the master and slave...</para>
 
-<warning> <para>MAKE SURE YOU STOP YOUR APPLICATION RUNNING AGAINST YOUR MASTER
-DATABASE WHEN REMOVING THE WHOLE SLONY CLUSTER, or at least re-cycle
-all your open connections after the event!
-</para></warning>
+<warning> <para><emphasis>MAKE SURE YOU STOP YOUR APPLICATION RUNNING
+AGAINST YOUR MASTER DATABASE WHEN REMOVING THE WHOLE SLONY
+CLUSTER</emphasis>, or at least re-cycle all your open connections
+after the event!  </para></warning>
 
 <para> The connections <quote>remember</quote> or refer to OIDs which
 are removed by the uninstall node script. And you get lots of errors
