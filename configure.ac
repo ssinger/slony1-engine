@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.19 2004-04-20 15:23:34 wieck Exp $
+# $Id: configure.ac,v 1.20 2004-06-09 15:36:07 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -61,7 +61,7 @@ ACX_PTHREAD()
 # ----
 # Locate the PostgreSQL source tree
 # ----
-AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL source tree], AC_SUBST(PGSOURCETREE, $with_pgsourcetree))
+AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL source tree])
 if test "x$with_pgsourcetree" = "x" ; then
 	AC_MSG_ERROR([
     ********************
@@ -84,6 +84,16 @@ if test ! -f ${with_pgsourcetree}/src/interfaces/libpq/libpq.a ; then
 	])
 fi
 
+# ----
+# Make an eventual relative path absolute
+# ----
+_pwd=`pwd`
+cd ${with_pgsourcetree}
+with_pgsourcetree=`pwd`
+echo "pgsources in ${with_pgsourcetree}"
+cd ${_pwd}
+
+AC_SUBST(PGSOURCETREE, $with_pgsourcetree)
 
 # ----
 # Check if our libpq contains several functions
