@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.5 2005-01-10 23:45:33 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.6 2005-01-28 16:55:43 cbbrowne Exp $ -->
 <refentry id="app-slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -41,7 +41,7 @@
   
   <variablelist>
    <varlistentry>
-    <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable><//arg></term>
+    <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable></term>
     <listitem>
      <para>
       Specifies the level of verbosity that <application>slon</application> should
@@ -64,7 +64,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable><//arg></term>
+    <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable></term>
     <listitem>
      <para>
       Specifies the interval, in milliseconds, in which
@@ -73,18 +73,29 @@
      </para>
      
      <para>
-      Short sync times keep the master on a <quote>short leash</quote>,
-      updating the slaves more frequently.  If you have replicated
-      sequences that are frequently updated <emphasis>without</emphasis> there
-      being tables that are affected, this keeps there from being times
-      when only sequences are updated, and therefore <emphasis>no</emphasis>
-      syncs take place
+      Short sync times keep the origin on a <quote>short
+      leash</quote>, updating its subscribers more frequently.  If you
+      have replicated sequences that are frequently updated
+      <emphasis>without</emphasis> there being tables that are
+      affected, this keeps there from being times when only sequences
+      are updated, and therefore <emphasis>no</emphasis> syncs take
+      place
+     </para>
+
+     <para>
+      Note that SYNC events are also generated on subscriber nodes.
+      Since they are not actually generating any replicable data to
+      pass on, these events are of little value.  You might want to
+      increase this parameter (along with the SYNC interval timeout)
+      to something rather higher on a subscriber node.  There is no
+      need to generate a SYNC more than once in 10 minutes on such a
+      node.
      </para>
     </listitem>
    </varlistentry>
    
    <varlistentry>
-    <term><option>-t</option><replaceable class="parameter">SYNC interval timeout</replaceable><//arg></term>
+    <term><option>-t</option><replaceable class="parameter">SYNC interval timeout</replaceable></term>
     <listitem>
      <para>
       Default is 60000 ms.
@@ -93,7 +104,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-g</option><replaceable class="parameter">group size</replaceable><//arg></term>
+    <term><option>-g</option><replaceable class="parameter">group size</replaceable></term>
     <listitem>
      <para>
       Maximum SYNC group size; defaults to 6.  Thus, if a particular
@@ -113,6 +124,14 @@
       Slon processes usually stay pretty small; even with large
       value for this option, slon would be expected to only grow to a
       few MB in size.
+     </para>
+     <para>
+      The big advantage in increasing this parameter comes from
+      cutting down on the number of transaction
+      <command>COMMIT</command>s; moving from 1 to 2 should provide
+      substantial benefit, but the benefits will steadily fall off
+      once the transactions being processed get to be reasonably
+      large.
      </para>
     </listitem>
    </varlistentry>
@@ -151,7 +170,7 @@
    </varlistentry>      
 
    <varlistentry>
-    <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable><//arg></term>
+    <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable></term>
     <listitem>
      <para>
       How often to <command>VACUUM</command> in cleanup cycles.
@@ -168,7 +187,7 @@
    
    
    <varlistentry>
-    <term><option>-p</option><replaceable class="parameter">PID filename</replaceable><//arg></term>
+    <term><option>-p</option><replaceable class="parameter">PID filename</replaceable></term>
     <listitem>
      <para>
       PID filename.
@@ -177,7 +196,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-f</option><replaceable class="parameter">config file</replaceable><//arg></term>
+    <term><option>-f</option><replaceable class="parameter">config file</replaceable></term>
     <listitem>
      <para>
       File containing <application>slon</application> configuration.
