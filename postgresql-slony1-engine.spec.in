@@ -1,14 +1,21 @@
+%define _unpackaged_files_terminate_build 0
+%{!?pgversion:%define pgversion 8.0.1}
+%{!?pgsourcetree:%define pgsourcetree /usr/src/redhat/SOURCES/postgresql-%pgversion}
+
 Summary: A "master to multiple slaves" replication system with cascading and failover.
 Name: postgresql-@PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 1
+Release: 3_pgsql%pgversion
 License: Berkeley/BSD
+Packager: Devrim Gunduz <devrim@PostgreSQL.org>
 Group: Applications/Databases
 URL: http://slony.info/
 Source0: @PACKAGE_NAME@-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Buildroot: %{_tmppath}/%{name}-%{version}-root
+
+Autoreqprov: no
 BuildRequires: postgresql-devel
-Requires: postgresql
+Requires: postgresql = %pgversion
 
 %description
 Slony-I will be a "master to multiple slaves" replication 
@@ -25,14 +32,24 @@ are available
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
-./configure --bindir /usr/bin --libdir /usr/lib/pgsql --includedir /usr/include/pgsql --datadir /usr/share/pgsql
 
 %build
-make CFLAGS="-I /usr/kerberos/include"
+CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et" ; export CFLAGS
+
+export LIBNAME=%{_lib}
+./configure --bindir /usr/bin --libdir %{_libdir}/pgsql --includedir %{_includedir}/pgsql --datadir /usr/share/pgsql --with-pgsourcetree=%pgsourcetree
+make 
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+mkdir -p $RPM_BUILD_ROOT/usr/share/pgsql
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/pgsql
+install -m 755 src/backend/*.sql $RPM_BUILD_ROOT/usr/share/pgsql
+install -m 755 src/xxid/xxid.so $RPM_BUILD_ROOT%{_libdir}/pgsql
+install -m 755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT%{_libdir}/pgsql
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -40,13 +57,19 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc COPYRIGHT
-/usr/bin/slon
-/usr/bin/slonik
-/usr/lib/pgsql/slony1_funcs.so
-/usr/lib/pgsql/xxid.so
+%{_bindir}/slon
+%{_bindir}/slonik
 /usr/share/pgsql/*.sql
-
+%{_libdir}/pgsql/slony1_funcs.so
+%{_libdir}/pgsql/xxid.so
 
 %changelog
+* Fri Mar 19 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine postgresql-slony1-engine 1.0.5-3
+- Added predefined value for pgsourcetree
+- Allowed slony to be installed for different versions on the same machine.
+
+* Fri Mar 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Fix spec file so that Slony can be installed on a server that PostgreSQL is installed from RPMs.
+
 * Thu Mar 18 2004 Daniel Berrange <berrange@redhat.com> postgresql-slony1-engine
 - Initial RPM packaging
