@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.36 2004-12-02 23:30:57 wieck Exp $
+ *	$Id: slonik.c,v 1.37 2004-12-03 17:16:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2289,6 +2289,24 @@ slonik_store_node(SlonikStmt_store_node *stmt)
 	{
 		dstring_free(&query);
 		return -1;
+	}
+
+	/* If the new node is a spool node, produce confirm rows for it */
+	if (stmt->no_spool)
+	{
+		slon_mkquery(&query,
+				"insert into \"_%s\".sl_confirm select "
+				"    ev_origin, %d, max(ev_seqno), CURRENT_TIMESTAMP "
+				"    from \"_%s\".sl_event group by 1, 2, 4; ",
+				stmt->hdr.script->clustername,
+				stmt->no_id,
+				stmt->hdr.script->clustername);
+
+		if (db_exec_command((SlonikStmt *)stmt, adminfo2, &query) < 0)
+		{
+			dstring_free(&query);
+			return -1;
+		}
 	}
 
 	dstring_free(&query);
