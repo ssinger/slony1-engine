@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.40 2004-05-11 13:58:55 wieck Exp $
+ *	$Id: remote_worker.c,v 1.41 2004-05-17 17:10:23 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3512,14 +3512,14 @@ sync_helper(void *cdata)
 
 						case 'U':
 							slon_appendquery(&(line->data),
-									"update %s set %s;",
+									"update only %s set %s;",
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
 
 						case 'D':
 							slon_appendquery(&(line->data),
-									"delete from %s where %s;",
+									"delete from only %s where %s;",
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
