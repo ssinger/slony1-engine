@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.9 2005-02-07 21:46:22 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -32,24 +32,23 @@ SCRIPT</link></command>:</para>
 
 <itemizedlist>
 
-<listitem><para>The script must not contain transaction
-<command>BEGIN</command> or <command>END</command> statements, as the
-script is already executed inside a transaction.  In
-<productname>PostgreSQL</productname> version 8, the introduction of
-nested transactions may change this requirement somewhat, but you must
-still remain aware that the actions in the script are wrapped inside a
-transaction.</para></listitem>
+<listitem><para>The script <emphasis>must not</emphasis> contain
+transaction <command>BEGIN</command> or <command>END</command>
+statements, as the script is already executed inside a transaction.
+In <productname>PostgreSQL</productname> version 8, the introduction
+of nested transactions may modify this requirement somewhat, but you
+must still remain aware that the actions in the script are wrapped
+inside a transaction.</para></listitem>
 
-<listitem><para>If there is <emphasis>anything</emphasis> broken
-about the script, or about how it executes on a particular node, this
-will cause the <link linkend="slon"><application>slon</application></link>
- daemon for that node to panic and crash. If you restart the
-node, it will, more likely than not, try to
-<emphasis>repeat</emphasis> the DDL script, which will, almost
-certainly, fail the second time just as it did the first time.  I have
-found this scenario to lead to a need to go to the
-<quote>master</quote> node to delete the event to stop it from
-continuing to fail.</para></listitem>
+<listitem><para>If there is <emphasis>anything</emphasis> broken about
+the script, or about how it executes on a particular node, this will
+cause the <link linkend="slon"><application>slon</application></link>
+daemon for that node to panic and crash. If you restart the node, it
+will, more likely than not, try to <emphasis>repeat</emphasis> the DDL
+script, which will, almost certainly, fail the second time just as it
+did the first time.  I have found this scenario to lead to a need to
+go to the <quote>master</quote> node to delete the event to stop it
+from continuing to fail.</para></listitem>
 
 <listitem><para> For <application>slon</application> to, at that
 point, <quote>panic</quote> is probably the
@@ -61,6 +60,51 @@ made <emphasis>after</emphasis> the DDL change on the provider node
 are queued up, waiting to head to the subscriber.  You don't run the
 risk of there being updates made that depended on the DDL changes in
 order to be correct.</para></listitem>
+
+<listitem><para> When you run <command><link
+linkend="stmtddlscript">EXECUTE SCRIPT</link></command>, this causes
+the <application>slonik</application> to request, <emphasis>for each
+table in the specified set</emphasis>, an exclusive table lock.
+
+<para> It starts by requesting the lock, and altering the table to
+remove <productname>Slony-I</productname> triggers:
+
+<screen>
+BEGIN;
+LOCK TABLE table_name;
+SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+</screen>
+
+<para> After the script executes, each table is
+<quote>restored</quote> to add back either the trigger that collects
+updates at the origin or that denies updates on subscribers:
+
+<screen>
+SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+COMMIT;
+</screen>
+
+<para> On a system which is busily taking updates, it may be
+troublesome to <quote>get in edgewise</quote> to actually successfully
+engage all the required locks.  The locks may run into deadlocks.
+This points to two ways to address this:
+
+<itemizedlist>
+
+<listitem><para> You may be able to <link linkend="definesets"> define
+replication sets </link> that consist of smaller sets of tables so
+that fewer locks need to be taken in order for the DDL script to make
+it into place.
+
+<para> If a particular DDL script only affects one table, it should be
+unnecessary to lock <emphasis>all</emphasis> application tables.
+
+<listitem><para> You may need to take a brief application outage in
+order to ensure that your applications are not demanding locks that
+will conflict with the ones you need to take in order to update the
+database schema.
+
+</itemizedlist>
 
 </itemizedlist>
 
@@ -75,6 +119,70 @@ fraught with trouble and frustration.</para>
 here:
 <ulink url="http://www.varlena.com/varlena/GeneralBits/88.php">
 Varlena General Bits</ulink></para>
+
+<sect2><title> Changes that you might <emphasis>not</emphasis> want to
+process using <command>EXECUTE SCRIPT</command></title>
+
+<para> While it is <emphasis> vitally necessary </emphasis> to use
+<command>EXECUTE SCRIPT</command> to propagate DDL modifications to
+tables that are being replicated, there are several sorts of changes
+that you might wish to handle some other way:
+
+<itemizedlist>
+
+<listitem><Para> There are various sorts of objects that don't have
+triggers that <productname>Slony-I</productname>
+<emphasis>doesn't</emphasis> replicate, such as stored functions, and
+it is quite likely to cause you grief if you propagate updates to them
+associated with a replication set where <command>EXECUTE
+SCRIPT</command> will lock a whole lot of tables that didn't really
+need to be locked.
+
+<para> If you are propagating a stored procedure that
+<emphasis>isn't</emphasis> used all the time (such that you'd care if
+it was briefly out of sync between nodes), then you could simply
+submit it to each node using <application>psql</application>, making
+no special use of <productname>Slony-I</productname>
+
+<para> If it <emphasis>does</emphasis> matter that the object be
+propagated at the same location in the transaction stream on all the
+nodes, then you but no tables need to be locked, then you might create
+a replication set that contains <emphasis>no</emphasis> tables,
+subscribe all the appropriate nodes to it, and use <command>EXECUTE
+SCRIPT</command>, specifying that <quote>empty set.</quote>
+
+<listitem><Para> You may want an extra index on some replicated
+node(s) in order to improve performance there.  
+
+<para> For instance, a table consisting of transactions may only need
+indices related to referential integrity on the <quote>origin</quote>
+node, and maximizing performance there dictates adding no more indices
+than are absolutely needed.  But nothing prevents you from adding
+additional indices to improve the performance of reports that run
+against replicated nodes.
+
+<para> It would be unwise to add additional indices that
+<emphasis>constrain</emphasis> things on replicated nodes, as if they
+find problems, this leads to replication breaking down as the
+subscriber(s) will be unable to apply changes coming from the origin
+that violate the constraints.
+
+<para> But it's no big deal to add some performance-enhancing indices.
+You should almost certainly <emphasis> not</emphasis> use
+<command>EXECUTE SCRIPT</emphasis> to add them; that leads to some
+replication set locking and unlocking tables, and possibly failing to
+apply the event due to some locks outstanding on objects and having to
+retry a few times before it gets the change in.  If you instead apply
+the index <quote>directly</quote> such as with
+<application>psql</application>, you can determine the time at which
+the table lock is introduced.  Adding an index to a table will require
+an exclusive lock for the time it takes to build the index; that will
+implicitly stop replication, while the index builds, but shouldn't
+cause any particular problems.  If you add an index on a table that
+takes 20 minutes to build, replication will block for 20 minutes, but
+should catch up quickly once the index is created.
+
+</itemizedlist>
 
 <sect2><title> Testing DDL Changes </title>
 
