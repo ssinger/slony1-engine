@@ -6,16 +6,16 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v73.sql.in,v 1.2 2003-11-18 15:11:35 wieck Exp $
+-- $Id: xxid.v73.sql.in,v 1.3 2003-11-28 14:55:10 wieck Exp $
 -- ----------
 
 --
 -- Type specific input and output functions
 --
-CREATE FUNCTION "@CLUSTER@"."xxidin"(cstring) RETURNS "@CLUSTER@"."xxid"
+CREATE FUNCTION @NAMESPACE@."xxidin"(cstring) RETURNS @NAMESPACE@."xxid"
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidin'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidout"("@CLUSTER@"."xxid") RETURNS cstring
+CREATE FUNCTION @NAMESPACE@."xxidout"(@NAMESPACE@."xxid") RETURNS cstring
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidout'
 	LANGUAGE C;
 
@@ -23,9 +23,9 @@ CREATE FUNCTION "@CLUSTER@"."xxidout"("@CLUSTER@"."xxid") RETURNS cstring
 --
 -- The data type itself
 --
-CREATE TYPE "@CLUSTER@"."xxid" (
-	INPUT = "@CLUSTER@"."xxidin",
-	OUTPUT = "@CLUSTER@"."xxidout",
+CREATE TYPE @NAMESPACE@."xxid" (
+	INPUT = @NAMESPACE@."xxidin",
+	OUTPUT = @NAMESPACE@."xxidout",
 	EXTERNALLENGTH = 12,
 	INTERNALLENGTH = 4,
 	PASSEDBYVALUE,
@@ -37,37 +37,37 @@ CREATE TYPE "@CLUSTER@"."xxid" (
 -- Since our xxid type has special cases for values 0-3, it
 -- in fact IS xid, so allow implicit type casting to and from.
 --
-CREATE CAST (xid AS "@CLUSTER@".xxid)
+CREATE CAST (xid AS @NAMESPACE@.xxid)
 	WITHOUT FUNCTION AS IMPLICIT;
-CREATE CAST ("@CLUSTER@".xxid AS xid)
+CREATE CAST (@NAMESPACE@.xxid AS xid)
 	WITHOUT FUNCTION AS IMPLICIT;
 
 
 --
 -- Comparision functions for the new datatype
 --
-CREATE FUNCTION "@CLUSTER@"."xxideq"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxideq"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxideq'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidne"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxidne"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidne'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidlt"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxidlt"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidlt'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidle"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxidle"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidle'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidgt"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxidgt"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidgt'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."xxidge"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS boolean
+CREATE FUNCTION @NAMESPACE@."xxidge"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS boolean
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_xxidge'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@"."btxxidcmp"("@CLUSTER@"."xxid", "@CLUSTER@"."xxid") RETURNS int4
+CREATE FUNCTION @NAMESPACE@."btxxidcmp"(@NAMESPACE@."xxid", @NAMESPACE@."xxid") RETURNS int4
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_btxxidcmp'
 	LANGUAGE C;
-CREATE FUNCTION "@CLUSTER@".getCurrentXid() RETURNS "@CLUSTER@"."xxid"
+CREATE FUNCTION @NAMESPACE@.getCurrentXid() RETURNS @NAMESPACE@."xxid"
 	AS '@LIBDIR@/xxid@DLSUFFIX@', '_Slony_I_getCurrentXid'
 	LANGUAGE C;
 
@@ -76,46 +76,46 @@ CREATE FUNCTION "@CLUSTER@".getCurrentXid() RETURNS "@CLUSTER@"."xxid"
 -- Operators on these comparision functions
 --
 CREATE OPERATOR < (
-	PROCEDURE = "@CLUSTER@"."xxidlt",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxidlt",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = >, NEGATOR = >=,
 	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
 );
 CREATE OPERATOR = (
-	PROCEDURE = "@CLUSTER@"."xxideq",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxideq",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = =, NEGATOR = <>,
 	RESTRICT = eqsel, JOIN = eqjoinsel,
 	SORT1 = <, SORT2 = <,
 	HASHES
 );
 CREATE OPERATOR <> (
-	PROCEDURE = "@CLUSTER@"."xxidne",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxidne",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = <>, NEGATOR = =,
 	RESTRICT = neqsel, JOIN = neqjoinsel
 );
 CREATE OPERATOR > (
-	PROCEDURE = "@CLUSTER@"."xxidgt",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxidgt",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = <, NEGATOR = <=,
 	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
 );
 CREATE OPERATOR <= (
-	PROCEDURE = "@CLUSTER@"."xxidle",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxidle",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = >=, NEGATOR = >,
 	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
 );
 CREATE OPERATOR >= (
-	PROCEDURE = "@CLUSTER@"."xxidge",
-	LEFTARG = "@CLUSTER@"."xxid",
-	RIGHTARG = "@CLUSTER@"."xxid",
+	PROCEDURE = @NAMESPACE@."xxidge",
+	LEFTARG = @NAMESPACE@."xxid",
+	RIGHTARG = @NAMESPACE@."xxid",
 	COMMUTATOR = <=, NEGATOR = <,
 	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
 );
@@ -125,13 +125,13 @@ CREATE OPERATOR >= (
 -- Finally the default operator class so that we can use our
 -- new data type in btree indexes.
 --
-CREATE OPERATOR CLASS "@CLUSTER@"."xxid_ops"
-	DEFAULT FOR TYPE "@CLUSTER@"."xxid" USING btree AS
-	OPERATOR 1 <  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
-	OPERATOR 2 <= ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
-	OPERATOR 3 =  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
-	OPERATOR 4 >= ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
-	OPERATOR 5 >  ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid"),
-	FUNCTION 1 "@CLUSTER@"."btxxidcmp" ("@CLUSTER@"."xxid", "@CLUSTER@"."xxid");
+CREATE OPERATOR CLASS @NAMESPACE@."xxid_ops"
+	DEFAULT FOR TYPE @NAMESPACE@."xxid" USING btree AS
+	OPERATOR 1 <  (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
+	OPERATOR 2 <= (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
+	OPERATOR 3 =  (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
+	OPERATOR 4 >= (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
+	OPERATOR 5 >  (@NAMESPACE@."xxid", @NAMESPACE@."xxid"),
+	FUNCTION 1 @NAMESPACE@."btxxidcmp" (@NAMESPACE@."xxid", @NAMESPACE@."xxid");
 
 
