@@ -1,0 +1,346 @@
+#!/bin/sh
+
+# **********
+# test_3_pgbench
+#
+# 	This test script creates a standalone pgbench database 
+#	as slony_test1 and then:
+#
+#	- initializes a primary node and starts the node daemon
+#	- creates a set containing all 4 pgbench tables
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- creates the pgbench tables (schema only)
+#	- subscribes the replication set from the primary node
+#
+#	This test differs from test_1 in that it adds tables,
+#	custom triggers and rewrite rules to the pgbench database.
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+
+PGBENCH_SCALE=1
+PGBENCH_CLIENTS=5
+PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
+
+trap '
+	echo ""
+	echo "**** user abort"
+	if [ ! -z $pgbench_pid ] ; then
+		echo "**** killing pgbench"
+		kill -15 $pgbench_pid
+	fi
+	if [ ! -z $slon1_pid ] ; then
+		echo "**** killing node daemon 1"
+		kill -15 $slon1_pid
+	fi
+	if [ ! -z $slon2_pid ] ; then
+		echo "**** killing node daemon 2"
+		kill -15 $slon2_pid
+	fi
+	exit 1
+' 2 15
+
+######################################################################
+# Preparations ... create a standalone pgbench database and
+# have the "application" (pgbench) running.
+######################################################################
+
+#####
+# Make sure the install is up to date
+#####
+echo -n "**** running 'gmake install' in src directory ... "
+if ! gmake -C .. install >$TMPOUT 2>&1 ; then
+    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
+fi
+echo "done"
+rm $TMPOUT
+
+#####
+# Remove old databases, if they exist
+#####
+echo "**** remove old test databases"
+dropdb $DB1 || echo "**** ignored"
+sleep 1
+dropdb $DB2 || echo "**** ignored"
+sleep 1
+
+#####
+# Create the "Primary Node"
+#####
+echo "**** creating database for Node 1"
+
+createdb $DB1 || exit 1
+pgbench -i -s $PGBENCH_SCALE $DB1
+
+#
+# Add a little bit of twist to the pgbench database
+#
+psql $DB1 <<_EOF_
+	create table accounts_audit (
+		au_aid		integer,
+		au_seqno	serial,
+		au_delta	integer,
+		au_user		text,
+		au_time		timestamp,
+
+		primary key (au_aid, au_seqno),
+		foreign key (au_aid) references accounts
+	);
+
+	create function accounts_audit_trig () returns trigger as '
+	begin
+		--
+		-- Log all changes >= $800 in the special audit table
+		--
+		if abs(new.abalance - old.abalance) >= 800 then
+			insert into accounts_audit
+					(au_aid, au_delta, au_user, au_time)
+					values (new.aid, (new.abalance - old.abalance),
+							SESSION_USER, CURRENT_TIMESTAMP);
+		end if;
+
+		return new;
+	end;
+	' language plpgsql;
+	create trigger accounts_audit_trig after update on accounts
+		for each row execute procedure accounts_audit_trig();
+
+	create table tellers_sum (
+		su_tid		integer,
+		su_sum		integer,
+
+		primary key (su_tid),
+		foreign key (su_tid) references tellers
+	);
+	insert into tellers_sum (su_tid, su_sum)
+		select tid, 0 from tellers;
+
+	create rule tellers_sum as on update to tellers
+		do update tellers_sum 
+			set su_sum = su_sum + abs(new.tbalance - old.tbalance)
+			where su_tid = old.tid;
+_EOF_
+
+pg_dump -s $DB1 >pgbench_schema.sql
+
+#####
+# Start pgbench in the background and give it rampup time
+#####
+pgbench -n -s $PGBENCH_SCALE -c $PGBENCH_CLIENTS -t $PGBENCH_TRANS $DB1 &
+pgbench_pid=$!
+echo "**** pgbench is running in background with pid $pgbench_pid"
+echo -n "**** sleeping 10 seconds to give pgbench time for rampup ... "
+sleep 10
+echo "done"
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now a standalone database with a running pgbench"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB1 as the primary cluster T1 node, start the node daemon,
+# and create a replication set containing the pgbench tables.
+######################################################################
+
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	init cluster (id = 1, comment = 'Node 1');
+	echo 'Database $DB1 initialized as Node 1';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid;
+	exit 1
+fi
+
+echo "**** starting the Slony-I node deamon for $DB1"
+xterm -title "Slon node 1" -e sh -c "slon T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+slon1_pid=$!
+echo "slon[$slon1_pid] on dbname=$DB1"
+
+echo "**** creating a replication set containing the 4 pgbench tables ... "
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		table add key (node id = 1, full qualified name = 'public.history');
+	}
+	on error {
+		exit 1;
+	}
+
+	try {
+		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 1,
+			id = 1, full qualified name = 'public.accounts',
+			comment = 'Table accounts');
+		set add table (set id = 1, origin = 1,
+			id = 2, full qualified name = 'public.branches',
+			comment = 'Table branches');
+		set add table (set id = 1, origin = 1,
+			id = 3, full qualified name = 'public.tellers',
+			comment = 'Table tellers');
+		set add table (set id = 1, origin = 1,
+			id = 4, full qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
+		set add table (set id = 1, origin = 1,
+			id = 5, full qualified name = 'public.accounts_audit',
+			comment = 'Table accounts_audit');
+		set add table (set id = 1, origin = 1,
+			id = 6, full qualified name = 'public.tellers_sum',
+			comment = 'Table tellers_sum');
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+
+if [ $? -ne 0 ] ; then
+	echo "failed"
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	cat $TMPOUT
+	rm $TMPOUT
+	exit 1
+fi
+echo "**** set created"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now the Slony-I master for set 1"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB2 as a slave node and let it subscribe the replication
+# set of the running pgbench
+######################################################################
+echo "**** creating database for Node 2"
+if ! createdb $DB2 ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	try {
+		store node (id = 2, comment = 'Node 2');
+		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
+		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
+		store listen (origin = 1, receiver = 2);
+		store listen (origin = 2, receiver = 1);
+	}
+	on error { exit -1; }
+	echo 'Database $DB2 added as Node 2';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "**** starting the Slony-I node deamon for $DB1"
+xterm -title "Slon node 2" -e sh -c "slon T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+slon2_pid=$!
+echo "slon[$slon2_pid] on dbname=$DB2"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+######################################################################
+# And now comes the moment where the big elephant starts to pee
+# and the attendants in the first row climb on their chairs ...
+######################################################################
+echo "**** creating pgbench tables and subscribing Node 2 to set 1"
+(
+	cat pgbench_schema.sql
+	echo "select \"_T1\".subscribeSet (1, 1, 2, true);"
+) | psql -q $DB2
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB2 should now be copying data and attempting to catch up."
+echo "**********************************************************************"
+echo ""
+
+echo -n "**** waiting for pgbench to finish "
+while kill -0 $pgbench_pid 2>/dev/null ; do
+	echo -n "."
+	sleep 10
+done
+echo "**** pgbench finished"
+echo "**** please terminate the replication engines when cought up."
+wait $slon1_pid
+wait $slon2_pid
+
+kill $pgbench_pid 2>/dev/null
+kill $slon1_pid 2>/dev/null
+kill $slon2_pid 2>/dev/null
+
+echo -n "**** comparing databases ... "
+psql $DB1 >dump.tmp.1.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
+			from accounts_audit order by au_aid, au_seqno;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'tellers_sum:'::text, su_tid, su_sum
+			from tellers_sum order by su_tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+psql $DB2 >dump.tmp.2.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
+			from accounts_audit order by au_aid, au_seqno;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'tellers_sum:'::text, su_tid, su_sum
+			from tellers_sum order by su_tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+
+if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_3.diff ; then
+	echo "success - databases are equal."
+	rm dump.tmp.?.$$
+	rm test_3.diff
+else
+	echo "FAILED - see test_3.diff for database differences"
+fi

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.27 2004-03-17 17:56:34 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.28 2004-03-17 18:34:57 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1140,9 +1140,6 @@ begin
 		-- ----
 		-- On the Origin we add the log trigger to the table and done
 		-- ----
-		raise notice ''Slony-I: alter table % for origin mode'', 
-				v_tab_fqname;
-
 		execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || 
 				p_tab_id || ''" after insert or update or delete on '' ||
 				v_tab_fqname || '' for each row execute procedure
@@ -1155,8 +1152,6 @@ begin
 		-- to disable all user- and foreign key triggers and rules.
 		-- ----
 
-		raise notice ''Slony-I: alter table % for subscriber mode'', 
-				v_tab_fqname;
 
 		-- ----
 		-- Disable all existing triggers
@@ -1172,8 +1167,6 @@ begin
 					set reltriggers = reltriggers - v_n
 					where oid = v_tab_row.tab_reloid;
 		end if;
-		raise notice ''Slony-I: % triggers disabled on table %'',
-				v_n, v_tab_fqname;
 
 		-- ----
 		-- Disable all existing rules
@@ -1189,8 +1182,6 @@ begin
 					set relhasrules = false
 					where oid = v_tab_row.tab_reloid;
 		end if;
-		raise notice ''Slony-I: % rules disabled on table %'',
-				v_n, v_tab_fqname;
 
 		-- ----
 		-- Add the trigger that denies write access to replicated tables
@@ -1260,9 +1251,6 @@ begin
 				v_tab_fqname;
 	end if;
 
-	raise notice ''Slony-I: alter table % restore'', 
-			v_tab_fqname;
-
 	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
 
 	-- ----
@@ -1295,8 +1283,6 @@ begin
 					set reltriggers = reltriggers + v_n
 					where oid = v_tab_row.tab_reloid;
 		end if;
-		raise notice ''Slony-I: % triggers restored on table %'',
-				v_n, v_tab_fqname;
 
 		-- ----
 		-- Restore all original rewrite rules
@@ -1312,8 +1298,6 @@ begin
 					set relhasrules = true
 					where oid = v_tab_row.tab_reloid;
 		end if;
-		raise notice ''Slony-I: % rules restored on table %'',
-				v_n, v_tab_fqname;
 
 	end if;
 
