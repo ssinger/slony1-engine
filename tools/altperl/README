@@ -1,129 +1,80 @@
 README
-$Id: README,v 1.11 2005-02-22 20:50:28 smsimms Exp $
+$Id: README,v 1.12 2005-03-10 21:05:54 smsimms Exp $
 
-Christopher Browne
-Database Administrator
-Afilias Canada
+Christopher Browne, Afilias Canada
+Steve Simms, Technically Sound
 
-This is a "second system" set of scripts for managing a set of Slony-I
-instances.
+The altperl scripts provide an alternate method of managing Slony-I,
+generating slonik scripts and monitoring slon daemons.  They support
+an arbitrary number of Slony-I nodes in clusters of various shapes and
+sizes.
 
-Unlike the shell scripts that have previously been used, these scripts
-support having an arbitrary number of Slony-I nodes.  They are
-configured in the [cluster].nodes file (e.g. - environment variable
-SLONYNODES) by calling add_node() once indicating the configuration
-for each node that is needed.
+To install the scripts, run "make" and "make install" in this
+directory.  The files will be installed under the --prefix you passed
+to configure.
 
-The following configuration is set up:
+Enter a complete description of your cluster configuration (both nodes
+and sets) in slon_tools.conf.  The provided slon_tools.conf-sample
+contains documentation about each of the available options.
 
- Host Level Configuration
---------------------------------------
+If you want to support multiple clusters, you can create multiple
+slon_tools.conf files and specify which one to use in any of the
+scripts by passing the --config option.
 
-This configuration will normally apply to all clusters being managed
-on a particular host, so it would probably make sense to modify it
-directly in slon_tools.conf.
 
- $APACHE_ROTATOR is an optional reference to the location of the
-   Apache log rotator; if you set it to a path to an Apache "rotatelog"
-   program, that will be used to keep log file size down to a "dull
-   roar".
-  <http://httpd.apache.org/docs-2.0/programs/rotatelogs.html>
+For the impatient: Steps to get started
+---------------------------------------
 
- $LOGDIR is the directory in which to put log files.  The script will
-   generate a subdirectory for each node.
+1. From the top-level source directory:
 
- Node Level Configuration
---------------------------------------
+   ./configure --prefix=/usr/local/slony --with-perltools
+   make
+   make install
 
-This configuration should be set up in the file represented in the
-environment variable SLONYNODES.
+2. Dump the schema from one database to another:
 
- $CLUSTER_NAME represents the name of the cluster.  In each database
-  involved in the replication set, you will find the namespace
-  "_$CLUSTER_NAME" that contains Slony-I's configuration tables
+   pg_dump --schema-only --host=server1 source_db | psql --host=server2 dest_db
 
- $MASTERNODE is the number of the "master" node.  It defaults to 1, if
- not otherwise set.
+3. Modify /usr/local/slony/etc/slon_tools.conf to reflect your setup.
 
- Set Level Configuration
------------------------------------
+4. Initialize the Slony-I cluster:
 
-The configuration of the tables, sequences and such are stored in the
-file pointed to by the environment variable SLONYSET, in the following
-Perl variables:
+   /usr/local/slony/bin/init_cluster
 
-  $TABLE_ID - where to start numbering table IDs
-  $SEQUENCE_ID - where to start numbering sequence IDs
+   Verify that the output looks reasonable, then run:
 
-   The table IDs are required to be unique across all sets in a
-   Slony-I cluster, so if you add extra sets, you need to set
-   $TABLE_ID to a value that won't conflict, typically something
-   higher than largest value used in earlier sets.
+   /usr/local/slony/bin/init_cluster | /usr/local/pgsql/bin/slonik
 
-  @PKEYEDTABLES contains all of the tables that have primary keys
+5. Start up slon daemons for both servers:
 
-  %KEYEDTABLES contains tables with candidate primary keys associated
-    with the index you _want_.
+   /usr/local/slony/bin/slon_start node1
+   /usr/local/slony/bin/slon_start node2
 
-  @SERIALTABLES contains tables that do not have a unique key
-                to which Slony-I will need to add and populate
-                a unique key
+6. Set up set 1 on the "master" node:
 
-  @SEQUENCES lists all of the application sequences that are to be
-             replicated.
+   /usr/local/slony/bin/create_set set1
 
-The values in slon_tools.conf are "hardcoded" as far as the tools are
-concerned.
+7. Subscribe node 2 to set 1:
 
-To make this more flexible, slon_tools.conf also looks at the
-environment variables SLONYNODES and SLONYSET as alternative sources
-for configuration.
+   /usr/local/slony/bin/subscribe_set set1 node2
 
-That way, you may do something like:
+After some period of time (from a few seconds to a few days depending
+on the size of the set), you should have a working replica of the
+tables in set 1 on node 2.
 
-   for i in `seq 10`; do
-      SLONYNODES="./node$i.config" ./init_cluster.pl
-   done
 
-- Such an "alternative cluster.nodes" might import Pg, and do queries
-against a database to be replicated in order to populate the sets of
-tables and such.
+Alternate Configuration Method
+------------------------------
 
-- The "alternative cluster.nodes" might search some sort of 'registry' for
-the set of nodes to be replicated.
+The slon_tools.conf file is interpreted by Perl, so you could modify
+it to query a database to determine the configuration.  (Beware of
+chicken-and-egg scenarios in doing this, however!)
 
-Parallel to SLONYNODES is the environment variable SLONYSET, which
-controls the contents of replication sets.  It looks as though it
-should be usual for there to be just one "intentionally active"
-subscription set at any given time, with other sets being set up in
-order to be merged with the "main" set.
 
-Steps to start up replication
--------------------------------
+For More Information
+--------------------
 
-0.  Dump from source system to destination
- pg_dump -s -c  flex1 | psql flex2
-  
-1. Initializes the Slony cluster
-  ./init_cluster.pl
+There are numerous other scripts for maintaining a Slony cluster.  To
+learn more about any of them, run "tool_name --help".
 
-  This sets up a FULL cross-join set of paths and listeners, doing
-  something of a shortest-path evaluation of which "store listens" to
-  set up.
-
-2. Start up slon servers for both DB instances
-  ./slon_start.pl node1
-  ./slon_start.pl node2
-
-3. Sets up all the tables for "set 1" for FlexReg 2.0  
-  ./create_set.pl set1
-    
-4. Subscribe Node #2 to Set #1
-  ./subscribe_set.pl set1 node2
-     This is the Big One...
-
-That SHOULD be it, although "should" is probably too strong a word :-)
-
-There are numerous other tools for adding/dropping Slony-I
-configuration, and scripts that might manage simple forms of
-switchover/failover.
+See also the Slony-I administration guide in the doc directory.
