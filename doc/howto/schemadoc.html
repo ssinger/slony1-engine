@@ -1,4 +1,4 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.2 2004-07-30 20:44:01 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/howto/schemadoc.html,v 1.3 2004-08-04 15:57:12 cbbrowne Exp $ -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -111,7 +111,7 @@
   <body>
 
     <!-- Primary Index -->
-	<p><br><br>Dumped on 2004-07-30</p>
+	<p><br><br>Dumped on 2004-08-04</p>
 <h1><a name="index">Index of database - schemadoc</a></h1>
 <ul>
     
@@ -1619,13 +1619,21 @@ seq_comment is a human-oriented comment</p>
             <tr class="tr1">
 				<td>
                 
+                  
+                
                 </td>
             	<td>seq_reloid</td>
             	<td>oid</td>
                 <td><i>
 				
+					
 
+					
+                       UNIQUE
+                    
 				
+
+				NOT NULL
 				
 				</i>
 				
@@ -2224,13 +2232,21 @@ tab_comment - Human-oriented description of the table</p>
             <tr class="tr1">
 				<td>
                 
+                  
+                
                 </td>
             	<td>tab_reloid</td>
             	<td>oid</td>
                 <td><i>
 				
+					
 
+					
+                       UNIQUE
+                    
 				
+
+				NOT NULL
 				
 				</i>
 				
@@ -2735,7 +2751,11 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>ddlScript(set_id, script)
+
+Generates a SYNC event, runs the script on the origin, and then
+generates a DDL_SCRIPT event to request it to be run on replicated
+slaves.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -2778,7 +2798,11 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>ddlScript_int(set_id, script)
+
+Processes the DDL_SCRIPT event.  On slave nodes, this restores
+original triggers/rules, runs the script, and then puts tables back
+into replicated mode.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -3135,7 +3159,9 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>dropListen (li_origin, li_provider, li_receiver)
+
+Generate the DROP_LISTEN event.</p>
         <pre>
 declare
 	p_li_origin		alias for $1;
@@ -3156,7 +3182,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>dropListen (li_origin, li_provider, li_receiver)
+
+Process the DROP_LISTEN event, deleting the sl_listen entry for
+the indicated (origin,provider,receiver) combination.</p>
         <pre>
 declare
 	p_li_origin		alias for $1;
@@ -3391,7 +3420,9 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>Process DROP_SET event to drop replication of set set_id.  This involves:
+- Restoring original triggers and rules
+- Removing all traces of the set configuration, including sequences, tables, subscribers, syncs, and the set itself</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -3477,7 +3508,10 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>dropTrigger (trig_tabid, trig_tgname)
+
+Submits DROP_TRIGGER event to indicate that trigger trig_tgname on
+replicated table trig_tabid WILL be disabled.</p>
         <pre>
 declare
 	p_trig_tabid		alias for $1;
@@ -3495,7 +3529,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>dropTrigger_int (trig_tabid, trig_tgname)
+
+Processes DROP_TRIGGER event to make sure that trigger trig_tgname on
+replicated table trig_tabid IS disabled.</p>
         <pre>
 declare
 	p_trig_tabid		alias for $1;
@@ -4168,7 +4205,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>lockSet(set_id)
+
+Add a special trigger to all tables of a set that disables access to
+it.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4237,7 +4277,10 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>Generate MERGE_SET event to request that sets be merged together.
+
+Both sets must exist, and originate on the same node.  They must be
+subscribed by the same set of nodes.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4314,7 +4357,8 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>mergeSet_int(set_id, add_id) - Perform MERGE_SET event, merging all objects from 
+set add_id into set set_id.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4348,7 +4392,9 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>moveSet(set_id, new_origin)
+
+Generate MOVE_SET event to request that the origin for set set_id be moved to node new_origin</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4439,7 +4485,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>moveSet(set_id, old_origin, new_origin)
+
+Process MOVE_SET event to request that the origin for set set_id be
+moved from old_origin to node new_origin</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4636,7 +4685,9 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
+Set sequence seq_id to have new value last_value.
+</p>
         <pre>
 declare
 	p_seq_id			alias for $1;
@@ -4679,7 +4730,11 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
+
+On the origin node for set set_id, add sequence seq_fqname to the
+replication set, and raise SET_ADD_SEQUENCE to cause this to replicate
+to subscriber nodes.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4729,7 +4784,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment)
+
+This processes the SET_ADD_SEQUENCE event.  On remote nodes that
+subscribe to set_id, add the sequence to the replication set.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4822,7 +4880,12 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>setAddTable (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
+
+Add table tab_fqname to replication set on origin node, and generate
+SET_ADD_TABLE event to allow this to propagate to other nodes.
+
+Note that the table id, tab_id, must be unique ACROSS ALL SETS.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -4874,7 +4937,11 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
+
+This function processes the SET_ADD_TABLE event on remote nodes,
+adding a table to replication if the remote node is subscribing to its
+replication set.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -5200,7 +5267,7 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>Generate STORE_SET event for set set_id with human readable comment set_comment</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -5229,7 +5296,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>storeSet_int (set_id, set_origin, set_comment)
+
+Process the STORE_SET event, indicating the new set with given ID,
+origin node, and human readable comment.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
@@ -5270,7 +5340,10 @@ end;
 		</h2>
 <h3>Returns: bigint</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>storeTrigger (trig_tabid, trig_tgname)
+
+Submits STORE_TRIGGER event to indicate that trigger trig_tgname on
+replicated table trig_tabid will NOT be disabled.</p>
         <pre>
 declare
 	p_trig_tabid		alias for $1;
@@ -5288,7 +5361,10 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>storeTrigger_int (trig_tabid, trig_tgname)
+
+Processes STORE_TRIGGER event to make sure that trigger trig_tgname on
+replicated table trig_tabid is NOT disabled.</p>
         <pre>
 declare
 	p_trig_tabid		alias for $1;
@@ -5678,7 +5754,7 @@ end;
 		</h2>
 <h3>Returns: integer</h3>
 <h3>Language: PLPGSQL</h3>
-        
+        <p>Remove the special trigger from all tables of a set that disables access to it.</p>
         <pre>
 declare
 	p_set_id			alias for $1;
