@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.20 2004-03-28 19:09:05 wieck Exp $
+ *	$Id: slon.c,v 1.21 2004-03-29 20:34:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -324,10 +324,10 @@ main (int argc, char *const argv[])
 		slon_exit(-1);
 	}
 	if (PQntuples(res) == 0)
-		strcpy(rtcfg_lastevent, "-1);
+		strcpy(rtcfg_lastevent, "-1");
 	else
 		if (PQgetisnull(res, 0, 0))
-			strcpy(rtcfg_lastevent, "-1);
+			strcpy(rtcfg_lastevent, "-1");
 		else
 			strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
 	PQclear(res);

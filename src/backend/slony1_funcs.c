@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.12 2004-03-26 14:59:05 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.13 2004-03-29 20:34:11 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1044,9 +1044,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 			"ev_type, ev_data1, ev_data2, ev_data3, ev_data4, "
 			"ev_data5, ev_data6, ev_data7, ev_data8) "
 			"VALUES ('%d', nextval('%s.sl_event_seq'), "
-			"now(), $1, $2, $3,
-			$4, $5, $6, $7, $8, $9, $10, $11, $12);
-			SELECT currval('%s.sl_event_seq');", 
+			"now(), $1, $2, $3, "
+			"$4, $5, $6, $7, $8, $9, $10, $11, $12); "
+			"SELECT currval('%s.sl_event_seq');", 
 			cs->clusterident,
 			cs->clusterident, cs->localNodeId, cs->clusterident,
 			cs->clusterident);
