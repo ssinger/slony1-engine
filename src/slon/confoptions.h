@@ -292,7 +292,7 @@ static struct config_string ConfigureNamesString[] =
 						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
 			SLON_C_STRING
 		},
-		&Syslog_ident,
+		&Syslog_facility,
 		"LOCAL0"
 	},
 	{
