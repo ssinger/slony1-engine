@@ -19,6 +19,7 @@ export PATH
 TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
+DEBUG_LEVEL=2
 
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
@@ -50,8 +51,8 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake`
-if [ -z $WGM ] ; then
+WGM=`which gmake | egrep '^/'`
+if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
     if [ -z "$CGNU" ] ; then
@@ -124,7 +125,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 11" -e sh -c "slon -d2 -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+xterm -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
@@ -222,7 +223,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -d2 -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+xterm -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 

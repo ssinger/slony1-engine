@@ -18,6 +18,7 @@ PATH=/usr/local/slony1/bin:$PATH
 export PATH
 TMPOUT=/tmp/output.$$
 ORIGIN=slony_test1
+DEBUG_LEVEL=2
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 50000 / $PGBENCH_CLIENTS`
@@ -85,7 +86,7 @@ _EOF_
 function slon_start () {
     local NODE=$1
     echo "**** starting the Slony-I node daemon for slony_test$NODE"
-    xterm -title "Slon node $NODE" -e sh -c "slon -d$NODE T1 dbname=slony_test$NODE; echo -n 'Enter>'; read line" &
+    xterm -title "Slon node $NODE" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=slony_test$NODE; echo -n 'Enter>'; read line" &
     PID[$NODE]=$!
     pid=$PID[$NODE]
     echo "slon[$pid] on dbname=slony_test$NODE"
@@ -125,8 +126,8 @@ function check_pgbench () {
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake`
-if [ -z $WGM ]; then
+WGM=`which gmake | egrep '^/'`
+if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
     if [ -z "$CGNU" ]; then
