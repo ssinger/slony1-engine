@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.17 2005-02-09 20:08:42 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.18 2005-02-11 21:13:47 cbbrowne Exp $ -->
 <qandaset>
 
 <qandaentry>
@@ -1189,6 +1189,46 @@ linkend="failover"> Doing switchover and failover with
 linkend="stmtfailover">FAILOVER</link></command> should be considered
 a <emphasis>last resort</emphasis> as it implies that you are
 abandoning the origin node as being corrupted.  </para></answer>
+</qandaentry>
+
+<qandaentry id="morethansuper">
+<question> <para> I created a <quote>superuser</quote> account,
+<command>slony</command>, to run replication activities.  As
+suggested, I set it up as a superuser, via the following query: 
+<command>
+update pg_shadow set usesuper = 't' where usename in ('slony',
+'molly', 'dumpy');
+</command>
+(that command also deals with other users I set up to run vacuums and
+backups).
+
+<para> Unfortunately, I ran into a problem the next time I subscribed
+to a new set.
+
+<programlisting>
+DEBUG1 copy_set 28661
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+DEBUG2 remoteWorkerThread_78: forward confirm 1,594436 received by 78
+DEBUG2 remoteWorkerThread_1: copy table public.billing_discount
+ERROR  remoteWorkerThread_1: "select "_mycluster".setAddTable_int(28661, 51, 'public.billing_discount', 'billing_discount_pkey', 'Table public.billing_discount with candidate primary key billing_discount_pkey'); " PGRES_FATAL_ERROR ERROR:  permission denied for relation pg_class
+CONTEXT:  PL/pgSQL function "altertableforreplication" line 23 at select into variables
+PL/pgSQL function "setaddtable_int" line 76 at perform
+WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
+</programlisting>
+
+<para> This continues to fail, over and over, until I restarted the
+<application>slon</application> to connect as
+<command>postgres</command> instead.</para>
+</question>
+
+<answer><para> The problem is fairly self-evident; permission is being
+denied on the system table, <envar>pg_class</envar>.</para></answer>
+
+<answer><para> The <quote>fix</fix> is thus:
+<programlisting>
+update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
+</programlisting>
+</answer>
 </qandaentry>
 
 </qandaset>

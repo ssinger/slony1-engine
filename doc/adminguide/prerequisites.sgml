@@ -173,8 +173,9 @@ port for each destination.</para>
 <para> Note that <application>slonik</application> and the
 <application>slon</application> instances need no special connections
 or protocols to communicate with one another; they merely need access
-to the &postgres; databases, connecting as a
-<quote>superuser</quote>.</para>
+to the &postgres; databases, connecting as a <quote>superuser</quote>
+<link linkend="morethansuper">that has the ability to update system
+tables.</link></para>
 
 <para> An implication of this communications model is that the entire
 extended network in which a &slony1; cluster operates must be able to
