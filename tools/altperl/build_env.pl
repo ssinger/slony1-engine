@@ -1,5 +1,5 @@
 #!perl
-# $Id: build_env.pl,v 1.2 2004-07-29 21:28:58 cbbrowne Exp $
+# $Id: build_env.pl,v 1.3 2004-08-04 14:45:58 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
@@ -35,7 +35,7 @@ foreach my $node (@nodes)
   die "Host is required" if ( !$tmpHost );
   die "database is required" if ( !$tmpDataBase );
   die "user is required" if ( !$tmpDataBaseUser );
-  $tmpPort = 5532 if ( !$tmpPort );
+  $tmpPort = 5432 if ( !$tmpPort );
   $host = $tmpHost if ( !$host );
   $dataBase = $tmpDataBase if ( !$dataBase );
   if ( !$dataBaseUser ) {
