@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.2 2003-12-03 17:38:27 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.3 2003-12-03 18:48:36 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -73,6 +73,17 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 	as '@LIBDIR@/slony1_funcs@DLSUFFIX@', '_Slony_I_createEvent'
 	language C
 	called on null input;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION getLocalNodeId ()
+--
+--	
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.getLocalNodeId (name) returns int4
+    as '@LIBDIR@/slony1_base@DLSUFFIX@', '_Slony_I_getLocalNodeId'
+	language C
+	security definer;
 
 
 -- **********************************************************************
