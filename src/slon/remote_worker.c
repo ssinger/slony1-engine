@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.26 2004-03-17 19:29:20 wieck Exp $
+ *	$Id: remote_worker.c,v 1.27 2004-03-17 19:54:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2431,7 +2431,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-		char	   *where_or_or = "where";
 		int			ntuples1;
 		int			tupno1;
 		PGresult   *res2;
@@ -2440,6 +2439,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 		provider_qual = &(provider->helper_qualification);
 		dstring_reset(provider_qual);
+		slon_mkquery(provider_qual,
+				"where log_origin = %d",
+				node->no_id);
 
 		/*
 		 * Select all sets we receive from this provider and which are
@@ -2532,15 +2534,13 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			/*
 			 * ... and build up a query qualification that is
 			 * 
-			 *  where (log_tableid in (<tables_in_set>) 
+			 *  and (log_tableid in (<tables_in_set>) 
 			 *         and (<snapshot_qual_of_new_sync>)
 			 *         and (<snapshot_qual_of_setsync>)
-			 *        )
-			 *  and   ( <next_set_from_this_provider> )
+			 *      )
+			 *  and ( <next_set_from_this_provider> )
 			 */
-			slon_appendquery(provider_qual, 
-					"%s (\n    log_tableid in (", where_or_or);
-			where_or_or = "or";
+			slon_appendquery(provider_qual, "and (\n    log_tableid in (");
 
 			/* the <tables_in_set> tab_id list */
 			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
