@@ -2,47 +2,73 @@ Die ersten Schritte mit Slony-I
 
 Installation
 
-Der erste Schritt für eine erfolgreiche Datenbankreplikation mit Slony-I besteht in der korrekten Installation.
+Der erste Schritt für eine erfolgreiche Datenbankreplikation mit
+Slony-I besteht in der korrekten Installation.
 
 Systemanforderungen:
 
-Prinzipiell sollte Slony-I auf jeder Plattform funktionsfähig sein auf der auch PostgreSQL selbst lauffähig ist. Die Liste der zum Zeitpunkt dieses Releases explizit getesteten Plattformen umfasst:  
+Prinzipiell sollte Slony-I auf jeder Plattform funktionsfähig sein auf
+der auch PostgreSQL selbst lauffähig ist. Die Liste der zum Zeitpunkt
+dieses Releases explizit getesteten Plattformen umfasst:  
 
-FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha, osX-10.3, Linux-2.4X-i386
-Linux-2.6X-i386 Linux-2.6X-amd64, Solaris-2.8-SPARC, Solaris-2.9-SPARC sowie 
-OpenBSD-3.5-sparc64.
+FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha, osX-10.3,
+Linux-2.4X-i386 Linux-2.6X-i386 Linux-2.6X-amd64, Solaris-2.8-SPARC,
+Solaris-2.9-SPARC sowie OpenBSD-3.5-sparc64.
 
-Alle am Replikationssystem teilnehmenden Knoten benötigen korrekt syncronisierte Systemzeiten, um Fehlfunktionen des "slon"-Dämons zu vermeiden der dadurch unter Umständen zum Schluss kommen kann das ein Slave bereits mehr Updates als der Master selbst erhalten hat.
-Zur Syncronisation der Uhrzeiten ist die Verwendung des "ntpd" empfohlen, wobei die Slaves den Master als ihre Zeitquelle verwenden.
+Alle am Replikationssystem teilnehmenden Knoten benötigen korrekt
+syncronisierte Systemzeiten, um Fehlfunktionen des "slon"-Dämons zu
+vermeiden der dadurch unter Umständen zum Schluss kommen kann das ein
+Slave bereits mehr Updates als der Master selbst erhalten hat.  Zur
+Syncronisation der Uhrzeiten ist die Verwendung des "ntpd" empfohlen,
+wobei die Slaves den Master als ihre Zeitquelle verwenden.
 
-Die folgenden Softwarepakete sind für eine erfolgreich Übersetzung des Slony-I Quellcodes nötig:
+Die folgenden Softwarepakete sind für eine erfolgreich Übersetzung des
+Slony-I Quellcodes nötig:
 
-GNU make.  Andere "make" - Utilities sind nicht unterstützt.  GNU make ist auf vielen Systemen als "gmake" vorinstalliert und daher wird in diesem Dokument immer diese Bezeichnung verwendet.
-Auf manchen Systemen ist GNU make das standardmässige make-Tool und ist dort unter dem Namen "make" installiert. Zum überprüfen der installierten GNU make version kann der Befehl "gmake --version" verwendet werden. Die Version 3.76 oder spätere sollten problemlos funktionieren, ältere Versionen können unter Umstände Probleme verursachen. 
+GNU make.  Andere "make" - Utilities sind nicht unterstützt.  GNU make
+ist auf vielen Systemen als "gmake" vorinstalliert und daher wird in
+diesem Dokument immer diese Bezeichnung verwendet.  Auf manchen
+Systemen ist GNU make das standardmässige make-Tool und ist dort unter
+dem Namen "make" installiert. Zum überprüfen der installierten GNU
+make version kann der Befehl "gmake --version" verwendet werden. Die
+Version 3.76 oder spätere sollten problemlos funktionieren, ältere
+Versionen können unter Umstände Probleme verursachen. 
 
-Ein ISO/ANSI kompatibler C-Kompiler ist erforderlich, aktuelle Versionen des gcc sollten problemlos funktionieren.
+Ein ISO/ANSI kompatibler C-Kompiler ist erforderlich, aktuelle
+Versionen des gcc sollten problemlos funktionieren.
 
-Weiters ist eine aktuelle Version des PostgreSQL Quellcodes erforderlich. Da Slony-I Namespaceunterstützung benötigt ist PostgreSQL 7.3 die Minimalanforderung für eine erfolgreiche Übersetzung.
+Weiters ist eine aktuelle Version des PostgreSQL Quellcodes
+erforderlich. Da Slony-I Namespaceunterstützung benötigt ist
+PostgreSQL 7.3 die Minimalanforderung für eine erfolgreiche
+Übersetzung.
 
-Sollte ein benötigtes GNU Package fehlen so sind diese im Lieferumfang des jeweiligen Betriebssystems oder auch auf dem lokalen GNU Spiegelserver (Liste unter
-http://www.gnu.org/order/ftp.html) bzw. direkte auf ftp://ftp.gnu.org/gnu zu finden.
+Sollte ein benötigtes GNU Package fehlen so sind diese im Lieferumfang
+des jeweiligen Betriebssystems oder auch auf dem lokalen GNU
+Spiegelserver (Liste unter http://www.gnu.org/order/ftp.html) bzw.
+direkte auf ftp://ftp.gnu.org/gnu zu finden.
 
-Sollte der PostgreSQL Quellcode benötigt werden, so kann dieser vom bevorzugten PostgreSQL Spiegelserver (Liste unter http://www.postgresql.org/mirrors-www.html), oder mittels BitTorrent von http://bt.postgresql.org/ bezogen werden.
+Sollte der PostgreSQL Quellcode benötigt werden, so kann dieser vom
+bevorzugten PostgreSQL Spiegelserver (Liste unter
+http://www.postgresql.org/mirrors-www.html), oder mittels BitTorrent
+von http://bt.postgresql.org/ bezogen werden.
 
-Slony-I benötigt für eine erfolgreiche Übersetzung und anschliessende Installation etwa 5MB an Festplattenkapazität.
+Slony-I benötigt für eine erfolgreiche Übersetzung und anschliessende
+Installation etwa 5MB an Festplattenkapazität.
 
 Download des Slony-I Quellcodes
 
 
-Der Slony-I Quellcode ist unter http://slony.org verfügbar.
+Der Slony-I Quellcode ist unter http://slony.info verfügbar.
 
-nach dem erfolgreichen download kann der Quellecode folgendermassen entpackt werden:
+nach dem erfolgreichen download kann der Quellecode folgendermassen
+entpackt werden:
 
 gunzip slony1-1.0.0.tar.gz
 tar xf slony1-1.0.0.tar
 
-Diese Befehle sollten ein "slony1-1.0.0" Unterverzeichnis im aktuellen Arbeitspfad erzeugen.
-Fuer den Rest der Installation sollten Sie nun in dieses Verzeichnis wechseln.
+Diese Befehle sollten ein "slony1-1.0.0" Unterverzeichnis im aktuellen
+Arbeitspfad erzeugen.  Fuer den Rest der Installation sollten Sie nun
+in dieses Verzeichnis wechseln.
 
 Kurzversion der Installation:
 
@@ -52,19 +78,23 @@ gmake install
 
 1. Konfiguration
 
-Der erste Schritt der Installationsprozedur besteht in der Vorbereitung des Quellcodeverzeichnisses. Diese erfolgt mit Hilfe des "configure" Skriptes.
-Dieses Skript benötigt die Information wo sich Ihr PostgreSQl Quellcodeverzeichnis befindet.
-Zur uebergabe dieser Information an das Skript dient die --with-pgsourcetree=<pfad/zu/ihren/pg/quellen> Kommandozeilenoption.
+Der erste Schritt der Installationsprozedur besteht in der
+Vorbereitung des Quellcodeverzeichnisses. Diese erfolgt mit Hilfe des
+"configure" Skriptes.  Dieses Skript benötigt die Information wo sich
+Ihr PostgreSQl Quellcodeverzeichnis befindet.  Zur uebergabe dieser
+Information an das Skript dient die
+--with-pgsourcetree=<pfad/zu/ihren/pg/quellen> Kommandozeilenoption.
 
 Ein Beispiel:
 
 ./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
 
-Dieses Skript wird eine Reihe von Tests durchfuehren um verschiedene nötige Informationen zu sammeln
-und eventuelle Eigenheiten Ihrer Systemplattform zu erkennen.
-Auf manchen Systemen benötigt Slony-I zudem eine modifizierte Version der libpg.
-Eine dieser Plattformen ist Solaris 2.x-SPARC, ein entsprechender Quellcodepatch kann unter
-<http://slony.org/> bezogen werden.
+Dieses Skript wird eine Reihe von Tests durchfuehren um verschiedene
+nötige Informationen zu sammeln und eventuelle Eigenheiten Ihrer
+Systemplattform zu erkennen.  Auf manchen Systemen benötigt Slony-I
+zudem eine modifizierte Version der libpg.  Eine dieser Plattformen
+ist Solaris 2.x-SPARC, ein entsprechender Quellcodepatch kann unter
+<http://slony.info/> bezogen werden.
 
 2. Übersetzung der Quellen
 
@@ -72,9 +102,10 @@ Zum starten der Übersetzung ist folgendes Kommando erforderlich:
 
 gmake all
 
-Vergessen Sie bitte nicht unbedingt GNU make zu verwenden. Die tatsächlich nötige Zeit
-zur Übersetzung der Quellen kann zwischen 30 Sekunden und mehr als 2 Minuten liegen, 
-abhängig von der jeweils verwendeten Hardware. Im Anschluss an die erfolgreiche Übersetzung 
+Vergessen Sie bitte nicht unbedingt GNU make zu verwenden. Die
+tatsächlich nötige Zeit zur Übersetzung der Quellen kann zwischen 30
+Sekunden und mehr als 2 Minuten liegen, abhängig von der jeweils
+verwendeten Hardware. Im Anschluss an die erfolgreiche Übersetzung
 sollte die folgende Zeichenkette anzeigt werden:
 
 All of Slony-I is successfully made.  Ready to install.
@@ -86,6 +117,8 @@ Um Slony-I zu installieren verwenden Sie bitte
 
 gmake install
 
-Dieses Kommando wird die nötigen Dateinen in das PostgreSQL Installationverzeichnis kopieren.
-Beachten Sie bitte das Sie die nötigen Schreibberechtigungen auf den entsprechenden Bereich
-besitzen. Üblicherweise sind für diesen Schritt daher "root"-Berechtigungen erforderlich.
+Dieses Kommando wird die nötigen Dateinen in das PostgreSQL
+Installationverzeichnis kopieren.  Beachten Sie bitte das Sie die
+nötigen Schreibberechtigungen auf den entsprechenden Bereich besitzen.
+Üblicherweise sind für diesen Schritt daher "root"-Berechtigungen
+erforderlich.

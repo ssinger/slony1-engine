@@ -46,7 +46,7 @@ approximately 5MB for the source tree during build and installation.
 
 Getting Slony-I Source
 
-You can get the Slony-I source from <http://slony.org/>
+You can get the Slony-I source from <http://slony.info/>
 
 After you have obtained the file, unpack it.
 
@@ -78,7 +78,7 @@ Example:
 This script will run a number of tests to guess values for various dependent
 variables and try to detect some quirks of your system.  Slony-I is known to
 need a modified version of libpq on specific platforms such as Solaris2.X on
-SPARC this patch can be found at <http://slony.org/>.
+SPARC this patch can be found at <http://slony.info/>.
 
 2.  Build
 
