@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.16 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.17 2005-03-10 23:06:11 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -71,7 +71,10 @@ cluster.</para>
 <para> You specify arguments including <option>database</option>,
 <option>host</option>, <option>user</option>,
 <option>cluster</option>, <option>password</option>, and
-<option>port</option> to connect to any of the nodes on a cluster.</para>
+<option>port</option> to connect to any of the nodes on a cluster.
+You also specify a <option>mailprog</option> command (which should be
+a program equivalent to <productname>Unix</productname>
+<application>mailx</application>) and a recipient of email. </para>
 
 <para> The script then rummages through <xref linkend="table.sl-path">
 to find all of the nodes in the cluster, and the DSNs to allow it to,
@@ -116,9 +119,8 @@ FAQ</link>.</para></listitem>
 
 </itemizedlist></para>
 
-<para> The script does not yet do much in the way of diagnosis work;
-it should be enhanced to be able to, based on some parameterization,
-notify someone of those problems it encounters.</para>
+<para> The script does some diagnosis work based on parameters in the
+script; if you don't like the values, pick your favorites!</para>
 
 </sect2>
 

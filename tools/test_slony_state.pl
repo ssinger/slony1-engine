@@ -1,8 +1,8 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_state.pl,v 1.1 2005-01-18 22:57:34 cbbrowne Exp $
+# $Id: test_slony_state.pl,v 1.2 2005-03-10 23:06:10 cbbrowne Exp $
 # Christopher Browne
-# Copyright 2004
-# Afilias Canada
+# Copyright 2005
+# PostgreSQL Global Development Group
 
 # This script, given DSN parameters to access a Slony-I cluster,
 # submits a number of queries to test the state of the nodes in the
@@ -11,11 +11,12 @@
 use Pg;
 use Getopt::Long;
 #use strict;
+my %PROBLEMS;
 
 my $sleep_seconds = 4;
 
 my $goodopts = GetOptions("help", "database=s", "host=s", "user=s", "cluster=s",
-			  "password=s", "port=s");
+			  "password=s", "port=s", "recipient=s", "mailprog=s");
 if (defined($opt_help)) {
   show_usage();
 }
@@ -28,6 +29,8 @@ $user = $opt_user if (defined($opt_user));
 $password = $opt_password if (defined($opt_password));
 $host = $opt_host if (defined($opt_host));
 $cluster = $opt_cluster if (defined($opt_cluster));
+$recipient = $opt_recipient if (defined($opt_recipient));
+$mailprog = $opt_mailprog if (defined($opt_mailprog));
 
 #DBI: my $initialDSN = "dbi:Pg:dbname=$database;host=$host;port=$port";
 my $initialDSN = "dbname=$database host=$host port=$port";
@@ -35,9 +38,6 @@ $initialDSN = $initialDSN . " password=$password" if defined($opt_password);
 
 print "DSN: $initialDSN\n===========================\n";
 
-# DBI: my $dbh = DBI->connect($initialDSN, $user, $password,
-# 		       {RaiseError => 0, PrintError => 0, AutoCommit => 1});
-# die "connect: $DBI::errstr" if ( !defined($dbh) || $DBI::err );
 my $dbh = Pg::connectdb($initialDSN);
 
 print "Rummage for DSNs\n=============================\n";
@@ -65,6 +65,8 @@ foreach my $node (keys %DSN) {
   test_node($node, $dsn);
 }
 
+report_on_problems ();
+
 sub test_node {
   my ($node, $dsn) = @_;
 
@@ -81,12 +83,45 @@ Pages: $relpages
 Tuples: $reltuples
 };
 
+  my $HILISTENPAGES = 5000;
+  if ($relpages > $HILISTENPAGES) {
+    add_problem ($node, "pg_listener relpages high - $relpages", 
+		 qq{Number of pages in table pg_listener is $relpages
+This is higher than the warning level of $HILISTENPAGES.
+
+Perhaps a long running transaction is preventing pg_listener from
+being vacuumed out?
+}); 
+  }
+
+  my $HILISTENTUPLES = 200000;
+  if ($reltuples > $HILISTENTUPLES) {
+    add_problem ($node, "pg_listener reltuples high - $reltuples",
+		 qq{Number of tuples in system table pg_listener is $reltuples.
+This is higher than the warning level of $HILISTENTUPLES.
+
+Perhaps a long running transaction is preventing pg_listener from
+being vacuumed out?
+});
+  }
+
+  my $HISLTUPLES=200000;
   print "\nSize Tests\n================================================\n";
   my $sizequeries = qq{select relname, relpages, reltuples from pg_catalog.pg_class where relname in ('sl_log_1', 'sl_log_2', 'sl_seqlog') order by relname;};
   $res = $dbh->exec($sizequeries);
   while (my @row = $res->fetchrow) {
     my ($relname, $relpages, $reltuples) = @row;
     printf "%15s  %8d %9f\n", $relname, $relpages, $reltuples;
+    if ($reltuples > $HISLTUPLES) {
+      add_problem($node, "$relname tuples = $reltuples > $HISLTUPLES",
+		  qq{Number of tuples in Slony-I table $relname is $reltuples which
+exceeds $HISLTUPLES.
+
+You may wish to investigate whether or not a node is down, or perhaps
+if sl_confirm entries have not been propagating properly.
+});
+
+    }
   }
 
   print "\nListen Path Analysis\n===================================================\n";
@@ -108,11 +143,21 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
                      where li_origin = origin and li_receiver = receiver);
 };
   $res = $dbh->exec($missing_paths);
+  my $allmissingpaths;
   while (my @row = $res->fetchrow) {
     my ($origin, $receiver) = @row;
-    printf "(origin,receiver) where there is exists a direct path missing in sl_listen: (%d,%d)\n", 
+    my $string = sprintf "(origin,receiver) where there is exists a direct path missing in sl_listen: (%d,%d)\n",
       $origin, $receiver;
+    print $string;
     $listenproblems++;
+    $allmissingpaths .= $string;
+  }
+  if ($allmissingpaths) {
+    add_problem($node, "Missing sl_listen paths", qq{$allmissingpaths
+
+Please check contents of table sl_listen; some STORE LISTEN requests may be
+necessary.
+});
   }
 
   # Each subscriber node must have a direct listen path
@@ -124,7 +169,13 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   $res = $dbh->exec($no_direct_path);
   while (my @row = $res->fetchrow) {
     my ($set, $provider, $receiver) = @row;
-    printf "No direct path found for set %5d from provider %5d to receiver %5d\n", $set, $provider, $receiver;
+    my $string = sprintf "No direct path found for set %5d from provider %5d to receiver %5d\n", $set, $provider, $receiver;
+    print $string;
+    add_problem($node, "Missing path from $provider to $receiver", qq{Missing sl_listen entry - $string
+
+Please check contents of table sl_listen; some STORE LISTEN requests may be
+necessary.
+});
     $listenproblems++;
   }
 
@@ -139,16 +190,28 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   printf "%7s %9s %9s %12s %12s\n", "Origin", "Min SYNC", "Max SYNC", "Min SYNC Age", "Max SYNC Age";
   print "================================================================================\n";
 
+  my $WANTAGE = "00:30:00";
   my $event_summary = qq{
   select ev_origin, min(ev_seqno), max(ev_seqno),
          date_trunc('minutes', min(now() - ev_timestamp)),
-         date_trunc('minutes', max(now() - ev_timestamp))
+         date_trunc('minutes', max(now() - ev_timestamp)),
+         min(now() - ev_timestamp) > '$WANTAGE' as agehi
      from _$cluster.sl_event group by ev_origin;
   };
   $res = $dbh->exec($event_summary);
   while (my @row = $res->fetchrow) {
-    my ($origin, $minsync, $maxsync, $minage, $maxage) = @row;
-    printf "%7s %9d %9d %12s %12s\n", $origin, $minsync, $maxsync, $minage, $maxage;
+    my ($origin, $minsync, $maxsync, $minage, $maxage, $agehi) = @row;
+    printf "%7s %9d %9d %12s %12s %4s\n", $origin, $minsync, $maxsync, $minage, $maxage, $agehi;
+    if ($agehi eq 't') {
+      add_problem($origin, "Events not propagating to node $origin",
+		  qq{Events not propagating quickly in sl_event -
+For origin node $origin, earliest propagated event of age $minage > $WANTAGE
+
+Are slons running for both nodes?
+
+Could listen paths be missing so that events are not propagating?
+});
+    }
   }
   print "\n";
 
@@ -156,11 +219,13 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   print "Summary of sl_confirm aging\n";
   printf "%9s  %9s  %9s  %9s  %12s  %12s\n", "Origin", "Receiver", "Min SYNC", "Max SYNC", "Age of latest SYNC", "Age of eldest SYNC";
   print "=================================================================================\n";
+  my $WANTCONFIRM = "00:30:00";
   my $confirm_summary = qq{
 
     select con_origin, con_received, min(con_seqno) as minseq,
            max(con_seqno) as maxseq, date_trunc('minutes', min(now()-con_timestamp)) as age1,
-           date_trunc('minutes', max(now()-con_timestamp)) as age2
+           date_trunc('minutes', max(now()-con_timestamp)) as age2,
+           min(now() - con_timestamp) > '$WANTCONFIRM' as tooold
     from _$cluster.sl_confirm
     group by con_origin, con_received
     order by con_origin, con_received;
@@ -168,8 +233,20 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
 
   $res = $dbh->exec($confirm_summary);
   while (my @row = $res->fetchrow) {
-    my ($origin, $receiver, $minsync, $maxsync, $minage, $maxage) = @row;
-    printf "%9s  %9s  %9s  %9s  %12s  %12s\n", $origin, $receiver, $minsync, $maxsync, $minage, $maxage;
+    my ($origin, $receiver, $minsync, $maxsync, $minage, $maxage, $agehi) = @row;
+    printf "%9s  %9s  %9s  %9s  %12s  %12s %4s\n", $origin, $receiver, $minsync, $maxsync, $minage, $maxage, $agehi;
+    if ($agehi eq 't') {
+      add_problem($origin, "Confirmations not propagating from $origin to $receiver",
+		  qq{Confirmations not propagating quickly in sl_confirm -
+
+For origin node $origin, receiver node $receiver, earliest propagated
+confirmation has age $minage > $WANTCONFIRM
+
+Are slons running for both nodes?
+
+Could listen paths be missing so that confirmations are not propagating?
+});
+    }
   }
   print "\n";
 
@@ -178,10 +255,11 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   printf "%15s %15s %15s %12s %20s\n", "Database", "PID", "User", "Query Age", "Query";
   print "================================================================================\n";
 
+  my $ELDERLY_TXN = "01:30:00";
   my $old_conn_query = qq{
      select datname, procpid, usename, date_trunc('minutes', now() - query_start), substr(current_query,0,20)
      from pg_stat_activity
-     where  (now() - query_start) > '1:30'::interval and
+     where  (now() - query_start) > '$ELDERLY_TXN'::interval and
             current_query <> '<IDLE>'
      order by query_start;
   };
@@ -190,8 +268,14 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   while (my @row = $res->fetchrow) {
     my ($db, $pid, $user, $age, $query) = @row;
     printf "%15s %15d %15s %12s %20s\n", $db, $pid, $user, $age, $query;
+      add_problem($origin, "Old Transactions Kept Open",
+		  qq{Old Transaction still running with age $age > $ELDERLY_TXN
+
+Query: $query
+});
   }
   print "\n";
+
 }
 
 sub show_usage {
@@ -200,5 +284,26 @@ sub show_usage {
     chomp $inerr;
     print $inerr, "\n";
   }
-  die "$0  --host --database --user --cluster --port=integer --password";
+  die "$0  --host --database --user --cluster --port=integer --password --recipient --mailprog";
+}
+
+sub add_problem {
+  my ($node, $short, $long) = @_;
+  $PROBLEMS{"$node $short"} = $long;
+}
+
+sub report_on_problems {
+  my ($totalproblems, $message);
+  foreach my $key (sort keys %PROBLEMS) {
+    $totalproblems++;
+    $message .= "\nNode: $key\n================================================\n" . $PROBLEMS{$key} . "\n";
+  }
+  if ($totalproblems) {
+    open(MAIL, "|$mailprog -s \"Slony State Test Warning - Cluster $cluster\" $recipient");
+    print MAIL "\n";
+    print MAIL $message;
+    close (MAIL);
+    print "\n\nSending message thus - |$mailprog -s \"Slony State Test Warning - Cluster $cluster\" $recipient\n";
+    print "Message:\n\n$message\n";
+  }
 }
