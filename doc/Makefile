@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.1 2003-11-18 15:18:15 wieck Exp $
+#	$Id: Makefile,v 1.2 2004-01-17 17:30:19 wieck Exp $
 # ----------
 
 subdir = src
@@ -15,3 +15,4 @@ all install installdirs:
 
 clean distclean maintainer-clean:
 	$(MAKE) -C concept $@
+	$(MAKE) -C implementation $@
