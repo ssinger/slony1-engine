@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.8 2004-03-26 14:59:06 wieck Exp $
+ *	$Id: parser.y,v 1.9 2004-03-27 03:02:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -264,7 +264,8 @@ stmt				: stmt_try
 						{ $$ = $1; }
 					;
 
-stmt_try			: lno K_TRY '{' try_stmts '}' try_on_error
+stmt_try			: lno K_TRY '{' try_stmts '}'
+					  try_on_error
 					{
 						SlonikStmt_try *new;
 
@@ -298,11 +299,59 @@ stmt_try			: lno K_TRY '{' try_stmts '}' try_on_error
 
 						$$ = (SlonikStmt *)new;
 					}
+					| lno K_TRY '{' try_stmts '}'
+					  try_on_error try_on_success 
+					{
+						SlonikStmt_try *new;
+
+						new = (SlonikStmt_try *)
+								malloc(sizeof(SlonikStmt_try));
+						memset(new, 0, sizeof(SlonikStmt_try));
+						new->hdr.stmt_type		= STMT_TRY;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						new->try_block = $4;
+						new->success_block = $7;
+						new->error_block = $6;
+
+						$$ = (SlonikStmt *)new;
+					}
+					| lno K_TRY '{' try_stmts '}'
+					  try_on_success
+					{
+						SlonikStmt_try *new;
+
+						new = (SlonikStmt_try *)
+								malloc(sizeof(SlonikStmt_try));
+						memset(new, 0, sizeof(SlonikStmt_try));
+						new->hdr.stmt_type		= STMT_TRY;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						new->try_block = $4;
+						new->success_block = $6;
+
+						$$ = (SlonikStmt *)new;
+					}
+					| lno K_TRY '{' try_stmts '}'
+					{
+						SlonikStmt_try *new;
+
+						new = (SlonikStmt_try *)
+								malloc(sizeof(SlonikStmt_try));
+						memset(new, 0, sizeof(SlonikStmt_try));
+						new->hdr.stmt_type		= STMT_TRY;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						new->try_block = $4;
+
+						$$ = (SlonikStmt *)new;
+					}
 					;
 
-try_on_error		:
-						{ $$ = NULL; }
-					| K_ON K_ERROR '{' stmts '}'
+try_on_error		: K_ON K_ERROR '{' stmts '}'
 						{ $$ = $4; }
 					;
 try_on_success		: K_ON K_SUCCESS '{' stmts '}'
