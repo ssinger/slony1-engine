@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.18 2004-10-14 16:01:05 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.19 2004-11-10 18:10:58 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -552,7 +552,7 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
 		return -1;
 	}
 	/*
-	 * We actually do not do the forwardiing ourself here. We send a
+	 * We actually do not do the forwarding ourself here. We send a
 	 * special message to the remote worker for that node.
 	 */
 	ntuples = PQntuples(res);
@@ -577,7 +577,7 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
  * ---------- remoteListen_receive_events
  * 
  * Retrieve all new events that origin from nodes for which we listen on this
- * node as provider and add them to the node specific worker message queue..
+ * node as provider and add them to the node specific worker message queue.
  * ----------
  */
 static int
@@ -599,7 +599,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	/*
 	 * In the runtime configuration info for the node, we remember the
 	 * last event sequence that we actually have received. If the remote
-	 * worker thread has processed it yet or not isn't important, we have
+	 * worker thread has processed it yet or it isn't important, we have
 	 * it in the message queue at least and don't need to select it
 	 * again.
 	 * 
