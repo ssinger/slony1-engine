@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: unsubscribe_set.pl,v 1.1 2004-07-25 04:02:51 cbbrowne Exp $
+# $Id: unsubscribe_set.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -34,5 +34,4 @@ print SLONIK qq{
         echo 'unsubscribed node $node from set $set';
 };
 close SLONIK;
-print `slonik < /tmp/slonik-unsubscribe.$$`;
-unlink("/tmp/slonik-unsubscribe.$$");
+run_slonik_script("/tmp/slonik-unsubscribe.$$");

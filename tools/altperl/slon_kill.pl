@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_kill.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: slon_kill.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
 # Kill all slon instances for the current setname
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
@@ -15,7 +15,7 @@ open(PSOUT, "ps auxww | egrep '[s]lon_watchdog' | sort -n | awk '{print \$2}'|")
 $found="n";
 while ($pid = <PSOUT>) {
   chomp $pid;
-  if (!($pid)){
+  if (!($pid)) {
     print "No slon_watchdog is running for set $SETNAME!\n";
   } else {
     $found="y";

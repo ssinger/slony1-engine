@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.3 2004-08-04 16:35:53 cbbrowne Exp $
+# $Id: create_set.pl,v 1.4 2004-08-10 20:55:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -29,7 +29,8 @@ foreach my $table (@SERIALTABLES) {
 ";
 }
 close OUTFILE;
-print `slonik < $OUTPUTFILE`;
+run_slonik_script($OUTPUTFILE);
+
 
 open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
@@ -45,7 +46,7 @@ print OUTFILE "
 ";
 
 close OUTFILE;
-print `slonik < $OUTPUTFILE`;
+run_slonik_script($OUTPUTFILE);
 
 open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
@@ -75,7 +76,7 @@ foreach my $table (@KEYEDTABLES) {
 }
 
 close OUTFILE;
-print `slonik < $OUTPUTFILE`;
+run_slonik_script($OUTPUTFILE);
 
 open (OUTFILE, ">$OUTPUTFILE");
 print OUTFILE genheader();
@@ -97,8 +98,7 @@ print OUTFILE "
         echo 'All tables added';
 ";
 
-print `slonik < $OUTPUTFILE`;
-unlink($OUTPUTFILE);
+run_slonik_script($OUTPUTFILE);
 
 ### If object hasn't a namespace specified, assume it's in "public", and make it so...
 sub ensure_namespace {

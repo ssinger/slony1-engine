@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: reset_cluster.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: reset_cluster.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -34,7 +34,7 @@ foreach my $nodea (@NODES) {
 	}
     }
 }
-}
+
 print SLONIK qq[
         }
         on error {
@@ -46,5 +46,4 @@ print SLONIK qq[
 ];
 
 close SLONIK;
-`slonik < /tmp/slonik.$$`;
-unlink("/tmp/slonik.$$");
+run_slonik_script("/tmp/slonik.$$");

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_pushsql.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: slon_pushsql.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -19,7 +19,8 @@ if ($node =~ /^node(\d+)$/) {
     die "Usage: ./slon_pushsql.pl set[N] node[N] sql_script_file\n";
 }
 
-open(SLONIK, "|slonik");
+my $FILE="/tmp/gensql.$$";
+open(SLONIK, ">$FILE");
 print SLONIK genheader();
 
 print SLONIK qq{
@@ -29,3 +30,5 @@ print SLONIK qq{
     event node = $node
   );
 };
+close SLONIK;
+run_slonik_script($FILE);

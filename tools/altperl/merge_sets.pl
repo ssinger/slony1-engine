@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: merge_sets.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: merge_sets.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -15,13 +15,13 @@ if ($node =~ /^node(\d+)$/) {
   die "Usage: ./merge_sets.pl nodeN setOLD setNEW\n";
 }
 
-if ($set1 =~ /^node(\d+)$/) {
+if ($set1 =~ /^set(\d+)$/) {
   $set1 = $1;
 } else {
   print "Valid set names are set1, set2, ...\n\n";
   die "Usage: ./merge_sets.pl nodeN setOLD setNEW\n";
 }
-if ($set2 =~ /^node(\d+)$/) {
+if ($set2 =~ /^set(\d+)$/) {
   $set2 = $1;
 } else {
   print "Valid set names are set1, set2, ...\n\n";
@@ -43,5 +43,4 @@ print SLONIK qq[
 ];
 
 close SLONIK;
-`slonik < /tmp/slonik.$$`;
-unlink("/tmp/slonik.$$");
+run_slonik_script("/tmp/slonik.$$");

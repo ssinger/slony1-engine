@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: drop_set.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: drop_set.pl,v 1.2 2004-08-10 20:55:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -10,10 +10,10 @@ if ($set =~ /^set(\d+)$/) {
   $set = $1;
 } else {
   print "Need set identifier\n";
-  croak "drop_set.pl setN\n";
+  die "drop_set.pl setN\n";
 }
-
-open(SLONIK, "|slonik");
+$OUTFILE="/tmp/dropset.$$";
+open(SLONIK, ">>$OUTFILE");
 
 print SLONIK genheader();
 
@@ -26,3 +26,5 @@ print SLONIK qq{
         }
         echo 'Dropped set $set';
 };
+close SLONIK;
+run_slonik_script($OUTFILE);

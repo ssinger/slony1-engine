@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: drop_node.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: drop_node.pl,v 1.2 2004-08-10 20:55:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,7 +14,8 @@ if ($node =~ /^node(\d+)$/) {
   die "drop_node nodeN\n";
 }
 
-open(SLONIK, ">/tmp/slonik-drop.$$");
+my $OUTPUTFILE="/tmp/slonik-drop.$$";
+open(SLONIK, ">$OUTPUTFILE");
 print SLONIK genheader();
 print SLONIK qq{
         try {
@@ -27,5 +28,4 @@ print SLONIK qq{
         echo 'dropped node $node cluster';
 };
 close SLONIK;
-print `slonik < /tmp/slonik-drop.$$`;
-unlink("/tmp/slonik-drop.$$");
+run_slonik_script($OUTPUTFILE);

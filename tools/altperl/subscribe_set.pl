@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: subscribe_set.pl,v 1.1 2004-07-25 04:02:51 cbbrowne Exp $
+# $Id: subscribe_set.pl,v 1.2 2004-08-10 20:55:34 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -20,7 +20,8 @@ if ($set =~ /^set(\d+)$/) {
   die "subscribe_set setM nodeN\n";
 }
 
-open(SLONIK, ">/tmp/slonik-subscribe.$$");
+$FILE="/tmp/slonik-subscribe.$$";
+open(SLONIK, ">$FILE");
 print SLONIK genheader();
 print SLONIK "try {\n";
 
@@ -49,5 +50,4 @@ print SLONIK qq{
 };
 
 close SLONIK;
-print `slonik < /tmp/slonik-subscribe.$$`;
-unlink("/tmp/slonik-subscribe.$$");
+run_slonik_script($FILE);

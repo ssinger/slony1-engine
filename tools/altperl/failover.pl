@@ -1,23 +1,29 @@
 #!/usr/bin/perl
-# $Id: failover.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: failover.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 require 'slon-tools.pm';
 require 'slon.env';
 
-my ($node1, $node2) = @ARGV;
+my ($node1, $set1, $node2) = @ARGV;
 if ($node1 =~ /^node(\d+)$/) {
   $node1 = $1;
 } else {
+  print "Valid node names are node1, node2, ...\n\n";
+  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
+}
+if ($set1 =~ /^set(\d+)$/) {
+  $set1 = $1;
+} else {
   print "Valid set names are set1, set2, ...\n\n";
-  die "Usage: ./failover.pl nodeN setOLD setNEW\n";
+  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
 }
 if ($node2 =~ /^node(\d+)$/) {
   $node2 = $1;
 } else {
-  print "Valid set names are set1, set2, ...\n\n";
-  die "Usage: ./failover.pl nodeN setOLD setNEW\n";
+  print "Valid node names are node1, node2, ...\n\n";
+  die "Usage: ./failover.pl nodeN setOLD nodeNEW\n";
 }
 
 open(SLONIK, ">/tmp/slonik.$$");
@@ -35,5 +41,4 @@ print SLONIK qq[
 ];
 
 close SLONIK;
-`slonik < /tmp/slonik.$$`;
-unlink("/tmp/slonik.$$");
+run_slonik_script("/tmp/slonik.$$");

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon-tools.pm,v 1.2 2004-08-04 16:38:34 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.3 2004-08-10 20:55:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -70,6 +70,22 @@ sub genheader {
       $header .= " node $node admin conninfo='$dsn';\n";
     }
   }
-  return $header
+  return $header;
+}
+
+# Stores copy of slonik script in log file in $LOGDIR
+# then invokes it and deletes it
+sub run_slonik_script {
+  my ($script) = @_;
+  chomp $script;
+  open(OUT, ">>$LOGDIR/slonik_scripts.log");
+  my $now = `date`;
+  chomp $now;
+  print OUT "-- Script: $script submitted at $now\n";
+  print OUT "-------------------------------------------------------------\n";
+  close OUT;
+  `cat $script >> $LOGDIR/slonik_scripts.log`;
+  print `slonik < $script`;
+  unlink($script);
 }
 return 1;

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: init_cluster.pl,v 1.1 2004-07-25 04:02:50 cbbrowne Exp $
+# $Id: init_cluster.pl,v 1.2 2004-08-10 20:55:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
@@ -7,8 +7,8 @@ my @PATH;
 
 require 'slon-tools.pm';
 require 'slon.env';
-my $FILE="init-cluster";
-open(SLONIK, ">/tmp/$FILE.$$");
+my $FILE="/tmp/init-cluster.$$";
+open(SLONIK, ">$FILE");
 
 print SLONIK genheader();
 
@@ -32,10 +32,9 @@ print SLONIK "} on error {
 echo 'Set up replication nodes';
 ";
 close SLONIK;
+run_slonik_script($FILE);
 
-`slonik < /tmp/$FILE.$$`;
-
-open(SLONIK, ">/tmp/$FILE.$$");
+open(SLONIK, ">$FILE");
 print SLONIK genheader();
 
 my @VIA ;
@@ -60,19 +59,19 @@ foreach my $nodea (@NODES) {
 
 close SLONIK;
 
-`slonik < /tmp/$FILE.$$`;
+run_slonik_script($FILE);
 
-open(SLONIK, ">/tmp/$FILE.$$");
+open(SLONIK, ">$FILE");
 print SLONIK genheader();
 
 foreach my $origin (@NODES) {
-    my $dsna = $DSN[$origin];
-    foreach my $receiver (@NODES) {
-	if ($origin != $receiver) {
-	    my $provider = $VIA[$origin][$receiver];
-	    print SLONIK "      store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
-	}
+  my $dsna = $DSN[$origin];
+  foreach my $receiver (@NODES) {
+    if ($origin != $receiver) {
+      my $provider = $VIA[$origin][$receiver];
+      print SLONIK "      store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
     }
+  }
 }
 
 print SLONIK qq[
@@ -81,126 +80,125 @@ print SLONIK qq[
 ];
 
 close SLONIK;
-`slonik < /tmp/$FILE.$$`;
-unlink("/tmp/$FILE.$$");
+run_slonik_script($FILE);
 
 sub generate_listen_paths {
-    my @COST;
-    my @PATH;
+  my @COST;
+  my @PATH;
 
-    my $infinity = 10000000;    # Initial costs are all infinite
-    foreach my $node1 (@NODES) {
-	foreach my $node2 (@NODES) {
-	    $COST[$node1][$node2] = $infinity;
-	}
+  my $infinity = 10000000;	# Initial costs are all infinite
+  foreach my $node1 (@NODES) {
+    foreach my $node2 (@NODES) {
+      $COST[$node1][$node2] = $infinity;
     }
+  }
 
-    # Initialize paths between parents and children, and based on them,
-    # generate initial seeding of listener paths, @VIA
+  # Initialize paths between parents and children, and based on them,
+  # generate initial seeding of listener paths, @VIA
 
-    foreach my $node1 (@NODES) {
-	$COST[$node1][$node1] = 0;
-	$VIA[$node1][$node1] = 0;
-	foreach my $node2 (@NODES) {
-	    if ($node2 != $node1) {
-		if ($PARENT[$node1] == $node2) {
-		    $PATH[$node1][$node2] = 1;
-		    $PATH[$node2][$node1] = 1;
-		    # Set up a cost 1 path between them
-		    # Parent to child
-		    $COST[$node1][$node2] = 1;
-		    $VIA[$node1][$node2] = $node1;
+  foreach my $node1 (@NODES) {
+    $COST[$node1][$node1] = 0;
+    $VIA[$node1][$node1] = 0;
+    foreach my $node2 (@NODES) {
+      if ($node2 != $node1) {
+	if ($PARENT[$node1] == $node2) {
+	  $PATH[$node1][$node2] = 1;
+	  $PATH[$node2][$node1] = 1;
+	  # Set up a cost 1 path between them
+	  # Parent to child
+	  $COST[$node1][$node2] = 1;
+	  $VIA[$node1][$node2] = $node1;
 
-		    # Child to parent
-		    $COST[$node2][$node1] = 1;
-		    $VIA[$node2][$node1] = $node2;
-		}
-	    }
+	  # Child to parent
+	  $COST[$node2][$node1] = 1;
+	  $VIA[$node2][$node1] = $node2;
 	}
+      }
     }
+  }
 
-    # Now, update the listener paths...
-    # 4 level nested iteration:
-    # 1 while not done, do
-    #   2 for each node, node1
-    #     3 for each node, node2, where node2 <> node1, where we don't
-    #           yet have a listener path
-    #       4 for each node node3 (<> node1 or node2),
-    #          consider introducing the listener path:
-    #                 node1 to node2 then node2 to node3
-    # In concept, it's an O(n^4) algorithm; since the number of nodes, n,
-    # is not likely to get particularly large, it's not worth tuning
-    # further.
-    $didwork = "yes";
-    while ($didwork eq "yes") {
-	$didwork = "no";
-	foreach my $node1 (@NODES) {
-	    foreach my $node3 (@NODES) {
-		if (($VIA[$node3][$node1] == 0) && ($node3 != $node1)) {
-		    foreach my $node2 (@NODES) {
-			if ($PATH[$node1][$node2] && ($VIA[$node2][$node3] != 0) && ($node2 != $node3) && ($node2 != $node1)) {
-			    # Consider introducing a path from n1 to n2 then n2 to n3
-			    # as a cheaper alternative to going direct from n1 to n3
-			    my $oldcost = $COST[$node3][$node1];
-			    my $newcost = $COST[$node1][$node2] + $COST[$node2][$node3];
-			    if ($newcost < $oldcost) {
-				$didwork = "yes";
+  # Now, update the listener paths...
+  # 4 level nested iteration:
+  # 1 while not done, do
+  #   2 for each node, node1
+  #     3 for each node, node2, where node2 <> node1, where we don't
+  #           yet have a listener path
+  #       4 for each node node3 (<> node1 or node2),
+  #          consider introducing the listener path:
+  #                 node1 to node2 then node2 to node3
+  # In concept, it's an O(n^4) algorithm; since the number of nodes, n,
+  # is not likely to get particularly large, it's not worth tuning
+  # further.
+  $didwork = "yes";
+  while ($didwork eq "yes") {
+    $didwork = "no";
+    foreach my $node1 (@NODES) {
+      foreach my $node3 (@NODES) {
+	if (($VIA[$node3][$node1] == 0) && ($node3 != $node1)) {
+	  foreach my $node2 (@NODES) {
+	    if ($PATH[$node1][$node2] && ($VIA[$node2][$node3] != 0) && ($node2 != $node3) && ($node2 != $node1)) {
+	      # Consider introducing a path from n1 to n2 then n2 to n3
+	      # as a cheaper alternative to going direct from n1 to n3
+	      my $oldcost = $COST[$node3][$node1];
+	      my $newcost = $COST[$node1][$node2] + $COST[$node2][$node3];
+	      if ($newcost < $oldcost) {
+		$didwork = "yes";
 				# So we go via node 2
-				$VIA[$node3][$node1] = $node2;
-				$COST[$node3][$node1] = $newcost;
-			    }
-			}
-		    }
-		}
+		$VIA[$node3][$node1] = $node2;
+		$COST[$node3][$node1] = $newcost;
+	      }
 	    }
+	  }
 	}
+      }
     }
+  }
 }
 
 sub report_on_paths {
-    print "cost\n";
-    print "    ";
+  print "cost\n";
+  print "    ";
+  foreach my $node2 (@NODES) {
+    printf "%4d|", $node2;
+  }
+  print "\n--------------------------------------------\n";
+  foreach my $node1 (@NODES) {
+    printf "%4d|", $node1;
     foreach my $node2 (@NODES) {
-	printf "%4d|", $node2;
+      if ($COST[$node2][$node1] == $infinity) {
+	printf "inf  ";
+      } else {
+	printf "%4d ", $COST[$node2][$node1];
+      }
+      print "\n";
     }
-    print "\n--------------------------------------------\n";
-    foreach my $node1 (@NODES) {
-	printf "%4d|", $node1;
-	foreach my $node2 (@NODES) {
-	    if ($COST[$node2][$node1] == $infinity) {
-		printf "inf  ";
-	    } else {
-		printf "%4d ", $COST[$node2][$node1];
-	    }
-	    print "\n";
-	}
-    }
-    print "\n\n";
-    print "VIA\n";
-    print "    ";
+  }
+  print "\n\n";
+  print "VIA\n";
+  print "    ";
+  foreach my $node2 (@NODES) {
+    printf "%4d|", $node2;
+  }
+  print "\n--------------------------------------------\n";
+  foreach my $node1 (@NODES) {
+    printf "%4d", $node1;
     foreach my $node2 (@NODES) {
-	printf "%4d|", $node2;
+      printf "%4d ", $VIA[$node2][$node1];
     }
-    print "\n--------------------------------------------\n";
-    foreach my $node1 (@NODES) {
-	printf "%4d", $node1;
-	foreach my $node2 (@NODES) {
-	    printf "%4d ", $VIA[$node2][$node1];
-	}
-	print "\n";
-    }
+    print "\n";
+  }
 
-    print "PATHS\n";
-    print "    ";
+  print "PATHS\n";
+  print "    ";
+  foreach my $node2 (@NODES) {
+    printf "%4d|", $node2;
+  }
+  print "\n--------------------------------------------\n";
+  foreach my $node1 (@NODES) {
+    printf "%4d", $node1;
     foreach my $node2 (@NODES) {
-	printf "%4d|", $node2;
+      printf "%4d ", $PATH[$node2][$node1];
     }
-    print "\n--------------------------------------------\n";
-    foreach my $node1 (@NODES) {
-	printf "%4d", $node1;
-	foreach my $node2 (@NODES) {
-	    printf "%4d ", $PATH[$node2][$node1];
-	}
-	print "\n";
-    }
+    print "\n";
+  }
 }
