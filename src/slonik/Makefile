@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.4 2004-03-30 18:46:55 wieck Exp $
+#	$Id: Makefile,v 1.5 2004-04-27 00:25:36 wieck Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -13,7 +13,7 @@ include $(slony_top_builddir)/Makefile.global
 
 CFLAGS += -I$(slony_top_builddir) -I$(PGSOURCETREE)/src/interfaces/libpq -DPGSHARE="\"$(datadir)\""
 LDFLAGS += $(rpath) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
-
+LDFLAGS += $(rpath) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq -L$(PGSOURCETREE)/src/port -lpgport
 ifeq ($(PORTNAME), aix)
   CFLAGS += -D_LARGE_FILES
 endif
@@ -35,7 +35,7 @@ ALL =					\
 all:	$(ALL)
 
 $(PROG):	$(OBJS)
-
+	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $(PROG)
 slonik.o:			slonik.c slonik.h
 dbutil.o:			dbutil.c slonik.h
 parser.o:			parser.c scan.c
