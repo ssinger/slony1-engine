@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.22 2005-03-14 23:25:50 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.23 2005-03-17 19:43:30 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -260,40 +260,23 @@ cleanupThread_main(void *dummy)
 	pthread_exit(NULL);
 }
 
+/* "_T1".getMinXid(); */
 
 static unsigned long get_earliest_xid (PGconn *dbconn) {
-	unsigned long lo = 2147483647;
-	unsigned long minhi = -1;
-	unsigned long minlo = lo;
-	unsigned long xid;
+	long long xid;
 	long n,t;
 	PGresult   *res;
 	SlonDString query1;
 	dstring_init(&query1);
-	slon_mkquery(&query1, "select transaction from pg_catalog.pg_locks where transaction is not null;");
+	slon_mkquery(&query1, "select %s.getMinXid();", rtcfg_namespace);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 		slon_log(SLON_FATAL, "cleanupThread: could not read locks from pg_locks!");
 		PQclear(res);
 		slon_abort();
 		return -1;
-	} else {
-		n = PQntuples(res);
-		for (t = 0; t < n; t++) {
-			xid = atoi(PQgetvalue(res, t, 0));
-			printf ("xid: %d\n", xid);
-			if (xid > lo) {
-				if (xid < minlo)
-					minlo = xid;
-			} else {
-				if (xid < minhi)
-					minhi = xid;
-			}
-		}
-	}
-	printf("minhi: %d minlo: %d\n", minlo, minhi);
-	if ((minhi - lo) < minlo)
-		return minlo;
-	else 
-		return minhi;
+	} 
+	xid = strtoll(PQgetvalue(res, 0, 0), NULL, 10);
+	slon_log(SLON_DEBUG3, "cleanupThread: minxid: %d\n", xid);
+	return (unsigned long) xid;
 }
