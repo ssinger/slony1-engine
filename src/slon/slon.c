@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.30 2004-09-24 22:12:36 darcyb Exp $
+ *	$Id: slon.c,v 1.31 2004-09-30 14:50:44 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -88,7 +88,7 @@ main(int argc, char *const argv[])
 			break;
 
 		case 's':
-			set_config_option("sync_group_maxsize", optarg);
+			set_config_option("sync_interval", optarg);
 			break;
 
 		case 't':
@@ -102,6 +102,7 @@ main(int argc, char *const argv[])
 		case 'c':
 			set_config_option("vac_frequency", optarg);
 			break;
+
 		case 'p':
 			set_config_option("pid_file", optarg);
 			break;

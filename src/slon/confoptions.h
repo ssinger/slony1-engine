@@ -123,7 +123,7 @@ static struct config_int ConfigureNamesInt[] =
 			SLON_C_INT			
 		},
 		&sync_interval,
-		100,
+		2000,
 		10,
 		60000
 	},
@@ -135,7 +135,7 @@ static struct config_int ConfigureNamesInt[] =
 			SLON_C_INT
 		},
 		&sync_interval_timeout,
-		1000,
+		10000,
 		0,
 		120000
 	},
@@ -147,9 +147,9 @@ static struct config_int ConfigureNamesInt[] =
 			SLON_C_INT
 		},
 		&sync_group_maxsize,
-		6,
+		20,
 		0,
-		100
+		500
 	},
 #ifdef HAVE_SYSLOG
 	{
