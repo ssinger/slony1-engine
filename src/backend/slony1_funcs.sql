@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.38 2004-11-10 23:33:48 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.39 2004-11-11 19:24:38 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4519,18 +4519,26 @@ begin
 
 	-- 1.  Add listens pointed out by subscriptions - sl_listen
 	-- @NAMESPACE@.storelisten(origin, provider, receiver)
-	perform @NAMESPACE@.storelisten(sub_provider, sub_provider, sub_receiver)
-		from @NAMESPACE@.sl_subscribe s
-		where exists (select true from @NAMESPACE@.sl_path p where 
+	for v_row in select sub_provider, sub_receiver 
+                     from @NAMESPACE@.sl_subscribe s
+			where exists (select true from @NAMESPACE@.sl_path p where 
                                  p.pa_server = s.sub_provider and
-                                 p.pa_client = s.sub_receiver);
+                                 p.pa_client = s.sub_receiver)
+	loop
+	--	raise notice ''Listen based on subscription: server % client %'', v_row.sub_provider, v_row.sub_receiver;
+		perform @NAMESPACE@.storelisten(v_row.sub_provider, v_row.sub_provider, v_row.sub_receiver);
+	end loop;
 
 	-- 2.  Add direct listens pointed out in sl_path
-	perform @NAMESPACE@.storelisten(pa_server, pa_server, pa_client)
+	for v_row in select pa_server, pa_client 
 		from @NAMESPACE@.sl_path path
 		where not exists (select true from @NAMESPACE@.sl_listen listen
 					where path.pa_server = listen.li_origin and
-					      path.pa_client = listen.li_receiver);
+					      path.pa_client = listen.li_receiver)
+	loop
+	--	raise notice ''Listen based on path: server % client %'', v_row.pa_server, v_row.pa_client;
+		perform @NAMESPACE@.storelisten(v_row.pa_server, v_row.pa_server, v_row.pa_client);
+	end loop;
 
 	-- 3.  Iterate until we cannot iterate any more...
 	--     Add in indirect listens based on what is in sl_listen and sl_path
@@ -4541,6 +4549,7 @@ begin
 			from @NAMESPACE@.sl_path path, @NAMESPACE@.sl_listen listen
 			where
 				li_receiver = pa_server
+                                and li_origin <> pa_client
 				and not exists (select true from @NAMESPACE@.sl_listen listen2
 					where listen2.li_origin = listen.li_origin and
 					      listen2.li_receiver = path.pa_client)
@@ -4549,6 +4558,7 @@ begin
                                               p.pa_client = path.pa_client )
 
 		loop
+	--		raise notice ''Listen based on listen/path - ORG: % PROV:% REC:%'', v_row.li_origin,v_row.pa_server,v_row.pa_client;
 			perform @NAMESPACE@.storelisten(v_row.li_origin,v_row.pa_server,v_row.pa_client);
 			v_done := ''f'';
 		end loop;		
