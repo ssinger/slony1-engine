@@ -154,21 +154,21 @@ static struct config_int ConfigureNamesInt[] =
 		&sync_group_maxsize,
 		20,
 		0,
-		500
+		10000
 	},
 	{
 		{
 			(const char *)"desired_sync_time",
 			gettext_noop("maximum time planned for grouped SYNCs"),
 			gettext_noop("If replication is behind, slon will try to increase numbers of "
-			  "syncs done targetting that they should take this quantity of "
-						 "time to process"),
+				     "syncs done targetting that they should take this quantity of "
+				     "time to process"),
 			SLON_C_INT
 		},
 		&desired_sync_time,
 		60000,
-		10000,
-		600000
+		0,
+		6000000
 	},
 #ifdef HAVE_SYSLOG
 	{
