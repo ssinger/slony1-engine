@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.5 2004-07-13 18:51:06 xfade Exp $
+# $Id: GNUmakefile.in,v 1.6 2004-07-13 19:30:21 xfade Exp $
 # ----------
 
 top_builddir = .
@@ -32,13 +32,13 @@ all:
 	echo "All of Slony-I is successfully made. Ready to install"
 
 install	installdirs:
-	for subdir in $(SUBDIRS) ; do \
+	for subdir in src doc ; do \
 	  $(MAKE) -C $$subdir $@ ; \
     done && \
 	echo "All of Slony-I is successfully installed"
 
 clean:
-	for subdir in $(SUBDIRS) ; do \
+	for subdir in src doc ; do \
 	  $(MAKE) -C $$subdir $@ ; \
     done
 
@@ -67,7 +67,7 @@ distdir: $(DISTFILES)
 	for file in $(DISTFILES) ; do \
       cp $$file $(distdir)/$$file ; \
     done
-	for subdir in $(SUBDIRS) ; do \
+	for subdir in src doc ; do \
 	  $(MAKE) -C $$subdir distdir ; \
     done
 
