@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.32 2004-08-31 21:41:52 darcyb Exp $
+# $Id: configure.ac,v 1.33 2004-09-02 17:38:48 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -119,7 +119,6 @@ AC_SUBST(PORTNAME,$template)
 # ----
 # Tools for building docs
 # ---
-#SLON_DOCS()
 
 AC_SUBST(GROFF)
 AC_SUBST(PS2PDF)

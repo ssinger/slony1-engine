@@ -193,6 +193,7 @@ if test x"$acx_pthread_ok" = xyes; then
         :
 else
         acx_pthread_ok=no
+	AC_ERROR(Slony-I requires pthreads. You must have a working pthreads implementation)
         $2
 fi
 AC_LANG_RESTORE

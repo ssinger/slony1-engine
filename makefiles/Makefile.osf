@@ -1,3 +1,5 @@
+INCLUDE += -I/usr/include
+
 AROPT = crs
 DLSUFFIX = .so
 CFLAGS_SL =
