@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.12 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: slon.c,v 1.13 2004-02-24 16:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -137,8 +137,12 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 	 */
 	dstring_init(&query);
 	slon_mkquery(&query, 
-			"select no_id, no_active, no_comment from %s.sl_node",
-			rtcfg_namespace);
+			"select no_id, no_active, no_comment, "
+			"    (select max(con_seqno) from %s.sl_confirm "
+			"        where con_origin = no_id and con_received = %d) "
+			"        as last_event "
+			"from %s.sl_node",
+			rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -153,6 +157,7 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 		int		no_id		= (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
 		int		no_active	= (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
 		char   *no_comment	= PQgetvalue(res, i, 2);
+		int64	last_event;
 
 		if (no_id == rtcfg_nodeid)
 		{
@@ -168,6 +173,9 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 			 * Add a remote node
 			 */
 			rtcfg_storeNode(no_id, no_comment);
+			sscanf(PQgetvalue(res, i, 3), "%lld", &last_event);
+			rtcfg_setNodeLastEvent(no_id, last_event);
+printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 
 			/*
 			 * If it is active, remember for activation just before
@@ -305,12 +313,12 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 		slon_exit(-1);
 	}
 	if (PQntuples(res) == 0)
-		rtcfg_lastevent = strdup("-1");
+		strcpy(rtcfg_lastevent, "-1);
 	else
 		if (PQgetisnull(res, 0, 0))
-			rtcfg_lastevent = strdup("-1");
+			strcpy(rtcfg_lastevent, "-1);
 		else
-			rtcfg_lastevent = strdup(PQgetvalue(res, 0, 0));
+			strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
 	PQclear(res);
 	dstring_free(&query);
 printf("main: last local event sequence = %s\n", rtcfg_lastevent);

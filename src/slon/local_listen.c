@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.3 2004-02-22 03:10:47 wieck Exp $
+ *	$Id: local_listen.c,v 1.4 2004-02-24 16:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -41,7 +41,6 @@ void *
 localListenThread_main(void *dummy)
 {
 	SlonConn   *conn;
-	char		last_eventseq_buf[64];
 	SlonDString	query1;
 	PGconn	   *dbconn;
 	PGresult   *res;
@@ -57,28 +56,9 @@ localListenThread_main(void *dummy)
 	dbconn = conn->dbconn;
 
 	/*
-	 * Retrieve the last committed event sequence.
+	 * Initialize local data
 	 */
 	dstring_init(&query1);
-	slon_mkquery(&query1,
-			"select coalesce (max(con_seqno), -1) from %s.sl_confirm "
-			"where con_origin = '%d' "
-			"      and con_received = '%d'",
-			rtcfg_namespace, rtcfg_nodeid, rtcfg_nodeid);
-	res = PQexec(dbconn, dstring_data(&query1));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		fprintf(stderr, "slon_localListenThread: \"%s\" - %s",
-				dstring_data(&query1), PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query1);
-		slon_abort();
-	}
-	strcpy(last_eventseq_buf, PQgetvalue(res, 0, 0));
-	PQclear(res);
-
-printf("slon_localListenThread: last confirmed event seq is %s\n", 
-last_eventseq_buf);
 
 	/*
 	 * Listen for local events
@@ -139,7 +119,7 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 				"where  ev_origin = '%d' "
 				"       and ev_seqno > '%s' "
 				"order by ev_seqno",
-				rtcfg_namespace, rtcfg_nodeid, last_eventseq_buf);
+				rtcfg_namespace, rtcfg_nodeid, rtcfg_lastevent);
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
@@ -151,7 +131,6 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 			break;
 		}
 		ntuples = PQntuples(res);
-printf("slon_localListenThread: %d new events\n", ntuples);
 
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
@@ -160,7 +139,7 @@ printf("slon_localListenThread: %d new events\n", ntuples);
 			/*
 			 * Remember the event sequence number for confirmation
 			 */
-			strcpy(last_eventseq_buf, PQgetvalue(res, tupno, 0));
+			strcpy(rtcfg_lastevent, PQgetvalue(res, tupno, 0));
 
 			/*
 			 * Get the event type and process configuration events
@@ -250,7 +229,7 @@ printf("slon_localListenThread: %d new events\n", ntuples);
 			else
 			{
 printf("slon_localListenThread: event %s: Unknown event type %s\n", 
-last_eventseq_buf, PQgetvalue(res, tupno, 5));
+rtcfg_lastevent, PQgetvalue(res, tupno, 5));
 				slon_abort();
 			}
 		}
@@ -258,23 +237,11 @@ last_eventseq_buf, PQgetvalue(res, tupno, 5));
 		PQclear(res);
 
 		/*
-		 * If there where events, create a new confirm record.
+		 * If there where events, commit the transaction.
 		 */
 		if (ntuples > 0)
 		{
-			/*
-			 * Confirm up to the last sequence number and
-			 * commit the transaction.
-			 */
-			slon_mkquery(&query1,
-					"insert into %s.sl_confirm "
-					"    (con_origin, con_received, con_seqno, con_timestamp) "
-					"values ('%d', '%d', '%s', CURRENT_TIMESTAMP);"
-					"commit transaction;",
-					rtcfg_namespace, rtcfg_nodeid, rtcfg_nodeid,
-					last_eventseq_buf);
-
-			res = PQexec(dbconn, dstring_data(&query1));
+			res = PQexec(dbconn, "commit transaction");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				fprintf(stderr, "slon_localListenThread: \"%s\" - %s",
@@ -285,13 +252,11 @@ last_eventseq_buf, PQgetvalue(res, tupno, 5));
 				break;
 			}
 			PQclear(res);
-printf("slon_localListenThread: new last event confirmed is %s\n",
-last_eventseq_buf);
 		}
 		else
 		{
 			/*
-			 * No database events received. Rollback.
+			 * No database events received. Rollback instead.
 			 */
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)

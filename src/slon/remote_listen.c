@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.3 2004-02-22 23:53:25 wieck Exp $
+ *	$Id: remote_listen.c,v 1.4 2004-02-24 16:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,6 +29,13 @@
 #include "slon.h"
 
 
+/* ----------
+ * struct listat
+ *
+ *	local data structure for nodes we are currently listening
+ *	for events from.
+ * ----------
+ */
 struct listat {
 	int				li_origin;
 
@@ -37,11 +44,17 @@ struct listat {
 };
 
 
+/* ----------
+ * Local functions
+ * ----------
+ */
 static void		remoteListen_adjust_listat(SlonNode *node,
 							struct listat **listat_head, 
 							struct listat **listat_tail);
 static void		remoteListen_cleanup(struct listat **listat_head,
 							struct listat **listat_tail);
+static int		remoteListen_forward_confirm(SlonNode *node,
+							SlonConn *conn);
 static int		remoteListen_receive_events(SlonNode *node,
 							SlonConn *conn, struct listat *listat);
 
@@ -66,6 +79,8 @@ remoteListenThread_main(void *cdata)
 	PGconn	   *dbconn = NULL;
 	PGresult   *res;
 	PGnotify   *notification;
+	char		notify_confirm[256];
+	int			forward_confirm = true;
 
 	struct listat  *listat_head;
 	struct listat  *listat_tail;
@@ -75,12 +90,19 @@ remoteListenThread_main(void *cdata)
 printf("slon_remoteListenThread: node %d - start\n",
 node->no_id);
 
+	/*
+	 * Initialize local data
+	 */
 	listat_head = NULL;
 	listat_tail = NULL;
 	dstring_init(&query1);
 
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
+	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name);
 
+	/*
+	 * Work until doomsday
+	 */
 	while (true)
 	{
 		if (last_config_seq != (new_config_seq = rtcfg_seq_get()))
@@ -137,7 +159,9 @@ node->no_id, conn_conninfo);
 				rtcfg_unlock();
 printf("slon_remoteListenThread: node %d - nothing to listen for\n",
 node->no_id);
-				sched_msleep(node, 10000);
+				rc = sched_msleep(node, 10000);
+				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+					break;
 				continue;
 			}
 
@@ -234,11 +258,37 @@ node->no_id, conn_conninfo);
 			conn = NULL;
 			conn_conninfo = NULL;
 
+			rc = sched_msleep(node, 10000);
+			if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+				break;
+
 			continue;
 		}
 
-printf("slon_remoteListenThread: node %d - waiting for action\n",
-node->no_id);
+		/*
+		 * If the remote node notified for new confirmations,
+		 * read them and queue them into the remote worker for
+		 * storage in our local database.
+		 */
+		if (forward_confirm)
+		{
+			rc = remoteListen_forward_confirm(node, conn);
+			if (rc < 0)
+			{
+				slon_disconnectdb(conn);
+				free(conn_conninfo);
+				conn = NULL;
+				conn_conninfo = NULL;
+
+				rc = sched_msleep(node, 10000);
+				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+					break;
+
+				continue;
+			}
+			forward_confirm = false;
+		}
+
 		/*
 		 * Wait for notification.
 		 */
@@ -248,17 +298,22 @@ node->no_id);
 		if (rc != SCHED_STATUS_OK)
 			break;
 
-printf("slon_remoteListenThread: node %d - ACTION\n",
-node->no_id);
+		/*
+		 * Set the forward_confirm flag if there was any Confirm
+		 * notification sent.
+		 */
 		PQconsumeInput(dbconn);
 		while ((notification = PQnotifies(dbconn)) != NULL)
 		{
-printf("slon_remoteListenThread: node %d - notify '%s' received\n",
-node->no_id, notification->relname);
+			if (strcmp(notification->relname, notify_confirm) == 0)
+				forward_confirm = true;
 			PQfreemem(notification);
 		}
 	}
 
+	/*
+	 * Doomsday!
+	 */
 printf("slon_remoteListenThread: node %d - exiting\n",
 node->no_id);
 	if (conn != NULL)
@@ -281,6 +336,13 @@ node->no_id);
 }
 
 
+/* ----------
+ * remoteListen_adjust_listat
+ *
+ *	local function to (re)adjust the known nodes to the global
+ *	configuration.
+ * ----------
+ */
 static void
 remoteListen_adjust_listat(SlonNode *node, struct listat **listat_head, 
 			struct listat **listat_tail)
@@ -376,12 +438,21 @@ node->no_id, listen->li_origin);
 }
 
 
+/* ----------
+ * remoteListen_cleanup
+ *
+ *	Free resources used by the remoteListen thread
+ * ----------
+ */
 static void
 remoteListen_cleanup(struct listat **listat_head, struct listat **listat_tail)
 {
 	struct listat  *listat;
 	struct listat  *linext;
 
+	/*
+	 * Free the listen status list
+	 */
 	for (listat = *listat_head; listat;)
 	{
 		linext = listat->next;
@@ -393,13 +464,85 @@ remoteListen_cleanup(struct listat **listat_head, struct listat **listat_tail)
 }
 
 
+/* ----------
+ * remoteListen_forward_confirm
+ *
+ *	Read the last confirmed event sequence for all nodes from the
+ *	remote database and forward it to the local database so that
+ *	the cleanup process will know when all nodes have confirmed
+ *	an event and it can be thrown away (together with its log data).
+ * ----------
+ */
+static int
+remoteListen_forward_confirm(SlonNode *node, SlonConn *conn)
+{
+	SlonDString		query;
+	PGresult	   *res;
+	int				ntuples;
+	int				tupno;
+
+	dstring_init(&query);
+
+	/*
+	 * Select the max(con_seqno) grouped by con_origin and con_received
+	 * from the sl_confirm table.
+	 */
+	slon_mkquery(&query,
+			"select con_origin, con_received, "
+			"    max(con_seqno) as con_seqno, "
+			"    max(con_timestamp) as con_timestamp "
+			"from %s.sl_confirm "
+			"where con_received <> %d "
+			"group by con_origin, con_received",
+			rtcfg_namespace, rtcfg_nodeid);
+	res = PQexec(conn->dbconn, dstring_data(&query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "remoteListen_forward_confirm: node %d - \"%s\" %s",
+				node->no_id, dstring_data(&query),
+				PQresultErrorMessage(res));
+		dstring_free(&query);
+		PQclear(res);
+		return -1;
+	}
+
+	/*
+	 * We actually do not do the forwardiing ourself here. We send
+	 * a special message to the remote worker for that node.
+	 */
+	ntuples = PQntuples(res);
+	for (tupno = 0; tupno < ntuples; tupno++)
+	{
+		remoteWorker_confirm(
+				node->no_id,
+				PQgetvalue(res, tupno, 0),
+				PQgetvalue(res, tupno, 1),
+				PQgetvalue(res, tupno, 2),
+				PQgetvalue(res, tupno, 3));
+	}
+
+	PQclear(res);
+	dstring_free(&query);
+
+	return 0;
+}
+
+
+/* ----------
+ * remoteListen_receive_events
+ *
+ *	Retrieve all new events that origin from nodes for which we
+ *	listen on this node as provider and add them to the node
+ *	specific worker message queue..
+ * ----------
+ */
 static int
 remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 			struct listat *listat)
 {
 	SlonNode	   *origin;
 	SlonDString		query;
-	char		   *where_or_and;
+	char		   *where_or_or;
 	char			seqno_buf[64];
 	PGresult	   *res;
 	int				ntuples;
@@ -407,6 +550,17 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 
 	dstring_init(&query);
 
+	/*
+	 * In the runtime configuration info for the node, we remember
+	 * the last event sequence that we actually have received. If the
+	 * remote worker thread has processed it yet or not isn't important,
+	 * we have it in the message queue at least and don't need to
+	 * select it again.
+	 *
+	 * So the query we construct contains a qualification
+	 * (ev_origin = <remote_node> and ev_seqno > <last_seqno>) per
+	 * remote node we're listen for here.
+	 */
 	slon_mkquery(&query,
 			"select ev_origin, ev_seqno, ev_timestamp, "
 			"       ev_minxid, ev_maxxid, ev_xip, "
@@ -420,7 +574,7 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 
 	rtcfg_lock();
 
-	where_or_and = "where";
+	where_or_or = "where";
 	while (listat)
 	{
 		if ((origin = rtcfg_findNode(listat->li_origin)) == NULL)
@@ -435,9 +589,9 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 		sprintf(seqno_buf, "%lld", origin->last_event);
 		slon_appendquery(&query,
 				" %s (e.ev_origin = '%d' and e.ev_seqno > '%s')",
-				where_or_and, listat->li_origin, seqno_buf);
+				where_or_or, listat->li_origin, seqno_buf);
 
-		where_or_and = "and";
+		where_or_or = "or";
 		listat = listat->next;
 	}
 	slon_appendquery(&query, " order by e.ev_origin, e.ev_seqno");
@@ -456,30 +610,32 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 	}
 	dstring_free(&query);
 
+	/*
+	 * Add all events found to the remote worker message queue.
+	 */
 	ntuples = PQntuples(res);
 	for (tupno = 0; tupno < ntuples; tupno++)
 	{
 		int			ev_origin;
 		int64		ev_seqno;
-		char	   *ev_type;
-		int64		retseq;
 
 		ev_origin = strtol(PQgetvalue(res, tupno, 0), NULL, 10);
 		sscanf(PQgetvalue(res, tupno, 1), "%lld", &ev_seqno);
-		ev_type = PQgetvalue(res, tupno, 6);
 
-printf("remoteListen_receive_events(): node %d - ev_origin %d ev_seqno %lld %s\n",
-node->no_id, ev_origin, ev_seqno, ev_type);
-
-		retseq = rtcfg_setNodeLastEvent(ev_origin, ev_seqno);
-		if (retseq <= 0)
-		{
-printf("remoteListen_receive_events(): node %d - ev_origin %d ev_seqno %lld already known\n",
-node->no_id, ev_origin, ev_seqno);
-			continue;
-		}
-printf("TODO remoteListen_receive_events(): node %d - Queue event!\n",
-node->no_id);
+		remoteWorker_event(ev_origin, ev_seqno,
+				PQgetvalue(res, tupno, 2),		/* ev_timestamp */
+				PQgetvalue(res, tupno, 3),		/* ev_minxid */
+				PQgetvalue(res, tupno, 4),		/* ev_maxxid */
+				PQgetvalue(res, tupno, 5),		/* ev_xip */
+				PQgetvalue(res, tupno, 6),		/* ev_type */
+				(PQgetisnull(res, tupno, 7)) ? NULL : PQgetvalue(res, tupno, 7),
+				(PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),
+				(PQgetisnull(res, tupno, 9)) ? NULL : PQgetvalue(res, tupno, 9),
+				(PQgetisnull(res, tupno, 10)) ? NULL : PQgetvalue(res, tupno, 10),
+				(PQgetisnull(res, tupno, 11)) ? NULL : PQgetvalue(res, tupno, 11),
+				(PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
+				(PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
+				(PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14));
 	}
 
 	PQclear(res);

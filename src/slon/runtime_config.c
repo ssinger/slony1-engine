@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.5 2004-02-22 23:53:25 wieck Exp $
+ *	$Id: runtime_config.c,v 1.6 2004-02-24 16:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,7 +40,7 @@ char				   *rtcfg_conninfo = NULL;
 int						rtcfg_nodeid = -1;
 int						rtcfg_nodeactive = 0;
 char				   *rtcfg_nodecomment = NULL;
-char				   *rtcfg_lastevent = NULL;
+char					rtcfg_lastevent[64];
 
 SlonSet				   *rtcfg_set_list_head = NULL;
 SlonSet				   *rtcfg_set_list_tail = NULL;
@@ -138,6 +138,8 @@ printf("rtcfg_storeNode: no_id=%d: NEW no_comment='%s'\n", no_id, no_comment);
 #if 0
 	pthread_mutex_init(&(node->node_lock), NULL);
 #endif
+	pthread_mutex_init(&(node->message_lock), NULL);
+	pthread_cond_init(&(node->message_cond), NULL);
 
 	DLLIST_ADD_TAIL(rtcfg_node_list_head, rtcfg_node_list_tail, node);
 
@@ -493,10 +495,48 @@ static void
 rtcfg_startStopNodeThread(SlonNode *node)
 {
 	int		need_listen = false;
-	int		need_worker = false;
 	int		need_wakeup = false;
 
 	rtcfg_lock();
+
+	if (sched_get_status() == SCHED_STATUS_OK && node->no_active)
+	{
+		/*
+		 * Make sure the node worker exists
+		 */
+		switch (node->worker_status)
+		{
+			case SLON_TSTAT_NONE:
+				if (pthread_create(&(node->worker_thread), NULL,
+						remoteWorkerThread_main, (void *)node) < 0)
+				{
+					perror("rtcfg_startStopNodeThread(): pthread_create");
+					rtcfg_unlock();
+					slon_abort();
+				}
+				node->worker_status = SLON_TSTAT_RUNNING;
+				break;
+			
+			case SLON_TSTAT_RUNNING:
+				break;
+
+			default:
+printf("TODO: rtcfg_startStopNodeThread: restart node worker\n");
+		}
+	}
+	else
+	{
+		/*
+		 * Make sure there is no node worker
+		 */
+		switch (node->worker_status)
+		{
+			case SLON_TSTAT_NONE:
+				break;
+			default:
+				break;
+		}
+	}
 
 	/*
 	 * Determine if we need a listener thread
@@ -525,7 +565,7 @@ rtcfg_startStopNodeThread(SlonNode *node)
 					rtcfg_unlock();
 					slon_abort();
 				}
-printf("TODO: rtcfg_startStopNodeThread(): node %d - listen thread started\n",
+printf("rtcfg_startStopNodeThread(): node %d - listen thread started\n",
 node->no_id);
 				break;
 
@@ -647,10 +687,9 @@ rtcfg_joinAllRemoteThreads(void)
 			case SLON_TSTAT_SHUTDOWN:
 			case SLON_TSTAT_RESTART:
 				node->listen_status = SLON_TSTAT_SHUTDOWN;
+				/* fall through */
 
 			case SLON_TSTAT_DONE:
-printf("rtcfg_joinAllRemoteThreads: waiting for remote listen node %d\n",
-node->no_id);
 				rtcfg_unlock();
 				sched_wakeup_node(node->no_id);
 				pthread_join(node->listen_thread, NULL);
@@ -658,7 +697,31 @@ node->no_id);
 				node->listen_status = SLON_TSTAT_NONE;
 printf("rtcfg_joinAllRemoteThreads: joined remote listen node %d\n",
 node->no_id);
+				break;
 		}
+
+		switch (node->worker_status)
+		{
+			case SLON_TSTAT_NONE:
+				break;
+
+			case SLON_TSTAT_RUNNING:
+			case SLON_TSTAT_SHUTDOWN:
+			case SLON_TSTAT_RESTART:
+				node->worker_status = SLON_TSTAT_SHUTDOWN;
+				/* fall through */
+
+			case SLON_TSTAT_DONE:
+				rtcfg_unlock();
+				remoteWorker_wakeup(node->no_id);
+				pthread_join(node->worker_thread, NULL);
+				rtcfg_lock();
+				node->worker_status = SLON_TSTAT_NONE;
+printf("rtcfg_joinAllRemoteThreads: joined remote worker node %d\n",
+node->no_id);
+				break;
+		}
+
 	}
 
 	rtcfg_unlock();

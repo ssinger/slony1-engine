@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.4 2004-02-22 03:10:47 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.5 2004-02-24 16:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -99,7 +99,7 @@ cleanupThread_main(void *dummy)
 		}
 		PQclear(res);
 		gettimeofday(&tv_end, NULL);
-printf("cleanupThread_main: %8.3f seconds for cleanupEvent()\n",
+printf("INFO cleanupThread: %8.3f seconds for cleanupEvent()\n",
 TIMEVAL_DIFF(&tv_start, &tv_end));
 
 		/*
@@ -117,7 +117,7 @@ TIMEVAL_DIFF(&tv_start, &tv_end));
 		}
 		PQclear(res);
 		gettimeofday(&tv_end, NULL);
-printf("cleanupThread_main: %8.3f seconds for vacuuming\n",
+printf("INFO cleanupThread_main: %8.3f seconds for vacuuming\n",
 TIMEVAL_DIFF(&tv_start, &tv_end));
 	}
 

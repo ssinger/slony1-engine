@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.12 2004-02-20 15:13:28 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.13 2004-02-24 16:51:21 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1090,6 +1090,38 @@ declare
 begin
 	-- **** TODO ****
 	raise exception ''Slony-I: enableSubscription_int() not implemented'';
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cleanupEvent ()
+--
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
+returns int8
+as '
+declare
+	p_con_origin	alias for $1;
+	p_con_received	alias for $2;
+	p_con_seqno		alias for $3;
+	p_con_timestamp	alias for $4;
+	v_max_seqno		int8;
+begin
+	select into v_max_seqno max(con_seqno)
+			from @NAMESPACE@.sl_confirm
+			where con_origin = p_con_origin
+			and con_received = p_con_received;
+	if not found or v_max_seqno < p_con_seqno then
+		insert into @NAMESPACE@.sl_confirm 
+				(con_origin, con_received, con_seqno, con_timestamp)
+				values (p_con_origin, p_con_received, p_con_seqno,
+					p_con_timestamp);
+		notify "_@CLUSTERNAME@_Confirm";
+		v_max_seqno = p_con_seqno;
+	end if;
+
+	return v_max_seqno;
 end;
 ' language plpgsql;
 

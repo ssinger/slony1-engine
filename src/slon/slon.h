@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.13 2004-02-22 23:53:25 wieck Exp $
+ *	$Id: slon.h,v 1.14 2004-02-24 16:51:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -62,6 +62,13 @@ struct SlonNode_s {
 	pthread_t			listen_thread;	/* thread id of listen thread */
 	SlonListen		   *listen_head;	/* list of origins we listen for */
 	SlonListen		   *listen_tail;
+
+	SlonThreadStatus	worker_status;	/* status of the worker thread */
+	pthread_t			worker_thread;	/* thread id of worker thread */
+	pthread_mutex_t		message_lock;	/* mutex for the message queue */
+	pthread_cond_t		message_cond;	/* condition variable for queue */
+	struct slon_work_message *message_head;
+	struct slon_work_message *message_tail;
 
 	SlonNode		   *prev;
 	SlonNode		   *next;
@@ -281,7 +288,7 @@ extern char	   *rtcfg_conninfo;
 extern int		rtcfg_nodeid;
 extern int		rtcfg_nodeactive;
 extern char	   *rtcfg_nodecomment;
-extern char	   *rtcfg_lastevent;
+extern char		rtcfg_lastevent[];
 
 extern SlonNode *rtcfg_node_list_head;
 extern SlonNode *rtcfg_node_list_tail;
@@ -367,6 +374,25 @@ extern void	   *localListenThread_main(void *dummy);
  * ----------
  */
 extern void	   *remoteListenThread_main(void *cdata);
+
+
+/* ----------
+ * Functions in remote_listen.c
+ * ----------
+ */
+extern void	   *remoteWorkerThread_main(void *cdata);
+extern void		remoteWorker_event(int ev_origin, int64 ev_seqno,
+							char *ev_timestamp,
+							char *ev_minxid, char *ev_maxxid, char *ev_xip,
+							char *ev_type,
+							char *ev_data1, char *ev_data2,
+							char *ev_data3, char *ev_data4,
+							char *ev_data5, char *ev_data6,
+							char *ev_data7, char *ev_data8);
+extern void		remoteWorker_wakeup(int no_id);
+extern void		remoteWorker_confirm(int no_id,
+							char *con_origin_c, char *con_received_c,
+							char *con_seqno_c, char *con_timestamp_c);
 
 
 /* ----------
