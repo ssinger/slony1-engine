@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.36 2004-03-26 14:59:06 wieck Exp $
+ *	$Id: remote_worker.c,v 1.37 2004-04-01 23:45:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3174,6 +3174,8 @@ sync_helper(void *cdata)
 	WorkerGroupLine	   *data_line[SLON_DATA_FETCH_SIZE];
 	int					alloc_lines = 0;
 
+	dstring_init(&query);
+
 	for (;;)
 	{
 		pthread_mutex_lock(&(provider->helper_lock));
@@ -3188,6 +3190,7 @@ sync_helper(void *cdata)
 
 		if (provider->helper_status == SLON_WG_EXIT)
 		{
+			dstring_free(&query);
 			pthread_mutex_unlock(&(provider->helper_lock));
 			pthread_exit(NULL);
 		}
@@ -3209,7 +3212,6 @@ sync_helper(void *cdata)
 			/*
 			 * Start a transaction
 			 */
-			dstring_init(&query);
 			slon_mkquery(&query, "start transaction; ");
 			if (query_execute(node, dbconn, &query) < 0)
 			{
@@ -3312,6 +3314,7 @@ sync_helper(void *cdata)
 							node->no_id, provider->no_id,
 							dstring_data(&query),
 							PQresultErrorMessage(res));
+					PQclear(res);
 					errors++;
 					break;
 				}
@@ -3337,6 +3340,7 @@ sync_helper(void *cdata)
 					line = data_line[tupno];
 					line->code = SLON_WGLC_ACTION;
 					line->provider = provider;
+					dstring_reset(&(line->data));
 
 					/*
 					 * This can happen if the table belongs to a
@@ -3346,16 +3350,9 @@ sync_helper(void *cdata)
 					 * we had started processing the copy_set.
 					 */
 					if (log_tableid >= wd->tab_fqname_size ||
-						wd->tab_fqname[log_tableid] == NULL)
-					{
-						dstring_reset(&(line->data));
+							wd->tab_fqname[log_tableid] == NULL)
 						continue;
-					}
 
-					slon_mkquery(&(line->data),
-							"-- log_xid %s\n"
-							"-- log_actionseq %s\n",
-							log_xid, log_actionseq);
 					if (wd->tab_forward[log_tableid])
 					{
 						slon_appendquery(&(line->data),
@@ -3393,6 +3390,7 @@ sync_helper(void *cdata)
 							break;
 					}
 				}
+				PQclear(res);
 
 				/*
 				 * Now put all the line buffers back. Filled ones
