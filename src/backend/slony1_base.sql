@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.21 2004-11-08 16:40:39 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.22 2004-11-10 18:12:40 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -84,7 +84,7 @@ comment on column @NAMESPACE@.sl_setsync.ssy_seqno is 'Slony-I sequence number';
 comment on column @NAMESPACE@.sl_setsync.ssy_minxid is 'Earliest XID in provider system affected by SYNC';
 comment on column @NAMESPACE@.sl_setsync.ssy_maxxid is 'Latest XID in provider system affected by SYNC';
 comment on column @NAMESPACE@.sl_setsync.ssy_xip is 'Contains the list of XIDs in the SYNC in the order they should be applied';
-comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'Presently always null';
+comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'The only time this field is used is during the subscription process. At the time a subscriber copies over data from the origin (not from another subscriber), it actually sees all tables in a state somewhere between two SYNC events. Therefore this list contains all action sequences that are visible, and therefore their operation already included in the data copied, at the time the initial data copy is done, so that those actions can be filtered out during the first SYNC after subscribing. ';
 
 
 -- ----------------------------------------------------------------------
