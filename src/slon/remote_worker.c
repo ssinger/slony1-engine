@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.7 2004-02-27 20:16:10 wieck Exp $
+ *	$Id: remote_worker.c,v 1.8 2004-02-27 20:20:29 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -828,6 +828,20 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 					"helper thread for provider %d terminated\n",
 					node->no_id, provider->no_id);
+
+			/*
+			 * Remove the line buffers we added for this helper.
+			 */
+			for (i = 0; i < SLON_WORKLINES_PER_HELPER; i++)
+			{
+				WorkerGroupLine	   *line;
+
+				if ((line = wd->linepool_head) == NULL)
+					break;
+				dstring_free(&(line->data));
+				DLLIST_REMOVE(wd->linepool_head, wd->linepool_tail,
+						line);
+			}
 
 			/*
 			 * Disconnect from the database.
