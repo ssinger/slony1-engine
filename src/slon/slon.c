@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.27 2004-06-08 15:15:49 wieck Exp $
+ *	$Id: slon.c,v 1.27.2.1 2004-09-30 17:45:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -561,5 +561,13 @@ sigalrmhandler(int signo)
 	pthread_kill(main_thread, SIGALRM);
 }
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
 
 

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.16.2.1 2004-09-27 20:48:03 darcyb Exp $
+ *	$Id: parser.y,v 1.16.2.2 2004-09-30 17:45:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -139,6 +139,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_merge_set
 %type <statement>	stmt_set_add_table
 %type <statement>	stmt_set_add_sequence
+%type <statement>	stmt_set_drop_table
+%type <statement>	stmt_set_drop_sequence
 %type <statement>	stmt_table_add_key
 %type <statement>	stmt_store_trigger
 %type <statement>	stmt_drop_trigger
@@ -240,9 +242,9 @@ static int	assign_options(statement_option *so, option_list *ol);
  * A script consists of header information and statements
  */
 script				: hdr_clustername
-					  hdr_admconninfos
+                      hdr_admconninfos
 					  stmts
-					{
+                    {
 						parser_script = (SlonikScript *)
 								malloc(sizeof(SlonikScript));
 						memset(parser_script, 0, sizeof(SlonikScript));
@@ -431,6 +433,10 @@ try_stmt			: stmt_echo
 					| stmt_set_add_table
 						{ $$ = $1; }
 					| stmt_set_add_sequence
+						{ $$ = $1; }
+					| stmt_set_drop_table
+						{ $$ = $1; }
+					| stmt_set_drop_sequence
 						{ $$ = $1; }
 					| stmt_store_trigger
 						{ $$ = $1; }
@@ -971,6 +977,60 @@ stmt_set_add_sequence : lno K_SET K_ADD K_SEQUENCE option_list
 							new->seq_id			= opt[2].ival;
 							new->seq_fqname		= opt[3].str;
 							new->seq_comment	= opt[4].str;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_set_drop_table	: lno K_SET K_DROP K_TABLE option_list
+					{
+						SlonikStmt_set_drop_table *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_END
+						};
+						new = (SlonikStmt_set_drop_table *)
+							malloc(sizeof(SlonikStmt_set_drop_table));
+						memset(new, 0, sizeof(SlonikStmt_set_drop_table));
+						new->hdr.stmt_type		= STMT_SET_DROP_TABLE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $5) == 0) {
+							new->set_origin		= opt[0].ival;
+							new->tab_id			= opt[1].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_set_drop_sequence : lno K_SET K_DROP K_SEQUENCE option_list
+					{
+						SlonikStmt_set_drop_sequence *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_set_drop_sequence *)
+								malloc(sizeof(SlonikStmt_set_drop_sequence));
+						memset(new, 0, sizeof(SlonikStmt_set_drop_sequence));
+						new->hdr.stmt_type		= STMT_SET_DROP_SEQUENCE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $5) == 0)
+						{
+							new->set_origin		= opt[0].ival;
+							new->seq_id			= opt[1].ival;
 						}
 						else
 							parser_errors++;
@@ -1659,3 +1719,11 @@ yyerror(const char *msg)
 #include "scan.c"
 
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

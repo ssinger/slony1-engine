@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.23.2.1 2004-09-23 17:28:26 wieck Exp $
+ *	$Id: local_listen.c,v 1.23.2.2 2004-09-30 17:45:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -402,6 +402,28 @@ localListenThread_main(void *dummy)
 				 * the runtime configuration.
 				 */
 			}
+			else if (strcmp(ev_type, "SET_DROP_TABLE") == 0)
+			{
+				/*
+				 * SET_DROP_TABLE
+				 */
+				/*
+				 * Nothing to do ATM ... 
+				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
+			}
+			else if (strcmp(ev_type, "SET_DROP_SEQUENCE") == 0)
+			{
+				/*
+				 * SET_DROP_SEQUENCE
+				 */
+				/*
+				 * Nothing to do ATM ... 
+				 * table information is not maintained in
+				 * the runtime configuration.
+				 */
+			}
 			else if (strcmp(ev_type, "ADJUST_SEQ") == 0)
 			{
 				/*
@@ -620,3 +642,11 @@ localListenThread_main(void *dummy)
 }
 
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

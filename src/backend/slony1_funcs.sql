@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.4 2004-09-28 23:32:01 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.5 2004-09-30 17:45:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2121,6 +2121,131 @@ end;
 
 
 -- ----------------------------------------------------------------------
+-- FUNCTION setDropTable (tab_id)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setDropTable(int4)
+returns bigint
+as '
+declare
+	p_tab_id		alias for $1;
+	v_set_id		int4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+        -- ----
+	-- Determine the set_id
+        -- ----
+	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
+
+	-- ----
+	-- Ensure table exists
+	-- ----
+	if not found then
+		raise exception ''Slony-I: setDropTable_int(): table % not found'',
+			p_tab_id;
+	end if;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception ''Slony-I: setDropTable(): set % not found'', v_set_id;
+	end if;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: setDropTable(): set % has remote origin'', v_set_id;
+	end if;
+
+	-- ----
+	-- Drop the table from the set and generate the SET_ADD_TABLE event
+	-- ----
+	perform @NAMESPACE@.setDropTable_int(p_tab_id);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_TABLE'', p_tab_id);
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.setDropTable(int4) is
+'setDropTable (tab_id)
+
+Drop table tab_id from set on origin node, and generate SET_DROP_TABLE
+event to allow this to propagate to other nodes.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setDropTable_int (tab_id)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setDropTable_int(int4)
+returns int4
+as '
+declare
+	p_tab_id		alias for $1;
+	v_set_id		int4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_tab_reloid		oid;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+        -- ----
+	-- Determine the set_id
+        -- ----
+	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
+
+	-- ----
+	-- Ensure table exists
+	-- ----
+	if not found then
+		return 0;
+	end if;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the table because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception ''Slony-I: setDropTable_int(): set % not found'',
+				v_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = v_set_id
+				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+		if not found then
+			return 0;
+		end if;
+	end if;
+	
+	-- ----
+	-- Drop the table from sl_table and drop trigger from it.
+	-- ----
+	perform @NAMESPACE@.alterTableRestore(p_tab_id);
+	perform @NAMESPACE@.tableDropKey(p_tab_id);
+	delete from @NAMESPACE@.sl_table where tab_id = p_tab_id;
+	return p_tab_id;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.setDropTable_int(int4) is
+'setDropTable_int (tab_id)
+
+This function processes the SET_DROP_TABLE event on remote nodes,
+dropping a table from replication if the remote node is subscribing to
+its replication set.';
+
+-- ----------------------------------------------------------------------
 -- FUNCTION setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setAddSequence (int4, int4, text, text)
@@ -2260,6 +2385,134 @@ begin
 end;
 ' language plpgsql;
 
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setDropSequence (seq_id)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setDropSequence (int4)
+returns bigint
+as '
+declare
+	p_seq_id		alias for $1;
+	v_set_id		int4;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Determine set id for this sequence
+	-- ----
+	select seq_set into v_set_id from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
+
+	-- ----
+	-- Ensure sequence exists
+	-- ----
+	if not found then
+		raise exception ''Slony-I: setDropSequence_int(): sequence % not found'',
+			p_seq_id;
+	end if;
+
+	-- ----
+	-- Check that we are the origin of the set
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception ''Slony-I: setDropSequence(): set % not found'', v_set_id;
+	end if;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: setDropSequence(): set % has remote origin'', v_set_id;
+	end if;
+
+	-- ----
+	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
+	-- ----
+	perform @NAMESPACE@.setDropSequence_int(p_seq_id);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_SEQUENCE'',
+			p_seq_id);
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.setDropSequence (int4) is
+'setDropSequence (seq_id)
+
+On the origin node for the set, drop sequence seq_id from replication
+set, and raise SET_DROP_SEQUENCE to cause this to replicate to
+subscriber nodes.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION setDropSequence_int (seq_id)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.setDropSequence_int(int4)
+returns int4
+as '
+declare
+	p_seq_id		alias for $1;
+	v_set_id		int4;
+	v_local_node_id		int4;
+	v_set_origin		int4;
+	v_sub_provider		int4;
+	v_relkind			char;
+	v_sync_row			record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Determine set id for this sequence
+	-- ----
+	select seq_set into v_set_id from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
+
+	-- ----
+	-- Ensure sequence exists
+	-- ----
+	if not found then
+		return 0;
+	end if;
+
+	-- ----
+	-- For sets with a remote origin, check that we are subscribed 
+	-- to that set. Otherwise we ignore the sequence because it might 
+	-- not even exist in our database.
+	-- ----
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = v_set_id;
+	if not found then
+		raise exception ''Slony-I: setDropSequence_int(): set % not found'',
+				v_set_id;
+	end if;
+	if v_set_origin != v_local_node_id then
+		select sub_provider into v_sub_provider
+				from @NAMESPACE@.sl_subscribe
+				where sub_set = v_set_id
+				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+		if not found then
+			return 0;
+		end if;
+	end if;
+
+	-- ----
+	-- drop the sequence from sl_sequence, sl_seqlog
+	-- ----
+	delete from @NAMESPACE@.sl_seqlog where seql_seqid = p_seq_id;
+	delete from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
+
+	return p_seq_id;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.setDropSequence_int(int4) is
+'setDropSequence_int (seq_id)
+
+This processes the SET_DROP_SEQUENCE event.  On remote nodes that
+subscribe to the set containing sequence seq_id, drop the sequence
+from the replication set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)

@@ -7,6 +7,7 @@ Table of Contents:
 3.  Configuring the databases for replication
 4.  Time to replicate
 5.  Checking the result
+6.  If I run into problems...
 
 And now, the contents.
 
@@ -328,8 +329,19 @@ else
     echo "FAILED - see test_1.diff for database differences"
 fi
 
-If this script reports any differences, I would be glad to hear how
-this happened.  Please contact me as JanWieck@Yahoo.com or on the IRC
-channel #slony on freenode.net.
+If this script reports any differences, I would appreciate hearing how
+this happened.  
+
+6.  Help!  I ran into a problem.
+
+The file in the documentation area named "helpitsbroken.txt" contains
+a variety of notes describing problems that people have run into in
+setting up Slony-I instances.  
+
+It may be worth checking there to see if the problem you are having
+has already been documented and diagnosed by someone else.
+
+Please contact me as JanWieck@Yahoo.com or on the IRC channel #slony
+on freenode.net.
 
 Jan Wieck

@@ -37,6 +37,8 @@
 		<li><a href="#stmt_merge_set">MERGE SET</a>
 		<li><a href="#stmt_set_add_table">SET ADD TABLE</a>
 		<li><a href="#stmt_set_add_sequence">SET ADD SEQUENCE</a>
+		<li><a href="#stmt_set_drop_table">SET DROP TABLE</a>
+		<li><a href="#stmt_set_drop_sequence">SET DROP SEQUENCE</a>
 		<li><a href="#stmt_store_trigger">STORE TRIGGER</a>
 		<li><a href="#stmt_drop_trigger">DROP TRIGGER</a>
 		<li><a href="#stmt_subscribe_set">SUBSCRIBE SET</a>
@@ -57,11 +59,12 @@
 </a>
 <div style="margin-left:40px; margin-right:80px;">
 <p>
-	Slonik is a commandline utility designed specifically to
-	setup and modify configurations of the Slony-I replication
-	system. 
-	This document is meant as a developer syntax-booklet, not
-	as a manual how to configure and setup a replication system.
+	Slonik is a commandline utility designed specifically to setup
+	and modify configurations of the Slony-I replication system.
+</p>
+
+<p> This document is meant as a developer syntax-booklet, not as a
+manual on how to configure and set up a replication system.
 </p>
 <p align="right">Back to <a href="#index">Index</a></p>
 </div>
@@ -72,16 +75,29 @@
 </a>
 <div style="margin-left:40px; margin-right:80px;">
 <p>
-	The slonik commandline utility is supposed to be embedded into
-	shell scripts and reads commands from files or stdin (via
-	here documents for example). Nearly all of the real configuration
-	work is done by calling stored procedures after loading the 
-	Slony-I support base into a database. Slonik was created because
-	these stored procedures have special requirements as to on which
-	particular node in the replication system they are called, the
-	lack of named parameters for stored procedures makes it rather
-	hard to do this from the psql prompt, and psql lacks the ability
-	to maintain multiple connections with open transactions.
+	The slonik commandline utility is supposed to be used embedded
+	into shell scripts and reads commands from files or stdin (via
+	here documents for example). Nearly all of the <i>real</i>
+	configuration work is done by calling stored procedures after
+	loading the Slony-I support base into a database.  You may
+	find documentation for those procedures in the <a
+	href="schemadoc.html"> Slony-I Schema Documentation </a>, as
+	well as in comments associated with them in the database.
+</p>
+      <p>
+	Slonik was created because:
+      <ul>
+
+	<li> The stored procedures have special requirements as to on
+	which particular node in the replication system they are
+	called,
+
+	<li> the lack of named parameters for stored procedures makes
+	it rather hard to do this from the psql prompt, and
+
+	<li> psql lacks the ability to maintain multiple connections
+	with open transactions.
+      </ul>
 </p>
 <p>
 	
@@ -95,10 +111,10 @@
 	parentheses. Each option consists of one or more keywords, followed
 	by an equal sign, followed by a value. Multiple options inside the
 	parentheses are separated by commas. All keywords are case
-	insensitive.
+	insensitive.  The language should remind the reader of SQL.
 </p>
 <p>
-	Option values are:
+	Option values may be:
 	<ul>
 		<li>integer values
 		<li>string literals enclosed in single quotes
@@ -135,9 +151,10 @@
 </a>
 <div style="margin-left:40px; margin-right:80px;">
 <p>
-	The following commands must appear at the very top of every slonik
-	command script. They do not cause any direct action on any of the
-	nodes in the replication system, but affect the entire script.
+	The following commands must appear at the very top of every
+	slonik command script. They do not cause any direct action on
+	any of the nodes in the replication system, but affect the
+	execution of the entire script.
 </p>
 
 <!-- **************************************** -->
@@ -149,14 +166,23 @@
 	CLUSTER NAME = &lt;string&gt;;
 <h3>Description:</h3>
 <p>
-	Must be the very first command in every slonik script. Defines the
-	namespace in which all Slony-I specific functions, procedures,
-	tables and sequences are defined. The namespace name is built by
-	prefixing the given string literal with an underscore. This
-	namespace will be identical in all databases that participate in
-	the same replication group. No user objects are supposed to live
-	in this namespace and the namespace is not allowed to exist prior
-	to adding a database to the replication system.
+	Must be the very first command in every slonik script. Defines
+	the namespace in which all Slony-I specific functions,
+	procedures, tables and sequences are defined. The namespace
+	name is built by prefixing the given string literal with an
+	underscore. This namespace will be identical in all databases
+	that participate in the same replication group. 
+</p>
+
+<p>
+                  No user objects are supposed to live in this
+                  namespace and the namespace is not allowed to exist
+                  prior to adding a database to the replication
+                  system.  Thus, if you add a new node using <tt>
+                  pg_dump -s </tt> on a database that is already in
+                  the cluster of replicated databases, you will need
+                  to drop the namespace via the SQL command <tt> DROP
+                  SCHEMA _testcluster CASCADE; </tt>.
 </p>
 <h3>Example:</h3>
 <p>
@@ -174,17 +200,17 @@
 	NODE &lt;ival&gt ADMIN CONNINFO = &lt;string&gt;;
 <h3>Description:</h3>
 <p>
-	Describes how the slonik utility can reach a nodes database in the cluster
-	from where it is run (usually the DBA's workstation). The conninfo
-	string is the string agrument given to the PQconnectdb() libpq
-	function. The user as to connect must be the special replication
-	superuser, as some of the actions performed later may include
-	operations that are strictly reserved for database superusers by
-	PostgreSQL.
+	Describes how the slonik utility can reach a nodes database in
+	the cluster from where it is run (likely the DBA's
+	workstation). The conninfo string is the string agrument given
+	to the PQconnectdb() libpq function. The user as to connect
+	must be the special replication superuser, as some of the
+	actions performed later may include operations that are
+	strictly reserved for database superusers by PostgreSQL.
 </p>
 <p>
 	The slonik utility will not try to connect to the databases
-	unless any subsequent command requires the connection. 
+	unless some subsequent command requires the connection.
 </p>
 <p>
 	Note: As mentioned in the original documents, Slony-I is designed as an
@@ -192,7 +218,17 @@
 	throughout the entire development that the database servers and
 	administrative workstations involved in replication and/or setup
 	and configuration activities can use simple authentication schemes
-	like trust. 
+	like <tt>trust</tt>.   Alternatively, libpq can read passwords from
+                 <tt> .pgpass </tt>.
+</p>
+
+<p>
+	Note: If you need to change the DSN information for a node, as
+	would happen if the IP address for a host were to change, you
+	may submit the new information using this command, and that
+	configuration will be propagated.  Existing <tt> slon </tt>
+	processes will need to be restarted in order to become aware
+	of the configuration change.
 </p>
 <h3>Example:</h3>
 <p>
@@ -306,6 +342,8 @@
 <p>
 	Initialize a new node and add it to the configuration of
 	an existing cluster.
+</p>
+<p>
 	The initialization process consists of creating the cluster
 	namespace in the new node (the database itself must already
 	exist), loading all the base tables, functions, procedures
@@ -431,7 +469,7 @@
 	Causes an eventually running replication daemon on the specified
 	node to shutdown and restart itself. Theoretically this command
 	should be obsolete. In practice, TCP timeouts can delay critical
-	configuration changes to actually happen in the case, a former
+	configuration changes to actually happen in the case where a former
 	forwarding node failed and needs to be bypassed by subscribers.
 </p>
 <h3>Example:</h3>
@@ -568,7 +606,7 @@
 	A <b>listen</b> entry causes a node (receiver) to query an event
 	provider for events that originate from a specific node, as well
 	as confirmations from every existing node. It requires a <b>path</b>
-	to exist so that the receiver (as client> can connect to the provider
+	to exist so that the receiver (as client) can connect to the provider
 	(as server).
 </p>
 <p>
@@ -806,11 +844,16 @@
 	MERGE SET ( &lt;options&gt; );
 <h3>Description:</h3>
 <p>
-	Merge a set of tables and sequences into another one. This function
-	is a workaround for the problem that it is not possible to add
-	tables/sequences to subscribed sets. One can create a temporary set,
-	add the new objects to that, subscribe all nodes, currently subscribed
-	to the other set to this new one and then merge the two together.
+	Merge a set of tables and sequences into another one. This
+	function is a workaround for the problem that it is not
+	possible to add tables/sequences to already-subscribed
+	sets. One may create a temporary set, add the new objects to
+	that, subscribe all nodes currently subscribed to the other
+	set to this new one, and then merge the two together.
+</p>
+<p>
+	This request will fail if the two sets do not have exactly the
+	same set of subscribers.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -853,8 +896,8 @@
 <h3>Description:</h3>
 <p>
 	Add an existing user table to a replication set. The set
-	cannot currently be subscribed by any other node (this
-	functionality will soon be implemented with a MERGE SET command).
+	cannot currently be subscribed by any other node - that
+	functionality is supported by the<tt>MERGE SET</tt> command.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -898,7 +941,8 @@
 		to be used as the row identifier for replication purposes. Or the
 		keyword SERIAL to use the special column added with a previous
 		<a href="#table_add_key">TABLE ADD KEY</a> command. Default
-		is to use the tables primary key.
+		is to use the table's primary key.  The index name is <i> not </i> 
+		fully qualified; you must omit the namespace.
 	</p></td>
 </tr>
 <tr>
@@ -931,8 +975,8 @@
 <h3>Description:</h3>
 <p>
 	Add an existing user sequence to a replication set. The set
-	cannot currently be subscribed by any other node (this
-	functionality will soon be implemented with a MERGE SET command).
+	cannot currently be subscribed by any other node - that
+	functionality is supported by the MERGE SET command.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -976,6 +1020,77 @@
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket id sequence'
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_drop_table">
+<h3>SET DROP TABLE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET DROP TABLE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drop an existing user table to a replication set.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set. A future version of slonik
+		might figure out this information by itself.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the table. 
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET DROP TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>);
+</p>
+</div>
+<p align="right">Back to <a href="#index">Index</a></p>
+
+<!-- **************************************** -->
+<a name="stmt_set_drop_sequence">
+<h3>SET DROP SEQUENCE</h3>
+</a>
+<div style="margin-left:40px; margin-right:0px;">
+<h3>Synopsis:</h3>
+	SET DROP SEQUENCE ( &lt;options&gt; );
+<h3>Description:</h3>
+<p>
+	Drops an existing user sequence from a replication set.
+</p>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		The current origin of the set.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		Unique ID of the sequence.
+	</p></td>
+</tr>
+</table>
+<h3>Example:</h3>
+<p>
+	SET DROP SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
 	<br>);
 </p>
 </div>
@@ -1083,18 +1198,31 @@
 <h3>Description:</h3>
 <p>
 	Causes a node (subscriber) to start replicating a set of
-	tables either from the origin or from another provider node, which
-	must be a currently forwarding subscriber itself.
+	tables either from the origin or from another provider node,
+	which must be a currently forwarding subscriber itself.
 </p>
 <p>
-	The application tables contained in the set must already exist and
-	should ideally be currently empty. The current version of Slony-I
-	will not attempt to copy the schema of the set. The replication daemon
-	will start copying the current content of the set from the given
-	provider and then try to catch up with any update activity that
-	happened during that copy process. After successfull subscription,
-	the tables are guarded on the subscriber against accidential updates
-	by the application.
+	The application tables contained in the set must already exist
+	and should ideally be currently empty. The current version of
+	Slony-I will not attempt to copy the schema of the set. The
+	replication daemon will start copying the current content of
+	the set from the given provider and then try to catch up with
+	any update activity that happened during that copy
+	process. After successful subscription, the tables are guarded
+	on the subscriber using triggers against accidental updates by
+	the application.
+</p>
+
+<p>
+	Note: If you need to revise subscription information for a
+	node, you may submit the new information using this command,
+	and the new configuration will be propagated throughout the
+	replication network.  The normal reason to revise this
+	information is that you want a node to subscribe to a <i>
+	different </i> provider node, or for a node to become a
+	"forwarding" subscriber so it may later become the provider
+	for a later subscriber.
+
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1118,9 +1246,10 @@
 <tr>
 	<td align="left" valign="top" nowrap><b>FORWARD = &lt;boolean&gt;</b></td>
 	<td align="left" valign="top"><p>
-		Flag if the new subscriber should store the log information
-		during replication to become a possible candidate for the
-		provider role of future nodes.
+		Flag whether or not the new subscriber should store
+		the log information during replication to make it
+		possible candidate for the provider role for future
+		nodes.
 	</p></td>
 </tr>
 </table>
@@ -1152,9 +1281,10 @@
 	restored.
 </p>
 <p>
-	<b>Warning!</b> Resubscribing an unsubscribed set requires a full
-	new copy from the provider to be transferred since the tables have
-	been subject to possible independant modifications.
+	<b>Warning!</b> Resubscribing an unsubscribed set requires a
+	<i>complete fresh copy</i> of data from the provider to be
+	transferred since the tables have been subject to possible
+	independent modifications.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1194,12 +1324,13 @@
 	command.
 </p>
 <p>
-	This command must be the first in a possible statement group (try).
-	The reason for this is that it needs to commit the changes made
-	to the tables (adding a special trigger function) before it can
-	wait for every concurrent transaction to finish. At the same time
-	it cannot hold an open transaction to the same database itself since
-	this would result in blocking itself forever.
+	This command must be the first in a possible statement group
+	(<tt>try</tt>).  The reason for this is that it needs to
+	commit the changes made to the tables (adding a special
+	trigger function) before it can wait for every concurrent
+	transaction to finish. At the same time it cannot hold an open
+	transaction to the same database itself since this would
+	result in blocking itself forever.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1274,17 +1405,19 @@
 	locked on the old origin. 
 </p>
 <p>
-	After this command, the set cannot be unlocked on the old origin
-	any more. The old origin will continue as a forwarding subscriber
-	of the set and the subscription chain from the old origin to the
-	new origin will get hop by hop reversed. As soon as the new origin
-	has finished processing the event (that includes any outstanding
-	sync events that happened before, i.e. fully catching up), the
-	new origin will take over and open all tables in the set for
-	client application update activity.
+	After this command, the set cannot be unlocked on the old
+	origin any more. The old origin will continue as a forwarding
+	subscriber of the set and the subscription chain from the old
+	origin to the new origin will be reversed, hop by hop. As soon
+	as the new origin has finished processing the event (that
+	includes any outstanding sync events that happened before,
+	<i>i.e.</i> fully catching up), the new origin will take over
+	and open all tables in the set for client application update
+	activity.
 </p>
 <p>
-	This is not failover, as it requires a fully functional old origin.
+	This is not failover, as it requires a fully functional old
+	origin node.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1326,25 +1459,26 @@
 	FAILOVER ( &lt;options&gt; );
 <h3>Description:</h3>
 <p>
-	WARNING: This command will abandon the status of the failed node.
-	There is no other possibility to let the failed node join the
-	cluster again than rebuilding it from scratch as a slave.
+	WARNING: This command will abandon the status of the failed
+	node.  There is no possibility to let the failed node join the
+	cluster again without rebuilding it from scratch as a slave
+	slave.
 </p>
 <p>
-	The failover command causes the backup node to take over all sets
-	that currently originate on the failed node. Slonik will contact
-	all other direct subscribers of the failed node to determine which
-	node has the highest sync status for each set. If another node has
-	a higher sync status than the backup node, the replication will
-	first be redirected so that the backup node replicates against that
-	other node, before assuming the origin role and allowing update
-	activity.
+	The failover command causes the backup node to take over all
+	sets that currently originate on the failed node. Slonik will
+	contact all other direct subscribers of the failed node to
+	determine which node has the highest sync status for each
+	set. If another node has a higher sync status than the backup
+	node, the replication will first be redirected so that the
+	backup node replicates against that other node, before
+	assuming the origin role and allowing update activity.
 </p>
 <p>
-	After successfull failover, all former direct subscribers of the
-	failed node are direct subscribers of the backup node. The failed
-	node can and should be removed from the configuration with
-	DROP NODE.
+	After successful failover, all former direct subscribers of
+	the failed node become direct subscribers of the backup
+	node. The failed node can and should be removed from the
+	configuration with <tt>DROP NODE</tt>.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1380,15 +1514,17 @@
 <h3>Description:</h3>
 <p>
 	Executes a script containing arbitrary SQL statements on all
-	nodes that are subscribed to a set at a controlled point within
-	the replication stream.
+	nodes that are subscribed to a set at a common controlled
+	point within the replication transaction stream.
 </p>
 <p>
-	The specified event origin must be the origin of the set. The
+	The specified event origin must be the origin of the set.  The
 	script file must not contain any START or COMMIT TRANSACTION
-	calls. Also any non-deterministic DML statements (like updating
-	a field with CURRENT_TIMESTAMP) must be avoided, since the
-	data changes done by the script are explicitly not replicated. 
+	calls.  (This may change in PostgreSQL 8.0 once nested
+	transactions, aka savepoints, are supported)  In addition,
+	non-deterministic DML statements (like updating a field with
+	CURRENT_TIMESTAMP) must be avoided, since the data changes
+	done by the script are explicitly not replicated.
 </p>
 <table border="0" cellpadding="10">
 <tr>
@@ -1409,6 +1545,17 @@
 		<b>(Optional)</b>
 		The ID of the current origin of the set.
 		The default value is 1.
+	</p></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EXECUTE ONLY ON = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><p>
+		<b>(Optional)</b>
+		The ID of the only node to actually execute the script.
+		This option causes the script to be propagated by all nodes
+		but executed only by one.
+		The default is to execute the script on all nodes that are
+		subscribed to the set.
 	</p></td>
 </tr>
 </table>
@@ -1436,10 +1583,14 @@
 </p>
 <p>
 	Slonik remembers the last event generated on every node during
-	script execution (events generated by earlier calls are currently
-	non checked). In certain situations it is necessary that events
-	generated on one node (like CREATE SET) are processed on another
-	node before issuing more commands (like SUBSCRIBE SET).
+	script execution (events generated by earlier calls are
+	currently not checked). In certain situations it is necessary
+	that events generated on one node (such as <tt>CREATE
+	SET</tt>) are processed on another node before issuing more
+	commands (for instance, <a
+	href="#stmt_subscribe_set">SUBSCRIBE SET</a>).  <tt>WAIT FOR
+	EVENT</tt> may be used to cause the slonik script to wait
+	until the subscriber node is ready for the next action.
 </p>
 <p>
 	WAIT FOR EVENT must be called outside of any try block to
@@ -1501,6 +1652,16 @@
 </div>
 
 -->
+
+<h1> Stored Procedures </h1>
+
+<P> The commands used in Slonik invoke stored procedures in the
+namespace created for the replication instance.  Slonik provides one
+convenient way to invoke these procedures; it is just as possible to
+invoke them directly to manage the Slony-I instances. </p>
+
+<P> See the <a href= "schemadoc.html"> Schema Documentation </a> for
+more details. </p>
 
 </body>
 </html>

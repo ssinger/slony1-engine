@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.13.2.3 2004-08-27 19:07:58 darcyb Exp $
+ *	$Id: cleanup_thread.c,v 1.13.2.4 2004-09-30 17:45:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -221,4 +221,12 @@ cleanupThread_main(void *dummy)
 	pthread_exit(NULL);
 }
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
 

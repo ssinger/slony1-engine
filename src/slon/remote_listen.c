@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.15 2004-06-16 11:34:31 wieck Exp $
+ *	$Id: remote_listen.c,v 1.15.2.1 2004-09-30 17:45:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -727,4 +727,10 @@ remoteListen_receive_events(SlonNode *node, SlonConn *conn,
 	return 0;
 }
 
-
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

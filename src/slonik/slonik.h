@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.17 2004-06-12 03:27:46 wieck Exp $
+ *	$Id: slonik.h,v 1.17.2.1 2004-09-30 17:45:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -32,6 +32,8 @@ typedef struct SlonikStmt_drop_set_s			SlonikStmt_drop_set;
 typedef struct SlonikStmt_merge_set_s			SlonikStmt_merge_set;
 typedef struct SlonikStmt_set_add_table_s		SlonikStmt_set_add_table;
 typedef struct SlonikStmt_set_add_sequence_s	SlonikStmt_set_add_sequence;
+typedef struct SlonikStmt_set_drop_table_s		SlonikStmt_set_drop_table;
+typedef struct SlonikStmt_set_drop_sequence_s	SlonikStmt_set_drop_sequence;
 typedef struct SlonikStmt_table_add_key_s		SlonikStmt_table_add_key;
 typedef struct SlonikStmt_store_trigger_s		SlonikStmt_store_trigger;
 typedef struct SlonikStmt_drop_trigger_s		SlonikStmt_drop_trigger;
@@ -63,6 +65,8 @@ typedef enum {
 	STMT_RESTART_NODE,
 	STMT_SET_ADD_SEQUENCE,
 	STMT_SET_ADD_TABLE,
+	STMT_SET_DROP_SEQUENCE,
+	STMT_SET_DROP_TABLE,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_STORE_PATH,
@@ -248,6 +252,19 @@ struct SlonikStmt_set_add_sequence_s {
 	int					seq_id;
 	char			   *seq_fqname;
 	char			   *seq_comment;
+};
+
+struct SlonikStmt_set_drop_table_s {
+	SlonikStmt			hdr;
+	int					set_origin;
+	int					tab_id;
+};
+
+
+struct SlonikStmt_set_drop_sequence_s {
+	SlonikStmt			hdr;
+	int					set_origin;
+	int					seq_id;
 };
 
 
@@ -442,6 +459,8 @@ extern int		slonik_drop_set(SlonikStmt_drop_set *stmt);
 extern int		slonik_merge_set(SlonikStmt_merge_set *stmt);
 extern int		slonik_set_add_table(SlonikStmt_set_add_table *stmt);
 extern int		slonik_set_add_sequence(SlonikStmt_set_add_sequence *stmt);
+extern int		slonik_set_drop_table(SlonikStmt_set_drop_table *stmt);
+extern int		slonik_set_drop_sequence(SlonikStmt_set_drop_sequence *stmt);
 extern int		slonik_table_add_key(SlonikStmt_table_add_key *stmt);
 extern int		slonik_store_trigger(SlonikStmt_store_trigger *stmt);
 extern int		slonik_drop_trigger(SlonikStmt_drop_trigger *stmt);
@@ -505,3 +524,11 @@ extern void		yyerror(const char *str);
 extern int		yyparse(void);
 extern int		yylex(void);
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.15 2004-06-23 23:29:43 wieck Exp $
+ *	$Id: scheduler.c,v 1.15.2.1 2004-09-30 17:45:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -799,4 +799,12 @@ sched_remove_fdset(int fd, fd_set *fds)
 	}
 }
 
+
+/*
+ * Local Variables:
+ *  tab-width: 4
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ */
 
