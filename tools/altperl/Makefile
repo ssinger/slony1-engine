@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.6 2005-02-20 00:59:56 smsimms Exp $
+#       $Id: Makefile,v 1.7 2005-02-22 20:34:45 smsimms Exp $
 #
 # ----------
 
@@ -26,6 +26,7 @@ endif
 		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
                        -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
+                       -e "s#@@PGBINDIR@@#$(pgbindir)#;" \
                        -e "s#@@TOOLSBIN@@#$(toolsbin)#;" \
                        $$file > $$tmpname; \
 		chmod 755 $$tmpname; \
