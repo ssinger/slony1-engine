@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.6 2003-12-11 18:00:10 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.7 2003-12-16 17:00:34 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -879,7 +879,7 @@ begin
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_attkind, p_tab_comment);
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
-			p_set_id, p_tab_id, p_fqname, v_tab_attkind, p_tab_comment);
+			p_set_id, p_tab_id, p_fqname, p_tab_attkind, p_tab_comment);
 
 	return p_tab_id;
 end;
@@ -971,12 +971,12 @@ as '
 declare
 	p_tab_id			alias for $1;
 	p_tab_fqname		alias for $2;
-	p_attkind			alias for $3;
+	p_tab_attkind		alias for $3;
 begin
 	-- ----
 	-- The table must have a primary key
 	-- ----
-	if not v_tab_attkind ~ ''k'' then
+	if not p_tab_attkind ~ ''k'' then
 		raise exception ''Slony-I: table % does not have a primary key'',
 				p_tab_fqname;
 	end if;
@@ -984,10 +984,10 @@ begin
 	-- ----
 	-- Define the trigger on the table
 	-- ----
-	execute ''create trigger @NAMESPACE@.logtrigger_'' || p_tab_id || ''"
+	execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || p_tab_id || ''"
 			after insert or update or delete on '' || p_tab_fqname || ''
 			for each row execute procedure
-			@NAMESPACE@.logtrigger (''''@NAMESPACE@'''', '''''' || p_tab_id || '''''', '''''' || v_tab_attkind || '''''');'';
+			@NAMESPACE@.logtrigger (''''@NAMESPACE@'''', '''''' || p_tab_id || '''''', '''''' || p_tab_attkind || '''''');'';
 
 	return p_tab_id;
 end;

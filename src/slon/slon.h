@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.3 2003-12-13 17:13:05 wieck Exp $
+ *	$Id: slon.h,v 1.4 2003-12-16 17:00:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,15 +27,16 @@
  * ----------
  */
 typedef struct SlonNode_s	SlonNode;
-typedef struct SlonConn_s	SlonConn;
 typedef struct SlonListen_s	SlonListen;
+typedef struct SlonSet_s	SlonSet;
+typedef struct SlonConn_s	SlonConn;
 
 /* ----
  * SlonNode
  * ----
  */
 struct SlonNode_s {
-	int					no_id;			/* this nodes ID */
+	int					no_id;			/* node ID */
 	int					no_active;		/* it's active state */
 	char			   *no_comment;		/* comment field */
 	pthread_mutex_t		node_lock;		/* mutex for node */
@@ -50,6 +51,9 @@ struct SlonNode_s {
 	SlonListen		   *li_list_head;	/* list of event origins we receive */
 	SlonListen		   *li_list_tail;	/* from this provider */
 
+	pthread_mutex_t		data_dblock;
+	PGconn			   *data_dbconn;
+
 	SlonNode		   *prev;
 	SlonNode		   *next;
 };
@@ -63,6 +67,24 @@ struct SlonListen_s {
 
 	SlonListen		   *prev;
 	SlonListen		   *next;
+};
+
+/* ----
+ * SlonSet
+ * ----
+ */
+struct SlonSet_s {
+	int					set_id;			/* set ID */
+	int					set_origin;		/* set origin */
+	char			   *set_comment;	/* set comment */
+
+	int					sub_provider;	/* from where this node receives */
+										/* data (if subscribed) */
+	int					sub_forward;	/* if we need to forward data */
+	int					sub_active;		/* if the subscription is active */
+
+	SlonSet			   *prev;
+	SlonSet			   *next;
 };
 
 /* ----
@@ -125,6 +147,19 @@ struct SlonConn_s {
 
 
 /* ----------
+ * Macro to compute the difference between two timeval structs
+ * as a double precision floating point.
+ * t1 = start time
+ * t2 = end time
+ * ----------
+ */
+#define TIMEVAL_DIFF(_t1,_t2) \
+	(((_t1)->tv_usec <= (_t2)->tv_usec) ? \
+		(double)((_t2)->tv_sec - (_t1)->tv_sec) + (double)((_t2)->tv_usec - (_t1)->tv_usec) / 1000000.0 : \
+		(double)((_t2)->tv_sec - (_t1)->tv_sec - 1) + (double)((_t2)->tv_usec + 1000000 - (_t1)->tv_usec) / 1000000.0)
+
+
+/* ----------
  * Scheduler runmodes
  * ----------
  */
@@ -146,6 +181,7 @@ struct SlonConn_s {
  * Globals in slon.c
  * ----------
  */
+extern pid_t	slon_pid;
 extern char	   *local_cluster_name;
 extern char	   *local_namespace;
 extern char	   *local_conninfo;
@@ -153,7 +189,8 @@ extern int		local_nodeid;
 extern int		local_nodeactive;
 extern char	   *local_nodecomment;
 
-extern PGconn  *local_eventconn;
+extern SlonSet *set_list_head;
+extern SlonSet *set_list_tail;
 
 
 /* ----------
@@ -171,12 +208,17 @@ extern void		slon_storePath(int pa_server, char *pa_conninfo,
 
 extern void		slon_storeListen(int li_origin, int li_provider);
 
+extern void		slon_storeSet(int set_id, int set_origin, char *set_comment);
+extern void		slon_storeSubscribe(int sub_set, int sub_provider,
+							int sub_forward);
+extern void		slon_enableSubscription(int sub_set);
+
 extern SlonConn *slon_connectdb(char *conninfo, char *symname);
 extern void		slon_disconnectdb(SlonConn *conn);
 extern SlonConn *slon_make_dummyconn(char *symname);
 extern void		slon_free_dummyconn(SlonConn *conn);
 
-#define slon_abort() {kill(getpid(), SIGTERM);}
+#define slon_abort() {kill(slon_pid, SIGTERM);}
 extern void		slon_exit(int code);
 
 

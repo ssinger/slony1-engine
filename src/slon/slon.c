@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.4 2003-12-13 17:13:05 wieck Exp $
+ *	$Id: slon.c,v 1.5 2003-12-16 17:00:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -31,12 +31,16 @@
  * Global data
  * ----------
  */
+pid_t					slon_pid;
 char				   *local_cluster_name = NULL;
 char				   *local_namespace = NULL;
 char				   *local_conninfo = NULL;
 int						local_nodeid = -1;
 int						local_nodeactive = 0;
 char				   *local_nodecomment = NULL;
+
+SlonSet				   *set_list_head = NULL;
+SlonSet				   *set_list_tail = NULL;
 
 /* ----------
  * Local data
@@ -94,6 +98,7 @@ main (int argc, const char *argv[])
 	 * Remember the cluster name and build the properly quoted 
 	 * namespace identifier
 	 */
+	slon_pid = getpid();
 	local_cluster_name	= (char *)argv[1];
 	local_namespace		= malloc(strlen(argv[1]) * 2 + 4);
 	cp2 = local_namespace;
@@ -242,6 +247,61 @@ printf("main: local node id = %d\n", local_nodeid);
 		int		li_provider	= (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
 
 		slon_storeListen(li_origin, li_provider);
+	}
+	PQclear(res);
+
+	/*
+	 * Read configuration table sl_set
+	 */
+	snprintf(query, 1024, "select set_id, set_origin, set_comment
+			from %s.sl_set",
+			local_namespace);
+	res = PQexec(startup_conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "Cannot get set config - %s",
+				PQresultErrorMessage(res));
+		PQclear(res);
+		slon_exit(-1);
+	}
+	for (i = 0, n = PQntuples(res); i < n; i++)
+	{
+		int		set_id		= (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int		set_origin	= (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
+		char   *set_comment = PQgetvalue(res, i, 2);
+
+		slon_storeSet(set_id, set_origin, set_comment);
+	}
+	PQclear(res);
+
+	/*
+	 * Read configuration table sl_subscribe - our subscriptions only
+	 */
+	snprintf(query, 1024, "select sub_set, sub_provider,
+			sub_forward, sub_active
+			from %s.sl_subscribe
+			where sub_receiver = %d",
+			local_namespace, local_nodeid);
+	res = PQexec(startup_conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "Cannot get subscription config - %s",
+				PQresultErrorMessage(res));
+		PQclear(res);
+		slon_exit(-1);
+	}
+	for (i = 0, n = PQntuples(res); i < n; i++)
+	{
+		int		sub_set			= (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int		sub_provider	= (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
+		int		sub_forward		= (strcmp(PQgetvalue(res, i, 2), "t") == 0) ?
+									1 : 0;
+		int		sub_active		= (strcmp(PQgetvalue(res, i, 3), "t") == 0) ?
+									1 : 0;
+
+		slon_storeSubscribe(sub_set, sub_provider, sub_forward);
+		if (sub_active)
+			slon_enableSubscription(sub_set);
 	}
 	PQclear(res);
 
@@ -489,6 +549,108 @@ li_origin, li_provider);
 	slon_startStopNodeThread(node);
 
 	pthread_mutex_unlock(&(node->node_lock));
+}
+
+
+void
+slon_storeSet(int set_id, int set_origin, char *set_comment)
+{
+	SlonSet	   *set;
+
+	pthread_mutex_lock(&config_lock);
+
+	/*
+	 * Try to update an existing set configuration
+	 */
+	for (set = set_list_head; set; set = set->next)
+	{
+		if (set->set_id == set_id)
+		{
+printf("slon_storeSet: update set_id=%d set_origin=%d set_comment='%s'\n",
+set_id, set_origin, set_comment);
+			free(set->set_comment);
+			set->set_origin = set_origin;
+			set->set_comment = strdup(set_comment);
+			pthread_mutex_unlock(&config_lock);
+			return;
+		}
+	}
+
+	/*
+	 * Add a new set to the configuration
+	 */
+printf("slon_storeSet: new set_id=%d set_origin=%d set_comment='%s'\n",
+set_id, set_origin, set_comment);
+	set = (SlonSet *)malloc(sizeof(SlonSet));
+	memset(set, 0, sizeof(SlonSet));
+
+	set->set_id = set_id;
+	set->set_origin = set_origin;
+	set->set_comment = strdup(set_comment);
+
+	set->sub_provider = -1;
+
+	DLLIST_ADD_TAIL(set_list_head, set_list_tail, set);
+	pthread_mutex_unlock(&config_lock);
+}
+
+
+void
+slon_storeSubscribe(int sub_set, int sub_provider, int sub_forward)
+{
+	SlonSet	   *set;
+
+	pthread_mutex_lock(&config_lock);
+
+	/*
+	 * Find the set and store subscription information
+	 */
+	for (set = set_list_head; set; set = set->next)
+	{
+		if (set->set_id == sub_set)
+		{
+printf("slon_storeSubscribe: sub_set=%d sub_provider=%d sub_forward=%d\n",
+sub_set, sub_provider, sub_forward);
+			if (set->sub_provider < 0)
+				set->sub_active = 0;
+			set->sub_provider = sub_provider;
+			set->sub_forward  = sub_forward;
+			pthread_mutex_unlock(&config_lock);
+			return;
+		}
+	}
+
+	fprintf(stderr, "slon_storeSubscribe: set %d not found\n", sub_set);
+	pthread_mutex_unlock(&config_lock);
+	slon_abort();
+}
+
+
+void
+slon_enableSubscription(int sub_set)
+{
+	SlonSet	   *set;
+
+	pthread_mutex_lock(&config_lock);
+
+	/*
+	 * Find the set and enable its subscription
+	 */
+	for (set = set_list_head; set; set = set->next)
+	{
+		if (set->set_id == sub_set)
+		{
+printf("slon_enableSubscription: sub_set=%d\n", sub_set);
+			if (set->sub_provider >= 0)
+				set->sub_active = 1;
+			pthread_mutex_unlock(&config_lock);
+			return;
+		}
+	}
+
+	fprintf(stderr, "slon_enableSubscription: set %d not found\n", sub_set);
+	pthread_mutex_unlock(&config_lock);
+	slon_abort();
 }
 
 
