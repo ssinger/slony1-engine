@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_replication.pl,v 1.2 2005-02-22 20:51:28 smsimms Exp $
+# $Id: test_slony_replication.pl,v 1.3 2005-03-15 16:45:07 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2004
 # Afilias Canada
@@ -49,8 +49,8 @@ my $dbh = Pg::connectdb($initialDSN);
 # Query to find the "master" node
 my $masterquery = "
   select sub_provider 
-   from _$cluster.sl_subscribe s1 
-   where not exists (select * from _$cluster.sl_subscribe s2 
+   from "_$cluster".sl_subscribe s1 
+   where not exists (select * from "_$cluster".sl_subscribe s2 
                                 where s2.sub_receiver = s1.sub_provider and 
                                            s1.sub_set = $set and s2.sub_set = $set and
                                            s1.sub_active = 't' and s2.sub_active = 't')
@@ -72,8 +72,8 @@ print "Rummage for DSNs\n";
 my $dsnsquery =
 "
    select p.pa_server, p.pa_conninfo
-   from _$cluster.sl_path p
-   where exists (select * from _$cluster.sl_subscribe s where 
+   from "_$cluster".sl_path p
+   where exists (select * from "_$cluster".sl_subscribe s where 
                           s.sub_set = $set and 
                           (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
                           sub_active = 't')
@@ -253,7 +253,7 @@ sub check_node_for_subscription {
     print "Status:  PGRES_CONNECTION_BAD\n";
     return;
   }
-  my $livequery = qq{ select * from _$cluster.sl_subscribe s1 where sub_set = $set and sub_receiver = $node and sub_active;};
+  my $livequery = qq{ select * from "_$cluster".sl_subscribe s1 where sub_set = $set and sub_receiver = $node and sub_active;};
   print "Query: $livequery\n";
   my $result = $slave->exec($livequery);
   while (my @row = $result->fetchrow) {
