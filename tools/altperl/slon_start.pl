@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slon_start.pl,v 1.6 2005-01-04 22:26:38 cbbrowne Exp $
+# $Id: slon_start.pl,v 1.7 2005-01-25 23:13:50 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -16,9 +16,6 @@ GetOptions("config=s"  => \$SLON_ENV_FILE,
 	   "watchdog!" => \$START_WATCHDOG,
 	   "sleep=i"   => \$SLEEP_TIME,
 	   "help"      => \$SHOW_USAGE);
-
-require 'slon-tools.pm';
-require $SLON_ENV_FILE;
 
 my $USAGE =
 "Usage: slon_start.pl [--config file] [--watchdog|--nowatchdog]
@@ -39,6 +36,9 @@ my $USAGE =
 if ($SHOW_USAGE or scalar(@ARGV) != 1) {
   die $USAGE;
 }
+
+require 'slon-tools.pm';
+require $SLON_ENV_FILE;
 
 $node = $ARGV[0];
 
@@ -67,6 +67,6 @@ unless ($pid) {
   print "PID [$pid]\n";
   if ($START_WATCHDOG) {
     print "Start the watchdog process as well...\n";
-    system "perl slon_watchdog.pl $node $SLEEP_TIME &";
+    system "perl slon_watchdog.pl --config=$SLON_ENV_FILE $node $SLEEP_TIME &";
   }
 }

@@ -1,26 +1,45 @@
 #!perl # -*- perl -*-
-# $Id: slon_watchdog.pl,v 1.3 2004-09-09 17:04:08 cbbrowne Exp $
+# $Id: slon_watchdog.pl,v 1.4 2005-01-25 23:13:50 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
+use Getopt::Long;
+
+# Defaults
+$SLON_ENV_FILE  = 'slon.env'; # Where to find the slon.env file
+$SHOW_USAGE     = 0;          # Show usage, then quit
+
+# Read command-line options
+GetOptions("config=s"  => \$SLON_ENV_FILE,
+	   "help"      => \$SHOW_USAGE);
+
+my $USAGE =
+"Usage: slon_watchdog.pl [--config file] node# sleep_seconds
+
+    --config file  Location of the slon.env file (default: Perl's \@INC)
+
+    sleep_seconds  Number of seconds for the watchdog process to sleep
+                   between checks
+
+";
+
+if ($SHOW_USAGE or scalar(@ARGV) != 2) {
+  die $USAGE;
+}
+
 require 'slon-tools.pm';
-require 'slon.env';
+require $SLON_ENV_FILE;
 
-$node =$ARGV[0];
-$sleep =$ARGV[1];
+$node = $ARGV[0];
+$sleep = $ARGV[1];
 
-if ( scalar(@ARGV) < 2 ) {
-  die "Usage: ./slon_watchdog node sleep-time\n";
-}
-
-if ($node =~/^node(\d+)$/) {
+if ($node =~/^(?:node)?(\d+)$/) {
   $nodenum = $1;
+} else {
+  die $USAGE;
 }
 
-slon_watchdog($node, $nodenum);
-
-sub slon_watchdog {
-  my ($node, $nodenum) = @_;
+while (1) {
   $pid = get_pid($node);
   if (!($pid)) {
     my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
@@ -44,5 +63,4 @@ sub slon_watchdog {
   }
   close(PSOUT);
   sleep $sleep;
-  slon_watchdog();
 }
