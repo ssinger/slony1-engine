@@ -4,20 +4,19 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.7 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.8 2004-07-12 18:53:27 xfade Exp $
 # ----------
 
 slony_subdir = src/slonik
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-CFLAGS += -I$(slony_top_builddir) -I$(PGSOURCETREE)/src/interfaces/libpq -DPGSHARE="\"$(datadir)\""
-LDFLAGS += $(rpath) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
-LDFLAGS += $(rpath) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
 ifeq ($(PORTNAME), aix)
   CFLAGS += -D_LARGE_FILES
 endif
 
+override CFLAGS += -I$(slony_top_builddir) -I$(pgincludedir) -I$(pgincludeserverdir) -DPGSHARE="\"$(pgsharedir)\""
+override LDFLAGS += $(rpath) -lpq
 
 PROG		= slonik
 
@@ -49,11 +48,11 @@ maintainer-clean:	clean
 	rm -f parser.c scan.c
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(bindir)
+	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(pgbindir)
 
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	$(mkinstalldirs) $(DESTDIR)$(pgbindir)
 
 
 distdir: $(DISTFILES)

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.17 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.18 2004-07-12 18:53:12 xfade Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -12,11 +12,13 @@ slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
 CC = $(PTHREAD_CC)
-CFLAGS += -g $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(PGSOURCETREE)/src/interfaces/libpq
+
 ifeq ($(PORTNAME), solaris)
   CFLAGS += -D_POSIX_PTHREAD_SEMANTICS
 endif
-LDFLAGS += -g $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(PGSOURCETREE)/src/interfaces/libpq -lpq
+
+override CFLAGS += -g $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
+override LDFLAGS += -g $(PTHREAD_CFLAGS) $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
 
 PROG		= slon
 
@@ -58,11 +60,11 @@ clean distclean maintainer-clean:
 	rm -f $(ALL) $(OBJS)
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(bindir)
+	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR) $(pgbindir) 
 
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	echo $(mkinstalldirs) $(DESTDIR) $(pgbindir)
 
 
 

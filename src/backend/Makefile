@@ -4,20 +4,18 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.12 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.13 2004-07-12 18:52:56 xfade Exp $
 # ----------
 
 slony_subdir = src/xxid
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
-CFLAGS += -I$(slony_top_builddir)
-include $(PGSOURCETREE)/src/Makefile.shlib
+override CFLAGS += -I$(slony_top_builddir)
 
+NAME		= slony1_funcs
 
-FUNCS_NAME		= slony1_funcs
-
-FUNCS_SONAME	= $(FUNCS_NAME)$(DLSUFFIX)
-FUNCS_SOOBJS	= $(FUNCS_NAME).o
+SO_NAME	= $(NAME)$(DLSUFFIX)
+SO_OBJS	= $(NAME).o
 
 BASE_COMMON		= slony1_base.sql
 FUNCS_COMMON	= slony1_funcs.sql
@@ -39,26 +37,26 @@ SQL_NAMES =				\
 DISTFILES = Makefile README README.events $(wildcard *.sql) $(wildcard *.in) $(wildcard *.c)
 
 ALL = $(SQL_NAMES)		\
-	$(FUNCS_SONAME)
+	$(SO_NAME)
 
 
 all:	$(ALL)
 
-$(FUNCS_SONAME):	$(FUNCS_SOOBJS)
+$(SO_NAME):	$(SO_OBJS)
 
 clean distclean maintainer-clean:
-	rm -f $(FUNCS_SONAME) $(FUNCS_SOOBJS)
+	rm -f $(SO_NAME) $(SO_OBJS)
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(FUNCS_SONAME) $(DESTDIR)$(pkglibdir)
+	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)
 	for file in $(SQL_NAMES); do \
-	  $(INSTALL_SCRIPT) $$file $(DESTDIR)$(datadir) || exit ; \
+	  $(INSTALL_SCRIPT) $$file $(DESTDIR)$(pgsharedir) || exit ; \
 	done
 
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
-	$(mkinstalldirs) $(DESTDIR)$(datadir)
+	$(mkinstalldirs) $(DESTDIR)$(pgpkglibdir)
+	$(mkinstalldirs) $(DESTDIR)$(pgsharedir)
 
 
 

@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.24 2004-07-02 14:56:07 wieck Exp $
+# $Id: configure.ac,v 1.25 2004-07-12 18:48:43 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -30,7 +30,7 @@ case $host_os in
     dgux*) template=dgux ;;
  freebsd*) template=freebsd ;;
     hpux*) template=hpux ;;
-    irix*) template=irix5 ;;
+    irix*) template=irix ;;
    linux*) template=linux ;;
   netbsd*) template=netbsd ;;
 nextstep*) template=nextstep ;;
@@ -58,95 +58,51 @@ AC_SUBST(LD)
 AC_SUBST(with_gnu_ld)
 ACX_PTHREAD()
 
-# ----
-# Locate the PostgreSQL source tree
-# ----
-AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL source tree])
-if test "x$with_pgsourcetree" = "x" ; then
-	AC_MSG_ERROR([
-    ********************
-    * Compiling Slony-I currently requires a source installation
-    * of PostgreSQL. Please specify the location of the tree you
-    * built as --with-pgsourcetree=<dir>
-    ********************
-	])
-fi
-# ----
-# Locate the PostgreSQL source tree
-# ----
-if test ! -f ${with_pgsourcetree}/src/interfaces/libpq/libpq.a ; then
-	AC_MSG_ERROR([
-    ********************
-    * The sourcetree in ${with_pgsourcetree}
-    * does not appear to be built. Please make sure to build 
-    * and install PostgreSQL from sources first.
-    ********************
-	])
-fi
+##Portability checks
+AC_CHECK_HEADERS([fcntl.h])
+AC_CHECK_HEADERS([limits.h])
+AC_CHECK_HEADERS([stddef.h])
+AC_CHECK_HEADERS([sys/socket.h]) 
+AC_CHECK_HEADERS([sys/time.h])
+AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([dup2])
+AC_CHECK_FUNCS([alarm])
+AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([select])
+AC_CHECK_FUNCS([strdup])
+AC_CHECK_FUNCS([strerror])
+AC_CHECK_FUNCS([strtol])
+AC_CHECK_FUNCS([strtoul])
+				
 
 # ----
-# Make an eventual relative path absolute
+# Locate PostgreSQL paths
 # ----
-_pwd=`pwd`
-cd ${with_pgsourcetree}
-with_pgsourcetree=`pwd`
-echo "pgsources in ${with_pgsourcetree}"
-cd ${_pwd}
+AC_ARG_WITH(pgconfigdir, [  --with-pgconfigdir=<dir>	     Location of the PostgreSQL pg_config program. ])
+AC_ARG_WITH(pgbindir, [  --with-pgbindir=<dir>	     Location of the PostgreSQL postmaster. ])
+AC_ARG_WITH(pgincludedir, [  --with-pgincludedir=<dir>          Location of the PostgreSQL headers. ])
+AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>    Location of the PostgreSQL server headers. ])
+AC_ARG_WITH(pglibdir, [  --with-pglibdir=<dir>              Location of the PostgreSQL libs. ])
+AC_ARG_WITH(pgpkglibdir, [  --with-pgpkglibdir=<dir>           Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
+AC_ARG_WITH(pgsharedir, [  --with-pgsharedir=<dir>            Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
 
-AC_SUBST(PGSOURCETREE, $with_pgsourcetree)
+#Our current path
+SLONYPATH=`pwd`
 
 # ----
-# Check if our libpq contains several functions
+# PostgreSQL checks
 # ----
-save_CFLAGS="$CFLAGS"
-save_LIBS="$LIBS"
-CFLAGS="-I${with_pgsourcetree}/src/interfaces/libpq -I${with_pgsourcetree}/src/include $CFLAGS"
-LIBS="-L${with_pgsourcetree}/src/interfaces/libpq -lpq $LIBS"
+ACX_LIBPQ()
 
-# PQfreemem()
-AC_MSG_CHECKING([for PQfreemem() in libpq])
-have_pqfreemem=no
-AC_TRY_LINK([#include <libpq-fe.h>],
-	   [PQfreemem(NULL);],
-	   [have_pqfreemem=yes])
-AC_MSG_RESULT($have_pqfreemem)
-if test $have_pqfreemem = yes ; then
-	AC_DEFINE(HAVE_PQFREEMEM,1,)
-fi
-
-# PQputCopyData()
-AC_MSG_CHECKING([for PQputCopyData() in libpq])
-have_pqputcopydata=no
-AC_TRY_LINK([#include <libpq-fe.h>],
-	   [PQputCopyData(NULL,NULL,0);],
-	   [have_pqputcopydata=yes])
-AC_MSG_RESULT($have_pqputcopydata)
-if test $have_pqputcopydata = yes ; then
-	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
-fi
-
-# PQsetNoticeReceiver()
-AC_MSG_CHECKING([for PQsetNoticeReceiver() in libpq])
-have_pqsetnoticereceiver=no
-AC_TRY_LINK([#include <libpq-fe.h>],
-	   [PQsetNoticeReceiver(NULL,NULL,NULL);],
-	   [have_pqsetnoticereceiver=yes])
-AC_MSG_RESULT($have_pqsetnoticereceiver)
-if test $have_pqsetnoticereceiver = yes ; then
-	AC_DEFINE(HAVE_PQSETNOTICERECEIVER,1,)
-fi
-
-AC_MSG_CHECKING([for typcache.h])
-if test -f "${with_pgsourcetree}/src/include/utils/typcache.h"; then
-	have_typcache=yes
-	AC_DEFINE(HAVE_TYPCACHE,1,)
-else
-	have_typcache=no
-fi
-AC_MSG_RESULT($have_typcache)
-
-CFLAGS="$save_CFLAGS"
-LIBS="$save_LIBS"
+AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
+AC_SUBST(PGINCLUDESERVERDIR, $PG_INCLUDESERVERDIR)
+AC_SUBST(PGLIBDIR, $PG_LIBDIR)
+AC_SUBST(PGPKGLIBDIR, $PG_PKGLIBDIR)
+AC_SUBST(PGSHAREDIR, $PG_SHAREDIR)
+AC_SUBST(PGBINDIR, $PG_BINDIR)
+AC_SUBST(SLONYPATH, $SLONYPATH)
+AC_SUBST(HOST_OS,$host_os)
+AC_SUBST(PORTNAME,$template)
 
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile
@@ -154,4 +110,5 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT([
     postgresql-slony1-engine.spec
+    Makefile.port:makefiles/Makefile.${template}
 ])

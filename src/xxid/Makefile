@@ -4,13 +4,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.10 2004-07-07 16:41:32 wieck Exp $
+#	$Id: Makefile,v 1.11 2004-07-12 18:52:18 xfade Exp $
 # ----------
 
 slony_subdir = src/xxid
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
-include $(PGSOURCETREE)/src/Makefile.shlib
 
 NAME		= xxid
 
@@ -32,22 +31,22 @@ all:	$(ALL)
 $(SQL_NAME74):	$(SQL_NAME73)
 	cp $< $@
 
-$(SO_NAME):	$(SO_OBJS)
+$(SO_NAME):     $(SO_OBJS)
 
 clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
 	rm -f $(SQL_NAME74)
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pkglibdir)
+	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)
 	for file in $(SQL_NAMES); do \
-	  $(INSTALL_SCRIPT) $$file $(DESTDIR)$(datadir) || exit ; \
+	  $(INSTALL_SCRIPT) $$file $(DESTDIR)$(pgsharedir) || exit ; \
 	done
 
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
-	$(mkinstalldirs) $(DESTDIR)$(datadir)
+	$(mkinstalldirs) $(DESTDIR)$(pgpkglibdir)
+	$(mkinstalldirs) $(DESTDIR)$(pgsharedir)
 
 
 distdir: $(DISTFILES)

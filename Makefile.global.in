@@ -6,19 +6,53 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.12 2004-06-21 22:59:44 darcyb Exp $
+# $Id: Makefile.global.in,v 1.13 2004-07-12 18:48:44 xfade Exp $
 # ----------
 
-PGSOURCETREE	= @PGSOURCETREE@
+pgincludedir = @PGINCLUDEDIR@
+pgincludeserverdir = @PGINCLUDESERVERDIR@
+pglibdir = @PGLIBDIR@
+pgpkglibdir = @PGPKGLIBDIR@
+pgsharedir = @PGSHAREDIR@
+pgbindir = @PGBINDIR@
+
+host_os = @HOST_OS@
+PORTNAME  = @PORTNAME@
+
 PACKAGE_NAME	= @PACKAGE_NAME@
 PACKAGE		= @PACKAGE@
 
 subdir=$(slony_subdir)
-top_builddir=$(PGSOURCETREE)
-include $(PGSOURCETREE)/src/Makefile.global
 
+override CPPFLAGS := -I$(top_builddir) -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
+LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq
 
 PTHREAD_CFLAGS	= @PTHREAD_CFLAGS@
 PTHREAD_LIBS	= @PTHREAD_LIBS@
 PTHREAD_CC		= @PTHREAD_CC@
+CC = @CC@
+
+# Installation.
+
+INSTALL = $(SHELL) @SLONYPATH@/config/install-sh -c
+
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_SCRIPT  = $(INSTALL) -m 755
+INSTALL_DATA    = $(INSTALL) -m 644
+INSTALL_SHLIB   = $(INSTALL) $(INSTALL_SHLIB_OPTS)
+
+mkinstalldirs   = $(SHELL) @SLONYPATH@/config/mkinstalldirs
+
+
+# This is mainly for use on FreeBSD, where we have both a.out and elf
+# systems now.  May be applicable to other systems to?
+ELF_SYSTEM= true
+
+# Pull in platform-specific magic
+include @SLONYPATH@/Makefile.port
+
+ifeq ($(enable_rpath), yes)
+LDFLAGS += $(rpath)
+endif
+
 
