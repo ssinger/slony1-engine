@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.8 2004-02-27 20:20:29 wieck Exp $
+ *	$Id: remote_worker.c,v 1.9 2004-02-27 21:27:26 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -153,6 +153,7 @@ struct ProviderInfo_s {
 struct WorkerGroupData_s {
 	SlonNode		   *node;
 
+	char			   *tab_forward;
 	char			  **tab_fqname;
 	int					tab_fqname_size;
 
@@ -259,6 +260,8 @@ remoteWorkerThread_main(void *cdata)
 	wd->tab_fqname_size = 1024;
 	wd->tab_fqname = (char **)malloc(sizeof(char *) * wd->tab_fqname_size);
 	memset(wd->tab_fqname, 0, sizeof(char *) * wd->tab_fqname_size);
+	wd->tab_forward = malloc(wd->tab_fqname_size);
+	memset(wd->tab_forward, 0, wd->tab_fqname_size);
 
 	dstring_init(&query1);
 	dstring_init(&query2);
@@ -635,6 +638,7 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 	dstring_free(&query1);
 	dstring_free(&query2);
 	free(wd->tab_fqname);
+	free(wd->tab_forward);
 	free(wd);
 
 	slon_log(SLON_DEBUG1,
@@ -696,6 +700,13 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 		for (rtcfg_set = rtcfg_set_list_head; rtcfg_set; 
 				rtcfg_set = rtcfg_set->next)
 		{
+			/*
+			 * We're only interested in the set's that origin on
+			 * the remote node this worker is replicating.
+			 */
+			if (rtcfg_set->set_origin != node->no_id)
+				continue;
+
 			if (rtcfg_set->sub_provider >= 0 &&
 				rtcfg_set->sub_active)
 			{
@@ -1489,7 +1500,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	if (*(PQgetvalue(res1, 0, 0)) == 't')
 	{
 		slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-				"transactions earlier that %s are still in progress\n",
+				"transactions earlier than XID %s are still in progress\n",
 				node->no_id, event->ev_maxxid_c);
 		PQclear(res1);
 		slon_disconnectdb(pro_conn);
@@ -2103,7 +2114,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
 		{
 			int		sub_set		= strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
-			char   *ssy_seqno	= PQgetvalue(res1, tupno1, 1);
 			char   *ssy_minxid	= PQgetvalue(res1, tupno1, 2);
 			char   *ssy_maxxid	= PQgetvalue(res1, tupno1, 3);
 			char   *ssy_xip		= PQgetvalue(res1, tupno1, 4);
@@ -2159,6 +2169,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
 			{
 				int		tab_id		= strtol(PQgetvalue(res2, tupno2, 0), NULL, 10);
+				int		tab_set		= strtol(PQgetvalue(res2, tupno2, 1), NULL, 10);
+				SlonSet	*rtcfg_set;
 
 				/*
 				 * Remember the full qualified table name on the fly.
@@ -2170,9 +2182,27 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 							sizeof(char *) * wd->tab_fqname_size * 2);
 					memset (&(wd->tab_fqname[wd->tab_fqname_size]), 0,
 							sizeof(char *) * wd->tab_fqname_size);
+					wd->tab_forward = realloc(wd->tab_forward,
+							wd->tab_fqname_size * 2);
+					memset(&(wd->tab_forward[wd->tab_fqname_size]), 0,
+							wd->tab_fqname_size);
 					wd->tab_fqname_size *= 2;
 				}
 				wd->tab_fqname[tab_id] = strdup(PQgetvalue(res2, tupno2, 2));
+
+				/*
+				 * Also remember if the tables log data needs to be
+				 * forwarded.
+				 */
+				for (rtcfg_set = rtcfg_set_list_head; rtcfg_set;
+						rtcfg_set = rtcfg_set->next)
+				{
+					if (rtcfg_set->set_id == tab_set)
+					{
+						wd->tab_forward[tab_id] = rtcfg_set->sub_forward;
+						break;
+					}
+				}
 
 				if (tupno2 > 0)
 					dstring_addchar(provider_qual, ',');
@@ -2356,6 +2386,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			wd->tab_fqname[i] = NULL;
 		}
 	}
+	memset(wd->tab_forward, 0, wd->tab_fqname_size);
 
 	/*
 	 * If there have been any errors, abort the SYNC
@@ -2622,34 +2653,43 @@ sync_helper(void *cdata)
 					line = data_line[tupno];
 					line->code = SLON_WGLC_ACTION;
 					line->provider = provider;
+
+					slon_mkquery(&(line->data),
+							"-- log_xid %s\n"
+							"-- log_actionseq %s\n",
+							log_xid, log_actionseq);
+					if (wd->tab_forward[log_tableid])
+					{
+						slon_appendquery(&(line->data),
+								"insert into %s.sl_log_1 "
+								"    (log_origin, log_xid, log_tableid, "
+								"     log_actionseq, log_cmdtype, "
+								"     log_cmddata) values "
+								"    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
+								rtcfg_namespace,
+								log_origin, log_xid, log_tableid,
+								log_actionseq, log_cmdtype, log_cmddata);
+					}
+
 					switch (*log_cmdtype)
 					{
 						case 'I':
-							slon_mkquery(&(line->data),
-									"-- log_xid %s\n"
-									"-- log_actionseq %s\n"
+							slon_appendquery(&(line->data),
 									"insert into %s %s;",
-									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
 
 						case 'U':
-							slon_mkquery(&(line->data),
-									"-- log_xid %s\n"
-									"-- log_actionseq %s\n"
+							slon_appendquery(&(line->data),
 									"update %s set %s;",
-									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
 
 						case 'D':
-							slon_mkquery(&(line->data),
-									"-- log_xid %s\n"
-									"-- log_actionseq %s\n"
+							slon_appendquery(&(line->data),
 									"delete from %s where %s;",
-									log_xid, log_actionseq,
 									wd->tab_fqname[log_tableid], 
 									log_cmddata);
 							break;
