@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.7 2004-10-01 20:42:59 cbbrowne Exp $
+$Id: README,v 1.8 2005-01-10 17:06:21 cbbrowne Exp $
 
 Christopher Browne
 Database Administrator
@@ -56,6 +56,7 @@ file pointed to by the environment variable SLONYSET, in the following
 Perl variables:
 
   $TABLE_ID - where to start numbering table IDs
+  $SEQUENCE_ID - where to start numbering sequence IDs
 
    The table IDs are required to be unique across all sets in a
    Slony-I cluster, so if you add extra sets, you need to set
