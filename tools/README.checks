@@ -1,0 +1,18 @@
+The two scripts perform different tasks.
+
+check_slon.sh checks to see that the slon daemon is in the proces list
+and optionally checks for any error or warning messages in the slon
+log file it is called using two or three parameters; the clustername,
+the dbname and (optionally) the location of the log file. This script
+is to be executed on each node in the cluster (both master and slaves)
+
+check_slony_cluster.sh checks that active receiver nodes are comfirming
+sync within 10 seconds of the master. I'm not entirely sure that this is
+the best strategy, and if you know otherwise, I'd love to hear. Requires
+two parameters;  the clustername and the dbname. This script is executed
+on the master database only.
+
+These scripts are designed to run on the host on which they are
+checking. With a little modification, they could check remote servers
+on the network. They are quite simplistic and may not be suitable for
+your environment. You are free to modify the code to suit your own needs.
