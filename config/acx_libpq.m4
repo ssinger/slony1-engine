@@ -132,7 +132,7 @@ else
 fi
 
 AC_MSG_CHECKING(for postgresql.conf.sample)
-PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir}"
+PGSHARE_POSSIBLE_LOCATIONS="/usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${with_pgsharedir} $(PG_BINDIR)/../share"
 for i in $PGSHARE_POSSIBLE_LOCATIONS; do
     if test -s "$i/postgresql.conf.sample" ; then
 	PG_SHAREDIR=$i/
