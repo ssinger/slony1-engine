@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # **********
-# test_3_pgbench
+# test_5_pgbench
 #
 # 	This test script creates a standalone pgbench database 
 #	as slony_test1 and then:
@@ -14,8 +14,9 @@
 #	- creates the pgbench tables (schema only)
 #	- subscribes the replication set from the primary node
 #
-#	This test differs from test_1 in that it adds tables,
-#	custom triggers and rewrite rules to the pgbench database.
+#	This test differs from test_3 in that it adds the tables
+#	and custom triggers via ddl-script execution during
+#	replication.
 # **********
 
 export PATH
@@ -24,7 +25,7 @@ DB1=slony_test1
 DB2=slony_test2
 
 PGBENCH_SCALE=1
-PGBENCH_CLIENTS=5
+PGBENCH_CLIENTS=2
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
 
 trap '
@@ -76,56 +77,6 @@ echo "**** creating database for Node 1"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
-
-#
-# Add a little bit of twist to the pgbench database
-#
-psql $DB1 <<_EOF_
-	create table accounts_audit (
-		au_aid		integer,
-		au_seqno	serial,
-		au_delta	integer,
-		au_user		text,
-		au_time		timestamp,
-
-		primary key (au_aid, au_seqno),
-		foreign key (au_aid) references accounts
-	);
-
-	create function accounts_audit_trig () returns trigger as '
-	begin
-		--
-		-- Log all changes >= $800 in the special audit table
-		--
-		if abs(new.abalance - old.abalance) >= 800 then
-			insert into accounts_audit
-					(au_aid, au_delta, au_user, au_time)
-					values (new.aid, (new.abalance - old.abalance),
-							SESSION_USER, CURRENT_TIMESTAMP);
-		end if;
-
-		return new;
-	end;
-	' language plpgsql;
-	create trigger accounts_audit_trig after update on accounts
-		for each row execute procedure accounts_audit_trig();
-
-	create table tellers_sum (
-		su_tid		integer,
-		su_sum		integer,
-
-		primary key (su_tid),
-		foreign key (su_tid) references tellers
-	);
-	insert into tellers_sum (su_tid, su_sum)
-		select tid, 0 from tellers;
-
-	create rule tellers_sum as on update to tellers
-		do update tellers_sum 
-			set su_sum = su_sum + abs(new.tbalance - old.tbalance)
-			where su_tid = old.tid;
-_EOF_
-
 pg_dump -s $DB1 >pgbench_schema.sql
 
 #####
@@ -194,14 +145,6 @@ slonik <<_EOF_
 		set add table (set id = 1, origin = 1,
 			id = 4, full qualified name = 'public.history',
 			key = serial, comment = 'Table accounts');
-		set add table (set id = 1, origin = 1,
-			id = 5, full qualified name = 'public.accounts_audit',
-			comment = 'Table accounts_audit');
-		set add table (set id = 1, origin = 1,
-			id = 6, full qualified name = 'public.tellers_sum',
-			comment = 'Table tellers_sum');
-		set add sequence (set id = 1, origin = 1,
-			id = 7, full qualified name = 'public.accounts_audit_au_seqno_seq');
 	}
 	on error {
 		exit 1;
@@ -294,7 +237,6 @@ slonik <<_EOF_
 
 	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
 _EOF_
-
 echo ""
 echo "**********************************************************************"
 echo "**** $DB2 should now be copying data and attempting to catch up."
@@ -317,7 +259,7 @@ kill $slon2_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
 psql $DB1 >dump.tmp.1.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
+	select 'accounts:'::text, aid, bid, abalance, filler, lastuser
 			from accounts order by aid;
 	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
 			from accounts_audit order by au_aid, au_seqno;
@@ -331,7 +273,7 @@ psql $DB1 >dump.tmp.1.$$ <<_EOF_
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
 psql $DB2 >dump.tmp.2.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
+	select 'accounts:'::text, aid, bid, abalance, filler, lastuser
 			from accounts order by aid;
 	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
 			from accounts_audit order by au_aid, au_seqno;

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.12 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: parser.y,v 1.13 2004-05-27 16:32:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,7 @@ typedef enum {
 	O_CONNINFO,
 	O_CONNRETRY,
 	O_EVENT_NODE,
+	O_FILENAME,
 	O_FORWARD,
 	O_FQNAME,
 	O_ID,
@@ -143,6 +144,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_lock_set
 %type <statement>	stmt_unlock_set
 %type <statement>	stmt_move_set
+%type <statement>	stmt_ddl_script
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -168,9 +170,11 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_ECHO
 %token	K_ERROR
 %token	K_EVENT
+%token	K_EXECUTE
 %token	K_EXIT
 %token	K_FAILOVER
 %token	K_FALSE
+%token	K_FILENAME
 %token	K_FORWARD
 %token	K_FULL
 %token	K_ID
@@ -193,6 +197,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_QUALIFIED
 %token	K_RECEIVER
 %token	K_RESTART
+%token	K_SCRIPT
 %token	K_SEQUENCE
 %token	K_SERIAL
 %token	K_SERVER
@@ -427,6 +432,8 @@ try_stmt			: stmt_echo
 					| stmt_unlock_set
 						{ $$ = $1; }
 					| stmt_move_set
+						{ $$ = $1; }
+					| stmt_ddl_script
 						{ $$ = $1; }
 					| stmt_error ';' { yyerrok; }
 						{ $$ = $1; }
@@ -1118,6 +1125,35 @@ stmt_move_set		: lno K_MOVE K_SET option_list
 					}
 					;
 
+stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
+					{
+						SlonikStmt_ddl_script *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_SET_ID, -1 ),
+							STMT_OPTION_STR( O_FILENAME, NULL ),
+							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_ddl_script *)
+								malloc(sizeof(SlonikStmt_ddl_script));
+						memset(new, 0, sizeof(SlonikStmt_ddl_script));
+						new->hdr.stmt_type		= STMT_DDL_SCRIPT;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->ddl_setid		= opt[0].ival;
+							new->ddl_fname		= opt[1].str;
+							new->ev_origin		= opt[2].ival;
+							new->ddl_fd			= -1;
+						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
 option_list			: ';'
 					{ $$ = NULL; }
 					| '(' option_list_items ')' ';'
@@ -1246,6 +1282,11 @@ option_list_item	: K_ID '=' option_item_id
 					| K_FORWARD '=' option_item_yn
 					{
 						$3->opt_code	= O_FORWARD;
+						$$ = $3;
+					}
+					| K_FILENAME '=' option_item_literal
+					{
+						$3->opt_code	= O_FILENAME;
 						$$ = $3;
 					}
 					;
@@ -1384,6 +1425,7 @@ option_str(option_code opt_code)
 		case O_TAB_ID:			return "table id";
 		case O_TRIG_NAME:		return "trigger name";
 		case O_USE_KEY:			return "key";
+		case O_FILENAME:		return "filename";
 		case END_OF_OPTIONS:	return "???";
 	}
 	return "???";

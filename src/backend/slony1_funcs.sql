@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.8 2004-05-20 17:50:34 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.9 2004-05-27 16:32:49 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1713,7 +1713,6 @@ begin
 					where ev_origin = p_new_origin
 						and ev_type = ''SYNC'';
 			if v_last_sync > 0 then
-raise notice ''move_set set=% new setsync=%,%'', p_set_id, p_new_origin, v_last_sync;
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
@@ -1723,7 +1722,6 @@ raise notice ''move_set set=% new setsync=%,%'', p_set_id, p_new_origin, v_last_
 						where ev_origin = p_new_origin
 							and ev_seqno = v_last_sync;
 			else
-raise notice ''move_set set=% new setsync=%,0 (no SYNC found)'', p_set_id, p_new_origin;
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
@@ -2435,6 +2433,120 @@ begin
 	end if;
 
 	return p_trig_tabid;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript (set_id, script)
+--
+--	Generate the DDL_SCRIPT event
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.ddlScript (int4, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_script			alias for $2;
+	v_set_origin		int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that the set exists and originates here
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+	end if;
+
+	-- ----
+	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script);
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
+			p_set_id, p_script);
+
+	return p_set_id;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript_int (set_id, script)
+--
+--	Process the DDL_SCRIPT event
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.ddlScript_int (int4, text)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_script			alias for $2;
+	v_set_origin		int4;
+	v_no_id				int4;
+	v_row				record;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that we either are the set origin or a current
+	-- subscriber of the set.
+	-- ----
+	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_set_id
+			for update;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_set_id;
+	end if;
+	if v_set_origin <> v_no_id
+			and not exists (select 1 from @NAMESPACE@.sl_subscribe
+						where sub_set = p_set_id
+						and sub_receiver = v_no_id)
+	then
+		return 0;
+	end if;
+
+	-- ----
+	-- Restore all original triggers and rules
+	-- ----
+	for v_row in select * from @NAMESPACE@.sl_table
+			where tab_set = p_set_id
+	loop
+		perform @NAMESPACE@.alterTableRestore(v_row.tab_id);
+	end loop;
+
+	-- ----
+	-- Run the script
+	-- ----
+	execute p_script;
+
+	-- ----
+	-- Put all tables back into replicated mode
+	-- ----
+	for v_row in select * from @NAMESPACE@.sl_table
+			where tab_set = p_set_id
+	loop
+		perform @NAMESPACE@.alterTableForReplication(v_row.tab_id);
+	end loop;
+
+	return p_set_id;
 end;
 ' language plpgsql;
 

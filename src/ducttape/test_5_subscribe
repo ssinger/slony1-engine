@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# **********
+# test_5_subscribe
+#
+#	Script to subscribe node2 to set 999, wait for 30 seconds
+#	and then merge set 999 into set 1. Should be called after
+#	node 2 has processed the DDL_SCRIPT event.
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+
+######################################################################
+# 
+######################################################################
+echo "**** Subscribing to temporary set 999"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		subscribe set ( id = 999, provider = 1, receiver = 2, forward = yes );
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+
+sleep 30
+
+echo "**** Merging set 999 into 1"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		merge set ( id = 1, add id = 999, origin = 1);
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.13 2004-05-21 15:30:35 wieck Exp $
+ *	$Id: slonik.h,v 1.14 2004-05-27 16:32:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,10 +40,12 @@ typedef struct SlonikStmt_unsubscribe_set_s		SlonikStmt_unsubscribe_set;
 typedef struct SlonikStmt_lock_set_s			SlonikStmt_lock_set;
 typedef struct SlonikStmt_unlock_set_s			SlonikStmt_unlock_set;
 typedef struct SlonikStmt_move_set_s			SlonikStmt_move_set;
+typedef struct SlonikStmt_ddl_script_s			SlonikStmt_ddl_script;
 
 typedef enum {
 	STMT_TRY = 1,
 	STMT_CREATE_SET,
+	STMT_DDL_SCRIPT,
 	STMT_DROP_LISTEN,
 	STMT_DROP_NODE,
 	STMT_DROP_PATH,
@@ -305,6 +307,15 @@ struct SlonikStmt_move_set_s {
 };
 
 
+struct SlonikStmt_ddl_script_s {
+	SlonikStmt			hdr;
+	int					ddl_setid;
+	char			   *ddl_fname;
+	int					ev_origin;
+	int					ddl_fd;
+};
+
+
 
 
 extern SlonikScript	   *parser_script;
@@ -419,6 +430,7 @@ extern int		slonik_unsubscribe_set(SlonikStmt_unsubscribe_set *stmt);
 extern int		slonik_lock_set(SlonikStmt_lock_set *stmt);
 extern int		slonik_unlock_set(SlonikStmt_unlock_set *stmt);
 extern int		slonik_move_set(SlonikStmt_move_set *stmt);
+extern int		slonik_ddl_script(SlonikStmt_ddl_script *stmt);
 
 extern int		slon_scanint64(char *str, int64 *result);
 

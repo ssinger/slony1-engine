@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# **********
+# test_5_ddlscript
+#
+#	Script to add the additional tables and add triggers to
+#	the existing ones. Should be called after node 2 finished
+#	subscribing and is in the process of catching up.
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+
+######################################################################
+# 
+######################################################################
+
+cat >test_5_tmp.sql <<_EOF_
+	alter table accounts add column lastuser name;
+
+	create function accounts_lastuser () returns trigger as '
+	begin
+		NEW.lastuser = SESSION_USER;
+		return NEW;
+	end;
+	' language plpgsql;
+	create trigger accounts_lastuser before insert or update on accounts
+		for each row execute procedure accounts_lastuser();
+
+	create table accounts_audit (
+		au_aid		integer,
+		au_seqno	serial,
+		au_delta	integer,
+		au_user		text,
+		au_time		timestamp,
+
+		primary key (au_aid, au_seqno),
+		foreign key (au_aid) references accounts
+	);
+
+	create function accounts_audit_trig () returns trigger as '
+	begin
+		--
+		-- Log all changes >= $800 in the special audit table
+		--
+		if abs(new.abalance - old.abalance) >= 800 then
+			insert into accounts_audit
+					(au_aid, au_delta, au_user, au_time)
+					values (new.aid, (new.abalance - old.abalance),
+							SESSION_USER, CURRENT_TIMESTAMP);
+		end if;
+
+		return new;
+	end;
+	' language plpgsql;
+	create trigger accounts_audit_trig after update on accounts
+		for each row execute procedure accounts_audit_trig();
+
+	create table tellers_sum (
+		su_tid		integer,
+		su_sum		integer,
+
+		primary key (su_tid),
+		foreign key (su_tid) references tellers
+	);
+	insert into tellers_sum (su_tid, su_sum)
+		select tid, 0 from tellers;
+
+	create rule tellers_sum as on update to tellers
+		do update tellers_sum 
+			set su_sum = su_sum + abs(new.tbalance - old.tbalance)
+			where su_tid = old.tid;
+_EOF_
+
+echo "**** Changing schema and createing set 2 for new objects"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	try {
+		execute script (set id = 1, filename = 'test_5_tmp.sql',
+			event node = 1);
+
+		create set (id = 999, origin = 1, comment = 'temp set for new objects');
+
+		set add table (set id = 999, origin = 1,
+			id = 5, full qualified name = 'public.accounts_audit',
+			comment = 'Table accounts_audit');
+		set add table (set id = 999, origin = 1,
+			id = 6, full qualified name = 'public.tellers_sum',
+			comment = 'Table tellers_sum');
+		set add sequence (set id = 999, origin = 1,
+			id = 7, full qualified name = 'public.accounts_audit_au_seqno_seq');
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+
+rm test_5_tmp.sql

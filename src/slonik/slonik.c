@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.19 2004-05-21 15:30:35 wieck Exp $
+ *	$Id: slonik.c,v 1.20 2004-05-27 16:32:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -782,6 +783,45 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_DDL_SCRIPT:
+				{
+					SlonikStmt_ddl_script *stmt =
+							(SlonikStmt_ddl_script *)hdr;
+
+					if (stmt->ev_origin < 0)
+					{
+						stmt->ev_origin = 1;
+					}
+					if (stmt->ddl_setid < 0)
+					{
+						printf("%s:%d: Error: "
+								"set id must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->ddl_fname == NULL)
+					{
+						printf("%s:%d: Error: "
+								"script file name must be specified\n",
+								hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
+						errors++;
+
+					stmt->ddl_fd = open(stmt->ddl_fname, O_RDONLY);
+					if (stmt->ddl_fd < 0)
+					{
+						printf("%s:%d: Error: "
+								"%s - %s\n", 
+								hdr->stmt_filename, hdr->stmt_lno,
+								stmt->ddl_fname, strerror(errno));
+						errors++;
+					}
+				}
+				break;
+
 		}
 
 		hdr = hdr->next;
@@ -1125,6 +1165,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 							(SlonikStmt_move_set *)hdr;
 
 					if (slonik_move_set(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_DDL_SCRIPT:
+				{
+					SlonikStmt_ddl_script *stmt =
+							(SlonikStmt_ddl_script *)hdr;
+
+					if (slonik_ddl_script(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -3076,6 +3126,98 @@ slonik_move_set(SlonikStmt_move_set *stmt)
 	}
 
 	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_ddl_script(SlonikStmt_ddl_script *stmt)
+{
+	SlonikAdmInfo  *adminfo1;
+	SlonDString		query;
+	SlonDString		script;
+	int				rc;
+	char			buf[4096];
+	char			rex1[256];
+	char			rex2[256];
+	int				sed_pipe[2];
+
+	adminfo1 = get_active_adminfo((SlonikStmt *)stmt, stmt->ev_origin);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo1) < 0)
+		return -1;
+
+	sprintf(rex1, "s/@CLUSTERNAME@/%s/g", stmt->hdr.script->clustername);
+	sprintf(rex2, "s/@NAMESPACE@/\\\"_%s\\\"/g", stmt->hdr.script->clustername);
+
+	if (pipe(sed_pipe) < 0)
+	{
+		perror("pipe()");
+		return -1;
+	}
+
+	switch (fork())
+	{
+		case -1:
+			perror("fork()");
+			return -1;
+
+		case 0:
+			dup2(stmt->ddl_fd, 0);
+			close(stmt->ddl_fd);
+			dup2(sed_pipe[1], 1);
+			close(sed_pipe[0]);
+			close(sed_pipe[1]);
+
+			execlp("sed", "sed", "-e", rex1, "-e", rex2, NULL);
+			perror("execlp()");
+			exit(-1);
+
+		default:
+			close(sed_pipe[1]);
+			break;
+	}
+
+	dstring_init(&script);
+	while((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
+		dstring_nappend(&script, buf, rc);
+
+	if (rc < 0)
+	{
+		perror("read()");
+		close(sed_pipe[0]);
+		dstring_free(&script);
+		return -1;
+	}
+	close(sed_pipe[0]);
+	dstring_terminate(&script);
+
+	wait(&rc);
+	if (rc != 0)
+	{
+		printf("%s:%d: command sed terminated with exitcode %d\n",
+				stmt->hdr.stmt_filename, stmt->hdr.stmt_lno, rc);
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_init(&query);
+	slon_mkquery(&query,
+			"select \"_%s\".ddlScript(%d, '%q'); ",
+			stmt->hdr.script->clustername,
+			stmt->ddl_setid, dstring_data(&script));
+	dstring_free(&script);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+
 	return 0;
 }
 

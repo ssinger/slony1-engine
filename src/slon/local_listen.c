@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.20 2004-05-20 17:50:34 wieck Exp $
+ *	$Id: local_listen.c,v 1.21 2004-05-27 16:32:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -503,6 +503,16 @@ localListenThread_main(void *dummy)
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_unsubscribeSet(sub_set);
+			}
+			else if (strcmp(ev_type, "DDL_SCRIPT") == 0)
+			{
+				/*
+				 * DDL_SCRIPT
+				 */
+
+				/*
+				 * Nothing to do ATM
+				 */
 			}
 			else
 			{

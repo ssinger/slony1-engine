@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.46 2004-05-21 20:18:51 wieck Exp $
+ *	$Id: remote_worker.c,v 1.47 2004-05-27 16:32:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -881,6 +881,16 @@ remoteWorkerThread_main(void *cdata)
 						"select %s.unsubscribeSet_int(%d, %d); ",
 						rtcfg_namespace,
 						sub_set, sub_receiver);
+			}
+			else if (strcmp(event->ev_type, "DDL_SCRIPT") == 0)
+			{
+				int		ddl_setid = (int) strtol(event->ev_data1, NULL, 10);
+				char   *ddl_script = event->ev_data2;
+
+				slon_appendquery(&query1,
+						"select %s.ddlScript_int(%d, '%q'); ",
+						rtcfg_namespace,
+						ddl_setid, ddl_script);
 			}
 			else
 			{

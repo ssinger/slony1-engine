@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.10 2004-05-20 17:50:35 wieck Exp $
+ *	$Id: scan.l,v 1.11 2004-05-27 16:32:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -51,9 +51,11 @@ drop			{ return K_DROP;				}
 echo			{ return K_ECHO;				}
 error			{ return K_ERROR;				}
 event			{ return K_EVENT;				}
+execute			{ return K_EXECUTE;				}
 exit			{ return K_EXIT;				}
 failover		{ return K_FAILOVER;			}
 false			{ return K_FALSE;				}
+filename		{ return K_FILENAME;			}
 forward			{ return K_FORWARD;				}
 full			{ return K_FULL;				}
 id				{ return K_ID;					}
@@ -76,6 +78,7 @@ provider		{ return K_PROVIDER;			}
 qualified		{ return K_QUALIFIED;			}
 receiver		{ return K_RECEIVER;			}
 restart			{ return K_RESTART;				}
+script			{ return K_SCRIPT;				}
 sequence		{ return K_SEQUENCE;			}
 serial			{ return K_SERIAL;				}
 server			{ return K_SERVER;				}
