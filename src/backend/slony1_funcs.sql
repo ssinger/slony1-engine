@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.9 2004-05-27 16:32:49 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.10 2004-05-29 15:15:28 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -207,37 +207,20 @@ end;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION resetLocalNode ()
---
---	Reset the local node to appear uninitialized.
--- ----------------------------------------------------------------------
-create function @NAMESPACE@.resetLocalNode ()
-returns int4
-as '
-begin
-	-- **** TODO ****
-	raise exception ''Slony-I: resetLocalNode() not implemented'';
-end;
-' language plpgsql;
-
-
--- ----------------------------------------------------------------------
 -- FUNCTION storeNode (no_id, no_comment)
 --
 --	Generate the STORE_NODE event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.storeNode (int4, text)
-returns int4
+returns bigint
 as '
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
 begin
 	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
 									p_no_id, p_no_comment);
-
-	return p_no_id;
 end;
 ' language plpgsql
 	called on null input;
@@ -295,7 +278,7 @@ end;
 --	Generate the ENABLE_NODE event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.enableNode (int4)
-returns int4
+returns bigint
 as '
 declare
 	p_no_id			alias for $1;
@@ -327,10 +310,8 @@ begin
 	-- Activate this node and generate the ENABLE_NODE event
 	-- ----
 	perform @NAMESPACE@.enableNode_int (p_no_id);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_NODE'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_NODE'',
 									p_no_id);
-
-	return p_no_id;
 end;
 ' language plpgsql;
 
@@ -413,7 +394,7 @@ end;
 --	Generate the DISABLE_NODE event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.disableNode (int4)
-returns int4
+returns bigint
 as '
 declare
 	p_no_id			alias for $1;
@@ -447,7 +428,7 @@ end;
 --	Generate the DROP_NODE event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.dropNode (int4)
-returns int4
+returns bigint
 as '
 declare
 	p_no_id			alias for $1;
@@ -496,10 +477,8 @@ begin
 	-- Call the internal drop functionality and generate the event
 	-- ----
 	perform @NAMESPACE@.dropNode_int(p_no_id);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_NODE'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_NODE'',
 									p_no_id);
-
-	return p_no_id;
 end;
 ' language plpgsql;
 
@@ -777,7 +756,7 @@ end;
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8)
-returns int4
+returns bigint
 as '
 declare
 	p_failed_node		alias for $1;
@@ -822,7 +801,7 @@ begin
 	perform @NAMESPACE@.failoverSet_int(p_failed_node,
 			p_backup_node, p_set_id);
 
-	return p_failed_node;
+	return p_ev_seqfake;
 end;
 ' language plpgsql;
 
@@ -960,7 +939,7 @@ end;
 --	Generate the STORE_PATH event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.storePath (int4, int4, text, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_pa_server		alias for $1;
@@ -970,10 +949,8 @@ declare
 begin
 	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client,
 			p_pa_conninfo, p_pa_connretry);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_PATH'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_PATH'', 
 			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
-
-	return 0;
 end;
 ' language plpgsql;
 
@@ -1047,7 +1024,7 @@ end;
 --	Generate the DROP_PATH event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.dropPath (int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_pa_server		alias for $1;
@@ -1089,10 +1066,8 @@ begin
 	-- Now drop the path and create the event
 	-- ----
 	perform @NAMESPACE@.dropPath_int(p_pa_server, p_pa_client);
-	perform @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
+	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
 			p_pa_server, p_pa_client);
-
-	return 0;
 end;
 ' language plpgsql;
 
@@ -1142,7 +1117,7 @@ end;
 --	Generate the STORE_LISTEN event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.storeListen (int4, int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_li_origin		alias for $1;
@@ -1150,10 +1125,8 @@ declare
 	p_li_receiver	alias for $3;
 begin
 	perform @NAMESPACE@.storeListen_int (p_li_origin, p_li_provider, p_li_receiver);
-	perform @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
+	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
 			p_li_origin, p_li_provider, p_li_receiver);
-
-	return 0;
 end;
 ' language plpgsql
 	called on null input;
@@ -1218,21 +1191,18 @@ end;
 --	Generate the DROP_LISTEN event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.dropListen (int4, int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_li_origin		alias for $1;
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
-	v_retval		int4;
 begin
-	v_retval := @NAMESPACE@.dropListen_int(p_li_origin, 
+	perform @NAMESPACE@.dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
-	perform @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_LISTEN'',
+	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_LISTEN'',
 			p_li_origin, p_li_provider, p_li_receiver);
-
-	return v_retval;
 end;
 ' language plpgsql;
 
@@ -1274,7 +1244,7 @@ end;
 --	Generate the STORE_SET event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.storeSet (int4, text)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -1292,10 +1262,8 @@ begin
 			(set_id, set_origin, set_comment) values
 			(p_set_id, v_local_node_id, p_set_comment);
 
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_SET'', 
+	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_SET'', 
 			p_set_id, v_local_node_id, p_set_comment);
-
-	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -1487,7 +1455,7 @@ end;
 --	Generate the MOVE_SET event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.moveSet (int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -1567,10 +1535,8 @@ begin
 	-- ----
 	-- Finally we generate the real event
 	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
+	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
 			p_set_id, v_local_node_id, p_new_origin);
-
-	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -1758,7 +1724,7 @@ end;
 --	Generate the DROP_SET event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.dropSet (int4)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -1786,10 +1752,8 @@ begin
 	-- Call the internal drop set functionality and generate the event
 	-- ----
 	perform @NAMESPACE@.dropSet_int(p_set_id);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_SET'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_SET'', 
 			p_set_id);
-
-	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -1848,7 +1812,7 @@ end;
 --	Generate the MERGE_SET event.
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.mergeSet (int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -1914,10 +1878,8 @@ begin
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	perform @NAMESPACE@.mergeSet_int(p_set_id, p_add_id);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MERGE_SET'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MERGE_SET'', 
 			p_set_id, p_add_id);
-
-	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -1962,7 +1924,7 @@ end;
 --					tab_comment)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.setAddTable(int4, int4, text, name, text)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -2002,11 +1964,9 @@ begin
 	-- ----
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
 			p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
-
-	return p_tab_id;
 end;
 ' language plpgsql;
 
@@ -2104,7 +2064,7 @@ end;
 -- FUNCTION setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.setAddSequence (int4, int4, text, text)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -2143,10 +2103,8 @@ begin
 	-- ----
 	perform @NAMESPACE@.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
 			p_seq_comment);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_SEQUENCE'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_SEQUENCE'',
 			p_set_id, p_seq_id, p_fqname, p_seq_comment);
-
-	return p_seq_id;
 end;
 ' language plpgsql;
 
@@ -2288,17 +2246,15 @@ end;
 -- FUNCTION storeTrigger (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.storeTrigger (int4, name)
-returns int4
+returns bigint
 as '
 declare
 	p_trig_tabid		alias for $1;
 	p_trig_tgname		alias for $2;
 begin
 	perform @NAMESPACE@.storeTrigger_int(p_trig_tabid, p_trig_tgname);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_TRIGGER'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_TRIGGER'',
 			p_trig_tabid, p_trig_tgname);
-
-	return p_trig_tabid;
 end;
 ' language plpgsql;
 
@@ -2367,17 +2323,15 @@ end;
 -- FUNCTION dropTrigger (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.dropTrigger (int4, name)
-returns int4
+returns bigint
 as '
 declare
 	p_trig_tabid		alias for $1;
 	p_trig_tgname		alias for $2;
 begin
 	perform @NAMESPACE@.dropTrigger_int(p_trig_tabid, p_trig_tgname);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_TRIGGER'',
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_TRIGGER'',
 			p_trig_tabid, p_trig_tgname);
-
-	return p_trig_tabid;
 end;
 ' language plpgsql;
 
@@ -2443,7 +2397,7 @@ end;
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.ddlScript (int4, text)
-returns int4
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -2475,10 +2429,8 @@ begin
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script);
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
 			p_set_id, p_script);
-
-	return p_set_id;
 end;
 ' language plpgsql;
 
@@ -2795,7 +2747,7 @@ end;
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
-returns int4
+returns bigint
 as '
 declare
 	p_sub_set			alias for $1;
@@ -2843,11 +2795,9 @@ begin
 	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
 			p_sub_set, p_sub_provider, p_sub_receiver, 
 			case p_sub_forward when true then ''t'' else ''f'' end);
-
-	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -2943,7 +2893,7 @@ end;
 -- FUNCTION unsubscribeSet (sub_set, sub_receiver)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.unsubscribeSet (int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_sub_set			alias for $1;
@@ -3009,10 +2959,8 @@ begin
 	-- ----
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''UNSUBSCRIBE_SET'', 
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''UNSUBSCRIBE_SET'', 
 			p_sub_set, p_sub_receiver);
-
-	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -3049,17 +2997,15 @@ end;
 -- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver)
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.enableSubscription (int4, int4, int4)
-returns int4
+returns bigint
 as '
 declare
 	p_sub_set			alias for $1;
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 begin
-	perform @NAMESPACE@.enableSubscription_int (p_sub_set, 
+	return  @NAMESPACE@.enableSubscription_int (p_sub_set, 
 			p_sub_provider, p_sub_receiver);
-
-	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -3109,14 +3055,14 @@ end;
 --
 -- ----------------------------------------------------------------------
 create function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
-returns int8
+returns bigint
 as '
 declare
 	p_con_origin	alias for $1;
 	p_con_received	alias for $2;
 	p_con_seqno		alias for $3;
 	p_con_timestamp	alias for $4;
-	v_max_seqno		int8;
+	v_max_seqno		bigint;
 begin
 	select into v_max_seqno coalesce(max(con_seqno), 0)
 			from @NAMESPACE@.sl_confirm
