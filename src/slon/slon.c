@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.14 2004-02-24 21:03:35 wieck Exp $
+ *	$Id: slon.c,v 1.15 2004-02-25 19:47:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -286,13 +286,11 @@ main (int argc, const char *argv[])
 	{
 		int		sub_set			= (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
 		int		sub_provider	= (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
-		int		sub_forward		= (strcmp(PQgetvalue(res, i, 2), "t") == 0) ?
-									1 : 0;
-		int		sub_active		= (strcmp(PQgetvalue(res, i, 3), "t") == 0) ?
-									1 : 0;
+		char   *sub_forward		= PQgetvalue(res, i, 2);
+		char   *sub_active		= PQgetvalue(res, i, 3);
 
 		rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
-		if (sub_active)
+		if (*sub_active == 't')
 			rtcfg_enableSubscription(sub_set);
 	}
 	PQclear(res);
@@ -301,7 +299,7 @@ main (int argc, const char *argv[])
 	 * Remember the last known local event sequence
 	 */
 	slon_mkquery(&query,
-			"select max(ev_seqno) from %s.sl_event "
+			"select coalesce(max(ev_seqno), -1) from %s.sl_event "
 			"where ev_origin = '%d'",
 			rtcfg_namespace, rtcfg_nodeid);
 	res = PQexec(startup_conn, dstring_data(&query));

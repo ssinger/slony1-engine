@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.7 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: runtime_config.c,v 1.8 2004-02-25 19:47:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -447,9 +447,10 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 
 
 void
-rtcfg_storeSubscribe(int sub_set, int sub_provider, int sub_forward)
+rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 {
 	SlonSet	   *set;
+	int			old_provider = -1;
 
 	rtcfg_lock();
 
@@ -462,14 +463,22 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, int sub_forward)
 		{
 			slon_log(SLON_CONFIG,
 					"storeSubscribe: sub_set=%d sub_provider=%d "
-					"sub_forward=%d\n",
+					"sub_forward='%s'\n",
 					sub_set, sub_provider, sub_forward);
+			old_provider = set->sub_provider;
 			if (set->sub_provider < 0)
 				set->sub_active = 0;
 			set->sub_provider = sub_provider;
-			set->sub_forward  = sub_forward;
+			set->sub_forward  = (*sub_forward == 't');
 			rtcfg_unlock();
 			rtcfg_seq_bump();
+			/*
+			 * Wakeup the worker threads for the old and new provider
+			 */
+			if (old_provider >= 0 && old_provider != sub_provider)
+				sched_wakeup_node(old_provider);
+			if (sub_provider >= 0)
+				sched_wakeup_node(sub_provider);
 			return;
 		}
 	}
@@ -502,6 +511,8 @@ rtcfg_enableSubscription(int sub_set)
 				set->sub_active = 1;
 			rtcfg_unlock();
 			rtcfg_seq_bump();
+			if (set->sub_provider >= 0)
+				sched_wakeup_node(set->sub_provider);
 			return;
 		}
 	}

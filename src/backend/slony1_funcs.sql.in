@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.14 2004-02-24 23:03:49 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.15 2004-02-25 19:47:37 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1005,9 +1005,52 @@ declare
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
+	v_set_origin		int4;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: subscribeSet() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Check that this is called on the receiver node
+	-- ----
+	if p_sub_receiver != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		raise exception ''Slony-I: subscribeSet() must be called on receiver'';
+	end if;
+
+	-- ----
+	-- Check that the origin and provider of the set are remote
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_sub_set;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_sub_set;
+	end if;
+	if v_set_origin = p_sub_receiver then
+		raise exception 
+				''Slony-I: set origin and receiver cannot be identical'';
+	end if;
+	if p_sub_receiver = p_sub_provider then
+		raise exception 
+				''Slony-I: set provider and receiver cannot be identical'';
+	end if;
+
+	-- ----
+	-- Call the internal procedure to store the subscription
+	-- ----
+	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
+			p_sub_receiver, p_sub_forward);
+
+	-- ----
+	-- Create the SUBSCRIBE_SET event
+	-- ----
+	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
+			p_sub_set, p_sub_provider, p_sub_receiver, 
+			case p_sub_forward when true then ''t'' else ''f'' end);
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -1023,9 +1066,50 @@ declare
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
+	v_set_origin		int4;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: subscribeSet_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Try to change provider and/or forward for an existing subscription
+	-- ----
+	update @NAMESPACE@.sl_subscribe
+			set sub_provider = p_sub_provider,
+				sub_forward = p_sub_forward
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver;
+	if found then
+		return p_sub_set;
+	end if;
+
+	-- ----
+	-- Not found, insert a new one
+	-- ----
+	insert into @NAMESPACE@.sl_subscribe
+			(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
+			values (p_sub_set, p_sub_provider, p_sub_receiver,
+				p_sub_forward, false);
+
+	-- ----
+	-- If the set origin is here, then enable the subscription
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_sub_set;
+	if not found then
+		raise exception ''Slony-I: set % not found'', p_sub_set;
+	end if;
+
+	if v_set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_SUBSCRIPTION'', 
+				p_sub_set, p_sub_provider, p_sub_receiver, 
+				case p_sub_forward when true then ''t'' else ''f'' end);
+	end if;
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.2 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: remote_worker.c,v 1.3 2004-02-25 19:47:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -120,6 +120,7 @@ static void	query_append_event(SlonDString *dsp,
 					struct slon_work_message_event *event);
 static void	store_confirm_forward(SlonNode *node, SlonConn *conn,
 					struct slon_work_message_confirm *confirm);
+static int	copy_set(SlonNode *node, SlonConn *local_conn, int set_id);
 
 
 /* ----------
@@ -155,6 +156,15 @@ remoteWorkerThread_main(void *cdata)
 	 * Initialize local data
 	 */
 	dstring_init(&query1);
+
+	/*
+	 * Put the connection into replication mode.
+	 */
+	slon_mkquery(&query1,
+			"select %s.setSessionRole('_%s', 'slon'); ",
+			rtcfg_namespace, rtcfg_cluster_name);
+	if (query_execute(node, local_dbconn, &query1, PGRES_TUPLES_OK) < 0)
+		slon_abort();
 
 	/*
 	 * Work until shutdown or node destruction
@@ -336,6 +346,87 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 						"select %s.storeSet_int(%d, %d, '%q'); ",
 						rtcfg_namespace,
 						set_id, set_origin, set_comment);
+			}
+			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
+			{
+				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
+				int		sub_provider = (int) strtol(event->ev_data2, NULL, 10);
+				int		sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
+				char   *sub_forward = event->ev_data4;
+
+				if (sub_receiver == rtcfg_nodeid)
+					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
+
+				slon_appendquery(&query1,
+						"select %s.subscribeSet_int(%d, %d, %d, '%q'); ",
+						rtcfg_namespace,
+						sub_set, sub_provider, sub_receiver, sub_forward);
+			}
+			else if (strcmp(event->ev_type, "ENABLE_SUBSCRIPTION") == 0)
+			{
+				int		sub_set = (int) strtol(event->ev_data1, NULL, 10);
+				int		sub_provider = (int) strtol(event->ev_data2, NULL, 10);
+				int		sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
+
+				/*
+				 * Do the actual enabling of the set only if
+				 * we are the receiver and if we received this
+				 * event from the provider.
+				 */
+				if (sub_receiver == rtcfg_nodeid &&
+					sub_provider == node->no_id)
+				{
+					SlonDString	query2;
+					int			sched_rc;
+					int			sleeptime = 15;
+
+					rtcfg_enableSubscription(sub_set);
+					dstring_init(&query2);
+					slon_mkquery(&query2, "rollback transaction");
+
+					while (true)
+					{
+						/*
+						 * Execute the config changes so far, but don't
+						 * commit the transaction yet. We have to copy
+						 * the data now ...
+						 */
+						if (query_execute(node, local_dbconn, &query1,
+								PGRES_COMMAND_OK) < 0)
+							slon_abort();
+
+						/*
+						 * If the copy succeeds, exit the loop and let
+						 * the transaction commit.
+						 */
+						if (copy_set(node, local_conn, sub_set) == 0)
+						{
+							dstring_free(&query2);
+							dstring_reset(&query1);
+							sched_rc = SCHED_STATUS_OK;
+							break;
+						}
+
+						/*
+						 * Data copy for new enabled set has failed.
+						 * Rollback the transaction, sleep and try again.
+						 */
+						if (query_execute(node, local_dbconn, &query2,
+								PGRES_COMMAND_OK) < 0)
+							slon_abort();
+
+						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+								"data copy for set %d failed - "
+								"sleep %d seconds\n",
+								node->no_id, sub_set, sleeptime);
+						sched_rc = sched_msleep(node, sleeptime * 1000);
+						if (sched_rc != SCHED_STATUS_OK)
+							break;
+
+						if (sleeptime < 60)
+							sleeptime *= 2;
+					}
+				}
 			}
 			else
 			{
@@ -867,6 +958,511 @@ store_confirm_forward(SlonNode *node, SlonConn *conn,
 	PQclear(res);
 	dstring_free(&query);
 	return;
+}
+
+
+static int
+copy_set(SlonNode *node, SlonConn *local_conn, int set_id)
+{
+	SlonConn	   *pro_conn;
+	PGconn		   *pro_dbconn;
+	PGconn		   *loc_dbconn;
+	char		   *conninfo;
+	char			conn_symname[64];
+	SlonDString		query1;
+	SlonDString		query2;
+	int				ntuples1;
+	int				tupno1;
+	PGresult	   *res1;
+	PGresult	   *res2;
+	PGresult	   *res3;
+	int				rc;
+	char		   *copydata = NULL;
+	int				set_origin;
+	char		   *ssy_seqno = NULL;
+	char		   *ssy_minxid = NULL;
+	char		   *ssy_maxxid = NULL;
+	char		   *ssy_xip = NULL;
+	SlonDString		ssy_action_list;
+
+	slon_log(SLON_DEBUG1, "******* copy_set %d\n", set_id);
+
+	/*
+	 * Connect to the provider DB
+	 */
+	rtcfg_lock();
+	conninfo = strdup(node->pa_conninfo);
+	rtcfg_unlock();
+	sprintf(conn_symname, "copy_set_%d", set_id);
+	if ((pro_conn = slon_connectdb(conninfo, conn_symname)) == NULL)
+	{
+		free(conninfo);
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				"copy set %d - cannot connect to provider DB\n",
+				node->no_id, set_id);
+		return -1;
+	}
+	free(conninfo);
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			"connected to provider DB\n",
+			node->no_id);
+
+	pro_dbconn = pro_conn->dbconn;
+	loc_dbconn = local_conn->dbconn;
+	dstring_init(&query1);
+
+	/*
+	 * Begin a serialized transaction and select the list of all
+	 * tables the provider currently has in the set.
+	 */
+	slon_mkquery(&query1,
+			"start transaction; "
+			"set transaction isolation level serializable; "
+			"select T.tab_id, "
+			"    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
+			"    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
+			"    T.tab_attkind, T.tab_comment "
+			"from %s.sl_table T, "
+			"    \"pg_catalog\".pg_class PGC, "
+			"    \"pg_catalog\".pg_namespace PGN "
+			"where T.tab_set = %d "
+			"    and T.tab_reloid = PGC.oid "
+			"    and PGC.relnamespace = PGN.oid "
+			"order by tab_id; ",
+			rtcfg_namespace, set_id);
+	res1 = PQexec(pro_dbconn, dstring_data(&query1));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query1),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	ntuples1 = PQntuples(res1);
+
+	/*
+	 * For each table in the set
+	 */
+	for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+	{
+		int		tab_id		= strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
+		char   *tab_fqname	= PQgetvalue(res1, tupno1, 1);
+		char   *tab_attkind	= PQgetvalue(res1, tupno1, 2);
+		char   *tab_comment	= PQgetvalue(res1, tupno1, 3);
+		int64	copysize	= 0;
+
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"tab_id=%d tab_fqname=%s tab_attkind=%s tab_comment='%s'\n",
+				node->no_id,
+				tab_id, tab_fqname, tab_attkind, tab_comment);
+
+		/*
+		 * Call the setAddTable_int() stored procedure. Up to now, while
+		 * we have not been subscribed to the set, this should have been
+		 * suppressed.
+		 */
+		slon_mkquery(&query1,
+				"select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
+				rtcfg_namespace,
+				set_id, tab_id, tab_fqname, tab_attkind, tab_comment);
+		if (query_execute(node, loc_dbconn, &query1, PGRES_TUPLES_OK) < 0)
+		{
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+
+		/*
+		 * Begin a COPY from stdin for the table on the local DB
+		 */
+		slon_mkquery(&query1, "copy %s from stdin; ", tab_fqname);
+		res2 = PQexec(loc_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res2) != PGRES_COPY_IN)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s %s\n",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res2),
+					PQerrorMessage(loc_dbconn));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+
+		/*
+		 * Begin a COPY to stdout for the table on the provider DB
+		 */
+		slon_mkquery(&query1, "copy %s to stdout; ", tab_fqname);
+		res3 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res3) != PGRES_COPY_OUT)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s %s\n",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res2),
+					PQerrorMessage(pro_dbconn));
+			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
+			PQclear(res3);
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+
+		/*
+		 * Copy the data over
+		 */
+		while ((rc = PQgetCopyData(pro_dbconn, &copydata, 0)) > 0)
+		{
+			int		len = strlen(copydata);
+
+			copysize += (int64)len;
+
+			if (PQputCopyData(loc_dbconn, copydata, len) != 1)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						"PQputCopyData() - %s",
+						node->no_id, PQerrorMessage(loc_dbconn));
+				PQfreemem(copydata);
+				PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
+				PQclear(res3);
+				PQclear(res2);
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				return -1;
+			}
+			PQfreemem(copydata);
+		}
+		if (rc != -1)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"PGgetCopyData() %s",
+					node->no_id, PQerrorMessage(pro_dbconn)); 
+			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
+			PQclear(res3);
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+
+		/*
+		 * Check that the COPY to stdout on the provider node
+		 * finished successful.
+		 */
+		res3 = PQgetResult(pro_dbconn);
+		if (PQresultStatus(res3) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"copy to stdout on provider - %s %s",
+					node->no_id, PQresStatus(PQresultStatus(res3)),
+					PQresultErrorMessage(res3));
+			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
+			PQclear(res3);
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		PQclear(res3);
+
+		/*
+		 * End the COPY from stdin on the local node with success
+		 */
+		if (PQputCopyEnd(loc_dbconn, NULL) != 1)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"PGputCopyEnd() %s",
+					node->no_id, PQerrorMessage(loc_dbconn)); 
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		res2 = PQgetResult(loc_dbconn);
+		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"copy from stdin on local node - %s %s",
+					node->no_id, PQresStatus(PQresultStatus(res2)),
+					PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		PQclear(res2);
+
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				"%lld bytes copied for table %s\n",
+				node->no_id, copysize, tab_fqname);
+	}
+	PQclear(res1);
+
+	/*
+	 * Determine the set origin
+	 */
+	slon_mkquery(&query1,
+			"select set_origin from %s.sl_set where set_id = %d; ",
+			rtcfg_namespace, set_id);
+	res1 = PQexec(pro_dbconn, dstring_data(&query1));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				node->no_id, dstring_data(&query1),
+				PQresultErrorMessage(res1));
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	if (PQntuples(res1) != 1)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				"cannot determine origin of set %d\n",
+				node->no_id, set_id);
+		PQclear(res1);
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	set_origin = strtol(PQgetvalue(res1, 0, 0), NULL, 10);
+	PQclear(res1);
+
+	/*
+	 * It depends on who is our data provider how we construct
+	 * the initial setsync status.
+	 */
+	if (set_origin == node->no_id)
+	{
+		/*
+		 * Our provider is the origin, so we have to construct
+		 * the setsync from scratch. Let's see if there is any
+		 * SYNC event known.
+		 */
+		slon_mkquery(&query1,
+				"select max(ev_seqno) as ssy_seqno "
+				"from %s.sl_event "
+				"where ev_origin = %d and ev_type = 'SYNC'; ",
+				rtcfg_namespace, node->no_id);
+		res1 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res1));
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		if (PQntuples(res1) != 1)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"query \"%s\" did not return a result\n",
+					node->no_id, dstring_data(&query1));
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		if (PQgetisnull(res1, 0, 0))
+		{
+			/*
+			 * No SYNC event found, so we initialize the setsync to
+			 * zeroes with ALL action sequences that exist.
+			 */
+			ssy_seqno	= "0";
+			ssy_minxid	= "0";
+			ssy_maxxid	= "0";
+			ssy_xip		= "";
+
+			slon_mkquery(&query1,
+					"select log_actionseq "
+					"from %s.sl_log_1 where log_origin = %d "
+					"union select log_actionseq "
+					"from %s.sl_log_2 where log_origin = %d; ",
+					rtcfg_namespace, node->no_id,
+					rtcfg_namespace, node->no_id);
+		}
+		else
+		{
+			/*
+			 * Use the last SYNC's snapshot information and
+			 * set the action sequence list to all actions after that.
+			 */
+			slon_mkquery(&query1,
+					"select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
+					"from %s.sl_event where ev_seqno = '%s'; ",
+					rtcfg_namespace, PQgetvalue(res1, 0, 0));
+			PQclear(res1);
+			res1 = PQexec(pro_dbconn, dstring_data(&query1));
+			if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+						node->no_id, dstring_data(&query1),
+						PQresultErrorMessage(res1));
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				return -1;
+			}
+			if (PQntuples(res1) != 1)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						"query \"%s\" did not return a result\n",
+						node->no_id, dstring_data(&query1));
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				return -1;
+			}
+
+			ssy_seqno	= PQgetvalue(res1, 0, 0);
+			ssy_minxid	= PQgetvalue(res1, 0, 1);
+			ssy_maxxid	= PQgetvalue(res1, 0, 2);
+			ssy_xip		= PQgetvalue(res1, 0, 3);
+
+			dstring_init(&query2);
+			slon_mkquery(&query2,
+					"log_xid > '%s' or (log_xid >= '%s'",
+					ssy_maxxid, ssy_minxid);
+			if (strlen(ssy_xip) != 0)
+				slon_appendquery(&query2, " and log_xid in (%s))", ssy_xip);
+			else
+				slon_appendquery(&query2, ")");
+			
+			slon_mkquery(&query1,
+					"select log_actionseq "
+					"from %s.sl_log_1 where log_origin = %d and %s "
+					"union select log_actionseq "
+					"from %s.sl_log_2 where log_origin = %d and %s; ",
+					rtcfg_namespace, node->no_id, dstring_data(&query2),
+					rtcfg_namespace, node->no_id, dstring_data(&query2));
+			dstring_free(&query2);
+		}
+
+		/*
+		 * query1 now contains the selection for the ssy_action_list
+		 * selection from both log tables. Fill the dstring.
+		 */
+		res2 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		ntuples1 = PQntuples(res2);
+		dstring_init(&ssy_action_list);
+		if (ntuples1 > 0)
+		{
+			dstring_addchar(&ssy_action_list, '\'');
+			dstring_append(&ssy_action_list, PQgetvalue(res2, 0, 0));
+			dstring_addchar(&ssy_action_list, '\'');
+		}
+		for (tupno1 = 1; tupno1 < ntuples1; tupno1++)
+		{
+			dstring_addchar(&ssy_action_list, ',');
+			dstring_addchar(&ssy_action_list, '\'');
+			dstring_append(&ssy_action_list, PQgetvalue(res2, 0, 0));
+			dstring_addchar(&ssy_action_list, '\'');
+		}
+		dstring_terminate(&ssy_action_list);
+		PQclear(res2);
+	}
+	else
+	{
+		/*
+		 * Our provider is another slave, so we can copy the
+		 * existing setsync from him.
+		 */
+		slon_mkquery(&query1,
+				"select ssy_seqno, ssy_minxid, ssy_maxxid, "
+				"    ssy_xip, ssy_action_list "
+				"from %s.sl_setsync where ssy_setid = %d; ",
+				rtcfg_namespace, set_id);
+		res1 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					node->no_id, dstring_data(&query1),
+					PQresultErrorMessage(res1));
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+		if (PQntuples(res1) != 1)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					"sl_setsync entry for set %d not found on provider\n",
+					node->no_id, set_id);
+			PQclear(res1);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			return -1;
+		}
+
+		dstring_init(&ssy_action_list);
+		ssy_seqno	= PQgetvalue(res1, 0, 0);
+		ssy_minxid	= PQgetvalue(res1, 0, 1);
+		ssy_maxxid	= PQgetvalue(res1, 0, 2);
+		ssy_xip		= PQgetvalue(res1, 0, 3);
+		dstring_append(&ssy_action_list, PQgetvalue(res1, 0, 4));
+		dstring_terminate(&ssy_action_list);
+	}
+
+	/*
+	 * Create our own initial setsync entry
+	 */
+	slon_mkquery(&query1,
+			"insert into %s.sl_setsync "
+			"    (ssy_setid, ssy_origin, ssy_seqno, "
+			"     ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) "
+			"    values ('%d', '%d', '%s', '%s', '%s', '%q', '%q'); ",
+			rtcfg_namespace,
+			set_id, node->no_id, ssy_seqno, ssy_minxid, ssy_maxxid, ssy_xip,
+			dstring_data(&ssy_action_list));
+	PQclear(res1);
+	dstring_free(&ssy_action_list);
+	if (query_execute(node, loc_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+	{
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+
+	/*
+	 * Roll back the transaction we used on the provider and close
+	 * the database connection.
+	 */
+	slon_mkquery(&query1, "rollback transaction");
+	if (query_execute(node, pro_dbconn, &query1, PGRES_COMMAND_OK) < 0)
+	{
+		slon_disconnectdb(pro_conn);
+		dstring_free(&query1);
+		return -1;
+	}
+	slon_disconnectdb(pro_conn);
+	dstring_free(&query1);
+
+	return 0;
 }
 
 

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.5 2004-02-24 21:03:34 wieck Exp $
+ *	$Id: local_listen.c,v 1.6 2004-02-25 19:47:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -230,6 +230,42 @@ localListenThread_main(void *dummy)
 				set_comment	= PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeSet(set_id, set_origin, set_comment);
+			}
+			else if (strcmp(ev_type, "SUBSCRIBE_SET") == 0)
+			{
+				/*
+				 * SUBSCRIBE_SET
+				 */
+				int		sub_set;
+				int		sub_provider;
+				int		sub_receiver;
+				char   *sub_forward;
+
+				sub_set			= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				sub_provider	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				sub_receiver	= (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				sub_forward		= PQgetvalue(res, tupno, 9);
+
+				if (sub_receiver == rtcfg_nodeid)
+					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
+			}
+			else if (strcmp(ev_type, "ENABLE_SUBSCRIPTION") == 0)
+			{
+				/*
+				 * ENABLE_SUBSCRIPTION
+				 */
+				int		sub_set;
+				int		sub_provider;
+				int		sub_receiver;
+				char   *sub_forward;
+
+				sub_set			= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				sub_provider	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				sub_receiver	= (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				sub_forward		= PQgetvalue(res, tupno, 9);
+
+				if (sub_receiver == rtcfg_nodeid)
+					rtcfg_enableSubscription(sub_set);
 			}
 			else
 			{

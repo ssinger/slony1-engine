@@ -136,7 +136,9 @@ SUBSCRIBE_SET
 	The subscribeSet() function is called on the origin.  This will
 	cascade through the system so that all nodes that store
 	forwarding information for this set are aware of the new
-	subscriber before it actually joins the set.
+	subscriber before the subscription is actually enabled. The
+	origin of the set will react to this with issuing the
+	ENABLE_SUBSCRIPTION message.
 	
 	
 UNSUBSCRIBE_SET
@@ -149,12 +151,15 @@ UNSUBSCRIBE_SET
 
 ENABLE_SUBSCRIPTION
 	ev_data1		sub_set
-	ev_data2		sub_receiver
+	ev_data2		sub_provider
+	ev_data3		sub_receiver
+	ev_data4		sub_forward
 
 	enableSubscription (sub_set, sub_receiver)
 	enableSubscription_int (sub_set, sub_receiver)
 
 	This is a special message issued by the origin of a set when a
-	deactivated node gets reenabled.
+	node subscribes or a deactivated node gets reenabled.
+
 
 

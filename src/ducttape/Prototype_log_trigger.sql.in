@@ -1,28 +1,28 @@
 -- ----------------------------------------------------------------------
--- FUNCTION setSessionRole(role)
+-- FUNCTION setSessionRole(clustername, role)
 --
 --    Prototype in PL/Tcl - final version needs to be in C
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setSessionRole(text)
+create function @NAMESPACE@.setSessionRole(text, text)
 returns text
 as '
 	upvar #0	@CLUSTERNAME@_global_data	gbl
 
-	if {[info exists gbl(session_role)] && "$gbl(session_role)" != "$1"} {
+	if {[info exists gbl(session_role)] && "$gbl(session_role)" != "$2"} {
 		elog ERROR "cannot change session_role once set"
 	}
 
-	set gbl(session_role) $1
-	return $1
+	set gbl(session_role) $2
+	return $2
 ' language pltcl;
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION getSessionRole()
+-- FUNCTION getSessionRole(clustername)
 --
 --    Prototype in PL/Tcl - final version needs to be in C
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.getSessionRole()
+create function @NAMESPACE@.getSessionRole(text)
 returns text
 as '
 	upvar #0	@CLUSTERNAME@_global_data	gbl
