@@ -773,7 +773,7 @@ rm -f $setup_log
 		foreach my $table (keys %{$data{"master"}{"databases"}{$database}{"tables"}}) {
 			print F "
 		echo '  Adding table $table...';
-		set add table (set id = 1, origin = 1, id = $count, full qualified name = '$table', comment = 'Table $table');
+		set add table (set id = 1, origin = 1, id = $count, fully qualified name = '$table', comment = 'Table $table');
 		echo '    done';\n";
 			$count++;
 		}
@@ -785,7 +785,7 @@ rm -f $setup_log
 		foreach my $sequence (keys %{$data{"master"}{"databases"}{$database}{"sequences"}}) {
 			print F "
 		echo '  Adding sequence $sequence...';
-		set add sequence (set id = 1, origin = 1, id = $count, full qualified name = '$sequence', comment = 'Sequence $sequence');
+		set add sequence (set id = 1, origin = 1, id = $count, fully qualified name = '$sequence', comment = 'Sequence $sequence');
 		echo '    done';\n";
 			$count++;
 		}

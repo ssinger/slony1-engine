@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.12 2004-06-03 20:16:06 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.13 2004-06-18 20:22:01 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2214,7 +2214,7 @@ declare
 	v_fqname			text;
 begin
 	-- ----
-	-- Get the sequences full qualified name
+	-- Get the sequences fully qualified name
 	-- ----
 	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 			"pg_catalog".quote_ident(PGC.relname) into v_fqname
@@ -3250,7 +3250,7 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Construct the tables full qualified name and get its oid
+	-- Construct the tables fully qualified name and get its oid
 	-- ----
 	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
 				"pg_catalog".quote_ident(PGC.relname),

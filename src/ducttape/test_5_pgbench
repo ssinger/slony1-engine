@@ -125,7 +125,7 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
-		table add key (node id = 1, full qualified name = 'public.history');
+		table add key (node id = 1, fully qualified name = 'public.history');
 	}
 	on error {
 		exit 1;
@@ -134,16 +134,16 @@ slonik <<_EOF_
 	try {
 		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
 		set add table (set id = 1, origin = 1,
-			id = 1, full qualified name = 'public.accounts',
+			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
 		set add table (set id = 1, origin = 1,
-			id = 2, full qualified name = 'public.branches',
+			id = 2, fully qualified name = 'public.branches',
 			comment = 'Table branches');
 		set add table (set id = 1, origin = 1,
-			id = 3, full qualified name = 'public.tellers',
+			id = 3, fully qualified name = 'public.tellers',
 			comment = 'Table tellers');
 		set add table (set id = 1, origin = 1,
-			id = 4, full qualified name = 'public.history',
+			id = 4, fully qualified name = 'public.history',
 			key = serial, comment = 'Table accounts');
 	}
 	on error {

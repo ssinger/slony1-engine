@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.51 2004-06-15 23:27:18 wieck Exp $
+ *	$Id: remote_worker.c,v 1.52 2004-06-18 20:22:01 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3097,7 +3097,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				SlonSet	*rtcfg_set;
 
 				/*
-				 * Remember the full qualified table name on the fly.
+				 * Remember the fully qualified table name on the fly.
 				 * This might have to become a hashtable someday.
 				 */
 				while (tab_id >= wd->tab_fqname_size)

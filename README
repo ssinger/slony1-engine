@@ -160,7 +160,7 @@ slonik <<_EOF_
     # value of nextval('"_test1".sl_rowid_seq'), be unique and not
     # null.  All existing rows will be initialized with a number.
     # ----
-    table add key ( node id = 1, full qualified name = 'public.history' );
+    table add key ( node id = 1, fully qualified name = 'public.history' );
 
     # ----
     # The Slony replication system organizes tables in sets.  The
@@ -172,16 +172,16 @@ slonik <<_EOF_
     # ----
     create set ( id = 1, origin = 1, comment = 'All pgbench tables' );
     set add table ( set id = 1, origin = 1,
-        id = 1, full qualified name = 'public.accounts',
+        id = 1, fully qualified name = 'public.accounts',
         comment = 'Table accounts' );
     set add table ( set id = 1, origin = 1,
-        id = 2, full qualified name = 'public.branches',
+        id = 2, fully qualified name = 'public.branches',
         comment = 'Table branches' );
     set add table ( set id = 1, origin = 1,
-        id = 3, full qualified name = 'public.tellers',
+        id = 3, fully qualified name = 'public.tellers',
         comment = 'Table tellers' );
     set add table ( set id = 1, origin = 1,
-        id = 4, full qualified name = 'public.history',
+        id = 4, fully qualified name = 'public.history',
         key = serial,
         comment = 'Table history' );
 

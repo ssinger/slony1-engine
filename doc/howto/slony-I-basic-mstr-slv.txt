@@ -115,7 +115,7 @@ slonik <<_EOF_
     # constraints applied.  All existing rows will be initialized with a
     # number
 	#--
-	table add key (node id = 1, full qualified name = 'public.history');
+	table add key (node id = 1, fully qualified name = 'public.history');
 
 	#--
     # Slony-I organizes tables into sets.  The smallest unit a node can
@@ -123,10 +123,10 @@ slonik <<_EOF_
     # all 4 pgbench tables.  The master or origin of the set is node 1.
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
-	set add table (set id=1, origin=1, id=1, full qualified name = 'public.accounts', comment='accounts table');
-	set add table (set id=1, origin=1, id=2, full qualified name = 'public.branches', comment='branches table');
-	set add table (set id=1, origin=1, id=3, full qualified name = 'public.tellers', comment='tellers table');
-	set add table (set id=1, origin=1, id=4, full qualified name = 'public.history', comment='history table', key = serial);
+	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
+	set add table (set id=1, origin=1, id=2, fully qualified name = 'public.branches', comment='branches table');
+	set add table (set id=1, origin=1, id=3, fully qualified name = 'public.tellers', comment='tellers table');
+	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table', key = serial);
 
 	#--
     # Create the second node (the slave) tell the 2 nodes how to connect to
