@@ -1,5 +1,5 @@
 #!perl     # -*- perl -*-
-# $Id: slon-tools.pm,v 1.13 2004-12-10 18:44:31 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.14 2005-01-04 22:19:12 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -11,7 +11,8 @@ sub add_node {
 		node => undef,
 		password => undef,
 		parent => 1,
-		noforward => undef
+		noforward => undef,
+		sslmode => undef
 	       );
   my $K;
   while ($K= shift) {
@@ -48,6 +49,11 @@ sub add_node {
   if ($password) {
     $loginstr .= " password=$password";
     $PASSWORD[$node] = $password;
+  }
+  my $sslmode = $PARAMS{'sslmode'};
+  if ($sslmode) {
+    $loginstr .= " sslmode=$sslmode";
+    $SSLMODE[$node] = $sslmode;
   }
   $DSN[$node] = $loginstr;
   my $parent = $PARAMS{'parent'};
