@@ -1,0 +1,13 @@
+What is Slony
+Slony-I is a "master to multiple slaves" replication system with cascading and failover. 
+The big picture for the development of Slony-I is a master-slave system that includes all features and capabilities needed to replicate large databases to a reasonably limited number of slave systems. 
+Slony-I is a system for data centers and backup sites, where the normal mode of operation is that all nodes are available. 
+
+Why yet another replication system
+Slony-I was born, with the idea to create a replication system that was not tied to a specific version of PostgreSQL, and allowed to be started and stoped on an existing database with out the need for a dump/reload cycle.
+
+What Slony-I is not
+Slony-I is not a network management system. Slony-I does not have any functionality within it to detect a node failure, or automaticly promote a note to a master or other data origin.  Slony-I is not multimaster, it's not a connection borker, and it dosn't make you coffee and toast in the morning.
+
+Current Limitations
+Slony-I does not automactily propigate schema changes, nor does it have any ability to replicate large objects
