@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.58 2004-08-17 04:20:14 dfetter Exp $
+ *	$Id: remote_worker.c,v 1.59 2004-08-27 13:24:43 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3443,7 +3443,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * fails.
 		 */
 		slon_mkquery(&query,
-				"listen \"_%s_Node_%d\"; ",
+				"unlisten \"_%s_Node_%d\"; ",
 				rtcfg_cluster_name, provider->no_id);
 		if (query_execute(node, local_dbconn, &query) < 0)
 		{
