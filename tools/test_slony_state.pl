@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_state.pl,v 1.2 2005-03-10 23:06:10 cbbrowne Exp $
+# $Id: test_slony_state.pl,v 1.3 2005-03-15 16:42:58 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -45,8 +45,8 @@ print "Rummage for DSNs\n=============================\n";
 my $dsnsquery =
 "
    select p.pa_server, p.pa_conninfo
-   from _$cluster.sl_path p
-   where exists (select * from _$cluster.sl_subscribe s where
+   from "_$cluster".sl_path p
+   where exists (select * from "_$cluster".sl_subscribe s where
                           (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
                           sub_active = 't')
    group by pa_server, pa_conninfo;
@@ -126,9 +126,9 @@ if sl_confirm entries have not been propagating properly.
 
   print "\nListen Path Analysis\n===================================================\n";
   my $inadequate_paths = qq{
-select li_origin, count(*) from _$cluster.sl_listen
+select li_origin, count(*) from "_$cluster".sl_listen
 group by li_origin
-having count(*) < (select count(*) - 1 from _$cluster.sl_node );
+having count(*) < (select count(*) - 1 from "_$cluster".sl_node );
 };
   $res = $dbh->exec($inadequate_paths);
   while (my @row = $res->fetchrow) {
@@ -138,8 +138,8 @@ having count(*) < (select count(*) - 1 from _$cluster.sl_node );
   }
   my $missing_paths = qq{
    select * from (select n1.no_id as origin, n2.no_id as receiver
-     from _$cluster.sl_node n1, _$cluster.sl_node n2 where n1.no_id != n2.no_id) as foo
-   where not exists (select 1 from _$cluster.sl_listen
+     from "_$cluster".sl_node n1, "_$cluster".sl_node n2 where n1.no_id != n2.no_id) as foo
+   where not exists (select 1 from "_$cluster".sl_listen
                      where li_origin = origin and li_receiver = receiver);
 };
   $res = $dbh->exec($missing_paths);
@@ -162,8 +162,8 @@ necessary.
 
   # Each subscriber node must have a direct listen path
   my $no_direct_path = qq{
-    select sub_set, sub_provider, sub_receiver from _$cluster.sl_subscribe where not exists
-        (select 1 from _$cluster.sl_listen 
+    select sub_set, sub_provider, sub_receiver from "_$cluster".sl_subscribe where not exists
+        (select 1 from "_$cluster".sl_listen 
          where li_origin = sub_provider and li_receiver = sub_receiver and li_provider = sub_provider);
 };
   $res = $dbh->exec($no_direct_path);
@@ -196,7 +196,7 @@ necessary.
          date_trunc('minutes', min(now() - ev_timestamp)),
          date_trunc('minutes', max(now() - ev_timestamp)),
          min(now() - ev_timestamp) > '$WANTAGE' as agehi
-     from _$cluster.sl_event group by ev_origin;
+     from "_$cluster".sl_event group by ev_origin;
   };
   $res = $dbh->exec($event_summary);
   while (my @row = $res->fetchrow) {
@@ -226,7 +226,7 @@ Could listen paths be missing so that events are not propagating?
            max(con_seqno) as maxseq, date_trunc('minutes', min(now()-con_timestamp)) as age1,
            date_trunc('minutes', max(now()-con_timestamp)) as age2,
            min(now() - con_timestamp) > '$WANTCONFIRM' as tooold
-    from _$cluster.sl_confirm
+    from "_$cluster".sl_confirm
     group by con_origin, con_received
     order by con_origin, con_received;
   };
