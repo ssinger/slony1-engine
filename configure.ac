@@ -6,16 +6,15 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.16 2004-03-19 03:41:43 wieck Exp $
+# $Id: configure.ac,v 1.17 2004-03-30 17:49:38 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
 
-AC_INIT(slony1-engine, 20040318)
+AC_INIT(slony1-engine, 20040330)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src])
-AC_PREFIX_DEFAULT(/usr/local/pgsql)
 
 AC_CANONICAL_HOST
 
@@ -57,76 +56,29 @@ AC_PROG_CC
 AC_PROG_LD
 AC_SUBST(LD)
 AC_SUBST(with_gnu_ld)
+ACX_PTHREAD()
 
-# Checks for libraries.
+# Locate the PostgreSQL source tree
 
-# Checks for header files.
+AC_ARG_WITH(pgsourcetree, [  --with-pgsourcetree=<dir> Location of PostgreSQL source tree], AC_SUBST(PGSOURCETREE, $with_pgsourcetree))
 
-# The installation locations must be identical to those of postgresql
-# or we will never be able to administer a box remote. Check for
-# certain files to be in those locations.
-
-if test "x$prefix" = "xNONE" ; then
-	test_prefix=/usr/local/pgsql
-else
-	test_prefix=$prefix
+if test "x$with_pgsourcetree" = "x" ; then
+	AC_MSG_ERROR([
+        ********************
+		* Compiling Slony-I currently requires a source installation
+		* of PostgreSQL. Please specify the location of the tree you
+		* built as --with-pgsourcetree=<dir>
+        ********************
+	])
 fi
-eval test_dir="${includedir}"
-if test "${test_dir}" = "NONE/include" ; then
-	test_dir="${test_prefix}/include"
-fi
-if test ! -f "${test_dir}/server/executor/spi.h" ; then
-    AC_MSG_ERROR([
-        ${test_dir}/server/executor/spi.h NOT found
-        you need to specify --includedir= pointing to the same directory
-        PostgreSQL was configured with and PostgreSQL must be installed 
-        including 'make install-all-headers'])
-fi
-test_includedir="${test_dir}"
-
-eval test_dir="${bindir}"
-if test "${test_dir}" = "NONE/bin" ; then
-	test_dir="${test_prefix}/bin"
-fi
-if test ! -f "${test_dir}/postmaster" ; then
-    AC_MSG_ERROR([
-        ${test_dir}/postmaster NOT found
-        you need to specify --bindir= pointing to the same directory
-        PostgreSQL was configured with])
-fi
-
-eval test_dir="${datadir}"
-if test "${test_dir}" = "NONE/share" ; then
-	test_dir="${test_prefix}/share"
-fi
-if test ! -f "${test_dir}/postgresql.conf.sample" ; then
-    AC_MSG_ERROR([
-        ${test_dir}/postgresql.conf.sample NOT found
-        you need to specify --datadir= pointing to the same directory
-        PostgreSQL was configured with])
-fi
-AC_DEFINE_UNQUOTED(PGSHARE, "${test_dir}", )
-
-eval test_dir="${libdir}"
-if test "${test_dir}" = "NONE/lib" ; then
-	test_dir="${test_prefix}/lib"
-fi
-if test ! -f "`ls ${test_dir}/plpgsql*`" ; then
-    AC_MSG_ERROR([
-        ${test_dir}/plpgsql module NOT found
-        you need to specify --libdir= pointing to the same directory
-        PostgreSQL was configured with])
-fi
-test_libdir="${test_dir}"
-
 
 # ----
 # Check if our libpq contains several functions
 # ----
 save_CFLAGS="$CFLAGS"
 save_LIBS="$LIBS"
-CFLAGS="-I${test_includedir} $CFLAGS"
-LIBS="-L${test_libdir} -lpq $LIBS"
+CFLAGS="-I${with_pgsourcetree}/src/interfaces/libpq -I${with_pgsourcetree}/src/include $CFLAGS"
+LIBS="-L${with_pgsourcetree}/src/interfaces/libpq -lpq $LIBS"
 
 # PQfreemem()
 AC_MSG_CHECKING([for PQfreemem() in libpq])
@@ -150,15 +102,6 @@ if test $have_pqputcopydata = yes ; then
 	AC_DEFINE(HAVE_PQPUTCOPYDATA,1,)
 fi
 
-AC_MSG_CHECKING([for typcache.h])
-if test -f "${test_includedir}/server/utils/typcache.h"; then
-	have_typcache=yes
-	AC_DEFINE(HAVE_TYPCACHE,1,)
-else
-	have_typcache=no
-fi
-AC_MSG_RESULT($have_typcache)
-
 # PQsetNoticeReceiver()
 AC_MSG_CHECKING([for PQsetNoticeReceiver() in libpq])
 have_pqsetnoticereceiver=no
@@ -170,28 +113,21 @@ if test $have_pqsetnoticereceiver = yes ; then
 	AC_DEFINE(HAVE_PQSETNOTICERECEIVER,1,)
 fi
 
+AC_MSG_CHECKING([for typcache.h])
+if test -f "${with_pgsourcetree}/src/include/utils/typcache.h"; then
+	have_typcache=yes
+	AC_DEFINE(HAVE_TYPCACHE,1,)
+else
+	have_typcache=no
+fi
+AC_MSG_RESULT($have_typcache)
+
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 
-# Checks for typedefs, structures, and compiler characteristics.
-AC_TYPE_SIZE_T
-
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_HEADER_STDC
-ACX_PTHREAD()
-AC_CHECK_FUNCS([strchr strpbrk])
-
 AC_CONFIG_FILES([
 	Makefile.global 
-	src/slon/Makefile
-	src/slonik/Makefile
 ])
-
-AC_CONFIG_LINKS([
-	Makefile.port:makefiles/Makefile.${template}
-])
-
 
 AC_OUTPUT([
     postgresql-slony1-engine.spec

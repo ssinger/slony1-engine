@@ -4,12 +4,15 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.8 2004-03-18 19:32:21 wieck Exp $
+#	$Id: Makefile,v 1.9 2004-03-30 17:49:38 wieck Exp $
 # ----------
 
-subdir = src/backend
-top_builddir = ../..
-include $(top_builddir)/Makefile.global
+slony_subdir = src/xxid
+slony_top_builddir = ../..
+include $(slony_top_builddir)/Makefile.global
+CFLAGS += -I$(slony_top_builddir)
+include $(PGSOURCETREE)/src/Makefile.shlib
+
 
 FUNCS_NAME		= slony1_funcs
 
