@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.5 2004-02-24 16:51:21 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.6 2004-02-24 21:03:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -46,6 +46,8 @@ cleanupThread_main(void *dummy)
 	PGresult   *res;
 	struct timeval	tv_start;
 	struct timeval	tv_end;
+
+	slon_log(SLON_DEBUG1, "cleanupThread: thread starts\n");
 
 	/*
 	 * Connect to the local database
@@ -91,7 +93,8 @@ cleanupThread_main(void *dummy)
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
-			fprintf(stderr, "cleanupThread_main: \"%s\" - %s",
+			slon_log(SLON_FATAL,
+					"cleanupThread: \"%s\" - %s",
 					dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
 			slon_abort();
@@ -99,8 +102,9 @@ cleanupThread_main(void *dummy)
 		}
 		PQclear(res);
 		gettimeofday(&tv_end, NULL);
-printf("INFO cleanupThread: %8.3f seconds for cleanupEvent()\n",
-TIMEVAL_DIFF(&tv_start, &tv_end));
+		slon_log(SLON_DEBUG1,
+				"cleanupThread: %8.3f seconds for cleanupEvent()\n",
+				TIMEVAL_DIFF(&tv_start, &tv_end));
 
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
@@ -109,7 +113,8 @@ TIMEVAL_DIFF(&tv_start, &tv_end));
 		res = PQexec(dbconn, dstring_data(&query2));
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
-			fprintf(stderr, "cleanupThread_main: \"%s\" - %s",
+			slon_log(SLON_FATAL,
+					"cleanupThread: \"%s\" - %s",
 					dstring_data(&query2), PQresultErrorMessage(res));
 			PQclear(res);
 			slon_abort();
@@ -117,9 +122,12 @@ TIMEVAL_DIFF(&tv_start, &tv_end));
 		}
 		PQclear(res);
 		gettimeofday(&tv_end, NULL);
-printf("INFO cleanupThread_main: %8.3f seconds for vacuuming\n",
-TIMEVAL_DIFF(&tv_start, &tv_end));
+		slon_log(SLON_DEBUG1,
+				"cleanupThread: %8.3f seconds for vacuuming\n",
+				TIMEVAL_DIFF(&tv_start, &tv_end));
 	}
+
+	slon_log(SLON_DEBUG1, "cleanupThread: thread exiting\n");
 
 	/*
 	 * Free Resources
@@ -135,6 +143,7 @@ TIMEVAL_DIFF(&tv_start, &tv_end));
 	/*
 	 * Terminate this thread
 	 */
+	slon_log(SLON_DEBUG1, "cleanupThread: thread done\n");
 	pthread_exit(NULL);
 }
 

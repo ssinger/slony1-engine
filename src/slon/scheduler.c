@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.4 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: scheduler.c,v 1.5 2004-02-24 21:03:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -683,8 +683,8 @@ sched_sighandler(int signo)
 	pthread_mutex_lock(&sched_master_lock);
 	if (pthread_self() != sched_main_thread)
 	{
-		fprintf(stderr, "sched_sighandler: called in non-main thread\n");
-		exit(-1);
+		slon_log(SLON_FATAL, "sched_sighandler: called in non-main thread\n");
+		slon_abort();
 	}
 
 	/*
@@ -698,7 +698,7 @@ sched_sighandler(int signo)
 	 */
 	if (sched_sockpair[1] < 0)
 	{
-		fprintf(stderr, "sched_sighandler: sockpair already closed\n");
+		slon_log(SLON_ERROR, "sched_sighandler: sockpair already closed\n");
 		pthread_mutex_unlock(&sched_master_lock);
 		return;
 	}

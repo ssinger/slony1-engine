@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.13 2004-02-24 16:51:21 wieck Exp $
+ *	$Id: slon.c,v 1.14 2004-02-24 21:03:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -88,12 +88,12 @@ main (int argc, const char *argv[])
 	startup_conn = PQconnectdb(rtcfg_conninfo);
 	if (startup_conn == NULL)
 	{
-		fprintf(stderr, "PQconnectdb() failed\n");
+		slon_log(SLON_FATAL, "main: PQconnectdb() failed\n");
 		slon_exit(-1);
 	}
 	if (PQstatus(startup_conn) != CONNECTION_OK)
 	{
-		fprintf(stderr, "Cannot connect to local database - %s",
+		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s",
 				PQerrorMessage(startup_conn));
 		PQfinish(startup_conn);
 		slon_exit(-1);
@@ -105,17 +105,18 @@ main (int argc, const char *argv[])
 	rtcfg_nodeid = db_getLocalNodeId(startup_conn);
 	if (rtcfg_nodeid < 0)
 	{
-		fprintf(stderr, "Node is not initialized properly\n");
+		slon_log(SLON_FATAL, "main: Node is not initialized properly\n");
 		slon_exit(-1);
 	}
-
-printf("main: local node id = %d\n", rtcfg_nodeid);
+	slon_log(SLON_INFO, "main: local node id = %d\n", rtcfg_nodeid);
 
 	/*
 	 * Start the event scheduling system
 	 */
 	if (sched_start_mainloop() < 0)
 		slon_exit(-1);
+
+	slon_log(SLON_DEBUG1, "main: loading current cluster configuration\n");
 
 	/*
 	 * Begin a transaction
@@ -125,7 +126,7 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 			"set transaction isolation level serializable;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		fprintf(stderr, "Cannot start transaction - %s",
+		slon_log(SLON_FATAL, "Cannot start transaction - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		slon_exit(-1);
@@ -141,12 +142,13 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 			"    (select max(con_seqno) from %s.sl_confirm "
 			"        where con_origin = no_id and con_received = %d) "
 			"        as last_event "
-			"from %s.sl_node",
+			"from %s.sl_node "
+			"order by no_id; ",
 			rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get node list - %s",
+		slon_log(SLON_FATAL, "main: Cannot get node list - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -172,10 +174,9 @@ printf("main: local node id = %d\n", rtcfg_nodeid);
 			/*
 			 * Add a remote node
 			 */
-			rtcfg_storeNode(no_id, no_comment);
 			sscanf(PQgetvalue(res, i, 3), "%lld", &last_event);
+			rtcfg_storeNode(no_id, no_comment);
 			rtcfg_setNodeLastEvent(no_id, last_event);
-printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 
 			/*
 			 * If it is active, remember for activation just before
@@ -197,7 +198,7 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get path config - %s",
+		slon_log(SLON_FATAL, "main: Cannot get path config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -223,7 +224,7 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get listen config - %s",
+		slon_log(SLON_FATAL, "main: Cannot get listen config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -248,7 +249,7 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get set config - %s",
+		slon_log(SLON_FATAL, "main: Cannot get set config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -275,7 +276,7 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get subscription config - %s",
+		slon_log(SLON_FATAL, "main: Cannot get subscription config - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -306,7 +307,7 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 	res = PQexec(startup_conn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "Cannot get last local eventid - %s",
+		slon_log(SLON_FATAL, "main: Cannot get last local eventid - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
@@ -321,7 +322,9 @@ printf("node %d - last event confirmed = %lld\n", no_id, last_event);
 			strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
 	PQclear(res);
 	dstring_free(&query);
-printf("main: last local event sequence = %s\n", rtcfg_lastevent);
+	slon_log(SLON_DEBUG1, 
+			"main: last local event sequence = %s\n", 
+			rtcfg_lastevent);
 
 	/*
 	 * Rollback the transaction we used to get the config snapshot
@@ -329,7 +332,7 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	res = PQexec(startup_conn, "rollback transaction;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		fprintf(stderr, "Cannot rollback transaction - %s",
+		slon_log(SLON_FATAL, "main: Cannot rollback transaction - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		slon_exit(-1);
@@ -340,6 +343,8 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 * Done with the startup, don't need the local connection any more.
 	 */
 	PQfinish(startup_conn);
+
+	slon_log(SLON_DEBUG1, "main: configuration complete - starting threads\n");
 
 	/*
 	 * Enable all nodes that are active
@@ -353,8 +358,9 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 */
 	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
 	{
-		perror("pthread_create()");
-		slon_exit(-1);
+		slon_log(SLON_FATAL, "main: cannot create localListenThread - %s\n",
+				strerror(errno));
+		slon_abort();
 	}
 
 	/*
@@ -363,8 +369,9 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 */
 	if (pthread_create(&local_cleanup_thread, NULL, cleanupThread_main, NULL) < 0)
 	{
-		perror("pthread_create()");
-		slon_exit(-1);
+		slon_log(SLON_FATAL, "main: cannot create cleanupThread - %s\n",
+				strerror(errno));
+		slon_abort();
 	}
 
 	/*
@@ -373,15 +380,21 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 */
 	if (pthread_create(&local_sync_thread, NULL, syncThread_main, NULL) < 0)
 	{
-		perror("pthread_create()");
-		slon_exit(-1);
+		slon_log(SLON_FATAL, "main: cannot create syncThread - %s\n",
+				strerror(errno));
+		slon_abort();
 	}
 
 	/*
 	 * Wait until the scheduler has shut down all remote connections
 	 */
+	slon_log(SLON_DEBUG1, "main: running scheduler mainloop\n");
 	if (sched_wait_mainloop() < 0)
-		return -1;
+	{
+		slon_log(SLON_FATAL, "main: scheduler returned with error\n");
+		slon_abort();
+	}
+	slon_log(SLON_DEBUG1, "main: scheduler mainloop returned\n");
 
 	/*
 	 * Wait for all remote threads to finish
@@ -392,15 +405,21 @@ printf("main: last local event sequence = %s\n", rtcfg_lastevent);
 	 * Wait for the local threads to finish
 	 */
 	if (pthread_join(local_event_thread, NULL) < 0)
-		perror("pthread_join()");
+		slon_log(SLON_ERROR, "main: cannot join localListenThread - %s\n",
+				strerror(errno));
 
 	if (pthread_join(local_cleanup_thread, NULL) < 0)
-		perror("pthread_join()");
+		slon_log(SLON_ERROR, "main: cannot join cleanupThread - %s\n",
+				strerror(errno));
 
 	if (pthread_join(local_sync_thread, NULL) < 0)
-		perror("pthread_join()");
+		slon_log(SLON_ERROR, "main: cannot join syncThread - %s\n",
+				strerror(errno));
 
-printf("main: done\n");
+	/*
+	 * That's it.
+	 */
+	slon_log(SLON_INFO, "main: done\n");
 	return 0;
 }
 

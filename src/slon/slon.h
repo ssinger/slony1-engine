@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.14 2004-02-24 16:51:22 wieck Exp $
+ *	$Id: slon.h,v 1.15 2004-02-24 21:03:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -141,7 +141,8 @@ do { \
 	(__ds)->n_used = 0; \
 	(__ds)->data = malloc(SLON_DSTRING_SIZE_INIT); \
 	if ((__ds)->data == NULL) { \
-		perror("dstring_init: malloc()"); \
+		slon_log(SLON_FATAL, "dstring_init: malloc() - %s", \
+				strerror(errno)); \
 		slon_abort(); \
 	} \
 } while (0)
@@ -165,7 +166,8 @@ do { \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
 		if ((__ds)->data == NULL) \
 		{ \
-			perror("dstring_nappend: realloc()"); \
+			slon_log(SLON_FATAL, "dstring_nappend: realloc() - %s", \
+					strerror(errno)); \
 			slon_abort(); \
 		} \
 	} \
@@ -185,7 +187,8 @@ do { \
 		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
 		if ((__ds)->data == NULL) \
 		{ \
-			perror("dstring_addchar: realloc()"); \
+			slon_log(SLON_FATAL, "dstring_addchar: realloc() - %s", \
+					strerror(errno)); \
 			slon_abort(); \
 		} \
 	} \
@@ -427,6 +430,20 @@ extern int		slon_appendquery(SlonDString *ds, char *fmt, ...);
  * Functions in misc.c
  * ----------
  */
+typedef enum {
+	SLON_FATAL,
+	SLON_ERROR,
+	SLON_WARN,
+	SLON_CONFIG,
+	SLON_INFO,
+	SLON_DEBUG1,
+	SLON_DEBUG2,
+	SLON_DEBUG3,
+	SLON_DEBUG4
+} SlonLogLevel;
+
+extern void		slon_log(SlonLogLevel level, char * fmt, ...);
+
 
 
 #endif /*  SLON_H_INCLUDED */

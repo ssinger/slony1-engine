@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.1 2004-02-24 16:51:21 wieck Exp $
+ *	$Id: remote_worker.c,v 1.2 2004-02-24 21:03:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -141,15 +141,9 @@ remoteWorkerThread_main(void *cdata)
 	int			check_config = true;
 	char		seqbuf[64];
 
-#if 0
-	PGresult   *res;
-	int			ntuples;
-	int			tupno;
-	PGnotify   *notification;
-#endif
-
-printf("slon_remoteWorkerThread: node %d - starting\n", 
-node->no_id);
+	slon_log(SLON_DEBUG1,
+			"remoteWorkerThread_%d: thread starts\n", 
+			node->no_id);
 	/*
 	 * Connect to the local database
 	 */
@@ -174,25 +168,13 @@ node->no_id);
 		if (check_config)
 		{
 			if (sched_get_status() != SCHED_STATUS_OK)
-			{
-printf("remoteWorkerThread: node %d - scheduler not in status OK\n",
-node->no_id);
 				break;
-			}
 
 			rtcfg_lock();
 			if (!node->no_active)
-			{
-printf("remoteWorkerThread: node %d - node got disabled\n",
-node->no_id);
 				break;
-			}
 			if (node->worker_status != SLON_TSTAT_RUNNING)
-			{
-printf("remoteWorkerThread: node %d - worker thread shutdown requested\n",
-node->no_id);
 				break;
-			}
 			rtcfg_unlock();
 
 			check_config = false;
@@ -208,8 +190,10 @@ node->no_id);
 			pthread_cond_wait(&(node->message_cond), &(node->message_lock));
 			if (node->message_head == NULL)
 			{
-				fprintf(stderr, "remoteWorkerThread: node %d - got message condition but queue is empty\n",
-							node->no_id);
+				slon_log(SLON_FATAL,
+						"remoteWorkerThread_%d: got message "
+						"condition but queue is empty\n",
+						node->no_id);
 				slon_abort();
 			}
 		}
@@ -223,8 +207,6 @@ node->no_id);
 		 */
 		if (msg->msg_type == WMSG_WAKEUP)
 		{
-printf("remoteWorkerThread: node %d - WAKEUP\n",
-node->no_id);
 			free(msg);
 			check_config = true;
 			continue;
@@ -246,7 +228,8 @@ node->no_id);
 		 */
 		if (msg->msg_type != WMSG_EVENT)
 		{
-			fprintf(stderr, "remoteWorkerThread: node %d - unknown WMSG type %d\n",
+			slon_log(SLON_FATAL,
+					"remoteWorkerThread_%d: unknown WMSG type %d\n",
 					node->no_id, msg->msg_type);
 			slon_abort();
 		}
@@ -273,7 +256,7 @@ node->no_id);
 			/*
 			 * SYNC event
 			 */
-printf("TODO: remoteWorkerThread: node %d - EVENT %d,%lld %s - need to replicate\n",
+printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d,%lld %s - need to replicate\n",
 node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			slon_appendquery(&query1, "commit transaction;");
 			if (query_execute(node, local_dbconn, &query1, PGRES_COMMAND_OK) < 0)
@@ -356,7 +339,7 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			}
 			else
 			{
-printf("TODO: remoteWorkerThread: node %d - EVENT %d,%lld %s - unknown event type\n",
+printf("TODO: ********** remoteWorkerThread: node %d - EVENT %d,%lld %s - unknown event type\n",
 node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 			}
 
@@ -376,14 +359,16 @@ node->no_id, event->ev_origin, event->ev_seqno, event->ev_type);
 	/*
 	 * Thread exit time has arrived.
 	 */
-printf("slon_remoteWorkerThread: node %d - exiting\n",
-node->no_id);
+	slon_log(SLON_DEBUG1,
+			"remoteWorkerThread_%d: thread exiting\n",
+			node->no_id);
 
 	slon_disconnectdb(local_conn);
 	dstring_free(&query1);
 
-printf("slon_remoteWorkerThread: node %d - done\n",
-node->no_id);
+	slon_log(SLON_DEBUG1,
+			"remoteWorkerThread_%d: thread done\n",
+			node->no_id);
 	pthread_exit(NULL);
 }
 
@@ -428,7 +413,8 @@ remoteWorker_event(int ev_origin, int64 ev_seqno,
 	 */
 	if (sched_get_status() != SCHED_STATUS_OK)
 	{
-		fprintf(stderr, "remoteWorker_event: ignore new events due to shutdown\n");
+		slon_log(SLON_DEBUG2,
+				"remoteWorker_event: ignore new events due to shutdown\n");
 		return;
 	}
 
@@ -441,21 +427,24 @@ remoteWorker_event(int ev_origin, int64 ev_seqno,
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_event: event %d,%lld ignored - unknown origin\n",
+		slon_log(SLON_WARN,
+				"remoteWorker_event: event %d,%lld ignored - unknown origin\n",
 				ev_origin, ev_seqno);
 		return;
 	}
 	if (!node->no_active)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_event: event %d,%lld ignored - origin inactive\n",
+		slon_log(SLON_WARN,
+				"remoteWorker_event: event %d,%lld ignored - origin inactive\n",
 				ev_origin, ev_seqno);
 		return;
 	}
 	if (node->last_event >= ev_seqno)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_event: event %d,%lld ignored - duplicate\n",
+		slon_log(SLON_DEBUG2,
+				"remoteWorker_event: event %d,%lld ignored - duplicate\n",
 				ev_origin, ev_seqno);
 		return;
 	}
@@ -571,13 +560,16 @@ remoteWorker_wakeup(int no_id)
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_wakeup: unknown node %d\n", no_id);
+		slon_log(SLON_ERROR,
+				"remoteWorker_wakeup: unknown node %d\n",
+				no_id);
 		return;
 	}
 	if (node->worker_status == SLON_TSTAT_NONE)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_wakeup: node %d - no worker thread\n", 
+		slon_log(SLON_WARN,
+				"remoteWorker_wakeup: node %d - no worker thread\n", 
 				no_id);
 		return;
 	}
@@ -623,13 +615,16 @@ remoteWorker_confirm(int no_id,
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_confirm: unknown node %d\n", no_id);
+		slon_log(SLON_ERROR,
+				"remoteWorker_confirm: unknown node %d\n",
+				no_id);
 		return;
 	}
 	if (node->worker_status == SLON_TSTAT_NONE)
 	{
 		rtcfg_unlock();
-		fprintf(stderr, "remoteWorker_wakeup: node %d - no worker thread\n", 
+		slon_log(SLON_WARN,
+				"remoteWorker_wakeup: node %d - no worker thread\n", 
 				no_id);
 		return;
 	}
@@ -706,7 +701,8 @@ query_execute(SlonNode *node, PGconn *dbconn,
 	res = PQexec(dbconn, dstring_data(dsp));
 	if (PQresultStatus(res) != expected_rc)
 	{
-		fprintf(stderr, "remoteWorkerThread: node %d - \"%s\" %s",
+		slon_log(SLON_ERROR,
+				"remoteWorkerThread_%d: \"%s\" %s",
 				node->no_id, dstring_data(dsp),
 				PQresultErrorMessage(res));
 		PQclear(res);
@@ -847,8 +843,10 @@ store_confirm_forward(SlonNode *node, SlonConn *conn,
 	dstring_init(&query);
 	sprintf(seqbuf, "%lld", confirm->con_seqno);
 	
-printf("INFO: remoteWorkerThread_%d: forward confirm %d,%s received by %d\n",
-node->no_id, confirm->con_origin, seqbuf, confirm->con_received);
+	slon_log(SLON_DEBUG2,
+			"remoteWorkerThread_%d: forward confirm %d,%s received by %d\n",
+			node->no_id, confirm->con_origin, seqbuf, confirm->con_received);
+
 	slon_mkquery(&query,
 			"select %s.forwardConfirm(%d, %d, '%s', '%q'); ",
 			rtcfg_namespace,
@@ -858,7 +856,8 @@ node->no_id, confirm->con_origin, seqbuf, confirm->con_received);
 	res = PQexec(conn->dbconn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "store_confirm_forward: node %d - \"%s\" %s",
+		slon_log(SLON_ERROR,
+				"remoteWorkerThread_%d: \"%s\" %s",
 				node->no_id, dstring_data(&query),
 				PQresultErrorMessage(res));
 		PQclear(res);

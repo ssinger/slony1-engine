@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.3 2004-02-22 03:10:48 wieck Exp $
+ *	$Id: sync_thread.c,v 1.4 2004-02-24 21:03:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,14 +45,14 @@ syncThread_main(void *dummy)
 	PGconn	   *dbconn;
 	PGresult   *res;
 
+	slon_log(SLON_DEBUG1,
+			"syncThread: thread stats\n");
+
 	/*
 	 * Connect to the local database
 	 */
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_sync")) == NULL)
-	{
 		slon_abort();
-		pthread_exit(NULL);
-	}
 	dbconn = conn->dbconn;
 
 	/*
@@ -90,7 +90,8 @@ syncThread_main(void *dummy)
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
-			fprintf(stderr, "slon_localSyncThread: \"%s\" - %s",
+			slon_log(SLON_FATAL,
+					"syncThread: \"%s\" - %s",
 					dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
 			slon_abort();
@@ -112,14 +113,16 @@ syncThread_main(void *dummy)
 			res = PQexec(dbconn, dstring_data(&query2));
 			if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			{
-				fprintf(stderr, "slon_localSyncThread: \"%s\" - %s",
+				slon_log(SLON_FATAL,
+						"syncThread: \"%s\" - %s",
 						dstring_data(&query2), PQresultErrorMessage(res));
 				PQclear(res);
 				slon_abort();
 				break;
 			}
-printf("slon_localSyncThread: new sl_action_seq %s - SYNC %s\n", 
-last_actseq_buf, PQgetvalue(res, 0, 0));
+			slon_log(SLON_DEBUG1,
+					"syncThread: new sl_action_seq %s - SYNC %s\n", 
+					last_actseq_buf, PQgetvalue(res, 0, 0));
 			PQclear(res);
 			
 			/*
@@ -128,11 +131,11 @@ last_actseq_buf, PQgetvalue(res, 0, 0));
 			res = PQexec(dbconn, "commit transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
-				fprintf(stderr, "slon_localSyncThread: \"commit transaction;\" - %s",
+				slon_log(SLON_FATAL,
+						"syncThread: \"commit transaction;\" - %s",
 						PQresultErrorMessage(res));
 				PQclear(res);
 				slon_abort();
-				break;
 			}
 			PQclear(res);
 		}
@@ -144,20 +147,24 @@ last_actseq_buf, PQgetvalue(res, 0, 0));
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
-				fprintf(stderr, "slon_localSyncThread: \"rollback transaction;\" - %s",
+				slon_log(SLON_FATAL,
+						"syncThread: \"rollback transaction;\" - %s",
 						PQresultErrorMessage(res));
 				PQclear(res);
 				slon_abort();
-				break;
 			}
 			PQclear(res);
 		}
 	}
 
+	slon_log(SLON_DEBUG1, "syncThread: thread exiting\n");
+
 	dstring_free(&query1);
 	dstring_free(&query2);
 
 	slon_disconnectdb(conn);
+
+	slon_log(SLON_DEBUG1, "syncThread: thread done\n");
 	pthread_exit(NULL);
 }
 

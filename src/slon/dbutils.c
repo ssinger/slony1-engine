@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.6 2004-02-22 23:53:25 wieck Exp $
+ *	$Id: dbutils.c,v 1.7 2004-02-24 21:03:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -48,13 +48,15 @@ slon_connectdb(char *conninfo, char *symname)
 	dbconn = PQconnectdb(conninfo);
 	if (dbconn == NULL)
 	{
-		fprintf(stderr, "slon_connectdb: PQconnectdb(\"%s\") failed\n",
+		slon_log(SLON_ERROR,
+				"slon_connectdb: PQconnectdb(\"%s\") failed\n",
 				conninfo);
 		return NULL;
 	}
 	if (PQstatus(dbconn) != CONNECTION_OK)
 	{
-		fprintf(stderr, "slon_connectdb: PQconnectdb(\"%s\") failed - %s",
+		slon_log(SLON_ERROR,
+				"slon_connectdb: PQconnectdb(\"%s\") failed - %s",
 				conninfo, PQerrorMessage(dbconn));
 		PQfinish(dbconn);
 		return NULL;
@@ -166,14 +168,16 @@ db_getLocalNodeId(PGconn *conn)
 	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		fprintf(stderr, "cannot get sl_local_node_id - %s",
+		slon_log(SLON_ERROR,
+				"cannot get sl_local_node_id - %s",
 				PQresultErrorMessage(res));
 		PQclear(res);
 		return -1;
 	}
 	if (PQntuples(res) != 1)
 	{
-		fprintf(stderr, "query '%s' returned %d rows (expected 1)\n",
+		slon_log(SLON_ERROR,
+				"query '%s' returned %d rows (expected 1)\n",
 				query, PQntuples(res));
 		PQclear(res);
 		return -1;

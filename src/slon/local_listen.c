@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.4 2004-02-24 16:51:21 wieck Exp $
+ *	$Id: local_listen.c,v 1.5 2004-02-24 21:03:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -67,7 +67,8 @@ localListenThread_main(void *dummy)
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		fprintf(stderr, "slon_localListenThread: \"%s\" - %s",
+		slon_log(SLON_FATAL,
+				"localListenThread: \"%s\" - %s",
 				dstring_data(&query1), PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query1);
@@ -75,7 +76,9 @@ localListenThread_main(void *dummy)
 	}
 	PQclear(res);
 			
-printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_name);
+	slon_log(SLON_DEBUG1,
+			"localListenThread: listening for \"%s_Event\"\n",
+			rtcfg_cluster_name);
 
 	/*
 	 * Process all events, then wait for notification and repeat
@@ -90,7 +93,8 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 					"set transaction isolation level serializable;");
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
-			fprintf(stderr, "slon_localListenThread: \"rollback transaction;\" - %s",
+			slon_log(SLON_FATAL,
+					"localListenThread: cannot start transaction - %s",
 					PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
@@ -123,7 +127,8 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
-			fprintf(stderr, "slon_localListenThread: \"%s\" - %s",
+			slon_log(SLON_FATAL,
+					"localListenThread: \"%s\" - %s",
 					dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
@@ -228,8 +233,9 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 			}
 			else
 			{
-printf("slon_localListenThread: event %s: Unknown event type %s\n", 
-rtcfg_lastevent, PQgetvalue(res, tupno, 5));
+				slon_log(SLON_FATAL,
+						"localListenThread: event %s: Unknown event type %s\n", 
+						rtcfg_lastevent, ev_type);
 				slon_abort();
 			}
 		}
@@ -244,7 +250,8 @@ rtcfg_lastevent, PQgetvalue(res, tupno, 5));
 			res = PQexec(dbconn, "commit transaction");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
-				fprintf(stderr, "slon_localListenThread: \"%s\" - %s",
+				slon_log(SLON_FATAL,
+						"localListenThread: \"%s\" - %s",
 						dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				dstring_free(&query1);
@@ -261,7 +268,8 @@ rtcfg_lastevent, PQgetvalue(res, tupno, 5));
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
-				fprintf(stderr, "slon_localListenThread: \"rollback transaction;\" - %s",
+				slon_log(SLON_FATAL,
+						"localListenThread: \"rollback transaction;\" - %s",
 						PQresultErrorMessage(res));
 				PQclear(res);
 				slon_abort();
@@ -283,7 +291,7 @@ rtcfg_lastevent, PQgetvalue(res, tupno, 5));
 	 */
 	dstring_free(&query1);
 	slon_disconnectdb(conn);
-printf("slon_localListenThread: done\n");
+	slon_log(SLON_DEBUG1, "localListenThread: thread done\n");
 	pthread_exit(NULL);
 }
 
