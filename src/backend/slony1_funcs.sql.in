@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql.in,v 1.21 2004-03-04 22:30:00 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.22 2004-03-10 21:26:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -643,9 +643,15 @@ declare
 	p_li_origin		alias for $1;
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
+	v_retval		int4;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropListen() not implemented'';
+	v_retval := @NAMESPACE@.dropListen_int(p_li_origin, 
+			p_li_provider, p_li_receiver);
+	
+	perform @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_LISTEN'',
+			p_li_origin, p_li_provider, p_li_receiver);
+
+	return v_retval;
 end;
 ' language plpgsql;
 
@@ -663,8 +669,20 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: dropListen_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	delete from @NAMESPACE@.sl_listen
+			where li_origin = p_li_origin
+			and li_provider = p_li_provider
+			and li_receiver = p_li_receiver;
+	if found then
+		return 1;
+	else
+		return 0;
+	end if;
 end;
 ' language plpgsql;
 
@@ -692,11 +710,6 @@ begin
 	insert into @NAMESPACE@.sl_set
 			(set_id, set_origin, set_comment) values
 			(p_set_id, v_local_node_id, p_set_comment);
-	insert into @NAMESPACE@.sl_setsync
-			(ssy_setid, ssy_origin, ssy_seqno,
-			ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) values
-			(p_set_id, v_local_node_id, ''0'',
-			''1'', ''1'', '''', '''');
 
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_SET'', 
 			p_set_id, v_local_node_id, p_set_comment);
@@ -741,11 +754,6 @@ begin
 		insert into @NAMESPACE@.sl_set
 				(set_id, set_origin, set_comment) values
 				(p_set_id, p_set_origin, p_set_comment);
-		insert into @NAMESPACE@.sl_setsync
-				(ssy_setid, ssy_origin, ssy_seqno,
-				ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) values
-				(p_set_id, p_set_origin, ''0'',
-				''1'', ''1'', '''', '''');
 	end if;
 
 	return p_set_id;
@@ -1116,11 +1124,27 @@ declare
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
 	v_set_origin		int4;
+	v_sub_row			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Provider change is only allowed for active sets
+	-- ----
+	if p_sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+		select sub_active into v_sub_row from @NAMESPACE@.sl_subscribe
+				where sub_set = p_sub_set
+				and sub_receiver = p_sub_receiver;
+		if found then
+			if not v_sub_row.sub_active then
+				raise exception ''Slony-I: set % is not active, cannot change provider'',
+						p_sub_set;
+			end if;
+		end if;
+	end if;
 
 	-- ----
 	-- Try to change provider and/or forward for an existing subscription
@@ -1206,14 +1230,7 @@ declare
 	p_sub_set			alias for $1;
 	p_sub_receiver		alias for $2;
 begin
-	-- ----
-	-- The real work is done in the replication engine. All
-	-- we have to do here is remembering that it happened.
-	-- ----
-	update @NAMESPACE@.sl_subscribe
-			set sub_active = ''t''
-			where sub_set = p_sub_set
-			and sub_receiver = p_sub_receiver;
+	perform @NAMESPACE@.enableSubscription_int (p_sub_set, p_sub_receiver);
 
 	return p_sub_set;
 end;
@@ -1228,10 +1245,23 @@ returns int4
 as '
 declare
 	p_sub_set			alias for $1;
-	p_sub_receiver		alias for $3;
+	p_sub_receiver		alias for $2;
 begin
-	-- **** TODO ****
-	raise exception ''Slony-I: enableSubscription_int() not implemented'';
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- The real work is done in the replication engine. All
+	-- we have to do here is remembering that it happened.
+	-- ----
+	update @NAMESPACE@.sl_subscribe
+			set sub_active = ''t''
+			where sub_set = p_sub_set
+			and sub_receiver = p_sub_receiver;
+
+	return p_sub_set;
 end;
 ' language plpgsql;
 
@@ -1338,24 +1368,255 @@ end;
 ' language plpgsql;
 
 
-create function @NAMESPACE@.createListenNetwork(int4, int4, int4)
-returns int4
+-- ----------------------------------------------------------------------
+-- FUNCTION tableAddKey (tab_fqname)
+--
+--	If the specified table does not have a column 
+--	"_Slony-I_<clustername>_rowID", then add it as a bigint
+--	with default nextval('"_<clustername>".sl_rowid_seq').
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.tableAddKey(text) returns text
 as '
 declare
-	p_origin	alias for $1;
-	p_node		alias for $2;
-	p_provider	alias for $3;
-	v_row		record;
+	p_tab_fqname	alias for $1;
+	v_attkind		text default '''';
+	v_attrow		record;
+	v_have_serial	bool default ''f'';
 begin
-	if p_origin <> p_node then
-		perform @NAMESPACE@.storeListen(p_origin, p_provider, p_node);
-	end if;
-	for v_row in select * from @NAMESPACE@.sl_path PA
-			where PA.pa_server = p_node
-			and PA.pa_client <> p_provider
+	--
+	-- Loop over the attributes of this relation
+	-- and add a "v" for every user column, and a "k"
+	-- if we find the Slony-I special serial column.
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from "pg_catalog".pg_class PGC,
+			    "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_attribute PGA
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum > 0
+			order by attnum
 	loop
-		perform @NAMESPACE@.createListenNetwork(p_origin, v_row.pa_client, p_node);
+		if v_attrow.attname = ''_Slony-I_@CLUSTERNAME@_rowID'' then
+		    v_attkind := v_attkind || ''k'';
+			v_have_serial := ''t'';
+		else
+			v_attkind := v_attkind || ''v'';
+		end if;
 	end loop;
-	return 0;
+	
+	--
+	-- A table must have at least one attribute, so not finding
+	-- anything means the table does not exist.
+	--
+	if not found then
+		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+	end if;
+
+	--
+	-- If it does not have the special serial column, we
+	-- have to add it. This will be only half way done.
+	-- The function to add the table to the set must finish
+	-- these definitions with NOT NULL and UNIQUE after
+	-- updating all existing rows.
+	--
+	if not v_have_serial then
+		execute ''lock table '' || p_tab_fqname ||
+			'' in access exclusive mode'';
+		execute ''alter table '' || p_tab_fqname ||
+			'' add column "_Slony-I_@CLUSTERNAME@_rowID" bigint;'';
+		execute ''alter table '' || p_tab_fqname ||
+			'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
+			'' set default "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
+
+		v_attkind := v_attkind || ''k'';
+	end if;
+
+	--
+	-- Return the resulting Slony-I attkind
+	--
+	return v_attkind;
 end;
 ' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION determineAttKindSerial (tab_fqname)
+--
+--	A table was that was specified without a primary key is added
+--	to the replication. Assume that tableAddKey() was called before
+--	and finish the creation of the serial column. The return an
+--	attkind according to that.
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.determineAttkindSerial(text) returns text
+as '
+declare
+	p_tab_fqname	alias for $1;
+	v_attkind		text default '''';
+	v_attrow		record;
+	v_have_serial	bool default ''f'';
+begin
+	--
+	-- Loop over the attributes of this relation
+	-- and add a "v" for every user column, and a "k"
+	-- if we find the Slony-I special serial column.
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from "pg_catalog".pg_class PGC,
+			    "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_attribute PGA
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum > 0
+			order by attnum
+	loop
+		if v_attrow.attname = ''_Slony-I_@CLUSTERNAME@_rowID'' then
+		    v_attkind := v_attkind || ''k'';
+			v_have_serial := ''t'';
+		else
+			v_attkind := v_attkind || ''v'';
+		end if;
+	end loop;
+	
+	--
+	-- A table must have at least one attribute, so not finding
+	-- anything means the table does not exist.
+	--
+	if not found then
+		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+	end if;
+
+	--
+	-- If it does not have the special serial column, we
+	-- have to add it.
+	--
+	if not v_have_serial then
+		raise exception ''Slony-I: table % does not have the serial key'',
+				p_tab_fqname;
+	end if;
+
+	execute ''update '' || p_tab_fqname ||
+		'' set "_Slony-I_@CLUSTERNAME@_rowID" ='' ||
+		'' "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
+	execute ''alter table '' || p_tab_fqname ||
+		'' add unique ("_Slony-I_@CLUSTERNAME@_rowID");'';
+	execute ''alter table '' || p_tab_fqname ||
+		'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
+		'' set not null;'';
+
+	--
+	-- Return the resulting Slony-I attkind
+	--
+	return v_attkind;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION determineAttKindSerial (tab_fqname, indexname)
+--
+--	Given a tablename, return the Slony-I specific attkind (used for
+--	the log trigger) of the table. Use the specified unique index or
+--	the primary key (if indexname is NULL).
+-- ----------------------------------------------------------------------
+create function @NAMESPACE@.determineAttkindUnique(text, name) returns text
+as '
+declare
+	p_tab_fqname	alias for $1;
+	p_idx_name		alias for $2;
+	v_idxrow		record;
+	v_attrow		record;
+	v_i				integer;
+	v_attno			int2;
+	v_attkind		text default '''';
+	v_attfound		bool;
+begin
+	--
+	-- Lookup the tables primary key or the specified unique index
+	--
+	if p_idx_name isnull then
+		select PGXC.relname, PGX.indexrelid, PGX.indnatts, PGX.indkey
+				into v_idxrow
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN,
+					"pg_catalog".pg_index PGX,
+					"pg_catalog".pg_class PGXC
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisprimary;
+		if not found then
+			raise exception ''Slony-I: table % has no primary key'',
+					p_tab_fqname;
+		end if;
+	else
+		select PGXC.relname, PGX.indexrelid, PGX.indnatts, PGX.indkey
+				into v_idxrow
+				from "pg_catalog".pg_class PGC,
+					"pg_catalog".pg_namespace PGN,
+					"pg_catalog".pg_index PGX,
+					"pg_catalog".pg_class PGXC
+				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+					and PGN.oid = PGC.relnamespace
+					and PGX.indrelid = PGC.oid
+					and PGX.indexrelid = PGXC.oid
+					and PGX.indisunique
+					and PGXC.relname = p_idx_name;
+		if not found then
+			raise exception ''Slony-I: table % has no unique index %'',
+					p_tab_fqname, p_idx_name;
+		end if;
+	end if;
+
+	--
+	-- Loop over the tables attributes and check if they are
+	-- index attributes. If so, add a "k" to the return value,
+	-- otherwise add a "v".
+	--
+	for v_attrow in select PGA.attnum, PGA.attname
+			from "pg_catalog".pg_class PGC,
+			    "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_attribute PGA
+			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
+			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				and PGN.oid = PGC.relnamespace
+				and PGA.attrelid = PGC.oid
+				and not PGA.attisdropped
+				and PGA.attnum > 0
+			order by attnum
+	loop
+		v_attfound = ''f'';
+
+		for v_i in 0 .. v_idxrow.indnatts - 1 loop
+			select indkey[v_i] into v_attno from "pg_catalog".pg_index
+					where indexrelid = v_idxrow.indexrelid;
+			if v_attrow.attnum = v_attno then
+				v_attfound = ''t'';
+				exit;
+			end if;
+		end loop;
+
+		if v_attfound then
+			v_attkind := v_attkind || ''k'';
+		else
+			v_attkind := v_attkind || ''v'';
+		end if;
+	end loop;
+
+	--
+	-- Return the resulting attkind
+	--
+	return v_attkind;
+end;
+' language plpgsql called on null input;
+
+

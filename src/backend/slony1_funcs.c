@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.5 2004-03-04 18:42:11 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.6 2004-03-10 21:26:06 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -890,7 +890,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		/*
 		 * Create the saved plan
 		 */
-		sprintf(query, "INSERT INTO %s.sl_event "
+		sprintf(query,
+			"LOCK TABLE %s.sl_event; "
+			"INSERT INTO %s.sl_event "
 			"(ev_origin, ev_seqno, "
 			"ev_timestamp, ev_minxid, ev_maxxid, ev_xip, "
 			"ev_type, ev_data1, ev_data2, ev_data3, ev_data4, "
@@ -899,6 +901,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 			"now(), $1, $2, $3,
 			$4, $5, $6, $7, $8, $9, $10, $11, $12);
 			SELECT currval('%s.sl_event_seq');", 
+			cs->clusterident,
 			cs->clusterident, cs->localNodeId, cs->clusterident,
 			cs->clusterident);
 		plan_types[0] = xxid_typid;

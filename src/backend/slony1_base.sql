@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.5 2004-02-26 22:26:59 wieck Exp $
+-- $Id: slony1_base.sql,v 1.6 2004-03-10 21:26:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -166,10 +166,7 @@ create table @NAMESPACE@.sl_event (
 	ev_data8			text,
 
 	CONSTRAINT "sl_event-pkey"
-		PRIMARY KEY (ev_origin, ev_seqno),
-	CONSTRAINT "ev_origin-no_id-ref"
-		FOREIGN KEY (ev_origin)
-		REFERENCES @NAMESPACE@.sl_node (no_id)
+		PRIMARY KEY (ev_origin, ev_seqno)
 );
 
 
@@ -180,14 +177,7 @@ create table @NAMESPACE@.sl_confirm (
 	con_origin			int4,
 	con_received		int4,
 	con_seqno			int8,
-	con_timestamp		timestamp DEFAULT timeofday()::timestamp,
-
-	CONSTRAINT "con_origin-no_id-ref"
-		FOREIGN KEY (con_origin)
-		REFERENCES @NAMESPACE@.sl_node (no_id),
-	CONSTRAINT "con_received-no_id-ref"
-		FOREIGN KEY (con_received)
-		REFERENCES @NAMESPACE@.sl_node (no_id)
+	con_timestamp		timestamp DEFAULT timeofday()::timestamp
 );
 create index sl_confirm_idx1 on @NAMESPACE@.sl_confirm
 	(con_origin, con_received, con_seqno);
