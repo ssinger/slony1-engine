@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.18 2005-02-22 20:50:28 smsimms Exp $
+# $Id: slon-tools.pm,v 1.19 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -10,7 +10,7 @@ sub add_node {
 		user => 'postgres',
 		node => undef,
 		password => undef,
-		parent => 1,
+		parent => undef,
 		noforward => undef,
 		sslmode => undef
 	       );
@@ -237,6 +237,7 @@ sub get_set {
     }
 
     # Set the variables for this set.
+    $SET_ORIGIN   = ($match->{"origin"} or $MASTERNODE);
     $TABLE_ID     = $match->{"table_id"};
     $SEQUENCE_ID  = $match->{"sequence_id"};
     @PKEYEDTABLES = @{$match->{"pkeyedtables"}};

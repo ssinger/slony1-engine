@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: init_cluster.pl,v 1.11 2005-02-22 17:11:18 smsimms Exp $
+# $Id: init_cluster.pl,v 1.12 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -65,15 +65,14 @@ foreach my $nodea (@NODES) {
       my $dsnb = $DSN[$nodeb];
       my $providerba = $VIA[$nodea][$nodeb];
       my $providerab = $VIA[$nodeb][$nodea];
-      if (!$printed[$nodea][$nodeb]) {
+      if (!$printed[$nodea][$nodeb] and $providerab == $nodea) {
 	print SLONIK "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
 	$printed[$nodea][$nodeb] = "done";
       }
-      if (!$printed[$nodeb][$nodea]) {
+      if (!$printed[$nodeb][$nodea] and $providerba == $nodea) {
 	print SLONIK "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
 	$printed[$nodeb][$nodea] = "done";
       }
-      print SLONIK "  echo 'configured path between $nodea and $nodeb';\n";
     }
   }
 }
@@ -111,7 +110,9 @@ sub generate_listen_paths {
     $VIA[$node1][$node1] = 0;
     foreach my $node2 (@NODES) {
       if ($node2 != $node1) {
-	if ($PARENT[$node1] == $node2) {
+	if ((not ($PARENT[$node1] or $PARENT[$node2])) or
+	    ($PARENT[$node1] and $PARENT[$node1] == $node2) or
+	    ($PARENT[$node2] and $PARENT[$node2] == $node1)) {
 	  $PATH[$node1][$node2] = 1;
 	  $PATH[$node2][$node1] = 1;
 	  # Set up a cost 1 path between them
@@ -156,6 +157,9 @@ sub generate_listen_paths {
 				# So we go via node 2
 		$VIA[$node3][$node1] = $node2;
 		$COST[$node3][$node1] = $newcost;
+
+		$VIA[$node1][$node3] = $node2;
+		$COST[$node1][$node3] = $newcost;
 	      }
 	    }
 	  }

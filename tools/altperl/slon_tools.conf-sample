@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.3 2005-02-22 20:50:28 smsimms Exp $
+# $Id: slon_tools.conf-sample,v 1.4 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -47,7 +47,6 @@ if ($ENV{"SLONYNODES"}) {
              password => '');
 
     add_node(node     => 2,
-	     parent   => 1,
 	     host     => 'server2',
 	     dbname   => 'database',
 	     port     => 5432,
@@ -55,12 +54,25 @@ if ($ENV{"SLONYNODES"}) {
              password => '');
 
     add_node(node     => 3,
-	     parent   => 1,
 	     host     => 'server3',
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
              password => '');
+
+    # If the node should only receive event notifications from a
+    # single node (e.g. if it can't access the other nodes), you can
+    # specify a single parent.  The downside to this approach is that
+    # if the parent goes down, your node becomes stranded.
+
+    add_node(node     => 4,
+	     parent   => 3,
+	     host     => 'server4',
+	     dbname   => 'database',
+	     port     => 5432,
+	     user     => 'postgres',
+             password => '');
+
 }
 
 # The $SLONY_SETS variable contains information about all of the sets
@@ -73,6 +85,11 @@ my $SLONY_SETS = {
 
 	# The set_id, also unique
 	"set_id" => 1,
+
+	# Uncomment the following line to change the origin
+	# (a.k.a. master) for the set.  The default is $MASTERNODE.
+	#
+	# "origin" => 1,
 
 	# The first ID to use for tables and sequences that are added
 	# to the replication cluster.  This must be unique across the

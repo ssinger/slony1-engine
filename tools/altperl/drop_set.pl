@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: drop_set.pl,v 1.9 2005-02-22 17:11:18 smsimms Exp $
+# $Id: drop_set.pl,v 1.10 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -36,11 +36,13 @@ if ($set =~ /^(?:set)?(\d+)$/) {
   die $USAGE;
 }
 
+get_set($set) or die "Non-existent set specified.\n";
+
 $FILE = "/tmp/dropset.$$";
 open(SLONIK, ">", $FILE);
 print SLONIK genheader();
 print SLONIK "  try {\n";
-print SLONIK "        drop set (id = $set, origin = $MASTERNODE);\n";
+print SLONIK "        drop set (id = $set, origin = $SET_ORIGIN);\n";
 print SLONIK "  } on error {\n";
 print SLONIK "        exit 1;\n";
 print SLONIK "  }\n";

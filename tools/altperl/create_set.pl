@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: create_set.pl,v 1.14 2005-02-22 17:11:18 smsimms Exp $
+# $Id: create_set.pl,v 1.15 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -44,7 +44,7 @@ foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
     print SLONIK "  echo '  Adding unique key to table $table...';\n";
     print SLONIK "  table add key (\n";
-    print SLONIK "    node id=$MASTERNODE,\n";
+    print SLONIK "    node id = $SET_ORIGIN,\n";
     print SLONIK "    full qualified name='$table'\n";
     print SLONIK "  );\n";
 }
@@ -53,7 +53,7 @@ foreach my $table (@SERIALTABLES) {
 print SLONIK "\n";
 print SLONIK "# CREATE SET\n";
 print SLONIK "  try {\n";
-print SLONIK "    create set (id = $SET_ID, origin = $MASTERNODE, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
+print SLONIK "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
 print SLONIK "  } on error {\n";
 print SLONIK "    echo 'Could not create subscription set $SET_ID for $CLUSTER_NAME!';\n";
 print SLONIK "    exit -1;\n";
@@ -69,7 +69,7 @@ $TABLE_ID = 1 if $TABLE_ID < 1;
 
 foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
-    print SLONIK "  set add table (set id = $SET_ID, origin = $MASTERNODE, id = $TABLE_ID,\n";
+    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table', key=serial,\n";
     print SLONIK "                 comment = 'Table $table without primary key');\n";
     print SLONIK "  echo 'Add unkeyed table $table';\n";
@@ -78,7 +78,7 @@ foreach my $table (@SERIALTABLES) {
 
 foreach my $table (@PKEYEDTABLES) {
     $table = ensure_namespace($table);
-    print SLONIK "  set add table (set id = $SET_ID, origin = $MASTERNODE, id = $TABLE_ID,\n";
+    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table',\n";
     print SLONIK "                 comment = 'Table $table with primary key');\n";
     print SLONIK "  echo 'Add primary keyed table $table';\n";
@@ -88,7 +88,7 @@ foreach my $table (@PKEYEDTABLES) {
 foreach my $table (keys %KEYEDTABLES) {
     my $key = $KEYEDTABLES{$table};
     $table = ensure_namespace($table);
-    print SLONIK "  set add table (set id = $SET_ID, origin = $MASTERNODE, id = $TABLE_ID,\n";
+    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table', key='$key'\n";
     print SLONIK "                 comment = 'Table $table with candidate primary key $key');\n";
     print SLONIK "  echo 'Add candidate primary keyed table $table';\n";
@@ -103,7 +103,7 @@ print SLONIK "  echo 'Adding sequences to the subscription set';\n";
 $SEQUENCE_ID = 1 if $SEQUENCE_ID < 1;
 foreach my $seq (@SEQUENCES) {
     $seq = ensure_namespace($seq);
-    print SLONIK "  set add sequence (set id = $SET_ID, origin = $MASTERNODE, id = $SEQUENCE_ID,\n";
+    print SLONIK "  set add sequence (set id = $SET_ID, origin = $SET_ORIGIN, id = $SEQUENCE_ID,\n";
     print SLONIK "                    full qualified name = '$seq',\n";
     print SLONIK "                    comment = 'Sequence $seq');\n";
     print SLONIK "  echo 'Add sequence $seq';\n";

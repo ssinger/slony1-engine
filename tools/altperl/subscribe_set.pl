@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: subscribe_set.pl,v 1.9 2005-02-22 17:11:18 smsimms Exp $
+# $Id: subscribe_set.pl,v 1.10 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -43,23 +43,25 @@ if ($set =~ /^(?:set)?(\d+)$/) {
   die $USAGE;
 }
 
+get_set($set) or die "Non-existent set specified.\n";
+
 $FILE="/tmp/slonik-subscribe.$$";
 open(SLONIK, ">$FILE");
 print SLONIK genheader();
 print SLONIK "  try {\n";
 
 if ($DSN[$node]) {
-  my $parent = 1;
+  my $provider = $SET_ORIGIN;
   my $forward;
   if ($PARENT[$node]) {
-    $parent = $PARENT[$node];
+    $provider = $PARENT[$node];
   }
   if ($NOFORWARD[$node] eq "yes") {
     $forward = "no";
   } else {
     $forward = "yes";
   }
-  print SLONIK "    subscribe set (id = $set, provider = $parent, receiver = $node, forward = $forward);\n";
+  print SLONIK "    subscribe set (id = $set, provider = $provider, receiver = $node, forward = $forward);\n";
 } else {
   die "Node $node not found\n";
 }

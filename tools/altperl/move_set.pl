@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: move_set.pl,v 1.8 2005-02-22 16:51:09 smsimms Exp $
+# $Id: move_set.pl,v 1.9 2005-02-23 20:30:51 smsimms Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -64,6 +64,8 @@ print SLONIK "      echo 'Failure to move set $set from $node1 to $node2';\n";
 print SLONIK "      unlock set (id = $set, origin = $node1);\n";
 print SLONIK "      exit 1;\n";
 print SLONIK "  }\n";
-print SLONIK "  echo 'Replication set $set moved from node $node1 to $node2';\n";
+print SLONIK "  echo 'Replication set $set moved from node $node1 to $node2.  Remember to';\n";
+print SLONIK "  echo 'update your configuration file, if necessary, to note the new location';\n";
+print SLONIK "  echo 'for the set.';\n";
 close SLONIK;
 run_slonik_script("/tmp/slonik.$$");
