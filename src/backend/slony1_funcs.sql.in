@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.4 2003-12-03 19:04:56 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.5 2003-12-04 14:58:17 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -76,7 +76,7 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION getLocalNodeId ()
+-- FUNCTION getLocalNodeId (name)
 --
 --	
 -- ----------------------------------------------------------------------
@@ -236,7 +236,7 @@ begin
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	select * into v_node_row
 			from @NAMESPACE@.sl_node
 			where no_id = p_no_id
@@ -314,7 +314,7 @@ begin
 	-- Generate ENABLE_SUBSCRIPTION events for all sets that
 	-- origin here and are subscribed by the just enabled node.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	for v_sub_row in select SUB.sub_set from
 			@NAMESPACE@.sl_set S,
 			@NAMESPACE@.sl_subscribe SUB
@@ -413,7 +413,8 @@ declare
 	p_pa_conninfo	alias for $3;
 	p_pa_connretry	alias for $4;
 begin
-	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client, p_pa_conninfo);
+	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client,
+			p_pa_conninfo, p_pa_connretry);
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_PATH'', 
 			p_pa_server, p_pa_client, p_pa_conninfo);
 
@@ -653,7 +654,7 @@ begin
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
 
-	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 
 	insert into @NAMESPACE@.sl_set
 			(set_id, set_origin, set_comment) values
@@ -740,7 +741,7 @@ begin
 	-- ----
 	-- Check that the set exists and that it is currently remote
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	select * into v_set_row from @NAMESPACE@.sl_set
 			where set_id = p_set_id
 			for update;
@@ -868,7 +869,7 @@ begin
 	if not found then
 		raise exception ''Slony-I: setAddTable(): set % not found'', p_set_id;
 	end if;
-	if v_set_origin != @NAMESPACE@.getLocalNodeId() then
+	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
 		raise exception ''Slony-I: setAddTable(): set % has remote origin'', p_set_id;
 	end if;
 
@@ -913,7 +914,7 @@ begin
 	-- to that set. Otherwise we ignore the table because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId();
+	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
@@ -925,7 +926,7 @@ begin
 		select sub_provider into v_sub_provider
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId();
+				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
 		if not found then
 			return 0;
 		end if;
