@@ -74,8 +74,8 @@ Add support for detecting errors in piped commands in the shell script.
 Sometimes a "pg_dump | psql" will generate errors on the psql side.  These
 are not always fatal, but should be looked at.
 
-Add support for detecting pg_dump 7.5 on the master and disabling dollar
-quoting if the slave is less than 7.5.
+Add support for detecting pg_dump 8.0 on the master and disabling dollar
+quoting if the slave is less than 8.0.
 
 Add support for detecting version of slaves to see if they satisfy?
 
