@@ -33,4 +33,5 @@ Slony-I.  Let Slony-I do what it does best: provide database replication.
 Current Limitations:
 
 Slony-I does not automatically propagate schema changes, nor does it have any
-ability to replicate large objects.
+ability to replicate large objects. Slony currently works with PostgreSQL 
+versions 7.3 and newer.
