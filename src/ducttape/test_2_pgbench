@@ -27,7 +27,7 @@ DB1=slony_test1
 DB2=slony_test2
 DB3=slony_test3
 
-PGBENCH_SCALE=1
+PGBENCH_SCALE=10
 PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 50000 / $PGBENCH_CLIENTS`
 
@@ -134,7 +134,7 @@ if [ $? -ne 0 ] ; then
 	exit -1
 fi
 
-echo "**** starting the Slony-I node deamon for $DB1"
+echo "**** starting the Slony-I node daemon for $DB1"
 xterm -title "Slon node 1" -e sh -c "slon -d2 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
@@ -230,7 +230,7 @@ if [ $? -ne 0 ] ; then
 	exit -1
 fi
 
-echo "**** starting the Slony-I node deamon for $DB1"
+echo "**** starting the Slony-I node daemon for $DB2"
 xterm -title "Slon node 2" -e sh -c "slon -d2 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
@@ -306,7 +306,7 @@ if [ $? -ne 0 ] ; then
 	exit -1
 fi
 
-echo "**** starting the Slony-I node deamon for $DB3"
+echo "**** starting the Slony-I node daemon for $DB3"
 xterm -title "Slon node 3" -e sh -c "slon -d2 T1 dbname=$DB3; echo -n 'Enter>'; read line" &
 slon3_pid=$!
 echo "slon[$slon3_pid] on dbname=$DB3"
