@@ -141,7 +141,7 @@ static struct config_int ConfigureNamesInt[] =
 		&sync_interval_timeout,
 		10000,
 		0,
-		120000
+		1200000
 	},
 	{
 		{
