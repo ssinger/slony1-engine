@@ -2381,7 +2381,7 @@ echo $ECHO_N "checking for typcache.h... $ECHO_C" >&6
 if test -f "${test_includedir}/server/utils/typcache.h"; then
 	have_typcache=yes
 	cat >>confdefs.h <<\_ACEOF
-#define HAVE_PQPUTCOPYDATA 1
+#define HAVE_TYPCACHE 1
 _ACEOF
 
 else

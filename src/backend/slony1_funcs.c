@@ -6,11 +6,12 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.7 2004-03-12 23:17:31 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.8 2004-03-12 23:55:02 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
 #include "postgres.h"
+#include "config.h"
 
 #include "nodes/makefuncs.h"
 #include "parser/parse_type.h"
