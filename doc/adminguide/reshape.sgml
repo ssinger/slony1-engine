@@ -1,5 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.8 2005-01-12 22:56:44 cbbrowne Exp $ -->
-<article>
+<!-- $Id: reshape.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <para>If you rearrange the nodes so that they serve different
@@ -48,7 +47,6 @@ however, smart enough to know what listener paths should be dropped.
 </para>
 
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

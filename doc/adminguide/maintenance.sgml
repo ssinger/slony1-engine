@@ -1,5 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.8 2005-01-07 23:25:50 cbbrowne Exp $ -->
-<article>
+<!-- $Id: maintenance.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>Slony-I Maintenance</title>
 
 <para><productname>Slony-I</productname> actually does most of its necessary
@@ -157,7 +156,6 @@ one of them gets too big;</para></listitem>
 </para>
 </sect2>
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

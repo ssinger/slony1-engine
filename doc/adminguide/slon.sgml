@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.6 2005-01-28 16:55:43 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.7 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <refentry id="app-slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -66,10 +66,12 @@
    <varlistentry>
     <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable></term>
     <listitem>
+
      <para>
       Specifies the interval, in milliseconds, in which
-      <application>slon</application> should add a SYNC even if none has been
-      mandated by data creation.  Default is 10000 ms.
+      <application>slon</application> should check to see if a SYNC
+      should be introduced even if none has been mandated by data
+      creation.  Default is 10000 ms.
      </para>
      
      <para>
@@ -83,22 +85,36 @@
      </para>
 
      <para>
-      Note that SYNC events are also generated on subscriber nodes.
-      Since they are not actually generating any replicable data to
-      pass on, these events are of little value.  You might want to
-      increase this parameter (along with the SYNC interval timeout)
-      to something rather higher on a subscriber node.  There is no
-      need to generate a SYNC more than once in 10 minutes on such a
-      node.
+      If the node is not an origin, so no updates are coming in, it
+      will continue on to the <option>-t</option> timeout and generate
+      a SYNC anyways.
      </para>
+
     </listitem>
    </varlistentry>
    
    <varlistentry>
-    <term><option>-t</option><replaceable class="parameter">SYNC interval timeout</replaceable></term>
+    <term><option>-t</option><replaceable class="parameter">SYNC
+    interval timeout</replaceable></term>
     <listitem>
+
+     <para>
+      At the end of each such timeout period, a SYNC will be generated
+      on the <quote>local</quote> node even if there has been no
+      replicatable data updated that would have pushed out a SYNC.
+     </para>
      <para>
       Default is 60000 ms.
+     </para>
+     <para>
+      Note that SYNC events are also generated on subscriber nodes.
+      Since they are not actually generating any data to replicate to
+      other nodes, such SYNC events are of little value.  You might
+      want to increase this parameter to something quite a bit higher
+      than the <option>-s</option SYNC check interval, so that
+      subscriber nodes won't generate and propagate as many SYNC
+      events.  The once per minute that is the default seems amply
+      often.
      </para>
     </listitem>
    </varlistentry>
@@ -129,9 +145,13 @@
       The big advantage in increasing this parameter comes from
       cutting down on the number of transaction
       <command>COMMIT</command>s; moving from 1 to 2 should provide
-      substantial benefit, but the benefits will steadily fall off
-      once the transactions being processed get to be reasonably
-      large.
+      substantial benefit, but the benefits will progressively fall
+      off once the transactions being processed get to be reasonably
+      large.  There isn't likely to be a material difference in
+      performance between 80 and 90; at that point, whether
+      <quote>bigger is better</quote> will depend on whether the
+      bigger set of SYNCs makes the LOG cursor behave badly due to
+      consuming more memory and requiring more time to sortt.
      </para>
     </listitem>
    </varlistentry>
@@ -159,13 +179,13 @@
      off for the <emphasis>next</emphasis> group.</para>
 
      <para> The overall effect is to improve
-     <productname>Slony-I</productname>'s ability to cope with
-     variations in traffic.  By starting with 1 SYNC, and gradually
-     moving to more, even if there turn out to be variations large
-     enough to cause <productname>PostgreSQL</productname> backends to
-     crash, <productname>Slony-I</productname> will back off down to
-     doing one sync at a time, if need be, so that if it is at all
-     possible for replication to progress, progress it will.</para>
+      <productname>Slony-I</productname>'s ability to cope with
+      variations in traffic.  By starting with 1 SYNC, and gradually
+      moving to more, even if there turn out to be variations large
+      enough to cause <productname>PostgreSQL</productname> backends to
+      crash, <productname>Slony-I</productname> will back off down to
+      start with one sync at a time, if need be, so that if it is at
+      all possible for replication to progress, it will.</para>
     </listitem>
    </varlistentry>      
 
@@ -176,11 +196,14 @@
       How often to <command>VACUUM</command> in cleanup cycles.
      </para>
      <para>
-      Set this to zero to disable slon-initiated vacuuming. If
-      you are using something like <application>pg_autovacuum</application>
-      to initiate vacuums, you may not need for slon to initiate vacuums itself.
-      If you are not, there are some tables Slony-I uses that collect a
-      <emphasis>lot</emphasis> of dead tuples that should be vacuumed frequently.
+      Set this to zero to disable
+      <application>slon</application>-initiated vacuuming. If you are
+      using something like <application>pg_autovacuum</application> to
+      initiate vacuums, you may not need for slon to initiate vacuums
+      itself.  If you are not, there are some tables
+      <productname>Slony-I</productname> uses that collect a
+      <emphasis>lot</emphasis> of dead tuples that should be vacuumed
+      frequently.
      </para>
     </listitem>
    </varlistentry>
@@ -190,7 +213,7 @@
     <term><option>-p</option><replaceable class="parameter">PID filename</replaceable></term>
     <listitem>
      <para>
-      PID filename.
+      Filename in which the PID (process ID) of the <application>slon</application> is stored.
      </para>
     </listitem>
    </varlistentry>
@@ -199,7 +222,7 @@
     <term><option>-f</option><replaceable class="parameter">config file</replaceable></term>
     <listitem>
      <para>
-      File containing <application>slon</application> configuration.
+      File from which to read <application>slon</application> configuration.
      </para>
     </listitem>
    </varlistentry>

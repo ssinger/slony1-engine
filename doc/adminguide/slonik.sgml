@@ -1,4 +1,4 @@
-<!-- $Id: slonik.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: slonik.sgml,v 1.8 2005-02-02 19:41:55 cbbrowne Exp $ -->
 <refentry id="app-slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -37,7 +37,7 @@
  <refsect1><title>Outline</title>
 
   <para>The <application>slonik</application> command line utility is
-  supposed to be used embedded into shell scripts and reads commands
+  supposed to be used embedded into shell scripts; it reads commands
   from files or stdin.</para>
 
   <para>It reads a set of Slonik statements, which are written in a

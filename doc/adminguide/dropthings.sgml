@@ -1,5 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.7 2004-12-22 23:09:58 darcyb Exp $ -->
-<article>
+<!-- $Id: dropthings.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from Slony Replication</title>
 
 <para>There are several things you might want to do involving dropping
@@ -143,7 +142,6 @@ eliminating the sequence everywhere <quote>at once.</quote> Or they
 may be applied by hand to each of the nodes.</para>
 </sect2>
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

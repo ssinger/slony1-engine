@@ -1,5 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.7 2005-01-24 17:35:35 cbbrowne Exp $ -->
-<article>
+<!-- $Id: addthings.sgml,v 1.8 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
 
@@ -49,7 +48,6 @@ successfully processed before going on to the next.  It's way easier
 to fix one thing that has broken than to piece things together after
 the interaction of five things that have all broken.</para>
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

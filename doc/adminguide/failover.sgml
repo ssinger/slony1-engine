@@ -1,5 +1,4 @@
-<!-- $Id: failover.sgml,v 1.8 2005-02-02 18:34:43 cbbrowne Exp $ -->
-<article>
+<!-- $Id: failover.sgml,v 1.9 2005-02-02 19:41:54 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with Slony-I</title>
 
@@ -19,8 +18,9 @@ should consider a <quote>professional</quote> way to do system
 maintenance.  And interestingly, those users who found it valuable to
 use replication for backup and failover purposes are the very ones
 that have the lowest tolerance for terms like <quote>system
-downtime.</quote> To help support these requirements, Slony-I has not
-only failover capabilities, but features for controlled origin
+downtime.</quote> To help support these requirements,
+<productname>Slony-I</productname> not only offers failover
+capabilities, but also the notion of controlled origin
 transfer.</para>
 
 <para> It is assumed in this document that the reader is familiar with
@@ -169,7 +169,7 @@ to analyze the last few transactions that made it into the failed node
 to see if some of them need to be reapplied on the <quote>live</quote>
 cluster.  For instance, if someone was entering bank deposits
 affecting customer accounts at the time of failure, you wouldn't want
-to lose that information.</emphasis>
+to lose that information.</para>
 
 <para> If the database is very large, it may take many hours to
 recover node1 as a functioning <productname>Slony-I</productname>
@@ -179,7 +179,6 @@ node; that is another reason to consider failover as an undesirable
 </sect2>
 
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

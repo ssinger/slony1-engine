@@ -1,5 +1,4 @@
-<!-- $Id: subscribenodes.sgml,v 1.7 2004-12-22 23:09:59 darcyb Exp $ -->
-<article>
+<!-- $Id: subscribenodes.sgml,v 1.8 2005-02-02 19:41:55 cbbrowne Exp $ -->
 <sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <para>Before you subscribe a node to a set, be sure that you have
@@ -81,7 +80,6 @@ tables on the origin node, and verify that the row is copied to the
 new subscriber.
 </para>
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

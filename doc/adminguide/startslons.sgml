@@ -1,5 +1,4 @@
-<!-- $Id: startslons.sgml,v 1.6 2004-12-22 23:09:59 darcyb Exp $ -->
-<article>
+<!-- $Id: startslons.sgml,v 1.7 2005-02-02 19:41:55 cbbrowne Exp $ -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
 <para>The programs that actually perform <productname>Slony-I</productname> replication are the
@@ -74,7 +73,6 @@ event.  More recently, the script has been changed to detect
 <command>COPY SET</command> in progress.</para>
 
 </sect1>
-</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

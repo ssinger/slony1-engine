@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.9 2005-01-24 17:35:36 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.10 2005-02-02 19:41:55 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -32,6 +32,7 @@
   <part id="slonyadmin">
     <title><productname>Slony-I</productname> Administration</title>
 
+  <article>
     &adminscripts;
     &startslons;
     &subscribenodes;
@@ -45,6 +46,7 @@
     &ddlchanges;
     &firstdb;
     &help;
+   </article>
   </part>
 
   <part id="faq">
