@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.1 2004-02-20 17:59:42 wieck Exp $
+ *	$Id: local_listen.c,v 1.2 2004-02-20 19:39:40 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -127,10 +127,7 @@ printf("slon_localListenThread: listening for \"%s_Event\"\n", rtcfg_cluster_nam
 		 */
 		PQconsumeInput(dbconn);
 		while ((notification = PQnotifies(dbconn)) != NULL)
-		{
-printf("slon_localListenThread: received notify for %s\n", notification->relname);
 			PQfreemem(notification);
-		}
 
 		/*
 		 * Query the database for new local events
@@ -161,13 +158,104 @@ printf("slon_localListenThread: %d new events\n", ntuples);
 
 		for (tupno = 0; tupno < ntuples; tupno++)
 		{
-			/* *******************************
-			 * TODO: process the events
-			 * *******************************
+			char   *ev_type;
+
+			/*
+			 * Remember the event sequence number for confirmation
 			 */
 			strcpy(last_eventseq_buf, PQgetvalue(res, tupno, 0));
-printf("slon_localListenThread: event %s: %s\n", 
+
+			/*
+			 * Get the event type and process configuration events
+			 */
+			ev_type = PQgetvalue(res, tupno, 5);
+			if (strcmp(ev_type, "SYNC") == 0)
+			{
+				/*
+				 * SYNC - nothing to do
+				 */
+			}
+			else if (strcmp(ev_type, "STORE_NODE") == 0)
+			{
+				/*
+				 * STORE_NODE
+				 */
+				int		no_id;
+				char   *no_comment;
+
+				no_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_comment	= PQgetvalue(res, tupno, 7);
+
+				if (no_id != rtcfg_nodeid)
+					rtcfg_storeNode(no_id, no_comment);
+			}
+			else if (strcmp(ev_type, "ENABLE_NODE") == 0)
+			{
+				/*
+				 * ENABLE_NODE
+				 */
+				int		no_id;
+
+				no_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+
+				if (no_id != rtcfg_nodeid)
+					rtcfg_enableNode(no_id);
+			}
+			else if (strcmp(ev_type, "STORE_PATH") == 0)
+			{
+				/*
+				 * STORE_PATH
+				 */
+				int		pa_server;
+				int		pa_client;
+				char   *pa_conninfo;
+				int		pa_connretry;
+
+				pa_server	= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				pa_client	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				pa_conninfo	= PQgetvalue(res, tupno, 8);
+				pa_connretry = (int) strtol(PQgetvalue(res, tupno, 9), NULL, 10);
+
+				if (pa_client == rtcfg_nodeid)
+					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+			}
+			else if (strcmp(ev_type, "STORE_LISTEN") == 0)
+			{
+				/*
+				 * STORE_LISTEN
+				 */
+				int		li_origin;
+				int		li_provider;
+				int		li_receiver;
+
+				li_origin	= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				li_provider	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				li_receiver	= (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+
+				if (li_receiver == rtcfg_nodeid)
+					rtcfg_storeListen(li_origin, li_provider);
+			}
+			else if (strcmp(ev_type, "STORE_SET") == 0)
+			{
+				/*
+				 * STORE_SET
+				 */
+				int		set_id;
+				int		set_origin;
+				char   *set_comment;
+
+				set_id		= (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				set_origin	= (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				set_comment	= PQgetvalue(res, tupno, 8);
+
+				rtcfg_storeSet(set_id, set_origin, set_comment);
+			}
+			else
+			{
+printf("slon_localListenThread: event %s: Unknown event type %s\n", 
 last_eventseq_buf, PQgetvalue(res, tupno, 5));
+				slon_abort();
+			}
 		}
 
 		PQclear(res);
