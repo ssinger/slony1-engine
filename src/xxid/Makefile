@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.13 2004-08-18 23:39:54 darcyb Exp $
+#	$Id: Makefile,v 1.14 2004-08-19 19:06:59 darcyb Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -17,12 +17,8 @@ SO_NAME		= $(NAME)$(DLSUFFIX)
 SQL_NAME73	= $(NAME).v73.sql
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAMES	= $(SQL_NAME73) $(SQL_NAME74)
-POSTGRES_IMP=
-SO_OBJS		= xxid.o
 
-ifeq ($(PORTNAME), aix)
-POSTGRES_IMP=$(slony_top_builddir)/postgresql.imp
-endif
+SO_OBJS		= xxid.o
 
 ALL =					\
 	$(SO_NAME)			\

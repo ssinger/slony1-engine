@@ -19,7 +19,7 @@ endif
 EXPSUFF= .exp
 IMPSUFF= .imp
 
-POSTGRES_IMP= postgres$(IMPSUFF)
+POSTGRES_IMP= $(slony_top_builddir)/postgres$(IMPSUFF)
 
 MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 
@@ -31,4 +31,4 @@ MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 
 %$(DLSUFFIX): %.o %$(EXPSUFF)
 	@echo Making shared library $@ from $*.o, $*$(EXPSUFF) and postgres.imp
-	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(slony_top_builddir)/src/backend/$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)
+	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)

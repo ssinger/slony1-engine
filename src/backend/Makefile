@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.15 2004-08-18 23:39:54 darcyb Exp $
+#	$Id: Makefile,v 1.16 2004-08-19 19:06:59 darcyb Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -19,16 +19,11 @@ SO_OBJS	= $(NAME).o
 
 BASE_COMMON		= slony1_base.sql
 FUNCS_COMMON	= slony1_funcs.sql
-POSTGRES_IMP=
 BASE_73			= slony1_base.v73.sql
 FUNCS_73		= slony1_funcs.v73.sql
 
 BASE_74			= slony1_base.v74.sql
 FUNCS_74		= slony1_funcs.v74.sql
-
-ifeq ($(PORTNAME), aix)
-POSTGRES_IMP=$(slony_top_builddir)/postgresql.imp
-endif
 
 SQL_NAMES =				\
 	$(BASE_COMMON)		\
