@@ -1,0 +1,389 @@
+Help!  It's broken!
+------------------------------
+
+You're having trouble getting it to work, and are scratching your head
+as to what might be wrong.
+
+Here are some idiosyncracies that other people have stumbled over that
+might help you to "stumble more quickly."
+
+1.  I looked for the _clustername namespace, and it wasn't there.
+
+If the DSNs are wrong, then slon instances can't connect to the nodes.
+
+This will generally lead to nodes remaining entirely untouched.
+
+Recheck the connection configuration.  By the way, since slon links to
+libpq, you could have password information stored in $HOME/.pgpass,
+partially filling in right/wrong authentication information there.
+
+2.  Everything in my script _looks_ OK, and some data is getting
+pushed around, but not all of it.
+
+Slony logs might look like the following:
+
+DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
+ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,        ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,        ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
+
+On AIX and Solaris (and possibly elsewhere), both Slony-I _and
+PostgreSQL_ must be compiled with the --enable-thread-safety option.
+The above results when PostgreSQL isn't so compiled.
+
+What happens is that the libc (threadsafe) and libpq (non-threadsafe)
+use different memory locations for errno, thereby leading to the
+request failing.
+
+Problems like this crop up with disadmirable regularity on AIX and
+Solaris; it may take something of an "object code audit" to make sure
+that ALL of the necessary components have been compiled and linked
+with --enable-thread-safety.
+
+For instance, I ran into the problem one that LD_LIBRARY_PATH had been
+set, on Solaris, to point to libraries from an old PostgreSQL compile.
+That meant that even though the database had been compiled with
+--enable-thread-safety, and slon had been compiled against that, slon
+was being dynamically linked to the "bad old thread-unsafe version,"
+so slon didn't work.  It wasn't clear until I ran "ldd" against slon.
+
+3.  I tried creating a CLUSTER NAME with a "-" in it.  That didn't work.
+
+Slony-I uses the same rules for unquoted identifiers as the PostgreSQL
+main parser, so no, you probably shouldn't put a "-" in your
+identifier name.
+
+You may be able to defeat this by putting "quotes" around identifier
+names, but it's liable to bite you some, so this is something that is
+probably not worth working around.
+
+4.  After an immediate stop of postgresql (simulation of system crash)
+in pg_catalog.pg_listener a tuple with
+relname='_${cluster_name}_Restart' exists. slon doesn't start cause it
+thinks another process is serving the cluster on this node.  What can
+I do? The tuples can't be dropped from this relation.
+
+The logs claim that "Another slon daemon is serving this node already"
+
+It's handy to keep a slonik script like the following one around to
+run in such cases:
+================================================================================
+twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
+cluster name = oxrsorg ;
+node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
+node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
+node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
+node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
+restart node 1;
+restart node 2;
+restart node 3;
+restart node 4;
+================================================================================
+
+'restart node n' cleans this stuff up so that you can restart the
+node.
+
+5.  If I run a "ps" command, I, and everyone else, can see passwords
+on the command line.
+
+Take the passwords out of the Slony configuration, and put them into
+$(HOME)/.pgpass.
+
+6.  When I run the sample setup script I get an error message similar
+to:
+
+<stdin>:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
+could not open file '$libdir/xxid': No such file or directory
+
+Evidently, you haven't got the xxid.so library in the $libdir
+directory that the PostgreSQL instance is using.  Note that the Slony
+components need to be installed on EACH ONE of the nodes, not just on
+the "master."
+
+This may also point to there being some other mismatch between the
+PostgreSQL binary instance and the Slony-I instance.  If you compiled
+Slony-I yourself, on a machine that may have multiple PostgreSQL
+builds "lying around," it's possible that the slon or slonik binaries
+are asking to load something that isn't actually in the library
+directory for the PostgreSQL database cluster that it's hitting.
+
+Long and short: This points to a need to "audit" what installations of
+PostgreSQL and Slony you have in place on the machine(s).
+Unfortunately, just about any mismatch will cause things not to link
+up quite right.  Look back at #2...
+
+7.  An oddity - no need for Fully Qualified Name for table keys...
+
+set add table (set id = 1, origin = 1, id = 27, full qualified name = 'nspace.some_table', key = 'key_on_whatever', 
+    comment = 'Table some_table in namespace nspace with a candidate primary key');
+
+If you have
+   key = 'nspace.key_on_whatever'
+the request will FAIL.
+
+8.  I'm trying to get a slave subscribed, and get the following
+messages in the logs:
+
+DEBUG1 copy_set 1
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+WARN   remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
+WARN   remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
+
+Oops.  What I forgot to mention, as well, was that I was trying to add
+TWO subscribers, concurrently.
+
+That doesn't work out: Slony-I won't work on the COPY commands
+concurrently.  See src/slon/remote_worker.c, function copy_set()
+
+This has the (perhaps unfortunate) implication that you cannot
+populate two slaves concurrently.  You have to subscribe one to the
+set, and only once it has completed setting up the subscription
+(copying table contents and such) can the second subscriber start
+setting up the subscription.
+
+It could also be possible for there to be an old outstanding
+transaction blocking Slony-I from processing the sync.  You might want
+to take a look at pg_locks to see what's up:
+
+sampledb=# select * from pg_locks where transaction is not null order by transaction;
+ relation | database | transaction |   pid   |     mode      | granted 
+----------+----------+-------------+---------+---------------+---------
+          |          |   127314921 | 2605100 | ExclusiveLock | t
+          |          |   127326504 | 5660904 | ExclusiveLock | t
+(2 rows)
+
+See?  127314921 is indeed older than 127314958, and it's still running.
+
+$ ps -aef | egrep '[2]605100'
+postgres 2605100  205018   0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
+
+This happens to be a COPY transaction involved in setting up the
+subscription for one of the nodes.  All is well; the system is busy
+setting up the first subscriber; it won't start on the second one
+until the first one has completed subscribing.
+
+By the way, if there is more than one database on the PostgreSQL
+cluster, and activity is taking place on the OTHER database, that will
+lead to there being "transactions earlier than XID whatever" being
+found to be still in progress.  The fact that it's a separate database
+on the cluster is irrelevant; Slony-I will wait until those old
+transactions terminate.
+
+9.  I tried setting up a second replication set, and got the following error:
+
+<stdin>:9: Could not create subscription set 2 for oxrslive!
+<stdin>:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
+CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
+
+The table IDs used in SET ADD TABLE are required to be unique ACROSS
+ALL SETS.  Thus, you can't restart numbering at 1 for a second set; if
+you are numbering them consecutively, a subsequent set has to start
+with IDs after where the previous set(s) left off.
+
+10.  I need to drop a table from a replication set, and I can't see
+how to do that.
+
+This can be accomplished several ways, not all equally desirable ;-).
+
+a) You could drop the whole replication set, and recreate it with just
+the tables that you need.  Alas, that means recopying a whole lot of
+data, and kills the usability of the cluster on the rest of the set
+while that's happening.
+
+b) If you are running 1.0.3 or later, there is the command SET DROP
+TABLE, which will "do the trick."
+
+c) If you are still using 1.0.1 or 1.0.2, the _essential_
+functionality of SET DROP TABLE involves the functionality in
+droptable_int().  You can fiddle this by hand by finding the table ID
+for the table you want to get rid of, which you can find in sl_table,
+and then run the following three queries, on each host:
+
+  select _slonyschema.alterTableRestore(40);
+  select _slonyschema.tableDropKey(40);
+  delete from _slonyschema.sl_table where tab_id = 40;
+
+The schema will obviously depend on how you defined the Slony-I
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.
+
+You'll have to run these three queries on all of the nodes, preferably
+firstly on the "master" node, so that the dropping of this propagates
+properly.  Implementing this via a SLONIK statement with a new Slony
+event would do that.  Submitting the three queries using EXECUTE
+SCRIPT could do that.  Also possible would be to connect to each
+database and submit the queries by hand.
+
+11.  I want to stop replicating a sequence
+
+If you are running 1.0.3 or later, there is a SET DROP SEQUENCE
+command in Slonik to allow you to do this, parallelling SET DROP
+TABLE.
+
+If you are running 1.0.2 or earlier, the process is a bit more manual.
+
+Supposing I want to get rid of the two sequences listed below,
+whois_cachemgmt_seq and epp_whoi_cach_seq_, we start by needing the
+seq_id values.
+
+oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
+ seq_id | seq_reloid | seq_set |             seq_comment             
+--------+------------+---------+-------------------------------------
+     93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
+     59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
+(2 rows)
+
+
+The data that needs to be deleted to stop Slony from continuing to
+replicate these are thus:
+
+delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+delete from _oxrsorg.sl_sequence where seq_id in (93,59);
+
+Those two queries could be submitted to all of the nodes via
+ddlscript() / EXECUTE SCRIPT, thus eliminating the sequence everywhere
+"at once."  Or they may be applied by hand to each of the nodes.
+
+Similarly to SET DROP TABLE, this should be in place for Slony-I version
+1.0.3 as SET DROP SEQUENCE.
+
+12.  I tried to add a table to a set, and got the following message:
+
+   Slony-I: cannot add table to currently subscribed set 1
+
+You cannot add tables to sets that already have subscribers.
+
+The workaround to this is to create ANOTHER set, add the new tables to
+that new set, subscribe the same nodes subscribing to "set 1" to the
+new set, and then merge the sets together.
+
+13.  Some nodes start consistently falling behind
+
+I have been running Slony-I on a node for a while, and am seeing
+system performance suffering.
+
+I'm seeing long running queries of the form:
+
+   fetch 100 from LOG;
+
+This is characteristic of pg_listener (which is the table containing
+NOTIFY data) having plenty of dead tuples in it.  That makes NOTIFY
+events take a long time, and causes the affected node to gradually
+fall further and further behind.
+
+You quite likely need to do a VACUUM FULL on pg_listener, to
+vigorously clean it out, and need to vacuum pg_listener really
+frequently.  Once every five minutes would likely be AOK.
+
+Slon daemons already vacuum a bunch of tables, and cleanup_thread.c
+contains a list of tables that are frequently vacuumed automatically.
+In Slony-I 1.0.2, pg_listener is not included.  In 1.0.3 and later, it
+is regularly vacuumed, so this should cease to be an issue.
+
+14.  I started doing a backup using pg_dump, and suddenly Slony stops
+replicating anything.
+
+Ouch.  What happens here is a conflict between:
+
+ a) pg_dump, which has taken out an AccessShareLock on all of the
+    tables in the database, including the Slony-I ones, and
+
+ b) A Slony-I sync event, which wants to grab a AccessExclusiveLock on
+    the table sl_event.
+
+The initial query that will be blocked is thus:
+
+    select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);     
+
+(You can see this in pg_stat_activity, if you have query display
+turned on in postgresql.conf)
+
+The actual query combination that is causing the lock is from the
+function Slony_I_ClusterStatus(), found in slony1_funcs.c, and is
+localized in the code that does:
+
+  LOCK TABLE %s.sl_event;
+  INSERT INTO %s.sl_event (...stuff...)
+  SELECT currval('%s.sl_event_seq');
+
+The LOCK statement will sit there and wait until pg_dump (or whatever
+else has pretty much any kind of access lock on sl_event) completes.  
+
+Every subsequent query submitted that touches sl_event will block
+behind the createEvent call.
+
+There are a number of possible answers to this:
+
+ a) Have pg_dump specify the schema dumped using --schema=whatever,
+    and don't try dumping the cluster's schema.
+
+ b) It would be nice to add an "--exclude-schema" option to pg_dump to
+    exclude the Slony cluster schema.  Maybe in 8.0 or 8.1...
+
+Note that 1.0.3 uses a more precise lock that is less exclusive that
+should relieve this problem.
+
+15.  The slons spent the weekend out of commission [for some reason],
+and it's taking a long time to get a sync through.
+
+You might want to take a look at the sl_log_1/sl_log_2 tables, and do
+a summary to see if there are any really enormous Slony-I transactions
+in there.  Up until at least 1.0.2, there needs to be a slon connected
+to the master in order for SYNC events to be generated.
+
+If none are being generated, then all of the updates until the next
+one is generated will collect into one rather enormous Slony-I
+transaction.
+
+Conclusion: Even if there is not going to be a subscriber around, you
+_really_ want to have a slon running to service the "master" node.
+
+Some future version (probably 1.1) may provide a way for SYNC counts
+to be updated on the master by the stored function that is invoked by
+the table triggers.
+
+16.  I pointed a subscribing node to a different parent and it stopped
+replicating
+
+We noticed this happening when we wanted to re-initialize a node,
+where we had configuration thus:
+
+ Node 1 - master
+ Node 2 - child of node 1 - the node we're reinitializing
+ Node 3 - child of node 3 - node that should keep replicating
+
+The subscription for node 3 was changed to have node 1 as provider,
+and we did DROP SET/SUBSCRIBE SET for node 2 to get it repopulating.
+
+Unfortunately, replication suddenly stopped to node 3.
+
+The problem was that there was not a suitable set of "listener paths"
+in sl_listen to allow the events from node 1 to propagate to node 3.
+The events were going through node 2, and blocking behind the
+SUBSCRIBE SET event that node 2 was working on.
+
+The following slonik script dropped out the listen paths where node 3
+had to go through node 2, and added in direct listens between nodes 1
+and 3.
+
+cluster name = oxrslive;
+ node 1 admin conninfo='host=32.85.68.220 dbname=oxrslive user=postgres port=5432';
+ node 2 admin conninfo='host=32.85.68.216 dbname=oxrslive user=postgres port=5432';
+ node 3 admin conninfo='host=32.85.68.244 dbname=oxrslive user=postgres port=5432';
+ node 4 admin conninfo='host=10.28.103.132 dbname=oxrslive user=postgres port=5432';
+try {
+      store listen (origin = 1, receiver = 3, provider = 1);
+      store listen (origin = 3, receiver = 1, provider = 3);
+      drop listen (origin = 1, receiver = 3, provider = 2);
+      drop listen (origin = 3, receiver = 1, provider = 2);
+}
+
+Immediately after this script was run, SYNC events started propagating
+again to node 3.
+
+This points out two principles:
+
+ 1.  If you have multiple nodes, and cascaded subscribers, you need to
+     be quite careful in populating the STORE LISTEN entries, and in
+     modifying them if the structure of the replication "tree" changes.
+
+ 2.  Version 1.1 probably ought to provide better tools to help manage
+     this.
