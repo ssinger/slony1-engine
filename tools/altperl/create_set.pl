@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: create_set.pl,v 1.7 2004-10-01 20:42:59 cbbrowne Exp $
+# $Id: create_set.pl,v 1.8 2004-11-19 23:35:57 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -28,12 +28,6 @@ foreach my $table (@SERIALTABLES) {
 		);
 ";
 }
-close OUTFILE;
-run_slonik_script($OUTPUTFILE);
-
-open (OUTFILE, ">$OUTPUTFILE");
-print OUTFILE genheader();
-
 print OUTFILE "
 try {
       create set (id = $set, origin = $MASTERNODE, comment = 'Set $set for $SETNAME');
@@ -42,12 +36,6 @@ try {
       exit -1;
 }
 ";
-
-close OUTFILE;
-run_slonik_script($OUTPUTFILE);
-
-open (OUTFILE, ">$OUTPUTFILE");
-print OUTFILE genheader();
 print OUTFILE "
 	echo 'Subscription set $set created';
 	echo 'Adding tables to the subscription set';
@@ -85,12 +73,6 @@ foreach my $table (keys %KEYEDTABLES) {
   $TABLE_ID++;
 }
 
-close OUTFILE;
-run_slonik_script($OUTPUTFILE);
-
-open (OUTFILE, ">$OUTPUTFILE");
-print OUTFILE genheader();
-# Finish subscription set...
 print OUTFILE "
                 echo 'Adding sequences to the subscription set';
 ";

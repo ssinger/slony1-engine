@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: init_cluster.pl,v 1.5 2004-10-01 20:42:59 cbbrowne Exp $
+# $Id: init_cluster.pl,v 1.6 2004-11-19 23:35:57 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 my @COST;
@@ -16,11 +16,6 @@ my ($dbname, $dbhost)=($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
 print SLONIK "
    init cluster (id = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');
 ";
-close SLONIK;
-run_slonik_script($FILE);
-
-open(SLONIK, ">$FILE");
-print SLONIK genheader();
 
 foreach my $node (@NODES) {
   if ($node != $MASTERNODE) {		# skip the first one; it's already initialized!
@@ -31,11 +26,6 @@ foreach my $node (@NODES) {
 
 print SLONIK "echo 'Set up replication nodes';
 ";
-close SLONIK;
-run_slonik_script($FILE);
-
-open(SLONIK, ">$FILE");
-print SLONIK genheader();
 
 my @VIA ;
 generate_listen_paths();
@@ -63,12 +53,6 @@ foreach my $nodea (@NODES) {
   }
 }
 
-close SLONIK;
-
-run_slonik_script($FILE);
-
-open(SLONIK, ">$FILE");
-print SLONIK genheader();
 
 foreach my $origin (@NODES) {
   my $dsna = $DSN[$origin];
