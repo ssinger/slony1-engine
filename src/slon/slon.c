@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.6 2003-12-17 21:21:13 wieck Exp $
+ *	$Id: slon.c,v 1.7 2004-01-09 02:17:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -339,7 +339,10 @@ printf("main: local node id = %d\n", local_nodeid);
 	if (PQntuples(res) == 0)
 		local_lastevent = strdup("-1");
 	else
-		local_lastevent = strdup(PQgetvalue(res, 0, 0));
+		if (PQgetisnull(res, 0, 0))
+			local_lastevent = strdup("-1");
+		else
+			local_lastevent = strdup(PQgetvalue(res, 0, 0));
 	PQclear(res);
 printf("main: last local event sequence = %s\n", local_lastevent);
 
@@ -836,6 +839,28 @@ slon_free_dummyconn(SlonConn *conn)
 	pthread_mutex_destroy(&(conn->conn_lock));
 	free(conn->symname);
 	free(conn);
+}
+
+
+void
+slon_quote(char *buf, char *value, char **endp)
+{
+	*buf++ = '\'';
+	while (*value != '\0')
+	{
+		switch (*value)
+		{
+			case '\'':
+			case '\\':	*buf++ = '\'';
+						break;
+		}
+		*buf++ = *value++;
+	}
+	*buf++ = '\'';
+	*buf = '\0';
+
+	if (endp != NULL)
+		*endp = buf;
 }
 
 

@@ -6,7 +6,7 @@
 -- Copyright (c) 2003, PostgreSQL Global Development Group
 -- Author: Jan Wieck, Afilias USA LLC.
 --
--- $Id: slony1_funcs.sql.in,v 1.8 2003-12-17 21:21:13 wieck Exp $
+-- $Id: slony1_funcs.sql.in,v 1.9 2004-01-09 02:17:47 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1149,7 +1149,10 @@ begin
 					where ev_origin = v_min_row.con_origin
 					and ev_seqno = v_max_sync;
 			if found then
-				delete from @NAMESPACE@.sl_log
+				delete from @NAMESPACE@.sl_log_1
+						where log_origin = v_max_row.ev_origin
+						and   log_xid    < v_max_row.ev_minxid;
+				delete from @NAMESPACE@.sl_log_2
 						where log_origin = v_max_row.ev_origin
 						and   log_xid    < v_max_row.ev_minxid;
 			end if;

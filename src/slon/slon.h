@@ -6,7 +6,7 @@
  *	Copyright (c) 2003, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.5 2003-12-17 21:21:13 wieck Exp $
+ *	$Id: slon.h,v 1.6 2004-01-09 02:17:48 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -44,6 +44,7 @@ struct SlonNode_s {
 	int					have_thread;	/* flag if event thread exists */
 	pthread_t			event_thread;	/* thread listening for events */
 	SlonConn		   *event_conn;		/* connection event thread uses */
+	PGconn			   *local_dbconn;	/* connection for forwarding data */
 
 	char			   *pa_conninfo;	/* conninfo to connect to it */
 	int					pa_connretry;	/* connect retry interval in seconds */
@@ -51,9 +52,9 @@ struct SlonNode_s {
 	SlonListen		   *li_list_head;	/* list of event origins we receive */
 	SlonListen		   *li_list_tail;	/* from this provider */
 
-	pthread_mutex_t		data_dblock;
-	PGconn			   *data_dbconn;
-
+	pthread_mutex_t		data_dblock;	/* lock and DB connection to get */
+	PGconn			   *data_dbconn;	/* data from the remote node */
+	
 	SlonNode		   *prev;
 	SlonNode		   *next;
 };
@@ -221,6 +222,7 @@ extern void		slon_free_dummyconn(SlonConn *conn);
 
 #define slon_abort() {kill(slon_pid, SIGTERM);}
 extern void		slon_exit(int code);
+extern void		slon_quote(char *buf, char *value, char **endp);
 
 
 /* ----------
