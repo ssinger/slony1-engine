@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.19 2004-12-10 23:57:36 darcyb Exp $
+# $Id: Makefile.global.in,v 1.20 2004-12-17 00:32:17 darcyb Exp $
 # ----------
 
 #location subsitutions
@@ -50,6 +50,7 @@ PS2PDF  = @PS2PDF@
 DJPEG   = @DJPEG@
 GROFF	= @GROFF@
 PNMTOPS = @PNMTOPS@
+TAR	= @TAR@
 
 subdir=$(slony_subdir)
 

@@ -2,12 +2,14 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.2 2004-12-10 18:41:56 cbbrowne Exp $
+# $Id: Makefile,v 1.3 2004-12-17 00:32:19 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
 subdir = doc/adminguide
-top_builddir = ../..
+slony_top_builddir = ../..
+
+include $(slony_top_builddir)/Makefile.global
 
 .SECONDARY:
 .NOTPARALLEL:
@@ -16,36 +18,10 @@ ifndef COLLATEINDEX
 COLLATEINDEX = /usr/bin/collateindex.pl
 endif
 
-ifndef JADE
-JADE = jade
-endif
-SGMLINCLUDE = -D $(srcdir)
-
-# If this is a vpath build, some generated SGML will be in the build
-# tree, so we need to make sure we look there as well as in the
-# source tree
-ifeq ($(vpath_build), yes)
-SGMLINCLUDE += -D .
-endif
-
-ifndef NSGMLS
-NSGMLS = nsgmls
-endif
-
-ifndef SGMLSPL
-SGMLSPL = sgmlspl
-endif
-
-CONVERT = convert
-EPSTOPDF = epstopdf
-
-# docbook2man generates man pages from docbook refentry source code.
-D2MSCRIPT= $(D2MDIR)/docbook2man-spec.pl
-
 
 GENERATED_SGML = bookindex.sgml 
 
-ALLSGML := $(wildcard $(srcdir)/*.sgml $(srcdir)/ref/*.sgml) $(GENERATED_SGML)
+ALLSGML := $(wildcard $(srcdir)/*.sgml $(GENERATED_SGML))
 
 ifdef DOCBOOKSTYLE
 CATALOG = -c $(DOCBOOKSTYLE)/catalog
@@ -84,14 +60,17 @@ all: html
 
 .PHONY: html
 
+ifndef JADE
+html:
+	@echo "You must have jade installed to build the documentation." && exit;
+else
 html: slony.sgml $(ALLSGML) stylesheet.dsl
 	@rm -f *.html
-	$(JADE) -ioutput.html -d mysheet.dsl -t sgml $<
-	#$(JADE) $(JADEFLAGS) $(SPFLAGS) $(SGMLINCLUDE) $(CATALOG) -d mysheet.dsl -ioutput-html -t sgml $<
+	$(JADE) $(JADEFLAGS) $(SGMLINCLUDE) $(CATALOG) -d mysheet.dsl -ioutput-html -t sgml $<
 ifeq ($(vpath_build), yes)
 	@cp $(srcdir)/stylesheet.css .
 endif
-
+endif
 
 COLLATEINDEX := LC_ALL=C $(PERL) $(COLLATEINDEX) -f -g
 

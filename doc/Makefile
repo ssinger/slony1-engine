@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.9 2004-12-11 00:44:22 darcyb Exp $
+#	$Id: Makefile,v 1.10 2004-12-17 00:32:18 darcyb Exp $
 # ----------
 
 slony_subdir = doc
@@ -32,3 +32,10 @@ distdir: $(DISTFILES)
 	@for subdir in $(SUBDIRS) ; do \
 		$(MAKE) -C $$subdir distdir ; \
 	done
+
+adminguide.tar:
+
+	$(MAKE) -C adminguide clean
+	$(MAKE) -C adminguide html
+	$(MAKE) -C adminguide html JADEFLAGS='-V html-manifest'
+	cd adminguide && $(TAR) -cf ../$@ `cat HTML.manifest` `echo *.gif | grep -v '\*'` *.css
