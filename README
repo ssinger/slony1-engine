@@ -15,19 +15,27 @@ And now, the contents.
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
-Slony must be built and installed by the PostgreSQL Unix user.  The
+Slony must be built and installed by the PostgreSQL Unix user. The
 installation target must be identical to the existing PostgreSQL
-installation.  [[and the original PostgreSQL source tree must be
-available - soon to become unnecessary]].  
+installation. [[A copy of the original PostgreSQL source tree used to be
+necessary; no longer so for 1.1...]]
 
 On certain platforms (AIX and Solaris are amongst these), PostgreSQL
 must be configured with the option --enable-thread-safety to provide
 correct client libraries.
 
-The location of the PostgreSQL source-tree is specified with the
-configure option --with-pgsourcetree=<dir>.  [[ An effort is ongoing
-to eliminate the need for the source tree; AIX is a conspicuous
-platform where this doesn't yet work... ]]
+The location of the PostgreSQL source-tree was specified with the
+configure option --with-pgsourcetree=<dir>. As of 1.1, this is no longer
+necessary; instead, locations of database components are specified
+individually, such as:
+
+--with-pgconfigdir=<dir>        Location of the PostgreSQL pg_config program.
+--with-pgbindir=<dir>           Location of the PostgreSQL postmaster.
+--with-pgincludedir=<dir>       Location of the PostgreSQL headers.
+--with-pgincludeserverdir=<dir> Location of the PostgreSQL server headers.
+--with-pglibdir=<dir>           Location of the PostgreSQL libs.
+--with-pgpkglibdir=<dir>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so
+--with-pgsharedir=<dir>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample
 
 The complete list of files installed is:
 
@@ -43,23 +51,23 @@ The complete list of files installed is:
     * $datadir/slony1_funcs.v74.sql
     * $datadir/xxid.v73.sql 
 
-The .sql files are not fully substituted yet.  And yes, both the 7.3
-and the 7.4 files get installed on a system, regardless of its
-version.  The slonik admin utility does namespace/cluster
-substitutions within the files, and loads them files when creating
-replication nodes.  At that point in time, the database being
-initialized may be remote and may run a different version of
-PostgreSQL than that of the local host.
+The .sql files are not fully substituted yet.  And yes, both the 7.3 and
+the 7.4 files get installed on a system, irrespective of its version.
+The slonik admin utility does namespace/cluster substitutions within the
+files, and loads them files when creating replication nodes.  At that
+point in time, the database being initialized may be remote and may run
+a different version of PostgreSQL than that of the local host.
 
 At the very least, the two shared objects installed in the $libdir
 directory must be installed onto every computer that is supposed to
-become a Slony node.
+become a Slony node. (Other components may be able to be invoked
+remotely from other hosts.)
 
 2.  Creating a sample database with application
 
-As a first test scenario, the pgbench test program that is shipped
-with PostgreSQL in the ./contrib directory and produces a not too
-light load of concurrent transactions will satisfy our needs.
+As a first test scenario, the pgbench test program that is shipped with
+PostgreSQL in the ./contrib directory and produces a not too light load
+of concurrent transactions will satisfy our needs.
 
 NOTE: the PL/PgSQL procedural language MUST BE INSTALLED into this
 database
@@ -95,8 +103,8 @@ until replication works would not be a bad idea.
 PREPARING THE TWO DATABASES
 
 As of this writing Slony-I does not attempt to automatically copy the
-table definitions when a node subscribes to a data set.  Because of
-this, we have to create one full and one schema-only pgbench database.
+table definitions when a node subscribes to a data set.  Because of this,
+we have to create one full and one schema-only pgbench database.
 
 createdb -O $PGBENCH_USER -h $HOST1 $DBNAME1
 createdb -O $PGBENCH_USER -h $HOST2 $DBNAME2
