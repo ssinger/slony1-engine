@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.1 2004-09-14 02:49:33 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.2 2004-09-23 17:28:24 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -156,6 +156,16 @@ grant execute on function @NAMESPACE@.logTrigger () to public;
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.terminateNodeConnections (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_terminateNodeConnections'
+	language C;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cleanupListener ()
+--
+--	
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cleanupListener () returns int4
+    as '$libdir/slony1_funcs', '_Slony_I_cleanupListener'
 	language C;
 
 

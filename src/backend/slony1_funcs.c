@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.17.2.1 2004-09-22 00:34:14 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.17.2.2 2004-09-23 17:28:24 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -18,6 +18,7 @@
 #include "parser/parse_type.h"
 #include "executor/spi.h"
 #include "commands/trigger.h"
+#include "commands/async.h"
 #include "access/xact.h"
 #include "utils/builtins.h"
 #ifdef HAVE_TYPCACHE
@@ -37,6 +38,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 PG_FUNCTION_INFO_V1(_Slony_I_terminateNodeConnections);
+PG_FUNCTION_INFO_V1(_Slony_I_cleanupListener);
 
 Datum           _Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum           _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -47,6 +49,7 @@ Datum           _Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum           _Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum           _Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum           _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
+Datum           _Slony_I_cleanupListener(PG_FUNCTION_ARGS);
 
 
 #define PLAN_NONE			0
@@ -948,6 +951,55 @@ _Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
 		elog(NOTICE, "Slony-I: terminating DB connection of faile node "
 				"with pid %d", pid);
 		kill(pid, SIGTERM);
+	}
+
+	SPI_finish();
+
+	return (Datum)0;
+}
+
+
+Datum
+_Slony_I_cleanupListener(PG_FUNCTION_ARGS)
+{
+	static void	   *plan = NULL;
+	int				i;
+	int32			pid;
+	char		   *relname;
+	bool			isnull;
+
+
+	if (SPI_connect() < 0)
+		elog(ERROR, "Slony-I: SPI_connect() failed in cleanupListener()");
+
+	if (plan == NULL)
+	{
+		plan = SPI_saveplan(SPI_prepare("select relname, listenerpid "
+				"    from \"pg_catalog\".pg_listener; ",
+				0, NULL));
+		if (plan == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed in cleanupListener()");
+	}
+
+	if (SPI_execp(plan, NULL, NULL, 0) != SPI_OK_SELECT)
+		elog(ERROR, "Slony-I: SPI_execp() failed in cleanupListener()");
+
+	for (i = 0; i < SPI_processed; i++)
+	{
+		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i], 
+				SPI_tuptable->tupdesc, 2, &isnull));
+		if (kill(pid, 0) < 0)
+		{
+			if (errno == ESRCH)
+			{
+				relname = SPI_getvalue(SPI_tuptable->vals[i],
+						SPI_tuptable->tupdesc, 1);
+
+				elog(NOTICE, "Slony-I: removing stale pg_listener entry "
+						"for pid %d, relname %s", pid, relname);
+				Async_Unlisten(relname, pid);
+			}
+		}
 	}
 
 	SPI_finish();
