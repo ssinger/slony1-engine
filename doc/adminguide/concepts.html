@@ -12,10 +12,10 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="UP"
-HREF="t24.html"><LINK
+HREF="slonyintro.html"><LINK
 REL="PREVIOUS"
-TITLE="Slonik"
-HREF="slonik.html"><LINK
+TITLE=" Slony-I Installation"
+HREF="installation.html"><LINK
 REL="NEXT"
 TITLE="Defining Slony-I Clusters"
 HREF="cluster.html"><LINK
@@ -50,7 +50,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="slonik.html"
+HREF="installation.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -79,7 +79,7 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="CONCEPTS"
->5. Slony-I Concepts</A
+>4. Slony-I Concepts</A
 ></H1
 ><P
 >In order to set up a set of Slony-I replicas, it is necessary to understand the following major abstractions that it uses:
@@ -113,35 +113,61 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN231"
->5.1. Cluster</A
+NAME="AEN212"
+>4.1. Cluster</A
 ></H2
 ><P
 >In Slony-I terms, a Cluster is a named set of PostgreSQL database instances; replication takes place between those databases.&#13;</P
 ><P
 >The cluster name is specified in each and every Slonik script via the directive:
-<TT
-CLASS="COMMAND"
->cluster name = 'something';</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    cluster name = 'something';</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->If the Cluster name is 'something', then Slony-I will create, in each database instance in the cluster, the namespace/schema '_something'.&#13;</P
+>If the Cluster name is <CODE
+CLASS="ENVAR"
+>something</CODE
+>, then Slony-I will
+create, in each database instance in the cluster, the namespace/schema
+<CODE
+CLASS="ENVAR"
+>_something</CODE
+>.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN237"
->5.2. Node</A
+NAME="AEN220"
+>4.2. Node</A
 ></H2
 ><P
 >A Slony-I Node is a named PostgreSQL database that will be participating in replication.  &#13;</P
 ><P
 >It is defined, near the beginning of each Slonik script, using the directive:
-<TT
-CLASS="COMMAND"
-> NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>     NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The CONNINFO information indicates a string argument that will ultimately be passed to the <CODE
@@ -170,34 +196,49 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN250"
->5.3. Replication Set</A
+NAME="AEN233"
+>4.3. Replication Set</A
 ></H2
 ><P
->A replication set is defined as a set of tables and sequences that are to be replicated between nodes in a Slony-I cluster.&#13;</P
+>A replication set is defined as a set of tables and sequences
+that are to be replicated between nodes in a Slony-I cluster.&#13;</P
 ><P
->You may have several sets, and the "flow" of replication does not need to be identical between those sets.&#13;</P
+>You may have several sets, and the <SPAN
+CLASS="QUOTE"
+>"flow"</SPAN
+> of replication does
+not need to be identical between those sets.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN254"
->5.4. Provider and Subscriber</A
+NAME="AEN238"
+>4.4. Provider and Subscriber</A
 ></H2
 ><P
->Each replication set has some "master" node, which winds up
-being the <SPAN
+>Each replication set has some <SPAN
+CLASS="QUOTE"
+>"master"</SPAN
+> node, which
+winds up being the <SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >only</I
 ></SPAN
-> place where user applications are permitted
-to modify data in the tables that are being replicated.  That "master"
-may be considered the master "provider node;" it is the main place
-from which data is provided.&#13;</P
+> place where user
+applications are permitted to modify data in the tables that are being
+replicated.  That <SPAN
+CLASS="QUOTE"
+>"master"</SPAN
+> may be considered the
+originating <SPAN
+CLASS="QUOTE"
+>"provider node;"</SPAN
+> it is the main place from
+which data is provided.&#13;</P
 ><P
 >Other nodes in the cluster will subscribe to the replication
 set, indicating that they want to receive the data.&#13;</P
@@ -205,10 +246,7 @@ set, indicating that they want to receive the data.&#13;</P
 >The "master" node will never be considered a "subscriber."  But
 Slony-I supports the notion of cascaded subscriptions, that is, a node
 that is subscribed to the "master" may also behave as a "provider" to
-other nodes in the cluster.
-
-
- </P
+other nodes in the cluster.&#13;</P
 ></DIV
 ></DIV
 ><DIV
@@ -227,7 +265,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="slonik.html"
+HREF="installation.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -255,13 +293,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Slonik</TD
+>Slony-I Installation</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="t24.html"
+HREF="slonyintro.html"
 ACCESSKEY="U"
 >Up</A
 ></TD

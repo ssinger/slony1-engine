@@ -33,18 +33,18 @@ then <ulink url="http://kirov.lug.ru/wiki/Slony">
 KirovOpenSourceCommunity: Slony</ulink> may be the place to go
 </itemizedlist>
 
-<sect1><title/ Other Information Sources/
+<sect2><title> Other Information Sources</title>
 <itemizedlist>
 
-<listitem><Para> <ulink
-url="http://comstar.dotgeek.org/postgres/slony-config/">
+<listitem><para> <ulink url=
+"http://comstar.dotgeek.org/postgres/slony-config/">
 slony-config</ulink> - A Perl tool for configuring Slony nodes using
 config files in an XML-based format that the tool transforms into a
-Slonik script
+Slonik script</para></listitem>
 
 </itemizedlist>
 
-
+</sect2>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

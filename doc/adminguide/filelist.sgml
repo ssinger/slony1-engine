@@ -9,7 +9,6 @@
 <!entity defineset           SYSTEM "defineset.sgml">
 <!entity adminscripts           SYSTEM "adminscripts.sgml">
 <!entity startslons           SYSTEM "startslons.sgml">
-<!entity slonconfig           SYSTEM "slonconfig.sgml">
 <!entity subscribenodes           SYSTEM "subscribenodes.sgml">
 <!entity monitoring           SYSTEM "monitoring.sgml">
 <!entity maintenance           SYSTEM "maintenance.sgml">
@@ -22,8 +21,9 @@
 <!entity firstdb           SYSTEM "firstdb.sgml">
 <!entity help           SYSTEM "help.sgml">
 <!entity faq           SYSTEM "faq.sgml">
-
-
+<!entity reference     SYSTEM "reference.sgml">
+<!entity slonik SYSTEM "slonik.sgml">
+<!entity slon SYSTEM "slon.sgml">
 
 <!entity history    SYSTEM "history.sgml">
 <!entity legal      SYSTEM "legal.sgml">

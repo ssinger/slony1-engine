@@ -1,9 +1,10 @@
-<sect1> <title>Defining Slony-I Replication Sets</title>
+<sect1 id="definingsets"> <title>Defining Slony-I Replication
+Sets</title>
 
 <para>Defining the nodes indicated the shape of the cluster of
 database servers; it is now time to determine what data is to be
 copied between them.  The groups of data that are copied are defined
-as "sets."
+as <quote>sets.</quote>
 
 <para>A replication set consists of the following:
 <itemizedlist>
@@ -27,8 +28,8 @@ There are three ways that you can get Slony-I to use a primary key:
 <itemizedlist>
 
 <listitem><para> If the table has a formally identified primary key,
-<command/SET ADD TABLE/ can be used without any need to reference the
-primary key.  <application/Slony-I/ will pick up that there is a
+<command>SET ADD TABLE</command> can be used without any need to reference the
+primary key.  <application>Slony-I</application> will pick up that there is a
 primary key, and use it.
 
 <listitem><para> If the table hasn't got a primary key, but has some
@@ -49,10 +50,11 @@ key, as it infers the namespace from the table.
 
 <listitem><para> If the table hasn't even got a candidate primary key,
 you can ask Slony-I to provide one.  This is done by first using
-<command/TABLE ADD KEY/ to add a column populated using a Slony-I
-sequence, and then having the <command/SET ADD TABLE/ include the
-directive <option/key=serial/, to indicate that
-<application/Slony-I/'s own column should be used.</para></listitem>
+<command>TABLE ADD KEY</command> to add a column populated using a
+Slony-I sequence, and then having the <command>SET ADD TABLE</command>
+include the directive <option>key=serial</option>, to indicate that
+<application>Slony-I</application>'s own column should be
+used.</para></listitem>
 
 </itemizedlist>
 
@@ -64,24 +66,24 @@ don't have a suitable primary key, that means that the table hasn't
 got any mechanism from your application's standpoint of keeping values
 unique.  Slony-I may therefore introduce a new failure mode for your
 application, and this implies that you had a way to enter confusing
-data into the database.
+data into the database.</para>
 
 <sect2><title> Grouping tables into sets</title>
 
 <para> It will be vital to group tables together into a single set if
 those tables are related via foreign key constraints.  If tables that
 are thus related are <emphasis>not</emphasis> replicated together,
-you'll find yourself in trouble if you switch the <quote/master
-provider/ from one node to another, and discover that the new
-<quote/master/ can't be updated properly because it is missing the
-contents of dependent tables.
+you'll find yourself in trouble if you switch the <quote>master
+provider</quote> from one node to another, and discover that the new
+<quote>master</quote> can't be updated properly because it is missing the
+contents of dependent tables.</para>
 
 <para> If a database schema has been designed cleanly, it is likely
 that replication sets will be virtually synonymous with namespaces.
 All of the tables and sequences in a particular namespace will be
 sufficiently related that you will want to replicate them all.
 Conversely, tables found in different schemas will likely NOT be
-related, and therefore should be replicated in separate sets.
+related, and therefore should be replicated in separate sets.</para>
 
 <!-- Keep this comment at the end of the file
 Local variables:

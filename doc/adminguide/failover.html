@@ -12,7 +12,7 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="UP"
-HREF="t24.html"><LINK
+HREF="slonyadmin.html"><LINK
 REL="PREVIOUS"
 TITLE="Reshaping a Cluster"
 HREF="reshape.html"><LINK
@@ -79,188 +79,193 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="FAILOVER"
->15. Doing switchover and failover with Slony-I</A
+>7. Doing switchover and failover with Slony-I</A
 ></H1
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN622"
->15.1. Foreword</A
+NAME="AEN700"
+>7.1. Foreword</A
 ></H2
 ><P
->	 Slony-I is an asynchronous replication system.  Because of that, it
-	 is almost certain that at the moment the current origin of a set
-	 fails, the last transactions committed have not propagated to the
-	 subscribers yet.  They always fail under heavy load, and you know
-	 it.  Thus the goal is to prevent the main server from failing.
-	 The best way to do that is frequent maintenance.</P
+> Slony-I is an asynchronous replication system.  Because of
+that, it is almost certain that at the moment the current origin of a
+set fails, the last transactions committed have not propagated to the
+subscribers yet.  They always fail under heavy load, and you know it.
+Thus the goal is to prevent the main server from failing.  The best
+way to do that is frequent maintenance.&#13;</P
 ><P
->	 Opening the case of a running server is not exactly what we
-	 all consider professional system maintenance.  And interestingly,
-	 those users who use replication for backup and failover
-	 purposes are usually the ones that have a very low tolerance for
-	 words like "downtime".  To meet these requirements, Slony-I has
-	 not only failover capabilities, but controlled master role transfer
-	 features too.&#13;</P
+> Opening the case of a running server is not exactly what we all
+consider professional system maintenance.  And interestingly, those
+users who use replication for backup and failover purposes are usually
+the ones that have a very low tolerance for words like "downtime".  To
+meet these requirements, Slony-I has not only failover capabilities,
+but controlled master role transfer features too.&#13;</P
 ><P
->	 It is assumed in this document that the reader is familiar with
-	 the slonik utility and knows at least how to set up a simple
-	 2 node replication system with Slony-I.&#13;</P
+> It is assumed in this document that the reader is familiar with
+the slonik utility and knows at least how to set up a simple 2 node
+replication system with Slony-I.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN627"
->15.2. Switchover</A
+NAME="AEN705"
+>7.2. Switchover</A
 ></H2
 ><P
->	 We assume a current "origin" as node1 (AKA master) with one 
-	 "subscriber" as node2 (AKA slave).  A web application on a third
-	 server is accessing the database on node1.  Both databases are
-	 up and running and replication is more or less in sync.
+> We assume a current <SPAN
+CLASS="QUOTE"
+>"origin"</SPAN
+> as node1 (AKA master) with
+one <SPAN
+CLASS="QUOTE"
+>"subscriber"</SPAN
+> as node2 (AKA slave).  A web application on a
+third server is accessing the database on node1.  Both databases are
+up and running and replication is more or less in sync.
 
 <P
 ></P
 ><UL
 ><LI
 ><P
->  At the time of this writing switchover to another server requires the application to reconnect to the database.  So in order to avoid	 any complications, we simply shut down the web server.  Users who use pg_pool for the applications database connections can shutdown	  the pool only.
-
-
-		</P
+> At the time of this writing switchover to another
+server requires the application to reconnect to the database.  So in
+order to avoid any complications, we simply shut down the web server.
+Users who use <B
+CLASS="APPLICATION"
+>pg_pool</B
+> for the applications database
+connections merely have to shut down the pool.&#13;</P
 ></LI
 ><LI
 ><P
-> A small slonik script executes the following commands:</P
-><P
-><TT
-CLASS="COMMAND"
->	lock set (id = 1, origin = 1);
+> A small slonik script executes the following commands:
 
-	wait for event (origin = 1, confirmed = 2);
-
-	move set (id = 1, old origin = 1, new origin = 2);
-
-	wait for event (origin = 1, confirmed = 2);&#13;</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    	lock set (id = 1, origin = 1);
+    	wait for event (origin = 1, confirmed = 2);
+    	move set (id = 1, old origin = 1, new origin = 2);
+    	wait for event (origin = 1, confirmed = 2);</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->	 After these commands, the origin (master role) of data set 1
-	 is now on node2.  It is not simply transferred.  It is done
-	 in a fashion so that node1 is now a fully synchronized subscriber
-	 actively replicating the set.  So the two nodes completely switched
-	 roles.&#13;</P
+> After these commands, the origin (master role) of data set 1 is
+now on node2.  It is not simply transferred.  It is done in a fashion
+so that node1 is now a fully synchronized subscriber actively
+replicating the set.  So the two nodes completely switched roles.&#13;</P
 ></LI
 ><LI
 ><P
->	 After reconfiguring the web application (or pgpool) to connect to	 the database on node2 instead, the web server is restarted and	 resumes normal operation.&#13;</P
+> After reconfiguring the web application (or pgpool)
+to connect to the database on node2 instead, the web server is
+restarted and resumes normal operation.&#13;</P
 ><P
->	 Done in one shell script, that does the shutdown, slonik, move
-	 config files and startup all together, this entire procedure
-	 takes less than 10 seconds.&#13;</P
+> Done in one shell script, that does the shutdown, slonik, move
+config files and startup all together, this entire procedure takes
+less than 10 seconds.&#13;</P
 ></LI
 ></UL
-></P
+>&#13;</P
 ><P
->	 It is now possible to simply shutdown node1 and do whatever is
-	 required.  When node1 is restarted later, it will start replicating
-	 again and eventually catch up after a while.  At this point the
-	 whole procedure is executed with exchanged node IDs and the
-	 original configuration is restored.&#13;</P
+> It is now possible to simply shutdown node1 and do whatever is
+required.  When node1 is restarted later, it will start replicating
+again and eventually catch up after a while.  At this point the whole
+procedure is executed with exchanged node IDs and the original
+configuration is restored.&#13;</P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN642"
->15.3. Failover</A
+NAME="AEN722"
+>7.3. Failover</A
 ></H2
 ><P
->	 Because of the possibility of missing not-yet-replicated
-
-	 transactions that are committed, failover is the worst thing
-
-	 that can happen in a master-slave replication scenario.  If there
-
-	 is any possibility to bring back the failed server even if only
-
-	 for a few minutes, we strongly recommended that you follow the
-
-	 switchover procedure above.
-&#13;</P
+> Because of the possibility of missing not-yet-replicated
+transactions that are committed, failover is the worst thing that can
+happen in a master-slave replication scenario.  If there is any
+possibility to bring back the failed server even if only for a few
+minutes, we strongly recommend that you follow the switchover
+procedure above.&#13;</P
 ><P
->	 Slony does not provide any automatic detection for failed systems.
-
-	 Abandoning committed transactions is a business decision that
-
-	 cannot be made by a database.  If someone wants to put the
-
-	 commands below into a script executed automatically from the
-
-	 network monitoring system, well ... its your data.
+> Slony does not provide any automatic detection for failed
+systems.  Abandoning committed transactions is a business decision
+that cannot be made by a database.  If someone wants to put the
+commands below into a script executed automatically from the network
+monitoring system, well ... its your data.
 
 <P
 ></P
 ><UL
 ><LI
 ><P
->	The slonik command</P
-><P
-><TT
-CLASS="COMMAND"
->	failover (id = 1, backup node = 2);</TT
+>	The slonik command
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    	failover (id = 1, backup node = 2);</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->	 causes node2 to assume the ownership (origin) of all sets that
-
-	 have node1 as their current origin.  In the case there would be
-
-	 more nodes, All direct subscribers of node1 are instructed that
-
-	 this is happening.  Slonik would also query all direct subscribers
-
-	 to figure out which node has the highest replication status
-
-	 (latest committed transaction) for each set, and the configuration
-
-	 would be changed in a way that node2 first applies those last
-
-	 minute changes before actually allowing write access to the
-
-	 tables.
-&#13;</P
+> causes node2 to assume the ownership (origin) of all sets that
+have node1 as their current origin.  In the case there would be more
+nodes, All direct subscribers of node1 are instructed that this is
+happening.  Slonik would also query all direct subscribers to figure
+out which node has the highest replication status (latest committed
+transaction) for each set, and the configuration would be changed in a
+way that node2 first applies those last minute changes before actually
+allowing write access to the tables.&#13;</P
 ><P
->	 In addition, all nodes that subscribed directly from node1 will
-
-	 now use node2 as data provider for the set.  This means that
-
-	 after the failover command succeeded, no node in the entire
-
-	 replication setup will receive anything from node1 any more.&#13;</P
+> In addition, all nodes that subscribed directly from node1 will
+now use node2 as data provider for the set.  This means that after the
+failover command succeeded, no node in the entire replication setup
+will receive anything from node1 any more.  &#13;</P
 ></LI
 ><LI
 ><P
->&#13;	 Reconfigure and restart the application (or pgpool) to cause it
-
-	 to reconnect to node2.
-&#13;</P
+> Reconfigure and restart the application (or pgpool)
+to cause it to reconnect to node2.&#13;</P
 ></LI
 ><LI
 ><P
->	 After the failover is complete and node2 accepts write operations
+> After the failover is complete and node2 accepts
+write operations against the tables, remove all remnants of node1's
+configuration information with the slonik command
 
-	 against the tables, remove all remnants of node1's configuration
-
-	 information with the slonik command
-&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->	drop node (id = 1, event node = 2);</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    	drop node (id = 1, event node = 2);</PRE
+></TD
+></TR
+></TABLE
 ></P
 ></LI
 ></UL
@@ -271,15 +276,15 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN659"
->15.4. After failover, getting back node1</A
+NAME="AEN737"
+>7.4. After failover, getting back node1</A
 ></H2
 ><P
->	 After the above failover, the data stored on node1 must be
-	 considered out of sync with the rest of the nodes.  Therefore, the
-	 only way to get node1 back and transfer the master role to it is
-	 to rebuild it from scratch as a slave, let it catch up and then
-	 follow the switchover procedure.
+> After the above failover, the data stored on node1 must be
+considered out of sync with the rest of the nodes.  Therefore, the
+only way to get node1 back and transfer the master role to it is to
+rebuild it from scratch as a slave, let it catch up and then follow
+the switchover procedure.
 
 
  </P
@@ -335,7 +340,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="t24.html"
+HREF="slonyadmin.html"
 ACCESSKEY="U"
 >Up</A
 ></TD

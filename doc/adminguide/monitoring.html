@@ -12,7 +12,7 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="UP"
-HREF="t24.html"><LINK
+HREF="slonyadmin.html"><LINK
 REL="PREVIOUS"
 TITLE=" Subscribing Nodes"
 HREF="subscribenodes.html"><LINK
@@ -79,7 +79,7 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="MONITORING"
->12. Monitoring</A
+>4. Monitoring</A
 ></H1
 ><P
 >Here are some of things that you may find in your Slony logs, and explanations of what they mean. &#13;</P
@@ -88,23 +88,32 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN565"
->12.1. CONFIG notices</A
+NAME="AEN645"
+>4.1. CONFIG notices</A
 ></H2
 ><P
 >These entries are pretty straightforward. They are informative messages about your configuration. &#13;</P
 ><P
->Here are some typical entries that you will probably run into in your logs:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->CONFIG main: local node id = 1
-CONFIG main: loading current cluster configuration
-CONFIG storeNode: no_id=3 no_comment='Node 3'
-CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo user=postgres port=6132" pa_connretry=10
-CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
-CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
-CONFIG main: configuration complete - starting threads</TT
+>Here are some typical entries that you will probably run into in your logs:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    CONFIG main: local node id = 1
+    CONFIG main: loading current cluster configuration
+    CONFIG storeNode: no_id=3 no_comment='Node 3'
+    CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo user=postgres port=6132" pa_connretry=10
+    CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
+    CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
+    CONFIG main: configuration complete - starting threads</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ></DIV
 ><DIV
@@ -112,19 +121,28 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN571"
->12.2. DEBUG Notices</A
+NAME="AEN650"
+>4.2. DEBUG Notices</A
 ></H2
 ><P
->Debug notices are always prefaced by the name of the thread that the notice originates from. You will see messages from the following threads:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->localListenThread: This is the local thread that listens for events on the local node.
-remoteWorkerThread_X: The thread processing remote events.
-remoteListenThread_X: Listens for events on a remote node database.
-cleanupThread: Takes care of things like vacuuming, cleaning out the confirm and event tables, and deleting logs.
-syncThread: Generates sync events.</TT
+>Debug notices are always prefaced by the name of the thread that the notice originates from. You will see messages from the following threads:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    localListenThread: This is the local thread that listens for events on the local node.
+    remoteWorkerThread_X: The thread processing remote events.
+    remoteListenThread_X: Listens for events on a remote node database.
+    cleanupThread: Takes care of things like vacuuming, cleaning out the confirm and event tables, and deleting logs.
+    syncThread: Generates sync events.</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 > WriteMe: I can't decide the format for the rest of this. I
@@ -187,7 +205,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="t24.html"
+HREF="slonyadmin.html"
 ACCESSKEY="U"
 >Up</A
 ></TD

@@ -75,37 +75,39 @@ step because it's already installed into the $MASTERDBNAME.
 createlang plpgsql -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 
-<para>Slony-I does not yet automatically copy table definitions from a master when a
-slave subscribes to it, so we need to import this data.  We do this with
-pg_dump.
+<para>Slony-I does not yet automatically copy table definitions from a
+master when a slave subscribes to it, so we need to import this data.
+We do this with <application/pg_dump/.
 
 <programlisting>
 pg_dump -s -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME | psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME
 </programlisting>
 
-<para>To illustrate how Slony-I allows for on the fly replication subscription, lets
-start up pgbench.  If you run the pgbench application in the foreground of a
-separate terminal window, you can stop and restart it with different
-parameters at any time.  You'll need to re-export the variables again so they
-are available in this session as well.
+<para>To illustrate how Slony-I allows for on the fly replication
+subscription, let's start up <application/pgbench/.  If you run the
+<application/pgbench/ application in the foreground of a separate
+terminal window, you can stop and restart it with different parameters
+at any time.  You'll need to re-export the variables again so they are
+available in this session as well.
 
-<para>The typical command to run pgbench would look like:
+<para>The typical command to run <application/pgbench/ would look like:
 
 <programlisting>
 pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 
-<para>This will run pgbench with 5 concurrent clients each processing 1000
-transactions against the pgbench database running on localhost as the pgbench
-user.
+<para>This will run <application/pgbench/ with 5 concurrent clients
+each processing 1000 transactions against the pgbench database running
+on localhost as the pgbench user.
 
 <sect2><title/ Configuring the Database for Replication./
 
-<para>Creating the configuration tables, stored procedures, triggers and
-configuration is all done through the slonik tool.  It is a specialized
-scripting aid that mostly calls stored procedures in the master/salve (node)
-databases.  The script to create the initial configuration for the simple
-master-slave setup of our pgbench database looks like this:
+<para>Creating the configuration tables, stored procedures, triggers
+and configuration is all done through the slonik tool.  It is a
+specialized scripting aid that mostly calls stored procedures in the
+master/slave (node) databases.  The script to create the initial
+configuration for the simple master-slave setup of our pgbench
+database looks like this:
 
 <programlisting>
 #!/bin/sh

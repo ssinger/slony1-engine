@@ -1,0 +1,1702 @@
+<article id="slonikcommands><title/Slonik Command Summary/
+<sect1 id="introduction"><title/Slonik Command Summary/
+<sect2><title/Introduction/
+
+<para>
+	<application/Slonik/ is a command line utility designed
+	specifically to setup and modify configurations of the
+	<productname/Slony-I/ replication system.
+
+
+<sect2 id="outline">
+<title>General outline</title>
+
+<para>
+	The <application/slonik/ commandline utility is supposed to be
+	used embedded into shell scripts and reads commands from files
+	or stdin (via here documents for example). Nearly all of the
+	<emphasis>real</emphasis> configuration work is done by
+	calling stored procedures after loading the
+	<productname/Slony-I/ support base into a database.  You may
+	find documentation for those procedures in the <a
+	href="schemadoc.html"> <productname/Slony-I/ Schema
+	Documentation </a>, as well as in comments associated with
+	them in the database.
+</para>
+
+      <para>
+	<Application/Slonik/ was created because:
+      <itemizedlist>
+
+	<listitem><para> The stored procedures have special requirements as to on
+	which particular node in the replication system they are
+	called,
+
+	<listitem><para> the lack of named parameters for stored procedures makes
+	it rather hard to do this from the psql prompt, and
+
+	<listitem><para> psql lacks the ability to maintain multiple connections
+	with open transactions.
+      </itemizedlist>
+</para>
+<para>
+	
+</para>
+<sect3><title>Commands</title>
+<para>
+	The slonik command language is format free. Commands begin with
+	keywords and are terminated with a semicolon. Most commands have
+	a list of parameters, some of which have default values and are
+	therefore optional. The parameters of commands are enclosed in
+	parentheses. Each option consists of one or more keywords, followed
+	by an equal sign, followed by a value. Multiple options inside the
+	parentheses are separated by commas. All keywords are case
+	insensitive.  The language should remind the reader of SQL.
+</para>
+<para>
+	Option values may be:
+	<itemizedlist>
+		<listitem><para>integer values
+		<listitem><para>string literals enclosed in single quotes
+		<listitem><para>boolean values {TRUE|ON|YES} or {FALSE|OFF|NO}
+		<listitem><para>keywords for special cases
+	</itemizedlist>
+</para>
+<sect3><title>Comments</title>
+<para>
+	Comments begin at a hash sign (#) and extend to the end of the line.
+</para>
+<sect3><title>Command groups</title>
+<para>
+	Commands can be combined into groups of commands with optional
+	<command>on error</command> and <command>on success</command> conditionals.
+	The syntax for this is:
+	<br>
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;try {
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;commands&gt;
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;[on error { &lt;commands&gt; }]
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;[on success { &lt;commands&gt; }]
+	<br>
+	<br>
+	Those commands are grouped together into one transaction per
+	participating node.
+</para>
+
+</div>
+
+<!-- ************************************************************ -->
+<sect2 id="hdrcmds">
+<title>Commands affecting Slonik</title>
+</a>
+
+<para>
+	The following commands must appear as a <quote/preamble/ at the very
+	top of every <application/slonik/ command script. They do not cause any
+	direct action on any of the nodes in the replication system,
+	but affect the execution of the entire script.
+</para>
+
+<!-- **************************************** -->
+
+<sect3 ="clustername"><title>CLUSTER NAME</title>
+
+
+<sect3><title>Synopsis:</title>
+	CLUSTER NAME = &lt;string&gt;;
+<sect3><title>Description:</title>
+<para>
+	Must be the very first command in every <application/slonik/ script. Defines
+	the namespace in which all <productname/Slony-I/ specific functions,
+	procedures, tables and sequences are defined. The namespace
+	name is built by prefixing the given string literal with an
+	underscore. This namespace will be identical in all databases
+	that participate in the same replication group. 
+</para>
+
+<para>
+                  No user objects are supposed to live in this
+                  namespace and the namespace is not allowed to exist
+                  prior to adding a database to the replication
+                  system.  Thus, if you add a new node using <tt>
+                  pg_dump -s </tt> on a database that is already in
+                  the cluster of replicated databases, you will need
+                  to drop the namespace via the SQL command <tt> DROP
+                  SCHEMA _testcluster CASCADE; </tt>.
+</para>
+<sect3><title>Example:</title>
+<para>
+	CLUSTER NAME = 'testcluster';
+</para>
+
+
+
+<!-- **************************************** -->
+
+<sect3 ="admconninfo"><title>ADMIN CONNINFO</title>
+
+<sect3><title>Synopsis:</title>
+	NODE &lt;ival&gt ADMIN CONNINFO = &lt;string&gt;;
+<sect3><title>Description:</title>
+
+<para>
+	Describes how the <application/slonik/ utility can reach a nodes database in
+	the cluster from where it is run (likely the DBA's
+	workstation). The conninfo string is the string agrument given
+	to the PQconnectdb() libpq function. The user as to connect
+	must be the special replication superuser, as some of the
+	actions performed later may include operations that are
+	strictly reserved for database superusers by PostgreSQL.
+</para>
+<para>
+	The <application/slonik/ utility will not try to connect to the databases
+	unless some subsequent command requires the connection.
+</para>
+<para>
+	Note: As mentioned in the original documents, <productname/Slony-I/ is designed as an
+	enterprise replication system for data centers. It has been assumed
+	throughout the entire development that the database servers and
+	administrative workstations involved in replication and/or setup
+	and configuration activities can use simple authentication schemes
+	like <tt>trust</tt>.   Alternatively, libpq can read passwords from
+                 <tt> .pgpass </tt>.
+</para>
+
+<para>
+	Note: If you need to change the DSN information for a node, as
+	would happen if the IP address for a host were to change, you
+	may submit the new information using this command, and that
+	configuration will be propagated.  Existing <tt> slon </tt>
+	processes will need to be restarted in order to become aware
+	of the configuration change.
+</para>
+<sect3><title>Example:</title>
+<para>
+	NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_echo"><title>ECHO</title>
+
+
+<sect3><title>Synopsis:</title>
+	ECHO &lt;string&gt;;
+<sect3><title>Description:</title>
+<para>
+	Prints the string literal on standard output.
+</para>
+<sect3><title>Example:</title>
+<para>
+	ECHO 'Node 1 initialized successfully';
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 id="stmt_exit"><title>EXIT</title>
+
+<sect3><title>Synopsis:</title>
+	EXIT [-]&lt;ival&gt;;
+<sect3><title>Description:</title>
+<para>
+	Terminates script execution immediately, rolling back every
+	open transaction on all database connections. The <application/slonik/ utility
+	will return the given value as its program termination code.
+</para>
+<sect3><title>Example:</title>
+<para>
+	EXIT 0;
+</para>
+</div>
+
+
+</div>
+
+<!-- ************************************************************ -->
+<sect2 id="cmds">
+<title>Configuration and Action commmands</title>
+
+<div style="margin-left:40px; margin-right:80px;">
+
+<!-- **************************************** -->
+
+<sect3 id="stmt_init_cluster"><title>INIT CLUSTER</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	INIT CLUSTER ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Initialize the first node in a new <productname/Slony-I/ replication cluster.
+	The initialization process consists of creating the cluster
+	namespace, loading all the base tables, functions, procedures
+	and initializing the node.
+</para>
+<para>
+	For this process to work, the SQL scripts of the <productname/Slony-I/ system
+	must be installed on the DBA workstation (the computer currently
+	executing the <application/slonik/ utility), while on the system where the
+	node database is running the shared objects of the <productname/Slony-I/ system 
+	must be installed in the PostgreSQL library directory. Also the
+	procedural language PL/pgSQL is assumed to be installed in the
+	target database already.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The unique, numeric ID number of the node. This MUST be 1.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		A descriptive text added to the node entry in the
+		table sl_node.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	INIT CLUSTER (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Node 1'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 id="stmt_store_node"><title>STORE NODE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	STORE NODE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Initialize a new node and add it to the configuration of
+	an existing cluster.
+</para>
+<para>
+	The initialization process consists of creating the cluster
+	namespace in the new node (the database itself must already
+	exist), loading all the base tables, functions, procedures
+	and initializing the node. The existing configuration of the
+	rest of the cluster is copied from the <b>event node</b>.
+</para>
+<para>
+	The same installation requirements as for the <command>init cluster</command>
+	command apply.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The unique, numeric ID number of the new node.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		A descriptive text added to the node entry in the
+		table sl_node.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>SPOOLNODE = &lt;boolean&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Specifies that the new node is a virtual spool node for
+		file archiving of replication log. If true <application/slonik/ will not
+		attempt to initialize a database with the replication
+		schema.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the node used to create the configuration event
+		that tells all existing nodes about the new node. Default
+		value is 1.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	STORE NODE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Node 2'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_drop_node"><title>DROP NODE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	DROP NODE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Drop a node. This command removes the specified node entirely from
+	the replication systems configuration. If the replication daemon
+	is still running on that node (and processing events), it will
+	attempt to uninstall the replication system and terminate itself.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the system to remove.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the system to generate the event.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	DROP NODE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_uninstall_node"><title>UNINSTALL NODE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	UNINSTALL NODE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Restores all tables to the unlocked state, with all original
+	user triggers, constraints and rules, eventually added <productname/Slony-I/
+	specific serial key columns dropped and the <productname/Slony-I/ schema
+	dropped. The node becomes a standalone database. The data is
+	left untouched.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the system to uninstall.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	UNINSTALL NODE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 3
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_restart_node"><title>RESTART NODE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	RESTART NODE &lt;ival&gt;;
+<sect3><title>Description:</title>
+<para>
+	Causes an eventually running replication daemon on the specified
+	node to shutdown and restart itself. Theoretically this command
+	should be obsolete. In practice, TCP timeouts can delay critical
+	configuration changes to actually happen in the case where a former
+	forwarding node failed and needs to be bypassed by subscribers.
+</para>
+<sect3><title>Example:</title>
+<para>
+	RESTART NODE 2;
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_store_path"><title>STORE PATH</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	STORE PATH ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Configures how the replication daemon of one node connects to the
+	database of another node. If the replication system is supposed
+	to use a special backbone network segment, this is the place to
+	user the special IP addresses or hostnames. An existing
+	configuration can be overwritten.
+</para>
+<para>
+	The conninfo string must contain all information to connect to the
+	database as the replication superuser. The names <b>server</b> or
+	<b>client</b> have nothing to do with the particular role of a node
+	within the cluster configuration. It should be simply viewed as
+	"the <b>server</b> has the message or data that the <b>client</b>
+	is supposed to get". For a simple 2 node setup, paths into both
+	directions must be configured.
+</para>
+<para>
+	It does not do any harm to configure path information from every
+	node to every other node (full cross product). The connections
+	are not established unless they are required to actually transfer
+	events or confirmations because of <b>listen</b> entries or data
+	because of <b>subscriptions</b>.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SERVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the database to connect to.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>CLIENT = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the replication daemon connecting.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>CONNINFO = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		PQconnectdb() argument to establish the connection.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>CONNRETRY = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		Number of seconds to wait before another attempt to connect
+		is made in case the server is unavailable. Default is 10.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	STORE PATH (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SERVER = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;CONNINFO = 'dbname=testdb host=server1 user=slony'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_drop_path"><title>DROP PATH</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	DROP PATH ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Remove the connection information between <b>server</b> and
+	<b>client</b>. 
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SERVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the server of this connection.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>CLIENT = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the client.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the node used to create the configuration event
+		that tells all existing nodes about dropping the path.
+		Defaults to the <b>client</b>.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	DROP PATH (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SERVER = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;CLIENT = 2
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_store_listen"><title>STORE LISTEN</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	STORE LISTEN ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	A <b>listen</b> entry causes a node (receiver) to query an event
+	provider for events that originate from a specific node, as well
+	as confirmations from every existing node. It requires a <b>path</b>
+	to exist so that the receiver (as client) can connect to the provider
+	(as server).
+</para>
+<para>
+	Every node in the system must listen for events from every other
+	node in the system. As a general rule of thumb, a subscriber (see
+	<a href="#stmt_subscribe_set">SUBSCRIBE SET</a>) should listen for
+	events of the set's origin on the same provider, where it receives
+	the data from. In turn, the origin of the data set should listen
+	for events from the origin in the opposite direction. A node can
+	listen for events from one and the same origin on different
+	providers at the same time. However, to process SYNC events from
+	that origin, all data providers must have the same or higher sync
+	status, so this will not result in any faster replication behaviour.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the event origin the receiver is listening for.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		ID of the node from which the receiver gets events from
+		the origin. Default is the origin.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the node receiving the events.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	STORE LISTEN (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 2,
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_drop_listen"><title>DROP LISTEN</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	DROP LISTEN ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Remove a <b>listen</b> configuration entry.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the event origin the receiver is listening for.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		ID of the node from which the receiver gets events from
+		the origin. Default is the origin.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the node receiving the events.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	DROP LISTEN (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 2,
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_table_add_key"><title>TABLE ADD KEY</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	TABLE ADD KEY ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	In the <productname/Slony-I/ replication system, every replicated table is
+	required to have at least one UNIQUE constraint who's columns
+	are declared <tt>NOT NULL.</tt> Any primary key satisfies this
+	requirement.
+</para>
+<para>
+	As a last resort, this command can be used to add such an
+	attribute to a table that does not have a primary key. Since
+	this modification can have unwanted side effects, <b>it is
+	strongly recommended that users add a unique and not null
+	attribute by other means.</b>
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>NODE ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set origin where the table will be added as
+		set member (See <a href="stmt_set_add_table">SET ADD TABLE</a>).
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The full name of the table consisting of the schema and table name
+		as the expression
+		<br><emphasis>quote_ident(nspname) || '.' || quote_ident(relname)</emphasis>
+		<br>would return it.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	TABLE ADD KEY (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NODE ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.history'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_create_set"><title>CREATE SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	CREATE SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	In the <productname/Slony-I/ replication system, replicated tables are
+	organized in sets. As a general rule of thumb, a set should
+	contain all the tables of one application, that have
+	relationships.  In a well designed application, this is equal
+	to all the tables in one schema.
+</para>
+<para>
+	The smallest unit one node can subscribe for replication from
+	another node is a set. A set always has an origin. In
+	classical replication terms, that would be the "master."
+	Since in <productname/Slony-I/ a node can be the "master" over one set,
+	while receiving replication data in the "slave" role for
+	another at the same time, this terminology may easily become
+	misleading and should therefore be replaced with <b>set
+	origin</b> and <b>subscriber</b>.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the set to be created.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Initial origin of the set.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		A descriptive text added to the set entry.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	CREATE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Tables of ticket system'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_drop_set"><title>DROP SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	DROP SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Drop a set of tables from the <productname/Slony-I/ configuration. This
+	automatically unsubscribes all nodes from the set and restores
+	the original triggers and rules on all subscribers.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the set to be dropped.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	DROP SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 5,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_merge_set"><title>MERGE SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	MERGE SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Merge a set of tables and sequences into another one. This
+	function is a workaround for the problem that it is not
+	possible to add tables/sequences to already-subscribed
+	sets. One may create a temporary set, add the new objects to
+	that, subscribe all nodes currently subscribed to the other
+	set to this new one, and then merge the two together.
+</para>
+<para>
+	This request will fail if the two sets do not have exactly the
+	same set of subscribers.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the set to contain the union of the two separate sets.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ADD ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the set whos objects should be transferred.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the two sets.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	MERGE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ADD ID = 9999,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_add_table"><title>SET ADD TABLE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET ADD TABLE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Add an existing user table to a replication set. The set
+	cannot currently be subscribed by any other node - that
+	functionality is supported by the<tt>MERGE SET</tt> command.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to which the table is added.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set. A future version of <application/slonik/
+		might figure out this information by itself.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the table. These ID's are not only used to
+		uniquely identify the individual table within the replication
+		system. The numeric value of this ID also determines the order
+		in which the tables are locked in a 
+		<a href="#stmt_lock_set">LOCK SET</a> command for example. So these
+		numbers should represent any applicable table hierarchy to
+		make sure the <application/slonik/ command scripts do not deadlock at any
+		critical moment.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The full table name as described in
+		<a href="#table_add_key">TABLE ADD KEY</a>.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>KEY = { &lt;string&gt; | SERIAL }</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The index name that covers the unique and not null column set
+		to be used as the row identifier for replication purposes. Or the
+		keyword SERIAL to use the special column added with a previous
+		<a href="#table_add_key">TABLE ADD KEY</a> command. Default
+		is to use the table's primary key.  The index name is <emphasis> not </emphasis> 
+		fully qualified; you must omit the namespace.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		A descriptive text added to the <productname/Slony-I/ configuration data.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET ADD TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket',
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_add_sequence"><title>SET ADD SEQUENCE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET ADD SEQUENCE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Add an existing user sequence to a replication set. The set
+	cannot currently be subscribed by any other node - that
+	functionality is supported by the MERGE SET command.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to which the sequence is added.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set. A future version of <application/slonik/
+		might figure out this information by itself.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the sequence.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FULLY QUALIFIED NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The full sequence name as described in
+		<a href="#table_add_key">TABLE ADD KEY</a>.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>COMMENT = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		A descriptive text added to the <productname/Slony-I/ configuration data.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET ADD SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;COMMENT = 'Support ticket id sequence'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_drop_table"><title>SET DROP TABLE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET DROP TABLE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Drop an existing user table to a replication set.
+</para>
+
+<para>
+	  Note that this action will <em> not </em> drop a candidate
+	  primary key created using <TT> TABLE ADD KEY </tt>.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set. A future version of <application/slonik/
+		might figure out this information by itself.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the table. 
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET DROP TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_drop_sequence"><title>SET DROP SEQUENCE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET DROP SEQUENCE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Drops an existing user sequence from a replication set.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the sequence.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET DROP SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 21,
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_move_table"><title>SET MOVE TABLE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET MOVE TABLE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Change the set a table belongs to. The current set and the new set
+	must origin on the same node and subscribed by the same nodes.
+	CAUTION: Due to the way subscribing to new sets works make
+	absolutely sure that the subscription of all nodes to the sets
+	is completely processed before moving tables. Moving a table too
+	early to a new set causes the subscriber to try and add the table
+	already during the subscription process, which fails with a duplicate
+	key error and breaks replication.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set. A future version of <application/slonik/
+		might figure out this information by itself.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the table. 
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the new set. 
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET MOVE TABLE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 20,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_set_move_sequence"><title>SET MOVE SEQUENCE</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SET MOVE SEQUENCE ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Change the set a sequence belongs to. The current set and the new set
+	must origin on the same node and subscribed by the same nodes.
+	CAUTION: Due to the way subscribing to new sets works make
+	absolutely sure that the subscription of all nodes to the sets
+	is completely processed before moving sequences. Moving a sequence too
+	early to a new set causes the subscriber to try and add the sequence
+	already during the subscription process, which fails with a duplicate
+	key error and breaks replication.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The current origin of the set. A future version of <application/slonik/
+		might figure out this information by itself.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the sequence. 
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>NEW SET = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Unique ID of the new set. 
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SET MOVE SEQUENCE (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 54,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW SET = 3
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_store_trigger"><title>STORE TRIGGER</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	STORE TRIGGER ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	By default, all user defined triggers and constraints are
+	disabled on all subscriber nodes while a table is
+	replicated. This command can be used to explicitly exclude a
+	trigger from being disabled.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>TABLE ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The unique, numeric ID number of the table the trigger is defined for.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>TRIGGER NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The name of the trigger as it appears in the pg_trigger
+		system catalog.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the node used to create the configuration event
+		that tells all existing nodes about the special trigger. Default
+		value is 1.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	STORE TRIGGER (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;TABLE ID = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;TRIGGER NAME = 'cache_invalidation'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_drop_trigger"><title>DROP TRIGGER</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	DROP TRIGGER ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Remove the special handling for the specified trigger.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>TABLE ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The unique, numeric ID number of the table the trigger is defined for.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>TRIGGER NAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The name of the trigger as it appears in the pg_trigger
+		system catalog.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the node used to create the configuration event
+		that tells all existing nodes about removing the special trigger. Default
+		value is 1.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	DROP TRIGGER (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;TABLE ID = 2,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;TRIGGER NAME = 'cache_invalidation'
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_subscribe_set"><title>SUBSCRIBE SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	SUBSCRIBE SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Causes a node (subscriber) to start replicating a set of
+	tables either from the origin or from another provider node,
+	which must be a currently forwarding subscriber itself.
+</para>
+<para>
+	The application tables contained in the set must already exist
+	and should ideally be currently empty. The current version of
+	<productname/Slony-I/ will not attempt to copy the schema of the set. The
+	replication daemon will start copying the current content of
+	the set from the given provider and then try to catch up with
+	any update activity that happened during that copy
+	process. After successful subscription, the tables are guarded
+	on the subscriber using triggers against accidental updates by
+	the application.
+</para>
+
+<para>
+	Note: If you need to revise subscription information for a
+	node, you may submit the new information using this command,
+	and the new configuration will be propagated throughout the
+	replication network.  The normal reason to revise this
+	information is that you want a node to subscribe to a <emphasis>
+	different </emphasis> provider node, or for a node to become a
+	"forwarding" subscriber so it may later become the provider
+	for a later subscriber.
+
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to subscribe
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>PROVIDER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the data provider where this set is subscribed from.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the new subscriber.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FORWARD = &lt;boolean&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Flag whether or not the new subscriber should store
+		the log information during replication to make it
+		possible candidate for the provider role for future
+		nodes.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	SUBSCRIBE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;PROVIDER = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 3,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FORWARD = YES
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_unsubscribe_set"><title>UNSUBSCRIBE SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	UNSUBSCRIBE SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Stops the subscriber from replicating the set. The tables are
+	opened up for full access by the client application on the
+	former subscriber. The tables are not truncated or otherwise
+	modified. All original triggers, rules and constraints are
+	restored.
+</para>
+<para>
+	<b>Warning!</b> Resubscribing an unsubscribed set requires a
+	<emphasis>complete fresh copy</emphasis> of data from the provider to be
+	transferred since the tables have been subject to possible
+	independent modifications.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to unsubscribe.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>RECEIVER = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the subscriber.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	UNSUBSCRIBE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;RECEIVER = 3
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_lock_set"><title>LOCK SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	LOCK SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Guards a replication set against client application updates in
+	preparation for a <a href="#stmt_move_set">MOVE SET</a>
+	command.
+</para>
+<para>
+	This command must be the first in a possible statement group
+	(<tt>try</tt>).  The reason for this is that it needs to
+	commit the changes made to the tables (adding a special
+	trigger function) before it can wait for every concurrent
+	transaction to finish. At the same time it cannot hold an open
+	transaction to the same database itself since this would
+	result in blocking itself forever.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to lock.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the current set origin.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	LOCK SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_unlock_set"><title>UNLOCK SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	UNLOCK SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Unlock a previously locked set.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to unlock.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the current set origin.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	UNLOCK SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = 1
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_move_set"><title>MOVE SET</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	MOVE SET ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Changes the origin of a set from one node to another. The new origin
+	must be a current subscriber of the set. The set must currently be
+	locked on the old origin. 
+</para>
+<para>
+	After this command, the set cannot be unlocked on the old
+	origin any more. The old origin will continue as a forwarding
+	subscriber of the set and the subscription chain from the old
+	origin to the new origin will be reversed, hop by hop. As soon
+	as the new origin has finished processing the event (that
+	includes any outstanding sync events that happened before,
+	<emphasis>i.e.</i> fully catching up), the new origin will take over
+	and open all tables in the set for client application update
+	activity.
+</para>
+<para>
+	This is not failover, as it requires a fully functional old
+	origin node.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the set to transfer.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>OLD ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the current set origin.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>NEW ORIGIN = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		Node ID of the new set origin.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	MOVE SET (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;OLD ORIGIN = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;NEW ORIGIN = 3
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_failover"><title>FAILOVER</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	FAILOVER ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	WARNING: This command will abandon the status of the failed
+	node.  There is no possibility to let the failed node join the
+	cluster again without rebuilding it from scratch as a slave
+	slave.
+</para>
+<para>
+	The failover command causes the backup node to take over all
+	sets that currently originate on the failed node. <Application/Slonik/ will
+	contact all other direct subscribers of the failed node to
+	determine which node has the highest sync status for each
+	set. If another node has a higher sync status than the backup
+	node, the replication will first be redirected so that the
+	backup node replicates against that other node, before
+	assuming the origin role and allowing update activity.
+</para>
+<para>
+	After successful failover, all former direct subscribers of
+	the failed node become direct subscribers of the backup
+	node. The failed node can and should be removed from the
+	configuration with <tt>DROP NODE</tt>.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the failed node.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>BACKUP NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		ID of the node that will take over all sets.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	FAILOVER (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;BACKUP NODE = 1,
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_ddl_script"><title>EXECUTE SCRIPT</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	EXECUTE SCRIPT ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Executes a script containing arbitrary SQL statements on all
+	nodes that are subscribed to a set at a common controlled
+	point within the replication transaction stream.
+</para>
+<para>
+	The specified event origin must be the origin of the set.  The
+	script file must not contain any START or COMMIT TRANSACTION
+	calls.  (This may change in PostgreSQL 8.0 once nested
+	transactions, aka savepoints, are supported)  In addition,
+	non-deterministic DML statements (like updating a field with
+	CURRENT_TIMESTAMP) must be avoided, since the data changes
+	done by the script are explicitly not replicated.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>SET ID = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The unique, numeric ID number of the set affected by the script.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>FILENAME = &lt;string&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The name of the file containing the SQL script to execute.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EVENT NODE = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the current origin of the set.
+		The default value is 1.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>EXECUTE ONLY ON = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		<b>(Optional)</b>
+		The ID of the only node to actually execute the script.
+		This option causes the script to be propagated by all nodes
+		but executed only by one.
+		The default is to execute the script on all nodes that are
+		subscribed to the set.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	EXECUTE SCRIPT (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;SET ID = 1,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;FILENAME = 'changes_20040510.sql',
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;EVENT NODE = 1
+	<br>);
+</para>
+</div>
+
+
+<!-- **************************************** -->
+
+<sect3 ="stmt_wait_event"><title>WAIT FOR EVENT</title>
+
+<div style="margin-left:40px; margin-right:0px;">
+<sect3><title>Synopsis:</title>
+	WAIT FOR EVENT ( &lt;options&gt; );
+<sect3><title>Description:</title>
+<para>
+	Waits for event confirmation.
+</para>
+<para>
+	<Application/Slonik/ remembers the last event generated on every node during
+	script execution (events generated by earlier calls are
+	currently not checked). In certain situations it is necessary
+	that events generated on one node (such as <tt>CREATE
+	SET</tt>) are processed on another node before issuing more
+	commands (for instance, <a
+	href="#stmt_subscribe_set">SUBSCRIBE SET</a>).  <tt>WAIT FOR
+	EVENT</tt> may be used to cause the <application/slonik/ script to wait
+	until the subscriber node is ready for the next action.
+</para>
+<para>
+	<tt>WAIT FOR EVENT</tt> must be called outside of any try
+	block in order to work, since new confirm messages don't
+	become visible within a transaction.
+</para>
+<table border="0" cellpadding="10">
+<tr>
+	<td align="left" valign="top" nowrap><b>ORIGIN = &lt;ival&gt;|ALL</b></td>
+	<td align="left" valign="top"><para>
+		The origin of the event(s) to wait for.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>CONFIRMED = &lt;ival&gt;|ALL</b></td>
+	<td align="left" valign="top"><para>
+		The node ID of the receiver that must have confirmed the event(s).
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>WAIT ON = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The ID of the node where to check the sl_confirm table.
+		The default value is 1.
+	</para></td>
+</tr>
+<tr>
+	<td align="left" valign="top" nowrap><b>TIMEOUT = &lt;ival&gt;</b></td>
+	<td align="left" valign="top"><para>
+		The number of seconds to wait. Default is 600 (10 minutes),
+		0 means wait forever.
+	</para></td>
+</tr>
+</table>
+<sect3><title>Example:</title>
+<para>
+	WAIT FOR EVENT (
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN = ALL,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;CONFIRMED = ALL,
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;WAIT ON = 1
+	<br>);
+
+
+<sect1 id="slonikprocs"> <title/Slonik Stored Procedures/
+
+<para> The commands used in <Application/Slonik/ invoke stored procedures in the
+namespace created for the replication instance.  <Application/Slonik/ provides one
+convenient way to invoke these procedures; it is just as possible to
+invoke them directly to manage the <productname/Slony-I/ instances. </para>
+
+<para> See the <a href= "schemadoc.html"> Schema Documentation </a> for
+more details. </para>

@@ -12,7 +12,7 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="UP"
-HREF="t24.html"><LINK
+HREF="slonyadmin.html"><LINK
 REL="PREVIOUS"
 TITLE=" Adding Things to Replication"
 HREF="addthings.html"><LINK
@@ -79,7 +79,7 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="DROPTHINGS"
->18. Dropping things from Slony Replication</A
+>10. Dropping things from Slony Replication</A
 ></H1
 ><P
 >There are several things you might want to do involving dropping things from Slony-I replication.&#13;</P
@@ -88,8 +88,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN729"
->18.1. Dropping A Whole Node</A
+NAME="AEN817"
+>10.1. Dropping A Whole Node</A
 ></H2
 ><P
 >If you wish to drop an entire node from replication, the Slonik command DROP NODE should do the trick.  &#13;</P
@@ -109,8 +109,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN737"
->18.2. Dropping An Entire Set</A
+NAME="AEN825"
+>10.2. Dropping An Entire Set</A
 ></H2
 ><P
 >If you wish to stop replicating a particular replication set,
@@ -166,8 +166,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN750"
->18.3. Unsubscribing One Node From One Set</A
+NAME="AEN838"
+>10.3. Unsubscribing One Node From One Set</A
 ></H2
 ><P
 >The <TT
@@ -235,8 +235,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN762"
->18.4. Dropping A Table From A Set</A
+NAME="AEN850"
+>10.4. Dropping A Table From A Set</A
 ></H2
 ><P
 >In Slony 1.0.5 and above, there is a Slonik command <TT
@@ -253,13 +253,22 @@ CLASS="QUOTE"
 ><P
 >You can fiddle this by hand by finding the table ID for the
 table you want to get rid of, which you can find in sl_table, and then
-run the following three queries, on each host:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->  select _slonyschema.alterTableRestore(40);
-  select _slonyschema.tableDropKey(40);
-  delete from _slonyschema.sl_table where tab_id = 40;</TT
+run the following three queries, on each host:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>      select _slonyschema.alterTableRestore(40);
+      select _slonyschema.tableDropKey(40);
+      delete from _slonyschema.sl_table where tab_id = 40;</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The schema will obviously depend on how you defined the Slony-I
@@ -278,8 +287,8 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN773"
->18.5. Dropping A Sequence From A Set</A
+NAME="AEN860"
+>10.5. Dropping A Sequence From A Set</A
 ></H2
 ><P
 >Just as with <TT
@@ -296,13 +305,21 @@ to how to drop sequences:&#13;</P
 ><P
 >The data that needs to be deleted to stop Slony from continuing
 to replicate the two sequences identified with Sequence IDs 93 and 59
-are thus:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+are thus:
 
-delete from _oxrsorg.sl_sequence where seq_id in (93,59);&#13;</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+    delete from _oxrsorg.sl_sequence where seq_id in (93,59);</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 > Those two queries could be submitted to all of the nodes via
@@ -371,7 +388,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="t24.html"
+HREF="slonyadmin.html"
 ACCESSKEY="U"
 >Up</A
 ></TD

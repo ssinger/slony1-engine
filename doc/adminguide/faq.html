@@ -2,7 +2,7 @@
 <HTML
 ><HEAD
 ><TITLE
-> FAQ </TITLE
+>Slony-I FAQ</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
@@ -12,8 +12,8 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="PREVIOUS"
-TITLE=" Other Information Sources"
-HREF="x931.html"><LINK
+TITLE=" More Slony-I Help "
+HREF="help.html"><LINK
 REL="STYLESHEET"
 TYPE="text/css"
 HREF="stdstyle.css"><META
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="x931.html"
+HREF="help.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -71,9 +71,18 @@ CLASS="TITLEPAGE"
 ><H1
 CLASS="TITLE"
 ><A
-NAME="FAQ"
->FAQ</A
+NAME="AEN1025"
+>Slony-I FAQ</A
 ></H1
+><H3
+CLASS="CORPAUTHOR"
+>The Slony Global Development Group</H3
+><H3
+CLASS="AUTHOR"
+><A
+NAME="AEN1028"
+>Christopher  Browne</A
+></H3
 ><HR></DIV
 ><P
 > Not all of these are, strictly speaking, <SPAN
@@ -84,26 +93,25 @@ asked;"</SPAN
 CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
->trouble found that seemed worth
-documenting</I
+>trouble found that seemed
+worth documenting</I
 ></SPAN
->.
-
- </P
+>.</P
 ><DIV
 CLASS="QANDASET"
 ><DL
 ><DT
 >Q: <A
-HREF="faq.html#AEN944"
+HREF="faq.html#AEN1036"
 >I looked for the <CODE
 CLASS="ENVAR"
 >_clustername</CODE
-> namespace, and it wasn't there.</A
+> namespace, and
+it wasn't there.</A
 ></DT
 ><DT
 >Q: <A
-HREF="faq.html#AEN955"
+HREF="faq.html#AEN1047"
 >Some events moving around, but no replication&#13;</A
 ></DT
 ></DL
@@ -114,13 +122,14 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN944"
+NAME="AEN1036"
 ></A
 ><B
 >Q: I looked for the <CODE
 CLASS="ENVAR"
 >_clustername</CODE
-> namespace, and it wasn't there.</B
+> namespace, and
+it wasn't there.</B
 ></BIG
 ></P
 ></DIV
@@ -155,7 +164,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN955"
+NAME="AEN1047"
 ></A
 ><B
 >Q: Some events moving around, but no replication&#13;</B
@@ -164,10 +173,19 @@ NAME="AEN955"
 ><P
 > Slony logs might look like the following:
 
-<TT
-CLASS="COMMAND"
->DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
-ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_minxid, ev_maxxid, ev_xip,		  ev_type,		  ev_data1, ev_data2,		  ev_data3, ev_data4,		  ev_data5, ev_data6,		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno &#62; '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
+    ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_minxid, ev_maxxid, ev_xip,		  ev_type,		  ev_data1, ev_data2,		  ev_data3, ev_data4,		  ev_data5, ev_data6,		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno &#62; '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ></DIV
 ><DIV
@@ -248,7 +266,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN978"
+NAME="AEN1070"
 ></A
 ><B
 >Q: I tried creating a CLUSTER NAME with a "-" in it.
@@ -275,7 +293,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN984"
+NAME="AEN1076"
 ></A
 ><B
 >Q:  slon does not restart after crash&#13;</B
@@ -296,20 +314,29 @@ CLASS="ANSWER"
 ><B
 >A: </B
 >It's handy to keep a slonik script like the following one around to
-run in such cases:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
-cluster name = oxrsorg ;
-node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
-node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
-node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
-node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
-restart node 1;
-restart node 2;
-restart node 3;
-restart node 4;</TT
+run in such cases:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
+    cluster name = oxrsorg ;
+    node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
+    node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
+    node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
+    node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
+    restart node 1;
+    restart node 2;
+    restart node 3;
+    restart node 4;</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 > <TT
@@ -326,7 +353,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN996"
+NAME="AEN1087"
 ></A
 ><B
 >Q: ps finds passwords on command line&#13;</B
@@ -359,7 +386,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1005"
+NAME="AEN1096"
 ></A
 ><B
 >Q: Slonik fails - cannot load PostgreSQL library - <TT
@@ -432,15 +459,26 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1022"
+NAME="AEN1113"
 ></A
 ><B
 >Q: Table indexes with FQ namespace names
 
-<TT
-CLASS="COMMAND"
->set add table (set id = 1, origin = 1, id = 27, full qualified name = 'nspace.some_table', key = 'key_on_whatever', 
-	 comment = 'Table some_table in namespace nspace with a candidate primary key');</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    set add table (set id = 1, origin = 1, id = 27, 
+                   full qualified name = 'nspace.some_table', 
+                   key = 'key_on_whatever', 
+                   comment = 'Table some_table in namespace nspace with a candidate primary key');</PRE
+></TD
+></TR
+></TABLE
 >&#13;</B
 ></BIG
 ></P
@@ -468,18 +506,27 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1030"
+NAME="AEN1121"
 ></A
 ><B
 >Q: I'm trying to get a slave subscribed, and get the following
 messages in the logs:
 
-<TT
-CLASS="COMMAND"
->DEBUG1 copy_set 1
-DEBUG1 remoteWorkerThread_1: connected to provider DB
-WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
-WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    DEBUG1 copy_set 1
+    DEBUG1 remoteWorkerThread_1: connected to provider DB
+    WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
+    WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds</PRE
+></TD
+></TR
+></TABLE
 >&#13;</B
 ></BIG
 ></P
@@ -522,23 +569,41 @@ setting up the subscription.&#13;</P
 transaction blocking Slony-I from processing the sync.  You might want
 to take a look at pg_locks to see what's up:
 
-<TT
-CLASS="COMMAND"
->sampledb=# select * from pg_locks where transaction is not null order by transaction;
- relation | database | transaction |	pid	|	  mode		| granted 
-----------+----------+-------------+---------+---------------+---------
-			 |			 |	127314921 | 2605100 | ExclusiveLock | t
-			 |			 |	127326504 | 5660904 | ExclusiveLock | t
-(2 rows)</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    sampledb=# select * from pg_locks where transaction is not null order by transaction;
+     relation | database | transaction |  pid    |     mode      | granted 
+    ----------+----------+-------------+---------+---------------+---------
+              |          |   127314921 | 2605100 | ExclusiveLock | t
+              |          |   127326504 | 5660904 | ExclusiveLock | t
+    (2 rows)</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >See?  127314921 is indeed older than 127314958, and it's still running.
 
-<TT
-CLASS="COMMAND"
->$ ps -aef | egrep '[2]605100'
-
-postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY </TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    $ ps -aef | egrep '[2]605100'
+    
+    postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY </PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >This happens to be a <TT
@@ -565,7 +630,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1050"
+NAME="AEN1141"
 ></A
 ><B
 >Q: ERROR: duplicate key violates unique constraint "sl_table-pkey"&#13;</B
@@ -574,11 +639,20 @@ NAME="AEN1050"
 ><P
 >I tried setting up a second replication set, and got the following error:
 
-<TT
-CLASS="COMMAND"
->stdin:9: Could not create subscription set 2 for oxrslive!
-stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
-CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    stdin:9: Could not create subscription set 2 for oxrslive!
+    stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
+    CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ></DIV
 ><DIV
@@ -603,7 +677,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1058"
+NAME="AEN1149"
 ></A
 ><B
 >Q: I need to drop a table from a replication set</B
@@ -632,11 +706,20 @@ CLASS="ANSWER"
 ><P
 > If you are still using 1.0.1 or 1.0.2, the _essential_ functionality of SET DROP TABLE involves the functionality in droptable_int().  You can fiddle this by hand by finding the table ID for the table you want to get rid of, which you can find in sl_table, and then run the following three queries, on each host:
 
-<TT
-CLASS="COMMAND"
->  select _slonyschema.alterTableRestore(40);
-  select _slonyschema.tableDropKey(40);
-  delete from _slonyschema.sl_table where tab_id = 40;</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>      select _slonyschema.alterTableRestore(40);
+      select _slonyschema.tableDropKey(40);
+      delete from _slonyschema.sl_table where tab_id = 40;</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The schema will obviously depend on how you defined the Slony-I
@@ -659,7 +742,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1072"
+NAME="AEN1163"
 ></A
 ><B
 >Q: I need to drop a sequence from a replication set&#13;</B
@@ -698,23 +781,41 @@ CLASS="ENVAR"
 >seq_id</CODE
 > values.
 
-<TT
-CLASS="COMMAND"
->oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
- seq_id | seq_reloid | seq_set |				 seq_comment				 
---------+------------+---------+-------------------------------------
-	  93 |  107451516 |		 1 | Sequence public.whois_cachemgmt_seq
-	  59 |  107451860 |		 1 | Sequence public.epp_whoi_cach_seq_
-(2 rows)</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
+     seq_id | seq_reloid | seq_set |       seq_comment				 
+    --------+------------+---------+-------------------------------------
+         93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
+         59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
+    (2 rows)</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The data that needs to be deleted to stop Slony from continuing to
 replicate these are thus:
 
-<TT
-CLASS="COMMAND"
->delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
-delete from _oxrsorg.sl_sequence where seq_id in (93,59);</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+    delete from _oxrsorg.sl_sequence where seq_id in (93,59);</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >Those two queries could be submitted to all of the nodes via
@@ -746,7 +847,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1095"
+NAME="AEN1186"
 ></A
 ><B
 >Q: Slony-I: cannot add table to currently subscribed set 1&#13;</B
@@ -755,9 +856,18 @@ NAME="AEN1095"
 ><P
 > I tried to add a table to a set, and got the following message:
 
-<TT
-CLASS="COMMAND"
->	Slony-I: cannot add table to currently subscribed set 1</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    	Slony-I: cannot add table to currently subscribed set 1</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ></DIV
 ><DIV
@@ -784,7 +894,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1104"
+NAME="AEN1195"
 ></A
 ><B
 >Q: Some nodes start consistently falling behind&#13;</B
@@ -795,9 +905,18 @@ NAME="AEN1104"
 system performance suffering.&#13;</P
 ><P
 >I'm seeing long running queries of the form:
-<TT
-CLASS="COMMAND"
->	fetch 100 from LOG;</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    	fetch 100 from LOG;</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ></DIV
 ><DIV
@@ -851,7 +970,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1122"
+NAME="AEN1213"
 ></A
 ><B
 >Q: I started doing a backup using pg_dump, and suddenly Slony stops&#13;</B
@@ -892,9 +1011,18 @@ CLASS="ENVAR"
 ><P
 >The initial query that will be blocked is thus:
 
-<TT
-CLASS="COMMAND"
->	 select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  </TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  </PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >(You can see this in <CODE
@@ -916,11 +1044,20 @@ CLASS="FILENAME"
 >slony1_funcs.c</TT
 >, and is localized in the code that does:
 
-<TT
-CLASS="COMMAND"
->  LOCK TABLE %s.sl_event;
-  INSERT INTO %s.sl_event (...stuff...)
-  SELECT currval('%s.sl_event_seq');</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>      LOCK TABLE %s.sl_event;
+      INSERT INTO %s.sl_event (...stuff...)
+      SELECT currval('%s.sl_event_seq');</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The <TT
@@ -971,7 +1108,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1160"
+NAME="AEN1251"
 ></A
 ><B
 >Q: The slons spent the weekend out of commission [for
@@ -1021,7 +1158,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1172"
+NAME="AEN1263"
 ></A
 ><B
 >Q: I pointed a subscribing node to a different parent and it stopped replicating&#13;</B
@@ -1081,19 +1218,28 @@ CLASS="COMMAND"
 had to go through node 2, and added in direct listens between nodes 1
 and 3.
 
-<TT
-CLASS="COMMAND"
->cluster name = oxrslive;
- node 1 admin conninfo='host=32.85.68.220 dbname=oxrslive user=postgres port=5432';
- node 2 admin conninfo='host=32.85.68.216 dbname=oxrslive user=postgres port=5432';
- node 3 admin conninfo='host=32.85.68.244 dbname=oxrslive user=postgres port=5432';
- node 4 admin conninfo='host=10.28.103.132 dbname=oxrslive user=postgres port=5432';
-try {
-		store listen (origin = 1, receiver = 3, provider = 1);
-		store listen (origin = 3, receiver = 1, provider = 3);
-		drop listen (origin = 1, receiver = 3, provider = 2);
-		drop listen (origin = 3, receiver = 1, provider = 2);
-}</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    cluster name = oxrslive;
+     node 1 admin conninfo='host=32.85.68.220 dbname=oxrslive user=postgres port=5432';
+     node 2 admin conninfo='host=32.85.68.216 dbname=oxrslive user=postgres port=5432';
+     node 3 admin conninfo='host=32.85.68.244 dbname=oxrslive user=postgres port=5432';
+     node 4 admin conninfo='host=10.28.103.132 dbname=oxrslive user=postgres port=5432';
+    try {
+      store listen (origin = 1, receiver = 3, provider = 1);
+      store listen (origin = 3, receiver = 1, provider = 3);
+      drop listen (origin = 1, receiver = 3, provider = 2);
+      drop listen (origin = 3, receiver = 1, provider = 2);
+    }</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >Immediately after this script was run, <TT
@@ -1135,7 +1281,7 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1203"
+NAME="AEN1294"
 ></A
 ><B
 >Q: After dropping a node, sl_log_1 isn't getting purged out anymore.&#13;</B
@@ -1161,18 +1307,27 @@ purge out old logs.&#13;</P
 >Diagnosis: Run the following query to see if there are any
 "phantom/obsolete/blocking" sl_confirm entries:
 
-<TT
-CLASS="COMMAND"
->oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
- con_origin | con_received | con_seqno |		 con_timestamp		  
-------------+--------------+-----------+----------------------------
-			 4 |			 501 |	  83999 | 2004-11-09 19:57:08.195969
-			 1 |				2 |	3345790 | 2004-11-14 10:33:43.850265
-			 2 |			 501 |	 102718 | 2004-11-14 10:33:47.702086
-		  501 |				2 |		6577 | 2004-11-14 10:34:45.717003
-			 4 |				5 |	  83999 | 2004-11-14 21:11:11.111686
-			 4 |				3 |	  83999 | 2004-11-24 16:32:39.020194
-(6 rows)</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
+     con_origin | con_received | con_seqno |        con_timestamp                  
+    ------------+--------------+-----------+----------------------------
+              4 |          501 |     83999 | 2004-11-09 19:57:08.195969
+              1 |            2 |   3345790 | 2004-11-14 10:33:43.850265
+              2 |          501 |    102718 | 2004-11-14 10:33:47.702086
+            501 |            2 |      6577 | 2004-11-14 10:34:45.717003
+              4 |            5 |     83999 | 2004-11-14 21:11:11.111686
+              4 |            3 |     83999 | 2004-11-24 16:32:39.020194
+    (6 rows)</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >In version 1.0.5, the "drop node" function purges out entries in
@@ -1180,22 +1335,43 @@ sl_confirm for the departing node.  In earlier versions, this needs to
 be done manually.  Supposing the node number is 3, then the query
 would be:
 
-<TT
-CLASS="COMMAND"
->delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >Alternatively, to go after <SPAN
 CLASS="QUOTE"
 >"all phantoms,"</SPAN
 > you could use
-<TT
-CLASS="COMMAND"
->oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
-DELETE 6</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
+    DELETE 6</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->General "due diligance" dictates starting with a
+>General <SPAN
+CLASS="QUOTE"
+>"due diligance"</SPAN
+> dictates starting with a
 <TT
 CLASS="COMMAND"
 >BEGIN</TT
@@ -1231,37 +1407,47 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1226"
+NAME="AEN1318"
 ></A
 ><B
->Q: Replication Fails - Unique Constraint Violation
-&#13;</B
+>Q: Replication Fails - Unique Constraint Violation&#13;</B
 ></BIG
 ></P
 ><P
->Replication has been running for a while, successfully, when a node encounters a "glitch," and replication logs are filled with repetitions of the following:
+>Replication has been running for a while, successfully, when a
+node encounters a "glitch," and replication logs are filled with
+repetitions of the following:
 
-<TT
-CLASS="COMMAND"
->DEBUG2 remoteWorkerThread_1: syncing set 2 with 5 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 1 with 41 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 5 with 1 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 3 with 1 table(s) from provider 1
-DEBUG2 remoteHelperThread_1_1: 0.135 seconds delay for first row
-DEBUG2 remoteHelperThread_1_1: 0.343 seconds until close cursor
-ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
-delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
-delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
-delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
-delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
-delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
-delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
-delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
-insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
-delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
-delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  duplicate key violates unique constraint "contact_status_pkey"
- - qualification was: 
-ERROR  remoteWorkerThread_1: SYNC aborted</TT
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    DEBUG2 remoteWorkerThread_1: syncing set 2 with 5 table(s) from provider 1
+    DEBUG2 remoteWorkerThread_1: syncing set 1 with 41 table(s) from provider 1
+    DEBUG2 remoteWorkerThread_1: syncing set 5 with 1 table(s) from provider 1
+    DEBUG2 remoteWorkerThread_1: syncing set 3 with 1 table(s) from provider 1
+    DEBUG2 remoteHelperThread_1_1: 0.135 seconds delay for first row
+    DEBUG2 remoteHelperThread_1_1: 0.343 seconds until close cursor
+    ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1          (log_origin, log_xid, log_tableid,                log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
+    delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
+    delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
+    delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
+    delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
+    delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
+    delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
+    delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
+    insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
+    delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
+    delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  duplicate key violates unique constraint "contact_status_pkey"
+     - qualification was: 
+    ERROR  remoteWorkerThread_1: SYNC aborted</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
 >The transaction rolls back, and Slony-I tries again, and again,
@@ -1314,7 +1500,8 @@ over, as well as when temporary network failure seemed likely.&#13;</P
 ></LI
 ><LI
 ><P
-> The scenario seems to involve a delete transaction having been missed by Slony-I.  </P
+> The scenario seems to involve a delete transaction
+having been missed by Slony-I.&#13;</P
 ></LI
 ></UL
 >&#13;</P
@@ -1341,29 +1528,51 @@ CLASS="QUESTION"
 ><P
 ><BIG
 ><A
-NAME="AEN1247"
+NAME="AEN1339"
 ></A
 ><B
->Q:  If you have a slonik script something like this, it will hang on you and never complete, because you can't have "wait for event" inside a try block. A try block is executed as one transaction, so the event that your waiting for will never arrive.
-
+>Q:  If you have a slonik script something like this, it
+will hang on you and never complete, because you can't have
 <TT
 CLASS="COMMAND"
->try {
-		  echo 'Moving set 1 to node 3';
-		  lock set (id=1, origin=1);
-		  echo 'Set locked';
-		  wait for event (origin = 1, confirmed = 3);
-		  echo 'Moving set';
-		  move set (id=1, old origin=1, new origin=3);
-		  echo 'Set moved - waiting for event to be confirmed by node 3';
-		  wait for event (origin = 1, confirmed = 3);
-		  echo 'Confirmed';
-} on error {
-		  echo 'Could not move set for cluster foo';
-		  unlock set (id=1, origin=1);
-		  exit -1;
-}</TT
-></B
+>wait for event</TT
+> inside a <TT
+CLASS="COMMAND"
+>try</TT
+> block. A <TT
+CLASS="COMMAND"
+>try</TT
+>
+block is executed as one transaction, and the event that you are
+waiting for can never arrive inside the scope of the transaction.
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    try {
+          echo 'Moving set 1 to node 3';
+          lock set (id=1, origin=1);
+          echo 'Set locked';
+          wait for event (origin = 1, confirmed = 3);
+          echo 'Moving set';
+          move set (id=1, old origin=1, new origin=3);
+          echo 'Set moved - waiting for event to be confirmed by node 3';
+          wait for event (origin = 1, confirmed = 3);
+          echo 'Confirmed';
+    } on error {
+          echo 'Could not move set for cluster foo';
+          unlock set (id=1, origin=1);
+          exit -1;
+    }</PRE
+></TD
+></TR
+></TABLE
+>&#13;</B
 ></BIG
 ></P
 ></DIV
@@ -1372,10 +1581,11 @@ CLASS="ANSWER"
 ><P
 ><B
 >A: </B
->  You must not invoke <TT
+> You must not invoke <TT
 CLASS="COMMAND"
 >wait for event</TT
-> inside a <SPAN
+> inside a
+<SPAN
 CLASS="QUOTE"
 >"try"</SPAN
 > block.&#13;</P
@@ -1433,7 +1643,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="x931.html"
+HREF="help.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -1457,7 +1667,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Other Information Sources</TD
+>More Slony-I Help</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

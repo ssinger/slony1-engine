@@ -497,17 +497,17 @@ sl_confirm for the departing node.  In earlier versions, this needs to
 be done manually.  Supposing the node number is 3, then the query
 would be:
 
-<command>
+<screen>
 delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
-</command>
+</screen>
 
 <para>Alternatively, to go after <quote/all phantoms,/ you could use
-<command>
+<screen>
 oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
 DELETE 6
-</command>
+</screen>
 
-<para>General "due diligance" dictates starting with a
+<para>General <quote/due diligance/ dictates starting with a
 <command/BEGIN/, looking at the contents of sl_confirm before,
 ensuring that only the expected records are purged, and then, only
 after that, confirming the change with a <command/COMMIT/.  If you

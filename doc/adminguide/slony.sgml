@@ -19,18 +19,22 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
   <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
   &legal;
  </bookinfo>
-<article> <title>Slony-I Administration</title>
+<article id="slonyintro"> <title>Slony-I Introduction</title>
 
  &intro;
  &prerequisites;
  &installation;
- &slonik;
  &concepts;
  &cluster;
  &defineset;
+</article>
+
+&reference;
+
+<article id="slonyadmin"> <title> Slony-I Administration </title>
+
  &adminscripts;
  &startslons;
- &slonconfig;
  &subscribenodes;
  &monitoring;
  &maintenance;
@@ -45,11 +49,19 @@ $PostgreSQL: pgsql/doc/src/sgml/postgres.sgml,v 1.68 2004/12/03 05:50:18 momjian
 
 </article>
 
-<article id="faq"><title> FAQ </title>
+<article id="faq"><title> Slony-I FAQ </title>
 
-<para> Not all of these are, strictly speaking, <quote/frequently
-asked;/ some represent <emphasis/trouble found that seemed worth
-documenting/.
+    <articleinfo><title>Slony-I FAQ</title>
+      <corpauthor>The Slony Global Development Group</corpauthor>
+      <author> 
+	<firstname>Christopher </firstname> 
+	<surname>Browne</surname> 
+      </author> 
+    </articleinfo>
+
+<para> Not all of these are, strictly speaking, <quote>frequently
+asked;</quote> some represent <emphasis>trouble found that seemed
+worth documenting</emphasis>.</para>
 
  &faq;
 

@@ -12,10 +12,10 @@ REL="HOME"
 TITLE="Slony-I 1.1 Administration"
 HREF="slony.html"><LINK
 REL="UP"
-HREF="t24.html"><LINK
+HREF="slonyadmin.html"><LINK
 REL="PREVIOUS"
-TITLE="Slon Configuration Options"
-HREF="slonconfig.html"><LINK
+TITLE="Slon daemons"
+HREF="slonstart.html"><LINK
 REL="NEXT"
 TITLE="Monitoring"
 HREF="monitoring.html"><LINK
@@ -50,7 +50,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="slonconfig.html"
+HREF="slonstart.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -79,27 +79,62 @@ CLASS="SECT1"
 CLASS="SECT1"
 ><A
 NAME="SUBSCRIBENODES"
->11. Subscribing Nodes</A
+>3. Subscribing Nodes</A
 ></H1
 ><P
->Before you subscribe a node to a set, be sure that you have slons running for both the master and the new subscribing node. If you don't have slons running, nothing will happen, and you'll beat your head against a wall trying to figure out what's going on.&#13;</P
+>Before you subscribe a node to a set, be sure that you have
+<B
+CLASS="APPLICATION"
+>slon</B
+>s running for both the master and the new
+subscribing node. If you don't have slons running, nothing will
+happen, and you'll beat your head against a wall trying to figure out
+what is going on.&#13;</P
 ><P
->Subscribing a node to a set is done by issuing the slonik command "subscribe set". It may seem tempting to try to subscribe several nodes to a set within the same try block like this:&#13;</P
-><P
-> <TT
+>Subscribing a node to a set is done by issuing the slonik
+command <TT
 CLASS="COMMAND"
->try {
-		  echo 'Subscribing sets';
-		  subscribe set (id = 1, provider=1, receiver=2, forward=yes);
-		  subscribe set (id = 1, provider=1, receiver=3, forward=yes);
-		  subscribe set (id = 1, provider=1, receiver=4, forward=yes);
-} on error {
-		  echo 'Could not subscribe the sets!';
-		  exit -1;
-}</TT
->&#13;</P
+>subscribe set</TT
+>. It may seem tempting to try to
+subscribe several nodes to a set within a single try block like this:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>    try {
+      echo 'Subscribing sets';
+      subscribe set (id = 1, provider=1, receiver=2, forward=yes);
+      subscribe set (id = 1, provider=1, receiver=3, forward=yes);
+      subscribe set (id = 1, provider=1, receiver=4, forward=yes);
+    } on error {
+      echo 'Could not subscribe the sets!';
+      exit -1;
+    }</PRE
+></TD
+></TR
+></TABLE
+>
+&#13;</P
 ><P
-> You are just asking for trouble if you try to subscribe sets like that. The proper procedure is to subscribe one node at a time, and to check the logs and databases before you move onto subscribing the next node to the set. It is also worth noting that success within the above slonik try block does not imply that nodes 2, 3, and 4 have all been successfully subscribed. It merely guarantees that the slonik commands were received by the slon running on the master node.&#13;</P
+> You are just asking for trouble if you try to subscribe sets in
+that fashion. The proper procedure is to subscribe one node at a time,
+and to check the logs and databases before you move onto subscribing
+the next node to the set. It is also worth noting that the
+<SPAN
+CLASS="QUOTE"
+>"success"</SPAN
+> within the above slonik try block does not imply that
+nodes 2, 3, and 4 have all been successfully subscribed. It merely
+indicates that the slonik commands were successfully received by the
+<B
+CLASS="APPLICATION"
+>slon</B
+> running on the master node.&#13;</P
 ><P
 >A typical sort of problem that will arise is that a cascaded
 subscriber is looking for a provider that is not ready yet.  In that
@@ -110,38 +145,81 @@ CLASS="EMPHASIS"
 >never</I
 ></SPAN
 > pick up the
-subscriber.  It will get "stuck" waiting for a past event to take
-place.  The other nodes will be convinced that it is successfully
+subscriber.  It will get <SPAN
+CLASS="QUOTE"
+>"stuck"</SPAN
+> waiting for a past event to
+take place.  The other nodes will be convinced that it is successfully
 subscribed (because no error report ever made it back to them); a
-request to unsubscribe the node will be "blocked" because the node is
-stuck on the attempt to subscribe it.&#13;</P
+request to unsubscribe the node will be <SPAN
+CLASS="QUOTE"
+>"blocked"</SPAN
+> because the
+node is stuck on the attempt to subscribe it.&#13;</P
 ><P
->When you subscribe a node to a set, you should see something like this in your slony logs for the master node:&#13;</P
-><P
-> <TT
-CLASS="COMMAND"
->DEBUG2 remoteWorkerThread_3: Received event 3,1059 SUBSCRIBE_SET</TT
+>When you subscribe a node to a set, you should see something
+like this in your slony logs for the master node:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    DEBUG2 remoteWorkerThread_3: Received event 3,1059 SUBSCRIBE_SET</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->You should also start seeing log entries like this in the slony logs for the subscribing node:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
->DEBUG2 remoteWorkerThread_1: copy table public.my_table</TT
+>You should also start seeing log entries like this in the slony logs for the subscribing node:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>    DEBUG2 remoteWorkerThread_1: copy table public.my_table</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->It may take some time for larger tables to be copied from the master node to the new subscriber. If you check the pg_stat_activity table on the master node, you should see a query that is copying the table to stdout.&#13;</P
+>It may take some time for larger tables to be copied from the
+master node to the new subscriber. If you check the pg_stat_activity
+table on the master node, you should see a query that is copying the
+table to stdout.&#13;</P
 ><P
->The table sl_subscribe on both the master, and the new subscriber should have entries for the new subscription:&#13;</P
-><P
-><TT
-CLASS="COMMAND"
-> sub_set | sub_provider | sub_receiver | sub_forward | sub_active
----------+--------------+--------------+-------------+------------
-	1	  |				1 |				2 | t			  | t</TT
+>The table <CODE
+CLASS="ENVAR"
+>sl_subscribe</CODE
+> on both the master, and the new
+subscriber should contain entries for the new subscription:
+
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>     sub_set | sub_provider | sub_receiver | sub_forward | sub_active
+    ---------+--------------+--------------+-------------+------------
+          1  |            1 |            2 |           t |         t</PRE
+></TD
+></TR
+></TABLE
 >&#13;</P
 ><P
->A final test is to insert a row into a table on the master node, and to see if the row is copied to the new subscriber. 
+>A final test is to insert a row into one of the replicated
+tables on the master node, and verify that the row is copied to the
+new subscriber.
 
 
 
@@ -163,7 +241,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="slonconfig.html"
+HREF="slonstart.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -191,13 +269,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Slon Configuration Options</TD
+>Slon daemons</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="t24.html"
+HREF="slonyadmin.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
