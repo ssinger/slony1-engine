@@ -1,16 +1,49 @@
-<!-- $Id: plainpaths.sgml,v 1.2 2005-02-09 20:08:43 cbbrowne Exp $ -->
-<sect1 id="plainpaths"><title><productname>Slony-I</productname> Path Communications</title>
+<!-- $Id: plainpaths.sgml,v 1.3 2005-02-18 17:04:07 cbbrowne Exp $ -->
+<sect1 id="plainpaths"><title> &slony1; Path Communications</title>
 
-<para> <productname>Slony-I</productname></para>
+<para> &slony1; uses &postgres; DSNs in two contexts to establish
+access to databases:
 
-<para> Basically need to discuss what STORE PATHs are about, and
-distinguish them from the admin conninfo entries in the slonik
-preamble.</para>
+<itemizedlist>
 
-<para> This isn't an issue for people with simple networks; it matters
-for those with complex firewall configurations, nodes at multiple
-locations, and the issue where nodes may not be able to all talk to
-one another at a uniform set of network addresses.</para>
+<listitem><para> <link linkend="admconninfo"> <command> ADMIN CONNINFO
+</command> </link> - controlling how a <link linkend="slonik"> slonik
+</link> script accesses the various nodes.
+
+<para> These connections are the ones that go from your
+<quote/administrative workstation/ to all of the nodes in a &slony1;
+cluster.
+
+<para> It is <emphasis/vital/ that you have connections from the
+central location where you run <link linkend="slonik"> slonik </link>
+to each and every node in the network.  These connections are only
+used briefly, to submit the few <acronym/SQL/ requests required to
+control the administration of the cluster.
+
+<para> Since these communications paths are only used briefly, it may
+be quite reasonable to <quote>hack together</quote> temporary
+connections using <link linkend="tunnelling">SSH tunnelling</link>.
+
+<listitem><para> <link linkend="stmtstorepath"> <command> STORE PATH
+</command> </link> - controlling how <link linkend="slon"> slon
+</link> daemons communicate with remote nodes.  These paths are stored
+in <link linkend="table.sl-path"> <envar>sl_path</envar> </link>. 
+
+<para> You forcibly <emphasis>need</emphasis> to have a path between
+each subscriber node and its provider; other paths are optional, and
+will not be used unless a listen path in <link
+linkend="table.sl-listen"> <envar>sl_listen</envar> </link>. is needed
+that uses that particular path.
+
+</itemizedlist>
+
+<para> The distinctions and possible complexities of paths are not
+normally an issue for people with simple networks where all the hosts
+can see one another via a comparatively <quote>global</quote> set of
+network addresses.  In contrast, it matters rather a lot for those
+with complex firewall configurations, nodes at multiple locations, and
+the issue where nodes may not be able to all talk to one another via a
+uniform set of network addresses.</para>
 
 <para> There is also room for discussion of SSH tunnelling here...</para>
 
