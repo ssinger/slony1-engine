@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.14 2004-05-31 15:24:15 wieck Exp $
+ *	$Id: parser.y,v 1.15 2004-06-03 20:16:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -148,6 +148,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_unlock_set
 %type <statement>	stmt_move_set
 %type <statement>	stmt_ddl_script
+%type <statement>	stmt_update_functions
 %type <statement>	stmt_wait_event
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
@@ -184,6 +185,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_FOR
 %token	K_FORWARD
 %token	K_FULL
+%token	K_FUNCTIONS
 %token	K_ID
 %token	K_INIT
 %token	K_KEY
@@ -220,6 +222,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_UNINSTALL
 %token	K_UNLOCK
 %token	K_UNSUBSCRIBE
+%token	K_UPDATE
 %token	K_YES
 %token	K_WAIT
 
@@ -444,6 +447,8 @@ try_stmt			: stmt_echo
 					| stmt_move_set
 						{ $$ = $1; }
 					| stmt_ddl_script
+						{ $$ = $1; }
+					| stmt_update_functions
 						{ $$ = $1; }
 					| stmt_wait_event
 						{ $$ = $1; }
@@ -1161,6 +1166,32 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 							new->ev_origin		= opt[2].ival;
 							new->ddl_fd			= -1;
 						}
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_update_functions	: lno K_UPDATE K_FUNCTIONS option_list
+					{
+						SlonikStmt_update_functions *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, 1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_update_functions *)
+								malloc(sizeof(SlonikStmt_update_functions));
+						memset(new, 0, sizeof(SlonikStmt_update_functions));
+						new->hdr.stmt_type		= STMT_UPDATE_FUNCTIONS;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}

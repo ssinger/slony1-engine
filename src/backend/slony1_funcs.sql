@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.11 2004-05-31 15:24:15 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.12 2004-06-03 20:16:06 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -20,55 +20,55 @@
 --
 --	Create an sl_event entry
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.createEvent (name, text)
+create or replace function @NAMESPACE@.createEvent (name, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
-create function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text)
+create or replace function @NAMESPACE@.createEvent (name, text, text, text, text, text, text, text, text, text)
 	returns bigint
 	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
 	language C
@@ -81,7 +81,7 @@ create function @NAMESPACE@.createEvent (name, text, text, text, text, text, tex
 --	Trigger function to prevent modifications to a table on
 --	a subscriber.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.denyAccess ()
+create or replace function @NAMESPACE@.denyAccess ()
 	returns trigger
 	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
 	language C
@@ -95,7 +95,7 @@ grant execute on function @NAMESPACE@.denyAccess () to public;
 --	Trigger function to prevent modifications to a table before
 --	and after a moveSet().
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.lockedSet ()
+create or replace function @NAMESPACE@.lockedSet ()
 	returns trigger
 	as '$libdir/slony1_funcs', '_Slony_I_lockedSet'
 	language C;
@@ -106,7 +106,7 @@ create function @NAMESPACE@.lockedSet ()
 --
 --	
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.getLocalNodeId (name) returns int4
+create or replace function @NAMESPACE@.getLocalNodeId (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_getLocalNodeId'
 	language C
 	security definer;
@@ -118,7 +118,7 @@ grant execute on function @NAMESPACE@.getLocalNodeId (name) to public;
 --
 --	
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setSessionRole (name, text) returns text
+create or replace function @NAMESPACE@.setSessionRole (name, text) returns text
     as '$libdir/slony1_funcs', '_Slony_I_setSessionRole'
 	language C
 	security definer;
@@ -130,7 +130,7 @@ grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 --
 --	
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.getSessionRole (name) returns text
+create or replace function @NAMESPACE@.getSessionRole (name) returns text
     as '$libdir/slony1_funcs', '_Slony_I_getSessionRole'
 	language C
 	security definer;
@@ -142,7 +142,7 @@ grant execute on function @NAMESPACE@.getSessionRole (name) to public;
 --
 --	
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.logTrigger () returns trigger
+create or replace function @NAMESPACE@.logTrigger () returns trigger
     as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
 	language C
 	security definer;
@@ -154,7 +154,7 @@ grant execute on function @NAMESPACE@.logTrigger () to public;
 --
 --	
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.terminateNodeConnections (name) returns int4
+create or replace function @NAMESPACE@.terminateNodeConnections (name) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_terminateNodeConnections'
 	language C;
 
@@ -169,7 +169,7 @@ create function @NAMESPACE@.terminateNodeConnections (name) returns int4
 --
 --	Initializes a new node.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.initializeLocalNode (int4, text)
+create or replace function @NAMESPACE@.initializeLocalNode (int4, text)
 returns int4
 as '
 declare
@@ -211,7 +211,7 @@ end;
 --
 --	Generate the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeNode (int4, text)
+create or replace function @NAMESPACE@.storeNode (int4, text)
 returns bigint
 as '
 declare
@@ -231,7 +231,7 @@ end;
 --
 --	Process the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeNode_int (int4, text)
+create or replace function @NAMESPACE@.storeNode_int (int4, text)
 returns int4
 as '
 declare
@@ -277,7 +277,7 @@ end;
 --
 --	Generate the ENABLE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.enableNode (int4)
+create or replace function @NAMESPACE@.enableNode (int4)
 returns bigint
 as '
 declare
@@ -321,7 +321,7 @@ end;
 --
 --	Process the ENABLE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.enableNode_int (int4)
+create or replace function @NAMESPACE@.enableNode_int (int4)
 returns int4
 as '
 declare
@@ -393,7 +393,7 @@ end;
 --
 --	Generate the DISABLE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.disableNode (int4)
+create or replace function @NAMESPACE@.disableNode (int4)
 returns bigint
 as '
 declare
@@ -410,7 +410,7 @@ end;
 --
 --	Process the DISABLE_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.disableNode_int (int4)
+create or replace function @NAMESPACE@.disableNode_int (int4)
 returns int4
 as '
 declare
@@ -427,7 +427,7 @@ end;
 --
 --	Generate the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropNode (int4)
+create or replace function @NAMESPACE@.dropNode (int4)
 returns bigint
 as '
 declare
@@ -488,7 +488,7 @@ end;
 --
 --	Process the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropNode_int (int4)
+create or replace function @NAMESPACE@.dropNode_int (int4)
 returns int4
 as '
 declare
@@ -544,7 +544,7 @@ end;
 --	Initiate a failover. This function must be called on all nodes
 --	and then waited for the restart of all node deamons.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.failedNode(int4, int4)
+create or replace function @NAMESPACE@.failedNode(int4, int4)
 returns int4
 as '
 declare
@@ -755,7 +755,7 @@ end;
 --	On the node that has the highest sequence number of the failed node,
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8)
+create or replace function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8)
 returns bigint
 as '
 declare
@@ -811,7 +811,7 @@ end;
 --
 --	Finish failover for one set.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.failoverSet_int (int4, int4, int4)
+create or replace function @NAMESPACE@.failoverSet_int (int4, int4, int4)
 returns int4
 as '
 declare
@@ -907,7 +907,7 @@ end;
 --	Reset the whole database to standalone by removing the whole
 --	replication system.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.uninstallNode ()
+create or replace function @NAMESPACE@.uninstallNode ()
 returns int4
 as '
 declare
@@ -938,7 +938,7 @@ end;
 --
 --	Generate the STORE_PATH event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storePath (int4, int4, text, int4)
+create or replace function @NAMESPACE@.storePath (int4, int4, text, int4)
 returns bigint
 as '
 declare
@@ -960,7 +960,7 @@ end;
 --
 --	Process the STORE_PATH event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storePath_int (int4, int4, text, int4)
+create or replace function @NAMESPACE@.storePath_int (int4, int4, text, int4)
 returns int4
 as '
 declare
@@ -1023,7 +1023,7 @@ end;
 --
 --	Generate the DROP_PATH event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropPath (int4, int4)
+create or replace function @NAMESPACE@.dropPath (int4, int4)
 returns bigint
 as '
 declare
@@ -1077,7 +1077,7 @@ end;
 --
 --	Process the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropPath_int (int4, int4)
+create or replace function @NAMESPACE@.dropPath_int (int4, int4)
 returns int4
 as '
 declare
@@ -1116,7 +1116,7 @@ end;
 --
 --	Generate the STORE_LISTEN event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeListen (int4, int4, int4)
+create or replace function @NAMESPACE@.storeListen (int4, int4, int4)
 returns bigint
 as '
 declare
@@ -1137,7 +1137,7 @@ end;
 --
 --	Process the STORE_LISTEN event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeListen_int (int4, int4, int4)
+create or replace function @NAMESPACE@.storeListen_int (int4, int4, int4)
 returns int4
 as '
 declare
@@ -1190,7 +1190,7 @@ end;
 --
 --	Generate the DROP_LISTEN event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropListen (int4, int4, int4)
+create or replace function @NAMESPACE@.dropListen (int4, int4, int4)
 returns bigint
 as '
 declare
@@ -1212,7 +1212,7 @@ end;
 --
 --	Process the DROP_LISTEN event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropListen_int (int4, int4, int4)
+create or replace function @NAMESPACE@.dropListen_int (int4, int4, int4)
 returns int4
 as '
 declare
@@ -1243,7 +1243,7 @@ end;
 --
 --	Generate the STORE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeSet (int4, text)
+create or replace function @NAMESPACE@.storeSet (int4, text)
 returns bigint
 as '
 declare
@@ -1273,7 +1273,7 @@ end;
 --
 --	Process the STORE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeSet_int (int4, int4, text)
+create or replace function @NAMESPACE@.storeSet_int (int4, int4, text)
 returns int4
 as '
 declare
@@ -1316,7 +1316,7 @@ end;
 --	Add a special trigger to all tables of a set that disables
 --	access to it.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.lockSet (int4)
+create or replace function @NAMESPACE@.lockSet (int4)
 returns int4
 as '
 declare
@@ -1387,7 +1387,7 @@ end;
 --	Remove the special trigger from all tables of a set that disables
 --	access to it.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.unlockSet (int4)
+create or replace function @NAMESPACE@.unlockSet (int4)
 returns int4
 as '
 declare
@@ -1454,7 +1454,7 @@ end;
 --
 --	Generate the MOVE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.moveSet (int4, int4)
+create or replace function @NAMESPACE@.moveSet (int4, int4)
 returns bigint
 as '
 declare
@@ -1546,7 +1546,7 @@ end;
 --
 --	Process the MOVE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.moveSet_int (int4, int4, int4)
+create or replace function @NAMESPACE@.moveSet_int (int4, int4, int4)
 returns int4
 as '
 declare
@@ -1723,7 +1723,7 @@ end;
 --
 --	Generate the DROP_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropSet (int4)
+create or replace function @NAMESPACE@.dropSet (int4)
 returns bigint
 as '
 declare
@@ -1763,7 +1763,7 @@ end;
 --
 --	Process the DROP_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropSet_int (int4)
+create or replace function @NAMESPACE@.dropSet_int (int4)
 returns int4
 as '
 declare
@@ -1811,7 +1811,7 @@ end;
 --
 --	Generate the MERGE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.mergeSet (int4, int4)
+create or replace function @NAMESPACE@.mergeSet (int4, int4)
 returns bigint
 as '
 declare
@@ -1889,7 +1889,7 @@ end;
 --
 --	Process the MERGE_SET event.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.mergeSet_int (int4, int4)
+create or replace function @NAMESPACE@.mergeSet_int (int4, int4)
 returns int4
 as '
 declare
@@ -1923,7 +1923,7 @@ end;
 -- FUNCTION setAddTable (set_id, tab_id, tab_fqname, tab_idxname,
 --					tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable(int4, int4, text, name, text)
+create or replace function @NAMESPACE@.setAddTable(int4, int4, text, name, text)
 returns bigint
 as '
 declare
@@ -1975,7 +1975,7 @@ end;
 -- FUNCTION setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname,
 --						tab_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
+create or replace function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
 returns int4
 as '
 declare
@@ -2063,7 +2063,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddSequence (int4, int4, text, text)
+create or replace function @NAMESPACE@.setAddSequence (int4, int4, text, text)
 returns bigint
 as '
 declare
@@ -2112,7 +2112,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.setAddSequence_int(int4, int4, text, text)
+create or replace function @NAMESPACE@.setAddSequence_int(int4, int4, text, text)
 returns int4
 as '
 declare
@@ -2204,7 +2204,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) returns int4
+create or replace function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) returns int4
 as '
 declare
 	p_seq_id			alias for $1;
@@ -2245,7 +2245,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION storeTrigger (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeTrigger (int4, name)
+create or replace function @NAMESPACE@.storeTrigger (int4, name)
 returns bigint
 as '
 declare
@@ -2262,7 +2262,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION storeTrigger_int (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.storeTrigger_int (int4, name)
+create or replace function @NAMESPACE@.storeTrigger_int (int4, name)
 returns int4
 as '
 declare
@@ -2322,7 +2322,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION dropTrigger (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropTrigger (int4, name)
+create or replace function @NAMESPACE@.dropTrigger (int4, name)
 returns bigint
 as '
 declare
@@ -2339,7 +2339,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION dropTrigger_int (trig_tabid, trig_tgname)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.dropTrigger_int (int4, name)
+create or replace function @NAMESPACE@.dropTrigger_int (int4, name)
 returns int4
 as '
 declare
@@ -2396,7 +2396,7 @@ end;
 --
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.ddlScript (int4, text)
+create or replace function @NAMESPACE@.ddlScript (int4, text)
 returns bigint
 as '
 declare
@@ -2440,7 +2440,7 @@ end;
 --
 --	Process the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.ddlScript_int (int4, text)
+create or replace function @NAMESPACE@.ddlScript_int (int4, text)
 returns int4
 as '
 declare
@@ -2506,7 +2506,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableForReplication (tab_id)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.alterTableForReplication (int4)
+create or replace function @NAMESPACE@.alterTableForReplication (int4)
 returns int4
 as '
 declare
@@ -2637,7 +2637,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableRestore (tab_id)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.alterTableRestore (int4)
+create or replace function @NAMESPACE@.alterTableRestore (int4)
 returns int4
 as '
 declare
@@ -2746,7 +2746,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
+create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
 returns bigint
 as '
 declare
@@ -2805,7 +2805,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool)
+create or replace function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool)
 returns int4
 as '
 declare
@@ -2892,7 +2892,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION unsubscribeSet (sub_set, sub_receiver)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.unsubscribeSet (int4, int4)
+create or replace function @NAMESPACE@.unsubscribeSet (int4, int4)
 returns bigint
 as '
 declare
@@ -2968,7 +2968,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION unsubscribeSet_int (sub_set, sub_receiver)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.unsubscribeSet_int (int4, int4)
+create or replace function @NAMESPACE@.unsubscribeSet_int (int4, int4)
 returns int4
 as '
 declare
@@ -2996,7 +2996,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.enableSubscription (int4, int4, int4)
+create or replace function @NAMESPACE@.enableSubscription (int4, int4, int4)
 returns int4
 as '
 declare
@@ -3013,7 +3013,7 @@ end;
 -- ----------------------------------------------------------------------
 -- FUNCTION enableSubscription_int (sub_set, sub_provider, sub_receiver)
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.enableSubscription_int (int4, int4, int4)
+create or replace function @NAMESPACE@.enableSubscription_int (int4, int4, int4)
 returns int4
 as '
 declare
@@ -3054,7 +3054,7 @@ end;
 -- FUNCTION forwardConfirm ()
 --
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
+create or replace function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
 returns bigint
 as '
 declare
@@ -3086,7 +3086,7 @@ end;
 -- FUNCTION cleanupEvent ()
 --
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.cleanupEvent ()
+create or replace function @NAMESPACE@.cleanupEvent ()
 returns int4
 as '
 declare
@@ -3162,7 +3162,7 @@ end;
 --	"_Slony-I_<clustername>_rowID", then add it as a bigint
 --	with default nextval('"_<clustername>".sl_rowid_seq').
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.tableAddKey(text) returns text
+create or replace function @NAMESPACE@.tableAddKey(text) returns text
 as '
 declare
 	p_tab_fqname	alias for $1;
@@ -3237,7 +3237,7 @@ end;
 --	"_Slony-I_<clustername>_rowID", then add it as a bigint
 --	with default nextval('"_<clustername>".sl_rowid_seq').
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.tableDropKey(int4) returns int4
+create or replace function @NAMESPACE@.tableDropKey(int4) returns int4
 as '
 declare
 	p_tab_id		alias for $1;
@@ -3289,7 +3289,7 @@ end;
 --	Given a tablename, check that a unique index exists or return
 --	the tables primary key index name.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.determineIdxnameUnique(text, name) returns name
+create or replace function @NAMESPACE@.determineIdxnameUnique(text, name) returns name
 as '
 declare
 	p_tab_fqname	alias for $1;
@@ -3349,7 +3349,7 @@ end;
 --
 --	Given a tablename, construct the serial columns index name
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.determineIdxnameSerial(text) returns name
+create or replace function @NAMESPACE@.determineIdxnameSerial(text) returns name
 as '
 declare
 	p_tab_fqname	alias for $1;
@@ -3385,7 +3385,7 @@ end;
 --	the log trigger) of the table. Use the specified unique index or
 --	the primary key (if indexname is NULL).
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.determineAttkindUnique(text, name) returns text
+create or replace function @NAMESPACE@.determineAttkindUnique(text, name) returns text
 as '
 declare
 	p_tab_fqname	alias for $1;
@@ -3478,7 +3478,7 @@ end;
 --	and finish the creation of the serial column. The return an
 --	attkind according to that.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.determineAttkindSerial(text)
+create or replace function @NAMESPACE@.determineAttkindSerial(text)
 returns text
 as '
 declare
@@ -3552,7 +3552,7 @@ end;
 --	Checks if a table has our special serial key column that is
 --	used if the table has no natural unique constraint.
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.tableHasSerialKey(text) 
+create or replace function @NAMESPACE@.tableHasSerialKey(text) 
 returns bool
 as '
 declare

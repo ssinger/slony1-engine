@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.21 2004-05-31 15:24:16 wieck Exp $
+ *	$Id: slonik.c,v 1.22 2004-06-03 20:16:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -823,6 +823,16 @@ script_check_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_UPDATE_FUNCTIONS:
+				{
+					SlonikStmt_update_functions *stmt =
+							(SlonikStmt_update_functions *)hdr;
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_WAIT_EVENT:
 				{
 					SlonikStmt_wait_event *stmt =
@@ -1206,6 +1216,16 @@ script_exec_stmts(SlonikScript *script, SlonikStmt *hdr)
 				}
 				break;
 
+			case STMT_UPDATE_FUNCTIONS:
+				{
+					SlonikStmt_update_functions *stmt =
+							(SlonikStmt_update_functions *)hdr;
+
+					if (slonik_update_functions(stmt) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_WAIT_EVENT:
 				{
 					SlonikStmt_wait_event *stmt =
@@ -1576,6 +1596,69 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
+		return -1;
+	}
+	db_notice_silent = false;
+
+	dstring_free(&query);
+
+	return 0;
+}
+
+
+static int
+load_slony_functions(SlonikStmt *stmt, int no_id)
+{
+	SlonikAdmInfo  *adminfo;
+	PGconn		   *dbconn;
+
+	int				use_major = 0;
+	int				use_minor = 0;
+
+	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
+		return -1;
+	
+	dbconn = adminfo->dbconn;
+
+	switch (adminfo->version_major)
+	{
+		case 7:
+			use_major = 7;
+
+			switch (adminfo->version_minor)
+			{
+				case 3:
+					use_minor = 3;
+					break;
+
+				case 4:
+				case 5:
+					use_minor = 4;
+					break;
+
+				default:
+					printf("%s:%d: unsupported PostgreSQL "
+							"version %d.%d\n",
+							stmt->stmt_filename, stmt->stmt_lno,
+							adminfo->version_major, adminfo->version_minor);
+			}
+			break;
+
+		default:
+			printf("%s:%d: unsupported PostgreSQL "
+					"version %d.%d\n",
+					stmt->stmt_filename, stmt->stmt_lno,
+					adminfo->version_major, adminfo->version_minor);
+	}
+
+	/* Load schema, DB version specific */
+	db_notice_silent = true;
+	if (load_sql_script(stmt, adminfo,
+			"%s/slony1_funcs.sql", PGSHARE) < 0 
+		|| load_sql_script(stmt, adminfo,
+			"%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
+	{
+		db_notice_silent = false;
 		return -1;
 	}
 	db_notice_silent = false;
@@ -3256,6 +3339,38 @@ slonik_ddl_script(SlonikStmt_ddl_script *stmt)
 	return 0;
 
 	return 0;
+}
+
+
+int
+slonik_update_functions(SlonikStmt_update_functions *stmt)
+{
+	SlonikAdmInfo  *adminfo;
+	SlonDString		query;
+	int				rc;
+
+	adminfo = get_checked_adminfo((SlonikStmt *)stmt, stmt->no_id);
+	if (adminfo == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *)stmt, adminfo) < 0)
+		return -1;
+
+	rc = load_slony_functions((SlonikStmt *)stmt, stmt->no_id);
+	if (rc < 0)
+		return -1;
+
+	dstring_init(&query);
+	slon_mkquery(&query,
+			"notify \"_%s_Restart\"; ",
+			stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *)stmt, adminfo, &query) < 0)
+		rc = -1;
+	else
+		rc = 0;
+	dstring_free(&query);
+
+	return rc;
 }
 
 
