@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.3 2004-09-24 17:32:05 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.4 2004-09-28 23:32:01 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3159,8 +3159,20 @@ begin
 	-- ----
 	-- First remove all but the oldest confirm row per origin,receiver pair
 	-- ----
+	delete from @NAMESPACE@.sl_confirm
+				where con_origin not in (select no_id from @NAMESPACE@.sl_node);
+	delete from @NAMESPACE@.sl_confirm
+				where con_received not in (select no_id from @NAMESPACE@.sl_node);
+	-- ----
+	-- Next remove all but the oldest confirm row per origin,receiver pair.
+	-- Ignore confirmations that are younger than 10 minutes. We currently
+	-- have an not confirmed suspicion that a possibly lost transaction due
+	-- to a server crash might have been visible to another session, and
+	-- that this led to log data that is needed again got removed.
+	-- ----
 	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
 				from @NAMESPACE@.sl_confirm
+				where con_timestamp < (CURRENT_TIMESTAMP - ''10 min''::interval)
 				group by con_origin, con_received
 	loop
 		delete from @NAMESPACE@.sl_confirm
