@@ -1,23 +1,25 @@
-<!-- $Id: slony.sgml,v 1.5 2004-12-20 16:55:06 darcyb Exp $ -->
+<!-- $Id -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
-
-<!entity % filelist SYSTEM "filelist.sgml">
-%filelist;
-
-<!entity reference  SYSTEM "reference.sgml">
-
+  <!entity % version SYSTEM "version.sgml">
+    %version;
+  <!entity % filelist SYSTEM "filelist.sgml">
+    %filelist;
+  <!entity reference  SYSTEM "reference.sgml">
 ]>
 
 <book id="slony">
-  <title>Slony-I 1.1 Administration</title>
+  <title>Slony-I &version; Documentation</title>
   <bookinfo>
     <corpauthor>The Slony Global Development Group</corpauthor>
-    <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
+    <author>
+      <firstname>Christopher</firstname>
+      <surname>Browne</surname>
+    </author>
     &legal;
   </bookinfo>
 
-  <article id="slonyintro">
+  <part id="slonyintro">
     <title>Slony-I Introduction</title>
 
     &intro;
@@ -26,11 +28,14 @@
     &concepts;
     &cluster;
     &defineset;
-  </article>
+  </part>
 
+  <part id="refrence">
+    <title>Slony-I Command Reference</title>
     &reference;
+  </part>
 
-  <article id="slonyadmin">
+  <part id="slonyadmin">
     <title>Slony-I Administration</title>
 
     &adminscripts;
@@ -46,37 +51,25 @@
     &ddlchanges;
     &firstdb;
     &help;
-  </article>
+  </part>
 
-  <article id="faq"><title>Slony-I FAQ</title>
-    <articleinfo><title>Slony-I FAQ</title>
-      <corpauthor>The Slony Global Development Group</corpauthor>
-      <author> 
-        <firstname>Christopher </firstname> 
-        <surname>Browne</surname> 
-      </author> 
-    </articleinfo>
-
-    <para>Not all of these are, strictly speaking, <quote>frequently
-    asked;</quote> some represent <emphasis>trouble found that seemed
-    worth documenting</emphasis>.</para>
+  <part id="faq">
+    <title>Slony-I FAQ</title>
+    <article>
+<para>Not all of these are, strictly speaking, <quote>frequently
+asked;</quote> some represent <emphasis>trouble found that seemed
+worth documenting</emphasis>.</para>
 
     &faq;
-  </article>
+</article>
+  </part>
 
-  <article id="developer">
+  <part id="developer">
     <title>Slony-I Internals</title>
-    <articleinfo>
-      <title>Slony-I Internals</title>
-      <corpauthor>The Slony Global Development Group</corpauthor>
-      <author>
-        <firstname>Christopher</firstname>
-        <surname>Browne</surname>
-      </author>
-    </articleinfo>
-  
-    &schemadoc;
-  </article>
+    <article id="schemadoc">  
+      &schemadoc;
+    </article>
+  </part>
 <!--  &errcodes; -->
 <!--  &biblio; -->
 <!--  &bookindex; -->

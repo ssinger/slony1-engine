@@ -1,5 +1,7 @@
-<sect1 id="installation"> <title> Slony-I Installation</title>
-
+<article id="installation">
+<title>Slony-I Installation</title>
+<sect1>
+<title>Slony-I Installation</title>
 <para>You should have obtained the <productname/Slony-I/ source from
 the previous step. Unpack it.</para>
 
@@ -11,16 +13,18 @@ tar xf slony.tar
 <para> This will create a directory under the current directory with
 the <productname/Slony-I/ sources.  Head into that that directory for the rest of
 the installation procedure.</para>
-
-<sect2><title> Short Version</title>
+</sect1>
+<sect1>
+<title>Short Version</title>
 
 <para>
 <screen>
 ./configure --with-pgsourcetree=/whereever/the/source/is 
 gmake all; gmake install 
 </screen>
-
-<sect2><title> Configuration</title>
+</sect1>
+<sect1>
+<title>Configuration</title>
 
 <para>The first step of the installation procedure is to configure the
 source tree for your system.  This is done by running the
@@ -31,12 +35,14 @@ source tree for your system.  This is done by running the
 <productname/Slony-I/ is configured by pointing it to the various
 library, binary, and include directories; for a full list of these
 options, use the command <command> ./configure --help </command>
-</para></sect2>
+</para>
+</sect1>
 
-<sect2><title> Example</title>
+<sect1>
+<title>Example</title>
 
 <screen>
-./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.3
+./configure --with-pgsourcetree=/usr/local/src/postgresql-7.4.6
 </screen>
 
 <para>This script will run a number of tests to guess values for
@@ -45,10 +51,12 @@ system.  Slony-I is known to need a modified version of libpq on
 specific platforms such as Solaris2.X on SPARC this patch can be found
 at <ulink
 url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
-http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulink></para></sect2>
+http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz</ulink></para>
+</sect1>
 
 
-<sect2><title> Build</title>
+<sect1>
+<title>Build</title>
 
 <para>To start the build process, type
 
@@ -64,9 +72,11 @@ depending on how fast your hardware is at compiling things.  The last
 line displayed should be</para>
 
 <para> <command> All of Slony-I is successfully made.  Ready to
-install.  </command></para></sect2>
+install.  </command></para>
+</sect1>
 
-<sect2><title> Installing Slony-I</title>
+<sect1>
+<title> Installing Slony-I</title>
 
 <para> To install Slony-I, enter
 
@@ -78,7 +88,8 @@ gmake install
 specified by the <option>--prefix</option> option used in the
 PostgreSQL configuration.  Make sure you have appropriate permissions
 to write into that area.  Normally you need to do this either as root
-or as the postgres user.  </para></sect2></sect1>
+or as the postgres user.  </para>
+</sect1>
 
 <!-- Keep this comment at the end of the file
 Local variables:

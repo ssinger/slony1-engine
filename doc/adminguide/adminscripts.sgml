@@ -1,4 +1,5 @@
-<sect1 id="altperl"><title/ Slony-I Administration Scripts/
+<chapter id="altperl">
+<title/ Slony-I Administration Scripts/
 
 <para>In the <filename/altperl/ directory in the <application/CVS/
 tree, there is a sizable set of <application/Perl/ scripts that may be
@@ -17,7 +18,7 @@ changed so that the scripts simply submit output to standard output.
 An administrator should review the script <emphasis/before/ submitting
 it to <link linkend="slonik"> slonik </link>.
 
-<sect2><title> Node/Cluster Configuration - cluster.nodes</title>
+<sect1><title> Node/Cluster Configuration - cluster.nodes</title>
 
 <para>The UNIX environment variable <envar/SLONYNODES/ is used to
 determine what Perl configuration file will be used to control the
@@ -53,8 +54,8 @@ my %PARAMS =   (host=> undef,		# Host name
 		noforward => undef	# shall this node be set up to forward results?
 );
 </programlisting>
-     
-<sect2><title> Set configuration - cluster.set1, cluster.set2</title>
+</sect1>     
+<sect1><title> Set configuration - cluster.set1, cluster.set2</title>
 
 <para>The UNIX environment variable <envar/SLONYSET/ is used to
 determine what Perl configuration file will be used to determine what
@@ -92,8 +93,8 @@ sequence that Slony-I generates
 <para> An array of names of sequences that are to be replicated
 
 </itemizedlist>
-
-<sect2><title/ build_env.pl/
+</sect1>
+<sect1><title/ build_env.pl/
 
 <para>Queries a database, generating output hopefully suitable for
 <filename/slon.env/ consisting of:
@@ -102,80 +103,80 @@ sequence that Slony-I generates
 <listitem><Para> a set of <function/add_node()/ calls to configure the cluster
 <listitem><Para> The arrays <envar/@KEYEDTABLES/, <envar/@SERIALTABLES/, and <envar/@SEQUENCES/
 </itemizedlist>
-
-<sect2><title/ create_set.pl/
+</sect1>
+<sect1><title/ create_set.pl/
 
 <para>This requires <envar/SLONYSET/ to be set as well as
 <envar/SLONYNODES/; it is used to generate the Slonik script to set up
 a replication set consisting of a set of tables and sequences that are
 to be replicated.
-
-<sect2><title/ drop_node.pl/
+</sect1>
+<sect1><title/ drop_node.pl/
 
 <para>Generates Slonik script to drop a node from a Slony-I cluster.
-
-<sect2><title/ drop_set.pl/
+</sect1>
+<sect1><title/ drop_set.pl/
 
 <para>Generates Slonik script to drop a replication set (<emphasis/e.g./ - set of tables and sequences) from a Slony-I cluster.
-
-<sect2><title/ failover.pl/
+</sect1>
+<sect1><title/ failover.pl/
 
 <para>Generates Slonik script to request failover from a dead node to some new origin
-
-<sect2><title/ init_cluster.pl/
+</sect1>
+<sect1><title/ init_cluster.pl/
 
 <para>Generates Slonik script to initialize a whole Slony-I cluster,
 including setting up the nodes, communications paths, and the listener
 routing.
-
-<sect2><title/ merge_sets.pl/
+</sect1>
+<sect1><title/ merge_sets.pl/
 
 <para>Generates Slonik script to merge two replication sets together.
-
-<sect2><title/ move_set.pl/
+</sect1>
+<sect1><title/ move_set.pl/
 
 <para>Generates Slonik script to move the origin of a particular set to a different node.
-
-<sect2><title/ replication_test.pl/
+</sect1>
+<sect1><title/ replication_test.pl/
 
 <para>Script to test whether Slony-I is successfully replicating data.
-
-<sect2><title/ restart_node.pl/
+</sect1>
+<sect1><title/ restart_node.pl/
 
 <para>Generates Slonik script to request the restart of a node.  This was
 particularly useful pre-1.0.5 when nodes could get snarled up when
 slon daemons died.
-
-<sect2><title/ restart_nodes.pl/
+</sect1>
+<sect1><title/ restart_nodes.pl/
 
 <para>Generates Slonik script to restart all nodes in the cluster.  Not
 particularly useful...
-
-<sect2><title/ show_configuration.pl/
+</sect1>
+<sect1><title/ show_configuration.pl/
 
 <para>Displays an overview of how the environment (e.g. - <envar/SLONYNODES/) is set
 to configure things.
-
-<sect2><title/ slon_kill.pl/
+</sect1>
+<sect1><title/ slon_kill.pl/
 
 <para>Kills slony watchdog and all slon daemons for the specified set.  It
 only works if those processes are running on the local host, of
 course!
-
-<sect2><title/ slon_pushsql.pl/
+</sect1>
+<sect1><title/ slon_pushsql.pl/
 
 <para>Generates Slonik script to push DDL changes to a replication set.
-
-<sect2><title/ slon_start.pl/
+</sect1>
+<sect1><title/ slon_start.pl/
 
 <para>This starts a slon daemon for the specified cluster and node, and uses
 slon_watchdog.pl to keep it running.
-
-<sect2><title/ slon_watchdog.pl/
+</sect1>
+<sect1><title/ slon_watchdog.pl/
 
 <para>Used by slon_start.pl...
 
-<sect2><title/ slon_watchdog2.pl/
+</sect1><sect1><title/ slon_watchdog2.pl/
 
 <para>This is a somewhat smarter watchdog; it monitors a particular Slony-I
 node, and restarts the slon process if it hasn't seen updates go in in
@@ -184,27 +185,27 @@ node, and restarts the slon process if it hasn't seen updates go in in
 <para>This is helpful if there is an unreliable network connection such that
 the slon sometimes stops working without becoming aware of it...
 
-<sect2><title/ subscribe_set.pl/
+</sect1><sect1><title/ subscribe_set.pl/
 
 <para>Generates Slonik script to subscribe a particular node to a particular replication set.
 
-<sect2><title/ uninstall_nodes.pl/
+</sect1><sect1><title/ uninstall_nodes.pl/
 
 <para>This goes through and drops the Slony-I schema from each node; use
 this if you want to destroy replication throughout a cluster.  This is
 a VERY unsafe script!
 
-<sect2><title/ unsubscribe_set.pl/
+</sect1><sect1><title/ unsubscribe_set.pl/
 
 <para>Generates Slonik script to unsubscribe a node from a replication set.
 
-<sect2><title/ update_nodes.pl/
+</sect1><sect1><title/ update_nodes.pl/
 
 <para>Generates Slonik script to tell all the nodes to update the
 Slony-I functions.  This will typically be needed when you upgrade
 from one version of <productname/Slony-I/ to another.
 
-<sect2 id="regenlisten"><title> regenerate-listens.pl</title>
+<sect1 id="regenlisten"><title> regenerate-listens.pl</title>
 
 <para> This script connects to a <productname>Slony-I</productname>
 node, and queries various tables (sl_set, sl_node, sl_subscribe,
@@ -214,7 +215,7 @@ cluster.</para>
 
 <para> See the documentation on <link linkend="autolisten"> Automated
 Listen Path Generation </link> for more details on how this
-works.</para></sect2>
+works.</para>
 
 </sect1>
 

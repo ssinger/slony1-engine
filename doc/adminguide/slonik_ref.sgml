@@ -1,45 +1,47 @@
-<article id="slonikcommands"><title/Slonik Command Summary/
-<sect1 id="slonikintro"><title/Slonik Command Summary/
+<ARTICLE id="slonikcommands">
+<title>Slonik Command Summary</title>
+<sect1 id="slonikintro">
+<title>Slonik Command Summary</title>
 <sect2><title/Introduction/
 
 <para>
-	<application/Slonik/ is a command line utility designed
+	<application>Slonik</application> is a command line utility designed
 	specifically to setup and modify configurations of the
-	<productname/Slony-I/ replication system.
+	<productname>Slony-I</productname> replication system.
 </para>
 
 <sect2 id="outline">
 <title>General outline</title>
 
 <para>
-	The <application/slonik/ commandline utility is supposed to be
+	The <application>slonik</application> commandline utility is supposed to be
 	used embedded into shell scripts and reads commands from files
 	or stdin (via here documents for example). Nearly all of the
 	<emphasis>real</emphasis> configuration work is done by
 	calling stored procedures after loading the
-	<productname/Slony-I/ support base into a database.  You may
+	<productname>Slony-I</productname> support base into a database.  You may
 	find documentation for those procedures in the <ulink
-	url="schemadoc.html"> <productname/Slony-I/ Schema
-	Documentation </ulink>, as well as in comments associated with
+	url="schemadoc"><productname>Slony-I</productname> Schema
+	Documentation</ulink>, as well as in comments associated with
 	them in the database.
 </para>
 
       <para>
-	<Application/Slonik/ was created because:
+	<Application>Slonik</Application> was created because:
       <itemizedlist>
 
-	<listitem><para> The stored procedures have special
+	<listitem><para>The stored procedures have special
 	requirements as to on which particular node in the replication
-	system they are called,
+	system they are called,</para></listitem>
 
-	<listitem><para> The lack of named parameters for stored
+	<listitem><para>The lack of named parameters for stored
 	procedures makes it rather difficult to do this from the
-	<application/psql/ prompt, and
+	<application>psql</application> prompt, and</para></listitem>
 
-	<listitem><para> <application/psql/ lacks the ability to
-	maintain multiple connections with open transactions.
+	<listitem><para><application>psql</application>lacks the ability to
+	maintain multiple connections with open transactions.</para></listitem>
       </itemizedlist>
-</para>
+      </para>
 <para>
 	
 </para>
@@ -57,10 +59,10 @@
 <para>
 	Option values may be:
 	<itemizedlist>
-		<listitem><para>integer values
-		<listitem><para>string literals enclosed in single quotes
-		<listitem><para>boolean values {TRUE|ON|YES} or {FALSE|OFF|NO}
-		<listitem><para>keywords for special cases
+		<listitem><para>integer values</para></listitem>
+		<listitem><para>string literals enclosed in single quotes</para></listitem>
+		<listitem><para>boolean values {TRUE|ON|YES} or {FALSE|OFF|NO}</para></listitem>
+		<listitem><para>keywords for special cases</para></listitem>
 	</itemizedlist>
 </para>
 <sect3><title>Comments</title>
@@ -259,58 +261,61 @@ try {
 
 
 <!-- **************************************** -->
-<reference id="cmds"><title>Configuration and Action commmands</title>
+<reference id="cmds">
+	<title>Configuration and Action commmands</title>
+	<refentry id ="stmtinitcluster">
+		<refmeta>
+			<refentrytitle>INIT CLUSTER</refentrytitle>
+		</refmeta>
 
-<refentry id ="stmtinitcluster"><refmeta><refentrytitle>INIT CLUSTER</refentrytitle> </refmeta>
+		<refnamediv>
+			<refname>INIT CLUSTER</refname>
 
-<refnamediv><refname>INIT CLUSTER</refname>
+			<refpurpose>Initialize <productname>Slony-I</productname> cluster</refpurpose>
+			<refsynopsisdiv>
+				<cmdsynopsis>
+					<command>INIT CLUSTER</command> 
+					<arg>ID = <replaceable class="parameter">integer</replaceable></arg>
+					<arg>COMMENT = <replaceable class="parameter">'string'</replaceable></arg>
+				</cmdsynopsis>
+			</refsynopsisdiv>
+			<refsect1>
+				<title>Description</title>
+				<para> Initialize the first node in a new <productname/Slony-I/
+				replication cluster.  The initialization process consists of creating
+				the cluster namespace, loading all the base tables, functions,
+				procedures and initializing the node.
 
-<refpurpose> Initialize <productname/Slony-I/ cluster </refpurpose>
-<refsynopsisdiv>
-<cmdsynopsis>
-<command>INIT CLUSTER </command> 
-<arg>ID = <replaceable class="parameter">integer</replaceable></arg>
-<arg>COMMENT = <replaceable class="parameter">'string'</replaceable></arg>
-</cmdsynopsis>
-</refsynopsisdiv>
-<refsect1>
-<title>Description</title>
+				<variablelist>
+					<varlistentry><term><literal>ID</literal></term>
+						<listitem><para>The unique, numeric ID number of the node.</para></listitem>
+					</varlistentry>
 
-<para> Initialize the first node in a new <productname/Slony-I/
-replication cluster.  The initialization process consists of creating
-the cluster namespace, loading all the base tables, functions,
-procedures and initializing the node.
+ 					<varlistentry><term><literal>COMMENT = 'comment text'</literal></term>
+						<listitem><para> A descriptive text added to the node entry in the table sl_node.</para></listitem>
+					</varlistentry>
+				</variablelist>
 
-<variablelist>
- <varlistentry><term><literal> ID </literal></term>
-  <listitem><para> The unique, numeric ID number of the node. </para>
- </varlistentry>
+				</para>
 
- <varlistentry><term><literal> COMMENT = 'comment text' </literal></term>
-  <listitem><para> A descriptive text added to the node entry in the table sl_node.</para>
- </varlistentry>
-</variablelist>
-
-</para>
-
-<para> For this process to work, the SQL scripts of the
-<productname>Slony-I</productname> system must be installed on the DBA workstation
-(the computer currently executing the <application>slonik</application> utility),
-while on the system where the node database is running the shared
-objects of the <productname>Slony-I</productname> system must be installed in the
-PostgreSQL library directory. Also the procedural language PL/pgSQL is
-assumed to already be installed in the target database.  </para>
-
-</Refsect1>
-<Refsect1><Title>Example</Title>
-<Programlisting>
-  INIT CLUSTER (
-      ID = 1,
-      COMMENT = 'Node 1'
-  );
-</Programlisting>
-</Refsect1>
-</Refentry>
+				<para> For this process to work, the SQL scripts of the
+				<productname>Slony-I</productname> system must be installed on the DBA workstation
+				(the computer currently executing the <application>slonik</application> utility),
+				while on the system where the node database is running the shared
+				objects of the <productname>Slony-I</productname> system must be installed in the
+				PostgreSQL library directory. Also the procedural language PL/pgSQL is
+				assumed to already be installed in the target database.</para>
+			</Refsect1>
+			<Refsect1>
+				<Title>Example</Title>
+				<Programlisting>
+					INIT CLUSTER (
+						ID = 1,
+						COMMENT = 'Node 1'
+					);
+				</Programlisting>
+			</Refsect1>
+	</Refentry>
 
 <!-- **************************************** -->
 
@@ -329,7 +334,7 @@ assumed to already be installed in the target database.  </para>
 <title>Description</title>
 
 <para> Initialize a new node and add it to the configuration of an
-existing cluster.
+existing cluster.</para>
 
 <para> The initialization process consists of creating the cluster
 namespace in the new node (the database itself must already exist),
@@ -338,30 +343,31 @@ the node. The existing configuration of the rest of the cluster is
 copied from the <quote>event node</quote>.
 
 <variablelist>
- <varlistentry><term><literal> ID  = ival </literal></term>
-  <listitem><para> The unique, numeric ID number of the new node. </para>
+ <varlistentry><term><literal>ID  = ival</literal></term>
+  <listitem><para> The unique, numeric ID number of the new node.</para></listitem>
  </varlistentry>
 
  <varlistentry><term><literal> COMMENT = 'description' </literal></term>
-  <listitem><para> A descriptive text added to the node entry in the table sl_node.</para>
+  <listitem><para> A descriptive text added to the node entry in the table sl_node.</para></listitem>
  </varlistentry>
 
  <varlistentry><term><literal> SPOOLNODE = boolean </literal></term>
 
-  <listitem><para> Specifies that the new node is a virtual spool node
+  <listitem><para>Specifies that the new node is a virtual spool node
   for file archiving of replication log. If true <application/slonik/
   will not attempt to initialize a database with the replication
-  schema. </para>
+  schema.</para></listitem>
 
  </varlistentry>
  <varlistentry><term><literal> EVENT NODE = ival </literal></term>
 
   <listitem><para> The ID of the node used to create the configuration
   event that tells all existing nodes about the new node. Default
-  value is 1. </para>
+  value is 1.</para></listitem>
  </varlistentry>
 </variablelist>
 </para>
+
 </Refsect1>
 <Refsect1><Title>Example</Title>
 <Programlisting>
@@ -392,10 +398,10 @@ copied from the <quote>event node</quote>.
 
 <variablelist>
  <varlistentry><term><literal> ID  = ival </literal></term>
-  <listitem><para> Node ID of the node to remove. </para>
+  <listitem><para> Node ID of the node to remove.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-  <listitem><para> Node ID of the node to generate the event. </para>
+  <listitem><para> Node ID of the node to generate the event.</para></listitem>
  </varlistentry>
 </variablelist>
 </para>
@@ -430,7 +436,7 @@ copied from the <quote>event node</quote>.
 
 <variablelist>
  <varlistentry><term><literal> ID  = ival </literal></term>
-  <listitem><para> Node ID of the node to uninstall. </para>
+  <listitem><para> Node ID of the node to uninstall.</para></listitem>
  </varlistentry>
 </variablelist>
 </para>
@@ -466,7 +472,7 @@ former forwarding node failed and needs to be bypassed by subscribers.
 
 <variablelist>
  <varlistentry><term><literal> ID  = ival </literal></term>
-  <listitem><para> Node ID of the node to restart. </para>
+  <listitem><para> Node ID of the node to restart.</para></listitem>
  </varlistentry>
 </variablelist>
 </para>
@@ -518,18 +524,18 @@ overwritten.</para>
 
 <variablelist>
  <varlistentry><term><literal> SERVER  = ival </literal></term>
-  <listitem><para> Node ID of the database to connect to. </para>
+  <listitem><para> Node ID of the database to connect to.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> CLIENT  = ival </literal></term>
-  <listitem><para> Node ID of the replication daemon connecting. </para>
+  <listitem><para> Node ID of the replication daemon connecting.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> CONNINFO  = string </literal></term>
-  <listitem><para> <function/PQconnectdb()/ argument to establish the connection. </para>
+  <listitem><para> <function/PQconnectdb()/ argument to establish the connection.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> CONNRETRY  = ival </literal></term>
   <listitem><para> Number of seconds to wait before another attempt to
   connect is made in case the server is unavailable. Default is 10.
- </para>
+  </para></listitem>
  </varlistentry>
 </variablelist>
 </para>
@@ -567,10 +573,10 @@ overwritten.</para>
 
 <variablelist>
  <varlistentry><term><literal> SERVER  = ival </literal></term>
-  <listitem><para> Node ID of the database to connect to. </para>
+  <listitem><para> Node ID of the database to connect to.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> CLIENT  = ival </literal></term>
-  <listitem><para> Node ID of the replication daemon connecting. </para>
+  <listitem><para> Node ID of the replication daemon connecting.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> EVENT NODE = ival </literal></term>
 
@@ -629,14 +635,14 @@ to exist so that the receiver (as client) can connect to the provider
 
 <variablelist>
  <varlistentry><term><literal> ORIGIN  = ival </literal></term>
-  <listitem><para> Node ID of the event origin the receiver is listening for. </para>
+  <listitem><para> Node ID of the event origin the receiver is listening for.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> PROVIDER  = ival </literal></term>
-  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para>
+  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> RECEIVER = ival </literal></term>
 
-  <listitem><para> The ID of the node receiving the events. </para>
+  <listitem><para> The ID of the node receiving the events.</para></listitem>
  </varlistentry>
 </variablelist>
 
@@ -671,14 +677,14 @@ linkend="listenpaths"> Slony-I Listen Paths. </link>
 
 <variablelist>
  <varlistentry><term><literal> ORIGIN  = ival </literal></term>
-  <listitem><para> Node ID of the event origin the receiver is listening for. </para>
+  <listitem><para> Node ID of the event origin the receiver is listening for.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> PROVIDER  = ival </literal></term>
-  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para>
+  <listitem><para> Node ID of the node from which the receiver gets events that come from the origin.   If not specified, default is the origin.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> RECEIVER = ival </literal></term>
 
-  <listitem><para> The ID of the node receiving the events. </para>
+  <listitem><para> The ID of the node receiving the events.</para></listitem>
  </varlistentry>
 </variablelist>
 
@@ -727,13 +733,13 @@ linkend="listenpaths"> Slony-I Listen Paths. </link>
  <varlistentry><term><literal> NODE ID = ival </literal></term>
   <listitem><para> Node ID of the set origin where the table will be
   added as a set member. (See <link linkend="stmtsetaddtable">
-  <command/ SET ADD TABLE / </link>.)  </para>
+  <command>SET ADD TABLE</command></link>.)</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> FULLY QUALIFIED NAME  = 'string' </literal></term>
   <listitem><para> The full name of the table consisting of the schema
   and table name as the SQL expression <command>quote_ident(nspname)
   || '.' || quote_ident(relname)</command>
-   would return it.  </para>
+   would return it.</para></listitem>
  </varlistentry>
 </variablelist>
 
@@ -784,13 +790,13 @@ linkend="listenpaths"> Slony-I Listen Paths. </link>
 
 <variablelist>
  <varlistentry><term><literal> ID = ival </literal></term>
-  <listitem><para> ID of the set to be created.  </para>
+  <listitem><para> ID of the set to be created.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> ORIGIN = ival </literal></term>
-  <listitem><para> Initial origin node of the set.  </para>
+  <listitem><para> Initial origin node of the set.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> COMMENT = 'string' </literal></term>
-  <listitem><para> A descriptive text added to the set entry.  </para>
+  <listitem><para> A descriptive text added to the set entry.</para></listitem>
  </varlistentry>
 </variablelist>
 
@@ -829,10 +835,10 @@ linkend="listenpaths"> Slony-I Listen Paths. </link>
 
 <variablelist>
  <varlistentry><term><literal> ID = ival </literal></term>
-  <listitem><para> ID of the set to be dropped.  </para>
+  <listitem><para> ID of the set to be dropped.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> ORIGIN = ival </literal></term>
-  <listitem><para> Current origin node of the set.  </para>
+  <listitem><para> Current origin node of the set.</para></listitem>
  </varlistentry>
 </variablelist>
 
@@ -876,7 +882,7 @@ linkend="listenpaths"> Slony-I Listen Paths. </link>
 
 <variablelist>
  <varlistentry><term><literal> ID = ival </literal></term>
-  <listitem><para> Unique ID of the set to contain the union of the two separate sets.  </para>
+  <listitem><para> Unique ID of the set to contain the union of the two separate sets.</para></listitem>
  </varlistentry>
  <varlistentry><term><literal> ADD ID = ival </literal></term>
   <listitem><para> Unique ID of the set whose objects should be transferred.  </para>

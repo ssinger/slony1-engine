@@ -1,13 +1,5 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.1 2004-12-17 23:30:03 darcyb Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.2 2004-12-21 15:12:57 darcyb Exp $ -->
 
-<book id="database.schemadoc" xreflabel="schemadoc database schema"><title>schemadoc Model</title>
-
-
-
-
-  <chapter id="schemadoc.schema"
-           xreflabel="schemadoc">
-    <title>Schema schemadoc</title>
     <para></para>
 
 
@@ -9146,9 +9138,4 @@ begin
 end;
 </programlisting>
       </para>
-    </section>
-
-  </chapter>
-
-</book>
 

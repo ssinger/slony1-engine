@@ -1,14 +1,15 @@
-<sect1 id="introduction"> <title>Introduction to Slony-I</title>
+<article id="introduction">
+	<title>Introduction to Slony-I</title>
+	<sect1>
+		<title>Why yet another replication system?</title>
 
-<sect2> <title>Why yet another replication system? </title>
-
-<para>Slony-I was born from an idea to create a replication system that was not tied
+		<para>Slony-I was born from an idea to create a replication system that was not tied
 to a specific version of PostgreSQL, which is allowed to be started and stopped on
-an existing database with out the need for a dump/reload cycle.</para></sect2>
-
-<sect2> <title>What Slony-I is</title>
-
-<para>Slony-I is a <quote>master to multiple slaves</quote> replication
+an existing database with out the need for a dump/reload cycle.</para>
+	</sect1>
+	<sect1>
+		<title>What Slony-I is</title>
+		<para>Slony-I is a <quote>master to multiple slaves</quote> replication
 system supporting cascading and slave promotion.  The big picture for
 the development of Slony-I is as a master-slave system that includes
 all features and capabilities needed to replicate large databases to a
@@ -17,10 +18,10 @@ context, is probably no more than a few dozen servers.  If the number
 of servers grows beyond that, the cost of communications becomes
 prohibitively high.</para>  
 
-<para> See also <link linkend="slonylistenercosts"> SlonyListenerCosts
+		<para> See also <link linkend="slonylistenercosts"> SlonyListenerCosts
 </link> for a further analysis.</para>
 
-<para> Slony-I is a system intended for data centers and backup sites,
+		<para> Slony-I is a system intended for data centers and backup sites,
 where the normal mode of operation is that all nodes are available all
 the time, and where all nodes can be secured.  If you have nodes that
 are likely to regularly drop onto and off of the network, or have
@@ -31,10 +32,10 @@ replication solution for you.</para>
 extension where updates would be serialized into files.  Given that,
 log files could be distributed by any means desired without any need
 of feedback between the provider node and those nodes subscribing via
-<quote>log shipping.</quote></para></sect2>
+<quote>log shipping.</quote></para></sect1>
 
 
-<sect2><title> Slony-I is not</title>
+<sect1><title> Slony-I is not</title>
 
 <para>Slony-I is not a network management system.</para>  
 
@@ -48,9 +49,9 @@ it doesn't make you coffee and toast in the morning.</para>
 <para>(That being said, the plan is for a subsequent system, Slony-II,
 to provide "multimaster" capabilities, and be "bootstrapped" using
 Slony-I.  But that is a separate project, and expectations for Slony-I
-should not be based on hopes for future projects.)</para></sect2>
+should not be based on hopes for future projects.)</para></sect1>
 
-<sect2><title> Why doesn't Slony-I do automatic fail-over/promotion? 
+<sect1><title> Why doesn't Slony-I do automatic fail-over/promotion? 
 </title>
 
 <para>This is the job of network monitoring software, not Slony.
@@ -62,9 +63,9 @@ network setup, vendor choice, hardware/software combination.  This is
 clearly the realm of network management software and not
 Slony-I.</para>
 
-<para>Let Slony-I do what it does best: provide database replication.</para></sect2>
+<para>Let Slony-I do what it does best: provide database replication.</para></sect1>
 
-<sect2><title> Current Limitations</title>
+<sect1><title> Current Limitations</title>
 
 <para>Slony-I does not automatically propagate schema changes, nor
 does it have any ability to replicate large objects.  There is a
@@ -100,9 +101,9 @@ server</quote> which cannot be used without it ceasing to be
 
 <para>There are a number of distinct models for database replication;
 it is impossible for one replication system to be all things to all
-people.</para></sect2>
+people.</para></sect1>
 
-<sect2 id="slonylistenercosts"><title> Slony-I Communications
+<sect1 id="slonylistenercosts"><title> Slony-I Communications
 Costs</title>
 
 <para>The cost of communications grows in a quadratic fashion in
@@ -139,9 +140,9 @@ communications network resulting from the number of nodes being large.
 Up to a half dozen nodes seems pretty reasonable; every time the
 number of nodes doubles, this can be expected to quadruple
 communications overheads.</para>
-</sect2>
-
 </sect1>
+
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

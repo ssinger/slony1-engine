@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.5 2004-12-20 16:55:06 darcyb Exp $
+# $Id: Makefile,v 1.6 2004-12-21 15:12:57 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ include $(slony_top_builddir)/Makefile.global
 .NOTPARALLEL:
 
 
-GENERATED_SGML = bookindex.sgml 
+GENERATED_SGML = bookindex.sgml version.sgml
 
 ALLSGML := $(wildcard $(srcdir)/*.sgml $(GENERATED_SGML))
 
@@ -167,7 +167,7 @@ regress_README.html: regress.sgml
 OSX = osx # (may be called sx or sgml2xml on some systems)
 XSLTPROC = xsltproc
 
-postgres.xml: postgres.sgml $(GENERATED_SGML)
+slony.xml: slony.sgml $(GENERATED_SGML)
 	$(OSX) -x lower $< | \
 	  sed -e 's/\[\(lt\|gt\|amp\|nbsp\|copy\|quot\|ouml\|uuml\|egrave\) *\]/\&\1;/g' \
 	      -e '1a\' -e '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">' \
@@ -182,7 +182,7 @@ testxml: stylesheet.xsl postgres.xml
 ##
 
 # Quick syntax check without style processing
-check: postgres.sgml $(ALLSGML)
+check: slony.sgml $(ALLSGML) $(GENERATED_SGML)
 	$(NSGMLS) $(SPFLAGS) $(SGMLINCLUDE) -s $<
 
 
@@ -218,3 +218,9 @@ schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	$(PGAUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t xml -f schemadoc ;\
 	$(pgbindir)/dropdb $(TEMPDB) >/dev/null 2>&1 \
 	) || echo "unable to createdb $(TEMPDB)"
+
+version.sgml:	$(slony_top_builddir)/Makefile.global
+	{ \
+	echo "<!entity version \"$(VERSION)\">"; \
+	echo "<!entity majorversion \"`expr $(VERSION) : '\([0-9][0-9]*\.[0-9][0-9]*\)'`\">"; \
+	} >$@

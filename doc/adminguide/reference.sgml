@@ -1,6 +1,6 @@
-<reference id="slony-commands"> <title>Slony-I Commands</title>
-
-&slon;
-&slonik;
-&slonikref;
+<chapter id="slony-commands">
+	<title>Slony-I Commands</title>
+	&slon;
+	&slonik;
+	&slonikref;
 
