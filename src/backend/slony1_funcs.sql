@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.44 2004-11-25 18:34:38 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.45 2004-11-25 18:47:22 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4669,9 +4669,10 @@ BEGIN
 	else
 		return 0;
 	end if;
-END' language plpgsql;
+END;
+' language plpgsql;
 
-comment on function @NAMESPACE@.generate_sync_event() is
+comment on function @NAMESPACE@.generate_sync_event(interval) is
   'Generate a sync event if there has not been one in 30 seconds.';
 
 -- ----------------------------------------------------------------------
