@@ -1,5 +1,5 @@
 #!perl # -*- perl -*-
-# $Id: move_set.pl,v 1.3 2004-09-09 17:04:07 cbbrowne Exp $
+# $Id: move_set.pl,v 1.4 2004-12-02 21:44:12 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -37,7 +37,6 @@ print SLONIK qq[
                 lock set (id = $set, origin = $node1);
                 echo 'Locked down - moving it';
                 move set (id = $set, old origin = $node1, new origin = $node2);
-                unlock set (id = $set, origin = $node2);
         }
         on error {
                 echo 'Failure to move set $set from $node1 to $node2';
