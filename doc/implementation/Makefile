@@ -4,12 +4,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.4 2004-03-18 19:32:21 wieck Exp $
+# $Id: Makefile,v 1.5 2004-07-20 09:15:30 dfetter Exp $
 # ----------
 
-subdir = doc/implementation
-top_builddir = ../..
-include $(top_builddir)/Makefile.global
+slony_subdir = doc/implementation
+slony_top_builddir = ../..
+include $(slony_top_builddir)/Makefile.global
 
 GROFF	= groff
 GOPTS	= -U -t -p -ms -mpspic

@@ -265,10 +265,10 @@ SHELL=${CONFIG_SHELL-/bin/sh}
 : ${ac_max_here_lines=38}
 
 # Identity of this package.
-PACKAGE_NAME='slony1-engine'
-PACKAGE_TARNAME='slony1-engine'
-PACKAGE_VERSION='1.0.0'
-PACKAGE_STRING='slony1-engine 1.0.0'
+PACKAGE_NAME='postgresql-slony1-engine'
+PACKAGE_TARNAME='postgresql-slony1-engine'
+PACKAGE_VERSION='1.0.1'
+PACKAGE_STRING='slony1-engine 1.0.1'
 PACKAGE_BUGREPORT=''
 
 ac_unique_file="src"

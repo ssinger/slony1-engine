@@ -1,5 +1,5 @@
 Summary: A "master to multiple slaves" replication system with cascading and failover.
-Name: postgresql-@PACKAGE_NAME@
+Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
 Release: 1
 License: Berkeley/BSD

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.11 2004-07-12 18:52:18 xfade Exp $
+#	$Id: Makefile,v 1.12 2004-07-20 09:15:31 dfetter Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -24,7 +24,7 @@ ALL =					\
 	$(SO_NAME)			\
 	$(SQL_NAMES)		\
 
-DISTFILES = Makefile xxid.c xxid.v73.sql.in
+DISTFILES = Makefile xxid.c xxid.v73.sql
 
 all:	$(ALL)
 

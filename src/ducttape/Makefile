@@ -4,12 +4,12 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.7 2004-07-01 02:24:35 wieck Exp $
+#	$Id: Makefile,v 1.8 2004-07-20 09:15:31 dfetter Exp $
 # ----------
 
-subdir = src/ducttape
-top_builddir = ../..
-include $(top_builddir)/Makefile.global
+slony_subdir = src/ducttape
+slony_top_builddir = ../..
+include $(slony_top_builddir)/Makefile.global
 
 DISTFILES = Makefile README test_1_pgbench test_2_extra_1 test_2_extra_2 test_2_pgbench test_3_pgbench
 

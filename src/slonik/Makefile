@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.9 2004-07-17 18:31:17 xfade Exp $
+#	$Id: Makefile,v 1.10 2004-07-20 09:15:31 dfetter Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -29,7 +29,7 @@ OBJS		= 			\
 	dbutil.o			\
 	parser.o
 
-DISTFILES = Makefile.in $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
+DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =					\
 	$(PROG)

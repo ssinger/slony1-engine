@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.19 2004-07-17 18:31:32 xfade Exp $
+#	$Id: Makefile,v 1.20 2004-07-20 09:15:31 dfetter Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -38,7 +38,7 @@ OBJS		= 			\
 	dbutils.o			\
 	misc.o
 
-DISTFILES = Makefile.in README $(wildcard *.c) $(wildcard *.h)
+DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h)
 
 ALL =				\
 	$(PROG)
@@ -64,11 +64,11 @@ clean distclean maintainer-clean:
 	rm -f $(ALL) $(OBJS)
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR) $(pgbindir) 
+	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(pgbindir) 
 
 
 installdirs:
-	echo $(mkinstalldirs) $(DESTDIR) $(pgbindir)
+	$(mkinstalldirs) $(DESTDIR)$(pgbindir)
 
 
 
