@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.10 2004-10-22 15:26:25 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.11 2005-01-24 18:42:36 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3714,7 +3714,10 @@ begin
 	return p_sub_set;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.enableSubscription_int (int4, int4, int4) is
+'Internal function to handle enabling of a subscription.  
+The real work is done in slon; this function just needs to update
+sl_subscribe to indicate that it occurred.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION forwardConfirm ()
@@ -3746,7 +3749,8 @@ begin
 	return v_max_seqno;
 end;
 ' language plpgsql;
-
+comment on function @NAMESPACE@.forwardConfirm(int4, int4, int8, timestamp) is
+'Store and forward a confirmation that a SYNC has been received.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION cleanupEvent ()
@@ -3761,7 +3765,8 @@ declare
 	v_max_sync	int8;
 begin
 	-- ----
-	-- First remove all but the oldest confirm row per origin,receiver pair
+	-- First remove all sl_confirm entries pointing to origins/receivers
+        -- that do not exist anymore in sl_node
 	-- ----
 	delete from @NAMESPACE@.sl_confirm
 				where con_origin not in (select no_id from @NAMESPACE@.sl_node);
@@ -3808,7 +3813,14 @@ begin
 	return 0;
 end;
 ' language plpgsql;
+comment on function @NAMESPACE@.cleanupEvent() is
+'Purges old data, getting rid of:
 
+ 1. Obsolete sl_confirm entries that reference nonexistent nodes
+ 2. All but the oldest confirm row for each (origin,receiver) pair,
+    ignoring young confirmations
+ 3. All events that have been confirmed by all nodes in the entire 
+    cluster';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableAddKey (tab_fqname)
@@ -4228,6 +4240,36 @@ begin
 end;
 ' language plpgsql;
 
+
+-- ----------------------------------------------------------------------
+-- FUNCTION generate_sync_event (interval)
+--
+--	This code can be used to create SYNC events every once in a while
+--      even if the 'master' slon daemon is down
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.generate_sync_event(interval)
+returns int4
+as '
+declare
+	p_interval     alias for $1;
+	v_node_row     record;
+
+BEGIN
+	select 1 into v_node_row from @NAMESPACE@.sl_event 
+       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''@NAMESPACE@'')
+          and ev_timestamp > now() - p_interval limit 1;
+	if not found then
+		-- If there has been no SYNC in the last interval, then push one
+		perform @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+		return 1;
+	else
+		return 0;
+	end if;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.generate_sync_event(interval) is
+  'Generate a sync event if there has not been one in 30 seconds.';
 
 -- **********************************************************************
 -- * Views
