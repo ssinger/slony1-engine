@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.39 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: slon.c,v 1.40 2005-01-10 23:45:32 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -74,7 +74,7 @@ main(int argc, char *const argv[])
 	InitializeConfOptions();
 
 
-	while ((c = getopt(argc, argv, "f:d:s:t:g:c:p:hv")) != EOF)
+	while ((c = getopt(argc, argv, "f:d:s:t:g:c:p:o:hv")) != EOF)
 	{
 		switch (c)
 		{
@@ -104,6 +104,10 @@ main(int argc, char *const argv[])
 
 		case 'p':
 			set_config_option("pid_file", optarg);
+			break;
+
+		case 'o':
+			set_config_option("desired_sync_time", optarg);
 			break;
 
 		case 'h':

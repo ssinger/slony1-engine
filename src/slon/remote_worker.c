@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.68 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: remote_worker.c,v 1.69 2005-01-10 23:45:32 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -210,7 +210,16 @@ pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int             sync_group_maxsize;
 
+int last_sync_group_size;
+int next_sync_group_size;
 
+int desired_sync_time = 60000;
+int ideal_sync ;
+struct timeval  sync_start;
+struct timeval  sync_end;
+int last_sync_length;
+int max_sync;
+int min_sync;
 /*
  * ---------- Local functions ----------
  */
@@ -431,8 +440,37 @@ remoteWorkerThread_main(void *cdata)
 
 			if (true)
 			{
+				/* Force last_sync_group_size to a reasonable range */
+				if (last_sync_group_size < 1) 
+					last_sync_group_size = 1;
+				if (last_sync_group_size > 100)
+					last_sync_group_size = 1;
+
+				gettimeofday(&sync_end, NULL);
+				last_sync_length = 
+					(sync_end.tv_sec - sync_start.tv_sec) * 1000 +
+					(sync_end.tv_usec - sync_start.tv_usec) / 1000;
+
+				/* Force last_sync_length to a reasonable range */
+				if ((last_sync_length < 10) || (last_sync_length > 1000000)) {
+						/* sync_length seems to be trash - force group size to 1 */
+					next_sync_group_size = 1;
+				} else {
+					/* Estimate an "ideal" number of syncs based on how long they took last time */
+					ideal_sync = (last_sync_group_size * desired_sync_time) / last_sync_length;
+					max_sync = ((last_sync_group_size * 110) / 100 ) + 1;
+					next_sync_group_size = ideal_sync;
+					if (next_sync_group_size > max_sync)
+						next_sync_group_size = max_sync;
+					if (next_sync_group_size < 1) 
+						next_sync_group_size = 1;
+					slon_log(SLON_DEBUG2, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
+							 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
+				}
+		
+				gettimeofday(&sync_start, NULL);
 				pthread_mutex_lock(&(node->message_lock));
-				while (sync_group_size < sync_group_maxsize && node->message_head != NULL)
+				while (sync_group_size < next_sync_group_size && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
 						break;
@@ -488,11 +526,13 @@ remoteWorkerThread_main(void *cdata)
 			 * further down).
 			 */
 			dstring_reset(&query1);
+			last_sync_group_size = 0;
 			for (i = 0; i < sync_group_size; i++)
 			{
 				query_append_event(&query1, sync_group[i]);
 				if (i < (sync_group_size - 1))
 					free(sync_group[i]);
+				last_sync_group_size++;
 			}
 			slon_appendquery(&query1, "commit transaction;");
 

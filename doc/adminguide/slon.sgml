@@ -1,164 +1,198 @@
-<!-- $Id: slon.sgml,v 1.4 2004-12-22 23:09:59 darcyb Exp $ -->
+<!-- $Id: slon.sgml,v 1.5 2005-01-10 23:45:33 cbbrowne Exp $ -->
 <refentry id="app-slon">
-	<refmeta>
-		<refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
-		<manvolnum>1</manvolnum>
-		<refmiscinfo>Application</refmiscinfo>
-	</refmeta>
-	<refnamediv>
-		<refname><application id="slon">slon</application></refname>
-		<refpurpose>
-			<productname>Slony-I</productname> daemon
-		</refpurpose>
-	</refnamediv>
+ <refmeta>
+  <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo>Application</refmiscinfo>
+ </refmeta>
+ <refnamediv>
+  <refname><application id="slon">slon</application></refname>
+  <refpurpose>
+   <productname>Slony-I</productname> daemon
+  </refpurpose>
+ </refnamediv>
+ 
+ <indexterm zone="app-slon">
+  <primary>slon</primary>
+ </indexterm>
+ 
+ <refsynopsisdiv>
+  <cmdsynopsis>
+   <command>slon</command>
+   <arg rep="repeat"><replaceable class="parameter">option</replaceable></arg>
+   <arg><replaceable class="parameter">clustername</replaceable></arg>
+   <arg><replaceable class="parameter">conninfo</replaceable></arg>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ 
+ <refsect1>
+  <title>Description</title>
+  <para>
+   <application>slon</application> is the daemon application that
+   <quote>runs</quote> <productname>Slony-I</productname>
+   replication.  A <application>slon</application> instance must be
+   run for each node in a <productname>Slony-I</productname>
+   cluster.
+  </para>
+ </refsect1>
+ 
+ <refsect1 id="R1-APP-SLON-3">
+  <title>Options</title>
+  
+  <variablelist>
+   <varlistentry>
+    <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable><//arg></term>
+    <listitem>
+     <para>
+      Specifies the level of verbosity that <application>slon</application> should
+      use when logging its activity.
+     </para>
+     <para>
+      The eight levels of logging are:
+      <itemizedlist>
+       <listitem><Para>Error</Para></listitem>
+       <listitem><Para>Warn</Para></listitem>
+       <listitem><Para>Config</Para></listitem>
+       <listitem><Para>Info</Para></listitem>
+       <listitem><Para>Debug1</Para></listitem>
+       <listitem><Para>Debug2</Para></listitem>
+       <listitem><Para>Debug3</Para></listitem>
+       <listitem><Para>Debug4</Para></listitem>
+      </itemizedlist>
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry>
+    <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable><//arg></term>
+    <listitem>
+     <para>
+      Specifies the interval, in milliseconds, in which
+      <application>slon</application> should add a SYNC even if none has been
+      mandated by data creation.  Default is 10000 ms.
+     </para>
+     
+     <para>
+      Short sync times keep the master on a <quote>short leash</quote>,
+      updating the slaves more frequently.  If you have replicated
+      sequences that are frequently updated <emphasis>without</emphasis> there
+      being tables that are affected, this keeps there from being times
+      when only sequences are updated, and therefore <emphasis>no</emphasis>
+      syncs take place
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry>
+    <term><option>-t</option><replaceable class="parameter">SYNC interval timeout</replaceable><//arg></term>
+    <listitem>
+     <para>
+      Default is 60000 ms.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry>
+    <term><option>-g</option><replaceable class="parameter">group size</replaceable><//arg></term>
+    <listitem>
+     <para>
+      Maximum SYNC group size; defaults to 6.  Thus, if a particular
+      node is behind by 200 SYNCs, it will try to group them together
+      into groups of 6.  This would be expected to reduce transaction
+      overhead due to having fewer transactions to <command>COMMIT</command>.
+     </para>
+     <para>
+      The default of 6 is probably suitable for small systems
+      that can devote only very limited bits of memory to slon.  If you
+      have plenty of memory, it would be reasonable to increase this,
+      as it will increase the amount of work done in each transaction,
+      and will allow a subscriber that is behind by a lot to catch up
+      more quickly.
+     </para>
+     <para>
+      Slon processes usually stay pretty small; even with large
+      value for this option, slon would be expected to only grow to a
+      few MB in size.
+     </para>
+    </listitem>
+   </varlistentry>
 
-	<indexterm zone="app-slon">
-	<primary>slon</primary>
-	</indexterm>
+   <varlistentry>
+    <term><option>-o</option><replaceable class="parameter">desired sync time</replaceable></term>
+    <listitem><para> A <quote>maximum</quote> time planned for grouped SYNCs.</para>
 
-	<refsynopsisdiv>
-		<cmdsynopsis>
-			<command>slon</command>
-			<arg rep="repeat"><replaceable class="parameter">option</replaceable></arg>
-			<arg><replaceable class="parameter">clustername</replaceable></arg>
-			<arg><replaceable class="parameter">conninfo</replaceable></arg>
-		</cmdsynopsis>
-	</refsynopsisdiv>
+     <para> If replication is running behind, slon will gradually
+      increase the numbers of SYNCs grouped together, targetting that
+      (based on the time taken for the <emphasis>last</emphasis> group
+      of SYNCs) they shouldn't take more than ths specified
+      <quote>desired sync time</quote>.</para>
 
-	<refsect1>
-		<title>Description</title>
-		<para>
-			<application>slon</application> is the daemon application that
-			<quote>runs</quote> <productname>Slony-I</productname>
-			replication.  A <application>slon</application> instance must be
-			run for each node in a <productname>Slony-I</productname>
-			cluster.
-		</para>
-	</refsect1>
+     <para> The default value is 60000ms, equal to one minute. </para>
 
-	<refsect1 id="R1-APP-SLON-3">
-		<title>Options</title>
+     <para> That way, you can expect (or at least hope!) that you'll
+      get a <command>COMMIT</command> roughly once per minute. </para>
 
-		<variablelist>
-			<varlistentry>
-				<term><option>-d</option><replaceable class="parameter">debuglevel</replaceable><//arg></term>
-				<listitem>
-					<para>
-						Specifies the level of verbosity that <application>slon</application> should
-						use when logging its activity.
-					</para>
-					<para>
-						The eight levels of logging are:
-						<itemizedlist>
-							<listitem><Para>Error</Para></listitem>
-							<listitem><Para>Warn</Para></listitem>
-							<listitem><Para>Config</Para></listitem>
-							<listitem><Para>Info</Para></listitem>
-							<listitem><Para>Debug1</Para></listitem>
-							<listitem><Para>Debug2</Para></listitem>
-							<listitem><Para>Debug3</Para></listitem>
-							<listitem><Para>Debug4</Para></listitem>
-						</itemizedlist>
-					</para>
-				</listitem>
-			</varlistentry>
+     <para> It isn't <emphasis>totally</emphasis> predictable, as it
+     is entirely possible for someone to request a <emphasis>very
+     large update,</emphasis> all as one transaction, that can
+     <quote>blow up</quote> the length of the resulting SYNC to be
+     nearly arbitrarily long.  In such a case, the heuristic will back
+     off for the <emphasis>next</emphasis> group.</para>
 
-			<varlistentry>
-				<term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable><//arg></term>
-				<listitem>
-					<para>
-						Specifies the interval, in milliseconds, in which
-						<application>slon</application> should add a SYNC even if none has been
-						mandated by data creation.  Default is 10000 ms.
-					</para>
+     <para> The overall effect is to improve
+     <productname>Slony-I</productname>'s ability to cope with
+     variations in traffic.  By starting with 1 SYNC, and gradually
+     moving to more, even if there turn out to be variations large
+     enough to cause <productname>PostgreSQL</productname> backends to
+     crash, <productname>Slony-I</productname> will back off down to
+     doing one sync at a time, if need be, so that if it is at all
+     possible for replication to progress, progress it will.</para>
+    </listitem>
+   </varlistentry>      
 
-					<para>
-						Short sync times keep the master on a <quote>short leash</quote>,
-						updating the slaves more frequently.  If you have replicated
-						sequences that are frequently updated <emphasis>without</emphasis> there
-						being tables that are affected, this keeps there from being times
-						when only sequences are updated, and therefore <emphasis>no</emphasis>
-						syncs take place
-					</para>
-				</listitem>
-			</varlistentry>
-
-			<varlistentry>
-				<term><option>-t</option><replaceable class="parameter">SYNC interval timeout</replaceable><//arg></term>
-				<listitem>
-					<para>
-						Default is 60000 ms.
-					</para>
-				</listitem>
-			</varlistentry>
-
-			<varlistentry>
-				<term><option>-g</option><replaceable class="parameter">group size</replaceable><//arg></term>
-				<listitem>
-					<para>
-						Maximum SYNC group size; defaults to 6.  Thus, if a particular
-						node is behind by 200 SYNCs, it will try to group them together
-						into groups of 6.  This would be expected to reduce transaction
-						overhead due to having fewer transactions to <command>COMMIT</command>.
-					</para>
-					<para>
-						The default of 6 is probably suitable for small systems
-						that can devote only very limited bits of memory to slon.  If you
-						have plenty of memory, it would be reasonable to increase this,
-						as it will increase the amount of work done in each transaction,
-						and will allow a subscriber that is behind by a lot to catch up
-						more quickly.
-					</para>
-					<para>
-						Slon processes usually stay pretty small; even with large
-						value for this option, slon would be expected to only grow to a
-						few MB in size.
-					</para>
-				</listitem>
-			</varlistentry>
-
-			<varlistentry>
-				<term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable><//arg></term>
-				<listitem>
-					<para>
-						How often to <command>VACUUM</command> in cleanup cycles.
-					</para>
-					<para>
-						Set this to zero to disable slon-initiated vacuuming. If
-						you are using something like <application>pg_autovacuum</application>
-						to initiate vacuums, you may not need for slon to initiate vacuums itself.
-						If you are not, there are some tables Slony-I uses that collect a
-						<emphasis>lot</emphasis> of dead tuples that should be vacuumed frequently.
-					</para>
-				</listitem>
-			</varlistentry>
-
-			<varlistentry>
-				<term><option>-p</option><replaceable class="parameter">PID filename</replaceable><//arg></term>
-				<listitem>
-					<para>
-						PID filename.
-					</para>
-				</listitem>
-			</varlistentry>
-
-			<varlistentry>
-				<term><option>-f</option><replaceable class="parameter">config file</replaceable><//arg></term>
-				<listitem>
-					<para>
-						File containing <application>slon</application> configuration.
-					</para>
-				</listitem>
-			</varlistentry>
-		</variablelist>
-	</refsect1>
-	<refsect1>
-		<title>Exit Status</title>
-		<para>
-			<application>slon</application> returns 0 to the shell if it
-			finished normally.  It returns -1 if it encounters any fatal error.
-		</para>
-	</refsect1>
+   <varlistentry>
+    <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable><//arg></term>
+    <listitem>
+     <para>
+      How often to <command>VACUUM</command> in cleanup cycles.
+     </para>
+     <para>
+      Set this to zero to disable slon-initiated vacuuming. If
+      you are using something like <application>pg_autovacuum</application>
+      to initiate vacuums, you may not need for slon to initiate vacuums itself.
+      If you are not, there are some tables Slony-I uses that collect a
+      <emphasis>lot</emphasis> of dead tuples that should be vacuumed frequently.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   
+   <varlistentry>
+    <term><option>-p</option><replaceable class="parameter">PID filename</replaceable><//arg></term>
+    <listitem>
+     <para>
+      PID filename.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry>
+    <term><option>-f</option><replaceable class="parameter">config file</replaceable><//arg></term>
+    <listitem>
+     <para>
+      File containing <application>slon</application> configuration.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1>
+  <title>Exit Status</title>
+  <para>
+   <application>slon</application> returns 0 to the shell if it
+   finished normally.  It returns -1 if it encounters any fatal error.
+  </para>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file

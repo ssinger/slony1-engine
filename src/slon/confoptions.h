@@ -23,6 +23,7 @@ extern int sync_interval;
 extern int sync_interval_timeout;
 
 extern int sync_group_maxsize;
+extern int desired_sync_time;
 
 char *Syslog_ident;
 char *Syslog_facility;
@@ -153,6 +154,20 @@ static struct config_int ConfigureNamesInt[] =
 		20,
 		0,
 		500
+	},
+	{
+		{
+			(const char *)"desired_sync_time",
+			gettext_noop("maximum time planned for grouped SYNCs"),
+			gettext_noop("If replication is behind, slon will try to increase numbers of "
+						 "syncs done targetting that they should take this quantity of "
+						 "time to process"),
+			SLON_C_INT
+		},
+		&desired_sync_time,
+		60000,
+		10000,
+		600000
 	},
 #ifdef HAVE_SYSLOG
 	{
