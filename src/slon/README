@@ -5,31 +5,12 @@ This directory contains the main replication engine.
 
 STATUS:
 	
-	Multithreaded framework started.
-
-	Engine reads tables sl_node, sl_path and sl_listen on startup
-	and starts 3 local threads (sync, cleanup, listen) as well
-	as one thread per remote node. All threads connect to their
-	databases and have timer/listen+notify behaviour.
+	Slon can process several events up to ENABLE_SUBSCRIPTION which
+	include the data copy process.
 
 TODO:
 
- 	Read set subscription information on startup.
+	SYNC
 
-	Create one local database connection per origin we are subscribing
-	data from. A remote SYNC event from that origin will be replicated
-	into the local database via that connection.
-
-  local threads:
-
-	SyncThread:		Generate SYNC event if sl_action_seq changes.
-
-	CleanupThread:	Call cleanup procedure and vacuum database.
-
-	EventThread:	Select configuration changes and process them.
-
-  remote threads:
-
-    EventThread:	Exchange confirm information.
-					Select new events and process them.
+	All other admin events (especially drop)
 
