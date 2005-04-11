@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.57 2005-04-11 15:45:53 xfade Exp $
+-- $Id: slony1_funcs.sql,v 1.58 2005-04-11 21:43:01 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -644,7 +644,7 @@ begin
 			and SUB.sub_receiver = p_no_id
 			for update of S
 	loop
-		perform @NAMESPACE@.enableSubscription (v_sub_row.sub_set,,
+		perform @NAMESPACE@.enableSubscription (v_sub_row.sub_set,
 				v_sub_row.sub_provider, p_no_id);
 	end loop;
 
