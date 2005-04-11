@@ -6,10 +6,11 @@
   </indexterm>
 
   <para>
-    There are several configuration parameters that affect the behavior of the 
-    replication system.  In this section, we describe how to set the slon daemon's
-    configuration parameters; the following subsections discuss each parameter 
-    in detail.
+    There are several configuration parameters that affect the
+    behavior of the replication system.  In this section, we describe
+    how to set the <application>slon</application> daemon's
+    configuration parameters; the following subsections discuss each
+    parameter in detail.
   </para>
 
   <para>
@@ -30,8 +31,8 @@
   </para>
 
   <para>
-    Some options may be set through the Command-line, these options override any
-    conflicting settings in the conf file.
+    Some options may be set through the Command-line, these options
+    override any conflicting settings in the configuration file.
   </para>
 
 
@@ -58,9 +59,10 @@
         <primary><varname>syslog_facility</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Sets the syslog "facility" to be used when syslog enabled.  Valid
-          values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, LOCAL4, LOCAL5, LOCAL6, LOCAL7.
-          The default is LOCAL0.
+        <para>Sets the syslog <quote>facility</quote> to be used when
+        syslog enabled.  Valid values are LOCAL0, LOCAL1, LOCAL2,
+        LOCAL3, LOCAL4, LOCAL5, LOCAL6, LOCAL7.  The default is
+        LOCAL0.
         </para>
       </listitem>
     </varlistentry>
@@ -95,7 +97,7 @@
       </indexterm>
       <listitem>
         <para>Determins, if you would like the pid of the (parent) slon process to
-          apear in each log line entry.
+          appear in each log line entry.
         </para>
       </listitem>
     </varlistentry>
@@ -106,8 +108,8 @@
         <primary><varname>log_timestamp</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Determins, if you would like the timestamp of the event being logged to 
-          apear in each log line entry.
+        <para>Determines if you would like the timestamp of the event being logged to 
+          appear in each log line entry.
         </para>
       </listitem>
     </varlistentry>
@@ -118,8 +120,9 @@
         <primary><varname>log_timestamp_format</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>A strftime()-conformant format string for use if log_timestamp is enabled. 
-          The default is '%Y-%m-%d %H:%M:%S %Z'
+        <para>A <function>strftime()</function>-conformant format
+        string for use if <envar>log_timestamp</envar> is enabled. The
+        default is <quote>%Y-%m-%d %H:%M:%S %Z</quote>
         </para>
       </listitem>
     </varlistentry>
@@ -130,8 +133,9 @@
         <primary><varname>pid_file</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Location and filename you would like for the pid file. The default 
-          is not defined in which case no pid file is written.
+        <para>Location and filename you would like for a file
+        containing the Process ID of the slon process. The default is
+        not defined in which case no file is written.
         </para>
       </listitem>
     </varlistentry>
@@ -142,40 +146,43 @@
   <title>Connection settings</title>
   <variablelist>
     <varlistentry id="slon-config-connection-cluster-name" xreflabel="slon_conf_cluster_name">
-      <term><varname>cluster_name  (<type>string</type>)</term>
+      <term><varname>cluster_name</varname>  (<type>string</type>) </term>
       <indexterm>
         <primary><varname>cluster_name</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Set the cluster name that this instance of slon is running against. 
-          The default is to read it off the command line.
+          Set the cluster name that this instance of
+          <application>slon</application> is running against. The
+          default is to read it off the command line.
         </para>
       </listitem>
     </varlistentry>
 
     <varlistentry id="slon-config-connection-conn-info" xreflabel="slon_conf_conn_info">
-      <term><varname>conn_info  (<type>string</type>)</term>
+      <term><varname>conn_info</varname>  (<type>string</type>)</term>
       <indexterm>
         <primary><varname>conn_info</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Set slon's connection info, default is to read it off the command line.
+          Set <application>slon</application>'s connection info;
+          default is to read it off the command line.
         </para>
       </listitem>
     </varlistentry>
 
     <varlistentry id="slon-config-sql-on-connection" xreflabel="slon_conf_sql_on_connection">
-      <term><varname>sql_on_connection  (<type>string</type>)</term>
+      <term><varname>sql_on_connection</varname>  (<type>string</type>)</term>
       <indexterm>
         <primary><varname>sql_on_connection</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Execute this SQL on each node at slon connect time. Useful to set logging 
-          levels, or to tune the planner/memory settings.  You can specify multiple 
-          statements by seperating them with a ;
+          Execute this SQL on each node at
+          <application>slon</application> connect time. Useful to set
+          logging levels, or to tune the planner/memory settings.  You
+          can specify multiple statements by separating them with a ;
         </para>
       </listitem>
     </varlistentry>
@@ -186,7 +193,7 @@
   <title>Event Tuning</title>
   <variablelist>
     <varlistentry id="slon-config-sync-interval" xreflabel="slon_conf_sync_interval">
-      <term><varname>sync_interval (<type>integer</type>)</term>
+      <term><varname>sync_interval</varname> (<type>integer</type>)</term>
       <indexterm>
         <primary><varname>sync_interval</varname> configuration parameter</primary>
       </indexterm>
@@ -198,68 +205,81 @@
     </varlistentry>
 
     <varlistentry id="slon-config-sync-interval-timeout" xreflabel="slon_conf_sync_interval_timeout">
-      <term><varname>sync_interval_timeout (<type>integer</type>)</term>
+      <term><varname>sync_interval_timeout</varname> (<type>integer</type>)</term>
       <indexterm>
         <primary><varname>sync_interval_timeout</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Maximum amount of time in milliseconds before issuing a SYNC event,
-          This prevents a possible race condition in which the action sequence
-          is bumped by the trigger while inserting the log row, which makes
-          this bump is immediately visible to the sync thread, but
-          the resulting log rows are not visible yet.  If the sync is picked
-          up by the subscriber, processed and finished before the transaction
-          commits, this transaction's changes will not be replicated until the
-          next SYNC.  But if all application activity suddenly stops,
-          there will be no more sequence bumps, so the high frequent -s check
-          won't detect that.  Thus, the need for sync_interval_timeout. 
-          Range: [0-120000], default 1000
+          Maximum amount of time in milliseconds before issuing a
+          <command>SYNC</command> event, This prevents a possible race
+          condition in which the action sequence is bumped by the
+          trigger while inserting the log row, which makes this bump
+          is immediately visible to the sync thread, but the resulting
+          log rows are not visible yet.  If the
+          <command>SYNC</command> is picked up by the subscriber,
+          processed and finished before the transaction commits, this
+          transaction's changes will not be replicated until the next
+          <command>SYNC</command>.  But if all application activity
+          suddenly stops, there will be no more sequence bumps, so the
+          high frequent <option>-s</option> check won't detect that.
+          Thus, the need for
+          <envar>sync_interval_timeout</envar>. Range: [0-120000],
+          default 1000
         </para>
       </listitem>
     </varlistentry>
 
     <varlistentry id="slon-config-sync-group-maxsize" xreflabel="slon_conf_sync_group_maxsize">
-      <term><varname>sync_group_maxsize (<type>integer</type>)</term>
+      <term><varname>sync_group_maxsize</varname> (<type>integer</type>)</term>
       <indexterm>
         <primary><varname>sync_group_maxsize</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Maximum number of SYNC events to group together when/if a subscriber
-          falls behind.  SYNCs are batched only if there are that many available 
-          and if they are contiguous. Every other event type in between leads to 
-          a smaller batch.  And if there is only one SYNC available, even -g60 
-          will apply just that one. As soon as a subscriber catches up, it will 
-          apply every single SYNC by itself.
-          Range:  [0,100], default: 6
+          Maximum number of <command>SYNC</command> events to group
+          together when/if a subscriber falls behind.
+          <command>SYNC</command>s are batched only if there are that
+          many available and if they are contiguous. Every other event
+          type in between leads to a smaller batch.  And if there is
+          only one <command>SYNC</command> available, even
+          <option>-g60</option> will apply just that one. As soon as a
+          subscriber catches up, it will apply every single
+          <command>SYNC</command> by itself.  Range: [0,100], default:
+          6
         </para>
       </listitem>
     </varlistentry>
     
     <varlistentry id="slon-config-vac-frequency" xreflabel="slon_conf_vac_frequency">
-      <term><varname>vac_frequency (<type>integer</type>)</term>
+      <term><varname>vac_frequency</varname> (<type>integer</type>)</term>
       <indexterm>
         <primary><varname>vac_frequency</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
         <para>
-          Sets how many cleanup cycles to run before a vacuum is done.  0 disables the builtin vacuum, 
-          intended to be used with the <application>pg_autovacuum</application> daemon.
-          Range: [0,100], default: 3
+          Sets how many cleanup cycles to run before a vacuum is done.
+          0 disables the builtin vacuum, intended to be used with the
+          <application>pg_autovacuum</application> daemon.  Range:
+          [0,100], default: 3
         </para>
       </listitem>
     </varlistentry>
     <varlistentry id="slon-config-desired-sync-time" xreflabel="desired_sync_time">
-      <term><varname>desired_sync_time  (<type>integer</type>)</term>
+      <term><varname>desired_sync_time</varname>  (<type>integer</type>)</term>
       <indexterm>
         <primary><varname>desired_sync_time</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Maximum time planned for grouped SYNCs. If replication is behind, 
-          <application>slon</application> will try to increase numbers of syncs 
-          done targetting that they should take this quantity of time to process.
-          This is in ms Range [10000,600000], default 60000.
+        <para>Maximum time planned for grouped
+        <command>SYNC</command>s. If replication is behind,
+        <application>slon</application> will try to increase numbers
+        of syncs done targetting that they should take this quantity
+        of time to process.  This is in Range [10000,600000] ms,
+        default 60000. </para> 
+
+	<para>If the value is left alone, it reverts to 0, in which
+	case this logic will be ignored.
         </para>
       </listitem>
     </varlistentry>

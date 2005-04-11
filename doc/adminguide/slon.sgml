@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.14 2005-03-23 20:12:54 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.15 2005-04-11 15:58:26 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -73,7 +73,7 @@
       indicates how often <application>slon</application> should check
       to see if a <command>SYNC</command> should be introduced.
       Default is 10000 ms.  The main loop in
-      <function>sync_Thread_main() sleeps for intervals of
+      <function>sync_Thread_main()</function> sleeps for intervals of
       <envar>sync_interval</envar> milliseconds between iterations.
      </para>
      
@@ -242,7 +242,7 @@
       itself.  If you are not, there are some tables
       <productname>Slony-I</productname> uses that collect a
       <emphasis>lot</emphasis> of dead tuples that should be vacuumed
-      frequently.
+      frequently, notably <envar>pg_listener</envar>.
      </para>
 
      <para> In &slony1; version 1.1, this changes a little; the
@@ -281,7 +281,15 @@
      </para>
 
      <para> This configuration is discussed further in <xref
-     linkend="runtime-config">.</para>
+     linkend="runtime-config">.  If there are to be a complex set of
+     configuration parameters, or if there are parameters you do not
+     wish to be visible in the process environment variables (such as
+     passwords), it may be convenient to draw many or all parameters
+     from a configuration file.  You might either put common
+     parameters for all slon processes in a commonly-used
+     configuration file, allowing the command line to specify little
+     other than the connection info.  Alternatively, you might create
+     a configuration file for each node.</para>
 
     </listitem>
    </varlistentry>
