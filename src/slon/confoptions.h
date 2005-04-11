@@ -287,8 +287,8 @@ static struct config_string ConfigureNamesString[] =
 	{
 		{
 			(const char *)"sql_on_connection",
-			gettext_noop("SQL to send to each connected node on "
-				"connection establishment, usefull to enable "
+			gettext_noop("SQL to send to each connected node upon "
+				"connection establishment, useful to enable "
 				"duration logging, or to adjust any other "
 				"connection settable GUC"),
 			NULL,
