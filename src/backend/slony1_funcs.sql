@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.56 2005-03-07 23:27:02 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.57 2005-04-11 15:45:53 xfade Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -251,6 +251,89 @@ create or replace function @NAMESPACE@.cleanupListener () returns int4
 
 comment on function @NAMESPACE@.cleanupListener() is
   'look for stale pg_listener entries and submit Async_Unlisten() to them';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slon_quote_brute(text)
+--
+--	Function that quotes a given string.
+--	All existing quotes will be escaped.
+--
+--	This function will be used to quote output of internal functions.
+-- ----------------------------------------------------------------------
+
+create or replace function @NAMESPACE@.slon_quote_brute(text) returns text
+as '
+declare	
+    p_tab_fqname alias for $1;
+    v_fqname text default '''';
+begin
+    v_fqname := ''"'' || replace(p_tab_fqname,''\"'',''\\\\"'') || ''"'';
+    return v_fqname;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.slon_quote_brute(text) is
+  'Brutally quote the given text';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION slon_quote_input(text)
+--
+--	Function that quotes a given fqn. This function quotes every
+--	word that isn't quoted yet. Words or groups of words that are
+--	already quoted will be untouched.
+--
+--	This function will be used to quote user input.
+-- ----------------------------------------------------------------------
+
+create or replace function @NAMESPACE@.slon_quote_input (text) returns text
+as '
+declare
+    p_tab_fqname alias for $1;
+    v_temp_fqname text default '''';
+    v_pre_quoted text[] default ''{}'';
+    v_pre_quote_counter smallint default 0;
+    v_count_fqname smallint default 0;
+    v_fqname_split text[];
+    v_quoted_fqname text default '''';
+begin
+    v_temp_fqname := p_tab_fqname;
+
+    LOOP
+	v_pre_quote_counter := v_pre_quote_counter + 1;
+	v_pre_quoted[v_pre_quote_counter] := 
+	    substring(v_temp_fqname from ''%#"\"%\"#"%'' for ''#'');
+	IF v_pre_quoted[v_pre_quote_counter] <> '''' THEN
+	    v_temp_fqname := replace(v_temp_fqname,
+	        v_pre_quoted[v_pre_quote_counter], ''@'' ||
+		v_pre_quote_counter);
+	ELSE
+	    EXIT;
+	END IF;
+    END LOOP;
+
+    v_fqname_split := string_to_array(v_temp_fqname , ''.'');
+    v_count_fqname := array_upper (v_fqname_split, 1);
+
+    FOR i in 1..v_count_fqname LOOP
+        IF substring(v_fqname_split[i],1,1) = ''@'' THEN
+            v_quoted_fqname := v_quoted_fqname || 
+		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
+        ELSE
+            v_quoted_fqname := v_quoted_fqname || ''"'' || 
+		v_fqname_split[i] || ''"'';
+        END IF;
+
+        IF i < v_count_fqname THEN
+            v_quoted_fqname := v_quoted_fqname || ''.'' ;
+        END IF;
+    END LOOP;
+	
+    return v_quoted_fqname;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.slon_quote_input(text) is
+  'quote all words that aren''t quoted yet';
 
 -- **********************************************************************
 -- * PL/pgSQL functions for administrative tasks
@@ -1635,8 +1718,8 @@ begin
 	-- Place the lockedSet trigger on all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where T.tab_set = p_set_id
@@ -1711,8 +1794,8 @@ begin
 	-- Drop the lockedSet trigger from all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where T.tab_set = p_set_id
@@ -2362,8 +2445,8 @@ begin
 	select PGC.oid, PGC.relkind, PGC.relname, PGN.nspname into v_tab_reloid, v_relkind, v_tab_relname, v_tab_nspname
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
-			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
-					''.'' || "pg_catalog".quote_ident(PGC.relname);
+			and @NAMESPACE@.slon_quote_input(p_fqname) = @NAMESPACE@.slon_quote_brute(PGN.nspname) ||
+					''.'' || @NAMESPACE@.slon_quote_brute(PGC.relname);
 	if not found then
 		raise exception ''Slony-I: setAddTable(): table % not found'', 
 				p_fqname;
@@ -2638,8 +2721,8 @@ begin
 		into v_seq_reloid, v_relkind, v_seq_relname, v_seq_nspname
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
-			and p_fqname = "pg_catalog".quote_ident(PGN.nspname) ||
-					''.'' || "pg_catalog".quote_ident(PGC.relname);
+			and @NAMESPACE@.slon_quote_input(p_fqname) = @NAMESPACE@.slon_quote_brute(PGN.nspname) ||
+					''.'' || @NAMESPACE@.slon_quote_brute(PGC.relname);
 	if not found then
 		raise exception ''Slony-I: setAddSequence_int(): sequence % not found'', 
 				p_fqname;
@@ -3067,8 +3150,8 @@ begin
 	-- ----
 	-- Get the sequences fully qualified name
 	-- ----
-	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			"pg_catalog".quote_ident(PGC.relname) into v_fqname
+	select @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) into v_fqname
 		from @NAMESPACE@.sl_sequence SQ,
 			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 		where SQ.seq_id = p_seq_id
@@ -3425,8 +3508,8 @@ begin
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_idxname, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
-			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
@@ -3563,8 +3646,8 @@ begin
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
-			"pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			"pg_catalog".quote_ident(PGC.relname) as tab_fqname
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
@@ -4146,10 +4229,12 @@ create or replace function @NAMESPACE@.tableAddKey(text) returns text
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	v_attkind		text default '''';
 	v_attrow		record;
 	v_have_serial	bool default ''f'';
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	--
 	-- Loop over the attributes of this relation
 	-- and add a "v" for every user column, and a "k"
@@ -4159,8 +4244,8 @@ begin
 			from "pg_catalog".pg_class PGC,
 			    "pg_catalog".pg_namespace PGN,
 				"pg_catalog".pg_attribute PGA
-			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			    @NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -4180,7 +4265,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4191,11 +4276,11 @@ begin
 	-- updating all existing rows.
 	--
 	if not v_have_serial then
-		execute ''lock table '' || p_tab_fqname ||
+		execute ''lock table '' || v_tab_fqname_quoted ||
 			'' in access exclusive mode'';
-		execute ''alter table only '' || p_tab_fqname ||
+		execute ''alter table only '' || v_tab_fqname_quoted ||
 			'' add column "_Slony-I_@CLUSTERNAME@_rowID" bigint;'';
-		execute ''alter table only '' || p_tab_fqname ||
+		execute ''alter table only '' || v_tab_fqname_quoted ||
 			'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
 			'' set default "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
 
@@ -4236,8 +4321,8 @@ begin
 	-- ----
 	-- Construct the tables fully qualified name and get its oid
 	-- ----
-	select "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-				"pg_catalog".quote_ident(PGC.relname),
+	select @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				@NAMESPACE@.slon_quote_brute(PGC.relname),
 				PGC.oid into v_tab_fqname, v_tab_oid
 			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC,
@@ -4282,19 +4367,21 @@ create or replace function @NAMESPACE@.determineIdxnameUnique(text, name) return
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	p_idx_name		alias for $2;
 	v_idxrow		record;
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	--
 	-- Ensure that the table exists
 	--
 	if (select PGC.relname
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN
-				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4307,15 +4394,15 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisprimary;
 		if not found then
 			raise exception ''Slony-I: table % has no primary key'',
-					p_tab_fqname;
+					v_tab_fqname_quoted;
 		end if;
 	else
 		select PGXC.relname
@@ -4324,8 +4411,8 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
@@ -4333,7 +4420,7 @@ begin
 					and PGXC.relname = p_idx_name;
 		if not found then
 			raise exception ''Slony-I: table % has no unique index %'',
-					p_tab_fqname, p_idx_name;
+					v_tab_fqname_quoted, p_idx_name;
 		end if;
 	end if;
 
@@ -4360,8 +4447,10 @@ create or replace function @NAMESPACE@.determineIdxnameSerial(text) returns name
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	v_row			record;
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	--
 	-- Lookup the table name alone
 	--
@@ -4369,12 +4458,12 @@ begin
 			into v_row
 			from "pg_catalog".pg_class PGC,
 				"pg_catalog".pg_namespace PGN
-			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-				"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace;
 	if not found then
 		raise exception ''Slony-I: table % not found'',
-				p_tab_fqname;
+				v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4399,7 +4488,9 @@ create or replace function @NAMESPACE@.determineAttkindUnique(text, name) return
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	p_idx_name		alias for $2;
+	v_idx_name_quoted	text;
 	v_idxrow		record;
 	v_attrow		record;
 	v_i				integer;
@@ -4407,16 +4498,18 @@ declare
 	v_attkind		text default '''';
 	v_attfound		bool;
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
+	v_idx_name_quoted := @NAMESPACE@.slon_quote_input(p_idx_name);
 	--
 	-- Ensure that the table exists
 	--
 	if (select PGC.relname
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN
-				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4431,16 +4524,16 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-					"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisunique
-					and PGXC.relname = p_idx_name;
+					and @NAMESPACE@.slon_quote_brute(PGXC.relname::text) = v_idx_name_quoted;
 		if not found then
 			raise exception ''Slony-I: table % has no unique index %'',
-					p_tab_fqname, p_idx_name;
+					v_tab_fqname_quoted, p_idx_name;
 		end if;
 	end if;
 
@@ -4453,8 +4546,8 @@ begin
 			from "pg_catalog".pg_class PGC,
 			    "pg_catalog".pg_namespace PGN,
 				"pg_catalog".pg_attribute PGA
-			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			    @NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -4511,10 +4604,12 @@ returns text
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	v_attkind		text default '''';
 	v_attrow		record;
 	v_have_serial	bool default ''f'';
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	--
 	-- Loop over the attributes of this relation
 	-- and add a "v" for every user column, and a "k"
@@ -4524,8 +4619,8 @@ begin
 			from "pg_catalog".pg_class PGC,
 			    "pg_catalog".pg_namespace PGN,
 				"pg_catalog".pg_attribute PGA
-			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-			    "pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			    @NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -4545,7 +4640,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception ''Slony-I: table % not found'', p_tab_fqname;
+		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4554,15 +4649,15 @@ begin
 	--
 	if not v_have_serial then
 		raise exception ''Slony-I: table % does not have the serial key'',
-				p_tab_fqname;
+				v_tab_fqname_quoted;
 	end if;
 
-	execute ''update '' || p_tab_fqname ||
+	execute ''update '' || v_tab_fqname_quoted ||
 		'' set "_Slony-I_@CLUSTERNAME@_rowID" ='' ||
 		'' "pg_catalog".nextval(''''@NAMESPACE@.sl_rowid_seq'''');'';
-	execute ''alter table only '' || p_tab_fqname ||
+	execute ''alter table only '' || v_tab_fqname_quoted ||
 		'' add unique ("_Slony-I_@CLUSTERNAME@_rowID");'';
-	execute ''alter table only '' || p_tab_fqname ||
+	execute ''alter table only '' || v_tab_fqname_quoted ||
 		'' alter column "_Slony-I_@CLUSTERNAME@_rowID" '' ||
 		'' set not null;'';
 
@@ -4748,14 +4843,16 @@ returns bool
 as '
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default '''';
 	v_attnum		int2;
 begin
+	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	select PGA.attnum into v_attnum
 			from "pg_catalog".pg_class PGC,
 				"pg_catalog".pg_namespace PGN,
 				"pg_catalog".pg_attribute PGA
-			where "pg_catalog".quote_ident(PGN.nspname) || ''.'' ||
-				"pg_catalog".quote_ident(PGC.relname) = p_tab_fqname
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGC.relnamespace = PGN.oid
 				and PGA.attrelid = PGC.oid
 				and PGA.attname = ''_Slony-I_@CLUSTERNAME@_rowID''
@@ -4882,16 +4979,16 @@ begin
         update @NAMESPACE@.sl_table set
                 tab_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(@NAMESPACE@.sl_table.tab_relname) = pg_catalog.quote_ident(PGC.relname)
+                where @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_relname) = @NAMESPACE@.slon_quote_brute(PGC.relname)
                         and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(@NAMESPACE@.sl_table.tab_nspname);
+			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_nspname);
 
         update @NAMESPACE@.sl_sequence set
                 seq_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(@NAMESPACE@.sl_sequence.seq_relname) = pg_catalog.quote_ident(PGC.relname)
+                where @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_relname) = @NAMESPACE@.slon_quote_brute(PGC.relname)
                 	and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(@NAMESPACE@.sl_sequence.seq_nspname);
+			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_nspname);
 
         return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''RESET_CONFIG'',
                         p_set_id, p_only_on_node);
@@ -4920,11 +5017,11 @@ DECLARE
   v_query     text;
 BEGIN
   select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
-     where quote_ident(n.nspname) = p_namespace and 
+     where @NAMESPACE@.slon_quote_brute(n.nspname) = p_namespace and 
          c.relnamespace = n.oid and
-         quote_ident(c.relname) = p_table and
+         @NAMESPACE@.slon_quote_brute(c.relname) = p_table and
          a.attrelid = c.oid and
-         quote_ident(a.attname) = p_field;
+         @NAMESPACE@.slon_quote_brute(a.attname) = p_field;
   if not found then
     raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
     v_query := ''alter table '' || p_namespace || ''.'' || p_table || '' add column '';
