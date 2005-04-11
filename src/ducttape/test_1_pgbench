@@ -51,7 +51,7 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake | egrep '^/'`
+WGM=`which gmake | egrep "^/"`
 if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
@@ -223,7 +223,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+xterm -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
