@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.10 2005-03-23 22:59:22 darcyb Exp $
+# $Id: Makefile,v 1.11 2005-04-12 20:29:28 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -99,12 +99,17 @@ endif
 
 COLLATEINDEX := LC_ALL=C $(PERL) $(COLLATEINDEX) -f -g
 
+ifdef JADE
 ifeq (,$(wildcard HTML.index))
 bookindex.sgml:
 	$(COLLATEINDEX) -o $@ -N
 else
 bookindex.sgml: HTML.index
 	$(COLLATEINDEX) -i 'bookindex' -o $@ $<
+endif
+else
+bookindex.sgml:
+	@echo "You must have jade to build the documentation" && exit
 endif
 
 ##

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.6 2005-03-23 22:59:23 darcyb Exp $
+# $Id: Makefile,v 1.7 2005-04-12 20:29:28 darcyb Exp $
 # ----------
 
 slony_subdir = doc/implementation
@@ -61,7 +61,9 @@ Slony-I-implementation.txt:	$(SRC_CONCEPT)
 
 Slon.eps:	Slon_$(IMG_WID)x$(IMG_HT).jpg
 ifdef DJPEG
+ifdef PNMTOPS
 		$(DJPEG) $< | $(PNMTOPS) -rle -noturn >$@
+endif
 endif
 
 %.ps:	%.nr

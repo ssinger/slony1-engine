@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.16 2004-11-02 17:54:53 darcyb Exp $
+# $Id: GNUmakefile.in,v 1.17 2005-04-12 20:29:27 darcyb Exp $
 # ----------
 
 top_builddir = .
@@ -27,13 +27,13 @@ DISTFILES = aclocal.m4 \
 
 
 all:
-	@for subdir in src doc tools ; do \
+	@for subdir in src tools doc ; do \
 	  $(MAKE) -C $$subdir $@ || exit; \
     done && \
 	echo "All of Slony-I is successfully made. Ready to install"
 
 install	installdirs:
-	@for subdir in src doc tools share ; do \
+	@for subdir in src share tools doc ; do \
 	  $(MAKE) -C $$subdir $@ || exit; \
     done && \
 	echo "All of Slony-I is successfully installed"
