@@ -4,3 +4,6 @@ slony1 (1.1-1) unstable; urgency=low
 
  -- Tim Goodaire <tgoodair@ca.afilias.info>  Thu, 11 Nov 2004 22:38:04 -0500
 
+  * Added build dependency for groff
+
+ -- Tim Goodaire <tgoodair@ca.afilias.info>  Tue, 12 Apr 2005 11:39:34 -0500
