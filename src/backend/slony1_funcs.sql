@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.14 2005-04-13 20:39:32 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.15 2005-04-13 21:21:24 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1657,14 +1657,28 @@ begin
 		end loop;
 	end if;
 
+	-- On the new origin, raise an event - ACCEPT_SET
+	if v_local_node_id = p_new_origin then
+		-- Find the event number from the origin
+		select max(ev_seqno) as seqno into v_sub_row 
+			from @NAMESPACE@.sl_event
+			where ev_type = ''MOVE_SET'' and
+			  ev_data1 = p_set_id and
+			  ev_data2 = p_old_origin and
+			  ev_data3 = p_new_origin and
+			  ev_origin = p_old_origin;
+		
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
+			p_set_id, p_old_origin, p_new_origin, v_sub_row.seqno);
+	end if;
+
 	-- ----
 	-- Next we have to reverse the subscription path
 	-- ----
 	v_sub_last = p_new_origin;
 	select sub_provider into v_sub_node
 			from @NAMESPACE@.sl_subscribe
-			where sub_set = p_set_id
-			and sub_receiver = p_new_origin;
+			where sub_receiver = p_new_origin;
 	if not found then
 		raise exception ''Slony-I: subscription path broken in moveSet_int'';
 	end if;
@@ -3450,6 +3464,7 @@ begin
 		raise exception 
 				''Slony-I: set provider and receiver cannot be identical'';
 	end if;
+
 
 	-- ---
 	-- Check to see if the set contains any tables - gripe if not - bug #1226

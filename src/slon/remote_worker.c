@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.55.2.7 2004-10-08 16:30:11 wieck Exp $
+ *	$Id: remote_worker.c,v 1.55.2.8 2005-04-13 21:21:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -744,6 +744,66 @@ remoteWorkerThread_main(void *cdata)
 						rtcfg_namespace,
 						trig_tabid, trig_tgname);
 			}
+			else if (strcmp(event->ev_type, "ACCEPT_SET") == 0)
+			{
+			    /* If we're a remote node, and haven't yet
+			     * received the MOVE_SET event from the
+			     * new origin, then we'll need to sleep a
+			     * bit...  This avoids a race condition
+			     * where new SYNCs take place on the new
+			     * origin, and are ignored on some
+			     * subscribers (and their children)
+			     * because the MOVE_SET wasn't yet
+			     * received and processed  */
+				
+				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
+				int		old_origin = (int) strtol(event->ev_data2, NULL, 10);
+				int		new_origin = (int) strtol(event->ev_data3, NULL, 10);
+			    PGresult   *res;
+
+			    if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin)) {
+					slon_mkquery(&query1, 
+								 "select 1 from %s.sl_event accept "
+								 "where "
+								 "   accept.ev_type = 'ACCEPT_SET' and "
+								 "   accept.ev_origin = %d and "
+								 "   accept.ev_data1 = %d and "
+								 "   accept.ev_data2 = %d and "
+								 "   accept.ev_data3 = %d and "
+								 "   not exists  "
+								 "   (select 1 from %s.sl_event move "
+								 "    where "
+								 "      accept.ev_origin = move.ev_data3 and "
+								 "      move.ev_type = 'MOVE_SET' and "
+								 "      move.ev_data1 = accept.ev_data1 and "
+								 "      move.ev_data2 = accept.ev_data2 and "
+								 "      move.ev_data3 = accept.ev_data3 and "
+								 "      move.ev_seqno = accept.ev_data4); ",
+								 
+								 rtcfg_namespace, 
+								 old_origin, set_id, old_origin, new_origin, 
+								 rtcfg_namespace);
+					res = PQexec(local_dbconn, dstring_data(&query1));
+					while (PQntuples(res) > 0) {
+						int sleeptime = 15;
+				    int sched_rc;
+				    slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+							 "accept set: node has not yet received MOVE_SET event "
+							 "for set %d old origin %d new origin - sleep %d seconds\n",
+							 rtcfg_nodeid, set_id, old_origin, new_origin, sleeptime);
+				    sched_rc = sched_msleep(node, sleeptime * 1000);
+				    if (sched_rc != SCHED_STATUS_OK) {
+						event_ok = false;
+						break;
+				    } else {
+						if (sleeptime < 60)
+							sleeptime *= 2;
+				    }
+				    if (query_execute(node, local_dbconn, &query1) < 0)
+						slon_abort();
+					}
+			    }
+			}
 			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
 			{
 				int		set_id = (int) strtol(event->ev_data1, NULL, 10);
@@ -758,6 +818,7 @@ remoteWorkerThread_main(void *cdata)
 				 * chain. To catch up with that, we need to execute
 				 * it now and select the resulting provider for us.
 				 */
+
 				slon_appendquery(&query1,
 						"select %s.moveSet_int(%d, %d, %d); ",
 						rtcfg_namespace,
