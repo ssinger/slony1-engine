@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.58 2005-04-11 21:43:01 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.59 2005-04-13 15:30:43 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4560,7 +4560,7 @@ begin
 		loop
 			select indkey[v_i] into v_attno from "pg_catalog".pg_index
 					where indexrelid = v_idxrow.indexrelid;
-			if v_attno = 0 then
+			if v_attno isnull or v_attno = 0 then
 				exit;
 			end if;
 			if v_attrow.attnum = v_attno then
