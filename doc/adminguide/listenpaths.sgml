@@ -1,5 +1,8 @@
-<!-- $Id: listenpaths.sgml,v 1.15 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.16 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
+
+<indexterm><primary>listen paths</primary></indexterm>
+
 <note><para> If you are running version
 &slony1; 1.1 or later it should be
 <emphasis>completely unnecessary</emphasis> to read this section as it
@@ -28,7 +31,7 @@ therefore be purged.  this extra communication is needful so
 <productname>Slony-I</productname> is able to shift origins to other
 locations.</para>
 
-<sect2><title>how listening can break</title>
+<sect2><title>How listening can break</title>
 
 <para>On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
@@ -55,7 +58,7 @@ from node #1 (the origin node for the replication set).  At that
 moment, <quote>as if by magic</quote>, node #3 started replicating again, as
 it discovered a place to get <command>sync</command> events.</para>
 </sect2>
-<sect2><title>how the listen configuration should look</title>
+<sect2><title>How the listen configuration should look</title>
 
 <para>The simple cases tend to be simple to cope with.  We need to
 instead look at a more complex node configuration.</para>
@@ -172,8 +175,8 @@ communicating.</para></listitem>
 <sect2 id="autolisten"><title>Automated Listen Path Generation</title>
 
 <para> In &slony1; version 1.1, a heuristic scheme is introduced to
-automatically generate listener entries.  This happens, in order,
-based on three data sources:
+automatically generate <envar>sl_listen</envar> entries.  This
+happens, in order, based on three data sources:
 
 <itemizedlist>
 

@@ -1,4 +1,4 @@
-<!-- $Id: plainpaths.sgml,v 1.5 2005-03-15 20:10:44 cbbrowne Exp $ -->
+<!-- $Id: plainpaths.sgml,v 1.6 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="plainpaths"><title> &slony1; Path Communications</title>
 
 <para> &slony1; uses &postgres; DSNs in two contexts to establish
@@ -13,11 +13,11 @@ access to databases:
 <quote/administrative workstation/ to all of the nodes in a &slony1;
 cluster.
 
-<para> It is <emphasis/vital/ that you have connections from the
-central location where you run <xref linkend="slonik"> 
-to each and every node in the network.  These connections are only
-used briefly, to submit the few <acronym/SQL/ requests required to
-control the administration of the cluster.
+<para> It is <emphasis>vital</emphasis> that you have connections from
+the central location where you run <xref linkend="slonik"> to each and
+every node in the network.  These connections are only used briefly,
+to submit the few <acronym>SQL</acronym> requests required to control
+the administration of the cluster.
 
 <para> Since these communications paths are only used briefly, it may
 be quite reasonable to <quote>hack together</quote> temporary

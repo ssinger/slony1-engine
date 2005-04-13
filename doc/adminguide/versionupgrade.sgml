@@ -1,5 +1,7 @@
-<!-- $Id: versionupgrade.sgml,v 1.4 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Id: versionupgrade.sgml,v 1.5 2005-04-13 21:22:58 cbbrowne Exp $ -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
+
+<indexterm><primary>&slony1; for &postgres; version upgrades</primary></indexterm>
 
 <para> A number of people have found
 &slony1; useful for helping perform upgrades

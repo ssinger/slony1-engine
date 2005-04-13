@@ -1,10 +1,10 @@
-<!-- $Id: logshipping.sgml,v 1.6 2005-04-11 15:58:26 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.7 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
-<para> One of the new features for 1.1 is the ability to serialize the
-updates to go out into log files that can be kept in a spool
-directory.
+<para> One of the new features for &slony1; 1.1 is the ability to
+serialize the updates to go out into log files that can be kept in a
+spool directory.
 
 <para> The spool files could then be transferred via whatever means
 was desired to a <quote>slave system,</quote> whether that be via FTP,

@@ -1,5 +1,6 @@
-<!-- $Id: faq.sgml,v 1.25 2005-02-28 01:01:41 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.26 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <qandaset>
+<indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
 <qandaentry>
 

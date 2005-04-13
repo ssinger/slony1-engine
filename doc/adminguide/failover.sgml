@@ -1,7 +1,6 @@
-<!-- $Id: failover.sgml,v 1.13 2005-03-07 19:31:02 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.14 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
-
 <sect2><title>Foreword</title>
 
 <para>&slony1; is an asynchronous replication system.  Because of
@@ -27,6 +26,10 @@ the <xref linkend="slonik"> utility and knows at least how to set up a
 simple 2 node replication system with &slony1;.</para></sect2>
 
 <sect2><title> Controlled Switchover</title>
+
+<indexterm>
+ <primary>Controlled switchover</primary>
+</indexterm>
 
 <para> We assume a current <quote>origin</quote> as node1 with one
 <quote>subscriber</quote> as node2 (<emphasis>e.g.</emphasis> -
@@ -84,6 +87,10 @@ be any loss of data.</para>
 
 </sect2>
 <sect2><title> Failover</title>
+
+<indexterm>
+ <primary>failover upon system failure</primary>
+</indexterm>
 
 <para> If some more serious problem occurs on the
 <quote>origin</quote> server, it may be necessary to <xref

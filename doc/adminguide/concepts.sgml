@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.11 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.12 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -15,9 +15,12 @@ to understand the following major abstractions that it uses:</para>
 
 <sect2>
 <title>Cluster</title>
+<indexterm>
+ <primary>cluster</primary>
+</indexterm>
 
-<para>In &slony1; terms, a Cluster is a named set of &postgres;
-database instances; replication takes place between those
+<para>In &slony1; terms, a <quote>cluster</quote> is a named set of
+&postgres; database instances; replication takes place between those
 databases.</para>
 
 <para>The cluster name is specified in each and every Slonik script via the directive:</para>
@@ -30,6 +33,10 @@ will create, in each database instance in the cluster, the
 namespace/schema <envar>_something.</envar></para>
 </sect2>
 <sect2><title>Node</title>
+
+<indexterm>
+ <primary>node</primary>
+</indexterm>
 
 <para>A &slony1; Node is a named &postgres; database that will be participating in replication.</para>
 
@@ -50,6 +57,10 @@ argument that will ultimately be passed to the
 </sect2>
 <sect2><title> Replication Set</title>
 
+<indexterm>
+ <primary>replication set</primary>
+</indexterm>
+
 <para>A replication set is defined as a set of tables and sequences
 that are to be replicated between nodes in a
 &slony1; cluster.</para>
@@ -60,11 +71,23 @@ replication does not need to be identical between those sets.</para>
 
 <sect2><title> Origin, Providers and Subscribers</title>
 
+<indexterm>
+ <primary>origin node</primary>
+</indexterm>
+
+<indexterm>
+ <primary>provider node</primary>
+</indexterm>
+
 <para>Each replication set has some origin node, which is the
 <emphasis>only</emphasis> place where user applications are permitted
 to modify data in the tables that are being replicated.  This might
 also be termed the <quote>master provider</quote>; it is the main
 place from which data is provided.</para>
+
+<indexterm>
+ <primary>subscriber node</primary>
+</indexterm>
 
 <para>Other nodes in the cluster subscribe to the replication set,
 indicating that they want to receive the data.</para>

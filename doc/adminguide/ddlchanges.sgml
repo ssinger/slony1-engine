@@ -1,6 +1,11 @@
-<!-- $Id: ddlchanges.sgml,v 1.13 2005-02-18 22:43:34 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.14 2005-04-13 21:22:57 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
+
+<indexterm>
+ <primary> DDL changes </primary>
+ <secondary> changing the database schema </secondary>
+</indexterm>
 
 <para>When changes are made to the database schema,
 <emphasis>e.g.</emphasis> - adding fields to a table, it is necessary
