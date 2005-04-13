@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.59 2005-04-13 15:30:43 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.60 2005-04-13 20:11:14 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3776,6 +3776,17 @@ begin
 	if p_sub_receiver = p_sub_provider then
 		raise exception 
 				''Slony-I: set provider and receiver cannot be identical'';
+	end if;
+
+
+	-- ---
+	-- Check to see if the set contains any tables - gripe if not - bug #1226
+	-- ---
+	if not exists (select true 
+		from @NAMESPACE@.sl_table
+		where tab_set = p_sub_set) then
+		raise notice ''subscribeSet:: set % has no tables - risk of problems - see bug 1226'', p_sub_set;
+		raise notice ''http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226'';
 	end if;
 
 	-- ----
