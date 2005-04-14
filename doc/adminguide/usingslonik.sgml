@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.8 2005-03-07 19:31:02 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.9 2005-04-14 21:22:20 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -45,7 +45,7 @@ as:
 <listitem><para> Named nodes, named sets</para>
 
 <para> This is supported by the (new in 1.1) <xref
-linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
+      linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
 </para></listitem>
 
 <listitem><para> Looping and control constructs</para>
@@ -142,7 +142,7 @@ node 2 admin conninfo = 'dbname=$DB2';
 <para> The <envar>PREAMBLE</envar> value could then be reused over and
 over again if the shell script invokes <command>slonik</command>
 multiple times.  You might also consider using <xref
-linkend="stmtinclude"> and place the preamble in a file that is
+     linkend="stmtinclude"> and place the preamble in a file that is
 <command>include</command>d.
  </para>
 
@@ -240,9 +240,9 @@ scripts</para></listitem>
 </itemizedlist></para>
 
 <para> If you can depend on having <ulink
-url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
-url="http://www.zsh.org/"> zsh</ulink>, or <ulink
-url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
+     url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
+     url="http://www.zsh.org/"> zsh</ulink>, or <ulink
+     url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
 those are all shells with extensions supporting reasonably
 sophisticated data structures and module systems.  On Linux, Bash is
 fairly ubiquitous; on commercial <trademark>UNIX</trademark>, Korn
@@ -271,7 +271,7 @@ requests directly via the stored functions.</para>
 <para> When debugging problems in <quote>troubled</quote> &slony1;
 clusters, it has also occasionally proven useful to use the stored
 functions.  This has been particularly useful for cases where <xref
-linkend="table.sl-listen"> configuration has been broken, and
+       linkend="table.sl-listen"> configuration has been broken, and
 events have not been propagating properly.  The <quote>easiest</quote>
 fix was to:</para>
 
@@ -283,15 +283,15 @@ _slonycluster.sl_listen;</command></para>
 pa_server, pa_client) from _slonycluster.sl_path;</command></para>
 
 <para> The result of this set of queries is to regenerate
-<emphasis/and propagate/ the listen paths.  By running the main
-<function/ _slonycluster.storelisten()/ function,
-<command/STORE_LISTEN/ events are raised to cause the listen paths to
-propagate to the other nodes in the cluster.
+<emphasis>and propagate</emphasis> the listen paths.  By running the main
+<function> _slonycluster.storelisten()</function> function,
+<command>STORE_LISTEN</command> events are raised to cause the listen paths to
+propagate to the other nodes in the cluster.</para>
 
-<para> If there was a <emphasis/local/ problem on one node, and you
+<para> If there was a <emphasis>local</emphasis> problem on one node, and you
 didn't want the updates to propagate (this would be an unusual
 situation; you almost certainly want to fix things
-<emphasis/everywhere/), the queries would instead be:
+<emphasis>everywhere</emphasis>), the queries would instead be:</para>
 
 <para> <command> select
 slonycluster.droplisten_int(li_origin,li_provider,li_receiver) from
@@ -312,35 +312,35 @@ thus:
 <listitem><para> The <quote>main</quote> function
 (<emphasis>e.g.</emphasis> - without the <command>_int</command>
 suffix) is called on a <quote>relevant</quote> node in the &slony1;
-cluster.
+cluster.</para>
 
 <para> In some cases, the function may be called on any node, and it
 can satisfactorily propagate to other nodes.  That is true for <xref
-linkend="function.storelisten-integer-integer-integer">, for instance.
+	  linkend="function.storelisten-integer-integer-integer">, for instance.
 In other cases, the function needs to be called on some particular
 node because that is the only place where data may be reasonably
-validated.  For instance, <xref linkend=
-"function.subscribeset-integer-integer-integer-boolean"> must be
-called on the receivernode.
+validated.  For instance, <xref
+	  linkend="function.subscribeset-integer-integer-integer-boolean"> must be
+called on the receivernode.</para></listitem>
 
 <listitem><para> If that <quote>main</quote> function succeeds, then
 the configuration change is performed on the local node, and an event
 is created using <xref linkend="function.createevent-name-text"> to
 cause the configuration change to propagate to all of the other nodes
-in the &slony1; cluster.
+in the &slony1; cluster.</para></listitem>
 
 <listitem><para> Thirdly, the <command>_int</command> version of the
-function must be run.  
+function must be run.</para>  
 
 <para> In some cases, where functions are idempotent, the node where
 the <quote>main</quote> function runs can do this fairly early in
-processing.
+processing.</para>
 
 <para> When the event propagates, the other nodes will run the
 <command>_int</command> version, we rather hope with good
-success. </para>
+success. </para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 </sect1>
 <!-- Keep this comment at the end of the file

@@ -1,16 +1,16 @@
-<!-- $Id: logshipping.sgml,v 1.7 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.8 2005-04-14 21:22:19 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
-<para> One of the new features for &slony1; 1.1 is the ability to
-serialize the updates to go out into log files that can be kept in a
-spool directory.
+<para> One of the new features for 1.1 is the ability to serialize the
+updates to go out into log files that can be kept in a spool
+directory.</para>
 
 <para> The spool files could then be transferred via whatever means
 was desired to a <quote>slave system,</quote> whether that be via FTP,
 rsync, or perhaps even by pushing them onto a 1GB <quote>USB
 key</quote> to be sent to the destination by clipping it to the ankle
-of some sort of <quote>avian transport</quote> system.
+of some sort of <quote>avian transport</quote> system.</para>
 
 <para> There are plenty of neat things you can do with a data stream
 in this form, including:
@@ -18,48 +18,48 @@ in this form, including:
 <itemizedlist>
   
   <listitem><para> Replicating to nodes that
-  <emphasis>aren't</emphasis> securable
+  <emphasis>aren't</emphasis> securable</para></listitem>
 
   <listitem><para> Replicating to destinations where it is not
-  possible to set up bidirection communications
+  possible to set up bidirection communications</para></listitem>
 
-  <listitem><para> Supporting a different form of <acronym/PITR/
+  <listitem><para> Supporting a different form of <acronym>PITR</acronym>
   (Point In Time Recovery) that filters out read-only transactions and
-  updates to tables that are not of interest.
+  updates to tables that are not of interest.</para></listitem>
 
   <listitem><para> If some disaster strikes, you can look at the logs
-  of queries in detail
+  of queries in detail</para>
 
   <para> This makes log shipping potentially useful even though you
-  might not intend to actually create a log-shipped node.
+  might not intend to actually create a log-shipped node.</para></listitem>
 
   <listitem><para> This is a really slick scheme for building load for
-  doing tests
+  doing tests</para></listitem>
 
   <listitem><para> We have a data <quote>escrow</quote> system that
-  would become incredibly cheaper given log shipping
+  would become incredibly cheaper given log shipping</para></listitem>
 
   <listitem><para> You may apply triggers on the <quote>disconnected
-  node </quote> to do additional processing on the data
+  node </quote> to do additional processing on the data</para>
 
   <para> For instance, you might take a fairly <quote>stateful</quote>
   database and turn it into a <quote>temporal</quote> one by use of
   triggers that implement the techniques described in
   <citation>Developing Time-Oriented Database Applications in SQL
-  </citation> by <ulink url= "http://www.cs.arizona.edu/people/rts/">
-  Richard T. Snodgrass</ulink>.
+  </citation> by <ulink url="http://www.cs.arizona.edu/people/rts/">
+  Richard T. Snodgrass</ulink>.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <qandaset>
 <qandaentry>
 
 <question> <para> Where are the <quote>spool files</quote> for a
-subscription set generated?
+subscription set generated?</para>
 </question>
 
 <answer> <para> Any <link linkend="slon"> slon </link> node can
-generate them by adding the <option>-a</option> option.
+generate them by adding the <option>-a</option> option.</para>
 </answer>
 </qandaentry>
 <qandaentry>
@@ -126,9 +126,9 @@ SYNCs and the dump created using
 to rerun <application>slony1_dump.sh</application>:
 
 <itemizedlist>
-<listitem><para><command> SUBSCRIBE_SET </command> 
+<listitem><para><command> SUBSCRIBE_SET </command></para></listitem> 
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para> A number of event types <emphasis> are </emphasis> handled in
 such a way that log shipping copes with them:
@@ -136,23 +136,23 @@ such a way that log shipping copes with them:
 <itemizedlist>
 
 <listitem><para><command>SYNC </command> events are, of course,
-handled.
+handled.</para></listitem>
 
-<listitem><para><command>DDL_SCRIPT</command> is handled.
+<listitem><para><command>DDL_SCRIPT</command> is handled.</para></listitem>
 
-<listitem><para><command> UNSUBSCRIBE_SET </command> 
+<listitem><para><command> UNSUBSCRIBE_SET </command></para> 
 
 <para> This event, much like <command>SUBSCRIBE_SET</command> is not
 handled by the log shipping code.  But its effect is, namely that
 <command>SYNC</command> events on the subscriber node will no longer
-contain updates to the set.
+contain updates to the set.</para>
 
 <para> Similarly, <command>SET_DROP_TABLE</command>,
 <command>SET_DROP_SEQUENCE</command>,
 <command>SET_MOVE_TABLE</command>,
 <command>SET_MOVE_SEQUENCE</command> <command>DROP_SET</command>,
 <command>MERGE_SET</command>, will be handled
-<quote>appropriately</quote>.
+<quote>appropriately</quote>.</para></listitem>
 
 <listitem><para> The various events involved in node configuration are
 irrelevant to log shipping:
@@ -163,7 +163,7 @@ irrelevant to log shipping:
 <command>STORE_PATH</command>,
 <command>DROP_PATH</command>,
 <command>STORE_LISTEN</command>,
-<command>DROP_LISTEN</command>
+<command>DROP_LISTEN</command></para></listitem>
 
 <listitem><para> Events involved in describing how particular sets are
 to be initially configured are similarly irrelevant:
@@ -172,7 +172,7 @@ to be initially configured are similarly irrelevant:
 <command>SET_ADD_TABLE</command>,
 <command>SET_ADD_SEQUENCE</command>,
 <command>STORE_TRIGGER</command>,
-<command>DROP_TRIGGER</command>,
+<command>DROP_TRIGGER</command>,</para></listitem>
 
 </itemizedlist>
 </para>
@@ -183,7 +183,7 @@ shipped</quote> node into a fully communicating &slony1; node that you
 could failover to.  This would be quite useful if you were trying to
 construct a cluster of (say) 6 nodes; you could start by creating one
 subscriber, and then use log shipping to populate the other 4 in
-parallel.
+parallel.</para>
 
 <para> This usage is not supported, but presumably one could add the
 &slony1; configuration to the node, and promote it into being a new
@@ -206,7 +206,7 @@ to <function> setsyncTracking_offline() </function> will fail, and
 your <application> psql</application> session will <command> ABORT
 </command>, and then run through the remainder of that SYNC file
 looking for a <command>COMMIT</command> or <command>ROLLBACK</command>
-so that it can try to move on to the next transaction.
+so that it can try to move on to the next transaction.</para>
 
 <para> But we <emphasis> know </emphasis> that the entire remainder of
 the file will fail!  It is futile to go through the parsing effort of
@@ -217,21 +217,21 @@ reading the remainder of the file.</para>
 <itemizedlist>
 
 <listitem><para> Read the first few lines of the file, up to and
-including the <function> setsyncTracking_offline() </function> call.  
+including the <function> setsyncTracking_offline() </function> call.</para></listitem>  
 
-<listitem><para> Try to apply it that far.
+<listitem><para> Try to apply it that far.</para></listitem>
 
 <listitem><para> If that failed, then it is futile to continue;
 <command>ROLLBACK</command> the transaction, and perhaps consider
-trying the next file.
+trying the next file.</para></listitem>
 
 <listitem><para> If the <function> setsyncTracking_offline()
 </function> call succeeds, then you have the right next SYNC file, and
 should apply it.  You should probably <command>ROLLBACK</command> the
 transaction, and then use <application>psql</application> to apply the
-entire file full of updates.
+entire file full of updates.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para>
 
 <para> In order to support the approach of grabbing just the first few
 lines of the sync file, the format has been set up to have a line of
@@ -243,7 +243,7 @@ dashes at the end of the <quote>header</quote> material:
 start transaction;
 select "_T1".setsyncTracking_offline(1, '744', '745');
 --------------------------------------------------------------------
-</programlisting>
+</programlisting></para></listitem>
 
 </itemizedlist>
 </sect2>

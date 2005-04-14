@@ -1,6 +1,5 @@
 <article id="slonikref">
 <title>Slonik Command Summary</title>
-
    <sect1><title>Introduction</title>
     
     <para>
@@ -84,7 +83,7 @@
 
      <para> Those commands are grouped together into one transaction
       per participating node. </para>
-<!-- ************************************************************ -->
+<!-- ************************************************************ --></sect3></sect2></sect1></article>
 
  <reference id="metacmds">
   <title>Slonik Meta Commands</title>

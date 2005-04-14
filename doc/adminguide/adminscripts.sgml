@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.22 2005-03-10 18:08:41 smsimms Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.23 2005-04-14 21:22:19 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -17,8 +17,7 @@ Unfortunately, this turned out to be a pretty large calibre
 couple of occasions, to pretty calamitous actions, so the behavior has
 been changed so that the scripts simply submit output to standard
 output.  An administrator should review the script
-<emphasis>before</emphasis> submitting it to <xref
-linkend="slonik">.</para>
+<emphasis>before</emphasis> submitting it to <xref linkend="slonik">.</para>
 
 <sect2><title>Node/Cluster Configuration - cluster.nodes</title>
 
@@ -226,7 +225,7 @@ from one version of &slony1; to another.</para>
 
 <para>This script connects to a &slony1; node, and queries various
 tables (sl_set, sl_node, sl_subscribe, sl_path) to compute what <xref
-linkend="stmtstorelisten"> requests should be submitted to the
+    linkend="stmtstorelisten"> requests should be submitted to the
 cluster.</para>
 
 <para> See the documentation in <xref linkend="autolisten"> for more
