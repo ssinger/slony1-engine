@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.60 2005-04-13 20:11:14 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.61 2005-04-14 10:25:59 xfade Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4428,7 +4428,7 @@ begin
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisunique
-					and PGXC.relname = p_idx_name;
+					and @NAMESPACE@.slon_quote_brute(PGXC.relname) = @NAMESPACE@.slon_quote_input(p_idx_name);
 		if not found then
 			raise exception ''Slony-I: table % has no unique index %'',
 					v_tab_fqname_quoted, p_idx_name;
@@ -4510,7 +4510,7 @@ declare
 	v_attfound		bool;
 begin
 	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
-	v_idx_name_quoted := @NAMESPACE@.slon_quote_input(p_idx_name);
+	v_idx_name_quoted := @NAMESPACE@.slon_quote_brute(p_idx_name);
 	--
 	-- Ensure that the table exists
 	--
@@ -4541,10 +4541,10 @@ begin
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisunique
-					and @NAMESPACE@.slon_quote_brute(PGXC.relname::text) = v_idx_name_quoted;
+					and @NAMESPACE@.slon_quote_brute(PGXC.relname) = v_idx_name_quoted;
 		if not found then
 			raise exception ''Slony-I: table % has no unique index %'',
-					v_tab_fqname_quoted, p_idx_name;
+					v_tab_fqname_quoted, v_idx_name_quoted;
 		end if;
 	end if;
 
