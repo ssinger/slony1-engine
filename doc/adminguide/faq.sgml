@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.27 2005-04-14 20:46:11 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.28 2005-04-14 21:27:36 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -678,7 +678,7 @@ isn't quite obvious; what takes place is that
 to diminish the number of network round trips.</para></question>
 
 <answer><para> A <emphasis>certain</emphasis> cause for this has not
-yet been arrived at.
+yet been arrived at.</para>
 
 <para>By the time we notice that there is a problem, the seemingly
 missed delete transaction has been cleaned out of <xref
@@ -716,7 +716,7 @@ into <xref linkend="table.sl-log-1">.  This <emphasis> ought
 linkend="table.sl-log-1">.  The latest punctured theory that comes
 from <emphasis>that</emphasis> was that perhaps this PK index has been
 corrupted (representing a <productname>PostgreSQL</productname> bug),
-and that perhaps the problem might be alleviated by running the query:
+and that perhaps the problem might be alleviated by running the query:</para>
 <programlisting>
 # reindex table _slonyschema.sl_log_1;
 </programlisting>
@@ -731,7 +731,7 @@ something like this, it will hang on you and never complete, because
 you can't have <command>wait for event</command> inside a
 <command>try</command> block. A <command>try</command> block is
 executed as one transaction, and the event that you are waiting for
-can never arrive inside the scope of the transaction.
+can never arrive inside the scope of the transaction.</para>
 
 <programlisting>
 try {
@@ -749,7 +749,7 @@ try {
       unlock set (id=1, origin=1);
       exit -1;
 }
-</programlisting></para></question>
+</programlisting></question>
 
 <answer><para> You must not invoke <xref linkend="stmtwaitevent">
 inside a <quote>try</quote> block.</para></answer>
@@ -797,7 +797,7 @@ linkend="stmtstoretrigger"> Slonik command.  </para>
 
 <para> The function <xref
 linkend="function.altertableforreplication-integer"> prepares each
-table for replication.
+table for replication.</para>
 
 <itemizedlist>
 
@@ -1017,10 +1017,10 @@ fix the entries in <xref linkend="table.sl-log-1"> by hand.
 
 <listitem><para> You'll need to identify from either the slon logs, or
 the PostgreSQL database logs exactly which statement it is that is
-causing the error.
+causing the error.</para></listitem>
 
 <listitem><para> You need to fix the Slony-defined triggers on the
-table in question.  This is done with the following procedure.
+table in question.  This is done with the following procedure.</para>
 
 <screen>
 BEGIN;
@@ -1034,9 +1034,9 @@ COMMIT;
 linkend="table.sl-log-1"> that have bad entries and fix them.  You may
 want to take down the slon daemons for all nodes except the master;
 that way, if you make a mistake, it won't immediately propagate
-through to the subscribers.
+through to the subscribers.</para>
 
-<para> Here is an example:
+<para> Here is an example:</para>
 
 <screen>
 BEGIN;
@@ -1078,7 +1078,7 @@ update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''
 
 <qandaentry> <question><para> After notification of a subscription on
 <emphasis>another</emphasis> node, replication falls over on one of
-the subscribers, with the following error message:
+the subscribers, with the following error message:</para>
 
 <screen>
 ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
@@ -1197,7 +1197,7 @@ update pg_shadow set usesuper = 't' where usename in ('slony',
 backups).
 
 <para> Unfortunately, I ran into a problem the next time I subscribed
-to a new set.
+to a new set.</para>
 
 <programlisting>
 DEBUG1 copy_set 28661
@@ -1218,7 +1218,7 @@ WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
 <answer><para> The problem is fairly self-evident; permission is being
 denied on the system table, <envar>pg_class</envar>.</para></answer>
 
-<answer><para> The <quote>fix</quote> is thus:
+<answer><para> The <quote>fix</quote> is thus:</para>
 <programlisting>
 update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
 </programlisting>
@@ -1242,7 +1242,7 @@ as a result...
 </question>
 
 <answer><para> There are two notable areas of
-<productname>PostgreSQL</productname> that cache query plans and OIDs:
+<productname>PostgreSQL</productname> that cache query plans and OIDs:</para>
 <itemizedlist>
 <listitem><para> Prepared statements
 <listitem><para> pl/pgSQL functions
@@ -1276,7 +1276,7 @@ could also announce an admin to take a look...  </para> </answer>
 
 <question><para> Node #1 was dropped via <xref
 linkend="stmtdropnode">, and the <xref linkend="slon"> one of the
-other nodes is repeatedly failing with the error message:
+other nodes is repeatedly failing with the error message:</para>
 
 <screen>
 ERROR  remoteWorkerThread_3: "begin transaction; set transaction isolation level
@@ -1311,10 +1311,10 @@ wouldn't be on node #3 if it had not already been processed
 successfully.  The easiest way to cope with this situation is to
 delete the offending <xref linkend="table.sl-event"> entry on node #2.
 You'll connect to node #2's database, and search for the
-<command>STORE_LISTEN</command> event:
+<command>STORE_LISTEN</command> event:</para>
 
 <para> <command> select * from sl_event where ev_type =
-'STORE_LISTEN';</command>
+'STORE_LISTEN';</command></para>
 
 <para> There may be several entries, only some of which need to be
 purged. </para>
