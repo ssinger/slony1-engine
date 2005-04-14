@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.28 2005-04-14 21:27:36 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.29 2005-04-14 21:47:27 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -716,7 +716,9 @@ into <xref linkend="table.sl-log-1">.  This <emphasis> ought
 linkend="table.sl-log-1">.  The latest punctured theory that comes
 from <emphasis>that</emphasis> was that perhaps this PK index has been
 corrupted (representing a <productname>PostgreSQL</productname> bug),
-and that perhaps the problem might be alleviated by running the query:</para>
+and that perhaps the problem might be alleviated by running the
+query:</para>
+
 <programlisting>
 # reindex table _slonyschema.sl_log_1;
 </programlisting>
@@ -856,7 +858,7 @@ node.  It is straightforward to do this: </para>
 <qandaentry>
 <question><para> After notification of a subscription on
 <emphasis>another</emphasis> node, replication falls over, starting
-with the following error message:
+with the following error message:</para>
 
 <screen>
 ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
@@ -941,7 +943,7 @@ there to be a connection connected to the node that sits <command>
 IDLE IN TRANSACTION </command> for a very long time. </para>
 
 <para> That open transaction will have multiple negative effects, all
-of which will adversely affect performance:
+of which will adversely affect performance:</para>
 
 <itemizedlist>
 
@@ -998,7 +1000,7 @@ numerous of them are left idle in transaction for hours at a time.
 <question> <para> Behaviour - all the subscriber nodes start to fall
 behind the origin, and all the logs on the subscriber nodes have the
 following error message repeating in them (when I encountered it,
-there was a nice long SQL statement above each entry):
+there was a nice long SQL statement above each entry):</para>
 
 <screen>
 ERROR remoteWorkerThread_1: helper 1 finished with error
@@ -1008,10 +1010,10 @@ ERROR remoteWorkerThread_1: SYNC aborted
 
 <answer> <para> Cause: you have likely issued <command>alter
 table</command> statements directly on the databases instead of using
-the slonik <xref linkend="stmtddlscript"> command.
+the slonik <xref linkend="stmtddlscript"> command.</para>
 
 <para>The solution is to rebuild the trigger on the affected table and
-fix the entries in <xref linkend="table.sl-log-1"> by hand.
+fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
 
 <itemizedlist>
 
@@ -1086,7 +1088,7 @@ DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_pat
 </screen>
 
 <para> This is then followed by a series of failed syncs as the <xref
-linkend="slon"> shuts down:
+linkend="slon"> shuts down:</para>
 
 <screen>
 DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
@@ -1194,7 +1196,7 @@ update pg_shadow set usesuper = 't' where usename in ('slony',
 'molly', 'dumpy');
 </command>
 (that command also deals with other users I set up to run vacuums and
-backups).
+backups).</para>
 
 <para> Unfortunately, I ran into a problem the next time I subscribed
 to a new set.</para>
