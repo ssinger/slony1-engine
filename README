@@ -37,6 +37,11 @@ individually, such as:
 --with-pgpkglibdir=<dir>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so
 --with-pgsharedir=<dir>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample
 
+PostgreSQL version 8 installs the server header #include files by
+default; with version 7.4 and earlier, you need to make sure that the
+build included doing "make install-all-headers", otherwise the server
+headers will not be installed.
+
 The complete list of files installed is:
 
     * $bindir/slon

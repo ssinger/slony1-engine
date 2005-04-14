@@ -1,6 +1,25 @@
-<!-- $Id: faq.sgml,v 1.26 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.27 2005-04-14 20:46:11 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
+
+<qandaentry>
+<question><para> I tried building &slony1; 1.1 and got the following
+error message:
+<screen>
+configure: error: Headers for libpqserver are not found in the includeserverdir.
+   This is the path to postgres.h. Please specify the includeserverdir with
+   --with-pgincludeserverdir=&lt;dir&gt;
+</screen>
+</para></question>
+
+<answer><para> You are almost certainly running version &postgres; 7.4
+or earlier, where server headers are not installed by default if you
+just do a <command>make install</command> of &postgres;.</para>
+
+<para> You need to install server headers when you install &postgres;
+via the command <command>make install-all-headers</command>.
+
+</para> </answer> </qandaentry>
 
 <qandaentry>
 
