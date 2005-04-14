@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.16 2005-03-15 20:12:02 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.17 2005-04-14 22:03:40 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -75,7 +75,7 @@ asked;</quote> some represent <emphasis>trouble found that seemed
 worth documenting</emphasis>.</para>
 
  &faq;
-
+</article>
 <part id="commandreference">
     <title>Core &slony1; Programs</title>
 	&slon;

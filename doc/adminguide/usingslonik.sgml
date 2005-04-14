@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.9 2005-04-14 21:22:20 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.10 2005-04-14 22:03:40 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -77,6 +77,7 @@ walks through the Perl objects as needed to satisfy whatever it is
 supposed to do.  </para></listitem>
 
 </itemizedlist>
+</sect1>
 
 <sect1 id="slonikshell"><title> Embedding Slonik in Shell Scripts </title>
 
@@ -252,6 +253,8 @@ shells are an option rather than a default.</para>
 <para> At that point, it makes sense to start looking at other
 scripting languages, of which Perl is the most ubiquitous, being
 widely available on Linux, <trademark>UNIX</trademark>, and BSD.
+</para>
+</sect1>
 
 <sect1 id="noslonik"><title> Not Using Slonik - Bare Metal &slony1;
 Functions </title>
@@ -316,12 +319,12 @@ cluster.</para>
 
 <para> In some cases, the function may be called on any node, and it
 can satisfactorily propagate to other nodes.  That is true for <xref
-	  linkend="function.storelisten-integer-integer-integer">, for instance.
+linkend="function.storelisten-integer-integer-integer">, for instance.
 In other cases, the function needs to be called on some particular
 node because that is the only place where data may be reasonably
 validated.  For instance, <xref
-	  linkend="function.subscribeset-integer-integer-integer-boolean"> must be
-called on the receivernode.</para></listitem>
+linkend="function.subscribeset-integer-integer-integer-boolean"> must
+be called on the receivernode.</para></listitem>
 
 <listitem><para> If that <quote>main</quote> function succeeds, then
 the configuration change is performed on the local node, and an event

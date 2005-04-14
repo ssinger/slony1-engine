@@ -746,9 +746,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	 Defaults to the <quote>client</quote>, if omitted.
 	</para></listitem>
       </varlistentry>
-     </variablelist>
-    <para> This uses <xref linkend= "function.droppath-integer-integer">. </para>
-   </refsect1>
+      </variablelist>
+      </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
   DROP PATH ( SERVER = 1, CLIENT = 2 );

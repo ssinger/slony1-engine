@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.29 2005-04-14 21:47:27 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.30 2005-04-14 22:03:40 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -823,7 +823,7 @@ replicated tables.</para>
 key</quote> index on the table rather than to the table
 itself.</para></listitem>
 
-</itemizedlist></para>
+</itemizedlist>
 
 <para> A somewhat unfortunate side-effect is that this handling of the
 rules and triggers somewhat <quote>tramples</quote> on them.  The
@@ -1103,7 +1103,7 @@ DEBUG2 remoteWorker_event: ignore new events due to shutdown
 DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
 </screen>
 
-</para></question>
+</question>
 
 <answer><para> If you see a <xref linkend="slon"> shutting down with
 <emphasis>ignore new events due to shutdown</emphasis> log entries,
@@ -1246,8 +1246,8 @@ as a result...
 <answer><para> There are two notable areas of
 <productname>PostgreSQL</productname> that cache query plans and OIDs:</para>
 <itemizedlist>
-<listitem><para> Prepared statements
-<listitem><para> pl/pgSQL functions
+<listitem><para> Prepared statements</para></listitem>
+<listitem><para> pl/pgSQL functions</para></listitem>
 </itemizedlist>
 
 <para> The problem isn't particularly a &slony1; one; it would occur
