@@ -1,4 +1,9 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.4 2005-02-18 22:43:35 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.6 2005-05-04 20:55:56 cbbrowne Exp $ -->
+
+
+
+
+
 
   <chapter id="schema"
            xreflabel="schemadoc">
@@ -2705,6 +2710,57 @@ WHERE (
 
 
 
+<!-- Function add_missing_table_field( text, text, text, text ) -->
+    <section id="function.add-missing-table-field-text-text-text-text"
+             xreflabel="schemadocadd_missing_table_field( text, text, text, text )">
+      <title id="function.add-missing-table-field-text-text-text-text-title">
+       add_missing_table_field( text, text, text, text )
+      </title>
+      <titleabbrev id="function.add-missing-table-field-text-text-text-text-titleabbrev">
+       add_missing_table_field( text, text, text, text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>boolean</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Add a column of a given type to a table if it is missing
+        <programlisting>
+DECLARE
+  p_namespace alias for $1;
+  p_table     alias for $2;
+  p_field     alias for $3;
+  p_type      alias for $4;
+  v_row       record;
+  v_query     text;
+BEGIN
+  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
+     where slon_quote_brute(n.nspname) = p_namespace and 
+         c.relnamespace = n.oid and
+         slon_quote_brute(c.relname) = p_table and
+         a.attrelid = c.oid and
+         slon_quote_brute(a.attname) = p_field;
+  if not found then
+    raise notice &#39;Upgrade table %.% - add field %&#39;, p_namespace, p_table, p_field;
+    v_query := &#39;alter table &#39; || p_namespace || &#39;.&#39; || p_table || &#39; add column &#39;;
+    v_query := v_query || p_field || &#39; &#39; || p_type || &#39;;&#39;;
+    execute v_query;
+    return &#39;t&#39;;
+  else
+    return &#39;f&#39;;
+  end if;
+END;</programlisting>
+      </para>
+    </section>
+
 <!-- Function altertableforreplication( integer ) -->
     <section id="function.altertableforreplication-integer"
              xreflabel="schemadocaltertableforreplication( integer )">
@@ -2760,8 +2816,8 @@ begin
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_idxname, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
-			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from sl_table T, sl_set S,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
@@ -2916,8 +2972,8 @@ begin
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
-			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from sl_table T, sl_set S,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN,
@@ -3591,10 +3647,12 @@ that.
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	v_attkind		text default &#39;&#39;;
 	v_attrow		record;
 	v_have_serial	bool default &#39;f&#39;;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
 	--
 	-- Loop over the attributes of this relation
 	-- and add a &quot;v&quot; for every user column, and a &quot;k&quot;
@@ -3604,8 +3662,8 @@ begin
 			from &quot;pg_catalog&quot;.pg_class PGC,
 			    &quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_attribute PGA
-			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+			where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			    slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -3625,7 +3683,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception &#39;Slony-I: table % not found&#39;, p_tab_fqname;
+		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -3634,15 +3692,15 @@ begin
 	--
 	if not v_have_serial then
 		raise exception &#39;Slony-I: table % does not have the serial key&#39;,
-				p_tab_fqname;
+				v_tab_fqname_quoted;
 	end if;
 
-	execute &#39;update &#39; || p_tab_fqname ||
+	execute &#39;update &#39; || v_tab_fqname_quoted ||
 		&#39; set &quot;_Slony-I_schemadoc_rowID&quot; =&#39; ||
 		&#39; &quot;pg_catalog&quot;.nextval(&#39;&#39;sl_rowid_seq&#39;&#39;);&#39;;
-	execute &#39;alter table only &#39; || p_tab_fqname ||
+	execute &#39;alter table only &#39; || v_tab_fqname_quoted ||
 		&#39; add unique (&quot;_Slony-I_schemadoc_rowID&quot;);&#39;;
-	execute &#39;alter table only &#39; || p_tab_fqname ||
+	execute &#39;alter table only &#39; || v_tab_fqname_quoted ||
 		&#39; alter column &quot;_Slony-I_schemadoc_rowID&quot; &#39; ||
 		&#39; set not null;&#39;;
 
@@ -3685,7 +3743,9 @@ primary key (if indexname is NULL).
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	p_idx_name		alias for $2;
+	v_idx_name_quoted	text;
 	v_idxrow		record;
 	v_attrow		record;
 	v_i				integer;
@@ -3693,6 +3753,20 @@ declare
 	v_attkind		text default &#39;&#39;;
 	v_attfound		bool;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
+	v_idx_name_quoted := slon_quote_brute(p_idx_name);
+	--
+	-- Ensure that the table exists
+	--
+	if (select PGC.relname
+				from &quot;pg_catalog&quot;.pg_class PGC,
+					&quot;pg_catalog&quot;.pg_namespace PGN
+				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
+					and PGN.oid = PGC.relnamespace) is null then
+		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
+	end if;
+
 	--
 	-- Lookup the tables primary key or the specified unique index
 	--
@@ -3705,16 +3779,16 @@ begin
 					&quot;pg_catalog&quot;.pg_namespace PGN,
 					&quot;pg_catalog&quot;.pg_index PGX,
 					&quot;pg_catalog&quot;.pg_class PGXC
-				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisunique
-					and PGXC.relname = p_idx_name;
+					and slon_quote_brute(PGXC.relname) = v_idx_name_quoted;
 		if not found then
 			raise exception &#39;Slony-I: table % has no unique index %&#39;,
-					p_tab_fqname, p_idx_name;
+					v_tab_fqname_quoted, v_idx_name_quoted;
 		end if;
 	end if;
 
@@ -3727,8 +3801,8 @@ begin
 			from &quot;pg_catalog&quot;.pg_class PGC,
 			    &quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_attribute PGA
-			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+			where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			    slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -3741,7 +3815,7 @@ begin
 		loop
 			select indkey[v_i] into v_attno from &quot;pg_catalog&quot;.pg_index
 					where indexrelid = v_idxrow.indexrelid;
-			if v_attno = 0 then
+			if v_attno isnull or v_attno = 0 then
 				exit;
 			end if;
 			if v_attrow.attnum = v_attno then
@@ -3795,8 +3869,10 @@ Given a tablename, construct the index name of the serial column.
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	v_row			record;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
 	--
 	-- Lookup the table name alone
 	--
@@ -3804,12 +3880,12 @@ begin
 			into v_row
 			from &quot;pg_catalog&quot;.pg_class PGC,
 				&quot;pg_catalog&quot;.pg_namespace PGN
-			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-				&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+			where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+				slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace;
 	if not found then
 		raise exception &#39;Slony-I: table % not found&#39;,
-				p_tab_fqname;
+				v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -3851,9 +3927,23 @@ is no unique index, it raises an exception.
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	p_idx_name		alias for $2;
 	v_idxrow		record;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
+	--
+	-- Ensure that the table exists
+	--
+	if (select PGC.relname
+				from &quot;pg_catalog&quot;.pg_class PGC,
+					&quot;pg_catalog&quot;.pg_namespace PGN
+				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
+					and PGN.oid = PGC.relnamespace) is null then
+		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
+	end if;
+
 	--
 	-- Lookup the tables primary key or the specified unique index
 	--
@@ -3864,15 +3954,15 @@ begin
 					&quot;pg_catalog&quot;.pg_namespace PGN,
 					&quot;pg_catalog&quot;.pg_index PGX,
 					&quot;pg_catalog&quot;.pg_class PGXC
-				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisprimary;
 		if not found then
 			raise exception &#39;Slony-I: table % has no primary key&#39;,
-					p_tab_fqname;
+					v_tab_fqname_quoted;
 		end if;
 	else
 		select PGXC.relname
@@ -3881,16 +3971,16 @@ begin
 					&quot;pg_catalog&quot;.pg_namespace PGN,
 					&quot;pg_catalog&quot;.pg_index PGX,
 					&quot;pg_catalog&quot;.pg_class PGXC
-				where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-					&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisunique
-					and PGXC.relname = p_idx_name;
+					and slon_quote_brute(PGXC.relname) = slon_quote_input(p_idx_name);
 		if not found then
 			raise exception &#39;Slony-I: table % has no unique index %&#39;,
-					p_tab_fqname, p_idx_name;
+					v_tab_fqname_quoted, p_idx_name;
 		end if;
 	end if;
 
@@ -4746,7 +4836,7 @@ begin
 			and SUB.sub_receiver = p_no_id
 			for update of S
 	loop
-		perform enableSubscription (v_sub_row.sub_set,,
+		perform enableSubscription (v_sub_row.sub_set,
 				v_sub_row.sub_provider, p_no_id);
 	end loop;
 
@@ -5638,8 +5728,8 @@ begin
 	-- Place the lockedSet trigger on all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			slon_quote_brute(PGC.relname) as tab_fqname
 			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where T.tab_set = p_set_id
@@ -6021,13 +6111,29 @@ begin
 		end loop;
 	end if;
 
+	-- On the new origin, raise an event - ACCEPT_SET
+	if v_local_node_id = p_new_origin then
+		-- Find the event number from the origin
+		select max(ev_seqno) as seqno into v_sub_row 
+			from sl_event
+			where ev_type = &#39;MOVE_SET&#39; and
+			  ev_data1 = p_set_id and
+			  ev_data2 = p_old_origin and
+			  ev_data3 = p_new_origin and
+			  ev_origin = p_old_origin;
+		
+		perform createEvent(&#39;_schemadoc&#39;, &#39;ACCEPT_SET&#39;, 
+			p_set_id, p_old_origin, p_new_origin, v_sub_row.seqno);
+	end if;
+
 	-- ----
 	-- Next we have to reverse the subscription path
 	-- ----
 	v_sub_last = p_new_origin;
 	select sub_provider into v_sub_node
 			from sl_subscribe
-			where sub_receiver = p_new_origin;
+			where sub_set = p_set_id
+			and sub_receiver = p_new_origin;
 	if not found then
 		raise exception &#39;Slony-I: subscription path broken in moveSet_int&#39;;
 	end if;
@@ -6387,8 +6493,8 @@ begin
 	-- ----
 	-- Get the sequences fully qualified name
 	-- ----
-	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			&quot;pg_catalog&quot;.quote_ident(PGC.relname) into v_fqname
+	select slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			slon_quote_brute(PGC.relname) into v_fqname
 		from sl_sequence SQ,
 			&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 		where SQ.seq_id = p_seq_id
@@ -6562,8 +6668,8 @@ begin
 		into v_seq_reloid, v_relkind, v_seq_relname, v_seq_nspname
 			from &quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
-			and p_fqname = &quot;pg_catalog&quot;.quote_ident(PGN.nspname) ||
-					&#39;.&#39; || &quot;pg_catalog&quot;.quote_ident(PGC.relname);
+			and slon_quote_input(p_fqname) = slon_quote_brute(PGN.nspname) ||
+					&#39;.&#39; || slon_quote_brute(PGC.relname);
 	if not found then
 		raise exception &#39;Slony-I: setAddSequence_int(): sequence % not found&#39;, 
 				p_fqname;
@@ -6756,8 +6862,8 @@ begin
 	select PGC.oid, PGC.relkind, PGC.relname, PGN.nspname into v_tab_reloid, v_relkind, v_tab_relname, v_tab_nspname
 			from &quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
-			and p_fqname = &quot;pg_catalog&quot;.quote_ident(PGN.nspname) ||
-					&#39;.&#39; || &quot;pg_catalog&quot;.quote_ident(PGC.relname);
+			and slon_quote_input(p_fqname) = slon_quote_brute(PGN.nspname) ||
+					&#39;.&#39; || slon_quote_brute(PGC.relname);
 	if not found then
 		raise exception &#39;Slony-I: setAddTable(): table % not found&#39;, 
 				p_fqname;
@@ -7448,6 +7554,112 @@ end;
       </para>
     </section>
 
+<!-- Function slon_quote_brute( text ) -->
+    <section id="function.slon-quote-brute-text"
+             xreflabel="schemadocslon_quote_brute( text )">
+      <title id="function.slon-quote-brute-text-title">
+       slon_quote_brute( text )
+      </title>
+      <titleabbrev id="function.slon-quote-brute-text-titleabbrev">
+       slon_quote_brute( text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Brutally quote the given text
+        <programlisting>
+declare	
+    p_tab_fqname alias for $1;
+    v_fqname text default &#39;&#39;;
+begin
+    v_fqname := &#39;&quot;&#39; || replace(p_tab_fqname,&#39;&quot;&#39;,&#39;\\&quot;&#39;) || &#39;&quot;&#39;;
+    return v_fqname;
+end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function slon_quote_input( text ) -->
+    <section id="function.slon-quote-input-text"
+             xreflabel="schemadocslon_quote_input( text )">
+      <title id="function.slon-quote-input-text-title">
+       slon_quote_input( text )
+      </title>
+      <titleabbrev id="function.slon-quote-input-text-titleabbrev">
+       slon_quote_input( text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       quote all words that aren&apos;t quoted yet
+        <programlisting>
+declare
+    p_tab_fqname alias for $1;
+    v_temp_fqname text default &#39;&#39;;
+    v_pre_quoted text[] default &#39;{}&#39;;
+    v_pre_quote_counter smallint default 0;
+    v_count_fqname smallint default 0;
+    v_fqname_split text[];
+    v_quoted_fqname text default &#39;&#39;;
+begin
+    v_temp_fqname := p_tab_fqname;
+
+    LOOP
+	v_pre_quote_counter := v_pre_quote_counter + 1;
+	v_pre_quoted[v_pre_quote_counter] := 
+	    substring(v_temp_fqname from &#39;%#&quot;&quot;%&quot;#&quot;%&#39; for &#39;#&#39;);
+	IF v_pre_quoted[v_pre_quote_counter] &lt;&gt; &#39;&#39; THEN
+	    v_temp_fqname := replace(v_temp_fqname,
+	        v_pre_quoted[v_pre_quote_counter], &#39;@&#39; ||
+		v_pre_quote_counter);
+	ELSE
+	    EXIT;
+	END IF;
+    END LOOP;
+
+    v_fqname_split := string_to_array(v_temp_fqname , &#39;.&#39;);
+    v_count_fqname := array_upper (v_fqname_split, 1);
+
+    FOR i in 1..v_count_fqname LOOP
+        IF substring(v_fqname_split[i],1,1) = &#39;@&#39; THEN
+            v_quoted_fqname := v_quoted_fqname || 
+		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
+        ELSE
+            v_quoted_fqname := v_quoted_fqname || &#39;&quot;&#39; || 
+		v_fqname_split[i] || &#39;&quot;&#39;;
+        END IF;
+
+        IF i &lt; v_count_fqname THEN
+            v_quoted_fqname := v_quoted_fqname || &#39;.&#39; ;
+        END IF;
+    END LOOP;
+	
+    return v_quoted_fqname;
+end;
+</programlisting>
+      </para>
+    </section>
+
 <!-- Function slonyversion(  ) -->
     <section id="function.slonyversion"
              xreflabel="schemadocslonyversion(  )">
@@ -7669,15 +7881,15 @@ begin
 		-- ----
 		if not exists (select 1 from sl_node
 						where no_id = p_li_origin) then
-			perform storeNode_int (p_li_origin, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_origin, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 		if not exists (select 1 from sl_node
 						where no_id = p_li_provider) then
-			perform storeNode_int (p_li_provider, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_provider, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 		if not exists (select 1 from sl_node
 						where no_id = p_li_receiver) then
-			perform storeNode_int (p_li_receiver, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_li_receiver, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 
 		insert into sl_listen
@@ -7915,11 +8127,11 @@ begin
 		-- ----
 		if not exists (select 1 from sl_node
 						where no_id = p_pa_server) then
-			perform storeNode_int (p_pa_server, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_pa_server, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 		if not exists (select 1 from sl_node
 						where no_id = p_pa_client) then
-			perform storeNode_int (p_pa_client, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_pa_client, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 		insert into sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry) values
@@ -8031,7 +8243,7 @@ begin
 	else
 		if not exists (select 1 from sl_node
 						where no_id = p_set_origin) then
-			perform storeNode_int (p_set_origin, &#39;&lt;event pending&gt;&#39;);
+			perform storeNode_int (p_set_origin, &#39;&lt;event pending&gt;&#39;, &#39;f&#39;);
 		end if;
 		insert into sl_set
 				(set_id, set_origin, set_comment) values
@@ -8230,6 +8442,17 @@ begin
 				&#39;Slony-I: set provider and receiver cannot be identical&#39;;
 	end if;
 
+
+	-- ---
+	-- Check to see if the set contains any tables - gripe if not - bug #1226
+	-- ---
+	if not exists (select true 
+		from sl_table
+		where tab_set = p_sub_set) then
+		raise notice &#39;subscribeSet:: set % has no tables - risk of problems - see bug 1226&#39;, p_sub_set;
+		raise notice &#39;http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226&#39;;
+	end if;
+
 	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
@@ -8394,10 +8617,12 @@ to nextval() for a sequence created for the cluster.
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	v_attkind		text default &#39;&#39;;
 	v_attrow		record;
 	v_have_serial	bool default &#39;f&#39;;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
 	--
 	-- Loop over the attributes of this relation
 	-- and add a &quot;v&quot; for every user column, and a &quot;k&quot;
@@ -8407,8 +8632,8 @@ begin
 			from &quot;pg_catalog&quot;.pg_class PGC,
 			    &quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_attribute PGA
-			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			    &quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+			where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			    slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
 				and not PGA.attisdropped
@@ -8428,7 +8653,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception &#39;Slony-I: table % not found&#39;, p_tab_fqname;
+		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -8439,11 +8664,11 @@ begin
 	-- updating all existing rows.
 	--
 	if not v_have_serial then
-		execute &#39;lock table &#39; || p_tab_fqname ||
+		execute &#39;lock table &#39; || v_tab_fqname_quoted ||
 			&#39; in access exclusive mode&#39;;
-		execute &#39;alter table only &#39; || p_tab_fqname ||
+		execute &#39;alter table only &#39; || v_tab_fqname_quoted ||
 			&#39; add column &quot;_Slony-I_schemadoc_rowID&quot; bigint;&#39;;
-		execute &#39;alter table only &#39; || p_tab_fqname ||
+		execute &#39;alter table only &#39; || v_tab_fqname_quoted ||
 			&#39; alter column &quot;_Slony-I_schemadoc_rowID&quot; &#39; ||
 			&#39; set default &quot;pg_catalog&quot;.nextval(&#39;&#39;sl_rowid_seq&#39;&#39;);&#39;;
 
@@ -8499,8 +8724,8 @@ begin
 	-- ----
 	-- Construct the tables fully qualified name and get its oid
 	-- ----
-	select &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-				&quot;pg_catalog&quot;.quote_ident(PGC.relname),
+	select slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+				slon_quote_brute(PGC.relname),
 				PGC.oid into v_tab_fqname, v_tab_oid
 			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC,
@@ -8560,14 +8785,16 @@ the table has no natural unique constraint.
         <programlisting>
 declare
 	p_tab_fqname	alias for $1;
+	v_tab_fqname_quoted	text default &#39;&#39;;
 	v_attnum		int2;
 begin
+	v_tab_fqname_quoted := slon_quote_input(p_tab_fqname);
 	select PGA.attnum into v_attnum
 			from &quot;pg_catalog&quot;.pg_class PGC,
 				&quot;pg_catalog&quot;.pg_namespace PGN,
 				&quot;pg_catalog&quot;.pg_attribute PGA
-			where &quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-				&quot;pg_catalog&quot;.quote_ident(PGC.relname) = p_tab_fqname
+			where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+				slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGC.relnamespace = PGN.oid
 				and PGA.attrelid = PGC.oid
 				and PGA.attname = &#39;_Slony-I_schemadoc_rowID&#39;
@@ -8712,8 +8939,8 @@ begin
 	-- Drop the lockedSet trigger from all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			&quot;pg_catalog&quot;.quote_ident(PGN.nspname) || &#39;.&#39; ||
-			&quot;pg_catalog&quot;.quote_ident(PGC.relname) as tab_fqname
+			slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
+			slon_quote_brute(PGC.relname) as tab_fqname
 			from sl_table T,
 				&quot;pg_catalog&quot;.pg_class PGC, &quot;pg_catalog&quot;.pg_namespace PGN
 			where T.tab_set = p_set_id
@@ -9045,16 +9272,16 @@ begin
         update sl_table set
                 tab_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(sl_table.tab_relname) = pg_catalog.quote_ident(PGC.relname)
+                where slon_quote_brute(sl_table.tab_relname) = slon_quote_brute(PGC.relname)
                         and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(sl_table.tab_nspname);
+			and slon_quote_brute(PGN.nspname) = slon_quote_brute(sl_table.tab_nspname);
 
         update sl_sequence set
                 seq_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where pg_catalog.quote_ident(sl_sequence.seq_relname) = pg_catalog.quote_ident(PGC.relname)
+                where slon_quote_brute(sl_sequence.seq_relname) = slon_quote_brute(PGC.relname)
                 	and PGC.relnamespace = PGN.oid
-			and pg_catalog.quote_ident(PGN.nspname) = pg_catalog.quote_ident(sl_sequence.seq_nspname);
+			and slon_quote_brute(PGN.nspname) = slon_quote_brute(sl_sequence.seq_nspname);
 
         return  createEvent(&#39;_schemadoc&#39;, &#39;RESET_CONFIG&#39;,
                         p_set_id, p_only_on_node);
@@ -9136,7 +9363,6 @@ begin
 		execute &#39;alter table sl_node add column no_spool boolean&#39;;
 		update sl_node set no_spool = false;
 	end if;
-
 	return p_old;
 end;
 </programlisting>
