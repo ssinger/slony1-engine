@@ -1,0 +1,20 @@
+Upgrading from an earlier version of Slony-I to 1.1
+-----------------------------------------------------
+$Id: UPGRADING,v 1.1 2005-04-15 21:59:34 cbbrowne Exp $
+
+When upgrading Slony-I, the Slony installation on all nodes in a cluster
+must be upgraded at once, using the slonik command UPDATE FUNCTIONS.
+
+While this requires temporarily stopping replication, it does not
+require an outage for applications that submit updates.
+
+The proper upgrade procedure is thus:
+
+	1. Stop the slons on all nodes.  (e.g. - old version of slon)
+	2. Install the new version of Slony-I software on all nodes.
+	3. Execute a slonik script containing the command
+
+		update functions (id = [whatever]);
+		for each node in the cluster.
+
+	4. Start all slons. 
