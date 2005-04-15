@@ -1,0 +1,66 @@
+Building and Installing Slony-I
+------------------------------------
+
+$Id: INSTALL,v 1.1 2005-04-15 19:33:15 cbbrowne Exp $
+
+Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
+
+Slony normally needs to be built and installed by the PostgreSQL Unix
+user.  The installation target must be identical to the existing
+PostgreSQL installation particularly in view of the fact that several
+Slony-I components represent libraries and SQL scripts that need to be
+in the PostgreSQL lib and share directories.
+
+On certain platforms (AIX and Solaris are known to need this),
+PostgreSQL must be configured with the option --enable-thread-safety
+to provide correct client libraries.
+
+The location of the PostgreSQL source-tree was specified with the
+configure option --with-pgsourcetree=<dir>. As of 1.1, this is no longer
+necessary; instead, locations of database components are specified
+individually, such as:
+
+--with-pgconfigdir=<dir>        Location of the PostgreSQL pg_config program.
+--with-pgbindir=<dir>           Location of the PostgreSQL postmaster.
+--with-pgincludedir=<dir>       Location of the PostgreSQL headers.
+--with-pgincludeserverdir=<dir> Location of the PostgreSQL server headers.
+--with-pglibdir=<dir>           Location of the PostgreSQL libs.
+--with-pgpkglibdir=<dir>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so
+--with-pgsharedir=<dir>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample
+
+PostgreSQL version 8 installs the server header #include files by
+default; with version 7.4 and earlier, you need to make sure that the
+build installation included doing "make install-all-headers",
+otherwise the server headers will not be installed, and Slony-I will
+be unable to compile.
+
+The main list of files installed within the PostgreSQL instance is:
+
+    * $bindir/slon
+    * $bindir/slonik
+    * $libdir/slony1_funcs$(DLSUFFIX)
+    * $libdir/xxid($DLSUFFIX)
+    * $datadir/slony1_base.sql
+    * $datadir/slony1_base.v73.sql
+    * $datadir/slony1_base.v74.sql
+    * $datadir/slony1_funcs.sql
+    * $datadir/slony1_funcs.v73.sql
+    * $datadir/slony1_funcs.v74.sql
+    * $datadir/xxid.v73.sql 
+
+The .sql files are not fully substituted yet.  And yes, both the 7.3
+and the 7.4 files get installed on a system, irrespective of its
+version.  The slonik admin utility does namespace/cluster
+substitutions within the files, and loads them files when creating
+replication nodes.  At that point in time, the database being
+initialized may be remote and may run a different version of
+PostgreSQL than that of the local host.
+
+At the very least, the two shared objects installed in the $libdir
+directory must be installed onto every computer that is supposed to
+become a Slony node. (Other components may be able to be invoked
+remotely from other hosts.)
+
+If you wish to have the "altperl" administration tools available, you
+need to specify the "--with-perltools=somewhere" option.
+
