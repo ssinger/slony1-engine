@@ -1,13 +1,6 @@
-<!-- $Id: intro.sgml,v 1.14 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.15 2005-04-15 22:27:05 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
-<sect2><title>Why yet another replication system?</title>
-
-<para>&slony1; was born from an idea to
-create a replication system that was not tied to a specific version of
-&postgres;, which is allowed to be started and stopped on an existing
-database with out the need for a dump/reload cycle.</para> </sect2>
-
 <sect2> <title>What &slony1; is</title>
 
 <para>&slony1; is a <quote>master to
@@ -42,11 +35,11 @@ well would include:
 staff who connect periodically to grab updates.  </para></listitem>
 </itemizedlist></para>
 
-<para> There are plans for a <quote>file-based log shipping</quote>
-extension where updates would be serialized into files.  Given that,
-log files could be distributed by any means desired without any need
-of feedback between the provider node and those nodes subscribing via
-<quote>log shipping.</quote></para>
+<para> There is also a <link linkend="logshipping">file-based log
+shipping</link> extension where updates would be serialized into
+files.  Given that, log files could be distributed by any means
+desired without any need of feedback between the provider node and
+those nodes subscribing via <quote>log shipping.</quote></para>
 
 <para> But &slony1;, by only having a single origin for each set, is
 quite unsuitable for <emphasis>really</emphasis> asynchronous multiway
@@ -62,65 +55,79 @@ address.</para>
 
 </sect2>
 
+<sect2><title>Why yet another replication system?</title>
+
+<para>&slony1; was born from an idea to create a replication system
+that was not tied to a specific version of &postgres;, which is
+allowed to be started and stopped on an existing database with out the
+need for a dump/reload cycle.</para> </sect2>
+
 <sect2><title> What &slony1; is not</title>
 
-<para>&slony1; is not a network management system.</para>
+<itemizedlist>
+<listitem><para>&slony1; is not a network management system.</para></listitem>
 
-<para> &slony1; does not have any functionality within it to detect a
+<listitem><para> &slony1; does not have any functionality within it to detect a
 node failure, nor to automatically promote a node to a master or other
-data origin.  It is quite possible that you may need to do that; that
+data origin.</para>
+
+<para> It is quite possible that you may need to do that; that
 will require that you combine some network tools that evaluate
 <emphasis> to your satisfaction </emphasis> which nodes you consider
 <quote>live</quote> and which nodes you consider <quote>dead</quote>
 along with some local policy to determine what to do under those
 circumstances.  &slony1; does not dictate any of that policy to
-you.</para>
+you.</para></listitem>
 
-<para>&slony1; is not multi-master; it is not a connection broker, and
-it doesn't make you coffee and toast in the morning.</para>
+<listitem><para>&slony1; is not multi-master; it is not a connection broker, and
+it doesn't make you coffee and toast in the morning.</para></listitem>
 
-<para>That being said, the plan is for a subsequent system,
-<productname>Slony-II</productname>, to provide
-<quote>multimaster</quote> capabilities.  But that is a separate
-project, and expectations for &slony1; should not be based on hopes
-for future projects.</para></sect2>
+</itemizedlist>
+
+<para>All that being said, there are tools available to help with some
+of these things, and there is a plan under way for a subsequent
+system, <productname>Slony-II</productname>, to provide
+<quote>multimaster</quote> capabilities.  But that represents a
+different, separate project, being implemented in a rather different
+fashion than &slony1;, and expectations for &slony1; should not be
+based on hopes for future projects.</para></sect2>
 
 <sect2><title> Why doesn't &slony1; do automatic fail-over/promotion?
 </title>
 
-<para>This is the job of network monitoring software, not &slony1;.
-Every site's configuration and fail-over paths are different.  For
-example, keep-alive monitoring with redundant NIC's and intelligent HA
-switches that guarantee race-condition-free takeover of a network
-address and disconnecting the <quote>failed</quote> node will vary
-based on network configuration, vendor choices, and the combinations
-of hardware and software in use.  This is clearly the realm of network
+<para>That is properly the responsibility of network monitoring
+software, not &slony1;.  The configuration, fail-over paths, and
+preferred policies will be different for each site.  For example,
+keep-alive monitoring with redundant NIC's and intelligent HA switches
+that guarantee race-condition-free takeover of a network address and
+disconnecting the <quote>failed</quote> node will vary based on
+network configuration, vendor choices, and the combinations of
+hardware and software in use.  This is clearly the realm of network
 management software and not &slony1;.</para>
 
 <para> Furthermore, choosing what to do based on the
 <quote>shape</quote> of the cluster represents local business policy.
-If &slony1; imposed failover policy on you,
-that might conflict with business requirements, thereby making
-&slony1; an unacceptable choice.</para>
+If &slony1; imposed failover policy on you, that might conflict with
+business requirements, thereby making &slony1; an unacceptable
+choice.</para>
 
 <para>As a result, let &slony1; do what it does best: provide database
 replication.</para></sect2>
 
 <sect2><title> Current Limitations</title>
 
-<para>&slony1; does not automatically
-propagate schema changes, nor does it have any ability to replicate
-large objects.  There is a single common reason for these limitations,
-namely that &slony1; operates using
-triggers, and neither schema changes nor large object operations can
-raise triggers suitable to tell &slony1;
-when those kinds of changes take place.</para>
+<para>&slony1; does not automatically propagate schema changes, nor
+does it have any ability to replicate large objects.  There is a
+single common reason for these limitations, namely that &slony1;
+operates using triggers, and neither schema changes nor large object
+operations can raise triggers suitable to tell &slony1; when those
+kinds of changes take place.</para>
 
 <para>There is a capability for &slony1; to propagate DDL changes if
 you submit them as scripts via the <application>slonik</application>
 <xref linkend="stmtddlscript"> operation.  That is not
 <quote>automatic;</quote> you have to construct an SQL DDL script and
-submit it.</para>
+submit it, and there are a number of further caveats.</para>
 
 <para>If you have those sorts of requirements, it may be worth
 exploring the use of &postgres; 8.0 <acronym>PITR</acronym> (Point In
@@ -156,14 +163,15 @@ increases.  Note the following relationships:
 <itemizedlist>
 
 <listitem><para> It is necessary to have <xref
-       linkend="table.sl-listen"> entries allowing connection from each node to every
-other node.  Most will normally not need to be very heavily, but it
-still means that there needs to be n(n-1) paths.  </para></listitem>
+linkend="table.sl-listen"> entries allowing connection from each node
+to every other node.  Most will normally not need to be very heavily,
+but it still means that there needs to be n(n-1) paths.
+</para></listitem>
 
 <listitem><para> Each SYNC applied needs to be reported back to all of
 the other nodes participating in the set so that the nodes all know
 that it is safe to purge <xref linkend="table.sl-log-1"> and <xref
-       linkend="table.sl-log-2"> data, as any <quote>forwarding</quote> node
+linkend="table.sl-log-2"> data, as any <quote>forwarding</quote> node
 could potentially take over as <quote>master</quote> at any time.  One
 might expect SYNC messages to need to travel through n/2 nodes to get
 propagated to their destinations; this means that each SYNC is

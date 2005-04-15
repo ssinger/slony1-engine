@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.12 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.13 2005-04-15 22:27:05 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -11,6 +11,8 @@ to understand the following major abstractions that it uses:</para>
 	<listitem><para>Node</para></listitem>
 	<listitem><para>Replication Set</para></listitem>
 	<listitem><para>Origin, Providers and Subscribers</para></listitem>
+        <listitem><para>slon daemons</para></listitem>
+        <listitem><para>slonik configuration processor</para></listitem>
 </itemizedlist>
 
 <sect2>
@@ -38,15 +40,16 @@ namespace/schema <envar>_something.</envar></para>
  <primary>node</primary>
 </indexterm>
 
-<para>A &slony1; Node is a named &postgres; database that will be participating in replication.</para>
+<para>A &slony1; Node is a named &postgres; database that will be
+participating in replication.</para>
 
 <para>It is defined, near the beginning of each Slonik script, using the directive:</para>
 <programlisting>
  NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
 </programlisting>
 
-<para>The <xref linkend="admconninfo"> information indicates a string
-argument that will ultimately be passed to the
+<para>The <xref linkend="admconninfo"> information indicates database
+connection information that will ultimately be passed to the
 <function>PQconnectdb()</function> libpq function.</para>
 
 <para>Thus, a &slony1; cluster consists of:</para>
@@ -62,8 +65,7 @@ argument that will ultimately be passed to the
 </indexterm>
 
 <para>A replication set is defined as a set of tables and sequences
-that are to be replicated between nodes in a
-&slony1; cluster.</para>
+that are to be replicated between nodes in a &slony1; cluster.</para>
 
 <para>You may have several sets, and the <quote>flow</quote> of
 replication does not need to be identical between those sets.</para>
@@ -99,6 +101,42 @@ reshaped, and the origin is expressly shifted to another node.)  But
 node that is subscribed to some set may also behave as a
 <quote>provider</quote> to other nodes in the cluster for that
 replication set.</para>
+</sect2>
+
+<sect2><title>slon Daemon</title>
+
+<para>For each node in the cluster, there will be a <xref
+linkend="slon"> process to manage replication activity for that node.
+</para>
+
+<para> <xref linkend="slon"> is a program implemented in C that
+processes replication events.  There are two main sorts of events:</para>
+
+<itemizedlist>
+
+<listitem><para> Configuration events</para>
+
+<para> These normally occur when a <xref linkend="slonik"> script is
+run, and submit updates to the configuration of the cluster. <para>
+</listitem>
+
+<listitem><para> <command>SYNC</command> events </para>
+
+<para> Updates to the tables that are replicated are grouped together
+into <command>SYNC</command>s; these groups of transactions are
+applied together to the subscriber nodes.  </para>
+</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2><title>slonik Configuration Processor</title>
+
+<para> The <xref linkend="slonik"> command processor processes scripts
+in a <quote>little language</quote> that are used to submit events to
+update the configuration of a &slony1; cluster.  This includes such
+things as adding and removing nodes, modifying communications paths,
+adding or removing subscriptions.
+</para>
 </sect2>
 </sect1>
 

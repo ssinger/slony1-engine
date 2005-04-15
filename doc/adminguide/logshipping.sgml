@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.8 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.9 2005-04-15 22:27:05 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 
@@ -58,24 +58,29 @@ in this form, including:
 subscription set generated?</para>
 </question>
 
-<answer> <para> Any <link linkend="slon"> slon </link> node can
-generate them by adding the <option>-a</option> option.</para>
+<answer> <para> Any <link linkend="slon"> slon </link> subscriber node
+can generate them by adding the <option>-a</option> option.</para>
+
+<note><para> Notice that this implies that in order to use log
+shipping, you must have at least one subscriber node. </para></note>
 </answer>
+
 </qandaentry>
-<qandaentry>
-<question> <para> What takes place when a failover/MOVE SET takes place?</para></question>
+
+<qandaentry> <question> <para> What takes place when a <xref
+linkend="stmtfailover">/ <xref linkend="stmtmoveset"> takes
+place?</para></question>
 
 <answer><para> Nothing special.  So long as the archiving node remains
 a subscriber, it will continue to generate logs.</para></answer>
 </qandaentry>
 
-<qandaentry>
-<question> <para> What if we run out of <quote>spool space</quote>?
-</para></question>
+<qandaentry> <question> <para> What if we run out of <quote>spool
+space</quote>?  </para></question>
 
-<answer><para> The node will stop accepting SYNCs until this problem
-is alleviated.  The database being subscribed to will also fall
-behind.  </para></answer>
+<answer><para> The node will stop accepting <command>SYNC</command>s
+until this problem is alleviated.  The database being subscribed to
+will also fall behind.  </para></answer>
 </qandaentry>
 
 <qandaentry>
@@ -89,8 +94,8 @@ the <quote>present</quote> state of the subscriber node.</para>
 </link></application> for the subscriber node with logging turned on.
 At any point after that, you can run
 <application>slony1_dump.sh</application>, which will pull the state
-of that subscriber as of some SYNC event.  Once the dump completes,
-all the SYNC logs generated from the time that dump
+of that subscriber as of some <command>SYNC</command> event.  Once the dump completes,
+all the <command>SYNC</command> logs generated from the time that dump
 <emphasis>started</emphasis> may be added to the dump in order to get
 a <quote>log shipping subscriber.</quote> </para></answer>
 </qandaentry>
@@ -114,14 +119,14 @@ entirety of the traffic going to a subscriber.  You cannot separate
 things out if there are multiple replication sets.  </para></answer>
 
 <answer><para> The <quote>log shipping node</quote> presently tracks
-only SYNC events.  This should be sufficient to cope with
+only <command>SYNC</command> events.  This should be sufficient to cope with
 <emphasis>some</emphasis> changes in cluster configuration, but not
 others.  </para>
 
 <para> Log shipping does <emphasis>not</emphasis> process certain
 additional events, with the implication that the introduction of any
 of the following events can invalidate the relationship between the
-SYNCs and the dump created using
+<command>SYNC</command>s and the dump created using
 <application>slony1_dump.sh</application> so that you'll likely need
 to rerun <application>slony1_dump.sh</application>:
 
@@ -200,11 +205,11 @@ you might want to use log shipping...</para> </note>
 <itemizedlist>
 
 <listitem><para> You <emphasis>don't</emphasis> want to blindly apply
-SYNC files because any given SYNC file may <emphasis>not</emphasis> be
+<command>SYNC</command> files because any given <command>SYNC</command> file may <emphasis>not</emphasis> be
 the right one.  If it's wrong, then the result will be that the call
 to <function> setsyncTracking_offline() </function> will fail, and
 your <application> psql</application> session will <command> ABORT
-</command>, and then run through the remainder of that SYNC file
+</command>, and then run through the remainder of that <command>SYNC</command> file
 looking for a <command>COMMIT</command> or <command>ROLLBACK</command>
 so that it can try to move on to the next transaction.</para>
 
@@ -226,10 +231,11 @@ including the <function> setsyncTracking_offline() </function> call.</para></lis
 trying the next file.</para></listitem>
 
 <listitem><para> If the <function> setsyncTracking_offline()
-</function> call succeeds, then you have the right next SYNC file, and
-should apply it.  You should probably <command>ROLLBACK</command> the
-transaction, and then use <application>psql</application> to apply the
-entire file full of updates.</para></listitem>
+</function> call succeeds, then you have the right next
+<command>SYNC</command> file, and should apply it.  You should
+probably <command>ROLLBACK</command> the transaction, and then use
+<application>psql</application> to apply the entire file full of
+updates.</para></listitem>
 
 </itemizedlist></para>
 

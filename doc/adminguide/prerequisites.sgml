@@ -7,8 +7,9 @@
 <para>The platforms that have received specific testing at the time of
 this release are FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha,
 osX-10.3, Linux-2.4X-i386 Linux-2.6X-i386 Linux-2.6X-amd64,
-<trademark>Solaris</trademark>-2.8-SPARC, <trademark>Solaris</trademark>-2.9-SPARC, AIX 5.1
-and OpenBSD-3.5-sparc64.</para>
+<trademark>Solaris</trademark>-2.8-SPARC,
+<trademark>Solaris</trademark>-2.9-SPARC, AIX 5.1 and
+OpenBSD-3.5-sparc64.</para>
 
 <para>There have been reports of success at running &slony1; hosts
 that are running PostgreSQL on Microsoft
@@ -59,16 +60,25 @@ and use &slony1;.  </para></listitem>
 <listitem><para> GNU packages may be included in the standard
 packaging for your operating system, or you may need to look for
 source code at your local GNU mirror (see <ulink
-       url="http://www.gnu.org/order/ftp.html">
+url="http://www.gnu.org/order/ftp.html">
 http://www.gnu.org/order/ftp.html </ulink> for a list) or at <ulink
-       url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink>
+url="ftp://ftp.gnu.org/gnu"> ftp://ftp.gnu.org/gnu </ulink>
 .)</para></listitem>
 
 <listitem><para> If you need to obtain &postgres; source, you can
 download it from your favorite &postgres; mirror.  See <ulink
-       url="http://www.postgresql.org/mirrors-www.html">
+url="http://www.postgresql.org/mirrors-www.html">
 http://www.postgresql.org/mirrors-www.html </ulink> for a
-list.</para></listitem> </itemizedlist> </para>
+list.</para></listitem>
+
+<listitem><para> This documentation is written in SGML using <ulink
+url="http://docbook.com/"> DocBook </ulink>, and may be processed into
+numerous formats including HTML, RTF, and PDF using tools in the
+<ulink url="http://docbook.sourceforge.net/"> DocBook Open Repository
+</ulink> along with <ulink url="http://openjade.sourceforge.net/">
+OpenJade.</ulink> </para></listitem>
+
+</itemizedlist> </para>
 
 <para>Also check to make sure you have sufficient disk space.  You
 will need approximately 5MB for the source tree during build and
@@ -149,13 +159,13 @@ leaping around due to Daylight Savings Time.</para>
 
 <para>It is necessary that the hosts that are to replicate between one
 another have <emphasis>bidirectional</emphasis> network communications
-to the &postgres; instances.  That is, if node B is replicating data
-from node A, it is necessary that there be a path from A to B and from
-B to A.  It is recommended that, as much as possible, all nodes in a
-&slony1; cluster allow this sort of bidirection communications from
-any node in the cluster to any other node in the cluster.</para>
+between the &postgres; instances.  That is, if node B is replicating
+data from node A, it is necessary that there be a path from A to B and
+from B to A.  It is recommended that, as much as possible, all nodes
+in a &slony1; cluster allow this sort of bidirection communications
+from any node in the cluster to any other node in the cluster.</para>
 
-<para>For ease of configuration, network addresses should be
+<para>For ease of configuration, network addresses should ideally be
 consistent across all of the nodes.  <xref linkend="stmtstorepath">
 does allow them to vary, but down this road lies madness as you try to
 manage the multiplicity of paths pointing to the same server.</para>
@@ -188,19 +198,19 @@ cluster can only be considered as stringent as those applied at the
 branch location that can't be kept secure compromises security for the
 cluster as a whole.</para>
 
-<para>In the future plans is a feature whereby updates for a
-particular replication set would be serialized via a scheme called
-<quote>log shipping.</quote> The data stored in
-<envar>sl_log_1</envar> and <envar>sl_log_2</envar> would be written
-out to log files on disk.  These files could be transmitted in any
+<para>New in &slony1; version 1.1 is a feature whereby updates for a
+particular replication set may be serialized via a scheme called <link
+linkend="logshipping">log shipping. </link> The data stored in
+<envar>sl_log_1</envar> and <envar>sl_log_2</envar> is also written
+out to log files on disk.  These files may then be transmitted in any
 manner desired, whether via scp, FTP, burning them onto DVD-ROMs and
 mailing them, or, at the frivolous end of the spectrum, by recording
 them on a USB <quote>flash device</quote> and attaching them to birds,
 allowing some equivalent to <ulink
-    url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
+url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
 datagrams on avian carriers - RFC 1149.</ulink> But whatever the
-transmission mechanism, this will allow one way communications such
-that subscribers that use log shipping have no need of access to other
+transmission mechanism, this allows one way communications such that
+subscribers that use log shipping have no need of access to other
 &slony1; nodes.</para>
 
 </sect2>

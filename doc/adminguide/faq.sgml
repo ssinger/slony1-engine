@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.30 2005-04-14 22:03:40 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.31 2005-04-15 22:27:05 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -38,7 +38,7 @@ right/wrong authentication information there.</para>
 </answer>
 </qandaentry>
 
-<qandaentry id="SlonyFAQ02">
+<qandaentry id="threadsafety">
 
 <question><para> Some events are moving around, but no replication is
 taking place.</para>
@@ -68,14 +68,19 @@ compiled and linked with <option>--enable-thread-safety</option>.</para>
 
 <para>For instance, I ran into the problem one that
 <envar>LD_LIBRARY_PATH</envar> had been set, on Solaris, to point to
-libraries from an old <productname>PostgreSQL</productname> compile.  That meant
-that even though the database <emphasis>had</emphasis> been compiled with
-<option>--enable-thread-safety</option>, and <application>slon</application> had been
-compiled against that, <application>slon</application> was being dynamically linked
-to the <quote>bad old thread-unsafe version,</quote> so slon didn't work.  It
-wasn't clear that this was the case until I ran <command>ldd</command> against
-<application>slon</application>.</para>
-</answer></qandaentry>
+libraries from an old &postgres; compile.  That meant that even though
+the database <emphasis>had</emphasis> been compiled with
+<option>--enable-thread-safety</option>, and
+<application>slon</application> had been compiled against that,
+<application>slon</application> was being dynamically linked to the
+<quote>bad old thread-unsafe version,</quote> so slon didn't work.  It
+wasn't clear that this was the case until I ran <command>ldd</command>
+against <application>slon</application>.</para> </answer>
+
+<answer><para> Note that with libpq version 7.4.2, on Solaris, a
+further patch <xref linkend="threadpatch"> was required.  </para>
+</answer>
+</qandaentry>
 
 <qandaentry>
 <question> <para>I tried creating a CLUSTER NAME with a "-" in it.
@@ -179,9 +184,9 @@ that it's hitting.</para>
 <para>Long and short: This points to a need to <quote>audit</quote>
 what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right.  See also <link linkend="slonyfaq02">
-SlonyFAQ02 </link> concerning threading issues on Solaris ...</para>
-</answer></qandaentry>
+not to link up quite right.  See also <link linkend="threadsafety">
+thread safety </link> concerning threading issues on Solaris
+...</para> </answer></qandaentry>
 
 <qandaentry>
 <question><para>Table indexes with FQ namespace names
@@ -1244,7 +1249,7 @@ as a result...
 </question>
 
 <answer><para> There are two notable areas of
-<productname>PostgreSQL</productname> that cache query plans and OIDs:</para>
+&postgres; that cache query plans and OIDs:</para>
 <itemizedlist>
 <listitem><para> Prepared statements</para></listitem>
 <listitem><para> pl/pgSQL functions</para></listitem>
