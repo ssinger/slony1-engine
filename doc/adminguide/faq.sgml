@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.31 2005-04-15 22:27:05 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.32 2005-04-18 16:20:14 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1342,6 +1342,79 @@ starts up, it will no longer find the <quote>offensive</quote>
 <command>STORE_LISTEN</command> events, and replication can continue.
 (You may then run into some other problem where an old stored event is
 referring to no-longer-existant configuration...) </para></answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<question><para> I am using <productname> Frotznik Freenix
+4.5</productname>, with its <acronym>FFPM</acronym> (Frotznik Freenix
+Package Manager) package management system.  It comes with
+<acronym>FFPM</acronym> packages for &postgres; 7.4.7, which are what
+I am using for my databases, but they don't include &slony1; in the
+packaging.  How do I add &slony1; to this?  </para>
+</question>
+
+
+<answer><para> <productname>Frotznik Freenix</productname> is new to
+me, so it's a bit dangerous to give really hard-and-fast definitive
+answers.  </para>
+
+<para> The answers differ somewhat between the various combinations of
+&postgres; and &slony1; versions; the newer versions generally
+somewhat easier to cope with than are the older versions.  In general,
+you almost certainly need to compile &slony1; from sources; depending
+on versioning of both &slony1; and &postgres;, you
+<emphasis>may</emphasis> need to compile &postgres; from scratch.
+(Whether you need to <emphasis> use </emphasis> the &postgres; compile
+is another matter; you probably don't...) </para>
+
+<itemizedlist>
+
+<listitem><para> &slony1; version 1.0.5 and earlier require having a
+fully configured copy of &postgres; sources available when you compile
+&slony1;.</para>
+
+<para> <emphasis>Hopefully</emphasis> you can make the configuration
+this closely match against the configuration in use by the packaged
+version of &postgres; by checking the configuration using the command
+<command> pg_config --configure</command>. </para> </listitem>
+
+<listitem> <para> &slony1; version 1.1 simplifies this considerably;
+it does not require the full copy of &postgres; sources, but can,
+instead, refer to the various locations where &postgres; libraries,
+binaries, configuration, and <command> #include </command> files are
+located.  </para> </listitem>
+
+<listitem><para> &postgres; 8.0 and higher is generally easier to deal
+with in that a <quote>default</quote> installation includes all of the
+<command> #include </command> files.  </para>
+
+<para> If you are using an earlier version of &postgres;, you may find
+it necessary to resort to a source installation if the packaged
+version did not install the <quote>server
+<command>#include</command></quote> files, which are installed by the
+command <command> make install-all-headers </command>.</para>
+</listitem>
+
+</itemizedlist>
+
+<para> In effect, the <quote>worst case</quote> scenario takes place
+if you are using a version of &slony1; earlier than 1.1 with an
+<quote>elderly</quote> version of &postgres;, in which case you can
+expect to need to compile &postgres; from scratch in order to have
+everything that the &slony1; compile needs even though you are using a
+<quote>packaged</quote> version of &postgres;.</para>
+
+<para> If you are running a recent &postgres; and a recent &slony1;,
+then the codependencies can be fairly small, and you may not need
+extra &postgres; sources.  These improvements should ease the
+production of &slony1; packages so that you might soon even be able to
+hope to avoid compiling &slony1;.</para>
+
+</answer>
+
+<answer><para> </para> </answer>
 
 </qandaentry>
 
