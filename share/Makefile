@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.2 2005-02-11 17:05:05 darcyb Exp $
+#	$Id: Makefile,v 1.3 2005-04-20 13:02:22 cbbrowne Exp $
 # ----------
 
 slony_subdir = share
@@ -17,7 +17,7 @@ CONF_NAMES = slon.conf-sample
 
 install: 
 	for file in $(CONF_NAMES); do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(pgsharedir) || exit ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(sysconfdir) || exit ; \
 	done
 
 distdir: $(DISTFILES)
