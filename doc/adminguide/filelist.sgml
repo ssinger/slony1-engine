@@ -1,4 +1,4 @@
-<!-- $Id: filelist.sgml,v 1.10 2005-02-21 18:35:46 cbbrowne Exp $ -->
+<!-- $Id: filelist.sgml,v 1.11 2005-04-20 18:29:00 cbbrowne Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
@@ -37,6 +37,7 @@
 <!entity problems           SYSTEM "problems.sgml">
 <!entity slonybook          SYSTEM "slony.sgml">
 <!entity logshipping        SYSTEM "logshipping.sgml">
+<!entity bestpractices      SYSTEM "bestpractices.sgml">
 
 <!-- back matter -->
 <!entity biblio     SYSTEM "biblio.sgml">

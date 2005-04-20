@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.15 2005-04-15 22:27:05 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.16 2005-04-20 18:29:00 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -60,7 +60,9 @@ address.</para>
 <para>&slony1; was born from an idea to create a replication system
 that was not tied to a specific version of &postgres;, which is
 allowed to be started and stopped on an existing database with out the
-need for a dump/reload cycle.</para> </sect2>
+need for a dump/reload cycle.</para>
+
+</sect2>
 
 <sect2><title> What &slony1; is not</title>
 
@@ -147,10 +149,81 @@ server</quote> which cannot be used without it ceasing to be
 <quote>standby.</quote></para></listitem>
 
 </itemizedlist></para>
+</sect2>
+
+<sect2><title>Replication Models</title>
 
 <para>There are a number of distinct models for database replication;
 it is impossible for one replication system to be all things to all
-people.</para></sect2>
+people.</para>
+
+<para> &slony1; implements a particular model, namely that of
+asynchronous replication, using triggers, where a single
+<quote>origin</quote> may be replicated to multiple
+<quote>subscribers</quote> including cascaded subscribers.</para>
+
+<para> There are a number of other replication models which are
+<emphasis> different </emphasis>; it is worth pointing out other
+approaches that exist.  &slony1; is certainly not the only approach,
+and for some applications, it is <emphasis> not </emphasis> the
+optimal approach. </para>
+
+<itemizedlist> 
+<listitem><para> Synchronous single-origin multi-subscriber replication</para>
+
+<para> In a synchronous system, updates cannot be committed at the
+origin until they have also been accepted by subscriber nodes.  This
+enhances the security property of nonrepudiation as updates will not
+be committed until they can be confirmed elsewhere.  Unfortunately,
+the requirement that changes be applied in multiple places introduces
+a performance bottleneck.  </para>
+
+<para> This approach is similar to the two phase commit processing
+model of the XA transaction processing protocol.</para>
+</listitem>
+
+<listitem><para> Synchronous multi-origin multi-subscriber replication </para> 
+
+<para> This is the model being used by the forthcoming
+<productname>Slony-II</productname> system.  Synchronous replication
+systems all <quote>suffer</quote> from the performance bottleneck that
+updates must be accepted on all nodes before they can be
+<command>commit</command>ted anywhere.  </para>
+</listitem>
+
+<listitem><para> Asynchronous multimaster replication with conflict
+avoidance/resolution</para>
+
+<para> Perhaps the most widely used replication system of this sort is
+the <productname>PalmOS HotSync</productname> system.
+<trademark>Lotus Notes</trademark> also provides a replication system
+that functions in much this manner.</para>
+
+<para> The characteristic <quote>troublesome problem</quote> with this
+style of replication is that it is possible for conflicts to arise
+because users update the same record in different ways on different
+nodes. </para>
+
+<para> In the case of <productname>HotSync</productname>, if conflicts
+arise due to records being updated on multiple nodes, the
+<quote>resolution</quote> is to simply create a duplicate record to
+reflect the two changes, and have the user resolve the conflict
+manually. </para>
+
+<para> Some async multimaster systems try to resolve conflicts by
+finding ways to apply partial record updates.  For instance, with an
+address update, one user, on one node, might update the phone number
+for an address, and another user might update the street address, and
+the conflict resolution system might try to apply these updates in a
+non-conflicting order.</para>
+
+<para> Conflict resolution systems almost always require some domain
+knowledge of the application being used. </para>
+</listitem>
+
+</itemizedlist>
+
+</sect2>
 </sect1>
 
 <sect1 id="slonylistenercosts"><title>

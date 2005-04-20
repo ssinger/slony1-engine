@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.32 2005-04-18 16:20:14 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.33 2005-04-20 18:29:00 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1038,7 +1038,8 @@ COMMIT;
 </screen>
 
 <para>You then need to find the rows in <xref
-linkend="table.sl-log-1"> that have bad entries and fix them.  You may
+linkend="table.sl-log-1"> that have bad 
+entries and fix them.  You may
 want to take down the slon daemons for all nodes except the master;
 that way, if you make a mistake, it won't immediately propagate
 through to the subscribers.</para>
@@ -1416,6 +1417,34 @@ hope to avoid compiling &slony1;.</para>
 
 <answer><para> </para> </answer>
 
+</qandaentry>
+
+<qandaentry id="sequenceset"><question><para> <ulink url=
+"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
+Bug #1226 </ulink> indicates an error condition that can come up if
+you have a replication set that consists solely of sequences. </para>
+</question>
+
+<answer> <para> The  short answer is that having a replication set
+consisting only of sequences is not a <link linkend="bestpractices">
+best practice.</link> </para>
+</answer>
+
+<answer>
+<para> The problem with a sequence-only set comes up only if you have
+a case where the only subscriptions that are active for a particular
+subscriber to a particular provider are for
+<quote>sequence-only</quote> sets.  If a node gets into that state,
+replication will fail, as the query that looks for data from <xref
+linkend="table.sl-log-1"> has no tables to find, and the query will be
+malformed, and fail.  If a replication set <emphasis>with</emphasis>
+tables is added back to the mix, everything will work out fine; it
+just <emphasis>seems</emphasis> scary.
+</para>
+
+<para> This problem should be resolved some time after &slony1;
+1.1.0.</para>
+</answer>
 </qandaentry>
 
 </qandaset>

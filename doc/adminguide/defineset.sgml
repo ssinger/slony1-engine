@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.15 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.16 2005-04-20 18:29:00 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -155,6 +155,16 @@ each SYNC by each sequence that is replicated.</para>
 sequence hasn't changed since it was last checked, perhaps the same
 value need not be stored over and over; some thought needs to go into
 how to do that safely.</para></listitem>
+
+<listitem><para> <ulink url=
+"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
+Bug #1226 </ulink> indicates an error condition that can come up if
+you have a replication set that consists solely of sequences. </para>
+
+<para> This is documented more in the <link linkend="sequenceset"> FAQ
+here;</link> the long and short is that having a replication set
+consisting only of sequences is not a particularly good
+idea.</para></listitem>
 
 </itemizedlist></para></sect2>
 

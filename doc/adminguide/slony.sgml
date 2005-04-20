@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.17 2005-04-14 22:03:40 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.18 2005-04-20 18:29:00 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -56,6 +56,7 @@
  &usingslonik;
  &adminscripts;
  &versionupgrade;
+ &bestpractices;
  &help;
 </article>
 
