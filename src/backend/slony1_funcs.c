@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.30 2005-04-22 15:33:10 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.31 2005-04-22 20:20:18 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1105,7 +1105,7 @@ slon_quote_literal(char *str)
 	*cp2++ = '\'';
 	while (len-- > 0)
 	{
-		if ((wl = pg_mblen(cp1)) != 1)
+		if ((wl = pg_mblen((unsigned char *)cp1)) != 1)
 		{
 			len -= wl;
 
