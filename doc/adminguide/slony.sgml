@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.18 2005-04-20 18:29:00 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.19 2005-04-25 18:27:25 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -49,6 +49,7 @@
  &failover;
  &listenpaths;
  &plainpaths;
+ &locking;
  &addthings;
  &dropthings;
  &logshipping;

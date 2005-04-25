@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.14 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.15 2005-04-25 18:27:25 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -115,8 +115,9 @@ database schema.</para></listitem>
 facility is somewhat fragile and fairly dangerous.  Making DDL changes
 must not be done in a sloppy or cavalier manner.  If your applications
 do not have fairly stable SQL schemas, then using &slony1; for
-replication is likely to be fraught with trouble and
-frustration.</para>
+replication is likely to be fraught with trouble and frustration.  See
+the section on <link linkend="locking"> locking issues </link> for
+more discussion of related issues.</para>
 
 <para>There is an article on how to manage &slony1; schema changes
 here: <ulink url="http://www.varlena.com/varlena/GeneralBits/88.php">

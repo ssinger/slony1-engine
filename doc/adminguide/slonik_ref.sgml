@@ -1705,12 +1705,16 @@ UNSUBSCRIBE SET (
     </para>
 
     <para> This command must be the first in a possible statement
-     group (<command>try</command>).  The reason for this is that it
-     needs to commit the changes made to the tables (adding a special
-     trigger function) before it can wait for every concurrent
-     transaction to finish. At the same time it cannot hold an open
-     transaction to the same database itself since this would result in
-     blocking itself forever.
+    group (<command>try</command>).  The reason for this is that it
+    needs to commit the changes made to the tables (adding a special
+    trigger function) before it can wait for every concurrent
+    transaction to finish. At the same time it cannot hold an open
+    transaction to the same database itself since this would result in
+    blocking itself forever.</para>
+
+    <para> Note that this is a <link linkend="locking"> locking
+    operation, </link> which means that it can get stuck behind other
+    database activity.
      
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
@@ -1815,9 +1819,12 @@ UNLOCK SET (
      origin).  You would probably prefer to <command>MOVE SET</command>
      instead of <command>FAILOVER</command>, if at all possible, as
      <command>FAILOVER</command> winds up discarding the old origin
-     node as being corrupted.
+     node as being corrupted.</para>
      
-
+    <para> Note that this is a <link linkend="locking"> locking
+    operation, </link> which means that it can get stuck behind other
+    database activity.
+     
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to transfer</para></listitem>
@@ -1977,8 +1984,12 @@ FAILOVER (
     
     <para> See also the warnings in <xref linkend="ddlchanges">.</para>
 
-    <para> Note that at the start of this event, all tables in the
-    specified set are unlocked via the function
+    <para> Note that this is a <link linkend="locking"> locking
+    operation, </link> which means that it can get stuck behind other
+    database activity.
+     
+    <para> At the start of this event, all tables in the specified set
+    are unlocked via the function
     <function>alterTableRestore(tab_id)</function>.  After the SQL
     script has run, they are returned to <quote>replicating
     state</quote> using

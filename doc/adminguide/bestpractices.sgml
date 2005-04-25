@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.1 2005-04-20 18:29:00 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.2 2005-04-25 18:27:25 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -18,8 +18,8 @@ of your set of database servers, and of your usage patterns for those
 servers. </para>
 
 <para> There are, however, a number of things that early adopters of
-&slony1; have discovered which can at least help to suggest some
-policies you might want to consider. </para>
+&slony1; have discovered which can at least help to suggest the sorts
+of policies you might want to consider. </para>
 
 <itemizedlist>
 
@@ -133,6 +133,48 @@ lot of data should be taken with great care; the section on <link
 linkend="dropthings"> Dropping things from &slony1; Replication</link>
 discusses the different sorts of <quote>deletion</quote> that &slony1;
 supports.  </para> </listitem>
+
+<listitem><para> <link linkend="Locking"> Locking issues </link>
+</para>
+
+<para> Certain &slony1; operations, notably <link
+linkend="stmtsetaddtable"> <command>set add table</command> </link>,
+<link linkend="stmtmoveset"> <command> move set</command> </link>,
+<link linkend="stmtlockset"> <command> lock set </command> </link>,
+and <link linkend="stmtddlscript"> <command>execute script</command>
+</link> require acquiring <emphasis>exclusive locks</emphasis> on the
+tables being replicated. </para>
+
+<para> Depending on the kind of activity on the databases, this may or
+may not have the effect of requiring a (hopefully brief) database
+outage. </para> </listitem>
+
+<listitem id="slonyuser"><para> &slony1;-specific user names. </para>
+
+<para> It has proven useful to define a <command>slony</command> user
+for use by &slony1;, as distinct from a generic
+<command>postgres</command> or <command>pgsql</command> user.  </para>
+
+<para> If all sorts of automatic <quote>maintenance</quote>
+activities, such as <command>vacuum</command>ing and performing
+backups, are performed under the <quote>ownership</quote> of a single
+&postgres; user, it turns out to be pretty easy to run into deadlock
+problems. </para>
+
+<para> For instance, a series of <command>vacuums</command> that
+unexpectedly run against a database that has a large
+<command>SUBSCRIBE_SET</command> event under way may run into a
+deadlock which would roll back several hours worth of data copying
+work.</para>
+
+<para> If, instead, different maintenance roles are performed by
+different users, you may, during vital operations such as
+<command>SUBSCRIBE_SET</command>, lock out other users at the
+<filename>pg_hba.conf</filename> level, only allowing the
+<command>slony</command> user in, which substantially reduces the risk
+of problems while the subscription is in progress.
+</para>
+</listitem>
 
 <listitem><para> listen path management </para> </listitem>
 
