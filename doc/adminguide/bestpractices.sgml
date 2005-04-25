@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.2 2005-04-25 18:27:25 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.3 2005-04-25 22:41:02 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -176,15 +176,95 @@ of problems while the subscription is in progress.
 </para>
 </listitem>
 
-<listitem><para> listen path management </para> </listitem>
+<listitem><para> Path configuration </para> 
 
-<listitem><para> path configuration </para> </listitem>
+<para> The section on <link linkend="plainpaths"> Path Communications
+</link> discusses the issues surrounding what network connections need
+to be in place in order for &slony1; to function.</para>
+</listitem>
 
-<listitem><para> configuring slon </para> </listitem>
+<listitem><para> The section on <link linkend="listenpaths"> listen
+paths </link> discusses the issues surrounding the table <xref
+linkend="table.sl-listen">.   </para>
 
-<listitem><para> when subscribing nodes </para> </listitem>
+<para> As of &slony1; 1.1, its contents are computed automatically
+based on the communications information available to &slony1; which
+should alleviate the problems found in earlier versions where this had
+to be configured by hand.  Many seemingly inexplicable communications
+failures, where nodes failed to talk to one another even though they
+technically could, were a result of incorrect listen path
+configuration. </para> </listitem>
 
-<listitem><para> managing use of slonik </para> </listitem>
+<listitem><para> Configuring <xref linkend="slon"> </para> 
+
+<para> As of version 1.1, <xref linkend="slon"> configuration may be
+drawn either from the command line or from configuration files.
+<quote>Best</quote> practices have yet to emerge from the two options:
+
+<itemizedlist>
+<listitem><para> Configuration via command line options</para> 
+
+<para> This approach has the merit that all the options that are
+active are visible in the process environment.  (And if there are a
+lot of them, they may be a nuisance to read.)</para>
+
+<para> Unfortunately, if you
+invoke <xref linkend="slon"> from the command line, you could
+<emphasis>forget</emphasis> to include <link linkend="logshipping">
+log shipping </link> configuration and thereby destroy the sequence of
+logs for a log shipping node. </para>
+</listitem>
+
+<listitem><para> Unlike when command line options are used, the active
+options are <emphasis>not</emphasis> visible.  They can only be
+inferred from the name and/or contents of the <xref linkend="slon">
+configuration file, and will not reflect subsequent changes to the
+configuration file.  </para> 
+
+<para> By putting the options in a file, you won't forget including
+any of them, so this is safer for <link linkend="logshipping"> log
+shipping. </link> </para> </listitem>
+
+</itemizedlist>
+</para>
+</listitem>
+
+<listitem><para> Things to do when subscribing nodes </para>
+
+<para> When a new node is running the <command>COPY_SET</command>
+event for a large replication set (<emphasis>e.g.</emphasis> - one
+which takes several hours to subscribe) it has been found to be
+desirable to lock all users other than the <command>slony</command>
+user out of the new subscriber because:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Applications will run into partially-copied,
+half-baked data that is not totally consistent. </para> </listitem>
+
+<listitem><para> It is possible for applications (and maintenance
+scripts) to submit combinations of queries that will get the system
+into a deadlock situation, thereby terminating the
+<command>COPY_SET</command> event, and requiring the subscription to
+start over again.  </para> </listitem>
+
+</itemizedlist>
+
+<para> It <emphasis>may</emphasis> be worth considering turning the
+&postgres; <function>fsync</function> functionality off during the
+copying of data, as this will improve performance, and if the database
+<quote>falls over</quote> during the <command>COPY_SET</command>
+event, you will be restarting the copy of the whole replication
+set.</para>
+</listitem>
+
+<listitem><para> Managing use of slonik </para> 
+
+<para> The notes on <link linkend="usingslonik"> Using Slonik </link>
+describe some of the lessons learned from managing large numbers of
+<xref linkend="slonik"> scripts.</para>
+</listitem>
 
 </itemizedlist>
 
