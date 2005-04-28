@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.17.2.6 2005-04-22 15:33:05 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.17.2.7 2005-04-28 17:44:25 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -430,7 +430,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		case SLON_ROLE_NORMAL:	/* Normal, that's good */
 			break;
 
-		case default:	/* non-client session ??? */
+		default:	/* non-client session ??? */
 			elog(ERROR, "Slony-I: logTrigger() called in non-client session");
 	}
 
