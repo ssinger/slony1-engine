@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.13 2005-04-15 22:27:05 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.14 2005-05-03 21:25:15 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -35,9 +35,8 @@ will create, in each database instance in the cluster, the
 namespace/schema <envar>_something.</envar></para>
 </sect2>
 <sect2><title>Node</title>
-
 <indexterm>
- <primary>node</primary>
+<primary>node</primary>
 </indexterm>
 
 <para>A &slony1; Node is a named &postgres; database that will be
@@ -59,9 +58,8 @@ connection information that will ultimately be passed to the
 </itemizedlist>
 </sect2>
 <sect2><title> Replication Set</title>
-
 <indexterm>
- <primary>replication set</primary>
+<primary>replication set</primary>
 </indexterm>
 
 <para>A replication set is defined as a set of tables and sequences
@@ -72,13 +70,11 @@ replication does not need to be identical between those sets.</para>
 </sect2>
 
 <sect2><title> Origin, Providers and Subscribers</title>
-
 <indexterm>
- <primary>origin node</primary>
+<primary>origin node</primary>
 </indexterm>
-
 <indexterm>
- <primary>provider node</primary>
+<primary>provider node</primary>
 </indexterm>
 
 <para>Each replication set has some origin node, which is the
@@ -88,7 +84,7 @@ also be termed the <quote>master provider</quote>; it is the main
 place from which data is provided.</para>
 
 <indexterm>
- <primary>subscriber node</primary>
+<primary>subscriber node</primary>
 </indexterm>
 
 <para>Other nodes in the cluster subscribe to the replication set,
@@ -117,7 +113,7 @@ processes replication events.  There are two main sorts of events:</para>
 <listitem><para> Configuration events</para>
 
 <para> These normally occur when a <xref linkend="slonik"> script is
-run, and submit updates to the configuration of the cluster. <para>
+run, and submit updates to the configuration of the cluster. </para>
 </listitem>
 
 <listitem><para> <command>SYNC</command> events </para>

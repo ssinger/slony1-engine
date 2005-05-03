@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.33 2005-04-20 18:29:00 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.34 2005-05-03 21:25:15 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -78,7 +78,9 @@ wasn't clear that this was the case until I ran <command>ldd</command>
 against <application>slon</application>.</para> </answer>
 
 <answer><para> Note that with libpq version 7.4.2, on Solaris, a
-further patch <xref linkend="threadpatch"> was required.  </para>
+further <link linkend="threadpatch"> thread patch </link> was
+required; similar is also required for &postgres; version 8.0.
+</para>
 </answer>
 </qandaentry>
 
@@ -1078,6 +1080,7 @@ update _app1.sl_log_1 SET log_cmddata = 'balance=''125186.00'' where pkey=''60''
 update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''' where log_actionseq = '68387029';
 
 </screen>
+</listitem>
 
 </itemizedlist>
 </answer>

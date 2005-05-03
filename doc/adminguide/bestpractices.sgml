@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.3 2005-04-25 22:41:02 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.4 2005-05-03 21:25:15 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -55,7 +55,7 @@ should be planned for ahead of time.  </para>
 <para> This may simply involve thinking about what the priority lists
 should be of what should fail to what, as opposed to trying to
 automate it.  But knowing what to do ahead of time cuts down on the
-number of mistakes made.
+number of mistakes made.</para>
 
 <para> At Afilias, some internal <citation>The 3AM Unhappy DBA's Guide
 to...</citation> guides have been created to provide checklists of

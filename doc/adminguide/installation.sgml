@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.11 2005-04-15 22:27:05 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.12 2005-05-03 21:25:15 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -72,7 +72,7 @@ PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 <para>The <application>configure</application> script will run a
 number of tests to guess values for various dependent variables and
 try to detect some quirks of your system.  &slony1; is known to need a
-modified version of <application>libpq<application> on specific
+modified version of <application>libpq</application> on specific
 platforms such as Solaris2.X on SPARC.  The patch for libpq version
 7.4.2 can be found at <ulink id="threadpatch" url=
 "http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">

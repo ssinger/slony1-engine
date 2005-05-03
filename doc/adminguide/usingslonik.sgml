@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.10 2005-04-14 22:03:40 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.11 2005-05-03 21:25:15 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -59,7 +59,7 @@ Slonik scripts; it is unattractive to force yet another one on people.
 </itemizedlist></para>
 
 <para> There are several ways to work around these issues that have
-been seen <quote>in the wild</quote>:
+been seen <quote>in the wild</quote>:</para>
 
 <itemizedlist>
 

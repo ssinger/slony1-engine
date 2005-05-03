@@ -728,9 +728,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para> 	Remove the connection information between <quote>server</quote> and
-     <quote>client</quote>.
-     
-     
+     <quote>client</quote>.</para>
      
      <variablelist>
       <varlistentry><term><literal> SERVER  = ival </literal></term>
@@ -1986,7 +1984,7 @@ FAILOVER (
 
     <para> Note that this is a <link linkend="locking"> locking
     operation, </link> which means that it can get stuck behind other
-    database activity.
+    database activity.</para>
      
     <para> At the start of this event, all tables in the specified set
     are unlocked via the function
