@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.79 2005-03-29 16:24:50 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.80 2005-05-03 16:16:22 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -888,12 +888,16 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "ACCEPT_SET") == 0)
 			{
-			    int set_id = (int) strtol(event->ev_data1, NULL, 10);
+			    slon_log(SLON_DEBUG2, "start processing ACCEPT_SET\n");
+    			    int set_id = (int) strtol(event->ev_data1, NULL, 10);
+			    slon_log(SLON_DEBUG2, "ACCEPT: set=%d\n", set_id);
 			    int old_origin = (int) strtol(event->ev_data2, NULL, 10);
+			    slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
 			    int new_origin = (int) strtol(event->ev_data3, NULL, 10);
-			    int seq_no = (int) strtol(event->ev_data4, NULL, 10);
+			    slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
 			    PGresult   *res;
-			    
+			    slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
+				
 			    /* If we're a remote node, and haven't yet
 			     * received the MOVE_SET event from the
 			     * new origin, then we'll need to sleep a
@@ -905,48 +909,50 @@ remoteWorkerThread_main(void *cdata)
 			     * received and processed  */
 
 			    if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin)) {
-				slon_mkquery(&query1, 
-					     "select 1 from %s.sl_event accept "
-					     "where "
-					     "   accept.ev_type = 'ACCEPT_SET' and "
-					     "   accept.ev_origin = %d and "
-					     "   accept.ev_data1 = %d and "
-					     "   accept.ev_data2 = %d and "
-					     "   accept.ev_data3 = %d and "
-					     "   accept.ev_data4 = %d and "
-					     "   not exists  "
-					     "   (select 1 from %s.sl_event move "
-					     "    where "
-					     "      accept.ev_origin = move.ev_data3 and "
-					     "      move.ev_type = 'MOVE_SET' and "
-					     "      move.ev_data1 = accept.ev_data1 and "
-					     "      move.ev_data2 = accept.ev_data2 and "
-					     "      move.ev_data3 = accept.ev_data3 and "
-					     "      move.ev_seqno = %d); ",
-					     
-					     rtcfg_namespace, 
-					     old_origin, set_id, old_origin, new_origin, seq_no,
-					     rtcfg_namespace, seq_no);
-				res = PQexec(local_dbconn, dstring_data(&query1));
-				while (PQntuples(res) > 0) {
-				    int sleeptime = 15;
-				    int sched_rc;
-				    slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-					     "accept set: node has not yet received MOVE_SET event "
-					     "for set %d old origin %d new origin - sleep %d seconds\n",
-					     rtcfg_nodeid, set_id, old_origin, new_origin, sleeptime);
-				    sched_rc = sched_msleep(node, sleeptime * 1000);
-				    if (sched_rc != SCHED_STATUS_OK) {
-					event_ok = false;
-					break;
-				    } else {
-					if (sleeptime < 60)
-					    sleeptime *= 2;
-				    }
+				    slon_log(SLON_DEBUG2, "ACCEPT_SET - node not origin - wait...\n");
+				    slon_mkquery(&query1, 
+						 "select 1 from %s.sl_event accept "
+						 "where "
+						 "   accept.ev_type = 'ACCEPT_SET' and "
+						 "   accept.ev_origin = %d and "
+						 "   accept.ev_data1 = %d and "
+						 "   accept.ev_data2 = %d and "
+						 "   accept.ev_data3 = %d and "
+						 "   not exists  "
+						 "   (select 1 from %s.sl_event move "
+						 "    where "
+						 "      accept.ev_origin = move.ev_data3 and "
+						 "      move.ev_type = 'MOVE_SET' and "
+						 "      move.ev_data1 = accept.ev_data1 and "
+						 "      move.ev_data2 = accept.ev_data2 and "
+						 "      move.ev_data3 = accept.ev_data3); ",
+						 
+						 rtcfg_namespace, 
+						 old_origin, set_id, old_origin, new_origin,
+						 rtcfg_namespace);
 				    res = PQexec(local_dbconn, dstring_data(&query1));
-				}
+				    while (PQntuples(res) > 0) {
+					    int sleeptime = 15;
+					    int sched_rc;
+					    slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+					     "accept set: node has not yet received MOVE_SET event "
+						     "for set %d old origin %d new origin - sleep %d seconds\n",
+						     rtcfg_nodeid, set_id, old_origin, new_origin, sleeptime);
+					    sched_rc = sched_msleep(node, sleeptime * 1000);
+					    if (sched_rc != SCHED_STATUS_OK) {
+						    event_ok = false;
+						    break;
+					    } else {
+						    if (sleeptime < 60)
+							    sleeptime *= 2;
+					    }
+					    res = PQexec(local_dbconn, dstring_data(&query1));
+				    }
+			    } else {
+				    slon_log(SLON_DEBUG2, "ACCEPT_SET - on origin node...\n");
 			    }
-			    
+			    slon_log(SLON_DEBUG2, "ACCEPT_SET - done...\n");
+
 			}
 			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
 			{

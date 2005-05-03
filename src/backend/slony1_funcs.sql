@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.61 2005-04-14 10:25:59 xfade Exp $
+-- $Id: slony1_funcs.sql,v 1.62 2005-05-03 16:16:22 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1962,17 +1962,9 @@ begin
 
 	-- On the new origin, raise an event - ACCEPT_SET
 	if v_local_node_id = p_new_origin then
-		-- Find the event number from the origin
-		select max(ev_seqno) as seqno into v_sub_row 
-			from @NAMESPACE@.sl_event
-			where ev_type = ''MOVE_SET'' and
-			  ev_data1 = p_set_id and
-			  ev_data2 = p_old_origin and
-			  ev_data3 = p_new_origin and
-			  ev_origin = p_old_origin;
 		
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
-			p_set_id, p_old_origin, p_new_origin, v_sub_row.seqno);
+			p_set_id, p_old_origin, p_new_origin);
 	end if;
 
 	-- ----
