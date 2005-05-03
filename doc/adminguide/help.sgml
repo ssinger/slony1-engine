@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.15 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.16 2005-05-03 21:32:26 cbbrowne Exp $ -->
 <sect1 id="help">
 <title>More &slony1; Help</title>
 
@@ -59,13 +59,16 @@ needing to update their configuration. </para> </listitem>
 <itemizedlist>
 
 <listitem><para> <ulink
-      url="http://comstar.dotgeek.org/postgres/slony-config/">
+url="http://comstar.dotgeek.org/postgres/slony-config/">
 slony-config</ulink> - A Perl tool for configuring Slony nodes using
 config files in an XML-based format that the tool transforms into a
 Slonik script</para></listitem>
 
 <listitem><para><ulink url="http://freshmeat.net/projects/slonyi/">
 Freshmeat on &slony1; </ulink></para></listitem>
+
+<listitem> <para><ulink url="http://www.slony2.org/wiki/index.php"> 
+Slony-II Wiki</ulink> </para> </listitem> 
 
 </itemizedlist>
 </sect2>

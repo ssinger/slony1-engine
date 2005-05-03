@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.14 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.15 2005-05-03 21:32:26 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <sect2><title>Foreword</title>
@@ -175,6 +175,33 @@ to see if some of them need to be reapplied on the <quote>live</quote>
 cluster.  For instance, if someone was entering bank deposits
 affecting customer accounts at the time of failure, you wouldn't want
 to lose that information.</para>
+
+<warning> <para> It has been observed that there can be some very
+confusing results if a node is <quote>failed</quote> due to a
+persistent network outage as opposed to failure of data storage.  In
+such a scenario, the <quote>failed</quote> node has a database in
+perfectly fine form; it is just that since it was cut off, it
+<quote>screams in silence.</quote> </para>
+
+<para> If the network connection is repaired, that node could
+reappear, and as far as <emphasis>its</emphasis> configuration is
+concerned, all is well, and it should communicate with the rest of its
+&slony1; cluster. </para>
+
+<para> In <emphasis>fact</emphasis>, the only confusion taking place
+is on that node.  The other nodes in the cluster are not confused at
+all; they know that this node is <quote>dead,</quote> and that they
+should ignore it.  But there is not a way to know this by looking at
+the <quote>failed</quote> node.
+</para> 
+
+<para> This points back to the design point that &slony1; is not a
+network monitoring tool.  You need to have clear methods of
+communicating to applications and users what database hosts are to be
+used.  If those methods are lacking, adding replication to the mix
+will worsen the potential for confusion, and failover will be the
+point at which there is the greatest potential for confusion. </para>
+</warning>
 
 <para> If the database is very large, it may take many hours to
 recover node1 as a functioning &slony1; node; that is another reason
