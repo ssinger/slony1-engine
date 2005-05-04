@@ -2,16 +2,15 @@ Source: slony1
 Section: misc
 Priority: optional
 Maintainer: Tim Goodaire <tgoodair@ca.afilias.info>
-Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison
+Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison, postgresql-dev (>= 7.3.3), libpq3
 Standards-Version: 3.6.1
 
 Package: slony1
 Architecture: any
-Depends: postgresql (>= 7.3.3), postgresql-dev (>= 7.3.3), libpq4
-Description: Slony-I is a replication system for postgresql
-	Slony-I is a "master to multiple slaves" replication system with cascading and
-	slave promotion.  The big picture for the development of Slony-I is a
-	master-slave system that includes all features and capabilities needed to
-	replicate large databases to a reasonably limited number of slave systems.
-	Slony-I is a system for data centers and backup sites, where the normal mode
-	of operation is that all nodes are available. 
+Depends: postgresql (>= 7.3.3), libpq3
+Description: Slony-I is an asynchronous replication system for PostgreSQL
+	This package contains the slon daemon, the slonik language, the 'altperl'
+	Slony-I administration tools, and the Slony-I documentation.
+	.
+	Slony-I is a "master to multiple slaves" replication system for PostgreSQL
+	with cascading and slave promotion.  

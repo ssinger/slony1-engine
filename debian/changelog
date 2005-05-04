@@ -7,3 +7,9 @@ slony1 (1.1-1) unstable; urgency=low
   * Added build dependency for groff
 
  -- Tim Goodaire <tgoodair@ca.afilias.info>  Tue, 12 Apr 2005 11:39:34 -0500
+
+  * Fixes to configure line in rules file
+  * Added etc/slony1 and usr/bin to dirs
+  * Changed Build-Depends, Depends, and Description in control file 
+
+ -- Tim Goodaire <tgoodair@ca.afilias.info>  Wed, 04 May 2005 15:24:21 -0500
