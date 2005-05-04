@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.25 2004-12-13 22:08:49 darcyb Exp $
+-- $Id: slony1_base.sql,v 1.26 2005-05-04 20:54:24 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -31,6 +31,7 @@ comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with
 comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the node';  
 comment on column @NAMESPACE@.sl_node.no_active is 'Is the node active in replication yet?';  
 comment on column @NAMESPACE@.sl_node.no_comment is 'A human-oriented description of the node';
+comment on column @NAMESPACE@.sl_node.no_spool is 'Is the node being used for log shipping?';  
 
 
 -- ----------------------------------------------------------------------
@@ -234,7 +235,7 @@ comment on column @NAMESPACE@.sl_subscribe.sub_set is 'ID # (from sl_set) of the
 comment on column @NAMESPACE@.sl_subscribe.sub_provider is 'ID# (from sl_node) of the node providing data';
 comment on column @NAMESPACE@.sl_subscribe.sub_receiver is 'ID# (from sl_node) of the node receiving data from the provider';
 comment on column @NAMESPACE@.sl_subscribe.sub_forward is 'Does this provider keep data in sl_log_1/sl_log_2 to allow it to be a provider for other nodes?';
-comment on column @NAMESPACE@.sl_subscribe.sub_active is 'Has this subscription been activated?  This is not set until the subscriber has received COPY data from the provider';
+comment on column @NAMESPACE@.sl_subscribe.sub_active is 'Has this subscription been activated?  This is not set on the subscriber until AFTER the subscriber has received COPY data from the provider';
 
 
 -- ----------------------------------------------------------------------
@@ -285,6 +286,7 @@ comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record
 				STORE_TRIGGER		=
 				DROP_TRIGGER		=
 				MOVE_SET			=
+				ACCEPT_SET			=
 				SET_DROP_TABLE			=
 				SET_DROP_SEQUENCE		=
 				SET_MOVE_TABLE			=
@@ -366,6 +368,12 @@ begin
 	-- not reached
 end;
 ' language plpgsql;
+
+comment on function @NAMESPACE@.sequenceLastValue(text) is
+'sequenceLastValue(p_seqname)
+
+Utility function used in sl_seqlastvalue view to compactly get the
+last value from the requested sequence.';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_1
@@ -501,6 +509,8 @@ Possible values:
 	1		sl_log_2 active, sl_log_1 clean
 	2		sl_log_1 active, sl_log_2 unknown - cleanup
 	3		sl_log_2 active, sl_log_1 unknown - cleanup
+
+This is not yet in use.
 ';
 
 

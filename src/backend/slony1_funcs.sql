@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.62 2005-05-03 16:16:22 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.63 2005-05-04 20:54:24 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -192,7 +192,11 @@ create or replace function @NAMESPACE@.setSessionRole (name, text) returns text
 	security definer;
 
 comment on function @NAMESPACE@.setSessionRole (name, text) is 
-  'not yet documented';
+  'setSessionRole(username, role) - set role for session.
+
+role can be "normal" or "slon"; setting the latter is necessary, on
+subscriber nodes, in order to override the denyaccess() trigger
+attached to subscribing tables.';
 
 grant execute on function @NAMESPACE@.setSessionRole (name, text) to public;
 
@@ -3097,6 +3101,11 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.setMoveSequence (int4, int4) is
+'setMoveSequence(p_seq_id, p_new_set_id) - This generates the
+SET_MOVE_SEQUENCE event, after validation, notably that both sets
+exist, are distinct, and have exactly the same subscription lists';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setMoveSequence_int (seq_id, new_set_id)
@@ -3126,6 +3135,10 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.setMoveSequence_int (int4, int4) is
+'setMoveSequence_int(p_seq_id, p_new_set_id) - processes the
+SET_MOVE_SEQUENCE event, moving a sequence to another replication
+set.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
@@ -4833,7 +4846,7 @@ end;
 ' language plpgsql;
 
 comment on function @NAMESPACE@.generate_sync_event(interval) is
-  'Generate a sync event if there has not been one in 30 seconds.';
+  'Generate a sync event if there has not been one in the requested interval.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableHasSerialKey (tab_fqname)
