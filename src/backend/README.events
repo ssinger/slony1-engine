@@ -101,6 +101,19 @@ MOVE_SET
 	origin of the set.
 
 
+ACCEPT_SET
+	ev_data1		set_id
+	ev_data2		old_set_origin
+	ev_data3		new_set_origin
+
+	This was introduced to eliminate a data loss case.
+        When MOVE_SET is received by the new origin node, an ACCEPT_SET
+	is raised.
+
+	On nodes, then, if we receive the ACCEPT_SET first, then we
+	stop processing SYNCs so that a SYNC is not missed in the
+	interim.
+
 DROP_SET
 	ev_data1		set_id
 
