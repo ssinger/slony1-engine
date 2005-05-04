@@ -1,0 +1,41 @@
+#!/bin/sh    
+# $Id: compare_pgbench_dumps,v 1.1 2005-05-04 20:43:16 cbbrowne Exp $
+# **********
+# compare_pgbench_dumps
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=$1    # First database
+DB2=$2    # Second database
+DEBUG_LEVEL=2
+
+echo -n "**** comparing databases ... "
+psql $DB1 >dump.tmp.1.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+psql $DB2 >dump.tmp.2.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+
+if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
+	echo "success - databases are equal."
+	rm dump.tmp.?.$$
+	rm test_1.diff
+else
+	echo "FAILED - see test_1.diff for database differences"
+fi
