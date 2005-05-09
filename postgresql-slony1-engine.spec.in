@@ -45,9 +45,9 @@ export LIBNAME=%{_lib}
 ./configure --bindir /usr/bin --libdir %{_libdir}/pgsql \
         --includedir %{_includedir}/pgsql \
 %if %perltools
-        --with-perltools \
+        --with-perltools=%{_bindir} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc
+        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql --with-docdir=/usr/share/doc
 make
 %if %perltools
  cd tools
@@ -56,28 +56,33 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/etc
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/pgsql
-mkdir -p $RPM_BUILD_ROOT/%{_libdir}/pgsql
+install -d $RPM_BUILD_ROOT%{_sysconfdir}
+install -d $RPM_BUILD_ROOT%{_datadir}/pgsql/
+install -d $RPM_BUILD_ROOT%{_libdir}/pgsql/
 make DESTDIR=$RPM_BUILD_ROOT install
-install -m 0755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT/%{_libdir}/pgsql/slony1_funcs.so
-install -m 0755 src/xxid/xxid.so $RPM_BUILD_ROOT/%{_libdir}/pgsql/xxid.so
-install -m 0755 src/backend/*.sql $RPM_BUILD_ROOT/%{_datadir}/pgsql
-install -m 0755 src/xxid/*.sql $RPM_BUILD_ROOT/%{_datadir}/pgsql
-install -m 0755 tools/*.sh  $RPM_BUILD_ROOT/%{_bindir}/
-install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT/etc/slon.conf-sample
+install -m 0755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT%{_libdir}/pgsql/slony1_funcs.so
+install -m 0755 src/xxid/xxid.so $RPM_BUILD_ROOT%{_libdir}/pgsql/xxid.so
+install -m 0755 src/backend/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
+install -m 0755 src/xxid/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
+install -m 0755 tools/*.sh  $RPM_BUILD_ROOT%{_bindir}/
+install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/
 
 %if %perltools
-/bin/rm -rf tools/altperl/*.pl tools/altperl/ToDo tools/altperl/README tools/altperl/Makefile tools/altperl/CVS
-install -m 0755 tools/altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT/etc/slon_tools.conf-sample
-install -m 0755 tools/altperl/slon-tools.pm  $RPM_BUILD_ROOT/%{_datadir}/pgsql/
+cd tools
+make DESTDIR=$RPM_BUILD_ROOT install
+/bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
+install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
+install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/
+install -m 0755 altperl/slon-tools.pm  $RPM_BUILD_ROOT%{_libdir}/pgsql/
+/bin/rm -f $RPM_BUILD_ROOT%{_libdir}/slon-tools.pm
+/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools.pm
 %endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-echo "Slony1 has been successfully installed. Before running slony,"
+echo "Slony1 has been successfully installed. Before running Slony1,"
 echo "be sure to edit /etc/slon.conf-sample and rename it to"
 echo "/etc/slon.conf"
 
@@ -90,11 +95,14 @@ echo "/etc/slon.conf"
 %{_datadir}/pgsql/*.sql
 %{_sysconfdir}/slon.conf-sample
 %if %perltools
-%{_datadir}/pgsql/slon-tools.pm
+%{_libdir}/pgsql/slon-tools.pm
 %{_sysconfdir}/slon_tools.conf-sample
 %endif
 
 %changelog
+* Thu Apr 07 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- More fixes on RPM builds
+
 * Thu Apr 04 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Fix RPM build errors, regarding to tools/ .
 
