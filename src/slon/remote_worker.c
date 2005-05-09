@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.82 2005-05-09 15:19:21 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.83 2005-05-09 19:06:38 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -888,16 +888,20 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "ACCEPT_SET") == 0)
 			{
+				int 		set_id, old_origin, 
+						new_origin, event_no;
+				PGresult	*res;
+
 				slon_log(SLON_DEBUG2, "start processing ACCEPT_SET\n");
-				int set_id = (int) strtol(event->ev_data1, NULL, 10);
+				set_id = (int) strtol(event->ev_data1, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: set=%d\n", set_id);
-				int old_origin = (int) strtol(event->ev_data2, NULL, 10);
+				old_origin = (int) strtol(event->ev_data2, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
-				int new_origin = (int) strtol(event->ev_data3, NULL, 10);
+				new_origin = (int) strtol(event->ev_data3, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
-				int event_no = event->ev_seqno;
+				event_no = event->ev_seqno;
 				slon_log(SLON_DEBUG2, "ACCEPT: move set seq=%d\n", event_no);
-				PGresult   *res;
+
 				slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
 				
 			    /* If we're a remote node, and haven't yet
