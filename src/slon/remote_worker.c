@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.81 2005-05-05 16:03:16 darcyb Exp $
+ *	$Id: remote_worker.c,v 1.82 2005-05-09 15:19:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -888,20 +888,17 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "ACCEPT_SET") == 0)
 			{
-				int	  set_id, old_origin, new_origin;
-				PGresult  *res;
-
 				slon_log(SLON_DEBUG2, "start processing ACCEPT_SET\n");
-    				set_id = (int) strtol(event->ev_data1, NULL, 10);
-
+				int set_id = (int) strtol(event->ev_data1, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: set=%d\n", set_id);
-			    	old_origin = (int) strtol(event->ev_data2, NULL, 10);
-
-			    	slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
-			    	new_origin = (int) strtol(event->ev_data3, NULL, 10);
-
-			   	slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
-			    	slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
+				int old_origin = (int) strtol(event->ev_data2, NULL, 10);
+				slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
+				int new_origin = (int) strtol(event->ev_data3, NULL, 10);
+				slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
+				int event_no = event->ev_seqno;
+				slon_log(SLON_DEBUG2, "ACCEPT: move set seq=%d\n", event_no);
+				PGresult   *res;
+				slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
 				
 			    /* If we're a remote node, and haven't yet
 			     * received the MOVE_SET event from the
@@ -2174,6 +2171,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	char		conn_symname[64];
 	SlonDString query1;
 	SlonDString query2;
+	SlonDString query3;
+	SlonDString indexregenquery;
 	int			ntuples1;
 	int			ntuples2;
 	int			tupno1;
@@ -2267,6 +2266,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	pro_dbconn = pro_conn->dbconn;
 	loc_dbconn = local_conn->dbconn;
 	dstring_init(&query1);
+	dstring_init(&query3);
+	dstring_init(&indexregenquery);
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 	
 
@@ -2727,6 +2728,64 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		PQclear(res2);
 
+		if (drop_indices) {
+			/*
+			 * Drop indices from table on the local database
+			 */
+			slon_mkquery(&query1,
+				     "select 'alter table %s drop constraint ' || \"pg_catalog\".quote_ident(co.conname),  "
+				     " 'alter table %s add  ' || "
+				     " pg_get_constraintdef(co.oid)  "
+				     "from pg_class c, pg_constraint co, pg_namespace ns "
+				     "where  "
+				     " '%s' = \"pg_catalog\".quote_ident(ns.nspname) || '.' || \"pg_catalog\".quote_ident(c.relname) and "
+				     " co.connamespace = ns.oid and "
+				     " co.contype in ('p', 'u') and "
+				     " c.oid = co.conrelid and "
+				     " ns.oid = c.relnamespace "
+				     "UNION ALL  "
+				     "select 'drop index ' || \"pg_catalog\".quote_ident(ns.nspname) || '.' || \"pg_catalog\".quote_ident(ci.relname) || ';' , "
+				     " pg_get_indexdef(ci.oid) "
+				     "from  "
+				     " pg_class c, pg_namespace ns, pg_class ci, pg_index i "
+				     "where  "
+				     " '%s' = \"pg_catalog\".quote_ident(ns.nspname) || '.' || \"pg_catalog\".quote_ident(c.relname) and "
+				     " i.indrelid = c.oid and "
+				     " i.indexrelid = ci.oid and "
+				     "    not exists (select * from pg_constraint co where connamespace = ns.oid and "
+				     "		 conrelid = c.oid and contype in ('p', 'u') and co.conname = ci.relname);",
+
+				     tab_fqname, tab_fqname, tab_fqname, tab_fqname);
+			res2 = PQexec(loc_dbconn, dstring_data(&query1));
+			ntuples2 = PQntuples(res2);
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: Found %d indices for %s - %s\n",
+				 node->no_id, ntuples2, tab_fqname, dstring_data(&query1));
+
+			slon_mkquery(&indexregenquery, " ");
+
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: start dropping %d indices\n", node->no_id, ntuples2);
+			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
+			{
+				slon_mkquery(&query3,
+					     "%s;",
+					     PQgetvalue(res2, tupno2, 0));
+				if (query_execute(node, loc_dbconn, &query3) < 0)
+				{
+					slon_log(SLON_FATAL, "remoteWorkerThread_%d: drop index during copy failed: %d\n",
+						 node->no_id, dstring_data(&query3));
+					PQclear(res2);
+					slon_abort();
+				} else {
+					slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: Dropped index %s\n",
+						 node->no_id, dstring_data(&query3));
+				}
+			
+				slon_appendquery(&indexregenquery,
+						 "%s;",
+						 PQgetvalue(res2, tupno2, 1));
+			}
+		}
+
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
 		 */
@@ -3002,6 +3061,20 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 INT64_FORMAT " bytes copied for table %s\n",
 			 node->no_id, copysize, tab_fqname);
 
+		if (drop_indices) {
+			slon_log(SLON_DEBUG2, "now, regenerate indices...\n");
+			slon_log(SLON_DEBUG2, 
+				 "remoteWorkerThread_%d: "
+				 "regenerate indices: %s",
+				 node->no_id, dstring_data(&indexregenquery));
+			if (query_execute(node, loc_dbconn, &indexregenquery) < 0) 
+			{
+				PQclear(res2);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&indexregenquery);
+				return -1;
+			}
+		}
 		/*
 		 * Analyze the table to update statistics
 		 */

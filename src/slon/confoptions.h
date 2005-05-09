@@ -31,6 +31,7 @@ int		Use_syslog;
 
 bool		logpid;
 bool		logtimestamp;
+bool            drop_indices;
 char		*log_timestamp_format;
 char		*sql_on_connection;
 
@@ -212,6 +213,25 @@ static struct config_bool ConfigureNamesBool[] =
 		&logtimestamp,
 		true
 	},
+
+	{
+		{
+			(const char *)"drop_indices_for_copy",
+			gettext_noop("Indicates that indices should be dropped "
+				     "on client while invoking COPY_SET event.  "
+				     "This provides a big performance boost as it "
+				     "is cheaper to regenerate indices after loading "
+				     "data than it is to incrementally generate "
+				     "indexes as the load generates.  Default is false."
+				),
+			NULL,
+			SLON_C_BOOL
+		},
+		&drop_indices,
+		true
+	},
+
+
 	NULL
 };
 
@@ -297,6 +317,9 @@ static struct config_string ConfigureNamesString[] =
 		&sql_on_connection,
 		NULL
 	},
+
+
+
 #ifdef HAVE_SYSLOG
 	{
 		{
