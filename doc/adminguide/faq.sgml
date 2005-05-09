@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.34 2005-05-03 21:25:15 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.35 2005-05-09 15:12:23 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -697,13 +697,13 @@ scratch on that node.</para>
 <para>In &slony1; 1.0.5, the handling of purges of <xref
 linkend="table.sl-log-1"> became more conservative, refusing to purge
 entries that haven't been successfully synced for at least 10 minutes
-on all nodes.  It was not certain that that will prevent the
-<quote>glitch</quote> from taking place, but it seemed likely that it
-might leave enough <xref linkend="table.sl-log-1"> data to be able to
-do something about recovering from the condition or at least
-diagnosing it more exactly.  And perhaps the problem is that <xref
+on all nodes.  It was not certain that that would prevent the
+<quote>glitch</quote> from taking place, but it seemed plausible that
+it might leave enough <xref linkend="table.sl-log-1"> data to be able
+to do something about recovering from the condition or at least
+diagnosing it more exactly.  And perhaps the problem was that <xref
 linkend="table.sl-log-1"> was being purged too aggressively, and this
-will resolve the issue completely.</para>
+would resolve the issue completely.</para>
 </answer>
 
 <answer><para> Unfortunately, this problem has been observed in 1.0.5,
@@ -720,16 +720,20 @@ you may only need to unsubscribe/drop and resubscribe the one set.
 log file that contained <emphasis> identical </emphasis> insertions
 into <xref linkend="table.sl-log-1">.  This <emphasis> ought
 </emphasis> to be impossible as is a primary key on <xref
-linkend="table.sl-log-1">.  The latest punctured theory that comes
-from <emphasis>that</emphasis> was that perhaps this PK index has been
-corrupted (representing a <productname>PostgreSQL</productname> bug),
-and that perhaps the problem might be alleviated by running the
-query:</para>
+linkend="table.sl-log-1">.  The latest (somewhat) punctured theory
+that comes from <emphasis>that</emphasis> was that perhaps this PK
+index has been corrupted (representing a &postgres; bug), and that
+perhaps the problem might be alleviated by running the query:</para>
 
 <programlisting>
 # reindex table _slonyschema.sl_log_1;
 </programlisting>
 
+<para> On at least one occasion, this has resolved the problem, so it
+is worth trying this.</para>
+
+<para> It appears increasingly likely that this problem represents a
+&postgres; bug as opposed to one in &slony1;.</para>
 </answer>
 </qandaentry>
 
