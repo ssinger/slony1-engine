@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.7 2005-04-12 20:29:28 darcyb Exp $
+# $Id: Makefile,v 1.8 2005-05-10 16:56:19 darcyb Exp $
 # ----------
 
 slony_subdir = doc/implementation
@@ -32,13 +32,13 @@ TXT		= Slony-I-implementation.txt
 
 DISTFILES = Makefile $(wildcard *.pic) Slon_900x720.jpg Slony-I-implementation.nr
 
-all:	all-ps all-pdf
+all:		all-ps all-pdf all-txt
 
-all-ps:	$(PS)
+all-ps:		Slon.eps $(PS)
 
-all-pdf:	$(PDF)
+all-pdf:	Slon.eps $(PDF)
 
-all-txt:	$(TXT)
+all-txt:	Slon.eps $(TXT)
 
 installdirs:
 ifdef DOCDIR
@@ -63,7 +63,11 @@ Slon.eps:	Slon_$(IMG_WID)x$(IMG_HT).jpg
 ifdef DJPEG
 ifdef PNMTOPS
 		$(DJPEG) $< | $(PNMTOPS) -rle -noturn >$@
+else
+		$(CONVERT) $< >$@ || echo "unable to create $@ from $<"
 endif
+else
+		$(CONVERT) $< >$@ || echo "unable to create $@ from $<"
 endif
 
 %.ps:	%.nr

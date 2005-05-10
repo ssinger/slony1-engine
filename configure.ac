@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.45 2005-04-06 19:00:54 darcyb Exp $
+# $Id: configure.ac,v 1.46 2005-05-10 16:56:19 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -166,6 +166,7 @@ SLON_AC_PROG_GROFF
 SLON_AC_PROG_PS2PDF
 SLON_AC_PROG_DJPEG
 SLON_AC_PROG_PNMTOPS
+SLON_AC_PROG_CONVERT
 SLON_AC_PROG_PGAUTODOC
 
 #
