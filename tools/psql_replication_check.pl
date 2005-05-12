@@ -1,7 +1,8 @@
 #!/usr/bin/perl
-# $Id: psql_replication_check.pl,v 1.1 2005-05-12 18:02:12 cbbrowne Exp $
+# $Id: psql_replication_check.pl,v 1.2 2005-05-12 21:43:31 cbbrowne Exp $#
 # Documentation listed below.
 # Credits:
+# Afilias Canada
 # Original script by jgoddard (2005-02-14)
 # Modified by nadx (2005-05-11)
 # Packaged by tgoodair (2005-05-12)
@@ -11,7 +12,7 @@ use strict;
 use Pg;
 use Getopt::Std;
 
-our ($opt_h, $opt_d, $opt_p, $opt_U) = '';
+our ($opt_h, $opt_d, $opt_p, $opt_U, $opt_w, $opt_c) = '';
 my ($conn, $res, $status, @tuple);
 my $query = 'SELECT * FROM replication_status' ;
 my @rep_time;
@@ -23,12 +24,17 @@ my $threshold_warning = 20;
 my $threshold_critical = 40;
 
 # Get the command line options
-getopt('hdpU');
+getopt('hdpUwc');
 if (not $opt_h or not $opt_d or not $opt_p or not $opt_U)
 {
-	print("$0 -h <host> -d <db> -p <port> -U <username>\n");
+	print("$0 -h <host> -d <db> -p <port> -U <username> -w <warning threshold> -c <critical threshold>\n");
 	exit(3);
 }
+
+if (($opt_w =~ /^\d+$/) && ($opt_w)) {$threshold_warning = $opt_w};
+if (($opt_c =~ /^\d+$/) && ($opt_c)) {$threshold_critical = $opt_c};
+
+if ($threshold_critical < $threshold_warning) { print "Warning: Critical threshold is less than warning threshold.\n"; }
 
 # .pgpass isn't read, so we're putting the password here
 my $password = "piTyThaF00!";
