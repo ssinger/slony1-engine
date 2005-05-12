@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.15 2005-04-11 15:58:26 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.16 2005-05-12 21:47:02 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -29,10 +29,9 @@
   <title>Description</title>
   <para>
    <application>slon</application> is the daemon application that
-   <quote>runs</quote> <productname>Slony-I</productname>
-   replication.  A <application>slon</application> instance must be
-   run for each node in a <productname>Slony-I</productname>
-   cluster.
+   <quote>runs</quote> &slony1; replication.  A
+   <application>slon</application> instance must be run for each node
+   in a &slony1; cluster.
   </para>
  </refsect1>
  

@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.16 2005-04-20 18:29:00 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.17 2005-05-12 21:47:02 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -226,8 +226,8 @@ knowledge of the application being used. </para>
 </sect2>
 </sect1>
 
-<sect1 id="slonylistenercosts"><title>
-<productname>Slony-I</productname> Communications Costs</title>
+<sect1 id="slonylistenercosts"><title> &slony1; Communications
+Costs</title>
 
 <para>The cost of communications grows in a quadratic fashion in
 several directions as the number of replication nodes in a cluster

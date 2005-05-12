@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.17 2005-03-10 23:06:11 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.18 2005-05-12 21:47:02 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -62,11 +62,63 @@ about how the threads work, what to expect in the logs after you run a
 </para>
 </sect2>
 
+<sect2> <title> Nagios Replication Checks </title>
+
+<para> The script in the <filename>tools</filename> directory called
+<command> pgsql_replication_check.pl </command> represents about best
+answers yet arrived at in several attempts to build replication tests
+to plug into the <ulink url="http://www.nagios.org/"> Nagios </ulink>
+system monitoring tool.</para>
+
+<para> A former script, <filename>
+test_slony_replication.pl</filename>, took a <quote>clever</quote>
+approach where a <quote>test script</quote> is periodically run, which
+rummages through the &slony1; configuration to find origin and
+subscribers, injects a change, and watches for its propagation through
+the system.  It had two problems:</para>
+<itemizedlist>
+
+<listitem><para> Connectivity problems to the
+<emphasis>single</emphasis> host where the test ran would make it look
+as though replication was destroyed.  Overall, this monitoring
+approach has been fragile to numerous error conditions.</para>
+</listitem>
+
+<listitem><para> Nagios has no ability to benefit from the
+<quote>cleverness</quote> of automatically exploring the set of nodes.
+</para> </listitem>
+</itemizedlist>
+
+<para> The new script, <command>pgsql_replication_check.pl</command>,
+takes the minimalist approach of assuming that the system is an online
+system that sees regular <quote>traffic,</quote> so that you can
+define a view specifically for the replication test called
+<envar>replication_status</envar> which is expected to see regular
+updates.  The view simply looks for the youngest
+<quote>transaction</quote> on the node, and lists its timestamp, age,
+and some bit of application information that might seem useful to see.
+</para>
+
+<itemizedlist>
+
+<listitem><para> In an inventory system, that might be the order
+number for the most recently processed order. </para> </listitem>
+
+<listitem><para> In a domain registry, that might be the name of the
+most recently created domain.</para> </listitem>
+
+</itemizedlist>
+
+<para> An instance of the script will need to be run for each node
+that is to be monitored; that is the way
+<application>Nagios</application> works. </para>
+
+</sect2>
+
 <sect2 id="testslonystate"> <title> test_slony_state</title>
 
 <para> This script is in preliminary stages, and may be used to do
-some analysis of the state of a <productname>Slony-I</productname>
-cluster.</para>
+some analysis of the state of a &slony1; cluster.</para>
 
 <para> You specify arguments including <option>database</option>,
 <option>host</option>, <option>user</option>,

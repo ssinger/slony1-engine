@@ -5,7 +5,7 @@
     <para>
      <application>Slonik</application> is a command line utility designed
      specifically to setup and modify configurations of the
-     <productname>Slony-I</productname> replication system.
+     &slony1; replication system.
     </para>
    
    <sect2 id="outline">
@@ -17,9 +17,9 @@
      commands from files or stdin (via here documents for
      example). Nearly all of the <emphasis>real</emphasis>
      configuration work is done by calling stored procedures after
-     loading the <productname>Slony-I</productname> support base into
+     loading the &slony1; support base into
      a database.  You may find documentation for those procedures in
-     the <ulink url="schemadoc"><productname>Slony-I</productname>
+     the <ulink url="schemadoc">&slony1;
      Schema Documentation</ulink>, as well as in comments associated
      with them in the database.
     </para>
@@ -205,7 +205,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    
    <refnamediv><refname>CLUSTER NAME</refname>
     
-    <refpurpose> preamble - identifying <productname>Slony-I</productname> cluster </refpurpose>
+    <refpurpose> preamble - identifying &slony1; cluster </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -218,7 +218,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <para>
      Must be the very first statement in every
      <application>slonik</application> script. It defines the
-     namespace in which all <productname>Slony-I</productname>
+     namespace in which all &slony1;
      specific functions, procedures, tables and sequences are
      defined. The namespace name is built by prefixing the given
      string literal with an underscore. This namespace will be
@@ -280,7 +280,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
 
    <note> <para>
      As mentioned in the original documents,
-     <productname>Slony-I</productname> is designed as an enterprise
+     &slony1; is designed as an enterprise
      replication system for data centers. It has been assumed
      throughout the entire development that the database servers and
      administrative workstations involved in replication and/or setup
@@ -380,7 +380,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </refmeta>
    <refnamediv>
     <refname>INIT CLUSTER</refname>
-    <refpurpose>Initialize <productname>Slony-I</productname> cluster</refpurpose></refnamediv>
+    <refpurpose>Initialize &slony1; cluster</refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>INIT CLUSTER</command> 
@@ -392,7 +392,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <title>Description</title> 
 
     <para> Initialize the first node in a new
-    <productname>Slony-I</productname> replication cluster.  The
+    &slony1; replication cluster.  The
     initialization process consists of creating the cluster namespace,
     loading all the base tables, functions, procedures and
     initializing the node, using <xref
@@ -414,11 +414,11 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     </para>
     
     <para> For this process to work, the SQL scripts of the
-    <productname>Slony-I</productname> system must be installed on the
+    &slony1; system must be installed on the
     DBA workstation (the computer currently executing the
     <application>slonik</application> utility), while on the system
     where the node database is running the shared objects of the
-    <productname>Slony-I</productname> system must be installed in the
+    &slony1; system must be installed in the
     PostgreSQL library directory. Also the procedural language
     PL/pgSQL is assumed to already be installed in the target
     database.</para>
@@ -446,7 +446,7 @@ INIT CLUSTER (
   <refentry id ="stmtstorenode"><refmeta><refentrytitle>STORE NODE</refentrytitle> </refmeta>
    
    <refnamediv><refname>STORE NODE</refname>
-    <refpurpose> Initialize <productname>Slony-I</productname> node </refpurpose>
+    <refpurpose> Initialize &slony1; node </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -509,7 +509,7 @@ INIT CLUSTER (
    
    <refnamediv><refname>DROP NODE</refname>
     
-    <refpurpose> Decommission <productname>Slony-I</productname> node </refpurpose></refnamediv>
+    <refpurpose> Decommission &slony1; node </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>DROP NODE (options);</command>
@@ -561,7 +561,7 @@ INIT CLUSTER (
    
    <refnamediv><refname>UNINSTALL NODE</refname>
     
-    <refpurpose> Decommission <productname>Slony-I</productname> node </refpurpose></refnamediv>
+    <refpurpose> Decommission &slony1; node </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>UNINSTALL NODE (options);</command>
@@ -572,8 +572,8 @@ INIT CLUSTER (
     
     <para> Restores all tables to the unlocked state, with all
      original user triggers, constraints and rules, eventually added
-     <productname>Slony-I</productname> specific serial key columns
-     dropped and the <productname>Slony-I</productname> schema
+     &slony1; specific serial key columns
+     dropped and the &slony1; schema
      dropped. The node becomes a standalone database. The data is left
      untouched.
      
@@ -610,7 +610,7 @@ INIT CLUSTER (
    
    <refnamediv><refname>RESTART NODE</refname>
 
-    <refpurpose> Restart <productname>Slony-I</productname> node </refpurpose></refnamediv>
+    <refpurpose> Restart &slony1; node </refpurpose></refnamediv>
    
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -650,7 +650,7 @@ INIT CLUSTER (
    
    <refnamediv><refname>STORE PATH</refname>
     
-    <refpurpose> Configure <productname>Slony-I</productname> node connection </refpurpose></refnamediv>
+    <refpurpose> Configure &slony1; node connection </refpurpose></refnamediv>
    
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -717,7 +717,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    
    <refnamediv><refname>DROP PATH</refname>
     
-    <refpurpose> Delete <productname>Slony-I</productname> connection information </refpurpose></refnamediv>
+    <refpurpose> Delete &slony1; connection information </refpurpose></refnamediv>
    
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -760,7 +760,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    
    <refnamediv><refname>STORE LISTEN</refname>
     
-    <refpurpose> Configure <productname>Slony-I</productname> node to
+    <refpurpose> Configure &slony1; node to
     indicate where to listen for events </refpurpose></refnamediv>
     
    <refsynopsisdiv>
@@ -819,7 +819,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refnamediv><refname>DROP LISTEN</refname>
     
     <refpurpose> Eliminate configuration indicating how
-    <productname>Slony-I</productname> node listens for events
+    &slony1; node listens for events
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -864,7 +864,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refnamediv><refname>TABLE ADD KEY</refname>
     
     <refpurpose> Add primary key for use by
-    <productname>Slony-I</productname> for a table with no suitable
+    &slony1; for a table with no suitable
     key </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -876,7 +876,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para>
-     In the <productname>Slony-I</productname> replication system,
+     In the &slony1; replication system,
      every replicated table is required to have at least one
      <command>UNIQUE</command> constraint whose columns are
      declared <command>NOT NULL.</command> Any primary key
@@ -920,7 +920,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    
    <refnamediv><refname>CREATE SET</refname>
     
-    <refpurpose> Create <productname>Slony-I</productname> replication
+    <refpurpose> Create &slony1; replication
     set </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -932,7 +932,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para>
-     In the <productname>Slony-I</productname> replication system,
+     In the &slony1; replication system,
      replicated tables are organized in sets. As a general rule of
      thumb, a set should contain all the tables of one application,
      that have relationships.  In a well designed application, this is
@@ -942,7 +942,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      The smallest unit one node can subscribe for replication from
      another node is a set. A set always has an origin. In
      classical replication terms, that would be the <quote>master.</quote>
-     Since in <productname>Slony-I</productname> a node can be the <quote>master</quote> over one set,
+     Since in &slony1; a node can be the <quote>master</quote> over one set,
      while receiving replication data in the <quote>slave</quote> role for
      another at the same time, this terminology may easily become
      misleading and should therefore be replaced with <quote>set
@@ -980,7 +980,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
    <refnamediv><refname>DROP SET</refname>
     
-    <refpurpose> Discard <productname>Slony-I</productname>
+    <refpurpose> Discard &slony1;
     replication set </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -992,7 +992,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para>
-     Drop a set of tables from the <productname>Slony-I</productname>
+     Drop a set of tables from the &slony1;
      configuration. This automatically unsubscribes all nodes from the
      set and restores the original triggers and rules on all
      subscribers.
@@ -1024,7 +1024,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    
    <refnamediv><refname>MERGE SET</refname>
     
-    <refpurpose> Merge <productname>Slony-I</productname> replication
+    <refpurpose> Merge &slony1; replication
     sets together </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1075,7 +1075,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    
    <refnamediv><refname>SET ADD TABLE</refname>
     
-    <refpurpose> Add a table to a <productname>Slony-I</productname>
+    <refpurpose> Add a table to a &slony1;
     replication set </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1154,7 +1154,7 @@ SET ADD TABLE (
    <refnamediv><refname>SET ADD SEQUENCE</refname>
     
     <refpurpose> Add a sequence to a
-    <productname>Slony-I</productname> replication set
+    &slony1; replication set
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1221,7 +1221,7 @@ SET ADD TABLE (
    <refnamediv><refname>SET DROP TABLE</refname>
     
     <refpurpose> Remove a table from a
-    <productname>Slony-I</productname> replication set
+    &slony1; replication set
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1269,7 +1269,7 @@ SET ADD TABLE (
    <refnamediv><refname>SET DROP SEQUENCE</refname>
     
     <refpurpose> Remove a sequence from a
-    <productname>Slony-I</productname> replication set
+    &slony1; replication set
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1314,7 +1314,7 @@ SET ADD TABLE (
    <refnamediv><refname>SET MOVE TABLE</refname>
 
     <refpurpose> Move a table from one
-    <productname>Slony-I</productname> replication set to another
+    &slony1; replication set to another
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1370,7 +1370,7 @@ SET MOVE TABLE (
    <refnamediv><refname>SET MOVE SEQUENCE</refname>
     
     <refpurpose> Move a sequence from one
-    <productname>Slony-I</productname> replication set to another
+    &slony1; replication set to another
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1431,7 +1431,7 @@ SET MOVE SEQUENCE (
    <refnamediv><refname>STORE TRIGGER</refname>
     
     <refpurpose> Indicate that a trigger should not be disabled by
-    <productname>Slony-I</productname> on a subscriber node
+    &slony1; on a subscriber node
     </refpurpose></refnamediv>
    
    <refsynopsisdiv>
@@ -1536,7 +1536,7 @@ DROP TRIGGER (
 
    <refnamediv><refname>SUBSCRIBE SET</refname>
     
-    <refpurpose> Start replication of <productname>Slony-I</productname> set </refpurpose></refnamediv>
+    <refpurpose> Start replication of &slony1; set </refpurpose></refnamediv>
    
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -1552,7 +1552,7 @@ DROP TRIGGER (
     
     <para> The application tables contained in the set must already
      exist and should ideally be empty. The current version of
-     <productname>Slony-I</productname> will <emphasis>not</emphasis>
+     &slony1; will <emphasis>not</emphasis>
      attempt to copy the schema of the set. The replication daemon will
      start copying the current content of the set from the given
      provider and then try to catch up with any update activity that
@@ -1635,7 +1635,7 @@ SUBSCRIBE SET (
    
    <refnamediv><refname>UNSUBSCRIBE SET</refname>
 
-    <refpurpose> End replication of <productname>Slony-I</productname> set </refpurpose></refnamediv>
+    <refpurpose> End replication of &slony1; set </refpurpose></refnamediv>
    
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -1687,7 +1687,7 @@ UNSUBSCRIBE SET (
 
    <refnamediv><refname>LOCK SET</refname>
     
-    <refpurpose> Guard <productname>Slony-I</productname> replication
+    <refpurpose> Guard &slony1; replication
     set to prepare for <command>MOVE SET</command>
     </refpurpose></refnamediv>
    <refsynopsisdiv>
@@ -1744,7 +1744,7 @@ LOCK SET (
    
    <refnamediv><refname>UNLOCK SET</refname>
     
-    <refpurpose> Unlock a <productname>Slony-I</productname> set that was locked </refpurpose></refnamediv>
+    <refpurpose> Unlock a &slony1; set that was locked </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>UNLOCK SET (options);</command>
@@ -1787,7 +1787,7 @@ UNLOCK SET (
    
    <refnamediv><refname>MOVE SET</refname>
     
-    <refpurpose> Change origin of a <productname>Slony-I</productname>
+    <refpurpose> Change origin of a &slony1;
     replication set </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
