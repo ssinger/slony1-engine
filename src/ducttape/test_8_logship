@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship,v 1.4 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: test_8_logship,v 1.5 2005-05-13 20:39:14 cbbrowne Exp $
 # **********
 # test_8_logship
 #
@@ -23,7 +23,7 @@ TMPOUT=/tmp/output.$$
 LOGSHIPDIR=/tmp/logs.$$
 mkdir -p $LOGSHIPDIR
 DB1=slony_test1
-DB2=slony_test
+DB2=slony_test2
 CLUSTERNAME=T1
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
