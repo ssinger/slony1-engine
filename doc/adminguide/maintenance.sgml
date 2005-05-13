@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.14 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.15 2005-05-13 21:24:03 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -32,6 +32,17 @@ cannot clear out dead tuples that are newer than the eldest
 transaction that is still running.  This will most notably lead to
 <envar>pg_listener</envar> growing large and will slow
 replication.</para></listitem>
+
+
+<listitem> <para> The <link linkend="dupkey"> Duplicate Key Violation
+</link> bug has helped track down some &postgres; race conditions.
+One remaining issue is that it appears that is a case where
+<command>VACUUM</command> is not reclaiming space correctly, leading
+to corruption of B-trees. </para>
+
+<para> It may be helpful to run the command <command> REINDEX TABLE
+sl_log_1;</command> periodically to avoid the problem
+occurring. </para> </listitem>
 
 </itemizedlist>
 </para>
