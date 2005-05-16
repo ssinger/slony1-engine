@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.50 2005-03-25 13:30:52 xfade Exp $
+ *	$Id: slon.c,v 1.51 2005-05-16 17:06:33 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -205,7 +205,7 @@ main(int argc, char *const argv[])
 		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
 		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
-		fprintf(stderr, "    -c <num>              how often to vaccum in cleanup cycles\n");
+		fprintf(stderr, "    -c <num>              how often to vacuum in cleanup cycles\n");
 		fprintf(stderr, "    -p <filename>         slon pid file\n");
 		fprintf(stderr, "    -f <filename>         slon configuration file\n");
 		fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
