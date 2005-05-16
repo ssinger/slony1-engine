@@ -286,32 +286,6 @@
         </para>
       </listitem>
     </varlistentry>
-    <varlistentry id="slon-drop-index" xreflabel="slon_drop_indices_for_copy">
-      <term><varname>drop_indices_for_copy</varname> (<type>boolean</type>)</term>
-      <indexterm>          
-        <primary><varname>drop_indices_for_copy</varname> configuration parameter</primary>
-      </indexterm>
-      <listitem>
-        <para>Determines whether or not the COPY_SET event should drop
-        indices for each table while copying each table.  It is much
-        faster to regenerate indices <quote>en masse</quote>
-        <emphasis>after</emphasis> loading the data than it is to have
-        them rebuilt incrementally as the <command>copy</command>
-        loads the data in.
-        </para>
-
-        <para> The default value is <quote>true</quote> at the time of
-        writing, in order that we get maximum testing out of it.  If
-        you run into problems, set it to <quote>false</quote>.</para>
-
-        <note> <para> If this option is activated, the old <quote>rule
-        of thumb</quote> that you ought to drop all unneeded indices
-        on subscriber nodes in order to improve
-        <command>COPY_SET</command> performance becomes wrong.  The
-        improved locality of reference to cached data reverses that
-        rule. </para></note>
-      </listitem>
-    </varlistentry>
 
   </variablelist>
 </sect1>
