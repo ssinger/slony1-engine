@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.24 2005-03-29 16:33:53 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.25 2005-05-16 22:04:53 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -44,9 +44,12 @@ static char *table_list [] = {"%s.sl_event",
 			      "%s.sl_log_2",
 			      "%s.sl_seqlog",
 			      "pg_catalog.pg_listener",
-                              "pg_catalog.pg_statistic"};
+                              "pg_catalog.pg_statistic",
+			      "pg_catalog.pg_listener",
+			      "pg_catalog.pg_listener"			      
+};
 
-#define MAX_VAC_TABLE 9           /* Add to this if additional tables are added above */
+#define MAX_VAC_TABLE 8           /* Add to this if additional tables are added above */
 
 static char tstring[255];         /* string used to store table names for the VACUUM statements */
 
