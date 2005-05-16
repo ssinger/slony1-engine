@@ -104,7 +104,7 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 
 </sect2>
 
-<sect2>
+<sect2 id="times">
 <title> Time Synchronization</title>
 
 <para> All the servers used within the replication cluster need to
