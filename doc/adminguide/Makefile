@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.11 2005-04-12 20:29:28 darcyb Exp $
+# $Id: Makefile,v 1.12 2005-05-19 22:26:11 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -18,6 +18,8 @@ include $(slony_top_builddir)/Makefile.global
 GENERATED_SGML = bookindex.sgml version.sgml
 
 ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML)
+
+DISTFILES = $(ALLSGML) $(GENERATED_SGML)
 
 ifdef DOCBOOKSTYLE
 CATALOG = -c $(DOCBOOKSTYLE)/catalog
@@ -261,3 +263,11 @@ version.sgml:	$(slony_top_builddir)/Makefile.global
 	echo "<!entity version \"$(VERSION)\">"; \
 	echo "<!entity majorversion \"`expr $(VERSION) : '\([0-9][0-9]*\.[0-9][0-9]*\)'`\">"; \
 	} >$@
+
+distdir:	$(DISTFILES)
+	mkdir -p $(distdir)/$(subdir)
+	-chmod 777 $(distdir)/$(subdir)
+	@for file in $(DISTFILES) ; do \
+		cp $$file $(distdir)/$(subdir)/$$file ; \
+	done
+

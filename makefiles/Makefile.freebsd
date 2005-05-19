@@ -1,13 +1,18 @@
 AROPT = cr
 
 ifdef ELF_SYSTEM
-export_dynamic = -export-dynamic
-rpath = -R$(pglibdir)
-shlib_symbolic = -Wl,-Bsymbolic -lc
+export_dynamic = -Wl,-export-dynamic
+rpath = -Wl,-R$(pglibdir)
 endif
 
 DLSUFFIX = .so
+
+ifeq ($(findstring sparc,$(host_cpu)), sparc)
+CFLAGS_SL = -fPIC -DPIC
+else
 CFLAGS_SL = -fpic -DPIC
+endif
+
 
 %.so: %.o
 ifdef ELF_SYSTEM

@@ -4,15 +4,15 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.8 2004-07-20 09:15:31 dfetter Exp $
+#	$Id: Makefile,v 1.9 2005-05-19 22:26:11 darcyb Exp $
 # ----------
 
 slony_subdir = src/ducttape
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-DISTFILES = Makefile README test_1_pgbench test_2_extra_1 test_2_extra_2 test_2_pgbench test_3_pgbench
-
+TESTS = $(wildcard test_[0-9A-F]_*)
+DISTFILES = Makefile README $(TESTS)
 ALL =
 
 
@@ -28,7 +28,10 @@ install: all installdirs
 installdirs:
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 
-
+test:
+	for script in $(TESTS) ; do \
+	  ./$$script ; \
+	done
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.29 2005-03-25 09:49:34 xfade Exp $
+#	$Id: Makefile,v 1.30 2005-05-19 22:26:11 darcyb Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -43,7 +43,7 @@ LDFLAGS+= ${NETSNMP_AGENTLIBS}
 endif
 
 
-DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h)
+DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =				\
 	$(PROG)

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.9 2005-05-10 16:56:19 darcyb Exp $
+# $Id: Makefile,v 1.10 2005-05-19 22:26:11 darcyb Exp $
 # ----------
 
 slony_subdir = doc/concept
@@ -63,13 +63,22 @@ Slony-I-concept.txt:	$(SRC_CONCEPT)
 
 Slon.eps:	Slon_$(IMG_WID)x$(IMG_HT).jpg
 ifdef DJPEG
-ifdef PNMTOPS
+  ifdef PNMTOPS
 		$(DJPEG) $< | $(PNMTOPS) -rle -noturn >$@
-else
+  else
+    ifdef CONVERT
 		$(CONVERT) $< >$@ || echo "unable to create $@ from $<"
-endif
+    else
+		@echo "unable to create $@ from $<"
+    endif
+  endif
 else
+  ifdef CONVERT
 		$(CONVERT) $< >$@ || echo "unable to create $@ from $<"
+  else
+		@echo "unable to create $@ from $<"
+  endif
+  
 endif
 
 %.ps:	%.nr

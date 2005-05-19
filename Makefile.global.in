@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.27 2005-05-10 16:56:18 darcyb Exp $
+# $Id: Makefile.global.in,v 1.28 2005-05-19 22:26:10 darcyb Exp $
 # ----------
 
 #location substitutions
@@ -23,6 +23,8 @@ prefix=			@prefix@
 sysconfdir=		@sysconfdir@
 
 host_os= 		@HOST_OS@
+host_cpu=		@host_cpu@
+
 PORTNAME= 		@PORTNAME@
 PACKAGE_NAME=		@PACKAGE_NAME@
 VERSION=		@PACKAGE_VERSION@
