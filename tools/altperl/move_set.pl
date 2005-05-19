@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: move_set.pl,v 1.9 2005-02-23 20:30:51 smsimms Exp $
+# $Id: move_set.pl,v 1.10 2005-05-19 18:14:45 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -53,17 +53,10 @@ if ($node2 =~ /^(?:node)?(\d+)$/) {
 
 open(SLONIK, ">", "/tmp/slonik.$$");
 print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "      echo 'Locking down set $set on node $node1';\n";
-print SLONIK "      lock set (id = $set, origin = $node1);\n";
-print SLONIK "      echo 'Locked down - moving it';\n";
-print SLONIK "      move set (id = $set, old origin = $node1, new origin = $node2);\n";
-print SLONIK "  }\n";
-print SLONIK "  on error {\n";
-print SLONIK "      echo 'Failure to move set $set from $node1 to $node2';\n";
-print SLONIK "      unlock set (id = $set, origin = $node1);\n";
-print SLONIK "      exit 1;\n";
-print SLONIK "  }\n";
+print SLONIK "  echo 'Locking down set $set on node $node1';\n";
+print SLONIK "  lock set (id = $set, origin = $node1);\n";
+print SLONIK "  echo 'Locked down - moving it';\n";
+print SLONIK "  move set (id = $set, old origin = $node1, new origin = $node2);\n";
 print SLONIK "  echo 'Replication set $set moved from node $node1 to $node2.  Remember to';\n";
 print SLONIK "  echo 'update your configuration file, if necessary, to note the new location';\n";
 print SLONIK "  echo 'for the set.';\n";
