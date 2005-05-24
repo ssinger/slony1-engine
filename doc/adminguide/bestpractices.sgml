@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.5 2005-05-16 22:03:32 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.6 2005-05-24 18:32:29 devrim Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -55,7 +55,7 @@ not shift around due to Daylight Savings Time. </para>
 <command><envar>TZ</envar>=UTC</command> or
 <command><envar>TZ</envar>=GMT</command>. </para>  
 
-<para> See also <xref linkend="times">.  </listitem>
+<para> See also <xref linkend="times">.</para></listitem>
 
 <listitem><para> Principle: Long running transactions are Evil </para>
 
