@@ -332,6 +332,7 @@ find_option(const char *name, int elevel)
 	}
 	else
 	{
+		slon_log(elevel, "conf option %s not found", name);
 		return NULL;
 	}
 }
@@ -377,7 +378,7 @@ get_config_option(const char *name)
 {
 	struct config_generic *record;
 
-	record = find_option(name, WARNING);
+	record = find_option(name, SLON_WARN);
 	if (record == NULL)
 	{
 		slon_log(SLON_WARN, "unrecognized configuration parameter \"%s\"\n", name);
@@ -421,9 +422,9 @@ bool
 set_config_option(const char *name, const char *value)
 {
 	struct config_generic *record;
-	int elevel = SLON_WARN;
 
-	record = find_option(name, WARNING);
+
+	record = find_option(name, SLON_WARN);
 
 	if (record == NULL)
 	{
@@ -441,13 +442,13 @@ set_config_option(const char *name, const char *value)
 				{
 					if (!parse_bool(value, &newval))
 					{
-						slon_log(elevel, "parameter \"%s\" requires a Boolean value\n", name);
+						slon_log(SLON_WARN, "parameter \"%s\" requires a Boolean value\n", name);
 						return false;
 					}
 				}
 				else
 				{
-					slon_log(elevel, "parameter \"%s\"\n", name);
+					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
 				}
 
 				*conf->variable = newval;
@@ -463,19 +464,19 @@ set_config_option(const char *name, const char *value)
 				{
 					if (!parse_int(value, &newval))
 					{
-						slon_log(elevel, "parameter \"%s\" requires a integer value\n", name);
+						slon_log(SLON_WARN, "parameter \"%s\" requires a integer value\n", name);
 						return false;
 					}
 					if (newval < conf->min || newval > conf->max)
 					{
-						slon_log(elevel, "%d is outside the valid range for parameter \"%s\" (%d .. %d)\n",
+						slon_log(SLON_WARN, "%d is outside the valid range for parameter \"%s\" (%d .. %d)\n",
 								 newval, name, conf->min, conf->max);
 						return false;
 					}
 				}
 				else
 				{
-					slon_log(elevel, "parameter \"%s\"\n", name);
+					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
 				}
 				*conf->variable = newval;
 				break;
@@ -489,19 +490,19 @@ set_config_option(const char *name, const char *value)
 				{
 					if (!parse_real(value, &newval))
 					{
-						slon_log(elevel, "parameter \"%s\" requires a numeric value\n", name);
+						slon_log(SLON_WARN, "parameter \"%s\" requires a numeric value\n", name);
 						return false;
 					}
 					if (newval < conf->min || newval > conf->max)
 					{
-						slon_log(elevel, "%g is outside the valid range for parameter \"%s\" (%g .. %g)\n",
+						slon_log(SLON_WARN, "%g is outside the valid range for parameter \"%s\" (%g .. %g)\n",
 								 newval, name, conf->min, conf->max);
 						return false;
 					}
 				}
 				else
 				{
-					slon_log(elevel, "parameter \"%s\"\n", name);
+					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
 				}
 				*conf->variable = newval;
 				break;
@@ -521,7 +522,7 @@ set_config_option(const char *name, const char *value)
 				}
 				else
 				{
-					slon_log(elevel, "parameter \"%s\"\n", name);
+					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
 					free(newval);
 				}
 				*conf->variable = newval;
