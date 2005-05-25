@@ -2,6 +2,11 @@
 # symbol names to tell them what to export/import.
 MAKE_EXPORTS= true
 
+# AIX needs threads for everything that uses libpq
+CFLAGS  += $(PTHREAD_CFLAGS)
+LDFLAGS += $(PTHREAD_LDFLAGS)
+LIBS    += $(PTHREAD_LIBS)
+
 RANLIB= touch
 MK_NO_LORDER= true
 AROPT = crs
