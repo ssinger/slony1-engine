@@ -421,6 +421,7 @@ bool
 set_config_option(const char *name, const char *value)
 {
 	struct config_generic *record;
+	int elevel = SLON_WARN;
 
 	record = find_option(name, WARNING);
 
