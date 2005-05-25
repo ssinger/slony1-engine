@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.31 2005-04-22 20:20:18 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.32 2005-05-25 16:17:21 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -15,6 +15,7 @@
 
 #include "miscadmin.h"
 #include "nodes/makefuncs.h"
+#include "parser/keywords.h"
 #include "parser/parse_type.h"
 #include "executor/spi.h"
 #include "commands/trigger.h"

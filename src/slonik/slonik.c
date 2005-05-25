@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.41 2005-04-28 17:38:30 darcyb Exp $
+ *	$Id: slonik.c,v 1.42 2005-05-25 16:16:02 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -44,6 +44,7 @@ static void usage(void);
 static SlonikAdmInfo *get_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_active_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_checked_adminfo(SlonikStmt * stmt, int no_id);
+static int slonik_repair_config(SlonikStmt_repair_config * stmt);
 
 
 static int	script_check(SlonikScript * script);
@@ -1966,9 +1967,10 @@ slonik_restart_node(SlonikStmt_restart_node * stmt)
 	}
 
 	dstring_free(&query);
+    return 0;
 }
 
-int
+static int
 slonik_repair_config(SlonikStmt_repair_config * stmt)
 {
 	SlonikAdmInfo *adminfo1;
