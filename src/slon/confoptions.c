@@ -376,12 +376,11 @@ void *
 get_config_option(const char *name)
 {
 	struct config_generic *record;
-	int			elevel;
 
-	record = find_option(name, elevel);
+	record = find_option(name, WARNING);
 	if (record == NULL)
 	{
-		slon_log(elevel, "unrecognized configuration parameter \"%s\"\n", name);
+		slon_log(SLON_WARN, "unrecognized configuration parameter \"%s\"\n", name);
 		return NULL;
 	}
 	switch (record->vartype)
@@ -422,15 +421,12 @@ bool
 set_config_option(const char *name, const char *value)
 {
 	struct config_generic *record;
-	int			elevel;
 
-	elevel = SLON_WARN;
-
-	record = find_option(name, elevel);
+	record = find_option(name, WARNING);
 
 	if (record == NULL)
 	{
-		slon_log(elevel, "unrecognized configuration parameter \"%s\"\n", name);
+		slon_log(SLON_WARN, "unrecognized configuration parameter \"%s\"\n", name);
 		return false;
 	}
 	switch (record->vartype)

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.51 2005-05-16 17:06:33 cbbrowne Exp $
+ *	$Id: slon.c,v 1.52 2005-05-25 16:10:41 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include "libpq-fe.h"
 #include "c.h"
@@ -77,7 +78,6 @@ main(int argc, char *const argv[])
 	PGconn	   *startup_conn;
 	int			c;
 	int			errors = 0;
-	int			signo;
 	char		pipe_c;
 	pid_t		pid;
 	extern int	optind;

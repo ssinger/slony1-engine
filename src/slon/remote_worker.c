@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.84 2005-05-16 17:08:03 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.85 2005-05-25 16:10:41 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -251,7 +251,7 @@ static int submit_query_to_archive(SlonDString *ds);
 static int submit_string_to_archive (const char *s);
 static int submit_raw_data_to_archive (const char *s);
 static int logarchive_tracking (const char *namespace, int sub_set, const char *firstseq, const char *seqbuf);
-static int write_void_log (int node_id, char *seqbuf, const char *message);
+static void write_void_log (int node_id, char *seqbuf, const char *message);
 
 #define TERMINATE_QUERY_AND_ARCHIVE dstring_free(&query); terminate_log_archive();
 
@@ -777,7 +777,6 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int set_id = (int)strtol(event->ev_data1, NULL, 10);
 				int add_id = (int)strtol(event->ev_data2, NULL, 10);
-				char dropquery[280];
 				rtcfg_dropSet(add_id);
 
 				slon_appendquery(&query1,
@@ -2414,11 +2413,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
 	{
-		int	tab_id = strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
 		char	   *tab_fqname = PQgetvalue(res1, tupno1, 1);
-		char	   *tab_idxname = PQgetvalue(res1, tupno1, 2);
-		char	   *tab_comment = PQgetvalue(res1, tupno1, 3);
-		int64		copysize = 0;
 
 		gettimeofday(&tv_start2, NULL);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
@@ -4711,7 +4706,7 @@ int open_log_archive (int node_id, char *seqbuf) {
 }
 
 int close_log_archive () {
-	int rc;
+	int rc = 0;
 	if (archive_dir) {
 		rc = fprintf(archive_fp, "\n------------------------------------------------------------------\n-- End Of Archive Log\n------------------------------------------------------------------\ncommit;\n");
 		rc = fclose(archive_fp);
@@ -4758,10 +4753,9 @@ int generate_archive_header (int node_id, char *seqbuf) {
 /* write_void_log() writes out a "void" log consisting of the message
  * which must either be a valid SQL query or a SQL comment. */
 
-int write_void_log (int node_id, char *seqbuf, const char *message) {
+void write_void_log (int node_id, char *seqbuf, const char *message) {
 	open_log_archive(node_id, seqbuf);
 	generate_archive_header(node_id, seqbuf);
 	submit_string_to_archive(message);
 	close_log_archive();
 }
-   
