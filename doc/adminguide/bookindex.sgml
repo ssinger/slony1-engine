@@ -25,13 +25,13 @@
   <primaryie> DDL changes 
   </primaryie>
   <secondaryie> changing the database schema ,
-    <ulink url="ddlchanges.html" role="AEN1665">Database Schema Changes (DDL)</ulink>
+    <ulink url="ddlchanges.html" role="AEN1702">Database Schema Changes (DDL)</ulink>
   </secondaryie>
 </indexentry>
 
 <indexentry>
   <primaryie> Frequently Asked Questions about Slony-I,
-    <ulink url="faq.html" role="AEN2427"></ulink>
+    <ulink url="faq.html" role="AEN2464"></ulink>
   </primaryie>
 </indexentry>
 
@@ -47,7 +47,7 @@
 
 <indexentry>
   <primaryie>cluster_name configuration parameter,
-    <ulink url="slon-config-connection.html" role="AEN3542">Connection settings</ulink>
+    <ulink url="slon-config-connection.html" role="AEN3610">Connection settings</ulink>
   </primaryie>
 </indexentry>
 
@@ -55,19 +55,19 @@
   <primaryie>configuration
   </primaryie>
   <secondaryie>of the slon daemon,
-    <ulink url="runtime-config.html" role="AEN3440"></ulink>
+    <ulink url="runtime-config.html" role="AEN3508"></ulink>
   </secondaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>conn_info configuration parameter,
-    <ulink url="slon-config-connection.html" role="AEN3552">Connection settings</ulink>
+    <ulink url="slon-config-connection.html" role="AEN3620">Connection settings</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>Controlled switchover,
-    <ulink url="failover.html#AEN1005" role="AEN1007"> Controlled Switchover</ulink>
+    <ulink url="failover.html#AEN1042" role="AEN1044"> Controlled Switchover</ulink>
   </primaryie>
 </indexentry>
 
@@ -76,7 +76,13 @@
 
 <indexentry>
   <primaryie>desired_sync_time configuration parameter,
-    <ulink url="slon-config-interval.html" role="AEN3622">Event Tuning</ulink>
+    <ulink url="slon-config-interval.html" role="AEN3690">Event Tuning</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>drop_indices_for_copy configuration parameter,
+    <ulink url="slon-config-interval.html" role="AEN3702">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 
@@ -85,7 +91,7 @@
 
 <indexentry>
   <primaryie>failover upon system failure,
-    <ulink url="failover.html#AEN1032" role="AEN1034"> Failover</ulink>
+    <ulink url="failover.html#AEN1069" role="AEN1071"> Failover</ulink>
   </primaryie>
 </indexentry>
 
@@ -94,37 +100,37 @@
 
 <indexentry>
   <primaryie>listen paths,
-    <ulink url="listenpaths.html" role="AEN1093">Slony-I listen paths</ulink>
+    <ulink url="listenpaths.html" role="AEN1130">Slony-I listen paths</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>locking issues,
-    <ulink url="locking.html" role="AEN1268">Locking Issues</ulink>
+    <ulink url="locking.html" role="AEN1305">Locking Issues</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>log_level configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3491">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3559">Logging</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>log_pid configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3500">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3568">Logging</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>log_timestamp configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3509">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3577">Logging</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>log_timestamp_format configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3518">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3586">Logging</ulink>
   </primaryie>
 </indexentry>
 
@@ -151,7 +157,7 @@
 
 <indexentry>
   <primaryie>pid_file configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3530">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3598">Logging</ulink>
   </primaryie>
 </indexentry>
 
@@ -193,13 +199,13 @@
 
 <indexentry>
   <primaryie>Slony-I for PostgreSQL version upgrades,
-    <ulink url="versionupgrade.html" role="AEN2097">Using Slony-I for PostgreSQL Upgrades</ulink>
+    <ulink url="versionupgrade.html" role="AEN2134">Using Slony-I for PostgreSQL Upgrades</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>sql_on_connection configuration parameter,
-    <ulink url="slon-config-connection.html" role="AEN3562">Connection settings</ulink>
+    <ulink url="slon-config-connection.html" role="AEN3630">Connection settings</ulink>
   </primaryie>
 </indexentry>
 
@@ -217,37 +223,37 @@
 
 <indexentry>
   <primaryie>sync_group_maxsize configuration parameter,
-    <ulink url="slon-config-interval.html" role="AEN3598">Event Tuning</ulink>
+    <ulink url="slon-config-interval.html" role="AEN3666">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>sync_interval configuration parameter,
-    <ulink url="slon-config-interval.html" role="AEN3575">Event Tuning</ulink>
+    <ulink url="slon-config-interval.html" role="AEN3643">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>sync_interval_timeout configuration parameter,
-    <ulink url="slon-config-interval.html" role="AEN3584">Event Tuning</ulink>
+    <ulink url="slon-config-interval.html" role="AEN3652">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>syslog configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3463">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3531">Logging</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>syslog_facility configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3472">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3540">Logging</ulink>
   </primaryie>
 </indexentry>
 
 <indexentry>
   <primaryie>syslog_ident configuration parameter,
-    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3482">Logging</ulink>
+    <ulink url="runtime-config.html#SLON-CONFIG-LOGGING" role="AEN3550">Logging</ulink>
   </primaryie>
 </indexentry>
 
@@ -256,7 +262,7 @@
 
 <indexentry>
   <primaryie>vac_frequency configuration parameter,
-    <ulink url="slon-config-interval.html" role="AEN3612">Event Tuning</ulink>
+    <ulink url="slon-config-interval.html" role="AEN3680">Event Tuning</ulink>
   </primaryie>
 </indexentry>
 

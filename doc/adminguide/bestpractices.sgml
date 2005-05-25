@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.6 2005-05-24 18:32:29 devrim Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.7 2005-05-25 15:59:07 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -284,6 +284,83 @@ describe some of the lessons learned from managing large numbers of
 <xref linkend="slonik"> scripts.</para>
 </listitem>
 
+<listitem><para> Handling Very Large Replication Sets </para>
+
+<para> Some users have set up replication on replication sets that are
+tens to hundreds of gigabytes in size, which puts some added
+<quote>strain</quote> on the system, in particular where it may take
+several days for the <command>COPY_SET</command> event to complete.
+Here are some principles that have been observed for dealing with
+these sorts of situtations.</para>
+
+<itemizedlist>
+
+<listitem><para> Drop all indices other than the primary key index
+while the <command>COPY_SET</command> event is run. </para>
+
+<para> When data is copied into a table that has indices on it,
+&postgres; builds the indices incrementally, on the fly.  This is much
+slower than simply copying the data into the table, and then
+recreating each index <quote>ex nihilo</quote>, as the latter can take
+substantial advantage of sort memory. </para>
+
+<para> In a future release, it is hopeful that indices will be dropped
+and recreated automatically, which would eliminate this.</para>
+</listitem>
+
+<listitem><para> If there are large numbers of updates taking place as
+the large set is being copied, this can lead to the subscriber being
+behind by some enormous number of <command>SYNC</command> events.</para>
+
+<para> If a <command> SYNC </command> is generated about once per
+second, that leads to the subscriber <quote>falling behind</quote> by
+around 90,000 <command>SYNC</command>s per day, possibly for several
+days.  </para>
+
+<para> There will correspondingly be an <emphasis>enormous</emphasis>
+growth of <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog">.  Unfortunately, once the
+<command>COPY_SET</command> completes, users have found that the
+queries against these tables wind up reverting to <command>Seq
+Scans</command> so that even though a particular
+<command>SYNC</command> processing event is only processing a small
+number of those 90,000 <command>SYNC</command> events, it still reads
+through the entire table.  In such a case, you may never see
+replication catch up.
+</para> </listitem>
+
+<listitem><para> Several things can be done that will help, involving
+careful selection of <xref linkend="slon"> parameters:</para>
+
+<itemizedlist>
+
+<listitem><para> On the subscriber's <xref linkend="slon">, increase
+the number of <command>SYNC</command> events processed together, with
+the <xref linkend= "slon-config-sync-group-maxsize"> parameter to some
+value that allows it to process a significant portion of the
+outstanding <command>SYNC</command> events. </para> </listitem>
+
+<listitem><para> On the subscriber's <xref linkend="slon">, set the
+<xref linkend="slon-config-desired-sync-time"> to 0, as the adaptive
+<command>SYNC</command> grouping system will start with small
+groupings that will, under these circumstances, perform
+poorly. </para> </listitem>
+
+<listitem><para> Increase the <xref
+linkend="slon-config-sync-interval"> on the origin's <xref
+linkend="slon"> so that <command>SYNC</command> events are generated
+less frequently.  If a <command>SYNC</command> is only generated once
+per minute instead of once per second, that will cut down the number
+of events by a factor of 60. </para> </listitem>
+</itemizedlist>
+
+<listitem><para> It is likely to be worthwhile to use <xref
+linkend="slon-config-vac-frequency"> to deactivate <xref
+linkend="slon">-initiated vacuuming in favor of running your own
+vacuum scripts, as there will be a buildup of unpurgeable data while
+the data is copied and the subscriber starts to catch up. </para>
+</listitem>
+</listitem>
 </itemizedlist>
 
 </sect1>

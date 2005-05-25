@@ -248,7 +248,7 @@
           only one <command>SYNC</command> available, even
           <option>-g60</option> will apply just that one. As soon as a
           subscriber catches up, it will apply every single
-          <command>SYNC</command> by itself.  Range: [0,100], default:
+          <command>SYNC</command> by itself.  Range: [0,10000], default:
           6
         </para>
       </listitem>
