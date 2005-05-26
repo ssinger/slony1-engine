@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.7 2005-05-25 15:59:07 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.8 2005-05-26 08:07:35 devrim Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -23,7 +23,8 @@ of policies you might want to consider. </para>
 
 <itemizedlist>
 
-<listitem><para> &slony1; is a complex multi-client, multi-server
+<listitem>
+<para> &slony1; is a complex multi-client, multi-server
 system, with the result that there are almost an innumerable set of
 places where problems can arise.  </para> 
 
@@ -36,11 +37,11 @@ between &slony1; versions, local libraries, and &postgres; libraries.
 Details count; you need to be clear on what hosts are running what
 versions of what software.
 </para>
-
 </listitem>
 
-<listitem><para> Principle: Use an unambiguous, stable time zone such
-as UTC or GMT. </para>
+<listitem>
+<para> Principle: Use an unambiguous, stable time zone such
+as UTC or GMT.</para>
 
 <para> Users have run into problems when their system uses a time zone
 that &postgres; was unable to recognize such as CUT0 or WST.  It is
@@ -55,9 +56,11 @@ not shift around due to Daylight Savings Time. </para>
 <command><envar>TZ</envar>=UTC</command> or
 <command><envar>TZ</envar>=GMT</command>. </para>  
 
-<para> See also <xref linkend="times">.</para></listitem>
+<para> See also <xref linkend="times">.</para>
+</listitem>
 
-<listitem><para> Principle: Long running transactions are Evil </para>
+<listitem>
+<para> Principle: Long running transactions are Evil </para>
 
 <para> The FAQ has an entry on <link linkend="pglistenerfull"> growth
 of <envar>pg_listener</envar> </link> which discusses this in a fair
@@ -67,7 +70,8 @@ have numerous ill effects.  They are particularly troublesome on an
 from taking effect, and the like.</para>
 </listitem>
 
-<listitem><para> <link linkend="Failover"> Failover </link> policies
+<listitem>
+<para> <link linkend="Failover"> Failover </link> policies
 should be planned for ahead of time.  </para>
 
 <para> This may simply involve thinking about what the priority lists
@@ -88,7 +92,8 @@ preventative maintenance to prevent problems from becoming serious
 enough to require <link linkend="failover"> failover </link>. </para>
 </listitem>
 
-<listitem><para> <command>VACUUM</command> policy needs to be
+<listitem>
+<para> <command>VACUUM</command> policy needs to be
 carefully defined.</para>
 
 <para> As mentioned above, <quote>long running transactions are
@@ -97,7 +102,8 @@ Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
 transaction with all the known ill effects.</para>
 </listitem>
 
-<listitem><para> Running all of the <xref linkend="slon"> daemons on a
+<listitem>
+<para> Running all of the <xref linkend="slon"> daemons on a
 central server for each network has proven preferable. </para> 
 
 <para> Each <xref linkend="slon"> should run on a host on the same
@@ -124,11 +130,13 @@ configuration scripts only need to be maintained in one place,
 eliminating duplication of configuration efforts.</para>
 </listitem>
 
-<listitem><para>The <link linkend="ddlchanges"> Database Schema
+<listitem>
+<para>The <link linkend="ddlchanges"> Database Schema
 Changes </link> section outlines some practices that have been found
 useful for handling changes to database schemas. </para></listitem>
 
-<listitem><para> Handling of Primary Keys </para> 
+<listitem>
+<para> Handling of Primary Keys </para> 
 
 <para> Discussed in the section on <link linkend="definingsets">
 Replication Sets, </link> it is <emphasis>ideal</emphasis> if each
@@ -142,18 +150,22 @@ due to the introduced unique index, which means that &slony1; has
 introduced a new failure mode for your application.</para>
 </listitem>
 
-<listitem><para> <link linkend="definesets"> Grouping tables into sets
+<listitem>
+<para> <link linkend="definesets"> Grouping tables into sets
 </link> suggests strategies for determining how to group tables and
-sequences into replication sets. </para> </listitem>
+sequences into replication sets. </para>
+</listitem>
 
-<listitem><para> It should be obvious that actions that can delete a
+<listitem>
+<para> It should be obvious that actions that can delete a
 lot of data should be taken with great care; the section on <link
 linkend="dropthings"> Dropping things from &slony1; Replication</link>
 discusses the different sorts of <quote>deletion</quote> that &slony1;
-supports.  </para> </listitem>
+supports.  </para>
+</listitem>
 
-<listitem><para> <link linkend="Locking"> Locking issues </link>
-</para>
+<listitem>
+<para> <link linkend="Locking"> Locking issues </link></para>
 
 <para> Certain &slony1; operations, notably <link
 linkend="stmtsetaddtable"> <command>set add table</command> </link>,
@@ -165,9 +177,11 @@ tables being replicated. </para>
 
 <para> Depending on the kind of activity on the databases, this may or
 may not have the effect of requiring a (hopefully brief) database
-outage. </para> </listitem>
+outage. </para>
+</listitem>
 
-<listitem id="slonyuser"><para> &slony1;-specific user names. </para>
+<listitem id="slonyuser">
+<para> &slony1;-specific user names. </para>
 
 <para> It has proven useful to define a <command>slony</command> user
 for use by &slony1;, as distinct from a generic
@@ -194,7 +208,8 @@ of problems while the subscription is in progress.
 </para>
 </listitem>
 
-<listitem><para> Path configuration </para> 
+<listitem>
+<para> Path configuration </para> 
 
 <para> The section on <link linkend="plainpaths"> Path Communications
 </link> discusses the issues surrounding what network connections need
@@ -203,7 +218,7 @@ to be in place in order for &slony1; to function.</para>
 
 <listitem><para> The section on <link linkend="listenpaths"> listen
 paths </link> discusses the issues surrounding the table <xref
-linkend="table.sl-listen">.   </para>
+linkend="table.sl-listen">.</para>
 
 <para> As of &slony1; 1.1, its contents are computed automatically
 based on the communications information available to &slony1; which
@@ -211,16 +226,22 @@ should alleviate the problems found in earlier versions where this had
 to be configured by hand.  Many seemingly inexplicable communications
 failures, where nodes failed to talk to one another even though they
 technically could, were a result of incorrect listen path
-configuration. </para> </listitem>
+configuration. </para>
+</listitem>
 
-<listitem><para> Configuring <xref linkend="slon"> </para> 
+<listitem>
+<para> Configuring <xref linkend="slon"> </para> 
 
 <para> As of version 1.1, <xref linkend="slon"> configuration may be
 drawn either from the command line or from configuration files.
-<quote>Best</quote> practices have yet to emerge from the two options:
+<quote>Best</quote> practices have yet to emerge from the two options:</para>
+</listitem>
+</itemizedlist>
 
 <itemizedlist>
-<listitem><para> Configuration via command line options</para> 
+
+<listitem>
+<para> Configuration via command line options</para> 
 
 <para> This approach has the merit that all the options that are
 active are visible in the process environment.  (And if there are a
@@ -233,7 +254,8 @@ log shipping </link> configuration and thereby destroy the sequence of
 logs for a log shipping node. </para>
 </listitem>
 
-<listitem><para> Unlike when command line options are used, the active
+<listitem>
+<para> Unlike when command line options are used, the active
 options are <emphasis>not</emphasis> visible.  They can only be
 inferred from the name and/or contents of the <xref linkend="slon">
 configuration file, and will not reflect subsequent changes to the
@@ -241,11 +263,11 @@ configuration file.  </para>
 
 <para> By putting the options in a file, you won't forget including
 any of them, so this is safer for <link linkend="logshipping"> log
-shipping. </link> </para> </listitem>
+shipping. </link> </para>
+</listitem>
 
 </itemizedlist>
-</para>
-</listitem>
+<itemizedlist>
 
 <listitem><para> Things to do when subscribing nodes </para>
 
@@ -255,7 +277,8 @@ which takes several hours to subscribe) it has been found to be
 desirable to lock all users other than the <command>slony</command>
 user out of the new subscriber because:
 </para>
-
+</listitem>
+</itemizedlist>
 <itemizedlist>
 
 <listitem><para> Applications will run into partially-copied,
@@ -275,8 +298,8 @@ copying of data, as this will improve performance, and if the database
 <quote>falls over</quote> during the <command>COPY_SET</command>
 event, you will be restarting the copy of the whole replication
 set.</para>
-</listitem>
 
+<itemizedlist>
 <listitem><para> Managing use of slonik </para> 
 
 <para> The notes on <link linkend="usingslonik"> Using Slonik </link>
@@ -284,15 +307,16 @@ describe some of the lessons learned from managing large numbers of
 <xref linkend="slonik"> scripts.</para>
 </listitem>
 
-<listitem><para> Handling Very Large Replication Sets </para>
+<listitem><para> Handling Very Large Replication Sets </para></listitem>
 
-<para> Some users have set up replication on replication sets that are
+<listitem><para> Some users have set up replication on replication sets that are
 tens to hundreds of gigabytes in size, which puts some added
 <quote>strain</quote> on the system, in particular where it may take
 several days for the <command>COPY_SET</command> event to complete.
 Here are some principles that have been observed for dealing with
-these sorts of situtations.</para>
+these sorts of situtations.</para></listitem>
 
+</itemizedlist>
 <itemizedlist>
 
 <listitem><para> Drop all indices other than the primary key index
@@ -330,8 +354,9 @@ replication catch up.
 </para> </listitem>
 
 <listitem><para> Several things can be done that will help, involving
-careful selection of <xref linkend="slon"> parameters:</para>
+careful selection of <xref linkend="slon"> parameters:</para></listitem>
 
+</itemizedlist>
 <itemizedlist>
 
 <listitem><para> On the subscriber's <xref linkend="slon">, increase
@@ -354,12 +379,12 @@ per minute instead of once per second, that will cut down the number
 of events by a factor of 60. </para> </listitem>
 </itemizedlist>
 
+<itemizedlist>
 <listitem><para> It is likely to be worthwhile to use <xref
 linkend="slon-config-vac-frequency"> to deactivate <xref
 linkend="slon">-initiated vacuuming in favor of running your own
 vacuum scripts, as there will be a buildup of unpurgeable data while
 the data is copied and the subscriber starts to catch up. </para>
-</listitem>
 </listitem>
 </itemizedlist>
 
