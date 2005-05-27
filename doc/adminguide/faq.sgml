@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.36 2005-05-12 21:47:02 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.37 2005-05-27 23:17:39 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1528,6 +1528,66 @@ UPDATE 1
 </programlisting>
 </answer>
 
+</qandaentry>
+
+<qandaentry id="v72upgrade">
+<question> <para> I have a &postgres; 7.2-based system that I
+<emphasis>really, really</emphasis> want to use &slony1; to help me
+upgrade it to 8.0.  What is involved in getting &slony1; to work for
+that?</para>
+</question>
+
+<answer> <para> Rod Taylor has reported the following...
+</para>
+
+<para> This is approximately what you need to do:</para>
+<itemizedlist>
+<listitem><para>Take the 7.3 templates and copy them to 7.2 -- or otherwise
+        hardcode the version your using to pick up the 7.3 templates </para></listitem>
+<listitem><para>Remove all traces of schemas from the code and sql templates. I
+        basically changed the "." to an "_". </para></listitem>
+<listitem><para> Bunch of work related to the XID datatype and functions. For
+        example, Slony creates CASTs for the xid to xxid and back -- but
+        7.2 cannot create new casts that way so you need to edit system
+        tables by hand. I recall creating an Operator Class and editing
+        several functions as well. </para></listitem>
+<listitem><para>sl_log_1 will have severe performance problems with any kind of
+        data volume. This required a number of index and query changes
+        to optimize for 7.2. 7.3 and above are quite a bit smarter in
+        terms of optimizations they can apply. </para></listitem>
+<listitem><para> Don't bother trying to make sequences work. Do them by hand
+        after the upgrade using pg_dump and grep. </para></listitem>
+</itemizedlist>
+<para> Of course, now that you have done all of the above, it's not compatible
+with standard Slony now. So you either need to implement 7.2 in a less
+hackish way, or you can also hack up slony to work without schemas on
+newer versions of PostgreSQL so they can talk to each other.
+</para>
+<para> Almost immediately after getting the DB upgraded from 7.2 to 7.4, we
+deinstalled the hacked up Slony (by hand for the most part), and started
+a migration from 7.4 to 7.4 on a different machine using the regular
+Slony. This was primarily to ensure we didn't keep our system catalogues
+which had been manually fiddled with.
+</para>
+
+<para> All that said, we upgraded a few hundred GB from 7.2 to 7.4
+with about 30 minutes actual downtime (versus 48 hours for a dump /
+restore cycle) and no data loss.
+</para>
+</answer>
+
+<answer> <para> That represents a sufficiently ugly set of
+<quote>hackery</quote> that the developers are exceedingly reluctant
+to let it anywhere near to the production code.  If someone were
+interested in <quote>productionizing</quote> this, it would probably
+make sense to do so based on the &slony1; 1.0 branch, with the express
+plan of <emphasis>not</emphasis> trying to keep much in the way of
+forwards compatibility or long term maintainability of replicas.
+</para>
+
+<para> You should only head down this road if you are sufficiently
+comfortable with &postgres; and &slony1; that you are prepared to hack
+pretty heavily with the code.  </para> </answer>
 </qandaentry>
 </qandaset>
 

@@ -17,9 +17,9 @@ that are running PostgreSQL on Microsoft
 <quote>binary</quote> applications (<emphasis>e.g.</emphasis> - <xref
 linkend="slonik">, <xref linkend="slon">) do not run on
 <trademark>Windows</trademark>, but a <xref linkend="slon"> running on
-one of the Unix-like systems has no reason to have difficulty connect
-to a PostgreSQL instance running on
-<trademark>Windows</trademark>.</para>
+one of the Unix-like systems has no reason to have difficulty
+connecting to a PostgreSQL instance running on
+<trademark>Windows</trademark>. </para>
 
 <para> It ought to be possible to port <xref linkend="slon"> and <xref
 linkend="slonik"> to run on <trademark>Windows</trademark>; the
@@ -55,7 +55,12 @@ will suffice; previous versions may not.</para></listitem>
 <listitem><para> You also need a recent version of &postgres;
 <emphasis>source</emphasis>.  &slony1; depends on namespace support so
 you must have &postgres; version 7.3.3 or newer to be able to build
-and use &slony1;.  </para></listitem>
+and use &slony1;.  </para>
+
+<para> Earlier versions of &postgres; are <emphasis> not </emphasis>
+supported, but note that one user has <quote>hacked</quote> &slony1;
+to do a 7.2-to-7.4 upgrade; see <link linkend="v72upgrade"> &postgres;
+7.2 notes </link>. </para></listitem>
 
 <listitem><para> GNU packages may be included in the standard
 packaging for your operating system, or you may need to look for
