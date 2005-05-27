@@ -4,8 +4,7 @@ MAKE_EXPORTS= true
 
 # AIX needs threads for everything that uses libpq
 CFLAGS  += $(PTHREAD_CFLAGS)
-LDFLAGS += $(PTHREAD_LDFLAGS)
-LIBS    += $(PTHREAD_LIBS)
+LDFLAGS += $(PTHREAD_LIBS)
 
 RANLIB= touch
 MK_NO_LORDER= true
@@ -24,7 +23,7 @@ endif
 EXPSUFF= .exp
 IMPSUFF= .imp
 
-POSTGRES_IMP= $(slony_top_builddir)/postgres$(IMPSUFF)
+POSTGRES_IMP= $(pglibdir)/postgres$(IMPSUFF)
 
 MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 
@@ -35,5 +34,5 @@ MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 %$(DLSUFFIX): %.o %$(EXPSUFF)
-	@echo Making shared library $@ from $*.o, $*$(EXPSUFF) and postgres.imp
-	$(CC) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$*$(EXPSUFF) $(LIBS)
+	@echo Making shared library $@ from $<,  $*$(EXPSUFF) and postgres.imp
+	$(CC) $(LDFLAGS_SL) -o $@ $< -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$(NAME)$(EXPSUFF) $(LIBS)
