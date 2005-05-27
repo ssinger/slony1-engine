@@ -188,7 +188,7 @@ static struct config_int ConfigureNamesInt[] =
 		2
 	},
 #endif
-	NULL
+    {0}
 };
 
 static struct config_bool ConfigureNamesBool[] =
@@ -214,7 +214,7 @@ static struct config_bool ConfigureNamesBool[] =
 		true
 	},
 
-	NULL
+    {0}
 };
 
 static struct config_real ConfigureNamesReal[] =
@@ -231,7 +231,7 @@ static struct config_real ConfigureNamesReal[] =
 		0.0,					/* min_value */
 		1.0						/* max value */
 	},
-	NULL
+    {0}
 };
 
 static struct config_string ConfigureNamesString[] =
@@ -325,7 +325,7 @@ static struct config_string ConfigureNamesString[] =
 		"slon"
 	},
 #endif
-	NULL
+    {0}
 };
 #endif
 /*
