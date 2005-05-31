@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: move_set.pl,v 1.10 2005-05-19 18:14:45 cbbrowne Exp $
+# $Id: slonik_move_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

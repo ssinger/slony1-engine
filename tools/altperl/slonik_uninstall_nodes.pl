@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: update_nodes.pl,v 1.7 2005-02-22 17:11:18 smsimms Exp $
+# $Id: slonik_uninstall_nodes.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -14,9 +14,9 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: update_nodes [--config file]
+"Usage: uninstall_nodes [--config file]
 
-    Updates the functions on all nodes.
+    Removes Slony configuration from all nodes in a cluster.
 
 ";
 
@@ -28,10 +28,13 @@ if ($SHOW_USAGE) {
 require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-open(SLONIK, ">", "/tmp/update_nodes.$$");
+$FILE="/tmp/slonik.$$";
+open(SLONIK, ">$FILE");
 print SLONIK genheader();
 foreach my $node (@NODES) {
-  print SLONIK "  update functions (id = $node);\n";
-};
+    next if $node == $MASTERNODE; # Do this one last
+    print SLONIK "  uninstall node (id=$node);\n";
+}
+print SLONIK "  uninstall node (id=$MASTERNODE);\n";
 close SLONIK;
-run_slonik_script("/tmp/update_nodes.$$");
+run_slonik_script($FILE);

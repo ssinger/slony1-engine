@@ -1,5 +1,5 @@
 README
-$Id: README,v 1.12 2005-03-10 21:05:54 smsimms Exp $
+$Id: README,v 1.13 2005-05-31 16:11:05 cbbrowne Exp $
 
 Christopher Browne, Afilias Canada
 Steve Simms, Technically Sound
@@ -39,11 +39,11 @@ For the impatient: Steps to get started
 
 4. Initialize the Slony-I cluster:
 
-   /usr/local/slony/bin/init_cluster
+   /usr/local/slony/bin/slonik_init_cluster
 
    Verify that the output looks reasonable, then run:
 
-   /usr/local/slony/bin/init_cluster | /usr/local/pgsql/bin/slonik
+   /usr/local/slony/bin/slonik_init_cluster | /usr/local/pgsql/bin/slonik
 
 5. Start up slon daemons for both servers:
 
@@ -52,11 +52,11 @@ For the impatient: Steps to get started
 
 6. Set up set 1 on the "master" node:
 
-   /usr/local/slony/bin/create_set set1
+   /usr/local/slony/bin/slonik_create_set set1
 
 7. Subscribe node 2 to set 1:
 
-   /usr/local/slony/bin/subscribe_set set1 node2
+   /usr/local/slony/bin/slonik_subscribe_set set1 node2
 
 After some period of time (from a few seconds to a few days depending
 on the size of the set), you should have a working replica of the

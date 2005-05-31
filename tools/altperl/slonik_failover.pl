@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: failover.pl,v 1.8 2005-02-22 16:51:09 smsimms Exp $
+# $Id: slonik_failover.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 

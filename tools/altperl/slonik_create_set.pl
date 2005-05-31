@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: create_set.pl,v 1.15 2005-02-23 20:30:51 smsimms Exp $
+# $Id: slonik_create_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
