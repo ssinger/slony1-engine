@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.46 2005-05-10 16:56:19 darcyb Exp $
+# $Id: configure.ac,v 1.47 2005-05-31 04:37:20 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -140,6 +140,7 @@ SLONYPATH=`pwd`
 ACX_LIBPQ()
 ACX_LIBSNMP()
 ACX_SLONYTOOLS()
+SLON_AC_DOCS()
 ACX_SLONYDOCS()
 
 AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
@@ -153,6 +154,7 @@ AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
 AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
 AC_SUBST(TOOLSBIN, $TOOLSBIN)
 AC_SUBST(DOCDIR, $DOCDIR)
+AC_SUBST(with_docs, $with_docs)
 
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)

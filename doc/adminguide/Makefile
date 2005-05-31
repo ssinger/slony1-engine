@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.12 2005-05-19 22:26:11 darcyb Exp $
+# $Id: Makefile,v 1.13 2005-05-31 04:37:20 darcyb Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -18,7 +18,6 @@ include $(slony_top_builddir)/Makefile.global
 GENERATED_SGML = bookindex.sgml version.sgml
 
 ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML)
-
 DISTFILES = $(ALLSGML) $(GENERATED_SGML)
 
 ifdef DOCBOOKSTYLE
@@ -69,9 +68,9 @@ ifdef DOCDIR
 	$(mkinstalldirs) $(DOCDIR)/man$(DEFAULTSECTION)
 endif
 
-install: all man installdirs
+install: installdirs
 ifdef DOCDIR
-	for file in $(ALLSGML) ; do \
+	for file in $(wildcard $(srcdir)/*.sgml) ; do \
 	  $(INSTALL_DATA) $$file $(DOCDIR)/sgml; \
 	done
 	for file in $(wildcard man1/*) ; do \
