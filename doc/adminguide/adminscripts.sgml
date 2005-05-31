@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.23 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.24 2005-05-31 16:14:55 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -100,7 +100,7 @@ sequence that &slony1; generates</para>
 </listitem>
 </itemizedlist>
 </sect2>
-<sect2><title>build_env</title>
+<sect2><title>slonik_build_env</title>
 
 <para>Queries a database, generating output hopefully suitable for
 <filename>slon_tools.conf</filename> consisting of:</para>
@@ -111,42 +111,42 @@ sequence that &slony1; generates</para>
 <envar>nvar>@SERIALT</envar>nvar>, and <envar>@SEQUENCES</envar></para></listitem>
 </itemizedlist>
 </sect2>
-<sect2><title>create_set</title>
+<sect2><title>slonik_create_set</title>
 
 <para>This requires <envar>SLONYSET</envar> to be set as well as
 <envar>SLONYNODES</envar>; it is used to generate the <command>slonik</command> script to set up
 a replication set consisting of a set of tables and sequences that are
 to be replicated.</para>
 </sect2>
-<sect2><title>drop_node</title>
+<sect2><title>slonik_drop_node</title>
 
 <para>Generates Slonik script to drop a node from a &slony1; cluster.</para>
 </sect2>
-<sect2><title>drop_set</title>
+<sect2><title>slonik_drop_set</title>
 
 <para>Generates Slonik script to drop a replication set
 (<emphasis>e.g.</emphasis> - set of tables and sequences) from a
 &slony1; cluster.</para>
 </sect2>
-<sect2><title>execute_script</title>
+<sect2><title>slonik_execute_script</title>
 
 <para>Generates Slonik script to push DDL changes to a replication set.</para>
 </sect2>
-<sect2><title>failover</title>
+<sect2><title>slonik_failover</title>
 
 <para>Generates Slonik script to request failover from a dead node to some new origin</para>
 </sect2>
-<sect2><title>init_cluster</title>
+<sect2><title>slonik_init_cluster</title>
 
 <para>Generates Slonik script to initialize a whole &slony1; cluster,
 including setting up the nodes, communications paths, and the listener
 routing.</para>
 </sect2>
-<sect2><title>merge_sets</title>
+<sect2><title>slonik_merge_sets</title>
 
 <para>Generates Slonik script to merge two replication sets together.</para>
 </sect2>
-<sect2><title>move_set</title>
+<sect2><title>slonik_move_set</title>
 
 <para>Generates Slonik script to move the origin of a particular set to a different node.</para>
 </sect2>
@@ -155,18 +155,18 @@ routing.</para>
 <para>Script to test whether &slony1; is successfully replicating
 data.</para>
 </sect2>
-<sect2><title>restart_node</title>
+<sect2><title>slonik_restart_node</title>
 
 <para>Generates Slonik script to request the restart of a node.  This was
 particularly useful pre-1.0.5 when nodes could get snarled up when
 slon daemons died.</para>
 </sect2>
-<sect2><title>restart_nodes</title>
+<sect2><title>slonik_restart_nodes</title>
 
 <para>Generates Slonik script to restart all nodes in the cluster.  Not
 particularly useful.</para>
 </sect2>
-<sect2><title>show_configuration</title>
+<sect2><title>slony_show_configuration</title>
 
 <para>Displays an overview of how the environment (e.g. - <envar>SLONYNODES</envar>) is set
 to configure things.</para>
@@ -196,26 +196,26 @@ go in in 20 minutes or more.</para>
 the slon sometimes stops working without becoming aware of it.</para>
 
 </sect2>
-<sect2><title>store_node</title>
+<sect2><title>slonik_store_node</title>
 
 <para>Adds a node to an existing cluster.</para>
 </sect2>
-<sect2><title>subscribe_set</title>
+<sect2><title>slonik_subscribe_set</title>
 
 <para>Generates Slonik script to subscribe a particular node to a particular replication set.</para>
 
-</sect2><sect2><title>uninstall_nodes</title>
+</sect2><sect2><title>slonik_uninstall_nodes</title>
 
 <para>This goes through and drops the &slony1; schema from each node;
 use this if you want to destroy replication throughout a cluster.
 This is a <emphasis>VERY</emphasis> unsafe script!</para>
 
-</sect2><sect2><title>unsubscribe_set</title>
+</sect2><sect2><title>slonik_unsubscribe_set</title>
 
 <para>Generates Slonik script to unsubscribe a node from a replication set.</para>
 
 </sect2>
-<sect2><title>update_nodes</title>
+<sect2><title>slonik_update_nodes</title>
 
 <para>Generates Slonik script to tell all the nodes to update the
 &slony1; functions.  This will typically be needed when you upgrade
