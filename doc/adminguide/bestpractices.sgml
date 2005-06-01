@@ -1,0 +1,406 @@
+<!-- $Id: bestpractices.sgml,v 1.8 2005-05-26 08:07:35 devrim Exp $ --> 
+<sect1 id="bestpractices">
+<title> &slony1; <quote>Best Practices</quote> </title>
+
+<para> It is common for managers to have a desire to operate systems
+using some available, documented set of <quote>best practices.</quote>
+Documenting that sort of thing is essential to ISO 9000, ISO 9001, and
+other sorts of organizational certifications. </para>
+
+<para> It is worthwhile to preface a discussion of <quote>best
+practices</quote> by mentioning that each organization that uses
+&slony1; is unique, and there may be a need for local policies to
+reflect unique local operating characteristics.  It is for that reason
+that &slony1; does <emphasis>not</emphasis> impose its own policies
+for such things as <link linkend="failover"> failover </link>; those
+will need to be determined based on the overall shape of your network,
+of your set of database servers, and of your usage patterns for those
+servers. </para>
+
+<para> There are, however, a number of things that early adopters of
+&slony1; have discovered which can at least help to suggest the sorts
+of policies you might want to consider. </para>
+
+<itemizedlist>
+
+<listitem>
+<para> &slony1; is a complex multi-client, multi-server
+system, with the result that there are almost an innumerable set of
+places where problems can arise.  </para> 
+
+<para> As a natural result, maintaining a clean environment is really
+valuable, as any sort of environmental <quote>messiness</quote> can
+either cause unexpected problems or mask the real problem. </para>
+
+<para> Numerous users have reported problems resulting from mismatches
+between &slony1; versions, local libraries, and &postgres; libraries.
+Details count; you need to be clear on what hosts are running what
+versions of what software.
+</para>
+</listitem>
+
+<listitem>
+<para> Principle: Use an unambiguous, stable time zone such
+as UTC or GMT.</para>
+
+<para> Users have run into problems when their system uses a time zone
+that &postgres; was unable to recognize such as CUT0 or WST.  It is
+necessary that you use a timezone that &postgres; can recognize
+correctly.
+</para>
+
+<para> It is furthermore preferable to use a time zone where times do
+not shift around due to Daylight Savings Time. </para>
+
+<para> The <quote>geographically unbiased</quote> choice seems to be
+<command><envar>TZ</envar>=UTC</command> or
+<command><envar>TZ</envar>=GMT</command>. </para>  
+
+<para> See also <xref linkend="times">.</para>
+</listitem>
+
+<listitem>
+<para> Principle: Long running transactions are Evil </para>
+
+<para> The FAQ has an entry on <link linkend="pglistenerfull"> growth
+of <envar>pg_listener</envar> </link> which discusses this in a fair
+bit of detail; the long and short is that long running transactions
+have numerous ill effects.  They are particularly troublesome on an
+<quote>origin</quote> node, holding onto locks, preventing vacuums
+from taking effect, and the like.</para>
+</listitem>
+
+<listitem>
+<para> <link linkend="Failover"> Failover </link> policies
+should be planned for ahead of time.  </para>
+
+<para> This may simply involve thinking about what the priority lists
+should be of what should fail to what, as opposed to trying to
+automate it.  But knowing what to do ahead of time cuts down on the
+number of mistakes made.</para>
+
+<para> At Afilias, some internal <citation>The 3AM Unhappy DBA's Guide
+to...</citation> guides have been created to provide checklists of
+what to do when <quote>unhappy</quote> things happen; this sort of
+material is highly specific to the applications running, so you would
+need to generate your own such documents.
+</para>
+</listitem>
+
+<listitem><para> <xref linkend="stmtmoveset"> should be used to allow
+preventative maintenance to prevent problems from becoming serious
+enough to require <link linkend="failover"> failover </link>. </para>
+</listitem>
+
+<listitem>
+<para> <command>VACUUM</command> policy needs to be
+carefully defined.</para>
+
+<para> As mentioned above, <quote>long running transactions are
+Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
+<command>VACUUM</command> on a huge table will open a long-running
+transaction with all the known ill effects.</para>
+</listitem>
+
+<listitem>
+<para> Running all of the <xref linkend="slon"> daemons on a
+central server for each network has proven preferable. </para> 
+
+<para> Each <xref linkend="slon"> should run on a host on the same
+local network as the node that it is servicing, as it does a
+<emphasis>lot</emphasis> of communications with its database.  </para>
+
+<para> In theory, the <quote>best</quote> speed would come from
+running the <xref linkend="slon"> on the database server that it is
+servicing. </para>
+
+<para> In practice, having the <xref linkend="slon"> processes strewn
+across a dozen servers turns out to be really inconvenient to manage,
+as making changes to their configuration requires logging onto a whole
+bunch of servers.  In environments where it is necessary to use
+<application>sudo</application> for users to switch to application
+users, this turns out to be seriously inconvenient.  It turns out to
+be <emphasis>much</emphasis> easier to manage to group the <xref
+linkend="slon"> processes on one server per local network, so that
+<emphasis>one</emphasis> script can start, monitor, terminate, and
+otherwise maintain <emphasis>all</emphasis> of the nearby nodes.</para>
+
+<para> That also has the implication that configuration data and
+configuration scripts only need to be maintained in one place,
+eliminating duplication of configuration efforts.</para>
+</listitem>
+
+<listitem>
+<para>The <link linkend="ddlchanges"> Database Schema
+Changes </link> section outlines some practices that have been found
+useful for handling changes to database schemas. </para></listitem>
+
+<listitem>
+<para> Handling of Primary Keys </para> 
+
+<para> Discussed in the section on <link linkend="definingsets">
+Replication Sets, </link> it is <emphasis>ideal</emphasis> if each
+replicated table has a true primary key constraint; it is
+<emphasis>acceptable</emphasis> to use a <quote>candidate primary key.</quote></para>
+
+<para> It is <emphasis>not recommended</emphasis> that a
+&slony1;-defined key be used to introduce a candidate primary key, as
+this introduces the possibility that updates to this table can fail
+due to the introduced unique index, which means that &slony1; has
+introduced a new failure mode for your application.</para>
+</listitem>
+
+<listitem>
+<para> <link linkend="definesets"> Grouping tables into sets
+</link> suggests strategies for determining how to group tables and
+sequences into replication sets. </para>
+</listitem>
+
+<listitem>
+<para> It should be obvious that actions that can delete a
+lot of data should be taken with great care; the section on <link
+linkend="dropthings"> Dropping things from &slony1; Replication</link>
+discusses the different sorts of <quote>deletion</quote> that &slony1;
+supports.  </para>
+</listitem>
+
+<listitem>
+<para> <link linkend="Locking"> Locking issues </link></para>
+
+<para> Certain &slony1; operations, notably <link
+linkend="stmtsetaddtable"> <command>set add table</command> </link>,
+<link linkend="stmtmoveset"> <command> move set</command> </link>,
+<link linkend="stmtlockset"> <command> lock set </command> </link>,
+and <link linkend="stmtddlscript"> <command>execute script</command>
+</link> require acquiring <emphasis>exclusive locks</emphasis> on the
+tables being replicated. </para>
+
+<para> Depending on the kind of activity on the databases, this may or
+may not have the effect of requiring a (hopefully brief) database
+outage. </para>
+</listitem>
+
+<listitem id="slonyuser">
+<para> &slony1;-specific user names. </para>
+
+<para> It has proven useful to define a <command>slony</command> user
+for use by &slony1;, as distinct from a generic
+<command>postgres</command> or <command>pgsql</command> user.  </para>
+
+<para> If all sorts of automatic <quote>maintenance</quote>
+activities, such as <command>vacuum</command>ing and performing
+backups, are performed under the <quote>ownership</quote> of a single
+&postgres; user, it turns out to be pretty easy to run into deadlock
+problems. </para>
+
+<para> For instance, a series of <command>vacuums</command> that
+unexpectedly run against a database that has a large
+<command>SUBSCRIBE_SET</command> event under way may run into a
+deadlock which would roll back several hours worth of data copying
+work.</para>
+
+<para> If, instead, different maintenance roles are performed by
+different users, you may, during vital operations such as
+<command>SUBSCRIBE_SET</command>, lock out other users at the
+<filename>pg_hba.conf</filename> level, only allowing the
+<command>slony</command> user in, which substantially reduces the risk
+of problems while the subscription is in progress.
+</para>
+</listitem>
+
+<listitem>
+<para> Path configuration </para> 
+
+<para> The section on <link linkend="plainpaths"> Path Communications
+</link> discusses the issues surrounding what network connections need
+to be in place in order for &slony1; to function.</para>
+</listitem>
+
+<listitem><para> The section on <link linkend="listenpaths"> listen
+paths </link> discusses the issues surrounding the table <xref
+linkend="table.sl-listen">.</para>
+
+<para> As of &slony1; 1.1, its contents are computed automatically
+based on the communications information available to &slony1; which
+should alleviate the problems found in earlier versions where this had
+to be configured by hand.  Many seemingly inexplicable communications
+failures, where nodes failed to talk to one another even though they
+technically could, were a result of incorrect listen path
+configuration. </para>
+</listitem>
+
+<listitem>
+<para> Configuring <xref linkend="slon"> </para> 
+
+<para> As of version 1.1, <xref linkend="slon"> configuration may be
+drawn either from the command line or from configuration files.
+<quote>Best</quote> practices have yet to emerge from the two options:</para>
+</listitem>
+</itemizedlist>
+
+<itemizedlist>
+
+<listitem>
+<para> Configuration via command line options</para> 
+
+<para> This approach has the merit that all the options that are
+active are visible in the process environment.  (And if there are a
+lot of them, they may be a nuisance to read.)</para>
+
+<para> Unfortunately, if you
+invoke <xref linkend="slon"> from the command line, you could
+<emphasis>forget</emphasis> to include <link linkend="logshipping">
+log shipping </link> configuration and thereby destroy the sequence of
+logs for a log shipping node. </para>
+</listitem>
+
+<listitem>
+<para> Unlike when command line options are used, the active
+options are <emphasis>not</emphasis> visible.  They can only be
+inferred from the name and/or contents of the <xref linkend="slon">
+configuration file, and will not reflect subsequent changes to the
+configuration file.  </para> 
+
+<para> By putting the options in a file, you won't forget including
+any of them, so this is safer for <link linkend="logshipping"> log
+shipping. </link> </para>
+</listitem>
+
+</itemizedlist>
+<itemizedlist>
+
+<listitem><para> Things to do when subscribing nodes </para>
+
+<para> When a new node is running the <command>COPY_SET</command>
+event for a large replication set (<emphasis>e.g.</emphasis> - one
+which takes several hours to subscribe) it has been found to be
+desirable to lock all users other than the <command>slony</command>
+user out of the new subscriber because:
+</para>
+</listitem>
+</itemizedlist>
+<itemizedlist>
+
+<listitem><para> Applications will run into partially-copied,
+half-baked data that is not totally consistent. </para> </listitem>
+
+<listitem><para> It is possible for applications (and maintenance
+scripts) to submit combinations of queries that will get the system
+into a deadlock situation, thereby terminating the
+<command>COPY_SET</command> event, and requiring the subscription to
+start over again.  </para> </listitem>
+
+</itemizedlist>
+
+<para> It <emphasis>may</emphasis> be worth considering turning the
+&postgres; <function>fsync</function> functionality off during the
+copying of data, as this will improve performance, and if the database
+<quote>falls over</quote> during the <command>COPY_SET</command>
+event, you will be restarting the copy of the whole replication
+set.</para>
+
+<itemizedlist>
+<listitem><para> Managing use of slonik </para> 
+
+<para> The notes on <link linkend="usingslonik"> Using Slonik </link>
+describe some of the lessons learned from managing large numbers of
+<xref linkend="slonik"> scripts.</para>
+</listitem>
+
+<listitem><para> Handling Very Large Replication Sets </para></listitem>
+
+<listitem><para> Some users have set up replication on replication sets that are
+tens to hundreds of gigabytes in size, which puts some added
+<quote>strain</quote> on the system, in particular where it may take
+several days for the <command>COPY_SET</command> event to complete.
+Here are some principles that have been observed for dealing with
+these sorts of situtations.</para></listitem>
+
+</itemizedlist>
+<itemizedlist>
+
+<listitem><para> Drop all indices other than the primary key index
+while the <command>COPY_SET</command> event is run. </para>
+
+<para> When data is copied into a table that has indices on it,
+&postgres; builds the indices incrementally, on the fly.  This is much
+slower than simply copying the data into the table, and then
+recreating each index <quote>ex nihilo</quote>, as the latter can take
+substantial advantage of sort memory. </para>
+
+<para> In a future release, it is hopeful that indices will be dropped
+and recreated automatically, which would eliminate this.</para>
+</listitem>
+
+<listitem><para> If there are large numbers of updates taking place as
+the large set is being copied, this can lead to the subscriber being
+behind by some enormous number of <command>SYNC</command> events.</para>
+
+<para> If a <command> SYNC </command> is generated about once per
+second, that leads to the subscriber <quote>falling behind</quote> by
+around 90,000 <command>SYNC</command>s per day, possibly for several
+days.  </para>
+
+<para> There will correspondingly be an <emphasis>enormous</emphasis>
+growth of <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog">.  Unfortunately, once the
+<command>COPY_SET</command> completes, users have found that the
+queries against these tables wind up reverting to <command>Seq
+Scans</command> so that even though a particular
+<command>SYNC</command> processing event is only processing a small
+number of those 90,000 <command>SYNC</command> events, it still reads
+through the entire table.  In such a case, you may never see
+replication catch up.
+</para> </listitem>
+
+<listitem><para> Several things can be done that will help, involving
+careful selection of <xref linkend="slon"> parameters:</para></listitem>
+
+</itemizedlist>
+<itemizedlist>
+
+<listitem><para> On the subscriber's <xref linkend="slon">, increase
+the number of <command>SYNC</command> events processed together, with
+the <xref linkend= "slon-config-sync-group-maxsize"> parameter to some
+value that allows it to process a significant portion of the
+outstanding <command>SYNC</command> events. </para> </listitem>
+
+<listitem><para> On the subscriber's <xref linkend="slon">, set the
+<xref linkend="slon-config-desired-sync-time"> to 0, as the adaptive
+<command>SYNC</command> grouping system will start with small
+groupings that will, under these circumstances, perform
+poorly. </para> </listitem>
+
+<listitem><para> Increase the <xref
+linkend="slon-config-sync-interval"> on the origin's <xref
+linkend="slon"> so that <command>SYNC</command> events are generated
+less frequently.  If a <command>SYNC</command> is only generated once
+per minute instead of once per second, that will cut down the number
+of events by a factor of 60. </para> </listitem>
+</itemizedlist>
+
+<itemizedlist>
+<listitem><para> It is likely to be worthwhile to use <xref
+linkend="slon-config-vac-frequency"> to deactivate <xref
+linkend="slon">-initiated vacuuming in favor of running your own
+vacuum scripts, as there will be a buildup of unpurgeable data while
+the data is copied and the subscriber starts to catch up. </para>
+</listitem>
+</itemizedlist>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"book.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->
