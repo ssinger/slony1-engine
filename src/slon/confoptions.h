@@ -124,8 +124,8 @@ static struct config_int ConfigureNamesInt[] =
 	{
 		{
 			(const char *)"sync_interval",
-			gettext_noop("sync even interval"),
-			gettext_noop("sync even interval in ms"),
+			gettext_noop("sync event interval"),
+			gettext_noop("sync event interval in ms"),
 			SLON_C_INT
 		},
 		&sync_interval,
