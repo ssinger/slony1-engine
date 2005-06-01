@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.1 2005-04-15 19:33:15 cbbrowne Exp $
+$Id: INSTALL,v 1.2 2005-06-01 16:34:17 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -64,3 +64,10 @@ remotely from other hosts.)
 If you wish to have the "altperl" administration tools available, you
 need to specify the "--with-perltools=somewhere" option.
 
+Note that you may have difficulty building the documentation on Red
+Hat-based systems due to NAMELEN being set way too low.  Havoc
+Pennington opened a bug on this back in mid-2001, back in the days of
+Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
+appear to have been any progress since then.
+
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058
