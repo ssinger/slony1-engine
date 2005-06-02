@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.48 2005-06-02 16:45:18 darcyb Exp $
+# $Id: configure.ac,v 1.49 2005-06-02 18:25:04 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -160,11 +160,11 @@ AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
 
-if test ${prefix} = "NONE"; then
-  SLONBINDIR="${PG_BINDIR}"
-else
-  SLONBINDIR="${prefix}/bin"
-fi
+#-- if test ${prefix} = "NONE"; then
+SLONBINDIR="${PG_BINDIR}"
+#-- else
+#--   SLONBINDIR="${prefix}/bin"
+#-- fi
 AC_SUBST(SLONBINDIR,$SLONBINDIR)
 
 # ----

@@ -7993,11 +7993,11 @@ HOST_OS=$host_os
 PORTNAME=$template
 
 
-if test ${prefix} = "NONE"; then
-  SLONBINDIR="${PG_BINDIR}"
-else
-  SLONBINDIR="${prefix}/bin"
-fi
+#-- if test ${prefix} = "NONE"; then
+SLONBINDIR="${PG_BINDIR}"
+#-- else
+#--   SLONBINDIR="${prefix}/bin"
+#-- fi
 SLONBINDIR=$SLONBINDIR
 
 
