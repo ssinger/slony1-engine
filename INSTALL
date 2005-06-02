@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.2 2005-06-01 16:34:17 cbbrowne Exp $
+$Id: INSTALL,v 1.3 2005-06-02 07:04:45 devrim Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -71,3 +71,4 @@ Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been any progress since then.
 
 https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382 (For RHEL)
