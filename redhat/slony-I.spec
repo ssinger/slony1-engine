@@ -74,10 +74,12 @@ install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/slon.conf
 cd tools
 make DESTDIR=$RPM_BUILD_ROOT install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
-install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
-/bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
+install -m 0755 altperl/slon_tools.conf-sample  
+$RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
 install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
 install -m 0755 altperl/slon-tools.pm  $RPM_BUILD_ROOT%{_libdir}/pgsql/
+/bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
+/bin/rm -f  $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
 /bin/rm -f $RPM_BUILD_ROOT%{_libdir}/slon-tools.pm
 /bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools.pm
 %endif
@@ -103,6 +105,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Thu Jun 02 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Apply a new %docs macro and disable building of docs by default.
+- Remove slon-tools.conf-sample from bindir.
 
 * Mon Apr 10 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - More fixes on RPM builds
