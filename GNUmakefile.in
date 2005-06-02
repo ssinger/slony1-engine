@@ -4,13 +4,19 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.21 2005-05-31 04:37:20 darcyb Exp $
+# $Id: GNUmakefile.in,v 1.22 2005-06-02 18:37:19 darcyb Exp $
 # ----------
 
 top_builddir = .
 include $(top_builddir)/Makefile.global
 TAR = tar
 GZIP = gzip --best
+
+DEFAULTBUILDS=src tools
+
+ifeq (@with_docs@, yes)
+DEFAULTBUILDS+=" doc"
+endif
 
 DISTFILES = aclocal.m4 \
   config.h.in \
@@ -30,22 +36,19 @@ DISTFILES = aclocal.m4 \
 
 
 all:
-	@for subdir in src tools ; do \
+	@for subdir in $(DEFAULTBUILDS) ; do \
 	  $(MAKE) -C $$subdir $@ || exit; \
     done && \
-	if [ "@with_docs@" = "yes" ]; then \
-		$(MAKE) -C doc $@ || exit; \
-	fi; \
 	echo "All of Slony-I is successfully made. Ready to install"
 
 install	installdirs:
-	@for subdir in src tools doc ; do \
+	@for subdir in $(DEFAULTBUILDS) ; do \
 	  $(MAKE) -C $$subdir $@ || exit; \
     done && \
 	echo "All of Slony-I is successfully installed"
 
 clean:
-	@for subdir in src doc tools ; do \
+	@for subdir in $(DEFAULTBUILDS) ; do \
 	  $(MAKE) -C $$subdir $@ ; \
     done ;\
       rm -f postgres.imp
