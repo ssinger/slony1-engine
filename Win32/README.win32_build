@@ -1,0 +1,23 @@
+The attached patch (in addition to my earlier patch) configures the
+build properly for Win32/Mingw. The following points should be noted.
+
+- A Mingw/Msys PostgreSQL installation is required. pgInstaller doesn't
+yet install all the required headers, and as previously noted, gcc seems
+to barf on C:/path/to/file style paths. I do not anticipate this to be a
+problem as I intend to eventually include a pre-built Slony with
+pgInstaller so only developers will need to worry about this (and they
+will probably already have the required enviroment for PostgreSQL
+development anyway).
+
+- Currently slon and slonik do not compile. These will need additional
+porting. xxid and slony1_funcs do compile however, consequently this
+patch obsoletes the /Win32 directory containing Andreas' pgxs makefiles.
+
+- Failure of the posix signals test is noted with a warning, but not a
+configure failure at this time to allow compilation of working
+components, and porting of the rest.
+
+As with my previous patch, I have not included an updated configure
+script as I'm running autoconf 2.59. I can send it if required.
+
+Regards, Dave Page

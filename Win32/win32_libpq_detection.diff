@@ -1,0 +1,27 @@
+Index: config/acx_libpq.m4
+===================================================================
+RCS file: /usr/local/cvsroot/slony1/slony1-engine/config/acx_libpq.m4,v
+retrieving revision 1.9
+diff -c -r1.9 acx_libpq.m4
+*** config/acx_libpq.m4	18 Feb 2005 00:15:56 -0000	1.9
+--- config/acx_libpq.m4	2 Jun 2005 09:30:10 -0000
+***************
+*** 145,150 ****
+--- 145,161 ----
+  
+  CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR -I$PG_INCLUDESERVERDIR"
+  
++ dnl ---------------------------------------------------
++ dnl Add the port specific include directory if required
++ dnl ---------------------------------------------------
++ 
++ case "${host_os}" in
++         *mingw32*)
++         
++         CPPFLAGS="$CPPFLAGS -I$PG_INCLUDESERVERDIR/port/win32"
++         ;;
++ esac
++ 
+  AC_CHECK_HEADER(postgres.h, HAVE_LIBPQSERVER=1)
+  AC_CHECK_HEADER(utils/typcache.h, AC_DEFINE(HAVE_TYPCACHE,1,[PostgreSQL typcache]),[],[#include "postgres.h"])
+  if test -n "$HAVE_LIBPQSERVER" -a "$HAVE_TYPCACHE" != "yes"; then
