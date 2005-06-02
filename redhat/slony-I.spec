@@ -48,9 +48,9 @@ export LIBNAME=%{_lib}
         --with-perltools=%{_bindir} \
 %endif
 %if %docs
-        --with-docs --with-docdir=/usr/share/doc \
+        --with-docs \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql
+        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql --with-docdir=/usr/share/doc 
 make
 %if %perltools
  cd tools
