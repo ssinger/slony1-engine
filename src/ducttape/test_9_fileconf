@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_9_fileconf,v 1.2 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: test_9_fileconf,v 1.3 2005-06-02 16:44:53 cbbrowne Exp $
 # **********
 # test_9_fileconf
 #
@@ -294,5 +294,5 @@ kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
-. compare_pgbench_dumps $DB1 $DB2
+./compare_pgbench_dumps $DB1 $DB2
 rm $PREAMBLE_FILE $SLONCONF1 $SLONCONF2

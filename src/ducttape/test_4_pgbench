@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_4_pgbench,v 1.10 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: test_4_pgbench,v 1.11 2005-06-02 16:44:53 cbbrowne Exp $
 # **********
 # test_4_pgbench
 #
@@ -304,4 +304,4 @@ kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
-. compare_pgbench_dumps $DB1 $DB2
+./compare_pgbench_dumps $DB1 $DB2

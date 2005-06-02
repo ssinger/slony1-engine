@@ -1,16 +1,13 @@
 #!/bin/sh    
-# $Id: compare_pgbench_dumps,v 1.1 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: compare_pgbench_dumps,v 1.2 2005-06-02 16:44:53 cbbrowne Exp $
 # **********
 # compare_pgbench_dumps
 # **********
-
-export PATH
 TMPOUT=/tmp/output.$$
 DB1=$1    # First database
 DB2=$2    # Second database
-DEBUG_LEVEL=2
 
-echo -n "**** comparing databases ... "
+echo -n "**** comparing databases $DB1 and $DB2 ... "
 psql $DB1 >dump.tmp.1.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;

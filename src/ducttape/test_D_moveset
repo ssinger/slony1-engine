@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_D_moveset,v 1.1 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: test_D_moveset,v 1.2 2005-06-02 16:44:53 cbbrowne Exp $
 # **********
 # test_D_moveset
 #
@@ -314,5 +314,5 @@ kill $slon2_pid 2>/dev/null
 
 echo "Terminated slons, pg_bench, comparing..."
 
-. compare_pgbench_dumps $DB1 $DB2
+./compare_pgbench_dumps $DB1 $DB2
 rm $PREAMBLE_FILE
