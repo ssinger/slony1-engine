@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.14 2005-01-26 19:51:22 darcyb Exp $
+#	$Id: Makefile,v 1.15 2005-06-02 16:45:18 darcyb Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -67,11 +67,11 @@ maintainer-clean:	clean
 	rm -f parser.c scan.c y.tab.h
 
 install: all installdirs
-	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(pgbindir)
+	$(INSTALL_SCRIPT) $(PROG) $(DESTDIR)$(slonbindir)
 
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(pgbindir)
+	$(mkinstalldirs) $(DESTDIR)$(slonbindir)
 
 
 distdir: $(DISTFILES)
