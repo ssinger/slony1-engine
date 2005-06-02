@@ -119,6 +119,21 @@ dnl -----------------------------------------
 dnl Make sure we have found the right values!
 dnl -----------------------------------------
 
+dnl -----------------------------------------
+dnl Because aix needs pg built with thread 
+dnl saftey we force PTHREAD_LIBS to be added 
+dnl to the test compile, there are more OS's
+dnl that this may/should be done for
+dnl
+
+
+case ${host_os} in
+aix*)
+        LIBS="$LIBS  $PTHREAD_LIBS"
+;;
+esac
+
+
 TEMP_LDFLAGS=$LDFLAGS
 LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
 

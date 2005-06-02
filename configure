@@ -5312,6 +5312,15 @@ TOOLSBINDIR=${with_pgincludeserverdir}
 fi
 
 
+
+
+case ${host_os} in
+aix*)
+        LIBS="$LIBS  $PTHREAD_LIBS"
+;;
+esac
+
+
 TEMP_LDFLAGS=$LDFLAGS
 LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
 
