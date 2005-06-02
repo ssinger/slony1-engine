@@ -1,4 +1,5 @@
 %{!?perltools:%define perltools 1}
+%{!?docs:%define docs 0}
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
 Name: 		slony1
@@ -46,7 +47,10 @@ export LIBNAME=%{_lib}
 %if %perltools
         --with-perltools=%{_bindir} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql --with-docdir=/usr/share/doc
+%if %docs
+        --with-docs --with-docdir=/usr/share/doc \
+%endif
+        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql
 make
 %if %perltools
  cd tools
@@ -83,7 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
+%if %docs
 %doc COPYRIGHT doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -95,6 +101,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Jun 02 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Apply a new %docs macro and disable building of docs by default.
+
 * Mon Apr 10 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - More fixes on RPM builds
 
