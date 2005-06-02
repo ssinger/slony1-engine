@@ -42,15 +42,14 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et" ; export CFLAGS
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
 
-./configure --bindir /usr/bin --libdir %{_libdir}/pgsql \
-        --includedir %{_includedir}/pgsql \
+./configure --includedir %{_includedir}/pgsql \
 %if %perltools
         --with-perltools=%{_bindir} \
 %endif
 %if %docs
-        --with-docs \
+        --with-docs --with-docdir=/usr/share/doc \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql --with-docdir=/usr/share/doc 
+        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
 make
 %if %perltools
  cd tools
@@ -106,6 +105,7 @@ rm -rf $RPM_BUILD_ROOT
 * Thu Jun 02 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Apply a new %docs macro and disable building of docs by default.
 - Remove slon-tools.conf-sample from bindir.
+- Removed --bindir and --libdir, since they are not needed.
 
 * Mon Apr 10 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - More fixes on RPM builds
