@@ -47,6 +47,20 @@ if test -n "$PG_CONFIG_LOCATION"; then
       AC_MSG_RESULT($PG_VERSION)
       AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
     fi
+    case ${host_os} in
+	aix*|*solaris*)
+		AC_MSG_CHECKING(PostgreSQL for enable-thread-safety as required on ${host_os})
+		PG_ETS=`echo $PG_CONFIGURE | grep -c enable-thread-safety`
+		if test $PG_ETS -eq 0; then
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR(PostgreSQL needs to be compiled with --enable-thread-safety on ${host_os})
+		else
+			AC_MSG_RESULT(yes)
+		fi
+	;;
+	*)
+	;;
+    esac
 else
     dnl Specify the commandline options here.
     AC_MSG_ERROR(Cannot find pg_config. 
