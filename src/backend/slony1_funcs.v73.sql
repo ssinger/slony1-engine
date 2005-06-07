@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v73.sql,v 1.6 2004-10-06 17:38:50 wieck Exp $
+-- $Id: slony1_funcs.v73.sql,v 1.7 2005-06-07 21:51:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -21,9 +21,8 @@ as '
 declare
 	p_tab_fqname		alias for $1;
 begin
-	execute ''delete from only '' || p_tab_fqname;
+	execute ''delete from only '' || @NAMESPACE@.slon_quote_input(p_tab_fqname);
 	return 1;
 end;
 ' language plpgsql;
-
 

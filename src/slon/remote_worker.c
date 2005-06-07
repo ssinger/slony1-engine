@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.85 2005-05-25 16:10:41 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.86 2005-06-07 21:51:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -757,8 +757,8 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_dropSet(set_id);
 
 				slon_appendquery(&query1,
-								 "select %s.dropSet_int(%d); ",
-								 rtcfg_namespace, set_id);
+						 "select %s.dropSet_int(%d); ",
+						 rtcfg_namespace, set_id);
 
 				/* The table deleted needs to be
 				 * dropped from log shipping too */
@@ -2383,8 +2383,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select T.tab_id, "
-		     "    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-		     "    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
+		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
+		     "    PGC.relname || '\"') as tab_fqname, "
 		     "    T.tab_idxname, T.tab_comment "
 		     "from %s.sl_table T, "
 		     "    \"pg_catalog\".pg_class PGC, "
@@ -2393,7 +2393,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "    and T.tab_reloid = PGC.oid "
 		     "    and PGC.relnamespace = PGN.oid "
 		     "order by tab_id; ",
-		     rtcfg_namespace, set_id);
+		     rtcfg_namespace, 
+		     rtcfg_namespace, 
+		     set_id);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
@@ -2491,8 +2493,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select SQ.seq_id, "
-		     "		\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-		     "		\"pg_catalog\".quote_ident(PGC.relname), "
+		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
+		     "    PGC.relname || '\"') as tab_fqname, "
 		     "		SQ.seq_comment "
 		     "	from %s.sl_sequence SQ, "
 		     "		\"pg_catalog\".pg_class PGC, "
@@ -2500,7 +2502,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "	where SQ.seq_set = %d "
 		     "		and PGC.oid = SQ.seq_reloid "
 		     "		and PGN.oid = PGC.relnamespace; ",
-		     rtcfg_namespace, set_id);
+		     rtcfg_namespace, 
+		     rtcfg_namespace, 
+		     set_id);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
@@ -2545,8 +2549,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select T.tab_id, "
-		     "    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-		     "    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname, "
+		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
+		     "    PGC.relname || '\"') as tab_fqname, "
 		     "    T.tab_idxname, T.tab_comment "
 		     "from %s.sl_table T, "
 		     "    \"pg_catalog\".pg_class PGC, "
@@ -2555,7 +2559,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "    and T.tab_reloid = PGC.oid "
 		     "    and PGC.relnamespace = PGN.oid "
 		     "order by tab_id; ",
-		     rtcfg_namespace, set_id);
+		     rtcfg_namespace, 
+		     rtcfg_namespace, 
+		     set_id);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
@@ -2954,7 +2960,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		PQputline(loc_dbconn, "\\.\n");
 		if (archive_dir) {
-			rc = submit_string_to_archive("\\\.");
+			rc = submit_string_to_archive("\\.");
 		}
 		/*
 		 * End the COPY to stdout on the provider
@@ -3092,8 +3098,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select SL.seql_seqid, SL.seql_last_value, "
-		     "	\"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-		     "	\"pg_catalog\".quote_ident(PGC.relname) "
+		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
+		     "    PGC.relname || '\"') as tab_fqname "
 		     "	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
 		     "		\"pg_catalog\".pg_class PGC, "
 		     "		\"pg_catalog\".pg_namespace PGN "
@@ -3102,7 +3108,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "		and SL.seql_ev_seqno = '%s' "
 		     "		and PGC.oid = SQ.seq_reloid "
 		     "		and PGN.oid = PGC.relnamespace; ",
-		     rtcfg_namespace, rtcfg_namespace,
+		     rtcfg_namespace, 
+		     rtcfg_namespace, 
+		     rtcfg_namespace,
 		     set_id, seqbuf);
 	res1 = PQexec(pro_dbconn, dstring_data(&query1));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
@@ -3691,16 +3699,18 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 * Select the tables in that set ...
 			 */
 			slon_mkquery(&query,
-						 "select T.tab_id, T.tab_set, "
-					 "    \"pg_catalog\".quote_ident(PGN.nspname) || '.' || "
-				 "    \"pg_catalog\".quote_ident(PGC.relname) as tab_fqname "
-						 "from %s.sl_table T, "
-						 "    \"pg_catalog\".pg_class PGC, "
-						 "    \"pg_catalog\".pg_namespace PGN "
-						 "where T.tab_set = %d "
-						 "    and PGC.oid = T.tab_reloid "
-						 "    and PGC.relnamespace = PGN.oid; ",
-						 rtcfg_namespace, sub_set);
+				     "select T.tab_id, T.tab_set, "
+				     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
+				     "    PGC.relname || '\"') as tab_fqname "
+				     "from %s.sl_table T, "
+				     "    \"pg_catalog\".pg_class PGC, "
+				     "    \"pg_catalog\".pg_namespace PGN "
+				     "where T.tab_set = %d "
+				     "    and PGC.oid = T.tab_reloid "
+				     "    and PGC.relnamespace = PGN.oid; ",
+				     rtcfg_namespace, 
+				     rtcfg_namespace, 
+				     sub_set);
 			res2 = PQexec(local_dbconn, dstring_data(&query));
 			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 			{

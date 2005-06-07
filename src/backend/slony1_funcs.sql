@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.63 2005-05-04 20:54:24 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64 2005-06-07 21:51:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -289,52 +289,84 @@ comment on function @NAMESPACE@.slon_quote_brute(text) is
 --	This function will be used to quote user input.
 -- ----------------------------------------------------------------------
 
-create or replace function @NAMESPACE@.slon_quote_input (text) returns text
-as '
-declare
-    p_tab_fqname alias for $1;
-    v_temp_fqname text default '''';
-    v_pre_quoted text[] default ''{}'';
-    v_pre_quote_counter smallint default 0;
-    v_count_fqname smallint default 0;
-    v_fqname_split text[];
-    v_quoted_fqname text default '''';
-begin
-    v_temp_fqname := p_tab_fqname;
+--create or replace function @NAMESPACE@.slon_quote_input (text) returns text
+--as '
+--declare
+--    p_tab_fqname alias for $1;
+--    v_temp_fqname text default '''';
+--    v_pre_quoted text[] default ''{}'';
+--    v_pre_quote_counter smallint default 0;
+--    v_count_fqname smallint default 0;
+--    v_fqname_split text[];
+--    v_quoted_fqname text default '''';
+--begin
+--    v_temp_fqname := p_tab_fqname;
 
-    LOOP
-	v_pre_quote_counter := v_pre_quote_counter + 1;
-	v_pre_quoted[v_pre_quote_counter] := 
-	    substring(v_temp_fqname from ''%#"\"%\"#"%'' for ''#'');
-	IF v_pre_quoted[v_pre_quote_counter] <> '''' THEN
-	    v_temp_fqname := replace(v_temp_fqname,
-	        v_pre_quoted[v_pre_quote_counter], ''@'' ||
-		v_pre_quote_counter);
-	ELSE
-	    EXIT;
-	END IF;
-    END LOOP;
+--    LOOP
+--	v_pre_quote_counter := v_pre_quote_counter + 1;
+--	v_pre_quoted[v_pre_quote_counter] := 
+--	    substring(v_temp_fqname from ''%#"\"%\"#"%'' for ''#'');
+--	IF v_pre_quoted[v_pre_quote_counter] <> '''' THEN
+--	    v_temp_fqname := replace(v_temp_fqname,
+--	        v_pre_quoted[v_pre_quote_counter], ''@'' ||
+--		v_pre_quote_counter);
+--	ELSE
+--	    EXIT;
+--	END IF;
+--    END LOOP;
 
-    v_fqname_split := string_to_array(v_temp_fqname , ''.'');
-    v_count_fqname := array_upper (v_fqname_split, 1);
+--    v_fqname_split := string_to_array(v_temp_fqname , ''.'');
+--    v_count_fqname := array_upper (v_fqname_split, 1);
 
-    FOR i in 1..v_count_fqname LOOP
-        IF substring(v_fqname_split[i],1,1) = ''@'' THEN
-            v_quoted_fqname := v_quoted_fqname || 
-		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
-        ELSE
-            v_quoted_fqname := v_quoted_fqname || ''"'' || 
-		v_fqname_split[i] || ''"'';
-        END IF;
+--    FOR i in 1..v_count_fqname LOOP
+--        IF substring(v_fqname_split[i],1,1) = ''@'' THEN
+--            v_quoted_fqname := v_quoted_fqname || 
+--		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
+--        ELSE
+--            v_quoted_fqname := v_quoted_fqname || ''"'' || 
+--		v_fqname_split[i] || ''"'';
+--        END IF;
 
-        IF i < v_count_fqname THEN
-            v_quoted_fqname := v_quoted_fqname || ''.'' ;
-        END IF;
-    END LOOP;
+--        IF i < v_count_fqname THEN
+--            v_quoted_fqname := v_quoted_fqname || ''.'' ;
+--        END IF;
+--    END LOOP;
 	
-    return v_quoted_fqname;
-end;
-' language plpgsql;
+--    return v_quoted_fqname;
+--end;
+--' language plpgsql;
+
+
+create or replace function @NAMESPACE@.slon_quote_input(text) returns text as '
+  declare
+     p_tab_fqname alias for $1;
+     v_nsp_name text;
+     v_tab_name text;
+     v_pq2 integer;
+begin
+  if (p_tab_fqname like ''"%"."%"'') then
+    v_pq2 := position (''"'' in substr(p_tab_fqname, 2));
+    v_nsp_name := substr(p_tab_fqname, 2, v_pq2 - 1);
+    v_tab_name := substr(p_tab_fqname, v_pq2 + 4, length(p_tab_fqname) - (v_pq2 + 4));
+  elsif (p_tab_fqname like ''"%".%'') then
+    v_pq2 := position (''"'' in substr(p_tab_fqname, 2));
+    v_nsp_name := substr(p_tab_fqname, 2, v_pq2 - 1);
+    v_tab_name := substr(p_tab_fqname, v_pq2 + 3, length(p_tab_fqname) - (v_pq2 + 2));
+  elsif (p_tab_fqname like ''%."%"'') then
+    v_pq2 := position (''.'' in substr(p_tab_fqname, 2));
+    v_nsp_name := substr(p_tab_fqname, 1, v_pq2);
+    v_tab_name := substr(p_tab_fqname, v_pq2 + 3, length(p_tab_fqname) - (v_pq2 + 3));
+  elsif (p_tab_fqname like ''%.%'') then
+    v_pq2 := position (''.'' in substr(p_tab_fqname, 2));
+    v_nsp_name := substr(p_tab_fqname, 1, v_pq2);
+    v_tab_name := substr(p_tab_fqname, v_pq2 + 2);
+  elsif (p_tab_fqname like ''"%"'') then
+    return p_tab_fqname;
+  else
+     return ''"'' || p_tab_fqname || ''"'';
+  end if;
+  return ''"'' || v_nsp_name || ''"."'' || v_tab_name || ''"'';
+end;' language plpgsql;
 
 comment on function @NAMESPACE@.slon_quote_input(text) is
   'quote all words that aren''t quoted yet';

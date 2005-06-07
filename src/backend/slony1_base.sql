@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.26 2005-05-04 20:54:24 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.27 2005-06-07 21:51:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -360,7 +360,7 @@ declare
 	p_seqname	alias for $1;
 	v_seq_row	record;
 begin
-	for v_seq_row in execute ''select last_value from '' || p_seqname
+	for v_seq_row in execute ''select last_value from '' || @NAMESPACE@.slon_quote_input(p_seqname)
 	loop
 		return v_seq_row.last_value;
 	end loop;
