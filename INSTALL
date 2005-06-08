@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.4 2005-06-08 16:26:35 cbbrowne Exp $
+$Id: INSTALL,v 1.5 2005-06-08 18:42:14 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -85,9 +85,10 @@ Hat-based systems due to NAMELEN being set way too low.  Havoc
 Pennington opened a bug on this back in mid-2001, back in the days of
 Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been much progress since then.  The second URL below
-indicates that there is intent to address the issue in some future
-release of Red Hat Enterprise Linux, but that won't likely help you in
-2005.
+indicates that there is intent to address the issue by bumping up the
+value of NAMELEN in some future release of Red Hat Enterprise Linux,
+but that won't likely help you in 2005.  Fedora Core 4 should have the
+issue addressed somewhat sooner.
 
 https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058
 https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382 (For RHEL)
