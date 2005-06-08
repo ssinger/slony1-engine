@@ -1,9 +1,12 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.3 2005-06-02 07:04:45 devrim Exp $
+$Id: INSTALL,v 1.4 2005-06-08 16:26:35 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
+
+Important Configuration parameters
+====================================
 
 Slony normally needs to be built and installed by the PostgreSQL Unix
 user.  The installation target must be identical to the existing
@@ -34,6 +37,9 @@ build installation included doing "make install-all-headers",
 otherwise the server headers will not be installed, and Slony-I will
 be unable to compile.
 
+Files Installed
+==================
+
 The main list of files installed within the PostgreSQL instance is:
 
     * $bindir/slon
@@ -61,14 +67,48 @@ directory must be installed onto every computer that is supposed to
 become a Slony node. (Other components may be able to be invoked
 remotely from other hosts.)
 
+altperl Administration tools
+================================
+
 If you wish to have the "altperl" administration tools available, you
 need to specify the "--with-perltools=somewhere" option.
+
+Building Documentation - Admin Guide
+========================================
+
+There is an extensive "Administrator's Guide" containing what wisdom
+has been discovered and written down about the care and feeding of
+Slony-I.
 
 Note that you may have difficulty building the documentation on Red
 Hat-based systems due to NAMELEN being set way too low.  Havoc
 Pennington opened a bug on this back in mid-2001, back in the days of
 Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
-appear to have been any progress since then.
+appear to have been much progress since then.  The second URL below
+indicates that there is intent to address the issue in some future
+release of Red Hat Enterprise Linux, but that won't likely help you in
+2005.
 
 https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058
 https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382 (For RHEL)
+
+A pre-built copy of the "admin guide" should be readily available,
+either in the form of a separate tarball nearby, or in the directory
+doc/adminguide/prebuilt
+
+Building Slony-I for use with Packaged PostgreSQL Binaries
+============================================================
+
+If you are building Slony-I against a prepackaged binary install of
+PostgreSQL as provided in RPM or .deb packages, you very likely need
+to install an additional "postgresql-dev" package which contains the
+PostgreSQL #include files.
+
+If you are running a pre-8.0 version of PostgreSQL, and the packagers
+did not use "make install-all-headers" to install server headers, you
+may discover that you are forced to throw the prepackaged version
+overboard and build PostgreSQL yourself.
+
+If you are looking for what software dependancies there are, it may be
+useful to look at the files debian/control or redhat/slony-I.spec to
+see what dependancies they point to.
