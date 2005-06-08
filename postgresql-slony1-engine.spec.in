@@ -88,7 +88,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %if %docs
-%doc COPYRIGHT doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
