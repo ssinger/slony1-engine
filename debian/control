@@ -2,7 +2,7 @@ Source: slony1
 Section: misc
 Priority: optional
 Maintainer: Tim Goodaire <tgoodair@ca.afilias.info>
-Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison, postgresql-dev (>= 7.3.3), libpq3
+Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison, postgresql-dev (>= 7.3.3), libpq3, flex
 Standards-Version: 3.6.1
 
 Package: slony1
