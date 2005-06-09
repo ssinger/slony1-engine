@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.17.2.7 2005-04-28 17:44:25 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.17.2.8 2005-06-09 15:01:44 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -110,7 +110,7 @@ static char					   *slon_quote_literal(char *str);
 Datum
 _Slony_I_createEvent(PG_FUNCTION_ARGS)
 {
-	TransactionId	newXid = GetCurrentTransactionId();
+	TransactionId	newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	text	   *ev_xip;
 	char	   *ev_type_c;
@@ -369,7 +369,7 @@ _Slony_I_getSessionRole(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 {
-	TransactionId	newXid = GetCurrentTransactionId();
+	TransactionId	newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	TriggerData	   *tg;
 	Datum			argv[4];

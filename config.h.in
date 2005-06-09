@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * $Id: config.h.in,v 1.8.2.3 2004-10-22 15:26:25 wieck Exp $
+ * $Id: config.h.in,v 1.8.2.4 2005-06-09 15:01:43 wieck Exp $
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
@@ -32,5 +32,11 @@
 
 /* Set to 1 if server/utils/typcache.h exists */
 #undef HAVE_TYPCACHE
+
+/* For PostgreSQL 8.0 and up we need to use GetTopTransactionId() */
+#undef HAVE_DECL_GETTOPTRANSACTIONID
+#if !HAVE_DECL_GETTOPTRANSACTIONID
+#define GetTopTransactionId() GetCurrentTransactionId()
+#endif
 
 #endif /* SLONY_I_CONFIG_H */

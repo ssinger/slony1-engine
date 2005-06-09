@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.24.2.2 2004-07-26 18:15:44 darcyb Exp $
+# $Id: configure.ac,v 1.24.2.3 2005-06-09 15:01:44 wieck Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -147,6 +147,15 @@ else
 	have_typcache=no
 fi
 AC_MSG_RESULT($have_typcache)
+
+AC_CHECK_DECLS([GetTopTransactionId],
+	   [],
+	   [],
+	   [
+	   #include "postgres.h"
+	   #include "access/xact.h"
+	   ])
+# AC_MSG_RESULT($have_gettoptransactionid)
 
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
