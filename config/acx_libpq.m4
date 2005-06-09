@@ -1,4 +1,4 @@
-dnl Checking for libpq.
+dnl Checking for libpq and postgres backend features
 dnl
 AC_DEFUN([ACX_LIBPQ], [
 AC_REQUIRE([AC_CANONICAL_HOST])
@@ -242,6 +242,11 @@ AC_CHECK_LIB(pq, [PQfreemem], [have_pqfreemem=yes])
 if test $have_pqfreemem = yes; then
 	AC_DEFINE(HAVE_PQFREEMEM,1,[Postgresql PQfreemem()])
 fi
+
+AC_CHECK_DECLS([GetTopTransactionId],[],[],[
+#include "postgres.h"
+#include "access/xact.h"
+])
 
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ

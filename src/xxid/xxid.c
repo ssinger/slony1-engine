@@ -6,10 +6,11 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.9 2005-01-12 17:27:12 darcyb Exp $
+ *	$Id: xxid.c,v 1.10 2005-06-09 15:02:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
+#include "config.h"
 #include "postgres.h"
 
 #include <limits.h>
@@ -214,7 +215,7 @@ _Slony_I_btxxidcmp(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_getCurrentXid(PG_FUNCTION_ARGS)
 {
-	PG_RETURN_TRANSACTIONID(GetCurrentTransactionId());
+	PG_RETURN_TRANSACTIONID(GetTopTransactionId());
 }
 
 
