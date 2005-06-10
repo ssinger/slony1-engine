@@ -1,3 +1,25 @@
+1.0.6	Bugfixes and added support for PostgreSQL 8.1
+
+  date: 2005/06/10 21:11:17;  author: wieck;
+  Backpatch:
+
+  Fix determineAttkindUnique() for 8.1. Apparently our stored procedure
+  relied on a bug in PostgreSQL. Returning NULL for an array index out
+  of bounds seems correct to me.
+
+  This also enables us to support 8.1 with the REL_1_0_STABLE branch.
+
+  ----------------------------
+
+  date: 2005/06/09 15:01:44;  author: wieck;  state: Exp;  lines: +3 -3
+  Fixed subtransaction bug
+
+  The transaction ID used for log purposes must under PostgreSQL 8.0
+  and newer be obtained with GetTopTransactionId() rather than with
+  GetCurrentTransactionId().
+
+  ----------------------------
+
 1.0.5	Bugfixes and required minor features
 
   date: 2004/08/26 19:28:07;  author: wieck;
