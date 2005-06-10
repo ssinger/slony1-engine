@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.27.2.6 2004-10-22 14:45:17 wieck Exp $
+ *	$Id: slonik.c,v 1.27.2.7 2005-06-10 21:11:17 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1768,6 +1768,7 @@ load_slony_base(SlonikStmt *stmt, int no_id)
 			switch (adminfo->version_minor)
 			{
 				case 0:
+				case 1:
 					use_major = 7;
 					use_minor = 4;
 					break;
@@ -1865,6 +1866,7 @@ load_slony_functions(SlonikStmt *stmt, int no_id)
 			switch (adminfo->version_minor)
 			{
 				case 0:
+				case 1:
 					use_major = 7;
 					use_minor = 4;
 					break;
