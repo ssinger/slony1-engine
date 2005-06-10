@@ -20,6 +20,43 @@
 
   ----------------------------
 
+  date: 2005/04/13 21:21:24;  author: cbbrowne;
+  Address synchronization problem where a MOVE_SET event may
+  get to cascaded subscribers *AFTER* the new origin has started
+  generating SYNCs. The subscriber ignored those syncs since it doesn't
+  yet know the origin has moved; this can lead to data loss.
+
+  The ACCEPT_SET is added as a remedy; upon submitting the MOVE_SET,
+  it also raises, on the new origin, an ACCEPT_SET event.  That
+  will necessarily precede any SYNCs coming from the new origin.
+
+  Nodes that get the ACCEPT_SET event will wait until they also get
+  the MOVE_SET event before proceeding, protecting from data loss.
+
+  ----------------------------
+
+  date: 2005/04/13 20:39:32;  author: cbbrowne;
+  Address bug #1226
+
+  If a set contains no tables, then warn the user that they may run afoul
+  of bug #1226.
+
+  ----------------------------
+
+  date: 2005/02/16 22:31:19;  author: smsimms;
+  Add a missing WHERE clause that causes MOVE SET to fail when:
+  1. There are three or more nodes
+  2. Sets originate on at least two nodes
+  3. A set is being moved from a third node to one of the first two.
+
+  ----------------------------
+
+  date: 2005/01/24 18:42:36;  author: cbbrowne;  
+  Added in stored function for generating SYNC events
+
+  ----------------------------
+
+
 1.0.5	Bugfixes and required minor features
 
   date: 2004/08/26 19:28:07;  author: wieck;
