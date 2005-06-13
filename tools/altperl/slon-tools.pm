@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.22 2005-03-18 21:40:44 smsimms Exp $
+# $Id: slon-tools.pm,v 1.23 2005-06-13 14:37:25 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -101,7 +101,7 @@ sub ps_args {
   my $sys=`uname`;
   chomp $sys;   # strip off edges
   if ($sys eq "Linux") {
-    return "/bin/ps -auxww";
+    return "/bin/ps auxww";
   } elsif ($sys eq "FreeBSD") {
     return "/bin/ps -auxww";
   } elsif ($sys eq "SunOS") {
