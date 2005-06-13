@@ -1,4 +1,4 @@
-<!-- $Id: filelist.sgml,v 1.12 2005-04-25 18:27:25 cbbrowne Exp $ -->
+<!-- $Id: filelist.sgml,v 1.13 2005-06-13 12:05:24 devrim Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
@@ -39,6 +39,7 @@
 <!entity logshipping        SYSTEM "logshipping.sgml">
 <!entity bestpractices      SYSTEM "bestpractices.sgml">
 <!entity locking            SYSTEM "locking.sgml">
+<!entity supportedplatforms SYSTEM "supportedplatforms.sgml">
 
 <!-- back matter -->
 <!entity biblio     SYSTEM "biblio.sgml">
