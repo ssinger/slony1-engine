@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.18 2005-05-12 21:47:02 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.19 2005-06-14 20:13:33 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -49,13 +49,102 @@ cluster.</para></listitem></varlistentry>
 
 <varlistentry><term>cleanupThread</term> <listitem><para> Takes care
 of things like vacuuming, cleaning out the confirm and event tables,
-and deleting logs.</para></listitem></varlistentry>
+and deleting old data.</para></listitem></varlistentry>
 
-<varlistentry><term>syncThread</term> <listitem><para> Generates sync
+<varlistentry><term>syncThread</term> <listitem><para> Generates SYNC
 events.</para></listitem></varlistentry>
 
 </variablelist>
 </para>
+
+<sect2> <title> How to read &slony1; logs </title>
+
+<para> Note that as far as slon is concerned, there is no "master" or
+"slave."  They are just nodes. </para>
+
+<para>What you can expect, initially, is to see, on both nodes, some
+events propagating back and forth.  Firstly, there should be some
+events published to indicate creation of the nodes and paths.  If you
+don't see those, then the nodes aren't likely to be able to
+communicate with one another, and nothing else will happen... </para>
+
+<itemizedlist>
+
+<listitem><para>Create the two nodes.</para> 
+
+<para> No slons are running yet, so there are no logs to look at.</para>
+</listitem>
+
+<listitem><para> Start the two slons</para>
+
+<para> The logs for each will start out very quiet, as neither node
+has much to say, and neither node knows how to talk to any other node.
+</para>
+
+</listitem>
+
+<listitem><para> Do the <command>STORE PATH</command> for the
+communications paths.  That will allow the nodes to start to become
+aware of one another.</para>
+
+<para> In version 1.0, <xref linkend="table.sl-listen"> is not set up
+automatically, so things still remain quiet until you explicitly
+submit <command>STORE LISTEN</command> requests. In version 1.1, the
+<quote>listen paths</quote> are set up automatically, which will much
+more quickly get the communications network up and running.  </para>
+
+<para> If you look at the contents of the tables <xref
+linkend="table.sl-node"> and <xref linkend="table.sl-path"> and <xref
+linkend="table.sl-listen">, on each node, that should give a good idea
+as to where things stand.  Until the <xref linkend="slon"> starts,
+each node may only be partly configured.  If there are two nodes,
+there should be two entries in all three of these tables once the
+communications configuration is set up properly.  If there are fewer
+entries than that, well, that should give you some idea of what is
+missing.</para>
+</listitem>
+
+<listitem><para> If needed (<emphasis>e.g.</emphasis> - before version
+1.1), submit <command>STORE LISTEN</command> requests to indicate how
+the nodes will use the communications paths. </para>
+
+<para> Once this has been done, the nodes' logs should show a greater
+level of activity, with events periodically being initiated on one
+node or the other, and propagating to the other. </para>
+</listitem>
+
+<listitem> <para> You'll set up the set (<command>CREATE
+SET</command>), add tables (<command>SET ADD TABLE</command>), and
+sequences (<command>SET ADD SEQUENCE</command>), and will see relevant
+events only on the origin node for the set. </para></listitem>
+
+<listitem><para> Then, when you submit the <command>SUBSCRIBE SET</command>
+request, the event should go to both nodes. </para>
+
+<para> The origin node has little more to do, after that...  The
+subscriber will then have a <command>COPY_SET</command> event, which
+will lead to logging information about adding each table and copying
+its data.</para></listitem>
+
+</itemizedlist>
+
+<para>After that, you'll mainly see two sorts of behaviour:</para>
+
+<itemizedlist>
+
+<listitem><para> On the origin, there won't be much logged, just
+indication that some <command>SYNC</command> events are being
+generated and confirmed by other nodes.</para></listitem>
+
+<listitem><para> On the subscriber, there will be reports of
+<command>SYNC</command> events, and that the subscriber pulls data
+from the provider for the relevant set(s).  This will happen
+infrequently if there are no updates going to the origin node; it will
+happen frequently when the origin sees heavy updates. </para>
+</listitem>
+
+</itemizedlist>
+
 <para> WriteMe: I can't decide the format for the rest of this. I
 think maybe there should be a "how it works" page, explaining more
 about how the threads work, what to expect in the logs after you run a
