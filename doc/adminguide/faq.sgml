@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.38 2005-06-14 20:04:45 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.39 2005-06-14 20:13:06 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -684,8 +684,8 @@ isn't quite obvious; what takes place is that
 &slony1; groups 10 update queries together
 to diminish the number of network round trips.</para></question>
 
-<answer><para> A <emphasis>certain</emphasis> cause for this has not
-yet been arrived at.</para>
+<answer><para> A <emphasis>certain</emphasis> cause for this has been
+difficult to arrive at.</para>
 
 <para>By the time we notice that there is a problem, the seemingly
 missed delete transaction has been cleaned out of <xref
@@ -704,10 +704,6 @@ to do something about recovering from the condition or at least
 diagnosing it more exactly.  And perhaps the problem was that <xref
 linkend="table.sl-log-1"> was being purged too aggressively, and this
 would resolve the issue completely.</para>
-</answer>
-
-<answer><para> Unfortunately, this problem has been observed in 1.0.5,
-so this still appears to represent a bug still in existence.</para>
 
 <para> It is a shame to have to reconstruct a large replication node
 for this; if you discover that this problem recurs, it may be an idea
@@ -731,12 +727,13 @@ perhaps the problem might be alleviated by running the query:</para>
 
 <para> On at least one occasion, this has resolved the problem, so it
 is worth trying this.</para>
+</answer>
 
-<para> This problem represents a &postgres; bug as opposed to one in
-&slony1;.  Version 7.4.8 was released with two resolutions to race
-conditions that should resolve the issue.  Thus, if you are running a
-version of &postgres; earlier than 7.4.8, you should consider
-upgrading to resolve this.
+<answer> <para> This problem has been found to represent a &postgres;
+bug as opposed to one in &slony1;.  Version 7.4.8 was released with
+two resolutions to race conditions that should resolve the issue.
+Thus, if you are running a version of &postgres; earlier than 7.4.8,
+you should consider upgrading to resolve this.
 </para>
 </answer>
 </qandaentry>
