@@ -538,6 +538,9 @@ INIT CLUSTER (
     <para> This uses <xref linkend=
     "function.dropnode-integer">. </para>
 
+    <para> When you invoke <command>DROP NODE</command>, one of the
+    steps is to run <command>UNINSTALL NODE</command>.</para>
+
    <warning><para> If you are using connections that cache query plans
    (this is particularly common for Java application frameworks with
    connection pools), the connections may cache query plans that
@@ -585,6 +588,11 @@ INIT CLUSTER (
     </para>
 
     <para> This uses <xref linkend= "function.uninstallnode">. </para>
+
+    <para> The difference between <command>UNINSTALL NODE</command>
+    and <command>DROP NODE</command> is that all <command>UNINSTALL
+    NODE</command> does is to remove the &slony1; configuration; it
+    doesn't drop the node's configuration from replication.</para>
 
    <warning><para> If you are using connections that cache query plans
    (this is particularly common for Java application frameworks with
