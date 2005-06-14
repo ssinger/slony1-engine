@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.37 2005-05-27 23:17:39 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.38 2005-06-14 20:04:45 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -732,8 +732,12 @@ perhaps the problem might be alleviated by running the query:</para>
 <para> On at least one occasion, this has resolved the problem, so it
 is worth trying this.</para>
 
-<para> It appears increasingly likely that this problem represents a
-&postgres; bug as opposed to one in &slony1;.</para>
+<para> This problem represents a &postgres; bug as opposed to one in
+&slony1;.  Version 7.4.8 was released with two resolutions to race
+conditions that should resolve the issue.  Thus, if you are running a
+version of &postgres; earlier than 7.4.8, you should consider
+upgrading to resolve this.
+</para>
 </answer>
 </qandaentry>
 
