@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.8 2005-05-26 08:07:35 devrim Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.9 2005-06-14 20:12:17 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 
@@ -54,7 +54,7 @@ not shift around due to Daylight Savings Time. </para>
 
 <para> The <quote>geographically unbiased</quote> choice seems to be
 <command><envar>TZ</envar>=UTC</command> or
-<command><envar>TZ</envar>=GMT</command>. </para>  
+<command><envar>TZ</envar>=GMT</command>. </para>
 
 <para> See also <xref linkend="times">.</para>
 </listitem>
@@ -180,8 +180,7 @@ may not have the effect of requiring a (hopefully brief) database
 outage. </para>
 </listitem>
 
-<listitem id="slonyuser">
-<para> &slony1;-specific user names. </para>
+<listitem id="slonyuser"> <para> &slony1;-specific user names. </para>
 
 <para> It has proven useful to define a <command>slony</command> user
 for use by &slony1;, as distinct from a generic
@@ -234,7 +233,8 @@ configuration. </para>
 
 <para> As of version 1.1, <xref linkend="slon"> configuration may be
 drawn either from the command line or from configuration files.
-<quote>Best</quote> practices have yet to emerge from the two options:</para>
+<quote>Best</quote> practices have yet to emerge from the two
+options:</para>
 </listitem>
 </itemizedlist>
 
@@ -247,19 +247,17 @@ drawn either from the command line or from configuration files.
 active are visible in the process environment.  (And if there are a
 lot of them, they may be a nuisance to read.)</para>
 
-<para> Unfortunately, if you
-invoke <xref linkend="slon"> from the command line, you could
-<emphasis>forget</emphasis> to include <link linkend="logshipping">
-log shipping </link> configuration and thereby destroy the sequence of
-logs for a log shipping node. </para>
+<para> Unfortunately, if you invoke <xref linkend="slon"> from the
+command line, you could <emphasis>forget</emphasis> to include <link
+linkend="logshipping"> log shipping </link> configuration and thereby
+destroy the sequence of logs for a log shipping node. </para>
 </listitem>
 
-<listitem>
-<para> Unlike when command line options are used, the active
-options are <emphasis>not</emphasis> visible.  They can only be
+<listitem> <para> Unlike when command line options are used, the
+active options are <emphasis>not</emphasis> visible.  They can only be
 inferred from the name and/or contents of the <xref linkend="slon">
 configuration file, and will not reflect subsequent changes to the
-configuration file.  </para> 
+configuration file.  </para>
 
 <para> By putting the options in a file, you won't forget including
 any of them, so this is safer for <link linkend="logshipping"> log
