@@ -60,7 +60,13 @@ and use &slony1;.  </para>
 <para> Earlier versions of &postgres; are <emphasis> not </emphasis>
 supported, but note that one user has <quote>hacked</quote> &slony1;
 to do a 7.2-to-7.4 upgrade; see <link linkend="v72upgrade"> &postgres;
-7.2 notes </link>. </para></listitem>
+7.2 notes </link>. </para>
+
+<para> Versions of &postgres; prior to 7.4.8 may run into a
+longstanding race condition that leads to problems of <quote>duplicate
+keys</quote>, so you may want to consider upgrades if you are running
+earlier versions.</para>
+</listitem>
 
 <listitem><para> GNU packages may be included in the standard
 packaging for your operating system, or you may need to look for
