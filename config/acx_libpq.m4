@@ -126,7 +126,7 @@ cd ${with_toolsdir}
 with_toolsdir=`pwd`
 cd ${_pwd}
 echo "Overriding toolsdir with" ${with_toolsdir}
-TOOLSBINDIR=${with_pgincludeserverdir}
+TOOLSBINDIR=${with_toolsdir}
 fi
 
 dnl -----------------------------------------

@@ -3,7 +3,7 @@ AC_DEFUN([ACX_SLONYTOOLS], [
 AC_REQUIRE([AC_CANONICAL_HOST])
 AC_LANG_SAVE
 AC_LANG_C
-
+LOCATION=""
 if test -n "${with_perltools}" ; then
   if test ${with_perltools} != "yes"; then
     LOCATION="${with_perltools}"

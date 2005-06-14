@@ -26,6 +26,7 @@ AC_DEFUN([ACX_SLONYDOCS], [
   AC_REQUIRE([AC_CANONICAL_HOST])
   AC_LANG_SAVE
   AC_LANG_C
+  LOCATION=""
   if test -n "${with_docdir}" ; then
     if test ${with_docdir} != "yes"; then
       LOCATION="${with_docdir}"
