@@ -281,8 +281,7 @@
         of time to process.  This is in Range [10000,600000] ms,
         default 60000. </para> 
 
-	<para>If the value is left alone, it reverts to 0, in which
-	case this logic will be ignored.
+	<para>If the value is set to 0, this logic will be ignored.
         </para>
       </listitem>
     </varlistentry>
