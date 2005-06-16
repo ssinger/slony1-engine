@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.5 2005-06-08 18:42:14 cbbrowne Exp $
+$Id: INSTALL,v 1.6 2005-06-16 19:31:39 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -19,9 +19,9 @@ PostgreSQL must be configured with the option --enable-thread-safety
 to provide correct client libraries.
 
 The location of the PostgreSQL source-tree was specified with the
-configure option --with-pgsourcetree=<dir>. As of 1.1, this is no longer
-necessary; instead, locations of database components are specified
-individually, such as:
+configure option --with-pgsourcetree=<dir>. As of 1.1, this configure
+option no longer exists, instead, locations of database components are
+specified individually, such as:
 
 --with-pgconfigdir=<dir>        Location of the PostgreSQL pg_config program.
 --with-pgbindir=<dir>           Location of the PostgreSQL postmaster.
@@ -36,6 +36,11 @@ default; with version 7.4 and earlier, you need to make sure that the
 build installation included doing "make install-all-headers",
 otherwise the server headers will not be installed, and Slony-I will
 be unable to compile.
+
+After running configure, you may wish to review the file
+"Makefile.global" to ensure it is looking in the right places for all of
+the components. If you failed to specify some of those locations, you
+may discover that your system fills in some surprising values...
 
 Files Installed
 ==================
@@ -64,7 +69,7 @@ PostgreSQL than that of the local host.
 
 At the very least, the two shared objects installed in the $libdir
 directory must be installed onto every computer that is supposed to
-become a Slony node. (Other components may be able to be invoked
+become a Slony node. (Other components may be able to be loaded
 remotely from other hosts.)
 
 altperl Administration tools
@@ -79,6 +84,8 @@ Building Documentation - Admin Guide
 There is an extensive "Administrator's Guide" containing what wisdom
 has been discovered and written down about the care and feeding of
 Slony-I.
+
+This is only built if you specify "--with-docs"
 
 Note that you may have difficulty building the documentation on Red
 Hat-based systems due to NAMELEN being set way too low.  Havoc
@@ -107,8 +114,8 @@ PostgreSQL #include files.
 
 If you are running a pre-8.0 version of PostgreSQL, and the packagers
 did not use "make install-all-headers" to install server headers, you
-may discover that you are forced to throw the prepackaged version
-overboard and build PostgreSQL yourself.
+may find yourself forced to throw the prepackaged version overboard and
+build PostgreSQL yourself.
 
 If you are looking for what software dependancies there are, it may be
 useful to look at the files debian/control or redhat/slony-I.spec to
