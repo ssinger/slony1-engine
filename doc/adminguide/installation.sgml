@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.12 2005-05-03 21:25:15 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.13 2005-06-16 14:42:56 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -50,6 +50,7 @@ installation.  Therefore, &slony1; is configured by pointing it to the
 various library, binary, and include directories.  For a full list of
 these options, use the command <command>./configure --help</command>
 </para>
+
 </sect2>
 
 <sect2>

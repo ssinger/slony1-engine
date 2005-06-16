@@ -1,8 +1,8 @@
-<!-- $Id: faq.sgml,v 1.39 2005-06-14 20:13:06 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40 2005-06-16 14:42:56 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
-<qandaentry>
+<qandaentry id="missingheaders">
 <question><para> I tried building &slony1; 1.1 and got the following
 error message:
 <screen>
