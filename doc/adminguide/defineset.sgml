@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.16 2005-04-20 18:29:00 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.17 2005-06-16 17:58:43 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -85,15 +85,15 @@ replication set:
 
 <itemizedlist>
 
-<listitem><para> Replicating a large set leads to a <link
-       linkend="longtxnsareevil"> long running transaction </link> on the
-provider node.  <xref linkend="faq"> outlines a number of problems
-that result from long running transactions that will injure system
-performance.</para>
+<listitem><para> The initial <command>COPY_SET</command> event for a
+large set leads to a <link linkend="longtxnsareevil"> long running
+transaction </link> on the provider node.  The <link linkend="faq">
+FAQ </link> outlines a number of problems that result from long
+running transactions that will injure system performance.</para>
 
-<para> If you can split a large set into several pieces, that will
-shorten the length of each of the transactions, lessening the degree
-of <quote>injury</quote> to performance.</para></listitem>
+<para> If you can split such a large set into several smaller pieces,
+that will shorten the length of each of the transactions, lessening
+the degree of <quote>injury</quote> to performance.</para></listitem>
 
 <listitem><para> Any time you invoke <xref linkend="stmtddlscript">,
 this requests a lock on <emphasis> every single table in the
