@@ -7,6 +7,8 @@ below. Slony-I can be successfully built, installed and run on these
 platforms.
 </para>
 
+<para> Last updated: Jun 23, 2005</para>
+
 <para>If you experience problems in these platforms, please subscribe to 
 <ulink url="http://gborg.PostgreSQL.org/mailman/listinfo/slony1-general">Slony-I 
 Mailing List</ulink> and ask your questions.</para>
@@ -28,120 +30,102 @@ Mailing List</ulink> and ask your questions.</para>
 
  <tbody>
      <row>
-      <entry>FreeBSD</entry>
-      <entry>4.X</entry>
+      <entry>Fedora Core</entry>
+      <entry>3</entry>
+      <entry>Intel - 32 bit</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>dvdm at truteq.co.za</entry>
+      <entry>PostgreSQL Version: 7.4.6</entry>
+     </row>
+
+     <row>
+      <entry>Red Hat Linux</entry>
+      <entry>9</entry>
       <entry>x86</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>dvdm at truteq.co.za</entry>
+      <entry>PostgreSQL Version: 7.4.5</entry>
      </row>
 
      <row>
-      <entry>FreeBSD</entry>
-      <entry>5.3</entry>
+      <entry>Debian GNU/Linux</entry>
+      <entry>Sid</entry>
       <entry>x86</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>cbbrowne at ca.afilias.info</entry>
+      <entry>PostgreSQL Version: 7.4.8</entry>
      </row>
 
      <row>
-      <entry>FreeBSD</entry>
-      <entry>6-Current</entry>
+      <entry>Debian GNU/Linux</entry>
+      <entry>Sid</entry>
       <entry>x86</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>cbbrowne at ca.afilias.info</entry>
+      <entry>PostgreSQL Version: 8.0.2</entry>
      </row>
 
      <row>
-      <entry>Solaris</entry>
-      <entry>2.8</entry>
-      <entry>ULTRA SPARC</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>Solaris</entry>
-      <entry>2.5</entry>
-      <entry>ULTRA SPARC</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>AIX</entry>
-      <entry>4.3</entry>
-      <entry>PPC</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Debian GNU/Linux</entry>
+      <entry>Sid</entry>
+      <entry>x86</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>cbbrowne at ca.afilias.info</entry>
+      <entry>PostgreSQL Version: 7.3.9</entry>
      </row>
 
      <row>
       <entry>AIX</entry>
       <entry>5.1</entry>
       <entry>PPC</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>cbbrowne at ca.afilias.info</entry>
+      <entry>PostgreSQL Version: 7.4.8</entry>
      </row>
 
      <row>
-      <entry>Linux</entry>
-      <entry>2.4.26</entry>
-      <entry>MIPS/Sel</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>Linux</entry>
-      <entry>2.4.26</entry>
-      <entry>IA-32</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>Linux</entry>
-      <entry>2.4.26</entry>
-      <entry>AMD64</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>OpenBSD</entry>
-      <entry>3.5</entry>
-      <entry>SPARC 64</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
-     </row>
-
-     <row>
-      <entry>OpenBSD</entry>
-      <entry>3.5</entry>
+      <entry>SunOS (a.k.a. Solaris8)</entry>
+      <entry>5.8</entry>
       <entry>x86</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>cbbrowne at ca.afilias.info</entry>
+      <entry>PostgreSQL Version: 7.4.8</entry>
      </row>
 
      <row>
-      <entry>OpenBSD</entry>
-      <entry>3.6</entry>
+      <entry>Red Hat Enterprise Linux Enterprise Server</entry>
+      <entry>3.0</entry>
       <entry>x86</entry>
-      <entry>Aug 31, 2004</entry>
-      <entry>.</entry>
-      <entry>.</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>devrim at gunduz.org</entry>
+      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+     </row>
+
+     <row>
+      <entry>Red Hat Enterprise Linux Enterprise Server</entry>
+      <entry>4</entry>
+      <entry>x86</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>devrim at gunduz.org</entry>
+      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+     </row>
+
+     <row>
+      <entry>Fedora Core</entry>
+      <entry>3</entry>
+      <entry>x86</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>devrim at gunduz.org</entry>
+      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+     </row>
+
+     <row>
+      <entry>Fedora Core</entry>
+      <entry>4</entry>
+      <entry>x86</entry>
+      <entry>Jun 22, 2005</entry>
+      <entry>devrim at gunduz.org</entry>
+      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
  </tbody>
