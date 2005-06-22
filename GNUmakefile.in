@@ -4,12 +4,11 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.23 2005-06-08 18:11:03 devrim Exp $
+# $Id: GNUmakefile.in,v 1.24 2005-06-22 22:20:28 darcyb Exp $
 # ----------
 
 top_builddir = .
 include $(top_builddir)/Makefile.global
-TAR = tar
 GZIP = gzip --best
 
 DEFAULTBUILDS=src tools
@@ -69,26 +68,30 @@ distclean: clean
 maintainer-clean: distclean
 	rm -rf configure autom4te.cache
 
-dist: distdir
-	-chmod -R a+r $(distdir)
-	$(TAR) --exclude */CVS -chof - @PACKAGE_NAME@-@PACKAGE_VERSION@ | $(GZIP) -c > @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
-	-rm -rf $(distdir)
+dist:	distdir
 
-distdir: $(DISTFILES)
+distdir := @PACKAGE_NAME@-@PACKAGE_VERSION@
+dummy	:= =install=
+garbage := =*  "#"*  ."#"*  *~*  *.orig  *.rej  core  @PACKAGE_NAME@-*
+
+dist 	:= $(distdir).tar.gz
+
+distdir:
+	-rm -rf $(distdir)* $(dummy)
+	for x in `cd $(top_builddir) && find . -name CVS -prune -o -print`; do \
+	  file=`expr X$$x : 'X\./\(.*\)'`; \
+	  if test -d "$(top_builddir)/$$file" ; then \
+	    mkdir "$(distdir)/$$file" && chmod 777 "$(distdir)/$$file"; \
+	  else \
+	    ln "$(top_builddir)/$$file" "$(distdir)/$$file" >/dev/null 2>&1 \
+	      || cp "$(top_builddir)/$$file" "$(distdir)/$$file"; \
+	  fi || exit; \
+	done
+
+dist:	distdir
+	$(TAR) cf @PACKAGE_NAME@-@PACKAGE_VERSION@.tar $(distdir)
+	$(GZIP) @PACKAGE_NAME@-@PACKAGE_VERSION@.tar
 	-rm -rf $(distdir)
-	mkdir $(distdir)
-	mkdir $(distdir)/config
-	mkdir $(distdir)/src
-	mkdir $(distdir)/doc
-	mkdir $(distdir)/share
-	mkdir $(distdir)/makefiles
-	-chmod -R 777 $(distdir)
-	for file in $(DISTFILES) ; do \
-      cp -r $$file $(distdir)/$$file ; \
-    done
-	for subdir in src doc tools ; do \
-	  $(MAKE) -C $$subdir distdir ; \
-    done
 
 rpm: dist
 	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
