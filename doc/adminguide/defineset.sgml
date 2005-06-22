@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.17 2005-06-16 17:58:43 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.18 2005-06-22 16:56:59 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -93,7 +93,13 @@ running transactions that will injure system performance.</para>
 
 <para> If you can split such a large set into several smaller pieces,
 that will shorten the length of each of the transactions, lessening
-the degree of <quote>injury</quote> to performance.</para></listitem>
+the degree of <quote>injury</quote> to performance.</para>
+
+<para> These <quote>negative effects</quote> tend to emerge when the
+database being subscribed to is tens of gigabytes in size.  For
+relatively small databases, this shouldn't be a material factor.
+</para>
+</listitem>
 
 <listitem><para> Any time you invoke <xref linkend="stmtddlscript">,
 this requests a lock on <emphasis> every single table in the
@@ -109,7 +115,7 @@ locked, and the greater the chances of deadlocks. </para>
 
 <para> By the same token, if a particular DDL script only needs to
 affect a couple of tables, you might use <xref
-       linkend="stmtsetmovetable"> to move them temporarily to a new
+linkend="stmtsetmovetable"> to move them temporarily to a new
 replication set.  By diminishing the number of locks needed, this
 should ease the ability to get the DDL change into place.</para>
 </listitem>
