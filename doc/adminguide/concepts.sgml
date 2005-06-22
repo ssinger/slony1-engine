@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.14 2005-05-03 21:25:15 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.15 2005-06-22 16:54:23 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -14,6 +14,18 @@ to understand the following major abstractions that it uses:</para>
         <listitem><para>slon daemons</para></listitem>
         <listitem><para>slonik configuration processor</para></listitem>
 </itemizedlist>
+
+<para> It is also worth knowing the meanings of certain Russian words:</para>
+<itemizedlist>
+<listitem><para>slon is Russian for <quote>elephant</quote></para></listitem>
+<listitem><para>slony is the plural of slon, and therefore refers to a group of elephants</para></listitem>
+<listitem><para>slonik is Russian for <quote>little elephant</quote></para></listitem>
+</itemizedlist>
+
+<para> The use of these terms in &slony1; is a <quote>tip of the
+hat</quote> to Vadim Mikheev, who was responsible for the
+<application>rserv</application> prototype which inspired some of the
+algorithms used in &slony1;.</para>
 
 <sect2>
 <title>Cluster</title>
