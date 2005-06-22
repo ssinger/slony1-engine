@@ -910,6 +910,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	would return it.</para></listitem>
      </varlistentry>
     </variablelist>
+
+    <note><para> There is a limitation at present; you can create a
+    &postgres; table with no columns, as with <command> create table
+    real_short (); </command>.  &slony1; will refuse to handle such a
+    table.  This isn't presently regarded as a serious limitation, as
+    we can't see there being terribly much interest in replicating
+    tables that contain no application data.</para> </note>
     
     <para> This uses <xref linkend= "function.tableaddkey-text">. </para>
    </refsect1>
