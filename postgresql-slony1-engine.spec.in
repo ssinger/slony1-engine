@@ -1,5 +1,5 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 1}
+%{!?docs:%define docs 0}
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
 Name:		@PACKAGE_NAME@
