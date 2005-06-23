@@ -253,7 +253,7 @@ parse_bool(const char *value, bool * result)
 			*result = true;
 		}
 	}
-	else if (strncasecmp(value, "o", len) == 0)
+	else if (strncasecmp(value, "0", len) == 0)
 	{
 		if (result)
 		{
