@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.2 2005-05-03 21:32:26 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.3 2005-06-29 20:13:37 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -27,21 +27,22 @@ table</command> </link></para>
 
 <para> A momentary table lock must be acquired on the
 <quote>origin</quote> node in order to add the trigger that collects
-updates for that table.</para>
+updates for that table.  It only needs to be acquired long enough to
+establish the new trigger.</para>
 </listitem>
 
 <listitem><para><link linkend="stmtmoveset"> <command> move
 set</command> </link></para>
 
 <para> When a set origin is shifted from one node to another, locks
-must be acquired on the tables on both the old origin and the new
-origin in order to change the triggers on the tables.
+must be acquired on each of the tables on both the old origin and the
+new origin in order to change the triggers on the tables.
 </para></listitem>
 
 <listitem><para><link linkend="stmtlockset"> <command> lock set
 </command> </link> </para>
 
-<para> This operation expressly requests locks on the tables in a
+<para> This operation expressly requests locks on each of the tables in a
 given replication set on the origin node.</para>
 </listitem>
 
@@ -61,7 +62,7 @@ subscriber </para>
 <para> In a sense, this is the least provocative scenario, since,
 before the replication set has been populated, it is pretty reasonable
 to say that the node is <quote>unusable</quote> and that &slony1;
-could reasonably expect exclusive access to the node. </para>
+could reasonably demand exclusive access to the node. </para>
 </listitem>
 
 </itemizedlist>
@@ -116,7 +117,8 @@ period where things were running slowly.  </para></listitem>
 the <link linkend="slonyuser"> <command>slony</command> user </link>
 will have access to the database. </para> </listitem>
 
-<listitem><para> Issue a <command>kill -SIGHUP</command> to the &postgres;  postmaster.</para> 
+<listitem><para> Issue a <command>kill -SIGHUP</command> to the
+&postgres; postmaster.</para>
 
 <para> This will not kill off existing possibly-long-running queries,
 but will prevent new ones from coming in.  There is an application
@@ -135,7 +137,7 @@ probably need to restart the <xref linkend="slon"> processes that
 attach to the node. </para> 
 
 <para> At that point, it will be safe to proceed with the &slony1;
-operation.</para></listitem>
+operation; there will be no competing processes.</para></listitem>
 
 <listitem><para> Reset <filename>pg_hba.conf</filename> to allow other
 users in, and <command>kill -SIGHUP</command> the postmaster to make

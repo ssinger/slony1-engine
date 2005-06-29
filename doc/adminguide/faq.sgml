@@ -1,6 +1,6 @@
-<!-- $Id: faq.sgml,v 1.40 2005-06-16 14:42:56 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.41 2005-06-29 20:13:37 cbbrowne Exp $ -->
 <qandaset>
-<indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
+<indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
 <qandaentry id="missingheaders">
 <question><para> I tried building &slony1; 1.1 and got the following

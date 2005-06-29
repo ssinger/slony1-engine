@@ -1,6 +1,7 @@
-<!-- $Id: bestpractices.sgml,v 1.9 2005-06-14 20:12:17 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.10 2005-06-29 20:13:36 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
+<indexterm><primary>best practices for &slony1; usage</primary></indexterm>
 
 <para> It is common for managers to have a desire to operate systems
 using some available, documented set of <quote>best practices.</quote>
@@ -81,9 +82,9 @@ number of mistakes made.</para>
 
 <para> At Afilias, some internal <citation>The 3AM Unhappy DBA's Guide
 to...</citation> guides have been created to provide checklists of
-what to do when <quote>unhappy</quote> things happen; this sort of
-material is highly specific to the applications running, so you would
-need to generate your own such documents.
+what to do when certain <quote>unhappy</quote> events take place; this
+sort of material is highly specific to the applications running, so
+you would need to generate your own such documents.
 </para>
 </listitem>
 
@@ -305,16 +306,15 @@ describe some of the lessons learned from managing large numbers of
 <xref linkend="slonik"> scripts.</para>
 </listitem>
 
-<listitem><para> Handling Very Large Replication Sets </para></listitem>
+<listitem><para> Handling Very Large Replication Sets </para>
 
-<listitem><para> Some users have set up replication on replication sets that are
+<para> Some users have set up replication on replication sets that are
 tens to hundreds of gigabytes in size, which puts some added
 <quote>strain</quote> on the system, in particular where it may take
 several days for the <command>COPY_SET</command> event to complete.
 Here are some principles that have been observed for dealing with
-these sorts of situtations.</para></listitem>
+these sorts of situtations.</para>
 
-</itemizedlist>
 <itemizedlist>
 
 <listitem><para> Drop all indices other than the primary key index
@@ -352,9 +352,8 @@ replication catch up.
 </para> </listitem>
 
 <listitem><para> Several things can be done that will help, involving
-careful selection of <xref linkend="slon"> parameters:</para></listitem>
+careful selection of <xref linkend="slon"> parameters:</para>
 
-</itemizedlist>
 <itemizedlist>
 
 <listitem><para> On the subscriber's <xref linkend="slon">, increase
@@ -384,6 +383,7 @@ linkend="slon">-initiated vacuuming in favor of running your own
 vacuum scripts, as there will be a buildup of unpurgeable data while
 the data is copied and the subscriber starts to catch up. </para>
 </listitem>
+</itemizedlist>
 </itemizedlist>
 
 </sect1>

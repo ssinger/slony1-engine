@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.24 2005-05-31 16:14:55 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.25 2005-06-29 20:13:36 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -16,8 +16,9 @@ Unfortunately, this turned out to be a pretty large calibre
 <quote>foot gun</quote>, as minor typos on the command line led, on a
 couple of occasions, to pretty calamitous actions, so the behavior has
 been changed so that the scripts simply submit output to standard
-output.  An administrator should review the script
-<emphasis>before</emphasis> submitting it to <xref linkend="slonik">.</para>
+output.  The savvy administrator should review the script
+<emphasis>before</emphasis> submitting it to <xref
+linkend="slonik">.</para>
 
 <sect2><title>Node/Cluster Configuration - cluster.nodes</title>
 

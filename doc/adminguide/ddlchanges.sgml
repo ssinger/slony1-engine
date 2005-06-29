@@ -1,10 +1,10 @@
-<!-- $Id: ddlchanges.sgml,v 1.15 2005-04-25 18:27:25 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.16 2005-06-29 20:13:37 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
 <indexterm>
- <primary> DDL changes </primary>
- <secondary> changing the database schema </secondary>
+ <primary>DDL changes</primary>
+ <secondary>database schema changes</secondary>
 </indexterm>
 
 <para>When changes are made to the database schema,
@@ -38,9 +38,9 @@ things</quote> about <xref linkend="stmtddlscript">:</para>
 <listitem><para>The script <emphasis>must not</emphasis> contain
 transaction <command>BEGIN</command> or <command>END</command>
 statements, as the script is already executed inside a transaction.
-In &postgres; version 8, the introduction of nested transactions may
-modify this requirement somewhat, but you must still remain aware that
-the actions in the script are wrapped inside a
+In &postgres; version 8, the introduction of nested transactions
+changes this somewhat, but you must still remain aware that the
+actions in the script are wrapped inside a single
 transaction.</para></listitem>
 
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
@@ -51,7 +51,12 @@ crash. If you restart the node, it will, more likely than not, try to
 certainly, fail the second time just as it did the first time.  I have
 found this scenario to lead to a need to go to the
 <quote>master</quote> node to delete the event to stop it from
-continuing to fail.</para></listitem>
+continuing to fail.</para>
+
+<para> The implication of this is that it is
+<emphasis>vital</emphasis> that modifications not be made in a
+haphazard way on one node or another.  The schemas must always stay in
+sync.</para> </listitem>
 
 <listitem><para> For <application>slon</application> to, at that
 point, <quote>panic</quote> is probably the

@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.20 2005-06-13 12:05:24 devrim Exp $ -->
+<!-- $Id: slony.sgml,v 1.21 2005-06-29 20:13:37 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -37,7 +37,7 @@
 <article id="slonyadmin"> 
 <title> Slony-I Administration </title>
  <articleinfo>
-  <corpauthor>The Slony Global Development Group</corpauthor>
+  <corpauthor>The PostgreSQL Global Development Group</corpauthor>
   <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
  </articleinfo>
  &firstdb;

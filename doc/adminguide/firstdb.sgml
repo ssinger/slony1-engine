@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.13 2005-05-16 22:02:29 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.14 2005-06-29 20:13:37 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating a first database</primary></indexterm>
@@ -194,8 +194,8 @@ slonik <<_EOF_
 _EOF_
 </programlisting></para>
 
-<para>Is the <application>pgbench</application> still running?  If not start it
-again.</para>
+<para>Is the <application>pgbench</application> still running?  If
+not, then start it again.</para>
 
 <para>At this point we have 2 databases that are fully prepared.  One
 is the master database in which <application>pgbench</application> is
@@ -267,8 +267,10 @@ practice, it's good to build confidence by verifying that the datasets
 are in fact the same.</para>
 
 <para>The following script will create ordered dumps of the 2
-databases and compare them.  Make sure that <application>pgbench</application> has
-completed its testing, and that your slon sessions have caught up.
+databases and compare them.  Make sure that
+<application>pgbench</application> has completed, so that there are no
+new updates hitting the origin node, and that your slon sessions have
+caught up.
 
 <programlisting>
 #!/bin/sh

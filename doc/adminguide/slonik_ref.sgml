@@ -249,7 +249,6 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   <refentry id ="admconninfo"><refmeta><refentrytitle>ADMIN CONNINFO</refentrytitle> </refmeta>
    
    <refnamediv><refname>ADMIN CONNINFO</refname>
-    
     <refpurpose> preamble - identifying <productname>PostgreSQL</productname> database </refpurpose>
    </refnamediv>
    <refsynopsisdiv>

@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.13 2005-06-16 14:42:56 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.14 2005-06-29 20:13:37 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -56,6 +56,10 @@ these options, use the command <command>./configure --help</command>
 <sect2>
 <title>Example</title>
 
+<para> After determining that the &postgres; instance to be used is
+installed in
+<filename>/opt/dbs/pgsql746-aix-2005-04-01</filename>:</para>
+
 <screen>
 PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 ./configure \
@@ -81,6 +85,9 @@ http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff
 </ulink> Similar patches may need to be constructed for other
 versions; see the FAQ entry on <link linkend="threadsafety"> thread
 safety </link>. </para>
+
+<para> For a full listing of configuration options, run the command
+<command>./configure --help</command>.</para>
 </sect2>
 
 <sect2>
@@ -116,10 +123,11 @@ gmake install
 </command></para>
 
 <para>This will install files into postgresql install directory as
-specified by the <option>--prefix</option> option used in the
-&postgres; installation.  Make sure you have appropriate permissions
-to write into that area.  Normally you need to do this either as root
-or as the postgres user.  </para>
+specified by the <command>configure</command>
+<option>--prefix</option> option used in the &postgres; installation.
+Make sure you have appropriate permissions to write into that area.
+Commonly you need to do this either as root or as the postgres user.
+</para>
 </sect2>
 </sect1>
 

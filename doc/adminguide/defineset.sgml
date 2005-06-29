@@ -1,11 +1,11 @@
-<!-- $Id: defineset.sgml,v 1.18 2005-06-22 16:56:59 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.19 2005-06-29 20:13:37 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
 <para>Defining the nodes indicated the shape of the cluster of
 database servers; it is now time to determine what data is to be
 copied between them.  The groups of data that are copied are defined
-as <quote>sets.</quote></para>
+as <quote>replication sets.</quote></para>
 
 <para>A replication set consists of the following:</para>
 <itemizedlist>
@@ -30,12 +30,12 @@ a primary key:</para>
 
 <listitem><para> If the table has a formally identified primary key,
 <xref linkend="stmtsetaddtable"> can be used without any need to
-reference the primary key.  &slony1; will pick up that there is a
-primary key, and use it.</para></listitem>
+reference the primary key.  &slony1; can automatically pick up that
+there is a primary key, and use it.</para></listitem>
 
 <listitem><para> If the table hasn't got a primary key, but has some
 <emphasis>candidate</emphasis> primary key, that is, some index on a
-combination of fields that is UNIQUE and NOT NULL, then you can
+combination of fields that is both UNIQUE and NOT NULL, then you can
 specify the key, as in</para>
 
 <programlisting>
@@ -63,10 +63,10 @@ should be used.</para></listitem>
 key;</quote> it is, however, recommended that you have one of those
 instead of having &slony1; populate the PK column for you.  If you
 don't have a suitable primary key, that means that the table hasn't
-got any mechanism from your application's standpoint of keeping values
-unique.  &slony1; may therefore introduce a new failure mode for your
-application, and this implies that you had a way to enter confusing
-data into the database.</para>
+got any mechanism from your application's standpoint for keeping
+values unique.  &slony1; may therefore introduce a new failure mode
+for your application, and this also implies that you had a way to
+enter confusing data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>

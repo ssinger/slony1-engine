@@ -104,14 +104,12 @@ OpenJade.</ulink> </para></listitem>
 will need approximately 5MB for the source tree during build and
 installation.</para>
 
-<note><para>There are changes afoot for version 1.1 that ought to make
-it possible to compile &slony1; separately from &postgres;, which
-should make it practical for the makers of distributions of
-<productname>Linux</productname> and
+<note><para>In &slony1; version 1.1, it is possible to compile
+&slony1; separately from &postgres;, making it practical for the
+makers of distributions of <productname>Linux</productname> and
 <productname>FreeBSD</productname> to include precompiled binary
-packages for &slony1;, but until that happens, you need to be prepared
-to use versions of all this software that you compile
-yourself.</para></note>
+packages for &slony1;.  If no suitable packages are available, you
+will need to be prepared to compile &slony1; yourself.  </para></note>
 </sect2>
 
 <sect2>
@@ -130,10 +128,12 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 <para> All the servers used within the replication cluster need to
 have their Real Time Clocks in sync. This is to ensure that <xref
 linkend="slon"> doesn't generate errors with messages indicating that
-a subscriber is already ahead of its provider during replication.  We
-recommend you have <application>ntpd</application> running on all
-nodes, where subscriber nodes using the <quote>master</quote> provider
-host as their time server.</para>
+a subscriber is already ahead of its provider during replication.
+Interpreting logs when servers have a different idea of what time it
+is leads to confusion and frustration.  It is recommended that you
+have <application>ntpd</application> running on all nodes, where
+subscriber nodes using the <quote>master</quote> provider host as
+their time server.</para>
 
 <para> It is possible for &slony1; itself to function even in the face
 of there being some time discrepancies, but having systems <quote>in
