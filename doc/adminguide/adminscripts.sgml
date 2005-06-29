@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.25 2005-06-29 20:13:36 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.26 2005-06-29 20:55:13 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -55,7 +55,9 @@ my %PARAMS =   (host=> undef,		# Host name
 		password => undef,	# password for user
 		parent => 1,		# which node is parent to this node
 		noforward => undef	# shall this node be set up to forward results?
-                sslmode => undef        # SSL mode argument - determine priority of SSL usage = disable,allow,prefer,require
+                sslmode => undef        # SSL mode argument - determine 
+                                        # priority of SSL usage
+                                        # = disable,allow,prefer,require
 );
 </programlisting>
 </sect2>

@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.16 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.17 2005-06-29 20:55:13 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -80,7 +80,8 @@ remove &slony1; triggers:
 <screen>
 BEGIN;
 LOCK TABLE table_name;
-SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+SELECT _oxrsorg.altertablerestore(tab_id);
+--tab_id is _slony_schema.sl_table.tab_id
 </screen></para>
 
 <para> After the script executes, each table is
@@ -88,7 +89,8 @@ SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab
 updates at the origin or that denies updates on subscribers:
 
 <screen>
-SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+SELECT _oxrsorg.altertableforreplication(tab_id);
+--tab_id is _slony_schema.sl_table.tab_id
 COMMIT;
 </screen></para>
 

@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.12 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.13 2005-06-29 20:55:14 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -99,14 +99,16 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
-		table add key (node id = 1, fully qualified name = 'public.history');
+		table add key (node id = 1, fully qualified name = 
+                               'public.history');
 	}
 	on error {
 		exit 1;
 	}
 
 	try {
-		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		create set (id = 1, origin = 1, comment = 
+                            'Set 1 - pgbench tables');
 		set add table (set id = 1, origin = 1,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
@@ -158,12 +160,14 @@ mainset=1
 slonik <<_EOF_
 $PREAMBLE
 try {
-    table add key (node id = $origin, fully qualified name = 'public.history');
+    table add key (node id = $origin, fully qualified name = 
+                   'public.history');
 } on error {
     exit 1;
 }
 try {
-	create set (id = $mainset, origin = $origin, comment = 'Set $mainset - pgbench tables');
+	create set (id = $mainset, origin = $origin, 
+                    comment = 'Set $mainset - pgbench tables');
 	set add table (set id = $mainset, origin = $origin,
 		id = 1, fully qualified name = 'public.accounts',
 		comment = 'Table accounts');
@@ -205,12 +209,14 @@ done
 slonik <<_EOF_
 $PREAMBLE
 try {
-    table add key (node id = $origin, fully qualified name = 'public.history');
+    table add key (node id = $origin, fully qualified name = 
+                   'public.history');
 } on error {
     exit 1;
 }
 try {
-	create set (id = $mainset, origin = $origin, comment = 'Set $mainset - pgbench tables');
+	create set (id = $mainset, origin = $origin, 
+                    comment = 'Set $mainset - pgbench tables');
 $ADDTABLES
 } on error {
 	exit 1;

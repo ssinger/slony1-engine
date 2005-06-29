@@ -177,8 +177,10 @@ define sakaiMovies  @setMovies, origin = @sakai;
 
 create set ( @sakaiMovies, comment = 'movies' );
 
-set add table( set @sakaiMovies, id = 1, @fqn = 'public.customers', comment = 'sakai customers' );
-set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',     comment = 'sakai tapes' );
+set add table( set @sakaiMovies, id = 1, @fqn = 'public.customers', 
+               comment = 'sakai customers' );
+set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',     
+               comment = 'sakai tapes' );
 echo 'But @sakaiMovies will display as a string, and is not expanded';
     </programlisting>
    </refsect1>
