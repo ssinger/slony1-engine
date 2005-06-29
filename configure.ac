@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.49 2005-06-02 18:25:04 darcyb Exp $
+# $Id: configure.ac,v 1.50 2005-06-29 02:31:02 darcyb Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -37,7 +37,7 @@ case $host_os in
     irix*) template=irix ;;
    linux*|gnu*|k*bsd*-gnu) 
            template=linux ;;
-   mingw*) template=win ;;
+   mingw*) template=win32 ;;
   netbsd*) template=netbsd ;;
 nextstep*) template=nextstep ;;
  openbsd*) template=openbsd ;;

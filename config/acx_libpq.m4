@@ -174,6 +174,17 @@ fi
 
 CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR -I$PG_INCLUDESERVERDIR"
 
+dnl ---------------------------------------------------
+dnl Add the port specific include directory if required
+dnl ---------------------------------------------------
+
+case "${host_os}" in
+        *mingw32*)
+        
+        CPPFLAGS="$CPPFLAGS -I$PG_INCLUDESERVERDIR/port/win32"
+        ;;
+esac
+
 AC_CHECK_HEADER(postgres.h, HAVE_LIBPQSERVER=1)
 AC_CHECK_HEADER(utils/typcache.h, AC_DEFINE(HAVE_TYPCACHE,1,[PostgreSQL typcache]),[],[#include "postgres.h"])
 if test -n "$HAVE_LIBPQSERVER" -a "$HAVE_TYPCACHE" != "yes"; then
