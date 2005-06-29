@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.42 2005-05-25 16:16:02 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.43 2005-06-29 01:48:15 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -14,11 +14,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#else
+#define sleep(x) Sleep(x*1000)
+#define vsnprintf _vsnprintf
+#ifdef PGSHARE
+#undef PGSHARE
+#endif
+#define PGSHARE "share"
+#ifdef SED
+#undef SED
+#endif
+#define SED "builtin"
+#define INT64_FORMAT "%I64d"
+#endif
 #include <errno.h>
 #include <time.h>
 
@@ -35,7 +49,7 @@
 SlonikScript *parser_script = NULL;
 int			parser_errors = 0;
 int			current_try_level;
-
+char			m_pgshare[1024];
 
 /*
  * Local functions
@@ -60,6 +74,86 @@ static void script_rollback_all(SlonikStmt * stmt,
 					SlonikScript * script);
 static void script_disconnect_all(SlonikScript * script);
 
+/*
+ * make a copy of the array of lines, with token replaced by replacement
+ * the first time it occurs on each line.
+ *
+ * This does most of what sed was used for in the shell script, but
+ * doesn't need any regexp stuff.
+ */
+void
+replace_token(char *resout, char *lines, const char *token, const char *replacement)
+{
+        int            numlines = 1;
+        int            i,o;
+        char           result_set[4096];
+        int            toklen,
+                       replen;
+
+        for (i = 0; lines[i]; i++)
+                numlines++;
+               
+        toklen = strlen(token);
+        replen = strlen(replacement);
+
+        for (i = o = 0; i < numlines; i++, o++)
+        {
+                /* just copy pointer if NULL or no change needed */
+                if (!lines[i]|| (strncmp((const char *)lines+i, token, toklen)))
+                {
+                       if (lines[i] == 0x0d) // ||(lines[i] == 0x0a))
+                               break;
+
+                       result_set[o] = lines[i];
+                       continue;
+                }
+                /* if we get here a change is needed - set up new line */
+               strncpy((char *)result_set+o, replacement, replen);
+               o += replen -1;
+               i += toklen - 1;
+        }
+
+       result_set[o] = '\0';
+       memcpy(resout, result_set, o);
+               
+}
+
+#ifdef WIN32
+/*
+ * This begins to look for share. 
+ * It begins to look for it from path of exec.
+ * bin/slonik.exe ../share
+ */
+char *get_sharepath(const char *path)
+{
+       DWORD dwRet;
+       char *result;
+
+       result = (char *)malloc(MAX_PATH+1);
+       memcpy(result,path,strlen(path));
+
+       for (dwRet = strlen(path); dwRet >= 0 ; dwRet--)
+       {
+               result[dwRet] = '\0';
+               if ((path[dwRet] == '/')||(path[dwRet] == '\\'))
+                       break;
+       }
+
+       if (result)
+       {
+               dwRet = strlen(result);
+               if (!_stricmp((const char *)result+dwRet-3,"bin"))
+               {
+                       dwRet -= 3;
+                       result[dwRet] = '\0';
+               }
+       }
+
+       memcpy(result+dwRet,PGSHARE,strlen(PGSHARE));
+       return result;
+
+}
+#endif
 
 /* ----------
  * main
@@ -93,7 +187,12 @@ main(int argc, const char *argv[])
 
 	if (parser_errors)
 		usage();
-
+#ifndef WIN32
+       strcpy(m_pgshare, PGSHARE);
+#else
+       /* This begins to look for share. */
+       strcpy(m_pgshare, get_sharepath(argv[0]));
+#endif
 	if (optind < argc)
 	{
 		while (optind < argc)
@@ -101,6 +200,11 @@ main(int argc, const char *argv[])
 			FILE	   *fp;
 
 			fp = fopen(argv[optind], "r");
+			if (fp == NULL)
+			{
+				printf("could not open file '%s'\n", argv[optind]);
+				return -1;
+			}
 			scan_new_input_file(fp);
 			current_file = (char *)argv[optind++];
 			yylineno = 1;
@@ -1646,65 +1750,43 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	char		buf    [4096];
 	char		rex1   [256];
 	char		rex2   [256];
-	int			sed_pipe[2];
+	char		rex3   [256];
+	FILE		*stmtp;
+
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
 
-	sprintf(rex1, "s/@CLUSTERNAME@/%s/g", stmt->script->clustername);
-	sprintf(rex2, "s/@NAMESPACE@/\\\"_%s\\\"/g", stmt->script->clustername);
 	va_start(ap, fname);
 	vsnprintf(fnamebuf, sizeof(fnamebuf), fname, ap);
 	va_end(ap);
 
-	if (pipe(sed_pipe) < 0)
+        stmtp = fopen(fnamebuf,"r");
+        if (!stmtp)
 	{
-		perror("pipe()");
+                printf("%s:%d: could not open file %s\n",
+                           stmt->stmt_filename, stmt->stmt_lno, fname);
 		return -1;
 	}
 
-	switch (fork())
-	{
-		case -1:
-			perror("fork()");
-			return -1;
+        dstring_init(&query);
 
-		case 0:
-			dup2(sed_pipe[1], 1);
-			close(sed_pipe[0]);
-			close(sed_pipe[1]);
+        sprintf(rex2, "\"_%s\"", stmt->script->clustername);
 
-			execlp(SED, SED, "-e", rex1, "-e", rex2, fnamebuf, NULL);
-			perror("execlp()");
-			exit(-1);
-
-		default:
-			close(sed_pipe[1]);
-			break;
+        while (fgets(rex1, 256, stmtp) != NULL)
+        {
+                rc = strlen(rex1);
+                rex1[rc] = '\0';
+                rex3[0] = '\0';
+                replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
+                replace_token(buf, rex3, "@NAMESPACE@", rex2);
+                rc = strlen(buf);
+                dstring_nappend(&query, buf, rc);
 	}
 
-	dstring_init(&query);
-	while ((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
-		dstring_nappend(&query, buf, rc);
+        fclose(stmtp);
 
-	if (rc < 0)
-	{
-		perror("read()");
-		close(sed_pipe[0]);
-		dstring_free(&query);
-		return -1;
-	}
-	close(sed_pipe[0]);
 	dstring_terminate(&query);
-
-	wait(&rc);
-	if (rc != 0)
-	{
-		printf("%s:%d: command sed terminated with exitcode %d\n",
-			   stmt->stmt_filename, stmt->stmt_lno, rc);
-		dstring_free(&query);
-		return -1;
-	}
 
 	/*
 	 * This little hoop is required because for some reason, 7.3 returns total
@@ -1839,15 +1921,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-					  "%s/xxid.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
+					  "%s/xxid.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-						   "%s/slony1_base.sql", PGSHARE) < 0
+						   "%s/slony1_base.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			   "%s/slony1_base.v%d%d.sql", PGSHARE, use_major, use_minor) < 0
+			   "%s/slony1_base.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-						   "%s/slony1_funcs.sql", PGSHARE) < 0
+						   "%s/slony1_funcs.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
+			 "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -1926,9 +2008,9 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-						"%s/slony1_funcs.sql", PGSHARE) < 0
+						"%s/slony1_funcs.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_funcs.v%d%d.sql", PGSHARE, use_major, use_minor) < 0)
+			 "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		return -1;
@@ -3717,7 +3799,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	char		buf    [4096];
 	char		rex1   [256];
 	char		rex2   [256];
-	int			sed_pipe[2];
+	char		rex3   [256];
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -3726,58 +3808,18 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
-	sprintf(rex1, "s/@CLUSTERNAME@/%s/g", stmt->hdr.script->clustername);
-	sprintf(rex2, "s/@NAMESPACE@/\\\"_%s\\\"/g", stmt->hdr.script->clustername);
+       dstring_init(&query);
 
-	if (pipe(sed_pipe) < 0)
+       sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
+
+       while (fgets(rex1,256, (FILE*)stmt->ddl_fd) != NULL)
 	{
-		perror("pipe()");
-		return -1;
-	}
-
-	switch (fork())
-	{
-		case -1:
-			perror("fork()");
-			return -1;
-
-		case 0:
-			dup2(stmt->ddl_fd, 0);
-			close(stmt->ddl_fd);
-			dup2(sed_pipe[1], 1);
-			close(sed_pipe[0]);
-			close(sed_pipe[1]);
-
-			execlp("sed", "sed", "-e", rex1, "-e", rex2, NULL);
-			perror("execlp()");
-			exit(-1);
-
-		default:
-			close(sed_pipe[1]);
-			break;
-	}
-
-	dstring_init(&script);
-	while ((rc = read(sed_pipe[0], buf, sizeof(buf))) > 0)
-		dstring_nappend(&script, buf, rc);
-
-	if (rc < 0)
-	{
-		perror("read()");
-		close(sed_pipe[0]);
-		dstring_free(&script);
-		return -1;
-	}
-	close(sed_pipe[0]);
-	dstring_terminate(&script);
-
-	wait(&rc);
-	if (rc != 0)
-	{
-		printf("%s:%d: command sed terminated with exitcode %d\n",
-			   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno, rc);
-		dstring_free(&query);
-		return -1;
+               rc = strlen(rex1);
+               rex1[rc] = '\0';
+               replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
+               replace_token(buf, rex3, "@NAMESPACE@", rex2);
+               rc = strlen(buf);
+               dstring_nappend(&query, buf, rc);
 	}
 
 	dstring_init(&query);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.7 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: dbutil.c,v 1.8 2005-06-29 01:48:15 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -14,10 +14,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#endif
 #include "postgres.h"
 #include "libpq-fe.h"
 
