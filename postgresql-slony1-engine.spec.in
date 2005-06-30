@@ -35,6 +35,7 @@ are available
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
+autoconf
 
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
