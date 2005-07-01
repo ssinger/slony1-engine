@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.10 2005-06-29 20:13:36 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.11 2005-07-01 15:44:19 devrim Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -313,7 +313,9 @@ tens to hundreds of gigabytes in size, which puts some added
 <quote>strain</quote> on the system, in particular where it may take
 several days for the <command>COPY_SET</command> event to complete.
 Here are some principles that have been observed for dealing with
-these sorts of situtations.</para>
+these sorts of situtations.</para></listitem>
+
+</itemizedlist>
 
 <itemizedlist>
 
@@ -349,10 +351,12 @@ Scans</command> so that even though a particular
 number of those 90,000 <command>SYNC</command> events, it still reads
 through the entire table.  In such a case, you may never see
 replication catch up.
-</para> </listitem>
+</para> 
 
-<listitem><para> Several things can be done that will help, involving
+<para> Several things can be done that will help, involving
 careful selection of <xref linkend="slon"> parameters:</para>
+</listitem>
+</itemizedlist>
 
 <itemizedlist>
 
@@ -383,7 +387,6 @@ linkend="slon">-initiated vacuuming in favor of running your own
 vacuum scripts, as there will be a buildup of unpurgeable data while
 the data is copied and the subscriber starts to catch up. </para>
 </listitem>
-</itemizedlist>
 </itemizedlist>
 
 </sect1>
