@@ -127,6 +127,31 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>devrim at gunduz.org</entry>
       <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
+     <row>
+      <entry>FreeBSD</entry>
+      <entry>5.X</entry>
+      <entry>AMD64</entry>
+      <entry>Jul 01, 2005</entry>
+      <entry>stefan at kaltenbrunner.cc </entry>
+      <entry>PostgreSQL Version: 8.0.3</entry>
+     </row>
+
+     <row>
+      <entry>OpenBSD</entry>
+      <entry>3.7</entry>
+      <entry>Sparc64</entry>
+      <entry>Jul 01, 2005</entry>
+      <entry>stefan at kaltenbrunner.cc </entry>
+      <entry>PostgreSQL Version: 8.0.3</entry>
+     </row>
+     <row>
+      <entry>OpenBSD</entry>
+      <entry>3.7</entry>
+      <entry>x86</entry>
+      <entry>Jul 01, 2005</entry>
+      <entry>stefan at kaltenbrunner.cc </entry>
+      <entry>PostgreSQL Version: 8.0.3</entry>
+     </row>
 
  </tbody>
    </tgroup>
