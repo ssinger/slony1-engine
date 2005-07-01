@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.18 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.19 2005-07-01 16:16:08 devrim Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -29,15 +29,15 @@ well would include:
 <itemizedlist>
 <listitem><para> Sites where connectivity is really <quote>flakey</quote>
 </para></listitem>
-<listitem><para> Replication to nodes that are unpredictably connected.</para>
+<listitem><para> Replication to nodes that are unpredictably connected.</para></listitem>
 
-<para> Replicating a pricing database from a central server to sales
+<listitem><para> Replicating a pricing database from a central server to sales
 staff who connect periodically to grab updates.  </para></listitem>
 
 <listitem><para> Sites where configuration changes are made in a
-haphazard way.</para>
+haphazard way.</para></listitem>
 
-<para> A <quote>web hosting</quote> situation where customers can
+<listitem><para> A <quote>web hosting</quote> situation where customers can
 independently make arbitrary changes to database schemas is not a good
 candidate for &slony1; usage. </para></listitem>
 
@@ -70,7 +70,7 @@ scenarios that &slony1; does not attempt to address.</para>
 
 <para>&slony1; was born from an idea to create a replication system
 that was not tied to a specific version of &postgres;, which is
-allowed to be started and stopped on an existing database with out the
+allowed to be started and stopped on an existing database without the
 need for a dump/reload cycle.</para>
 
 </sect2>
@@ -148,7 +148,7 @@ submit it, and there are a number of further <link
 linkend="ddlchanges"> caveats.</link></para>
 
 <para>If you have those sorts of requirements, it may be worth
-exploring the use of &postgres; 8.0 <acronym>PITR</acronym> (Point In
+exploring the use of &postgres; 8.X <acronym>PITR</acronym> (Point In
 Time Recovery), where <acronym>WAL</acronym> logs are replicated to
 remote nodes.  Unfortunately, that has two attendant limitations:
 

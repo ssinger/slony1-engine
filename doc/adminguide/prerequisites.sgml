@@ -39,7 +39,7 @@ future release.</para>
 need to be able to be compiled from source at your site.</para>
 
 <para> In order to compile &slony1;, you need to have the following
-tools.
+tools:
 
 <itemizedlist>
 <listitem><para> GNU make.  Other make programs will not work.  GNU

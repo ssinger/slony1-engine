@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.14 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.15 2005-07-01 16:16:08 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -129,6 +129,39 @@ Make sure you have appropriate permissions to write into that area.
 Commonly you need to do this either as root or as the postgres user.
 </para>
 </sect2>
+
+<sect2>
+<title> Installing &slony1; from RPMs</title>
+
+<para> Even though &slony1; can be compiled and run on most Linux 
+distributions, it is also possible to install &slony1; using binary 
+packages. Slony Global Development Team provides official RPMs and SRPMs 
+for many versions or Red Hat ana Fedora Core.</para>
+
+<para>The RPMs are available at 
+http://developer.PostgreSQL.org/~devrim/slony . Please read <command> 
+CURRENT_MAINTAINER</command> file for the details of the RPMs. 
+Please note that the RPMs will look for RPM installation of 
+PostgreSQL, so if you install PosgtgreSQL from source, you should 
+manually ignore the RPM dependencies related to PostgreSQL.</para>
+
+<para>Installing &slony1; using these RPMs is as easy as 
+installing any RPM.</para>
+
+<screen>rpm -ivh postgresql-slony1-engine-....rpm</screen>
+
+<para>If you want to upgrade the previous version, just use 
+<command>rpm -Uvh</command> to upgrade it. But please remember to follow 
+the usual upgrade procedure, too.</para>
+
+<para>The RPM installs the files into their usual places. The 
+configuration files are installed under /etc, the binary files are 
+installed to /usr/bin, libs are installed to /usr/lib/pgsql, and finally 
+the docs are installed under 
+/usr/share/doc/postgresql-slony1-engine.</para> 
+
+</sect2>
+
 </sect1>
 
 <!-- Keep this comment at the end of the file
