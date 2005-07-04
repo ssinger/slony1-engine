@@ -1,0 +1,265 @@
+#!/bin/sh    
+# $Id: test_F_utf8,v 1.1 2005-07-04 15:41:46 cbbrowne Exp $
+# **********
+# test_A_fileconf
+#
+# 	This test script creates a standalone database 
+#	as slony_test1 and then:
+#
+#	- creates a series of tables with awful, evil names for 
+#	  names including reserved names, spaces, dots, and
+#         varying capitalization
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- subscribes the replication set from the primary node
+#
+#  This exercises the quoting revisions.
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+SLONCONF1=/tmp/slon_config_node1.$$
+SLONCONF2=/tmp/slon_config_node2.$$
+SCHEMADUMP=/tmp/schema_dump.sql.$$
+DB1=slony_test1
+DB2=slony_test2
+DEBUG_LEVEL=2
+
+trap '
+	echo ""
+	echo "**** user abort"
+	if [ ! -z $slon1_pid ] ; then
+		echo "**** killing node daemon 1"
+		kill -15 $slon1_pid
+	fi
+	if [ ! -z $slon2_pid ] ; then
+		echo "**** killing node daemon 2"
+		kill -15 $slon2_pid
+	fi
+	exit 1
+' 2 15
+
+######################################################################
+# Preparations ... create a standalone database
+######################################################################
+
+#####
+# Make sure the install is up to date
+#####
+WGM=`which gmake | egrep '^/'`
+if [ -z "$WGM" ] ; then
+    MAKE=make
+    CGNU=`make -v | grep GNU`
+    if [ -z "$CGNU" ] ; then
+	echo "GNU Make not found - please install GNU Make"
+	exit 1
+    fi
+else
+    MAKE=gmake
+fi
+echo -n "**** running 'make install' in src directory ... "
+if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
+    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
+fi
+echo "done"
+rm $TMPOUT
+
+PREAMBLE_FILE=/tmp/preamble.$$
+cat <<EOF > $PREAMBLE_FILE
+define origin 11;
+define sub1 22;
+cluster name = T1;
+node @origin admin conninfo='dbname=$DB1';
+node @sub1 admin conninfo='dbname=$DB2';
+EOF
+
+#####
+# Remove old databases, if they exist
+#####
+echo "**** remove old test databases"
+dropdb $DB1 || echo "**** ignored"
+sleep 1
+dropdb $DB2 || echo "**** ignored"
+sleep 1
+
+#####
+# Create the "Primary Node"
+#####
+echo "**** creating database for Node 11"
+
+createdb $DB1 --encoding UNICODE || exit 1
+psql $DB1 <<_EOF_
+create table foo (id integer not null unique default nextval('foo_id'),
+                  string text,
+		  primary key(id)
+);
+create sequence foo_id;
+INSERT INTO foo (string) VALUES ('1b\303\241r') ;
+_EOF_
+
+pg_dump -s $DB1 >$SCHEMADUMP
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now a standalone database with the various funky tables"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB1 as the primary cluster T1 node, start the node daemon,
+# and create a replication set containing the tables and sequences
+######################################################################
+
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
+slonik <<_EOF_
+	include <$PREAMBLE_FILE>;
+	init cluster (id = @origin, comment = 'Node @origin');
+	echo 'Database $DB1 initialized as Node 11';
+_EOF_
+
+echo "log_level=$DEBUG_LEVEL" > $SLONCONF1
+echo "sync_group_maxsize=10" >> $SLONCONF1
+echo "sql_on_connection='select now();'" >> $SLONCONF1
+echo "conn_info='dbname=$DB1'" >> $SLONCONF1
+echo "sync_interval=1000" >> $SLONCONF1
+echo "cluster_name='T1'" >> $SLONCONF1
+
+echo "**** starting the Slony-I node daemon for $DB1"
+xterm -title "Slon node 11" -e sh -c "slon -f $SLONCONF1 ; echo -n 'Enter>'; read line" &
+slon1_pid=$!
+echo "slon[$slon1_pid] on dbname=$DB1"
+
+echo "**** creating a replication set containing the various dangerously named tables ... "
+slonik <<_EOF_
+include <$PREAMBLE_FILE>;
+try {
+	create set (id = 1, origin = @origin, comment = 'Set 1 - UNICODE tables');
+	set add table (set id = 1, origin = @origin,
+		id = 1, fully qualified name = 'public.foo', 
+		comment = 'Unicode Table');
+	set add sequence (set id = 1, origin = @origin,
+		id = 1, fully qualified name = 'public.foo_id');
+} on error {
+	exit 1;
+}
+_EOF_
+
+if [ $? -ne 0 ] ; then
+	echo "failed"
+	kill $slon1_pid 2>/dev/null
+	cat $TMPOUT
+	rm $TMPOUT
+	exit 1
+fi
+echo "**** set created"
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now the Slony-I origin for set 1"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB2 as a subscriber node and let it subscribe the replication
+# set
+######################################################################
+echo "**** creating database for node 22"
+if ! createdb $DB2 --encoding UNICODE ; then
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "**** initializing $DB2 as node 22 of Slony-I cluster T1"
+slonik <<_EOF_
+	include <$PREAMBLE_FILE>;
+	echo 'Creating node 22';
+	try {
+		store node (id = @sub1, comment = 'node @sub1', event node = @origin);
+        } on error {
+	    echo 'could not establish node @sub1';
+	    exit -1;
+	}
+	try {
+		store path (server = @origin, client = @sub1, conninfo = 'dbname=$DB1');
+		store path (server = @sub1, client = @origin, conninfo = 'dbname=$DB2');
+	}
+	on error { 
+	    echo 'could not establish paths between @origin and @sub1';
+	    exit -1; 
+	}
+	echo 'Database $DB2 added as node @sub1';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "log_level=$DEBUG_LEVEL" > $SLONCONF2
+echo "sync_group_maxsize=10" >> $SLONCONF2
+echo "sql_on_connection='select now();'" >> $SLONCONF2
+echo "conn_info='dbname=$DB2'" >> $SLONCONF2
+echo "sync_interval=1000" >> $SLONCONF2
+echo "desired_sync_time=10000" >> $SLONCONF2
+echo "cluster_name='T1'" >> $SLONCONF2
+
+echo "**** starting the Slony-I node daemon for $DB1"
+xterm -title "Slon node 22" -e sh -c "slon -f $SLONCONF2; echo -n 'Enter>'; read line" &
+slon2_pid=$!
+echo "slon[$slon2_pid] on dbname=$DB2"
+
+######################################################################
+# And now comes the moment where the big elephant starts to pee
+# and the attendants in the first row climb on their chairs ...
+######################################################################
+echo "**** creating Unicode tables and subscribing node 22 to set 1"
+(
+	cat $SCHEMADUMP
+) | psql -q $DB2
+slonik <<_EOF_
+	include <$PREAMBLE_FILE>;
+	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
+_EOF_
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB2 should now be copying data and attempting to catch up."
+echo "**********************************************************************"
+echo ""
+
+# We'll just grab users and IDs from /etc/passwd
+# This breaks a little if someone has hacked with user IDs, as might
+# happen if someone created a "toor" user or something of the sort...
+
+for record in `cut -d: -f 1,3 /etc/passwd`; do
+    user=`echo $record | cut -d: -f 1`
+    echo "insert into foo(string) values ('$user - \303\241 - Unicode');" | psql $DB1
+done
+
+sleep 10
+echo "**** Inserts finished"
+echo "**** please terminate the replication engines when caught up."
+wait $slon1_pid
+wait $slon2_pid
+
+kill $slon1_pid 2>/dev/null
+kill $slon2_pid 2>/dev/null
+
+echo -n "**** comparing databases ... "
+psql $DB1 >dump.tmp.1.$$ <<_EOF_
+	select id, string
+			from foo order by id;
+_EOF_
+psql $DB2 >dump.tmp.2.$$ <<_EOF_
+	select id, string
+			from foo order by id;
+_EOF_
+
+if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
+	echo "success - databases are equal."
+	rm dump.tmp.?.$$
+	rm test_1.diff
+else
+	echo "FAILED - see test_1.diff for database differences"
+fi
+rm $PREAMBLE_FILE $SLONCONF1 $SLONCONF2 $SCHEMADUMP
