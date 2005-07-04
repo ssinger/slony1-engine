@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.43 2005-06-29 01:48:15 darcyb Exp $
+ *	$Id: slonik.c,v 1.44 2005-07-04 22:58:03 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,10 +27,6 @@
 #undef PGSHARE
 #endif
 #define PGSHARE "share"
-#ifdef SED
-#undef SED
-#endif
-#define SED "builtin"
 #define INT64_FORMAT "%I64d"
 #endif
 #include <errno.h>
