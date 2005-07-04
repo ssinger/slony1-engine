@@ -1,21 +1,33 @@
 #!/bin/sh
-# $Id: test_4_pgbench,v 1.11 2005-06-02 16:44:53 cbbrowne Exp $
+# $Id: test_1_pgbench_no_node1.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
 # **********
-# test_4_pgbench
+# test_1_pgbench_no_node1
 #
-# 	This test script is derived from test_1_pgbench. It 
-#	tests the MERGE_SET funcitonality by delaying the subsciption
-#	of the history table until later.
+# 	This test script creates a standalone pgbench database 
+#	as slony_test1 and then:
+#
+#	- initializes a primary node and starts the node daemon
+#	- creates a set containing all 4 pgbench tables
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- creates the pgbench tables (schema only)
+#	- subscribes the replication set from the primary node
+#
+#  The point to this test is to validate that you do not need to
+#  have a node #1 configured
 # **********
+
+TERMPROG=xterm
+WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
-DEBUG_LEVEL=2
 
 PGBENCH_SCALE=1
-PGBENCH_CLIENTS=2
+PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
 
 trap '
@@ -44,8 +56,8 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake | egrep '^/'`
-if [ -z "$WGM" ] ; then
+WGM=`$WHICHPROG gmake`
+if [ -z $WGM ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
     if [ -z "$CGNU" ] ; then
@@ -74,7 +86,7 @@ sleep 1
 #####
 # Create the "Primary Node"
 #####
-echo "**** creating database for Node 1"
+echo "**** creating database for Node 11"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
@@ -104,10 +116,10 @@ echo ""
 echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
 slonik <<_EOF_
 	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
-	init cluster (id = 1, comment = 'Node 1');
-	echo 'Database $DB1 initialized as Node 1';
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
+	init cluster (id = 11, comment = 'Node 11');
+	echo 'Database $DB1 initialized as Node 11';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
@@ -115,34 +127,37 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 1" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 11" -e sh -c "slon -d2 -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
-echo "**** creating a replication set containing the 3 pgbench tables ... "
+echo "**** creating a replication set containing the 4 pgbench tables ... "
 slonik <<_EOF_
 	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
 
 	try {
-		table add key (node id = 1, fully qualified name = 'public.history');
+		table add key (node id = 11, fully qualified name = 'public.history');
 	}
 	on error {
 		exit 1;
 	}
 
 	try {
-		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
-		set add table (set id = 1, origin = 1,
+		create set (id = 1, origin = 11, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 11,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
-		set add table (set id = 1, origin = 1,
+		set add table (set id = 1, origin = 11,
 			id = 2, fully qualified name = 'public.branches',
 			comment = 'Table branches');
-		set add table (set id = 1, origin = 1,
+		set add table (set id = 1, origin = 11,
 			id = 3, fully qualified name = 'public.tellers',
 			comment = 'Table tellers');
+		set add table (set id = 1, origin = 11,
+			id = 4, fully qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
 	}
 	on error {
 		exit 1;
@@ -178,27 +193,35 @@ echo ""
 # Setup DB2 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-echo "**** creating database for Node 2"
+echo "**** creating database for node 22"
 if ! createdb $DB2 ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	exit 1
 fi
 
-echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
+echo "**** initializing $DB2 as node 22 of Slony-I cluster T1"
 slonik <<_EOF_
 	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
+	node 1 admin conninfo = 'dbname=nothing';
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
+	echo 'Creating node 22';
 	try {
-		store node (id = 2, comment = 'Node 2');
-		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
-		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
-		store listen (origin = 1, receiver = 2);
-		store listen (origin = 2, receiver = 1);
+		store node (id = 22, comment = 'node 22', event node = 11);
+        } on error {
+	    echo 'could not establish node 22';
+	    exit -1;
 	}
-	on error { exit -1; }
-	echo 'Database $DB2 added as Node 2';
+	try {
+		store path (server = 11, client = 22, conninfo = 'dbname=$DB1');
+		store path (server = 22, client = 11, conninfo = 'dbname=$DB2');
+	}
+	on error { 
+	    echo 'could not establish paths between 11 and 22';
+	    exit -1; 
+	}
+	echo 'Database $DB2 added as node 22';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
@@ -207,7 +230,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 2" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 22" -e sh -c "slon -d2 -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -224,16 +247,16 @@ fi
 # And now comes the moment where the big elephant starts to pee
 # and the attendants in the first row climb on their chairs ...
 ######################################################################
-echo "**** creating pgbench tables and subscribing Node 2 to set 1"
+echo "**** creating pgbench tables and subscribing node 22 to set 1"
 (
 	cat pgbench_schema.sql
 ) | psql -q $DB2
 slonik <<_EOF_
 	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
 
-	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
+	subscribe set ( id = 1, provider = 11, receiver = 22, forward = yes );
 _EOF_
 
 echo ""
@@ -242,61 +265,13 @@ echo "**** $DB2 should now be copying data and attempting to catch up."
 echo "**********************************************************************"
 echo ""
 
-echo -n "Hit enter when node 2 ready >"
-read line
-echo ""
-
-echo "**** creating a replication set containing the history table ... "
-slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
-
-	try {
-		table add key (node id = 1, fully qualified name = 'public.history');
-	}
-	on error {
-		exit 1;
-	}
-
-	try {
-		create set (id = 99, origin = 1, comment = 'Set 99 - history');
-		set add table (set id = 99, origin = 1,
-			id = 4, fully qualified name = 'public.history',
-			key = serial, comment = 'Table accounts');
-	}
-	on error {
-		exit 1;
-	}
-_EOF_
-sleep 30
-
-echo "**** subscribing node 2 to set 99 ... "
-slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
-
-	subscribe set ( id = 99, provider = 1, receiver = 2, forward = yes );
-_EOF_
-sleep 30
-
-echo "**** merging set 99 to 1 ... "
-slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
-
-	merge set ( id = 1, add id = 99, origin = 1);
-_EOF_
-
 echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do
 	echo -n "."
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when caught up."
+echo "**** please terminate the replication engines when cought up."
 wait $slon1_pid
 wait $slon2_pid
 

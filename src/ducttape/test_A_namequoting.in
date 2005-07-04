@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_A_namequoting,v 1.3 2005-05-04 20:43:16 cbbrowne Exp $
+# $Id: test_A_namequoting.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
 # **********
 # test_A_fileconf
 #
@@ -16,6 +16,9 @@
 #
 #  This exercises the quoting revisions.
 # **********
+
+TERMPROG=xterm
+WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
@@ -47,7 +50,7 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake | egrep '^/'`
+WGM=`$WHICHPROG gmake | egrep '^/'`
 if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
@@ -143,7 +146,7 @@ echo "sync_interval=1000" >> $SLONCONF1
 echo "cluster_name='T1'" >> $SLONCONF1
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 11" -e sh -c "slon -f $SLONCONF1 ; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 11" -e sh -c "slon -f $SLONCONF1 ; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
@@ -233,7 +236,7 @@ echo "desired_sync_time=10000" >> $SLONCONF2
 echo "cluster_name='T1'" >> $SLONCONF2
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -f $SLONCONF2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 22" -e sh -c "slon -f $SLONCONF2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 

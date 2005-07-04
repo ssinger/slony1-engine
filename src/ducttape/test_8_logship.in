@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: test_1_pgbench_no_node1,v 1.5 2005-06-02 16:44:53 cbbrowne Exp $
+# $Id: test_8_logship.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
 # **********
-# test_1_pgbench_no_node1
+# test_8_logship
 #
 # 	This test script creates a standalone pgbench database 
 #	as slony_test1 and then:
@@ -14,18 +14,24 @@
 #	- creates the pgbench tables (schema only)
 #	- subscribes the replication set from the primary node
 #
-#  The point to this test is to validate that you do not need to
-#  have a node #1 configured
+#  The nature of the test has to do with the use of the new slonik
+#  log shipping functionality...
 # **********
+
+TERMPROG=xterm
+WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
+LOGSHIPDIR=/tmp/logs.$$
+mkdir -p $LOGSHIPDIR
 DB1=slony_test1
 DB2=slony_test2
-
+CLUSTERNAME=T1
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
+DEBUG_LEVEL=2
 
 trap '
 	echo ""
@@ -53,8 +59,8 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake`
-if [ -z $WGM ] ; then
+WGM=`$WHICHPROG gmake | egrep '^/'`
+if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
     if [ -z "$CGNU" ] ; then
@@ -70,6 +76,16 @@ if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
 fi
 echo "done"
 rm $TMPOUT
+
+PREAMBLE_FILE=/tmp/preamble.$$
+cat <<EOF > $PREAMBLE_FILE
+define origin 11;
+define sub1 22;
+cluster name = $CLUSTERNAME;
+node @origin admin conninfo='dbname=$DB1';
+node @sub1 admin conninfo='dbname=$DB2';
+EOF
+
 
 #####
 # Remove old databases, if they exist
@@ -110,12 +126,10 @@ echo ""
 # and create a replication set containing the pgbench tables.
 ######################################################################
 
-echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster $CLUSTERNAME"
 slonik <<_EOF_
-	cluster name = T1;
-	node 11 admin conninfo = 'dbname=$DB1';
-	node 22 admin conninfo = 'dbname=$DB2';
-	init cluster (id = 11, comment = 'Node 11');
+	include <$PREAMBLE_FILE>;
+	init cluster (id = @origin, comment = 'Node @origin');
 	echo 'Database $DB1 initialized as Node 11';
 _EOF_
 if [ $? -ne 0 ] ; then
@@ -124,35 +138,32 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 11" -e sh -c "slon -d2 -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 $CLUSTERNAME dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
 echo "**** creating a replication set containing the 4 pgbench tables ... "
 slonik <<_EOF_
-	cluster name = T1;
-	node 11 admin conninfo = 'dbname=$DB1';
-	node 22 admin conninfo = 'dbname=$DB2';
-
+	include <$PREAMBLE_FILE>;
 	try {
-		table add key (node id = 11, fully qualified name = 'public.history');
+		table add key (node id = @origin, fully qualified name = 'public.history');
 	}
 	on error {
 		exit 1;
 	}
 
 	try {
-		create set (id = 1, origin = 11, comment = 'Set 1 - pgbench tables');
-		set add table (set id = 1, origin = 11,
+		create set (id = 1, origin = @origin, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = @origin,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
-		set add table (set id = 1, origin = 11,
+		set add table (set id = 1, origin = @origin,
 			id = 2, fully qualified name = 'public.branches',
 			comment = 'Table branches');
-		set add table (set id = 1, origin = 11,
+		set add table (set id = 1, origin = @origin,
 			id = 3, fully qualified name = 'public.tellers',
 			comment = 'Table tellers');
-		set add table (set id = 1, origin = 11,
+		set add table (set id = 1, origin = @origin,
 			id = 4, fully qualified name = 'public.history',
 			key = serial, comment = 'Table accounts');
 	}
@@ -197,28 +208,25 @@ if ! createdb $DB2 ; then
 	exit 1
 fi
 
-echo "**** initializing $DB2 as node 22 of Slony-I cluster T1"
+echo "**** initializing $DB2 as node 22 of Slony-I cluster $CLUSTERNAME"
 slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=nothing';
-	node 11 admin conninfo = 'dbname=$DB1';
-	node 22 admin conninfo = 'dbname=$DB2';
+	include <$PREAMBLE_FILE>;
 	echo 'Creating node 22';
 	try {
-		store node (id = 22, comment = 'node 22', event node = 11);
+		store node (id = @sub1, comment = 'node @sub1', event node = @origin);
         } on error {
-	    echo 'could not establish node 22';
+	    echo 'could not establish node @sub1';
 	    exit -1;
 	}
 	try {
-		store path (server = 11, client = 22, conninfo = 'dbname=$DB1');
-		store path (server = 22, client = 11, conninfo = 'dbname=$DB2');
+		store path (server = @origin, client = @sub1, conninfo = 'dbname=$DB1');
+		store path (server = @sub1, client = @origin, conninfo = 'dbname=$DB2');
 	}
 	on error { 
-	    echo 'could not establish paths between 11 and 22';
+	    echo 'could not establish paths between @origin and @sub1';
 	    exit -1; 
 	}
-	echo 'Database $DB2 added as node 22';
+	echo 'Database $DB2 added as node @sub1';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
@@ -227,7 +235,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -d2 -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -249,11 +257,8 @@ echo "**** creating pgbench tables and subscribing node 22 to set 1"
 	cat pgbench_schema.sql
 ) | psql -q $DB2
 slonik <<_EOF_
-	cluster name = T1;
-	node 11 admin conninfo = 'dbname=$DB1';
-	node 22 admin conninfo = 'dbname=$DB2';
-
-	subscribe set ( id = 1, provider = 11, receiver = 22, forward = yes );
+	include <$PREAMBLE_FILE>;
+	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
 _EOF_
 
 echo ""
@@ -268,7 +273,7 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when cought up."
+echo "**** please terminate the replication engines when caught up."
 wait $slon1_pid
 wait $slon2_pid
 
@@ -277,3 +282,4 @@ kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
 ./compare_pgbench_dumps $DB1 $DB2
+rm $PREAMBLE_FILE

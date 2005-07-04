@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: compare_pgbench_dumps,v 1.2 2005-06-02 16:44:53 cbbrowne Exp $
+# $Id: compare_pgbench_dumps,v 1.3 2005-07-04 23:45:21 darcyb Exp $
 # **********
 # compare_pgbench_dumps
 # **********
@@ -8,7 +8,7 @@ DB1=$1    # First database
 DB2=$2    # Second database
 
 echo -n "**** comparing databases $DB1 and $DB2 ... "
-psql $DB1 >dump.tmp.1.$$ <<_EOF_
+psql $DB1 -o dump.tmp.1.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler
@@ -18,7 +18,7 @@ psql $DB1 >dump.tmp.1.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
-psql $DB2 >dump.tmp.2.$$ <<_EOF_
+psql $DB2 -o dump.tmp.2.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler

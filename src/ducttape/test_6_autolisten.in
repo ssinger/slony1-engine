@@ -14,6 +14,9 @@
 #	- compares the 6 databases.
 # **********
 
+TERMPROG=xterm
+WHICHPROG=which
+
 PATH=/usr/local/slony1/bin:$PATH
 export PATH
 TMPOUT=/tmp/output.$$
@@ -86,7 +89,7 @@ _EOF_
 function slon_start () {
     local NODE=$1
     echo "**** starting the Slony-I node daemon for slony_test$NODE"
-    xterm -title "Slon node $NODE" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=slony_test$NODE; echo -n 'Enter>'; read line" &
+    $TERMPROG -title "Slon node $NODE" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=slony_test$NODE; echo -n 'Enter>'; read line" &
     PID[$NODE]=$!
     pid=$PID[$NODE]
     echo "slon[$pid] on dbname=slony_test$NODE"
@@ -126,7 +129,7 @@ function check_pgbench () {
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake | egrep '^/'`
+WGM=`$WHICHPROG gmake | egrep '^/'`
 if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`

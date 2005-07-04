@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: test_8_logship,v 1.6 2005-06-02 16:44:53 cbbrowne Exp $
+# $Id: test_3_pgbench.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
 # **********
-# test_8_logship
+# test_3_pgbench
 #
 # 	This test script creates a standalone pgbench database 
 #	as slony_test1 and then:
@@ -14,21 +14,22 @@
 #	- creates the pgbench tables (schema only)
 #	- subscribes the replication set from the primary node
 #
-#  The nature of the test has to do with the use of the new slonik
-#  log shipping functionality...
+#	This test differs from test_1 in that it adds tables,
+#	custom triggers and rewrite rules to the pgbench database.
 # **********
+
+TERMPROG=xterm
+WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
-LOGSHIPDIR=/tmp/logs.$$
-mkdir -p $LOGSHIPDIR
 DB1=slony_test1
 DB2=slony_test2
-CLUSTERNAME=T1
+DEBUG_LEVEL=2
+
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
-DEBUG_LEVEL=2
 
 trap '
 	echo ""
@@ -53,10 +54,7 @@ trap '
 # have the "application" (pgbench) running.
 ######################################################################
 
-#####
-# Make sure the install is up to date
-#####
-WGM=`which gmake | egrep '^/'`
+WGM=`$WHICHPROG gmake | egrep '^/'`
 if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
@@ -67,22 +65,15 @@ if [ -z "$WGM" ] ; then
 else
     MAKE=gmake
 fi
+#####
+# Make sure the install is up to date
+#####
 echo -n "**** running 'make install' in src directory ... "
 if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
     echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
 fi
 echo "done"
 rm $TMPOUT
-
-PREAMBLE_FILE=/tmp/preamble.$$
-cat <<EOF > $PREAMBLE_FILE
-define origin 11;
-define sub1 22;
-cluster name = $CLUSTERNAME;
-node @origin admin conninfo='dbname=$DB1';
-node @sub1 admin conninfo='dbname=$DB2';
-EOF
-
 
 #####
 # Remove old databases, if they exist
@@ -96,10 +87,60 @@ sleep 1
 #####
 # Create the "Primary Node"
 #####
-echo "**** creating database for Node 11"
+echo "**** creating database for Node 1"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
+
+#
+# Add a little bit of twist to the pgbench database
+#
+psql $DB1 <<_EOF_
+	create table accounts_audit (
+		au_aid		integer,
+		au_seqno	serial,
+		au_delta	integer,
+		au_user		text,
+		au_time		timestamp,
+
+		primary key (au_aid, au_seqno),
+		foreign key (au_aid) references accounts
+	);
+
+	create function accounts_audit_trig () returns trigger as '
+	begin
+		--
+		-- Log all changes >= $800 in the special audit table
+		--
+		if abs(new.abalance - old.abalance) >= 800 then
+			insert into accounts_audit
+					(au_aid, au_delta, au_user, au_time)
+					values (new.aid, (new.abalance - old.abalance),
+							SESSION_USER, CURRENT_TIMESTAMP);
+		end if;
+
+		return new;
+	end;
+	' language plpgsql;
+	create trigger accounts_audit_trig after update on accounts
+		for each row execute procedure accounts_audit_trig();
+
+	create table tellers_sum (
+		su_tid		integer,
+		su_sum		integer,
+
+		primary key (su_tid),
+		foreign key (su_tid) references tellers
+	);
+	insert into tellers_sum (su_tid, su_sum)
+		select tid, 0 from tellers;
+
+	create rule tellers_sum as on update to tellers
+		do update tellers_sum 
+			set su_sum = su_sum + abs(new.tbalance - old.tbalance)
+			where su_tid = old.tid;
+_EOF_
+
 pg_dump -s $DB1 >pgbench_schema.sql
 
 #####
@@ -123,11 +164,13 @@ echo ""
 # and create a replication set containing the pgbench tables.
 ######################################################################
 
-echo "**** initializing $DB1 as Primary Node for Slony-I cluster $CLUSTERNAME"
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	init cluster (id = @origin, comment = 'Node @origin');
-	echo 'Database $DB1 initialized as Node 11';
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	init cluster (id = 1, comment = 'Node 1');
+	echo 'Database $DB1 initialized as Node 1';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
@@ -135,34 +178,45 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 $CLUSTERNAME dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 1" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
 echo "**** creating a replication set containing the 4 pgbench tables ... "
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
 	try {
-		table add key (node id = @origin, fully qualified name = 'public.history');
+		table add key (node id = 1, fully qualified name = 'public.history');
 	}
 	on error {
 		exit 1;
 	}
 
 	try {
-		create set (id = 1, origin = @origin, comment = 'Set 1 - pgbench tables');
-		set add table (set id = 1, origin = @origin,
+		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 1,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
-		set add table (set id = 1, origin = @origin,
+		set add table (set id = 1, origin = 1,
 			id = 2, fully qualified name = 'public.branches',
 			comment = 'Table branches');
-		set add table (set id = 1, origin = @origin,
+		set add table (set id = 1, origin = 1,
 			id = 3, fully qualified name = 'public.tellers',
 			comment = 'Table tellers');
-		set add table (set id = 1, origin = @origin,
+		set add table (set id = 1, origin = 1,
 			id = 4, fully qualified name = 'public.history',
 			key = serial, comment = 'Table accounts');
+		set add table (set id = 1, origin = 1,
+			id = 5, fully qualified name = 'public.accounts_audit',
+			comment = 'Table accounts_audit');
+		set add table (set id = 1, origin = 1,
+			id = 6, fully qualified name = 'public.tellers_sum',
+			comment = 'Table tellers_sum');
+		set add sequence (set id = 1, origin = 1,
+			id = 7, fully qualified name = 'public.accounts_audit_au_seqno_seq');
 	}
 	on error {
 		exit 1;
@@ -198,32 +252,27 @@ echo ""
 # Setup DB2 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-echo "**** creating database for node 22"
+echo "**** creating database for Node 2"
 if ! createdb $DB2 ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	exit 1
 fi
 
-echo "**** initializing $DB2 as node 22 of Slony-I cluster $CLUSTERNAME"
+echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	echo 'Creating node 22';
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
 	try {
-		store node (id = @sub1, comment = 'node @sub1', event node = @origin);
-        } on error {
-	    echo 'could not establish node @sub1';
-	    exit -1;
+		store node (id = 2, comment = 'Node 2');
+		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
+		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
+		store listen (origin = 1, receiver = 2);
+		store listen (origin = 2, receiver = 1);
 	}
-	try {
-		store path (server = @origin, client = @sub1, conninfo = 'dbname=$DB1');
-		store path (server = @sub1, client = @origin, conninfo = 'dbname=$DB2');
-	}
-	on error { 
-	    echo 'could not establish paths between @origin and @sub1';
-	    exit -1; 
-	}
-	echo 'Database $DB2 added as node @sub1';
+	on error { exit -1; }
+	echo 'Database $DB2 added as Node 2';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
@@ -232,7 +281,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 2" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -249,13 +298,16 @@ fi
 # And now comes the moment where the big elephant starts to pee
 # and the attendants in the first row climb on their chairs ...
 ######################################################################
-echo "**** creating pgbench tables and subscribing node 22 to set 1"
+echo "**** creating pgbench tables and subscribing Node 2 to set 1"
 (
 	cat pgbench_schema.sql
 ) | psql -q $DB2
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
 _EOF_
 
 echo ""
@@ -278,5 +330,40 @@ kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
-./compare_pgbench_dumps $DB1 $DB2
-rm $PREAMBLE_FILE
+echo -n "**** comparing databases ... "
+psql $DB1 >dump.tmp.1.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
+			from accounts_audit order by au_aid, au_seqno;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'tellers_sum:'::text, su_tid, su_sum
+			from tellers_sum order by su_tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+psql $DB2 >dump.tmp.2.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'accounts_audit:'::text, au_aid, au_seqno, au_delta, au_user, au_time
+			from accounts_audit order by au_aid, au_seqno;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'tellers_sum:'::text, su_tid, su_sum
+			from tellers_sum order by su_tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
+
+if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_3.diff ; then
+	echo "success - databases are equal."
+	rm dump.tmp.?.$$
+	rm test_3.diff
+else
+	echo "FAILED - see test_3.diff for database differences"
+fi

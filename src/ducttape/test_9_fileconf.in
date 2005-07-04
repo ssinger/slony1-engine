@@ -1,7 +1,7 @@
 #!/bin/sh    
-# $Id: test_D_moveset,v 1.2 2005-06-02 16:44:53 cbbrowne Exp $
+# $Id: test_9_fileconf.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
 # **********
-# test_D_moveset
+# test_9_fileconf
 #
 # 	This test script creates a standalone pgbench database 
 #	as slony_test1 and then:
@@ -14,22 +14,24 @@
 #	- creates the pgbench tables (schema only)
 #	- subscribes the replication set from the primary node
 #
-#       - when pgbench ends, it does a MOVE SET request
-#         and then runs pgbench for a while again against
-#         the new master node
-#
-#  The test is on MOVE SET
+#  The nature of the test has to do with the use of the new slon
+#  configuration file options
 # **********
+
+TERMPROG=xterm
+WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
+SLONCONF1=/tmp/slon_config_node1.$$
+SLONCONF2=/tmp/slon_config_node2.$$
 DB1=slony_test1
 DB2=slony_test2
 DEBUG_LEVEL=2
 
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
-PGBENCH_TRANS=`expr 8000 / $PGBENCH_CLIENTS`
+PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
 
 trap '
 	echo ""
@@ -57,7 +59,7 @@ trap '
 #####
 # Make sure the install is up to date
 #####
-WGM=`which gmake | egrep '^/'`
+WGM=`$WHICHPROG gmake | egrep '^/'`
 if [ -z "$WGM" ] ; then
     MAKE=make
     CGNU=`make -v | grep GNU`
@@ -136,8 +138,15 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
+echo "log_level=$DEBUG_LEVEL" > $SLONCONF1
+echo "sync_group_maxsize=10" >> $SLONCONF1
+echo "sql_on_connection='select now();'" >> $SLONCONF1
+echo "conn_info='dbname=$DB1'" >> $SLONCONF1
+echo "sync_interval=1000" >> $SLONCONF1
+echo "cluster_name='T1'" >> $SLONCONF1
+
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 11" -e sh -c "slon -f $SLONCONF1 ; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
@@ -233,8 +242,16 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
+echo "log_level=$DEBUG_LEVEL" > $SLONCONF2
+echo "sync_group_maxsize=10" >> $SLONCONF2
+echo "sql_on_connection='select now();'" >> $SLONCONF2
+echo "conn_info='dbname=$DB2'" >> $SLONCONF2
+echo "sync_interval=1000" >> $SLONCONF2
+echo "desired_sync_time=10000" >> $SLONCONF2
+echo "cluster_name='T1'" >> $SLONCONF2
+
 echo "**** starting the Slony-I node daemon for $DB1"
-xterm -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 22" -e sh -c "slon -f $SLONCONF2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -271,38 +288,6 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	echo -n "."
 	sleep 10
 done
-echo "
-****************************************************************************
-**** Now, switch roles so that $DB2 becomes master, and $DB1 the slave. ****
-****************************************************************************
-"
-
-echo "**** switching $DB2 to be origin of Slony-I cluster T1"
-slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	echo 'Lock set';
-	lock set (id = 1, origin = @origin);
-	move set (id = 1, old origin = @origin, new origin = @sub1);
-_EOF_
-if [ $? -ne 0 ] ; then
-	kill $pgbench_pid 2>/dev/null
-	kill $slon1_pid 2>/dev/null
-	exit 1
-fi
-
-echo <<EOF
- Start up pgbench against $DB2
-EOF
-pgbench -n -s $PGBENCH_SCALE -c $PGBENCH_CLIENTS -t $PGBENCH_TRANS $DB2 &
-pgbench_pid=$!
-
-echo -n "**** waiting for pgbench to finish "
-while kill -0 $pgbench_pid 2>/dev/null ; do
-	echo -n "."
-	sleep 10
-done
-echo <<EOF
-
 echo "**** pgbench finished"
 echo "**** please terminate the replication engines when caught up."
 wait $slon1_pid
@@ -312,7 +297,5 @@ kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
-echo "Terminated slons, pg_bench, comparing..."
-
 ./compare_pgbench_dumps $DB1 $DB2
-rm $PREAMBLE_FILE
+rm $PREAMBLE_FILE $SLONCONF1 $SLONCONF2
