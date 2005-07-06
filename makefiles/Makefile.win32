@@ -1,7 +1,8 @@
-# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win32,v 1.2 2005-06-29 02:31:03 darcyb Exp $
+# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win32,v 1.3 2005-07-06 12:47:55 dpage Exp $
 
 # Use replacement include files for those missing on Win32
 override CPPFLAGS+=-I${pgincludeserverdir}/port/win32
+override LDFLAGS+=-lpgport
 
 DLLTOOL= dlltool
 DLLWRAP= dllwrap
