@@ -12,18 +12,39 @@ dnl Checking for pg_config in a list of possible locations.
 PGCONFIG_POSSIBLE_LOCATIONS="${with_pgconfigdir} /usr/local/pgsql/bin /usr/local/bin /usr/bin /bin /usr/lib/postgresql/bin /opt/local/pgsql/bin /opt/pgsql/bin/"
 for i in $PGCONFIG_POSSIBLE_LOCATIONS; do
     if test -x $i/pg_config; then
-	PG_CONFIG_LOCATION="$i/pg_config"
-	break;
+	    PG_CONFIG_LOCATION="$i/pg_config"
+        WIN32_PG_LOCATION=`echo $i | sed 's/\/bin//'`
+	    break;
     fi
 done
 
 if test -n "$PG_CONFIG_LOCATION"; then
     AC_MSG_RESULT([$PG_CONFIG_LOCATION])
-    PG_BINDIR=`$PG_CONFIG_LOCATION --bindir`/
-    PG_LIBDIR=`$PG_CONFIG_LOCATION --libdir`/
-    PG_INCLUDEDIR=`$PG_CONFIG_LOCATION --includedir`/
-    PG_PKGLIBDIR=`$PG_CONFIG_LOCATION --pkglibdir`/
-    PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
+    
+    dnl
+    dnl On win32 pg_config returns DOS style paths which Mingw/GCC cannot use.
+    dnl Use default values in this case, rather than pg_config supplied ones.
+    dnl Also note that trailing /'s seem to cause compile failures.
+    dnl
+    
+    case "${host_os}" in
+        *mingw32*)
+            PG_BINDIR=$WIN32_PG_LOCATION/bin
+            PG_LIBDIR=$WIN32_PG_LOCATION/lib
+            PG_INCLUDEDIR=$WIN32_PG_LOCATION/include
+            PG_PKGLIBDIR=$WIN32_PG_LOCATION/lib
+            PG_INCLUDESERVERDIR=$WIN32_PG_LOCATION/include/server
+            ;;
+        
+        *)
+            PG_BINDIR=`$PG_CONFIG_LOCATION --bindir`/
+            PG_LIBDIR=`$PG_CONFIG_LOCATION --libdir`/
+            PG_INCLUDEDIR=`$PG_CONFIG_LOCATION --includedir`/
+            PG_PKGLIBDIR=`$PG_CONFIG_LOCATION --pkglibdir`/
+            PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
+            ;;
+    esac
+    
     PG_CONFIGURE=`$PG_CONFIG_LOCATION --configure`
     PG_VERSION=`$PG_CONFIG_LOCATION --version|cut -f2- -d' '|cut -f1 -d'd'|cut -f-2 -d'.'`
 
@@ -201,10 +222,10 @@ AC_MSG_CHECKING(for plpgsql.so)
 if test -s $PG_PKGLIBDIR"/plpgsql.so"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
-elif test -s $PG_PKGLIBDIR"plpgsql.sl"; then
+elif test -s $PG_PKGLIBDIR"/plpgsql.sl"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
-elif test -s $PG_PKGLIBDIR"plpgsql.dll"; then
+elif test -s $PG_PKGLIBDIR"/plpgsql.dll"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
 else
