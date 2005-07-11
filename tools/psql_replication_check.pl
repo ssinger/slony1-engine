@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: psql_replication_check.pl,v 1.2 2005-05-12 21:43:31 cbbrowne Exp $#
+# $Id: psql_replication_check.pl,v 1.3 2005-07-11 22:00:30 cbbrowne Exp $#
 # Documentation listed below.
 # Credits:
 # Afilias Canada
@@ -109,7 +109,7 @@ Sample view definition:
 CREATE VIEW replication_status AS
 SELECT customer_name AS object_name, 
 transaction_date, 
-date_part('minutes'::text, now() - transaction_date) AS age
+(date_part('epoch'::text, now() - transaction_date) / 60::double precision)::integer AS age
 FROM customer_orders
 ORDER BY id DESC
 LIMIT 1;
