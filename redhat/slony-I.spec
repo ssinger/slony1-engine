@@ -3,14 +3,14 @@
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
-Name:		@PACKAGE_NAME@
-Version:	@PACKAGE_VERSION@
+Name:		postgresql-slony1-engine
+Version:	HEAD_20050712
 Release:	1_PG%{pg_version}
 License:	Berkeley/BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
 Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
-Source0:	@PACKAGE_NAME@-%{version}.tar.gz
+Source0:	postgresql-slony1-engine-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
@@ -35,7 +35,7 @@ sites, where the normal mode of operation is that all nodes
 are available
 
 %prep
-%setup -q -n @PACKAGE_NAME@-%{version}
+%setup -q -n postgresql-slony1-engine-%{version}
 
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
