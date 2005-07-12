@@ -1,10 +1,11 @@
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 0}
+%define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
-Release:	1
+Release:	1_PG%{pg_version}
 License:	Berkeley/BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
@@ -12,7 +13,7 @@ Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
 Source0:	@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires:	postgresql-devel
-Requires:	postgresql-server
+Requires:	postgresql-server = %{pg_version}
 
 %if %docs
 BuildRequires:	docbook-style-dsssl
@@ -35,7 +36,6 @@ are available
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
-autoconf
 
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
@@ -55,6 +55,9 @@ export LIBNAME=%{_lib}
         --with-docs --with-docdir=/usr/share/doc \
 %endif
         --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
+
+autoconf
+
 make
 %if %perltools
  cd tools
@@ -106,6 +109,11 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Jul 12 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Added a line to check postgresql RPM version and tag SlonyI RPM with it.
+- Updated Requires files so that it checks correct PostgreSQL version
+- Moved autoconf line into correct place.
+
 * Thu Jun 08 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added UPGRADING, HISTORY-1.1, INSTALL, SAMPLE among installed files, reflecting the change in GNUMakefile.in
 
