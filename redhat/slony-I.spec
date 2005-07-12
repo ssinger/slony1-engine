@@ -1,18 +1,25 @@
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 0}
+%define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
-Name: 		slony1
-Version: 	1.1.0
-Release: 	beta3
-License: 	Berkeley/BSD
-Group: 		Applications/Databases
-URL: 		http://slony.info/
-Packager: 	Devrim Gunduz <devrim@PostgreSQL.org>
-Source0: 	slony1-%{version}.%{release}.tar.gz
-Buildroot: 	%{_tmppath}/%{name}-%{version}-root
-BuildRequires: 	postgresql-devel
+Name:		postgresql-slony1-engine
+Version:	HEAD_20050613
+Release:	1_PG%{pg_version}
+License:	Berkeley/BSD
+Group:		Applications/Databases
+URL:		http://slony.info/
+Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
+Source0:	postgresql-slony1-engine-%{version}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires:	postgresql-devel
 Requires:	postgresql-server
+
+%if %docs
+BuildRequires:	docbook-style-dsssl
+%endif
+
+%define prefix /usr
 
 %description
 Slony-I will be a "master to multiple slaves" replication 
@@ -28,10 +35,9 @@ sites, where the normal mode of operation is that all nodes
 are available
 
 %prep
-%setup -q -n slony1-%{version}.%{release}
+%setup -q -n postgresql-slony1-engine-%{version}
 
 %build
-autoconf
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
 CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et" ; export CPPFLAGS
@@ -41,7 +47,6 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-
 ./configure --includedir %{_includedir}/pgsql \
 %if %perltools
         --with-perltools=%{_bindir} \
@@ -50,6 +55,9 @@ export LIBNAME=%{_lib}
         --with-docs --with-docdir=/usr/share/doc \
 %endif
         --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
+
+autoconf
+
 make
 %if %perltools
  cd tools
@@ -73,8 +81,7 @@ install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/slon.conf
 cd tools
 make DESTDIR=$RPM_BUILD_ROOT install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
-install -m 0755 altperl/slon_tools.conf-sample  
-$RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
+install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
 install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
 install -m 0755 altperl/slon-tools.pm  $RPM_BUILD_ROOT%{_libdir}/pgsql/
 /bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
@@ -102,6 +109,11 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Jul 12 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Added a line to check postgresql RPM version and tag SlonyI RPM with it.
+- Updated Requires files so that it checks correct PostgreSQL version
+- Moved autoconf line into correct place.
+
 * Thu Jun 08 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added UPGRADING, HISTORY-1.1, INSTALL, SAMPLE among installed files, reflecting the change in GNUMakefile.in
 
@@ -116,12 +128,12 @@ rm -rf $RPM_BUILD_ROOT
 * Thu Apr 07 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - More fixes on RPM builds
 
-* Thu Apr 04 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+* Tue Apr 04 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Fix RPM build errors, regarding to tools/ .
 
 * Thu Apr 02 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added docs to installed files list.
-- Fixed doc problems
+- Added perltools, so that tools/altperl may be compiled.
 - Updated the spec file
 
 * Thu Mar 17 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
@@ -133,3 +145,4 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Mar 18 2004 Daniel Berrange <berrange@redhat.com> postgresql-slony1-engine
 - Initial RPM packaging
+
