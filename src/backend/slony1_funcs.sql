@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64 2005-06-07 21:51:05 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.65 2005-07-13 19:47:49 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3784,6 +3784,7 @@ declare
 	p_sub_forward		alias for $4;
 	v_set_origin		int4;
 	v_ev_seqno			int8;
+	v_rec			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -3815,6 +3816,19 @@ begin
 				''Slony-I: set provider and receiver cannot be identical'';
 	end if;
 
+	-- ---
+	-- Verify that the provider is either the origin or an active subscriber
+	-- Bug report #1362
+	-- ---
+	if v_set_origin <> p_sub_provider then
+		select 1 into v_rec from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set and 
+                              sub_receiver = p_sub_provider and
+			      sub_forward and sub_active;
+		if not found then
+			raise exception ''Slony-I: provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
+		end if;
+	end if;
 
 	-- ---
 	-- Check to see if the set contains any tables - gripe if not - bug #1226
