@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.44 2005-07-04 22:58:03 darcyb Exp $
+ *	$Id: slonik.c,v 1.45 2005-07-15 17:56:02 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1097,8 +1097,8 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 
-					stmt->ddl_fd = open(stmt->ddl_fname, O_RDONLY);
-					if (stmt->ddl_fd < 0)
+					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
+					if (stmt->ddl_fd == NULL )
 					{
 						printf("%s:%d: Error: "
 							   "%s - %s\n",
@@ -3808,7 +3808,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 
        sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
 
-       while (fgets(rex1,256, (FILE*)stmt->ddl_fd) != NULL)
+       while (fgets(rex1,256, stmt->ddl_fd) != NULL)
 	{
                rc = strlen(rex1);
                rex1[rc] = '\0';

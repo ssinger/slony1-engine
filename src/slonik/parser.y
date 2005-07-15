@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.22 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: parser.y,v 1.23 2005-07-15 17:56:02 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1346,7 +1346,7 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 							new->ddl_fname		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
 							new->only_on_node	= opt[3].ival;
-							new->ddl_fd			= -1;
+							new->ddl_fd		= NULL;
 						}
 						else
 							parser_errors++;
