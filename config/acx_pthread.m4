@@ -74,6 +74,9 @@ case "${host_cpu}-${host_os}" in
 	*cygwin*)
 	acx_pthread_flags="-lpthread $acx_pthread_flags"
 	;;
+	*freebsd*)
+	# freebsd 4 uses -pthread, freebsd 5 and above use -lpthread
+	acx_pthread_flags="pthread -pthread"
 esac
 
 if test x"$acx_pthread_ok" = xno; then
