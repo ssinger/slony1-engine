@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.45 2005-07-15 17:56:02 darcyb Exp $
+ *	$Id: slonik.c,v 1.46 2005-07-18 20:14:12 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -116,38 +116,51 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
 
 #ifdef WIN32
 /*
- * This begins to look for share. 
- * It begins to look for it from path of exec.
- * bin/slonik.exe ../share
+ * Attempt to locate share directory. Will add to path of exe,
+ * except when the exe is in a "bin" directory, in which case
+ * it goes to ../share.
+ * This is a very simple view of things - perhaps it needs to be
+ * expanded? If so there is more complete code available in the
+ * PostgreSQL backend that could be adapted.
  */
 char *get_sharepath(const char *path)
 {
-       DWORD dwRet;
-       char *result;
+	int i; 
+	char *result;
 
-       result = (char *)malloc(MAX_PATH+1);
-       memcpy(result,path,strlen(path));
+	result = (char *)malloc(MAX_PATH+1);
+	if (!result) {
+		printf("memory allocation failure.\n");
+		exit(1);
+	}
 
-       for (dwRet = strlen(path); dwRet >= 0 ; dwRet--)
-       {
-               result[dwRet] = '\0';
-               if ((path[dwRet] == '/')||(path[dwRet] == '\\'))
-                       break;
-       }
+	memcpy(result,path,strlen(path));
 
-       if (result)
-       {
-               dwRet = strlen(result);
-               if (!_stricmp((const char *)result+dwRet-3,"bin"))
-               {
-                       dwRet -= 3;
-                       result[dwRet] = '\0';
-               }
-       }
+	for (i = strlen(path); i >= 0 ; i --)
+	{
+		if ((path[i] == '/')||(path[i] == '\\'))
+			break;
+		result[i] = '\0';
+	}
 
-       memcpy(result+dwRet,PGSHARE,strlen(PGSHARE));
-       return result;
+	if (!result[0])
+	{
+		/* Nothing left, so assume subdir of current */
+		strcpy(result,PGSHARE);
+		return result;
+	}
 
+	/* Check if directory of exe is "bin" */
+	if (strlen(result) >= 3 &&
+		!strncasecmp(result+i-3,"bin",3) &&
+		(result[i]=='/' || result[i]=='\\'))
+	{
+		/* Strip off bin directory */
+		result[i-3] = 0;
+	}
+
+	strcat(result, PGSHARE);
+	return result;
 }
 #endif
 
