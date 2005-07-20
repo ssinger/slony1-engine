@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.52 2005-05-25 16:10:41 cbbrowne Exp $
+ *	$Id: slon.c,v 1.53 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -24,16 +24,23 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#ifdef WIN32
+#include <winsock.h>
+#endif
+
 #include "libpq-fe.h"
 #include "c.h"
 
 #include "slon.h"
 #include "confoptions.h"
 
+
 /*
  * ---------- Global data ----------
  */
+#ifndef WIN32
 int			watchdog_pipe[2];
+#endif
 int			sched_wakeuppipe[2];
 
 pthread_mutex_t slon_wait_listen_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -53,9 +60,11 @@ static pthread_t local_snmp_thread;
 static pthread_t main_thread;
 static char *const *main_argv;
 
+#ifndef WIN32
 static void sighandler(int signo);
 static void main_sigalrmhandler(int signo);
 static void slon_kill_child(void);
+#endif
 
 int			slon_log_level;
 char	   *pid_file;
@@ -83,7 +92,12 @@ main(int argc, char *const argv[])
 	extern int	optind;
 	extern char *optarg;
 
-#ifndef CYGWIN
+#ifdef WIN32
+    WSADATA wsaData;
+    int err;
+#endif
+
+#if !defined(CYGWIN) && !defined(WIN32)
 	struct sigaction act;
 #endif
 	InitializeConfOptions();
@@ -155,8 +169,10 @@ main(int argc, char *const argv[])
 	 * identifier
 	 */
 	slon_pid = getpid();
+#ifndef WIN32
 	slon_cpid = 0;
 	slon_ppid = 0;
+#endif
 	main_argv = argv;
 
 	if ((char *)argv[optind])
@@ -212,7 +228,17 @@ main(int argc, char *const argv[])
 		return 1;
 	}
 
-
+#ifdef WIN32
+    /* 
+     * Startup the network subsystem, in case our libpq doesn't
+     */
+    err = WSAStartup(MAKEWORD(1, 1), &wsaData);
+    if (err != 0) {
+		slon_log(SLON_FATAL, "main: Cannot start the network subsystem - %d\n", err);
+		slon_exit(-1);
+    }
+#endif
+    
 	/*
 	 * Connect to the local database to read the initial configuration
 	 */
@@ -268,17 +294,23 @@ main(int argc, char *const argv[])
 	 * Pipes to be used as communication devices between the parent (watchdog)
 	 * and child (worker) processes.
 	 */
-	if (pipe(watchdog_pipe) < 0)
+#ifndef WIN32
+	if (pgpipe(watchdog_pipe) < 0)
 	{
 		slon_log(SLON_FATAL, "slon: parent pipe create failed -(%d) %s\n", errno,strerror(errno));
 		slon_exit(-1);
 	}
-	if (pipe(sched_wakeuppipe) < 0)
+#endif
+	if (pgpipe(sched_wakeuppipe) < 0)
 	{
 		slon_log(SLON_FATAL, "slon: sched_wakeuppipe create failed -(%d) %s\n", errno,strerror(errno));
 		slon_exit(-1);
 	}
 
+	/* There is no watchdog process on win32. We delegate restarting and
+	 * other such tasks to the Service Control Manager. And win32 doesn't
+	 * support signals, so we don't need to catch them... */
+#ifndef WIN32
 	/*
 	 * Fork here to allow parent process to trap signals and child process to 
 	 * handle real processing work creating a watchdog and worker process
@@ -290,11 +322,15 @@ main(int argc, char *const argv[])
 		slon_exit(-1);
 	}
 	else if (slon_cpid == 0) /* child */
+#endif /* WIN32 */
 	{
 		slon_pid = getpid();
+#ifndef WIN32
 		slon_ppid = getppid();
+#endif
 
 		slon_log(SLON_DEBUG2, "main: main process started\n");
+#ifndef WIN32
 		/*
 		 * Wait for the parent process to initialize
 		 */
@@ -339,6 +375,7 @@ main(int argc, char *const argv[])
 		}
 
 		slon_log(SLON_DEBUG2, "main: end signal handler setup\n");
+#endif
 
 		/*
 		 * Start the event scheduling system
@@ -619,13 +656,17 @@ main(int argc, char *const argv[])
 		 * Wait for all remote threads to finish
 		 */
 		main_thread = pthread_self();
+#ifndef WIN32 /* XXX WIN32 no sigalarm, how fix? XXX */
 		signal(SIGALRM, main_sigalrmhandler);
 		alarm(20);
+#endif
 
 		slon_log(SLON_DEBUG2, "main: wait for remote threads\n");
 		rtcfg_joinAllRemoteThreads();
 
+#ifndef WIN32 /* XXX WIN32 XXX */
 		alarm(0);
+#endif
 
 		/*
 		 * Wait for the local threads to finish
@@ -651,6 +692,7 @@ main(int argc, char *const argv[])
 		/*
 		 * Tell parent that worker is done
 		 */
+#ifndef WIN32
 		slon_log(SLON_DEBUG2, "main: notify parent that worker is done\n");
 
 		if (write(watchdog_pipe[1], "c", 1) != 1)
@@ -658,11 +700,13 @@ main(int argc, char *const argv[])
 			slon_log(SLON_FATAL, "main: write to watchdog pipe failed -(%d) %s\n", errno,strerror(errno));
 			slon_exit(-1);
 		}
+#endif
 
 		slon_log(SLON_DEBUG1, "main: done\n");
 
 		exit(0);
 	}
+#ifndef WIN32 /* Again, no watchdog process on WIN32 */
 	else /* parent */
 	{
 		slon_log(SLON_DEBUG2, "slon: watchdog process started\n");
@@ -707,7 +751,7 @@ main(int argc, char *const argv[])
 			slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
 			slon_exit(-1);
 		}
-		
+
 		slon_log(SLON_DEBUG2, "slon: end signal handler setup\n");
 
 		/*
@@ -733,9 +777,11 @@ main(int argc, char *const argv[])
 		 */
 		slon_exit(0);
 	}
+#endif /* WIN32 */
 }
 
 
+#ifndef WIN32
 static void
 main_sigalrmhandler(int signo)
 {
@@ -814,7 +860,7 @@ slon_kill_child()
 		slon_exit(-1);
 	}
 	
-	if (write(sched_wakeuppipe[1], "p", 1) != 1)
+	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
 	{
 		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno,strerror(errno));
 		kill(slon_cpid,SIGKILL);
@@ -852,11 +898,19 @@ slon_kill_child()
 
 	slon_log(SLON_DEBUG2, "slon: worker process shutdown ok\n");
 }
+#endif
 
 void
 slon_exit(int code)
 {
-	if (slon_ppid == 0 && pid_file)
+#ifdef WIN32
+    /* Cleanup winsock */
+    WSACleanup();
+    
+	if (pid_file)
+#else
+    if (slon_ppid == 0 && pid_file)
+#endif
 	{
 		slon_log(SLON_DEBUG2, "slon: remove pid file\n");
 		unlink(pid_file);

@@ -25,6 +25,17 @@ extern void slon_log(Slon_Log_Level level, char *fmt,...);
 extern int	slon_scanint64(char *str, int64 * result);
 #endif
 
+#ifdef WIN32
+/* Remove some defines that are imported from the postgresql headers, but
+ * that refer to backend porting functions. */
+#undef select
+#undef accept
+#undef connect
+#undef socket
+#undef recv
+#undef send
+#endif
+
 /*
  * Local Variables:
  *	tab-width: 4

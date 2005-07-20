@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.26 2005-05-25 16:10:41 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.27 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -91,8 +91,12 @@ cleanupThread_main(void *dummy)
 	 */
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_cleanup")) == NULL)
 	{
+#ifndef WIN32
 		kill(getpid(), SIGTERM);
 		pthread_exit(NULL);
+#else
+		exit(0);
+#endif
 		/* slon_abort(); */
 	}
 	dbconn = conn->dbconn;

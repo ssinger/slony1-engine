@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.18 2005-05-27 20:44:10 darcyb Exp $
+ *	$Id: misc.c,v 1.19 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -24,7 +24,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#ifndef WIN32
 #include <syslog.h>
+#endif
 #include <stdarg.h>
 
 #include "libpq-fe.h"

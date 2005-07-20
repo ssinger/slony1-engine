@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.48 2005-03-10 23:11:26 cbbrowne Exp $
+ *	$Id: slon.h,v 1.49 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -324,8 +324,10 @@ do { \
  * ----------
  */
 extern pid_t slon_pid;
+#ifndef WIN32
 extern pid_t slon_ppid;
 extern pid_t slon_cpid;
+#endif
 extern char *rtcfg_cluster_name;
 extern char *rtcfg_namespace;
 extern char *rtcfg_conninfo;
@@ -344,6 +346,7 @@ extern SlonSet *rtcfg_set_list_tail;
  * Functions in slon.c
  * ----------
  */
+#ifndef WIN32
 #define slon_abort() \
 do { \
 	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGTERM); \
@@ -353,6 +356,17 @@ do { \
 do { \
 	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGHUP); \
 } while (0)
+#else /* WIN32 */
+/* On win32, we currently just bail out and let the service control manager
+ * deal with possible restarts */
+#define slon_abort() \
+WSACleanup(); \
+exit(1);
+#define slon_restart() \
+WSACleanup(); \
+exit(1);
+#endif
+
 extern void slon_exit(int code);
 
 extern int	slon_restart_request;

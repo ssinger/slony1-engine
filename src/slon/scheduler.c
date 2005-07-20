@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.20 2005-03-23 23:06:50 darcyb Exp $
+ *	$Id: scheduler.c,v 1.21 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -192,7 +192,7 @@ sched_wait_conn(SlonConn * conn, int condition)
 	 * Give the scheduler thread a heads up, release the master lock and wait
 	 * for it to tell us that the event we're waiting for happened.
 	 */
-	if (write(sched_wakeuppipe[1], "x", 1) < 0)
+	if (pipewrite(sched_wakeuppipe[1], "x", 1) < 0)
 	{
 		perror("sched_wait_conn: write()");
 		exit(-1);
@@ -326,7 +326,7 @@ sched_wakeup_node(int no_id)
 	 */
 	if (num_wakeup > 0)
 	{
-		if (write(sched_wakeuppipe[1], "x", 1) < 0)
+		if (pipewrite(sched_wakeuppipe[1], "x", 1) < 0)
 		{
 			perror("sched_wait_conn: write()");
 			slon_abort();
@@ -517,7 +517,7 @@ sched_mainloop(void *dummy)
 			char		buf    [1];
 
 			rc--;
-			if (read(sched_wakeuppipe[0], buf, 1) != 1)
+			if (piperead(sched_wakeuppipe[0], buf, 1) != 1)
 			{
 				perror("sched_mainloop: read()");
 				sched_status = SCHED_STATUS_ERROR;
@@ -635,60 +635,6 @@ sched_mainloop(void *dummy)
 	pthread_mutex_unlock(&sched_master_lock);
 	pthread_exit(NULL);
 }
-
-
-/*
- * ---------- sched_sighandler
- *
- * After starting up the sole purpose of the main thread (the original process)
- * is to respond to signals while waiting for the scheduler to finish. The
- * signal handler is here because it is actually sched_start_mainloop() that
- * arranges for the signal handling and sched_wait_mainloop() that enables
- * them. And the only one really interested in the signals is the scheduler
- * thread ... but that's doing select(2) mainly and we have to avoid race
- * conditions with signals. ----------
- */
-static void
-sched_shutdown()
-{
-	/*
-	 * Lock the master mutex and make sure that we are the main thread
-	 */
-	pthread_mutex_lock(&sched_master_lock);
-	if (!pthread_equal(pthread_self(), sched_main_thread))
-	{
-		slon_log(SLON_FATAL, "sched_sighandler: called in non-main thread\n");
-		slon_abort();
-	}
-
-	/*
-	 * Set the scheduling status to shutdown
-	 */
-	if (sched_status == SCHED_STATUS_OK)
-		sched_status = SCHED_STATUS_SHUTDOWN;
-
-	/*
-	 * Try to wakeup the scheduler thread by throwing a bait
-	 */
-	if (sched_wakeuppipe[1] < 0)
-	{
-		slon_log(SLON_ERROR, "sched_sighandler: sockpair already closed\n");
-		pthread_mutex_unlock(&sched_master_lock);
-		return;
-	}
-	if (write(sched_wakeuppipe[1], "x", 1) < 0)
-	{
-		perror("sched_sighandler: write()");
-		pthread_mutex_unlock(&sched_master_lock);
-		exit(-1);
-	}
-
-	/*
-	 * Unlock the master mutex
-	 */
-	pthread_mutex_unlock(&sched_master_lock);
-}
-
 
 
 /*

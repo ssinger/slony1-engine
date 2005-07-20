@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.24 2005-03-10 23:11:26 cbbrowne Exp $
+ *	$Id: runtime_config.c,v 1.25 2005-07-20 13:59:46 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -33,8 +33,10 @@
  * ---------- Global data ----------
  */
 pid_t		slon_pid;
+#ifndef WIN32
 pid_t		slon_cpid;
 pid_t		slon_ppid;
+#endif
 char	   *rtcfg_cluster_name = NULL;
 char	   *rtcfg_namespace = NULL;
 char	   *rtcfg_conninfo = NULL;

@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.33 2005-07-20 10:47:22 dpage Exp $
+#	$Id: Makefile,v 1.34 2005-07-20 13:59:46 dpage Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -13,8 +13,8 @@ include $(slony_top_builddir)/Makefile.global
 
 CC = $(PTHREAD_CC)
 
-override CFLAGS +=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
-LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
+override CFLAGS +=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(slony_top_builddir)/$(slony_subdir) -I$(pgincludedir)
+override LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
 
 
 PROG		= slon
@@ -45,8 +45,13 @@ OBJS+= snmp_thread.o
 LDFLAGS+= ${NETSNMP_AGENTLIBS}
 endif
 
+ifeq ($(PORTNAME), win32)
+OBJS += port/pipe.o
+override LDFLAGS += -lwsock32
+endif
 
-DISTFILES = Makefile README $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
+
+DISTFILES = Makefile README $(wildcard *.c) $(wildcard port/*.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =				\
 	$(PROG)
