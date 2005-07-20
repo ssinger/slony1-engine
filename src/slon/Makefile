@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.31 2005-06-02 16:45:18 darcyb Exp $
+#	$Id: Makefile,v 1.32 2005-07-20 10:01:14 dpage Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -14,12 +14,15 @@ include $(slony_top_builddir)/Makefile.global
 CC = $(PTHREAD_CC)
 
 override CFLAGS +=  $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(pgincludedir)
-LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
+override LDFLAGS += $(rpath) $(PTHREAD_LIBS) -L$(pglibdir) -lpq
 
 
 PROG		= slon
 
 ifeq ($(PORTNAME), win)
+PROG            = slon.exe
+endif
+ifeq ($(PORTNAME), win32)
 PROG            = slon.exe
 endif
 
@@ -40,6 +43,11 @@ OBJS		= \
 ifdef HAVE_NETSNMP
 OBJS+= snmp_thread.o
 LDFLAGS+= ${NETSNMP_AGENTLIBS}
+endif
+
+ifeq ($(PORTNAME), win32)
+OBJS += pipe.o
+override LDFLAGS += -lwsock32
 endif
 
 
