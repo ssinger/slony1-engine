@@ -11,12 +11,10 @@ AC_DEFUN([SLON_AC_FUNC_POSIX_SIGNALS],
     AC_DEFINE(HAVE_POSIX_SIGNALS,, [Define to 1 if you have the POSIX signal interface.])
     HAVE_POSIX_SIGNALS=$slonac_cv_func_posix_signals  
   else
-    if test x"$template" = "xwin" ; then
-      AC_MSG_RESULT(*** Skipping error on Cygwin ***)
-    else 
-      if test x"$template" = "xwin32" ; then
-        AC_MSG_RESULT(*** Skipping error on MinGW/Msys to allow xxid/slony_funcs compilation ***)
-      else
+    if test x"$template" != "xwin32" ; then
+      if test x"$template" = "xwin" ; then
+        AC_MSG_RESULT(*** Skipping error on Cygwin ***)
+      else 
         AC_MSG_ERROR(Slony requires a POSIX compatible signal interface.)
       fi
     fi
