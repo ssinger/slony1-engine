@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.65 2005-07-13 19:47:49 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.66 2005-07-20 09:02:39 dpage Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -397,7 +397,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as '
 begin
-	return 1;
+	return 2;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
