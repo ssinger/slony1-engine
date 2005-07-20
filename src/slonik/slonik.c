@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.46 2005-07-18 20:14:12 dpage Exp $
+ *	$Id: slonik.c,v 1.47 2005-07-20 08:48:12 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1774,7 +1774,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
         if (!stmtp)
 	{
                 printf("%s:%d: could not open file %s\n",
-                           stmt->stmt_filename, stmt->stmt_lno, fname);
+                           stmt->stmt_filename, stmt->stmt_lno, fnamebuf);
 		return -1;
 	}
 
