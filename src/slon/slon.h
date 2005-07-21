@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.49 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: slon.h,v 1.50 2005-07-21 15:55:00 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -360,11 +360,15 @@ do { \
 /* On win32, we currently just bail out and let the service control manager
  * deal with possible restarts */
 #define slon_abort() \
-WSACleanup(); \
-exit(1);
+do { \
+    WSACleanup(); \
+    exit(1); \
+} while (0)
 #define slon_restart() \
-WSACleanup(); \
-exit(1);
+do { \
+    WSACleanup(); \
+    exit(1); \
+} while (0)
 #endif
 
 extern void slon_exit(int code);
