@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.11 2005-03-16 18:57:21 smsimms Exp $
+# $Id: slon_watchdog.pl,v 1.12 2005-07-25 21:37:51 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -48,7 +48,7 @@ while (1) {
     print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
     print SLONLOG "WATCHDOG: I'm going to restart slon for $node...\n";
     # First, restart the node using slonik
-    system "@@TOOLSBIN@@/restart_node $node | @@PGBINDIR@@/slonik";
+    system "@@TOOLSBIN@@/slonik_restart_node $node | @@PGBINDIR@@/slonik";
     # Next, restart the slon process to service the node
     start_slon($nodenum);
     $pid = get_pid($node);
