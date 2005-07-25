@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.5 2005-03-10 17:50:03 smsimms Exp $
+# $Id: slon_tools.conf-sample,v 1.5.2.1 2005-07-25 21:49:38 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -30,6 +30,9 @@ if ($ENV{"SLONYNODES"}) {
     # it points to the executable.
     #
     # $APACHE_ROTATOR = '/usr/local/apache/bin/rotatelogs';
+
+    # SYNC check interval (slon -s option)
+    # $SYNC_CHECK_INTERVAL = 1000;
 
     # Which node is the default master for all sets?
     $MASTERNODE = 1;

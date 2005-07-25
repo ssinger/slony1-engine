@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.23 2005-06-13 14:37:25 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.23.2.1 2005-07-25 21:49:38 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -134,17 +134,18 @@ sub get_pid {
 sub start_slon {
   my ($nodenum) = @_;
   my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
-  my $cmd;
-  `mkdir -p $LOGDIR/slony1/node$nodenum`;
+  $SYNC_CHECK_INTERVAL ||= 1000;
+  system("mkdir -p $LOGDIR/slony1/node$nodenum");
+  my $cmd = "@@PGBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d2 $CLUSTER_NAME '$dsn' 2>&1 ";
   if ($APACHE_ROTATOR) {
-    $cmd = "@@PGBINDIR@@/slon -s 1000 -d2 $CLUSTER_NAME '$dsn' 2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" . $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M&";
+    $cmd .= "| $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M &";
   } else {
     my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
     chomp $now;
-    $cmd = "@@PGBINDIR@@/slon -s 1000 -d2 -g 80 $CLUSTER_NAME '$dsn' 2>&1 > $LOGDIR/slony1/node$nodenum/$dbname-$now.log &";
+    $cmd .= "> $LOGDIR/slony1/node$nodenum/$dbname-$now.log &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
-  system $cmd;
+  system ($cmd);
 }
 
 
