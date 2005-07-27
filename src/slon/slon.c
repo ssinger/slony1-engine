@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.54 2005-07-27 18:36:59 cbbrowne Exp $
+ *	$Id: slon.c,v 1.55 2005-07-27 20:34:33 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -60,7 +60,9 @@ static pthread_t local_snmp_thread;
 static pthread_t main_thread;
 static char *const *main_argv;
 
+static void SlonMain(PGconn *startup_conn);
 #ifndef WIN32
+static void SlonWatchdog(void);
 static void sighandler(int signo);
 static void main_sigalrmhandler(int signo);
 static void slon_kill_child(void);
@@ -332,8 +334,23 @@ main(int argc, char *const argv[])
 		slon_exit(-1);
 	}
 	else if (slon_cpid == 0) /* child */
-#endif /* WIN32 */
-	{
+		SlonMain(startup_conn);
+	else
+		SlonWatchdog();
+#else
+	SlonMain(startup_conn);
+#endif
+	exit(0);
+}
+
+
+static void SlonMain(PGconn *startup_conn)
+{
+		PGresult *res;
+		SlonDString query;
+		int i,n;
+		char		pipe_c;
+
 		slon_pid = getpid();
 #ifndef WIN32
 		slon_ppid = getppid();
@@ -715,10 +732,15 @@ main(int argc, char *const argv[])
 		slon_log(SLON_DEBUG1, "main: done\n");
 
 		exit(0);
-	}
-#ifndef WIN32 /* Again, no watchdog process on WIN32 */
-	else /* parent */
-	{
+}
+
+#ifndef WIN32
+static void SlonWatchdog(void)
+{
+		pid_t		pid;
+#if !defined(CYGWIN) && !defined(WIN32)
+		struct sigaction act;
+#endif
 		slon_log(SLON_DEBUG2, "slon: watchdog process started\n");
 
 		/* 
@@ -786,12 +808,9 @@ main(int argc, char *const argv[])
 		 * That's it.
 		 */
 		slon_exit(0);
-	}
-#endif /* WIN32 */
 }
 
 
-#ifndef WIN32
 static void
 main_sigalrmhandler(int signo)
 {

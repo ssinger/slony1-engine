@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.50 2005-07-21 15:55:00 dpage Exp $
+ *	$Id: slon.h,v 1.51 2005-07-27 20:34:33 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
