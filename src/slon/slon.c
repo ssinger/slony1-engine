@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.53 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: slon.c,v 1.54 2005-07-27 18:36:59 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -102,10 +102,18 @@ main(int argc, char *const argv[])
 #endif
 	InitializeConfOptions();
 
-	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:hv")) != EOF)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:hv")) != EOF)
 	{
 		switch (c)
 		{
+		        case 'q':
+			        set_config_option("quit_sync_provider", optarg);
+				break;
+
+		        case 'r':
+			        set_config_option("quit_sync_finalsync", optarg);
+				break;
+
 			case 'f':
 				ProcessConfigFile(optarg);
 				break;
@@ -225,6 +233,8 @@ main(int argc, char *const argv[])
 		fprintf(stderr, "    -p <filename>         slon pid file\n");
 		fprintf(stderr, "    -f <filename>         slon configuration file\n");
 		fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
+		fprintf(stderr, "    -q <num>              Terminate when this node reaches # of SYNCs\n");
+		fprintf(stderr, "    -r <num>              # of syncs for -q option\n");
 		return 1;
 	}
 

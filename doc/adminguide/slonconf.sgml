@@ -286,6 +286,38 @@
       </listitem>
     </varlistentry>
 
+    <varlistentry id="slon-config-quit-sync-provider" xreflabel="quit_sync_provider">
+      <term><varname>quit_sync_provider</varname>  (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>quit_sync_provider</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para> This must be used in conjunction with <xref
+        linkend="slon-config-quit-sync-finalsync">, and indicates
+        which provider node's worker thread should be watched to see
+        if the slon should terminate due to reaching some desired
+        <quote>final</quote> event number.</para>
+
+	<para>If the value is set to 0, this logic will be ignored.</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry id="slon-config-quit-sync-finalsync" xreflabel="quit_sync_finalsync">
+      <term><varname>quit_sync_finalsync</varname>  (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>quit_sync_finalsync</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Final event number to process.  This must be used in
+        conjunction with <xref linkend="slon-config-quit-sync-finalsync">, and
+        allows the <application>slon</application> to terminate itself
+        once it reaches a certain event for the specified
+        provider. </para>
+
+	<para>If the value is set to 0, this logic will be ignored.
+        </para>
+      </listitem>
+    </varlistentry>
+
   </variablelist>
 </sect1>
 </article>

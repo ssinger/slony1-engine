@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.16 2005-05-12 21:47:02 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.17 2005-07-27 18:36:56 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -302,6 +302,35 @@
      </para>
     </listitem>
    </varlistentry>
+
+
+   <varlistentry>
+    <term><option>-q</option><replaceable class="parameter"> quit based on SYNC provider </replaceable></term>
+    <listitem>
+     <para>
+      <envar>quit_sync_provider</envar> indicates which provider's
+      worker thread should be watched in order to terminate after a
+      certain event.  This must be used in conjunction with the
+      <option>-r</option> option below...
+     </para>
+
+     <para> This allows you to have a <application>slon</application>
+     stop replicating after a certain point. </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term><option>-r</option><replaceable class="parameter"> quit at event number </replaceable></term>
+    <listitem>
+     <para>
+      <envar>quit_sync_finalsync</envar> indicates the event number
+      after which the remote worker thread for the provider above
+      should terminate.  This must be used in conjunction with the
+      <option>-q</option> option above...
+     </para>
+    </listitem>
+   </varlistentry>
+
   </variablelist>
  </refsect1>
  <refsect1>

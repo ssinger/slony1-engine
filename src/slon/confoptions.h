@@ -25,6 +25,9 @@ extern int	sync_interval_timeout;
 extern int	sync_group_maxsize;
 extern int	desired_sync_time;
 
+extern int      quit_sync_provider;
+extern int      quit_sync_finalsync;
+
 char	   	*Syslog_ident;
 char	   	*Syslog_facility;
 int		Use_syslog;
@@ -188,7 +191,33 @@ static struct config_int ConfigureNamesInt[] =
 		2
 	},
 #endif
-    {0}
+ 	{
+ 		{
+ 			(const char *)"quit_sync_provider",
+ 			gettext_noop("Node to watch for a final SYNC"),
+ 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
+ 				     "against a certain provider.  This is the provider... "),
+ 			SLON_C_INT
+ 		},
+ 		&quit_sync_provider,
+ 		0,
+ 		0,
+ 		2147483647
+ 	},
+ 	{
+ 		{
+ 			(const char *)"quit_sync_finalsync",
+ 			gettext_noop("SYNC number at which slon should abort"),
+ 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
+ 				     "against a certain provider.  This is the SYNC number... "),
+ 			SLON_C_INT
+ 		},
+ 		&quit_sync_finalsync,
+ 		0,
+ 		0,
+ 		2147483647
+ 	},
+	{0}
 };
 
 static struct config_bool ConfigureNamesBool[] =

@@ -4,15 +4,15 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.10 2005-07-04 23:45:21 darcyb Exp $
+#	$Id: Makefile,v 1.11 2005-07-27 18:36:58 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/ducttape
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
-TESTSSRC = `ls test_[0-9A-F]_*.in`
-TESTS = `ls test_[0-9A-F]_*.in | sed -e 's/\.in//'`
+TESTSSRC = `ls test_[0-9A-Z]_*.in`
+TESTS = `ls test_[0-9A-Z]_*.in | sed -e 's/\.in//'`
 DISTFILES = Makefile README $(TESTSSRC)
 ALL =
 
@@ -25,7 +25,6 @@ all:	$(ALL)
 			cp $$script.in $$script; \
 		fi; \
 	done
-	
 
 clean distclean maintainer-clean:
 	@for script in $(TESTS); do \

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86 2005-06-07 21:51:05 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.87 2005-07-27 18:36:58 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -222,6 +222,8 @@ struct timeval  sync_end;
 int last_sync_length;
 int max_sync;
 int min_sync;
+int quit_sync_provider;
+int quit_sync_finalsync;
 /*
  * ---------- Local functions ----------
  */
@@ -489,6 +491,20 @@ remoteWorkerThread_main(void *cdata)
 						next_sync_group_size = 1;
 					slon_log(SLON_DEBUG3, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
 						 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
+				}
+
+
+				/* Quit upon receiving event # quit_sync_number from node # quit_sync_provider */
+				if (quit_sync_provider != 0) {
+					if (quit_sync_provider == node->no_id) {
+						if ((next_sync_group_size + (event->ev_seqno)) > quit_sync_finalsync) {
+							next_sync_group_size = quit_sync_finalsync - event->ev_seqno;
+						}
+						if (event->ev_seqno >= quit_sync_finalsync) {
+							slon_log(SLON_FATAL, "ABORT at sync %d per command line request%n", quit_sync_finalsync);
+							slon_abort();
+						}
+					}
 				}
 
 				gettimeofday(&sync_start, NULL);
