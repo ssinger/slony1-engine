@@ -1272,7 +1272,7 @@ SET ADD TABLE (
     <programlisting>
      SET DROP TABLE (
      ORIGIN = 1,
-     ID = 20,
+     ID = 20
      );
     </programlisting>
    </refsect1>
