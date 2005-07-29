@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.41 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.42 2005-07-29 14:54:03 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1589,6 +1589,19 @@ forwards compatibility or long term maintainability of replicas.
 <para> You should only head down this road if you are sufficiently
 comfortable with &postgres; and &slony1; that you are prepared to hack
 pretty heavily with the code.  </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para> I am finding some multibyte columns (Unicode, Big5)
+are being truncated.  Why?  </para> </question>
+
+<answer> <para> This was a bug present until a little after &slony1;
+version 1.1.0; the way in which columns were being captured by the
+<function>logtrigger()</function> function could clip off the last
+byte of a column represented in a multibyte format.  Check to see that
+your version of <filename>src/backend/slony1_funcs.c</filename> is
+1.34 or better; the patch was introduced in CVS version 1.34 of that
+file.  </para> </answer>
 </qandaentry>
 </qandaset>
 
