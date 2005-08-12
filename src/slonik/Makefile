@@ -4,11 +4,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.18 2005-07-20 10:47:23 dpage Exp $
+#	$Id: Makefile,v 1.19 2005-08-12 13:30:24 dpage Exp $
 # ----------
 
 slony_subdir = src/slonik
 slony_top_builddir = ../..
+SLFILEDESC="Slony command interpreter"
 include $(slony_top_builddir)/Makefile.global
 
 ifeq ($(PORTNAME), aix)
@@ -30,7 +31,7 @@ endif
 OBJS		= 			\
 	slonik.o			\
 	dbutil.o			\
-	parser.o
+	parser.o $(WIN32RES)
 
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 

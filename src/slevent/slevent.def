@@ -1,0 +1,4 @@
+; dlltool --output-def slevent.def slevent.o slmsgevent.o
+EXPORTS
+	DllUnregisterServer=DllUnregisterServer@0 @ 1; 
+	DllRegisterServer=DllRegisterServer@0 @ 2; 

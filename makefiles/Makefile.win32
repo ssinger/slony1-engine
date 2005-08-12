@@ -1,4 +1,4 @@
-# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win32,v 1.3 2005-07-06 12:47:55 dpage Exp $
+# $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/makefiles/Makefile.win32,v 1.4 2005-08-12 13:30:20 dpage Exp $
 
 # Use replacement include files for those missing on Win32
 override CPPFLAGS+=-I${pgincludeserverdir}/port/win32
@@ -13,6 +13,22 @@ DLSUFFIX = .dll
 CFLAGS_SL =
 
 %.dll: %.o
-	$(DLLTOOL) --export-all --output-def $*.def $<
-	$(DLLWRAP) -o $@ --def $*.def $< $(DLLINIT) $(SHLIB_LINK)
+	$(DLLTOOL) --export-all --output-def $*.def $^
+	$(DLLWRAP) -o $@ --def $*.def $^ $(DLLINIT) $(SHLIB_LINK)
 	rm -f $*.def
+
+# Make sure all: is the default target
+all:
+
+ifeq ($(SO_NAME),)
+PGFTYPE=VFT_APP
+else
+PGFTYPE=VFT_DLL
+endif
+
+WIN32RES = win32ver.o
+win32ver.rc: $(slony_top_builddir)/src/slon/port/win32ver.rc.in
+	sed -e 's;FILEDESC;$(SLFILEDESC);' -e 's;VFT_APP;$(PGFTYPE);' -e 's;SLVERSION;SLONY_I_VERSION_STRING_DEC ,'`date '+%y%j' | sed 's/^0*//'`';' $(slony_top_builddir)/src/slon/port/win32ver.rc.in > win32ver.rc
+win32ver.o: win32ver.rc
+	windres -i win32ver.rc -o win32ver.o --include-dir=$(slony_top_builddir)
+	rm -f win32ver.rc

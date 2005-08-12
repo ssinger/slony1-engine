@@ -4,23 +4,24 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.17 2005-06-09 15:02:15 wieck Exp $
+#	$Id: Makefile,v 1.18 2005-08-12 13:30:24 dpage Exp $
 # ----------
 
 slony_subdir = src/xxid
 slony_top_builddir = ../..
+SLFILEDESC = "Slony xxid datatype"
+SO_NAME		= $(NAME)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
 override CFLAGS += $(CFLAGS_SL)
 override CFLAGS += -I$(slony_top_builddir)
 
 NAME		= xxid
 
-SO_NAME		= $(NAME)$(DLSUFFIX)
 SQL_NAME73	= $(NAME).v73.sql
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAMES	= $(SQL_NAME73) $(SQL_NAME74)
 
-SO_OBJS		= xxid.o
+SO_OBJS		= xxid.o $(WIN32RES)
 
 ALL =					\
 	$(SO_NAME)			\

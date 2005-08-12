@@ -4,19 +4,20 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.19 2005-05-27 17:34:50 darcyb Exp $
+#	$Id: Makefile,v 1.20 2005-08-12 13:30:21 dpage Exp $
 # ----------
 
 slony_subdir = src/backend
 slony_top_builddir = ../..
+SLFILEDESC="Slony replication functions"
+SO_NAME = $(NAME)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
 
 override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL)
 
 NAME		= slony1_funcs
 
-SO_NAME	= $(NAME)$(DLSUFFIX)
-SO_OBJS	= $(NAME).o
+SO_OBJS	= $(NAME).o $(WIN32RES)
 
 BASE_COMMON		= slony1_base.sql
 FUNCS_COMMON	= slony1_funcs.sql
