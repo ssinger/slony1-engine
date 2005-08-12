@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.34 2005-07-20 13:59:46 dpage Exp $
+#	$Id: Makefile,v 1.35 2005-08-12 11:07:50 dpage Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -46,7 +46,7 @@ LDFLAGS+= ${NETSNMP_AGENTLIBS}
 endif
 
 ifeq ($(PORTNAME), win32)
-OBJS += port/pipe.o
+OBJS += port/pipe.o port/win32service.o
 override LDFLAGS += -lwsock32
 endif
 

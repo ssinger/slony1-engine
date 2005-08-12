@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.55 2005-07-27 20:34:33 dpage Exp $
+ *	$Id: slon.c,v 1.56 2005-08-12 11:07:50 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,6 +26,7 @@
 
 #ifdef WIN32
 #include <winsock.h>
+#include "port/win32service.h"
 #endif
 
 #include "libpq-fe.h"
@@ -102,6 +103,22 @@ main(int argc, char *const argv[])
 #if !defined(CYGWIN) && !defined(WIN32)
 	struct sigaction act;
 #endif
+
+
+#ifdef WIN32
+	if (argc >= 2 && !strcmp(argv[1],"-service"))
+	{
+		win32_servicestart();
+		exit(0);
+	}
+	if (argc >= 2 && !strcmp(argv[1],"-subservice"))
+	{
+		win32_isservice = 1;
+		argc--;
+		argv++;
+	}
+#endif
+	
 	InitializeConfOptions();
 
 	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:hv")) != EOF)

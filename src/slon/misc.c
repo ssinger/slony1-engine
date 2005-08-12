@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.19 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: misc.c,v 1.20 2005-08-12 11:07:50 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,6 +26,8 @@
 
 #ifndef WIN32
 #include <syslog.h>
+#else
+#include "port/win32service.h"
 #endif
 #include <stdarg.h>
 
@@ -147,8 +149,13 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 			slon_abort();
 		}
 	}
+	outbuf[0] = 0;
 
-	if (logtimestamp == true && (Use_syslog != 1))
+	if (logtimestamp == true && (Use_syslog != 1)
+#ifdef WIN32
+			&& !win32_isservice
+#endif
+			)
 	{
 		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
 		sprintf(outbuf, "%s ", time_buf);
@@ -176,6 +183,10 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	{
 		write_syslog(syslog_level, outbuf);
 	}
+#endif
+#ifdef WIN32
+	if (win32_isservice)
+		win32_eventlog(level, outbuf);
 #endif
 	fwrite(outbuf, strlen(outbuf), 1, stdout);
 	fflush(stdout);
