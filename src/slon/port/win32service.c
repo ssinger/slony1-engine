@@ -1,12 +1,12 @@
 /*-------------------------------------------------------------------------
- * slon.h
+ * win32service.c
  *
  *  Windows service integration and eventlog 
  *
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *	Author: Magnus Hagander
  *
- *  $Id: win32service.c,v 1.1 2005-08-12 11:07:50 dpage Exp $
+ *  $Id: win32service.c,v 1.2 2005-08-12 12:45:03 dpage Exp $
  *-------------------------------------------------------------------------
  */
 #define WIN32_LEAN_AND_MEAN

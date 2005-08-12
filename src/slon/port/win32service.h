@@ -1,11 +1,11 @@
 /*-------------------------------------------------------------------------
- * slon.h
+ * win32service.h
  *
  *  Windows service definitions	
  *
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *
- *  $Id: win32service.h,v 1.1 2005-08-12 11:07:50 dpage Exp $
+ *  $Id: win32service.h,v 1.2 2005-08-12 12:45:03 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
