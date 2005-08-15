@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.15 2005-05-03 21:32:26 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.16 2005-08-15 16:16:50 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <sect2><title>Foreword</title>
@@ -143,9 +143,8 @@ will receive anything from node1 any more.</para>
 node2.</para>
 </listitem>
 
-<listitem>
-<para> After the failover is complete and node2 accepts write
-operations against the tables, remove all remnants of node1's
+<listitem> <para> After the failover is complete and node2 accepts
+write operations against the tables, remove all remnants of node1's
 configuration information with the <xref linkend="stmtdropnode">
 command:
 
@@ -155,6 +154,42 @@ drop node (id = 1, event node = 2);
 </para>
 </listitem>
 </itemizedlist>
+
+</sect2>
+
+<sect2><title> Automating <command> FAIL OVER </command> </title>
+
+<para> If you do choose to automate <command>FAIL OVER </command>, it
+is important to do so <emphasis>carefully.</emphasis> You need to have
+good assurance that the failed node is well and truly failed, and you
+need to be able to assure that the failed node will not accidentally
+return into service, thereby allowing there to be two nodes out there
+able to respond in a <quote>master</quote> role. </para>
+
+<para> When failover occurs, there needs to be a mechanism to forcibly
+knock the failed node off the network.  This could take place via
+having an SNMP interface that does some combination of the following:
+
+<itemizedlist>
+
+<listitem><para> Turns off power on the failed server. </para> 
+
+<para> If care is not taken, the server may reappear when system
+administrators power it up. </para>
+
+</listitem>
+
+<listitem><para> Modify firewall rules or other network configuration
+to drop the failed server's IP address from the network. </para>
+
+<para> If the server has multiple network interfaces, and therefore
+multiple IP addresses, this approach allows the
+<quote>application</quote> addresses to be dropped/deactivated, but
+leave <quote>administrative</quote> addresses open so that the server
+would remain accessible to system administrators.  </para> </listitem>
+
+</itemizedlist>
+
 </sect2>
 
 <sect2><title>After Failover, Reconfiguring node1</title>
