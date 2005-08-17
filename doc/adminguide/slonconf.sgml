@@ -318,6 +318,23 @@
       </listitem>
     </varlistentry>
 
+    <varlistentry id="slon-config-lag-interval" xreflabel="lag_interval">
+      <term><varname>lag_interval</varname>  (<type>string/interval</type>)</term>
+      <indexterm>
+        <primary><varname>lag_interval</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Indicates an interval by which this node should lag its
+        providers.  If set, this is used in the event processing loop
+        to modify what events are to be considered for queueing; those
+        events newer than <command> now() - lag_interval::interval
+        </command> are left out, to be processed later.  </para>
+
+	<para>If the value is left empty, this logic will be ignored.
+        </para>
+      </listitem>
+    </varlistentry>
+
   </variablelist>
 </sect1>
 </article>

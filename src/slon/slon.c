@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.56 2005-08-12 11:07:50 dpage Exp $
+ *	$Id: slon.c,v 1.57 2005-08-17 14:42:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -121,7 +121,7 @@ main(int argc, char *const argv[])
 	
 	InitializeConfOptions();
 
-	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:hv")) != EOF)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:hv")) != EOF)
 	{
 		switch (c)
 		{
@@ -167,6 +167,10 @@ main(int argc, char *const argv[])
 
 			case 'o':
 				set_config_option("desired_sync_time", optarg);
+				break;
+
+			case 'l':
+				set_config_option("lag_interval", optarg);
 				break;
 
 			case 'h':
@@ -254,6 +258,7 @@ main(int argc, char *const argv[])
 		fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
 		fprintf(stderr, "    -q <num>              Terminate when this node reaches # of SYNCs\n");
 		fprintf(stderr, "    -r <num>              # of syncs for -q option\n");
+		fprintf(stderr, "    -l <interval>         this node should lag providers by this interval\n");
 		return 1;
 	}
 

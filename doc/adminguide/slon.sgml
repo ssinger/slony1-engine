@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.17 2005-07-27 18:36:56 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.18 2005-08-17 14:42:42 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -327,6 +327,20 @@
       after which the remote worker thread for the provider above
       should terminate.  This must be used in conjunction with the
       <option>-q</option> option above...
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term><option>-l</option><replaceable class="parameter"> lag interval </replaceable></term>
+    <listitem>
+     <para>
+      <envar>lag_interval</envar> indicates an interval value such as
+      <command> 3 minutes </command> or <command> 4 hours </command>
+      or <command> 2 days </command> that indicates that this node is
+      to lag its providers by the specified interval of time.  This
+      causes events to be ignored until they reach the age
+      corresponding to the interval.
      </para>
     </listitem>
    </varlistentry>

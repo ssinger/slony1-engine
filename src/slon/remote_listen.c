@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.21 2005-01-28 22:45:26 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.22 2005-08-17 14:42:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -57,7 +57,7 @@ static int remoteListen_forward_confirm(SlonNode * node,
 static int remoteListen_receive_events(SlonNode * node,
 							SlonConn * conn, struct listat *listat);
 
-
+extern char *lag_interval;
 
 /*
  * ---------- slon_remoteListenThread
@@ -586,6 +586,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 {
 	SlonNode   *origin;
 	SlonDString query;
+	SlonDString q2;
 	char	   *where_or_or;
 	char		seqno_buf[64];
 	PGresult   *res;
@@ -620,6 +621,11 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	rtcfg_lock();
 
 	where_or_or = "where";
+	if (lag_interval) {
+		dstring_init(&q2);
+		slon_mkquery(&q2, "where ev_timestamp < now() - '%s'::interval and (", lag_interval);
+		where_or_or = dstring_data(&q2);
+	}
 	while (listat)
 	{
 		if ((origin = rtcfg_findNode(listat->li_origin)) == NULL)
@@ -638,6 +644,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 
 		where_or_or = "or";
 		listat = listat->next;
+	}
+	if (lag_interval) {
+		slon_appendquery(&query, ")");
 	}
 	slon_appendquery(&query, " order by e.ev_origin, e.ev_seqno");
 

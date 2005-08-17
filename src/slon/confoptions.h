@@ -37,6 +37,7 @@ bool		logtimestamp;
 bool            drop_indices;
 char		*log_timestamp_format;
 char		*sql_on_connection;
+char		*lag_interval;
 
 enum config_type
 {
@@ -326,6 +327,20 @@ static struct config_string ConfigureNamesString[] =
 			SLON_C_STRING
 		},
 		&sql_on_connection,
+		NULL
+	},
+
+
+	{
+		{
+			(const char *)"lag_interval",
+			gettext_noop("A PostgreSQL value compatible with ::interval "
+				     "which indicates how far behind this node should "
+				     "lag its providers."),
+			NULL,
+			SLON_C_STRING
+		},
+		&lag_interval,
 		NULL
 	},
 
