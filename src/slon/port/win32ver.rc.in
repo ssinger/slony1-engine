@@ -1,0 +1,30 @@
+#include <winver.h>
+#include "config.h"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    SLVERSION 
+ PRODUCTVERSION SLVERSION 
+ FILEFLAGSMASK  0x17L
+ FILEFLAGS      0x0L
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE	VFT_APP
+ FILESUBTYPE    0x0L
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "000004b0"
+  BEGIN
+   VALUE "CompanyName",      "PostgreSQL Global Development Group"
+   VALUE "FileDescription",  FILEDESC
+   VALUE "FileVersion",      SLONY_I_VERSION_STRING 
+   VALUE "LegalCopyright", "Portions Copyright (c) 1996-2005, PostgreSQL Global Development Group. Portions Copyright (c) 1994, Regents of the University of California."
+   VALUE "ProductName",      "Slony-I"
+   VALUE "ProductVersion",   SLONY_I_VERSION_STRING
+  END
+ END
+ BLOCK "VarFileInfo"
+ BEGIN
+  VALUE "Translation", 0x0, 1200
+ END
+END
+
