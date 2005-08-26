@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.47 2005-07-20 08:48:12 dpage Exp $
+ *	$Id: slonik.c,v 1.48 2005-08-26 17:03:41 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3817,19 +3817,20 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
-       dstring_init(&query);
+        dstring_init(&script);
 
-       sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
+        sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
 
-       while (fgets(rex1,256, stmt->ddl_fd) != NULL)
+        while (fgets(rex1,256, stmt->ddl_fd) != NULL)
 	{
                rc = strlen(rex1);
                rex1[rc] = '\0';
                replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
                replace_token(buf, rex3, "@NAMESPACE@", rex2);
                rc = strlen(buf);
-               dstring_nappend(&query, buf, rc);
+               dstring_nappend(&script, buf, rc);
 	}
+        dstring_terminate(&script);
 
 	dstring_init(&query);
 	slon_mkquery(&query,
