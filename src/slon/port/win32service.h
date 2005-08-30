@@ -5,7 +5,7 @@
  *
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *
- *  $Id: win32service.h,v 1.2 2005-08-12 12:45:03 dpage Exp $
+ *  $Id: win32service.h,v 1.3 2005-08-30 18:24:04 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 

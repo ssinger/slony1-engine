@@ -6,7 +6,7 @@
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *	Author: Magnus Hagander
  *
- *  $Id: win32service.c,v 1.2 2005-08-12 12:45:03 dpage Exp $
+ *  $Id: win32service.c,v 1.3 2005-08-30 18:24:04 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 #define WIN32_LEAN_AND_MEAN
