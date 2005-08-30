@@ -3,7 +3,7 @@ AWK= awk
  
 DLSUFFIX = .so
 CFLAGS_SL =
-BE_DLLLIBS= -bundle_loader $(pgbindir)postgres
+BE_DLLLIBS= -bundle_loader $(pgbindir)/postgres
  
 # Rule for building shared libs (currently used only for regression test
 # shlib ... should go away, since this is not really enough knowledge)
