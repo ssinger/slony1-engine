@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.51 2005-07-27 20:34:33 dpage Exp $
+ *	$Id: slon.h,v 1.52 2005-08-30 18:17:40 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -537,6 +537,18 @@ extern char 	*sql_on_connection;
  * ----------
  */
 extern int	slon_log_level;
+
+#ifndef pgpipe
+/* -----------------------------------
+ * pgpipe is not defined in PG pre-8.0
+ * -----------------------------------
+ */
+#define pgpipe(a)			pipe(a)
+#define piperead(a,b,c)		read(a,b,c)
+#define pipewrite(a,b,c)	write(a,b,c)
+#endif
+ 
+
 #endif   /* SLON_H_INCLUDED */
 
 
