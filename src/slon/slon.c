@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.57 2005-08-17 14:42:43 cbbrowne Exp $
+ *	$Id: slon.c,v 1.58 2005-09-06 13:14:05 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -75,6 +75,34 @@ char	   *archive_dir = NULL;
 int			child_status;
 
 
+void Usage(char * const argv[])
+{
+	fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
+	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
+	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
+	fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
+	fprintf(stderr, "    -c <num>              how often to vacuum in cleanup cycles\n");
+	fprintf(stderr, "    -p <filename>         slon pid file\n");
+	fprintf(stderr, "    -f <filename>         slon configuration file\n");
+	fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
+	fprintf(stderr, "    -q <num>              Terminate when this node reaches # of SYNCs\n");
+	fprintf(stderr, "    -r <num>              # of syncs for -q option\n");
+	fprintf(stderr, "    -l <interval>         this node should lag providers by this interval\n");
+#ifdef WIN32
+	fprintf(stderr, "\nWindows service registration:\n");
+	fprintf(stderr, " slon -regservice [servicename]\n");
+    fprintf(stderr, " slon -unregservice [servicename]\n");
+	fprintf(stderr, " slon -listengines [servicename]\n");
+	fprintf(stderr, " slon -addengine [servicename] <configfile>\n");
+	fprintf(stderr, " slon -delengine [servicename] <configfile>\n");
+#endif
+	exit(1);
+}
+
+
 /*
  * ---------- main ----------
  */
@@ -117,14 +145,25 @@ main(int argc, char *const argv[])
 		argc--;
 		argv++;
 	}
+	if (argc >= 2 && argc <= 4 && (
+				!strcmp(argv[1],"-regservice") ||
+				!strcmp(argv[1],"-unregservice") ||
+				!strcmp(argv[1],"-addengine") ||
+				!strcmp(argv[1],"-delengine") ||
+				!strcmp(argv[1],"-listengines")))
+	{
+		win32_serviceconfig(argc, argv);
+	}
 #endif
 	
 	InitializeConfOptions();
 
-	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:hv")) != EOF)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:hv?")) != EOF)
 	{
 		switch (c)
 		{
+				case '?':
+					Usage(argv);
 		        case 'q':
 			        set_config_option("quit_sync_provider", optarg);
 				break;
@@ -245,21 +284,7 @@ main(int argc, char *const argv[])
 
 	if (errors != 0)
 	{
-		fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "Options:\n");
-		fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
-		fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
-		fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
-		fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
-		fprintf(stderr, "    -c <num>              how often to vacuum in cleanup cycles\n");
-		fprintf(stderr, "    -p <filename>         slon pid file\n");
-		fprintf(stderr, "    -f <filename>         slon configuration file\n");
-		fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
-		fprintf(stderr, "    -q <num>              Terminate when this node reaches # of SYNCs\n");
-		fprintf(stderr, "    -r <num>              # of syncs for -q option\n");
-		fprintf(stderr, "    -l <interval>         this node should lag providers by this interval\n");
-		return 1;
+		Usage(argv);
 	}
 
 #ifdef WIN32

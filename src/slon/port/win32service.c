@@ -6,7 +6,7 @@
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *	Author: Magnus Hagander
  *
- *  $Id: win32service.c,v 1.3 2005-08-30 18:24:04 darcyb Exp $
+ *  $Id: win32service.c,v 1.4 2005-09-06 13:14:04 dpage Exp $
  *-------------------------------------------------------------------------
  */
 #define WIN32_LEAN_AND_MEAN
@@ -26,6 +26,13 @@ static void WINAPI win32_servicehandler(DWORD request);
 static void win32_setservicestatus(DWORD state);
 static bool win32_load_child_list(void);
 static HANDLE win32_start_engine(int num);
+
+static void RegisterService(char *servicename);
+static void UnRegisterService(char *servicename);
+static void ListEngines(char *servicename);
+static void AddEngine(char *servicename, char *configfile);
+static void DelEngine(char *servicename, char *configfile);
+
 
 /* Gobals for service control */
 static SERVICE_STATUS status;
@@ -202,6 +209,26 @@ static void WINAPI win32_servicehandler(DWORD request)
 }
 
 /*
+ * Open the <servicename>\Parameters\Engines registry key, which holds the list
+ * of all the engines associated with this service.
+ */
+static HKEY OpenEnginesKey(DWORD access)
+{
+	char rootkey[1024];
+	HKEY key;
+	int r;
+
+	sprintf(rootkey,"SYSTEM\\CurrentControlSet\\Services\\%s\\Parameters\\Engines", running_servicename);
+
+	if ((r = RegCreateKeyEx(HKEY_LOCAL_MACHINE, rootkey, 0, NULL, REG_OPTION_NON_VOLATILE, access, NULL, &key, NULL)) != ERROR_SUCCESS)
+	{
+		slon_log(SLON_FATAL, "Failed to open registry key '%s': %lu", rootkey, r);
+		return NULL;
+	}
+	return key;
+}
+
+/*
  * Load the list of slon engines to start
  */
 static bool win32_load_child_list(void)
@@ -215,13 +242,10 @@ static bool win32_load_child_list(void)
 	DWORD regtype;
 	int r;
 
-	sprintf(rootkey,"SYSTEM\\CurrentControlSet\\Services\\%s\\Parameters\\Engines", running_servicename);
-
-	if ((r = RegOpenKeyEx(HKEY_LOCAL_MACHINE, rootkey, 0, KEY_READ, &key)) != ERROR_SUCCESS)
-	{
-		slon_log(SLON_FATAL, "Failed to open registry key '%s': %lu", rootkey, r);
+	key = OpenEnginesKey(KEY_READ);
+	if (!key)
 		return false;
-	}
+	
 	childcount = 0;
 	while ((r=RegEnumValue(key, childcount, valname, &valnamesize, NULL, &regtype, NULL, NULL)) == ERROR_SUCCESS)
 	{
@@ -359,4 +383,254 @@ void win32_eventlog(int level, char *msg)
 		}
 	}
 	ReportEvent(evtHandle, elevel, 0, 0, NULL, 1, 0, (const char **)&msg, NULL);
+}
+
+
+
+/* Deal with service and engine registration and unregistration */
+void win32_serviceconfig(int argc, char *argv[])
+{
+	if (!strcmp(argv[1],"-regservice"))
+	{
+		if (argc != 2 && argc != 3)
+			Usage(argv);
+		RegisterService((argc==3)?argv[2]:"Slony-I");
+	}
+	else if (!strcmp(argv[1],"-unregservice"))
+	{
+		if (argc != 2 && argc != 3)
+			Usage(argv);
+		UnRegisterService((argc==3)?argv[2]:"Slony-I");
+	}
+	else if (!strcmp(argv[1],"-listengines"))
+	{
+		if (argc != 2 && argc != 3)
+			Usage(argv);
+		ListEngines((argc==3)?argv[2]:"Slony-I");
+	}
+	else if (!strcmp(argv[1],"-addengine"))
+	{
+		if (argc != 3 && argc != 4)
+			Usage(argv);
+		AddEngine((argc==4)?argv[2]:"Slony-I", (argc==4)?argv[3]:argv[2]);
+	}
+	else if (!strcmp(argv[1],"-delengine"))
+	{
+		if (argc != 3 && argc != 4)
+			Usage(argv);
+		DelEngine((argc==4)?argv[2]:"Slony-I", (argc==4)?argv[3]:argv[2]);
+	}
+	else
+		Usage(argv);
+	exit(0);
+}
+
+/* Check windows version against Server 2003 to determine service functionality */
+static bool is_windows2003ornewer()
+{
+	OSVERSIONINFO vi;
+
+	vi.dwOSVersionInfoSize = sizeof(vi);
+
+	if (!GetVersionEx(&vi))
+	{
+		fprintf(stderr,"Failed to determine OS version: %lu\n",GetLastError());
+		exit(1);
+	}
+	if (vi.dwMajorVersion > 5) return true; /* Vista + */
+	if (vi.dwMajorVersion ==5 && vi.dwMinorVersion >= 2) return true; /* Win 2003 */
+	return false;
+}
+
+/* Open Service Control Manager */
+static SC_HANDLE openSCM()
+{
+	SC_HANDLE manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	if (!manager)
+	{
+		fprintf(stderr,"Failed to open service control manager: %lu\n",GetLastError());
+		exit(1);
+	}
+	return manager;
+}
+
+/* Register a service with the specified name with the local service control manager */
+static void RegisterService(char *servicename)
+{
+	char self[1024];
+	char execpath[1200];
+	SC_HANDLE manager;
+	SC_HANDLE service;
+	char *account = is_windows2003ornewer()?"NT AUTHORITY\\Local Service":NULL;
+
+	ZeroMemory(self,sizeof(self));
+
+	if (!GetModuleFileName(NULL, self, sizeof(self)))
+	{
+		fprintf(stderr,"Failed to determine path name: %lu\n",GetLastError());
+		exit(1);
+	}
+	wsprintf(execpath,"%s -service",self);
+
+	manager = openSCM();
+
+	service =CreateService(
+				manager,
+				servicename,
+				servicename,
+				SERVICE_ALL_ACCESS,
+				SERVICE_WIN32_OWN_PROCESS,
+				SERVICE_AUTO_START,
+				SERVICE_ERROR_NORMAL,
+				execpath,
+				NULL,
+				NULL,
+				"RPCSS\0",
+				account,
+				"");
+	if (!service)
+	{
+		fprintf(stderr,"Failed to create service: %lu\n",GetLastError());
+		exit(1);
+	}
+
+	CloseServiceHandle(service);
+	CloseServiceHandle(manager);
+
+	printf("Service registered.\n");
+	printf("Before you can run Slony, you must also register an engine!\n\n");
+	if (account == NULL)
+	{
+		printf("WARNING! Service is registered to run as Local System. You are\n");
+		printf("encouraged to change this to a low privilege account to increase\n");
+		printf("system security.\n");
+	}
+}
+
+/* Remove a service with the specified name from the local service control manager */
+static void UnRegisterService(char *servicename)
+{
+	SC_HANDLE manager;
+	SC_HANDLE service;
+
+	manager = openSCM();
+	
+	service = OpenService(manager, servicename, SC_MANAGER_ALL_ACCESS);
+	if (!service)
+	{
+		fprintf(stderr,"Failed to open service: %lu\n",GetLastError());
+		exit(1);
+	}
+
+	if (!DeleteService(service))
+	{
+		fprintf(stderr,"Failed to delete service: %lu\n",GetLastError());
+		exit(1);
+	}
+	
+	CloseServiceHandle(service);
+	CloseServiceHandle(manager);
+
+	printf("Service removed.\n");
+}
+
+/* Print a list of all engines associated with the specified service */
+static void ListEngines(char *servicename)
+{
+	int i;
+
+	strcpy(running_servicename, servicename);
+	if (!win32_load_child_list())
+		exit(1);
+
+	printf("\n%i engine(s) registered for service '%s'\n",childcount,servicename);
+	for (i = 0; i < childcount; i++)
+	{
+		printf("Engine %i: %s\n", i+1, children_config_files[i]);
+	}
+}
+
+/*
+ * Verify that a file exists, and also expand the filename to 
+ * an absolute path.
+ */
+static char _vfe_buf[MAXPGPATH];
+static char *VerifyFileExists(char *filename)
+{
+	DWORD r;
+
+	ZeroMemory(_vfe_buf,sizeof(_vfe_buf));
+	r = GetFullPathName(filename, sizeof(_vfe_buf), _vfe_buf, NULL);
+	if (r ==0 || r > sizeof(_vfe_buf))
+	{
+		fprintf(stderr,"Failed to get full pathname for '%s': %i\n", filename, GetLastError());
+		exit(1);
+	}
+
+	if (GetFileAttributes(_vfe_buf) == 0xFFFFFFFF)
+	{
+		fprintf(stderr,"File '%s' could not be opened: %i\n", _vfe_buf, GetLastError());
+		exit(1);
+	}
+	
+	return _vfe_buf;
+}
+
+/* Register a new engine with a specific config file with the specified service */
+static void AddEngine(char *servicename, char *configfile)
+{
+	HKEY key;
+	int r;
+
+	char *full_configfile = VerifyFileExists(configfile);
+
+	strcpy(running_servicename, servicename);
+	key = OpenEnginesKey(KEY_ALL_ACCESS);
+	if (!key)
+		exit(1);
+
+	r = RegQueryValueEx(key, full_configfile, 0, NULL, NULL, NULL);
+	if (r == 0)
+	{
+		fprintf(stderr,"Engine '%s' already registered for service '%s'.\n", full_configfile, servicename);
+		exit(1);
+	}
+
+	r = RegSetValueEx(key, full_configfile, 0, REG_SZ, full_configfile, strlen(full_configfile)+1);
+	RegCloseKey(key);
+	if (r == ERROR_SUCCESS)
+	{
+		printf("Engine added.\n");
+		return;
+	}
+	else
+		fprintf(stderr,"Failed to register engine: %lu.\n", r);
+	exit(1);
+}	
+
+/* Remove an engine registration from the specified service */
+static void DelEngine(char *servicename, char *configfile)
+{
+	HKEY key;
+	int r;
+
+	strcpy(running_servicename, servicename);
+	key = OpenEnginesKey(KEY_ALL_ACCESS);
+	if (!key)
+		exit(1);
+
+	r = RegDeleteValue(key, configfile);
+	RegCloseKey(key);
+	if (r == ERROR_SUCCESS)
+	{
+		printf("Engine removed.\n");
+		return;
+	}
+	else if (r == 2)
+	{
+		fprintf(stderr,"Engine '%s' not registered for service '%s'.\n", configfile, servicename);
+	}
+	else
+		fprintf(stderr,"Failed to unregister engine: %lu\n", r);
+	exit(1);
 }

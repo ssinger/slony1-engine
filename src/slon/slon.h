@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.52 2005-08-30 18:17:40 darcyb Exp $
+ *	$Id: slon.h,v 1.53 2005-09-06 13:14:05 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -372,6 +372,7 @@ do { \
 #endif
 
 extern void slon_exit(int code);
+extern void Usage(char * const argv[]);
 
 extern int	slon_restart_request;
 extern int watchdog_pipe[];
@@ -538,7 +539,7 @@ extern char 	*sql_on_connection;
  */
 extern int	slon_log_level;
 
-#ifndef pgpipe
+#if !defined(pgpipe) && !defined(WIN32)
 /* -----------------------------------
  * pgpipe is not defined in PG pre-8.0
  * -----------------------------------
