@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_create_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_create_set.pl,v 1.2 2005-09-07 19:49:27 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -89,7 +89,7 @@ foreach my $table (keys %KEYEDTABLES) {
     my $key = $KEYEDTABLES{$table};
     $table = ensure_namespace($table);
     print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
-    print SLONIK "                 full qualified name = '$table', key='$key'\n";
+    print SLONIK "                 full qualified name = '$table', key='$key',\n";
     print SLONIK "                 comment = 'Table $table with candidate primary key $key');\n";
     print SLONIK "  echo 'Add candidate primary keyed table $table';\n";
     $TABLE_ID++;
