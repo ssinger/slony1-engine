@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.43 2005-08-26 14:53:04 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.44 2005-09-13 14:51:45 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -47,8 +47,27 @@ taking place.</para>
 
 <screen>
 DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
-ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_minxid, ev_maxxid, ev_xip,		  ev_type,		  ev_data1, ev_data2,		  ev_data3, ev_data4,		  ev_data5, ev_data6,		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
+ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,
+		  ev_minxid, ev_maxxid, ev_xip,
+		  ev_type,
+                  ev_data1, ev_data2,
+		  ev_data3, ev_data4,
+ 	          ev_data5, ev_data6,
+		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e 
+where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
 </screen>
+</para>
+
+<para> Alternatively, it may appear like...
+
+<screen>
+ERROR  remoteListenThread_2: "select ev_origin, ev_seqno, ev_timestamp,
+ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,
+ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8
+from "_sl_p2t2".sl_event e where (e.ev_origin = '2' and e.ev_seqno >
+'0') order by e.ev_origin, e.ev_seqno" - could not receive data from
+server: Error 0
+</screen> 
 </para>
 </question>
 
@@ -188,7 +207,14 @@ what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
 not to link up quite right.  See also <link linkend="threadsafety">
 thread safety </link> concerning threading issues on Solaris
-...</para> </answer></qandaentry>
+...</para> 
+
+<para> Life is simplest if you only have one set of &postgres;
+binaries on a given server; in that case, there isn't a <quote>wrong
+place</quote> in which &slony1; components might get installed.  If
+you have several software installs, you'll have to verify that the
+right versions of &slony1; components are associated with the right
+&postgres; binaries. </para> </answer></qandaentry>
 
 <qandaentry>
 <question><para>Table indexes with FQ namespace names
