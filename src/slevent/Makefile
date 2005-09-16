@@ -27,7 +27,7 @@ slmsgevent.o: slmsgevent.rc win32ver.rc
 all-lib: $(NAME)
 
 install-lib: $(NAME)
-	$(INSTALL_STLIB) $< $(DESTDIR)$(pgpkglibdir)/$<
+	$(INSTALL_SCRIPT) $< $(DESTDIR)$(pgpkglibdir)/$<
 
 uninstall-lib:
 	rm -f $(DESTDIR)$(libdir)/$(NAME)
