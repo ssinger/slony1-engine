@@ -257,6 +257,19 @@ fi
 
 LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
 
+dnl On Windows (and other OSs?) we need to link against libintl if the server
+dnl was built with --enable-nls
+
+case "${host_os}" in
+    *mingw32*)
+        NLSOPT=`echo $PG_CONFIGURE | grep -c enable-nls`
+        if test "$NLSOPT" -ne 0; then
+            NLSLIB="-lintl"
+        fi
+        ;;
+esac
+
+
 have_pqputcopydata=no
 AC_CHECK_LIB(pq, [PQputCopyData], [have_pqputcopydata=yes])
 if test $have_pqputcopydata = yes ; then
@@ -279,6 +292,8 @@ AC_CHECK_DECLS([GetTopTransactionId],[],[],[
 #include "postgres.h"
 #include "access/xact.h"
 ])
+
+AC_SUBST(NLSLIB)
 
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ
