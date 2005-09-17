@@ -7,7 +7,7 @@
  *
  * IDENTIFICATION
  *	  $PostgreSQL: pgsql/src/bin/pgevent/pgevent.c,v 1.4 2004/09/27 19:16:01 momjian Exp $
- *    $Id: slevent.c,v 1.1 2005-08-12 13:30:25 dpage Exp $
+ *    $Id: slevent.c,v 1.2 2005-09-17 19:27:23 dpage Exp $
  *
  *-------------------------------------------------------------------------
  */
