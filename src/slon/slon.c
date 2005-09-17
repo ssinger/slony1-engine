@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.58 2005-09-06 13:14:05 dpage Exp $
+ *	$Id: slon.c,v 1.59 2005-09-17 20:14:13 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -25,7 +25,7 @@
 #include <sys/wait.h>
 
 #ifdef WIN32
-#include <winsock.h>
+#include <winsock2.h>
 #include "port/win32service.h"
 #endif
 
