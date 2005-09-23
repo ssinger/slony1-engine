@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.24 2005-07-25 21:47:51 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.25 2005-09-23 15:44:32 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -266,8 +266,8 @@ where ev_origin = "_$CLUSTER_NAME".getlocalnodeid('_$CLUSTER_NAME') and  -- Even
       and not sub_active
 limit 1;   --- One such entry is sufficient...
 };
-  my ($port, $host, $dbname)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum]);
-  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only $dbname`;
+  my ($port, $host, $dbname, $dbuser)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum]);
+  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";
