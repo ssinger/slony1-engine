@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.13 2005-05-31 04:37:20 darcyb Exp $
+# $Id: Makefile,v 1.14 2005-09-26 17:01:23 devrim Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -235,7 +235,7 @@ clean distclean maintainer-clean:
 # index
 	rm -f HTML.index $(GENERATED_SGML)
 # text
-	rm -f INSTALL HISTORY README
+	rm -f INSTALL HISTORY
 
 BASEDIR=$(slony_top_builddir)/src/backend
 BASESQL=$(BASEDIR)/slony1_base.sql
