@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.10 2005-05-04 18:42:31 cbbrowne Exp $
+#       $Id: Makefile,v 1.10.2.1 2005-09-26 15:22:53 cbbrowne Exp $
 #
 # ----------
 
@@ -13,6 +13,7 @@ include $(slony_top_builddir)/Makefile.global
 DISTFILES = Makefile ToDo README $(wildcard *.pl) $(wildcard *.pm) slon_tools.conf-sample
 
 all:
+ifdef toolsbin
 ifndef PERL
 	@echo "The altperl tools require that Perl be installed."
 	exit 1;
@@ -31,6 +32,7 @@ endif
                        $$file > $$tmpname; \
 		chmod 755 $$tmpname; \
 	done
+endif
 
 install: all installdirs
 ifndef toolsbin
