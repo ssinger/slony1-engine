@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86 2005-06-07 21:51:05 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.86.2.1 2005-09-26 17:27:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2028,7 +2028,7 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 					 "); "
 					 "insert into %s.sl_confirm "
 					 "	(con_origin, con_received, con_seqno, con_timestamp) "
-					 "   values (%d, %d, '%s', CURRENT_TIMESTAMP); ",
+					 "   values (%d, %d, '%s', now()); ",
 					 rtcfg_namespace,
 					 event->ev_origin, rtcfg_nodeid, seqbuf);
 }
