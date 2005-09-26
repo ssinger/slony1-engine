@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.16 2005-09-17 21:56:50 dpage Exp $ -->
+<!-- $Id: installation.sgml,v 1.17 2005-09-26 09:15:03 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -173,8 +173,8 @@ the docs are installed under
 
 <para> On <trademark>Windows</trademark> systems instead of running one
 slon daemon per node, a single slon service is installed which can then be
-controlled through the <program>Services</program> control panel applet, or
-from a command prompt using the <program>net</program> command.</para>
+controlled through the <command>Services</command> control panel applet, or
+from a command prompt using the <command>net</command> command.</para>
 
 <screen>
 C:\Program Files\PostgreSQL\8.0\bin> slon -regservice my_slon

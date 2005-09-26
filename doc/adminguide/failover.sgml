@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.16 2005-08-15 16:16:50 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.17 2005-09-26 09:15:03 devrim Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <sect2><title>Foreword</title>
@@ -189,7 +189,7 @@ leave <quote>administrative</quote> addresses open so that the server
 would remain accessible to system administrators.  </para> </listitem>
 
 </itemizedlist>
-
+</para>
 </sect2>
 
 <sect2><title>After Failover, Reconfiguring node1</title>
