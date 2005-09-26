@@ -6,7 +6,7 @@
  *	Copyright (c) 2005, PostgreSQL Global Development Group
  *	Author: Magnus Hagander
  *
- *  $Id: win32service.c,v 1.5 2005-09-17 20:14:12 dpage Exp $
+ *  $Id: win32service.c,v 1.6 2005-09-26 07:42:33 dpage Exp $
  *-------------------------------------------------------------------------
  */
 #define WIN32_LEAN_AND_MEAN
@@ -79,6 +79,7 @@ static void WINAPI win32_servicemain(DWORD argc, LPTSTR * argv)
 	DWORD ret;
 	HANDLE *waithandles = NULL;
 	int i;
+	int startcount;
 
 	/* fetch our actual service name */
 	strcpy(running_servicename, argv[0]);
@@ -130,6 +131,7 @@ static void WINAPI win32_servicemain(DWORD argc, LPTSTR * argv)
 	waithandles[0] = shutdownEvent;
 	
 	/* Start the required slony processes */
+	startcount = 0;
 	for (i = 0; i < childcount; i++)
 	{
 		waithandles[i+1] = win32_start_engine(i);
@@ -138,7 +140,10 @@ static void WINAPI win32_servicemain(DWORD argc, LPTSTR * argv)
 		   prevent failure in wait code */
 		if (waithandles[i+1] == INVALID_HANDLE_VALUE)
 			waithandles[i+1] = shutdownEvent;
+        else
+            startcount++;
 	}
+	slon_log(SLON_INFO, "started %i slon engine(s)", startcount);
 
 	/* Stay in a loop until SCM shuts us down */ 
 	while (true)
@@ -353,6 +358,7 @@ static HANDLE win32_start_engine(int num)
 		CloseHandle(pi.hProcess);
 		return INVALID_HANDLE_VALUE;
 	}
+	slon_log(SLON_INFO,"Started Slon engine for '%s' with pid %i", children_config_files[num], pi.dwProcessId);
 }
 
 
@@ -602,6 +608,7 @@ static void AddEngine(char *servicename, char *configfile)
 	if (r == ERROR_SUCCESS)
 	{
 		printf("Engine added.\n");
+		printf("NOTE! You need to restart the Slony service before this takes effect.\n");
 		return;
 	}
 	else
@@ -625,6 +632,7 @@ static void DelEngine(char *servicename, char *configfile)
 	if (r == ERROR_SUCCESS)
 	{
 		printf("Engine removed.\n");
+		printf("NOTE! You need to restart the Slony service before this takes effect.\n");
 		return;
 	}
 	else if (r == 2)
