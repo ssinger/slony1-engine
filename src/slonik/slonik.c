@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.42 2005-05-25 16:16:02 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.42.2.1 2005-09-26 21:49:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -101,6 +101,12 @@ main(int argc, const char *argv[])
 			FILE	   *fp;
 
 			fp = fopen(argv[optind], "r");
+			if (fp == NULL) 
+			{
+				printf("could not open file '%s'\n",
+				       argv[optind]);
+				return -1;
+			}
 			scan_new_input_file(fp);
 			current_file = (char *)argv[optind++];
 			yylineno = 1;
