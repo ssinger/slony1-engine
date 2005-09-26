@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_F_utf8,v 1.1 2005-07-04 15:41:46 cbbrowne Exp $
+# $Id: test_F_utf8,v 1.1.2.1 2005-09-26 21:09:13 cbbrowne Exp $
 # **********
 # test_A_fileconf
 #
@@ -135,7 +135,7 @@ slonik <<_EOF_
 include <$PREAMBLE_FILE>;
 try {
 	create set (id = 1, origin = @origin, comment = 'Set 1 - UNICODE tables');
-	set add table (set id = 1, origin = @origin,
+	set add table (set id  1, origin = @origin,
 		id = 1, fully qualified name = 'public.foo', 
 		comment = 'Unicode Table');
 	set add sequence (set id = 1, origin = @origin,
