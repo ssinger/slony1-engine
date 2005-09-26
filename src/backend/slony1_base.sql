@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.27 2005-06-07 21:51:05 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.27.2.1 2005-09-26 19:31:19 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -389,6 +389,9 @@ create table @NAMESPACE@.sl_log_1 (
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
+create index sl_log_1_idx2 on @NAMESPACE@.sl_log_1
+	(log_xid @NAMESPACE@.xxid_ops);
+
 comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes';
 comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
 comment on column @NAMESPACE@.sl_log_1.log_xid is 'Transaction ID on the origin node';
@@ -416,6 +419,8 @@ comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perfor
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
+create index sl_log_2_idx2 on @NAMESPACE@.sl_log_2
+	(log_xid @NAMESPACE@.xxid_ops);
 
 -- **********************************************************************
 -- * Views
