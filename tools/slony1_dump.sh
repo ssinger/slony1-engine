@@ -91,15 +91,15 @@ create table $clname.sl_sequence_offline (
 create table $clname.sl_setsync_offline (
 	ssy_setid			int4,
 	ssy_seqno			int8,
+	ssy_synctime                    timestamptz,
 
 	CONSTRAINT "sl_setsync-pkey"
 		PRIMARY KEY (ssy_setid)
 );
 
-
--- ----------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- FUNCTION sequenceSetValue_offline (seq_id, seq_origin, ev_seqno, last_value)
--- ----------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 create or replace function $clname.sequenceSetValue_offline(int4, int8) returns int4
 as '
 declare
@@ -127,15 +127,16 @@ begin
 end;
 ' language plpgsql;
 
--- ----------------------------------------------------------------------
--- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, last_value)
--- ----------------------------------------------------------------------
+-- ---------------------------------------------------------------------------------------
+-- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, last_value, sync_time)
+-- ---------------------------------------------------------------------------------------
 create or replace function $clname.setsyncTracking_offline(int4, int8, int8) returns int8
 as '
 declare
 	p_set_id	alias for \$1;
 	p_old_seq	alias for \$2;
 	p_new_seq	alias for \$3;
+        p_sync_time     alias for \$4;
 	v_row		record;
 begin
 	select ssy_seqno into v_row from $clname.sl_setsync_offline
@@ -148,8 +149,9 @@ begin
 		raise exception ''Slony-I: set % is on sync %, this archive log expects %'', 
 			p_set_id, v_row.ssy_seqno, p_old_seq;
 	end if;
+	raise notice ''Slony-I: Process set % sync % time'', p_set_id, p_new_seq, p_sync_time;
 
-	update $clname.sl_setsync_offline set ssy_seqno = p_new_seq
+	update $clname.sl_setsync_offline set ssy_seqno = p_new_seq, ssy_synctime = p_sync_time
 		where ssy_setid = p_set_id;
 	return p_new_seq;
 end;
