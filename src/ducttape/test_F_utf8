@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_F_utf8,v 1.1.2.1 2005-09-26 21:09:13 cbbrowne Exp $
+# $Id: test_F_utf8,v 1.1.2.2 2005-09-28 01:14:20 cbbrowne Exp $
 # **********
 # test_A_fileconf
 #
@@ -63,7 +63,7 @@ if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
     echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
 fi
 echo "done"
-rm $TMPOUT
+rm -f $TMPOUT
 
 PREAMBLE_FILE=/tmp/preamble.$$
 cat <<EOF > $PREAMBLE_FILE
@@ -88,7 +88,7 @@ sleep 1
 #####
 echo "**** creating database for Node 11"
 
-createdb $DB1 --encoding UNICODE || exit 1
+createdb $DB1 --encoding=UNICODE || exit 1
 psql $DB1 <<_EOF_
 create table foo (id integer not null unique default nextval('foo_id'),
                   string text,
@@ -133,9 +133,10 @@ echo "slon[$slon1_pid] on dbname=$DB1"
 echo "**** creating a replication set containing the various dangerously named tables ... "
 slonik <<_EOF_
 include <$PREAMBLE_FILE>;
+
 try {
 	create set (id = 1, origin = @origin, comment = 'Set 1 - UNICODE tables');
-	set add table (set id  1, origin = @origin,
+	set add table (set id = 1, origin = @origin,
 		id = 1, fully qualified name = 'public.foo', 
 		comment = 'Unicode Table');
 	set add sequence (set id = 1, origin = @origin,
@@ -165,7 +166,7 @@ echo ""
 # set
 ######################################################################
 echo "**** creating database for node 22"
-if ! createdb $DB2 --encoding UNICODE ; then
+if ! createdb $DB2 --encoding=UNICODE ; then
 	kill $slon1_pid 2>/dev/null
 	exit 1
 fi
