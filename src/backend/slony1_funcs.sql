@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.1 2005-07-15 15:20:59 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.2 2005-09-28 01:18:55 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5196,3 +5196,29 @@ create or replace view @NAMESPACE@.sl_status as select
 
 comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nodes are.';
 
+create or replace function @NAMESPACE@.copyFields(integer) 
+returns text
+as '
+declare
+	result text;
+	prefix text;
+	prec record;
+begin
+	result := '''';
+	prefix := ''('';   -- Initially, prefix is the opening paren
+
+	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 order by attnum
+	loop
+		result := result || prefix || prec.column;
+		prefix := '','';   -- Subsequently, prepend columns with commas
+	end loop;
+	result := result || '')'';
+	return result;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.copyFields(integer) is
+'Return a string consisting of what should be appended to a COPY statement
+to specify fields for the passed-in tab_id.  
+
+In PG versions > 7.3, this looks like (field1,field2,...fieldn)';

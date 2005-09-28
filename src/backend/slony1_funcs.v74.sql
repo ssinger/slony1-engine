@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v74.sql,v 1.6 2005-04-19 15:47:03 darcyb Exp $
+-- $Id: slony1_funcs.v74.sql,v 1.6.2.1 2005-09-28 01:18:55 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -26,3 +26,13 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.truncateTable(text) is
+'Delete all data from specified table';
+
+create or replace function @NAMESPACE@.pre74()
+returns integer
+as 'select 0' language sql;
+
+comment on function @NAMESPACE@.pre74() is 
+'Returns 1/0 based on whether or not the DB is running a
+version earlier than 7.4';
