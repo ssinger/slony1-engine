@@ -1,0 +1,43 @@
+$Id: RELEASE-1.1.1,v 1.1.2.1 2005-09-29 21:52:46 cbbrowne Exp $
+
+The 1.1.1 release primarily addresses four issues:
+
+1.  A bug was discovered with the handling of multibyte (e.g. -
+UNICODE, Big5) fields that led to columns sometimes being truncated on
+subscriber nodes.
+
+2.  Log shipping has, added to it, a SYNC timestamp, indicating the
+time that each SYNC was applied on the origin node.
+
+3.  COPY statements have field names added to them.  This allows data
+to be copied into databases where tables might be augmented to have
+additional columns not found on the master.
+
+4.  It has been discovered that it is commonly VERY valuable to have
+an index on sl_log_1(log_xid); this is now added, by default.
+
+[Aside: Items 2 and 3 provide a little bit of vital data supporting
+the use of log shipping to generate temporal databases...]
+
+In addition, several low-complexity bugs have been addressed
+including:
+
+- An altperl Makefile error where "make" would try to build these
+tools even if Perl was not present
+
+- A Darwin DLL configuration error
+
+- Some revisions to RPM spec files
+
+- Bug 1362 - Verify that the provider is either the origin or an active subscriber
+
+- Default logging level for slon has changed from 4 (which is a bit too verbose!) to 1.
+
+- slonik immediately aborts if it cannot open the requested script file
+
+- several fixes to the way the altperl tools start the slon process
+
+- fixed some internal naming for altperl scripts
+
+Some documentation enhancements have also been included which
+obviously do not change the functionality of the software.
