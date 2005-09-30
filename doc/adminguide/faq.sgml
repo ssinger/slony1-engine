@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.44 2005-09-13 14:51:45 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.45 2005-09-30 18:31:48 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1669,6 +1669,23 @@ the alteration to the subscriber, it can retry the
 <quote>new</quote> column names, work just fine.
 </para> </answer></qandaentry>
 
+<qandaentry>
+<question> <para> Replication has fallen behind, and it appears that the
+queries to draw data from <xref linkend="table.sl-log-1">/<xref
+linkend="table.sl-log-2"> are taking a long time to pull just a few
+<command>SYNC</command>s. </para>
+</question>
+
+<answer> <para> Until version 1.1.1, there was only one index on <xref
+linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
+there were multiple replication sets, some of the columns on the index
+would not provide meaningful selectivity.  If there is no index on
+column <function> log_xid</function>, consider adding it.  See
+<filename>slony1_base.sql</filename> for an example of how to create
+the index.
+</para>
+</answer>
+</qandaentry>
 </qandaset>
 
 <!-- Keep this comment at the end of the file Local variables:
