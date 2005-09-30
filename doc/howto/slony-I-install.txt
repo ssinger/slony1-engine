@@ -47,10 +47,10 @@ You can get the Slony-I source from <http://slony.info/>
 
 After you have obtained the file, unpack it.
 
-gunzip slony1-1.1.0.tar.gz
-tar xf slony1-1.1.0.tar
+gunzip slony1-1.1.1.tar.gz
+tar xf slony1-1.1.1.tar
 
-This will create a directory slony1-1.0.0 under the current directory with the
+This will create a directory slony1-1.1.1 under the current directory with the
 Slony-I sources.  Change into that that directory for the rest of the
 installation procedure.
 

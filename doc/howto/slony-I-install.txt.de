@@ -58,8 +58,8 @@ Der Slony-I Quellcode ist unter http://slony.info verfügbar.
 nach dem erfolgreichen Download kann der Quellecode folgendermassen
 entpackt werden:
 
-gunzip slony1-1.0.0.tar.gz
-tar xf slony1-1.0.0.tar
+gunzip slony1-1.1.1.tar.gz
+tar xf slony1-1.1.1.tar
 
 Diese Befehle sollten ein "slony1-1.0.0" Unterverzeichnis im aktuellen
 Arbeitspfad erzeugen.  Fuer den Rest der Installation sollten Sie nun

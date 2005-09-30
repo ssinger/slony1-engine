@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.2 2005-09-28 01:18:55 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.3 2005-09-30 18:46:53 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -411,7 +411,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as '
 begin
-	return 0;
+	return 1;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -5142,7 +5142,7 @@ begin
 	end if;
 
 	-- ----
-	-- Changes from 1.0.x to 1.1.0
+	-- Changes from 1.0.x to 1.1.x
 	-- ----
 	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
 		-- Add new column sl_node.no_spool for virtual spool nodes
