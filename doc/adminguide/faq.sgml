@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.40 2005-06-16 14:42:56 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40.2.1 2005-09-30 18:29:17 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1589,6 +1589,24 @@ forwards compatibility or long term maintainability of replicas.
 <para> You should only head down this road if you are sufficiently
 comfortable with &postgres; and &slony1; that you are prepared to hack
 pretty heavily with the code.  </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para> Replication has fallen behind, and it appears that the
+queries to draw data from <xref linkend="table.sl-log-1">/<xref
+linkend="table.sl-log-2"> are taking a long time to pull just a few
+<command>SYNC</command>s. </para>
+</question>
+
+<answer> <para> Until version 1.1.1, there was only one index on <xref
+linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
+there were multiple replication sets, some of the columns on the index
+would not provide meaningful selectivity.  If there is no index on
+column <function> log_xid</function>, consider adding it.  See
+<filename>slony1_base.sql</filename> for an example of how to create
+the index.
+</para>
+</answer>
 </qandaentry>
 </qandaset>
 
