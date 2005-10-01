@@ -1,5 +1,5 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 1}
+%{!?docs:%define docs 0}
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
