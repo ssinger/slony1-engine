@@ -1,16 +1,16 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 0}
+%{!?docs:%define docs 1}
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
-Name:		postgresql-slony1-engine
-Version:	HEAD_20050712
+Name:		slony1
+Version:	1.1.1
 Release:	1_PG%{pg_version}
 License:	Berkeley/BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
 Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
-Source0:	postgresql-slony1-engine-%{version}.tar.gz
+Source0:	slony1-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
@@ -35,7 +35,7 @@ sites, where the normal mode of operation is that all nodes
 are available
 
 %prep
-%setup -q -n postgresql-slony1-engine-%{version}
+%setup -q -n slony1-%{version}
 
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
@@ -109,8 +109,12 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Sat Oct 01 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Upgrade to 1.1.1
+
 * Tue Jul 12 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added a line to check postgresql RPM version and tag SlonyI RPM with it.
+
 - Updated Requires files so that it checks correct PostgreSQL version
 - Moved autoconf line into correct place.
 
