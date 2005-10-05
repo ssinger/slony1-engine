@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.14 2005-09-26 17:01:23 devrim Exp $
+# $Id: Makefile,v 1.15 2005-10-05 19:50:15 dpage Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -208,7 +208,10 @@ slony.xml: slony.sgml $(GENERATED_SGML)
 	      -e '1a\' -e '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">' \
 	  >$@
 
-testxml: stylesheet.xsl postgres.xml
+testxml: stylesheet.xsl slony.xml
+	$(XSLTPROC) $(XSLTPROCFLAGS) --stringparam pg.version '$(VERSION)' $^
+
+htmlhelp: stylesheet-hh.xsl slony.xml
 	$(XSLTPROC) $(XSLTPROCFLAGS) --stringparam pg.version '$(VERSION)' $^
 
 
