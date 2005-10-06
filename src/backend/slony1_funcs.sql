@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.67 2005-09-28 14:39:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.68 2005-10-06 02:21:58 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5207,7 +5207,7 @@ begin
 	result := '''';
 	prefix := ''('';   -- Initially, prefix is the opening paren
 
-	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 order by attnum
+	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 and a.attisdropped=false order by attnum
 	loop
 		result := result || prefix || prec.column;
 		prefix := '','';   -- Subsequently, prepend columns with commas
