@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.4 2005-10-06 02:18:57 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.5 2005-10-07 19:44:39 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3483,10 +3483,9 @@ begin
 	end if;
 
 	-- ----
-	-- Restore all original triggers and rules
+	-- Restore all original triggers and rules of all sets
 	-- ----
 	for v_row in select * from @NAMESPACE@.sl_table
-			where tab_set = p_set_id
 	loop
 		perform @NAMESPACE@.alterTableRestore(v_row.tab_id);
 	end loop;
@@ -3500,7 +3499,6 @@ begin
 	-- Put all tables back into replicated mode
 	-- ----
 	for v_row in select * from @NAMESPACE@.sl_table
-			where tab_set = p_set_id
 	loop
 		perform @NAMESPACE@.alterTableForReplication(v_row.tab_id);
 	end loop;
