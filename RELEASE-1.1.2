@@ -1,0 +1,12 @@
+$Id: RELEASE-1.1.2,v 1.1.2.1 2005-10-07 20:50:23 wieck Exp $
+
+The 1.1.2 release primarily addresses four issues:
+
+1.  Subscribing to an empty set caused replication to break with
+a malformed query on the subscriber. 
+
+2.  During the execution of DDL scripts, all tables will be restored
+in order to support cross-schema DDL.
+
+3.  UPDATE FUNCTIONS got fixed to support upgrading from 1.0.6.
+
