@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.3 2005-10-07 16:36:40 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.4 2005-10-07 18:08:39 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3760,6 +3760,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		PGresult   *res2;
 		int			ntuples2;
 		int			tupno2;
+		int			ntables_total = 0;
 		int			added_or_to_provider = 0;
 
 		provider_qual = &(provider->helper_qualification);
@@ -3854,8 +3855,16 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			if (ntuples2 == 0)
 			{
 				PQclear(res2);
+
+				if (!added_or_to_provider)
+				{
+					slon_appendquery(provider_qual, " ( false ) ");
+					added_or_to_provider = 1;
+				}
+
 				continue;
 			}
+			ntables_total += ntuples2;
 
 			/*
 			 * ... and build up a query qualification that is
