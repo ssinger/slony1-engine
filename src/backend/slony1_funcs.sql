@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.5 2005-10-07 19:44:39 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.6 2005-10-07 20:28:47 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5103,7 +5103,7 @@ declare
         p_old   alias for $1;
 begin
 	-- upgrade sl_table
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
 		execute ''alter table @NAMESPACE@.sl_table add column tab_relname name'';
 		execute ''alter table @NAMESPACE@.sl_table add column tab_nspname name'';
@@ -5122,7 +5122,7 @@ begin
 	end if;
 
 	-- upgrade sl_sequence
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column(s) sl_sequence.seq_relname, sl_sequence.seq_nspname
 		execute ''alter table @NAMESPACE@.sl_sequence add column seq_relname name'';
 		execute ''alter table @NAMESPACE@.sl_sequence add column seq_nspname name'';
@@ -5142,7 +5142,7 @@ begin
 	-- ----
 	-- Changes from 1.0.x to 1.1.x
 	-- ----
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column sl_node.no_spool for virtual spool nodes
 		execute ''alter table @NAMESPACE@.sl_node add column no_spool boolean'';
 		update @NAMESPACE@.sl_node set no_spool = false;
