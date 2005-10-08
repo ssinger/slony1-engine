@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.4 2005-10-07 18:08:39 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.5 2005-10-08 19:37:29 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3650,6 +3650,15 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+		if (provider->conn != NULL)
+		{
+			if (PQstatus(provider->conn->dbconn) != CONNECTION_OK)
+			{
+				slon_disconnectdb(provider->conn);
+				provider->conn = NULL;
+			}
+		}
+
 		if (provider->conn == NULL)
 		{
 			if (provider->pa_conninfo == NULL)
