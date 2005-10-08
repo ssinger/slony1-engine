@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.25 2005-07-21 15:29:53 dpage Exp $
+# $Id: GNUmakefile.in,v 1.26 2005-10-08 08:24:35 devrim Exp $
 # ----------
 
 top_builddir = .
@@ -94,6 +94,8 @@ dist:	distdir
 	-rm -rf $(distdir)
 
 rpm: dist
-	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+	mv @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz /usr/src/redhat/SOURCES
+	mv @PACKAGE_NAME@.spec /usr/src/redhat/SPECS
+	rpmbuild -ba /usr/src/redhat/SPECS/@PACKAGE_NAME@.spec
 
 .PHONY: install
