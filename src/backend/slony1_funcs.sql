@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.7 2005-10-07 20:50:25 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.8 2005-10-12 21:14:23 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -943,41 +943,6 @@ begin
 -- Note that the following code should all become obsolete in the wake
 -- of the availability of RebuildListenEntries()...
 
-if false then
-	-- ----
-	-- Let every node that listens for something on the failed node
-	-- listen for that on the backup node instead.
-	-- ----
-	for v_row in select * from @NAMESPACE@.sl_listen
-			where li_provider = p_failed_node
-				and li_receiver <> p_backup_node
-	loop
-		perform @NAMESPACE@.storeListen_int(v_row.li_origin,
-				p_backup_node, v_row.li_receiver);
-	end loop;
-
-	-- ----
-	-- Let the backup node listen for all events where the
-	-- failed node did listen for it.
-	-- ----
-	for v_row in select li_origin, li_provider
-			from @NAMESPACE@.sl_listen
-			where li_receiver = p_failed_node
-				and li_provider <> p_backup_node
-	loop
-		perform @NAMESPACE@.storeListen_int(v_row.li_origin,
-				v_row.li_provider, p_backup_node);
-	end loop;
-
-	-- ----
-	-- Remove all sl_listen entries that receive anything from the
-	-- failed node.
-	-- ----
-	delete from @NAMESPACE@.sl_listen
-			where li_provider = p_failed_node
-				or li_receiver = p_failed_node;
-end if;
-
 	-- ----
 	-- Move the sets
 	-- ----
@@ -1009,12 +974,10 @@ raise notice ''failedNode: set % has no other direct receivers - move now'', v_r
 				loop
 					perform @NAMESPACE@.alterTableRestore(v_row2.tab_id);
 				end loop;
-			end if;
 
-			update @NAMESPACE@.sl_set set set_origin = p_backup_node
-					where set_id = v_row.set_id;
+				update @NAMESPACE@.sl_set set set_origin = p_backup_node
+						where set_id = v_row.set_id;
 
-			if p_backup_node = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
 				delete from @NAMESPACE@.sl_setsync
 						where ssy_setid = v_row.set_id;
 
@@ -1106,6 +1069,8 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
+raise notice ''failedNode2(): faking FAILOVER_SET event'';
+
 	insert into @NAMESPACE@.sl_event
 			(ev_origin, ev_seqno, ev_timestamp,
 			ev_minxid, ev_maxxid, ev_xip,
@@ -1135,7 +1100,7 @@ comment on function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8) is
 'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 
 On the node that has the highest sequence number of the failed node,
-fake the FAILED_NODE event.';
+fake the FAILOVER_SET event.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failoverSet_int (failed_node, backup_node, set_id)
@@ -1183,6 +1148,15 @@ begin
 		loop
 			perform @NAMESPACE@.alterTableForReplication(v_row.tab_id);
 		end loop;
+		insert into @NAMESPACE@.sl_event
+				(ev_origin, ev_seqno, ev_timestamp,
+				ev_minxid, ev_maxxid, ev_xip,
+				ev_type, ev_data1, ev_data2, ev_data3)
+				values 
+				(p_backup_node, "pg_catalog".nextval(''@NAMESPACE@.sl_event_seq''), CURRENT_TIMESTAMP,
+				''0'', ''0'', '''',
+				''ACCEPT_SET'', p_set_id::text,
+				p_failed_node::text, p_backup_node::text);
 	else
 		delete from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id

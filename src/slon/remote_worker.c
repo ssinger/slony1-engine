@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.5 2005-10-08 19:37:29 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.6 2005-10-12 21:14:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -905,8 +905,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
 				
 			    /* If we're a remote node, and haven't yet
-			     * received the MOVE_SET event from the
-			     * new origin, then we'll need to sleep a
+			     * received the MOVE/FAILOVER_SET event from the
+			     * old origin, then we'll need to sleep a
 			     * bit...  This avoids a race condition
 			     * where new SYNCs take place on the new
 			     * origin, and are ignored on some
@@ -915,49 +915,50 @@ remoteWorkerThread_main(void *cdata)
 			     * received and processed  */
 
 			    if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin)) {
-				    slon_log(SLON_DEBUG2, "ACCEPT_SET - node not origin - wait...\n");
-				    slon_mkquery(&query1, 
-						 "select 1 from %s.sl_event accept "
+				    slon_log(SLON_DEBUG2, "ACCEPT_SET - node not origin\n");
+				    slon_mkquery(&query2, 
+						 "select 1 from %s.sl_event "
 						 "where "
-						 "   accept.ev_type = 'ACCEPT_SET' and "
-						 "   accept.ev_origin = %d and "
-						 "   accept.ev_data1 = %d and "
-						 "   accept.ev_data2 = %d and "
-						 "   accept.ev_data3 = %d and "
-						 "   not exists  "
-						 "   (select 1 from %s.sl_event move "
-						 "    where "
-						 "      accept.ev_origin = move.ev_data3 and "
-						 "      move.ev_type = 'MOVE_SET' and "
-						 "      move.ev_data1 = accept.ev_data1 and "
-						 "      move.ev_data2 = accept.ev_data2 and "
-						 "      move.ev_data3 = accept.ev_data3); ",
+						 "     (ev_origin = %d and "
+						 "      ev_type = 'MOVE_SET' and "
+						 "      ev_data1 = '%d' and "
+						 "      ev_data2 = '%d' and "
+						 "      ev_data3 = '%d') "
+						 "or "
+						 "     (ev_origin = %d and "
+						 "      ev_type = 'FAILOVER_SET' and "
+						 "      ev_data1 = '%d' and "
+						 "      ev_data2 = '%d' and "
+						 "      ev_data3 = '%d'); ",
 						 
 						 rtcfg_namespace, 
 						 old_origin, set_id, old_origin, new_origin,
-						 rtcfg_namespace);
-				    res = PQexec(local_dbconn, dstring_data(&query1));
-				    while (PQntuples(res) > 0) {
-					    int sleeptime = 15;
-					    int sched_rc;
-					    slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-					     "accept set: node has not yet received MOVE_SET event "
-						     "for set %d old origin %d new origin - sleep %d seconds\n",
-						     rtcfg_nodeid, set_id, old_origin, new_origin, sleeptime);
-					    sched_rc = sched_msleep(node, sleeptime * 1000);
-					    if (sched_rc != SCHED_STATUS_OK) {
-						    event_ok = false;
-						    break;
-					    } else {
-						    if (sleeptime < 60)
-							    sleeptime *= 2;
-					    }
-					    res = PQexec(local_dbconn, dstring_data(&query1));
-				    }
+						 old_origin, old_origin, new_origin, set_id);
+
+				    res = PQexec(local_dbconn, dstring_data(&query2));
+					while (PQntuples(res) == 0)
+					{
+						slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+						if (sched_msleep(node, 10000) != SCHED_STATUS_OK)
+							slon_abort();
+						PQclear(res);
+						res = PQexec(local_dbconn, dstring_data(&query2));
+					}
+					PQclear(res);
+					slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - done\n");
+
+					slon_appendquery(&query1,
+									 "notify \"_%s_Restart\"; ",
+									 rtcfg_cluster_name);
+					query_append_event(&query1, event);
+					slon_appendquery(&query1, "commit transaction;");
+					query_execute(node, local_dbconn, &query1);
+					slon_abort();
+
+					need_reloadListen = true;
 			    } else {
 				    slon_log(SLON_DEBUG2, "ACCEPT_SET - on origin node...\n");
 			    }
-			    slon_log(SLON_DEBUG2, "ACCEPT_SET - done...\n");
 
 			}
 			else if (strcmp(event->ev_type, "MOVE_SET") == 0)
