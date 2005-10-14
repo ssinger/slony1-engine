@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.15.2.18 2005-07-13 19:58:06 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.15.2.19 2005-10-14 14:14:07 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3482,11 +3482,10 @@ begin
 	-- Bug report #1362
 	-- ---
 	if v_set_origin <> p_sub_provider then
-		select 1 into v_rec from @NAMESPACE@.sl_subscribe
+		if not exists (select 1 from @NAMESPACE@.sl_subscribe
 			where sub_set = p_sub_set and 
                               sub_receiver = p_sub_provider and
-			      sub_forward and sub_active;
-		if not found then
+			      sub_forward and sub_active) then
 			raise exception ''Slony-I: provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
 		end if;
 	end if;
