@@ -34,6 +34,17 @@ Slony-I is planned as a system for data centers and backup
 sites, where the normal mode of operation is that all nodes 
 are available
 
+%if %docs
+%package docs
+Summary: Documentation for Slony-I
+Group: Applications/Databases
+Prereq: postgresql-slony1-engine-HEAD_20050917
+
+%description docs
+The postgresql-slony1-engine-docs package includes some documentation for Slony-I.
+%endif
+
+
 %prep
 %setup -q -n slony1-%{version}
 
@@ -83,7 +94,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
 install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
 install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
-install -m 0755 altperl/slon-tools.pm  $RPM_BUILD_ROOT%{_libdir}/pgsql/
+install -m 0755 altperl/slon-tools  $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
 /bin/rm -f  $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
 /bin/rm -f $RPM_BUILD_ROOT%{_libdir}/slon-tools.pm
@@ -95,9 +106,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%if %docs
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
-%endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -108,7 +116,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/slon_tools.conf
 %endif
 
+%if %docs
+%files docs
+%defattr(-,root,root)
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%endif
+
 %changelog
+* Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Created a new package : -docs and moved all the docs there.
+- Fixed the problem in http://gborg.postgresql.org/pipermail/slony1-general/2005-October/003105.html
+
 * Sat Oct 01 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Upgrade to 1.1.1
 
