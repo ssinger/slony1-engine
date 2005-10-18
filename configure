@@ -254,8 +254,8 @@ SHELL=${CONFIG_SHELL-/bin/sh}
 # Identity of this package.
 PACKAGE_NAME='postgresql-slony1-engine'
 PACKAGE_TARNAME='postgresql-slony1-engine'
-PACKAGE_VERSION='REL_1_1_1'
-PACKAGE_STRING='postgresql-slony1-engine REL_1_1_1'
+PACKAGE_VERSION='REL_1_1_2'
+PACKAGE_STRING='postgresql-slony1-engine REL_1_1_2'
 PACKAGE_BUGREPORT=''
 
 ac_unique_file="src"
