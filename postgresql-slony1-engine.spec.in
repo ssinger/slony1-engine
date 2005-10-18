@@ -1,5 +1,5 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 0}
+%{!?docs:%define docs 1}
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
@@ -33,6 +33,16 @@ reasonably limited number of slave systems.
 Slony-I is planned as a system for data centers and backup 
 sites, where the normal mode of operation is that all nodes 
 are available
+
+%if %docs
+%package docs
+Summary: Documentation for Slony-I
+Group: Applications/Databases
+Prereq: @PACKAGE_NAME@-@PACKAGE_VERSION@
+
+%description docs
+The @PACKAGE_NAME@-docs package includes some documentation for Slony-I.
+%endif
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
@@ -94,9 +104,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%if %docs
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
-%endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -107,7 +114,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/slon_tools.conf
 %endif
 
+%if %docs
+%files docs
+%defattr(-,root,root)
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%endif
+
 %changelog
+* Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Created a new package : -docs and moved all the docs there.
+
 * Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Fixed the problem in http://gborg.postgresql.org/pipermail/slony1-general/2005-October/003105.html
 
