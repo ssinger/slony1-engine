@@ -4,7 +4,7 @@
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
 Name:		postgresql-slony1-engine
-Version:	HEAD_20050613
+Version:	REL_1_1_2
 Release:	1_PG%{pg_version}
 License:	Berkeley/BSD
 Group:		Applications/Databases
