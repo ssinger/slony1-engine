@@ -98,7 +98,7 @@ create table $clname.sl_setsync_offline (
 );
 
 -- -----------------------------------------------------------------------------
--- FUNCTION sequenceSetValue_offline (seq_id, seq_origin, ev_seqno, last_value)
+-- FUNCTION sequenceSetValue_offline (seq_id, last_value)
 -- -----------------------------------------------------------------------------
 create or replace function $clname.sequenceSetValue_offline(int4, int8) returns int4
 as '
@@ -128,9 +128,9 @@ end;
 ' language plpgsql;
 
 -- ---------------------------------------------------------------------------------------
--- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, last_value, sync_time)
+-- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, sync_time)
 -- ---------------------------------------------------------------------------------------
-create or replace function $clname.setsyncTracking_offline(int4, int8, int8) returns int8
+create or replace function $clname.setsyncTracking_offline(int4, int8, int8, timestamptz) returns int8
 as '
 declare
 	p_set_id	alias for \$1;
@@ -147,9 +147,9 @@ begin
 
 	if v_row.ssy_seqno <> p_old_seq then
 		raise exception ''Slony-I: set % is on sync %, this archive log expects %'', 
-			p_set_id, v_row.ssy_seqno, p_old_seq;
+			p_set_id, p_old_seq, p_new_seq;
 	end if;
-	raise notice ''Slony-I: Process set % sync % time'', p_set_id, p_new_seq, p_sync_time;
+	raise notice ''Slony-I: Process set % sync % time %'', p_set_id, p_new_seq, p_sync_time;
 
 	update $clname.sl_setsync_offline set ssy_seqno = p_new_seq, ssy_synctime = p_sync_time
 		where ssy_setid = p_set_id;
@@ -197,13 +197,22 @@ echo "select 'insert into $clname.sl_setsync_offline values (' ||
 # ----
 # Now dump all the user table data
 # ----
+system_type=`uname`
 for tab in $tables ; do
 	eval tabname=\$tabname_$tab
-	echo "select 'copy $tabname from stdin;';"
 
-	echo "copy $tabname to stdout;"
+	# Get fieldnames...
+ 	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
+ 	echo "select 'copy $tabname $fields from stdin;';"
 
-	echo "select '\\\\.';"
+        case $system_type in
+	    AIX|aix)
+		echo "select '\\\\\\\\.';"
+		;;
+	    *)
+		echo "select '\\\\.';"
+		;;
+	esac
 done
 
 # ----
