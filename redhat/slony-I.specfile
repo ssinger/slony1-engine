@@ -51,8 +51,8 @@ The postgresql-slony1-engine-docs package includes some documentation for Slony-
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
-CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et" ; export CPPFLAGS
-CFLAGS="${CFLAGS} -I%{_includedir}/et" ; export CFLAGS
+CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CPPFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CFLAGS
 
 # Strip out -ffast-math from CFLAGS....
 
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Oct 26 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Modify CPPFLAGS and CFLAGS to fix builds on RHEL -- Per Philip Yarra
+
 * Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Created a new package : -docs and moved all the docs there.
 - Fixed the problem in http://gborg.postgresql.org/pipermail/slony1-general/2005-October/003105.html
