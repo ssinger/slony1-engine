@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.6 2005-06-16 19:31:39 cbbrowne Exp $
+$Id: INSTALL,v 1.7 2005-10-25 17:57:39 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -103,6 +103,10 @@ https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382 (For RHEL)
 A pre-built copy of the "admin guide" should be readily available,
 either in the form of a separate tarball nearby, or in the directory
 doc/adminguide/prebuilt
+
+Until Red Hat Software fixes this bug, as root, you may work around the
+issue by changing NAMELEN as follows:
+cd /usr/share/sgml && perl -pi.bak -e 's/(NAMELEN\s+)44/${1}256/' `find . -type f |xargs grep 'NAMELEN.*44'|sed -e 's/:.*//'`
 
 Building Slony-I for use with Packaged PostgreSQL Binaries
 ============================================================
