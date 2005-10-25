@@ -40,8 +40,8 @@ are available
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
-CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et" ; export CPPFLAGS
-CFLAGS="${CFLAGS} -I%{_includedir}/et" ; export CFLAGS
+CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CPPFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CFLAGS
 
 # Strip out -ffast-math from CFLAGS....
 
@@ -49,7 +49,7 @@ CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
 ./configure --includedir %{_includedir}/pgsql \
 %if %perltools
-        --with-perltools=%{_bindir} \
+	--with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
 %if %docs
         --with-docs --with-docdir=/usr/share/doc \
@@ -60,8 +60,7 @@ autoconf
 
 make
 %if %perltools
- cd tools
- make
+ make -C tools
 %endif
 
 %install
@@ -83,6 +82,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
 install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
 install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
+install -m 0755 altperl/slon-tools $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
 install -m 0755 altperl/slon-tools.pm  $RPM_BUILD_ROOT%{_libdir}/pgsql/
 /bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
 /bin/rm -f  $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
@@ -109,6 +109,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Oct 26 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Modify CPPFLAGS and CFLAGS to fix builds on RHEL -- Per Philip Yarra
+- Fixed the problem in http://gborg.postgresql.org/pipermail/slony1-general/2005-October/003105.html 
+
 * Tue Jul 12 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added a line to check postgresql RPM version and tag SlonyI RPM with it.
 - Updated Requires files so that it checks correct PostgreSQL version
