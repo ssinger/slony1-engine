@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.2,v 1.1.2.1 2005-10-07 20:50:23 wieck Exp $
+$Id: RELEASE-1.1.2,v 1.1.2.2 2005-10-25 20:50:20 cbbrowne Exp $
 
 The 1.1.2 release primarily addresses four issues:
 
@@ -10,3 +10,10 @@ in order to support cross-schema DDL.
 
 3.  UPDATE FUNCTIONS got fixed to support upgrading from 1.0.6.
 
+4.  In the case of failover we need the same ACCEPT_SET guarding, so
+that the remaining subscribers do not process any events from the
+backup node before they have finished all remaining events from the
+failed node, that might be queued up on the backup.
+
+ACCEPT_SET must also restart slon in order to guarantee that the new
+configuration is loaded.
