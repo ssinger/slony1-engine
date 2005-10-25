@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.45 2005-09-30 18:31:48 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.46 2005-10-25 16:18:41 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1685,6 +1685,58 @@ column <function> log_xid</function>, consider adding it.  See
 the index.
 </para>
 </answer>
+</qandaentry>
+<qandaentry>
+<question><para>The <xref linkend="slon"> processes servicing my
+subscribers are growing to enormous size, challenging system resources
+both in terms of swap space as well as moving towards breaking past
+the 2GB maximum process size on my system. </para> 
+
+<para> By the way, the data that I am replicating includes some rather
+large records.  We have records that are tens of megabytes in size.
+Perhaps that is somehow relevant? </para> </question>
+
+<answer> <para> Yes, those very large records are at the root of the
+problem.  The problem is that <xref linkend="slon"> normally draws in
+about 100 records at a time when a subscriber is processing the query
+which loads data from the provider.  Thus, if the average record size
+is 10MB, this will draw in 1000MB of data which is then transformed
+into <command>INSERT</command> or <command>UPDATE</command>
+statements, in the <xref linkend="slon"> process' memory.</para>
+
+<para> That obviously leads to <xref linkend="slon"> growing to a
+fairly tremendous size. </para>
+
+<para> The number of records that are fetched is controlled by the
+value <envar> SLON_DATA_FETCH_SIZE </envar>, which is defined in the
+file <filename>src/slon/slon.h</filename>.  The relevant extract of
+this is shown below. </para>
+ 
+<programlisting>
+#ifdef	SLON_CHECK_CMDTUPLES
+#define SLON_COMMANDS_PER_LINE		1
+#define SLON_DATA_FETCH_SIZE		100
+#define SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 4)
+#else
+#define SLON_COMMANDS_PER_LINE		10
+#define SLON_DATA_FETCH_SIZE		10
+#define SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 50)
+#endif
+</programlisting>
+
+<para> If you are experiencing this problem, you might modify the
+definition of <envar> SLON_DATA_FETCH_SIZE </envar>, perhaps reducing
+by a factor of 10, and recompile <xref linkend="slon">.  There are two
+definitions as <envar> SLON_CHECK_CMDTUPLES</envar> allows doing some
+extra monitoring to ensure that subscribers have not fallen out of
+SYNC with the provider.  By default, this option is turned off, so the
+default modification to make is to change the second definition of
+<envar> SLON_DATA_FETCH_SIZE </envar> from 10 to 1. </para> </answer>
+
+<answer><para> There are plans to change the behaviour of <xref
+linkend="slon"> to better adapt to the size of these queries for
+version 1.2, so at that point, this note will hopefully become
+obsolete. </para> </answer>
 </qandaentry>
 </qandaset>
 
