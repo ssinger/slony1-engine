@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.90 2005-09-28 14:39:25 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.91 2005-10-26 21:45:52 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -255,6 +255,8 @@ static int submit_raw_data_to_archive (const char *s);
 static int logarchive_tracking (const char *namespace, int sub_set, const char *firstseq, 
 				const char *seqbuf, const char *timestamp);
 static int write_void_log (int node_id, char *seqbuf, const char *message);
+
+static void compress_actionseq (const char *ssy_actionseq, SlonDString *action_subquery);
 
 #define TERMINATE_QUERY_AND_ARCHIVE dstring_free(&query); terminate_log_archive();
 
@@ -3726,6 +3728,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString new_qual;
 	SlonDString query;
 	SlonDString *provider_qual;
+	SlonDString actionseq_subquery;
+
+	int actionlist_len;
 
 	gettimeofday(&tv_start, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT
@@ -4051,12 +4056,20 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				slon_appendquery(provider_qual,
 								 "(log_xid >= '%s')",
 								 ssy_maxxid);
-			if (strlen(ssy_action_list) != 0)
-				slon_appendquery(provider_qual,
-								 " and log_actionseq not in (%s)\n) ",
-								 ssy_action_list);
-			else
+			actionlist_len = strlen(ssy_action_list);
+			slon_log(SLON_DEBUG2, " ssy_action_list value: %s length: %d\n",  
+				 ssy_action_list, actionlist_len);
+
+			if (actionlist_len == 0) {
 				slon_appendquery(provider_qual, "\n) ");
+			} else {
+				dstring_init(&actionseq_subquery);
+				compress_actionseq(ssy_action_list, &actionseq_subquery);
+				slon_appendquery(provider_qual,
+						 " and (%s)\n) ",
+						 dstring_data(&actionseq_subquery));
+				dstring_free(&actionseq_subquery);
+			}
 
 			PQclear(res2);
 
@@ -5023,4 +5036,216 @@ int write_void_log (int node_id, char *seqbuf, const char *message) {
 		return rc;
 	rc = close_log_archive();
 	return rc;
+}
+ 
+/* given a string consisting of a list of actionseq values, return a
+   string that compresses this into a set of log_actionseq ranges
+
+   Thus, "'13455','13456','13457','13458','13459','13460','13462'"
+   compresses into...
+
+   log_actionseq not between '13455' and '13460' and
+   log_actionseq <> '13462'
+
+   There is an expectation that the actionseq values are being
+   returned more or less in order; if that is even somewhat loosely
+   the case, this will lead to a pretty spectacular compression of
+   values if the SUBSCRIBE_SET runs for a long time thereby leading to
+   there being Really A Lot of log entries to exclude. */
+
+#define START_STATE 1
+#define COLLECTING_DIGITS 2
+#define BETWEEN_NUMBERS 3
+#define DONE 4
+
+#define MINMAXINITIAL -1
+
+void compress_actionseq (const char *ssy_actionlist, SlonDString *action_subquery) {
+	int state;
+	int curr_number, curr_min, curr_max;
+	int curr_digit;
+	int first_subquery;
+	char curr_char;
+	curr_min = MINMAXINITIAL;
+	curr_max = MINMAXINITIAL;
+	first_subquery = 1;
+	state = START_STATE;
+	slon_mkquery(action_subquery, " ");
+	
+	slon_log(SLON_DEBUG3, "compress_actionseq(list,subquery) Action list: %s\n", ssy_actionlist);
+	while (state != DONE) {
+		curr_char = *ssy_actionlist;
+		switch (curr_char) {
+		case '\0':
+			state = DONE;
+			break;
+		case '0':
+			curr_digit = 0;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '1':
+			curr_digit = 1;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '2':
+			curr_digit = 2;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '3':
+			curr_digit = 3;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '4':
+			curr_digit = 4;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '5':
+			curr_digit = 5;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '6':
+			curr_digit = 6;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '7':
+			curr_digit = 7;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '8':
+			curr_digit = 8;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '9':
+			curr_digit = 9;
+			if (state == COLLECTING_DIGITS) {
+				curr_number = curr_number * 10 + curr_digit;
+			} else {
+				state = COLLECTING_DIGITS;
+				curr_number = curr_digit;
+			}
+			break;
+		case '\'':
+		case ',':
+			if (state == COLLECTING_DIGITS) {
+				/* Finished another number... Fold it into the ranges... */
+  				slon_log(SLON_DEBUG4, "Finished number: %d\n", curr_number);
+				/* If we haven't a range, then the range is the current
+				   number */
+				if (curr_min == MINMAXINITIAL) {
+					curr_min = curr_number;
+				}
+				if (curr_max == MINMAXINITIAL) {
+					curr_max = curr_number;
+				}
+				/* If the number pushes the range outwards by 1,
+				   then shift the range by 1... */
+				if (curr_number == curr_min - 1) {
+					curr_min --;
+				} 
+				if (curr_number == curr_max + 1) {
+					curr_max ++;
+				}
+
+				/* If the number is inside the range, do nothing */
+				if ((curr_number >= curr_min) && (curr_number <= curr_max)) {
+					/* Do nothing - inside the range */
+				}
+
+				/* If the number is outside the range, then
+				   generate a subquery based on the range, and
+				   have the new number become the new range */
+				if ((curr_number < curr_min - 1) || (curr_number > curr_max + 1)) {
+					if (first_subquery) {
+						first_subquery = 0;
+					} else {
+						slon_appendquery(action_subquery, " and ");
+					}
+					if (curr_max == curr_min) {
+ 						slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max); 
+						slon_appendquery(action_subquery, 
+								 " log_actionseq <> '%d' ", curr_max);
+					} else {
+  						slon_log(SLON_DEBUG4, "between entry - %d %d\n", 
+  							 curr_min, curr_max);
+						slon_appendquery(action_subquery,
+								 " log_actionseq not between '%d' and '%d' ",
+								 curr_min, curr_max);
+					}
+					curr_min = curr_number;
+					curr_max = curr_number;
+				}
+			}
+			state = BETWEEN_NUMBERS;
+			curr_number = 0;
+
+		}
+		ssy_actionlist++;
+	}
+	/* process last range, if it exists */
+	if (curr_min || curr_max) {
+		if (first_subquery) {
+			first_subquery = 0;
+		} else {
+			slon_appendquery(action_subquery, " and ");
+		}
+		if (curr_max == curr_min) {
+			slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+			slon_appendquery(action_subquery,
+					 " log_actionseq <> '%d' ", curr_max);
+		} else {
+			slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+				 curr_min, curr_max);
+			slon_appendquery(action_subquery,
+					 " log_actionseq not between '%d' and '%d' ",
+					 curr_min, curr_max);
+		}
+		
+
+	}
+	slon_log(SLON_DEBUG3, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
