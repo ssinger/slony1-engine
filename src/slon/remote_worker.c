@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.91 2005-10-26 21:45:52 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.92 2005-10-26 21:48:32 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2938,7 +2938,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 		res3 = PQexec(pro_dbconn, dstring_data(&query2));
 
-		if (PQresultStatus(res2) != PGRES_TUPLES_OK) {
+		if (PQresultStatus(res3) != PGRES_TUPLES_OK) {
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
 				 node->no_id, dstring_data(&query2),
 				 PQresultErrorMessage(res3));
