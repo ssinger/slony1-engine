@@ -136,7 +136,7 @@ declare
 	p_set_id	alias for \$1;
 	p_old_seq	alias for \$2;
 	p_new_seq	alias for \$3;
-        p_sync_time     alias for \$4;
+	p_sync_time	alias for \$4;
 	v_row		record;
 begin
 	select ssy_seqno into v_row from $clname.sl_setsync_offline
