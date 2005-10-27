@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.69 2005-10-14 14:16:07 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.70 2005-10-27 19:20:40 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -940,44 +940,6 @@ begin
 	perform @NAMESPACE@.terminateNodeConnections(
 			''_@CLUSTERNAME@_Node_'' || p_failed_node);
 
--- Note that the following code should all become obsolete in the wake
--- of the availability of RebuildListenEntries()...
-
-if false then
-	-- ----
-	-- Let every node that listens for something on the failed node
-	-- listen for that on the backup node instead.
-	-- ----
-	for v_row in select * from @NAMESPACE@.sl_listen
-			where li_provider = p_failed_node
-				and li_receiver <> p_backup_node
-	loop
-		perform @NAMESPACE@.storeListen_int(v_row.li_origin,
-				p_backup_node, v_row.li_receiver);
-	end loop;
-
-	-- ----
-	-- Let the backup node listen for all events where the
-	-- failed node did listen for it.
-	-- ----
-	for v_row in select li_origin, li_provider
-			from @NAMESPACE@.sl_listen
-			where li_receiver = p_failed_node
-				and li_provider <> p_backup_node
-	loop
-		perform @NAMESPACE@.storeListen_int(v_row.li_origin,
-				v_row.li_provider, p_backup_node);
-	end loop;
-
-	-- ----
-	-- Remove all sl_listen entries that receive anything from the
-	-- failed node.
-	-- ----
-	delete from @NAMESPACE@.sl_listen
-			where li_provider = p_failed_node
-				or li_receiver = p_failed_node;
-end if;
-
 	-- ----
 	-- Move the sets
 	-- ----
@@ -1009,12 +971,10 @@ raise notice ''failedNode: set % has no other direct receivers - move now'', v_r
 				loop
 					perform @NAMESPACE@.alterTableRestore(v_row2.tab_id);
 				end loop;
-			end if;
 
-			update @NAMESPACE@.sl_set set set_origin = p_backup_node
-					where set_id = v_row.set_id;
+				update @NAMESPACE@.sl_set set set_origin = p_backup_node
+						where set_id = v_row.set_id;
 
-			if p_backup_node = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
 				delete from @NAMESPACE@.sl_setsync
 						where ssy_setid = v_row.set_id;
 
@@ -1135,7 +1095,7 @@ comment on function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8) is
 'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 
 On the node that has the highest sequence number of the failed node,
-fake the FAILED_NODE event.';
+fake the FAILOVER_SET event.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failoverSet_int (failed_node, backup_node, set_id)
@@ -1183,6 +1143,15 @@ begin
 		loop
 			perform @NAMESPACE@.alterTableForReplication(v_row.tab_id);
 		end loop;
+		insert into @NAMESPACE@.sl_event
+				(ev_origin, ev_seqno, ev_timestamp,
+				ev_minxid, ev_maxxid, ev_xip,
+				ev_type, ev_data1, ev_data2, ev_data3)
+				values
+				(p_backup_node, "pg_catalog".nextval(''@NAMESPACE@.sl_event_seq''), CURRENT_TIMESTAMP,
+				''0'', ''0'', '''',
+				''ACCEPT_SET'', p_set_id::text,
+				p_failed_node::text, p_backup_node::text);
 	else
 		delete from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
@@ -3483,10 +3452,9 @@ begin
 	end if;
 
 	-- ----
-	-- Restore all original triggers and rules
+	-- Restore all original triggers and rules of all sets
 	-- ----
 	for v_row in select * from @NAMESPACE@.sl_table
-			where tab_set = p_set_id
 	loop
 		perform @NAMESPACE@.alterTableRestore(v_row.tab_id);
 	end loop;
@@ -3500,7 +3468,6 @@ begin
 	-- Put all tables back into replicated mode
 	-- ----
 	for v_row in select * from @NAMESPACE@.sl_table
-			where tab_set = p_set_id
 	loop
 		perform @NAMESPACE@.alterTableForReplication(v_row.tab_id);
 	end loop;
@@ -5104,7 +5071,7 @@ declare
         p_old   alias for $1;
 begin
 	-- upgrade sl_table
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
 		execute ''alter table @NAMESPACE@.sl_table add column tab_relname name'';
 		execute ''alter table @NAMESPACE@.sl_table add column tab_nspname name'';
@@ -5123,7 +5090,7 @@ begin
 	end if;
 
 	-- upgrade sl_sequence
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column(s) sl_sequence.seq_relname, sl_sequence.seq_nspname
 		execute ''alter table @NAMESPACE@.sl_sequence add column seq_relname name'';
 		execute ''alter table @NAMESPACE@.sl_sequence add column seq_nspname name'';
@@ -5143,7 +5110,7 @@ begin
 	-- ----
 	-- Changes from 1.0.x to 1.1.0
 	-- ----
-	if p_old = ''1.0.2'' or p_old = ''1.0.5'' then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'') then
 		-- Add new column sl_node.no_spool for virtual spool nodes
 		execute ''alter table @NAMESPACE@.sl_node add column no_spool boolean'';
 		update @NAMESPACE@.sl_node set no_spool = false;
@@ -5206,7 +5173,7 @@ begin
 	result := '''';
 	prefix := ''('';   -- Initially, prefix is the opening paren
 
-	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 and a.attisdropped=false order by attnum
+	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 and a.attisdropped = false order by attnum
 	loop
 		result := result || prefix || prec.column;
 		prefix := '','';   -- Subsequently, prepend columns with commas

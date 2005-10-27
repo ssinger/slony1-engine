@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.48 2005-08-26 17:03:41 darcyb Exp $
+ *	$Id: slonik.c,v 1.49 2005-10-27 19:20:41 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2521,6 +2521,7 @@ typedef struct
 typedef struct
 {
 	int			set_id;
+	int			num_directsub;
 	int			num_subscribers;
 	failnode_node **subscribers;
 	failnode_node *max_node;
@@ -2592,8 +2593,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "    and S.set_origin = %d "
 				 "    and SUB.sub_provider = %d "
 				 "    and SUB.sub_active "
-				 "    group by set_id "
-				 "    having count(S.set_id) > 1",
+				 "    group by set_id ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->no_id, stmt->no_id);
@@ -2681,6 +2681,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	for (i = 0; i < num_sets; i++)
 	{
 		setinfo[i].set_id = (int)strtol(PQgetvalue(res2, i, 0), NULL, 10);
+		setinfo[i].num_directsub = (int)strtol(PQgetvalue(res2, i, 1), NULL, 10);
+
+		if (setinfo[i].num_directsub <= 1)
+			continue;
 
 		slon_mkquery(&query,
 					 "select sub_receiver "
@@ -2857,6 +2861,34 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		setinfo[i].max_node = NULL;
 		setinfo[i].max_seqno = 0;
 
+		if (setinfo[i].num_directsub <= 1)
+		{
+			int64		ev_seqno;
+
+			slon_mkquery(&query,
+					"select max(ev_seqno) "
+					"	from \"_%s\".sl_event "
+					"	where ev_origin = %d "
+					"	and ev_type = 'SYNC'; ",
+					stmt->hdr.script->clustername,
+					stmt->no_id);
+			res1 = db_exec_select((SlonikStmt *) stmt,
+					adminfo1, &query);
+			if (res1 == NULL)
+			{
+				free(configbuf);
+				dstring_free(&query);
+				return -1;
+			}
+			slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
+
+			setinfo[i].max_seqno = ev_seqno;
+
+			PQclear(res1);
+
+			continue;
+		}
+
 		slon_mkquery(&query,
 					 "select ssy_seqno "
 					 "    from \"_%s\".sl_setsync "
@@ -2920,7 +2952,12 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		int			use_node;
 		SlonikAdmInfo *use_adminfo;
 
-		if (setinfo[i].max_node == NULL)
+		if (setinfo[i].num_directsub <= 1)
+		{
+			use_node = stmt->backup_node;
+			use_adminfo = adminfo1;
+		}
+		else if (setinfo[i].max_node == NULL)
 		{
 			printf("no setsync status for set %d found at all\n",
 				   setinfo[i].set_id);
