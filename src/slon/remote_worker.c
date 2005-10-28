@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.93 2005-10-27 19:20:40 wieck Exp $
+ *	$Id: remote_worker.c,v 1.94 2005-10-28 15:29:53 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2701,6 +2701,20 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
 				 "table %s does not require Slony-I serial key\n",
 				 node->no_id, tab_fqname);
+			slon_mkquery(&query3, "select * from %s limit 0;",
+				     tab_fqname);
+			res2 = PQexec(loc_dbconn, dstring_data(&query3));
+			if (PQresultStatus(res2) != PGRES_TUPLES_OK) {
+				slon_log (SLON_ERROR, "remoteWorkerThread_%d: Could not find table %s "
+					  "on subscriber\n", node->no_id, tab_fqname);
+				PQclear(res2);
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				dstring_free(&query3);
+				terminate_log_archive();
+				return -1;
+			}
 		}
 	}
 	PQclear(res1);
