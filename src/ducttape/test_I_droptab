@@ -1,0 +1,279 @@
+#!/bin/sh
+# $Id: test_I_droptab,v 1.1.2.1 2005-10-28 15:32:05 cbbrowne Exp $
+# **********
+# test_1_pgbench
+#
+# 	This test script creates a standalone pgbench database 
+#	as slony_test1 and then:
+#
+#	- initializes a primary node and starts the node daemon
+#	- creates a set containing all 4 pgbench tables
+#	- creates a second database as slony_test2
+#	- adds database slony_test2 to the system
+#	- starts the second replication daemon
+#	- creates the pgbench tables (schema only)
+#	- subscribes the replication set from the primary node
+# **********
+
+TERMPROG=xterm
+WHICHPROG=which
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+DEBUG_LEVEL=2
+
+PGBENCH_SCALE=1
+PGBENCH_CLIENTS=5
+PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
+
+trap '
+	echo ""
+	echo "**** user abort"
+	if [ ! -z $pgbench_pid ] ; then
+		echo "**** killing pgbench"
+		kill -15 $pgbench_pid
+	fi
+	if [ ! -z $slon1_pid ] ; then
+		echo "**** killing node daemon 1"
+		kill -15 $slon1_pid
+	fi
+	if [ ! -z $slon2_pid ] ; then
+		echo "**** killing node daemon 2"
+		kill -15 $slon2_pid
+	fi
+	exit 1
+' 2 15
+
+######################################################################
+# Preparations ... create a standalone pgbench database and
+# have the "application" (pgbench) running.
+######################################################################
+
+#####
+# Make sure the install is up to date
+#####
+WGM=`$WHICHPROG gmake | egrep "^/"`
+if [ -z "$WGM" ] ; then
+    MAKE=make
+    CGNU=`make -v | grep GNU`
+    if [ -z "$CGNU" ] ; then
+	echo "GNU Make not found - please install GNU Make"
+	exit 1
+    fi
+else
+    MAKE=gmake
+fi
+echo -n "**** running 'make install' in src directory ... "
+if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
+    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
+fi
+echo "done"
+rm $TMPOUT
+
+#####
+# Remove old databases, if they exist
+#####
+echo "**** remove old test databases"
+dropdb $DB1 || echo "**** ignored"
+sleep 1
+dropdb $DB2 || echo "**** ignored"
+sleep 1
+
+#####
+# Create the "Primary Node"
+#####
+echo "**** creating database for Node 11"
+
+createdb $DB1 || exit 1
+pgbench -i -s $PGBENCH_SCALE $DB1
+pg_dump -s $DB1 >pgbench_schema.sql
+
+#####
+# Start pgbench in the background and give it rampup time
+#####
+pgbench -n -s $PGBENCH_SCALE -c $PGBENCH_CLIENTS -t $PGBENCH_TRANS $DB1 &
+pgbench_pid=$!
+echo "**** pgbench is running in background with pid $pgbench_pid"
+echo -n "**** sleeping 10 seconds to give pgbench time for rampup ... "
+sleep 10
+echo "done"
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now a standalone database with a running pgbench"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB1 as the primary cluster T1 node, start the node daemon,
+# and create a replication set containing the pgbench tables.
+######################################################################
+
+PREAMBLE="	cluster name = T1;
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
+"
+
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
+slonik <<_EOF_
+$PREAMBLE
+	init cluster (id = 11, comment = 'Node 11');
+	echo 'Database $DB1 initialized as Node 11';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid;
+	exit 1
+fi
+
+echo "**** starting the Slony-I node daemon for $DB1"
+$TERMPROG -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
+slon1_pid=$!
+echo "slon[$slon1_pid] on dbname=$DB1"
+
+echo "**** creating a replication set containing the 4 pgbench tables ... "
+slonik <<_EOF_
+$PREAMBLE
+
+	try {
+		table add key (node id = 11, fully qualified name = 'public.history');
+	}
+	on error {
+		exit 1;
+	}
+
+	try {
+		create set (id = 1, origin = 11, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 11,
+			id = 1, fully qualified name = 'public.accounts',
+			comment = 'Table accounts');
+		set add table (set id = 1, origin = 11,
+			id = 2, fully qualified name = 'public.branches',
+			comment = 'Table branches');
+		set add table (set id = 1, origin = 11,
+			id = 3, fully qualified name = 'public.tellers',
+			comment = 'Table tellers');
+		set add table (set id = 1, origin = 11,
+			id = 4, fully qualified name = 'public.history',
+			key = serial, comment = 'Table accounts');
+	}
+	on error {
+		exit 1;
+	}
+_EOF_
+
+if [ $? -ne 0 ] ; then
+	echo "failed"
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	cat $TMPOUT
+	rm $TMPOUT
+	exit 1
+fi
+echo "**** set created"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB1 is now the Slony-I origin for set 1"
+echo "**********************************************************************"
+echo ""
+
+######################################################################
+# Setup DB2 as a subscriber node and let it subscribe the replication
+# set of the running pgbench
+######################################################################
+echo "**** creating database for node 22"
+if ! createdb $DB2 ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "**** initializing $DB2 as node 22 of Slony-I cluster T1"
+slonik <<_EOF_
+$PREAMBLE
+	echo 'Creating node 22';
+	try {
+		store node (id = 22, comment = 'node 22', event node = 11);
+        } on error {
+	    echo 'could not establish node 22';
+	    exit -1;
+	}
+	try {
+		store path (server = 11, client = 22, conninfo = 'dbname=$DB1');
+		store path (server = 22, client = 11, conninfo = 'dbname=$DB2');
+	}
+	on error { 
+	    echo 'could not establish paths between 11 and 22';
+	    exit -1; 
+	}
+	echo 'Database $DB2 added as node 22';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+echo "**** starting the Slony-I node daemon for $DB1"
+$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -g10 T1 dbname=$DB2; echo -n 'Enter>'; read line" &
+slon2_pid=$!
+echo "slon[$slon2_pid] on dbname=$DB2"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	exit 1
+fi
+
+######################################################################
+# And now comes the moment where the big elephant starts to pee
+# and the attendants in the first row climb on their chairs ...
+######################################################################
+echo "**** creating pgbench tables and subscribing node 22 to set 1"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB2
+
+echo "*** Drop table account on node 22"
+psql -d $DB2 -c "drop table public.tellers;"
+slonik <<_EOF_
+$PREAMBLE
+
+	subscribe set ( id = 1, provider = 11, receiver = 22, forward = yes );
+_EOF_
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB2 should now be copying data and attempting to catch up."
+echo "**********************************************************************"
+echo ""
+
+echo -n "**** waiting for pgbench to finish "
+while kill -0 $pgbench_pid 2>/dev/null ; do
+	echo -n "."
+	sleep 10
+done
+echo "**** pgbench finished"
+echo "**** please terminate the replication engines when caught up."
+wait $slon1_pid
+wait $slon2_pid
+
+kill $pgbench_pid 2>/dev/null
+kill $slon1_pid 2>/dev/null
+kill $slon2_pid 2>/dev/null
+
+./compare_pgbench_dumps $DB1 $DB2
