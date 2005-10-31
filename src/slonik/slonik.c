@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.49 2005-10-27 19:20:41 wieck Exp $
+ *	$Id: slonik.c,v 1.50 2005-10-31 16:05:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1916,6 +1916,14 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 				   adminfo->version_major, adminfo->version_minor);
 	}
 
+#define ROWIDBITS "_Slony-I__rowID"
+
+	if (strlen(stmt->script->clustername) + strlen("ROWIDBITS") > NAMEDATALEN) {
+		printf ("Cluster name %s too long to permit creation of columns containing %s - maximum name length: %d\n", 
+			stmt->script->clustername, ROWIDBITS, NAMEDATALEN);
+		return -1;
+        }
+	
 	dstring_init(&query);
 
 	/* Create the cluster namespace */
