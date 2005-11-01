@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.9 2005-10-14 14:12:26 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.10 2005-11-01 21:19:44 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3799,16 +3799,6 @@ begin
 			      sub_forward and sub_active) then
 			raise exception ''Slony-I: provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
 		end if;
-	end if;
-
-	-- ---
-	-- Check to see if the set contains any tables - gripe if not - bug #1226
-	-- ---
-	if not exists (select true 
-		from @NAMESPACE@.sl_table
-		where tab_set = p_sub_set) then
-		raise notice ''subscribeSet:: set % has no tables - risk of problems - see bug 1226'', p_sub_set;
-		raise notice ''http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226'';
 	end if;
 
 	-- ----
