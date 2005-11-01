@@ -170,7 +170,7 @@ esac
 
 
 TEMP_LDFLAGS=$LDFLAGS
-LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
+LDFLAGS="$TEMP_LDFLAGS -L$PG_LIBDIR"
 
 AC_CHECK_LIB(pq, PQunescapeBytea, HAVE_PQUNESCAPEBYTEA=1)
 if test -n "$HAVE_PQUNESCAPEBYTEA"; then
@@ -217,7 +217,7 @@ else
     )
 fi
 
-LDFLAGS="$TEMP_FLAGS -L$PG_PKGLIBDIR"
+LDFLAGS="$TEMP_LDFLAGS -L$PG_PKGLIBDIR"
 AC_MSG_CHECKING(for plpgsql.so)
 if test -s $PG_PKGLIBDIR"/plpgsql.so"; then
     AC_MSG_RESULT(yes)
@@ -255,7 +255,7 @@ else
 	)
 fi
 
-LDFLAGS="$TEMP_FLAGS -L$PG_LIBDIR"
+LDFLAGS="$TEMP_LDFLAGS -L$PG_LIBDIR"
 
 dnl On Windows (and other OSs?) we need to link against libintl if the server
 dnl was built with --enable-nls
