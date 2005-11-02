@@ -5,6 +5,74 @@ AC_REQUIRE([AC_CANONICAL_HOST])
 AC_LANG_SAVE
 AC_LANG_C
 
+dnl -----------------------------------------
+dnl Get commandline options first
+dnl -----------------------------------------
+
+
+if test -n "${with_pgbindir}" ; then
+_pwd=`pwd`
+cd ${with_pgbindir}
+with_pgbindir=`pwd`
+cd ${_pwd}
+echo "overriding pgbindir with" ${with_pgbindir}
+PG_BINDIR=${with_pgbindir}
+fi
+
+if test -n "${with_pglibdir}"; then
+_pwd=`pwd`
+cd ${with_pglibdir}
+with_pglibdir=`pwd`
+cd ${_pwd}
+echo "overriding pglibdir with" ${with_pglibdir}
+PG_LIBDIR=${with_pglibdir}
+fi
+
+if test -n "${with_pgincludedir}"; then
+_pwd=`pwd`
+cd ${with_pgincludedir}
+with_pgincludedir=`pwd`
+cd ${_pwd}
+echo "overriding pgincludedir with" ${with_pgincludedir}
+PG_INCLUDEDIR=${with_pgincludedir}
+fi
+
+if test -n "${with_pgpkglibdir}"; then
+_pwd=`pwd`
+cd ${with_pgpkglibdir}
+with_pgpkglibdir=`pwd`
+cd ${_pwd}
+echo "overriding pgpkglibdir with" ${with_pgpkglibdir}
+PG_PKGLIBDIR=${with_pgpkglibdir}
+fi
+
+if test -n "${with_pgincludeserverdir}"; then
+_pwd=`pwd`
+cd ${with_pgincludeserverdir}
+with_pgincludeserverdir=`pwd`
+cd ${_pwd}
+echo "overriding pgincludeserverdir with" ${with_pgincludeserverdir}
+PG_INCLUDESERVERDIR=${with_pgincludeserverdir}
+fi
+
+if test -n "${with_toolsdir}"; then
+_pwd=`pwd`
+cd ${with_toolsdir}
+with_toolsdir=`pwd`
+cd ${_pwd}
+echo "overriding toolsdir with" ${with_toolsdir}
+TOOLSBINDIR=${with_toolsdir}
+fi
+
+if test -n "${with_pgsharedir}"; then
+_pwd=`pwd`
+cd ${with_pgsharedir}
+with_pgsharedir=`pwd`
+cd ${_pwd}
+echo "overriding pgsharedir with" ${with_pgsharedir}
+PG_SHAREDIR=${with_pgsharedir}
+fi
+
 
 AC_MSG_CHECKING(for pg_config)
 
@@ -37,11 +105,26 @@ if test -n "$PG_CONFIG_LOCATION"; then
             ;;
         
         *)
-            PG_BINDIR=`$PG_CONFIG_LOCATION --bindir`/
-            PG_LIBDIR=`$PG_CONFIG_LOCATION --libdir`/
-            PG_INCLUDEDIR=`$PG_CONFIG_LOCATION --includedir`/
-            PG_PKGLIBDIR=`$PG_CONFIG_LOCATION --pkglibdir`/
-            PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
+	    if test "$PG_BINDIR" = ""; then
+		PG_BINDIR=`$PG_CONFIG_LOCATION --bindir`/
+		echo "pg_config says pg_bindir is $PG_BINDIR"
+		fi
+            if test "$PG_LIBDIR" = ""; then
+        	PG_LIBDIR=`$PG_CONFIG_LOCATION --libdir`/
+		echo "pg_config says pg_libdir is $PG_LIBDIR"
+	    fi
+            if test "$PG_INCLUDEDIR" = ""; then
+        	PG_INCLUDEDIR=`$PG_CONFIG_LOCATION --includedir`/
+		echo "pg_config says pg_includedir is $PG_INCLUDEDIR"
+	    fi
+            if test "$PG_PKGLIBDIR" = ""; then
+        	PG_PKGLIBDIR=`$PG_CONFIG_LOCATION --pkglibdir`/
+		echo "pg_config says pg_pkglibdir is $PG_PKGLIBDIR"
+	    fi
+            if test "$PG_INCLUDESERVERDIR" = ""; then
+        	PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
+		echo "pg_config says pg_includeserverdir is $PG_INCLUDESERVERDIR"
+	    fi
             ;;
     esac
     
@@ -90,68 +173,11 @@ else
     )
 fi
 
-dnl -----------------------------------------
-dnl Override the detected values with commandline options
-dnl -----------------------------------------
-
-
-
-if test -n "${with_pgbindir}" ; then
-_pwd=`pwd`
-cd ${with_pgbindir}
-with_pgbindir=`pwd`
-cd ${_pwd}
-echo "Overriding pgbindir with" ${with_pgbindir}
-PG_BINDIR=${with_pgbindir}
-fi
-
-if test -n "${with_pglibdir}"; then
-_pwd=`pwd`
-cd ${with_pglibdir}
-with_pglibdir=`pwd`
-cd ${_pwd}
-echo "Overriding pglibdir with" ${with_pglibdir}
-PG_LIBDIR=${with_pglibdir}
-fi
-
-if test -n "${with_pgincludedir}"; then
-_pwd=`pwd`
-cd ${with_pgincludedir}
-with_pgincludedir=`pwd`
-cd ${_pwd}
-echo "Overriding pgincludedir with" ${with_pgincludedir}
-PG_INCLUDEDIR=${with_pgincludedir}
-fi
-
-if test -n "${with_pgpkglibdir}"; then
-_pwd=`pwd`
-cd ${with_pgpkglibdir}
-with_pgpkglibdir=`pwd`
-cd ${_pwd}
-echo "Overriding pgpkglibdir with" ${with_pgpkglibdir}
-PG_PKGLIBDIR=${with_pgpkglibdir}
-fi
-
-if test -n "${with_pgincludeserverdir}"; then
-_pwd=`pwd`
-cd ${with_pgincludeserverdir}
-with_pgincludeserverdir=`pwd`
-cd ${_pwd}
-echo "Overriding pgincludeserverdir with" ${with_pgincludeserverdir}
-PG_INCLUDESERVERDIR=${with_pgincludeserverdir}
-fi
-
-if test -n "${with_toolsdir}"; then
-_pwd=`pwd`
-cd ${with_toolsdir}
-with_toolsdir=`pwd`
-cd ${_pwd}
-echo "Overriding toolsdir with" ${with_toolsdir}
-TOOLSBINDIR=${with_toolsdir}
-fi
 
 dnl -----------------------------------------
 dnl Make sure we have found the right values!
+dnl Values that were overridden will not be
+dnl checked.
 dnl -----------------------------------------
 
 dnl -----------------------------------------
@@ -217,42 +243,52 @@ else
     )
 fi
 
-LDFLAGS="$TEMP_LDFLAGS -L$PG_PKGLIBDIR"
 AC_MSG_CHECKING(for plpgsql.so)
-if test -s $PG_PKGLIBDIR"/plpgsql.so"; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
-elif test -s $PG_PKGLIBDIR"/plpgsql.sl"; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
-elif test -s $PG_PKGLIBDIR"/plpgsql.dll"; then
-    AC_MSG_RESULT(yes)
+if test -n "${with_pgpkglibdir}"; then
+    AC_MSG_RESULT(skipped due to override)
     AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
 else
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR($PG_PKGLIBDIR/plpgsql.[so|sl|dll] is not found in the pkglibdir.
-    Please specify the pkglibdir with --with-pgpkglibdir=<dir>
-    )
+    LDFLAGS="$TEMP_LDFLAGS -L$PG_PKGLIBDIR"
+
+    if test -s $PG_PKGLIBDIR"/plpgsql.so"; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
+    elif test -s $PG_PKGLIBDIR"/plpgsql.sl"; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
+    elif test -s $PG_PKGLIBDIR"/plpgsql.dll"; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(PG_PKGLIBDIR_VERIFIED,1,[PostgreSQL pkglibdir])
+    else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR($PG_PKGLIBDIR/plpgsql.[so|sl|dll] is not found in the pkglibdir.
+	Please specify the pkglibdir with --with-pgpkglibdir=<dir>
+	)
+    fi
 fi
 
 AC_MSG_CHECKING(for postgresql.conf.sample)
-PGSHARE_POSSIBLE_LOCATIONS="${with_pgsharedir} /usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${PG_BINDIR}/../share"
-for i in $PGSHARE_POSSIBLE_LOCATIONS; do
-    if test -s "$i/postgresql.conf.sample" ; then
-	PG_SHAREDIR=$i/
-	break;
-    fi
-done
-
 if test -n "$PG_SHAREDIR" ; then
-    AC_MSG_RESULT(${PG_SHAREDIR}postgresql.conf.sample)
+    AC_MSG_RESULT(skipped due to override)
     AC_DEFINE(PG_SHAREDIR_VERIFIED,1,[PostgreSQL sharedir])
 else
-    AC_MSG_RESULT(not found)
-    AC_MSG_ERROR(
+    PGSHARE_POSSIBLE_LOCATIONS="$PG_SHAREDIR /usr/local/pgsql/share /usr/local/share/postgresql /usr/share/postgresql /usr/local/share/pgsql /usr/share/pgsql /opt/local/pgsql/share /opt/pgsql/share ${PG_BINDIR}/../share"
+    for i in $PGSHARE_POSSIBLE_LOCATIONS; do
+	if test -s "$i/postgresql.conf.sample" ; then
+	    PG_SHAREDIR=$i/
+	    break;
+	fi
+    done
+    if test -n "$PG_SHAREDIR" ; then
+	AC_MSG_RESULT(${PG_SHAREDIR}postgresql.conf.sample)
+	AC_DEFINE(PG_SHAREDIR_VERIFIED,1,[PostgreSQL sharedir])
+    else
+	AC_MSG_RESULT(not found)
+	AC_MSG_ERROR(
 	postgresql.conf.sample not found! Please specify the sharedir
 	with --with-pgsharedir=<dir>
 	)
+    fi
 fi
 
 LDFLAGS="$TEMP_LDFLAGS -L$PG_LIBDIR"
