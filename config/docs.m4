@@ -44,15 +44,5 @@ AC_DEFUN([ACX_SLONYDOCS], [
   AC_LANG_RESTORE
 ]) dnl ACX_SLONYDOCS
 
-AC_DEFUN([SLON_AC_DOCS],
-[AC_ARG_WITH(docs,
-[  --with-docs             Build the sgml documentation [default=no]],
-test "$withval" = no || with_docs=yes, with_docs=no)
-AC_MSG_CHECKING(if you have requested documentation building)
-if test -n "$with_docs"; then
-  AC_MSG_RESULT($with_docs)
-else
-  AC_MSG_RESULT(no)
-fi
-])
+AC_DEFUN([SLON_AC_DOCS])
 

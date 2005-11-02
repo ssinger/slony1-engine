@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.50 2005-06-29 02:31:02 darcyb Exp $
+# $Id: configure.ac,v 1.51 2005-11-02 12:39:44 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -131,6 +131,8 @@ AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of 
 AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. **EXPERIMENTAL** ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation Default is $PREFIX/doc. ])
+AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
+
 #Our current path
 SLONYPATH=`pwd`
 
@@ -140,8 +142,6 @@ SLONYPATH=`pwd`
 ACX_LIBPQ()
 ACX_LIBSNMP()
 ACX_SLONYTOOLS()
-SLON_AC_DOCS()
-ACX_SLONYDOCS()
 
 AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
 AC_SUBST(PGINCLUDESERVERDIR, $PG_INCLUDESERVERDIR)
@@ -154,7 +154,6 @@ AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
 AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
 AC_SUBST(TOOLSBIN, $TOOLSBIN)
 AC_SUBST(DOCDIR, $DOCDIR)
-AC_SUBST(with_docs, $with_docs)
 
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
@@ -168,25 +167,41 @@ SLONBINDIR="${PG_BINDIR}"
 AC_SUBST(SLONBINDIR,$SLONBINDIR)
 
 # ----
-# Tools for building docs
-# ---
+# Documentation checks
+# ----
+SLON_AC_DOCS()
+ACX_SLONYDOCS()
 
-SLON_AC_PROG_GROFF
-SLON_AC_PROG_PS2PDF
-SLON_AC_PROG_DJPEG
-SLON_AC_PROG_PNMTOPS
-SLON_AC_PROG_CONVERT
-SLON_AC_PROG_PGAUTODOC
+AC_SUBST(with_docs, $with_docs)
 
-#
-# Check for DocBook and tools
-#
-SLON_AC_PROG_NSGMLS
-SLON_AC_PROG_JADE
-SLON_AC_CHECK_DOCBOOK(4.2)
-SLON_AC_PATH_DOCBOOK_STYLESHEETS
-SLON_AC_PATH_COLLATEINDEX
-AC_SUBST(SGMLSPL, $SGMLSPL)
+AC_MSG_CHECKING(if you have requested documentation building)
+if test "$with_docs" = "yes"; then
+
+	AC_MSG_RESULT($with_docs)
+
+	# ----
+	# Tools for building docs
+	# ---
+
+	SLON_AC_PROG_GROFF
+	SLON_AC_PROG_PS2PDF
+	SLON_AC_PROG_DJPEG
+	SLON_AC_PROG_PNMTOPS
+	SLON_AC_PROG_CONVERT
+	SLON_AC_PROG_PGAUTODOC
+
+	#
+	# Check for DocBook and tools
+	#
+	SLON_AC_PROG_NSGMLS
+	SLON_AC_PROG_JADE
+	SLON_AC_CHECK_DOCBOOK(4.2)
+	SLON_AC_PATH_DOCBOOK_STYLESHEETS
+	SLON_AC_PATH_COLLATEINDEX
+	AC_SUBST(SGMLSPL, $SGMLSPL)
+else
+  AC_MSG_RESULT(no)
+fi
 
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile
