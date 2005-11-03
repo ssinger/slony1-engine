@@ -6,6 +6,12 @@ mechanics of replicating an existing database are covered here, however we
 recommend that you learn how Slony-I functions by using a fresh new
 non-production database.
 
+Note that pgbench is a "benchmark" tool that is in the PostgreSQL set
+of "contrib" tools.  If you build PostgreSQL from source, you can
+readily head to "contrib/pgbench" and do a "make install" to build and
+install it; it is not always included in packaged binary PostgreSQL
+installations.
+
 The Slony-I replication engine is trigger-based, allowing us to replicate
 databases (or portions thereof) running under the same postmaster.  More
 commonly, databases are replicated from one host to another.
