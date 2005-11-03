@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.14 2005-06-29 20:13:37 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.15 2005-11-03 20:50:08 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating a first database</primary></indexterm>
@@ -7,6 +7,13 @@
 database.  The mechanics of replicating an existing database are
 covered here, however we recommend that you learn how &slony1;
 functions by using a fresh new non-production database.</para>
+
+<para> Note that <application>pgbench</application> is a "benchmark"
+tool that is in the &postgres; set of <filename>contrib</filename>
+tools. If you build &postgres; from source, you can readily head
+to <filename>contrib/pgbench</filename> and do a <command>make
+install</command> to build and install it; it is not always included in
+packaged binary &postgres; installations.</para>
 
 <para>The &slony1; replication engine is trigger-based, allowing us to
 replicate databases (or portions thereof) running under the same
