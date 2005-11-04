@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.94 2005-10-28 15:29:53 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.95 2005-11-04 16:12:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5087,7 +5087,12 @@ int close_log_archive () {
 			     "commit;\n"
 			     "vacuum analyze %s.sl_setsync_offline;\n", 
 			     rtcfg_namespace);
+		if ( rc < 0 ) 
+			return -1;
 		rc = fclose(archive_fp);
+		archive_fp = NULL;
+		if ( rc < 0 ) 
+			return -1;
 		rc = rename(archive_tmp, archive_name);
 	}
 	return rc;
