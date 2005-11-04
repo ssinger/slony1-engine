@@ -136,7 +136,7 @@ declare
 	p_set_id	alias for \$1;
 	p_old_seq	alias for \$2;
 	p_new_seq	alias for \$3;
-        p_sync_time     alias for \$4;
+	p_sync_time	alias for \$4;
 	v_row		record;
 begin
 	select ssy_seqno into v_row from $clname.sl_setsync_offline
@@ -177,7 +177,7 @@ echo "set transaction isolation level serializable;"
 # ----
 echo "select 'copy $clname.sl_sequence_offline from stdin;';"
 echo "select seq_id::text || '	' || seq_relname  || '	' || seq_nspname from $clname.sl_sequence;"
-echo "select '\\\\.';"
+printf "select '\\\\\\\\.';"
 
 for seq in $sequences ; do
 	eval seqname=\$seqname_$seq
@@ -204,15 +204,7 @@ for tab in $tables ; do
 	# Get fieldnames...
  	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
  	echo "select 'copy $tabname $fields from stdin;';"
-
-        case $system_type in
-	    AIX|aix)
-		echo "select '\\\\\\\\.';"
-		;;
-	    *)
-		echo "select '\\\\.';"
-		;;
-	esac
+ 	printf "select '\\\\\\\\.';"
 done
 
 # ----
