@@ -177,7 +177,7 @@ echo "set transaction isolation level serializable;"
 # ----
 echo "select 'copy $clname.sl_sequence_offline from stdin;';"
 echo "select seq_id::text || '	' || seq_relname  || '	' || seq_nspname from $clname.sl_sequence;"
-echo "select '\\\\.';"
+printf "select '\\\\\\\\.';"
 
 for seq in $sequences ; do
 	eval seqname=\$seqname_$seq
@@ -204,15 +204,7 @@ for tab in $tables ; do
 	# Get fieldnames...
  	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
  	echo "select 'copy $tabname $fields from stdin;';"
-
-        case $system_type in
-	    AIX|aix)
-		echo "select '\\\\\\\\.';"
-		;;
-	    *)
-		echo "select '\\\\.';"
-		;;
-	esac
+ 	printf "select '\\\\\\\\.';"
 done
 
 # ----
