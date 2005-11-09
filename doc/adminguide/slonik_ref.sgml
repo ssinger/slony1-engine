@@ -1728,7 +1728,16 @@ UNSUBSCRIBE SET (
 
     <para> Note that this is a <link linkend="locking"> locking
     operation, </link> which means that it can get stuck behind other
-    database activity.
+    database activity.</para>
+
+    <para> The operation waits for transaction IDs to advance in order
+    that data is not missed on the new origin.  Thus, if you have
+    long-running transactions running on the source node, this
+    operation will wait for those transactions to complete.
+    Unfortunately, if you have another database on the same postmaster
+    as the origin node, long running transactions on that database
+    will also be considered even though they are essentially
+    independent.
      
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
