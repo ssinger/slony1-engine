@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.11 2005-11-09 16:24:22 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.12 2005-11-09 23:53:19 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -247,7 +247,7 @@ begin
 			nl_backendpid from @NAMESPACE@.sl_nodelock
 			where nl_nodeid = p_failed_node for update
 	loop
-		perform @NAMESPACE@.killBackend(v_row.nl_backendpid, 15);
+		perform @NAMESPACE@.killBackend(v_row.nl_backendpid, ''TERM'');
 		delete from @NAMESPACE@.sl_nodelock
 			where nl_nodeid = v_row.nl_nodeid
 			and nl_conncnt = v_row.nl_conncnt;
@@ -261,15 +261,15 @@ comment on function @NAMESPACE@.terminateNodeConnections (int4) is
   'terminates all backends that have registered to be from the given node';
 
 -- ----------------------------------------------------------------------
--- FUNCTION killBackend (pid, signo)
+-- FUNCTION killBackend (pid, signame)
 --
 --	
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.killBackend (int4, int4) returns int4
+create or replace function @NAMESPACE@.killBackend (int4, text) returns int4
     as '$libdir/slony1_funcs', '_Slony_I_killBackend'
 	language C;
 
-comment on function @NAMESPACE@.killBackend(int4, int4) is
+comment on function @NAMESPACE@.killBackend(int4, text) is
   'Send a signal to a postgres process. Requires superuser rights';
 
 -- ----------------------------------------------------------------------
@@ -465,7 +465,7 @@ begin
 			from @NAMESPACE@.sl_nodelock
 			for update
 	loop
-		if @NAMESPACE@.killBackend(v_row.nl_backendpid, 0) < 0 then
+		if @NAMESPACE@.killBackend(v_row.nl_backendpid, ''NULL'') < 0 then
 			raise notice ''Slony-I: cleanup stale sl_nodelock entry for pid=%'',
 					v_row.nl_backendpid;
 			delete from @NAMESPACE@.sl_nodelock where
