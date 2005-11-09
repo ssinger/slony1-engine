@@ -583,6 +583,12 @@ case `uname` in
       mktmp=$tmpdir/$rstring
     fi
   ;;
+  Linux)
+    mktmp=`mktemp -d -t slony-regress.XXXXXX`
+    if [ ! -d $mktmp ]; then
+      err 3 "mktemp failed"
+    fi
+  ;;
   *)
     mktmp=`mktemp -d -t slony-regress`
     if [ ! -d $mktmp ]; then
