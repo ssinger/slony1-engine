@@ -1109,7 +1109,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
-       <listitem><para> ID of the set to which the table is to be added.  </para></listitem>
+       <listitem><para> ID of the set to which the table is to be added. </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
@@ -1125,7 +1125,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	 these numbers should represent any applicable table hierarchy
 	 to make sure the <application>slonik</application> command
 	 scripts do not deadlock at any critical
-	 moment.</para></listitem>
+	 moment.</para>
+
+         <para> This ID must be unique across all sets; you cannot
+         have two tables in the same cluster with the same
+         ID. </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full table name as described in
