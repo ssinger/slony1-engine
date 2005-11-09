@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.95 2005-11-04 16:12:10 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.96 2005-11-09 16:50:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -318,14 +318,11 @@ remoteWorkerThread_main(void *cdata)
 	local_dbconn = local_conn->dbconn;
 
 	/*
-	 * Put the connection into replication mode and listen on the special
-	 * relation telling what node daemon this connection belongs to.
+	 * Put the connection into replication mode
 	 */
 	slon_mkquery(&query1,
-				 "select %s.setSessionRole('_%s', 'slon'); "
-				 "listen \"_%s_Node_%d\"; ",
-				 rtcfg_namespace, rtcfg_cluster_name,
-				 rtcfg_cluster_name, rtcfg_nodeid);
+				 "select %s.setSessionRole('_%s', 'slon'); ",
+				 rtcfg_namespace, rtcfg_cluster_name);
 	if (query_execute(node, local_dbconn, &query1) < 0)
 		slon_abort();
 
@@ -2500,12 +2497,11 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 	}
 	/*
-	 * Listen on the special relation telling what node daemon this connection
-	 * belongs to.
+	 * Register this connection in sl_nodelock
 	 */
 	slon_mkquery(&query1,
-		     "listen \"_%s_Node_%d\"; ",
-		     rtcfg_cluster_name, rtcfg_nodeid);
+		     "select %s.registerNodeConnection(%d); ",
+		     rtcfg_namespace, rtcfg_nodeid);
 	if (query_execute(node, pro_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
@@ -3897,8 +3893,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 * Listen on the special relation telling our node relationship
 			 */
 			slon_mkquery(&query,
-						 "listen \"_%s_Node_%d\"; ",
-						 rtcfg_cluster_name, rtcfg_nodeid);
+						 "select %s.registerNodeConnection(%d); ",
+						 rtcfg_namespace, rtcfg_nodeid);
 			if (query_execute(node, provider->conn->dbconn, &query) < 0)
 			{
 				TERMINATE_QUERY_AND_ARCHIVE;
@@ -4522,19 +4518,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			}
 		}
 		PQclear(res1);
-
-		/*
-		 * Start listening on the special relation that will cause our local
-		 * connection to be killed when the provider node fails.
-		 */
-		slon_mkquery(&query,
-					 "listen \"_%s_Node_%d\"; ",
-					 rtcfg_cluster_name, provider->no_id);
-		if (query_execute(node, local_dbconn, &query) < 0)
-		{
-			dstring_free(&query);
-			return 60;
-		}
 	}
 
 	/*
@@ -4579,21 +4562,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			return 10;
 		}
 		PQclear(res1);
-	}
-	for (provider = wd->provider_head; provider; provider = provider->next)
-	{
-		/*
-		 * Stop listening on the special relations that will cause our local
-		 * connection to be killed when the provider node fails.
-		 */
-		slon_mkquery(&query,
-					 "unlisten \"_%s_Node_%d\"; ",
-					 rtcfg_cluster_name, provider->no_id);
-		if (query_execute(node, local_dbconn, &query) < 0)
-		{
-			TERMINATE_QUERY_AND_ARCHIVE;
-			return 60;
-		}
 	}
 
 	/*

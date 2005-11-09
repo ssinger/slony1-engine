@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.28 2005-09-26 19:31:45 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.29 2005-11-09 16:50:37 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -32,6 +32,23 @@ comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the nod
 comment on column @NAMESPACE@.sl_node.no_active is 'Is the node active in replication yet?';  
 comment on column @NAMESPACE@.sl_node.no_comment is 'A human-oriented description of the node';
 comment on column @NAMESPACE@.sl_node.no_spool is 'Is the node being used for log shipping?';  
+
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_nodelock
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_nodelock (
+	nl_nodeid			int4,
+	nl_conncnt			serial,
+	nl_backendpid		int4,
+
+	CONSTRAINT "sl_nodelock-pkey"
+		PRIMARY KEY (nl_nodeid, nl_conncnt)
+);
+comment on table @NAMESPACE@.sl_nodelock is 'Used to prevent multiple slon instances and to identify the backends to kill in terminateNodeConnections().';
+comment on column @NAMESPACE@.sl_nodelock.nl_nodeid is 'Clients node_id';
+comment on column @NAMESPACE@.sl_nodelock.nl_conncnt is 'Clients connection number';
+comment on column @NAMESPACE@.sl_nodelock.nl_backendpid is 'PID of database backend owning this lock';
 
 
 -- ----------------------------------------------------------------------

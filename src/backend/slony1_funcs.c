@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.34 2005-07-04 15:41:47 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.35 2005-11-09 16:50:37 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -44,8 +44,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
-PG_FUNCTION_INFO_V1(_Slony_I_terminateNodeConnections);
-PG_FUNCTION_INFO_V1(_Slony_I_cleanupListener);
+PG_FUNCTION_INFO_V1(_Slony_I_killBackend);
 
 PG_FUNCTION_INFO_V1(_slon_quote_ident);
 
@@ -59,8 +58,7 @@ Datum		_Slony_I_getSessionRole(PG_FUNCTION_ARGS);
 Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
-Datum		_Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS);
-Datum		_Slony_I_cleanupListener(PG_FUNCTION_ARGS);
+Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
 
@@ -1000,92 +998,21 @@ _Slony_I_lockedSet(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_terminateNodeConnections(PG_FUNCTION_ARGS)
+_Slony_I_killBackend(PG_FUNCTION_ARGS)
 {
-	Name		relname = PG_GETARG_NAME(0);
-	void	   *plan;
-	Oid			argtypes[1];
-	Datum		args  [1];
-	int			i;
 	int32		pid;
-	bool		isnull;
+	int32		signo;
 
-	if (SPI_connect() < 0)
-		elog(ERROR, "Slony-I: SPI_connect() failed in terminateNodeConnections()");
+	if (!superuser())
+		elog(ERROR, "Slony-I: insufficient privilege for killBackend");
 
-	argtypes[0] = NAMEOID;
-	plan = SPI_prepare("select listenerpid "
-					   "    from \"pg_catalog\".pg_listener "
-					   "    where relname = $1; ",
-					   1, argtypes);
-	if (plan == NULL)
-		elog(ERROR, "Slony-I: SPI_prepare() failed in terminateNodeConnections()");
+	pid		= PG_GETARG_INT32(0);
+	signo	= PG_GETARG_INT32(1);
 
-	args[0] = NameGetDatum(relname);
-	if (SPI_execp(plan, args, NULL, 0) != SPI_OK_SELECT)
-		elog(ERROR, "Slony-I: SPI_execp() failed in terminateNodeConnections()");
+	if (kill(pid, signo) < 0)
+		PG_RETURN_INT32(-1);
 
-	for (i = 0; i < SPI_processed; i++)
-	{
-		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
-										  SPI_tuptable->tupdesc, 1, &isnull));
-		elog(NOTICE, "Slony-I: terminating DB connection of failed node "
-			 "with pid %d", pid);
-		kill(pid, SIGTERM);
-	}
-
-	SPI_finish();
-
-	return (Datum)0;
-}
-
-
-Datum
-_Slony_I_cleanupListener(PG_FUNCTION_ARGS)
-{
-	static void *plan = NULL;
-	int			i;
-	int32		pid;
-	char	   *relname;
-	bool		isnull;
-
-
-	if (SPI_connect() < 0)
-		elog(ERROR, "Slony-I: SPI_connect() failed in cleanupListener()");
-
-	if (plan == NULL)
-	{
-		plan = SPI_saveplan(SPI_prepare("select relname, listenerpid "
-									 "    from \"pg_catalog\".pg_listener; ",
-										0, NULL));
-		if (plan == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed in cleanupListener()");
-	}
-
-	if (SPI_execp(plan, NULL, NULL, 0) != SPI_OK_SELECT)
-		elog(ERROR, "Slony-I: SPI_execp() failed in cleanupListener()");
-
-	for (i = 0; i < SPI_processed; i++)
-	{
-		pid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
-										  SPI_tuptable->tupdesc, 2, &isnull));
-		if (kill(pid, 0) < 0)
-		{
-			if (errno == ESRCH)
-			{
-				relname = SPI_getvalue(SPI_tuptable->vals[i],
-									   SPI_tuptable->tupdesc, 1);
-
-				elog(NOTICE, "Slony-I: removing stale pg_listener entry "
-					 "for pid %d, relname %s", pid, relname);
-				Async_Unlisten(relname, pid);
-			}
-		}
-	}
-
-	SPI_finish();
-
-	return (Datum)0;
+	PG_RETURN_INT32(0);
 }
 
 
