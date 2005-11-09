@@ -93,7 +93,7 @@ echo "ik done"
       warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
     fi
     status "loading remaining rows of data"
-    cat ${testname}/init_dropnode.ik > $mktmp/slonik.script
+    ${testname}/init_dropnode.sh > $mktmp/slonik.script
     do_ik
     $pgbindir/psql -h $host $db $user < $mktmp/generate.data.ac 1>> $mktmp/initdata.log 2> $mktmp/initdata.log
     if [ $? -ne 0 ]; then
