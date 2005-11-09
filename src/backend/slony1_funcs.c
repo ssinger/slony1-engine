@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.35 2005-11-09 16:50:37 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.36 2005-11-09 23:53:10 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1002,12 +1002,28 @@ _Slony_I_killBackend(PG_FUNCTION_ARGS)
 {
 	int32		pid;
 	int32		signo;
+	text	   *signame;
 
 	if (!superuser())
 		elog(ERROR, "Slony-I: insufficient privilege for killBackend");
 
 	pid		= PG_GETARG_INT32(0);
-	signo	= PG_GETARG_INT32(1);
+	signame	= PG_GETARG_TEXT_P(1);
+
+	if (VARSIZE(signame) == VARHDRSZ + 4 &&
+		memcmp(VARDATA(signame), "NULL", 0) == 0)
+	{
+		signo = 0;
+	}
+	else if (VARSIZE(signame) == VARHDRSZ + 4 &&
+		memcmp(VARDATA(signame), "TERM", 0) == 0)
+	{
+		signo = SIGTERM;
+	}
+	else
+	{
+		elog(ERROR, "Slony-I: unsupported signal");
+	}
 
 	if (kill(pid, signo) < 0)
 		PG_RETURN_INT32(-1);
