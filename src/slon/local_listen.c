@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.31 2005-05-03 16:16:22 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.31.2.1 2005-11-09 16:24:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -69,10 +69,8 @@ localListenThread_main(void *dummy)
 	 * Listen for local events
 	 */
 	slon_mkquery(&query1,
-				 "select %s.cleanupListener(); "
 				 "listen \"_%s_Event\"; "
 				 "listen \"_%s_Restart\"; ",
-				 rtcfg_namespace,
 				 rtcfg_cluster_name, rtcfg_cluster_name);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -90,23 +88,17 @@ localListenThread_main(void *dummy)
 	 * Check that we are the only slon daemon connected.
 	 */
 	slon_mkquery(&query1,
-				 "select true from \"pg_catalog\".pg_listener "
-				 "    where relname = '_%s_Restart';",
-				 rtcfg_cluster_name, rtcfg_cluster_name);
+				 "select %s.cleanupNodelock(); "
+				 "insert into %s.sl_nodelock values ("
+				 "    %d, 0, \"pg_catalog\".pg_backend_pid()); ",
+				 rtcfg_namespace, rtcfg_namespace,
+				 rtcfg_nodeid);
 	res = PQexec(dbconn, dstring_data(&query1));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_FATAL,
 				 "localListenThread: \"%s\" - %s",
 				 dstring_data(&query1), PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query1);
-		slon_abort();
-	}
-	if (PQntuples(res) != 1)
-	{
-		slon_log(SLON_FATAL,
-				 "localListenThread: Another slon daemon is serving this node already\n");
 		PQclear(res);
 		dstring_free(&query1);
 		slon_abort();

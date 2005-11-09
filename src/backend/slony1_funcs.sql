@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.10 2005-11-01 21:19:44 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.11 2005-11-09 16:24:22 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -233,28 +233,44 @@ updates to be recorded in sl_log_1/sl_log_2.';
 grant execute on function @NAMESPACE@.logTrigger () to public;
 
 -- ----------------------------------------------------------------------
--- FUNCTION terminateNodeConnections (name)
+-- FUNCTION terminateNodeConnections (failed_node)
 --
 --	
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.terminateNodeConnections (name) returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_terminateNodeConnections'
-	language C;
+create or replace function @NAMESPACE@.terminateNodeConnections (int4) returns int4
+as '
+declare
+	p_failed_node	alias for $1;
+	v_row			record;
+begin
+	for v_row in select nl_nodeid, nl_conncnt,
+			nl_backendpid from @NAMESPACE@.sl_nodelock
+			where nl_nodeid = p_failed_node for update
+	loop
+		perform @NAMESPACE@.killBackend(v_row.nl_backendpid, 15);
+		delete from @NAMESPACE@.sl_nodelock
+			where nl_nodeid = v_row.nl_nodeid
+			and nl_conncnt = v_row.nl_conncnt;
+	end loop;
 
-comment on function @NAMESPACE@.terminateNodeConnections (name) is 
-  'terminates connections to the node and terminates the process';
+	return 0;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.terminateNodeConnections (int4) is 
+  'terminates all backends that have registered to be from the given node';
 
 -- ----------------------------------------------------------------------
--- FUNCTION cleanupListener ()
+-- FUNCTION killBackend (pid, signo)
 --
 --	
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupListener () returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_cleanupListener'
+create or replace function @NAMESPACE@.killBackend (int4, int4) returns int4
+    as '$libdir/slony1_funcs', '_Slony_I_killBackend'
 	language C;
 
-comment on function @NAMESPACE@.cleanupListener() is
-  'look for stale pg_listener entries and submit Async_Unlisten() to them';
+comment on function @NAMESPACE@.killBackend(int4, int4) is
+  'Send a signal to a postgres process. Requires superuser rights';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION slon_quote_brute(text)
@@ -432,6 +448,56 @@ end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
   'Returns the version number of the slony schema';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cleanupNodelock ()
+--
+--	Remove old entries from the nodelock table
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cleanupNodelock ()
+returns int4
+as '
+declare
+	v_row		record;
+begin
+	for v_row in select nl_nodeid, nl_conncnt, nl_backendpid
+			from @NAMESPACE@.sl_nodelock
+			for update
+	loop
+		if @NAMESPACE@.killBackend(v_row.nl_backendpid, 0) < 0 then
+			raise notice ''Slony-I: cleanup stale sl_nodelock entry for pid=%'',
+					v_row.nl_backendpid;
+			delete from @NAMESPACE@.sl_nodelock where
+					nl_nodeid = v_row.nl_nodeid and
+					nl_conncnt = v_row.nl_conncnt;
+		end if;
+	end loop;
+
+	return 0;
+end;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION registerNodeConnection (nodeid)
+--
+--	
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.registerNodeConnection (int4)
+returns int4
+as '
+declare
+	p_nodeid	alias for $1;
+begin
+	insert into @NAMESPACE@.sl_nodelock
+		(nl_nodeid, nl_backendpid)
+		values
+		(p_nodeid, pg_backend_pid());
+
+	return 0;
+end;
+' language plpgsql;
 
 
 -- ----------------------------------------------------------------------
@@ -937,8 +1003,7 @@ begin
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
-	perform @NAMESPACE@.terminateNodeConnections(
-			''_@CLUSTERNAME@_Node_'' || p_failed_node);
+	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
 
 -- Note that the following code should all become obsolete in the wake
 -- of the availability of RebuildListenEntries()...
@@ -4232,6 +4297,11 @@ begin
 		end if;
 	end loop;
 
+	-- ----
+	-- Also remove stale entries from the nodelock table.
+	-- ----
+	perform @NAMESPACE@.cleanupNodelock();
+
 	return 0;
 end;
 ' language plpgsql;
@@ -5110,6 +5180,25 @@ begin
 		execute ''alter table @NAMESPACE@.sl_node add column no_spool boolean'';
 		update @NAMESPACE@.sl_node set no_spool = false;
 	end if;
+
+	-- ----
+	-- Changes for 1.1.3
+	-- ----
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'') then
+		-- Add new table sl_nodelock
+		execute ''create table @NAMESPACE@.sl_nodelock (
+						nl_nodeid		int4,
+						nl_conncnt		serial,
+						nl_backendpid	int4,
+
+						CONSTRAINT "sl_nodelock-pkey"
+						PRIMARY KEY (nl_nodeid, nl_conncnt)
+					)'';
+		-- Drop obsolete functions
+		execute ''drop function @NAMESPACE@.terminateNodeConnections(name)'';
+		execute ''drop function @NAMESPACE@.cleanupListener()'';
+	end if;
+
 	return p_old;
 end;
 ' language plpgsql;

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.21 2005-01-28 22:45:26 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.21.2.1 2005-11-09 16:24:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -224,15 +224,16 @@ remoteListenThread_main(void *cdata)
 
 			/*
 			 * Listen on the connection for events and confirmations
+			 * and register the node connection.
 			 */
 			slon_mkquery(&query1,
 				     "listen \"_%s_Event\"; "
 				     "listen \"_%s_Confirm\"; "
-				     "listen \"_%s_Node_%d\"; ",
+				     "select %s.registerNodeConnection(%d); ",
 				     rtcfg_cluster_name, rtcfg_cluster_name,
-				     rtcfg_cluster_name, rtcfg_nodeid);
+				     rtcfg_namespace, rtcfg_nodeid);
 			res = PQexec(dbconn, dstring_data(&query1));
-			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR,
 					 "remoteListenThread_%d: \"%s\" - %s",
