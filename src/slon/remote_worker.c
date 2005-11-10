@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.9 2005-11-09 16:24:23 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.10 2005-11-10 23:39:34 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2853,10 +2853,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		nodeon73 = atoi(PQgetvalue(res4, 0, 0));
 
 		slon_mkquery(&query1,
-			     "select %s.truncateTable('%s'); "
+			     "select %s.prepareTableForCopy(%d); "
 			     "copy %s %s from stdin; ",
 			     rtcfg_namespace,
-			     tab_fqname, tab_fqname,
+			     tab_id, tab_fqname,
 			     nodeon73 ? "" : PQgetvalue(res3, 0, 0)
 			);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
@@ -3159,7 +3159,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Analyze the table to update statistics
 		 */
-		slon_mkquery(&query1, "analyze %s; ", tab_fqname);
+		slon_mkquery(&query1, "select %s.finishTableAfterCopy(%d); "
+							"analyze %s; ",
+							rtcfg_namespace, tab_id,
+							tab_fqname);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
