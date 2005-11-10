@@ -228,18 +228,20 @@ init_origin_rdbms()
         eval db=\$DB${originnode}
         eval host=\$HOST${originnode}
         eval user=\$USER${originnode}
+	eval pgbindir=\$PGBINDIR${originnode}
+	eval port=\$PORT${originnode}
 
 	if [ -n "${db}" -a "${host}" -a "${user}" ]; then
-	  status "creating origin DB: $user -h $host -U $user $db"
-  	  $pgbindir/createdb -O $user -h $host -U $user $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
+	  status "creating origin DB: $user -h $host -U $user -p $port $db"
+  	  $pgbindir/createdb -O $user -h $host -U $user -p $port $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
 	  if [ $? -ne 0 ]; then	   
-	    err 3 "An error occured trying to $pgbindir/createdb -O $user -h $host -U $user $db, ${mktmp}/createdb.${originnode} for details"
+	    err 3 "An error occured trying to $pgbindir/createdb -O $user -h $host -U $user -p $port $db, ${mktmp}/createdb.${originnode} for details"
 	  fi
 	else
-	  err 3 "No db '${db}' or host '${host}' or user '${user}' specified"
+	  err 3 "No db '${db}' or host '${host}' or user '${user}' or port '${port}' specified"
 	fi
 	status "loading origin DB with $testname/init_schema.sql"
-	$pgbindir/psql -h $host $db $user < $testname/init_schema.sql 1> ${mktmp}/init_schema.sql.${originnode} 2>${mktmp}/init_schema.sql.${originnode}
+	$pgbindir/psql -h $host -p $port $db $user < $testname/init_schema.sql 1> ${mktmp}/init_schema.sql.${originnode} 2>${mktmp}/init_schema.sql.${originnode}
 	status "done"
 }
 
@@ -249,6 +251,8 @@ create_subscribers()
         eval odb=\$DB${originnode}
         eval ohost=\$HOST${originnode}
         eval ouser=\$USER${originnode}
+	eval opgbindir=\$PGBINDIR${originnode}
+	eval oport=\$PORT${originnode}
 
         if [ -n "${odb}" -a "${ohost}" -a "${ouser}" ]; then
           alias=1
@@ -256,13 +260,15 @@ create_subscribers()
             eval db=\$DB${alias}
             eval host=\$HOST${alias}
             eval user=\$USER${alias}
+	    eval pgbindir=\$PGBINDIR${alias}
+	    eval port=\$PORT${alias}
 
-            if [ -n "${db}" -a "${host}" -a "${user}" ]; then
+            if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
               if [ ${alias} -ne ${originnode} ]; then
-		status "creating subscriber ${alias} DB: $user -h $host -U $user $db"
-	        $pgbindir/createdb -O $user -h $host -U $user $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
+		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
+	        $pgbindir/createdb -O $user -h $host -U $user -p $port $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
 		status "loading subscriber ${alias} DB from $odb"
-	        $pgbindir/pg_dump -s  -h $ohost -U $ouser $odb | $pgbindir/psql -h $host $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
+	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
 		status "done"
               fi
               if [ ${alias} -ge ${NUMNODES} ]; then
@@ -288,11 +294,13 @@ drop_databases()
 	  eval db=\$DB${alias}
 	  eval host=\$HOST${alias}
 	  eval user=\$USER${alias}
+	  eval pgbindir=\$PGBINDIR${alias}
+	  eval port=\$PORT${alias}
 
 	  status "${db}"
 
-	  if [ -n "${db}" -a "${host}" -a "${user}" ]; then
-	    $pgbindir/dropdb -U $user -h $host $db 1> ${mktmp}/dropdb.${alias} 2> ${mktmp}/dropdb.${alias}
+	  if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
+	    $pgbindir/dropdb -U $user -h $host -p $port $db 1> ${mktmp}/dropdb.${alias} 2> ${mktmp}/dropdb.${alias}
 	    if [ ${alias} -ge ${NUMNODES} ]; then
               break;
             else
@@ -349,16 +357,18 @@ load_data()
         eval odb=\$DB${originnode}
         eval ohost=\$HOST${originnode}
         eval ouser=\$USER${originnode}
+	eval opgbindir=\$PGBINDIR${originnode}
+	eval oport=\$PORT${originnode}
 	if [ -n "${odb}" -a "${ohost}" -a "${ouser}" ]; then
 		
 	  if [ -f $testname/init_data.sql ]; then
-	    $pgbindir/psql -h $ohost $odb $ouser < $testname/init_data.sql 1> $mktmp/init_data.sql.log 2> $mktmp/init_data.sql.log
+	    $opgbindir/psql -h $ohost -p $oport $odb $ouser < $testname/init_data.sql 1> $mktmp/init_data.sql.log 2> $mktmp/init_data.sql.log
 	    if [ $? -ne 0 ]; then
               warn 3 "$testname/init_data.sql generated an error see $mktmp/init_data.sql.log for details"
 	    fi
 	  fi
         else
-          err 3 "No origin found in ${odb} ${ohost} ${ouser}"
+          err 3 "No origin found in ${odb} ${ohost} ${ouser} ${oport}"
 	fi
 }
 
@@ -380,19 +390,21 @@ launch_poll()
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
   eval ouser=\$USER${originnode}
+  eval opgbindir=\$PGBINDIR${originnode}
+  eval oport=\$PORT${originnode}
   eval cluster=\$CLUSTER1
-  conninfo="-h ${ohost} ${odb} ${ouser}"
+  conninfo="-h ${ohost} -p ${oport} ${odb} ${ouser}"
   status "launching polling script"
   case `uname` in
     MINGW32*)
-      ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${pgbindir}" /dev/tty &
+      ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${opgbindir}" /dev/tty &
       poll_pid=$!
       ;;
     *)
       if [ "x$SHLVL" != "x" ]; then
-        ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${pgbindir}" `tty` &
+        ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${opgbindir}" `tty` &
       else
-        ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${pgbindir}" /dev/null &
+        ./poll_cluster.sh "$mktmp" "${cluster}" "${conninfo}" "${opgbindir}" /dev/null &
       fi
       tmppid=$!
       tmpppid=$$
@@ -413,11 +425,13 @@ launch_slon()
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
   eval ouser=\$USER${originnode}
+  eval opgbindir=\$PGBINDIR${originnode}
+  eval oport=\$PORT${originnode}
   eval cluster=\$CLUSTER1
 
-  conninfo="dbname=${odb} host=${ohost} user=${ouser}"
-  status "launching originnode : $pgbindir/slon -s500 -g10 $cluster \"$conninfo\""
-  $pgbindir/slon -s500 -g10 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
+  conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
+  status "launching originnode : $opgbindir/slon -s500 -g10 $cluster \"$conninfo\""
+  $opgbindir/slon -s500 -g10 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
   tmppid=$!
   tmpppid=$$
   sleep 1
@@ -436,16 +450,18 @@ launch_slon()
       eval db=\$DB${alias}
       eval host=\$HOST${alias}
       eval user=\$USER${alias}
+      eval pgbindir=\$PGBINDIR${alias}
+      eval port=\$PORT${alias}
       eval cluster=\$CLUSTER1
 
-      if [ -n "${db}" -a "${host}" -a "${user}" ]; then
+      if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         unset conninfo
 
         unset tmppid
         unset tmpppid
         eval slon${alias}_pid=
 
-        conninfo="dbname=${db} host=${host} user=${user}"
+        conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
         status "launching: $pgbindir/slon -s500 -g10 $cluster \"$conninfo\""
 
@@ -477,13 +493,15 @@ poll_cluster()
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
   eval ouser=\$USER${originnode}
+  eval opgbindir=\$PGBINDIR${originnode}
+  eval oport=\$PORT${originnode}
 
   alias=1
   while : ; do
     eval cluster=\$CLUSTER${alias}
     if [ -n "${cluster}" ]; then
       SQL="SELECT * FROM \"_${cluster}\".sl_status"
-      ${pgbindir}/psql -c "${SQL}" -h ${ohost} ${odb} ${ouser}
+      ${opgbindir}/psql -c "${SQL}" -h ${ohost} -p ${oport} ${odb} ${ouser}
       if [ ${alias} -ge ${NUMCLUSTERS} ]; then
         break;
       else
@@ -514,13 +532,15 @@ diff_db()
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
   eval ouser=\$USER${originnode}
+  eval opgbindir=\$PGBINDIR${originnode}
+  eval oport=\$PORT${originnode}
 
   if [ -f ${mktmp}/db_${originnode}.dmp ]; then
     err 3 "${mktmp}/db_${originnode}.dmp exists but should not"
   fi
   status "getting data from origin DB for diffing"
   cat ${testname}/schema.diff | while read SQL; do
-    ${pgbindir}/psql -c "${SQL}" -h ${ohost} ${odb} ${ouser} >> ${mktmp}/db_${originnode}.dmp
+    ${opgbindir}/psql -c "${SQL}" -h ${ohost} -p ${oport} ${odb} ${ouser} >> ${mktmp}/db_${originnode}.dmp
   done
   status "done"
   alias=1
@@ -528,15 +548,17 @@ diff_db()
     eval db=\$DB${alias}
     eval host=\$HOST${alias}
     eval user=\$USER${alias}
+    eval port=\$PORT${alias}
+    eval pgbindir=\$PGBINDIR${alias}
 
-    if [ -n "${db}" -a "${host}" -a "${user}" ]; then
+    if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
       if [ ${alias} -ne ${originnode} ]; then
         if [ -f ${mktmp}/db_${alias}.dmp ]; then
           err 3 "${mktmp}/db_${alias}.dmp exists but should not"
         fi
 	status "getting data from node ${alias} for diffing against origin"
         cat ${testname}/schema.diff | while read SQL; do
-          ${pgbindir}/psql -h ${host} -c "${SQL}" ${db} ${user} >> ${mktmp}/db_${alias}.dmp
+          ${pgbindir}/psql -h ${host} -c "${SQL}" -p ${port} ${db} ${user} >> ${mktmp}/db_${alias}.dmp
         done
 	status "comparing"
 	diff ${mktmp}/db_${originnode}.dmp ${mktmp}/db_${alias}.dmp > ${mktmp}/db_diff.${alias}
