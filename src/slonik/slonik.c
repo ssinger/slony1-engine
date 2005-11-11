@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.51 2005-11-11 13:53:24 wieck Exp $
+ *	$Id: slonik.c,v 1.52 2005-11-11 21:24:35 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -97,7 +97,7 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
                 /* just copy pointer if NULL or no change needed */
                 if (!lines[i]|| (strncmp((const char *)lines+i, token, toklen)))
                 {
-                       if (lines[i] == 0x0d) // ||(lines[i] == 0x0a))
+                       if (lines[i] == 0x0d) /* ||(lines[i] == 0x0a)) */
                                break;
 
                        result_set[o] = lines[i];
