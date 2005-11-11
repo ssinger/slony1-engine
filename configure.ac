@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.51 2005-11-02 12:39:44 xfade Exp $
+# $Id: configure.ac,v 1.52 2005-11-11 19:51:22 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -90,6 +90,10 @@ AC_SUBST(with_gnu_ld)
 AC_SUBST(PERL)
 AC_SUBST(SED)
 
+dnl Check whether to use the evil rpath or not
+SLON_AC_ARG_BOOL(enable, rpath, yes,
+              [  --disable-rpath         do not embed shared library search path in executables])
+AC_SUBST(enable_rpath)
 
 ACX_PTHREAD()
 

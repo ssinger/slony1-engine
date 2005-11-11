@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.30 2005-09-17 21:56:22 dpage Exp $
+# $Id: Makefile.global.in,v 1.31 2005-11-11 19:51:22 xfade Exp $
 # ----------
 
 #location substitutions
@@ -42,6 +42,7 @@ PTHREAD_CFLAGS= 	@PTHREAD_CFLAGS@
 PTHREAD_LIBS=		@PTHREAD_LIBS@
 YFLAGS=			@YFLAGS@
 FLEXFLAGS=		@LEXFLAGS@ $(LFLAGS)
+enable_rpath=		@enable_rpath@
 
 #libs
 PTHREAD_LIBS=		@PTHREAD_LIBS@
