@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.18 2005-08-12 13:30:24 dpage Exp $
+#	$Id: Makefile,v 1.19 2005-11-11 13:53:24 wieck Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -19,7 +19,8 @@ NAME		= xxid
 
 SQL_NAME73	= $(NAME).v73.sql
 SQL_NAME74	= $(NAME).v74.sql
-SQL_NAMES	= $(SQL_NAME73) $(SQL_NAME74)
+SQL_NAME80	= $(NAME).v80.sql
+SQL_NAMES	= $(SQL_NAME73) $(SQL_NAME74) $(SQL_NAME80)
 
 SO_OBJS		= xxid.o $(WIN32RES)
 
@@ -32,6 +33,9 @@ DISTFILES = Makefile xxid.c xxid.v73.sql
 all:	$(ALL)
 
 $(SQL_NAME74):	$(SQL_NAME73)
+	cp $< $@
+
+$(SQL_NAME80):	$(SQL_NAME73)
 	cp $< $@
 
 $(SO_NAME):     $(SO_OBJS) $(POSTGRES_IMP)

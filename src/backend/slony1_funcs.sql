@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.73 2005-11-09 23:53:10 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.74 2005-11-11 13:53:24 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5192,6 +5192,7 @@ begin
 		-- Drop obsolete functions
 		execute ''drop function @NAMESPACE@.terminateNodeConnections(name)'';
 		execute ''drop function @NAMESPACE@.cleanupListener()'';
+		execute ''drop function @NAMESPACE@.truncateTable(text)'';
 	end if;
 
 	return p_old;
