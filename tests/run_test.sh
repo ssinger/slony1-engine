@@ -42,6 +42,12 @@ if [ ! -x "$pgbindir/psql" ]; then
   exit 1;
 fi
 
+# Display the test documentation
+echo "test: $testname"
+echo "----------------------------------------------------"
+cat $testname/README
+echo "----------------------------------------------------"
+
 #load settings
 
 . settings.ik
