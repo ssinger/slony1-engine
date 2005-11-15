@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.26 2005-06-29 20:55:13 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.27 2005-11-15 20:18:59 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -32,6 +32,19 @@ shape of the nodes in a &slony1; cluster.</para>
 <listitem><para><envar>$CLUSTER_NAME</envar>=orglogs;	# What is the name of the replication cluster?</para></listitem>
 <listitem><para><envar>$LOGDIR</envar>='/opt/OXRS/log/LOGDBS';	# What is the base directory for logs?</para></listitem>
 <listitem><para><envar>$APACHE_ROTATOR</envar>="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator</para></listitem>
+
+<listitem><para><envar>foldCase</envar>
+
+<para> If set to 1, object names (including schema names) will be
+folded to lower case.  By default, your object names will be left
+alone.  Note that &postgres; itself folds object names to lower case;
+if you create a table via the command <command> CREATE TABLE
+SOME_THING (Id INTEGER, STudlYName text);</command>, the result will
+be that all of those components are forced to lower case, thus
+equivalent to <command> create table some_thing (id integer,
+studlyname text);</command>, and the name of table and, in this case,
+the fields will all, in fact, be lower case. </para>
+
 </itemizedlist>
 </para>
 
