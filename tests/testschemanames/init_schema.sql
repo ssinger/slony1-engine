@@ -19,3 +19,20 @@ CREATE TABLE table3(
   CONSTRAINT table3_date_check	CHECK (mod_date <= now())
 ); 
 
+-- Create some Evil names...
+create schema "Schema.name";
+create schema "Studly Spacey Schema";
+create table "Schema.name"."user" (
+  id integer,
+  "user" text not null unique,
+  primary key (id)
+);
+
+create table "Schema.name"."Capital Idea" (
+  "user" text,
+  description text,
+  primary key("user")
+);
+
+create sequence "Studly Spacey Schema"."user";
+create sequence "Schema.name"."a.periodic.sequence";

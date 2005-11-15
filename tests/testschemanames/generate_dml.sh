@@ -41,6 +41,10 @@ generate_initdata()
     echo "INSERT INTO table1(data) VALUES ('${txta}');" > $GENDATA
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" > $GENDATA
     echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" > $GENDATA
+    echo "INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values ('${txta}', '${txtb}');" >> $GENDATA
+    echo "INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values ('${txtb}', $txtblen);" >> $GENDATA
+    echo "select nextval('\"Schema.name\".\"a.periodic.sequence\"');" >> $GENDATA
+    echo "select nextval('\"Studly Spacey Schema\".\"user\"');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;
     else

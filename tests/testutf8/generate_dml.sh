@@ -41,6 +41,8 @@ generate_initdata()
     echo "INSERT INTO table1(data) VALUES ('${txta}');" > $GENDATA
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" > $GENDATA
     echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" > $GENDATA
+    echo "INSERT INTO utf8table (string) values ('${txtb} - \303\241');" >> $GENDATA
+    echo "INSERT INTO utf8table (string) values ('${txtb} -- \303\241');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;
     else
