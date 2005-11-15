@@ -73,28 +73,35 @@ do_initdata()
     if [ $? -ne 0 ]; then
       warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
     fi
-echo "preamble"
-    stop_poll
-    stop_slons
-    sleep 3
-#    $pgbindir/dropdb -h $host $db
-    $pgbindir/dropdb -h $host slonyregress2
-    sleep 1
-    launch_slon
-    
+echo "move set from node 1 to node 2"
+    init_preamble
+    cat ${testname}/init_moveset.ik  >> $mktmp/slonik.script
+    do_ik
+echo "fail over from node 2 to node 3"    
     init_preamble
     cat ${testname}/init_failover.ik  >> $mktmp/slonik.script
     do_ik
-echo "ik done"
+echo "failover ik done"
+echo "destroy node 1"
+    $pgbindir/dropdb -h $host slonyregress1
+    sleep 1
+echo "stop polling/slons"
+    stop_poll
+    stop_slons
+    sleep 3
+echo "restart slons"
+    launch_slon
     launch_poll
     status "loading second set of ${splitsize} rows of data"
     $pgbindir/psql -h $host $db $user < $mktmp/generate.data.ab 1>> $mktmp/initdata.log 2> $mktmp/initdata.log
     if [ $? -ne 0 ]; then
       warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
     fi
-    status "loading remaining rows of data"
-    ${testname}/init_dropnode.sh > $mktmp/slonik.script
+echo "drop node 2"    
+    . ${testname}/init_dropnode.sh > $mktmp/slonik.script
+    cp $mktmp/slonik.script $mktmp/dropnode.slonik
     do_ik
+    status "loading remaining rows of data"
     $pgbindir/psql -h $host $db $user < $mktmp/generate.data.ac 1>> $mktmp/initdata.log 2> $mktmp/initdata.log
     if [ $? -ne 0 ]; then
       warn 3 "do_initdata failed, see $mktmp/initdata.log for details"

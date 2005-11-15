@@ -2,6 +2,8 @@ CLUSTER1=${CLUSTER1:-"slony_regress1"}
 CLUSTER2=${CLUSTER2:-"slony_regress2"}
 CLUSTER3=${CLUSTER3:-"slony_regress3"}
 
+ENCODING=${ENCODING:-"UNICODE"}
+
 DB1=${DB1:-"slonyregress1"}
 HOST1=${HOST1:-"localhost"}
 USER1=${USER1:-${PGUSER:-"postgres"}}
