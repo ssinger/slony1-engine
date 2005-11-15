@@ -1,5 +1,6 @@
 #!@@PERL@@
-# $Id: slonik_create_set.pl,v 1.2 2005-09-07 19:49:27 cbbrowne Exp $
+
+# $Id: slonik_create_set.pl,v 1.3 2005-11-15 18:09:59 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -42,6 +43,7 @@ print SLONIK "\n";
 print SLONIK "# TABLE ADD KEY\n";
 foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
+    $table = lc($table) if $FOLD_CASE;
     print SLONIK "  echo '  Adding unique key to table $table...';\n";
     print SLONIK "  table add key (\n";
     print SLONIK "    node id = $SET_ORIGIN,\n";
@@ -69,6 +71,7 @@ $TABLE_ID = 1 if $TABLE_ID < 1;
 
 foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
+	$table = lc($table) if $FOLD_CASE;
     print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table', key=serial,\n";
     print SLONIK "                 comment = 'Table $table without primary key');\n";
@@ -78,6 +81,7 @@ foreach my $table (@SERIALTABLES) {
 
 foreach my $table (@PKEYEDTABLES) {
     $table = ensure_namespace($table);
+	$table = lc($table) if $FOLD_CASE;
     print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table',\n";
     print SLONIK "                 comment = 'Table $table with primary key');\n";
@@ -88,6 +92,7 @@ foreach my $table (@PKEYEDTABLES) {
 foreach my $table (keys %KEYEDTABLES) {
     my $key = $KEYEDTABLES{$table};
     $table = ensure_namespace($table);
+	$table = lc($table) if $FOLD_CASE;
     print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     print SLONIK "                 full qualified name = '$table', key='$key',\n";
     print SLONIK "                 comment = 'Table $table with candidate primary key $key');\n";
@@ -103,6 +108,7 @@ print SLONIK "  echo 'Adding sequences to the subscription set';\n";
 $SEQUENCE_ID = 1 if $SEQUENCE_ID < 1;
 foreach my $seq (@SEQUENCES) {
     $seq = ensure_namespace($seq);
+	$seq = lc($seq) if $FOLD_CASE;
     print SLONIK "  set add sequence (set id = $SET_ID, origin = $SET_ORIGIN, id = $SEQUENCE_ID,\n";
     print SLONIK "                    full qualified name = '$seq',\n";
     print SLONIK "                    comment = 'Sequence $seq');\n";

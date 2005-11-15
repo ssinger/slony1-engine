@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.6 2005-07-25 21:47:52 cbbrowne Exp $
+# $Id: slon_tools.conf-sample,v 1.7 2005-11-15 18:09:59 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -94,6 +94,16 @@ $SLONY_SETS = {
 	#
 	# "origin" => 1,
 
+	# If this is set to 1, table and sequence names will be folded to lower-case
+	# to match the way that PostgreSQL handles unquoted names.
+	# For example, CREATE TABLE ACCOUNT(...) actually turns into CREATE TABLE account(...);
+	# unless you put quotes around the table name
+	# Slony always quotes object names, so you may get a mis-match between the table-name
+	# as PostgreSQL understands it, and as Slony represents it.
+	# default value is 0
+	#
+	# foldCase => 0,
+
 	# The first ID to use for tables and sequences that are added
 	# to the replication cluster.  This must be unique across the
 	# cluster.
@@ -108,7 +118,7 @@ $SLONY_SETS = {
 	# This array contains a list of tables that already have
 	# primary keys.
         "pkeyedtables" => [
-			   'table1',
+			   'TABLE1',
 			   'table2',
 			   ],
 

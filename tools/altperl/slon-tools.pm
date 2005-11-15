@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.25 2005-09-23 15:44:32 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.26 2005-11-15 18:09:59 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -246,6 +246,7 @@ sub get_set {
     %KEYEDTABLES  = %{$match->{"keyedtables"}};
     @SERIALTABLES = @{$match->{"serialtables"}};
     @SEQUENCES    = @{$match->{"sequences"}};
+    $FOLD_CASE    = ($match->{"foldCase"} or 0);
 
     return $match->{"set_id"};
 }
