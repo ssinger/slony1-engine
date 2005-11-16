@@ -66,10 +66,15 @@ fi
 
 if test -n "${with_pgsharedir}"; then
 _pwd=`pwd`
-cd ${with_pgsharedir}
-with_pgsharedir=`pwd`
+cd ${with_pgsharedir} 2>/dev/null
+_share=`pwd`
 cd ${_pwd}
-echo "overriding pgsharedir with" ${with_pgsharedir}
+	if test ${_pwd} = ${_share}; then
+		echo "overriding pgsharedir with" ${with_pgsharedir} "even though it wasn't found :)"
+	else
+		echo "overriding pgsharedir with" ${with_pgsharedir}
+		with_pgsharedir=${_share}
+	fi
 PG_SHAREDIR=${with_pgsharedir}
 fi
 
