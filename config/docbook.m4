@@ -1,4 +1,4 @@
-# $Id: docbook.m4,v 1.3 2004-12-17 23:20:45 darcyb Exp $
+# $Id: docbook.m4,v 1.4 2005-11-17 16:30:56 xfade Exp $
 
 # SLON_AC_PROG_JADE
 # --------------
@@ -63,7 +63,8 @@ else
 	sgml/docbook-dsssl \
         sgml/docbook/dsssl/modular \
         sgml/docbook/stylesheet/dsssl/modular \
-        sgml/docbook/dsssl-stylesheets
+        sgml/docbook/dsssl-stylesheets \
+        sgml/stylesheets/dsssl/docbook
       do
         slonac_candidate=$slonac_prefix/$slonac_infix/$slonac_postfix
         if test -r "$slonac_candidate/html/docbook.dsl" \
