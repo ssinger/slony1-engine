@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.52 2005-11-11 19:51:22 xfade Exp $
+# $Id: configure.ac,v 1.53 2005-11-17 16:47:26 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -157,7 +157,6 @@ AC_SUBST(HAVE_NETSNMP, $HAVE_NETSNMP)
 AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
 AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
 AC_SUBST(TOOLSBIN, $TOOLSBIN)
-AC_SUBST(DOCDIR, $DOCDIR)
 
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
@@ -203,6 +202,7 @@ if test "$with_docs" = "yes"; then
 	SLON_AC_PATH_DOCBOOK_STYLESHEETS
 	SLON_AC_PATH_COLLATEINDEX
 	AC_SUBST(SGMLSPL, $SGMLSPL)
+	AC_SUBST(DOCDIR, $DOCDIR)
 else
   AC_MSG_RESULT(no)
 fi
