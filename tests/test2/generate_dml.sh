@@ -58,6 +58,8 @@ generate_initdata()
 
 do_initdata()
 {
+  LOG=${mktmp}/initdata.log
+  SCRIPT=${mktmp}/slonik.script
   originnode=${ORIGINNODE:-"1"}
   eval db=\$DB${originnode}
   eval host=\$HOST${originnode}
@@ -69,17 +71,17 @@ do_initdata()
     splitsize=`expr $rows / 3`
     split -l $splitsize ${mktmp}/generate.data ${mktmp}/generate.data.
     status "loading ${splitsize} rows of data"
-    $pgbindir/psql -h $host $db $user < $mktmp/generate.data.aa 1> $mktmp/initdata.log 2> $mktmp/initdata.log
+    $pgbindir/psql -h $host -d $db -U $user < $mktmp/generate.data.aa 1> $LOG 2> $LOG
     if [ $? -ne 0 ]; then
-      warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
+      warn 3 "do_initdata failed, see $LOG for details"
     fi
 echo "move set from node 1 to node 2"
     init_preamble
-    cat ${testname}/init_moveset.ik  >> $mktmp/slonik.script
+    cat ${testname}/init_moveset.ik  >> $SCRIPT
     do_ik
 echo "fail over from node 2 to node 3"    
     init_preamble
-    cat ${testname}/init_failover.ik  >> $mktmp/slonik.script
+    cat ${testname}/init_failover.ik  >> $SCRIPT
     do_ik
 echo "failover ik done"
 echo "destroy node 1"
@@ -93,24 +95,24 @@ echo "restart slons"
     launch_slon
     launch_poll
     status "loading second set of ${splitsize} rows of data"
-    $pgbindir/psql -h $host $db $user < $mktmp/generate.data.ab 1>> $mktmp/initdata.log 2> $mktmp/initdata.log
+    $pgbindir/psql -h $host -d $db -U $user < $mktmp/generate.data.ab 1>> $LOG 2> $LOG
     if [ $? -ne 0 ]; then
-      warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
+      warn 3 "do_initdata failed, see $LOG for details"
     fi
 echo "drop node 2"    
-    . ${testname}/init_dropnode.sh > $mktmp/slonik.script
-    cp $mktmp/slonik.script $mktmp/dropnode.slonik
+    . ${testname}/init_dropnode.sh > $SCRIPT
+    cp $SCRIPT $mktmp/dropnode.slonik
     do_ik
     status "loading remaining rows of data"
-    $pgbindir/psql -h $host $db $user < $mktmp/generate.data.ac 1>> $mktmp/initdata.log 2> $mktmp/initdata.log
+    $pgbindir/psql -h $host -d $db -U $user < $mktmp/generate.data.ac 1>> $LOG 2> $LOG
     if [ $? -ne 0 ]; then
-      warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
+      warn 3 "do_initdata failed, see $LOG for details"
     fi
   else    
     status "loading ${rows} rows of data"
-    $pgbindir/psql -h $host $db $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
+    $pgbindir/psql -h $host -d $db -U $user < $mktmp/generate.data 1> $LOG 2> $LOG
     if [ $? -ne 0 ]; then
-      warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
+      warn 3 "do_initdata failed, see $LOG for details"
     fi
   fi 
   status "done"

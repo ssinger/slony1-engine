@@ -22,6 +22,7 @@ commit()
 
 generate_initdata()
 {
+  GENDATA="$mktmp/generate.data"
   numrows=$(random_number 50 1000)
   i=0;
   trippoint=`expr $numrows / 20`
@@ -37,10 +38,9 @@ generate_initdata()
     txtblen=$(random_number 1 100)
     txtb=$(random_string ${txtblen})
     txtb=`echo ${txtb} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
-    GENDATA="$mktmp/generate.data"
-    echo "INSERT INTO table1(data) VALUES ('${txta}');" > $GENDATA
-    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" > $GENDATA
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" > $GENDATA
+    echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
+    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
+    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
     echo "INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values ('${txta}', '${txtb}');" >> $GENDATA
     echo "INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values ('${txtb}', $txtblen);" >> $GENDATA
     echo "select nextval('\"Schema.name\".\"a.periodic.sequence\"');" >> $GENDATA
@@ -69,7 +69,7 @@ do_initdata()
   generate_initdata
   launch_poll
   status "loading data"
-  $pgbindir/psql -h $host $db $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
+  $pgbindir/psql -h $host -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
