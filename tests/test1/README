@@ -1,0 +1,5 @@
+$Id: README,v 1.1 2005-11-18 17:16:46 cbbrowne Exp $
+
+test1 is a basic test that replication generally functions.  It
+creates three simple tables as one replication set, and replicates
+them from one database to another.

@@ -1,0 +1,113 @@
+<!-- $Id: testbed.sgml,v 1.3 2005-11-17 20:56:01 cbbrowne Exp $ -->
+<sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
+
+<para> As of version 1.2, &slony1; has a common test bed framework
+intended to better support performing a comprehensive set of tests.
+The code lives in the source tree under the <filename> tests
+</filename> directory.</para>
+
+<para>Here are some of the vital files...</para>
+
+<itemizedlist>
+
+<listitem><para> <filename>run_test.sh</filename> </para></listitem>
+
+</itemizedlist>
+
+<para> This is the central script for running tests.  Typical usage is
+thus:</para>
+
+<para> <command> ./run_test.sh </command></para>
+<screen>
+usage ./run_test.sh testname
+</screen>
+
+<para> You need to specify the subdirectory name of the test set to be
+run; each such set is stored in a subdirectory of
+<filename>tests</filename>.</para>
+
+<para> You may need to set one or more of the following environment
+variables to reflect your local configuration.  For instance, the
+writer runs his <quote>main</quote> test like the following:</para>
+
+<screen> PGBINDIR=/opt/OXRS/dbs/pgsql8/bin PGPORT=5532 PGUSER=cbbrowne ./run_test.sh test1 </screen>
+
+<glosslist>
+<glossentry><glossterm> <envar>PGBINDIR</envar> </glossterm>
+
+<glossdef><para> This determines where the test scripts look for
+&postgres; and &slony1; binaries.  The default is <filename>
+/usr/local/pgsql/bin</filename> </para> 
+
+<para> There are also variables <envar>PGBINDIR1</envar> thru
+<envar>PGBINDIR13</envar> which allows you to specify a separate path
+for each database instance.  That will be particularly useful when
+testing interoperability of &slony1; across different versions of
+&postgres;. In order to create a database of each respective version,
+you need to point to an <application>initdb</application> of the
+appropriate version.</para> </glossdef> </glossentry>
+
+<glossentry><glossterm> <envar>PGPORT</envar> </glossterm>
+<glossdef><para> This indicates what port the backend is on.  By
+default, 5432 is used. </para> 
+
+<para> There are also variables <envar>PORT1</envar> thru
+<envar>PORT13</envar> which allows you to specify a separate port
+number for each database instance.  That will be particularly useful
+when testing interoperability of &slony1; across different versions of
+&postgres;. </para> </glossdef> </glossentry>
+
+<glossentry><glossterm> <envar>PGUSER</envar> </glossterm>
+<glossdef><para> By default, the user <filename>postgres</filename> is
+used; this is taken as the default user ID to use for all of the
+databases. </para>
+
+<para> There are also variables <envar>USER1</envar> thru
+<envar>USER13</envar> which allow specifying a separate user name for
+each database instance.</para>  </glossdef> </glossentry>
+
+<glossentry><glossterm> <envar>HOST</envar> </glossterm>
+<glossdef><para> By default, <filename>localhost</filename> is used.
+</para>
+
+<para> There are also variables <envar>HOST1</envar> thru
+<envar>HOST13</envar> which allow specifying a separate host for
+each database instance.</para></glossdef>
+</glossentry>
+
+<glossentry><glossterm> <envar>DB1</envar> thru <envar>DB13 </envar> </glossterm> 
+
+<glossdef><para> By default, <filename>slonyregress1</filename> thru
+<filename>slonyregress13</filename> are used.
+</para>
+
+<para> You may override these from the environment. </para></glossdef>
+</glossentry>
+
+<glossentry>
+<glossterm><envar>ENCODING</envar></glossterm>
+
+<glossdef><para> By default, <filename>UNICODE</filename> is used, so
+that tests can create UTF8 tables and test the multibyte capabilities.
+</para></glossdef>
+
+</glossentry>
+
+</glosslist>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"book.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->

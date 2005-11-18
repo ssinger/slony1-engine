@@ -1,0 +1,6 @@
+$Id: README,v 1.1 2005-11-18 17:16:46 cbbrowne Exp $
+
+This test sets up a trio of three simple tables, and sets up
+replication from node 1 to node 2 which then replicates to node 3.
+
+It then fails over to node 3 and sees how things turn out.
