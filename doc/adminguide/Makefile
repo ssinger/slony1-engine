@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.15 2005-10-05 19:50:15 dpage Exp $
+# $Id: Makefile,v 1.16 2005-11-18 16:42:24 xfade Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -62,25 +62,25 @@ all: html man
 
 installdirs:
 ifdef DOCDIR
-	$(mkinstalldirs) $(DOCDIR)/sgml
-	$(mkinstalldirs) $(DOCDIR)/html
-	$(mkinstalldirs) $(DOCDIR)/man1
-	$(mkinstalldirs) $(DOCDIR)/man$(DEFAULTSECTION)
+	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/sgml
+	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/html
+	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/man1
+	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/man$(DEFAULTSECTION)
 endif
 
 install: installdirs
 ifdef DOCDIR
 	for file in $(wildcard $(srcdir)/*.sgml) ; do \
-	  $(INSTALL_DATA) $$file $(DOCDIR)/sgml; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/sgml; \
 	done
 	for file in $(wildcard man1/*) ; do \
-	   $(INSTALL_DATA) $$file $(DOCDIR)/man1 ;\
+	   $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/man1 ;\
 	done
 	for file in $(wildcard man$(DEFAULTSECTION)/*) ; do \
-	  $(INSTALL_DATA) $$file $(DOCDIR)/man$(DEFAULTSECTION) ;\
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/man$(DEFAULTSECTION) ;\
 	done
 	for file in $(wildcard *.html) stylesheet.css ; do \
-	  $(INSTALL_DATA) $$file $(DOCDIR)/html ;\
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/html ;\
 	done
 endif
 

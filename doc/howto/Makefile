@@ -22,12 +22,12 @@ all:
 
 installdirs:
 ifdef DOCDIR
-	$(mkinstalldirs) $(DOCDIR)/howto
+	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/howto
 endif
 
 install: all installdirs
 ifdef DOCDIR
 	for file in $(wildcard *.txt) $(wildcard *.html ); do \
-	  $(INSTALL_DATA) $$file $(DOCDIR)/howto ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/howto ; \
 	done
 endif
