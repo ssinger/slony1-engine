@@ -107,7 +107,8 @@ random_number()
     eval ouser=\$USER${originnode}
     eval _upperbound=${_upperbound}    
     eval _lowerbound=${_lowerbound}
-    rannum=`psql -c "SELECT round(random()* ${_upperbound} + ${_lowerbound});" -t -A -h ${ohost} ${odb} ${ouser}`
+    eval opath=\$PGBINDIR${originnode}
+    rannum=`${opath}/psql -c "SELECT round(random()* ${_upperbound} + ${_lowerbound});" -t -A -h ${ohost} ${odb} ${ouser}`
   ;;
   esac
   echo ${rannum}
@@ -124,7 +125,7 @@ random_string()
   FreeBSD)
     ranstring=`jot -r -c ${_length} a Z | rs -g 0 ${_length}`
     ;;
-  AIX|MINGW32*)
+  Linux|AIX|MINGW32*)
     ranstring=`echo | awk -v _length=${_length} '{srand(); {for (i=0; i<= _length ; i++) printf "%c", (rand() * (122-48))+48};}'`
     ;;
   SunOS)
@@ -135,9 +136,10 @@ random_string()
     eval odb=\$DB${originnode}
     eval ohost=\$HOST${originnode}
     eval ouser=\$USER${originnode}
+    eval opath=\$PGBINDIR${originnode}
     alias=${_length}
     while : ; do
-      ranstring=${ranstring}`psql -c "SELECT chr(round(random()*((122-48))+48)::int4);" -t -A -h ${ohost} ${odb} ${ouser}`
+      ranstring=${ranstring}`${opath}/psql -c "SELECT chr(round(random()*((122-48))+48)::int4);" -t -A -h ${ohost} ${odb} ${ouser}`
       if [ ${alias} -ge ${_length} ]; then
         break;
       else
