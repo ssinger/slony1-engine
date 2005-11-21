@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.53 2005-09-06 13:14:05 dpage Exp $
+ *	$Id: slon.h,v 1.54 2005-11-21 21:20:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -325,8 +325,9 @@ do { \
  */
 extern pid_t slon_pid;
 #ifndef WIN32
-extern pid_t slon_ppid;
-extern pid_t slon_cpid;
+extern pthread_mutex_t slon_watchdog_lock;
+extern pid_t slon_watchdog_pid;
+extern pid_t slon_worker_pid;
 #endif
 extern char *rtcfg_cluster_name;
 extern char *rtcfg_namespace;
@@ -349,12 +350,34 @@ extern SlonSet *rtcfg_set_list_tail;
 #ifndef WIN32
 #define slon_abort() \
 do { \
-	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGTERM); \
+	pthread_mutex_lock(&slon_watchdog_lock); \
+	if (slon_watchdog_pid >= 0) { \
+		slon_log(SLON_DEBUG2, "slon_abort() from pid=%d\n", slon_pid); \
+		kill(slon_watchdog_pid, SIGTERM); \
+		slon_watchdog_pid = -1; \
+	} \
+	pthread_mutex_unlock(&slon_watchdog_lock); \
 	pthread_exit(NULL); \
 } while (0)
 #define slon_restart() \
 do { \
-	kill((slon_ppid == 0 ? slon_pid : slon_ppid), SIGHUP); \
+	pthread_mutex_lock(&slon_watchdog_lock); \
+	if (slon_watchdog_pid >= 0) { \
+		slon_log(SLON_DEBUG2, "slon_restart() from pid=%d\n", slon_pid); \
+		kill(slon_watchdog_pid, SIGHUP); \
+		slon_watchdog_pid = -1; \
+	} \
+	pthread_mutex_unlock(&slon_watchdog_lock); \
+} while (0)
+#define slon_retry() \
+do { \
+	pthread_mutex_lock(&slon_watchdog_lock); \
+	if (slon_watchdog_pid >= 0) { \
+		slon_log(SLON_DEBUG2, "slon_retry() from pid=%d\n", slon_pid); \
+		kill(slon_watchdog_pid, SIGUSR1); \
+		slon_watchdog_pid = -1; \
+	} \
+	pthread_mutex_unlock(&slon_watchdog_lock); \
 } while (0)
 #else /* WIN32 */
 /* On win32, we currently just bail out and let the service control manager
@@ -369,13 +392,16 @@ do { \
     WSACleanup(); \
     exit(1); \
 } while (0)
+#define slon_retry() \
+do { \
+    WSACleanup(); \
+    exit(1); \
+} while (0)
 #endif
 
 extern void slon_exit(int code);
 extern void Usage(char * const argv[]);
 
-extern int	slon_restart_request;
-extern int watchdog_pipe[];
 extern int sched_wakeuppipe[];
 extern pthread_mutex_t slon_wait_listen_lock;
 extern pthread_cond_t slon_wait_listen_cond;

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.27 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: cleanup_thread.c,v 1.28 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -97,7 +97,7 @@ cleanupThread_main(void *dummy)
 #else
 		exit(0);
 #endif
-		/* slon_abort(); */
+		/* slon_retry(); */
 	}
 	dbconn = conn->dbconn;
 
@@ -129,7 +129,7 @@ cleanupThread_main(void *dummy)
 					 "cleanupThread: \"%s\" - %s",
 					 dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
-			slon_abort();
+			slon_retry();
 			break;
 		}
 		PQclear(res);
@@ -158,7 +158,7 @@ cleanupThread_main(void *dummy)
 					 "cleanupThread: \"%s\" - %s",
 					 dstring_data(&query2), PQresultErrorMessage(res));
 			PQclear(res);
-			slon_abort();
+			slon_retry();
 			break;
 		}
 		n = PQntuples(res);
@@ -188,7 +188,7 @@ cleanupThread_main(void *dummy)
 						 dstring_data(&query2), PQresultErrorMessage(res2));
 				PQclear(res);
 				PQclear(res2);
-				slon_abort();
+				slon_retry();
 				break;
 			}
 			PQclear(res2);
@@ -235,7 +235,7 @@ cleanupThread_main(void *dummy)
 						 "cleanupThread: \"%s\" - %s",
 						 dstring_data(&query3), PQresultErrorMessage(res));
 				PQclear(res);
-				/* slon_abort();
+				/* slon_retry();
 				   break; */
 			}
 			}
@@ -289,7 +289,7 @@ static unsigned long get_earliest_xid (PGconn *dbconn) {
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 		slon_log(SLON_FATAL, "cleanupThread: could not getMinXid()!\n");
 		PQclear(res);
-		slon_abort();
+		slon_retry();
 		return -1;
 	} 
 	xid = strtoll(PQgetvalue(res, 0, 0), NULL, 10);

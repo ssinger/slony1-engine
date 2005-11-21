@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.23 2005-11-09 16:50:38 wieck Exp $
+ *	$Id: remote_listen.c,v 1.24 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -478,7 +478,7 @@ remoteListen_adjust_listat(SlonNode * node, struct listat **listat_head,
 			if (listat == NULL)
 			{
 				perror("remoteListen_adjust_listat: malloc()");
-				slon_abort();
+				slon_restart();
 			}
 			memset(listat, 0, sizeof(struct listat));
 

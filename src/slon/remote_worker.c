@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.97 2005-11-11 13:53:24 wieck Exp $
+ *	$Id: remote_worker.c,v 1.98 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -314,7 +314,7 @@ remoteWorkerThread_main(void *cdata)
 	 * Connect to the local database
 	 */
 	if ((local_conn = slon_connectdb(rtcfg_conninfo, "remote_worker")) == NULL)
-		slon_abort();
+		slon_retry();
 	local_dbconn = local_conn->dbconn;
 
 	/*
@@ -324,7 +324,7 @@ remoteWorkerThread_main(void *cdata)
 				 "select %s.setSessionRole('_%s', 'slon'); ",
 				 rtcfg_namespace, rtcfg_cluster_name);
 	if (query_execute(node, local_dbconn, &query1) < 0)
-		slon_abort();
+		slon_retry();
 
 	/*
 	 * Work until shutdown or node destruction
@@ -370,7 +370,7 @@ remoteWorkerThread_main(void *cdata)
 						 "remoteWorkerThread_%d: got message "
 						 "condition but queue is empty\n",
 						 node->no_id);
-				slon_abort();
+				slon_retry();
 			}
 		}
 		msg = node->message_head;
@@ -412,7 +412,7 @@ remoteWorkerThread_main(void *cdata)
 			slon_log(SLON_FATAL,
 					 "remoteWorkerThread_%d: unknown WMSG type %d\n",
 					 node->no_id, msg->msg_type);
-			slon_abort();
+			slon_retry();
 		}
 		event_ok = true;
 		event = (SlonWorkMsg_event *) msg;
@@ -502,7 +502,7 @@ remoteWorkerThread_main(void *cdata)
 						}
 						if (event->ev_seqno >= quit_sync_finalsync) {
 							slon_log(SLON_FATAL, "ABORT at sync %d per command line request%n", quit_sync_finalsync);
-							slon_abort();
+							slon_retry();
 						}
 					}
 				}
@@ -533,7 +533,7 @@ remoteWorkerThread_main(void *cdata)
 				 * the transaction yet.
 				 */
 				if (query_execute(node, local_dbconn, &query1) < 0)
-					slon_abort();
+					slon_retry();
 
 				/*
 				 * Process the sync and apply the replication data. If
@@ -552,7 +552,7 @@ remoteWorkerThread_main(void *cdata)
 				 */
 				slon_mkquery(&query2, "rollback transaction");
 				if (query_execute(node, local_dbconn, &query2) < 0)
-					slon_abort();
+					slon_retry();
 
 				if ((rc = sched_msleep(node, seconds * 1000)) != SCHED_STATUS_OK)
 					break;
@@ -577,7 +577,7 @@ remoteWorkerThread_main(void *cdata)
 			slon_appendquery(&query1, "commit transaction;");
 
 			if (query_execute(node, local_dbconn, &query1) < 0)
-				slon_abort();
+				slon_retry();
 		}
 		else
 		{
@@ -614,7 +614,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 
@@ -638,7 +638,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -668,18 +668,18 @@ remoteWorkerThread_main(void *cdata)
 
 					slon_appendquery(&query1, "commit transaction; ");
 					if (query_execute(node, local_dbconn, &query1) < 0)
-						slon_abort();
+						slon_retry();
 
 					slon_mkquery(&query1, "select %s.uninstallNode(); ",
 								 rtcfg_namespace);
 					if (query_execute(node, local_dbconn, &query1) < 0)
-						slon_abort();
+						slon_retry();
 
 					slon_mkquery(&query1, "drop schema %s cascade; ",
 								 rtcfg_namespace);
 					query_execute(node, local_dbconn, &query1);
 
-					slon_abort();
+					slon_retry();
 				}
 
 				/*
@@ -695,7 +695,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -720,7 +720,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -744,7 +744,7 @@ remoteWorkerThread_main(void *cdata)
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
 
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -766,7 +766,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -788,7 +788,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 
@@ -812,7 +812,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -833,13 +833,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = generate_archive_header(rtcfg_nodeid, seqbuf);
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					slon_mkquery(&query1, 
 						     "delete from %s.sl_setsync_offline "
@@ -849,13 +849,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = close_log_archive();
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -879,13 +879,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = generate_archive_header(rtcfg_nodeid, seqbuf);
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = slon_mkquery(&query1, 
 							  "delete from %s.sl_setsync_offline "
@@ -895,13 +895,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = close_log_archive();
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -917,7 +917,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -933,7 +933,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -949,7 +949,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -965,7 +965,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -982,7 +982,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -999,7 +999,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -1017,7 +1017,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -1035,7 +1035,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -1093,7 +1093,7 @@ remoteWorkerThread_main(void *cdata)
 					{
 						slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
 						if (sched_msleep(node, 10000) != SCHED_STATUS_OK)
-							slon_abort();
+							slon_retry();
 						PQclear(res);
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
@@ -1106,7 +1106,7 @@ remoteWorkerThread_main(void *cdata)
 					query_append_event(&query1, event);
 					slon_appendquery(&query1, "commit transaction;");
 					query_execute(node, local_dbconn, &query1);
-					slon_abort();
+					slon_retry();
 
 					need_reloadListen = true;
 			    } else {
@@ -1134,7 +1134,7 @@ remoteWorkerThread_main(void *cdata)
 						 rtcfg_namespace,
 						 set_id, old_origin, new_origin);
 				if (query_execute(node, local_dbconn, &query1) < 0)
-					slon_abort();
+					slon_retry();
 
 				slon_mkquery(&query1,
 							 "select sub_provider from %s.sl_subscribe "
@@ -1147,7 +1147,7 @@ remoteWorkerThread_main(void *cdata)
 							 node->no_id, dstring_data(&query1),
 							 PQresultErrorMessage(res));
 					PQclear(res);
-					slon_abort();
+					slon_retry();
 				}
 				if (PQntuples(res) == 1)
 				{
@@ -1183,7 +1183,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 				need_reloadListen = true;
@@ -1207,7 +1207,7 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 				need_reloadListen = true;
@@ -1269,7 +1269,7 @@ remoteWorkerThread_main(void *cdata)
 						 * ...
 						 */
 						if (query_execute(node, local_dbconn, &query1) < 0)
-							slon_abort();
+							slon_retry();
 
 						/*
 						 * If the copy succeeds, exit the loop and let the
@@ -1295,7 +1295,7 @@ remoteWorkerThread_main(void *cdata)
 								 "sleep %d seconds\n",
 								 node->no_id, sub_set, sleeptime);
 						if (query_execute(node, local_dbconn, &query2) < 0)
-							slon_abort();
+							slon_retry();
 						sched_rc = sched_msleep(node, sleeptime * 1000);
 						if (sched_rc != SCHED_STATUS_OK)
 						{
@@ -1341,13 +1341,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = generate_archive_header(rtcfg_nodeid, seqbuf);
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					slon_mkquery(&query1, 
 						     "delete from %s.sl_setsync_offline "
@@ -1357,13 +1357,13 @@ remoteWorkerThread_main(void *cdata)
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					rc = close_log_archive();
 					if (rc < 0) {
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s", 
 							 node->no_id, archive_tmp, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 				}
 			}
@@ -1388,28 +1388,28 @@ remoteWorkerThread_main(void *cdata)
 					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						     "Could not open DDL archive file %s - %s",
 					       node->no_id, archive_tmp, strerror(errno));
-					    slon_abort();
+					    slon_retry();
 					}
 					generate_archive_header(node->no_id, seqbuf);
 					if (rc < 0) {
 					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						     "Could not generate DDL archive header %s - %s",
 						     node->no_id, archive_tmp, strerror(errno));
-					    slon_abort();
+					    slon_retry();
 					}
 					rc = logarchive_tracking(rtcfg_namespace, ddl_setid, seqbuf, seqbuf, event->ev_timestamp_c);
 					if (rc < 0) {
 					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						     "Could not generate DDL archive tracker %s - %s",
 						     node->no_id, archive_tmp, strerror(errno));
-					    slon_abort();
+					    slon_retry();
 					}
 					rc = submit_string_to_archive(ddl_script);
 					if (rc < 0) {
 					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						     "Could not submit DDL Script %s - %s",
 						     node->no_id, archive_tmp, strerror(errno));
-					    slon_abort();
+					    slon_retry();
 					}
 					
 					rc = close_log_archive();
@@ -1417,7 +1417,7 @@ remoteWorkerThread_main(void *cdata)
 					    slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 						     "Could not close DDL Script %s - %s",
 						     node->no_id, archive_tmp, strerror(errno));
-					    slon_abort();
+					    slon_retry();
 					}
 				    }
 				}
@@ -1456,7 +1456,7 @@ remoteWorkerThread_main(void *cdata)
 				slon_mkquery(&query1, "rollback transaction;");
 			}
 			if (query_execute(node, local_dbconn, &query1) < 0)
-				slon_abort();
+				slon_retry();
 
 			if (need_reloadListen)
 			{
@@ -1601,7 +1601,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 						slon_log(SLON_FATAL, "remoteWorkerThread_%d: ",
 								 "pthread_create() - %s\n",
 								 node->no_id, strerror(errno));
-						slon_abort();
+						slon_retry();
 					}
 					slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 							 "helper thread for provider %d created\n",
@@ -1884,7 +1884,7 @@ remoteWorker_event(int event_provider,
 	if (msg == NULL)
 	{
 		perror("remoteWorker_event: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	memset(msg, 0, sizeof(SlonWorkMsg_event));
 

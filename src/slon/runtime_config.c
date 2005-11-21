@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.25 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: runtime_config.c,v 1.26 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -34,8 +34,9 @@
  */
 pid_t		slon_pid;
 #ifndef WIN32
-pid_t		slon_cpid;
-pid_t		slon_ppid;
+pthread_mutex_t slon_watchdog_lock;
+pid_t		slon_watchdog_pid;
+pid_t		slon_worker_pid;
 #endif
 char	   *rtcfg_cluster_name = NULL;
 char	   *rtcfg_namespace = NULL;
@@ -133,7 +134,7 @@ rtcfg_storeNode(int no_id, char *no_comment)
 	if (node == NULL)
 	{
 		perror("rtcfg_storeNode: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	memset(node, 0, sizeof(SlonNode));
 
@@ -230,7 +231,7 @@ rtcfg_enableNode(int no_id)
 
 		slon_log(SLON_FATAL,
 				 "enableNode: unknown node ID %d\n", no_id);
-		slon_abort();
+		slon_retry();
 		return;
 	}
 
@@ -265,7 +266,7 @@ rtcfg_disableNode(int no_id)
 
 		slon_log(SLON_FATAL,
 				 "enableNode: unknown node ID %d\n", no_id);
-		slon_abort();
+		slon_retry();
 		return;
 	}
 
@@ -449,7 +450,7 @@ rtcfg_reloadListen(PGconn *db)
 				 PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query);
-		slon_exit(-1);
+		slon_retry();
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
@@ -485,7 +486,7 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	{
 		slon_log(SLON_FATAL,
 				 "storeListen: unknown node ID %d\n", li_provider);
-		slon_abort();
+		slon_retry();
 		return;
 	}
 
@@ -517,7 +518,7 @@ rtcfg_storeListen(int li_origin, int li_provider)
 	if (listen == NULL)
 	{
 		perror("rtcfg_storeListen: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	memset(listen, 0, sizeof(SlonListen));
 
@@ -550,7 +551,7 @@ rtcfg_dropListen(int li_origin, int li_provider)
 	{
 		slon_log(SLON_FATAL,
 				 "dropListen: unknown node ID %d\n", li_provider);
-		slon_abort();
+		slon_retry();
 		return;
 	}
 
@@ -638,7 +639,7 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 	if (set == NULL)
 	{
 		perror("rtcfg_storeSet: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	memset(set, 0, sizeof(SlonSet));
 
@@ -733,7 +734,7 @@ rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 	 */
 	rtcfg_unlock();
 	slon_log(SLON_FATAL, "rtcfg_moveSet(): set %d not found\n", set_id);
-	slon_abort();
+	slon_retry();
 }
 
 
@@ -778,7 +779,7 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 	slon_log(SLON_FATAL,
 			 "storeSubscribe: set %d not found\n", sub_set);
 	rtcfg_unlock();
-	slon_abort();
+	slon_retry();
 }
 
 
@@ -820,7 +821,7 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 	slon_log(SLON_FATAL,
 			 "enableSubscription: set %d not found\n", sub_set);
 	rtcfg_unlock();
-	slon_abort();
+	slon_retry();
 }
 
 
@@ -861,7 +862,7 @@ rtcfg_unsubscribeSet(int sub_set)
 	slon_log(SLON_FATAL,
 			 "unsubscribeSet: set %d not found\n", sub_set);
 	rtcfg_unlock();
-	slon_abort();
+	slon_retry();
 }
 
 
@@ -892,7 +893,7 @@ rtcfg_startStopNodeThread(SlonNode * node)
 							 "remoteWorkerThread - %s\n",
 							 strerror(errno));
 					rtcfg_unlock();
-					slon_abort();
+					slon_retry();
 				}
 				node->worker_status = SLON_TSTAT_RUNNING;
 				break;
@@ -946,7 +947,7 @@ rtcfg_startStopNodeThread(SlonNode * node)
 							 "remoteListenThread - %s\n",
 							 strerror(errno));
 					rtcfg_unlock();
-					slon_abort();
+					slon_retry();
 				}
 				break;
 
@@ -1019,7 +1020,7 @@ rtcfg_needActivate(int no_id)
 	if (anode == NULL)
 	{
 		perror("rtcfg_needActivate: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	anode->no_id = no_id;
 	DLLIST_ADD_TAIL(to_activate_head, to_activate_tail, anode);

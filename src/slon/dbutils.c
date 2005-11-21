@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.16 2005-03-08 22:52:37 darcyb Exp $
+ *	$Id: dbutils.c,v 1.17 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -139,7 +139,7 @@ slon_make_dummyconn(char *symname)
 	if (conn == NULL)
 	{
 		perror("slon_make_dummyconn: malloc()");
-		slon_abort();
+		slon_retry();
 	}
 	memset(conn, 0, sizeof(SlonConn));
 	conn->symname = strdup(symname);

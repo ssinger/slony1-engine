@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.21 2005-07-20 13:59:46 dpage Exp $
+ *	$Id: scheduler.c,v 1.22 2005-11-21 21:20:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -50,8 +50,8 @@ static SlonConn *sched_waitqueue_tail = NULL;
 static pthread_t sched_main_thread;
 static pthread_t sched_scheduler_thread;
 
-static pthread_mutex_t sched_master_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t sched_master_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t sched_master_lock;
+static pthread_cond_t sched_master_cond;
 
 
 /*
@@ -66,7 +66,7 @@ static void sched_shutdown();
 /*
  * ---------- sched_start_mainloop
  *
- * Called from main() before starting up any worker thread.
+ * Called from SlonMain() before starting up any worker thread.
  *
  * This will spawn the event scheduling thread that does the central select(2)
  * system call. ----------
@@ -74,17 +74,41 @@ static void sched_shutdown();
 int
 sched_start_mainloop(void)
 {
+	sched_status = SCHED_STATUS_OK;
+	sched_waitqueue_head = NULL;
+	sched_waitqueue_tail = NULL;
+	sched_numfd = 0;
+	FD_ZERO(&sched_fdset_read);
+	FD_ZERO(&sched_fdset_write);
+
 	/*
 	 * Remember the main threads identifier
 	 */
 	sched_main_thread = pthread_self();
 
 	/*
+	 * Initialize the master lock and condition variables
+	 */
+	if (pthread_mutex_init(&sched_master_lock, NULL) < 0)
+	{
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_init() - %s\n",
+				strerror(errno));
+		return -1;
+	}
+	if (pthread_cond_init(&sched_master_cond, NULL) < 0)
+	{
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_cond_init() - %s\n",
+				strerror(errno));
+		return -1;
+	}
+
+	/*
 	 * Grab the scheduler master lock
 	 */
 	if (pthread_mutex_lock(&sched_master_lock) < 0)
 	{
-		perror("sched_start_mainloop: pthread_mutex_lock()");
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_lock() - %s\n",
+				strerror(errno));
 		return -1;
 	}
 
@@ -93,7 +117,8 @@ sched_start_mainloop(void)
 	 */
 	if (pthread_create(&sched_scheduler_thread, NULL, sched_mainloop, NULL) < 0)
 	{
-		perror("sched_start_mainloop: pthread_create()");
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_create() - %s\n",
+				strerror(errno));
 		return -1;
 	}
 
@@ -102,7 +127,8 @@ sched_start_mainloop(void)
 	 */
 	if (pthread_cond_wait(&sched_master_cond, &sched_master_lock) < 0)
 	{
-		perror("sched_start_mainloop: pthread_cond_wait()");
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_cond_wait() - %s\n",
+				strerror(errno));
 		return -1;
 	}
 
@@ -111,7 +137,8 @@ sched_start_mainloop(void)
 	 */
 	if (pthread_mutex_unlock(&sched_master_lock) < 0)
 	{
-		perror("sched_start_mainloop: pthread_mutex_unlock()");
+		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_unlock() - %s\n",
+				strerror(errno));
 		return -1;
 	}
 
@@ -329,7 +356,7 @@ sched_wakeup_node(int no_id)
 		if (pipewrite(sched_wakeuppipe[1], "x", 1) < 0)
 		{
 			perror("sched_wait_conn: write()");
-			slon_abort();
+			slon_restart();
 		}
 	}
 	pthread_mutex_unlock(&sched_master_lock);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.15 2005-01-12 17:27:11 darcyb Exp $
+ *	$Id: sync_thread.c,v 1.16 2005-11-21 21:20:05 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -62,7 +62,7 @@ syncThread_main(void *dummy)
 	 * Connect to the local database
 	 */
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_sync")) == NULL)
-		slon_abort();
+		slon_retry();
 	dbconn = conn->dbconn;
 
 	/*
@@ -106,7 +106,7 @@ syncThread_main(void *dummy)
 					 "syncThread: \"%s\" - %s",
 					 dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
-			slon_abort();
+			slon_retry();
 			break;
 		}
 
@@ -134,7 +134,7 @@ syncThread_main(void *dummy)
 						 "syncThread: \"%s\" - %s",
 						 dstring_data(&query2), PQresultErrorMessage(res));
 				PQclear(res);
-				slon_abort();
+				slon_retry();
 				break;
 			}
 			slon_log(SLON_DEBUG2,
@@ -152,7 +152,7 @@ syncThread_main(void *dummy)
 						 "syncThread: \"commit transaction;\" - %s",
 						 PQresultErrorMessage(res));
 				PQclear(res);
-				slon_abort();
+				slon_retry();
 			}
 			PQclear(res);
 
@@ -175,7 +175,7 @@ syncThread_main(void *dummy)
 						 "syncThread: \"rollback transaction;\" - %s",
 						 PQresultErrorMessage(res));
 				PQclear(res);
-				slon_abort();
+				slon_retry();
 			}
 			PQclear(res);
 		}

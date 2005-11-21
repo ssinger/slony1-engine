@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.20 2005-08-12 11:07:50 dpage Exp $
+ *	$Id: misc.c,v 1.21 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -146,7 +146,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 		{
 			perror("slon_log: malloc()");
 			pthread_mutex_unlock(&log_mutex);
-			slon_abort();
+			slon_retry();
 		}
 	}
 	outbuf[0] = 0;
@@ -175,7 +175,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 		if (outbuf == NULL)
 		{
 			perror("slon_log: realloc()");
-			slon_abort();
+			slon_retry();
 		}
 	}
 #ifdef HAVE_SYSLOG

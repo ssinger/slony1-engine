@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.33 2005-11-09 16:50:38 wieck Exp $
+ *	$Id: local_listen.c,v 1.34 2005-11-21 21:20:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -56,7 +56,7 @@ localListenThread_main(void *dummy)
 	 * Connect to the local database
 	 */
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_listen")) == NULL)
-		slon_abort();
+		slon_retry();
 	dbconn = conn->dbconn;
 
 	/*
@@ -80,7 +80,7 @@ localListenThread_main(void *dummy)
 				 dstring_data(&query1), PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query1);
-		slon_abort();
+		slon_retry();
 	}
 	PQclear(res);
 
@@ -131,7 +131,7 @@ localListenThread_main(void *dummy)
 					 PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
-			slon_abort();
+			slon_retry();
 			break;
 		}
 		PQclear(res);
@@ -150,14 +150,13 @@ localListenThread_main(void *dummy)
 		if (restart_request)
 		{
 			slon_log(SLON_INFO,
-					 "localListenThread: got restart notification - "
-					 "signal scheduler\n");
+					 "localListenThread: got restart notification\n");
 #ifndef WIN32
-			kill(getppid(), SIGHUP);
+			slon_restart();
 #else
 			/* XXX */
 			/* Win32 defer to service manager to restart for now */
-			slon_abort();
+			slon_restart();
 #endif
 		}
 
@@ -183,7 +182,7 @@ localListenThread_main(void *dummy)
 					 dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
-			slon_abort();
+			slon_retry();
 			break;
 		}
 		ntuples = PQntuples(res);
@@ -271,7 +270,7 @@ localListenThread_main(void *dummy)
 					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s",
 							 notify_query, PQresultErrorMessage(notify_res));
 					PQclear(notify_res);
-					slon_abort();
+					slon_restart();
 				}
 				PQclear(notify_res);
 
@@ -511,7 +510,7 @@ localListenThread_main(void *dummy)
 						 PQresultErrorMessage(res2));
 					dstring_free(&query2);
 					PQclear(res2);
-					slon_abort();
+					slon_retry();
 				}
 				if (PQntuples(res2) != 1)
 				{
@@ -520,7 +519,7 @@ localListenThread_main(void *dummy)
 						 set_id);
 					dstring_free(&query2);
 					PQclear(res2);
-					slon_abort();
+					slon_retry();
 				}
 				
 				sub_provider =
@@ -645,7 +644,7 @@ localListenThread_main(void *dummy)
 						 dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				dstring_free(&query1);
-				slon_abort();
+				slon_retry();
 				break;
 			}
 			PQclear(res);
@@ -662,7 +661,7 @@ localListenThread_main(void *dummy)
 						 "localListenThread: \"rollback transaction;\" - %s",
 						 PQresultErrorMessage(res));
 				PQclear(res);
-				slon_abort();
+				slon_retry();
 				break;
 			}
 			PQclear(res);
