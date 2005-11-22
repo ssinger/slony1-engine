@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.8 2005-06-29 01:48:15 darcyb Exp $
+ *	$Id: dbutil.c,v 1.9 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -70,7 +70,6 @@ db_notice_recv(void *arg, const PGresult *res)
 				PQresultErrorMessage(res));
 	}
 }
-
 #else							/* !HAVE_PQSETNOTICERECEIVER */
 
 /* ----------
@@ -602,7 +601,7 @@ static int
 slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
 	char	   *s;
-	char		buf    [64];
+	char		buf[64];
 
 	while (*fmt)
 	{

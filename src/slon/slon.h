@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.54 2005-11-21 21:20:05 wieck Exp $
+ *	$Id: slon.h,v 1.55 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,8 +45,8 @@
 /* See: http://archives.postgresql.org/pgsql-hackers/1999-10/msg00754.php */
 /* Also  view src/include/pg_config.h.win32 src/include/pg_config_manual.h */
 
-	/* FIXME: must determine and use OS specific max path length */
-	/* cbb: Not forcibly necessary; note that MAXPGPATH is 1024 */
+ /* FIXME: must determine and use OS specific max path length */
+ /* cbb: Not forcibly necessary; note that MAXPGPATH is 1024 */
 
 #define SLON_CLEANUP_SLEEP			600 /* sleep 10 minutes between */
  /* cleanup calls */
@@ -324,6 +324,7 @@ do { \
  * ----------
  */
 extern pid_t slon_pid;
+
 #ifndef WIN32
 extern pthread_mutex_t slon_watchdog_lock;
 extern pid_t slon_watchdog_pid;
@@ -379,30 +380,30 @@ do { \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \
 } while (0)
-#else /* WIN32 */
+#else							/* WIN32 */
 /* On win32, we currently just bail out and let the service control manager
  * deal with possible restarts */
 #define slon_abort() \
 do { \
-    WSACleanup(); \
-    exit(1); \
+	WSACleanup(); \
+	exit(1); \
 } while (0)
 #define slon_restart() \
 do { \
-    WSACleanup(); \
-    exit(1); \
+	WSACleanup(); \
+	exit(1); \
 } while (0)
 #define slon_retry() \
 do { \
-    WSACleanup(); \
-    exit(1); \
+	WSACleanup(); \
+	exit(1); \
 } while (0)
 #endif
 
 extern void slon_exit(int code);
-extern void Usage(char * const argv[]);
+extern void Usage(char *const argv[]);
 
-extern int sched_wakeuppipe[];
+extern int	sched_wakeuppipe[];
 extern pthread_mutex_t slon_wait_listen_lock;
 extern pthread_cond_t slon_wait_listen_cond;
 
@@ -557,7 +558,7 @@ extern int	db_checkSchemaVersion(PGconn *conn);
 
 extern int	slon_mkquery(SlonDString * ds, char *fmt,...);
 extern int	slon_appendquery(SlonDString * ds, char *fmt,...);
-extern char 	*sql_on_connection;
+extern char *sql_on_connection;
 
 /* ----------
  * Globals in misc.c
@@ -574,7 +575,6 @@ extern int	slon_log_level;
 #define piperead(a,b,c)		read(a,b,c)
 #define pipewrite(a,b,c)	write(a,b,c)
 #endif
- 
 
 #endif   /* SLON_H_INCLUDED */
 

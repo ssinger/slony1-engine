@@ -1,4 +1,4 @@
-/*-------------------------------------------------------------------------
+/* ----------------------------------------------------------------------
  * dbutils.c
  *
  *	Database utility functions for Slony-I
@@ -6,8 +6,8 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.17 2005-11-21 21:20:03 wieck Exp $
- *-------------------------------------------------------------------------
+ *	$Id: dbutils.c,v 1.18 2005-11-22 05:11:58 wieck Exp $
+ * ----------------------------------------------------------------------
  */
 
 
@@ -31,20 +31,21 @@
 
 static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 
-/*
+/* ----
  * This mutex is used to wrap around PQconnectdb. There's a problem that
  * occurs when your libpq is compiled with libkrb (kerberos) which is not
  * threadsafe.	It is especially odd because I'm not using kerberos.
  *
  * This is fixed in libpq in 8.0, but for now (and for older versions we'll just
  * use this mutex.
- *
+ * ----
  */
 static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
-/*
- * ---------- slon_connectdb ----------
+/* ----------
+ * slon_connectdb 
+ * ----------
  */
 SlonConn *
 slon_connectdb(char *conninfo, char *symname)
@@ -76,20 +77,20 @@ slon_connectdb(char *conninfo, char *symname)
 	if (sql_on_connection != NULL)
 	{
 
-		PGresult *res;
+		PGresult   *res;
 		SlonDString query;
 
 		dstring_init(&query);
 		slon_mkquery(&query, "%s", sql_on_connection);
 		res = PQexec(dbconn, dstring_data(&query));
-		if ( ! ((PQresultStatus(res) == PGRES_TUPLES_OK) ||
-		       (PQresultStatus(res)  == PGRES_COMMAND_OK)) )
+		if (!((PQresultStatus(res) == PGRES_TUPLES_OK) ||
+			  (PQresultStatus(res) == PGRES_COMMAND_OK)))
 		{
 			slon_log(SLON_ERROR,
-				"query %s failed\n",
-				dstring_data(&query));
+					 "query %s failed\n",
+					 dstring_data(&query));
 		}
-                PQclear(res);
+		PQclear(res);
 	}
 
 	/*
@@ -103,8 +104,9 @@ slon_connectdb(char *conninfo, char *symname)
 }
 
 
-/*
- * ---------- slon_disconnectdb ----------
+/* ----------
+ * slon_disconnectdb 
+ * ----------
  */
 void
 slon_disconnectdb(SlonConn * conn)
@@ -124,8 +126,9 @@ slon_disconnectdb(SlonConn * conn)
 }
 
 
-/*
- * ---------- slon_make_dummyconn ----------
+/* ----------
+ * slon_make_dummyconn 
+ * ----------
  */
 SlonConn *
 slon_make_dummyconn(char *symname)
@@ -155,8 +158,9 @@ slon_make_dummyconn(char *symname)
 }
 
 
-/*
- * ---------- slon_free_dummyconn ----------
+/* ----------
+ * slon_free_dummyconn 
+ * ----------
  */
 void
 slon_free_dummyconn(SlonConn * conn)
@@ -179,15 +183,16 @@ slon_free_dummyconn(SlonConn * conn)
 }
 
 
-/*
- * ---------- db_getLocalNodeId
+/* ----------
+ * db_getLocalNodeId
  *
- * Query a connection for the value of sequence sl_local_node_id ----------
+ * Query a connection for the value of sequence sl_local_node_id 
+ * ----------
  */
 int
 db_getLocalNodeId(PGconn *conn)
 {
-	char		query  [1024];
+	char		query[1024];
 	PGresult   *res;
 	int			retval;
 
@@ -233,7 +238,7 @@ db_getLocalNodeId(PGconn *conn)
 int
 db_checkSchemaVersion(PGconn *conn)
 {
-	char		query  [1024];
+	char		query[1024];
 	PGresult   *res;
 	int			retval = 0;
 
@@ -323,13 +328,15 @@ db_checkSchemaVersion(PGconn *conn)
 }
 
 
-/*
- * ---------- slon_mkquery
+/* ----------
+ * slon_mkquery
  *
  * A simple query formatting and quoting function using dynamic string buffer
- * allocation. Similar to sprintf() it uses formatting symbols: %s
- * tring argument %q		Quoted literal (\ and ' will be escaped) %d
- * nteger argument ----------
+ * allocation. Similar to sprintf() it uses formatting symbols: 
+ *     %s	String argument
+ *     %q	Quoted literal (\ and ' will be escaped)
+ *     %d	Integer argument 
+ * ----------
  */
 int
 slon_mkquery(SlonDString * dsp, char *fmt,...)
@@ -348,10 +355,11 @@ slon_mkquery(SlonDString * dsp, char *fmt,...)
 }
 
 
-/*
- * ---------- slon_appendquery
+/* ----------
+ * slon_appendquery
  *
- * Append query string material to an existing dynamic string. ----------
+ * Append query string material to an existing dynamic string.
+ * ----------
  */
 int
 slon_appendquery(SlonDString * dsp, char *fmt,...)
@@ -368,16 +376,17 @@ slon_appendquery(SlonDString * dsp, char *fmt,...)
 }
 
 
-/*
- * ---------- slon_appendquery_int
+/* ----------
+ * slon_appendquery_int
  *
- * Implementation of slon_mkquery() and slon_appendquery(). ----------
+ * Implementation of slon_mkquery() and slon_appendquery(). 
+ * ----------
  */
 static int
 slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
 	char	   *s;
-	char		buf    [64];
+	char		buf[64];
 
 	while (*fmt)
 	{

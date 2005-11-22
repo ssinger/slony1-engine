@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.36 2005-11-09 23:53:10 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.37 2005-11-22 05:11:58 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -115,7 +115,7 @@ static Slony_I_ClusterStatus *clusterStatusList = NULL;
 static Slony_I_ClusterStatus *
 getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
-const char * slon_quote_identifier(const char *ident);
+const char *slon_quote_identifier(const char *ident);
 static char *slon_quote_literal(char *str);
 
 
@@ -126,8 +126,8 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	Slony_I_ClusterStatus *cs;
 	text	   *ev_xip;
 	char	   *ev_type_c;
-	Datum		argv  [12];
-	char		nulls  [13];
+	Datum		argv[12];
+	char		nulls[13];
 	char	   *buf;
 	size_t		buf_size;
 	int			rc;
@@ -384,7 +384,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	TriggerData *tg;
-	Datum		argv  [4];
+	Datum		argv[4];
 	text	   *cmdtype = NULL;
 	int			rc;
 	Name		cluster_name;
@@ -1007,8 +1007,8 @@ _Slony_I_killBackend(PG_FUNCTION_ARGS)
 	if (!superuser())
 		elog(ERROR, "Slony-I: insufficient privilege for killBackend");
 
-	pid		= PG_GETARG_INT32(0);
-	signame	= PG_GETARG_TEXT_P(1);
+	pid = PG_GETARG_INT32(0);
+	signame = PG_GETARG_TEXT_P(1);
 
 	if (VARSIZE(signame) == VARHDRSZ + 4 &&
 		memcmp(VARDATA(signame), "NULL", 0) == 0)
@@ -1016,7 +1016,7 @@ _Slony_I_killBackend(PG_FUNCTION_ARGS)
 		signo = 0;
 	}
 	else if (VARSIZE(signame) == VARHDRSZ + 4 &&
-		memcmp(VARDATA(signame), "TERM", 0) == 0)
+			 memcmp(VARDATA(signame), "TERM", 0) == 0)
 	{
 		signo = SIGTERM;
 	}
@@ -1074,7 +1074,7 @@ slon_quote_literal(char *str)
 
 
 /*
- * slon_quote_identifier                     - Quote an identifier only if needed
+ * slon_quote_identifier					 - Quote an identifier only if needed
  *
  * When quotes are needed, we palloc the required space; slightly
  * space-wasteful but well worth it for notational simplicity.
@@ -1084,109 +1084,108 @@ slon_quote_literal(char *str)
 const char *
 slon_quote_identifier(const char *ident)
 {
-        /*
-         * Can avoid quoting if ident starts with a lowercase letter or
-         * underscore and contains only lowercase letters, digits, and
-         * underscores, *and* is not any SQL keyword.  Otherwise, supply
-         * quotes.
-         */
-        int                     nquotes = 0;
-        bool            safe;
-        const char *ptr;
-        char       *result;
-        char       *optr;
+	/*
+	 * Can avoid quoting if ident starts with a lowercase letter or underscore
+	 * and contains only lowercase letters, digits, and underscores, *and* is
+	 * not any SQL keyword.  Otherwise, supply quotes.
+	 */
+	int			nquotes = 0;
+	bool		safe;
+	const char *ptr;
+	char	   *result;
+	char	   *optr;
 
-        /*
-         * would like to use <ctype.h> macros here, but they might yield
-         * unwanted locale-specific results...
-         */
-        safe = ((ident[0] >= 'a' && ident[0] <= 'z') || ident[0] == '_');
+	/*
+	 * would like to use <ctype.h> macros here, but they might yield unwanted
+	 * locale-specific results...
+	 */
+	safe = ((ident[0] >= 'a' && ident[0] <= 'z') || ident[0] == '_');
 
-        for (ptr = ident; *ptr; ptr++)
-        {
-                char            ch = *ptr;
+	for (ptr = ident; *ptr; ptr++)
+	{
+		char		ch = *ptr;
 
-                if ((ch >= 'a' && ch <= 'z') ||
-                        (ch >= '0' && ch <= '9') ||
-                        (ch == '_'))
-                {
-                        /* okay */
-                }
-                else
-                {
-                        safe = false;
-                        if (ch == '"')
-                                nquotes++;
-                }
-        }
+		if ((ch >= 'a' && ch <= 'z') ||
+			(ch >= '0' && ch <= '9') ||
+			(ch == '_'))
+		{
+			/* okay */
+		}
+		else
+		{
+			safe = false;
+			if (ch == '"')
+				nquotes++;
+		}
+	}
 
-        if (safe)
-        {
-                /*
-                 * Check for keyword.  This test is overly strong, since many of
-                 * the "keywords" known to the parser are usable as column names,
-                 * but the parser doesn't provide any easy way to test for whether
-                 * an identifier is safe or not... so be safe not sorry.
-                 *
-                 * Note: ScanKeywordLookup() does case-insensitive comparison, but
-                 * that's fine, since we already know we have all-lower-case.
-                 */
-                if (ScanKeywordLookup(ident) != NULL)
-                        safe = false;
-        }
+	if (safe)
+	{
+		/*
+		 * Check for keyword.  This test is overly strong, since many of the
+		 * "keywords" known to the parser are usable as column names, but the
+		 * parser doesn't provide any easy way to test for whether an
+		 * identifier is safe or not... so be safe not sorry.
+		 *
+		 * Note: ScanKeywordLookup() does case-insensitive comparison, but that's
+		 * fine, since we already know we have all-lower-case.
+		 */
+		if (ScanKeywordLookup(ident) != NULL)
+			safe = false;
+	}
 
-        if (safe)
-                return ident;                   /* no change needed */
+	if (safe)
+		return ident;			/* no change needed */
 
-        result = (char *) palloc(strlen(ident) + nquotes + 2 + 1);
+	result = (char *)palloc(strlen(ident) + nquotes + 2 + 1);
 
-        optr = result;
-        *optr++ = '"';
-        for (ptr = ident; *ptr; ptr++)
-        {
-                char            ch = *ptr;
+	optr = result;
+	*optr++ = '"';
+	for (ptr = ident; *ptr; ptr++)
+	{
+		char		ch = *ptr;
 
-                if (ch == '"')
-                        *optr++ = '"';
-                *optr++ = ch;
-        }
-        *optr++ = '"';
-        *optr = '\0';
+		if (ch == '"')
+			*optr++ = '"';
+		*optr++ = ch;
+	}
+	*optr++ = '"';
+	*optr = '\0';
 
-        return result;
+	return result;
 }
 
 
 
 /*
  * _slon_quote_ident -
- *        returns a properly quoted identifier
+ *		  returns a properly quoted identifier
  *
  * Version: pgsql/src/backend/utils/adt/quote.c,v 1.14.4.1 2005/03/21 16:29:31
  */
 Datum
 _slon_quote_ident(PG_FUNCTION_ARGS)
 {
-        text       *t = PG_GETARG_TEXT_P(0);
-        text       *result;
-        const char *qstr;
-        char       *str;
-        int                     len;
+	text	   *t = PG_GETARG_TEXT_P(0);
+	text	   *result;
+	const char *qstr;
+	char	   *str;
+	int			len;
 
-        /* We have to convert to a C string to use quote_identifier */
-        len = VARSIZE(t) - VARHDRSZ;
-        str = (char *) palloc(len + 1);
-        memcpy(str, VARDATA(t), len);
-        str[len] = '\0';
+	/* We have to convert to a C string to use quote_identifier */
+	len = VARSIZE(t) - VARHDRSZ;
+	str = (char *)palloc(len + 1);
+	memcpy(str, VARDATA(t), len);
+	str[len] = '\0';
 
-        qstr = slon_quote_identifier(str);
+	qstr = slon_quote_identifier(str);
 
-        len = strlen(qstr);
-        result = (text *) palloc(len + VARHDRSZ);
-        VARATT_SIZEP(result) = len + VARHDRSZ;
-        memcpy(VARDATA(result), qstr, len);
+	len = strlen(qstr);
+	result = (text *) palloc(len + VARHDRSZ);
+	VARATT_SIZEP(result) = len + VARHDRSZ;
+	memcpy(VARDATA(result), qstr, len);
 
-        PG_RETURN_TEXT_P(result);
+	PG_RETURN_TEXT_P(result);
 }
 
 
@@ -1196,7 +1195,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 {
 	Slony_I_ClusterStatus *cs;
 	int			rc;
-	char		query  [1024];
+	char		query[1024];
 	bool		isnull;
 	Oid			plan_types[12];
 	Oid			xxid_typid;

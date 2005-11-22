@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.21 2005-11-21 21:20:03 wieck Exp $
+ *	$Id: misc.c,v 1.22 2005-11-22 05:11:58 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -63,13 +63,16 @@ extern char *Syslog_facility;	/* openlog() parameters */
 extern char *Syslog_ident;
 
 static void write_syslog(int level, const char *line);
-
 #else
 
 #define Use_syslog 0
 #endif   /* HAVE_SYSLOG */
 
 
+/* ----------
+ * slon_log
+ * ----------
+ */
 void
 slon_log(Slon_Log_Level level, char *fmt,...)
 {
@@ -153,9 +156,9 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 
 	if (logtimestamp == true && (Use_syslog != 1)
 #ifdef WIN32
-			&& !win32_isservice
+		&& !win32_isservice
 #endif
-			)
+		)
 	{
 		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
 		sprintf(outbuf, "%s ", time_buf);
@@ -196,11 +199,12 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 }
 
 
-/*
+/* ----------
  * scanint8 --- try to parse a string into an int8.
  *
  * If errorOK is false, ereport a useful error message if the string is bad. If
  * errorOK is true, just return "false" for bad input.
+ * ----------
  */
 int
 slon_scanint64(char *str, int64 * result)
@@ -263,6 +267,10 @@ slon_scanint64(char *str, int64 * result)
 }
 
 #if HAVE_SYSLOG
+/* ----------
+ * write_syslog
+ * ----------
+ */
 static void
 write_syslog(int level, const char *line)
 {
@@ -311,7 +319,7 @@ write_syslog(int level, const char *line)
 
 		while (len > 0)
 		{
-			char		buf    [SLON_SYSLOG_LIMIT + 1];
+			char		buf[SLON_SYSLOG_LIMIT + 1];
 			int			buflen;
 			int			i;
 
@@ -365,3 +373,5 @@ write_syslog(int level, const char *line)
 }
 
 #endif   /* HAVE_SYSLOG */
+
+

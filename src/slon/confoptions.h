@@ -7,15 +7,15 @@
 void		InitializeConfOptions(void);
 
 bool		set_config_option(const char *name, const char *value);
-void		*get_config_option(const char *name);
+void	   *get_config_option(const char *name);
 
 extern double real_placeholder;
 
-extern char	*rtcfg_cluster_name;
-extern char	*rtcfg_conninfo;
+extern char *rtcfg_cluster_name;
+extern char *rtcfg_conninfo;
 
-extern char	*pid_file;
-extern char	*archive_dir;
+extern char *pid_file;
+extern char *archive_dir;
 
 extern int	vac_frequency;
 extern int	slon_log_level;
@@ -25,19 +25,19 @@ extern int	sync_interval_timeout;
 extern int	sync_group_maxsize;
 extern int	desired_sync_time;
 
-extern int      quit_sync_provider;
-extern int      quit_sync_finalsync;
+extern int	quit_sync_provider;
+extern int	quit_sync_finalsync;
 
-char	   	*Syslog_ident;
-char	   	*Syslog_facility;
-int		Use_syslog;
+char	   *Syslog_ident;
+char	   *Syslog_facility;
+int			Use_syslog;
 
 bool		logpid;
 bool		logtimestamp;
-bool            drop_indices;
-char		*log_timestamp_format;
-char		*sql_on_connection;
-char		*lag_interval;
+bool		drop_indices;
+char	   *log_timestamp_format;
+char	   *sql_on_connection;
+char	   *lag_interval;
 
 enum config_type
 {
@@ -51,8 +51,8 @@ struct config_generic
 {
 	/* constant fields, must be set correctly in initial value: */
 	const char *name;
-	const char *short_desc;
-	const char *long_desc;
+				const char *short_desc;
+				const char *long_desc;
 	enum config_type vartype;	/* type of variable (set only at startup) */
 };
 
@@ -94,7 +94,7 @@ struct config_string
 	/* these fields must be set correctly in initial value: */
 	/* (all are constants) */
 	char	  **variable;
-	const char *default_val;
+				const char *default_val;
 };
 
 
@@ -166,8 +166,8 @@ static struct config_int ConfigureNamesInt[] =
 			(const char *)"desired_sync_time",
 			gettext_noop("maximum time planned for grouped SYNCs"),
 			gettext_noop("If replication is behind, slon will try to increase numbers of "
-				     "syncs done targetting that they should take this quantity of "
-				     "time to process"),
+			  "syncs done targetting that they should take this quantity of "
+						 "time to process"),
 			SLON_C_INT
 		},
 		&desired_sync_time,
@@ -192,32 +192,32 @@ static struct config_int ConfigureNamesInt[] =
 		2
 	},
 #endif
- 	{
- 		{
- 			(const char *)"quit_sync_provider",
- 			gettext_noop("Node to watch for a final SYNC"),
- 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
- 				     "against a certain provider.  This is the provider... "),
- 			SLON_C_INT
- 		},
- 		&quit_sync_provider,
- 		0,
- 		0,
- 		2147483647
- 	},
- 	{
- 		{
- 			(const char *)"quit_sync_finalsync",
- 			gettext_noop("SYNC number at which slon should abort"),
- 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
- 				     "against a certain provider.  This is the SYNC number... "),
- 			SLON_C_INT
- 		},
- 		&quit_sync_finalsync,
- 		0,
- 		0,
- 		2147483647
- 	},
+	{
+		{
+			(const char *)"quit_sync_provider",
+			gettext_noop("Node to watch for a final SYNC"),
+			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
+					"against a certain provider.  This is the provider... "),
+			SLON_C_INT
+		},
+		&quit_sync_provider,
+		0,
+		0,
+		2147483647
+	},
+	{
+		{
+			(const char *)"quit_sync_finalsync",
+			gettext_noop("SYNC number at which slon should abort"),
+			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
+				 "against a certain provider.  This is the SYNC number... "),
+			SLON_C_INT
+		},
+		&quit_sync_finalsync,
+		0,
+		0,
+		2147483647
+	},
 	{0}
 };
 
@@ -244,7 +244,7 @@ static struct config_bool ConfigureNamesBool[] =
 		true
 	},
 
-    {0}
+	{0}
 };
 
 static struct config_real ConfigureNamesReal[] =
@@ -261,7 +261,7 @@ static struct config_real ConfigureNamesReal[] =
 		0.0,					/* min_value */
 		1.0						/* max value */
 	},
-    {0}
+	{0}
 };
 
 static struct config_string ConfigureNamesString[] =
@@ -320,9 +320,9 @@ static struct config_string ConfigureNamesString[] =
 		{
 			(const char *)"sql_on_connection",
 			gettext_noop("SQL to send to each connected node upon "
-				"connection establishment, useful to enable "
-				"duration logging, or to adjust any other "
-				"connection settable GUC"),
+						 "connection establishment, useful to enable "
+						 "duration logging, or to adjust any other "
+						 "connection settable GUC"),
 			NULL,
 			SLON_C_STRING
 		},
@@ -335,8 +335,8 @@ static struct config_string ConfigureNamesString[] =
 		{
 			(const char *)"lag_interval",
 			gettext_noop("A PostgreSQL value compatible with ::interval "
-				     "which indicates how far behind this node should "
-				     "lag its providers."),
+						 "which indicates how far behind this node should "
+						 "lag its providers."),
 			NULL,
 			SLON_C_STRING
 		},
@@ -369,7 +369,7 @@ static struct config_string ConfigureNamesString[] =
 		"slon"
 	},
 #endif
-    {0}
+	{0}
 };
 #endif
 /*

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.24 2005-07-15 17:56:02 darcyb Exp $
+ *	$Id: slonik.h,v 1.25 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -402,7 +402,7 @@ struct SlonikStmt_ddl_script_s
 	char	   *ddl_fname;
 	int			ev_origin;
 	int			only_on_node;
-	FILE			*ddl_fd;
+	FILE	   *ddl_fd;
 };
 
 
@@ -556,7 +556,6 @@ extern int	db_notice_lno;
 
 #ifdef HAVE_PQSETNOTICERECEIVER
 void		db_notice_recv(void *arg, const PGresult *res);
-
 #else
 void		db_notice_recv(void *arg, const char *msg);
 #endif

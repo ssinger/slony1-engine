@@ -6,13 +6,10 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.16 2005-11-21 21:20:05 wieck Exp $
+ *	$Id: sync_thread.c,v 1.17 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
-
-/* Note that in 1.1, generate_sync_event() is a stored procedure that
-   does roughly the same thing as this... */
 
 #include <pthread.h>
 
@@ -31,15 +28,16 @@
 #include "slon.h"
 
 
-/*
- * ---------- Global variables ----------
+/* ---------- 
+ * Global variables 
+ * ----------
  */
 int			sync_interval;
 int			sync_interval_timeout;
 
 
-/*
- * ---------- slon_localSyncThread
+/* ---------- 
+ * slon_localSyncThread
  *
  * Generate SYNC event if local database activity created new log info.
  * ----------

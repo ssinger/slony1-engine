@@ -68,7 +68,7 @@ build_conf_variables(void)
 
 	size_vars = num_vars + num_vars / 4;
 
-	conf_vars = (struct config_generic **)malloc(size_vars * sizeof(struct config_generic *));
+	conf_vars = (struct config_generic **) malloc(size_vars * sizeof(struct config_generic *));
 	if (conf_vars == NULL)
 	{
 		slon_log(FATAL, "malloc failed");
@@ -105,7 +105,7 @@ build_conf_variables(void)
 
 
 static bool
-add_conf_variable(struct config_generic *var, int elevel)
+add_conf_variable(struct config_generic * var, int elevel)
 {
 	if (num_conf_variables + 1 >= size_conf_variables)
 	{
@@ -157,21 +157,21 @@ InitializeConfOptions(void)
 		{
 			case SLON_C_BOOL:
 				{
-					struct config_bool *conf = (struct config_bool *)gconf;
+					struct config_bool *conf = (struct config_bool *) gconf;
 
 					*conf->variable = conf->default_val;
 					break;
 				}
 			case SLON_C_INT:
 				{
-					struct config_int *conf = (struct config_int *)gconf;
+					struct config_int *conf = (struct config_int *) gconf;
 
 					*conf->variable = conf->default_val;
 					break;
 				}
 			case SLON_C_REAL:
 				{
-					struct config_real *conf = (struct config_real *)gconf;
+					struct config_real *conf = (struct config_real *) gconf;
 
 					*conf->variable = conf->default_val;
 					break;
@@ -179,7 +179,7 @@ InitializeConfOptions(void)
 			case SLON_C_STRING:
 				{
 					char	   *str;
-					struct config_string *conf = (struct config_string *)gconf;
+					struct config_string *conf = (struct config_string *) gconf;
 
 					*conf->variable = NULL;
 					if (conf->default_val)
@@ -340,8 +340,8 @@ find_option(const char *name, int elevel)
 static int
 conf_var_compare(const void *a, const void *b)
 {
-	struct config_generic *confa = *(struct config_generic **)a;
-	struct config_generic *confb = *(struct config_generic **)b;
+	struct config_generic *confa = *(struct config_generic **) a;
+	struct config_generic *confb = *(struct config_generic **) b;
 
 	return conf_name_compare(confa->name, confb->name);
 }
@@ -388,28 +388,28 @@ get_config_option(const char *name)
 	{
 		case SLON_C_BOOL:
 			{
-				struct config_bool *conf = (struct config_bool *)record;
+				struct config_bool *conf = (struct config_bool *) record;
 
 				return (void *)conf->variable;
 				break;
 			}
 		case SLON_C_INT:
 			{
-				struct config_int *conf = (struct config_int *)record;
+				struct config_int *conf = (struct config_int *) record;
 
 				return (void *)conf->variable;
 				break;
 			}
 		case SLON_C_REAL:
 			{
-				struct config_real *conf = (struct config_real *)record;
+				struct config_real *conf = (struct config_real *) record;
 
 				return (void *)conf->variable;
 				break;
 			}
 		case SLON_C_STRING:
 			{
-				struct config_string *conf = (struct config_string *)record;
+				struct config_string *conf = (struct config_string *) record;
 
 				return (void *)*conf->variable;
 				break;
@@ -435,7 +435,7 @@ set_config_option(const char *name, const char *value)
 	{
 		case SLON_C_BOOL:
 			{
-				struct config_bool *conf = (struct config_bool *)record;
+				struct config_bool *conf = (struct config_bool *) record;
 				bool		newval;
 
 				if (value)
@@ -457,7 +457,7 @@ set_config_option(const char *name, const char *value)
 			}
 		case SLON_C_INT:
 			{
-				struct config_int *conf = (struct config_int *)record;
+				struct config_int *conf = (struct config_int *) record;
 				int			newval;
 
 				if (value)
@@ -483,7 +483,7 @@ set_config_option(const char *name, const char *value)
 			}
 		case SLON_C_REAL:
 			{
-				struct config_real *conf = (struct config_real *)record;
+				struct config_real *conf = (struct config_real *) record;
 				double		newval;
 
 				if (value)
@@ -509,7 +509,7 @@ set_config_option(const char *name, const char *value)
 			}
 		case SLON_C_STRING:
 			{
-				struct config_string *conf = (struct config_string *)record;
+				struct config_string *conf = (struct config_string *) record;
 				char	   *newval = NULL;
 
 				if (value)

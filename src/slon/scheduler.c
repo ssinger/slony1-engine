@@ -1,4 +1,4 @@
-/*-------------------------------------------------------------------------
+/* ----------------------------------------------------------------------
  * scheduler.c
  *
  *	Event scheduling subsystem for slon.
@@ -6,8 +6,8 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.22 2005-11-21 21:20:04 wieck Exp $
- *-------------------------------------------------------------------------
+ *	$Id: scheduler.c,v 1.23 2005-11-22 05:11:59 wieck Exp $
+ * ----------------------------------------------------------------------
  */
 
 
@@ -36,8 +36,9 @@
 #define PF_LOCAL PF_UNIX
 #endif
 
-/*
- * ---------- Static data ----------
+/* ---------- 
+ * Static data 
+ * ----------
  */
 static int	sched_status = SCHED_STATUS_OK;
 
@@ -54,8 +55,9 @@ static pthread_mutex_t sched_master_lock;
 static pthread_cond_t sched_master_cond;
 
 
-/*
- * ---------- Local functions ----------
+/* ----------
+ * Local functions 
+ * ----------
  */
 static void *sched_mainloop(void *);
 static void sched_add_fdset(int fd, fd_set * fds);
@@ -63,13 +65,14 @@ static void sched_remove_fdset(int fd, fd_set * fds);
 static void sched_shutdown();
 
 
-/*
- * ---------- sched_start_mainloop
+/* ----------
+ * sched_start_mainloop
  *
  * Called from SlonMain() before starting up any worker thread.
  *
  * This will spawn the event scheduling thread that does the central select(2)
- * system call. ----------
+ * system call. 
+ * ----------
  */
 int
 sched_start_mainloop(void)
@@ -92,13 +95,13 @@ sched_start_mainloop(void)
 	if (pthread_mutex_init(&sched_master_lock, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_init() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 	if (pthread_cond_init(&sched_master_cond, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_cond_init() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 
@@ -108,7 +111,7 @@ sched_start_mainloop(void)
 	if (pthread_mutex_lock(&sched_master_lock) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_lock() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 
@@ -118,7 +121,7 @@ sched_start_mainloop(void)
 	if (pthread_create(&sched_scheduler_thread, NULL, sched_mainloop, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_create() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 
@@ -128,7 +131,7 @@ sched_start_mainloop(void)
 	if (pthread_cond_wait(&sched_master_cond, &sched_master_lock) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_cond_wait() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 
@@ -138,7 +141,7 @@ sched_start_mainloop(void)
 	if (pthread_mutex_unlock(&sched_master_lock) < 0)
 	{
 		slon_log(SLON_FATAL, "sched_start_mainloop: pthread_mutex_unlock() - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		return -1;
 	}
 
@@ -155,12 +158,13 @@ sched_start_mainloop(void)
 }
 
 
-/*
- * ---------- sched_wait_mainloop
+/* ----------
+ * sched_wait_mainloop
  *
  * Called from main() after all working threads according to the initial
  * configuration are started. Will wait until the scheduler mainloop
- * terminates. ----------
+ * terminates. 
+ * ----------
  */
 int
 sched_wait_mainloop(void)
@@ -177,13 +181,14 @@ sched_wait_mainloop(void)
 }
 
 
-/*
- * ---------- sched_wait_conn
+/* ----------
+ * sched_wait_conn
  *
  * Assumes that the thread holds the lock on conn->conn_lock.
  *
  * Adds the connection to the central wait queue and wakes up the scheduler
- * thread to reloop onto the select(2) call. ----------
+ * thread to reloop onto the select(2) call. 
+ * ----------
  */
 int
 sched_wait_conn(SlonConn * conn, int condition)
@@ -245,8 +250,8 @@ sched_wait_conn(SlonConn * conn, int condition)
 }
 
 
-/*
- * ---------- sched_wait_time
+/* ---------- 
+ * sched_wait_time
  *
  * Assumes that the thread holds the lock on conn->conn_lock.
  *
@@ -274,10 +279,11 @@ sched_wait_time(SlonConn * conn, int condition, int msec)
 }
 
 
-/*
- * ---------- sched_msleep
+/* ---------- 
+ * sched_msleep
  *
- * Use the schedulers event loop to sleep for msec milliseconds. ----------
+ * Use the schedulers event loop to sleep for msec milliseconds. 
+ * ----------
  */
 int
 sched_msleep(SlonNode * node, int msec)
@@ -301,10 +307,11 @@ sched_msleep(SlonNode * node, int msec)
 }
 
 
-/*
- * ---------- sched_get_status
+/* ---------- 
+ * sched_get_status
  *
- * Return the current scheduler status in a thread safe fashion ----------
+ * Return the current scheduler status in a thread safe fashion 
+ * ----------
  */
 int
 sched_get_status(void)
@@ -318,12 +325,13 @@ sched_get_status(void)
 }
 
 
-/*
- * ---------- sched_wakeup_node
+/* ---------- 
+ * sched_wakeup_node
  *
  * Wakeup the threads (listen and worker) of one or all remote nodes to cause
  * them rechecking the current runtime status or adjust their configuration
- * to changes. ----------
+ * to changes. 
+ * ----------
  */
 int
 sched_wakeup_node(int no_id)
@@ -370,10 +378,11 @@ sched_wakeup_node(int no_id)
 }
 
 
-/*
- * ---------- sched_mainloop
+/* ---------- 
+ * sched_mainloop
  *
- * The thread handling the master scheduling. ----------
+ * The thread handling the master scheduling. 
+ * ----------
  */
 static void *
 sched_mainloop(void *dummy)
@@ -541,7 +550,7 @@ sched_mainloop(void *dummy)
 		 */
 		if (FD_ISSET(sched_wakeuppipe[0], &rfds))
 		{
-			char		buf    [1];
+			char		buf[1];
 
 			rc--;
 			if (piperead(sched_wakeuppipe[0], buf, 1) != 1)
@@ -626,11 +635,9 @@ sched_mainloop(void *dummy)
 	 */
 
 	/*
-	close(sched_wakeuppipe[0]);
-	sched_wakeuppipe[0] = -1;
-	close(sched_wakeuppipe[1]);
-	sched_wakeuppipe[1] = -1;
-	*/
+	 * close(sched_wakeuppipe[0]); sched_wakeuppipe[0] = -1;
+	 * close(sched_wakeuppipe[1]); sched_wakeuppipe[1] = -1;
+	 */
 
 	/*
 	 * Then we cond_signal all connections that are in the queue.
@@ -664,11 +671,12 @@ sched_mainloop(void *dummy)
 }
 
 
-/*
- * ---------- sched_add_fdset
+/* ---------- 
+ * sched_add_fdset
  *
  * Add a file descriptor to one of the global scheduler sets and adjust
- * sched_numfd accordingly. ----------
+ * sched_numfd accordingly. 
+ * ----------
  */
 static void
 sched_add_fdset(int fd, fd_set * fds)
@@ -679,11 +687,12 @@ sched_add_fdset(int fd, fd_set * fds)
 }
 
 
-/*
- * ---------- sched_add_fdset
+/* ---------- 
+ * sched_add_fdset
  *
  * Remove a file descriptor from one of the global scheduler sets and adjust
- * sched_numfd accordingly. ----------
+ * sched_numfd accordingly. 
+ * ----------
  */
 static void
 sched_remove_fdset(int fd, fd_set * fds)
@@ -701,3 +710,5 @@ sched_remove_fdset(int fd, fd_set * fds)
 		}
 	}
 }
+
+

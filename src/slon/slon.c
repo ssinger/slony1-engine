@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.60 2005-11-21 21:20:04 wieck Exp $
+ *	$Id: slon.c,v 1.61 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -36,8 +36,9 @@
 #include "confoptions.h"
 
 
-/*
- * ---------- Global data ----------
+/* ---------- 
+ * Global data 
+ * ----------
  */
 #ifndef WIN32
 #define		SLON_WATCHDOG_NORMAL		0
@@ -51,8 +52,9 @@ int			sched_wakeuppipe[2];
 pthread_mutex_t slon_wait_listen_lock;
 pthread_cond_t slon_wait_listen_cond;
 
-/*
- * ---------- Local data ----------
+/* ---------- 
+ * Local data 
+ * ----------
  */
 static pthread_t local_event_thread;
 static pthread_t local_cleanup_thread;
@@ -66,6 +68,7 @@ static pthread_t main_thread;
 static char *const *main_argv;
 
 static void SlonMain(void);
+
 #ifndef WIN32
 static void SlonWatchdog(void);
 static void sighandler(int signo);
@@ -78,7 +81,12 @@ char	   *archive_dir = NULL;
 int			child_status;
 
 
-void Usage(char * const argv[])
+/* ----------
+ * Usage
+ * ----------
+ */
+void
+Usage(char *const argv[])
 {
 	fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
 	fprintf(stderr, "\n");
@@ -97,7 +105,7 @@ void Usage(char * const argv[])
 #ifdef WIN32
 	fprintf(stderr, "\nWindows service registration:\n");
 	fprintf(stderr, " slon -regservice [servicename]\n");
-    fprintf(stderr, " slon -unregservice [servicename]\n");
+	fprintf(stderr, " slon -unregservice [servicename]\n");
 	fprintf(stderr, " slon -listengines [servicename]\n");
 	fprintf(stderr, " slon -addengine [servicename] <configfile>\n");
 	fprintf(stderr, " slon -delengine [servicename] <configfile>\n");
@@ -106,8 +114,9 @@ void Usage(char * const argv[])
 }
 
 
-/*
- * ---------- main ----------
+/* ---------- 
+ * main 
+ * ----------
  */
 int
 main(int argc, char *const argv[])
@@ -116,7 +125,7 @@ main(int argc, char *const argv[])
 	char	   *cp2;
 	SlonDString query;
 	PGresult   *res;
-	int			i	  ,
+	int			i,
 				n;
 	int			c;
 	int			errors = 0;
@@ -126,8 +135,8 @@ main(int argc, char *const argv[])
 	extern char *optarg;
 
 #ifdef WIN32
-    WSADATA wsaData;
-    int err;
+	WSADATA		wsaData;
+	int			err;
 #endif
 
 #if !defined(CYGWIN) && !defined(WIN32)
@@ -136,42 +145,42 @@ main(int argc, char *const argv[])
 
 
 #ifdef WIN32
-	if (argc >= 2 && !strcmp(argv[1],"-service"))
+	if (argc >= 2 && !strcmp(argv[1], "-service"))
 	{
 		win32_servicestart();
 		exit(0);
 	}
-	if (argc >= 2 && !strcmp(argv[1],"-subservice"))
+	if (argc >= 2 && !strcmp(argv[1], "-subservice"))
 	{
 		win32_isservice = 1;
 		argc--;
 		argv++;
 	}
 	if (argc >= 2 && argc <= 4 && (
-				!strcmp(argv[1],"-regservice") ||
-				!strcmp(argv[1],"-unregservice") ||
-				!strcmp(argv[1],"-addengine") ||
-				!strcmp(argv[1],"-delengine") ||
-				!strcmp(argv[1],"-listengines")))
+								   !strcmp(argv[1], "-regservice") ||
+								   !strcmp(argv[1], "-unregservice") ||
+								   !strcmp(argv[1], "-addengine") ||
+								   !strcmp(argv[1], "-delengine") ||
+								   !strcmp(argv[1], "-listengines")))
 	{
 		win32_serviceconfig(argc, argv);
 	}
 #endif
-	
+
 	InitializeConfOptions();
 
 	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:hv?")) != EOF)
 	{
 		switch (c)
 		{
-				case '?':
-					Usage(argv);
-		        case 'q':
-			        set_config_option("quit_sync_provider", optarg);
+			case '?':
+				Usage(argv);
+			case 'q':
+				set_config_option("quit_sync_provider", optarg);
 				break;
 
-		        case 'r':
-			        set_config_option("quit_sync_finalsync", optarg);
+			case 'r':
+				set_config_option("quit_sync_finalsync", optarg);
 				break;
 
 			case 'f':
@@ -181,7 +190,7 @@ main(int argc, char *const argv[])
 			case 'a':
 				set_config_option("archive_dir", optarg);
 				break;
-				
+
 			case 'd':
 				set_config_option("log_level", optarg);
 				break;
@@ -244,8 +253,8 @@ main(int argc, char *const argv[])
 #ifndef WIN32
 	if (pthread_mutex_init(&slon_watchdog_lock, NULL) < 0)
 	{
-		slon_log(SLON_FATAL, "slon: pthread_mutex_init() - %s\n", 
-				strerror(errno));
+		slon_log(SLON_FATAL, "slon: pthread_mutex_init() - %s\n",
+				 strerror(errno));
 		exit(-1);
 	}
 	slon_watchdog_pid = slon_pid;
@@ -296,16 +305,18 @@ main(int argc, char *const argv[])
 	}
 
 #ifdef WIN32
-    /* 
-     * Startup the network subsystem, in case our libpq doesn't
-     */
-    err = WSAStartup(MAKEWORD(1, 1), &wsaData);
-    if (err != 0) {
+
+	/*
+	 * Startup the network subsystem, in case our libpq doesn't
+	 */
+	err = WSAStartup(MAKEWORD(1, 1), &wsaData);
+	if (err != 0)
+	{
 		slon_log(SLON_FATAL, "main: Cannot start the network subsystem - %d\n", err);
 		exit(-1);
-    }
+	}
 #endif
-    
+
 	if (pid_file)
 	{
 		FILE	   *pidfile;
@@ -327,13 +338,15 @@ main(int argc, char *const argv[])
 	 */
 	if (pgpipe(sched_wakeuppipe) < 0)
 	{
-		slon_log(SLON_FATAL, "slon: sched_wakeuppipe create failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: sched_wakeuppipe create failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
 
-	/* There is no watchdog process on win32. We delegate restarting and
-	 * other such tasks to the Service Control Manager. And win32 doesn't
-	 * support signals, so we don't need to catch them... */
+	/*
+	 * There is no watchdog process on win32. We delegate restarting and other
+	 * such tasks to the Service Control Manager. And win32 doesn't support
+	 * signals, so we don't need to catch them...
+	 */
 #ifndef WIN32
 	SlonWatchdog();
 #else
@@ -343,13 +356,19 @@ main(int argc, char *const argv[])
 }
 
 
-static void SlonMain(void)
+/* ---------- 
+ * SlonMain 
+ * ----------
+ */
+static void
+SlonMain(void)
 {
-	PGresult	   *res;
-	SlonDString		query;
-	int				i,n;
-	char			pipe_c;
-	PGconn		   *startup_conn;
+	PGresult   *res;
+	SlonDString query;
+	int			i,
+				n;
+	char		pipe_c;
+	PGconn	   *startup_conn;
 
 	slon_pid = getpid();
 #ifndef WIN32
@@ -359,13 +378,13 @@ static void SlonMain(void)
 	if (pthread_mutex_init(&slon_wait_listen_lock, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: pthread_mutex_init() failed - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		slon_abort();
 	}
 	if (pthread_cond_init(&slon_wait_listen_cond, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: pthread_cond_init() failed - %s\n",
-				strerror(errno));
+				 strerror(errno));
 		slon_abort();
 	}
 
@@ -406,32 +425,31 @@ static void SlonMain(void)
 	slon_log(SLON_CONFIG, "main: local node id = %d\n", rtcfg_nodeid);
 
 #ifndef WIN32
-	if (signal(SIGHUP,SIG_IGN) == SIG_ERR)
+	if (signal(SIGHUP, SIG_IGN) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "main: SIGHUP signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: SIGHUP signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_abort();
 	}
-	if (signal(SIGINT,SIG_IGN) == SIG_ERR)
+	if (signal(SIGINT, SIG_IGN) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "main: SIGINT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: SIGINT signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_abort();
 	}
-	if (signal(SIGTERM,SIG_IGN) == SIG_ERR)
+	if (signal(SIGTERM, SIG_IGN) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "main: SIGTERM signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: SIGTERM signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_abort();
 	}
-	if (signal(SIGCHLD,SIG_IGN) == SIG_ERR)
+	if (signal(SIGCHLD, SIG_IGN) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "main: SIGCHLD signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: SIGCHLD signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_abort();
 	}
-	if (signal(SIGQUIT,SIG_IGN) == SIG_ERR)
+	if (signal(SIGQUIT, SIG_IGN) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "main: SIGQUIT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: SIGQUIT signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_abort();
 	}
-
 #endif
 
 	slon_log(SLON_DEBUG2, "main: main process started\n");
@@ -573,7 +591,8 @@ static void SlonMain(void)
 	PQclear(res);
 
 	/*
-	 * Read configuration table sl_subscribe - only subscriptions for local node
+	 * Read configuration table sl_subscribe - only subscriptions for local
+	 * node
 	 */
 	slon_mkquery(&query,
 				 "select sub_set, sub_provider, sub_forward, sub_active "
@@ -651,10 +670,10 @@ static void SlonMain(void)
 	slon_log(SLON_CONFIG, "main: configuration complete - starting threads\n");
 
 	/*
-	 * Create the local event thread that monitors the local node
-	 * for administrative events to adjust the configuration at
-	 * runtime. We wait here until the local listen thread has
-	 * checked that there is no other slon daemon running.
+	 * Create the local event thread that monitors the local node for
+	 * administrative events to adjust the configuration at runtime. We wait
+	 * here until the local listen thread has checked that there is no other
+	 * slon daemon running.
 	 */
 	pthread_mutex_lock(&slon_wait_listen_lock);
 	if (pthread_create(&local_event_thread, NULL, localListenThread_main, NULL) < 0)
@@ -696,10 +715,11 @@ static void SlonMain(void)
 	if (pthread_create(&local_snmp_thread, NULL, snmpThread_main, NULL) < 0)
 	{
 		slon_log(SLON_FATAL, "main: cannot create snmpThread -%s\n",
-				strerror(errno));
+				 strerror(errno));
 		slon_retry();
 	}
 #endif
+
 	/*
 	 * Wait until the scheduler has shut down all remote connections
 	 */
@@ -737,7 +757,7 @@ static void SlonMain(void)
 #ifdef HAVE_NETSNMP
 	if (pthread_kill(local_snmp_thread, SIGINT) < 0)
 		slon_log(SLON_ERROR, "main: cannot join snmpThread - %s\n",
-				strerror(errno));
+				 strerror(errno));
 #endif
 
 	slon_log(SLON_DEBUG1, "main: done\n");
@@ -746,59 +766,65 @@ static void SlonMain(void)
 }
 
 #ifndef WIN32
-static void SlonWatchdog(void)
+/* ---------- 
+ * SlonWatchdog 
+ * ----------
+ */
+static void
+SlonWatchdog(void)
 {
 	pid_t		pid;
+
 #if !defined(CYGWIN) && !defined(WIN32)
 	struct sigaction act;
 #endif
 	slon_log(SLON_DEBUG2, "slon: watchdog process started\n");
 
-	/* 
-	 * Install signal handlers 
+	/*
+	 * Install signal handlers
 	 */
 #ifndef CYGWIN
-	act.sa_handler = &sighandler; 
+	act.sa_handler = &sighandler;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags = SA_NODEFER;
 
-	if (sigaction(SIGHUP,&act,NULL) < 0)
+	if (sigaction(SIGHUP, &act, NULL) < 0)
 #else
-	if (signal(SIGHUP,sighandler) == SIG_ERR)
+	if (signal(SIGHUP, sighandler) == SIG_ERR)
 #endif
 	{
-		slon_log(SLON_FATAL, "slon: SIGHUP signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGHUP signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
 
-	if (signal(SIGUSR1,sighandler) == SIG_ERR)
+	if (signal(SIGUSR1, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGUSR1 signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGUSR1 signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
-	if (signal(SIGALRM,sighandler) == SIG_ERR)
+	if (signal(SIGALRM, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGALRM signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGALRM signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
-	if (signal(SIGINT,sighandler) == SIG_ERR)
+	if (signal(SIGINT, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGINT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGINT signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
-	if (signal(SIGTERM,sighandler) == SIG_ERR)
+	if (signal(SIGTERM, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGTERM signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGTERM signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
-	if (signal(SIGCHLD,sighandler) == SIG_ERR)
+	if (signal(SIGCHLD, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGCHLD signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGCHLD signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
-	if (signal(SIGQUIT,sighandler) == SIG_ERR)
+	if (signal(SIGQUIT, sighandler) == SIG_ERR)
 	{
-		slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
 	}
 
@@ -812,7 +838,7 @@ static void SlonWatchdog(void)
 	}
 
 	slon_log(SLON_DEBUG2, "slon: worker process created - pid = %d\n",
-			slon_worker_pid);
+			 slon_worker_pid);
 	while ((pid = wait(&child_status)) != slon_worker_pid)
 	{
 		if (pid < 0 && errno == EINTR)
@@ -824,12 +850,12 @@ static void SlonWatchdog(void)
 
 	alarm(0);
 
-	switch(watchdog_status)
+	switch (watchdog_status)
 	{
 		case SLON_WATCHDOG_RESTART:
 			execvp(main_argv[0], main_argv);
 			slon_log(SLON_FATAL, "slon: cannot restart via execvp() - %s\n",
-					strerror(errno));
+					 strerror(errno));
 			slon_exit(-1);
 			break;
 
@@ -842,7 +868,7 @@ static void SlonWatchdog(void)
 			{
 				execvp(main_argv[0], main_argv);
 				slon_log(SLON_FATAL, "slon: cannot restart via execvp() - %s\n",
-						strerror(errno));
+						 strerror(errno));
 				slon_exit(-1);
 			}
 			break;
@@ -860,46 +886,54 @@ static void SlonWatchdog(void)
 }
 
 
+/* ---------- 
+ * sighandler 
+ * ----------
+ */
 static void
 sighandler(int signo)
 {
 	switch (signo)
 	{
-	case SIGALRM:
-		slon_log(SLON_DEBUG1, "slon: child termination timeout - kill child\n");
-		kill(slon_worker_pid, SIGKILL);
-		break;
-		
-	case SIGCHLD:
-		break;
-		
-	case SIGHUP:
-		slon_log(SLON_DEBUG1, "slon: restart requested\n");
-		watchdog_status = SLON_WATCHDOG_RESTART;
-		slon_terminate_worker();
-		break;
+		case SIGALRM:
+			slon_log(SLON_DEBUG1, "slon: child termination timeout - kill child\n");
+			kill(slon_worker_pid, SIGKILL);
+			break;
 
-	case SIGUSR1:
-		slon_log(SLON_DEBUG1, "slon: retry requested\n");
-		watchdog_status = SLON_WATCHDOG_RETRY;
-		slon_terminate_worker();
-		break;
+		case SIGCHLD:
+			break;
 
-	case SIGINT:
-	case SIGTERM:
-		slon_log(SLON_DEBUG1, "slon: shutdown requested\n");
-		watchdog_status = SLON_WATCHDOG_SHUTDOWN;
-		slon_terminate_worker();
-		break;
+		case SIGHUP:
+			slon_log(SLON_DEBUG1, "slon: restart requested\n");
+			watchdog_status = SLON_WATCHDOG_RESTART;
+			slon_terminate_worker();
+			break;
 
-	case SIGQUIT:
-		slon_log(SLON_DEBUG1, "slon: shutdown now requested\n");
-		kill(slon_worker_pid, SIGKILL);
-		slon_exit(-1);
-		break;
+		case SIGUSR1:
+			slon_log(SLON_DEBUG1, "slon: retry requested\n");
+			watchdog_status = SLON_WATCHDOG_RETRY;
+			slon_terminate_worker();
+			break;
+
+		case SIGINT:
+		case SIGTERM:
+			slon_log(SLON_DEBUG1, "slon: shutdown requested\n");
+			watchdog_status = SLON_WATCHDOG_SHUTDOWN;
+			slon_terminate_worker();
+			break;
+
+		case SIGQUIT:
+			slon_log(SLON_DEBUG1, "slon: shutdown now requested\n");
+			kill(slon_worker_pid, SIGKILL);
+			slon_exit(-1);
+			break;
 	}
 }
 
+/* ---------- 
+ * slon_terminate_worker 
+ * ----------
+ */
 void
 slon_terminate_worker()
 {
@@ -907,7 +941,7 @@ slon_terminate_worker()
 
 	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
 	{
-		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno,strerror(errno));
+		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno, strerror(errno));
 		kill(slon_worker_pid, SIGKILL);
 		slon_exit(-1);
 	}
@@ -916,21 +950,25 @@ slon_terminate_worker()
 }
 #endif
 
+/* ---------- 
+ * slon_exit 
+ * ----------
+ */
 void
 slon_exit(int code)
 {
 #ifdef WIN32
-    /* Cleanup winsock */
-    WSACleanup();
+	/* Cleanup winsock */
+	WSACleanup();
 #endif
-    
+
 	if (pid_file)
 	{
 		slon_log(SLON_DEBUG2, "slon: remove pid file\n");
 		unlink(pid_file);
 	}
 
-	slon_log(SLON_DEBUG2, "slon: exit(%d)\n",code);
+	slon_log(SLON_DEBUG2, "slon: exit(%d)\n", code);
 
 	exit(code);
 }

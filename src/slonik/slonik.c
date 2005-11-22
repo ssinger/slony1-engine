@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.52 2005-11-11 21:24:35 xfade Exp $
+ *	$Id: slonik.c,v 1.53 2005-11-22 05:11:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,7 +45,7 @@
 SlonikScript *parser_script = NULL;
 int			parser_errors = 0;
 int			current_try_level;
-char			m_pgshare[1024];
+char		m_pgshare[1024];
 
 /*
  * Local functions
@@ -54,18 +54,18 @@ static void usage(void);
 static SlonikAdmInfo *get_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_active_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_checked_adminfo(SlonikStmt * stmt, int no_id);
-static int slonik_repair_config(SlonikStmt_repair_config * stmt);
+static int	slonik_repair_config(SlonikStmt_repair_config * stmt);
 
 
 static int	script_check(SlonikScript * script);
 static int	script_check_adminfo(SlonikStmt * hdr, int no_id);
-static int script_check_stmts(SlonikScript * script,
-				   SlonikStmt * stmt);
+static int	script_check_stmts(SlonikScript * script,
+					SlonikStmt * stmt);
 static int	script_exec(SlonikScript * script);
-static int script_exec_stmts(SlonikScript * script,
-				  SlonikStmt * stmt);
-static void script_commit_all(SlonikStmt * stmt,
-				  SlonikScript * script);
+static int	script_exec_stmts(SlonikScript * script,
+					SlonikStmt * stmt);
+static void	script_commit_all(SlonikStmt * stmt,
+					SlonikScript * script);
 static void script_rollback_all(SlonikStmt * stmt,
 					SlonikScript * script);
 static void script_disconnect_all(SlonikScript * script);
@@ -80,38 +80,39 @@ static void script_disconnect_all(SlonikScript * script);
 void
 replace_token(char *resout, char *lines, const char *token, const char *replacement)
 {
-        int            numlines = 1;
-        int            i,o;
-        char           result_set[4096];
-        int            toklen,
-                       replen;
+	int			numlines = 1;
+	int			i,
+				o;
+	char		result_set[4096];
+	int			toklen,
+				replen;
 
-        for (i = 0; lines[i]; i++)
-                numlines++;
-               
-        toklen = strlen(token);
-        replen = strlen(replacement);
+	for (i = 0; lines[i]; i++)
+		numlines++;
 
-        for (i = o = 0; i < numlines; i++, o++)
-        {
-                /* just copy pointer if NULL or no change needed */
-                if (!lines[i]|| (strncmp((const char *)lines+i, token, toklen)))
-                {
-                       if (lines[i] == 0x0d) /* ||(lines[i] == 0x0a)) */
-                               break;
+	toklen = strlen(token);
+	replen = strlen(replacement);
 
-                       result_set[o] = lines[i];
-                       continue;
-                }
-                /* if we get here a change is needed - set up new line */
-               strncpy((char *)result_set+o, replacement, replen);
-               o += replen -1;
-               i += toklen - 1;
-        }
+	for (i = o = 0; i < numlines; i++, o++)
+	{
+		/* just copy pointer if NULL or no change needed */
+		if (!lines[i] || (strncmp((const char *)lines + i, token, toklen)))
+		{
+			if (lines[i] == 0x0d)		/* ||(lines[i] == 0x0a)) */
+				break;
 
-       result_set[o] = '\0';
-       memcpy(resout, result_set, o);
-               
+			result_set[o] = lines[i];
+			continue;
+		}
+		/* if we get here a change is needed - set up new line */
+		strncpy((char *)result_set + o, replacement, replen);
+		o += replen - 1;
+		i += toklen - 1;
+	}
+
+	result_set[o] = '\0';
+	memcpy(resout, result_set, o);
+
 }
 
 #ifdef WIN32
@@ -123,22 +124,24 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
  * expanded? If so there is more complete code available in the
  * PostgreSQL backend that could be adapted.
  */
-char *get_sharepath(const char *path)
+char *
+get_sharepath(const char *path)
 {
-	int i; 
-	char *result;
+	int			i;
+	char	   *result;
 
-	result = (char *)malloc(MAX_PATH+1);
-	if (!result) {
+	result = (char *)malloc(MAX_PATH + 1);
+	if (!result)
+	{
 		printf("memory allocation failure.\n");
 		exit(1);
 	}
 
-	memcpy(result,path,strlen(path));
+	memcpy(result, path, strlen(path));
 
-	for (i = strlen(path); i >= 0 ; i --)
+	for (i = strlen(path); i >= 0; i--)
 	{
-		if ((path[i] == '/')||(path[i] == '\\'))
+		if ((path[i] == '/') || (path[i] == '\\'))
 			break;
 		result[i] = '\0';
 	}
@@ -146,17 +149,17 @@ char *get_sharepath(const char *path)
 	if (!result[0])
 	{
 		/* Nothing left, so assume subdir of current */
-		strcpy(result,PGSHARE);
+		strcpy(result, PGSHARE);
 		return result;
 	}
 
 	/* Check if directory of exe is "bin" */
 	if (strlen(result) >= 3 &&
-		!strncasecmp(result+i-3,"bin",3) &&
-		(result[i]=='/' || result[i]=='\\'))
+		!strncasecmp(result + i - 3, "bin", 3) &&
+		(result[i] == '/' || result[i] == '\\'))
 	{
 		/* Strip off bin directory */
-		result[i-3] = 0;
+		result[i - 3] = 0;
 	}
 
 	strcat(result, PGSHARE);
@@ -197,10 +200,10 @@ main(int argc, const char *argv[])
 	if (parser_errors)
 		usage();
 #ifndef WIN32
-       strcpy(m_pgshare, PGSHARE);
+	strcpy(m_pgshare, PGSHARE);
 #else
-       /* This begins to look for share. */
-       strcpy(m_pgshare, get_sharepath(argv[0]));
+	/* This begins to look for share. */
+	strcpy(m_pgshare, get_sharepath(argv[0]));
 #endif
 	if (optind < argc)
 	{
@@ -1111,7 +1114,7 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 						errors++;
 
 					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
-					if (stmt->ddl_fd == NULL )
+					if (stmt->ddl_fd == NULL)
 					{
 						printf("%s:%d: Error: "
 							   "%s - %s\n",
@@ -1756,11 +1759,11 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	va_list		ap;
 	int			rc;
 	char		fnamebuf[1024];
-	char		buf    [4096];
-	char		rex1   [256];
-	char		rex2   [256];
-	char		rex3   [256];
-	FILE		*stmtp;
+	char		buf[4096];
+	char		rex1[256];
+	char		rex2[256];
+	char		rex3[256];
+	FILE	   *stmtp;
 
 
 	if (db_begin_xact(stmt, adminfo) < 0)
@@ -1770,30 +1773,30 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	vsnprintf(fnamebuf, sizeof(fnamebuf), fname, ap);
 	va_end(ap);
 
-        stmtp = fopen(fnamebuf,"r");
-        if (!stmtp)
+	stmtp = fopen(fnamebuf, "r");
+	if (!stmtp)
 	{
-                printf("%s:%d: could not open file %s\n",
-                           stmt->stmt_filename, stmt->stmt_lno, fnamebuf);
+		printf("%s:%d: could not open file %s\n",
+			   stmt->stmt_filename, stmt->stmt_lno, fnamebuf);
 		return -1;
 	}
 
-        dstring_init(&query);
+	dstring_init(&query);
 
-        sprintf(rex2, "\"_%s\"", stmt->script->clustername);
+	sprintf(rex2, "\"_%s\"", stmt->script->clustername);
 
-        while (fgets(rex1, 256, stmtp) != NULL)
-        {
-                rc = strlen(rex1);
-                rex1[rc] = '\0';
-                rex3[0] = '\0';
-                replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
-                replace_token(buf, rex3, "@NAMESPACE@", rex2);
-                rc = strlen(buf);
-                dstring_nappend(&query, buf, rc);
+	while (fgets(rex1, 256, stmtp) != NULL)
+	{
+		rc = strlen(rex1);
+		rex1[rc] = '\0';
+		rex3[0] = '\0';
+		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
+		replace_token(buf, rex3, "@NAMESPACE@", rex2);
+		rc = strlen(buf);
+		dstring_nappend(&query, buf, rc);
 	}
 
-        fclose(stmtp);
+	fclose(stmtp);
 
 	dstring_terminate(&query);
 
@@ -1918,12 +1921,13 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 
 #define ROWIDBITS "_Slony-I__rowID"
 
-	if (strlen(stmt->script->clustername) + strlen("ROWIDBITS") > NAMEDATALEN) {
-		printf ("Cluster name %s too long to permit creation of columns containing %s - maximum name length: %d\n", 
-			stmt->script->clustername, ROWIDBITS, NAMEDATALEN);
+	if (strlen(stmt->script->clustername) + strlen("ROWIDBITS") > NAMEDATALEN)
+	{
+		printf("Cluster name %s too long to permit creation of columns containing %s - maximum name length: %d\n",
+			   stmt->script->clustername, ROWIDBITS, NAMEDATALEN);
 		return -1;
-        }
-	
+	}
+
 	dstring_init(&query);
 
 	/* Create the cluster namespace */
@@ -1938,15 +1942,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-					  "%s/xxid.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
+					"%s/xxid.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
 						   "%s/slony1_base.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			   "%s/slony1_base.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
+			 "%s/slony1_base.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
 						   "%s/slony1_funcs.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -2010,9 +2014,9 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 				default:
 					use_minor = 0;
 					printf("%s:%d: Possible unsupported PostgreSQL "
-						"version %d.%d\n",
-						stmt->stmt_filename, stmt->stmt_lno,
-						adminfo->version_major, adminfo->version_minor);
+						   "version %d.%d\n",
+						   stmt->stmt_filename, stmt->stmt_lno,
+						   adminfo->version_major, adminfo->version_minor);
 					break;
 			}
 			break;
@@ -2029,7 +2033,7 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	if (load_sql_script(stmt, adminfo,
 						"%s/slony1_funcs.sql", m_pgshare) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		return -1;
@@ -2068,7 +2072,7 @@ slonik_restart_node(SlonikStmt_restart_node * stmt)
 	}
 
 	dstring_free(&query);
-    return 0;
+	return 0;
 }
 
 static int
@@ -2547,9 +2551,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 	int			num_nodes;
 	int			num_sets;
-	int			n	  ,
-				i		 ,
-				j		 ,
+	int			n,
+				i,
+				j,
 				k;
 
 	failnode_node *nodeinfo;
@@ -2876,14 +2880,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			int64		ev_seqno;
 
 			slon_mkquery(&query,
-					"select max(ev_seqno) "
-					"	from \"_%s\".sl_event "
-					"	where ev_origin = %d "
-					"	and ev_type = 'SYNC'; ",
-					stmt->hdr.script->clustername,
-					stmt->no_id);
+						 "select max(ev_seqno) "
+						 "	from \"_%s\".sl_event "
+						 "	where ev_origin = %d "
+						 "	and ev_type = 'SYNC'; ",
+						 stmt->hdr.script->clustername,
+						 stmt->no_id);
 			res1 = db_exec_select((SlonikStmt *) stmt,
-					adminfo1, &query);
+								  adminfo1, &query);
 			if (res1 == NULL)
 			{
 				free(configbuf);
@@ -3852,10 +3856,10 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonDString query;
 	SlonDString script;
 	int			rc;
-	char		buf    [4096];
-	char		rex1   [256];
-	char		rex2   [256];
-	char		rex3   [256];
+	char		buf[4096];
+	char		rex1[256];
+	char		rex2[256];
+	char		rex3[256];
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -3864,20 +3868,20 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
-        dstring_init(&script);
+	dstring_init(&script);
 
-        sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
+	sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
 
-        while (fgets(rex1,256, stmt->ddl_fd) != NULL)
+	while (fgets(rex1, 256, stmt->ddl_fd) != NULL)
 	{
-               rc = strlen(rex1);
-               rex1[rc] = '\0';
-               replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
-               replace_token(buf, rex3, "@NAMESPACE@", rex2);
-               rc = strlen(buf);
-               dstring_nappend(&script, buf, rc);
+		rc = strlen(rex1);
+		rex1[rc] = '\0';
+		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
+		replace_token(buf, rex3, "@NAMESPACE@", rex2);
+		rc = strlen(buf);
+		dstring_nappend(&script, buf, rc);
 	}
-        dstring_terminate(&script);
+	dstring_terminate(&script);
 
 	dstring_init(&query);
 	slon_mkquery(&query,
@@ -4006,7 +4010,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	time_t		timeout;
 	time_t		now;
 	int			all_confirmed = 0;
-	char		seqbuf [64];
+	char		seqbuf[64];
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->wait_on);
 	if (adminfo1 == NULL)
