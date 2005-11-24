@@ -38,7 +38,7 @@ are available
 %package docs
 Summary: Documentation for Slony-I
 Group: Applications/Databases
-Prereq: postgresql-slony1-engine-HEAD_20050917
+Prereq: postgresql-slony1-engine-HEAD_20050917-%{release}
 
 %description docs
 The postgresql-slony1-engine-docs package includes some documentation for Slony-I.

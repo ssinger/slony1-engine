@@ -38,7 +38,7 @@ are available
 %package docs
 Summary: Documentation for Slony-I
 Group: Applications/Databases
-Prereq: @PACKAGE_NAME@-@PACKAGE_VERSION@
+Prereq: @PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
 
 %description docs
 The @PACKAGE_NAME@-docs package includes some documentation for Slony-I.
