@@ -75,6 +75,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
+install -d $RPM_BUILD_ROOT%{_bindir}
 install -d $RPM_BUILD_ROOT%{_sysconfdir}
 install -d $RPM_BUILD_ROOT%{_datadir}/pgsql/
 install -d $RPM_BUILD_ROOT%{_libdir}/pgsql/
@@ -121,6 +122,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Nov 24 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
+- Created bindir
+
 * Wed Oct 26 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Modify CPPFLAGS and CFLAGS to fix builds on RHEL -- Per Philip Yarra
 
