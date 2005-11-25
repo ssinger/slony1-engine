@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.99 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: remote_worker.c,v 1.100 2005-11-25 23:11:58 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1842,7 +1842,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 			}
 			if (provider->pa_conninfo != NULL)
 				free(provider->pa_conninfo);
-			if (rtcfg_node->pa_conninfo == NULL)
+			if ((rtcfg_node == NULL) || (rtcfg_node->pa_conninfo == NULL))
 				provider->pa_conninfo = NULL;
 			else
 				provider->pa_conninfo = strdup(rtcfg_node->pa_conninfo);
