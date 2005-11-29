@@ -2,12 +2,12 @@ Source: slony1
 Section: misc
 Priority: optional
 Maintainer: Tim Goodaire <tgoodair@ca.afilias.info>
-Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison, postgresql-dev (>= 7.3.3), libpq3, flex
+Build-Depends: debhelper (>= 4.0.0), docbook-dsssl, groff, byacc | bison, postgresql-dev (>= 7.3.3) | postgresql-server-dev-8.0 | postgresql-server-dev-8.1 | postgresql-server-dev-7.4, libpq3, flex
 Standards-Version: 3.6.1
 
 Package: slony1
 Architecture: any
-Depends: postgresql (>= 7.3.3), libpq3
+Depends: postgresql (>= 7.3.3)| postgresql-7.4 | postgresql-8.0 | postgresql-8.1, libpq3
 Description: Slony-I is an asynchronous replication system for PostgreSQL
 	This package contains the slon daemon, the slonik language, the 'altperl'
 	Slony-I administration tools, and the Slony-I documentation.

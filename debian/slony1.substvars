@@ -1,1 +1,1 @@
-shlibs:Depends=libc6 (>= 2.3.2.ds1-21), libpq3 (>= 7.4)
+shlibs:Depends=libc6 (>= 2.3.2.ds1-21), libpq3 (>= 7.4) | libpq4

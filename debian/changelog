@@ -13,3 +13,10 @@ slony1 (1.1-1) unstable; urgency=low
   * Changed Build-Depends, Depends, and Description in control file 
 
  -- Tim Goodaire <tgoodair@ca.afilias.info>  Wed, 04 May 2005 15:24:21 -0500
+
+slony1 (1.2-1) unstable; urgency=low
+
+  * Changed Build-Depends, Depends, shlibs to reflect the latest PostgreSQL package names
+  * Updated version to 1.2-1
+
+ -- Christopher Browne <cbbrowne@ca.afilias.info>  Tue, 29 Nov 2005 11:32:30 -0500
