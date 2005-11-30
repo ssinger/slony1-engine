@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.6 2005-06-16 19:31:39 cbbrowne Exp $
+$Id: INSTALL,v 1.6.2.1 2005-11-30 20:24:44 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -118,5 +118,8 @@ may find yourself forced to throw the prepackaged version overboard and
 build PostgreSQL yourself.
 
 If you are looking for what software dependancies there are, it may be
-useful to look at the files debian/control or redhat/slony-I.spec to
-see what dependancies they point to.
+useful to look at the file redhat/slony-I.spec to see what
+dependancies they point to.
+
+On Debian, there is now an official package; see
+<http://packages.qa.debian.org/s/slony1.html> for more details.
