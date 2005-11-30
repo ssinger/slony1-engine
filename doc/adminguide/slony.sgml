@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.20 2005-06-13 12:05:24 devrim Exp $ -->
+<!-- $Id: slony.sgml,v 1.20.2.1 2005-11-30 17:41:30 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -8,6 +8,7 @@
   <!entity reference  SYSTEM "reference.sgml">
   <!ENTITY slony1 "<PRODUCTNAME>Slony-I</PRODUCTNAME>">
   <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
+  <!ENTITY windows "<trademark>Windows</trademark>">
 ]>
 
 <book id="slony">
@@ -37,7 +38,7 @@
 <article id="slonyadmin"> 
 <title> Slony-I Administration </title>
  <articleinfo>
-  <corpauthor>The Slony Global Development Group</corpauthor>
+  <corpauthor>The PostgreSQL Global Development Group</corpauthor>
   <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
  </articleinfo>
  &firstdb;
@@ -58,6 +59,7 @@
  &adminscripts;
  &versionupgrade;
  &bestpractices;
+ &testbed;
  &help;
 </article>
 
