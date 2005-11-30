@@ -8,9 +8,8 @@
 this release are FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha,
 OS-X-10.3, Linux-2.4X-i386 Linux-2.6X-i386 Linux-2.6X-amd64,
 <trademark>Solaris</trademark>-2.8-SPARC,
-<trademark>Solaris</trademark>-2.9-SPARC, AIX 5.1,
-OpenBSD-3.5-sparc64 and <trademark>Windows</trademark> 2000, XP and 
-2003 (32 bit).</para>
+<trademark>Solaris</trademark>-2.9-SPARC, AIX 5.1, OpenBSD-3.5-sparc64
+and &windows; 2000, XP and 2003 (32 bit).</para>
 
 <sect2>
 <title> &slony1; Software Dependancies</title>
@@ -79,13 +78,12 @@ numerous formats including HTML, RTF, and PDF using tools in the
 </ulink> along with <ulink url="http://openjade.sourceforge.net/">
 OpenJade.</ulink> </para></listitem>
 
-<listitem><para> On <trademark>Windows</trademark> you will also need the
-same <ulink url=
-"http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys 
-Toolset</ulink> used to build PostgreSQL 8.0 and above.
-In addition you will need to install <ulink url=
-"http://sourceware.org/pthreads-win32/">pthreads-win32 2.x</ulink>. 
-</para></listitem>
+<listitem><para> On &windows; you will also need the same <ulink url=
+"http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys
+Toolset</ulink> used to build &postgres; 8.0 and above.  In addition
+you will need to install <ulink url=
+"http://sourceware.org/pthreads-win32/">pthreads-win32
+2.x</ulink>. </para></listitem>
 
 </itemizedlist> </para>
 

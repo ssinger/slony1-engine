@@ -1,11 +1,11 @@
-<!-- $Id: installation.sgml,v 1.17 2005-09-26 09:15:03 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.18 2005-11-30 16:28:51 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
-<para>Note for <trademark>Windows</trademark> users:
-Unless you are planning on hacking the &slony1; code, it is highly
-recommended that you download and install a prebuilt binary 
-distribution and jump straight to the configuration section below.
+<para>Note for &windows; users: Unless you are planning on hacking the
+&slony1; code, it is highly recommended that you download and install
+a prebuilt binary distribution and jump straight to the configuration
+section below.
 </para>
 
 <para>You should have obtained the &slony1; source from the previous
@@ -128,7 +128,7 @@ install.  </command></para>
 gmake install
 </command></para>
 
-<para>This will install files into postgresql install directory as
+<para>This will install files into the postgresql install directory as
 specified by the <command>configure</command>
 <option>--prefix</option> option used in the &postgres; installation.
 Make sure you have appropriate permissions to write into that area.
@@ -148,8 +148,8 @@ for many versions or Red Hat ana Fedora Core.</para>
 http://developer.PostgreSQL.org/~devrim/slony . Please read <command> 
 CURRENT_MAINTAINER</command> file for the details of the RPMs. 
 Please note that the RPMs will look for RPM installation of 
-PostgreSQL, so if you install PosgtgreSQL from source, you should 
-manually ignore the RPM dependencies related to PostgreSQL.</para>
+&postgres;, so if you install &postgres; from source, you should 
+manually ignore the RPM dependencies related to &postgres;.</para>
 
 <para>Installing &slony1; using these RPMs is as easy as 
 installing any RPM.</para>
@@ -169,12 +169,12 @@ the docs are installed under
 </sect2>
 
 <sect2>
-<title> Installing the &slony1; service on <trademark>Windows</trademark></title>
+<title> Installing the &slony1; service on &windows;</title>
 
-<para> On <trademark>Windows</trademark> systems instead of running one
-slon daemon per node, a single slon service is installed which can then be
-controlled through the <command>Services</command> control panel applet, or
-from a command prompt using the <command>net</command> command.</para>
+<para> On &windows; systems, instead of running one slon daemon per
+node, a single slon service is installed which can then be controlled
+through the <command>Services</command> control panel applet, or from
+a command prompt using the <command>net</command> command.</para>
 
 <screen>
 C:\Program Files\PostgreSQL\8.0\bin> slon -regservice my_slon

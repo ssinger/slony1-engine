@@ -251,7 +251,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   <refentry id ="admconninfo"><refmeta><refentrytitle>ADMIN CONNINFO</refentrytitle> </refmeta>
    
    <refnamediv><refname>ADMIN CONNINFO</refname>
-    <refpurpose> preamble - identifying <productname>PostgreSQL</productname> database </refpurpose>
+    <refpurpose> preamble - identifying &postgres; database </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -270,7 +270,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      function. The user used to connect must be the special
      replication superuser, as some of the actions performed later may
      include operations that are strictly reserved for database
-     superusers by PostgreSQL.
+     superusers by &postgres;.
     </para>
 
     <para>
@@ -420,7 +420,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <application>slonik</application> utility), while on the system
     where the node database is running the shared objects of the
     &slony1; system must be installed in the
-    PostgreSQL library directory. Also the procedural language
+    &postgres; library directory. Also the procedural language
     PL/pgSQL is assumed to already be installed in the target
     database.</para>
    </refsect1>
@@ -1970,13 +1970,14 @@ FAILOVER (
      point within the replication transaction stream.</para>
     
     <para> The specified event origin must be the origin of the set.
-     The script file must not contain any <command>START</command> or
-     <command>COMMIT TRANSACTION</command> calls.  (This may change in
-     PostgreSQL 8.0 once nested transactions, aka savepoints, are
-     supported) In addition, non-deterministic DML statements (like
-     updating a field with <function>CURRENT_TIMESTAMP</function>) must
-     be avoided, since the data changes done by the script are
-     explicitly not replicated. </para>
+    The script file must not contain any <command>START</command> or
+    <command>COMMIT TRANSACTION</command> calls.  (This changes
+    somewhat in &postgres; 8.0 once nested transactions, aka
+    savepoints, are supported) In addition, non-deterministic DML
+    statements (like updating a field with
+    <function>CURRENT_TIMESTAMP</function>) must be avoided, since the
+    data changes done by the script are explicitly not
+    replicated. </para>
 
     <variablelist>
      <varlistentry><term><literal> SET ID = ival </literal></term>
@@ -2028,6 +2029,16 @@ FAILOVER (
     <para> If a table's columns are modified, it is very important
     that the triggers be regenerated, otherwise they may be
     inappropriate for the new form of the table schema.</para>
+
+    <para> Note that if you need to make reference to the cluster
+    name, you can use the token <command>@CLUSTERNAME@</command>; if
+    you need to make reference to the &slony1; namespace, you can use
+    the token <command>@NAMESPACE@</command>; both will be expanded
+    into the appropriate replacement tokens. </para>
+
+    <para> It generally seems a bad idea to use quotes in DDL scripts.
+    It appears preferable to handle that sort of thing <quote>out of
+    band.</quote> </para>
 
     <para> This uses <xref linkend= "function.ddlscript-integer-text-integer">. </para>
    </refsect1>

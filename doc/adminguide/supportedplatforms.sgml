@@ -35,7 +35,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>Intel - 32 bit</entry>
       <entry>Jun 22, 2005</entry>
       <entry>dvdm at truteq.co.za</entry>
-      <entry>PostgreSQL Version: 7.4.6</entry>
+      <entry>&postgres; Version: 7.4.6</entry>
      </row>
 
      <row>
@@ -44,7 +44,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>dvdm at truteq.co.za</entry>
-      <entry>PostgreSQL Version: 7.4.5</entry>
+      <entry>&postgres; Version: 7.4.5</entry>
      </row>
 
      <row>
@@ -53,7 +53,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>PostgreSQL Version: 7.4.8</entry>
+      <entry>&postgres; Version: 7.4.8</entry>
      </row>
 
      <row>
@@ -62,7 +62,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>PostgreSQL Version: 8.0.2</entry>
+      <entry>&postgres; Version: 8.0.2</entry>
      </row>
 
      <row>
@@ -71,7 +71,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>PostgreSQL Version: 7.3.9</entry>
+      <entry>&postgres; Version: 7.3.9</entry>
      </row>
 
      <row>
@@ -80,7 +80,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>PPC</entry>
       <entry>Jun 22, 2005</entry>
       <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>PostgreSQL Version: 7.4.8</entry>
+      <entry>&postgres; Version: 7.4.8</entry>
      </row>
 
      <row>
@@ -89,7 +89,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>PostgreSQL Version: 7.4.8</entry>
+      <entry>&postgres; Version: 7.4.8</entry>
      </row>
 
      <row>
@@ -98,7 +98,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>devrim at gunduz.org</entry>
-      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
      <row>
@@ -107,7 +107,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>devrim at gunduz.org</entry>
-      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
      <row>
@@ -116,7 +116,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>devrim at gunduz.org</entry>
-      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
      <row>
@@ -125,7 +125,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jun 22, 2005</entry>
       <entry>devrim at gunduz.org</entry>
-      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
      <row>
@@ -134,7 +134,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jul 14, 2005</entry>
       <entry>devrim at gunduz.org</entry>
-      <entry>PostgreSQL Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
      </row>
 
      <row>
@@ -143,7 +143,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>AMD64</entry>
       <entry>Jul 01, 2005</entry>
       <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>PostgreSQL Version: 8.0.3</entry>
+      <entry>&postgres; Version: 8.0.3</entry>
      </row>
 
      <row>
@@ -152,7 +152,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>Sparc64</entry>
       <entry>Jul 01, 2005</entry>
       <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>PostgreSQL Version: 8.0.3</entry>
+      <entry>&postgres; Version: 8.0.3</entry>
      </row>
      <row>
       <entry>OpenBSD</entry>
@@ -160,7 +160,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>x86</entry>
       <entry>Jul 01, 2005</entry>
       <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>PostgreSQL Version: 8.0.3</entry>
+      <entry>&postgres; Version: 8.0.3</entry>
      </row>
 
  </tbody>

@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.17 2005-06-29 20:55:13 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.18 2005-11-30 16:28:51 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -107,7 +107,8 @@ that fewer locks need to be taken in order for the DDL script to make
 it into place.</para>
 
 <para> If a particular DDL script only affects one table, it should be
-unnecessary to lock <emphasis>all</emphasis> application tables.</para></listitem>
+unnecessary to lock <emphasis>all</emphasis> application
+tables.</para></listitem>
 
 <listitem><para> You may need to take a brief application outage in
 order to ensure that your applications are not demanding locks that
