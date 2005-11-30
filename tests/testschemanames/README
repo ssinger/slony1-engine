@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2005-11-15 21:25:34 cbbrowne Exp $
+$Id: README,v 1.1.2.1 2005-11-30 17:35:25 cbbrowne Exp $
 
 This test involves creating tables and sequences in namespaces with
 some wacky names, with StudlyCaps, spaces, and ".".

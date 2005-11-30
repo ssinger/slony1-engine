@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2005-11-18 17:15:21 cbbrowne Exp $
+$Id: README,v 1.1.2.1 2005-11-30 17:35:25 cbbrowne Exp $
 
 testddl performs some DDL changes via the EXECUTE SCRIPT capability.
 
