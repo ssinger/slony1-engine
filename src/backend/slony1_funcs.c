@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.37 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.38 2005-11-30 16:40:40 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1255,7 +1255,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 										SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull));
 		SPI_freetuptable(SPI_tuptable);
 		if (cs->localNodeId < 0)
-			elog(ERROR, "Slony-I: Node is uninitialized");
+			elog(ERROR, "Slony-I: Node is uninitialized - cluster %s", cluster_name);
 
 		/*
 		 * Initialize the currentXid to invalid
@@ -1270,7 +1270,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	}
 
 	/*
-	 * Prepare and save the PLAN_NOTIFT_EVENT
+	 * Prepare and save the PLAN_NOTIFY_EVENT
 	 */
 	if ((need_plan_mask & PLAN_NOTIFY_EVENT) != 0 &&
 		(cs->have_plan & PLAN_NOTIFY_EVENT) == 0)
