@@ -39,7 +39,7 @@ AC_DEFUN([ACX_SLONYDOCS], [
     fi
   fi
   if test x"${LOCATION}" != x; then
-   DOCDIR="${LOCATION}"
+   docdir="${LOCATION}"
   fi
   AC_LANG_RESTORE
 ]) dnl ACX_SLONYDOCS

@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.53 2005-11-17 16:47:26 xfade Exp $
+# $Id: configure.ac,v 1.54 2005-12-01 19:48:09 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -202,7 +202,7 @@ if test "$with_docs" = "yes"; then
 	SLON_AC_PATH_DOCBOOK_STYLESHEETS
 	SLON_AC_PATH_COLLATEINDEX
 	AC_SUBST(SGMLSPL, $SGMLSPL)
-	AC_SUBST(DOCDIR, $DOCDIR)
+	AC_SUBST(docdir, $docdir)
 else
   AC_MSG_RESULT(no)
 fi

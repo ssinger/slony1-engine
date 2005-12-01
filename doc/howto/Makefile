@@ -21,13 +21,13 @@ distdir: $(DISTFILES)
 all:
 
 installdirs:
-ifdef DOCDIR
-	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/howto
+ifdef docdir
+	$(mkinstalldirs) $(DESTDIR)$(docdir)/howto
 endif
 
 install: all installdirs
-ifdef DOCDIR
+ifdef docdir
 	for file in $(wildcard *.txt) $(wildcard *.html ); do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/howto ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/howto ; \
 	done
 endif

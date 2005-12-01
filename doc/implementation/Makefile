@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.10 2005-11-18 16:42:25 xfade Exp $
+# $Id: Makefile,v 1.11 2005-12-01 19:48:15 xfade Exp $
 # ----------
 
 slony_subdir = doc/implementation
@@ -41,14 +41,14 @@ all-pdf:	Slon.eps $(PDF)
 all-txt:	Slon.eps $(TXT)
 
 installdirs:
-ifdef DOCDIR
-	$(mkinstalldirs) $(DESTDIR)$(DOCDIR)/implementation
+ifdef docdir
+	$(mkinstalldirs) $(DESTDIR)$(docdir)/implementation
 endif
 
 install: all installdirs
-ifdef DOCDIR
+ifdef docdir
 	for file in $(PS) $(PDF) $(TXT) Slon.eps Slon_$(IMG_WID)x$(IMG_HT).jpg ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(DOCDIR)/implementation ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/implementation ; \
 	done
 endif
 
