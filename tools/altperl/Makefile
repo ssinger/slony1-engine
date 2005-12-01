@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.11 2005-09-26 15:24:18 cbbrowne Exp $
+#       $Id: Makefile,v 1.12 2005-12-01 21:27:38 xfade Exp $
 #
 # ----------
 
@@ -39,7 +39,7 @@ ifndef toolsbin
 	@echo "The altperl tools won't be installed unless --with-perltools is specified in configure"
 else
 	$(INSTALL_DATA)   slon_tools.conf-sample $(DESTDIR)$(sysconfdir)
-	$(INSTALL_DATA)   slon-tools             $(DESTDIR)$(pglibdir)/slon-tools.pm
+	$(INSTALL_DATA)   slon-tools             $(DESTDIR)$(perlsharedir)/slon-tools.pm
 	for file in $(wildcard *.pl) ; do \
 		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
 		$(INSTALL_SCRIPT) $$tmpname $(DESTDIR)$(toolsbin) ; \

@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.54 2005-12-01 19:48:09 xfade Exp $
+# $Id: configure.ac,v 1.55 2005-12-01 21:27:37 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -134,6 +134,7 @@ AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of 
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
 AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. **EXPERIMENTAL** ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
+AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm Default $pglibdir. ])
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation Default is $PREFIX/doc. ])
 AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
 
@@ -206,6 +207,12 @@ if test "$with_docs" = "yes"; then
 else
   AC_MSG_RESULT(no)
 fi
+
+if test x"$with_perlsharedir" = x""; then
+	with_perlsharedir="$PG_LIBDIR"
+fi
+
+AC_SUBST(perlsharedir, $with_perlsharedir)
 
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile
