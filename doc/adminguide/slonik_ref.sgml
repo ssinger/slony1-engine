@@ -972,7 +972,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
     </variablelist>
     
-    <para> This uses &funstoreset;. </para>
+    <para> This uses &funstoreset; . </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
