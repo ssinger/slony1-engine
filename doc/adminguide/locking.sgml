@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.3 2005-06-29 20:13:37 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.4 2005-12-02 22:54:21 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -147,11 +147,10 @@ it reload the security configuration. </para> </listitem>
 </para>
 </listitem>
 
-<listitem><para> The section on <link linkend="ddlchanges"> DDL
-Changes </link> suggests some additional techniques that may be
-useful, such as moving tables between replication sets in such a way
-that you minimize the set of tables that need to be
-locked. </para></listitem>
+<listitem><para> The section  &rddlchanges; suggests some additional
+techniques that may be useful, such as moving tables between
+replication sets in such a way that you minimize the set of tables
+that need to be locked. </para></listitem>
 
 </itemizedlist>
 

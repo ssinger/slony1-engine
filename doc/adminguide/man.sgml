@@ -1,4 +1,4 @@
-<!-- $Id: man.sgml,v 1.1 2005-12-02 20:29:29 xfade Exp $ -->
+<!-- $Id: man.sgml,v 1.2 2005-12-02 22:54:21 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -9,6 +9,40 @@
   <!ENTITY slony1 "<PRODUCTNAME>Slony-I</PRODUCTNAME>">
   <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
   <!ENTITY windows "<trademark>Windows</trademark>">
+  <!ENTITY logship "log shipping">
+  <!ENTITY rlocking " locking ">
+  <!ENTITY rddlchanges "distribution documentation on DDL changes">
+  <!ENTITY rplainpaths "distribution documentation on plain paths">
+  <!ENTITY rlistenpaths "distribution documentation on listen paths">
+  <!ENTITY rmissingoids "error messages indicating missing OIDs">
+  <!ENTITY fundroplisten "<function>droplisten(integer,integer,integer)</function>">
+  <!ENTITY fundropset " <function>dropset(integer)</function>">
+  <!ENTITY funmergeset "<function>mergeset(integer,integer)</function> "> 
+  <!ENTITY funsetdroptable " <function>setdroptable(integer)</function> ">
+  <!ENTITY funstorelisten " <function>storelisten(integer,integer,integer)</function> ">
+  <!ENTITY funstorepath " <function>storepath(integer,integer,text,integer)</function> ">
+  <!ENTITY funstoreset " <function>storeset(integer,text)</function>">
+  <!ENTITY funtableaddkey " <function>tableaddkey(text)</function>">
+  <!ENTITY funsetaddtable "<function>setaddtable(integer,integer,text,name,text)">
+  <!ENTITY funsetaddsequence "<function>setaddsequence(integer,integer,text,text)">
+  <!ENTITY funsetdropsequence "<function>setdropsequence(integer)">
+  <!ENTITY funsetmovetable "<function>setmovetable(integer,integer)">
+  <!ENTITY funddlscript "<function>ddlscript(integer,text,integer)</function>">
+  <!ENTITY fundropnode "<function>dropnode(integer)</function>">
+  <!ENTITY funenablenode "<function>enablenode(integer)</function>">
+  <!ENTITY fundroptrigger "<function>droptrigger(integer,name)</function>">
+  <!ENTITY funfailednode "<function>failednode(integer,integer)</function>">
+  <!ENTITY funinitializelocalnode "<function>initializelocalnode(integer,text)</function>">
+  <!ENTITY funlockset "<function>lockset(integer)</function>">
+  <!ENTITY funmoveset "<function>moveset(integer,integer)</function>">
+  <!ENTITY fununlockset "<function>unlockset(integer)</function>">
+  <!ENTITY fununsubscribeset "<function>unsubscribeset(integer,integer)</function>">
+  <!ENTITY fununinstallnode "<function>uninstallnode()</function>">
+  <!ENTITY funsetmovesequence "<function>setmovesequence(integer,integer)</function>">
+  <!ENTITY funstoretrigger "<function>storetrigger(integer,name)</function>">
+  <!ENTITY funsubscribeset "<function>subscribeset(integer,integer,integer,boolean)</function>">
+  <!ENTITY slnode "<envar>sl_node</envar>">
+  <!ENTITY slconfirm "<envar>sl_confirm</envar>">
 ]>
 
 <book id="slony">
@@ -26,6 +60,7 @@
 	&slon;
 	&slonconf;
 	&slonik;
+        &slonikref;
 </part>
 </book>
 

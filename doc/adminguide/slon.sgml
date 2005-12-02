@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.18 2005-08-17 14:42:42 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.19 2005-12-02 22:54:21 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -298,7 +298,7 @@
      <para>
       <envar>archive_dir</envar> indicates a directory in which to
       place a sequence of <command>SYNC</command> archive files for
-      use in <link linkend="logshipping"> log shipping</link> mode.
+      use in &logship; mode.
      </para>
     </listitem>
    </varlistentry>
