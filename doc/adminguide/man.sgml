@@ -1,4 +1,4 @@
-<!-- $Id: man.sgml,v 1.2 2005-12-02 22:54:21 cbbrowne Exp $ -->
+<!-- $Id: man.sgml,v 1.3 2005-12-03 13:06:19 xfade Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -23,10 +23,10 @@
   <!ENTITY funstorepath " <function>storepath(integer,integer,text,integer)</function> ">
   <!ENTITY funstoreset " <function>storeset(integer,text)</function>">
   <!ENTITY funtableaddkey " <function>tableaddkey(text)</function>">
-  <!ENTITY funsetaddtable "<function>setaddtable(integer,integer,text,name,text)">
-  <!ENTITY funsetaddsequence "<function>setaddsequence(integer,integer,text,text)">
-  <!ENTITY funsetdropsequence "<function>setdropsequence(integer)">
-  <!ENTITY funsetmovetable "<function>setmovetable(integer,integer)">
+  <!ENTITY funsetaddtable "<function>setaddtable(integer,integer,text,name,text)</function>">
+  <!ENTITY funsetaddsequence "<function>setaddsequence(integer,integer,text,text)</function>">
+  <!ENTITY funsetdropsequence "<function>setdropsequence(integer)</function>">
+  <!ENTITY funsetmovetable "<function>setmovetable(integer,integer)</function>">
   <!ENTITY funddlscript "<function>ddlscript(integer,text,integer)</function>">
   <!ENTITY fundropnode "<function>dropnode(integer)</function>">
   <!ENTITY funenablenode "<function>enablenode(integer)</function>">
