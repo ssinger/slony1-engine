@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.19 2005-12-02 22:54:21 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.20 2005-12-03 13:18:36 xfade Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -40,7 +40,7 @@
   
   <variablelist>
    <varlistentry>
-    <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable></term>
+    <term><option>-d</option><replaceable class="parameter"> debuglevel</replaceable></term>
     <listitem>
      <para>
       The <envar>log_level</envar> specifies the level of verbosity
@@ -64,7 +64,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable></term>
+    <term><option>-s</option><replaceable class="parameter"> SYNC check interval</replaceable></term>
     <listitem>
 
      <para>
@@ -96,7 +96,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-t</option><replaceable class="parameter">SYNC
+    <term><option>-t</option><replaceable class="parameter"> SYNC
     interval timeout</replaceable></term>
     <listitem>
 
@@ -122,7 +122,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-g</option><replaceable class="parameter">group size</replaceable></term>
+    <term><option>-g</option><replaceable class="parameter"> group size</replaceable></term>
     <listitem>
      <para>
       This controls the maximum <command>SYNC</command> group size,
@@ -191,7 +191,7 @@
    </varlistentry>
 
    <varlistentry>
-    <term><option>-o</option><replaceable class="parameter">desired sync time</replaceable></term>
+    <term><option>-o</option><replaceable class="parameter"> desired sync time</replaceable></term>
     <listitem><para> A <quote>maximum</quote> time planned for grouped <command>SYNC</command>s.</para>
 
      <para> If replication is running behind, slon will gradually
@@ -227,7 +227,7 @@
    </varlistentry>      
 
    <varlistentry>
-    <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable></term>
+    <term><option>-c</option><replaceable class="parameter"> cleanup cycles</replaceable></term>
     <listitem>
      <para>
       The value <envar>vac_frequency</envar> indicates how often to
@@ -257,7 +257,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-p</option><replaceable class="parameter">PID filename</replaceable></term>
+    <term><option>-p</option><replaceable class="parameter"> PID filename</replaceable></term>
     <listitem>
      <para>
       <envar>pid_file</envar> contains the filename in which the PID
@@ -273,7 +273,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-f</option><replaceable class="parameter">config file</replaceable></term>
+    <term><option>-f</option><replaceable class="parameter"> config file</replaceable></term>
     <listitem>
      <para>
       File from which to read <application>slon</application> configuration.
@@ -293,7 +293,7 @@
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-a</option><replaceable class="parameter">archive directory</replaceable></term>
+    <term><option>-a</option><replaceable class="parameter"> archive directory</replaceable></term>
     <listitem>
      <para>
       <envar>archive_dir</envar> indicates a directory in which to
