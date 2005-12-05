@@ -1,4 +1,4 @@
-<!-- $Id: slonik.sgml,v 1.13 2005-03-15 20:12:01 cbbrowne Exp $ -->
+<!-- $Id: slonik.sgml,v 1.14 2005-12-05 15:28:02 cbbrowne Exp $ -->
 <refentry id="slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -66,7 +66,8 @@
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</para>
   
-  <para>See also <xref linkend="slonikref">. </para>
+  <para>See also <link linkend="slonikref"> Slonik Command Language
+  reference </link>. </para>
 
  </refsect1>
 
