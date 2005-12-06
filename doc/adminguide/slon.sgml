@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.21 2005-12-06 15:25:36 xfade Exp $ -->
+<!-- $Id: slon.sgml,v 1.22 2005-12-06 17:39:54 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -351,7 +351,9 @@
   <title>Exit Status</title>
   <para>
    <application>slon</application> returns 0 to the shell if it
-   finished normally.  It returns -1 if it encounters any fatal error.
+   finished normally.  It returns via <function>exit(-1)</function>
+   (which will likely provide a return value of either 127 or 255,
+   depending on your system) if it encounters any fatal error.
   </para>
  </refsect1>
 </refentry>
