@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.20 2005-12-03 13:18:36 xfade Exp $ -->
+<!-- $Id: slon.sgml,v 1.21 2005-12-06 15:25:36 xfade Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -279,8 +279,8 @@
       File from which to read <application>slon</application> configuration.
      </para>
 
-     <para> This configuration is discussed further in <xref
-     linkend="runtime-config">.  If there are to be a complex set of
+     <para> This configuration is  discussed  further  in <link 
+     linkend="runtime-config">Slon  Run-time Configuration</link>. If there are to be a complex set of
      configuration parameters, or if there are parameters you do not
      wish to be visible in the process environment variables (such as
      passwords), it may be convenient to draw many or all parameters
