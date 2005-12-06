@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.25 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: remote_listen.c,v 1.26 2005-12-06 21:34:54 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -99,7 +99,7 @@ remoteListenThread_main(void *cdata)
 	dstring_init(&query1);
 
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
-	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name);
+/*	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name); */
 
 	/*
 	 * Work until doomsday
@@ -212,9 +212,9 @@ remoteListenThread_main(void *cdata)
 				conn_conninfo = NULL;
 
 				slon_log(SLON_WARN,
-						 "remoteListenThread_%d: DB connection failed - "
-						 "sleep %d seconds\n",
-						 node->no_id, pa_connretry);
+					 "remoteListenThread_%d: DB connection failed - "
+					 "sleep %d seconds\n",
+					 node->no_id, pa_connretry);
 
 				rc = sched_msleep(node, pa_connretry * 1000);
 				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
@@ -229,24 +229,24 @@ remoteListenThread_main(void *cdata)
 			 * register the node connection.
 			 */
 			slon_mkquery(&query1,
-						 "listen \"_%s_Event\"; "
-						 "listen \"_%s_Confirm\"; "
-						 "select %s.registerNodeConnection(%d); ",
-						 rtcfg_cluster_name, rtcfg_cluster_name,
-						 rtcfg_namespace, rtcfg_nodeid);
+				     "listen \"_%s_Event\"; "
+				     /*	 skip confirms "listen \"_%s_Confirm\"; " */
+				     "select _%s.registerNodeConnection(%d); ",
+				     rtcfg_cluster_name, rtcfg_cluster_name,
+				     rtcfg_namespace, rtcfg_nodeid);
 			res = PQexec(dbconn, dstring_data(&query1));
 			if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR,
-						 "remoteListenThread_%d: \"%s\" - %s",
-						 node->no_id,
-						 dstring_data(&query1), PQresultErrorMessage(res));
+					 "remoteListenThread_%d: \"%s\" - %s",
+					 node->no_id,
+					 dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
 				conn = NULL;
 				conn_conninfo = NULL;
-
+				
 				rc = sched_msleep(node, pa_connretry * 1000);
 				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
 					break;
@@ -319,24 +319,26 @@ remoteListenThread_main(void *cdata)
 		 * queue them into the remote worker for storage in our local
 		 * database.
 		 */
-		if (forward_confirm)
+		
+		/* Initially: Let's just blindly check... */
+		/* if (forward_confirm)
+		   { */
+		rc = remoteListen_forward_confirm(node, conn);
+		if (rc < 0)
 		{
-			rc = remoteListen_forward_confirm(node, conn);
-			if (rc < 0)
-			{
-				slon_disconnectdb(conn);
-				free(conn_conninfo);
-				conn = NULL;
-				conn_conninfo = NULL;
-
-				rc = sched_msleep(node, 10000);
-				if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
-					break;
-
+			slon_disconnectdb(conn);
+			free(conn_conninfo);
+			conn = NULL;
+			conn_conninfo = NULL;
+			
+			rc = sched_msleep(node, 10000);
+			if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+				break;
+			
 				continue;
-			}
-			forward_confirm = false;
 		}
+		/* forward_confirm = false; */
+		/* } */
 
 		/*
 		 * Wait for notification.
@@ -351,6 +353,7 @@ remoteListenThread_main(void *cdata)
 		 * Set the forward_confirm flag if there was any Confirm notification
 		 * sent.
 		 */
+/* Don't bother doing anything about CONFIRM notifications 
 		PQconsumeInput(dbconn);
 		while ((notification = PQnotifies(dbconn)) != NULL)
 		{
@@ -358,6 +361,7 @@ remoteListenThread_main(void *cdata)
 				forward_confirm = true;
 			PQfreemem(notification);
 		}
+*/
 	}
 
 	/*
