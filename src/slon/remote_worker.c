@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.102 2005-12-06 20:59:10 wieck Exp $
+ *	$Id: remote_worker.c,v 1.103 2005-12-07 03:51:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -171,6 +171,7 @@ struct WorkerGroupData_s
 
 	pthread_mutex_t workdata_lock;
 	WorkGroupStatus workgroup_status;
+	int				workdata_largemem;
 
 	pthread_cond_t repldata_cond;
 	WorkerGroupLine *repldata_head;
@@ -188,6 +189,7 @@ struct WorkerGroupLine_s
 	ProviderInfo *provider;
 	SlonDString data;
 	SlonDString log;
+	int			line_largemem;
 
 	WorkerGroupLine *prev;
 	WorkerGroupLine *next;
@@ -212,6 +214,8 @@ static struct node_confirm_status *node_confirm_tail = NULL;
 pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int			sync_group_maxsize;
+int			sync_max_rowsize;
+int			sync_max_largemem;
 
 int			last_sync_group_size;
 int			next_sync_group_size;
@@ -304,6 +308,7 @@ remoteWorkerThread_main(void *cdata)
 	pthread_mutex_lock(&(wd->workdata_lock));
 	wd->workgroup_status = SLON_WG_IDLE;
 	wd->node = node;
+	wd->workdata_largemem = 0;
 
 	wd->tab_fqname_size = SLON_MAX_PATH;
 	wd->tab_fqname = (char **)malloc(sizeof(char *) * wd->tab_fqname_size);
@@ -1700,6 +1705,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 
 						line = (WorkerGroupLine *) malloc(sizeof(WorkerGroupLine));
 						memset(line, 0, sizeof(WorkerGroupLine));
+						line->line_largemem = 0;
 						dstring_init(&(line->data));
 						dstring_init(&(line->log));
 						DLLIST_ADD_TAIL(wd->linepool_head, wd->linepool_tail,
@@ -4533,8 +4539,26 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		for (wgline = lines_head; wgline; wgline = wgnext)
 		{
 			wgnext = wgline->next;
-			dstring_reset(&(wgline->data));
-			dstring_reset(&(wgline->log));
+			if (wgline->line_largemem > 0)
+			{
+				/*
+				 * Really free the lines that contained large rows
+				 */
+				dstring_free(&(wgline->data));
+				dstring_free(&(wgline->log));
+				dstring_init(&(wgline->data));
+				dstring_init(&(wgline->log));
+				wd->workdata_largemem -= wgline->line_largemem;
+				wgline->line_largemem = 0;
+			}
+			else
+			{
+				/*
+				 * just reset (and allow to grow further) the small ones
+				 */
+				dstring_reset(&(wgline->data));
+				dstring_reset(&(wgline->log));
+			}
 			DLLIST_ADD_HEAD(wd->linepool_head, wd->linepool_tail, wgline);
 		}
 		if (num_errors == 1)
@@ -4783,6 +4807,7 @@ sync_helper(void *cdata)
 	PGconn	   *dbconn;
 	WorkerGroupLine *line = NULL;
 	SlonDString query;
+	SlonDString query2;
 	int			errors;
 	int			alloc_lines = 0;
 	struct timeval tv_start;
@@ -4795,6 +4820,7 @@ sync_helper(void *cdata)
 	int			data_line_last;
 
 	PGresult   *res;
+	PGresult   *res2;
 	int			ntuples;
 	int			tupno;
 
@@ -4802,6 +4828,7 @@ sync_helper(void *cdata)
 	int			line_ncmds;
 
 	dstring_init(&query);
+	dstring_init(&query2);
 
 	for (;;)
 	{
@@ -4862,8 +4889,13 @@ sync_helper(void *cdata)
 			slon_mkquery(&query,
 						 "declare LOG cursor for select "
 						 "    log_origin, log_xid, log_tableid, "
-						 "    log_actionseq, log_cmdtype, log_cmddata "
+						 "    log_actionseq, log_cmdtype, "
+						 "    octet_length(log_cmddata), "
+						 "    case when octet_length(log_cmddata) <= %d "
+						 "        then log_cmddata "
+						 "        else null end "
 						 "from %s.sl_log_1 %s order by log_actionseq; ",
+						 sync_max_rowsize,
 						 rtcfg_namespace,
 						 dstring_data(&(provider->helper_qualification)));
 
@@ -4926,19 +4958,20 @@ sync_helper(void *cdata)
 				 * have available line buffers.
 				 */
 				pthread_mutex_lock(&(wd->workdata_lock));
-				if (data_line_alloc == 0 /* || oversize */)
+				if (data_line_alloc == 0 || 
+						wd->workdata_largemem > sync_max_largemem)
 				{
 					/*
 					 * First make sure that the overall memory usage is
 					 * inside bouds.
 					 */
-					if (0 /* oversize */)
+					if (wd->workdata_largemem > sync_max_largemem)
 					{
 						slon_log(SLON_DEBUG4,
 								 "remoteHelperThread_%d_%d: wait for oversize memory to free\n",
 								 node->no_id, provider->no_id);
 
-						while (/* oversize && */
+						while (wd->workdata_largemem > sync_max_largemem &&
 								wd->workgroup_status == SLON_WG_BUSY)
 						{
 							pthread_cond_wait(&(wd->linepool_cond), &(wd->workdata_lock));
@@ -5064,9 +5097,48 @@ sync_helper(void *cdata)
 													 NULL, 10);
 					char	   *log_actionseq = PQgetvalue(res, tupno, 3);
 					char	   *log_cmdtype = PQgetvalue(res, tupno, 4);
-					char	   *log_cmddata = PQgetvalue(res, tupno, 5);
+					int			log_cmdsize = strtol(PQgetvalue(res, tupno, 5),
+													 NULL, 10);
+					char	   *log_cmddata = PQgetvalue(res, tupno, 6);
+					int			largemem = 0;
 
 					tupno++;
+
+					if (log_cmdsize >= sync_max_rowsize)
+					{
+						slon_mkquery(&query2,
+								"select log_cmddata "
+								"from %s.sl_log_1 "
+								"where log_origin = '%s' "
+								"  and log_xid = '%s' "
+								"  and log_actionseq = '%s'",
+								rtcfg_namespace,
+								log_origin, log_xid, log_actionseq);
+						res2 = PQexec(dbconn, dstring_data(&query2));
+						if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+						{
+							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: \"%s\" %s",
+									 node->no_id, provider->no_id,
+									 dstring_data(&query),
+									 PQresultErrorMessage(res2));
+							PQclear(res2);
+							errors++;
+							break;
+						}
+						if (PQntuples(res2) != 1)
+						{
+							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: large log_cmddata for actionseq %s not found\n",
+									 node->no_id, provider->no_id,
+									 dstring_data(&query),
+									 log_actionseq);
+							PQclear(res2);
+							errors++;
+							break;
+						}
+
+						log_cmddata = PQgetvalue(res2, 0, 0);
+						largemem = log_cmdsize;
+					}
 
 					/*
 					 * This can happen if the table belongs to a set that
@@ -5093,11 +5165,13 @@ sync_helper(void *cdata)
 										 rtcfg_namespace,
 										 log_origin, log_xid, log_tableid,
 									log_actionseq, log_cmdtype, log_cmddata);
+						largemem *= 2;
 					}
 
 					/*
 					 * Add the actual replicating command to the line buffer
 					 */
+					line->line_largemem += largemem;
 					switch (*log_cmdtype)
 					{
 						case 'I':
@@ -5136,6 +5210,30 @@ sync_helper(void *cdata)
 						dstring_reset(&(line->log));
 
 						line_ncmds = 0;
+					}
+
+					/*
+					 * If this was a large log_cmddata entry 
+					 * (> sync_max_rowsize), add this to the memory
+					 * usage of the workgroup and check if we are
+					 * exceeding limits.
+					 */
+					if (largemem > 0)
+					{
+						PQclear(res2);
+						pthread_mutex_lock(&(wd->workdata_lock));
+						wd->workdata_largemem += largemem;
+						if (wd->workdata_largemem >= sync_max_largemem)
+						{
+							/*
+							 * This is it ... we exit the loop here
+							 * and wait for the worker to apply enough
+							 * of the large rows first.
+							 */
+							pthread_mutex_unlock(&(wd->workdata_lock));
+							break;
+						}
+						pthread_mutex_unlock(&(wd->workdata_lock));
 					}
 				}
 

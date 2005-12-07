@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.56 2005-12-06 20:59:10 wieck Exp $
+ *	$Id: slon.h,v 1.57 2005-12-07 03:51:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -509,6 +509,8 @@ extern void *remoteListenThread_main(void *cdata);
  * ----------
  */
 extern int	sync_group_maxsize;
+extern int	sync_max_rowsize;
+extern int	sync_max_largemem;
 
 
 /* ----------
