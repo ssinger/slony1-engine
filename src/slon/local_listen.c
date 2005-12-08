@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.35 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: local_listen.c,v 1.36 2005-12-08 15:51:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -49,6 +49,7 @@ localListenThread_main(void *dummy)
 	PGnotify   *notification;
 	char		restart_notify[256];
 	int			restart_request;
+	int poll_sleep = 0;
 
 	slon_log(SLON_DEBUG1, "localListenThread: thread starts\n");
 
@@ -69,9 +70,10 @@ localListenThread_main(void *dummy)
 	 * Listen for local events
 	 */
 	slon_mkquery(&query1,
-				 "listen \"_%s_Event\"; "
-				 "listen \"_%s_Restart\"; ",
-				 rtcfg_cluster_name, rtcfg_cluster_name);
+		     /* "listen \"_%s_Event\"; " */
+		     "listen \"_%s_Restart\"; ",
+		     /*	 rtcfg_cluster_name,  */
+		     rtcfg_cluster_name);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -636,6 +638,7 @@ localListenThread_main(void *dummy)
 		 */
 		if (ntuples > 0)
 		{
+			poll_sleep = 0;  /* drop polling time back to 0... */
 			res = PQexec(dbconn, "commit transaction");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
@@ -654,6 +657,12 @@ localListenThread_main(void *dummy)
 			/*
 			 * No database events received. Rollback instead.
 			 */
+
+			/* Increase the amount of time to sleep, to a max of sync_interval_timeout */
+			poll_sleep += sync_interval;
+			if (poll_sleep > sync_interval_timeout) {
+				poll_sleep = sync_interval_timeout;
+			}
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
@@ -668,9 +677,9 @@ localListenThread_main(void *dummy)
 		}
 
 		/*
-		 * Wait for notify
+		 * Wait for notify or for timeout
 		 */
-		if (sched_wait_conn(conn, SCHED_WAIT_SOCK_READ) != SCHED_STATUS_OK)
+		if (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, poll_sleep) != SCHED_STATUS_OK)
 			break;
 	}
 

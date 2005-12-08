@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.27 2005-12-08 13:08:58 dpage Exp $
+ *	$Id: remote_listen.c,v 1.28 2005-12-08 15:51:10 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -58,6 +58,10 @@ static int remoteListen_forward_confirm(SlonNode * node,
 static int remoteListen_receive_events(SlonNode * node,
 					SlonConn * conn, struct listat * listat);
 
+static int poll_sleep;
+enum pstate_enum {POLL=1, LISTEN};
+static enum pstate_enum pstate;
+
 extern char *lag_interval;
 
 /* ----------
@@ -98,8 +102,11 @@ remoteListenThread_main(void *cdata)
 	listat_tail = NULL;
 	dstring_init(&query1);
 
+	poll_sleep = 0;
+	pstate = POLL;      /* Initially, start in Polling mode */
+
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
-/*	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name); */
+	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name);
 
 	/*
 	 * Work until doomsday
@@ -229,13 +236,23 @@ remoteListenThread_main(void *cdata)
 			 * register the node connection.
 			 */
 			slon_mkquery(&query1,
-				     "listen \"_%s_Event\"; "
+				     /* "listen \"_%s_Event\"; " */
 				     /*	 skip confirms "listen \"_%s_Confirm\"; " */
-				     "select %s.registerNodeConnection(%d); ",
-				     rtcfg_cluster_name, /* rtcfg_cluster_name, */
+				     "select _%s.registerNodeConnection(%d); ",
+				     /* rtcfg_cluster_name,  */
 				     rtcfg_namespace, rtcfg_nodeid);
+
+			if (pstate == LISTEN) {
+				slon_appendquery(&query1, 
+						 "listen \"_%s_Event\"; ",
+						 rtcfg_cluster_name);
+			} else {
+				slon_appendquery(&query1, 
+						 "unlisten \"_%s_Event\"; ",
+						 rtcfg_cluster_name);
+			}
 			res = PQexec(dbconn, dstring_data(&query1));
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)
+			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				slon_log(SLON_ERROR,
 					 "remoteListenThread_%d: \"%s\" - %s",
@@ -299,6 +316,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Receive events from the provider node
 		 */
+		enum pstate_enum oldpstate = pstate;
 		rc = remoteListen_receive_events(node, conn, listat_head);
 		if (rc < 0)
 		{
@@ -312,6 +330,41 @@ remoteListenThread_main(void *cdata)
 				break;
 
 			continue;
+		}
+		if (oldpstate != pstate) { /* Switched states... */
+			switch (pstate) {
+			case POLL:
+				slon_log(SLON_DEBUG2, 
+					 "remoteListenThread_%d: UNLISTEN\n",
+					 node->no_id);
+
+				slon_mkquery(&query1,
+					     "unlisten \"_%s_Event\"; ",
+					     rtcfg_cluster_name);
+				break;
+			case LISTEN:
+				slon_log(SLON_DEBUG2, 
+					 "remoteListenThread_%d: LISTEN\n",
+					 node->no_id);
+				slon_mkquery(&query1,
+					     "listen \"_%s_Event\"; ",
+					     rtcfg_cluster_name);
+				break;
+			}			
+			res = PQexec(dbconn, dstring_data(&query1));
+			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			{
+				slon_log(SLON_ERROR,
+					 "remoteListenThread_%d: \"%s\" - %s",
+					 node->no_id,
+					 dstring_data(&query1), PQresultErrorMessage(res));
+				PQclear(res);
+				slon_disconnectdb(conn);
+				free(conn_conninfo);
+				conn = NULL;
+				conn_conninfo = NULL;
+				continue;
+			}
 		}
 
 		/*
@@ -343,7 +396,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Wait for notification.
 		 */
-		rc = sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 10000);
+		rc = sched_wait_time(conn, SCHED_WAIT_SOCK_READ, poll_sleep);
 		if (rc == SCHED_STATUS_CANCEL)
 			continue;
 		if (rc != SCHED_STATUS_OK)
@@ -746,6 +799,16 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		  (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14));
 	}
 
+	if (ntuples > 0) {
+		poll_sleep = 0;
+		pstate = POLL;
+	} else {
+		poll_sleep = poll_sleep * 2 + sync_interval;
+		if (poll_sleep > sync_interval_timeout) {
+			poll_sleep = sync_interval_timeout;
+			pstate = LISTEN;
+		}
+	}
 	PQclear(res);
 
 	return 0;
