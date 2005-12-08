@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.17 2005-12-01 19:48:12 xfade Exp $
+# $Id: Makefile,v 1.18 2005-12-08 20:44:58 xfade Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -29,6 +29,11 @@ ifneq (,$(findstring devel, $(VERSION)))
 override JADEFLAGS += -V draft-mode
 endif
 
+# docbook2man generates man pages from docbook refentry source code.
+ifdef D2MDIR
+D2MSCRIPT=$(D2MDIR)/docbook2man-spec.pl
+endif
+
 # Enable some extra warnings
 override SPFLAGS += -wall -wno-unused-param -wno-empty
 
@@ -38,18 +43,17 @@ override SPFLAGS += -wall -wno-unused-param -wno-empty
 
 .PHONY: man
 
-DEFAULTSECTION := $(sqlmansect_dummy)
 
-man: slony.sgml $(ALLSGML)
+man: man.sgml $(ALLSGML)
 ifdef NSGMLS
 ifdef SGMLSPL
 ifdef D2MSCRIPT
-	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --section $(DEFAULTSECTION) --date "`date '+%Y-%m-%d'`"
+	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --date "`date '+%Y-%m-%d'`"
 # One more time, to resolve cross-references
-	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --section $(DEFAULTSECTION) --date "`date '+%Y-%m-%d'`"
-	mkdir -p man1 man$(DEFAULTSECTION)
+	$(NSGMLS) $(NSGMLS_FLAGS) $< | $(SGMLSPL) $(D2MSCRIPT) --lowercase --date "`date '+%Y-%m-%d'`"
+	mkdir -p man1 man7
 	mv *.1 man1/
-	mv *.$(DEFAULTSECTION) man$(DEFAULTSECTION)/
+	mv *.7 man7/
 endif
 endif
 endif
@@ -64,8 +68,8 @@ installdirs:
 ifdef docdir
 	$(mkinstalldirs) $(DESTDIR)$(docdir)/sgml
 	$(mkinstalldirs) $(DESTDIR)$(docdir)/html
-	$(mkinstalldirs) $(DESTDIR)$(docdir)/man1
-	$(mkinstalldirs) $(DESTDIR)$(docdir)/man$(DEFAULTSECTION)
+	$(mkinstalldirs) $(DESTDIR)$(mandir)/man1
+	$(mkinstalldirs) $(DESTDIR)$(mandir)/man7
 endif
 
 install: installdirs
@@ -74,10 +78,10 @@ ifdef docdir
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/sgml; \
 	done
 	for file in $(wildcard man1/*) ; do \
-	   $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/man1 ;\
+	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1 ;\
 	done
-	for file in $(wildcard man$(DEFAULTSECTION)/*) ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/man$(DEFAULTSECTION) ;\
+	for file in $(wildcard man7/*) ; do \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man7 ;\
 	done
 	for file in $(wildcard *.html) stylesheet.css ; do \
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/html ;\
@@ -232,7 +236,7 @@ clean distclean maintainer-clean:
 # HTML
 	rm -f HTML.manifest *.html *.gif
 # man
-	rm -rf *.1 *.$(DEFAULTSECTION) man1 man$(DEFAULTSECTION) manpage.refs manpage.links manpage.log
+	rm -rf *.1 *.7 man1 man7 manpage.refs manpage.links manpage.log
 # print
 	rm -f *.rtf *.tex-ps *.tex-pdf *.dvi *.aux *.log *.ps *.pdf *.out *.eps *.fot
 # index

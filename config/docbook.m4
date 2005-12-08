@@ -1,4 +1,4 @@
-# $Id: docbook.m4,v 1.4 2005-11-17 16:30:56 xfade Exp $
+# $Id: docbook.m4,v 1.5 2005-12-08 20:44:57 xfade Exp $
 
 # SLON_AC_PROG_JADE
 # --------------
@@ -11,6 +11,20 @@ AC_DEFUN([SLON_AC_PROG_JADE],
 AC_DEFUN([SLON_AC_PROG_NSGMLS],
 [AC_CHECK_PROGS([NSGMLS], [onsgmls nsgmls])])
 
+AC_DEFUN([SLON_AC_PROG_SGMLSPL],
+[AC_CHECK_PROGS([SGMLSPL], [sgmlspl])])
+
+# SLON_AC_PROG_D2M
+# ----------------
+AC_DEFUN([SLON_AC_PROG_D2M],
+[AC_MSG_CHECKING([for docbook2man-spec.pl],[slon_cv_check_d2mdir])
+if test -s "$with_d2mdir/docbook2man-spec.pl" ; then
+    AC_SUBST(d2mdir, $with_d2mdir)
+    AC_MSG_RESULT([found])
+  else 
+    AC_MSG_RESULT([not found, skipping manpages.
+Please use --with-d2mdir to specify the path to docbook2man-spec.pl])
+fi])
 
 # SLON_AC_CHECK_DOCBOOK(VERSION)
 # ---------------------------

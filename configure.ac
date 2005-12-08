@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.55 2005-12-01 21:27:37 xfade Exp $
+# $Id: configure.ac,v 1.56 2005-12-08 20:44:57 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -133,10 +133,12 @@ AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of 
 AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
 AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. **EXPERIMENTAL** ])
-AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools Default $PREFIX/bin. ])
-AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm Default $pglibdir. ])
-AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation Default is $PREFIX/doc. ])
+AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools. Default $PREFIX/bin. ])
+AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm. Default $pglibdir. ])
 AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
+AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation. Default is $PREFIX/doc. ])
+AC_ARG_WITH(d2mdir,		[  --with-d2mdir=<dir>              Location of docbook2man-spec.pl (Manpages will be skipped if not specified)])
+AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the manpages. Default is $PREFIX/man.])
 
 #Our current path
 SLONYPATH=`pwd`
@@ -198,12 +200,16 @@ if test "$with_docs" = "yes"; then
 	# Check for DocBook and tools
 	#
 	SLON_AC_PROG_NSGMLS
+	SLON_AC_PROG_SGMLSPL
+	SLON_AC_PROG_D2M
+
 	SLON_AC_PROG_JADE
 	SLON_AC_CHECK_DOCBOOK(4.2)
 	SLON_AC_PATH_DOCBOOK_STYLESHEETS
 	SLON_AC_PATH_COLLATEINDEX
-	AC_SUBST(SGMLSPL, $SGMLSPL)
+
 	AC_SUBST(docdir, $docdir)
+	AC_SUBST(mandir, $mandir)
 else
   AC_MSG_RESULT(no)
 fi

@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.33 2005-12-02 14:14:55 xfade Exp $
+# $Id: Makefile.global.in,v 1.34 2005-12-08 20:44:57 xfade Exp $
 # ----------
 
 #location substitutions
@@ -67,7 +67,8 @@ DOCBOOKSTYLE=		@DOCBOOKSTYLE@
 COLLATEINDEX=		@COLLATEINDEX@
 PGAUTODOC=		@PGAUTODOC@
 docdir=			@docdir@
-
+mandir=			@mandir@
+D2MDIR=			@d2mdir@
 #perltools
 perlsharedir=		@perlsharedir@
 
