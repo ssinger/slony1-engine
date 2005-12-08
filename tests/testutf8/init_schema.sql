@@ -21,11 +21,10 @@ CREATE TABLE table3(
 
 -- Table to perform UTF8 tests (checks multibyte; should be helpful in
 -- preventing problems with Asian character sets too)
-create table utf8table (
+CREATE SEQUENCE utf8_id;
+CREATE TABLE utf8table (
     id integer not null unique default nextval('utf8_id'),
     string text,
     primary key(id)
 );
-
-create sequence utf8_id;
 INSERT INTO utf8table (string) VALUES ('1b\303\241r') ;
