@@ -1,7 +1,7 @@
-<!-- $Id: plainpaths.sgml,v 1.8 2005-04-14 21:22:19 cbbrowne Exp $ -->
+<!-- $Id: plainpaths.sgml,v 1.8.2.1 2005-12-09 22:21:59 cbbrowne Exp $ -->
 <sect1 id="plainpaths"><title> &slony1; Path Communications</title>
 
-<para> &slony1; uses &postgres; DSNs in two contexts to establish
+<para> &slony1; uses &postgres; DSNs in three contexts to establish
 access to databases:
 
 <itemizedlist>
@@ -23,6 +23,12 @@ control the administration of the cluster.</para>
 be quite reasonable to <quote>hack together</quote> temporary
 connections using <link linkend="tunnelling">SSH
 tunnelling</link>.</para></listitem>
+
+<listitem><para> The <xref linkend="slon"> DSN parameter. </para> 
+
+<para> The DSN parameter passed to each <xref linkend="slon">
+indicates what network path should be used to get from the slon
+process to the database that it manages.</para> </listitem>
 
 <listitem><para> <xref linkend="stmtstorepath"> - controlling how
 <xref linkend="slon"> daemons communicate with remote nodes.  These
@@ -79,8 +85,8 @@ machines at the secondary site merely be <quote>backups;</quote> they
 would doubtless prefer for them to be useful, and that can certainly
 be the case.  If the primary site is being used for
 <quote>transactional activities,</quote> the replicas at the secondary
-site may be used for running time-oriented reports that are allowed to
-be a little bit behind.</para></listitem>
+site may be used for running time-oriented reports that do not require
+up-to-the second data.</para></listitem>
 
 <listitem><para> The symmetry of the configuration means that if you
 had <emphasis>two</emphasis> transactional applications needing

@@ -1,4 +1,4 @@
-<!-- $Id: subscribenodes.sgml,v 1.12 2005-04-13 21:22:58 cbbrowne Exp $ -->
+<!-- $Id: subscribenodes.sgml,v 1.12.2.1 2005-12-09 22:22:02 cbbrowne Exp $ -->
 <sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <indexterm><primary>subscribing nodes</primary></indexterm>
@@ -48,7 +48,8 @@ to them); a request to unsubscribe the node will be
 subscribe it.</para>
 
 <para>When you subscribe a node to a set, you should see something
-like this in your <application>slon</application> logs for the provider node:
+like this in your <application>slon</application> logs for the
+provider node:
 
 <screen>
 DEBUG2 remoteWorkerThread_3: Received event 3,1059 SUBSCRIBE_SET
@@ -79,6 +80,50 @@ subscriber should contain entries for the new subscription:
 tables on the origin node, and verify that the row is copied to the
 new subscriber.
 </para>
+
+<warning> <para> If you create and subscribe a set that does not
+contain any tables, that can lead to a problem that will stop
+replication from proceeding. </para>
+
+<para> If a particular subscriber is only being fed sequences by one
+of its providers, the query that collects <command>SYNC</command>
+event data will not be constructed correctly, and you will see error
+messages similar to the following:</para>
+
+<screen>
+2005-04-13 07:11:28 PDT ERROR remoteWorkerThread_11: "declare LOG
+cursor for select log_origin, log_xid, log_tableid, log_actionseq,
+log_cmdtype, log_cmddata from "_T1".sl_log_1 where log_origin = 11 and
+( order by log_actionseq; " PGRES_FATAL_ERROR ERROR: syntax error at
+or near "order" at character 162
+</screen>
+
+<para> The function <xref
+linkend="function.subscribeset-integer-integer-integer-boolean"> will
+generate a warning if given a replication set that lacks any tables to
+replicate, as shown in the following example.</para>
+
+<screen>
+cbbrowne@dba2:/tmp> cat create_empty_set.slonik
+cluster name = T1;
+node 11 admin conninfo = 'dbname=slony_test1';
+node 22 admin conninfo = 'dbname=slony_test2';
+
+create set (id = 255, origin = 11, comment='blank empty set');
+subscribe set (id=255, provider = 11, receiver = 22, forward = false);
+</screen>
+
+<para> This leads to the following warning message: </para>
+
+<screen>
+bbrowne@dba2:/tmp> slonik create_empty_set.slonik
+create_empty_set.slonik:6: NOTICE:  subscribeSet:: set 255 has no tables
+- risk of problems - see bug 1226
+create_empty_set.slonik:6: NOTICE: 
+http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226
+cbbrowne@dba2:/tmp>
+</screen>
+</warning>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

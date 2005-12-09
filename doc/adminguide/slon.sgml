@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.16 2005-05-12 21:47:02 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.16.2.1 2005-12-09 22:22:00 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -40,7 +40,7 @@
   
   <variablelist>
    <varlistentry>
-    <term><option>-d</option><replaceable class="parameter">debuglevel</replaceable></term>
+    <term><option>-d</option><replaceable class="parameter"> debuglevel</replaceable></term>
     <listitem>
      <para>
       The <envar>log_level</envar> specifies the level of verbosity
@@ -64,7 +64,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-s</option><replaceable class="parameter">SYNC check interval</replaceable></term>
+    <term><option>-s</option><replaceable class="parameter"> SYNC check interval</replaceable></term>
     <listitem>
 
      <para>
@@ -96,7 +96,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-t</option><replaceable class="parameter">SYNC
+    <term><option>-t</option><replaceable class="parameter"> SYNC
     interval timeout</replaceable></term>
     <listitem>
 
@@ -122,7 +122,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-g</option><replaceable class="parameter">group size</replaceable></term>
+    <term><option>-g</option><replaceable class="parameter"> group size</replaceable></term>
     <listitem>
      <para>
       This controls the maximum <command>SYNC</command> group size,
@@ -191,7 +191,7 @@
    </varlistentry>
 
    <varlistentry>
-    <term><option>-o</option><replaceable class="parameter">desired sync time</replaceable></term>
+    <term><option>-o</option><replaceable class="parameter"> desired sync time</replaceable></term>
     <listitem><para> A <quote>maximum</quote> time planned for grouped <command>SYNC</command>s.</para>
 
      <para> If replication is running behind, slon will gradually
@@ -227,7 +227,7 @@
    </varlistentry>      
 
    <varlistentry>
-    <term><option>-c</option><replaceable class="parameter">cleanup cycles</replaceable></term>
+    <term><option>-c</option><replaceable class="parameter"> cleanup cycles</replaceable></term>
     <listitem>
      <para>
       The value <envar>vac_frequency</envar> indicates how often to
@@ -257,7 +257,7 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-p</option><replaceable class="parameter">PID filename</replaceable></term>
+    <term><option>-p</option><replaceable class="parameter"> PID filename</replaceable></term>
     <listitem>
      <para>
       <envar>pid_file</envar> contains the filename in which the PID
@@ -273,14 +273,14 @@
    </varlistentry>
    
    <varlistentry>
-    <term><option>-f</option><replaceable class="parameter">config file</replaceable></term>
+    <term><option>-f</option><replaceable class="parameter"> config file</replaceable></term>
     <listitem>
      <para>
       File from which to read <application>slon</application> configuration.
      </para>
 
-     <para> This configuration is discussed further in <xref
-     linkend="runtime-config">.  If there are to be a complex set of
+     <para> This configuration is  discussed  further  in <link 
+     linkend="runtime-config">Slon  Run-time Configuration</link>. If there are to be a complex set of
      configuration parameters, or if there are parameters you do not
      wish to be visible in the process environment variables (such as
      passwords), it may be convenient to draw many or all parameters
@@ -293,22 +293,67 @@
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-a</option><replaceable class="parameter">archive directory</replaceable></term>
+    <term><option>-a</option><replaceable class="parameter"> archive directory</replaceable></term>
     <listitem>
      <para>
       <envar>archive_dir</envar> indicates a directory in which to
       place a sequence of <command>SYNC</command> archive files for
-      use in <link linkend="logshipping"> log shipping</link> mode.
+      use in &logship; mode.
      </para>
     </listitem>
    </varlistentry>
+
+
+   <varlistentry>
+    <term><option>-q</option><replaceable class="parameter"> quit based on SYNC provider </replaceable></term>
+    <listitem>
+     <para>
+      <envar>quit_sync_provider</envar> indicates which provider's
+      worker thread should be watched in order to terminate after a
+      certain event.  This must be used in conjunction with the
+      <option>-r</option> option below...
+     </para>
+
+     <para> This allows you to have a <application>slon</application>
+     stop replicating after a certain point. </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term><option>-r</option><replaceable class="parameter"> quit at event number </replaceable></term>
+    <listitem>
+     <para>
+      <envar>quit_sync_finalsync</envar> indicates the event number
+      after which the remote worker thread for the provider above
+      should terminate.  This must be used in conjunction with the
+      <option>-q</option> option above...
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term><option>-l</option><replaceable class="parameter"> lag interval </replaceable></term>
+    <listitem>
+     <para>
+      <envar>lag_interval</envar> indicates an interval value such as
+      <command> 3 minutes </command> or <command> 4 hours </command>
+      or <command> 2 days </command> that indicates that this node is
+      to lag its providers by the specified interval of time.  This
+      causes events to be ignored until they reach the age
+      corresponding to the interval.
+     </para>
+    </listitem>
+   </varlistentry>
+
   </variablelist>
  </refsect1>
  <refsect1>
   <title>Exit Status</title>
   <para>
    <application>slon</application> returns 0 to the shell if it
-   finished normally.  It returns -1 if it encounters any fatal error.
+   finished normally.  It returns via <function>exit(-1)</function>
+   (which will likely provide a return value of either 127 or 255,
+   depending on your system) if it encounters any fatal error.
   </para>
  </refsect1>
 </refentry>

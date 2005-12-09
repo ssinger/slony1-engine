@@ -1,17 +1,17 @@
-<!-- $Id: intro.sgml,v 1.17 2005-05-12 21:47:02 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.17.2.1 2005-12-09 22:21:54 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
 
-<para>&slony1; is a <quote>master to
-multiple slaves</quote> replication system supporting cascading and
-slave promotion.  The big picture for the development of
-&slony1; is as a master-slave system that
-includes all features and capabilities needed to replicate large
+<para>&slony1; is a <quote>master to multiple slaves</quote>
+replication system supporting cascading and slave promotion.  The big
+picture for the development of &slony1; is as a master-slave system
+that includes the sorts of capabilities needed to replicate large
 databases to a reasonably limited number of slave systems.
-<quote>Reasonable,</quote> in this context, is probably no more than a
-few dozen servers.  If the number of servers grows beyond that, the
-cost of communications becomes prohibitively high.</para>
+<quote>Reasonable,</quote> in this context, is on the order of a dozen
+servers.  If the number of servers grows beyond that, the cost of
+communications increases prohibitively, and the incremental benefits
+of having multiple servers will be falling off at that point.</para>
 
 <para> See also <xref linkend="slonylistenercosts"> for a further
 analysis of costs associated with having many nodes.</para>
@@ -29,17 +29,27 @@ well would include:
 <itemizedlist>
 <listitem><para> Sites where connectivity is really <quote>flakey</quote>
 </para></listitem>
-<listitem><para> Replication to nodes that are unpredictably connected.</para>
+<listitem><para> Replication to nodes that are unpredictably connected.</para></listitem>
 
-<para> Replicating a pricing database from a central server to sales
+<listitem><para> Replicating a pricing database from a central server to sales
 staff who connect periodically to grab updates.  </para></listitem>
+
+<listitem><para> Sites where configuration changes are made in a
+haphazard way.</para></listitem>
+
+<listitem><para> A <quote>web hosting</quote> situation where customers can
+independently make arbitrary changes to database schemas is not a good
+candidate for &slony1; usage. </para></listitem>
+
 </itemizedlist></para>
 
 <para> There is also a <link linkend="logshipping">file-based log
 shipping</link> extension where updates would be serialized into
 files.  Given that, log files could be distributed by any means
 desired without any need of feedback between the provider node and
-those nodes subscribing via <quote>log shipping.</quote></para>
+those nodes subscribing via <quote>log shipping.</quote> <quote>Log
+shipped</quote> nodes do not add to the costs of communicating events
+between &slony1; nodes.</para>
 
 <para> But &slony1;, by only having a single origin for each set, is
 quite unsuitable for <emphasis>really</emphasis> asynchronous multiway
@@ -48,10 +58,11 @@ replication.  For those that could use some sort of
 resolution</quote> akin to what is provided by <productname>Lotus
 <trademark>Notes</trademark></productname> or the
 <quote>syncing</quote> protocols found on PalmOS systems, you will
-really need to look elsewhere.  These sorts of replication models are
-not without merit, but they represent <emphasis>different</emphasis>
-replication scenarios that &slony1; does not attempt to
-address.</para>
+really need to look elsewhere.  </para> 
+
+<para> These other sorts of replication models are not without merit,
+but they represent <emphasis>different</emphasis> replication
+scenarios that &slony1; does not attempt to address.</para>
 
 </sect2>
 
@@ -59,7 +70,7 @@ address.</para>
 
 <para>&slony1; was born from an idea to create a replication system
 that was not tied to a specific version of &postgres;, which is
-allowed to be started and stopped on an existing database with out the
+allowed to be started and stopped on an existing database without the
 need for a dump/reload cycle.</para>
 
 </sect2>
@@ -73,16 +84,17 @@ need for a dump/reload cycle.</para>
 node failure, nor to automatically promote a node to a master or other
 data origin.</para>
 
-<para> It is quite possible that you may need to do that; that
-will require that you combine some network tools that evaluate
-<emphasis> to your satisfaction </emphasis> which nodes you consider
+<para> It is quite possible that you may need to do that; that will
+require that you combine some network tools that evaluate <emphasis>
+to your satisfaction </emphasis> which nodes you consider
 <quote>live</quote> and which nodes you consider <quote>dead</quote>
 along with some local policy to determine what to do under those
 circumstances.  &slony1; does not dictate any of that policy to
 you.</para></listitem>
 
-<listitem><para>&slony1; is not multi-master; it is not a connection broker, and
-it doesn't make you coffee and toast in the morning.</para></listitem>
+<listitem><para>&slony1; is not a multi-master replication system; it
+is not a connection broker, and it won't make you coffee and toast in
+the morning.</para></listitem>
 
 </itemizedlist>
 
@@ -97,24 +109,27 @@ based on hopes for future projects.</para></sect2>
 <sect2><title> Why doesn't &slony1; do automatic fail-over/promotion?
 </title>
 
-<para>That is properly the responsibility of network monitoring
-software, not &slony1;.  The configuration, fail-over paths, and
-preferred policies will be different for each site.  For example,
-keep-alive monitoring with redundant NIC's and intelligent HA switches
-that guarantee race-condition-free takeover of a network address and
-disconnecting the <quote>failed</quote> node will vary based on
-network configuration, vendor choices, and the combinations of
-hardware and software in use.  This is clearly the realm of network
-management software and not &slony1;.</para>
+<para>Determining whether a node has <quote>failed</quote> is properly
+the responsibility of network management software, not &slony1;.  The
+configuration, fail-over paths, and preferred policies will be
+different for each site.  For example, keep-alive monitoring with
+redundant NIC's and intelligent HA switches that guarantee
+race-condition-free takeover of a network address and disconnecting
+the <quote>failed</quote> node will vary based on network
+configuration, vendor choices, and the combinations of hardware and
+software in use.  This is clearly in the realm of network management
+and not &slony1;.</para>
 
 <para> Furthermore, choosing what to do based on the
-<quote>shape</quote> of the cluster represents local business policy.
-If &slony1; imposed failover policy on you, that might conflict with
-business requirements, thereby making &slony1; an unacceptable
-choice.</para>
+<quote>shape</quote> of the cluster represents local business policy,
+particularly in view of the fact that <link
+linkend="stmtfailover"><command>FAIL OVER</command></link> requires
+discarding the failed node. If &slony1; imposed failover policy on
+you, that might conflict with business requirements, thereby making
+&slony1; an unacceptable choice.</para>
 
 <para>As a result, let &slony1; do what it does best: provide database
-replication.</para></sect2>
+replication services.</para></sect2>
 
 <sect2><title> Current Limitations</title>
 
@@ -129,10 +144,11 @@ kinds of changes take place.</para>
 you submit them as scripts via the <application>slonik</application>
 <xref linkend="stmtddlscript"> operation.  That is not
 <quote>automatic;</quote> you have to construct an SQL DDL script and
-submit it, and there are a number of further caveats.</para>
+submit it, and there are a number of further <link
+linkend="ddlchanges"> caveats.</link></para>
 
 <para>If you have those sorts of requirements, it may be worth
-exploring the use of &postgres; 8.0 <acronym>PITR</acronym> (Point In
+exploring the use of &postgres; 8.X <acronym>PITR</acronym> (Point In
 Time Recovery), where <acronym>WAL</acronym> logs are replicated to
 remote nodes.  Unfortunately, that has two attendant limitations:
 
@@ -215,10 +231,16 @@ finding ways to apply partial record updates.  For instance, with an
 address update, one user, on one node, might update the phone number
 for an address, and another user might update the street address, and
 the conflict resolution system might try to apply these updates in a
-non-conflicting order.</para>
+non-conflicting order.  This can also be considered a form of
+<quote>table partitioning</quote> where a database table is treated as
+consisting of several <quote>sub-tables.</quote> </para>
 
 <para> Conflict resolution systems almost always require some domain
-knowledge of the application being used. </para>
+knowledge of the application being used, which means that they can
+only deal automatically with those conflicts where you have assigned a
+policy.  If they run into conflicts for which no policy is available,
+replication stops until someone applies some manual
+intervention. </para>
 </listitem>
 
 </itemizedlist>

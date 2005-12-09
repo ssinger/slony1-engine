@@ -1,7 +1,6 @@
-<!-- $Id: concepts.sgml,v 1.15 2005-06-22 16:54:23 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.15.2.1 2005-12-09 22:21:43 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
-
 
 <para>In order to set up a set of &slony1; replicas, it is necessary
 to understand the following major abstractions that it uses:</para>

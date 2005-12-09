@@ -1,6 +1,12 @@
-<!-- $Id: installation.sgml,v 1.13.2.1 2005-07-01 16:19:33 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.13.2.2 2005-12-09 22:21:53 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
+
+<para>Note for &windows; users: Unless you are planning on hacking the
+&slony1; code, it is highly recommended that you download and install
+a prebuilt binary distribution and jump straight to the configuration
+section below.
+</para>
 
 <para>You should have obtained the &slony1; source from the previous
 step. Unpack it.</para>
@@ -56,6 +62,10 @@ these options, use the command <command>./configure --help</command>
 <sect2>
 <title>Example</title>
 
+<para> After determining that the &postgres; instance to be used is
+installed in
+<filename>/opt/dbs/pgsql746-aix-2005-04-01</filename>:</para>
+
 <screen>
 PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 ./configure \
@@ -81,6 +91,9 @@ http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff
 </ulink> Similar patches may need to be constructed for other
 versions; see the FAQ entry on <link linkend="threadsafety"> thread
 safety </link>. </para>
+
+<para> For a full listing of configuration options, run the command
+<command>./configure --help</command>.</para>
 </sect2>
 
 <sect2>
@@ -115,44 +128,79 @@ install.  </command></para>
 gmake install
 </command></para>
 
-<para>This will install files into postgresql install directory as
-specified by the <option>--prefix</option> option used in the
-&postgres; installation.  Make sure you have appropriate permissions
-to write into that area.  Normally you need to do this either as root
-or as the postgres user.  </para>
+<para>This will install files into the postgresql install directory as
+specified by the <command>configure</command>
+<option>--prefix</option> option used in the &postgres; installation.
+Make sure you have appropriate permissions to write into that area.
+Commonly you need to do this either as root or as the postgres user.
+</para>
 </sect2>
 
 <sect2>
 <title> Installing &slony1; from RPMs</title>
 
-<para> Even though &slony1; can be compiled and run on most Linux
-distributions, it is also possible to install &slony1; using binary
-packages. Slony Global Development Team provides official RPMs and SRPMs
+<para> Even though &slony1; can be compiled and run on most Linux 
+distributions, it is also possible to install &slony1; using binary 
+packages. Slony Global Development Team provides official RPMs and SRPMs 
 for many versions or Red Hat ana Fedora Core.</para>
 
-<para>The RPMs are available at
-http://developer.PostgreSQL.org/~devrim/slony . Please read <command>
-CURRENT_MAINTAINER</command> file for the details of the RPMs.
-Please note that the RPMs will look for RPM installation of
-PostgreSQL, so if you install PosgtgreSQL from source, you should
-manually ignore the RPM dependencies related to PostgreSQL.</para>
+<para>The RPMs are available at 
+http://developer.PostgreSQL.org/~devrim/slony . Please read <command> 
+CURRENT_MAINTAINER</command> file for the details of the RPMs. 
+Please note that the RPMs will look for RPM installation of 
+&postgres;, so if you install &postgres; from source, you should 
+manually ignore the RPM dependencies related to &postgres;.</para>
 
-<para>Installing &slony1; using these RPMs is as easy as
+<para>Installing &slony1; using these RPMs is as easy as 
 installing any RPM.</para>
 
 <screen>rpm -ivh postgresql-slony1-engine-....rpm</screen>
 
-<para>If you want to upgrade the previous version, just use
-<command>rpm -Uvh</command> to upgrade it. But please remember to follow
+<para>If you want to upgrade the previous version, just use 
+<command>rpm -Uvh</command> to upgrade it. But please remember to follow 
 the usual upgrade procedure, too.</para>
 
-<para>The RPM installs the files into their usual places. The
-configuration files are installed under /etc, the binary files are
-installed to /usr/bin, libs are installed to /usr/lib/pgsql, and finally
-the docs are installed under
-/usr/share/doc/postgresql-slony1-engine.</para>
+<para>The RPM installs the files into their usual places. The 
+configuration files are installed under /etc, the binary files are 
+installed to /usr/bin, libs are installed to /usr/lib/pgsql, and finally 
+the docs are installed under 
+/usr/share/doc/postgresql-slony1-engine.</para> 
 
 </sect2>
+
+<sect2>
+<title> Installing the &slony1; service on &windows;</title>
+
+<para> On &windows; systems, instead of running one slon daemon per
+node, a single slon service is installed which can then be controlled
+through the <command>Services</command> control panel applet, or from
+a command prompt using the <command>net</command> command.</para>
+
+<screen>
+C:\Program Files\PostgreSQL\8.0\bin> slon -regservice my_slon
+Service registered.
+Before you can run Slony, you must also register an engine!
+
+WARNING! Service is registered to run as Local System. You are
+encouraged to change this to a low privilege account to increase
+system security. 
+</screen>
+
+<para> Once the service is installed, individual nodes can be setup
+by registering slon configuration files with the service.</para>
+
+<screen>
+C:\Program Files\PostgreSQL\8.0\bin> slon -addengine c:\node1.conf
+Engine added.
+</screen>
+
+<para>Other, self explanatory commands include <command>slon -unregservice 
+&lt;service name&gt;</command>, <command>slon -listengines 
+&lt;service name&gt;</command> and <command>slon -delengine 
+&lt;service name&gt; &lt;config file&gt;</command>.</para> 
+
+</sect2>
+
 </sect1>
 
 <!-- Keep this comment at the end of the file

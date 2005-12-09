@@ -1,6 +1,6 @@
-<!-- $Id: faq.sgml,v 1.40.2.2 2005-10-25 16:19:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40.2.3 2005-12-09 22:21:49 cbbrowne Exp $ -->
 <qandaset>
-<indexterm><primary> Frequently Asked Questions about &slony1;</primary></indexterm>
+<indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
 <qandaentry id="missingheaders">
 <question><para> I tried building &slony1; 1.1 and got the following
@@ -47,8 +47,27 @@ taking place.</para>
 
 <screen>
 DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
-ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,		  ev_minxid, ev_maxxid, ev_xip,		  ev_type,		  ev_data1, ev_data2,		  ev_data3, ev_data4,		  ev_data5, ev_data6,		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
+ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,
+		  ev_minxid, ev_maxxid, ev_xip,
+		  ev_type,
+                  ev_data1, ev_data2,
+		  ev_data3, ev_data4,
+ 	          ev_data5, ev_data6,
+		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e 
+where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
 </screen>
+</para>
+
+<para> Alternatively, it may appear like...
+
+<screen>
+ERROR  remoteListenThread_2: "select ev_origin, ev_seqno, ev_timestamp,
+ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,
+ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8
+from "_sl_p2t2".sl_event e where (e.ev_origin = '2' and e.ev_seqno >
+'0') order by e.ev_origin, e.ev_seqno" - could not receive data from
+server: Error 0
+</screen> 
 </para>
 </question>
 
@@ -101,25 +120,26 @@ something that is probably not worth working around.</para>
 <question><para> <xref linkend="slon"> does not restart after
 crash</para>
 
-<para> After an immediate stop of postgresql (simulation of system
-crash) in pg_catalog.pg_listener a tuple with
-relname='_${cluster_name}_Restart' exists. slon doesn't start because
-it thinks another process is serving the cluster on this node.  What
-can I do? The tuples can't be dropped from this relation.</para>
+<para> After an immediate stop of &postgres; (simulation of system
+crash) in <envar>pg_catalog.pg_listener</envar> a tuple with <command>
+relname='_${cluster_name}_Restart'</command> exists. slon doesn't
+start because it thinks another process is serving the cluster on this
+node.  What can I do? The tuples can't be dropped from this
+relation.</para>
 
 <para> The logs claim that <blockquote><para>Another slon daemon is
 serving this node already</para></blockquote></para></question>
 
 <answer><para> The problem is that the system table
-<envar>pg_catalog.pg_listener</envar>, used by
-<productname>PostgreSQL</productname> to manage event notifications,
-contains some entries that are pointing to backends that no longer
-exist.  The new <xref linkend="slon"> instance connects to the
-database, and is convinced, by the presence of these entries, that an
-old <application>slon</application> is still servicing this &slony1;
-node.</para>
+<envar>pg_catalog.pg_listener</envar>, used by &postgres; to manage
+event notifications, contains some entries that are pointing to
+backends that no longer exist.  The new <xref linkend="slon"> instance
+connects to the database, and is convinced, by the presence of these
+entries, that an old <application>slon</application> is still
+servicing this &slony1; node.</para>
 
-<para> The <quote>trash</quote> in that table needs to be thrown away.</para>
+<para> The <quote>trash</quote> in that table needs to be thrown
+away.</para>
 
 <para>It's handy to keep a slonik script similar to the following to
 run in such cases:
@@ -142,6 +162,13 @@ so that you can restart the node.</para>
 
 <para>As of version 1.0.5, the startup process of slon looks for this
 condition, and automatically cleans it up.</para>
+
+<para> As of version 8.1 of &postgres;, the functions that manipulate
+<envar>pg_listener</envar> do not support this usage, so for &slony1;
+versions after 1.1.2 (<emphasis>e.g. - </emphasis> 1.1.5), this
+<quote>interlock</quote> behaviour is handled via a new table, and the
+issue should be transparently <quote>gone.</quote> </para>
+
 </answer></qandaentry>
 
 <qandaentry>
@@ -155,8 +182,7 @@ put them into <filename>$(HOME)/.pgpass.</filename></para>
 </answer></qandaentry>
 
 <qandaentry>
-<question><para>Slonik fails - cannot load
-<productname>PostgreSQL</productname> library -
+<question><para>Slonik fails - cannot load &postgres; library -
 <command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
 
 <para> When I run the sample setup script I get an error message similar
@@ -188,7 +214,14 @@ what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
 not to link up quite right.  See also <link linkend="threadsafety">
 thread safety </link> concerning threading issues on Solaris
-...</para> </answer></qandaentry>
+...</para> 
+
+<para> Life is simplest if you only have one set of &postgres;
+binaries on a given server; in that case, there isn't a <quote>wrong
+place</quote> in which &slony1; components might get installed.  If
+you have several software installs, you'll have to verify that the
+right versions of &slony1; components are associated with the right
+&postgres; binaries. </para> </answer></qandaentry>
 
 <qandaentry>
 <question><para>Table indexes with FQ namespace names
@@ -972,13 +1005,11 @@ grow, ceaselessly, until the transaction is closed. </para>
 </answer>
 
 <answer> <para> You can monitor for this condition inside the database
-only if the <productname> PostgreSQL </productname> <filename>
-postgresql.conf </filename> parameter
-<envar>stats_command_string</envar> is set to true.  If that is set,
-then you may submit the query <command> select * from pg_stat_activity
-where current_query like '%IDLE% in transaction'; </command> which
-will find relevant activity.
-</para> </answer>
+only if the &postgres; <filename> postgresql.conf </filename>
+parameter <envar>stats_command_string</envar> is set to true.  If that
+is set, then you may submit the query <command> select * from
+pg_stat_activity where current_query like '%IDLE% in transaction';
+</command> which will find relevant activity.  </para> </answer>
 
 <answer> <para> You should also be able to search for <quote> idle in
 transaction </quote> in the process table to find processes that are
@@ -990,10 +1021,9 @@ very long time.  The <envar> query_start </envar> time in <envar>
 pg_stat_activity </envar> may show you some query that has been
 running way too long.  </para> </answer>
 
-<answer> <para> There are plans for <productname> PostgreSQL
-</productname> to have a timeout parameter, <envar>
-open_idle_transaction_timeout </envar>, which would cause old
-transactions to time out after some period of disuse.  Buggy
+<answer> <para> There are plans for &postgres; to have a timeout
+parameter, <envar> open_idle_transaction_timeout </envar>, which would
+cause old transactions to time out after some period of disuse.  Buggy
 connection pool logic is a common culprit for this sort of thing.
 There are plans for <productname> <link linkend="pgpool"> pgpool
 </link> </productname> to provide a better alternative, eventually,
@@ -1030,7 +1060,7 @@ fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
 <itemizedlist>
 
 <listitem><para> You'll need to identify from either the slon logs, or
-the PostgreSQL database logs exactly which statement it is that is
+the &postgres; database logs exactly which statement it is that is
 causing the error.</para></listitem>
 
 <listitem><para> You need to fix the Slony-defined triggers on the
@@ -1141,12 +1171,12 @@ things in a rush; you need to be sure things are working right
 and load the data back in much faster than the <command>SUBSCRIBE
 SET</command> runs.  Why is that?  </para></question>
 
-<answer><para> &slony1; depends on there
-being an already existant index on the primary key, and leaves all
-indexes alone whilst using the <productname>PostgreSQL</productname>
-<command>COPY</command> command to load the data.  Further hurting
-performane, the <command>COPY SET</command> event starts by deleting
-the contents of tables, which potentially leaves a lot of dead tuples
+<answer><para> &slony1; depends on there being an already existant
+index on the primary key, and leaves all indexes alone whilst using
+the &postgres; <command>COPY</command> command to load the data.
+Further hurting performane, the <command>COPY SET</command> event
+starts by deleting the contents of tables, which potentially leaves a
+lot of dead tuples
 </para>
 
 <para> When you use <command>pg_dump</command> to dump the contents of
@@ -1154,11 +1184,7 @@ a database, and then load that, creation of indexes is deferred until
 the very end.  It is <emphasis>much</emphasis> more efficient to
 create indexes against the entire table, at the end, than it is to
 build up the index incrementally as each row is added to the
-table.</para>
-
-<para> Unfortunately, dropping and recreating indexes <quote>on the
-fly,</quote> as it were, has proven thorny.  Doing it automatically
-hasn't been implemented.  </para></answer>
+table.</para></answer>
 
 <answer><para> If you can drop unnecessary indices while the
 <command>COPY</command> takes place, that will improve performance
@@ -1166,13 +1192,11 @@ quite a bit.  If you can <command>TRUNCATE</command> tables that
 contain data that is about to be eliminated, that will improve
 performance <emphasis>a lot.</emphasis> </para></answer>
 
-<answer><para> There is a TODO item for implementation in
-<productname>PostgreSQL</productname> that adds a new option,
-something like <option>BULKLOAD</option>, which would defer revising
-indexes until the end, and regenerating indexes in bulk.  That will
-likely not be available until <productname>PostgreSQL</productname>
-8.1, but it should substantially improve performance once available.
-</para></answer>
+<answer><para> &slony1; version 1.1.5 and later versions should handle
+this automatically; it <quote>thumps</quote> on the indexes in the
+&postgres; catalog to hide them, in much the same way triggers are
+hidden, and then <quote>fixes</quote> the index pointers and reindexes
+the table. </para> </answer>
 </qandaentry>
 
 <qandaentry>
@@ -1562,7 +1586,7 @@ that?</para>
 <para> Of course, now that you have done all of the above, it's not compatible
 with standard Slony now. So you either need to implement 7.2 in a less
 hackish way, or you can also hack up slony to work without schemas on
-newer versions of PostgreSQL so they can talk to each other.
+newer versions of &postgres; so they can talk to each other.
 </para>
 <para> Almost immediately after getting the DB upgraded from 7.2 to 7.4, we
 deinstalled the hacked up Slony (by hand for the most part), and started
@@ -1592,6 +1616,58 @@ pretty heavily with the code.  </para> </answer>
 </qandaentry>
 
 <qandaentry>
+<question> <para> I am finding some multibyte columns (Unicode, Big5)
+are being truncated.  Why?  </para> </question>
+
+<answer> <para> This was a bug present until a little after &slony1;
+version 1.1.0; the way in which columns were being captured by the
+<function>logtrigger()</function> function could clip off the last
+byte of a column represented in a multibyte format.  Check to see that
+your version of <filename>src/backend/slony1_funcs.c</filename> is
+1.34 or better; the patch was introduced in CVS version 1.34 of that
+file.  </para> </answer>
+</qandaentry>
+
+<qandaentry><question> <para> I need to rename a column that is in the
+primary key for one of my replicated tables.  That seems pretty
+dangerous, doesn't it?  I have to drop the table out of replication
+and recreate it, right?</para>
+</question>
+
+<answer><para> Actually, this is a scenario which works out remarkably
+cleanly.  &slony1; does indeed make intense use of the primary key
+columns, but actually does so in a manner that allows this sort of
+change to be made very nearly transparently.</para>
+
+<para> Suppose you revise a column name, as with the SQL DDL <command>
+alter table accounts alter column aid rename to cid; </command> This
+revises the names of the columns in the table; it
+<emphasis>simultaneously</emphasis> renames the names of the columns
+in the primary key index.  The result is that the normal course of
+things is that altering a column name affects both aspects
+simultaneously on a given node.</para>
+
+<para> The <emphasis>ideal</emphasis> and proper handling of this
+change would involve using <xref linkend="stmtddlscript"> to deploy
+the alteration, which ensures it is applied at exactly the right point
+in the transaction stream on each node.</para>
+
+<para> Interestingly, that isn't forcibly necessary.  As long as the
+alteration is applied on the replication set's origin before
+application on subscribers, things won't break irrepairably.  Some
+<command>SYNC</command> events that do not include changes to the
+altered table can make it through without any difficulty...  At the
+point that the first update to the table is drawn in by a subscriber,
+<emphasis>that</emphasis> is the point at which
+<command>SYNC</command> events will start to fail, as the provider
+will indicate the <quote>new</quote> set of columns whilst the
+subscriber still has the <quote>old</quote> ones.  If you then apply
+the alteration to the subscriber, it can retry the
+<command>SYNC</command>, at which point it will, finding the
+<quote>new</quote> column names, work just fine.
+</para> </answer></qandaentry>
+
+<qandaentry>
 <question> <para> Replication has fallen behind, and it appears that the
 queries to draw data from <xref linkend="table.sl-log-1">/<xref
 linkend="table.sl-log-2"> are taking a long time to pull just a few
@@ -1608,7 +1684,6 @@ the index.
 </para>
 </answer>
 </qandaentry>
-
 <qandaentry>
 <question><para>The <xref linkend="slon"> processes servicing my
 subscribers are growing to enormous size, challenging system resources
@@ -1656,10 +1731,34 @@ SYNC with the provider.  By default, this option is turned off, so the
 default modification to make is to change the second definition of
 <envar> SLON_DATA_FETCH_SIZE </envar> from 10 to 1. </para> </answer>
 
-<answer><para> There are plans to change the behaviour of <xref
-linkend="slon"> to better adapt to the size of these queries for
-version 1.2, so at that point, this note will hopefully become
-obsolete. </para> </answer>
+<answer><para> In version 1.2, configuration values <xref
+linkend="slon-config-max-rowsize"> and <xref
+linkend="slon-config-max-largemem"> are associated with a new
+algorithm that changes the logic as follows.  Rather than fetching 100
+rows worth of data at a time:</para>
+
+<itemizedlist>
+
+<listitem><para> The <command>fetch from LOG</command> query will draw
+in 500 rows at a time where the size of the attributes does not exceed
+<xref linkend="slon-config-max-rowsize">.  With default values, this
+restricts this aspect of memory consumption to about 8MB.  </para>
+</listitem>
+
+<listitem><para> Tuples with larger attributes are loaded until
+aggregate size exceeds the parameter <xref
+linkend="slon-config-max-largemem">.  By default, this restricts
+consumption of this sort to about 5MB.  This value is not a strict
+upper bound; if you have a tuple with attributes 50MB in size, it
+forcibly <emphasis>must</emphasis> be loaded into memory.  There is no
+way around that.  But <xref linkend="slon"> at least won't be trying
+to load in 100 such records at a time, chewing up 10GB of memory by
+the time it's done.  </para> </listitem>
+</itemizedlist>
+
+<para> This should alleviate problems people have been experiencing
+when they sporadically have series' of very large tuples. </para>
+</answer>
 </qandaentry>
 </qandaset>
 

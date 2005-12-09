@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.24 2005-05-31 16:14:55 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.24.2.1 2005-12-09 22:21:41 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -16,8 +16,9 @@ Unfortunately, this turned out to be a pretty large calibre
 <quote>foot gun</quote>, as minor typos on the command line led, on a
 couple of occasions, to pretty calamitous actions, so the behavior has
 been changed so that the scripts simply submit output to standard
-output.  An administrator should review the script
-<emphasis>before</emphasis> submitting it to <xref linkend="slonik">.</para>
+output.  The savvy administrator should review the script
+<emphasis>before</emphasis> submitting it to <xref
+linkend="slonik">.</para>
 
 <sect2><title>Node/Cluster Configuration - cluster.nodes</title>
 
@@ -31,6 +32,17 @@ shape of the nodes in a &slony1; cluster.</para>
 <listitem><para><envar>$CLUSTER_NAME</envar>=orglogs;	# What is the name of the replication cluster?</para></listitem>
 <listitem><para><envar>$LOGDIR</envar>='/opt/OXRS/log/LOGDBS';	# What is the base directory for logs?</para></listitem>
 <listitem><para><envar>$APACHE_ROTATOR</envar>="/opt/twcsds004/OXRS/apache/rotatelogs";  # If set, where to find Apache log rotator</para></listitem>
+<listitem><para><envar>foldCase</envar> # If set to 1, object names (including schema names) will be
+folded to lower case.  By default, your object names will be left
+alone.  Note that &postgres; itself folds object names to lower case;
+if you create a table via the command <command> CREATE TABLE
+SOME_THING (Id INTEGER, STudlYName text);</command>, the result will
+be that all of those components are forced to lower case, thus
+equivalent to <command> create table some_thing (id integer,
+studlyname text);</command>, and the name of table and, in this case,
+the fields will all, in fact, be lower case. </para>
+
+</listitem>
 </itemizedlist>
 </para>
 
@@ -54,7 +66,9 @@ my %PARAMS =   (host=> undef,		# Host name
 		password => undef,	# password for user
 		parent => 1,		# which node is parent to this node
 		noforward => undef	# shall this node be set up to forward results?
-                sslmode => undef        # SSL mode argument - determine priority of SSL usage = disable,allow,prefer,require
+                sslmode => undef        # SSL mode argument - determine 
+                                        # priority of SSL usage
+                                        # = disable,allow,prefer,require
 );
 </programlisting>
 </sect2>

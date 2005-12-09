@@ -1,6 +1,7 @@
-<!-- $Id: logshipping.sgml,v 1.9.2.1 2005-09-28 01:18:55 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.9.2.2 2005-12-09 22:21:58 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
+<indexterm><primary>log shipping</primary></indexterm>
 
 <para> One of the new features for 1.1 is the ability to serialize the
 updates to go out into log files that can be kept in a spool
@@ -118,22 +119,10 @@ a set of <quote>log shipping nodes.</quote>. </para></answer>
 entirety of the traffic going to a subscriber.  You cannot separate
 things out if there are multiple replication sets.  </para></answer>
 
-<answer><para> The <quote>log shipping node</quote> presently tracks
-only <command>SYNC</command> events.  This should be sufficient to cope with
-<emphasis>some</emphasis> changes in cluster configuration, but not
-others.  </para>
-
-<para> Log shipping does <emphasis>not</emphasis> process certain
-additional events, with the implication that the introduction of any
-of the following events can invalidate the relationship between the
-<command>SYNC</command>s and the dump created using
-<application>slony1_dump.sh</application> so that you'll likely need
-to rerun <application>slony1_dump.sh</application>:
-
-<itemizedlist>
-<listitem><para><command> SUBSCRIBE_SET </command></para></listitem> 
-
-</itemizedlist></para>
+<answer><para> The <quote>log shipping node</quote> presently only
+fully tracks <command>SYNC</command> events.  This should be
+sufficient to cope with <emphasis>some</emphasis> changes in cluster
+configuration, but not others.  </para>
 
 <para> A number of event types <emphasis> are </emphasis> handled in
 such a way that log shipping copes with them:
@@ -158,6 +147,8 @@ contain updates to the set.</para>
 <command>SET_MOVE_SEQUENCE</command> <command>DROP_SET</command>,
 <command>MERGE_SET</command>, will be handled
 <quote>appropriately</quote>.</para></listitem>
+
+<listitem><para><command> SUBSCRIBE_SET </command></para></listitem> 
 
 <listitem><para> The various events involved in node configuration are
 irrelevant to log shipping:
@@ -205,13 +196,15 @@ you might want to use log shipping...</para> </note>
 <itemizedlist>
 
 <listitem><para> You <emphasis>don't</emphasis> want to blindly apply
-<command>SYNC</command> files because any given <command>SYNC</command> file may <emphasis>not</emphasis> be
-the right one.  If it's wrong, then the result will be that the call
-to <function> setsyncTracking_offline() </function> will fail, and
-your <application> psql</application> session will <command> ABORT
-</command>, and then run through the remainder of that <command>SYNC</command> file
-looking for a <command>COMMIT</command> or <command>ROLLBACK</command>
-so that it can try to move on to the next transaction.</para>
+<command>SYNC</command> files because any given
+<command>SYNC</command> file may <emphasis>not</emphasis> be the right
+one.  If it's wrong, then the result will be that the call to
+<function> setsyncTracking_offline() </function> will fail, and your
+<application> psql</application> session will <command> ABORT
+</command>, and then run through the remainder of that
+<command>SYNC</command> file looking for a <command>COMMIT</command>
+or <command>ROLLBACK</command> so that it can try to move on to the
+next transaction.</para>
 
 <para> But we <emphasis> know </emphasis> that the entire remainder of
 the file will fail!  It is futile to go through the parsing effort of
@@ -222,7 +215,8 @@ reading the remainder of the file.</para>
 <itemizedlist>
 
 <listitem><para> Read the first few lines of the file, up to and
-including the <function> setsyncTracking_offline() </function> call.</para></listitem>  
+including the <function> setsyncTracking_offline() </function>
+call.</para></listitem>
 
 <listitem><para> Try to apply it that far.</para></listitem>
 

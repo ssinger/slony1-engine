@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.15 2005-05-03 21:32:26 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.15.2.1 2005-12-09 22:21:47 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <sect2><title>Foreword</title>
@@ -135,6 +135,7 @@ write access to the tables.</para>
 now use node2 as data provider for the set.  This means that after the
 failover command succeeded, no node in the entire replication setup
 will receive anything from node1 any more.</para>
+
 </listitem>
 
 <listitem>
@@ -143,9 +144,16 @@ will receive anything from node1 any more.</para>
 node2.</para>
 </listitem>
 
-<listitem>
-<para> After the failover is complete and node2 accepts write
-operations against the tables, remove all remnants of node1's
+<listitem> <para> Purge out the abandoned node </para>
+
+<para> You will find, after the failover, that there are still a full
+set of references to node 1 in <xref linkend="table.sl-node">, as well
+as in referring tables such as <xref linkend="table.sl-confirm">;
+since data in <xref linkend="table.sl-log-1"> is still present,
+&slony1; cannot immediately purge out the node. </para>
+
+<para> After the failover is complete and node2 accepts
+write operations against the tables, remove all remnants of node1's
 configuration information with the <xref linkend="stmtdropnode">
 command:
 
@@ -153,18 +161,76 @@ command:
 drop node (id = 1, event node = 2);
 </programlisting>
 </para>
+
+<para> Supposing the failure resulted from some catastrophic failure
+of the hardware supporting node 1, there might be no
+<quote>remains</quote> left to look at.  If the failure was not
+<quote>total</quote>, as might be the case if the node had to be
+abandoned due to a network communications failure, you will find that
+node 1 still <quote>imagines</quote> itself to be as it was before the
+failure.  See <xref linkend="rebuildnode1"> for more details on the
+implications.</para>
+
 </listitem>
 </itemizedlist>
+
 </sect2>
 
-<sect2><title>After Failover, Reconfiguring node1</title>
+<sect2><title> Automating <command> FAIL OVER </command> </title>
 
-<para> After the above failover, the data stored on node1 will rapidly
-become increasingly out of sync with the rest of the nodes, and must
-be treated as corrupt.  Therefore, the only way to get node1 back and
-transfer the origin role back to it is to rebuild it from scratch as a
-subscriber, let it catch up, and then follow the switchover
-procedure.</para>
+<para> If you do choose to automate <command>FAIL OVER </command>, it
+is important to do so <emphasis>carefully.</emphasis> You need to have
+good assurance that the failed node is well and truly failed, and you
+need to be able to assure that the failed node will not accidentally
+return into service, thereby allowing there to be two nodes out there
+able to respond in a <quote>master</quote> role. </para>
+
+<para> When failover occurs, there needs to be a mechanism to forcibly
+knock the failed node off the network.  This could take place via
+having an SNMP interface that does some combination of the following:
+
+<itemizedlist>
+
+<listitem><para> Turns off power on the failed server. </para> 
+
+<para> If care is not taken, the server may reappear when system
+administrators power it up. </para>
+
+</listitem>
+
+<listitem><para> Modify firewall rules or other network configuration
+to drop the failed server's IP address from the network. </para>
+
+<para> If the server has multiple network interfaces, and therefore
+multiple IP addresses, this approach allows the
+<quote>application</quote> addresses to be dropped/deactivated, but
+leave <quote>administrative</quote> addresses open so that the server
+would remain accessible to system administrators.  </para> </listitem>
+
+</itemizedlist>
+</para>
+</sect2>
+
+<sect2 id="rebuildnode1"><title>After Failover, Reconfiguring
+node 1</title>
+
+<para> What happens to the failed node will depend somewhat on the
+nature of the catastrophe that lead to needing to fail over to another
+node.  If the node had to be abandoned because of physical destruction
+of its disk storage, there will likely not be anything of interest
+left.  On the other hand, a node might be abandoned due to the failure
+of a network connection, in which case the former
+<quote>provider</quote> can appear be functioning perfectly well.
+Nonetheless, once communications are restored, the fact of the
+<command>FAIL OVER</command> makes it mandatory that the failed node
+be abandoned. </para>
+
+<para> After the above failover, the data stored on node 1 will
+rapidly become increasingly out of sync with the rest of the nodes,
+and must be treated as corrupt.  Therefore, the only way to get node 1
+back and transfer the origin role back to it is to rebuild it from
+scratch as a subscriber, let it catch up, and then follow the
+switchover procedure.</para>
 
 <para> A good reason <emphasis>not</emphasis> to do this automatically
 is the fact that important updates (from a
@@ -199,8 +265,8 @@ the <quote>failed</quote> node.
 network monitoring tool.  You need to have clear methods of
 communicating to applications and users what database hosts are to be
 used.  If those methods are lacking, adding replication to the mix
-will worsen the potential for confusion, and failover will be the
-point at which there is the greatest potential for confusion. </para>
+will worsen the potential for confusion, and failover will be a point
+at which there is enormous potential for confusion. </para>
 </warning>
 
 <para> If the database is very large, it may take many hours to

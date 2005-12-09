@@ -1,6 +1,7 @@
-<!-- $Id: bestpractices.sgml,v 1.9.2.1 2005-09-30 18:29:17 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.9.2.2 2005-12-09 22:21:42 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
+<indexterm><primary>best practices for &slony1; usage</primary></indexterm>
 
 <para> It is common for managers to have a desire to operate systems
 using some available, documented set of <quote>best practices.</quote>
@@ -81,9 +82,9 @@ number of mistakes made.</para>
 
 <para> At Afilias, some internal <citation>The 3AM Unhappy DBA's Guide
 to...</citation> guides have been created to provide checklists of
-what to do when <quote>unhappy</quote> things happen; this sort of
-material is highly specific to the applications running, so you would
-need to generate your own such documents.
+what to do when certain <quote>unhappy</quote> events take place; this
+sort of material is highly specific to the applications running, so
+you would need to generate your own such documents.
 </para>
 </listitem>
 
@@ -305,9 +306,9 @@ describe some of the lessons learned from managing large numbers of
 <xref linkend="slonik"> scripts.</para>
 </listitem>
 
-<listitem><para> Handling Very Large Replication Sets </para></listitem>
+<listitem><para> Handling Very Large Replication Sets </para>
 
-<listitem><para> Some users have set up replication on replication sets that are
+<para> Some users have set up replication on replication sets that are
 tens to hundreds of gigabytes in size, which puts some added
 <quote>strain</quote> on the system, in particular where it may take
 several days for the <command>COPY_SET</command> event to complete.
@@ -315,6 +316,7 @@ Here are some principles that have been observed for dealing with
 these sorts of situtations.</para></listitem>
 
 </itemizedlist>
+
 <itemizedlist>
 
 <listitem><para> Drop all indices other than the primary key index
@@ -326,8 +328,8 @@ slower than simply copying the data into the table, and then
 recreating each index <quote>ex nihilo</quote>, as the latter can take
 substantial advantage of sort memory. </para>
 
-<para> In version 1.2, indices will be dropped and recreated
-automatically, which would make this unnecessary.</para>
+<para> In a future release, it is hopeful that indices will be dropped
+and recreated automatically, which would eliminate this.</para>
 </listitem>
 
 <listitem><para> If there are large numbers of updates taking place as
@@ -349,12 +351,13 @@ Scans</command> so that even though a particular
 number of those 90,000 <command>SYNC</command> events, it still reads
 through the entire table.  In such a case, you may never see
 replication catch up.
-</para> </listitem>
+</para> 
 
-<listitem><para> Several things can be done that will help, involving
-careful selection of <xref linkend="slon"> parameters:</para></listitem>
-
+<para> Several things can be done that will help, involving
+careful selection of <xref linkend="slon"> parameters:</para>
+</listitem>
 </itemizedlist>
+
 <itemizedlist>
 
 <listitem><para> Ensure that there exists, on the
@@ -390,7 +393,6 @@ linkend="slon">-initiated vacuuming in favor of running your own
 vacuum scripts, as there will be a buildup of unpurgeable data while
 the data is copied and the subscriber starts to catch up. </para>
 </listitem>
-
 </itemizedlist>
 
 </sect1>

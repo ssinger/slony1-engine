@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.11 2005-05-03 21:25:15 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.11.2.1 2005-12-09 22:22:04 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
@@ -44,8 +44,8 @@ as:
 <itemizedlist>
 <listitem><para> Named nodes, named sets</para>
 
-<para> This is supported by the (new in 1.1) <xref
-      linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
+<para> This is supported in &slony1; 1.1 by the <xref
+linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
 </para></listitem>
 
 <listitem><para> Looping and control constructs</para>
@@ -69,12 +69,13 @@ scripts</para>
 <para> The test bed found in the <filename>src/ducttape</filename>
 directory takes this approach.</para></listitem>
 
-<listitem><para> The <xref linkend="altperl"> use Perl code to
-generate Slonik scripts.</para>
+<listitem><para> The <link linkend="altperl"> altperl tools </link>
+use Perl code to generate Slonik scripts.</para>
 
-<para> You define the cluster as a set of Perl objects; each script
-walks through the Perl objects as needed to satisfy whatever it is
-supposed to do.  </para></listitem>
+<para> You define the cluster's configuration as a set of Perl
+objects; each script walks through the Perl objects as needed to
+generate a slonik script for that script's purpose.
+</para></listitem>
 
 </itemizedlist>
 </sect1>
@@ -98,14 +99,16 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
-		table add key (node id = 1, fully qualified name = 'public.history');
+		table add key (node id = 1, fully qualified name = 
+                               'public.history');
 	}
 	on error {
 		exit 1;
 	}
 
 	try {
-		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		create set (id = 1, origin = 1, comment = 
+                            'Set 1 - pgbench tables');
 		set add table (set id = 1, origin = 1,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
@@ -157,12 +160,14 @@ mainset=1
 slonik <<_EOF_
 $PREAMBLE
 try {
-    table add key (node id = $origin, fully qualified name = 'public.history');
+    table add key (node id = $origin, fully qualified name = 
+                   'public.history');
 } on error {
     exit 1;
 }
 try {
-	create set (id = $mainset, origin = $origin, comment = 'Set $mainset - pgbench tables');
+	create set (id = $mainset, origin = $origin, 
+                    comment = 'Set $mainset - pgbench tables');
 	set add table (set id = $mainset, origin = $origin,
 		id = 1, fully qualified name = 'public.accounts',
 		comment = 'Table accounts');
@@ -204,12 +209,14 @@ done
 slonik <<_EOF_
 $PREAMBLE
 try {
-    table add key (node id = $origin, fully qualified name = 'public.history');
+    table add key (node id = $origin, fully qualified name = 
+                   'public.history');
 } on error {
     exit 1;
 }
 try {
-	create set (id = $mainset, origin = $origin, comment = 'Set $mainset - pgbench tables');
+	create set (id = $mainset, origin = $origin, 
+                    comment = 'Set $mainset - pgbench tables');
 $ADDTABLES
 } on error {
 	exit 1;
@@ -241,9 +248,9 @@ scripts</para></listitem>
 </itemizedlist></para>
 
 <para> If you can depend on having <ulink
-     url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
-     url="http://www.zsh.org/"> zsh</ulink>, or <ulink
-     url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
+url="http://www.gnu.org/software/bash/bash.html"> Bash</ulink>, <ulink
+url="http://www.zsh.org/"> zsh</ulink>, or <ulink
+url="http://www.kornshell.com/"> Korn shell</ulink> available, well,
 those are all shells with extensions supporting reasonably
 sophisticated data structures and module systems.  On Linux, Bash is
 fairly ubiquitous; on commercial <trademark>UNIX</trademark>, Korn
@@ -269,14 +276,17 @@ the &slony1; stored functions.</para>
 <para> The developers of &slony1; anticipate that interested parties
 may wish to develop graphical tools as an alternative to Slonik; it
 would be entirely appropriate in such cases to submit configuration
-requests directly via the stored functions.</para>
+requests directly via the stored functions.  If you plan to do so, it
+is suggested that you examine how the stored procedures get used in
+<filename>slonik.c</filename>, as that should be the most
+representative way of seeing correct use of the functions.</para>
 
 <para> When debugging problems in <quote>troubled</quote> &slony1;
 clusters, it has also occasionally proven useful to use the stored
 functions.  This has been particularly useful for cases where <xref
-       linkend="table.sl-listen"> configuration has been broken, and
-events have not been propagating properly.  The <quote>easiest</quote>
-fix was to:</para>
+linkend="table.sl-listen"> configuration has been broken, and events
+have not been propagating properly.  The <quote>easiest</quote> fix
+was to:</para>
 
 <para> <command> select
 _slonycluster.droplisten(li_origin,li_provider,li_receiver) from
