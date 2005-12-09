@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.5,v 1.1.2.1 2005-12-09 22:14:18 cbbrowne Exp $
+$Id: RELEASE-1.1.5,v 1.1.2.2 2005-12-09 23:03:11 cbbrowne Exp $
 
 I need to get the full, voluminous release notes completed, but there
 are a few pointedly tasty improvements in store:
@@ -27,3 +27,40 @@ now be generated.
 
 6.  A fairly large number of minor bugs that have been reported have
 been fixed.
+
+
+*** OUTSTANDING ISSUE WITH PostgreSQL 8.1 ***
+
+PostgreSQL 8.1 is quite a lot more strict about what UTF-8 mappings of
+Unicode characters it accepts as compared to version 8.0.
+
+If you intend to use Slony-I to update an older database to 8.1, and
+might have invalid UTF-8 values, you may be for an unpleasant
+surprise.
+
+Let us suppose we have a database running 8.0, encoding in UTF-8.
+That database will accept the sequence '\060\242' as UTF-8 compliant,
+even though it is really not.
+
+If you replicate into a PostgreSQL 8.1 instance, it will complain
+about this, either at subscribe time, where Slony-I will complain
+about detecting an invalid Unicode sequence during the COPY of the
+data, which will prevent the subscription from proceeding, or, upon
+adding data, later, where this will hang up replication fairly much
+irretrievably.  (You could hack on the contents of sl_log_1, but
+that's *really* unattractive...)
+
+There have been discussions as to what might be done about this.  No
+compelling strategy has yet emerged, as all are unattractive.
+
+If you are using Unicode with PostgreSQL 8.0, you run a considerable
+risk of corrupting data.  
+
+If you use replication for a one-time conversion, there is a risk of
+failure due to the issues mentioned earlier; if that happens, it
+appears likely that the best answer is to fix the data on the 8.0
+system, and retry.
+
+In view of the risks, running replication between versions seems to be
+something you should not keep running any longer than is necessary to
+migrate to 8.1.
