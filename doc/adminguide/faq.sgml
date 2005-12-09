@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.47 2005-11-30 16:28:51 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.48 2005-12-09 19:42:46 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1731,10 +1731,34 @@ SYNC with the provider.  By default, this option is turned off, so the
 default modification to make is to change the second definition of
 <envar> SLON_DATA_FETCH_SIZE </envar> from 10 to 1. </para> </answer>
 
-<answer><para> There are plans to change the behaviour of <xref
-linkend="slon"> to better adapt to the size of these queries for
-version 1.2, so at that point, this note will hopefully become
-obsolete. </para> </answer>
+<answer><para> In version 1.2, configuration values <xref
+linkend="slon-config-max-rowsize"> and <xref
+linkend="slon-config-max-largemem"> are associated with a new
+algorithm that changes the logic as follows.  Rather than fetching 100
+rows worth of data at a time:</para>
+
+<itemizedlist>
+
+<listitem><para> The <command>fetch from LOG</command> query will draw
+in 500 rows at a time where the size of the attributes does not exceed
+<xref linkend="slon-config-max-rowsize">.  With default values, this
+restricts this aspect of memory consumption to about 8MB.  </para>
+</listitem>
+
+<listitem><para> Tuples with larger attributes are loaded until
+aggregate size exceeds the parameter <xref
+linkend="slon-config-max-largemem">.  By default, this restricts
+consumption of this sort to about 5MB.  This value is not a strict
+upper bound; if you have a tuple with attributes 50MB in size, it
+forcibly <emphasis>must</emphasis> be loaded into memory.  There is no
+way around that.  But <xref linkend="slon"> at least won't be trying
+to load in 100 such records at a time, chewing up 10GB of memory by
+the time it's done.  </para> </listitem>
+</itemizedlist>
+
+<para> This should alleviate problems people have been experiencing
+when they sporadically have series' of very large tuples. </para>
+</answer>
 </qandaentry>
 </qandaset>
 
