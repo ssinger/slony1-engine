@@ -1,0 +1,29 @@
+$Id: RELEASE-1.1.5,v 1.1.2.1 2005-12-09 22:14:18 cbbrowne Exp $
+
+I need to get the full, voluminous release notes completed, but there
+are a few pointedly tasty improvements in store:
+
+1.  Compatibility with 8.1.  There was a sort of "interlock" that
+abused pg_listener in order to make sure that each node was being
+managed by one and only one slon process.  Functionality of
+Async_Unlisten() changed in 8.1, so we had to change strategy to use a
+new custom table to manage this.
+
+2.  Greatly Improved SUBSCRIBE SET performance.  Indices are
+temporarily detached during the COPY statements, and then reattached
+and reindexed, which, in principle, should mean that subscribing a set
+should be a bit faster than restoring from pg_dump (with Slony-I all
+the indices are regenerated together, so there should be benefits from
+the data already being in cache).
+
+3.  The New Generation test scripts have been added in, which should
+make it easier to run tests.
+
+4.  Man pages for slon, slonik, as well as all the slonik commands can
+now be generated.
+
+5.  There is official Debian packaging under way, in the
+"experimental" area.
+
+6.  A fairly large number of minor bugs that have been reported have
+been fixed.
