@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.10 2005-11-10 23:39:34 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.11 2005-12-09 21:32:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1570,7 +1570,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 			}
 			if (provider->pa_conninfo != NULL)
 				free(provider->pa_conninfo);
-			if (rtcfg_node->pa_conninfo == NULL)
+			if ((rtcfg_node != NULL) || (rtcfg_node->pa_conninfo == NULL))
 				provider->pa_conninfo = NULL;
 			else
 				provider->pa_conninfo = strdup(rtcfg_node->pa_conninfo);
@@ -3532,7 +3532,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	if (archive_dir) {
 		slon_mkquery(&query1,
-			     "insert into %s.sl_setsync_offline () "
+			     "insert into %s.sl_setsync_offline (ssy_setid, ssy_seqno) "
 			     "values ('%d', '%d');",
 			     rtcfg_namespace, set_id, ssy_seqno);
 		rc = submit_query_to_archive(&query1);
