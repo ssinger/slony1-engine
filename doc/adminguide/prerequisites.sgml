@@ -109,6 +109,30 @@ http://developer.postgresql.org/~wieck/slony1/download/</ulink>
 
 </sect2>
 
+<sect2 id="encoding">
+<title> Database Encoding </title>
+
+<para> &postgres; databases may be created in a number of language
+encodings, set up via the <command>createdb --encoding=$ENCODING
+databasename</command> option.  &slony1; assumes that they use
+<emphasis>identical</emphasis> encodings.
+</para>
+
+<para> If the encodings are <quote>closely equivalent</quote>, you may
+be able to get away with them not being absolutely identical.  For
+instance, if the origin system used <envar>LATIN1</envar> and a
+subscriber used <envar>SQL_ASCII</envar> and another subscriber used
+<envar>UNICODE</envar>, and your application never challenges the
+boundary conditions between these variant encodings, you may never
+experience any problems.  </para>
+
+<para> In &postgres; 8.1, changes were made to the
+<envar>UNICODE</envar> encoding because earlier versions accepted some
+invalid encodings.  This can lead to <link linkend="faqunicode">
+replication problems.</link> </para>
+
+</sect2>
+
 <sect2 id="times">
 <title> Time Synchronization</title>
 

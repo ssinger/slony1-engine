@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.40.2.3 2005-12-09 22:21:49 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40.2.4 2005-12-12 20:45:57 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1758,6 +1758,52 @@ the time it's done.  </para> </listitem>
 
 <para> This should alleviate problems people have been experiencing
 when they sporadically have series' of very large tuples. </para>
+</answer>
+</qandaentry>
+
+<qandaentry id="faqunicode"> <question> <para> I am trying to replicate
+<envar>UNICODE</envar> data from &postgres; 8.0 to &postgres; 8.1, and
+am experiencing problems. </para>
+</question>
+
+<answer> <para> &postgres; 8.1 is quite a lot more strict about what
+UTF-8 mappings of Unicode characters it accepts as compared to version
+8.0.</para>
+
+<para> If you intend to use &slony1; to update an older database to 8.1, and
+might have invalid UTF-8 values, you may be for an unpleasant
+surprise.</para>
+
+<para> Let us suppose we have a database running 8.0, encoding in UTF-8.
+That database will accept the sequence <command>'\060\242'</command> as UTF-8 compliant,
+even though it is really not. </para>
+
+<para> If you replicate into a &postgres; 8.1 instance, it will complain
+about this, either at subscribe time, where &slony1; will complain
+about detecting an invalid Unicode sequence during the COPY of the
+data, which will prevent the subscription from proceeding, or, upon
+adding data, later, where this will hang up replication fairly much
+irretrievably.  (You could hack on the contents of sl_log_1, but
+that quickly gets <emphasis>really</emphasis> unattractive...)</para>
+
+<para>There have been discussions as to what might be done about this.  No
+compelling strategy has yet emerged, as all are unattractive. </para>
+
+<para>If you are using Unicode with &postgres; 8.0, you run a
+considerable risk of corrupting data.  </para>
+
+<para> If you use replication for a one-time conversion, there is a risk of
+failure due to the issues mentioned earlier; if that happens, it
+appears likely that the best answer is to fix the data on the 8.0
+system, and retry. </para>
+
+<para> In view of the risks, running replication between versions seems to be
+something you should not keep running any longer than is necessary to
+migrate to 8.1. </para>
+
+<para> For more details, see the <ulink url=
+"http://archives.postgresql.org/pgsql-hackers/2005-12/msg00181.php">
+discussion on postgresql-hackers mailing list. </ulink>.  </para>
 </answer>
 </qandaentry>
 </qandaset>
