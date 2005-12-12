@@ -68,7 +68,7 @@ do_initdata()
   generate_initdata
   launch_poll
   status "loading data"
-  $pgbindir/psql -h $host $db -U $user < $mktmp/generate.data 1> $LOG 2> $LOG
+  $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi
@@ -82,7 +82,7 @@ do_initdata()
   status "Generate some more data"
   generate_initdata
   status "loading extra data"
-  $pgbindir/psql -h $host $db -U $user < $mktmp/generate.data 1> $LOG 2> $LOG
+  $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
 
   status "done"
 }
