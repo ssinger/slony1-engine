@@ -129,6 +129,9 @@
      include &lt;/tmp/preamble.slonik&gt;;
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.1 </para>
+   </refsect1>
   </refentry>
   <!-- **************************************** -->
   <refentry id ="stmtdefine"><refmeta><refentrytitle>DEFINE</refentrytitle>
@@ -185,6 +188,10 @@ set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',
                comment = 'sakai tapes' );
 echo 'But @sakaiMovies will display as a string, and is not expanded';
     </programlisting>
+   </refsect1>
+
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.1 </para>
    </refsect1>
   </refentry>
 
@@ -245,6 +252,9 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <programlisting>
      CLUSTER NAME = 'testcluster';
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
   
@@ -315,6 +325,9 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      NODE 1 ADMIN CONNINFO = 'dbname=testdb host=server1 user=slony';
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </Refentry>
  </reference>
 <!-- ************************************************************ -->
@@ -348,6 +361,9 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      ECHO 'Node 1 initialized successfully';
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </Refentry>
   
   <!-- **************************************** -->
@@ -379,6 +395,9 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      EXIT 0;
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </Refentry>
 
   <!-- **************************************** -->
@@ -446,6 +465,9 @@ INIT CLUSTER (
 
    </para> </note>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -509,6 +531,12 @@ INIT CLUSTER (
      STORE NODE ( ID = 2, COMMENT = 'Node 2');
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Version Information </title> <para> This command
+   was introduced in &slony1; 1.0.  The <envar>SPOOLNODE</envar>
+   parameter was introduced in version 1.1, but was vestigal in that
+   version.  The described functionality for <envar>SPOOLNODE</envar>
+   arrives in version 1.2. </para>
+   </refsect1>
   </Refentry>
   
 <!-- **************************************** -->
@@ -563,6 +591,9 @@ INIT CLUSTER (
      DROP NODE ( ID = 2 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -616,6 +647,9 @@ INIT CLUSTER (
   UNINSTALL NODE ( ID = 2 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -654,6 +688,9 @@ INIT CLUSTER (
     <programlisting>
   RESTART NODE ( ID = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0; its use should be unnecessary as of version 1.0.5. </para>
    </refsect1>
   </refentry>
   
@@ -723,6 +760,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
            );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 
@@ -766,6 +806,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
   DROP PATH ( SERVER = 1, CLIENT = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
   
@@ -830,6 +873,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      STORE LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title> <para> This command
+   was introduced in &slony1; 1.0.  As of version 1.1, you should no
+   longer need to use this command. </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -874,6 +921,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
      DROP LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title> <para> This command
+   was introduced in &slony1; 1.0.  As of version 1.1, you should not
+   need to use it anymore. </para>
    </refsect1>
   </refentry>
 
@@ -940,6 +991,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      FULLY QUALIFIED NAME = 'public.history' );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
   
 
@@ -1001,6 +1055,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
                COMMENT = 'Tables for ticketing system' );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 
@@ -1045,6 +1102,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
   DROP SET ( ID = 5, 
              ORIGIN = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
  
@@ -1097,6 +1157,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      ADD ID = 9999,
      ORIGIN = 1 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
   </refentry>
 
@@ -1181,6 +1244,9 @@ SET ADD TABLE (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -1249,6 +1315,9 @@ SET ADD TABLE (
      );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
   
 <!-- **************************************** -->
@@ -1298,6 +1367,9 @@ SET ADD TABLE (
      );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0.5 </para>
+   </refsect1>
   </refentry>
   
 <!-- **************************************** -->
@@ -1342,6 +1414,9 @@ SET ADD TABLE (
      ID = 20,
      );
 </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
   </refentry>
   
@@ -1398,6 +1473,9 @@ SET MOVE TABLE (
     NEW SET = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
 </refentry>
   
@@ -1461,6 +1539,9 @@ SET MOVE SEQUENCE (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0.5 </para>
+   </refsect1>
   </refentry>
 
 
@@ -1518,6 +1599,9 @@ STORE TRIGGER (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -1570,6 +1654,9 @@ DROP TRIGGER (
     TRIGGER NAME = 'cache_invalidation'
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
   
@@ -1670,6 +1757,9 @@ SUBSCRIBE SET (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
   
 <!-- **************************************** -->
@@ -1721,6 +1811,9 @@ UNSUBSCRIBE SET (
    RECEIVER = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
 
@@ -1789,6 +1882,9 @@ LOCK SET (
 );
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </Refentry>
 
 <!-- **************************************** -->
@@ -1831,6 +1927,9 @@ UNLOCK SET (
    RECEIVER = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
   
@@ -1905,6 +2004,9 @@ MOVE SET (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -1973,6 +2075,9 @@ FAILOVER (
    BACKUP NODE = 2
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
 
@@ -2077,6 +2182,9 @@ EXECUTE SCRIPT (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -2117,6 +2225,9 @@ UPDATE FUNCTIONS (
     ID = 3        # Update functions on node 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
 
@@ -2187,6 +2298,9 @@ WAIT FOR EVENT (
   WAIT ON = 1
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
  </reference>
