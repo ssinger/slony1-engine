@@ -19,14 +19,12 @@ CREATE TABLE table3(
   CONSTRAINT table3_date_check	CHECK (mod_date <= now())
 ); 
 
-CREATE TABLE table4 (
-  id1 serial,
-  id2 serial,
-  data text,
-  primary key (id1, id2)
+-- Table to perform UTF8 tests (checks multibyte; should be helpful in
+-- preventing problems with Asian character sets too)
+CREATE SEQUENCE utf8_id;
+CREATE TABLE utf8table (
+    id integer not null unique default nextval('utf8_id'),
+    string text,
+    primary key(id)
 );
-
-insert into table4 (data) values ('BA Baracus');
-insert into table4 (data) values ('HM Murdoch');
-insert into table4 (data) values ('Face');
-insert into table4 (data) values ('Hannibal');
+INSERT INTO utf8table (string) VALUES ('1b\303\241r') ;
