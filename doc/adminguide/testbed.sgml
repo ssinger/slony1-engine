@@ -1,7 +1,7 @@
-<!-- $Id: testbed.sgml,v 1.3 2005-11-17 20:56:01 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.4 2005-12-13 21:43:25 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
-<para> As of version 1.2, &slony1; has a common test bed framework
+<para> As of version 1.1.5, &slony1; has a common test bed framework
 intended to better support performing a comprehensive set of tests.
 The code lives in the source tree under the <filename> tests
 </filename> directory.</para>
@@ -28,7 +28,8 @@ run; each such set is stored in a subdirectory of
 
 <para> You may need to set one or more of the following environment
 variables to reflect your local configuration.  For instance, the
-writer runs his <quote>main</quote> test like the following:</para>
+writer runs <quote>test1</quote> against &postgres; 8.0.x using the
+following command line:</para>
 
 <screen> PGBINDIR=/opt/OXRS/dbs/pgsql8/bin PGPORT=5532 PGUSER=cbbrowne ./run_test.sh test1 </screen>
 
@@ -37,7 +38,7 @@ writer runs his <quote>main</quote> test like the following:</para>
 
 <glossdef><para> This determines where the test scripts look for
 &postgres; and &slony1; binaries.  The default is <filename>
-/usr/local/pgsql/bin</filename> </para> 
+/usr/local/pgsql/bin</filename>.</para>
 
 <para> There are also variables <envar>PGBINDIR1</envar> thru
 <envar>PGBINDIR13</envar> which allows you to specify a separate path
@@ -64,7 +65,8 @@ databases. </para>
 
 <para> There are also variables <envar>USER1</envar> thru
 <envar>USER13</envar> which allow specifying a separate user name for
-each database instance.</para>  </glossdef> </glossentry>
+each database instance.  As always, with &slony1;, this needs
+to be a &postgres; <quote>superuser.</quote> </para>  </glossdef> </glossentry>
 
 <glossentry><glossterm> <envar>HOST</envar> </glossterm>
 <glossdef><para> By default, <filename>localhost</filename> is used.
