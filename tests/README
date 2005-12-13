@@ -1,0 +1,53 @@
+ Slony-I HEAD_20051208 Documentation
+Prev Fast_Backward  Fast_Forward Next
+===============================================================================
+****** 21. Slony-I Test Bed Framework ******
+As of version 1.2, Slony-I has a common test bed framework intended to better
+support performing a comprehensive set of tests. The code lives in the source
+tree under the tests directory.
+Here are some of the vital files...
+    * run_test.sh
+This is the central script for running tests. Typical usage is thus:
+./run_test.sh
+usage ./run_test.sh testname
+You need to specify the subdirectory name of the test set to be run; each such
+set is stored in a subdirectory of tests.
+You may need to set one or more of the following environment variables to
+reflect your local configuration. For instance, the writer runs "test1" against
+PostgreSQL 8.0.x using the following command line:
+ PGBINDIR=/opt/OXRS/dbs/pgsql8/bin PGPORT=5532 PGUSER=cbbrowne ./run_test.sh
+test1
+  PGBINDIR
+      This determines where the test scripts look for PostgreSQL and Slony-
+      I binaries. The default is /usr/local/pgsql/bin
+      There are also variables PGBINDIR1 thru PGBINDIR13 which allows you to
+      specify a separate path for each database instance. That will be
+      particularly useful when testing interoperability of Slony-I across
+      different versions of PostgreSQL. In order to create a database of each
+      respective version, you need to point to an initdb of the appropriate
+      version.
+  PGPORT
+      This indicates what port the backend is on. By default, 5432 is used.
+      There are also variables PORT1 thru PORT13 which allows you to specify a
+      separate port number for each database instance. That will be
+      particularly useful when testing interoperability of Slony-I across
+      different versions of PostgreSQL.
+  PGUSER
+      By default, the user postgres is used; this is taken as the default user
+      ID to use for all of the databases.
+      There are also variables USER1 thru USER13 which allow specifying a
+      separate user name for each database instance.  As always, with Slony-I,
+      this needs to be a PostgreSQL "superuser."
+  HOST
+      By default, localhost is used.
+      There are also variables HOST1 thru HOST13 which allow specifying a
+      separate host for each database instance.
+  DB1 thru DB13
+      By default, slonyregress1 thru slonyregress13 are used.
+      You may override these from the environment.
+  ENCODING
+      By default, UNICODE is used, so that tests can create UTF8 tables and
+      test the multibyte capabilities.
+===============================================================================
+Prev                     Home              Next
+Slony-I "Best Practices"  Up  More Slony-I Help
