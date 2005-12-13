@@ -246,6 +246,8 @@ init_origin_rdbms()
 	else
 	  err 3 "No db '${db}' or host '${host}' or user '${user}' or port '${port}' specified"
 	fi
+        status "add plpgsql to Origin"
+        $pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 	status "loading origin DB with $testname/init_schema.sql"
 	$pgbindir/psql -h $host -p $port $db $user < $testname/init_schema.sql 1> ${mktmp}/init_schema.sql.${originnode} 2>${mktmp}/init_schema.sql.${originnode}
 	status "done"
@@ -273,6 +275,8 @@ create_subscribers()
               if [ ${alias} -ne ${originnode} ]; then
 		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
 	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
+		status "add plpgsql to subscriber"
+		$pgbindir/createlang -h $ohost -U $ouser -p $oport plpgsql $odb
 		status "loading subscriber ${alias} DB from $odb"
 	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
 		status "done"
