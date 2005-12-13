@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.28 2005-12-08 15:51:10 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.29 2005-12-13 21:10:08 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -238,7 +238,7 @@ remoteListenThread_main(void *cdata)
 			slon_mkquery(&query1,
 				     /* "listen \"_%s_Event\"; " */
 				     /*	 skip confirms "listen \"_%s_Confirm\"; " */
-				     "select _%s.registerNodeConnection(%d); ",
+				     "select %s.registerNodeConnection(%d); ",
 				     /* rtcfg_cluster_name,  */
 				     rtcfg_namespace, rtcfg_nodeid);
 
