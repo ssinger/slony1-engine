@@ -1,7 +1,12 @@
+# $Id: settings.ik,v 1.4 2005-12-13 21:45:55 cbbrowne Exp $
+# This file contains the various sets of possible DB
+# configuration defaults/overrides
+
 CLUSTER1=${CLUSTER1:-"slony_regress1"}
 CLUSTER2=${CLUSTER2:-"slony_regress2"}
 CLUSTER3=${CLUSTER3:-"slony_regress3"}
 
+# Note that there is only ONE encoding
 ENCODING=${ENCODING:-"UNICODE"}
 
 DB1=${DB1:-"slonyregress1"}
