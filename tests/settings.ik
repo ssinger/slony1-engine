@@ -2,6 +2,7 @@ CLUSTER1=${CLUSTER1:-"slony_regress1"}
 CLUSTER2=${CLUSTER2:-"slony_regress2"}
 CLUSTER3=${CLUSTER3:-"slony_regress3"}
 
+# Note that there is only ONE encoding
 ENCODING=${ENCODING:-"UNICODE"}
 
 DB1=${DB1:-"slonyregress1"}
