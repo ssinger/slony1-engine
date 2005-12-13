@@ -1,12 +1,13 @@
 STORE_NODE
 	ev_data1		no_id
 	ev_data2		no_comment
+	ev_data3		no_spool
 
-	storeNode (no_id, no_comment)
-	storeNode_int (no_id, no_comment)
+	storeNode (no_id, no_comment, no_spool)
+	storeNode_int (no_id, no_comment, no_spool)
 
 	A new initially deactivated node is created. If the node already
-	exists, the no_comment field is updated only.
+	exists, the no_comment and no_spool fields are updated.
 
 
 ENABLE_NODE
