@@ -19,3 +19,4 @@ Linux		2.4.26		AMD64		Feb 2, 2005
 OpenBSD		3.5		SPARC 64		Aug 15, 2004
 OpenBSD		3.5		x86			Aug 15, 2004
 OpenBSD		3.6		x86			Aug 15, 2004
+OpenBSD		3.8		x86			Dec 9, 2005
