@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.74 2005-11-11 13:53:24 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.75 2005-12-14 15:31:32 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3874,11 +3874,6 @@ begin
 	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
 			p_sub_receiver, p_sub_forward);
 
-	-- ----
-	-- Submit listen management events
-	-- ----
-	perform @NAMESPACE@.RebuildListenEntries();
-
 	return v_ev_seqno;
 end;
 ' language plpgsql;
@@ -3931,6 +3926,11 @@ begin
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	if found then
+		-- ----
+		-- Rewrite sl_listen table
+		-- ----
+		perform @NAMESPACE@.RebuildListenEntries();
+
 		return p_sub_set;
 	end if;
 
@@ -3970,7 +3970,9 @@ begin
 				p_sub_provider, p_sub_receiver);
 	end if;
 
+	-- ----
 	-- Rewrite sl_listen table
+	-- ----
 	perform @NAMESPACE@.RebuildListenEntries();
 
 	return p_sub_set;
