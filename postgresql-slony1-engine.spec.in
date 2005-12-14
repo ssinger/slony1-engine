@@ -109,10 +109,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
 %{_datadir}/pgsql/*.sql
-%{_sysconfdir}/slon.conf
+%config(noreplace) %{_sysconfdir}/slon.conf
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
-%{_sysconfdir}/slon_tools.conf
+%config(noreplace) %{_sysconfdir}/slon_tools.conf
 %endif
 
 %if %docs
@@ -122,6 +122,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Dec 14 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
+- Fixed the spec file so that during upgrade, conf files will not be replaced, and a .rpmnew will be created.
+
 * Thu Nov 24 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Created bindir
 
