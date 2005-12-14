@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.29 2005-12-13 21:10:08 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.30 2005-12-14 02:07:01 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -58,9 +58,12 @@ static int remoteListen_forward_confirm(SlonNode * node,
 static int remoteListen_receive_events(SlonNode * node,
 					SlonConn * conn, struct listat * listat);
 
-static int poll_sleep;
-enum pstate_enum {POLL=1, LISTEN};
-static enum pstate_enum pstate;
+typedef enum {
+	SLON_POLLSTATE_POLL=1, 
+	SLON_POLLSTATE_LISTEN
+} PollState;
+static PollState	poll_state;
+static int			poll_sleep;
 
 extern char *lag_interval;
 
@@ -91,6 +94,8 @@ remoteListenThread_main(void *cdata)
 	int64		last_config_seq = 0;
 	int64		new_config_seq = 0;
 
+	PollState	oldpstate;
+
 	slon_log(SLON_DEBUG1,
 			 "remoteListenThread_%d: thread starts\n",
 			 node->no_id);
@@ -103,7 +108,7 @@ remoteListenThread_main(void *cdata)
 	dstring_init(&query1);
 
 	poll_sleep = 0;
-	pstate = POLL;      /* Initially, start in Polling mode */
+	poll_state = SLON_POLLSTATE_POLL;	/* Initially, start in Polling mode */
 
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
 	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name);
@@ -242,7 +247,7 @@ remoteListenThread_main(void *cdata)
 				     /* rtcfg_cluster_name,  */
 				     rtcfg_namespace, rtcfg_nodeid);
 
-			if (pstate == LISTEN) {
+			if (poll_state == SLON_POLLSTATE_LISTEN) {
 				slon_appendquery(&query1, 
 						 "listen \"_%s_Event\"; ",
 						 rtcfg_cluster_name);
@@ -316,7 +321,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Receive events from the provider node
 		 */
-		enum pstate_enum oldpstate = pstate;
+		oldpstate = poll_state;
 		rc = remoteListen_receive_events(node, conn, listat_head);
 		if (rc < 0)
 		{
@@ -331,9 +336,9 @@ remoteListenThread_main(void *cdata)
 
 			continue;
 		}
-		if (oldpstate != pstate) { /* Switched states... */
-			switch (pstate) {
-			case POLL:
+		if (oldpstate != poll_state) { /* Switched states... */
+			switch (poll_state) {
+			case SLON_POLLSTATE_POLL:
 				slon_log(SLON_DEBUG2, 
 					 "remoteListenThread_%d: UNLISTEN\n",
 					 node->no_id);
@@ -342,7 +347,7 @@ remoteListenThread_main(void *cdata)
 					     "unlisten \"_%s_Event\"; ",
 					     rtcfg_cluster_name);
 				break;
-			case LISTEN:
+			case SLON_POLLSTATE_LISTEN:
 				slon_log(SLON_DEBUG2, 
 					 "remoteListenThread_%d: LISTEN\n",
 					 node->no_id);
@@ -801,12 +806,12 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 
 	if (ntuples > 0) {
 		poll_sleep = 0;
-		pstate = POLL;
+		poll_state = SLON_POLLSTATE_POLL;
 	} else {
 		poll_sleep = poll_sleep * 2 + sync_interval;
 		if (poll_sleep > sync_interval_timeout) {
 			poll_sleep = sync_interval_timeout;
-			pstate = LISTEN;
+			poll_state = SLON_POLLSTATE_LISTEN;
 		}
 	}
 	PQclear(res);
