@@ -1,5 +1,5 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 1}
+%{!?docs:%define docs 0}
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
@@ -95,7 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %if %docs
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support RELEASE-1.1.5 RELEASE-1.1.2 RELEASE-1.1.1
 %endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
@@ -110,6 +110,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed Dec 14 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
 - Fixed the spec file so that during upgrade, conf files will not be replaced, and a .rpmnew will be created.
+- Added RELEASE files to docs
 
 * Wed Oct 26 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Modify CPPFLAGS and CFLAGS to fix builds on RHEL -- Per Philip Yarra
