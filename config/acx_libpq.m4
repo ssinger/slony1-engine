@@ -137,12 +137,12 @@ if test -n "$PG_CONFIG_LOCATION"; then
     PG_VERSION=`$PG_CONFIG_LOCATION --version|cut -f2- -d' '|cut -f1 -d'd'|cut -f-2 -d'.'`
 
     AC_MSG_CHECKING(for correct version of PostgreSQL)
-    PG_MAJOR_VERSION=`echo $PG_VERSION |\
+    PG_VERSION_MAJOR=`echo $PG_VERSION |\
            sed 's/\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-    PG_MINOR_VERSION=`echo $PG_VERSION |\
+    PG_VERSION_MINOR=`echo $PG_VERSION |\
            sed 's/\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-    if test "$PG_MAJOR_VERSION" = "7"; then
-	if test $PG_MINOR_VERSION -gt 2; then
+    if test "$PG_VERSION_MAJOR" = "7"; then
+	if test $PG_VERSION_MINOR -gt 2; then
 	    AC_MSG_RESULT($PG_VERSION)
 	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
 	else
@@ -152,7 +152,7 @@ if test -n "$PG_CONFIG_LOCATION"; then
 	    a newer version.)
 	fi
     fi
-    if test "$PG_MAJOR_VERSION" = "8"; then
+    if test "$PG_VERSION_MAJOR" = "8"; then
       AC_MSG_RESULT($PG_VERSION)
       AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
     fi
@@ -170,6 +170,11 @@ if test -n "$PG_CONFIG_LOCATION"; then
 	*)
 	;;
     esac
+	dnl ----
+	dnl Define the detected PostgreSQL version
+	dnl ----
+	AC_DEFINE_UNQUOTED(PG_VERSION_MAJOR,$PG_VERSION_MAJOR,[PostgreSQL major version])
+	AC_DEFINE_UNQUOTED(PG_VERSION_MINOR,$PG_VERSION_MINOR,[PostgreSQL minor version])
 else
     dnl Specify the commandline options here.
     AC_MSG_ERROR(Cannot find pg_config. 

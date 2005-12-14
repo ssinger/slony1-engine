@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.18 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: dbutils.c,v 1.19 2005-12-14 17:57:27 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -31,6 +31,7 @@
 
 static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 
+#if (PG_VERSION_MAJOR < 8)
 /* ----
  * This mutex is used to wrap around PQconnectdb. There's a problem that
  * occurs when your libpq is compiled with libkrb (kerberos) which is not
@@ -41,6 +42,7 @@ static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
  * ----
  */
 static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 
 /* ----------
@@ -56,9 +58,13 @@ slon_connectdb(char *conninfo, char *symname)
 	/*
 	 * Create the native database connection
 	 */
+#if (PG_VERSION_MAJOR < 8)
 	pthread_mutex_lock(&slon_connect_lock);
 	dbconn = PQconnectdb(conninfo);
 	pthread_mutex_unlock(&slon_connect_lock);
+#else
+	dbconn = PQconnectdb(conninfo);
+#endif
 	if (dbconn == NULL)
 	{
 		slon_log(SLON_ERROR,
