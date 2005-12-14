@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.57 2005-12-07 03:51:22 wieck Exp $
+ *	$Id: slon.h,v 1.58 2005-12-14 16:15:22 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -369,6 +369,7 @@ do { \
 		slon_watchdog_pid = -1; \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \
+	pthread_exit(NULL); \
 } while (0)
 #define slon_retry() \
 do { \
@@ -379,6 +380,7 @@ do { \
 		slon_watchdog_pid = -1; \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \
+	pthread_exit(NULL); \
 } while (0)
 #else							/* WIN32 */
 /* On win32, we currently just bail out and let the service control manager
