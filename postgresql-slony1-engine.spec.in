@@ -1,6 +1,8 @@
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 0}
 %{?buildrhel3:%define kerbdir /usr/kerberos}
+%{!?kerbdir:%define kerbdir "/usr"}
+
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
@@ -41,8 +43,8 @@ are available
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
-CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CPPFLAGS
-CFLAGS="${CFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CFLAGS
+CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 # Strip out -ffast-math from CFLAGS....
 
@@ -111,6 +113,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed Dec 21 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
 - Added a buildrhel3 macro to fix RHEL 3 RPM builds
+- Added a kerbdir macro
 
 * Wed Dec 14 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
 - Fixed the spec file so that during upgrade, conf files will not be replaced, and a .rpmnew will be created.

@@ -1,5 +1,8 @@
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 0}
+%{?buildrhel3:%define kerbdir /usr/kerberos}
+%{!?kerbdir:%define kerbdir "/usr"}
+
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
@@ -40,8 +43,8 @@ are available
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
-CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CPPFLAGS
-CFLAGS="${CFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CFLAGS
+CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 # Strip out -ffast-math from CFLAGS....
 
