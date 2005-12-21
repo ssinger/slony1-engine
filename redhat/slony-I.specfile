@@ -1,5 +1,8 @@
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 0}
+%{?buildrhel3:%define kerbdir /usr/kerberos}
+%{!?kerbdir:%define kerbdir "/usr"}
+
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
@@ -51,8 +54,8 @@ The postgresql-slony1-engine-docs package includes some documentation for Slony-
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
-CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CPPFLAGS
-CFLAGS="${CFLAGS} -I%{_includedir}/et -I/usr/kerberos/include" ; export CFLAGS
+CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
+CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 # Strip out -ffast-math from CFLAGS....
 
@@ -111,10 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
 %{_datadir}/pgsql/*.sql
-%{_sysconfdir}/slon.conf
+%config(noreplace) %{_sysconfdir}/slon.conf
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
-%{_sysconfdir}/slon_tools.conf
+%config(noreplace) %{_sysconfdir}/slon_tools.conf
 %endif
 
 %if %docs
@@ -124,6 +127,13 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Dec 21 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
+- Added a buildrhel3 macro to fix RHEL 3 RPM builds
+- Added a kerbdir macro
+
+* Wed Dec 14 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
+- Fixed the spec file so that during upgrade, conf files will not be replaced, and a .rpmnew will be created.
+
 * Thu Nov 24 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Created bindir
 
