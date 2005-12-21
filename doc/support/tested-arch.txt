@@ -8,6 +8,7 @@ FreeBSD		6-CURRENT	x86			Aug 31, 2004
 
 Solaris		2.8		ULTRA SPARC		Aug 31, 2004
 Solaris		2.5		HYPER SPARC		Aug 31, 2004
+Solaris         10              x86-64			December 21, 2005
 
 AIX		4.3		PPC			Aug 31, 2004
 AIX		5.1		PPC			Aug 31, 2004
