@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.14 2005-11-11 17:23:58 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.15 2005-12-22 16:16:25 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3828,7 +3828,7 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	-- ----
-	-- Check that this is called on the receiver node
+	-- Check that this is called on the provider node
 	-- ----
 	if p_sub_provider != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
 		raise exception ''Slony-I: subscribeSet() must be called on provider'';
