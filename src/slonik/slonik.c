@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.54 2005-12-13 21:42:31 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.55 2005-12-23 09:20:52 dpage Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -23,10 +23,6 @@
 #else
 #define sleep(x) Sleep(x*1000)
 #define vsnprintf _vsnprintf
-#ifdef PGSHARE
-#undef PGSHARE
-#endif
-#define PGSHARE "share"
 #define INT64_FORMAT "%I64d"
 #endif
 #include <errno.h>
@@ -45,7 +41,11 @@
 SlonikScript *parser_script = NULL;
 int			parser_errors = 0;
 int			current_try_level;
-char		m_pgshare[1024];
+
+#ifdef WIN32
+static char myfull_path[MAXPGPATH];
+#endif
+static char share_path[MAXPGPATH];
 
 /*
  * Local functions
@@ -115,58 +115,6 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
 
 }
 
-#ifdef WIN32
-/*
- * Attempt to locate share directory. Will add to path of exe,
- * except when the exe is in a "bin" directory, in which case
- * it goes to ../share.
- * This is a very simple view of things - perhaps it needs to be
- * expanded? If so there is more complete code available in the
- * PostgreSQL backend that could be adapted.
- */
-char *
-get_sharepath(const char *path)
-{
-	int			i;
-	char	   *result;
-
-	result = (char *)malloc(MAX_PATH + 1);
-	if (!result)
-	{
-		printf("memory allocation failure.\n");
-		exit(1);
-	}
-
-	memcpy(result, path, strlen(path));
-
-	for (i = strlen(path); i >= 0; i--)
-	{
-		if ((path[i] == '/') || (path[i] == '\\'))
-			break;
-		result[i] = '\0';
-	}
-
-	if (!result[0])
-	{
-		/* Nothing left, so assume subdir of current */
-		strcpy(result, PGSHARE);
-		return result;
-	}
-
-	/* Check if directory of exe is "bin" */
-	if (strlen(result) >= 3 &&
-		!strncasecmp(result + i - 3, "bin", 3) &&
-		(result[i] == '/' || result[i] == '\\'))
-	{
-		/* Strip off bin directory */
-		result[i - 3] = 0;
-	}
-
-	strcat(result, PGSHARE);
-	return result;
-}
-#endif
-
 /* ----------
  * main
  * ----------
@@ -200,10 +148,20 @@ main(int argc, const char *argv[])
 	if (parser_errors)
 		usage();
 #ifndef WIN32
-	strcpy(m_pgshare, PGSHARE);
+        strcpy(share_path, PGSHARE);
 #else
-	/* This begins to look for share. */
-	strcpy(m_pgshare, get_sharepath(argv[0]));
+	/*
+	 * We need to find a share directory like PostgreSQL. 
+	 */
+	if (find_my_exec(argv[0],myfull_path) < 0)
+	{
+		printf("full path was unacquirable. '%s'\n", argv[0]);
+		return -1;
+	}
+	else
+	{
+		get_share_path(myfull_path, share_path);
+	}
 #endif
 	if (optind < argc)
 	{
@@ -1942,15 +1900,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-					"%s/xxid.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
+					"%s/xxid.v%d%d.sql", share_path, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-						   "%s/slony1_base.sql", m_pgshare) < 0
+						   "%s/slony1_base.sql", share_path) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_base.v%d%d.sql", m_pgshare, use_major, use_minor) < 0
+			 "%s/slony1_base.v%d%d.sql", share_path, use_major, use_minor) < 0
 		|| load_sql_script(stmt, adminfo,
-						   "%s/slony1_funcs.sql", m_pgshare) < 0
+						   "%s/slony1_funcs.sql", share_path) < 0
 		|| load_sql_script(stmt, adminfo,
-		   "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.sql", share_path, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -2031,9 +1989,9 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-						"%s/slony1_funcs.sql", m_pgshare) < 0
+						"%s/slony1_funcs.sql", share_path) < 0
 		|| load_sql_script(stmt, adminfo,
-		   "%s/slony1_funcs.v%d%d.sql", m_pgshare, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.sql", share_path, use_major, use_minor) < 0)
 	{
 		db_notice_silent = false;
 		return -1;

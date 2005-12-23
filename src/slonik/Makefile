@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.21 2005-11-11 22:21:05 xfade Exp $
+#	$Id: Makefile,v 1.22 2005-12-23 09:20:52 dpage Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -22,9 +22,11 @@ PROG		= slonik
 
 ifeq ($(PORTNAME), win)
 PROG            = slonik.exe
+LDFLAG		= $(LDFLAG) -lpgport
 endif
 ifeq ($(PORTNAME), win32)
 PROG            = slonik.exe
+LDFLAG		= $(LDFLAG) -lpgport
 endif
 
 OBJS		= 			\
