@@ -545,7 +545,7 @@ INIT CLUSTER (
    
    <refnamediv><refname>DROP NODE</refname>
     
-    <refpurpose> Decommission &slony1; node </refpurpose></refnamediv>
+    <refpurpose> Remove the node from participating in the replication </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>DROP NODE (options);</command>
