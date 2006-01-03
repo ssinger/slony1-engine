@@ -5,14 +5,14 @@
 Summary:	A "master to multiple slaves" replication system with cascading and failover.
 Name:		postgresql-slony1-engine
 Version:	1_1_5
-Release:	1_PG%{pg_version}
+Release:	2_PG%{pg_version}
 License:	Berkeley/BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
 Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
 Source0:	postgresql-slony1-engine-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires:	postgresql-devel
+BuildRequires:	postgresql-devel, openssl-devel
 Requires:	postgresql-server
 
 %if %docs
@@ -108,6 +108,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Jan 03 2006 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
+- Added openssl-devel into buildrequires
+
 * Tue Oct 22 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - 1.1.2 SuSE RPM
 
