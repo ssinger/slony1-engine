@@ -126,6 +126,14 @@ begin
 	return p_seq_id;
 end;
 ' language plpgsql;
+-- ---------------------------------------------------------------------------------------
+-- FUNCTION finishTableAfterCopy(table_id)
+-- ---------------------------------------------------------------------------------------
+-- This can just be a simple stub function; it does not 
+-- ---------------------------------------------------------------------------------------
+create or replace function $clname.finishTableAfterCopy(int4) returns int4 as
+  'select 1'
+language sql;
 
 -- ---------------------------------------------------------------------------------------
 -- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, sync_time)
