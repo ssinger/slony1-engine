@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.20.2.2 2005-12-09 22:22:01 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.20.2.3 2006-01-06 17:05:22 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -8,6 +8,7 @@
   <!entity reference  SYSTEM "reference.sgml">
   <!ENTITY slony1 "<PRODUCTNAME>Slony-I</PRODUCTNAME>">
   <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
+  <!ENTITY nagios "<PRODUCTNAME>Nagios</PRODUCTNAME>">
   <!ENTITY windows "<trademark>Windows</trademark>">
   <!ENTITY logship "<link linkend=logshipping>log shipping</link>">
   <!ENTITY rlocking "<link linkend=locking> locking </link>">

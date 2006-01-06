@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.24.2.1 2005-12-09 22:21:41 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.24.2.2 2006-01-06 17:05:22 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -234,16 +234,6 @@ This is a <emphasis>VERY</emphasis> unsafe script!</para>
 <para>Generates Slonik script to tell all the nodes to update the
 &slony1; functions.  This will typically be needed when you upgrade
 from one version of &slony1; to another.</para>
-</sect2>
-<sect2 id="regenlisten"><title>regenerate-listens</title>
-
-<para>This script connects to a &slony1; node, and queries various
-tables (sl_set, sl_node, sl_subscribe, sl_path) to compute what <xref
-    linkend="stmtstorelisten"> requests should be submitted to the
-cluster.</para>
-
-<para> See the documentation in <xref linkend="autolisten"> for more
-details on how this works.</para>
 </sect2>
 
 </sect1>
