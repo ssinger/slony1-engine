@@ -3,10 +3,10 @@
  *
  *	Database utility functions for Slony-I
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.16 2005-03-08 22:52:37 darcyb Exp $
+ *	$Id: dbutils.c,v 1.16.2.1 2006-01-06 17:07:47 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 

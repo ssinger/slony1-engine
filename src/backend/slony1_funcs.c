@@ -3,10 +3,10 @@
  *
  *	  The C functions and triggers portion of Slony-I.
  *
- *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.33.2.3 2005-11-09 23:53:19 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.33.2.4 2006-01-06 17:07:46 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 

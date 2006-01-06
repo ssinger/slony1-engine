@@ -1,10 +1,10 @@
 # ----------
 # Makefile for src/slonik
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.15 2005-06-02 16:45:18 darcyb Exp $
+#	$Id: Makefile,v 1.15.2.1 2006-01-06 17:07:48 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slonik

@@ -4,10 +4,10 @@
  *	Implementation of the thread listening for events on
  *	a remote node database.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.21.2.1 2005-11-09 16:24:22 wieck Exp $
+ *	$Id: remote_listen.c,v 1.21.2.2 2006-01-06 17:07:47 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -4,10 +4,10 @@
  *
  *	The slonik command language grammar
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.22 2004-12-13 22:08:49 darcyb Exp $
+ *	$Id: parser.y,v 1.22.2.1 2006-01-06 17:07:48 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 

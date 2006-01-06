@@ -3,10 +3,10 @@
  *
  *	The control framework for the node daemon.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.52 2005-05-25 16:10:41 cbbrowne Exp $
+ *	$Id: slon.c,v 1.52.2.1 2006-01-06 17:07:47 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
