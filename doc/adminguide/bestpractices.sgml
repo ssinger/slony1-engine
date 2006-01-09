@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.12 2005-09-30 18:31:48 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.13 2006-01-09 16:41:22 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>

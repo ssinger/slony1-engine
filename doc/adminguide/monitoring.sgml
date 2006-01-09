@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.20 2005-06-22 17:32:27 devrim Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.22 2006-01-17 16:16:09 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -152,13 +152,13 @@ about how the threads work, what to expect in the logs after you run a
 </para>
 </sect2>
 
-<sect2> <title> Nagios Replication Checks </title>
+<sect2> <title> &nagios& Replication Checks </title>
 
 <para> The script in the <filename>tools</filename> directory called
-<command> pgsql_replication_check.pl </command> represents about best
-answers yet arrived at in several attempts to build replication tests
-to plug into the <ulink url="http://www.nagios.org/"> Nagios </ulink>
-system monitoring tool.</para>
+<command> pgsql_replication_check.pl </command> represents some of the
+best answers arrived at in attempts to build replication tests to plug
+into the <ulink url="http://www.nagios.org/"> &nagios; </ulink> system
+monitoring tool.</para>
 
 <para> A former script, <filename>
 test_slony_replication.pl</filename>, took a <quote>clever</quote>
@@ -174,9 +174,10 @@ as though replication was destroyed.  Overall, this monitoring
 approach has been fragile to numerous error conditions.</para>
 </listitem>
 
-<listitem><para> Nagios has no ability to benefit from the
+<listitem><para> &nagios; has no ability to benefit from the
 <quote>cleverness</quote> of automatically exploring the set of nodes.
-</para> </listitem>
+You need to set up a &nagios; monitoring rule for each and every node
+being monitored.  </para> </listitem>
 </itemizedlist>
 
 <para> The new script, <command>pgsql_replication_check.pl</command>,
@@ -200,9 +201,43 @@ most recently created domain.</para> </listitem>
 </itemizedlist>
 
 <para> An instance of the script will need to be run for each node
-that is to be monitored; that is the way
-<application>Nagios</application> works. </para>
+that is to be monitored; that is the way &nagios; works. </para>
 
+</sect2>
+
+<sect2 id="slonymrtg"> <title> Monitoring &slony1; using MRTG </title>
+
+<para> One user reported on the &slony1; mailing list how to configure
+<ulink url="http://people.ee.ethz.ch/~oetiker/webtools/mrtg/">
+<application> mrtg - Multi Router Traffic Grapher </application>
+</ulink> to monitor &slony1; replication.</para>
+
+<para> ... Since I use <application>mrtg</application> to graph data
+from multiple servers I use snmp (<application>net-snmp</application>
+to be exact).  On database server, I added the following line to
+<application>snmpd</application> configuration:
+
+<programlisting>
+exec replicationLagTime  /cvs/scripts/snmpReplicationLagTime.sh 2
+</programlisting>
+
+where <filename> /cvs/scripts/snmpReplicationLagTime.sh</filename> looks like this:
+
+<programlisting>
+#!/bin/bash
+/home/pgdba/work/bin/psql -U pgdba -h 127.0.0.1 -p 5800 -d _DBNAME_ -qAt -c
+"select cast(extract(epoch from st_lag_time) as int8) FROM _irr.sl_status
+WHERE st_received = $1"
+</programlisting>
+
+<para> Then, in mrtg configuration,  add this target:</para>
+<programlisting>
+Target[db_replication_lagtime]:extOutput.3&amp;extOutput.3:public at db::30:::
+MaxBytes[db_replication_lagtime]: 400000000
+Title[db_replication_lagtime]: db: replication lag time
+PageTop[db_replication_lagtime]: &lt;H1&gt;db: replication lag time&lt;/H1&gt;
+Options[db_replication_lagtime]: gauge,nopercent,growright
+</programlisting>
 </sect2>
 
 <sect2 id="testslonystate"> <title> test_slony_state</title>

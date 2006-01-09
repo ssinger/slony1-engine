@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.19 2005-07-01 16:16:08 devrim Exp $ -->
+<!-- $Id: intro.sgml,v 1.20 2006-01-09 16:41:22 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
