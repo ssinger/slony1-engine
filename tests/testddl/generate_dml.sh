@@ -65,10 +65,11 @@ do_initdata()
   eval db=\$DB${originnode}
   eval host=\$HOST${originnode}
   eval user=\$USER${originnode}
+  eval port=\$PORT${originnode}
   generate_initdata
   launch_poll
   status "loading data"
-  $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
+  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi

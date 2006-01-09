@@ -30,3 +30,21 @@ insert into table4 (data) values ('BA Baracus');
 insert into table4 (data) values ('HM Murdoch');
 insert into table4 (data) values ('Face');
 insert into table4 (data) values ('Hannibal');
+
+create sequence billing_discount_seq;
+
+CREATE TABLE billing_discount (
+discount_code character(2) NOT NULL,
+billing_object_type character varying(10) NOT NULL,
+billing_action_type character varying(10) NOT NULL,
+discount_amount numeric(7,2) NOT NULL,
+start_date timestamp with time zone NOT NULL,
+end_date timestamp with time zone NOT NULL,
+billing_discount_id integer DEFAULT nextval('billing_discount_seq'::text) NOT NULL,
+registrar_id integer,
+tld_id integer,
+zone_id integer
+);
+
+ALTER TABLE ONLY billing_discount
+    ADD CONSTRAINT billing_discount_pkey PRIMARY KEY (billing_discount_id);
