@@ -105,10 +105,11 @@ random_number()
     eval odb=\$DB${originnode}
     eval ohost=\$HOST${originnode}
     eval ouser=\$USER${originnode}
+    eval oport=\$PORT${originnode}
     eval _upperbound=${_upperbound}    
     eval _lowerbound=${_lowerbound}
     eval opath=\$PGBINDIR${originnode}
-    rannum=`${opath}/psql -c "SELECT round(random()* ${_upperbound} + ${_lowerbound});" -t -A -h ${ohost} ${odb} ${ouser}`
+    rannum=`${opath}/psql -c "SELECT round(random()* ${_upperbound} + ${_lowerbound});" -t -A -h ${ohost} -p ${oport} -d ${odb} -U ${ouser}`
   ;;
   esac
   echo ${rannum}
@@ -136,10 +137,11 @@ random_string()
     eval odb=\$DB${originnode}
     eval ohost=\$HOST${originnode}
     eval ouser=\$USER${originnode}
+    eval oport=\$PORT${originnode}
     eval opath=\$PGBINDIR${originnode}
     alias=${_length}
     while : ; do
-      ranstring=${ranstring}`${opath}/psql -c "SELECT chr(round(random()*((122-48))+48)::int4);" -t -A -h ${ohost} ${odb} ${ouser}`
+      ranstring=${ranstring}`${opath}/psql -c "SELECT chr(round(random()*((122-48))+48)::int4);" -t -A -h ${ohost} -p ${oport} -d ${odb} -U ${ouser}`
       if [ ${alias} -ge ${_length} ]; then
         break;
       else
@@ -174,9 +176,10 @@ random_az()
     eval odb=\$DB${originnode}
     eval ohost=\$HOST${originnode}
     eval ouser=\$USER${originnode}
+    eval oport=\$PORT${originnode}
     alias=${_length}
     while : ; do
-      ranstring=${ranstring}`psql -c "SELECT chr(round(random()*(((122)-97))+97)::int4);" -t -A -h ${ohost} ${odb} ${ouser}`
+      ranstring=${ranstring}`psql -c "SELECT chr(round(random()*(((122)-97))+97)::int4);" -t -A -h ${ohost} -p ${oport} -d ${odb} -U ${ouser}`
       if [ ${alias} -ge ${_length} ]; then
         break;
       else
