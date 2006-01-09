@@ -254,6 +254,30 @@ init_origin_rdbms()
 	status "done"
 }
 
+create_subscriber () {
+    alias=$1
+    originnode=${ORIGINNODE:-"1"}
+    eval odb=\$DB${originnode}
+    eval ohost=\$HOST${originnode}
+    eval ouser=\$USER${originnode}
+    eval opgbindir=\$PGBINDIR${originnode}
+    eval oport=\$PORT${originnode}
+
+    eval db=\$DB${alias}
+    eval host=\$HOST${alias}
+    eval user=\$USER${alias}
+    eval pgbindir=\$PGBINDIR${alias}
+    eval port=\$PORT${alias}
+
+    status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
+    $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
+    status "add plpgsql to subscriber"
+    $pgbindir/createlang -h $host -U $user -p $port plpgsql $db
+    status "loading subscriber ${alias} DB from $odb"
+    $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
+    status "done"
+}
+
 create_subscribers()
 {
         originnode=${ORIGINNODE:-"1"}
@@ -266,22 +290,10 @@ create_subscribers()
         if [ -n "${odb}" -a "${ohost}" -a "${ouser}" ]; then
           alias=1
           while : ; do
-            eval db=\$DB${alias}
-            eval host=\$HOST${alias}
-            eval user=\$USER${alias}
-	    eval pgbindir=\$PGBINDIR${alias}
-	    eval port=\$PORT${alias}
-
             if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
               if [ ${alias} -ne ${originnode} ]; then
-		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
-	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
-		status "add plpgsql to subscriber"
-		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
-		status "loading subscriber ${alias} DB from $odb"
-	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
-		status "done"
-              fi
+	        create_subscriber ${alias}
+	      fi
               if [ ${alias} -ge ${NUMNODES} ]; then
                 break;
               else
@@ -674,11 +686,11 @@ fi
 
 diff_db
 
-stop_processes
+# stop_processes
 
-status "waiting for slons to die"
-sleep 5
-status "done"
+# status "waiting for slons to die"
+# sleep 5
+# status "done"
 
-drop_databases
-cleanup
+# drop_databases
+# cleanup
