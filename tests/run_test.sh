@@ -165,15 +165,17 @@ store_node()
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
   eval ouser=\$USER${originnode}
+  eval oport=\$PORT${originnode}
 
-  if [ -n "${odb}" -a "${ohost}" -a "${ouser}" ]; then
+  if [ -n "${odb}" -a "${ohost}" -a "${ouser}" -a "${oport}" ]; then
     alias=1
     while : ; do
       eval db=\$DB${alias}
       eval host=\$HOST${alias}
       eval user=\$USER${alias}
+      eval port=\$PORT${alias}
 
-      if [ -n "${db}" -a "${host}" -a "${user}" ]; then
+      if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         if [ ${alias} -ne ${originnode} ]; then
           echo "STORE NODE (id=${alias}, comment='node ${alias}');" >> $mktmp/slonik.script
         fi
@@ -198,16 +200,18 @@ store_path()
     eval db=\$DB${i}
     eval host=\$HOST${i}
     eval user=\$USER${i}
+    eval port=\$PORT${i}
 
-    if [ -n "${db}" -a "${host}" -a "${user}" ]; then
+    if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
       j=1
       while : ; do
         if [ ${i} -ne ${j} ]; then
           eval bdb=\$DB${j}
           eval bhost=\$HOST${j}
           eval buser=\$USER${j}
-          if [ -n "${bdb}" -a "${bhost}" -a "${buser}" ]; then
-	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user}');" >> $mktmp/slonik.script
+          eval bport=\$PORT${j}
+          if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
+	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/slonik.script
           else
             err 3 "No conninfo"
           fi
@@ -405,7 +409,7 @@ launch_poll()
   eval opgbindir=\$PGBINDIR${originnode}
   eval oport=\$PORT${originnode}
   eval cluster=\$CLUSTER1
-  conninfo="-h ${ohost} -p ${oport} ${odb} ${ouser}"
+  conninfo="-h ${ohost} -p ${oport} -d ${odb} -U ${ouser}"
   status "launching polling script"
   case `uname` in
     MINGW32*)
