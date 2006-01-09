@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.40.2.4 2005-12-12 20:45:57 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40.2.5 2006-01-09 16:25:12 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1805,6 +1805,35 @@ migrate to 8.1. </para>
 "http://archives.postgresql.org/pgsql-hackers/2005-12/msg00181.php">
 discussion on postgresql-hackers mailing list. </ulink>.  </para>
 </answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para> I am running &slony1; 1.1 and have a 4+ node setup
+where there are two subscription sets, 1 and 2, that do not share any
+nodes.  I am discovering that confirmations for set 1 never get to the
+nodes subscribing to set 2, and that confirmations for set 2 never get
+to nodes subscribing to set 1.  As a result, <xref
+linkend="table.sl-log-1"> grows and grows and is never purged.  This
+was reported as &slony1; <ulink
+url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1485">
+bug 1485 </ulink>.
+</para>
+</question>
+
+<answer><para> Apparently the code for
+<function>RebuildListenEntries()</function> does not suffice for this
+case.</para>
+
+<para> <function> RebuildListenEntries()</function> will be replaced
+in &slony1; version 1.2 with an algorithm that covers this case. </para>
+
+<para> In the interim, you'll want to manually add some <xref
+linkend="table.sl-listen"> entries using <xref
+linkend="stmtstorelisten"> or <function>storeListen()</function>,
+based on the (apparently not as obsolete as we thought) principles
+described in <xref linkend="listenpaths">.
+
+</para></answer>
 </qandaentry>
 </qandaset>
 
