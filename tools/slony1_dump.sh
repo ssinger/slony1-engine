@@ -155,7 +155,7 @@ begin
 
 	if v_row.ssy_seqno <> p_old_seq then
 		raise exception ''Slony-I: set % is on sync %, this archive log expects %'', 
-			p_set_id, p_old_seq, p_new_seq;
+			p_set_id, v_row.ssy_seqno, p_old_seq;
 	end if;
 	raise notice ''Slony-I: Process set % sync % time %'', p_set_id, p_new_seq, p_sync_time;
 
@@ -212,6 +212,7 @@ for tab in $tables ; do
 	# Get fieldnames...
  	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
  	echo "select 'copy $tabname $fields from stdin;';"
+	echo "copy $tabname $fields to stdout;"
  	printf "select '\\\\\\\\.';"
 done
 
