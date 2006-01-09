@@ -142,9 +142,10 @@ init_preamble() {
 	  eval db=\$DB${alias}
 	  eval host=\$HOST${alias}
 	  eval user=\$USER${alias}
+	  eval port=\$PORT${alias}
 	
-	  if [ -n "${db}" -a "${host}" -a "${user}" ]; then
-	    conninfo="dbname=${db} host=${host} user=${user}"
+	  if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
+	    conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 	    echo "NODE ${alias} ADMIN CONNINFO = '${conninfo}';" >> $mktmp/slonik.script
 	    if [ ${alias} -ge ${NUMNODES} ]; then
 	      break;
@@ -276,7 +277,7 @@ create_subscribers()
 		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
 	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
 		status "add plpgsql to subscriber"
-		$pgbindir/createlang -h $ohost -U $ouser -p $oport plpgsql $odb
+		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 		status "loading subscriber ${alias} DB from $odb"
 	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
 		status "done"
