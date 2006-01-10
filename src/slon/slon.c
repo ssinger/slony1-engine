@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.61 2005-11-22 05:11:59 wieck Exp $
+ *	$Id: slon.c,v 1.62 2006-01-10 15:38:40 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -94,6 +94,7 @@ Usage(char *const argv[])
 	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
 	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
+	fprintf(stderr, "    -o <milliseconds>     desired subscriber SYNC processing time\n");
 	fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
 	fprintf(stderr, "    -c <num>              how often to vacuum in cleanup cycles\n");
 	fprintf(stderr, "    -p <filename>         slon pid file\n");
