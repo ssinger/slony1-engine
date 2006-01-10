@@ -690,11 +690,11 @@ fi
 
 diff_db
 
-# stop_processes
+stop_processes
 
-# status "waiting for slons to die"
-# sleep 5
-# status "done"
+status "waiting for slons to die"
+sleep 5
+status "done"
 
-# drop_databases
-# cleanup
+drop_databases
+cleanup
