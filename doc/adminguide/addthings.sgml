@@ -1,11 +1,11 @@
-<!-- $Id: addthings.sgml,v 1.11.2.1 2006-01-10 17:06:08 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.11.2.2 2006-01-10 19:08:13 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
 
 <para>You may discover that you have missed replicating things that
 you wish you were replicating.</para>
 
-<para>This can be fairly easily remedied.</para>
+<para>This can generally be fairly easily remedied.</para>
 
 <para>You cannot directly use <xref linkend="slonik"> <xref
 linkend="stmtsetaddtable"> or <xref linkend="stmtsetaddsequence"> in
@@ -44,6 +44,9 @@ node reconfigurations by making sure that one change has been
 successfully processed before going on to the next.  It's way easier
 to fix one thing that has broken than to piece things together after
 the interaction of five things that have all broken.</para>
+
+<para> Here are a set of <quote>recipes</quote> for how to do various
+sorts of modifications to replication configuration:</para>
 
 <itemizedlist>
 <listitem><para> Adding a table to replication </para>
