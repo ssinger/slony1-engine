@@ -982,6 +982,21 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     table.  This isn't presently regarded as a serious limitation, as
     we can't see there being terribly much interest in replicating
     tables that contain no application data.</para> </note>
+
+    <caution><para> <command>TABLE ADD KEY</command> <emphasis>should
+    not be used</emphasis> if you can possibly avoid it.  It is
+    emphatically <emphasis>not</emphasis> a <link
+    linkend="bestpractices"> Best Practice.</link> </para>
+
+    <para> The absence of a proper primary key should be a big red
+    flag that the database schema is <emphasis>broken.</emphasis> The
+    <emphasis>right</emphasis> way to repair this is to introduce a
+    proper primary key, not to have &slony1; <quote>fake</quote> one
+    up.</para> 
+
+    <para>It is <emphasis>not</emphasis> supported in <link
+    linkend="logshipping"> log shipping </link>, and will not
+    be.</para> </caution>
     
     <para> This uses &funtableaddkey;. </para>
    </refsect1>
