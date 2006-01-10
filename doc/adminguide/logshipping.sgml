@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.9.2.2 2005-12-09 22:21:58 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.9.2.3 2006-01-10 17:06:09 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -168,7 +168,9 @@ to be initially configured are similarly irrelevant:
 <command>SET_ADD_TABLE</command>,
 <command>SET_ADD_SEQUENCE</command>,
 <command>STORE_TRIGGER</command>,
-<command>DROP_TRIGGER</command>,</para></listitem>
+<command>DROP_TRIGGER</command>,
+<command>TABLE_ADD_KEY</command>
+</para></listitem>
 
 </itemizedlist>
 </para>

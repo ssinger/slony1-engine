@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.9.2.2 2005-12-09 22:21:42 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.9.2.3 2006-01-10 17:06:09 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -145,10 +145,11 @@ replicated table has a true primary key constraint; it is
 <emphasis>acceptable</emphasis> to use a <quote>candidate primary key.</quote></para>
 
 <para> It is <emphasis>not recommended</emphasis> that a
-&slony1;-defined key be used to introduce a candidate primary key, as
-this introduces the possibility that updates to this table can fail
-due to the introduced unique index, which means that &slony1; has
-introduced a new failure mode for your application.</para>
+&slony1;-defined key (created via <xref linkend="stmttableaddkey">) be
+used to introduce a candidate primary key, as this introduces the
+possibility that updates to this table can fail due to the introduced
+unique index, which means that &slony1; has introduced a new failure
+mode for your application.</para>
 </listitem>
 
 <listitem>

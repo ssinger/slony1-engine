@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.40.2.5 2006-01-09 16:25:12 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.40.2.6 2006-01-10 17:06:09 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -593,15 +593,9 @@ linkend="stmtstorelisten"> entries, and in modifying them if the
 structure of the replication <quote>tree</quote>
 changes.</para></listitem>
 
-<listitem><para> Version 1.1 should provide better tools to help
-manage this.</para>
-
-<para> In fact, it does.  <xref linkend="autolisten"> provides a
-heuristic to generate listener entries.  If you are still tied to
-earlier versions, a Perl script, <xref linkend="regenlisten">,
-provides a way of querying a live &slony1; instance and generating the
-<xref linkend="slonik"> commands to generate the listen path
-network.</para></listitem>
+<listitem><para> Version 1.1 provides better tools to help manage
+this.</para>
+</listitem>
 
 </itemizedlist></para>
 
