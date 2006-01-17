@@ -230,16 +230,15 @@ branch location that can't be kept secure compromises security for the
 cluster as a whole.</para>
 
 <para>New in &slony1; version 1.1 is a feature whereby updates for a
-particular replication set may be serialized via a scheme called <link
-linkend="logshipping">log shipping. </link> The data stored in
-<envar>sl_log_1</envar> and <envar>sl_log_2</envar> is also written
-out to log files on disk.  These files may then be transmitted in any
-manner desired, whether via scp, FTP, burning them onto DVD-ROMs and
-mailing them, or, at the frivolous end of the spectrum, by recording
-them on a USB <quote>flash device</quote> and attaching them to birds,
-allowing some equivalent to <ulink
-url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of IP
-datagrams on avian carriers - RFC 1149.</ulink> But whatever the
+particular replication set may be serialized via a scheme called
+&logshiplink;.  The data stored in <envar>sl_log_1</envar> and
+<envar>sl_log_2</envar> is also written out to log files on disk.
+These files may then be transmitted in any manner desired, whether via
+scp, FTP, burning them onto DVD-ROMs and mailing them, or, at the
+frivolous end of the spectrum, by recording them on a USB <quote>flash
+device</quote> and attaching them to birds, allowing some equivalent
+to <ulink url="http://www.faqs.org/rfcs/rfc1149.html"> transmission of
+IP datagrams on avian carriers - RFC 1149.</ulink> But whatever the
 transmission mechanism, this allows one way communications such that
 subscribers that use log shipping have no need of access to other
 &slony1; nodes.</para>

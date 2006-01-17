@@ -1,4 +1,4 @@
-<!-- $Id: listenpaths.sgml,v 1.16 2005-04-13 21:22:57 cbbrowne Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.17 2006-01-17 16:16:09 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
 
 <indexterm><primary>listen paths</primary></indexterm>
@@ -202,12 +202,6 @@ receiver as a provider.</para></listitem>
 linkend="table.sl-path"> are modified,
 <function>RebuildListenEntries()</function> will be called to revise
 the listener paths.</para>
-
-<para> If you are running an earlier version of &slony1;, you may want
-to take a look at <xref linkend="regenlisten">, a Perl script which
-duplicates the functionality of the stored procedure in the form of a
-script that generates the <xref linkend="slonik"> requests to
-generate the listener paths.</para></sect2>
 
 </sect1>
 <!-- Keep this comment at the end of the file

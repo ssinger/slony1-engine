@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.20 2006-01-09 16:41:22 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.21 2006-01-17 16:16:09 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -136,16 +136,37 @@ replication services.</para></sect2>
 <para>&slony1; does not automatically propagate schema changes, nor
 does it have any ability to replicate large objects.  There is a
 single common reason for these limitations, namely that &slony1;
-operates using triggers, and neither schema changes nor large object
-operations can raise triggers suitable to tell &slony1; when those
-kinds of changes take place.</para>
+collects updates using triggers, and neither schema changes nor large
+object operations are able to triggers suitable to inform &slony1;
+when those sorts of changes take place.  As a result, the only
+database objects where &slony1; can replicate updates are tables and
+sequences.  </para>
 
-<para>There is a capability for &slony1; to propagate DDL changes if
-you submit them as scripts via the <application>slonik</application>
-<xref linkend="stmtddlscript"> operation.  That is not
-<quote>automatic;</quote> you have to construct an SQL DDL script and
-submit it, and there are a number of further <link
-linkend="ddlchanges"> caveats.</link></para>
+<para> Note that with the <emphasis>use</emphasis> of triggers comes
+some additional <emphasis>fiddling around with triggers</emphasis>.
+On the <quote>origin</quote> for each replicated table, an additional
+trigger is added which runs the stored procedure <xref
+linkend="function.logtrigger">.  On each subscriber, tables are
+augmented with a trigger that runs the <xref
+linkend="function.denyaccess"> function; this function prevents
+anything other than the <xref linkend="slon"> process from updating
+data in replicated tables.  In addition, any
+<emphasis>other</emphasis> triggers and rules on replicated tables are
+<emphasis>suppressed</emphasis> on the subscribers: This is done by
+pointing them, in the system table, to the primary key index instead
+of to the table itself.  This represents something of a
+<quote>corruption</quote> of the data dictionary, and is why you
+should not directly use <application>pg_dump</application> to dump
+schemas on subscribers. </para>
+
+<para>There is a capability for &slony1; to propagate other kinds of
+database modifications, notably DDL changes, if you submit them as
+scripts via the <application>slonik</application> <xref
+linkend="stmtddlscript"> operation.  That is not handled
+<quote>automaticly;</quote> you, as a database administrator, will
+have to construct an SQL DDL script and submit it, via <xref
+linkend="stmtddlscript"> and there are a number of further <link
+linkend="ddlchanges"> caveats.</link> </para>
 
 <para>If you have those sorts of requirements, it may be worth
 exploring the use of &postgres; 8.X <acronym>PITR</acronym> (Point In
@@ -174,8 +195,8 @@ it is impossible for one replication system to be all things to all
 people.</para>
 
 <para> &slony1; implements a particular model, namely that of
-asynchronous replication, using triggers, where a single
-<quote>origin</quote> may be replicated to multiple
+asynchronous replication, using triggers to collect table updates,
+where a single <quote>origin</quote> may be replicated to multiple
 <quote>subscribers</quote> including cascaded subscribers.</para>
 
 <para> There are a number of other replication models which are

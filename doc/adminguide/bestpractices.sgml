@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.13 2006-01-09 16:41:22 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.14 2006-01-17 16:16:09 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -145,10 +145,11 @@ replicated table has a true primary key constraint; it is
 <emphasis>acceptable</emphasis> to use a <quote>candidate primary key.</quote></para>
 
 <para> It is <emphasis>not recommended</emphasis> that a
-&slony1;-defined key be used to introduce a candidate primary key, as
-this introduces the possibility that updates to this table can fail
-due to the introduced unique index, which means that &slony1; has
-introduced a new failure mode for your application.</para>
+&slony1;-defined key (created via <xref linkend="stmttableaddkey">) be
+used to introduce a candidate primary key, as this introduces the
+possibility that updates to this table can fail due to the introduced
+unique index, which means that &slony1; has introduced a new failure
+mode for your application.</para>
 </listitem>
 
 <listitem>
@@ -249,9 +250,9 @@ active are visible in the process environment.  (And if there are a
 lot of them, they may be a nuisance to read.)</para>
 
 <para> Unfortunately, if you invoke <xref linkend="slon"> from the
-command line, you could <emphasis>forget</emphasis> to include <link
-linkend="logshipping"> log shipping </link> configuration and thereby
-destroy the sequence of logs for a log shipping node. </para>
+command line, you could <emphasis>forget</emphasis> to include
+&logshiplink; configuration and thereby destroy the sequence of logs
+for a log shipping node. </para>
 </listitem>
 
 <listitem> <para> Unlike when command line options are used, the
@@ -261,8 +262,7 @@ configuration file, and will not reflect subsequent changes to the
 configuration file.  </para>
 
 <para> By putting the options in a file, you won't forget including
-any of them, so this is safer for <link linkend="logshipping"> log
-shipping. </link> </para>
+any of them, so this is safer for &logshiplink;. </para>
 </listitem>
 
 </itemizedlist>
