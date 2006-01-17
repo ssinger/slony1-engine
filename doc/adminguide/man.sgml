@@ -1,4 +1,4 @@
-<!-- $Id: man.sgml,v 1.3.2.1 2005-12-09 22:27:47 cbbrowne Exp $ -->
+<!-- $Id: man.sgml,v 1.3.2.2 2006-01-17 16:14:43 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -9,7 +9,7 @@
   <!ENTITY slony1 "<PRODUCTNAME>Slony-I</PRODUCTNAME>">
   <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
   <!ENTITY windows "<trademark>Windows</trademark>">
-  <!ENTITY logship "log shipping">
+  <!ENTITY logshiplink "log shipping">
   <!ENTITY rlocking " locking ">
   <!ENTITY rddlchanges "distribution documentation on DDL changes">
   <!ENTITY rplainpaths "distribution documentation on plain paths">
@@ -43,6 +43,7 @@
   <!ENTITY funsubscribeset "<function>subscribeset(integer,integer,integer,boolean)</function>">
   <!ENTITY slnode "<envar>sl_node</envar>">
   <!ENTITY slconfirm "<envar>sl_confirm</envar>">
+  <!ENTITY bestpracticelink "Best Practice">
 ]>
 
 <book id="slony">

@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.20.2.3 2006-01-06 17:05:22 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.20.2.4 2006-01-17 16:14:43 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -10,7 +10,7 @@
   <!ENTITY postgres "<PRODUCTNAME>PostgreSQL</PRODUCTNAME>">
   <!ENTITY nagios "<PRODUCTNAME>Nagios</PRODUCTNAME>">
   <!ENTITY windows "<trademark>Windows</trademark>">
-  <!ENTITY logship "<link linkend=logshipping>log shipping</link>">
+  <!ENTITY logshiplink "<link linkend=logshipping>log shipping</link>">
   <!ENTITY rlocking "<link linkend=locking> locking </link>">
   <!ENTITY rddlchanges "<xref linkend=ddlchanges>"> 
   <!ENTITY fundroplisten "<xref linkend=function.droplisten-integer-integer-integer>">
@@ -39,6 +39,7 @@
 <!ENTITY fununinstallnode "<xref linkend=function.uninstallnode>">
 <!ENTITY fununlockset "<xref linkend=function.unlockset-integer>">
 <!ENTITY fununsubscribeset "<xref linkend=function.unsubscribeset-integer-integer>">
+  <!ENTITY bestpracticelink "<link linkend=bestpractices>Best Practice</link>">
   <!ENTITY rmissingoids "<link linkend=missingoids>error messages indicating missing OIDs</link>">
   <!ENTITY slnode "<xref linkend=table.sl-node>">
   <!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
@@ -89,7 +90,7 @@
  &locking;
  &addthings;
  &dropthings;
- &logshipping;
+ &logshipfile;
  &ddlchanges;
  &usingslonik;
  &adminscripts;

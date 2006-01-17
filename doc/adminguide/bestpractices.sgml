@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.9.2.3 2006-01-10 17:06:09 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.9.2.4 2006-01-17 16:14:43 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -250,9 +250,9 @@ active are visible in the process environment.  (And if there are a
 lot of them, they may be a nuisance to read.)</para>
 
 <para> Unfortunately, if you invoke <xref linkend="slon"> from the
-command line, you could <emphasis>forget</emphasis> to include <link
-linkend="logshipping"> log shipping </link> configuration and thereby
-destroy the sequence of logs for a log shipping node. </para>
+command line, you could <emphasis>forget</emphasis> to include
+&logshiplink; configuration and thereby destroy the sequence of logs
+for a log shipping node. </para>
 </listitem>
 
 <listitem> <para> Unlike when command line options are used, the
@@ -262,8 +262,7 @@ configuration file, and will not reflect subsequent changes to the
 configuration file.  </para>
 
 <para> By putting the options in a file, you won't forget including
-any of them, so this is safer for <link linkend="logshipping"> log
-shipping. </link> </para>
+any of them, so this is safer for &logshiplink;. </para>
 </listitem>
 
 </itemizedlist>
