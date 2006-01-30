@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.21 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.22 2006-01-30 20:22:20 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -52,7 +52,8 @@ key, as it infers the namespace from the table.</para></listitem>
 <listitem><para> If the table hasn't even got a candidate primary key,
 you can ask &slony1; to provide one.  This is done by first using
 <xref linkend="stmttableaddkey"> to add a column populated using a
-&slony1; sequence, and then having the <xref linkend="stmtsetaddtable"> include the directive
+&slony1; sequence, and then having the <xref
+linkend="stmtsetaddtable"> include the directive
 <option>key=serial</option>, to indicate that &slony1;'s own column
 should be used.</para></listitem>
 
@@ -93,17 +94,20 @@ running transactions that will injure system performance.</para>
 
 <para> If you can split such a large set into several smaller pieces,
 that will shorten the length of each of the transactions, lessening
-the degree of <quote>injury</quote> to performance.</para>
+the degree of the <quote>injury</quote> to performance.</para>
 
 <para> These <quote>negative effects</quote> tend to emerge when the
-database being subscribed to is tens of gigabytes in size.  For
-relatively small databases, this shouldn't be a material factor.
+database being subscribed to is many gigabytes in size and where it
+takes many hours or even days for the subscriber to complete the
+initial data copy.  For relatively small databases, this shouldn't be
+a material factor.
 </para>
 </listitem>
 
 <listitem><para> Any time you invoke <xref linkend="stmtddlscript">,
 this requests a lock on <emphasis> every single table in the
-replication set. </emphasis></para>
+replication set, first, on the origin node, and then, as the event
+propagates to other nodes, to each subscriber node. </emphasis></para>
 
 <para> There have been reports <quote>in the field</quote> of this
 leading to deadlocks such that the <xref linkend="stmtddlscript">
@@ -118,6 +122,10 @@ affect a couple of tables, you might use <xref
 linkend="stmtsetmovetable"> to move them temporarily to a new
 replication set.  By diminishing the number of locks needed, this
 should ease the ability to get the DDL change into place.</para>
+
+<para> There is a further <link linkend="locking"> discussion of
+locking </link> which outlines where &slony1; requires locks likely to
+intrude on your applications.</para>
 </listitem>
 
 </itemizedlist></para>

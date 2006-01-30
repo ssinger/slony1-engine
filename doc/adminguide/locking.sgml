@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.6 2006-01-17 16:16:09 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.7 2006-01-30 20:22:20 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -25,7 +25,7 @@ modifying &slony1; configuration can bring back some of those
 <listitem><para><link linkend="stmtsetaddtable"> <command>set add
 table</command> </link></para>
 
-<para> A momentary table lock must be acquired on the
+<para> A momentary exclusive table lock must be acquired on the
 <quote>origin</quote> node in order to add the trigger that collects
 updates for that table.  It only needs to be acquired long enough to
 establish the new trigger.</para>
@@ -34,10 +34,10 @@ establish the new trigger.</para>
 <listitem><para><link linkend="stmtmoveset"> <command> move
 set</command> </link></para>
 
-<para> When a set origin is shifted from one node to another, locks
-must be acquired on each of the tables on both the old origin and the
-new origin in order to change the triggers on the tables.
-</para></listitem>
+<para> When a set origin is shifted from one node to another,
+exclusive locks must be acquired on each replicated table on both the
+old origin and the new origin in order to change the triggers on the
+tables.  </para></listitem>
 
 <listitem><para><link linkend="stmtlockset"> <command> lock set
 </command> </link> </para>
@@ -56,13 +56,22 @@ being restored.  The operation therefore must acquire table locks on
 all replicated tables on each node. </para>
 </listitem>
 
-<listitem><para> During the <command>COPY_SET</command> event on a new
-subscriber </para>
+<listitem><para> During the <command>SUBSCRIBE_SET</command> event on
+a new subscriber </para>
 
 <para> In a sense, this is the least provocative scenario, since,
 before the replication set has been populated, it is pretty reasonable
 to say that the node is <quote>unusable</quote> and that &slony1;
 could reasonably demand exclusive access to the node. </para>
+
+<para> A change in version 1.2 is that an express <command>LOCK
+TABLE</command> SQL request is submitted in the loop that validates
+that all of the tables are there.  This means that
+<emphasis>all</emphasis> tables in the replication set will be locked
+via an exclusive lock for the entire duration of the process of
+subscription.  By locking the tables early, this means that the
+subscription cannot fail after copying some of the data due to some
+other process having held on to a table. </para>
 </listitem>
 
 </itemizedlist>
