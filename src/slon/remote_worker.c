@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.103 2005-12-07 03:51:21 wieck Exp $
+ *	$Id: remote_worker.c,v 1.104 2006-01-30 19:23:12 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2821,6 +2821,26 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				terminate_log_archive();
 				return -1;
 			}
+		}
+		/* Request an exclusive lock on each table
+
+		   We do this immediately so that we don't get stuck
+		   later if something else had been holding onto one
+		   or another table.
+		 */
+		
+		slon_mkquery(&query3, "lock table %s;\n", tab_fqname);
+		res2 = PQexec(loc_dbconn, dstring_data(&query3));
+		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: Could not lock table %s "
+				 "on subscriber\n", node->no_id, tab_fqname);
+			PQclear(res2);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			dstring_free(&query3);
+			terminate_log_archive();
+			return -1;
 		}
 	}
 	PQclear(res1);
