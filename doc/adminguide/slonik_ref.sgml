@@ -465,6 +465,12 @@ INIT CLUSTER (
 
    </para> </note>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This command creates a new namespace and configures tables
+    therein; no public objects should be locked during the duration of
+    this.</para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -531,6 +537,12 @@ INIT CLUSTER (
      STORE NODE ( ID = 2, COMMENT = 'Node 2');
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This command creates a new namespace and configures tables
+    therein; no public objects should be locked during the duration of
+    this.</para>
+   </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  The <envar>SPOOLNODE</envar>
    parameter was introduced in version 1.1, but was vestigal in that
@@ -591,6 +603,12 @@ INIT CLUSTER (
      DROP NODE ( ID = 2 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> When dropping triggers off of application tables, this will
+    require exclusive access to each replicated table on the node
+    being discarded.</para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -647,6 +665,12 @@ INIT CLUSTER (
   UNINSTALL NODE ( ID = 2 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> When dropping triggers off of application tables, this will
+    require exclusive access to each replicated table on the node
+    being discarded.</para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -688,6 +712,10 @@ INIT CLUSTER (
     <programlisting>
   RESTART NODE ( ID = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0; its use should be unnecessary as of version 1.0.5. </para>
@@ -760,6 +788,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
            );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -806,6 +838,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
   DROP PATH ( SERVER = 1, CLIENT = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -873,6 +909,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      STORE LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  As of version 1.1, you should no
    longer need to use this command. </para>
@@ -921,6 +961,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
      DROP LISTEN ( ORIGIN = 1, RECEIVER = 2, PROVIDER = 3 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  As of version 1.1, you should not
@@ -1004,6 +1048,28 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      FULLY QUALIFIED NAME = 'public.history' );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> On the origin node, this will take out an exclusive lock on
+    the table being modified for as long as it takes to:
+    <itemizedlist>
+    <listitem><para> Alter the table, adding the column;</para></listitem>
+    <listitem><para> Alter each row in the table, attaching the sequence value;</para></listitem>
+    <listitem><para> Adding the new unique index to the table.</para></listitem>
+    </itemizedlist>
+
+    <para> On subscriber nodes, these alterations take place on the
+    table when it is empty, and do not add any particular additional
+    burden to subscription time where the table will be locked on the
+    subscriber node.</para> 
+
+    <para> If the table is large and frequently updated, by your
+    applications, this will impose a not-insignificant application
+    outage for the duration of the time it takes to modify the table
+    on the origin node.  That is why it is recommended that this
+    command should not be used if you can possibly avoid it.</para>
+
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1068,6 +1134,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
                COMMENT = 'Tables for ticketing system' );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1115,6 +1185,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
   DROP SET ( ID = 5, 
              ORIGIN = 2 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> On each node, this will require taking out exclusive locks
+    on each replicated table in order to modify the table schema to
+    clean up the triggers and rules.  </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -1170,6 +1246,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      ADD ID = 9999,
      ORIGIN = 1 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
@@ -1257,6 +1337,14 @@ SET ADD TABLE (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> On the origin node, this operation requires a brief
+    exclusive lock on the table in order to alter it to add the
+    replication trigger.  On subscriber nodes, corresponding locking
+    takes place at the time of the <command>SUBSCRIBE_SET</command>
+    event.  </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1328,6 +1416,10 @@ SET ADD TABLE (
      );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1356,7 +1448,7 @@ SET ADD TABLE (
      Drop a table from a replication set.
     </para>
     <para>
-     Note that this action will <emphasis> not </emphasis> drop a
+     Note that this action will <emphasis>not</emphasis> drop a
      candidate primary key created using <xref
      linkend="stmttableaddkey">.
      
@@ -1379,6 +1471,13 @@ SET ADD TABLE (
      ID = 20
      );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This operation must acquire an exclusive lock on the table
+    being dropped from replication in order to alter it to drop the
+    replication trigger.  On subscriber nodes, this also involves
+    adding back any rules/triggers that have been hidden. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
@@ -1427,6 +1526,10 @@ SET ADD TABLE (
      ID = 20,
      );
 </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
@@ -1486,6 +1589,10 @@ SET MOVE TABLE (
     NEW SET = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
@@ -1552,6 +1659,10 @@ SET MOVE SEQUENCE (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
@@ -1612,6 +1723,12 @@ STORE TRIGGER (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This operation will need to acquire an exclusive lock on
+    the specified table on each node to which it applies in order to
+    alter table schemas to add back the trigger. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1667,6 +1784,12 @@ DROP TRIGGER (
     TRIGGER NAME = 'cache_invalidation'
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This operation will need to acquire an exclusive lock on
+    the specified table on each node to which it applies in order to
+    alter table schemas to remove the trigger. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -1770,6 +1893,19 @@ SUBSCRIBE SET (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> This operation does <emphasis>not</emphasis> require
+    acquiring any locks on the provider node.</para>
+
+    <para> On the subscriber node, it will have the effect of locking
+    every table in the replication set.  In version 1.2, exclusive
+    locks are acquired at the beginning of the process; in earlier
+    versions, locks were acquired implicitly as activity mandated it,
+    which left some risk of deadlock if other applications could
+    access the subscriber database at this time.
+    </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1824,6 +1960,12 @@ UNSUBSCRIBE SET (
    RECEIVER = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Exclusive locks on each replicated table will be taken out
+    on the subscriber in order to drop replication triggers from the
+    tables and restore other triggers/rules. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -1895,6 +2037,12 @@ LOCK SET (
 );
     </Programlisting>
    </Refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Exclusive locks on each replicated table will be taken out
+    on the origin node, and triggers are added to each such table that
+    reject table updates. </para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1940,6 +2088,12 @@ UNLOCK SET (
    RECEIVER = 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Exclusive locks on each replicated table will be taken out
+    on the origin node, as the triggers are removed from each table
+    that reject table updates. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -2017,6 +2171,12 @@ MOVE SET (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Exclusive locks on each replicated table will be taken out
+    on both the old origin node and the new origin node, as
+    replication triggers are changed on both nodes.</para>
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2088,6 +2248,15 @@ FAILOVER (
    BACKUP NODE = 2
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Exclusive locks on each replicated table will be taken out
+    on both the new origin node as replication triggers are changed.
+    If the new origin was not completely up to date, and replication
+    data must be drawn from some other node that is more up to date,
+    the new origin will not become usable until those updates are
+    complete. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -2195,6 +2364,19 @@ EXECUTE SCRIPT (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> Each replicated table receives an exclusive lock, on the
+    origin node, in order to remove the replication triggers; after
+    the DDL script completes, those locks will be cleared. </para>
+
+    <para> After the DDL script has run on the origin node, it will
+    then run on subscriber nodes, where replicated tables will be
+    similarly altered to remove replication triggers, therefore
+    requiring that exclusive locks be taken out on each node, in
+    turn. </para>
+
+   </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2238,6 +2420,10 @@ UPDATE FUNCTIONS (
     ID = 3        # Update functions on node 3
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -2311,6 +2497,10 @@ WAIT FOR EVENT (
   WAIT ON = 1
 );
     </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
