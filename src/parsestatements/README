@@ -1,0 +1,10 @@
+scanner.c is a scanner which uses a state machine to walk through a
+set of SQL statements and identify where the ends of statements are
+(e.g. - relevant ";"'s).
+
+It needs to handle various forms of quoting, notably with "double
+quotes", 'single quotes', and $dol$dollar quoting$dol$.
+
+This will need to get integrated into both slon and slonik in order
+to split DDL requests being submitted via EXECUTE SCRIPT into
+individual statements.
