@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.21 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.22 2006-02-24 18:44:18 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -221,11 +221,14 @@ model of the XA transaction processing protocol.</para>
 
 <listitem><para> Synchronous multi-origin multi-subscriber replication </para> 
 
-<para> This is the model being used by the forthcoming
+<para> This is the model being used by the possibly-forthcoming
 <productname>Slony-II</productname> system.  Synchronous replication
 systems all <quote>suffer</quote> from the performance bottleneck that
 updates must be accepted on all nodes before they can be
 <command>commit</command>ted anywhere.  </para>
+
+<para> That generally makes it impractical to run synchronous
+replication across wide area networks. </para>
 </listitem>
 
 <listitem><para> Asynchronous multimaster replication with conflict

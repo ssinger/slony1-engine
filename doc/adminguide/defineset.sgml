@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.22 2006-01-30 20:22:20 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.23 2006-02-24 18:44:18 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -23,8 +23,10 @@ suitable primary key</para></listitem>
 <para>&slony1; <emphasis>needs</emphasis> to have a primary key or
 candidate thereof on each table that is replicated.  PK values are
 used as the primary identifier for each tuple that is modified in the
-source system.  There are three ways that you can get &slony1; to use
-a primary key:</para>
+source system.  Note that they can be composite keys composed of
+multiple NOT NULL columns; they don't need to consist of single
+fields.  There are three ways that you can get &slony1; to use a
+primary key:</para>
 
 <itemizedlist>
 
