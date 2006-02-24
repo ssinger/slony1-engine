@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.55 2005-12-23 09:20:52 dpage Exp $
+ *	$Id: slonik.c,v 1.56 2006-02-24 20:02:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1119,6 +1119,25 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				}
 				break;
 
+			case STMT_SWITCH_LOG:
+				{
+					SlonikStmt_switch_log *stmt =
+					(SlonikStmt_switch_log *) hdr;
+
+					if (stmt->no_id == -1)
+					{
+						printf("%s:%d: Error: "
+							   "node ID must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
+
+				}
+				break;
+
 		}
 
 		hdr = hdr->next;
@@ -1540,6 +1559,16 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_wait_event *) hdr;
 
 					if (slonik_wait_event(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_SWITCH_LOG:
+				{
+					SlonikStmt_switch_log *stmt =
+					(SlonikStmt_switch_log *) hdr;
+
+					if (slonik_switch_log(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -4067,6 +4096,35 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 
 	dstring_free(&query);
 
+	return 0;
+}
+
+
+int
+slonik_switch_log(SlonikStmt_switch_log * stmt)
+{
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+				 "select \"_%s\".logswitch_start(); ",
+				 stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
 	return 0;
 }
 

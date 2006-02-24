@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.76 2005-12-22 16:17:40 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.77 2006-02-24 20:02:37 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5090,9 +5090,136 @@ comment on function @NAMESPACE@.updateReloid(int4, int4) is
 Updates the respective reloids in sl_table and sl_seqeunce based on
 their respective FQN';
 
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logswitch_start()
+--
+--	Called by slonik to initiate a switch from sl_log_1 to sl_log_2 and
+--  visa versa.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logswitch_start()
+returns int4 as '
+DECLARE
+	v_current_status	int4;
+BEGIN
+	-- ----
+	-- Grab the central configuration lock to prevent race conditions
+	-- while changing the sl_log_status sequence value.
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the current log status.
+	-- ----
+	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
+
+	-- ----
+	-- status = 0: sl_log_1 active, sl_log_2 clean
+	-- Initiate a switch to sl_log_2.
+	-- ----
+	if v_current_status = 0 then
+		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 3);
+		raise notice ''Logswitch to sl_log_2 initiated'';
+		return 2;
+	end if;
+
+	-- ----
+	-- status = 1: sl_log_2 active, sl_log_1 clean
+	-- Initiate a switch to sl_log_1.
+	-- ----
+	if v_current_status = 1 then
+		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 2);
+		raise notice ''Logswitch to sl_log_1 initiated'';
+		return 1;
+	end if;
+
+	raise exception ''Previous logswitch still in progress'';
+END;
+' language plpgsql;
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logswitch_finish()
+--
+--	Called from the cleanup thread to eventually finish a logswitch
+--  that is in progress.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logswitch_finish()
+returns int4 as '
+DECLARE
+	v_current_status	int4;
+	v_dummy				record;
+BEGIN
+	-- ----
+	-- Grab the central configuration lock to prevent race conditions
+	-- while changing the sl_log_status sequence value.
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get the current log status.
+	-- ----
+	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
+
+	-- ----
+	-- status value 0 or 1 means that there is no log switch in progress
+	-- ----
+	if v_current_status = 0 or v_current_status = 1 then
+		return 0;
+	end if;
+
+	-- ----
+	-- status = 2: sl_log_1 active, cleanup sl_log_2
+	-- ----
+	if v_current_status = 2 then
+		-- ----
+		-- The cleanup thread calls us after it did the delete and
+		-- vacuum of both log tables. If sl_log_2 is empty now, we
+		-- can truncate it and the log switch is done.
+		-- ----
+		for v_dummy in select 1 from @NAMESPACE@.sl_log_2 loop
+			-- ----
+			-- Found a row ... log switch is still in progress.
+			-- ----
+			raise notice ''Slony-I: log switch to sl_log_1 still in progress - sl_log_2 not truncated'';
+			return -1;
+		end loop;
+
+		raise notice ''Slony-I: log switch to sl_log_1 complete - truncate sl_log_2'';
+		truncate @NAMESPACE@.sl_log_2;
+		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 0);
+		return 1;
+	end if;
+
+	-- ----
+	-- status = 3: sl_log_2 active, cleanup sl_log_1
+	-- ----
+	if v_current_status = 3 then
+		-- ----
+		-- The cleanup thread calls us after it did the delete and
+		-- vacuum of both log tables. If sl_log_2 is empty now, we
+		-- can truncate it and the log switch is done.
+		-- ----
+		for v_dummy in select 1 from @NAMESPACE@.sl_log_1 loop
+			-- ----
+			-- Found a row ... log switch is still in progress.
+			-- ----
+			raise notice ''Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated'';
+			return -1;
+		end loop;
+
+		raise notice ''Slony-I: log switch to sl_log_2 complete - truncate sl_log_1'';
+		truncate @NAMESPACE@.sl_log_1;
+		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 1);
+		return 2;
+	end if;
+END;
+' language plpgsql;
+
+
 -- ----------------------------------------------------------------------
 -- FUNCTION upgradeSchema(old_version)
-        -- upgrade sl_node
+-- upgrade sl_node
 --
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------

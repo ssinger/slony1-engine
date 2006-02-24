@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.29 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.30 2006-02-24 20:02:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -123,7 +123,8 @@ cleanupThread_main(void *dummy)
 	 * cluster will run into conflicts due to trying to vacuum pg_listener
 	 * concurrently
 	 */
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
+	// while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 300 * 1000) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
@@ -146,7 +147,7 @@ cleanupThread_main(void *dummy)
 				 TIMEVAL_DIFF(&tv_start, &tv_end));
 
 		/*
-		 * Clean up the logs
+		 * Clean up the logs and eventually finish switching logs
 		 */
 		gettimeofday(&tv_start, NULL);
 		slon_mkquery(&query2,
@@ -180,15 +181,17 @@ cleanupThread_main(void *dummy)
 						 "and log_xid < '%s'; "
 						 "delete from %s.sl_seqlog "
 						 "where seql_origin = '%s' "
-						 "and seql_ev_seqno < '%s'; ",
+						 "and seql_ev_seqno < '%s'; "
+						 "select %s.logswitch_finish(); ",
 						 rtcfg_namespace, PQgetvalue(res, t, 0),
 						 PQgetvalue(res, t, 2),
 						 rtcfg_namespace, PQgetvalue(res, t, 0),
 						 PQgetvalue(res, t, 2),
 						 rtcfg_namespace, PQgetvalue(res, t, 0),
-						 PQgetvalue(res, t, 1));
+						 PQgetvalue(res, t, 1),
+						 rtcfg_namespace);
 			res2 = PQexec(dbconn, dstring_data(&query2));
-			if (PQresultStatus(res2) != PGRES_COMMAND_OK)
+			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_FATAL,
 						 "cleanupThread: \"%s\" - %s",

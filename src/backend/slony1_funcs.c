@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.38 2005-11-30 16:40:40 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.39 2006-02-24 20:02:37 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -99,6 +99,7 @@ typedef struct slony_I_cluster_status
 	void	   *plan_insert_log_1;
 	void	   *plan_insert_log_2;
 	void	   *plan_record_sequences;
+	void	   *plan_get_logstatus;
 
 	text	   *cmdtype_I;
 	text	   *cmdtype_U;
@@ -451,10 +452,33 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	 */
 	if (!TransactionIdEquals(cs->currentXid, newXid))
 	{
+		int32	log_status;
+
 		/*
 		 * Determine the currently active log table
 		 */
-		cs->plan_active_log = cs->plan_insert_log_1;
+		if(SPI_execp(cs->plan_get_logstatus, NULL, NULL, 0) < 0)
+			elog(ERROR, "Slony-I: cannot determine log status");
+		if (SPI_processed != 1)
+			elog(ERROR, "Slony-I: cannot determine log status");
+		
+		log_status = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
+									SPI_tuptable->tupdesc, 1, NULL));
+		SPI_freetuptable(SPI_tuptable);
+
+		switch(log_status)
+		{
+			case 0:
+			case 2:		cs->plan_active_log = cs->plan_insert_log_1;
+						break;
+			
+			case 1:
+			case 3:		cs->plan_active_log = cs->plan_insert_log_2;
+						break;
+
+			default:	elog(ERROR, "Slony-I: illegal log status %d", log_status);
+						break;
+		}
 
 		cs->currentXid = newXid;
 	}
@@ -1424,6 +1448,10 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->cmdtype_D = malloc(VARHDRSZ + 1);
 		VARATT_SIZEP(cs->cmdtype_D) = VARHDRSZ + 1;
 		*VARDATA(cs->cmdtype_D) = 'D';
+
+		sprintf(query, "SELECT last_value::int4 FROM %s.sl_log_status",
+				cs->clusterident);
+		cs->plan_get_logstatus = SPI_saveplan(SPI_prepare(query, 0, NULL));
 
 		cs->cmddata_size = 8192;
 		cs->cmddata_buf = (text *) malloc(8192);

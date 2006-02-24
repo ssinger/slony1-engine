@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.104 2006-01-30 19:23:12 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.105 2006-02-24 20:02:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4833,6 +4833,8 @@ sync_helper(void *cdata)
 	struct timeval tv_start;
 	struct timeval tv_now;
 	int			first_fetch;
+	int			log_status;
+	int			rc;
 
 	WorkerGroupLine *data_line[SLON_DATA_FETCH_SIZE];
 	int			data_line_alloc;
@@ -4841,6 +4843,7 @@ sync_helper(void *cdata)
 
 	PGresult   *res;
 	PGresult   *res2;
+	PGresult   *res3;
 	int			ntuples;
 	int			tupno;
 
@@ -4901,12 +4904,49 @@ sync_helper(void *cdata)
 			}
 
 			/*
+			 * Get the current sl_log_status value
+			 */
+			slon_mkquery(&query, "select last_value from %s.sl_log_status",
+						rtcfg_namespace);
+			res3 = PQexec(dbconn, dstring_data(&query));
+			rc = PQresultStatus(res3);
+			if (rc != PGRES_TUPLES_OK)
+			{
+				slon_log(SLON_ERROR,
+						 "remoteWorkerThread_%d: \"%s\" %s %s",
+						 node->no_id, dstring_data(&query),
+						 PQresStatus(rc),
+						 PQresultErrorMessage(res3));
+				PQclear(res3);
+				errors++;
+				break;
+			}
+			if (PQntuples(res3) != 1)
+			{
+				slon_log(SLON_ERROR,
+						 "remoteWorkerThread_%d: \"%s\" %s returned %d tuples\n",
+						 node->no_id, dstring_data(&query),
+						 PQresStatus(rc), PQntuples(res3));
+				PQclear(res3);
+				errors++;
+				break;
+			}
+			log_status = strtol(PQgetvalue(res3, 0, 0), NULL, 10);
+			PQclear(res3);
+			slon_log(SLON_DEBUG2,
+					 "remoteWorkerThread_%d: current log_status = %d\n", 
+					 node->no_id, log_status);
+					
+			/*
 			 * Open a cursor that reads the log data.
 			 *
-			 * TODO: need to change this into a conditional sl_log_n selection
-			 * depending on the logstatus.
+			 *	Depending on sl_log_status select from sl_log_1,
+			 *	sl_log_2 or both.
 			 */
-			slon_mkquery(&query,
+			switch (log_status)
+			{
+				case 0:
+					slon_mkquery(&query,
 						 "declare LOG cursor for select "
 						 "    log_origin, log_xid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
@@ -4918,6 +4958,60 @@ sync_helper(void *cdata)
 						 sync_max_rowsize,
 						 rtcfg_namespace,
 						 dstring_data(&(provider->helper_qualification)));
+					break;
+
+				case 1:
+					slon_mkquery(&query,
+						 "declare LOG cursor for select "
+						 "    log_origin, log_xid, log_tableid, "
+						 "    log_actionseq, log_cmdtype, "
+						 "    octet_length(log_cmddata), "
+						 "    case when octet_length(log_cmddata) <= %d "
+						 "        then log_cmddata "
+						 "        else null end "
+						 "from %s.sl_log_2 %s order by log_actionseq; ",
+						 sync_max_rowsize,
+						 rtcfg_namespace,
+						 dstring_data(&(provider->helper_qualification)));
+					break;
+
+				case 2:
+				case 3:
+					slon_mkquery(&query,
+						 "declare LOG cursor for select * from ("
+						 "  select log_origin, log_xid, log_tableid, "
+						 "    log_actionseq, log_cmdtype, "
+						 "    octet_length(log_cmddata), "
+						 "    case when octet_length(log_cmddata) <= %d "
+						 "        then log_cmddata "
+						 "        else null end "
+						 "  from %s.sl_log_1 %s "
+						 "  union all "
+						 "  select log_origin, log_xid, log_tableid, "
+						 "    log_actionseq, log_cmdtype, "
+						 "    octet_length(log_cmddata), "
+						 "    case when octet_length(log_cmddata) <= %d "
+						 "        then log_cmddata "
+						 "        else null end "
+						 "  from %s.sl_log_2 %s) as log_union "
+						 "order by log_actionseq; ",
+						 sync_max_rowsize,
+						 rtcfg_namespace,
+						 dstring_data(&(provider->helper_qualification)),
+						 sync_max_rowsize,
+						 rtcfg_namespace,
+						 dstring_data(&(provider->helper_qualification)));
+					break;
+
+				default:
+					slon_log(SLON_ERROR,
+						 "remoteWorkerThread_%d: unexpected log_status %d\n",
+						 node->no_id, log_status);
+					errors++;
+					break;
+			}
+			if (errors)
+				break;
 
 			gettimeofday(&tv_start, NULL);
 			first_fetch = true;

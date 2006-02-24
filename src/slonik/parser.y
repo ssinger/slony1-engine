@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.23 2005-07-15 17:56:02 darcyb Exp $
+ *	$Id: parser.y,v 1.24 2006-02-24 20:02:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -159,6 +159,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_update_functions
 %type <statement>	stmt_repair_config
 %type <statement>	stmt_wait_event
+%type <statement>	stmt_switch_log
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -201,6 +202,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_KEY
 %token	K_LISTEN
 %token	K_LOCK
+%token	K_LOG
 %token	K_MERGE
 %token	K_MOVE
 %token	K_NAME
@@ -227,6 +229,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_STORE
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
+%token	K_SWITCH
 %token	K_TABLE
 %token	K_TIMEOUT
 %token	K_TRIGGER
@@ -474,6 +477,8 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 						{ $$ = $1; }
 					| stmt_wait_event
+						{ $$ = $1; }
+					| stmt_switch_log
 						{ $$ = $1; }
 					| stmt_error ';' 
 						{ yyerrok;
@@ -1435,6 +1440,32 @@ stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 							new->wait_confirmed	= opt[1].ival;
 							new->wait_on		= opt[2].ival;
 							new->wait_timeout	= opt[3].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_switch_log		: lno K_SWITCH K_LOG option_list
+					{
+						SlonikStmt_switch_log *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_switch_log *)
+								malloc(sizeof(SlonikStmt_switch_log));
+						memset(new, 0, sizeof(SlonikStmt_switch_log));
+						new->hdr.stmt_type		= STMT_SWITCH_LOG;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
 						}
 						else
 							parser_errors++;
