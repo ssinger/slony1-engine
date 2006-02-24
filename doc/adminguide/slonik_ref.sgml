@@ -1216,15 +1216,18 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <title>Description</title>
     
     <para> Merge a set of tables and sequences into another one. This
-     function is a workaround for the problem that it is not possible
-     to add tables/sequences to already-subscribed sets. One may create
-     a temporary set, add the new objects to that, subscribe all nodes
-     currently subscribed to the other set to this new one, and then
-     merge the two together.
+    function is a workaround for the problem that it is not possible
+    to add tables/sequences to already-subscribed sets. One may create
+    a temporary set, add the new objects to that, subscribe all nodes
+    currently subscribed to the other set to this new one, and then
+    merge the two together, eliminating the set ID that was being
+    added.
     </para>
+
     <para>
-     This request will fail if the two sets do not have
-     <emphasis>exactly</emphasis> the same set of subscribers.  </para>
+     This operation will refuse to be run if the two sets do not have
+     <emphasis>exactly</emphasis> the same set of subscribers.
+     </para>
     
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
