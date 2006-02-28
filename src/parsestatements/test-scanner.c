@@ -22,4 +22,6 @@ int main (int argc, char *const argv[]) {
     }
     START = STMTS[i];
   }
+
+  return 0;
 }

@@ -15,3 +15,5 @@ test: test-scanner
 	cmp ./emptytestresult.log emptytestresult.expected
 	./test-scanner < ./test_sql.sql > test_sql.log
 	cmp ./test_sql.log ./test_sql.expected
+
+install:
