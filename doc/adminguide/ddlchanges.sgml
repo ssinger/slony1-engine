@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.21 2006-02-28 17:27:51 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.22 2006-02-28 22:49:50 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -132,15 +132,15 @@ entire set of queries based on the state of the database at the
 independent of one another, such as if you add two columns to a
 table.</para>
 
-<command> alter table t1 add column c1 integer; alter table t1 add
-column c2 integer; </command>
+<para> <command> alter table t1 add column c1 integer; alter table t1 add
+column c2 integer; </command></para>
 
 <para> Trouble arises if a subsequent query needs to reference an
 earlier one.  Consider the following DDL statements...  </para>
 
-<command> alter table t1 add column c1 integer; create sequence s1;
+<para><command> alter table t1 add column c1 integer; create sequence s1;
 update t1 set c1=nextval('s1'); alter table t1 alter column c1 set not
-null; alter table t1 add primary key(c1); </command>
+null; alter table t1 add primary key(c1); </command></para>
 
 <para> Up until &slony1; version 1.2, this query would <emphasis> fail
 </emphasis>.  It would specifically fail upon reaching the
