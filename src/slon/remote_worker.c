@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.106 2006-02-28 17:27:51 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.107 2006-02-28 21:25:51 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -162,6 +162,8 @@ struct ProviderInfo_s
 struct WorkerGroupData_s
 {
 	SlonNode   *node;
+
+	int			active_log_table;
 
 	char	   *tab_forward;
 	char	  **tab_fqname;
@@ -4001,6 +4003,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	/* TODO: tab_forward array to know if we need to store the log */
 	PGconn	   *local_dbconn = local_conn->dbconn;
 	PGresult   *res1;
+	int			ntuples1;
 	int			num_sets = 0;
 	int			num_providers_active = 0;
 	int			num_errors;
@@ -4445,6 +4448,40 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 		return 0;
 	}
+
+	/*
+	 * Get the current sl_log_status
+	 */
+	slon_mkquery(&query, "select last_value from %s.sl_log_status",
+			rtcfg_namespace);
+	res1 = PQexec(local_dbconn, dstring_data(&query));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				 node->no_id, dstring_data(&query),
+				 PQresultErrorMessage(res1));
+		PQclear(res1);
+		TERMINATE_QUERY_AND_ARCHIVE;
+		slon_disconnectdb(provider->conn);
+		provider->conn = NULL;
+		return 20;
+	}
+	ntuples1 = PQntuples(res1);
+	if (ntuples1 != 1)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: cannot determine current log status",
+				 node->no_id);
+		PQclear(res1);
+		TERMINATE_QUERY_AND_ARCHIVE;
+		slon_disconnectdb(provider->conn);
+		provider->conn = NULL;
+		return 20;
+	}
+	wd->active_log_table = (strtol(PQgetvalue(res1, 0, 0), NULL, 10) & 0x01) + 1;
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			"current local log_status is %d\n",
+			node->no_id, strtol(PQgetvalue(res1, 0, 0), NULL, 10));
+	PQclear(res1);
 
 	/*
 	 * Time to get the helpers busy.
@@ -4977,8 +5014,8 @@ sync_helper(void *cdata)
 			log_status = strtol(PQgetvalue(res3, 0, 0), NULL, 10);
 			PQclear(res3);
 			slon_log(SLON_DEBUG2,
-					 "remoteWorkerThread_%d: current log_status = %d\n", 
-					 node->no_id, log_status);
+					 "remoteWorkerThread_%d_%d: current remote log_status = %d\n", 
+					 node->no_id, provider->no_id, log_status);
 					
 			/*
 			 * Open a cursor that reads the log data.
@@ -5314,13 +5351,13 @@ sync_helper(void *cdata)
 					if (wd->tab_forward[log_tableid])
 					{
 						slon_appendquery(&(line->log),
-										 "insert into %s.sl_log_1 "
+									"insert into %s.sl_log_%d "
 									"    (log_origin, log_xid, log_tableid, "
-										 "     log_actionseq, log_cmdtype, "
-										 "     log_cmddata) values "
-							   "    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
-										 rtcfg_namespace,
-										 log_origin, log_xid, log_tableid,
+									"     log_actionseq, log_cmdtype, "
+									"     log_cmddata) values "
+									"    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
+									rtcfg_namespace, wd->active_log_table,
+									log_origin, log_xid, log_tableid,
 									log_actionseq, log_cmdtype, log_cmddata);
 						largemem *= 2;
 					}
