@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.15 2005-05-13 21:24:03 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.16 2006-02-28 22:51:37 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -13,7 +13,7 @@ linkend="table.sl-log-2"> (not yet used), and <xref
 linkend="table.sl-seqlog">.</para></listitem>
 
 <listitem><para> Vacuum certain tables used by &slony1;.  As of 1.0.5,
-this includes pg_listener; in earlier versions, you must vacuum that
+this includes &pglistener;; in earlier versions, you must vacuum that
 table heavily, otherwise you'll find replication slowing down because
 &slony1; raises plenty of events, which leads to that table having
 plenty of dead tuples.</para>
@@ -24,13 +24,13 @@ something like <application>pg_autovacuum</application> to handle
 vacuuming of these tables.  Unfortunately, it has been quite possible
 for <application>pg_autovacuum</application> to not vacuum quite
 frequently enough, so you probably want to use the internal vacuums.
-Vacuuming <envar>pg_listener</envar> <quote>too often</quote> isn't
-nearly as hazardous as not vacuuming it frequently enough.</para>
+Vacuuming &pglistener; <quote>too often</quote> isn't nearly as
+hazardous as not vacuuming it frequently enough.</para>
 
 <para>Unfortunately, if you have long-running transactions, vacuums
 cannot clear out dead tuples that are newer than the eldest
 transaction that is still running.  This will most notably lead to
-<envar>pg_listener</envar> growing large and will slow
+&pglistener; growing large and will slow
 replication.</para></listitem>
 
 

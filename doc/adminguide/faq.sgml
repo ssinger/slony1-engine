@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.51 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.52 2006-02-28 22:51:36 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -121,7 +121,7 @@ something that is probably not worth working around.</para>
 crash</para>
 
 <para> After an immediate stop of &postgres; (simulation of system
-crash) in <envar>pg_catalog.pg_listener</envar> a tuple with <command>
+crash) in &pglistener; a tuple with <command>
 relname='_${cluster_name}_Restart'</command> exists. slon doesn't
 start because it thinks another process is serving the cluster on this
 node.  What can I do? The tuples can't be dropped from this
@@ -130,13 +130,13 @@ relation.</para>
 <para> The logs claim that <blockquote><para>Another slon daemon is
 serving this node already</para></blockquote></para></question>
 
-<answer><para> The problem is that the system table
-<envar>pg_catalog.pg_listener</envar>, used by &postgres; to manage
-event notifications, contains some entries that are pointing to
-backends that no longer exist.  The new <xref linkend="slon"> instance
-connects to the database, and is convinced, by the presence of these
-entries, that an old <application>slon</application> is still
-servicing this &slony1; node.</para>
+<answer><para> The problem is that the system table &pglistener;, used
+by &postgres; to manage event notifications, contains some entries
+that are pointing to backends that no longer exist.  The new <xref
+linkend="slon"> instance connects to the database, and is convinced,
+by the presence of these entries, that an old
+<application>slon</application> is still servicing this &slony1;
+node.</para>
 
 <para> The <quote>trash</quote> in that table needs to be thrown
 away.</para>
@@ -164,8 +164,8 @@ so that you can restart the node.</para>
 condition, and automatically cleans it up.</para>
 
 <para> As of version 8.1 of &postgres;, the functions that manipulate
-<envar>pg_listener</envar> do not support this usage, so for &slony1;
-versions after 1.1.2 (<emphasis>e.g. - </emphasis> 1.1.5), this
+&pglistener; do not support this usage, so for &slony1; versions after
+1.1.2 (<emphasis>e.g. - </emphasis> 1.1.5), this
 <quote>interlock</quote> behaviour is handled via a new table, and the
 issue should be transparently <quote>gone.</quote> </para>
 
@@ -427,21 +427,21 @@ seeing system performance suffering.</para>
 	fetch 100 from LOG;
 </screen></para></question>
 
-<answer><para> This can be characteristic of pg_listener (which is the
-table containing <command>NOTIFY</command> data) having plenty of dead
-tuples in it.  That makes <command>NOTIFY</command> events take a long
-time, and causes the affected node to gradually fall further and
+<answer><para> This can be characteristic of &pglistener; (which is
+the table containing <command>NOTIFY</command> data) having plenty of
+dead tuples in it.  That makes <command>NOTIFY</command> events take a
+long time, and causes the affected node to gradually fall further and
 further behind.</para>
 
 <para>You quite likely need to do a <command>VACUUM FULL</command> on
-<envar>pg_listener</envar>, to vigorously clean it out, and need to
-vacuum <envar>pg_listener</envar> really frequently.  Once every five
-minutes would likely be AOK.</para>
+&pglistener;, to vigorously clean it out, and need to vacuum
+&pglistener; really frequently.  Once every five minutes would likely
+be AOK.</para>
 
 <para> Slon daemons already vacuum a bunch of tables, and
 <filename>cleanup_thread.c</filename> contains a list of tables that
 are frequently vacuumed automatically.  In &slony1; 1.0.2,
-<envar>pg_listener</envar> is not included.  In 1.0.5 and later, it is
+&pglistener; is not included.  In 1.0.5 and later, it is
 regularly vacuumed, so this should cease to be a direct issue.</para>
 
 <para>There is, however, still a scenario where this will still
@@ -503,8 +503,10 @@ completes.</para>
 schema dumped using <option>--schema=whatever</option>, and don't try
 dumping the cluster's schema.</para></listitem>
 
-<listitem><para> It would be nice to add an <option>--exclude-schema</option>
-option to pg_dump to exclude the Slony cluster schema.  Maybe in 8.1...</para></listitem>
+<listitem><para> It would be nice to add an
+<option>--exclude-schema</option> option to
+<application>pg_dump</application> to exclude the &slony1; cluster
+schema.  Maybe in 8.2...</para></listitem>
 
 <listitem><para>Note that 1.0.5 uses a more precise lock that is less
 exclusive that alleviates this problem.</para></listitem>
@@ -973,8 +975,8 @@ well, generally getting steadily worse. </para>
 
 <answer> <para> There are actually a number of possible causes for
 this sort of thing.  There is a question involving similar pathology
-where the problem is that <link linkend="pglistenerfull"> <envar>
-pg_listener </envar> grows because it is not vacuumed. </link>
+where the problem is that <link linkend="pglistenerfull"> 
+&pglistener; grows because it is not vacuumed. </link>
 </para>
 
 <para> Another <quote> proximate cause </quote> for this growth is for
@@ -986,9 +988,9 @@ of which will adversely affect performance:</para>
 
 <itemizedlist>
 
-<listitem><para> Vacuums on all tables, including <envar> pg_listener
-</envar>, will not clear out dead tuples from before the start of the
-idle transaction. </para> </listitem>
+<listitem><para> Vacuums on all tables, including &pglistener;, will
+not clear out dead tuples from before the start of the idle
+transaction. </para> </listitem>
 
 <listitem><para> The cleanup thread will be unable to clean out
 entries in <xref linkend="table.sl-log-1"> and <xref

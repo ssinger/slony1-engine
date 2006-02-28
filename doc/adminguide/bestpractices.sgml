@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.14 2006-01-17 16:16:09 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.15 2006-02-28 22:51:36 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -64,11 +64,28 @@ not shift around due to Daylight Savings Time. </para>
 <para> Principle: Long running transactions are Evil </para>
 
 <para> The FAQ has an entry on <link linkend="pglistenerfull"> growth
-of <envar>pg_listener</envar> </link> which discusses this in a fair
-bit of detail; the long and short is that long running transactions
-have numerous ill effects.  They are particularly troublesome on an
+of &pglistener; </link> which discusses this in a fair bit of detail;
+the long and short is that long running transactions have numerous ill
+effects.  They are particularly troublesome on an
 <quote>origin</quote> node, holding onto locks, preventing vacuums
 from taking effect, and the like.</para>
+
+<para> In version 1.2, some of the <quote>evils</quote> should be
+lessened, because:</para>
+
+<itemizedlist>
+
+<listitem><para> Events in &pglistener; are only generated when
+replication updates are relatively infrequent, which should mean that
+busy systems won't generate many dead tuples in that table
+</para></listitem>
+
+<listitem><para> The system will periodically rotate (using
+<command>TRUNCATE</command> to clean out the old table) between the
+two log tables, <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-log-2">.  </para></listitem>
+</itemizedlist>
+
 </listitem>
 
 <listitem>
