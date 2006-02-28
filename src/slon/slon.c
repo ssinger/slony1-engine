@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.62 2006-01-10 15:38:40 cbbrowne Exp $
+ *	$Id: slon.c,v 1.63 2006-02-28 18:33:42 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -323,14 +323,15 @@ main(int argc, char *const argv[])
 		FILE	   *pidfile;
 
 		pidfile = fopen(pid_file, "w");
-		if (pidfile)
+		if (pidfile != NULL)
 		{
 			fprintf(pidfile, "%d", slon_pid);
 			fclose(pidfile);
 		}
 		else
 		{
-			slon_log(SLON_WARN, "Cannot open pid_file \"%s\", pid_file\n");
+			slon_log(SLON_FATAL, "Cannot open pid_file \"%s\", pid_file\n");
+			exit(-1);
 		}
 	}
 
