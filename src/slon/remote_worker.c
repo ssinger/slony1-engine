@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.105 2006-02-24 20:02:37 wieck Exp $
+ *	$Id: remote_worker.c,v 1.106 2006-02-28 17:27:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,7 +27,8 @@
 
 #include "slon.h"
 #include "confoptions.h"
-
+#include "../parsestatements/scanner.h"
+extern STMTS[MAXSTATEMENTS];
 
 /* ----------
  * Local definitions 
@@ -1453,11 +1454,53 @@ remoteWorkerThread_main(void *cdata)
 
 
 				slon_appendquery(&query1,
-								 "select %s.ddlScript_int(%d, '%q', %d); ",
-								 rtcfg_namespace,
-								 ddl_setid, ddl_script, ddl_only_on_node);
+						 "select %s.ddlScript_prepare_int(%d, %d); ",
+						 rtcfg_namespace,
+						 ddl_setid, ddl_only_on_node);
+
+				if (query_execute(node, local_dbconn, &query1) < 0) {
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL preparation failed - set %d - only on node %\n",
+							 node->no_id, ddl_setid, ddl_only_on_node);
+						slon_retry();
+				}
+
+				int num_statements = -1, stmtno, startpos;
+				num_statements = scan_for_statements (ddl_script);
+				if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS)) {
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL had invalid number of statements - %d\n", 
+						 node->no_id, num_statements);
+					slon_retry();
+				}
+				for (stmtno=0, startpos=0; stmtno > num_statements; startpos = STMTS[stmtno], stmtno++) {
+					char *dest = (char *) malloc (STMTS[stmtno] - startpos + 1);
+					if (dest == 0) {
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d: malloc() failure in DDL_SCRIPT\n");
+						slon_retry();
+					}
+					strncpy(dest, ddl_script + startpos, STMTS[stmtno]-startpos);
+					dest[STMTS[stmtno]-startpos+1] = 0;
+					slon_mkquery(&query1, dest);
+					free(dest);
+
+					if (query_execute(node, local_dbconn, &query1) < 0) {
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL statement failed - %s\n",
+							 node->no_id, dstring_data(&query1));
+						slon_retry();
+					}
+				}
+	
+				slon_mkquery(&query1, "select \"_%s\".ddlScript_complete_int(%d, %d); ", 
+					     rtcfg_namespace,
+					     ddl_setid,
+					     ddl_only_on_node);
 
 				/* DDL_SCRIPT needs to be turned into a log shipping script */
+				/* Note that the issue about parsing that mandates breaking 
+				   up compound statements into
+				   individually-processed statements does not apply to log
+				   shipping as psql parses and processes each statement
+				   individually */
+
 				if (archive_dir)
 				{
 					if ((ddl_only_on_node < 1) || (ddl_only_on_node == rtcfg_nodeid))

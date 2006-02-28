@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.56 2006-02-24 20:02:38 wieck Exp $
+ *	$Id: slonik.c,v 1.57 2006-02-28 17:27:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -33,7 +33,8 @@
 
 #include "slonik.h"
 #include "config.h"
-
+#include "../parsestatements/scanner.h"
+extern STMTS[MAXSTATEMENTS];
 
 /*
  * Global data
@@ -3871,9 +3872,49 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 
 	dstring_init(&query);
 	slon_mkquery(&query,
-				 "select \"_%s\".ddlScript(%d, '%q', %d); ",
-				 stmt->hdr.script->clustername,
-				 stmt->ddl_setid, dstring_data(&script), stmt->only_on_node);
+		     "select \"_%s\".ddlScript_prepare(%d, %d); ",
+		     stmt->hdr.script->clustername,
+		     stmt->ddl_setid, /* dstring_data(&script),  */ 
+		     stmt->only_on_node);
+
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	/* Split the script into a series of SQL statements - each needs to
+	   be submitted separately */
+	int num_statements = -1, stmtno, startpos;
+	num_statements = scan_for_statements (&script);
+
+	/* OOPS!  Something went wrong !!! */
+	if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS)) {
+		return -1;
+	}
+	for (stmtno=0, startpos=0; stmtno > num_statements; startpos = STMTS[stmtno], stmtno++) {
+		char *dest = (char *) malloc (STMTS[stmtno] - startpos + 1);
+		if (dest == 0) {
+			return -1;
+		}
+		strncpy(dest, dstring_data(&script + startpos), STMTS[stmtno]-startpos);
+		dest[STMTS[stmtno]-startpos+1] = 0;
+		slon_mkquery(&query, dest);
+		free(dest);
+
+		if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+	}
+	
+
+	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, '%s' %d); ", 
+		     stmt->hdr.script->clustername,
+		     stmt->ddl_setid,  dstring_data(&script),
+		     stmt->only_on_node);
+
 	dstring_free(&script);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{

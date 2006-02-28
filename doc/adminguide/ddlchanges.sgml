@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.20 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.21 2006-02-28 17:27:51 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -116,6 +116,51 @@ will conflict with the ones you need to take in order to update the
 database schema.</para></listitem>
 
 </itemizedlist></para></listitem>
+
+<listitem><para> In &slony1; versions 1.0 thru 1.1.5, the script is
+processed as a single query request, which can cause problems if you
+are making complex changes.  In version 1.2, the script is parsed into
+individual SQL statements, and each statement is submitted separately,
+which is a preferable handling of this.  </para>
+
+<para> The trouble with one query processing a <quote>compound
+statement</quote> is that the SQL parser does its processing for that
+entire set of queries based on the state of the database at the
+<emphasis>beginning</emphasis> of the query.</para>   
+
+<para> This causes no particular trouble if those statements are
+independent of one another, such as if you add two columns to a
+table.</para>
+
+<command> alter table t1 add column c1 integer; alter table t1 add
+column c2 integer; </command>
+
+<para> Trouble arises if a subsequent query needs to reference an
+earlier one.  Consider the following DDL statements...  </para>
+
+<command> alter table t1 add column c1 integer; create sequence s1;
+update t1 set c1=nextval('s1'); alter table t1 alter column c1 set not
+null; alter table t1 add primary key(c1); </command>
+
+<para> Up until &slony1; version 1.2, this query would <emphasis> fail
+</emphasis>.  It would specifically fail upon reaching the
+<command>UPDATE</command> statement, complaining that column
+<envar>c1</envar> doesn't exist.  This happens because
+<emphasis>all</emphasis> of those queries are parsed based on the
+state of things immediately before the query.  So, the
+<command>UPDATE</command> is evaluated based on a table definition
+<emphasis>before</emphasis> the new column was added. Oops. </para>
+
+<para>If you are running one of the earlier versions, the workaround
+is that you invoke a separate <xref linkend="stmtddlscript"> request
+with a separate script, cutting off to a new script each time a
+statement refers to something created in previous statements. </para>
+
+<para> In &slony1; version 1.2, there is a state machine that pulls
+apart the DDL script into individual statements.  Each statement is
+submitted as a separate <function>PQexec()</function> request, with
+the result that this is no longer an issue. </para>
+</listitem>
 
 </itemizedlist>
 

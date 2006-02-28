@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.22 2005-12-23 09:20:52 dpage Exp $
+#	$Id: Makefile,v 1.23 2006-02-28 17:27:51 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -32,7 +32,8 @@ endif
 OBJS		= 			\
 	slonik.o			\
 	dbutil.o			\
-	parser.o $(WIN32RES)
+	parser.o $(WIN32RES)            \
+	../parsestatements/scanner.o
 
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
@@ -85,4 +86,3 @@ distdir: $(DISTFILES)
 	for file in $(DISTFILES) ; do \
       cp $$file $(distdir)/$(subdir)/$$file ; \
     done
-

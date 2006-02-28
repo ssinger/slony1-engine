@@ -2298,7 +2298,9 @@ FAILOVER (
 
     <variablelist>
      <varlistentry><term><literal> SET ID = ival </literal></term>
-      <listitem><para> The unique numeric ID number of the set affected by the script</para></listitem>
+
+      <listitem><para> The unique numeric ID number of the set
+      affected by the script</para></listitem>
       
      </varlistentry>
      <varlistentry><term><literal> FILENAME = '/path/to/file' </literal></term>
@@ -2352,10 +2354,6 @@ FAILOVER (
     the token <command>@NAMESPACE@</command>; both will be expanded
     into the appropriate replacement tokens. </para>
 
-    <para> It generally seems a bad idea to use quotes in DDL scripts.
-    It appears preferable to handle that sort of thing <quote>out of
-    band.</quote> </para>
-
     <para> This uses &funddlscript;. </para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -2381,7 +2379,21 @@ EXECUTE SCRIPT (
 
    </refsect1>
    <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.0 </para>
+    <para> This command was introduced in &slony1; 1.0. </para>
+
+    <para> Before &slony1; version 1.2, the entire DDL script was
+    submitted as one <function>PQexec()</function> request, with the
+    implication that the <emphasis>entire</emphasis> script was parsed
+    based on the state of the database before invokation of the
+    script.  This means statements later in the script cannot depend
+    on DDL changes made by earlier statements in the same script.
+    Thus, you cannot add a column to a table and add constraints to
+    that column later in the same request. </para>
+
+    <para> In &slony1; version 1.2, the DDL script is split into
+    statements, and each is submitted separately.  As a result, it is
+    fine for later statements to refer to objects or attributes
+    created or modified in earlier statements. </para>
    </refsect1>
   </refentry>
 

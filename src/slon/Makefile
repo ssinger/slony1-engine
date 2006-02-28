@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.39 2005-11-14 14:17:12 dpage Exp $
+#	$Id: Makefile,v 1.40 2006-02-28 17:27:51 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -38,7 +38,8 @@ OBJS		= \
 	dbutils.o		\
 	conf-file.o		\
 	confoptions.o		\
-	misc.o
+	misc.o                  \
+	../parsestatements/scanner.o
 
 ifdef HAVE_NETSNMP
 OBJS+= snmp_thread.o

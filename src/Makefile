@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.11 2005-08-12 13:30:21 dpage Exp $
+#	$Id: Makefile,v 1.12 2006-02-28 17:27:51 cbbrowne Exp $
 # ----------
 
 slony_subdir = src
@@ -12,7 +12,7 @@ slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
 DISTFILES = Makefile
-SUBDIRS = xxid slon slonik backend ducttape
+SUBDIRS = xxid parsestatements slon slonik backend ducttape
 ifeq ($(PORTNAME),win32)
 SUBDIRS += slevent
 endif
