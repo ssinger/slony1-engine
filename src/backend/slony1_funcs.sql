@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.77 2006-02-24 20:02:37 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.78 2006-03-01 20:18:42 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -448,6 +448,182 @@ end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
   'Returns the version number of the slony schema';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION registry_set_int4(key, value);
+-- FUNCTION registry_get_int4(key, default);
+-- FUNCTION registry_set_text(key, value);
+-- FUNCTION registry_get_text(key, default);
+-- FUNCTION registry_set_timestamp(key, value);
+-- FUNCTION registry_get_timestamp(key, default);
+--
+--	Functions for accessing sl_registry
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.registry_set_int4(text, int4)
+returns int4 as '
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from @NAMESPACE@.sl_registry
+				where reg_key = p_key;
+	else
+		lock table @NAMESPACE@.sl_registry;
+		update @NAMESPACE@.sl_registry
+				set reg_int4 = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into @NAMESPACE@.sl_registry (reg_key, reg_int4)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_set_int4(text, int4) is
+'registry_set_int4(key, value)
+
+Set or delete a registry value';
+
+create or replace function @NAMESPACE@.registry_get_int4(text, int4)
+returns int4 as '
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		int4;
+BEGIN
+	select reg_int4 into v_value from @NAMESPACE@.sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform @NAMESPACE@.registry_set_int4(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception ''Slony-I: registry key % is not an int4 value'',
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_get_int4(text, int4) is
+'registry_get_int4(key, value)
+
+Get a registry value. If not present, set and return the default.';
+
+create or replace function @NAMESPACE@.registry_set_text(text, text)
+returns text as '
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from @NAMESPACE@.sl_registry
+				where reg_key = p_key;
+	else
+		lock table @NAMESPACE@.sl_registry;
+		update @NAMESPACE@.sl_registry
+				set reg_text = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into @NAMESPACE@.sl_registry (reg_key, reg_text)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_set_text(text, text) is
+'registry_set_text(key, value)
+
+Set or delete a registry value';
+
+create or replace function @NAMESPACE@.registry_get_text(text, text)
+returns text as '
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		text;
+BEGIN
+	select reg_text into v_value from @NAMESPACE@.sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform @NAMESPACE@.registry_set_text(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception ''Slony-I: registry key % is not an text value'',
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_get_text(text, text) is
+'registry_get_text(key, value)
+
+Get a registry value. If not present, set and return the default.';
+
+create or replace function @NAMESPACE@.registry_set_timestamp(text, timestamp)
+returns timestamp as '
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from @NAMESPACE@.sl_registry
+				where reg_key = p_key;
+	else
+		lock table @NAMESPACE@.sl_registry;
+		update @NAMESPACE@.sl_registry
+				set reg_timestamp = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into @NAMESPACE@.sl_registry (reg_key, reg_timestamp)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_set_timestamp(text, timestamp) is
+'registry_set_timestamp(key, value)
+
+Set or delete a registry value';
+
+create or replace function @NAMESPACE@.registry_get_timestamp(text, timestamp)
+returns timestamp as '
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		timestamp;
+BEGIN
+	select reg_timestamp into v_value from @NAMESPACE@.sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform @NAMESPACE@.registry_set_timestamp(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception ''Slony-I: registry key % is not an timestamp value'',
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.registry_get_timestamp(text, timestamp) is
+'registry_get_timestamp(key, value)
+
+Get a registry value. If not present, set and return the default.';
 
 
 -- ----------------------------------------------------------------------
@@ -5119,6 +5295,8 @@ BEGIN
 	-- ----
 	if v_current_status = 0 then
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 3);
+		perform @NAMESPACE@.registry_set_timestamp(
+				''logswitch.laststart'', now()::timestamp);
 		raise notice ''Logswitch to sl_log_2 initiated'';
 		return 2;
 	end if;
@@ -5129,6 +5307,8 @@ BEGIN
 	-- ----
 	if v_current_status = 1 then
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 2);
+		perform @NAMESPACE@.registry_set_timestamp(
+				''logswitch.laststart'', now()::timestamp);
 		raise notice ''Logswitch to sl_log_1 initiated'';
 		return 1;
 	end if;
@@ -5136,6 +5316,84 @@ BEGIN
 	raise exception ''Previous logswitch still in progress'';
 END;
 ' language plpgsql;
+comment on function @NAMESPACE@.logswitch_start() is
+'logswitch_start()
+
+Initiate a log table switch if none is in progress';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logswitch_weekly()
+--
+--	Called by slonik to ensure that a logswitch is done at least
+--  once a week. The default time is Sunday 2am.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logswitch_weekly()
+returns int4 as '
+DECLARE
+	v_now			timestamp;
+	v_now_dow		int4;
+	v_auto_dow		int4;
+	v_auto_time		time;
+	v_auto_ts		timestamp;
+	v_lastrun		timestamp;
+	v_laststart		timestamp;
+	v_days_since	int4;
+BEGIN
+	-- ----
+	-- Check that today is the day to run at all
+	-- ----
+	v_auto_dow := @NAMESPACE@.registry_get_int4(
+			''logswitch_weekly.dow'', 0);
+	v_now := "pg_catalog".now();
+	v_now_dow := extract (DOW from v_now);
+	if v_now_dow <> v_auto_dow then
+		perform @NAMESPACE@.registry_set_timestamp(
+				''logswitch_weekly.lastrun'', v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- Check that the last run of this procedure was before and now is
+	-- after the time we should automatically switch logs.
+	-- ----
+	v_auto_time := @NAMESPACE@.registry_get_text(
+			''logswitch_weekly.time'', ''02:00'');
+	v_auto_ts := current_date + v_auto_time;
+	v_lastrun := @NAMESPACE@.registry_get_timestamp(
+			''logswitch_weekly.lastrun'', ''epoch'');
+	if v_lastrun >= v_auto_ts or v_now < v_auto_ts then
+		perform @NAMESPACE@.registry_set_timestamp(
+				''logswitch_weekly.lastrun'', v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- This is the moment configured in dow+time. Check that the
+	-- last logswitch was done more than 2 days ago.
+	-- ----
+	v_laststart := @NAMESPACE@.registry_get_timestamp(
+			''logswitch.laststart'', ''epoch'');
+	v_days_since := extract (days from (v_now - v_laststart));
+	if v_days_since < 2 then
+		perform @NAMESPACE@.registry_set_timestamp(
+				''logswitch_weekly.lastrun'', v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- Fire off an automatic logswitch
+	-- ----
+	perform @NAMESPACE@.logswitch_start();
+	perform @NAMESPACE@.registry_set_timestamp(
+			''logswitch_weekly.lastrun'', v_now);
+	return 1;
+END;
+' language plpgsql;
+comment on function @NAMESPACE@.logswitch_weekly() is
+'logswitch_weekly()
+
+Ensure a logswitch is done at least weekly';
 
 
 -- ----------------------------------------------------------------------
@@ -5215,6 +5473,10 @@ BEGIN
 	end if;
 END;
 ' language plpgsql;
+comment on function @NAMESPACE@.logswitch_finish() is
+'logswitch_finish()
+
+Attempt to finalize a log table switch in progress';
 
 
 -- ----------------------------------------------------------------------
@@ -5322,6 +5584,19 @@ begin
 		execute ''drop function @NAMESPACE@.terminateNodeConnections(name)'';
 		execute ''drop function @NAMESPACE@.cleanupListener()'';
 		execute ''drop function @NAMESPACE@.truncateTable(text)'';
+	end if;
+
+	-- ----
+	-- Changes for 1.2
+	-- ----
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'') then
+		-- Add new table sl_registry
+		execute ''create table @NAMESPACE@.sl_registry (
+						reg_key			text primay key,
+						reg_int4		int4,
+						reg_text		text,
+						reg_timestamp	timestamp
+					)'';
 	end if;
 
 	return p_old;

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.39 2006-02-24 20:02:37 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.40 2006-03-01 20:18:42 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1449,6 +1449,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		VARATT_SIZEP(cs->cmdtype_D) = VARHDRSZ + 1;
 		*VARDATA(cs->cmdtype_D) = 'D';
 
+		/*
+		 * And the plan to read the current log_status.
+		 */
 		sprintf(query, "SELECT last_value::int4 FROM %s.sl_log_status",
 				cs->clusterident);
 		cs->plan_get_logstatus = SPI_saveplan(SPI_prepare(query, 0, NULL));

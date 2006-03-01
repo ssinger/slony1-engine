@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.30 2006-02-24 20:02:37 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.31 2006-03-01 20:18:43 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -123,8 +123,7 @@ cleanupThread_main(void *dummy)
 	 * cluster will run into conflicts due to trying to vacuum pg_listener
 	 * concurrently
 	 */
-	// while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, 300 * 1000) == SCHED_STATUS_OK)
+	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
@@ -200,6 +199,23 @@ cleanupThread_main(void *dummy)
 				PQclear(res2);
 				slon_retry();
 				break;
+			}
+			PQclear(res2);
+
+			/*
+			 * Eventually kick off a logswitch. This might fail,
+			 * but this is not really slon's problem, so we just
+			 * shrug and move on if it does.
+			 */
+			slon_mkquery(&query2,
+						 "select %s.logswitch_weekly(); ",
+						 rtcfg_namespace);
+			res2 = PQexec(dbconn, dstring_data(&query2));
+			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+			{
+				slon_log(SLON_WARN,
+						 "cleanupThread: \"%s\" - %s",
+						 dstring_data(&query2), PQresultErrorMessage(res2));
 			}
 			PQclear(res2);
 		}

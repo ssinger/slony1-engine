@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.29 2005-11-09 16:50:37 wieck Exp $
+-- $Id: slony1_base.sql,v 1.30 2006-03-01 20:18:42 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -440,6 +440,22 @@ create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 -- Add in an additional index as sometimes log_origin isn't a useful discriminant
 create index sl_log_2_idx2 on @NAMESPACE@.sl_log_2
 	(log_xid @NAMESPACE@.xxid_ops);
+
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_registry
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_registry (
+	reg_key				text primary key,
+	reg_int4			int4,
+	reg_text			text,
+	reg_timestamp		timestamp
+);
+comment on table @NAMESPACE@.sl_registry is 'Stores miscellaneous runtime data';
+comment on column @NAMESPACE@.sl_registry.reg_key is 'Unique key of the runtime option';
+comment on column @NAMESPACE@.sl_registry.reg_int4 is 'Option value if type int4';
+comment on column @NAMESPACE@.sl_registry.reg_text is 'Option value if type text';
+comment on column @NAMESPACE@.sl_registry.reg_timestamp is 'Option value if type timestamp';
 
 
 -- **********************************************************************

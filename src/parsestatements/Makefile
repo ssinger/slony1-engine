@@ -17,3 +17,7 @@ test: test-scanner
 	cmp ./test_sql.log ./test_sql.expected
 
 install:
+
+clean:
+	rm -f scanner.o test-scanner test-scanner.o
+	rm -f *.log
