@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.78 2006-03-01 20:18:42 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.79 2006-03-02 19:03:01 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -654,6 +654,8 @@ begin
 end;
 ' language plpgsql;
 
+comment on function @NAMESPACE@.cleanupNodelock() is
+'Clean up stale entries when restarting slon';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION registerNodeConnection (nodeid)
@@ -674,6 +676,9 @@ begin
 	return 0;
 end;
 ' language plpgsql;
+
+comment on function @NAMESPACE@.registerNodeConnection (int4) is
+'Register (uniquely) the node connection so that only one slon can service the node';
 
 
 -- ----------------------------------------------------------------------
@@ -5592,7 +5597,7 @@ begin
 	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'') then
 		-- Add new table sl_registry
 		execute ''create table @NAMESPACE@.sl_registry (
-						reg_key			text primay key,
+						reg_key			text primary key,
 						reg_int4		int4,
 						reg_text		text,
 						reg_timestamp	timestamp
