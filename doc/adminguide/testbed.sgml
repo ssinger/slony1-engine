@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.6 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.7 2006-03-07 22:45:56 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <para> As of version 1.1.5, &slony1; has a common test bed framework
@@ -92,6 +92,16 @@ each database instance.</para></glossdef>
 <glossdef><para> By default, <filename>UNICODE</filename> is used, so
 that tests can create UTF8 tables and test the multibyte capabilities.
 </para></glossdef>
+
+</glossentry>
+
+<glossentry>
+<glossterm><envar>MY_MKTEMP_IS_DECREPIT</envar></glossterm>
+
+<glossdef><para> If your version of Linux uses a variation of
+<application>mktemp</application> that does not generate a full path
+to the location of the desired temporary file/directory, then set this
+value.  </para></glossdef>
 
 </glossentry>
 

@@ -623,6 +623,9 @@ case `uname` in
   ;;
   Linux)
     mktmp=`mktemp -d -t slony-regress.XXXXXX`
+    if [ $MY_MKTEMP_IS_DECREPIT ] ; then
+        mktmp=`mktemp -d /tmp/slony-regress.XXXXXX`
+    fi
     if [ ! -d $mktmp ]; then
       err 3 "mktemp failed"
     fi
