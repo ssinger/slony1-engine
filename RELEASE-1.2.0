@@ -1,0 +1,92 @@
+$Id: RELEASE-1.2.0,v 1.1 2006-03-07 20:59:08 cbbrowne Exp $
+
+Release 1.2 of Slony-I has numerous improvements over previous
+versions.  
+
+Many of them should represent near-invisible enhancements to improve
+how Slony-I manages replication configuration.  These include:
+
+- A major revision of memory management to limit memory usage by slon
+  daemons.  In earlier versions, slon would try to load 100 tuples
+  into memory at a time.  If you have tables with Very Large bytea or
+  character varying columns, this could lead to loading 100 x 50MB
+  into memory, twice, doing terrible things to memory consumption.
+
+  slon now loads tuples in, directly, only if they are less than a
+  certain size, and handles those 50MB tuples individually.
+
+- Log switching: periodically, Slony-I will switch between storing
+  replication data in sl_log_1 and sl_log_2, which allows regularly
+  cleaning these tables out via TRUNCATE and which prevents some data
+  loss problems relating to cases where different sets originate on
+  different nodes, when transaction IDs roll over the 32 bit limits.
+
+- pg_listener is now used dramatically less than it used to be, which
+  diminishes the number of dead tuples you will find in this table.
+
+  This, along with log switching, should improve Slony-I behaviour on
+  systems where long-running transactions are common.
+
+- DDL scripts are broken into individual statements
+
+  This is more a bug fix than an enhancement; it now permits DDL
+  scripts to create new tables and columns, and reference them later
+  in the script.
+
+  In the past, DDL was submitted to the postmaster as a single query,
+  which meant that all of them had to reference the state of
+  pg_catalog as it was before the DDL ran.  So you could add as many
+  columns to tables as you liked; you could NOT, then, reference those
+  columns, because the query processor would discover that the new
+  column didn't exist as at "before the DDL ran."
+
+  There is now a statement parser which splits scripts into individual
+  SQL statements and passes them to the back end individually.
+
+These features are generally configurable, but the defaults ought to
+allow improved behaviour for all but the most "Extreme Uses."
+
+There are also numerous enhancements that are more directly visible:
+
+- Windows support
+
+  A group of developers has contributed changes to allow running
+  Slony-I as a Windows service.
+
+- Subscribe set aggressively locks tables on the subscriber to avoid
+  failures
+
+  This may become a configurable option so that sites where they
+  Really Know What They're Doing and are sure that they won't deadlock
+  themselves can leave the tables more open.
+
+  But for most users, it's really preferable to lock the tables down
+  on the subscriber so that you don't get 18 hours into subscribing an
+  18GB replication set, hit a deadlock, and have to start all over.
+  (The slon will automatically try again; the irritation is that you
+  may have been depending on that getting done by Monday morning...)
+
+- A lot of fixes to build environment (this needs to be tested on lots
+  of platforms)
+
+- slon "lag interval" option
+
+  You can tell a node to lag behind by a particular interval of time.
+
+    slon -l "4 hours" [and probably other options :-)] 
+
+  will cause the slon to ignore events until they reach the age
+  corresponding to the requested interval.  That way, you can hold a
+  node behind by 4 hours.
+
+  This is a potential "foot gun" as there are some cases (MOVE SET,
+  FAILOVER) where events have to be coordinated across all nodes with
+  near-simultaneity.
+
+- slon "stop after event" option
+
+  You can tell a slon to terminate itself as soon as it receives a
+  certain event from a certain node.
+
+  As with "lag interval," this could be a bit of a foot gun...
+

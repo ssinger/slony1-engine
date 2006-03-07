@@ -1,0 +1,60 @@
+*** OUTSTANDING ISSUE WITH PostgreSQL 8.1 ***
+
+PostgreSQL 8.1 is quite a lot more strict about what UTF-8 mappings of
+Unicode characters it accepts as compared to version 8.0.
+
+If you intend to use Slony-I to update an older database to 8.1, and
+might have invalid UTF-8 values, you may be for an unpleasant
+surprise.
+
+Let us suppose we have a database running 8.0, encoding in UTF-8.
+That database will accept the sequence '\060\242' as UTF-8 compliant,
+even though it is really not.
+
+If you replicate into a PostgreSQL 8.1 instance, it will complain
+about this, either at subscribe time, where Slony-I will complain
+about detecting an invalid Unicode sequence during the COPY of the
+data, which will prevent the subscription from proceeding, or, upon
+adding data, later, where this will hang up replication fairly much
+irretrievably.  (You could hack on the contents of sl_log_1, but
+that's *really* unattractive...)
+
+There have been discussions as to what might be done about this.  No
+compelling strategy has yet emerged, as all are unattractive.
+
+If you are using Unicode with PostgreSQL 8.0, you run a considerable
+risk of corrupting data.  
+
+If you use replication for a one-time conversion, there is a risk of
+failure due to the issues mentioned earlier; if that happens, it
+appears likely that the best answer is to fix the data on the 8.0
+system, and retry.
+
+In view of the risks, running replication between versions seems to be
+something you should not keep running any longer than is necessary to
+migrate to 8.1.
+
+http://archives.postgresql.org/pgsql-hackers/2005-12/msg00181.php
+
+Extracting from that:
+---------------------------------------------------------------
+Upgrading UNICODE databases to 8.1
+
+Postgres 8.1 includes a number of bug-fixes and improvements to
+Unicode and UTF-8 character handling.  Unfortunately previous releases
+would accept character sequences that were not valid UTF-8.  This
+may cause problems when upgrading your database using
+pg_dump/pg_restore resulting in an error message like this:
+
+  Invalid UNICODE byte sequence detected near byte ...
+
+To convert your pre-8.1 database to 8.1 you may have to remove and/or
+fix the offending characters.  One simple way to fix the problem is to
+run your pg_dump output through the iconv command like this:
+
+  iconv -c -f UTF8 -t UTF8 -o fixed.sql dump.sql
+
+The -c flag tells iconv to omit invalid characters from output.
+
+-- Paul Lindner
+---------------------------------------------------------------
