@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.57 2006-02-28 17:27:51 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.58 2006-03-08 18:29:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1684,8 +1684,7 @@ get_active_adminfo(SlonikStmt * stmt, int no_id)
 		if (db_connect(stmt, adminfo) < 0)
 			return NULL;
 
-		if (db_get_version(stmt, adminfo,
-				   &(adminfo->version_major), &(adminfo->version_minor)) < 0)
+		if (adminfo->pg_version = db_get_version(stmt, adminfo) < 0)
 		{
 			PQfinish(adminfo->dbconn);
 			adminfo->dbconn = NULL;
@@ -1854,57 +1853,38 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		return -1;
 	}
 
-	switch (adminfo->version_major)
+	/* determine what schema version we should load */
+
+	if (adminfo->pg_version > 70300)	/* 7.2 and lower */
 	{
-		case 7:
-			use_major = 7;
-
-			switch (adminfo->version_minor)
-			{
-				case 3:
-					use_minor = 3;
-					break;
-
-				case 4:
-					use_minor = 4;
-					break;
-				case 5:
-					use_minor = 4;
-					break;
-
-				default:
-					printf("%s:%d: unsupported PostgreSQL "
-						   "version %d.%d\n",
-						   stmt->stmt_filename, stmt->stmt_lno,
-						   adminfo->version_major, adminfo->version_minor);
-			}
-			break;
-		case 8:
-			use_major = 8;
-
-			switch (adminfo->version_minor)
-			{
-				case 0:
-					use_minor = 0;
-					break;
-				case 1:
-					use_minor = 0;
-					break;
-				default:
-					use_minor = 0;
-					printf("%s:%d: Possible unsupported PostgreSQL "
-						   "version %d.%d\n",
-						   stmt->stmt_filename, stmt->stmt_lno,
-						   adminfo->version_major, adminfo->version_minor);
-					break;
-			}
-			break;
-
-		default:
-			printf("%s:%d: unsupported PostgreSQL "
-				   "version %d.%d\n",
-				   stmt->stmt_filename, stmt->stmt_lno,
-				   adminfo->version_major, adminfo->version_minor);
+		printf("%s:%d: unsupported PostgreSQL "
+			"version %d.%d\n",
+			stmt->stmt_filename, stmt->stmt_lno,
+			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+	}
+	else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
+	{
+		use_major = 7;
+		use_minor = 3;
+	}
+	else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
+	{
+		use_major = 7;
+		use_minor = 4;
+	}
+	else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80200)	/* 8.0 and 8.1 */ 
+	{
+		use_major = 8;
+		use_minor = 0;
+	}
+	else	/* 8.2 and above */
+	{
+		use_major = 8;
+		use_minor = 0;
+		printf("%s:%d: Possible unsupported PostgreSQL "
+			"version (%d) %d.%d, defaulting to 8.0 support\n",
+                        stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
+			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}
 
 #define ROWIDBITS "_Slony-I__rowID"
@@ -1966,55 +1946,39 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 
 	dbconn = adminfo->dbconn;
 
-	switch (adminfo->version_major)
-	{
-		case 7:
-			use_major = 7;
+        /* determine what schema version we should load */
 
-			switch (adminfo->version_minor)
-			{
-				case 3:
-					use_minor = 3;
-					break;
-
-				case 4:
-				case 5:
-					use_minor = 4;
-					break;
-
-				default:
-					printf("%s:%d: unsupported PostgreSQL "
-						   "version %d.%d\n",
-						   stmt->stmt_filename, stmt->stmt_lno,
-						   adminfo->version_major, adminfo->version_minor);
-			}
-			break;
-		case 8:
-			use_major = 8;
-			switch (adminfo->version_minor)
-			{
-				case 0:
-					use_minor = 0;
-					break;
-				case 1:
-					use_minor = 0;
-					break;
-				default:
-					use_minor = 0;
-					printf("%s:%d: Possible unsupported PostgreSQL "
-						   "version %d.%d\n",
-						   stmt->stmt_filename, stmt->stmt_lno,
-						   adminfo->version_major, adminfo->version_minor);
-					break;
-			}
-			break;
-
-		default:
-			printf("%s:%d: unsupported PostgreSQL "
-				   "version %d.%d\n",
-				   stmt->stmt_filename, stmt->stmt_lno,
-				   adminfo->version_major, adminfo->version_minor);
-	}
+        if (adminfo->pg_version > 70300)        /* 7.2 and lower */
+        {
+                printf("%s:%d: unsupported PostgreSQL "
+                        "version %d.%d\n",
+                        stmt->stmt_filename, stmt->stmt_lno,
+                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+        }
+        else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
+        {
+                use_major = 7;
+                use_minor = 3;
+        }
+        else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
+        {
+                use_major = 7;
+                use_minor = 4;
+        }
+        else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80200) /* 8.0 and 8.1 */
+        {
+                use_major = 8;
+                use_minor = 0;
+        }
+        else    /* 8.2 and above */
+        {
+                use_major = 8;
+                use_minor = 0;
+                printf("%s:%d: Possible unsupported PostgreSQL "
+                        "version %d.%d, defaulting to 8.0 support\n",
+                        stmt->stmt_filename, stmt->stmt_lno,
+                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+        }
 
 	/* Load schema, DB version specific */
 	db_notice_silent = true;

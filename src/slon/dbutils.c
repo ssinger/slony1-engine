@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.19 2005-12-14 17:57:27 wieck Exp $
+ *	$Id: dbutils.c,v 1.20 2006-03-08 18:29:10 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -30,6 +30,7 @@
 
 
 static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
+static int	db_get_version(PGconn *conn);
 
 #if (PG_VERSION_MAJOR < 8)
 /* ----
@@ -105,6 +106,17 @@ slon_connectdb(char *conninfo, char *symname)
 	 */
 	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
+	conn->pg_version = db_get_version(dbconn);
+        if (conn->pg_version < 70303)
+        {
+                slon_log(SLON_ERROR,
+                        "slon_connectdb: PQconnectdb(\"%s\") PostgreSQL version not supported\n",
+                        conninfo);
+                PQfinish(dbconn);
+                return NULL;
+        }
+        slon_log(SLON_DEBUG4,
+                "version for \"%s\" is %d\n", conninfo, conn->pg_version);
 
 	return conn;
 }
@@ -461,6 +473,37 @@ slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 	return 0;
 }
 
+static int db_get_version(PGconn *conn)
+{
+	PGresult    *res;
+	SlonDString query;
+	char	    versionstr[7];
+	int	    version=0;
+	int	    major=0;
+	int	    minor=0;
+	int	    patch=0;
+
+	dstring_init(&query);
+	slon_mkquery(&query, "SELECT version();");
+	res = PQexec(conn, dstring_data(&query));
+
+	if ( !res || PQresultStatus(res) != PGRES_TUPLES_OK )
+        {
+		PQclear(res);
+		return -1;
+	}
+	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2)
+	{
+		PQclear(res);
+		return -1;
+	}
+	PQclear(res);
+	snprintf(versionstr, 7, "%.2d%.2d%.2d", major, minor, patch);
+	version=atoi(versionstr);
+
+	return version;
+}
+	
 /*
  * Local Variables:
  *	tab-width: 4

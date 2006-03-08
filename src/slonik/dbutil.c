@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.9 2005-11-22 05:11:59 wieck Exp $
+ *	$Id: dbutil.c,v 1.10 2006-03-08 18:29:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -314,10 +314,15 @@ db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
  * ----------
  */
 int
-db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo, int *major, int *minor)
+db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGresult   *res;
 	SlonDString query;
+	char        versionstr[7];
+	int	    major=0;
+	int	    minor=0;
+	int         patch=0;
+	int         version=0;
 
 	if (db_begin_xact(stmt, adminfo) < 0)
 		return -1;
@@ -330,7 +335,7 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo, int *major, int *mino
 	if (res == NULL)
 		return -1;
 
-	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d", major, minor) != 2)
+	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2)
 	{
 		fprintf(stderr, "%s:%d: failed to parse %s for DB version\n",
 				stmt->stmt_filename, stmt->stmt_lno,
@@ -339,8 +344,9 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo, int *major, int *mino
 		return -1;
 	}
 	PQclear(res);
-
-	return 0;
+	snprintf(versionstr, 7, "%.2d%.2d%.2d", major, minor, patch);
+	version=atoi(versionstr);
+	return version;
 }
 
 

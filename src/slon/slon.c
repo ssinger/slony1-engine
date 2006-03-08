@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.63 2006-02-28 18:33:42 darcyb Exp $
+ *	$Id: slon.c,v 1.64 2006-03-08 18:29:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -91,6 +91,7 @@ Usage(char *const argv[])
 	fprintf(stderr, "usage: %s [options] clustername conninfo\n", argv[0]);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Options:\n");
+
 	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
 	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
@@ -323,7 +324,7 @@ main(int argc, char *const argv[])
 		FILE	   *pidfile;
 
 		pidfile = fopen(pid_file, "w");
-		if (pidfile != NULL)
+		if (pidfile)
 		{
 			fprintf(pidfile, "%d", slon_pid);
 			fclose(pidfile);
@@ -713,6 +714,7 @@ SlonMain(void)
 				 strerror(errno));
 		slon_retry();
 	}
+
 #ifdef HAVE_NETSNMP
 	if (pthread_create(&local_snmp_thread, NULL, snmpThread_main, NULL) < 0)
 	{

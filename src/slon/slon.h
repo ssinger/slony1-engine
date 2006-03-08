@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.58 2005-12-14 16:15:22 wieck Exp $
+ *	$Id: slon.h,v 1.59 2006-03-08 18:29:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -155,6 +155,7 @@ struct SlonConn_s
 
 	int			condition;		/* what are we waiting for? */
 	struct timeval timeout;		/* timeofday for timeout */
+	int	pg_version;		/* PostgreSQL version */
 
 	SlonConn   *prev;
 	SlonConn   *next;

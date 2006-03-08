@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.31 2006-03-01 20:18:43 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.32 2006-03-08 18:29:10 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -46,12 +46,9 @@ static char *table_list[] = {"%s.sl_event",
 	"%s.sl_seqlog",
 	"pg_catalog.pg_listener",
 	"pg_catalog.pg_statistic",
-	"pg_catalog.pg_listener",
-	"pg_catalog.pg_listener"
+	NULL
 };
 
-#define MAX_VAC_TABLE 8			/* Add to this if additional tables are added
-								 * above */
 
 static char tstring[255];		/* string used to store table names for the
 								 * VACUUM statements */
@@ -79,6 +76,7 @@ cleanupThread_main(void *dummy)
 	int			n,
 				t;
 	int			vac_count = 0;
+	int			vac_enable = SLON_VACUUM_FREQUENCY;
 	char	   *vacuum_action;
 
 	slon_log(SLON_DEBUG1, "cleanupThread: thread starts\n");
@@ -228,22 +226,66 @@ cleanupThread_main(void *dummy)
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
 		 */
-		if (vac_frequency != 0 && ++vac_count >= vac_frequency)
+		if (vac_frequency !=0)
+		{
+			vac_enable = vac_frequency;
+		}
+		if (++vac_count >= vac_enable)
 		{
 			unsigned long latest_xid;
+			int a_vac = 0;
 
 			vac_count = 0;
-			latest_xid = get_earliest_xid(dbconn);
-			if (earliest_xid != latest_xid)
+
+			dstring_init(&query3);
+
+			/* 
+			 * if we are running a version >= 8.1, check to see 
+			 * if autovacuum is enabled, if so we should only run
+			 * analyze on the tables in table_list[], otherwise it
+			 * is ok to vacuum analyze
+			 */
+
+			if (conn->pg_version >=80100)
 			{
-				vacuum_action = "vacuum analyze";
+				dstring_reset(&query3);
+				slon_mkquery(&query3, "show autovacuum");
+				res = PQexec(dbconn, dstring_data(&query3));
+				if (PQresultStatus(res)  != PGRES_TUPLES_OK)
+				{
+					slon_log(SLON_ERROR,
+                                                         "cleanupThread: \"%s\" - %s",
+                                                   dstring_data(&query3), PQresultErrorMessage(res));
+
+                                        /*
+                                         * slon_retry(); break;
+                                         */
+                                }
+				else if (strncmp(PQgetvalue(res, 0, 0), "on", 2) == 0)
+				{
+					/*
+					 * autovacuum is on
+					 */
+					a_vac=1;
+				}
+                                PQclear(res);
+				dstring_reset(&query3);
 			}
-			else
+			latest_xid = get_earliest_xid(dbconn);
+			if (earliest_xid == latest_xid)
 			{
-				vacuum_action = "analyze";
+				
+				vacuum_action = "";
 				slon_log(SLON_DEBUG4,
 					"cleanupThread: xid %d still active - analyze instead\n",
 					earliest_xid);
+			}
+			else
+			{
+				if ((vac_enable == vac_frequency) && (a_vac==0))
+				{
+					vacuum_action = "vacuum ";
+				}
 			}
 			earliest_xid = latest_xid;
 
@@ -251,30 +293,68 @@ cleanupThread_main(void *dummy)
 			 * Build the query string for vacuuming replication runtime data
 			 * and event tables
 			 */
-			dstring_init(&query3);
 			gettimeofday(&tv_start, NULL);
-			for (t = 0; t < MAX_VAC_TABLE; t++)
+			for (t = 0; table_list[t] != NULL ; t++)
 			{
+
 				sprintf(tstring, table_list[t], rtcfg_namespace);
-				slon_mkquery(&query3,
-							 "%s %s;",
-							 vacuum_action,
-							 tstring);
-
-				res = PQexec(dbconn, dstring_data(&query3));
-				if (PQresultStatus(res) != PGRES_COMMAND_OK)
+				if (a_vac==1)
 				{
-					slon_log(SLON_ERROR,
-							 "cleanupThread: \"%s\" - %s",
-						   dstring_data(&query3), PQresultErrorMessage(res));
-					PQclear(res);
+					slon_mkquery(&query3,"select (case when pga.enabled ISNULL THEN true ELSE pga.enabled END) "
+						"from \"pg_catalog\".pg_namespace PGN, \"pg_catalog\".pg_class PGC LEFT OUTER JOIN "
+						"\"pg_catalog\".pg_autovacuum pga ON (PGC.oid = pga.vacrelid) where PGC.relnamespace = PGN.oid "
+						"and %s.slon_quote_input('%s')=%s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
+					 	rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
 
-					/*
-					 * slon_retry(); break;
-					 */
+					res = PQexec(dbconn, dstring_data(&query3));
+					if (PQresultStatus(res) != PGRES_TUPLES_OK)  /* query error */
+					{
+						slon_log(SLON_ERROR,
+							 "cleanupThread: \"%s\" - %s",
+							   dstring_data(&query3), PQresultErrorMessage(res));
+						/*
+						 * slon_retry(); break;
+						 */
+					}
+					else	/* no errors */
+					{
+						if (PQntuples(res) == 1)	/* we want 1 and only 1 row, otherwise skip */
+						{
+							if (strncmp(PQgetvalue(res, 0, 0), "f", 1) == 0) 
+							{
+								/* 
+								 * pg_avac is NOT enabled for this table
+								 * so this means we need to handel it internaly
+								 */
+								if (vac_enable == vac_frequency)
+								{
+									vacuum_action = "vacuum ";
+								}
+							}
+							else
+							{
+								vacuum_action = "";
+							}
+						}
+					}
+					PQclear(res);
 				}
+				dstring_reset(&query3);
+
+				slon_mkquery(&query3,"%s analyze %s;",vacuum_action, tstring);
+				res = PQexec(dbconn, dstring_data(&query3));
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)  /* query error */
+                                {
+                 	                slon_log(SLON_ERROR,
+	                                        "cleanupThread: \"%s\" - %s",
+                                                dstring_data(&query3), PQresultErrorMessage(res));
+                                                /*
+                                                 * slon_retry(); break;
+                                                 */                  
+                                }
+				PQclear(res);
+				dstring_reset(&query3);
 			}
-			PQclear(res);
 			gettimeofday(&tv_end, NULL);
 			slon_log(SLON_DEBUG2,
 					 "cleanupThread: %8.3f seconds for vacuuming\n",
