@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.25 2006-02-28 22:51:37 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.26 2006-03-14 18:47:23 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -342,6 +342,16 @@
       causes events to be ignored until they reach the age
       corresponding to the interval.
      </para>
+
+     <warning><para> There is a concommittant downside to this lag;
+     events that require all nodes to synchronize, as typically
+     happens with <xref linkend="stmtfailover"> and <xref
+     linkend="stmtmoveset">, will have to wait for this lagging
+     node. </para>
+
+     <para> That might not be ideal behaviour at failover time, or at
+     the time when you want to run <xref
+     linkend="stmtddlscript">. </para></warning>
     </listitem>
    </varlistentry>
 
