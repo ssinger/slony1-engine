@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.22 2006-02-24 18:44:18 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.23 2006-03-14 18:46:42 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 <sect2> <title>What &slony1; is</title>
@@ -136,11 +136,11 @@ replication services.</para></sect2>
 <para>&slony1; does not automatically propagate schema changes, nor
 does it have any ability to replicate large objects.  There is a
 single common reason for these limitations, namely that &slony1;
-collects updates using triggers, and neither schema changes nor large
-object operations are able to triggers suitable to inform &slony1;
-when those sorts of changes take place.  As a result, the only
-database objects where &slony1; can replicate updates are tables and
-sequences.  </para>
+collects updates using triggers, and neither schema changes, large
+object operations, nor <command>TRUNCATE</command> requests are able
+to triggers suitable to inform &slony1; when those sorts of changes
+take place.  As a result, the only database objects where &slony1; can
+replicate updates are tables and sequences.  </para>
 
 <para> Note that with the <emphasis>use</emphasis> of triggers comes
 some additional <emphasis>fiddling around with triggers</emphasis>.
