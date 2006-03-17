@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.52 2006-02-28 22:51:36 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.53 2006-03-17 18:56:50 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1613,7 +1613,8 @@ pretty heavily with the code.  </para> </answer>
 
 <qandaentry>
 <question> <para> I am finding some multibyte columns (Unicode, Big5)
-are being truncated.  Why?  </para> </question>
+are being truncated a bit, clipping off the last character.  Why?
+</para> </question>
 
 <answer> <para> This was a bug present until a little after &slony1;
 version 1.1.0; the way in which columns were being captured by the

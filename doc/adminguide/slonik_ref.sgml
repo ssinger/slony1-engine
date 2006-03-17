@@ -1038,7 +1038,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     up.</para> 
 
     <para>It is <emphasis>not</emphasis> supported in &logshiplink;,
-    and will not be.</para> </caution>
+    and we do not intend to add support.</para> </caution>
     
     <para> This uses &funtableaddkey;. </para>
    </refsect1>
