@@ -15,8 +15,9 @@ set is stored in a subdirectory of tests.
 You may need to set one or more of the following environment variables to
 reflect your local configuration. For instance, the writer runs "test1" against
 PostgreSQL 8.0.x using the following command line:
- PGBINDIR=/opt/OXRS/dbs/pgsql8/bin PGPORT=5532 PGUSER=cbbrowne ./run_test.sh
-test1
+
+ PGBINDIR=/opt/OXRS/dbs/pgsql8/bin PGPORT=5532 PGUSER=cbbrowne ./run_test.sh test1
+
   PGBINDIR
       This determines where the test scripts look for PostgreSQL and Slony-
       I binaries. The default is /usr/local/pgsql/bin
