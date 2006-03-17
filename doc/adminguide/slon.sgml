@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.26 2006-03-14 18:47:23 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.27 2006-03-17 18:56:26 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -43,8 +43,8 @@
     <term><option>-d</option><replaceable class="parameter"> debuglevel</replaceable></term>
     <listitem>
      <para>
-      The <envar>log_level</envar> specifies the level of verbosity
-      that <application>slon</application> should use when logging its
+      The <envar>log_level</envar> specifies which Debug levels
+      <application>slon</application> should display when logging its
       activity.
      </para>
      <para>
@@ -60,6 +60,11 @@
        <listitem><para>Debug4</para></listitem>
       </itemizedlist>
      </para>
+     <para> Thus, <emphasis>all</emphasis> the non-debugging log
+     levels are always displayed in the logs.  If
+     <envar>log_level</envar> is set to 2 (a routine, and, seemingly
+     preferable choice), then output at debugging levels 1 and 2 will
+     also be displayed.</para>
     </listitem>
    </varlistentry>
    
