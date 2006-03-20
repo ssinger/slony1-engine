@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.58 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: slonik.c,v 1.59 2006-03-20 22:12:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3811,6 +3811,8 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	char		rex1[256];
 	char		rex2[256];
 	char		rex3[256];
+	PGresult *res;
+	ExecStatusType rstat;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -3850,31 +3852,51 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	/* Split the script into a series of SQL statements - each needs to
 	   be submitted separately */
 	int num_statements = -1, stmtno, startpos;
-	num_statements = scan_for_statements (&script);
+	num_statements = scan_for_statements (dstring_data(&script));
+	printf("DDL script consisting of %d SQL statements\n", num_statements);
 
 	/* OOPS!  Something went wrong !!! */
 	if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS)) {
+		printf("DDL - number of statements invalid - %d not between 0 and %d\n", num_statements, MAXSTATEMENTS);
 		return -1;
 	}
-	for (stmtno=0, startpos=0; stmtno > num_statements; startpos = STMTS[stmtno], stmtno++) {
-		char *dest = (char *) malloc (STMTS[stmtno] - startpos + 1);
+	for (stmtno=0; stmtno < num_statements;  stmtno++) {
+		int startpos, endpos;
+		char *dest;
+		if (stmtno == 0)
+			startpos = 0;
+		else
+			startpos = STMTS[stmtno-1];
+		endpos = STMTS[stmtno];
+		dest = (char *) malloc (endpos - startpos + 1);
 		if (dest == 0) {
+			printf("DDL Failure - could not allocate %d bytes of memory\n", endpos - startpos + 1);
 			return -1;
 		}
-		strncpy(dest, dstring_data(&script + startpos), STMTS[stmtno]-startpos);
-		dest[STMTS[stmtno]-startpos+1] = 0;
+		strncpy(dest, dstring_data(&script) + startpos, endpos-startpos);
+		dest[STMTS[stmtno]-startpos] = 0;
 		slon_mkquery(&query, dest);
+		printf("DDL Statement %d: (%d,%d) [%s]\n", stmtno, startpos, endpos, dest);
 		free(dest);
 
-		if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+		res = PQexec(adminfo1->dbconn, dstring_data(&query));
+
+		if (PQresultStatus(res) != PGRES_COMMAND_OK && 
+		    PQresultStatus(res) != PGRES_TUPLES_OK &&
+		    PQresultStatus(res) != PGRES_EMPTY_QUERY)
 		{
+			rstat = PQresultStatus(res);
+			printf("DDL Statement failed - %s\n", PQresStatus(rstat));
 			dstring_free(&query);
 			return -1;
 		}
+		rstat = PQresultStatus(res);
+		printf ("Success - %s\n", PQresStatus(rstat));
 	}
 	
+	printf("Submitting SQL statements to subscribers...\n");
 
-	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, '%s' %d); ", 
+	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, '%s', %d); ", 
 		     stmt->hdr.script->clustername,
 		     stmt->ddl_setid,  dstring_data(&script),
 		     stmt->only_on_node);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.108 2006-03-20 17:26:53 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.109 2006-03-20 22:12:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1459,6 +1459,8 @@ remoteWorkerThread_main(void *cdata)
 				int			ddl_setid = (int)strtol(event->ev_data1, NULL, 10);
 				char	   *ddl_script = event->ev_data2;
 				int			ddl_only_on_node = (int)strtol(event->ev_data3, NULL, 10);
+				PGresult *res;
+				ExecStatusType rstat;
 
 
 				slon_appendquery(&query1,
@@ -1474,30 +1476,52 @@ remoteWorkerThread_main(void *cdata)
 
 				int num_statements = -1, stmtno, startpos;
 				num_statements = scan_for_statements (ddl_script);
+				slon_log(SLON_CONFIG, "remoteWorkerThread_%d: DDL request with %d statements\n",
+					 node->no_id, num_statements);
 				if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS)) {
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL had invalid number of statements - %d\n", 
 						 node->no_id, num_statements);
 					slon_retry();
 				}
-				for (stmtno=0, startpos=0; stmtno > num_statements; startpos = STMTS[stmtno], stmtno++) {
-					char *dest = (char *) malloc (STMTS[stmtno] - startpos + 1);
+				
+				for (stmtno=0; stmtno < num_statements;  stmtno++) {
+					int startpos, endpos;
+					char *dest;
+					if (stmtno == 0)
+						startpos = 0;
+					else
+						startpos = STMTS[stmtno-1];
+
+					endpos = STMTS[stmtno];
+					dest = (char *) malloc (endpos - startpos + 1);
 					if (dest == 0) {
-						slon_log(SLON_ERROR, "remoteWorkerThread_%d: malloc() failure in DDL_SCRIPT\n");
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d: malloc() failure in DDL_SCRIPT - could not allocate %d bytes of memory\n", 
+							 node->no_id, endpos - startpos + 1);
 						slon_retry();
 					}
-					strncpy(dest, ddl_script + startpos, STMTS[stmtno]-startpos);
-					dest[STMTS[stmtno]-startpos+1] = 0;
+					strncpy(dest, ddl_script + startpos, endpos-startpos);
+					dest[STMTS[stmtno]-startpos] = 0;
 					slon_mkquery(&query1, dest);
+					slon_log(SLON_CONFIG, "remoteWorkerThread_%d: DDL Statement %d: [%s]\n", 
+						 node->no_id, stmtno, dest);						 
 					free(dest);
 
-					if (query_execute(node, local_dbconn, &query1) < 0) {
-						slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL statement failed - %s\n",
-							 node->no_id, dstring_data(&query1));
+					res = PQexec(local_dbconn, dstring_data(&query1));
+
+					if (PQresultStatus(res) != PGRES_COMMAND_OK && 
+					    PQresultStatus(res) != PGRES_TUPLES_OK &&
+					    PQresultStatus(res) != PGRES_EMPTY_QUERY)
+					{
+						rstat = PQresultStatus(res);
+						slon_log(SLON_ERROR, "DDL Statement failed - %s\n", PQresStatus(rstat));
+						dstring_free(&query1);
 						slon_retry();
 					}
+					rstat = PQresultStatus(res);
+					slon_log (SLON_CONFIG, "DDL success - %s\n", PQresStatus(rstat));
 				}
 	
-				slon_mkquery(&query1, "select \"_%s\".ddlScript_complete_int(%d, %d); ", 
+				slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
 					     rtcfg_namespace,
 					     ddl_setid,
 					     ddl_only_on_node);

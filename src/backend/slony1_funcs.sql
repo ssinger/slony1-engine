@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.79 2006-03-02 19:03:01 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.80 2006-03-20 22:12:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -118,7 +118,6 @@ comment on function @NAMESPACE@.createEvent (name, text, text, text, text, text,
 'FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
 
 Create an sl_event entry';
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION denyAccess (cluster_name)
@@ -3598,17 +3597,16 @@ Processes DROP_TRIGGER event to make sure that trigger trig_tgname on
 replicated table trig_tabid IS disabled.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlScript (set_id, script, only_on_node)
+-- FUNCTION ddlScript_prepare (set_id, only_on_node)
 --
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript (int4, text, int4)
-returns bigint
+create or replace function @NAMESPACE@.ddlScript_prepare (int4, int4)
+returns integer
 as '
 declare
 	p_set_id			alias for $1;
-	p_script			alias for $2;
-	p_only_on_node		alias for $3;
+	p_only_on_node		alias for $2;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -3635,31 +3633,53 @@ begin
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
-	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
-	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
-			p_set_id, p_script, p_only_on_node);
+	return 1;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.ddlScript(int4, text, int4) is
-'ddlScript(set_id, script, only_on_node)
 
-Generates a SYNC event, runs the script on the origin, and then
-generates a DDL_SCRIPT event to request it to be run on replicated
-slaves.';
+comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is 
+'Prepare for DDL script execution on origin';
+
+-- 	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlScript_int (set_id, script, only_on_node)
+-- FUNCTION ddlScript_complete (set_id, script, only_on_node)
 --
---	Process the DDL_SCRIPT event
+--	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript_int (int4, text, int4)
-returns int4
+create or replace function @NAMESPACE@.ddlScript_complete (int4, text, int4)
+returns integer
 as '
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
 	p_only_on_node		alias for $3;
+	v_set_origin		int4;
+begin
+	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
+			p_set_id, p_script, p_only_on_node);
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.ddlScript_complete(int4, text, int4) is
+'ddlScript_complete(set_id, script, only_on_node)
+
+After script has run on origin, this fixes up relnames, restores
+triggers, and generates a DDL_SCRIPT event to request it to be run on
+replicated slaves.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript_prepare_int (set_id, only_on_node)
+--
+--	Prepare for the DDL_SCRIPT event
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.ddlScript_prepare_int (int4, int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_only_on_node		alias for $2;
 	v_set_origin		int4;
 	v_no_id				int4;
 	v_row				record;
@@ -3704,12 +3724,30 @@ begin
 	loop
 		perform @NAMESPACE@.alterTableRestore(v_row.tab_id);
 	end loop;
+	return p_set_id;
+end;
+' language plpgsql;
 
-	-- ----
-	-- Run the script
-	-- ----
-	execute p_script;
+comment on function @NAMESPACE@.ddlScript_prepare_int (int4, int4) is
+'ddlScript_prepare_int (set_id, only_on_node)
 
+Do preparatory work for a DDL script, restoring 
+triggers/rules to original state.';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript_complete_int (set_id, only_on_node)
+--
+--	Complete the DDL_SCRIPT event
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.ddlScript_complete_int (int4, int4)
+returns int4
+as '
+declare
+	p_set_id			alias for $1;
+	p_only_on_node		alias for $2;
+	v_row				record;
+begin
 	-- ----
 	-- Put all tables back into replicated mode
 	-- ----
@@ -3721,12 +3759,11 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.ddlScript_int(int4, text, int4) is
-'ddlScript_int(set_id, script, only_on_node)
+comment on function @NAMESPACE@.ddlScript_complete_int(int4, int4) is
+'ddlScript_complete_int(set_id, script, only_on_node)
 
-Processes the DDL_SCRIPT event.  On slave nodes, this restores
-original triggers/rules, runs the script, and then puts tables back
-into replicated mode.';
+Complete processing the DDL_SCRIPT event.  This puts tables back into
+replicated mode.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableForReplication (tab_id)
@@ -4196,7 +4233,7 @@ begin
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
-		raise exception ''Slony-I: Cannot unsubscibe set % while being provider'',
+		raise exception ''Slony-I: Cannot unsubscribe set % while being provider'',
 				p_sub_set;
 	end if;
 
@@ -4946,7 +4983,6 @@ A table was that was specified without a primary key is added to the
 replication. Assume that tableAddKey() was called before and finish
 the creation of the serial column. The return an attkind according to
 that.';
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION RebuildListenEntries ()
