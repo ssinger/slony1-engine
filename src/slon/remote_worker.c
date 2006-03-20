@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.107 2006-02-28 21:25:51 wieck Exp $
+ *	$Id: remote_worker.c,v 1.108 2006-03-20 17:26:53 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -353,10 +353,16 @@ remoteWorkerThread_main(void *cdata)
 		if (check_config)
 		{
 			rtcfg_lock();
-			if (!node->no_active)
+			if (!node->no_active) 
+			{
+	                        rtcfg_unlock();
 				break;
+			}
 			if (node->worker_status != SLON_TSTAT_RUNNING)
+			{
+                        	rtcfg_unlock();
 				break;
+			}
 
 			if (curr_config != rtcfg_seq_get())
 			{
