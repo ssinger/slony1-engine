@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.80 2006-03-20 22:12:05 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.81 2006-03-20 22:20:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4994,25 +4994,46 @@ create or replace function @NAMESPACE@.RebuildListenEntries()
 returns int
 as '
 declare
-	v_row			record;
+	v_receiver record ;
+	v_provider record ;
+	v_origin record ;
+	v_reachable int4[] ;
 begin
 	-- First remove the entire configuration
 	delete from @NAMESPACE@.sl_listen;
 
-	-- The loop over every possible pair of origin, receiver
-	for v_row in select N1.no_id as origin, N2.no_id as receiver
-			from @NAMESPACE@.sl_node N1, @NAMESPACE@.sl_node N2
-			where N1.no_id <> N2.no_id
-	loop
-		perform @NAMESPACE@.RebuildListenEntriesOne(v_row.origin, v_row.receiver);
-	end loop;
+	-- Loop over every possible pair of receiver and provider
+	for v_receiver in select no_id from @NAMESPACE@.sl_node loop
+		for v_provider in select pa_server as no_id from @NAMESPACE@.sl_path where pa_client = v_receiver.no_id loop
 
-	return 0;
-end;
-' language plpgsql;
+			-- Find all nodes that v_provider.no_id can receiver events from without using v_receiver.no_id			
+			for v_origin in select * from @NAMESPACE@.ReachableFromNode(v_provider.no_id, array[v_receiver.no_id]) as r(no_id) loop
+
+				-- If v_receiver.no_id subscribes a set from v_provider.no_id, events have to travel the same
+				-- path as the data. Ignore possible sl_listen that would break that rule.
+				perform 1 from @NAMESPACE@.sl_subscribe
+					join @NAMESPACE@.sl_set on sl_set.set_id = sl_subscribe.sub_set
+		 			where
+						sub_receiver = v_receiver.no_id and
+						sub_provider != v_provider.no_id and
+						set_origin = v_origin.no_id ;
+				if not found then
+					insert into @NAMESPACE@.sl_listen (li_receiver, li_provider, li_origin)
+						values (v_receiver.no_id, v_provider.no_id, v_origin.no_id) ;
+				end if ;
+
+
+			end loop ;
+
+		end loop ;
+	end loop ;
+
+	return null ;
+end ;
+' language 'plpgsql';
 
 comment on function @NAMESPACE@.RebuildListenEntries() is
-'RebuildListenEntries(p_provider, p_receiver)
+'RebuildListenEntries()
 
 Invoked by various subscription and path modifying functions, this
 rewrites the sl_listen entries, adding in all the ones required to
@@ -5020,93 +5041,44 @@ allow communications between nodes in the Slony-I cluster.';
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION RebuildListenEntriesOne (origin, receiver)
+-- FUNCTION ReachableFromNode (receiver, blacklist)
 --
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.RebuildListenEntriesOne(int4, int4)
-returns int4
-as '
+create or replace function @NAMESPACE@.ReachableFromNode(int4, int4[]) returns setof int4 as '
 declare
-	p_origin		alias for $1;
-	p_receiver		alias for $2;
-	v_row			record;
+	v_node alias for $1 ;
+	v_blacklist alias for $2 ;
+	v_ignore int4[] ;
+	v_reachable_edge_last int4[] ;
+	v_reachable_edge_new int4[] default \'{}\' ;
+	v_server record ;
 begin
-	-- 1. If the receiver is subscribed to any set from the origin,
-	--    listen on the same provider(s).
-	for v_row in select distinct sub_provider
-			from @NAMESPACE@.sl_subscribe, @NAMESPACE@.sl_set,
-				@NAMESPACE@.sl_path
-			where sub_set = set_id
-			and set_origin = p_origin
-			and sub_receiver = p_receiver
-			and sub_provider = pa_server
-			and sub_receiver = pa_client
-	loop
-		perform @NAMESPACE@.storeListen_int(p_origin, 
-				v_row.sub_provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
-
-	-- 2. If the receiver has a direct path to the provider,
-	--    use that.
-	if exists (select true
+	v_reachable_edge_last := array[v_node] ;
+	v_ignore := v_blacklist || array[v_node] ;
+	return next v_node ;
+	while v_reachable_edge_last != \'{}\' loop
+		v_reachable_edge_new := \'{}\' ;
+		for v_server in select pa_server as no_id
 			from @NAMESPACE@.sl_path
-			where pa_server = p_origin
-			and pa_client = p_receiver)
-	then
-		perform @NAMESPACE@.storeListen_int(p_origin, p_origin, p_receiver);
-		return 1;
-	end if;
+			where pa_client = ANY(v_reachable_edge_last) and pa_server != ALL(v_ignore)
+		loop
+			if v_server.no_id != ALL(v_ignore) then
+				v_ignore := v_ignore || array[v_server.no_id] ;
+				v_reachable_edge_new := v_reachable_edge_new || array[v_server.no_id] ;
+				return next v_server.no_id ;
+			end if ;
+		end loop ;
+		v_reachable_edge_last := v_reachable_edge_new ;
+	end loop ;
+	return ;
+end ;
+' language 'plpgsql';
 
-	-- 3. Listen on every node that is either provider for the
-	--    receiver or is using the receiver as provider (follow the
-	--    normal subscription routes).
-	for v_row in select distinct provider from (
-			select sub_provider as provider
-					from @NAMESPACE@.sl_subscribe
-					where sub_receiver = p_receiver
-			union
-			select sub_receiver as provider
-					from @NAMESPACE@.sl_subscribe
-					where sub_provider = p_receiver
-					and exists (select true from @NAMESPACE@.sl_path
-								where pa_server = sub_receiver
-								and pa_client = sub_provider)
-			) as S
-	loop
-		perform @NAMESPACE@.storeListen_int(p_origin,
-				v_row.provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
+comment on function @NAMESPACE@.ReachableFromNode(int4, int4[]) is
+'ReachableFromNode(receiver, blacklist)
 
-	-- 4. If all else fails - meaning there are no subscriptions to
-	--    guide us to the right path - use every node we have a path
-	--    to as provider. This normally only happens when the cluster
-	--    is built or a new node added. This brute force fallback
-	--    ensures that events will propagate if possible at all.
-	for v_row in select pa_server as provider
-			from @NAMESPACE@.sl_path
-			where pa_client = p_receiver
-	loop
-		perform @NAMESPACE@.storeListen_int(p_origin, 
-				v_row.provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
-
-	return 0;
-end;
-' language plpgsql;
-
-comment on function @NAMESPACE@.RebuildListenEntriesOne(int4, int4) is
-'RebuildListenEntriesOne(p_origin, p_receiver)
-
-Rebuilding of sl_listen entries for one origin, receiver pair.';
+Find all nodes that <receiver> can receive events from without
+using nodes in <blacklist> as a relay.';
 
 
 -- ----------------------------------------------------------------------
