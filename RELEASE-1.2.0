@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.1 2006-03-07 20:59:08 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.2 2006-03-21 19:10:26 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -90,3 +90,7 @@ There are also numerous enhancements that are more directly visible:
 
   As with "lag interval," this could be a bit of a foot gun...
 
+- slon "run program after each log shipped SYNC" option
+
+  You can specify a program to run each time a SYNC event
+  is successfully closed off.
