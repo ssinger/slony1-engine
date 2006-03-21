@@ -35,7 +35,7 @@ _check_pid()
 	  err 3 'USAGE: _check_pid procname pid ppid'
 	fi
 	case `uname` in
-        FreeBSD)
+        *BSD|Darwin)
         	_psargs="-j"
             _fp_args='_user _pid _ppid _pgid _sess _jobc _stat _tt _time _command'
             ;;
@@ -88,7 +88,7 @@ random_number()
   _upperbound=$2
 
   case `uname` in
-  FreeBSD)
+  *BSD|Darwin)
     rannum=`jot -r 1 ${_lowerbound} ${_upperbound}`
     ;;
   AIX|MINGW32*)
@@ -123,7 +123,7 @@ random_string()
 
   _length=$1
   case `uname` in
-  FreeBSD)
+  *BSD|Darwin)
     ranstring=`jot -r -c ${_length} a Z | rs -g 0 ${_length}`
     ;;
   Linux|AIX|MINGW32*)
@@ -162,7 +162,7 @@ random_az()
 
   _length=$1
   case `uname` in
-  FreeBSD)
+  *BSD|Darwin)
     ranstring=`jot -r -c ${_length} a Z | rs -g 0 ${_length}`
     ;;
   AIX|MINGW32*)
