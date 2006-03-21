@@ -1847,7 +1847,31 @@ DROP TRIGGER (
 	for the old, deleted entries, which will slow the process of
 	inserting new entries into the index.</para></listitem>
      </itemizedlist>
-     
+
+     <warning><para> This operation can take a (potentially distinctly)
+     non-zero period of time.  If you have a great deal of data in a
+     particular set of tables, it may take hours or even (if <quote>a
+     great deal</quote> indicates <quote>tens or hundreds gigabytes of
+     data</quote>) possibly multiple days for this event to
+     complete.</para>
+
+     <para> The <command>SUBSCRIBE SET</command> request will,
+     nonetheless, return fairly much immediately, even though the work
+     is merely <quote>in progress.</quote> If you need to set up
+     subscriptions for a set of cascading nodes, you will need to wait
+     for each subscriber to complete subscribing before submitting
+     requests for subscriptions that use that node as a provider.  If
+     you don't, it won't be a big deal: <command>slonik</command> will
+     check the node, discover that it is not yet an active provider
+     for the set, and report back:</para>
+
+<programlisting>
+ Slony-I: provider 2 is not an active forwarding node for replication set 1
+</programlisting>
+
+     <para> In effect, such subscription requests will be ignored
+     until the provider is ready.</para>
+</warning>
 
      <note><para> If you need to revise subscription information for a
        node, you <emphasis>also</emphasis> submit the new information
@@ -2393,7 +2417,11 @@ EXECUTE SCRIPT (
     <para> In &slony1; version 1.2, the DDL script is split into
     statements, and each is submitted separately.  As a result, it is
     fine for later statements to refer to objects or attributes
-    created or modified in earlier statements. </para>
+    created or modified in earlier statements.  Furthermore, in
+    version 1.2, the <command>slonik</command> output includes a
+    listing of each statement as it is processed, on the set origin
+    node.  Similarly, the statements processed are listed in slon logs
+    on the other nodes.</para>
    </refsect1>
   </refentry>
 

@@ -192,6 +192,56 @@
 
   </variablelist>
 </sect1>
+<sect1 id="slon-archive-logging">
+  <title> Archive Logging Options </title>
+  <variablelist>
+    <varlistentry id="slon-config-archive-dir" xreflabel="slon_conf_archive_dir">
+      <term><varname>archive_dir</varname> (<type>text</type>)</term>
+      <indexterm>
+        <primary><varname>archive_dir</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>This indicates in what directory sync archive files should be stored.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-command-on-logarchive" xreflabel="slon_conf_command_on_log_archive">
+      <term><varname>command_on_logarchive</varname> (<type>text</type>)</term>
+      <indexterm>
+        <primary><varname>command_on_logarchive</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>This indicates a Unix command to be submitted each time
+        an archive log is successfully generated.
+        </para>
+
+        <para> The command will be passed one parameter, namely the
+        full pathname of the archive file.  Thus, supposing we have
+        the settings...</para>
+
+        <command>command_on_logarchive = <filename>/usr/local/bin/logstuff</filename></command>
+        <command>archive_dir = <filename>/var/log/slony1/archivelogs/payroll</filename></command>
+
+        <para> A typical log file might be named something like
+        <filename>/var/log/slony1/archivelogs/payroll/slony1_log_1_00000000000000000036.sql</filename></para>
+
+        <para> The command run after that SYNC was generated would be: </para>
+
+        <command><filename>/usr/local/bin/logstuff</filename> <filename>/var/log/slony1/archivelogs/payroll/slony1_log_1_00000000000000000036.sql</filename></command>
+
+        <warning> <para> Note that this is run via
+        <function>system(const char *COMMAND)</function>; if the
+        program that is run takes five minutes to run, that will defer
+        the next <command>SYNC</command> by five minutes.  You
+        probably don't want the archiving command to do much
+        <quote>in-line</quote> work.</para></warning>
+
+      </listitem>
+    </varlistentry>
+    
+  </variablelist>
+</sect1>
 <sect1 id="slon-config-interval">
   <title>Event Tuning</title>
   <variablelist>

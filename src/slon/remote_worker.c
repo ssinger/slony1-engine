@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.109 2006-03-20 22:12:05 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.110 2006-03-21 17:59:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4909,6 +4909,13 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	if (archive_dir)
 	{
 		close_log_archive();
+		if (command_on_logarchive) {
+			char command[512];
+			sprintf(command, "%s %s", command_on_logarchive, archive_name);
+			slon_log(SLON_INFO, "remoteWorkerThread_%d: Run Archive Command %s\n",
+				 node->no_id, command);
+			system(command);
+		}
 	}
 
 	/*

@@ -40,6 +40,7 @@ bool		drop_indices;
 char	   *log_timestamp_format;
 char	   *sql_on_connection;
 char	   *lag_interval;
+char       *command_on_logarchive;
 
 enum config_type
 {
@@ -370,6 +371,20 @@ static struct config_string ConfigureNamesString[] =
 		NULL
 	},
 
+	{
+		{
+			(const char *)"command_on_logarchive",
+			gettext_noop("Command to run (probably a shell script) "
+				     "every time a log archive is committed. "
+				     "This command will be passed one parameter: "
+				     "The full pathname of the archive file"
+				),
+			NULL,
+			SLON_C_STRING
+		},
+		&command_on_logarchive,
+		NULL
+	},
 
 
 #ifdef HAVE_SYSLOG

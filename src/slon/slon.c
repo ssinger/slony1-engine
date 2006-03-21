@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.64 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: slon.c,v 1.65 2006-03-21 17:59:25 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -101,6 +101,7 @@ Usage(char *const argv[])
 	fprintf(stderr, "    -p <filename>         slon pid file\n");
 	fprintf(stderr, "    -f <filename>         slon configuration file\n");
 	fprintf(stderr, "    -a <directory>        directory to store SYNC archive files\n");
+	fprintf(stderr, "    -x <command>          program to run after writing archive file\n");
 	fprintf(stderr, "    -q <num>              Terminate when this node reaches # of SYNCs\n");
 	fprintf(stderr, "    -r <num>              # of syncs for -q option\n");
 	fprintf(stderr, "    -l <interval>         this node should lag providers by this interval\n");
@@ -171,7 +172,7 @@ main(int argc, char *const argv[])
 
 	InitializeConfOptions();
 
-	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:hv?")) != EOF)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:x:hv?")) != EOF)
 	{
 		switch (c)
 		{
@@ -232,6 +233,10 @@ main(int argc, char *const argv[])
 			case 'v':
 				printf("slon version %s\n", SLONY_I_VERSION_STRING);
 				exit(0);
+				break;
+
+			case 'x':
+				set_config_option("command_on_logarchive", optarg);
 				break;
 
 			default:
