@@ -220,15 +220,21 @@
         full pathname of the archive file.  Thus, supposing we have
         the settings...</para>
 
+        <para>
         <command>command_on_logarchive = <filename>/usr/local/bin/logstuff</filename></command>
+        </para>
+        <para>
         <command>archive_dir = <filename>/var/log/slony1/archivelogs/payroll</filename></command>
+        </para>
 
         <para> A typical log file might be named something like
         <filename>/var/log/slony1/archivelogs/payroll/slony1_log_1_00000000000000000036.sql</filename></para>
 
         <para> The command run after that SYNC was generated would be: </para>
 
+        <para>
         <command><filename>/usr/local/bin/logstuff</filename> <filename>/var/log/slony1/archivelogs/payroll/slony1_log_1_00000000000000000036.sql</filename></command>
+        </para>
 
         <warning> <para> Note that this is run via
         <function>system(const char *COMMAND)</function>; if the

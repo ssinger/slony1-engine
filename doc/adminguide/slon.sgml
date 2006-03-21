@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.27 2006-03-17 18:56:26 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.28 2006-03-21 19:08:16 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -305,6 +305,19 @@
       place a sequence of <command>SYNC</command> archive files for
       use in &logshiplink; mode.
      </para>
+    </listitem>
+   </varlistentry>
+
+
+   <varlistentry>
+    <term><option>-x</option><replaceable class="parameter"> command to run on log archive</replaceable></term>
+    <listitem>
+     <para>
+      <envar>command_on_logarchive</envar> indicates a command to be run 
+      each time a SYNC file is successfully generated.
+     </para>
+
+     <para> See more details on <xref linkend="slon-config-command-on-logarchive">.</para>
     </listitem>
    </varlistentry>
 
