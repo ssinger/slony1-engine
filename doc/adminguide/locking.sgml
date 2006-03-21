@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.7 2006-01-30 20:22:20 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.8 2006-03-21 19:07:05 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -72,6 +72,12 @@ via an exclusive lock for the entire duration of the process of
 subscription.  By locking the tables early, this means that the
 subscription cannot fail after copying some of the data due to some
 other process having held on to a table. </para>
+
+<para> In any case, note that this one began with the wording
+<quote>on a new subscriber.</quote> The locks are applied <emphasis>on
+the new subscriber.</emphasis> They are <emphasis>not</emphasis>
+applied on the provider or on the origin. </para>
+
 </listitem>
 
 </itemizedlist>
