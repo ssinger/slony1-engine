@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.59 2006-03-20 22:12:06 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.60 2006-03-24 23:42:04 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3890,24 +3890,44 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 			dstring_free(&query);
 			return -1;
 		}
-		rstat = PQresultStatus(res);
-		printf ("Success - %s\n", PQresStatus(rstat));
+		/* rstat = PQresultStatus(res); */
+		/* printf ("Success - %s\n", PQresStatus(rstat)); */
 	}
 	
-	printf("Submitting SQL statements to subscribers...\n");
+	printf("Submit DDL Event to subscribers...\n");
 
-	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, '%s', %d); ", 
+	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
 		     stmt->hdr.script->clustername,
-		     stmt->ddl_setid,  dstring_data(&script),
+		     stmt->ddl_setid,  
 		     stmt->only_on_node);
 
-	dstring_free(&script);
-	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+#define PARMCOUNT 1
+
+	const char *params[PARMCOUNT];
+	int paramlens[PARMCOUNT];
+	int paramfmts[PARMCOUNT];
+
+	paramlens[PARMCOUNT-1] = 0;
+	paramfmts[PARMCOUNT-1] = 0;
+	params[PARMCOUNT-1] = dstring_data(&script);
+
+	res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
+			   NULL, params, paramlens, paramfmts, 0);
+	
+	if (PQresultStatus(res) != PGRES_COMMAND_OK && 
+	    PQresultStatus(res) != PGRES_TUPLES_OK &&
+	    PQresultStatus(res) != PGRES_EMPTY_QUERY)
 	{
+		rstat = PQresultStatus(res);
+		printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
 		dstring_free(&query);
 		return -1;
+	} else {
+		rstat = PQresultStatus(res);
+		printf ("DDL on origin - %s\n", PQresStatus(rstat));
 	}
-
+	
+	dstring_free(&script);
 	dstring_free(&query);
 	return 0;
 }
