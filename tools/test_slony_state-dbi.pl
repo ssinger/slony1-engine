@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_state-dbi.pl,v 1.1 2005-03-15 16:41:04 cbbrowne Exp $
+# $Id: test_slony_state-dbi.pl,v 1.2 2006-03-27 21:50:13 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -25,14 +25,16 @@ my ($database,$user, $port, $cluster, $host, $password, $set, $finalquery);
 $database = $opt_database if (defined($opt_database));
 $port = 5432;
 $port = $opt_port if (defined($opt_port));
+$user = `uname`;  chomp $user;
 $user = $opt_user if (defined($opt_user));
 $password = $opt_password if (defined($opt_password));
+$host = "localhost";
 $host = $opt_host if (defined($opt_host));
 $cluster = $opt_cluster if (defined($opt_cluster));
 $recipient = $opt_recipient if (defined($opt_recipient));
 $mailprog = $opt_mailprog if (defined($opt_mailprog));
 
-my $initialDSN = "dbi:Pg:dbname=$database;host=$host;port=$port";
+my $initialDSN = "dbi:Pg:dbname=$database;host=$host;port=$port;user=$user";
 $initialDSN = $initialDSN . ";password=$password" if defined($opt_password);
 
 print "DSN: $initialDSN\n===========================\n";
