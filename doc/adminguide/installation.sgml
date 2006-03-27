@@ -1,12 +1,26 @@
-<!-- $Id: installation.sgml,v 1.21 2006-02-27 21:46:44 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.22 2006-03-27 22:43:05 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
-<para>Note for &windows; users: Unless you are planning on hacking the
-&slony1; code, it is highly recommended that you download and install
-a prebuilt binary distribution and jump straight to the configuration
-section below.
+<note> <para>For &windows; users: Unless you are planning on hacking
+the &slony1; code, it is highly recommended that you download and
+install a prebuilt binary distribution and jump straight to the
+configuration section below.  There are likely to be links and/or
+binaries at <ulink url="http://pgfoundry.org/projects/slony1/">
+pgFoundry &slony1; site </ulink> for official releases, the first of
+which is expected to be &slony1; version 1.2.0.  </para>
+
+<para> There are also RPM binaries available at that site for recent
+versions of &slony1; for recent versions of &postgres;.
 </para>
+</note>
+
+<warning><para> If you need &slony1; to do an upgrade from some
+elderly version of &postgres; to a newer version, or if you need a
+late-breaking CVS version, outside the context of a major release,
+then be prepared to need to build both &postgres; and &slony1; from
+source.  The remainder of this section assumes this...</para>
+</warning>
 
 <para>You should have obtained the &slony1; source from the previous
 step. Unpack it.</para>
