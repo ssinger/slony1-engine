@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.12 2005-12-01 21:27:38 xfade Exp $
+#       $Id: Makefile,v 1.13 2006-03-28 20:55:46 cbbrowne Exp $
 #
 # ----------
 
@@ -34,7 +34,7 @@ endif
 	done
 endif
 
-install: all installdirs
+install: installdirs
 ifndef toolsbin
 	@echo "The altperl tools won't be installed unless --with-perltools is specified in configure"
 else
