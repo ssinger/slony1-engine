@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.82 2006-03-28 18:59:50 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.83 2006-03-28 20:48:51 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -179,6 +179,22 @@ grant execute on function @NAMESPACE@.getModuleVersion () to public;
 
 comment on function @NAMESPACE@.getModuleVersion () is
   'Returns the compiled-in version number of the Slony-I shared object';
+
+create or replace function @NAMESPACE@.checkmoduleversion () returns text as '
+begin
+  if @NAMESPACE@.getModuleVersion() <> ''@MODULEVERSION@'' then
+      raise exception ''Slonik version: % != Slony-I version in PG build %'',
+             ''@MODULEVERSION@'', @NAMESPACE@.getModuleVersion();
+  end if;
+  return null;
+end;' language plpgsql;
+
+comment on function @NAMESPACE@.checkmoduleversion () is 
+'Inline test function that verifies that slonik request for STORE
+NODE/INIT CLUSTER is being run against a conformant set of
+schema/functions.';
+
+select @NAMESPACE@.checkmoduleversion();
 
 -- ----------------------------------------------------------------------
 -- FUNCTION setSessionRole (name, role)

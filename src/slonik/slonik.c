@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.60 2006-03-24 23:42:04 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.61 2006-03-28 20:48:52 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1750,6 +1750,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	char		rex1[256];
 	char		rex2[256];
 	char		rex3[256];
+	char		rex4[256];
 	FILE	   *stmtp;
 
 
@@ -1778,7 +1779,8 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 		rex1[rc] = '\0';
 		rex3[0] = '\0';
 		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
-		replace_token(buf, rex3, "@NAMESPACE@", rex2);
+		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
+		replace_token(buf, rex4, "@NAMESPACE@", rex2);
 		rc = strlen(buf);
 		dstring_nappend(&query, buf, rc);
 	}
