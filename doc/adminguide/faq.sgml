@@ -1,1378 +1,8 @@
-<!-- $Id: faq.sgml,v 1.53 2006-03-17 18:56:50 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.54 2006-03-28 16:43:57 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
-<qandaentry id="missingheaders">
-<question><para> I tried building &slony1; 1.1 and got the following
-error message:
-<screen>
-configure: error: Headers for libpqserver are not found in the includeserverdir.
-   This is the path to postgres.h. Please specify the includeserverdir with
-   --with-pgincludeserverdir=&lt;dir&gt;
-</screen>
-</para></question>
-
-<answer><para> You are almost certainly running version &postgres; 7.4
-or earlier, where server headers are not installed by default if you
-just do a <command>make install</command> of &postgres;.</para>
-
-<para> You need to install server headers when you install &postgres;
-via the command <command>make install-all-headers</command>.
-
-</para> </answer> </qandaentry>
-
-<qandaentry>
-
-<question><para>I looked for the <envar>_clustername</envar> namespace, and
-it wasn't there.</para></question>
-
-<answer><para> If the DSNs are wrong, then <xref linkend="slon">
-instances can't connect to the nodes.</para>
-
-<para>This will generally lead to nodes remaining entirely untouched.</para>
-
-<para>Recheck the connection configuration.  By the way, since <xref
-linkend="slon"> links to libpq, you could have password information
-stored in <filename> $HOME/.pgpass</filename>, partially filling in
-right/wrong authentication information there.</para>
-</answer>
-</qandaentry>
-
-<qandaentry id="threadsafety">
-
-<question><para> Some events are moving around, but no replication is
-taking place.</para>
-
-<para> Slony logs might look like the following:
-
-<screen>
-DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
-ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,
-		  ev_minxid, ev_maxxid, ev_xip,
-		  ev_type,
-                  ev_data1, ev_data2,
-		  ev_data3, ev_data4,
- 	          ev_data5, ev_data6,
-		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e 
-where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
-</screen>
-</para>
-
-<para> Alternatively, it may appear like...
-
-<screen>
-ERROR  remoteListenThread_2: "select ev_origin, ev_seqno, ev_timestamp,
-ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,
-ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8
-from "_sl_p2t2".sl_event e where (e.ev_origin = '2' and e.ev_seqno >
-'0') order by e.ev_origin, e.ev_seqno" - could not receive data from
-server: Error 0
-</screen> 
-</para>
-</question>
-
-<answer><para>On AIX and Solaris (and possibly elsewhere), both
-&slony1; <emphasis>and &postgres;</emphasis> must be compiled with the
-<option>--enable-thread-safety</option> option.  The above results
-when &postgres; isn't so compiled.</para>
-
-<para>What breaks here is that the libc (threadsafe) and libpq
-(non-threadsafe) use different memory locations for errno, thereby
-leading to the request failing.</para>
-
-<para>Problems like this crop up with disadmirable regularity on AIX
-and Solaris; it may take something of an <quote>object code audit</quote> to
-make sure that <emphasis>ALL</emphasis> of the necessary components have been
-compiled and linked with <option>--enable-thread-safety</option>.</para>
-
-<para>For instance, I ran into the problem one that
-<envar>LD_LIBRARY_PATH</envar> had been set, on Solaris, to point to
-libraries from an old &postgres; compile.  That meant that even though
-the database <emphasis>had</emphasis> been compiled with
-<option>--enable-thread-safety</option>, and
-<application>slon</application> had been compiled against that,
-<application>slon</application> was being dynamically linked to the
-<quote>bad old thread-unsafe version,</quote> so slon didn't work.  It
-wasn't clear that this was the case until I ran <command>ldd</command>
-against <application>slon</application>.</para> </answer>
-
-<answer><para> Note that with libpq version 7.4.2, on Solaris, a
-further <link linkend="threadpatch"> thread patch </link> was
-required; similar is also required for &postgres; version 8.0.
-</para>
-</answer>
-</qandaentry>
-
-<qandaentry>
-<question> <para>I tried creating a CLUSTER NAME with a "-" in it.
-That didn't work.</para></question>
-
-<answer><para> &slony1; uses the same rules for unquoted identifiers
-as the &postgres; main parser, so no, you probably shouldn't put a "-"
-in your identifier name.</para>
-
-<para> You may be able to defeat this by putting <quote>quotes</quote> around
-identifier names, but it's still liable to bite you some, so this is
-something that is probably not worth working around.</para>
-</answer>
-</qandaentry>
-<qandaentry>
-<question><para> <xref linkend="slon"> does not restart after
-crash</para>
-
-<para> After an immediate stop of &postgres; (simulation of system
-crash) in &pglistener; a tuple with <command>
-relname='_${cluster_name}_Restart'</command> exists. slon doesn't
-start because it thinks another process is serving the cluster on this
-node.  What can I do? The tuples can't be dropped from this
-relation.</para>
-
-<para> The logs claim that <blockquote><para>Another slon daemon is
-serving this node already</para></blockquote></para></question>
-
-<answer><para> The problem is that the system table &pglistener;, used
-by &postgres; to manage event notifications, contains some entries
-that are pointing to backends that no longer exist.  The new <xref
-linkend="slon"> instance connects to the database, and is convinced,
-by the presence of these entries, that an old
-<application>slon</application> is still servicing this &slony1;
-node.</para>
-
-<para> The <quote>trash</quote> in that table needs to be thrown
-away.</para>
-
-<para>It's handy to keep a slonik script similar to the following to
-run in such cases:
-
-<programlisting>
-twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
-cluster name = oxrsorg ;
-node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
-node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
-node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
-node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
-restart node 1;
-restart node 2;
-restart node 3;
-restart node 4;
-</programlisting></para>
-
-<para> <xref linkend="stmtrestartnode"> cleans up dead notifications
-so that you can restart the node.</para>
-
-<para>As of version 1.0.5, the startup process of slon looks for this
-condition, and automatically cleans it up.</para>
-
-<para> As of version 8.1 of &postgres;, the functions that manipulate
-&pglistener; do not support this usage, so for &slony1; versions after
-1.1.2 (<emphasis>e.g. - </emphasis> 1.1.5), this
-<quote>interlock</quote> behaviour is handled via a new table, and the
-issue should be transparently <quote>gone.</quote> </para>
-
-</answer></qandaentry>
-
-<qandaentry>
-<question><para>ps finds passwords on command line</para>
-
-<para> If I run a <command>ps</command> command, I, and everyone else,
-can see passwords on the command line.</para></question>
-
-<answer> <para>Take the passwords out of the Slony configuration, and
-put them into <filename>$(HOME)/.pgpass.</filename></para>
-</answer></qandaentry>
-
-<qandaentry>
-<question><para>Slonik fails - cannot load &postgres; library -
-<command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
-
-<para> When I run the sample setup script I get an error message similar
-to:
-
-<command>
-stdin:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
-could not open file '$libdir/xxid': No such file or directory
-</command></para></question>
-
-<answer><para> Evidently, you haven't got the
-<filename>xxid.so</filename> library in the <envar>$libdir</envar>
-directory that the &postgres; instance is
-using.  Note that the &slony1; components
-need to be installed in the &postgres;
-software installation for <emphasis>each and every one</emphasis> of
-the nodes, not just on the origin node.</para>
-
-<para>This may also point to there being some other mismatch between
-the &postgres; binary instance and the &slony1; instance.  If you
-compiled &slony1; yourself, on a machine that may have multiple
-&postgres; builds <quote>lying around,</quote> it's possible that the
-slon or slonik binaries are asking to load something that isn't
-actually in the library directory for the &postgres; database cluster
-that it's hitting.</para>
-
-<para>Long and short: This points to a need to <quote>audit</quote>
-what installations of &postgres; and &slony1; you have in place on the
-machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right.  See also <link linkend="threadsafety">
-thread safety </link> concerning threading issues on Solaris
-...</para> 
-
-<para> Life is simplest if you only have one set of &postgres;
-binaries on a given server; in that case, there isn't a <quote>wrong
-place</quote> in which &slony1; components might get installed.  If
-you have several software installs, you'll have to verify that the
-right versions of &slony1; components are associated with the right
-&postgres; binaries. </para> </answer></qandaentry>
-
-<qandaentry>
-<question><para>Table indexes with FQ namespace names
-
-<programlisting>
-set add table (set id = 1, origin = 1, id = 27, 
-               full qualified name = 'nspace.some_table', 
-               key = 'key_on_whatever', 
-               comment = 'Table some_table in namespace nspace with a candidate primary key');
-</programlisting></para></question>
-
-<answer><para> If you have <command> key =
-'nspace.key_on_whatever'</command> the request will
-<emphasis>FAIL</emphasis>.</para>
-</answer></qandaentry>
-<qandaentry>
-<question><para> I'm trying to get a slave subscribed, and get the
-following messages in the logs:
-
-<screen>
-DEBUG1 copy_set 1
-DEBUG1 remoteWorkerThread_1: connected to provider DB
-WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
-WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
-</screen></para>
-
-<para>Oops.  What I forgot to mention, as well, was that I was trying
-to add <emphasis>TWO</emphasis> subscribers, concurrently.</para></question>
-
-<answer><para> That doesn't work out: &slony1; won't work on the
-<command>COPY</command> commands concurrently.  See
-<filename>src/slon/remote_worker.c</filename>, function
-<function>copy_set()</function></para>
-
-<para>This has the (perhaps unfortunate) implication that you cannot
-populate two slaves concurrently from a single provider.  You have to
-subscribe one to the set, and only once it has completed setting up
-the subscription (copying table contents and such) can the second
-subscriber start setting up the subscription.</para>
-
-<para>It could also be possible for there to be an old outstanding
-transaction blocking &slony1; from processing the sync.  You might
-want to take a look at pg_locks to see what's up:
-
-<screen>
-sampledb=# select * from pg_locks where transaction is not null order by transaction;
- relation | database | transaction |  pid    |     mode      | granted 
-----------+----------+-------------+---------+---------------+---------
-          |          |   127314921 | 2605100 | ExclusiveLock | t
-          |          |   127326504 | 5660904 | ExclusiveLock | t
-(2 rows)
-</screen></para>
-
-<para>See?  127314921 is indeed older than 127314958, and it's still running.
-
-<screen>
-$ ps -aef | egrep '[2]605100'
-postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
-</screen></para>
-
-<para>This happens to be a <command>COPY</command> transaction involved in setting up the
-subscription for one of the nodes.  All is well; the system is busy
-setting up the first subscriber; it won't start on the second one
-until the first one has completed subscribing.</para>
-
-<para>By the way, if there is more than one database on the &postgres;
-cluster, and activity is taking place on the OTHER database, that will
-lead to there being <quote>transactions earlier than XID
-whatever</quote> being found to be still in progress.  The fact that
-it's a separate database on the cluster is irrelevant; &slony1; will
-wait until those old transactions terminate.</para>
-</answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-ERROR: duplicate key violates unique constraint "sl_table-pkey"</para>
-
-<para>I tried setting up a second replication set, and got the following error:
-
-<screen>
-stdin:9: Could not create subscription set 2 for oxrslive!
-stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
-CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
-</screen></para></question>
-
-<answer><para> The table IDs used in <xref linkend="stmtsetaddtable">
-are required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus,
-you can't restart numbering at 1 for a second set; if you are
-numbering them consecutively, a subsequent set has to start with IDs
-after where the previous set(s) left off.</para> </answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>I need to drop a table from a replication set</para></question>
-<answer><para>
-This can be accomplished several ways, not all equally desirable ;-).
-
-<itemizedlist>
-
-<listitem><para> You could drop the whole replication set, and
-recreate it with just the tables that you need.  Alas, that means
-recopying a whole lot of data, and kills the usability of the cluster
-on the rest of the set while that's happening.</para></listitem>
-
-<listitem><para> If you are running 1.0.5 or later, there is the
-command SET DROP TABLE, which will "do the trick."</para></listitem>
-
-<listitem><para> If you are still using 1.0.1 or 1.0.2, the
-<emphasis>essential functionality of <xref linkend="stmtsetdroptable">
-involves the functionality in <function>droptable_int()</function>.
-You can fiddle this by hand by finding the table ID for the table you
-want to get rid of, which you can find in <xref linkend="table.sl-table">, and then run the
-following three queries, on each host:</emphasis>
-
-<programlisting>
-  select _slonyschema.alterTableRestore(40);
-  select _slonyschema.tableDropKey(40);
-  delete from _slonyschema.sl_table where tab_id = 40;
-</programlisting></para>
-
-<para>The schema will obviously depend on how you defined the &slony1;
-cluster.  The table ID, in this case, 40, will need to change to the
-ID of the table you want to have go away.</para>
-
-<para> You'll have to run these three queries on all of the nodes,
-preferably firstly on the origin node, so that the dropping of this
-propagates properly.  Implementing this via a <xref linkend="slonik">
-statement with a new &slony1; event would do that.  Submitting the
-three queries using <xref linkend="stmtddlscript"> could do that.
-Also possible would be to connect to each database and submit the
-queries by hand.</para></listitem> </itemizedlist></para>
-</answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>I need to drop a sequence from a replication set</para></question>
-
-<answer><para></para><para>If you are running 1.0.5 or later, there is
-a <xref linkend="stmtsetdropsequence"> command in Slonik to allow you
-to do this, parallelling <xref linkend="stmtsetdroptable">.</para>
-
-<para>If you are running 1.0.2 or earlier, the process is a bit more manual.</para>
-
-<para>Supposing I want to get rid of the two sequences listed below,
-<envar>whois_cachemgmt_seq</envar> and
-<envar>epp_whoi_cach_seq_</envar>, we start by needing the
-<envar>seq_id</envar> values.
-
-<screen>
-oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
- seq_id | seq_reloid | seq_set |       seq_comment				 
---------+------------+---------+-------------------------------------
-     93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
-     59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
-(2 rows)
-</screen></para>
-
-<para>The data that needs to be deleted to stop Slony from continuing to
-replicate these are thus:
-
-<programlisting>
-delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
-delete from _oxrsorg.sl_sequence where seq_id in (93,59);
-</programlisting></para>
-
-<para>Those two queries could be submitted to all of the nodes via
-<xref linkend="function.ddlscript-integer-text-integer"> / <xref
-linkend="stmtddlscript">, thus eliminating the sequence everywhere
-<quote>at once.</quote> Or they may be applied by hand to each of the
-nodes.</para>
-
-<para>Similarly to <xref linkend="stmtsetdroptable">, this is
-implemented &slony1; version 1.0.5 as <xref
-linkend="stmtsetdropsequence">.</para></answer></qandaentry>
-
-<qandaentry>
-<question><para>Slony-I: cannot add table to currently subscribed set 1</para>
-
-<para> I tried to add a table to a set, and got the following message:
-
-<screen>
-	Slony-I: cannot add table to currently subscribed set 1
-</screen></para></question>
-
-<answer><para> You cannot add tables to sets that already have
-subscribers.</para>
-
-<para>The workaround to this is to create <emphasis>ANOTHER</emphasis>
-set, add the new tables to that new set, subscribe the same nodes
-subscribing to "set 1" to the new set, and then merge the sets
-together.</para>
-</answer></qandaentry>
-
-<qandaentry id="PGLISTENERFULL">
-<question><para>Some nodes start consistently falling behind</para>
-
-<para>I have been running &slony1; on a node for a while, and am
-seeing system performance suffering.</para>
-
-<para>I'm seeing long running queries of the form:
-<screen>
-	fetch 100 from LOG;
-</screen></para></question>
-
-<answer><para> This can be characteristic of &pglistener; (which is
-the table containing <command>NOTIFY</command> data) having plenty of
-dead tuples in it.  That makes <command>NOTIFY</command> events take a
-long time, and causes the affected node to gradually fall further and
-further behind.</para>
-
-<para>You quite likely need to do a <command>VACUUM FULL</command> on
-&pglistener;, to vigorously clean it out, and need to vacuum
-&pglistener; really frequently.  Once every five minutes would likely
-be AOK.</para>
-
-<para> Slon daemons already vacuum a bunch of tables, and
-<filename>cleanup_thread.c</filename> contains a list of tables that
-are frequently vacuumed automatically.  In &slony1; 1.0.2,
-&pglistener; is not included.  In 1.0.5 and later, it is
-regularly vacuumed, so this should cease to be a direct issue.</para>
-
-<para>There is, however, still a scenario where this will still
-<quote>bite.</quote> Under MVCC, vacuums cannot delete tuples that
-were made <quote>obsolete</quote> at any time after the start time of
-the eldest transaction that is still open.  Long running transactions
-will cause trouble, and should be avoided, even on subscriber
-nodes.</para> </answer></qandaentry>
-
-<qandaentry> <question><para>I started doing a backup using
-<application>pg_dump</application>, and suddenly Slony
-stops</para></question>
-
-<answer><para>Ouch.  What happens here is a conflict between:
-<itemizedlist>
-
-<listitem><para> <application>pg_dump</application>, which has taken
-out an <command>AccessShareLock</command> on all of the tables in the
-database, including the &slony1; ones, and</para></listitem>
-
-<listitem><para> A &slony1; sync event, which wants to grab a
-<command>AccessExclusiveLock</command> on the table <xref
-linkend="table.sl-event">.</para></listitem> </itemizedlist></para>
-
-<para>The initial query that will be blocked is thus:
-
-<screen>
-select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  
-</screen></para>
-
-<para>(You can see this in <envar>pg_stat_activity</envar>, if you
-have query display turned on in
-<filename>postgresql.conf</filename>)</para>
-
-<para>The actual query combination that is causing the lock is from
-the function <function>Slony_I_ClusterStatus()</function>, found in
-<filename>slony1_funcs.c</filename>, and is localized in the code that
-does:
-
-<programlisting>
-  LOCK TABLE %s.sl_event;
-  INSERT INTO %s.sl_event (...stuff...)
-  SELECT currval('%s.sl_event_seq');
-</programlisting></para>
-
-<para>The <command>LOCK</command> statement will sit there and wait
-until <command>pg_dump</command> (or whatever else has pretty much any
-kind of access lock on <xref linkend="table.sl-event">)
-completes.</para>
-
-<para>Every subsequent query submitted that touches
-<xref linkend="table.sl-event"> will block behind the
-<function>createEvent</function> call.</para>
-
-<para>There are a number of possible answers to this:
-<itemizedlist>
-
-<listitem><para> Have <application>pg_dump</application> specify the
-schema dumped using <option>--schema=whatever</option>, and don't try
-dumping the cluster's schema.</para></listitem>
-
-<listitem><para> It would be nice to add an
-<option>--exclude-schema</option> option to
-<application>pg_dump</application> to exclude the &slony1; cluster
-schema.  Maybe in 8.2...</para></listitem>
-
-<listitem><para>Note that 1.0.5 uses a more precise lock that is less
-exclusive that alleviates this problem.</para></listitem>
-</itemizedlist></para>
-</answer></qandaentry>
-<qandaentry>
-
-<question><para>The <application>slon</application> spent the weekend out of
-commission [for some reason], and it's taking a long time to get a
-sync through.</para></question>
-
-<answer><para> You might want to take a look at the <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
-do a summary to see if there are any really enormous &slony1;
-transactions in there.  Up until at least 1.0.2, there needs to be a
-<xref linkend="slon"> connected to the origin in order for
-<command>SYNC</command> events to be generated.</para>
-
-<para>If none are being generated, then all of the updates until the
-next one is generated will collect into one rather enormous &slony1;
-transaction.</para>
-
-<para>Conclusion: Even if there is not going to be a subscriber
-around, you <emphasis>really</emphasis> want to have a
-<application>slon</application> running to service the origin
-node.</para>
-
-<para>&slony1; 1.1 provides a stored procedure that allows
-<command>SYNC</command> counts to be updated on the origin based on a
-<application>cron</application> job even if there is no <xref
-linkend="slon"> daemon running.</para> </answer></qandaentry>
-
-<qandaentry>
-<question><para>I pointed a subscribing node to a different provider
-and it stopped replicating</para></question>
-
-<answer><para>
-We noticed this happening when we wanted to re-initialize a node,
-where we had configuration thus:
-
-<itemizedlist>
-<listitem><para> Node 1 - provider</para></listitem>
-<listitem><para> Node 2 - subscriber to node 1 - the node we're reinitializing</para></listitem>
-<listitem><para> Node 3 - subscriber to node 3 - node that should keep replicating</para></listitem>
-</itemizedlist></para>
-
-<para>The subscription for node 3 was changed to have node 1 as
-provider, and we did <xref linkend="stmtdropset"> /<xref
-linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
-
-<para>Unfortunately, replication suddenly stopped to node 3.</para>
-
-<para>The problem was that there was not a suitable set of
-<quote>listener paths</quote> in <xref linkend="table.sl-listen"> to allow the events from
-node 1 to propagate to node 3.  The events were going through node 2,
-and blocking behind the <xref linkend="stmtsubscribeset"> event that
-node 2 was working on.</para>
-
-<para>The following slonik script dropped out the listen paths where
-node 3 had to go through node 2, and added in direct listens between
-nodes 1 and 3.
-
-<programlisting>
-cluster name = oxrslive;
- node 1 admin conninfo='host=32.85.68.220 dbname=oxrslive user=postgres port=5432';
- node 2 admin conninfo='host=32.85.68.216 dbname=oxrslive user=postgres port=5432';
- node 3 admin conninfo='host=32.85.68.244 dbname=oxrslive user=postgres port=5432';
- node 4 admin conninfo='host=10.28.103.132 dbname=oxrslive user=postgres port=5432';
-try {
-  store listen (origin = 1, receiver = 3, provider = 1);
-  store listen (origin = 3, receiver = 1, provider = 3);
-  drop listen (origin = 1, receiver = 3, provider = 2);
-  drop listen (origin = 3, receiver = 1, provider = 2);
-}
-</programlisting></para>
-
-<para>Immediately after this script was run, <command>SYNC</command>
-events started propagating again to node 3.
-
-This points out two principles:
-<itemizedlist>
-
-<listitem><para> If you have multiple nodes, and cascaded subscribers,
-you need to be quite careful in populating the <xref
-linkend="stmtstorelisten"> entries, and in modifying them if the
-structure of the replication <quote>tree</quote>
-changes.</para></listitem>
-
-<listitem><para> Version 1.1 provides better tools to help manage
-this.</para>
-</listitem>
-
-</itemizedlist></para>
-
-<para>The issues of <quote>listener paths</quote> are discussed
-further at <xref linkend="listenpaths"> </para></answer>
-</qandaentry>
-
-<qandaentry id="faq17">
-<question><para>After dropping a node, <xref linkend="table.sl-log-1">
-isn't getting purged out anymore.</para></question>
-
-<answer><para> This is a common scenario in versions before 1.0.5, as
-the <quote>clean up</quote> that takes place when purging the node
-does not include purging out old entries from the &slony1; table,
-<xref linkend="table.sl-confirm">, for the recently departed
-node.</para>
-
-<para> The node is no longer around to update confirmations of what
-syncs have been applied on it, and therefore the cleanup thread that
-purges log entries thinks that it can't safely delete entries newer
-than the final <xref linkend="table.sl-confirm"> entry, which rather
-curtails the ability to purge out old logs.</para>
-
-<para>Diagnosis: Run the following query to see if there are any
-<quote>phantom/obsolete/blocking</quote> <xref
-linkend="table.sl-confirm"> entries:
-
-<screen>
-oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
- con_origin | con_received | con_seqno |        con_timestamp                  
-------------+--------------+-----------+----------------------------
-          4 |          501 |     83999 | 2004-11-09 19:57:08.195969
-          1 |            2 |   3345790 | 2004-11-14 10:33:43.850265
-          2 |          501 |    102718 | 2004-11-14 10:33:47.702086
-        501 |            2 |      6577 | 2004-11-14 10:34:45.717003
-          4 |            5 |     83999 | 2004-11-14 21:11:11.111686
-          4 |            3 |     83999 | 2004-11-24 16:32:39.020194
-(6 rows)
-</screen></para>
-
-<para>In version 1.0.5, the <xref linkend="stmtdropnode"> function
-purges out entries in <xref linkend="table.sl-confirm"> for the
-departing node.  In earlier versions, this needs to be done manually.
-Supposing the node number is 3, then the query would be:
-
-<screen>
-delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
-</screen></para>
-
-<para>Alternatively, to go after <quote>all phantoms,</quote> you could use
-<screen>
-oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
-DELETE 6
-</screen></para>
-
-<para>General <quote>due diligence</quote> dictates starting with a
-<command>BEGIN</command>, looking at the contents of
-<xref linkend="table.sl-confirm"> before, ensuring that only the expected
-records are purged, and then, only after that, confirming the change
-with a <command>COMMIT</command>.  If you delete confirm entries for
-the wrong node, that could ruin your whole day.</para>
-
-<para>You'll need to run this on each node that remains...</para>
-
-<para>Note that as of 1.0.5, this is no longer an issue at all, as it
-purges unneeded entries from <xref linkend="table.sl-confirm"> in two
-places:
-
-<itemizedlist>
-<listitem><para> At the time a node is dropped</para></listitem>
-
-<listitem><para> At the start of each
-<function>cleanupEvent</function> run, which is the event in which old
-data is purged from <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
-</answer>
-</qandaentry>
-
-<qandaentry id="dupkey">
-<question><para>Replication Fails - Unique Constraint Violation</para>
-
-<para>Replication has been running for a while, successfully, when a
-node encounters a <quote>glitch,</quote> and replication logs are filled with
-repetitions of the following:
-
-<screen>
-DEBUG2 remoteWorkerThread_1: syncing set 2 with 5 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 1 with 41 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 5 with 1 table(s) from provider 1
-DEBUG2 remoteWorkerThread_1: syncing set 3 with 1 table(s) from provider 1
-DEBUG2 remoteHelperThread_1_1: 0.135 seconds delay for first row
-DEBUG2 remoteHelperThread_1_1: 0.343 seconds until close cursor
-ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1          (log_origin, log_xid, log_tableid,                log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
-delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
-delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
-delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
-delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
-delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
-delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
-delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
-insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
-delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
-delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  duplicate key violates unique constraint "contact_status_pkey"
- - qualification was: 
-ERROR  remoteWorkerThread_1: SYNC aborted
-</screen></para>
-
-<para>The transaction rolls back, and
-&slony1; tries again, and again, and again.
-The problem is with one of the <emphasis>last</emphasis> SQL
-statements, the one with <command>log_cmdtype = 'I'</command>.  That
-isn't quite obvious; what takes place is that
-&slony1; groups 10 update queries together
-to diminish the number of network round trips.</para></question>
-
-<answer><para> A <emphasis>certain</emphasis> cause for this has been
-difficult to arrive at.</para>
-
-<para>By the time we notice that there is a problem, the seemingly
-missed delete transaction has been cleaned out of <xref
-linkend="table.sl-log-1">, so there appears to be no recovery
-possible.  What has seemed necessary, at this point, is to drop the
-replication set (or even the node), and restart replication from
-scratch on that node.</para>
-
-<para>In &slony1; 1.0.5, the handling of purges of <xref
-linkend="table.sl-log-1"> became more conservative, refusing to purge
-entries that haven't been successfully synced for at least 10 minutes
-on all nodes.  It was not certain that that would prevent the
-<quote>glitch</quote> from taking place, but it seemed plausible that
-it might leave enough <xref linkend="table.sl-log-1"> data to be able
-to do something about recovering from the condition or at least
-diagnosing it more exactly.  And perhaps the problem was that <xref
-linkend="table.sl-log-1"> was being purged too aggressively, and this
-would resolve the issue completely.</para>
-
-<para> It is a shame to have to reconstruct a large replication node
-for this; if you discover that this problem recurs, it may be an idea
-to break replication down into multiple sets in order to diminish the
-work involved in restarting replication.  If only one set has broken,
-you may only need to unsubscribe/drop and resubscribe the one set.
-</para>
-
-<para> In one case we found two lines in the SQL error message in the
-log file that contained <emphasis> identical </emphasis> insertions
-into <xref linkend="table.sl-log-1">.  This <emphasis> ought
-</emphasis> to be impossible as is a primary key on <xref
-linkend="table.sl-log-1">.  The latest (somewhat) punctured theory
-that comes from <emphasis>that</emphasis> was that perhaps this PK
-index has been corrupted (representing a &postgres; bug), and that
-perhaps the problem might be alleviated by running the query:</para>
-
-<programlisting>
-# reindex table _slonyschema.sl_log_1;
-</programlisting>
-
-<para> On at least one occasion, this has resolved the problem, so it
-is worth trying this.</para>
-</answer>
-
-<answer> <para> This problem has been found to represent a &postgres;
-bug as opposed to one in &slony1;.  Version 7.4.8 was released with
-two resolutions to race conditions that should resolve the issue.
-Thus, if you are running a version of &postgres; earlier than 7.4.8,
-you should consider upgrading to resolve this.
-</para>
-</answer>
-</qandaentry>
-
-<qandaentry>
-
-<question><para> If you have a <xref linkend="slonik"> script
-something like this, it will hang on you and never complete, because
-you can't have <command>wait for event</command> inside a
-<command>try</command> block. A <command>try</command> block is
-executed as one transaction, and the event that you are waiting for
-can never arrive inside the scope of the transaction.</para>
-
-<programlisting>
-try {
-      echo 'Moving set 1 to node 3';
-      lock set (id=1, origin=1);
-      echo 'Set locked';
-      wait for event (origin = 1, confirmed = 3);
-      echo 'Moving set';
-      move set (id=1, old origin=1, new origin=3);
-      echo 'Set moved - waiting for event to be confirmed by node 3';
-      wait for event (origin = 1, confirmed = 3);
-      echo 'Confirmed';
-} on error {
-      echo 'Could not move set for cluster foo';
-      unlock set (id=1, origin=1);
-      exit -1;
-}
-</programlisting></question>
-
-<answer><para> You must not invoke <xref linkend="stmtwaitevent">
-inside a <quote>try</quote> block.</para></answer>
-
-</qandaentry>
-
-<qandaentry>
-<question> <para> Is the ordering of tables in a set significant?</para>
-</question>
-<answer> <para> Most of the time, it isn't.  You might imagine it of
-some value to order the tables in some particular way in order that
-<quote>parent</quote> entries would make it in before their <quote>children</quote>
-in some foreign key relationship; that <emphasis>isn't</emphasis> the case since
-foreign key constraint triggers are turned off on subscriber nodes.
-</para>
-</answer>
-
-<answer> <para>(Jan Wieck comments:) The order of table ID's is only
-significant during a <xref linkend="stmtlockset"> in preparation of
-switchover. If that order is different from the order in which an
-application is acquiring its locks, it can lead to deadlocks that
-abort either the application or <application>slon</application>.
-</para>
-</answer>
-
-<answer><para> (David Parker) I ran into one other case where the
-ordering of tables in the set was significant: in the presence of
-inherited tables. If a child table appears before its parent in a set,
-then the initial subscription will end up deleting that child table
-after it has possibly already received data, because the
-<command>copy_set</command> logic does a <command>delete</command>,
-not a <command>delete only</command>, so the delete of the parent will
-delete the new rows in the child as well.
-</para>
-</answer>
-</qandaentry>
-
-<qandaentry><question><para> What happens with rules and triggers on
-&slony1;-replicated tables?</para>
-</question>
-
-<answer><para> Firstly, let's look at how it is handled
-<emphasis>absent</emphasis> of the special handling of the <xref
-linkend="stmtstoretrigger"> Slonik command.  </para>
-
-<para> The function <xref
-linkend="function.altertableforreplication-integer"> prepares each
-table for replication.</para>
-
-<itemizedlist>
-
-<listitem><para> On the origin node, this involves adding a trigger
-that uses the <xref linkend="function.logtrigger"> function to the
-table.</para>
-
-<para> That trigger initiates the action of logging all updates to the
-table to &slony1; <xref linkend="table.sl-log-1">
-tables.</para></listitem>
-
-<listitem><para> On a subscriber node, this involves disabling
-triggers and rules, then adding in the trigger that denies write
-access using the <function>denyAccess()</function> function to
-replicated tables.</para>
-
-<para> Up until 1.1 (and perhaps onwards), the
-<quote>disabling</quote> is done by modifying the
-<envar>pg_trigger</envar> or <envar>pg_rewrite</envar>
-<envar>tgrelid</envar> to point to the OID of the <quote>primary
-key</quote> index on the table rather than to the table
-itself.</para></listitem>
-
-</itemizedlist>
-
-<para> A somewhat unfortunate side-effect is that this handling of the
-rules and triggers somewhat <quote>tramples</quote> on them.  The
-rules and triggers are still there, but are no longer properly tied to
-their tables.  If you do a <command>pg_dump</command> on the
-<quote>subscriber</quote> node, it won't find the rules and triggers
-because it does not expect them to be associated with an index.</para>
-
-</answer>
-
-<answer> <para> Now, consider how <xref linkend="stmtstoretrigger">
-enters into things.</para>
-
-<para> Simply put, this command causes
-&slony1; to restore the trigger using
-<function>alterTableRestore(table id)</function>, which restores the
-table's OID into the <envar>pg_trigger</envar> or
-<envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
-affected node.</para></answer> 
-
-<answer><para> This implies that if you plan to draw backups from a
-subscriber node, you will need to draw the schema from the origin
-node.  It is straightforward to do this: </para>
-
-<screen>
-% pg_dump -h originnode.example.info -p 5432 --schema-only --schema=public ourdb > schema_backup.sql
-% pg_dump -h subscribernode.example.info -p 5432 --data-only --schema=public ourdb > data_backup.sql
-</screen>
-
-</answer>
-</qandaentry>
-<qandaentry>
-<question><para> After notification of a subscription on
-<emphasis>another</emphasis> node, replication falls over, starting
-with the following error message:</para>
-
-<screen>
-ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
-DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
-</screen>
-
-<para> This is then followed by a series of failed syncs as the <xref
-linkend="slon"> shuts down:
-
-<screen>
-DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
-</screen>
-
-</para></question>
-
-<answer><para> If you see a <xref linkend="slon"> shutting down with
-<emphasis>ignore new events due to shutdown</emphasis> log entries,
-you'll typically have to step back to <emphasis>before</emphasis> they
-started failing to see indication of the root cause of the problem.
-
-</para></answer>
-
-<answer><para> In this particular case, the problem was that some of
-the <xref linkend="stmtstorepath"> commands had not yet made it to
-node 4 before the <xref linkend="stmtsubscribeset"> command
-propagated. </para>
-
-<para>This is yet another example of the need to not do things too
-terribly quickly; you need to be sure things are working right
-<emphasis>before</emphasis> making further configuration changes.
-</para></answer>
-
-</qandaentry>
-
-
-<qandaentry>
-
-<question><para>I just used <xref linkend="stmtmoveset"> to move the
-origin to a new node.  Unfortunately, some subscribers are still
-pointing to the former origin node, so I can't take it out of service
-for maintenance without stopping them from getting updates.  What do I
-do?  </para></question>
-
-<answer><para> You need to use <xref linkend="stmtsubscribeset"> to
-alter the subscriptions for those nodes to have them subscribe to a
-provider that <emphasis>will</emphasis> be sticking around during the
-maintenance.</para>
-
-<warning> <para> What you <emphasis>don't</emphasis> do is to <xref
-linkend="stmtunsubscribeset">; that would require reloading all data
-for the nodes from scratch later.
-
-</para></warning>
-</answer>
-</qandaentry>
-
-<qandaentry id="longtxnsareevil">
-
-<question><para> Replication has been slowing down, I'm seeing
-<command> FETCH 100 FROM LOG </command> queries running for a long
-time, <xref linkend="table.sl-log-1"> is growing, and performance is,
-well, generally getting steadily worse. </para>
-</question>
-
-<answer> <para> There are actually a number of possible causes for
-this sort of thing.  There is a question involving similar pathology
-where the problem is that <link linkend="pglistenerfull"> 
-&pglistener; grows because it is not vacuumed. </link>
-</para>
-
-<para> Another <quote> proximate cause </quote> for this growth is for
-there to be a connection connected to the node that sits <command>
-IDLE IN TRANSACTION </command> for a very long time. </para>
-
-<para> That open transaction will have multiple negative effects, all
-of which will adversely affect performance:</para>
-
-<itemizedlist>
-
-<listitem><para> Vacuums on all tables, including &pglistener;, will
-not clear out dead tuples from before the start of the idle
-transaction. </para> </listitem>
-
-<listitem><para> The cleanup thread will be unable to clean out
-entries in <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog">, with the result that these tables will
-grow, ceaselessly, until the transaction is closed. </para>
-</listitem>
-</itemizedlist>
-</answer>
-
-<answer> <para> You can monitor for this condition inside the database
-only if the &postgres; <filename> postgresql.conf </filename>
-parameter <envar>stats_command_string</envar> is set to true.  If that
-is set, then you may submit the query <command> select * from
-pg_stat_activity where current_query like '%IDLE% in transaction';
-</command> which will find relevant activity.  </para> </answer>
-
-<answer> <para> You should also be able to search for <quote> idle in
-transaction </quote> in the process table to find processes that are
-thus holding on to an ancient transaction.  </para> </answer>
-
-<answer> <para> It is also possible (though rarer) for the problem to
-be a transaction that is, for some other reason, being held open for a
-very long time.  The <envar> query_start </envar> time in <envar>
-pg_stat_activity </envar> may show you some query that has been
-running way too long.  </para> </answer>
-
-<answer> <para> There are plans for &postgres; to have a timeout
-parameter, <envar> open_idle_transaction_timeout </envar>, which would
-cause old transactions to time out after some period of disuse.  Buggy
-connection pool logic is a common culprit for this sort of thing.
-There are plans for <productname> <link linkend="pgpool"> pgpool
-</link> </productname> to provide a better alternative, eventually,
-where connections would be shared inside a connection pool implemented
-in C.  You may have some more or less buggy connection pool in your
-Java or PHP application; if a small set of <emphasis> real </emphasis>
-connections are held in <productname>pgpool</productname>, that will
-hide from the database the fact that the application imagines that
-numerous of them are left idle in transaction for hours at a time.
-</para> </answer>
-
-</qandaentry> 
-
-<qandaentry id="neededexecddl">
-
-<question> <para> Behaviour - all the subscriber nodes start to fall
-behind the origin, and all the logs on the subscriber nodes have the
-following error message repeating in them (when I encountered it,
-there was a nice long SQL statement above each entry):</para>
-
-<screen>
-ERROR remoteWorkerThread_1: helper 1 finished with error
-ERROR remoteWorkerThread_1: SYNC aborted
-</screen>
-</question>
-
-<answer> <para> Cause: you have likely issued <command>alter
-table</command> statements directly on the databases instead of using
-the slonik <xref linkend="stmtddlscript"> command.</para>
-
-<para>The solution is to rebuild the trigger on the affected table and
-fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
-
-<itemizedlist>
-
-<listitem><para> You'll need to identify from either the slon logs, or
-the &postgres; database logs exactly which statement it is that is
-causing the error.</para></listitem>
-
-<listitem><para> You need to fix the Slony-defined triggers on the
-table in question.  This is done with the following procedure.</para>
-
-<screen>
-BEGIN;
-LOCK TABLE table_name;
-SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
-SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
-COMMIT;
-</screen>
-
-<para>You then need to find the rows in <xref
-linkend="table.sl-log-1"> that have bad 
-entries and fix them.  You may
-want to take down the slon daemons for all nodes except the master;
-that way, if you make a mistake, it won't immediately propagate
-through to the subscribers.</para>
-
-<para> Here is an example:</para>
-
-<screen>
-BEGIN;
-
-LOCK TABLE customer_account;
-
-SELECT _app1.altertablerestore(31);
-SELECT _app1.altertableforreplication(31);
-COMMIT;
-
-BEGIN;
-LOCK TABLE txn_log;
-
-SELECT _app1.altertablerestore(41);
-SELECT _app1.altertableforreplication(41);
-
-COMMIT;
-
---fixing customer_account, which had an attempt to insert a "" into a timestamp with timezone.
-BEGIN;
-
-update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67796036';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''60690.00'' where pkey=''49''' where log_actionseq = '67796194';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67795881';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''1852.00'' where pkey=''57''' where log_actionseq = '67796403';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''87906.00'' where pkey=''8''' where log_actionseq = '68352967';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''125180.00'' where pkey=''60''' where log_actionseq = '68386951';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''125198.00'' where pkey=''60''' where log_actionseq = '68387055';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''125174.00'' where pkey=''60''' where log_actionseq = '68386682';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''125186.00'' where pkey=''60''' where log_actionseq = '68386992';
-update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''' where log_actionseq = '68387029';
-
-</screen>
-</listitem>
-
-</itemizedlist>
-</answer>
-
-</qandaentry>
-
-<qandaentry> <question><para> After notification of a subscription on
-<emphasis>another</emphasis> node, replication falls over on one of
-the subscribers, with the following error message:</para>
-
-<screen>
-ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
-DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
-</screen>
-
-<para> This is then followed by a series of failed syncs as the <xref
-linkend="slon"> shuts down:</para>
-
-<screen>
-DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
-DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
-DEBUG2 remoteWorker_event: ignore new events due to shutdown
-DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
-</screen>
-
-</question>
-
-<answer><para> If you see a <xref linkend="slon"> shutting down with
-<emphasis>ignore new events due to shutdown</emphasis> log entries,
-you typically need to step back in the log to
-<emphasis>before</emphasis> they started failing to see indication of
-the root cause of the problem.  </para></answer>
-
-<answer><para> In this particular case, the problem was that some of
-the <xref linkend="stmtstorepath"> commands had not yet made it to
-node 4 before the <xref linkend="stmtsubscribeset"> command
-propagated. </para>
-
-<para>This demonstrates yet another example of the need to not do
-things in a rush; you need to be sure things are working right
-<emphasis>before</emphasis> making further configuration changes.
-</para></answer>
-
-</qandaentry>
-
-<qandaentry> <question><para> I can do a <command>pg_dump</command>
-and load the data back in much faster than the <command>SUBSCRIBE
-SET</command> runs.  Why is that?  </para></question>
-
-<answer><para> &slony1; depends on there being an already existant
-index on the primary key, and leaves all indexes alone whilst using
-the &postgres; <command>COPY</command> command to load the data.
-Further hurting performane, the <command>COPY SET</command> event
-starts by deleting the contents of tables, which potentially leaves a
-lot of dead tuples
-</para>
-
-<para> When you use <command>pg_dump</command> to dump the contents of
-a database, and then load that, creation of indexes is deferred until
-the very end.  It is <emphasis>much</emphasis> more efficient to
-create indexes against the entire table, at the end, than it is to
-build up the index incrementally as each row is added to the
-table.</para></answer>
-
-<answer><para> If you can drop unnecessary indices while the
-<command>COPY</command> takes place, that will improve performance
-quite a bit.  If you can <command>TRUNCATE</command> tables that
-contain data that is about to be eliminated, that will improve
-performance <emphasis>a lot.</emphasis> </para></answer>
-
-<answer><para> &slony1; version 1.1.5 and later versions should handle
-this automatically; it <quote>thumps</quote> on the indexes in the
-&postgres; catalog to hide them, in much the same way triggers are
-hidden, and then <quote>fixes</quote> the index pointers and reindexes
-the table. </para> </answer>
-</qandaentry>
-
-<qandaentry>
-<question> <para> I had a network <quote>glitch</quote> that led to my
-using <xref linkend="stmtfailover"> to fail over to an alternate node.
-The failure wasn't a disk problem that would corrupt databases; why do
-I need to rebuild the failed node from scratch? </para></question>
-
-<answer><para> The action of <xref linkend="stmtfailover"> is to
-<emphasis>abandon</emphasis> the failed node so that no more &slony1;
-activity goes to or from that node.  As soon as that takes place, the
-failed node will progressively fall further and further out of sync.
-</para></answer>
-
-<answer><para> The <emphasis>big</emphasis> problem with trying to
-recover the failed node is that it may contain updates that never made
-it out of the origin.  If they get retried, on the new origin, you may
-find that you have conflicting updates.  In any case, you do have a
-sort of <quote>logical</quote> corruption of the data even if there
-never was a disk failure making it <quote>physical.</quote>
-</para></answer>
-
-<answer><para> As discusssed in <xref linkend="failover">, using <xref
-linkend="stmtfailover"> should be considered a <emphasis>last
-resort</emphasis> as it implies that you are abandoning the origin
-node as being corrupted.  </para></answer>
-</qandaentry>
-
-<qandaentry id="morethansuper">
-<question> <para> I created a <quote>superuser</quote> account,
-<command>slony</command>, to run replication activities.  As
-suggested, I set it up as a superuser, via the following query: 
-<command>
-update pg_shadow set usesuper = 't' where usename in ('slony',
-'molly', 'dumpy');
-</command>
-(that command also deals with other users I set up to run vacuums and
-backups).</para>
-
-<para> Unfortunately, I ran into a problem the next time I subscribed
-to a new set.</para>
-
-<programlisting>
-DEBUG1 copy_set 28661
-DEBUG1 remoteWorkerThread_1: connected to provider DB
-DEBUG2 remoteWorkerThread_78: forward confirm 1,594436 received by 78
-DEBUG2 remoteWorkerThread_1: copy table public.billing_discount
-ERROR  remoteWorkerThread_1: "select "_mycluster".setAddTable_int(28661, 51, 'public.billing_discount', 'billing_discount_pkey', 'Table public.billing_discount with candidate primary key billing_discount_pkey'); " PGRES_FATAL_ERROR ERROR:  permission denied for relation pg_class
-CONTEXT:  PL/pgSQL function "altertableforreplication" line 23 at select into variables
-PL/pgSQL function "setaddtable_int" line 76 at perform
-WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
-</programlisting>
-
-<para> This continues to fail, over and over, until I restarted the
-<application>slon</application> to connect as
-<command>postgres</command> instead.</para>
-</question>
-
-<answer><para> The problem is fairly self-evident; permission is being
-denied on the system table, <envar>pg_class</envar>.</para></answer>
-
-<answer><para> The <quote>fix</quote> is thus:</para>
-<programlisting>
-update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
-</programlisting>
-</answer>
-</qandaentry>
-
-<qandaentry id="missingoids"> <question> <para> We got bitten by
-something we didn't foresee when completely uninstalling a slony
-replication cluster from the master and slave...</para>
-
-<warning> <para><emphasis>MAKE SURE YOU STOP YOUR APPLICATION RUNNING
-AGAINST YOUR MASTER DATABASE WHEN REMOVING THE WHOLE SLONY
-CLUSTER</emphasis>, or at least re-cycle all your open connections
-after the event!  </para></warning>
-
-<para> The connections <quote>remember</quote> or refer to OIDs which
-are removed by the uninstall node script. And you get lots of errors
-as a result...
-</para>
-
-</question>
-
-<answer><para> There are two notable areas of
-&postgres; that cache query plans and OIDs:</para>
-<itemizedlist>
-<listitem><para> Prepared statements</para></listitem>
-<listitem><para> pl/pgSQL functions</para></listitem>
-</itemizedlist>
-
-<para> The problem isn't particularly a &slony1; one; it would occur
-any time such significant changes are made to the database schema.  It
-shouldn't be expected to lead to data loss, but you'll see a wide
-range of OID-related errors.
-</para></answer>
-
-<answer><para> The problem occurs when you are using some sort of
-<quote>connection pool</quote> that keeps recycling old connections.
-If you restart the application after this, the new connections will
-create <emphasis>new</emphasis> query plans, and the errors will go
-away.  If your connection pool drops the connections, and creates new
-ones, the new ones will have <emphasis>new</emphasis> query plans, and
-the errors will go away. </para></answer>
-
-<answer> <para> In our code we drop the connection on any error we
-cannot map to an expected condition. This would eventually recycle all
-connections on such unexpected problems after just one error per
-connection.  Of course if the error surfaces as a constraint violation
-which is a recognized condition, this won't help either, and if the
-problem is persistent, the connections will keep recycling which will
-drop the effect of the pooling, in the latter case the pooling code
-could also announce an admin to take a look...  </para> </answer>
-</qandaentry>
-
-<qandaentry> 
-
-<question><para> Node #1 was dropped via <xref
-linkend="stmtdropnode">, and the <xref linkend="slon"> one of the
-other nodes is repeatedly failing with the error message:</para>
-
-<screen>
-ERROR  remoteWorkerThread_3: "begin transaction; set transaction isolation level
- serializable; lock table "_mailermailer".sl_config_lock; select "_mailermailer"
-.storeListen_int(2, 1, 3); notify "_mailermailer_Event"; notify "_mailermailer_C
-onfirm"; insert into "_mailermailer".sl_event     (ev_origin, ev_seqno, ev_times
-tamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3
-   ) values ('3', '2215', '2005-02-18 10:30:42.529048', '3286814', '3286815', ''
-, 'STORE_LISTEN', '2', '1', '3'); insert into "_mailermailer".sl_confirm
-(con_origin, con_received, con_seqno, con_timestamp)    values (3, 2, '2215', CU
-RRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or updat
-e on table "sl_listen" violates foreign key constraint "sl_listen-sl_path-ref"
-DETAIL:  Key (li_provider,li_receiver)=(1,3) is not present in table "sl_path".
-DEBUG1 syncThread: thread done
-</screen>
-
-<para> Evidently, a <xref linkend="stmtstorelisten"> request hadn't
-propagated yet before node 1 was dropped.  </para></question>
-
-<answer id="eventsurgery"><para> This points to a case where you'll
-need to do <quote>event surgery</quote> on one or more of the nodes.
-A <command>STORE_LISTEN</command> event remains outstanding that wants
-to add a listen path that <emphasis>cannot</emphasis> be created
-because node 1 and all paths pointing to node 1 have gone away.</para>
-
-<para> Let's assume, for exposition purposes, that the remaining nodes
-are #2 and #3, and that the above error is being reported on node
-#3.</para>
-
-<para> That implies that the event is stored on node #2, as it
-wouldn't be on node #3 if it had not already been processed
-successfully.  The easiest way to cope with this situation is to
-delete the offending <xref linkend="table.sl-event"> entry on node #2.
-You'll connect to node #2's database, and search for the
-<command>STORE_LISTEN</command> event:</para>
-
-<para> <command> select * from sl_event where ev_type =
-'STORE_LISTEN';</command></para>
-
-<para> There may be several entries, only some of which need to be
-purged. </para>
-
-<screen> 
--# begin;  -- Don't straight delete them; open a transaction so you can respond to OOPS
-BEGIN;
--# delete from sl_event where ev_type = 'STORE_LISTEN' and
--#  (ev_data1 = '1' or ev_data2 = '1' or ev_data3 = '1');
-DELETE 3
--# -- Seems OK...
--# commit;
-COMMIT
-</screen>
-
-<para> The next time the <application>slon</application> for node 3
-starts up, it will no longer find the <quote>offensive</quote>
-<command>STORE_LISTEN</command> events, and replication can continue.
-(You may then run into some other problem where an old stored event is
-referring to no-longer-existant configuration...) </para></answer>
-
-</qandaentry>
+<qandadiv id="faqcompiling"><title> &slony1; FAQ: Building and Installing &slony1; </title>
 
 <qandaentry>
 
@@ -1447,109 +77,464 @@ hope to avoid compiling &slony1;.</para>
 
 </qandaentry>
 
-<qandaentry id="sequenceset"><question><para> <ulink url=
-"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
-Bug #1226 </ulink> indicates an error condition that can come up if
-you have a replication set that consists solely of sequences. </para>
-</question>
+<qandaentry id="missingheaders">
+<question><para> I tried building &slony1; 1.1 and got the following
+error message:
+<screen>
+configure: error: Headers for libpqserver are not found in the includeserverdir.
+   This is the path to postgres.h. Please specify the includeserverdir with
+   --with-pgincludeserverdir=&lt;dir&gt;
+</screen>
+</para></question>
 
-<answer> <para> The  short answer is that having a replication set
-consisting only of sequences is not a <link linkend="bestpractices">
-best practice.</link> </para>
-</answer>
+<answer><para> You are almost certainly running version &postgres; 7.4
+or earlier, where server headers are not installed by default if you
+just do a <command>make install</command> of &postgres;.</para>
 
-<answer>
-<para> The problem with a sequence-only set comes up only if you have
-a case where the only subscriptions that are active for a particular
-subscriber to a particular provider are for
-<quote>sequence-only</quote> sets.  If a node gets into that state,
-replication will fail, as the query that looks for data from <xref
-linkend="table.sl-log-1"> has no tables to find, and the query will be
-malformed, and fail.  If a replication set <emphasis>with</emphasis>
-tables is added back to the mix, everything will work out fine; it
-just <emphasis>seems</emphasis> scary.
+<para> You need to install server headers when you install &postgres;
+via the command <command>make install-all-headers</command>.
+
+</para> </answer> </qandaentry>
+
+<qandaentry id="threadsafety">
+
+<question><para> &slony1; seemed to compile fine; now, when I run a
+<xref linkend="slon">, some events are moving around, but no
+replication is taking place.</para>
+
+<para> Slony logs might look like the following:
+
+<screen>
+DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
+ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,
+		  ev_minxid, ev_maxxid, ev_xip,
+		  ev_type,
+                  ev_data1, ev_data2,
+		  ev_data3, ev_data4,
+ 	          ev_data5, ev_data6,
+		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e 
+where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
+</screen>
 </para>
 
-<para> This problem should be resolved some time after &slony1;
-1.1.0.</para>
+<para> Alternatively, it may appear like...
+
+<screen>
+ERROR  remoteListenThread_2: "select ev_origin, ev_seqno, ev_timestamp,
+ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,
+ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8
+from "_sl_p2t2".sl_event e where (e.ev_origin = '2' and e.ev_seqno >
+'0') order by e.ev_origin, e.ev_seqno" - could not receive data from
+server: Error 0
+</screen> 
+</para>
+</question>
+
+<answer><para>On AIX and Solaris (and possibly elsewhere), both
+&slony1; <emphasis>and &postgres;</emphasis> must be compiled with the
+<option>--enable-thread-safety</option> option.  The above results
+when &postgres; isn't so compiled.</para>
+
+<para>What breaks here is that the libc (threadsafe) and libpq
+(non-threadsafe) use different memory locations for errno, thereby
+leading to the request failing.</para>
+
+<para>Problems like this crop up with disadmirable regularity on AIX
+and Solaris; it may take something of an <quote>object code audit</quote> to
+make sure that <emphasis>ALL</emphasis> of the necessary components have been
+compiled and linked with <option>--enable-thread-safety</option>.</para>
+
+<para>For instance, I ran into the problem one that
+<envar>LD_LIBRARY_PATH</envar> had been set, on Solaris, to point to
+libraries from an old &postgres; compile.  That meant that even though
+the database <emphasis>had</emphasis> been compiled with
+<option>--enable-thread-safety</option>, and
+<application>slon</application> had been compiled against that,
+<application>slon</application> was being dynamically linked to the
+<quote>bad old thread-unsafe version,</quote> so slon didn't work.  It
+wasn't clear that this was the case until I ran <command>ldd</command>
+against <application>slon</application>.</para> </answer>
+
+<answer><para> Note that with libpq version 7.4.2, on Solaris, a
+further <link linkend="threadpatch"> thread patch </link> was
+required; similar is also required for &postgres; version 8.0.
+</para>
 </answer>
 </qandaentry>
 
-<qandaentry><question><para> I tried the following query which did not work:</para> 
+</qandadiv>
+
+<qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
+<qandaentry>
+
+<question><para>I looked for the <envar>_clustername</envar> namespace, and
+it wasn't there.</para></question>
+
+<answer><para> If the DSNs are wrong, then <xref linkend="slon">
+instances can't connect to the nodes.</para>
+
+<para>This will generally lead to nodes remaining entirely untouched.</para>
+
+<para>Recheck the connection configuration.  By the way, since <xref
+linkend="slon"> links to libpq, you could have password information
+stored in <filename> $HOME/.pgpass</filename>, partially filling in
+right/wrong authentication information there.</para>
+</answer>
+</qandaentry>
+
+<qandaentry id="morethansuper">
+<question> <para> I created a <quote>superuser</quote> account,
+<command>slony</command>, to run replication activities.  As
+suggested, I set it up as a superuser, via the following query: 
+<command>
+update pg_shadow set usesuper = 't' where usename in ('slony',
+'molly', 'dumpy');
+</command>
+(that command also deals with other users I set up to run vacuums and
+backups).</para>
+
+<para> Unfortunately, I ran into a problem the next time I subscribed
+to a new set.</para>
 
 <programlisting>
-sdb=# explain select query_start, current_query from pg_locks join
-pg_stat_activity on pid = procpid where granted = true and transaction
-in (select transaction from pg_locks where granted = false); 
-
-ERROR: could not find hash function for hash operator 716373
+DEBUG1 copy_set 28661
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+DEBUG2 remoteWorkerThread_78: forward confirm 1,594436 received by 78
+DEBUG2 remoteWorkerThread_1: copy table public.billing_discount
+ERROR  remoteWorkerThread_1: "select "_mycluster".setAddTable_int(28661, 51, 'public.billing_discount', 'billing_discount_pkey', 'Table public.billing_discount with candidate primary key billing_discount_pkey'); " PGRES_FATAL_ERROR ERROR:  permission denied for relation pg_class
+CONTEXT:  PL/pgSQL function "altertableforreplication" line 23 at select into variables
+PL/pgSQL function "setaddtable_int" line 76 at perform
+WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
 </programlisting>
 
-<para> It appears the &slony1; <function>xxid</function> functions are
-claiming to be capable of hashing, but cannot actually do so.</para>
+<para> This continues to fail, over and over, until I restarted the
+<application>slon</application> to connect as
+<command>postgres</command> instead.</para>
+</question>
 
+<answer><para> The problem is fairly self-evident; permission is being
+denied on the system table, <envar>pg_class</envar>.</para></answer>
 
-<para> What's up? </para>
+<answer><para> The <quote>fix</quote> is thus:</para>
+<programlisting>
+update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
+</programlisting>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I'm trying to get a slave subscribed, and get the
+following messages in the logs:
+
+<screen>
+DEBUG1 copy_set 1
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
+WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
+</screen></para>
+
+<para>Oops.  What I forgot to mention, as well, was that I was trying
+to add <emphasis>TWO</emphasis> subscribers, concurrently.</para></question>
+
+<answer><para> That doesn't work out: &slony1; won't work on the
+<command>COPY</command> commands concurrently.  See
+<filename>src/slon/remote_worker.c</filename>, function
+<function>copy_set()</function></para>
+
+<para>This has the (perhaps unfortunate) implication that you cannot
+populate two slaves concurrently from a single provider.  You have to
+subscribe one to the set, and only once it has completed setting up
+the subscription (copying table contents and such) can the second
+subscriber start setting up the subscription.</para>
+
+<para>It could also be possible for there to be an old outstanding
+transaction blocking &slony1; from processing the sync.  You might
+want to take a look at pg_locks to see what's up:
+
+<screen>
+sampledb=# select * from pg_locks where transaction is not null order by transaction;
+ relation | database | transaction |  pid    |     mode      | granted 
+----------+----------+-------------+---------+---------------+---------
+          |          |   127314921 | 2605100 | ExclusiveLock | t
+          |          |   127326504 | 5660904 | ExclusiveLock | t
+(2 rows)
+</screen></para>
+
+<para>See?  127314921 is indeed older than 127314958, and it's still running.
+
+<screen>
+$ ps -aef | egrep '[2]605100'
+postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
+</screen></para>
+
+<para>This happens to be a <command>COPY</command> transaction involved in setting up the
+subscription for one of the nodes.  All is well; the system is busy
+setting up the first subscriber; it won't start on the second one
+until the first one has completed subscribing.</para>
+
+<para>By the way, if there is more than one database on the &postgres;
+cluster, and activity is taking place on the OTHER database, that will
+lead to there being <quote>transactions earlier than XID
+whatever</quote> being found to be still in progress.  The fact that
+it's a separate database on the cluster is irrelevant; &slony1; will
+wait until those old transactions terminate.</para>
+</answer>
+</qandaentry>
+
+<qandaentry id="missingoids"> <question> <para> We got bitten by
+something we didn't foresee when completely uninstalling a slony
+replication cluster from the master and slave...</para>
+
+<warning> <para><emphasis>MAKE SURE YOU STOP YOUR APPLICATION RUNNING
+AGAINST YOUR MASTER DATABASE WHEN REMOVING THE WHOLE SLONY
+CLUSTER</emphasis>, or at least re-cycle all your open connections
+after the event!  </para></warning>
+
+<para> The connections <quote>remember</quote> or refer to OIDs which
+are removed by the uninstall node script. And you get lots of errors
+as a result...
+</para>
 
 </question>
 
-<answer><para> &slony1; defined an XXID data type and operators on
-that type in order to allow manipulation of transaction IDs that are
-used to group together updates that are associated with the same
-transaction.</para>
+<answer><para> There are two notable areas of
+&postgres; that cache query plans and OIDs:</para>
+<itemizedlist>
+<listitem><para> Prepared statements</para></listitem>
+<listitem><para> pl/pgSQL functions</para></listitem>
+</itemizedlist>
 
-<para> Operators were not available for &postgres; 7.3 and earlier
-versions; in order to support version 7.3, custom functions had to be
-added.  The <function>=</function> operator was marked as supporting
-hashing, but for that to work properly, the join operator must appear
-in a hash index operator class.  That was not defined, and as a
-result, queries (like the one above) that decide to use hash joins
-will fail. </para> </answer>
+<para> The problem isn't particularly a &slony1; one; it would occur
+any time such significant changes are made to the database schema.  It
+shouldn't be expected to lead to data loss, but you'll see a wide
+range of OID-related errors.
+</para></answer>
 
-<answer> <para> This has <emphasis> not </emphasis> been considered a
-<quote>release-critical</quote> bug, as &slony1; does not internally
-generate queries likely to use hash joins.  This problem shouldn't
-injure &slony1;'s ability to continue replicating. </para> </answer>
+<answer><para> The problem occurs when you are using some sort of
+<quote>connection pool</quote> that keeps recycling old connections.
+If you restart the application after this, the new connections will
+create <emphasis>new</emphasis> query plans, and the errors will go
+away.  If your connection pool drops the connections, and creates new
+ones, the new ones will have <emphasis>new</emphasis> query plans, and
+the errors will go away. </para></answer>
 
-<answer> <para> Future releases of &slony1; (<emphasis>e.g.</emphasis>
-1.0.6, 1.1) will omit the <command>HASHES</command> indicator, so that
-</para> </answer>
-
-<answer> <para> Supposing you wish to repair an existing instance, so
-that your own queries will not run afoul of this problem, you may do
-so as follows: </para>
-
-<programlisting>
-/* cbbrowne@[local]/dba2 slony_test1=*/ \x     
-Expanded display is on.
-/* cbbrowne@[local]/dba2 slony_test1=*/ select * from pg_operator where oprname = '=' 
-and oprnamespace = (select oid from pg_namespace where nspname = 'public');
--[ RECORD 1 ]+-------------
-oprname      | =
-oprnamespace | 2200
-oprowner     | 1
-oprkind      | b
-oprcanhash   | t
-oprleft      | 82122344
-oprright     | 82122344
-oprresult    | 16
-oprcom       | 82122365
-oprnegate    | 82122363
-oprlsortop   | 82122362
-oprrsortop   | 82122362
-oprltcmpop   | 82122362
-oprgtcmpop   | 82122360
-oprcode      | "_T1".xxideq
-oprrest      | eqsel
-oprjoin      | eqjoinsel
-
-/* cbbrowne@[local]/dba2 slony_test1=*/ update pg_operator set oprcanhash = 'f' where 
-oprname = '=' and oprnamespace = 2200 ;
-UPDATE 1
-</programlisting>
-</answer>
+<answer> <para> In our code we drop the connection on any error we
+cannot map to an expected condition. This would eventually recycle all
+connections on such unexpected problems after just one error per
+connection.  Of course if the error surfaces as a constraint violation
+which is a recognized condition, this won't help either, and if the
+problem is persistent, the connections will keep recycling which will
+drop the effect of the pooling, in the latter case the pooling code
+could also announce an admin to take a look...  </para> </answer>
 
 </qandaentry>
+
+<qandaentry>
+<question><para>I pointed a subscribing node to a different provider
+and it stopped replicating</para></question>
+
+<answer><para>
+We noticed this happening when we wanted to re-initialize a node,
+where we had configuration thus:
+
+<itemizedlist>
+<listitem><para> Node 1 - provider</para></listitem>
+<listitem><para> Node 2 - subscriber to node 1 - the node we're reinitializing</para></listitem>
+<listitem><para> Node 3 - subscriber to node 3 - node that should keep replicating</para></listitem>
+</itemizedlist></para>
+
+<para>The subscription for node 3 was changed to have node 1 as
+provider, and we did <xref linkend="stmtdropset"> /<xref
+linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
+
+<para>Unfortunately, replication suddenly stopped to node 3.</para>
+
+<para>The problem was that there was not a suitable set of
+<quote>listener paths</quote> in <xref linkend="table.sl-listen"> to allow the events from
+node 1 to propagate to node 3.  The events were going through node 2,
+and blocking behind the <xref linkend="stmtsubscribeset"> event that
+node 2 was working on.</para>
+
+<para>The following slonik script dropped out the listen paths where
+node 3 had to go through node 2, and added in direct listens between
+nodes 1 and 3.
+
+<programlisting>
+cluster name = oxrslive;
+ node 1 admin conninfo='host=32.85.68.220 dbname=oxrslive user=postgres port=5432';
+ node 2 admin conninfo='host=32.85.68.216 dbname=oxrslive user=postgres port=5432';
+ node 3 admin conninfo='host=32.85.68.244 dbname=oxrslive user=postgres port=5432';
+ node 4 admin conninfo='host=10.28.103.132 dbname=oxrslive user=postgres port=5432';
+try {
+  store listen (origin = 1, receiver = 3, provider = 1);
+  store listen (origin = 3, receiver = 1, provider = 3);
+  drop listen (origin = 1, receiver = 3, provider = 2);
+  drop listen (origin = 3, receiver = 1, provider = 2);
+}
+</programlisting></para>
+
+<para>Immediately after this script was run, <command>SYNC</command>
+events started propagating again to node 3.
+
+This points out two principles:
+<itemizedlist>
+
+<listitem><para> If you have multiple nodes, and cascaded subscribers,
+you need to be quite careful in populating the <xref
+linkend="stmtstorelisten"> entries, and in modifying them if the
+structure of the replication <quote>tree</quote>
+changes.</para></listitem>
+
+<listitem><para> Version 1.1 provides better tools to help manage
+this.</para>
+</listitem>
+
+</itemizedlist></para>
+
+<para>The issues of <quote>listener paths</quote> are discussed
+further at <xref linkend="listenpaths"> </para></answer>
+</qandaentry>
+
+</qandadiv>
+
+<qandadiv id="faqconfiguration"> <title> &slony1; FAQ: Configuration Issues </title>
+<qandaentry>
+<question><para>Slonik fails - cannot load &postgres; library -
+<command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
+
+<para> When I run the sample setup script I get an error message similar
+to:
+
+<command>
+stdin:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
+could not open file '$libdir/xxid': No such file or directory
+</command></para></question>
+
+<answer><para> Evidently, you haven't got the
+<filename>xxid.so</filename> library in the <envar>$libdir</envar>
+directory that the &postgres; instance is
+using.  Note that the &slony1; components
+need to be installed in the &postgres;
+software installation for <emphasis>each and every one</emphasis> of
+the nodes, not just on the origin node.</para>
+
+<para>This may also point to there being some other mismatch between
+the &postgres; binary instance and the &slony1; instance.  If you
+compiled &slony1; yourself, on a machine that may have multiple
+&postgres; builds <quote>lying around,</quote> it's possible that the
+slon or slonik binaries are asking to load something that isn't
+actually in the library directory for the &postgres; database cluster
+that it's hitting.</para>
+
+<para>Long and short: This points to a need to <quote>audit</quote>
+what installations of &postgres; and &slony1; you have in place on the
+machine(s).  Unfortunately, just about any mismatch will cause things
+not to link up quite right.  See also <link linkend="threadsafety">
+thread safety </link> concerning threading issues on Solaris
+...</para> 
+
+<para> Life is simplest if you only have one set of &postgres;
+binaries on a given server; in that case, there isn't a <quote>wrong
+place</quote> in which &slony1; components might get installed.  If
+you have several software installs, you'll have to verify that the
+right versions of &slony1; components are associated with the right
+&postgres; binaries. </para> </answer></qandaentry>
+
+<qandaentry>
+<question> <para>I tried creating a CLUSTER NAME with a "-" in it.
+That didn't work.</para></question>
+
+<answer><para> &slony1; uses the same rules for unquoted identifiers
+as the &postgres; main parser, so no, you probably shouldn't put a "-"
+in your identifier name.</para>
+
+<para> You may be able to defeat this by putting <quote>quotes</quote> around
+identifier names, but it's still liable to bite you some, so this is
+something that is probably not worth working around.</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>ps finds passwords on command line</para>
+
+<para> If I run a <command>ps</command> command, I, and everyone else,
+can see passwords on the command line.</para></question>
+
+<answer> <para>Take the passwords out of the Slony configuration, and
+put them into <filename>$(HOME)/.pgpass.</filename></para>
+</answer></qandaentry>
+
+<qandaentry>
+<question><para>Table indexes with FQ namespace names
+
+<programlisting>
+set add table (set id = 1, origin = 1, id = 27, 
+               full qualified name = 'nspace.some_table', 
+               key = 'key_on_whatever', 
+               comment = 'Table some_table in namespace nspace with a candidate primary key');
+</programlisting></para></question>
+
+<answer><para> If you have <command> key =
+'nspace.key_on_whatever'</command> the request will
+<emphasis>FAIL</emphasis>.</para>
+</answer></qandaentry>
+
+<qandaentry>
+<question> <para> Replication has fallen behind, and it appears that the
+queries to draw data from <xref linkend="table.sl-log-1">/<xref
+linkend="table.sl-log-2"> are taking a long time to pull just a few
+<command>SYNC</command>s. </para>
+</question>
+
+<answer> <para> Until version 1.1.1, there was only one index on <xref
+linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
+there were multiple replication sets, some of the columns on the index
+would not provide meaningful selectivity.  If there is no index on
+column <function> log_xid</function>, consider adding it.  See
+<filename>slony1_base.sql</filename> for an example of how to create
+the index.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry><question> <para> I need to rename a column that is in the
+primary key for one of my replicated tables.  That seems pretty
+dangerous, doesn't it?  I have to drop the table out of replication
+and recreate it, right?</para>
+</question>
+
+<answer><para> Actually, this is a scenario which works out remarkably
+cleanly.  &slony1; does indeed make intense use of the primary key
+columns, but actually does so in a manner that allows this sort of
+change to be made very nearly transparently.</para>
+
+<para> Suppose you revise a column name, as with the SQL DDL <command>
+alter table accounts alter column aid rename to cid; </command> This
+revises the names of the columns in the table; it
+<emphasis>simultaneously</emphasis> renames the names of the columns
+in the primary key index.  The result is that the normal course of
+things is that altering a column name affects both aspects
+simultaneously on a given node.</para>
+
+<para> The <emphasis>ideal</emphasis> and proper handling of this
+change would involve using <xref linkend="stmtddlscript"> to deploy
+the alteration, which ensures it is applied at exactly the right point
+in the transaction stream on each node.</para>
+
+<para> Interestingly, that isn't forcibly necessary.  As long as the
+alteration is applied on the replication set's origin before
+application on subscribers, things won't break irrepairably.  Some
+<command>SYNC</command> events that do not include changes to the
+altered table can make it through without any difficulty...  At the
+point that the first update to the table is drawn in by a subscriber,
+<emphasis>that</emphasis> is the point at which
+<command>SYNC</command> events will start to fail, as the provider
+will indicate the <quote>new</quote> set of columns whilst the
+subscriber still has the <quote>old</quote> ones.  If you then apply
+the alteration to the subscriber, it can retry the
+<command>SYNC</command>, at which point it will, finding the
+<quote>new</quote> column names, work just fine.
+</para> </answer></qandaentry>
 
 <qandaentry id="v72upgrade">
 <question> <para> I have a &postgres; 7.2-based system that I
@@ -1612,75 +597,454 @@ pretty heavily with the code.  </para> </answer>
 </qandaentry>
 
 <qandaentry>
-<question> <para> I am finding some multibyte columns (Unicode, Big5)
-are being truncated a bit, clipping off the last character.  Why?
-</para> </question>
+<question> <para> I had a network <quote>glitch</quote> that led to my
+using <xref linkend="stmtfailover"> to fail over to an alternate node.
+The failure wasn't a disk problem that would corrupt databases; why do
+I need to rebuild the failed node from scratch? </para></question>
 
-<answer> <para> This was a bug present until a little after &slony1;
-version 1.1.0; the way in which columns were being captured by the
-<function>logtrigger()</function> function could clip off the last
-byte of a column represented in a multibyte format.  Check to see that
-your version of <filename>src/backend/slony1_funcs.c</filename> is
-1.34 or better; the patch was introduced in CVS version 1.34 of that
-file.  </para> </answer>
+<answer><para> The action of <xref linkend="stmtfailover"> is to
+<emphasis>abandon</emphasis> the failed node so that no more &slony1;
+activity goes to or from that node.  As soon as that takes place, the
+failed node will progressively fall further and further out of sync.
+</para></answer>
+
+<answer><para> The <emphasis>big</emphasis> problem with trying to
+recover the failed node is that it may contain updates that never made
+it out of the origin.  If they get retried, on the new origin, you may
+find that you have conflicting updates.  In any case, you do have a
+sort of <quote>logical</quote> corruption of the data even if there
+never was a disk failure making it <quote>physical.</quote>
+</para></answer>
+
+<answer><para> As discusssed in <xref linkend="failover">, using <xref
+linkend="stmtfailover"> should be considered a <emphasis>last
+resort</emphasis> as it implies that you are abandoning the origin
+node as being corrupted.  </para></answer>
 </qandaentry>
 
-<qandaentry><question> <para> I need to rename a column that is in the
-primary key for one of my replicated tables.  That seems pretty
-dangerous, doesn't it?  I have to drop the table out of replication
-and recreate it, right?</para>
+
+<qandaentry> <question><para> After notification of a subscription on
+<emphasis>another</emphasis> node, replication falls over on one of
+the subscribers, with the following error message:</para>
+
+<screen>
+ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
+DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
+</screen>
+
+<para> This is then followed by a series of failed syncs as the <xref
+linkend="slon"> shuts down:</para>
+
+<screen>
+DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
+</screen>
+
 </question>
 
-<answer><para> Actually, this is a scenario which works out remarkably
-cleanly.  &slony1; does indeed make intense use of the primary key
-columns, but actually does so in a manner that allows this sort of
-change to be made very nearly transparently.</para>
+<answer><para> If you see a <xref linkend="slon"> shutting down with
+<emphasis>ignore new events due to shutdown</emphasis> log entries,
+you typically need to step back in the log to
+<emphasis>before</emphasis> they started failing to see indication of
+the root cause of the problem.  </para></answer>
 
-<para> Suppose you revise a column name, as with the SQL DDL <command>
-alter table accounts alter column aid rename to cid; </command> This
-revises the names of the columns in the table; it
-<emphasis>simultaneously</emphasis> renames the names of the columns
-in the primary key index.  The result is that the normal course of
-things is that altering a column name affects both aspects
-simultaneously on a given node.</para>
+<answer><para> In this particular case, the problem was that some of
+the <xref linkend="stmtstorepath"> commands had not yet made it to
+node 4 before the <xref linkend="stmtsubscribeset"> command
+propagated. </para>
 
-<para> The <emphasis>ideal</emphasis> and proper handling of this
-change would involve using <xref linkend="stmtddlscript"> to deploy
-the alteration, which ensures it is applied at exactly the right point
-in the transaction stream on each node.</para>
+<para>This demonstrates yet another example of the need to not do
+things in a rush; you need to be sure things are working right
+<emphasis>before</emphasis> making further configuration changes.
+</para></answer>
 
-<para> Interestingly, that isn't forcibly necessary.  As long as the
-alteration is applied on the replication set's origin before
-application on subscribers, things won't break irrepairably.  Some
-<command>SYNC</command> events that do not include changes to the
-altered table can make it through without any difficulty...  At the
-point that the first update to the table is drawn in by a subscriber,
-<emphasis>that</emphasis> is the point at which
-<command>SYNC</command> events will start to fail, as the provider
-will indicate the <quote>new</quote> set of columns whilst the
-subscriber still has the <quote>old</quote> ones.  If you then apply
-the alteration to the subscriber, it can retry the
-<command>SYNC</command>, at which point it will, finding the
-<quote>new</quote> column names, work just fine.
-</para> </answer></qandaentry>
+</qandaentry>
 
 <qandaentry>
-<question> <para> Replication has fallen behind, and it appears that the
-queries to draw data from <xref linkend="table.sl-log-1">/<xref
-linkend="table.sl-log-2"> are taking a long time to pull just a few
-<command>SYNC</command>s. </para>
-</question>
 
-<answer> <para> Until version 1.1.1, there was only one index on <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
-there were multiple replication sets, some of the columns on the index
-would not provide meaningful selectivity.  If there is no index on
-column <function> log_xid</function>, consider adding it.  See
-<filename>slony1_base.sql</filename> for an example of how to create
-the index.
+<question><para>I just used <xref linkend="stmtmoveset"> to move the
+origin to a new node.  Unfortunately, some subscribers are still
+pointing to the former origin node, so I can't take it out of service
+for maintenance without stopping them from getting updates.  What do I
+do?  </para></question>
+
+<answer><para> You need to use <xref linkend="stmtsubscribeset"> to
+alter the subscriptions for those nodes to have them subscribe to a
+provider that <emphasis>will</emphasis> be sticking around during the
+maintenance.</para>
+
+<warning> <para> What you <emphasis>don't</emphasis> do is to <xref
+linkend="stmtunsubscribeset">; that would require reloading all data
+for the nodes from scratch later.
+
+</para></warning>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> After notification of a subscription on
+<emphasis>another</emphasis> node, replication falls over, starting
+with the following error message:</para>
+
+<screen>
+ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level serializable; lock table "_livesystem".sl_config_lock; select "_livesystem".enableSubscription(25506, 1, 501); notify "_livesystem_Event"; notify "_livesystem_Confirm"; insert into "_livesystem".sl_event     (ev_origin, ev_seqno, ev_timestamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3, ev_data4    ) values ('1', '4896546', '2005-01-23 16:08:55.037395', '1745281261', '1745281262', '', 'ENABLE_SUBSCRIPTION', '25506', '1', '501', 't'); insert into "_livesystem".sl_confirm      (con_origin, con_received, con_seqno, con_timestamp)    values (1, 4, '4896546', CURRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or update on table "sl_subscribe" violates foreign key constraint "sl_subscribe-sl_path-ref"
+DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
+</screen>
+
+<para> This is then followed by a series of failed syncs as the <xref
+linkend="slon"> shuts down:
+
+<screen>
+DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897518 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897519 SYNC
+DEBUG2 remoteListenThread_1: queue event 1,4897520 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897521 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897522 SYNC
+DEBUG2 remoteWorker_event: ignore new events due to shutdown
+DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
+</screen>
+
+</para></question>
+
+<answer><para> If you see a <xref linkend="slon"> shutting down with
+<emphasis>ignore new events due to shutdown</emphasis> log entries,
+you'll typically have to step back to <emphasis>before</emphasis> they
+started failing to see indication of the root cause of the problem.
+
+</para></answer>
+
+<answer><para> In this particular case, the problem was that some of
+the <xref linkend="stmtstorepath"> commands had not yet made it to
+node 4 before the <xref linkend="stmtsubscribeset"> command
+propagated. </para>
+
+<para>This is yet another example of the need to not do things too
+terribly quickly; you need to be sure things are working right
+<emphasis>before</emphasis> making further configuration changes.
+</para></answer>
+
+</qandaentry>
+
+<qandaentry>
+<question> <para> Is the ordering of tables in a set significant?</para>
+</question>
+<answer> <para> Most of the time, it isn't.  You might imagine it of
+some value to order the tables in some particular way in order that
+<quote>parent</quote> entries would make it in before their <quote>children</quote>
+in some foreign key relationship; that <emphasis>isn't</emphasis> the case since
+foreign key constraint triggers are turned off on subscriber nodes.
+</para>
+</answer>
+
+<answer> <para>(Jan Wieck comments:) The order of table ID's is only
+significant during a <xref linkend="stmtlockset"> in preparation of
+switchover. If that order is different from the order in which an
+application is acquiring its locks, it can lead to deadlocks that
+abort either the application or <application>slon</application>.
+</para>
+</answer>
+
+<answer><para> (David Parker) I ran into one other case where the
+ordering of tables in the set was significant: in the presence of
+inherited tables. If a child table appears before its parent in a set,
+then the initial subscription will end up deleting that child table
+after it has possibly already received data, because the
+<command>copy_set</command> logic does a <command>delete</command>,
+not a <command>delete only</command>, so the delete of the parent will
+delete the new rows in the child as well.
 </para>
 </answer>
 </qandaentry>
+
+<qandaentry>
+
+<question><para> If you have a <xref linkend="slonik"> script
+something like this, it will hang on you and never complete, because
+you can't have <command>wait for event</command> inside a
+<command>try</command> block. A <command>try</command> block is
+executed as one transaction, and the event that you are waiting for
+can never arrive inside the scope of the transaction.</para>
+
+<programlisting>
+try {
+      echo 'Moving set 1 to node 3';
+      lock set (id=1, origin=1);
+      echo 'Set locked';
+      wait for event (origin = 1, confirmed = 3);
+      echo 'Moving set';
+      move set (id=1, old origin=1, new origin=3);
+      echo 'Set moved - waiting for event to be confirmed by node 3';
+      wait for event (origin = 1, confirmed = 3);
+      echo 'Confirmed';
+} on error {
+      echo 'Could not move set for cluster foo';
+      unlock set (id=1, origin=1);
+      exit -1;
+}
+</programlisting></question>
+
+<answer><para> You must not invoke <xref linkend="stmtwaitevent">
+inside a <quote>try</quote> block.</para></answer>
+
+</qandaentry>
+
+<qandaentry>
+<question><para>Slony-I: cannot add table to currently subscribed set 1</para>
+
+<para> I tried to add a table to a set, and got the following message:
+
+<screen>
+	Slony-I: cannot add table to currently subscribed set 1
+</screen></para></question>
+
+<answer><para> You cannot add tables to sets that already have
+subscribers.</para>
+
+<para>The workaround to this is to create <emphasis>ANOTHER</emphasis>
+set, add the new tables to that new set, subscribe the same nodes
+subscribing to "set 1" to the new set, and then merge the sets
+together.</para>
+</answer></qandaentry>
+
+<qandaentry>
+<question><para>
+ERROR: duplicate key violates unique constraint "sl_table-pkey"</para>
+
+<para>I tried setting up a second replication set, and got the following error:
+
+<screen>
+stdin:9: Could not create subscription set 2 for oxrslive!
+stdin:11: PGRES_FATAL_ERROR select "_oxrslive".setAddTable(2, 1, 'public.replic_test', 'replic_test__Slony-I_oxrslive_rowID_key', 'Table public.replic_test without primary key');  - ERROR:  duplicate key violates unique constraint "sl_table-pkey"
+CONTEXT:  PL/pgSQL function "setaddtable_int" line 71 at SQL statement
+</screen></para></question>
+
+<answer><para> The table IDs used in <xref linkend="stmtsetaddtable">
+are required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus,
+you can't restart numbering at 1 for a second set; if you are
+numbering them consecutively, a subsequent set has to start with IDs
+after where the previous set(s) left off.</para> </answer>
+</qandaentry>
+
+</qandadiv>
+<qandadiv id="faqperformance"> <title> &slony1; FAQ: Performance Issues </title>
+
+<qandaentry id="longtxnsareevil">
+
+<question><para> Replication has been slowing down, I'm seeing
+<command> FETCH 100 FROM LOG </command> queries running for a long
+time, <xref linkend="table.sl-log-1"> is growing, and performance is,
+well, generally getting steadily worse. </para>
+</question>
+
+<answer> <para> There are actually a number of possible causes for
+this sort of thing.  There is a question involving similar pathology
+where the problem is that <link linkend="pglistenerfull"> 
+&pglistener; grows because it is not vacuumed. </link>
+</para>
+
+<para> Another <quote> proximate cause </quote> for this growth is for
+there to be a connection connected to the node that sits <command>
+IDLE IN TRANSACTION </command> for a very long time. </para>
+
+<para> That open transaction will have multiple negative effects, all
+of which will adversely affect performance:</para>
+
+<itemizedlist>
+
+<listitem><para> Vacuums on all tables, including &pglistener;, will
+not clear out dead tuples from before the start of the idle
+transaction. </para> </listitem>
+
+<listitem><para> The cleanup thread will be unable to clean out
+entries in <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog">, with the result that these tables will
+grow, ceaselessly, until the transaction is closed. </para>
+</listitem>
+</itemizedlist>
+</answer>
+
+<answer> <para> You can monitor for this condition inside the database
+only if the &postgres; <filename> postgresql.conf </filename>
+parameter <envar>stats_command_string</envar> is set to true.  If that
+is set, then you may submit the query <command> select * from
+pg_stat_activity where current_query like '%IDLE% in transaction';
+</command> which will find relevant activity.  </para> </answer>
+
+<answer> <para> You should also be able to search for <quote> idle in
+transaction </quote> in the process table to find processes that are
+thus holding on to an ancient transaction.  </para> </answer>
+
+<answer> <para> It is also possible (though rarer) for the problem to
+be a transaction that is, for some other reason, being held open for a
+very long time.  The <envar> query_start </envar> time in <envar>
+pg_stat_activity </envar> may show you some query that has been
+running way too long.  </para> </answer>
+
+<answer> <para> There are plans for &postgres; to have a timeout
+parameter, <envar> open_idle_transaction_timeout </envar>, which would
+cause old transactions to time out after some period of disuse.  Buggy
+connection pool logic is a common culprit for this sort of thing.
+There are plans for <productname> <link linkend="pgpool"> pgpool
+</link> </productname> to provide a better alternative, eventually,
+where connections would be shared inside a connection pool implemented
+in C.  You may have some more or less buggy connection pool in your
+Java or PHP application; if a small set of <emphasis> real </emphasis>
+connections are held in <productname>pgpool</productname>, that will
+hide from the database the fact that the application imagines that
+numerous of them are left idle in transaction for hours at a time.
+</para> </answer>
+
+</qandaentry> 
+
+<qandaentry id="faq17">
+<question><para>After dropping a node, <xref linkend="table.sl-log-1">
+isn't getting purged out anymore.</para></question>
+
+<answer><para> This is a common scenario in versions before 1.0.5, as
+the <quote>clean up</quote> that takes place when purging the node
+does not include purging out old entries from the &slony1; table,
+<xref linkend="table.sl-confirm">, for the recently departed
+node.</para>
+
+<para> The node is no longer around to update confirmations of what
+syncs have been applied on it, and therefore the cleanup thread that
+purges log entries thinks that it can't safely delete entries newer
+than the final <xref linkend="table.sl-confirm"> entry, which rather
+curtails the ability to purge out old logs.</para>
+
+<para>Diagnosis: Run the following query to see if there are any
+<quote>phantom/obsolete/blocking</quote> <xref
+linkend="table.sl-confirm"> entries:
+
+<screen>
+oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
+ con_origin | con_received | con_seqno |        con_timestamp                  
+------------+--------------+-----------+----------------------------
+          4 |          501 |     83999 | 2004-11-09 19:57:08.195969
+          1 |            2 |   3345790 | 2004-11-14 10:33:43.850265
+          2 |          501 |    102718 | 2004-11-14 10:33:47.702086
+        501 |            2 |      6577 | 2004-11-14 10:34:45.717003
+          4 |            5 |     83999 | 2004-11-14 21:11:11.111686
+          4 |            3 |     83999 | 2004-11-24 16:32:39.020194
+(6 rows)
+</screen></para>
+
+<para>In version 1.0.5, the <xref linkend="stmtdropnode"> function
+purges out entries in <xref linkend="table.sl-confirm"> for the
+departing node.  In earlier versions, this needs to be done manually.
+Supposing the node number is 3, then the query would be:
+
+<screen>
+delete from _namespace.sl_confirm where con_origin = 3 or con_received = 3;
+</screen></para>
+
+<para>Alternatively, to go after <quote>all phantoms,</quote> you could use
+<screen>
+oxrsbar=# delete from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
+DELETE 6
+</screen></para>
+
+<para>General <quote>due diligence</quote> dictates starting with a
+<command>BEGIN</command>, looking at the contents of
+<xref linkend="table.sl-confirm"> before, ensuring that only the expected
+records are purged, and then, only after that, confirming the change
+with a <command>COMMIT</command>.  If you delete confirm entries for
+the wrong node, that could ruin your whole day.</para>
+
+<para>You'll need to run this on each node that remains...</para>
+
+<para>Note that as of 1.0.5, this is no longer an issue at all, as it
+purges unneeded entries from <xref linkend="table.sl-confirm"> in two
+places:
+
+<itemizedlist>
+<listitem><para> At the time a node is dropped</para></listitem>
+
+<listitem><para> At the start of each
+<function>cleanupEvent</function> run, which is the event in which old
+data is purged from <xref linkend="table.sl-log-1"> and <xref
+linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+
+<question><para>The <application>slon</application> spent the weekend out of
+commission [for some reason], and it's taking a long time to get a
+sync through.</para></question>
+
+<answer><para> You might want to take a look at the <xref
+linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
+do a summary to see if there are any really enormous &slony1;
+transactions in there.  Up until at least 1.0.2, there needs to be a
+<xref linkend="slon"> connected to the origin in order for
+<command>SYNC</command> events to be generated.</para>
+
+<para>If none are being generated, then all of the updates until the
+next one is generated will collect into one rather enormous &slony1;
+transaction.</para>
+
+<para>Conclusion: Even if there is not going to be a subscriber
+around, you <emphasis>really</emphasis> want to have a
+<application>slon</application> running to service the origin
+node.</para>
+
+<para>&slony1; 1.1 provides a stored procedure that allows
+<command>SYNC</command> counts to be updated on the origin based on a
+<application>cron</application> job even if there is no <xref
+linkend="slon"> daemon running.</para> </answer></qandaentry>
+
+<qandaentry id="PGLISTENERFULL">
+<question><para>Some nodes start consistently falling behind</para>
+
+<para>I have been running &slony1; on a node for a while, and am
+seeing system performance suffering.</para>
+
+<para>I'm seeing long running queries of the form:
+<screen>
+	fetch 100 from LOG;
+</screen></para></question>
+
+<answer><para> This can be characteristic of &pglistener; (which is
+the table containing <command>NOTIFY</command> data) having plenty of
+dead tuples in it.  That makes <command>NOTIFY</command> events take a
+long time, and causes the affected node to gradually fall further and
+further behind.</para>
+
+<para>You quite likely need to do a <command>VACUUM FULL</command> on
+&pglistener;, to vigorously clean it out, and need to vacuum
+&pglistener; really frequently.  Once every five minutes would likely
+be AOK.</para>
+
+<para> Slon daemons already vacuum a bunch of tables, and
+<filename>cleanup_thread.c</filename> contains a list of tables that
+are frequently vacuumed automatically.  In &slony1; 1.0.2,
+&pglistener; is not included.  In 1.0.5 and later, it is regularly
+vacuumed, so this should cease to be a direct issue.  In version 1.2,
+&pglistener; will only be used when a node is only receiving events
+periodically, which means that the issue should mostly go away even in
+the presence of evil long running transactions...</para>
+
+<para>There is, however, still a scenario where this will still
+<quote>bite.</quote> Under MVCC, vacuums cannot delete tuples that
+were made <quote>obsolete</quote> at any time after the start time of
+the eldest transaction that is still open.  Long running transactions
+will cause trouble, and should be avoided, even on subscriber
+nodes.</para> </answer></qandaentry>
+
+</qandadiv>
+<qandadiv id="faqbugs"> <title> &slony1; FAQ: &slony1; Bugs in Elder Versions </title>
 <qandaentry>
 <question><para>The <xref linkend="slon"> processes servicing my
 subscribers are growing to enormous size, challenging system resources
@@ -1832,6 +1196,672 @@ described in <xref linkend="listenpaths">.
 
 </para></answer>
 </qandaentry>
+
+<qandaentry>
+<question> <para> I am finding some multibyte columns (Unicode, Big5)
+are being truncated a bit, clipping off the last character.  Why?
+</para> </question>
+
+<answer> <para> This was a bug present until a little after &slony1;
+version 1.1.0; the way in which columns were being captured by the
+<function>logtrigger()</function> function could clip off the last
+byte of a column represented in a multibyte format.  Check to see that
+your version of <filename>src/backend/slony1_funcs.c</filename> is
+1.34 or better; the patch was introduced in CVS version 1.34 of that
+file.  </para> </answer>
+</qandaentry>
+
+<qandaentry id="sequenceset"><question><para> <ulink url=
+"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
+Bug #1226 </ulink> indicates an error condition that can come up if
+you have a replication set that consists solely of sequences. </para>
+</question>
+
+<answer> <para> The  short answer is that having a replication set
+consisting only of sequences is not a <link linkend="bestpractices">
+best practice.</link> </para>
+</answer>
+
+<answer>
+<para> The problem with a sequence-only set comes up only if you have
+a case where the only subscriptions that are active for a particular
+subscriber to a particular provider are for
+<quote>sequence-only</quote> sets.  If a node gets into that state,
+replication will fail, as the query that looks for data from <xref
+linkend="table.sl-log-1"> has no tables to find, and the query will be
+malformed, and fail.  If a replication set <emphasis>with</emphasis>
+tables is added back to the mix, everything will work out fine; it
+just <emphasis>seems</emphasis> scary.
+</para>
+
+<para> This problem should be resolved some time after &slony1;
+1.1.0.</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>I need to drop a table from a replication set</para></question>
+<answer><para>
+This can be accomplished several ways, not all equally desirable ;-).
+
+<itemizedlist>
+
+<listitem><para> You could drop the whole replication set, and
+recreate it with just the tables that you need.  Alas, that means
+recopying a whole lot of data, and kills the usability of the cluster
+on the rest of the set while that's happening.</para></listitem>
+
+<listitem><para> If you are running 1.0.5 or later, there is the
+command SET DROP TABLE, which will "do the trick."</para></listitem>
+
+<listitem><para> If you are still using 1.0.1 or 1.0.2, the
+<emphasis>essential functionality of <xref linkend="stmtsetdroptable">
+involves the functionality in <function>droptable_int()</function>.
+You can fiddle this by hand by finding the table ID for the table you
+want to get rid of, which you can find in <xref linkend="table.sl-table">, and then run the
+following three queries, on each host:</emphasis>
+
+<programlisting>
+  select _slonyschema.alterTableRestore(40);
+  select _slonyschema.tableDropKey(40);
+  delete from _slonyschema.sl_table where tab_id = 40;
+</programlisting></para>
+
+<para>The schema will obviously depend on how you defined the &slony1;
+cluster.  The table ID, in this case, 40, will need to change to the
+ID of the table you want to have go away.</para>
+
+<para> You'll have to run these three queries on all of the nodes,
+preferably firstly on the origin node, so that the dropping of this
+propagates properly.  Implementing this via a <xref linkend="slonik">
+statement with a new &slony1; event would do that.  Submitting the
+three queries using <xref linkend="stmtddlscript"> could do that.
+Also possible would be to connect to each database and submit the
+queries by hand.</para></listitem> </itemizedlist></para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>I need to drop a sequence from a replication set</para></question>
+
+<answer><para></para><para>If you are running 1.0.5 or later, there is
+a <xref linkend="stmtsetdropsequence"> command in Slonik to allow you
+to do this, parallelling <xref linkend="stmtsetdroptable">.</para>
+
+<para>If you are running 1.0.2 or earlier, the process is a bit more manual.</para>
+
+<para>Supposing I want to get rid of the two sequences listed below,
+<envar>whois_cachemgmt_seq</envar> and
+<envar>epp_whoi_cach_seq_</envar>, we start by needing the
+<envar>seq_id</envar> values.
+
+<screen>
+oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
+ seq_id | seq_reloid | seq_set |       seq_comment				 
+--------+------------+---------+-------------------------------------
+     93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
+     59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
+(2 rows)
+</screen></para>
+
+<para>The data that needs to be deleted to stop Slony from continuing to
+replicate these are thus:
+
+<programlisting>
+delete from _oxrsorg.sl_seqlog where seql_seqid in (93, 59);
+delete from _oxrsorg.sl_sequence where seq_id in (93,59);
+</programlisting></para>
+
+<para>Those two queries could be submitted to all of the nodes via
+<xref linkend="function.ddlscript-integer-text-integer"> / <xref
+linkend="stmtddlscript">, thus eliminating the sequence everywhere
+<quote>at once.</quote> Or they may be applied by hand to each of the
+nodes.</para>
+
+<para>Similarly to <xref linkend="stmtsetdroptable">, this is
+implemented &slony1; version 1.0.5 as <xref
+linkend="stmtsetdropsequence">.</para></answer></qandaentry>
+
+</qandadiv>
+
+<qandadiv id="faqobsolete"> <title> &slony1; FAQ: Hopefully Obsolete Issues </title>
+
+<qandaentry>
+<question><para> <xref linkend="slon"> does not restart after
+crash</para>
+
+<para> After an immediate stop of &postgres; (simulation of system
+crash) in &pglistener; a tuple with <command>
+relname='_${cluster_name}_Restart'</command> exists. slon doesn't
+start because it thinks another process is serving the cluster on this
+node.  What can I do? The tuples can't be dropped from this
+relation.</para>
+
+<para> The logs claim that <blockquote><para>Another slon daemon is
+serving this node already</para></blockquote></para></question>
+
+<answer><para> The problem is that the system table &pglistener;, used
+by &postgres; to manage event notifications, contains some entries
+that are pointing to backends that no longer exist.  The new <xref
+linkend="slon"> instance connects to the database, and is convinced,
+by the presence of these entries, that an old
+<application>slon</application> is still servicing this &slony1;
+node.</para>
+
+<para> The <quote>trash</quote> in that table needs to be thrown
+away.</para>
+
+<para>It's handy to keep a slonik script similar to the following to
+run in such cases:
+
+<programlisting>
+twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
+cluster name = oxrsorg ;
+node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
+node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
+node 3 admin conninfo = 'host=32.85.68.244 dbname=oxrsorg user=postgres port=5532';
+node 4 admin conninfo = 'host=10.28.103.132 dbname=oxrsorg user=postgres port=5532';
+restart node 1;
+restart node 2;
+restart node 3;
+restart node 4;
+</programlisting></para>
+
+<para> <xref linkend="stmtrestartnode"> cleans up dead notifications
+so that you can restart the node.</para>
+
+<para>As of version 1.0.5, the startup process of slon looks for this
+condition, and automatically cleans it up.</para>
+
+<para> As of version 8.1 of &postgres;, the functions that manipulate
+&pglistener; do not support this usage, so for &slony1; versions after
+1.1.2 (<emphasis>e.g. - </emphasis> 1.1.5), this
+<quote>interlock</quote> behaviour is handled via a new table, and the
+issue should be transparently <quote>gone.</quote> </para>
+
+</answer></qandaentry>
+
+<qandaentry><question><para> I tried the following query which did not work:</para> 
+
+<programlisting>
+sdb=# explain select query_start, current_query from pg_locks join
+pg_stat_activity on pid = procpid where granted = true and transaction
+in (select transaction from pg_locks where granted = false); 
+
+ERROR: could not find hash function for hash operator 716373
+</programlisting>
+
+<para> It appears the &slony1; <function>xxid</function> functions are
+claiming to be capable of hashing, but cannot actually do so.</para>
+
+
+<para> What's up? </para>
+
+</question>
+
+<answer><para> &slony1; defined an XXID data type and operators on
+that type in order to allow manipulation of transaction IDs that are
+used to group together updates that are associated with the same
+transaction.</para>
+
+<para> Operators were not available for &postgres; 7.3 and earlier
+versions; in order to support version 7.3, custom functions had to be
+added.  The <function>=</function> operator was marked as supporting
+hashing, but for that to work properly, the join operator must appear
+in a hash index operator class.  That was not defined, and as a
+result, queries (like the one above) that decide to use hash joins
+will fail. </para> </answer>
+
+<answer> <para> This has <emphasis> not </emphasis> been considered a
+<quote>release-critical</quote> bug, as &slony1; does not internally
+generate queries likely to use hash joins.  This problem shouldn't
+injure &slony1;'s ability to continue replicating. </para> </answer>
+
+<answer> <para> Future releases of &slony1; (<emphasis>e.g.</emphasis>
+1.0.6, 1.1) will omit the <command>HASHES</command> indicator, so that
+</para> </answer>
+
+<answer> <para> Supposing you wish to repair an existing instance, so
+that your own queries will not run afoul of this problem, you may do
+so as follows: </para>
+
+<programlisting>
+/* cbbrowne@[local]/dba2 slony_test1=*/ \x     
+Expanded display is on.
+/* cbbrowne@[local]/dba2 slony_test1=*/ select * from pg_operator where oprname = '=' 
+and oprnamespace = (select oid from pg_namespace where nspname = 'public');
+-[ RECORD 1 ]+-------------
+oprname      | =
+oprnamespace | 2200
+oprowner     | 1
+oprkind      | b
+oprcanhash   | t
+oprleft      | 82122344
+oprright     | 82122344
+oprresult    | 16
+oprcom       | 82122365
+oprnegate    | 82122363
+oprlsortop   | 82122362
+oprrsortop   | 82122362
+oprltcmpop   | 82122362
+oprgtcmpop   | 82122360
+oprcode      | "_T1".xxideq
+oprrest      | eqsel
+oprjoin      | eqjoinsel
+
+/* cbbrowne@[local]/dba2 slony_test1=*/ update pg_operator set oprcanhash = 'f' where 
+oprname = '=' and oprnamespace = 2200 ;
+UPDATE 1
+</programlisting>
+</answer>
+
+</qandaentry>
+<qandaentry> <question><para> I can do a <command>pg_dump</command>
+and load the data back in much faster than the <command>SUBSCRIBE
+SET</command> runs.  Why is that?  </para></question>
+
+<answer><para> &slony1; depends on there being an already existant
+index on the primary key, and leaves all indexes alone whilst using
+the &postgres; <command>COPY</command> command to load the data.
+Further hurting performane, the <command>COPY SET</command> event
+starts by deleting the contents of tables, which potentially leaves a
+lot of dead tuples
+</para>
+
+<para> When you use <command>pg_dump</command> to dump the contents of
+a database, and then load that, creation of indexes is deferred until
+the very end.  It is <emphasis>much</emphasis> more efficient to
+create indexes against the entire table, at the end, than it is to
+build up the index incrementally as each row is added to the
+table.</para></answer>
+
+<answer><para> If you can drop unnecessary indices while the
+<command>COPY</command> takes place, that will improve performance
+quite a bit.  If you can <command>TRUNCATE</command> tables that
+contain data that is about to be eliminated, that will improve
+performance <emphasis>a lot.</emphasis> </para></answer>
+
+<answer><para> &slony1; version 1.1.5 and later versions should handle
+this automatically; it <quote>thumps</quote> on the indexes in the
+&postgres; catalog to hide them, in much the same way triggers are
+hidden, and then <quote>fixes</quote> the index pointers and reindexes
+the table. </para> </answer>
+</qandaentry>
+
+<qandaentry id="dupkey">
+<question><para>Replication Fails - Unique Constraint Violation</para>
+
+<para>Replication has been running for a while, successfully, when a
+node encounters a <quote>glitch,</quote> and replication logs are filled with
+repetitions of the following:
+
+<screen>
+DEBUG2 remoteWorkerThread_1: syncing set 2 with 5 table(s) from provider 1
+DEBUG2 remoteWorkerThread_1: syncing set 1 with 41 table(s) from provider 1
+DEBUG2 remoteWorkerThread_1: syncing set 5 with 1 table(s) from provider 1
+DEBUG2 remoteWorkerThread_1: syncing set 3 with 1 table(s) from provider 1
+DEBUG2 remoteHelperThread_1_1: 0.135 seconds delay for first row
+DEBUG2 remoteHelperThread_1_1: 0.343 seconds until close cursor
+ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1          (log_origin, log_xid, log_tableid,                log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
+delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
+delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
+delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
+delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
+delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
+delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
+delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
+insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
+delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
+delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  duplicate key violates unique constraint "contact_status_pkey"
+ - qualification was: 
+ERROR  remoteWorkerThread_1: SYNC aborted
+</screen></para>
+
+<para>The transaction rolls back, and
+&slony1; tries again, and again, and again.
+The problem is with one of the <emphasis>last</emphasis> SQL
+statements, the one with <command>log_cmdtype = 'I'</command>.  That
+isn't quite obvious; what takes place is that
+&slony1; groups 10 update queries together
+to diminish the number of network round trips.</para></question>
+
+<answer><para> A <emphasis>certain</emphasis> cause for this has been
+difficult to arrive at.</para>
+
+<para>By the time we notice that there is a problem, the seemingly
+missed delete transaction has been cleaned out of <xref
+linkend="table.sl-log-1">, so there appears to be no recovery
+possible.  What has seemed necessary, at this point, is to drop the
+replication set (or even the node), and restart replication from
+scratch on that node.</para>
+
+<para>In &slony1; 1.0.5, the handling of purges of <xref
+linkend="table.sl-log-1"> became more conservative, refusing to purge
+entries that haven't been successfully synced for at least 10 minutes
+on all nodes.  It was not certain that that would prevent the
+<quote>glitch</quote> from taking place, but it seemed plausible that
+it might leave enough <xref linkend="table.sl-log-1"> data to be able
+to do something about recovering from the condition or at least
+diagnosing it more exactly.  And perhaps the problem was that <xref
+linkend="table.sl-log-1"> was being purged too aggressively, and this
+would resolve the issue completely.</para>
+
+<para> It is a shame to have to reconstruct a large replication node
+for this; if you discover that this problem recurs, it may be an idea
+to break replication down into multiple sets in order to diminish the
+work involved in restarting replication.  If only one set has broken,
+you may only need to unsubscribe/drop and resubscribe the one set.
+</para>
+
+<para> In one case we found two lines in the SQL error message in the
+log file that contained <emphasis> identical </emphasis> insertions
+into <xref linkend="table.sl-log-1">.  This <emphasis> ought
+</emphasis> to be impossible as is a primary key on <xref
+linkend="table.sl-log-1">.  The latest (somewhat) punctured theory
+that comes from <emphasis>that</emphasis> was that perhaps this PK
+index has been corrupted (representing a &postgres; bug), and that
+perhaps the problem might be alleviated by running the query:</para>
+
+<programlisting>
+# reindex table _slonyschema.sl_log_1;
+</programlisting>
+
+<para> On at least one occasion, this has resolved the problem, so it
+is worth trying this.</para>
+</answer>
+
+<answer> <para> This problem has been found to represent a &postgres;
+bug as opposed to one in &slony1;.  Version 7.4.8 was released with
+two resolutions to race conditions that should resolve the issue.
+Thus, if you are running a version of &postgres; earlier than 7.4.8,
+you should consider upgrading to resolve this.
+</para>
+</answer>
+</qandaentry>
+<qandaentry> <question><para>I started doing a backup using
+<application>pg_dump</application>, and suddenly Slony
+stops</para></question>
+
+<answer><para>Ouch.  What happens here is a conflict between:
+<itemizedlist>
+
+<listitem><para> <application>pg_dump</application>, which has taken
+out an <command>AccessShareLock</command> on all of the tables in the
+database, including the &slony1; ones, and</para></listitem>
+
+<listitem><para> A &slony1; sync event, which wants to grab a
+<command>AccessExclusiveLock</command> on the table <xref
+linkend="table.sl-event">.</para></listitem> </itemizedlist></para>
+
+<para>The initial query that will be blocked is thus:
+
+<screen>
+select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  
+</screen></para>
+
+<para>(You can see this in <envar>pg_stat_activity</envar>, if you
+have query display turned on in
+<filename>postgresql.conf</filename>)</para>
+
+<para>The actual query combination that is causing the lock is from
+the function <function>Slony_I_ClusterStatus()</function>, found in
+<filename>slony1_funcs.c</filename>, and is localized in the code that
+does:
+
+<programlisting>
+  LOCK TABLE %s.sl_event;
+  INSERT INTO %s.sl_event (...stuff...)
+  SELECT currval('%s.sl_event_seq');
+</programlisting></para>
+
+<para>The <command>LOCK</command> statement will sit there and wait
+until <command>pg_dump</command> (or whatever else has pretty much any
+kind of access lock on <xref linkend="table.sl-event">)
+completes.</para>
+
+<para>Every subsequent query submitted that touches
+<xref linkend="table.sl-event"> will block behind the
+<function>createEvent</function> call.</para>
+
+<para>There are a number of possible answers to this:
+<itemizedlist>
+
+<listitem><para> Have <application>pg_dump</application> specify the
+schema dumped using <option>--schema=whatever</option>, and don't try
+dumping the cluster's schema.</para></listitem>
+
+<listitem><para> It would be nice to add an
+<option>--exclude-schema</option> option to
+<application>pg_dump</application> to exclude the &slony1; cluster
+schema.  Maybe in 8.2...</para></listitem>
+
+<listitem><para>Note that 1.0.5 uses a more precise lock that is less
+exclusive that alleviates this problem.</para></listitem>
+</itemizedlist></para>
+</answer></qandaentry>
+
+</qandadiv>
+
+<qandadiv id="faqoddities"> <title> &slony1; FAQ: Oddities and Heavy Slony-I Hacking </title>
+<qandaentry><question><para> What happens with rules and triggers on
+&slony1;-replicated tables?</para>
+</question>
+
+<answer><para> Firstly, let's look at how it is handled
+<emphasis>absent</emphasis> of the special handling of the <xref
+linkend="stmtstoretrigger"> Slonik command.  </para>
+
+<para> The function <xref
+linkend="function.altertableforreplication-integer"> prepares each
+table for replication.</para>
+
+<itemizedlist>
+
+<listitem><para> On the origin node, this involves adding a trigger
+that uses the <xref linkend="function.logtrigger"> function to the
+table.</para>
+
+<para> That trigger initiates the action of logging all updates to the
+table to &slony1; <xref linkend="table.sl-log-1">
+tables.</para></listitem>
+
+<listitem><para> On a subscriber node, this involves disabling
+triggers and rules, then adding in the trigger that denies write
+access using the <function>denyAccess()</function> function to
+replicated tables.</para>
+
+<para> Up until 1.1 (and perhaps onwards), the
+<quote>disabling</quote> is done by modifying the
+<envar>pg_trigger</envar> or <envar>pg_rewrite</envar>
+<envar>tgrelid</envar> to point to the OID of the <quote>primary
+key</quote> index on the table rather than to the table
+itself.</para></listitem>
+
+</itemizedlist>
+
+<para> A somewhat unfortunate side-effect is that this handling of the
+rules and triggers somewhat <quote>tramples</quote> on them.  The
+rules and triggers are still there, but are no longer properly tied to
+their tables.  If you do a <command>pg_dump</command> on the
+<quote>subscriber</quote> node, it won't find the rules and triggers
+because it does not expect them to be associated with an index.</para>
+
+</answer>
+
+<answer> <para> Now, consider how <xref linkend="stmtstoretrigger">
+enters into things.</para>
+
+<para> Simply put, this command causes
+&slony1; to restore the trigger using
+<function>alterTableRestore(table id)</function>, which restores the
+table's OID into the <envar>pg_trigger</envar> or
+<envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
+affected node.</para></answer> 
+
+<answer><para> This implies that if you plan to draw backups from a
+subscriber node, you will need to draw the schema from the origin
+node.  It is straightforward to do this: </para>
+
+<screen>
+% pg_dump -h originnode.example.info -p 5432 --schema-only --schema=public ourdb > schema_backup.sql
+% pg_dump -h subscribernode.example.info -p 5432 --data-only --schema=public ourdb > data_backup.sql
+</screen>
+
+</answer>
+</qandaentry>
+
+<qandaentry id="neededexecddl">
+
+<question> <para> Behaviour - all the subscriber nodes start to fall
+behind the origin, and all the logs on the subscriber nodes have the
+following error message repeating in them (when I encountered it,
+there was a nice long SQL statement above each entry):</para>
+
+<screen>
+ERROR remoteWorkerThread_1: helper 1 finished with error
+ERROR remoteWorkerThread_1: SYNC aborted
+</screen>
+</question>
+
+<answer> <para> Cause: you have likely issued <command>alter
+table</command> statements directly on the databases instead of using
+the slonik <xref linkend="stmtddlscript"> command.</para>
+
+<para>The solution is to rebuild the trigger on the affected table and
+fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
+
+<itemizedlist>
+
+<listitem><para> You'll need to identify from either the slon logs, or
+the &postgres; database logs exactly which statement it is that is
+causing the error.</para></listitem>
+
+<listitem><para> You need to fix the Slony-defined triggers on the
+table in question.  This is done with the following procedure.</para>
+
+<screen>
+BEGIN;
+LOCK TABLE table_name;
+SELECT _oxrsorg.altertablerestore(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_table.tab_id
+COMMIT;
+</screen>
+
+<para>You then need to find the rows in <xref
+linkend="table.sl-log-1"> that have bad 
+entries and fix them.  You may
+want to take down the slon daemons for all nodes except the master;
+that way, if you make a mistake, it won't immediately propagate
+through to the subscribers.</para>
+
+<para> Here is an example:</para>
+
+<screen>
+BEGIN;
+
+LOCK TABLE customer_account;
+
+SELECT _app1.altertablerestore(31);
+SELECT _app1.altertableforreplication(31);
+COMMIT;
+
+BEGIN;
+LOCK TABLE txn_log;
+
+SELECT _app1.altertablerestore(41);
+SELECT _app1.altertableforreplication(41);
+
+COMMIT;
+
+--fixing customer_account, which had an attempt to insert a "" into a timestamp with timezone.
+BEGIN;
+
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67796036';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60690.00'' where pkey=''49''' where log_actionseq = '67796194';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''60684.00'' where pkey=''49''' where log_actionseq = '67795881';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''1852.00'' where pkey=''57''' where log_actionseq = '67796403';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''87906.00'' where pkey=''8''' where log_actionseq = '68352967';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125180.00'' where pkey=''60''' where log_actionseq = '68386951';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125198.00'' where pkey=''60''' where log_actionseq = '68387055';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125174.00'' where pkey=''60''' where log_actionseq = '68386682';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125186.00'' where pkey=''60''' where log_actionseq = '68386992';
+update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''' where log_actionseq = '68387029';
+
+</screen>
+</listitem>
+
+</itemizedlist>
+</answer>
+
+</qandaentry>
+
+<qandaentry> 
+
+<question><para> Node #1 was dropped via <xref
+linkend="stmtdropnode">, and the <xref linkend="slon"> one of the
+other nodes is repeatedly failing with the error message:</para>
+
+<screen>
+ERROR  remoteWorkerThread_3: "begin transaction; set transaction isolation level
+ serializable; lock table "_mailermailer".sl_config_lock; select "_mailermailer"
+.storeListen_int(2, 1, 3); notify "_mailermailer_Event"; notify "_mailermailer_C
+onfirm"; insert into "_mailermailer".sl_event     (ev_origin, ev_seqno, ev_times
+tamp,      ev_minxid, ev_maxxid, ev_xip, ev_type , ev_data1, ev_data2, ev_data3
+   ) values ('3', '2215', '2005-02-18 10:30:42.529048', '3286814', '3286815', ''
+, 'STORE_LISTEN', '2', '1', '3'); insert into "_mailermailer".sl_confirm
+(con_origin, con_received, con_seqno, con_timestamp)    values (3, 2, '2215', CU
+RRENT_TIMESTAMP); commit transaction;" PGRES_FATAL_ERROR ERROR:  insert or updat
+e on table "sl_listen" violates foreign key constraint "sl_listen-sl_path-ref"
+DETAIL:  Key (li_provider,li_receiver)=(1,3) is not present in table "sl_path".
+DEBUG1 syncThread: thread done
+</screen>
+
+<para> Evidently, a <xref linkend="stmtstorelisten"> request hadn't
+propagated yet before node 1 was dropped.  </para></question>
+
+<answer id="eventsurgery"><para> This points to a case where you'll
+need to do <quote>event surgery</quote> on one or more of the nodes.
+A <command>STORE_LISTEN</command> event remains outstanding that wants
+to add a listen path that <emphasis>cannot</emphasis> be created
+because node 1 and all paths pointing to node 1 have gone away.</para>
+
+<para> Let's assume, for exposition purposes, that the remaining nodes
+are #2 and #3, and that the above error is being reported on node
+#3.</para>
+
+<para> That implies that the event is stored on node #2, as it
+wouldn't be on node #3 if it had not already been processed
+successfully.  The easiest way to cope with this situation is to
+delete the offending <xref linkend="table.sl-event"> entry on node #2.
+You'll connect to node #2's database, and search for the
+<command>STORE_LISTEN</command> event:</para>
+
+<para> <command> select * from sl_event where ev_type =
+'STORE_LISTEN';</command></para>
+
+<para> There may be several entries, only some of which need to be
+purged. </para>
+
+<screen> 
+-# begin;  -- Don't straight delete them; open a transaction so you can respond to OOPS
+BEGIN;
+-# delete from sl_event where ev_type = 'STORE_LISTEN' and
+-#  (ev_data1 = '1' or ev_data2 = '1' or ev_data3 = '1');
+DELETE 3
+-# -- Seems OK...
+-# commit;
+COMMIT
+</screen>
+
+<para> The next time the <application>slon</application> for node 3
+starts up, it will no longer find the <quote>offensive</quote>
+<command>STORE_LISTEN</command> events, and replication can continue.
+(You may then run into some other problem where an old stored event is
+referring to no-longer-existant configuration...) </para></answer>
+
+</qandaentry>
+</qandadiv>
+
 </qandaset>
 
 <!-- Keep this comment at the end of the file Local variables:
