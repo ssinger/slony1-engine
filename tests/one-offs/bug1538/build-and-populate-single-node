@@ -1,0 +1,21 @@
+#!/bin/bash
+# $Id: build-and-populate-single-node,v 1.1 2006-03-28 21:18:04 cbbrowne Exp $
+export PGPORT=5832
+dropdb test1538
+createdb test1538
+pgbench -i -h localhost -p $PGPORT -d test1538
+
+echo "cluster name = test1538;
+node 1 admin conninfo='host=localhost dbname=test1538 port=$PGPORT';
+init cluster (id=1,comment='only node');
+create set (id = 1, origin=1, comment='test set');
+set add table (id=1, origin=1, set id=1, fully qualified name = 'public.accounts');
+set add table (id=2, origin=1, set id=1, fully qualified name = 'public.branches');
+set add table (id=3, origin=1, set id=1, fully qualified name = 'public.tellers');
+" | slonik
+
+slon -d 2 -c 1 test1538 'dbname=test1538' > /tmp/test.1538 &
+
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  pgbench -h localhost -p $PGPORT -t 500 -d test1538 > /dev/null
+done

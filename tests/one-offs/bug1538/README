@@ -1,0 +1,10 @@
+$Id: README,v 1.1 2006-03-28 21:18:04 cbbrowne Exp $
+
+This script expects to have a suitable PostgreSQL installation in $PATH
+
+It then drops/creates database "test1538", creates *one* Slony-I node,
+starts up a slon against it, and throws some pgbench updates at it.
+
+You should then take a look at the node, to see that sl_event and
+sl_log_1 are getting trimmed out even though there is only a single
+node.
