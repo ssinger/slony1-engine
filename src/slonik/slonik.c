@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.62 2006-03-28 21:27:01 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.63 2006-03-28 21:32:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1859,8 +1859,10 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	}
 	else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
 	{
-		use_major = 7;
-		use_minor = 3;
+		printf("%s:%d: unsupported PostgreSQL "
+			"version %d.%d\n",
+			stmt->stmt_filename, stmt->stmt_lno,
+			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}
 	else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
 	{
@@ -1952,8 +1954,10 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
         }
         else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
         {
-                use_major = 7;
-                use_minor = 3;
+                printf("%s:%d: unsupported PostgreSQL "
+                        "version %d.%d\n",
+                        stmt->stmt_filename, stmt->stmt_lno,
+                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
         }
         else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
         {

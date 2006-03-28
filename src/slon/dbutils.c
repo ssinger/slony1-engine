@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.20 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: dbutils.c,v 1.21 2006-03-28 21:32:53 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -107,7 +107,7 @@ slon_connectdb(char *conninfo, char *symname)
 	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
 	conn->pg_version = db_get_version(dbconn);
-        if (conn->pg_version < 70303)
+        if (conn->pg_version < 70400)
         {
                 slon_log(SLON_ERROR,
                         "slon_connectdb: PQconnectdb(\"%s\") PostgreSQL version not supported\n",
