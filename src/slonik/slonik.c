@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.61 2006-03-28 20:48:52 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.62 2006-03-28 21:27:01 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1789,18 +1789,10 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 
 	dstring_terminate(&query);
 
-	/*
-	 * This little hoop is required because for some reason, 7.3 returns total
-	 * garbage as a result code for such a big pile of commands. So we just
-	 * fire that off, and then do one extra select and see if we have an
-	 * aborted transaction.
-	 */
 	res = PQexec(adminfo->dbconn, dstring_data(&query));
-	dstring_free(&query);
-	PQclear(res);
-	res = PQexec(adminfo->dbconn, "select 1;");
+
 	rc = PQresultStatus(res);
-	if (rc != PGRES_TUPLES_OK)
+	if ((rc != PGRES_TUPLES_OK) && (rc != PGRES_COMMAND_OK) && (rc != PGRES_EMPTY_QUERY))
 	{
 		printf("%s:%d: loading of file %s: %s %s%s",
 			   stmt->stmt_filename, stmt->stmt_lno,
@@ -1810,6 +1802,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 		PQclear(res);
 		return -1;
 	}
+	dstring_free(&query);
 	PQclear(res);
 
 	return 0;
@@ -3813,6 +3806,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	char		rex1[256];
 	char		rex2[256];
 	char		rex3[256];
+	char		rex4[256];
 	PGresult *res;
 	ExecStatusType rstat;
 
@@ -3832,7 +3826,8 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		rc = strlen(rex1);
 		rex1[rc] = '\0';
 		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
-		replace_token(buf, rex3, "@NAMESPACE@", rex2);
+		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
+		replace_token(buf, rex4, "@NAMESPACE@", rex2);
 		rc = strlen(buf);
 		dstring_nappend(&script, buf, rc);
 	}
