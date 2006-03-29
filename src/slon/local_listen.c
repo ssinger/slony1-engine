@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.36 2005-12-08 15:51:10 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.37 2006-03-29 16:10:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -89,6 +89,8 @@ localListenThread_main(void *dummy)
 	/*
 	 * Check that we are the only slon daemon connected.
 	 */
+#define NODELOCKERROR "ERROR:  duplicate key violates unique constraint \"sl_nodelock-pkey\""
+
 	slon_mkquery(&query1,
 				 "select %s.cleanupNodelock(); "
 				 "insert into %s.sl_nodelock values ("
@@ -99,8 +101,15 @@ localListenThread_main(void *dummy)
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_FATAL,
-				 "localListenThread: \"%s\" - %s",
+				 "localListenThread: \"%s\" - %s\n",
 				 dstring_data(&query1), PQresultErrorMessage(res));
+		if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0) {
+			slon_log(SLON_FATAL,
+				 "Do you already have a slon running against this node?\n");
+			slon_log(SLON_FATAL,
+				 "Or perhaps a residual idle backend connection from a dead slon?\n");
+		}
+		    
 		PQclear(res);
 		dstring_free(&query1);
 		slon_abort();
