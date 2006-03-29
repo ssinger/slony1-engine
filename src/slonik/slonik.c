@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.63 2006-03-28 21:32:54 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.64 2006-03-29 17:02:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3174,11 +3174,13 @@ slonik_drop_listen(SlonikStmt_drop_listen * stmt)
 }
 
 
+#define CREATESET_DEFCOMMENT "A replication set so boring no one thought to give it a name"
 int
 slonik_create_set(SlonikStmt_create_set * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	const char *comment;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
@@ -3187,12 +3189,17 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
+	if (stmt->set_comment == NULL)
+		comment = CREATESET_DEFCOMMENT;
+	else
+		comment = stmt->set_comment;
+
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-				 "select \"_%s\".storeSet(%d, '%q'); ",
-				 stmt->hdr.script->clustername,
-				 stmt->set_id, stmt->set_comment);
+		     "select \"_%s\".storeSet(%d, '%q'); ",
+		     stmt->hdr.script->clustername,
+		     stmt->set_id, comment);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
