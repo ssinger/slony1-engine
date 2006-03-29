@@ -1121,7 +1121,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       <listitem><para> Initial origin node of the set.</para></listitem>
      </varlistentry>
      <varlistentry><term><literal> COMMENT = 'string' </literal></term>
-      <listitem><para> A descriptive text added to the set entry.</para></listitem>
+      <listitem><para> A descriptive text added to the set entry.</para>
+                <para> If none is provided, a default value is set; <command>A replication set so boring no one thought to give it a name</command>. </para>
+      </listitem>
      </varlistentry>
     </variablelist>
     
@@ -1140,6 +1142,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+    <para> Until version 1.2, it would crash if no comment was provided. </para>
    </refsect1>
   </refentry>
 
