@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.54 2006-03-28 16:43:57 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.55 2006-03-29 16:48:13 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -99,7 +99,7 @@ via the command <command>make install-all-headers</command>.
 <qandaentry id="threadsafety">
 
 <question><para> &slony1; seemed to compile fine; now, when I run a
-<xref linkend="slon">, some events are moving around, but no
+&lslon;, some events are moving around, but no
 replication is taking place.</para>
 
 <para> Slony logs might look like the following:
@@ -170,7 +170,7 @@ required; similar is also required for &postgres; version 8.0.
 <question><para>I looked for the <envar>_clustername</envar> namespace, and
 it wasn't there.</para></question>
 
-<answer><para> If the DSNs are wrong, then <xref linkend="slon">
+<answer><para> If the DSNs are wrong, then &lslon;
 instances can't connect to the nodes.</para>
 
 <para>This will generally lead to nodes remaining entirely untouched.</para>
@@ -393,6 +393,67 @@ this.</para>
 
 <para>The issues of <quote>listener paths</quote> are discussed
 further at <xref linkend="listenpaths"> </para></answer>
+</qandaentry>
+
+<qandaentry id="multipleslonconnections">
+
+<question><para> I was starting a &lslon;, and got the
+following <quote>FATAL</quote> messages in its logs.  What's up??? </para>
+<screen>
+2006-03-29 16:01:34 UTC CONFIG main: slon version 1.2.0 starting up
+2006-03-29 16:01:34 UTC DEBUG2 slon: watchdog process started
+2006-03-29 16:01:34 UTC DEBUG2 slon: watchdog ready - pid = 28326
+2006-03-29 16:01:34 UTC DEBUG2 slon: worker process created - pid = 28327
+2006-03-29 16:01:34 UTC CONFIG main: local node id = 1
+2006-03-29 16:01:34 UTC DEBUG2 main: main process started
+2006-03-29 16:01:34 UTC CONFIG main: launching sched_start_mainloop
+2006-03-29 16:01:34 UTC CONFIG main: loading current cluster configuration
+2006-03-29 16:01:34 UTC CONFIG storeSet: set_id=1 set_origin=1 set_comment='test set'
+2006-03-29 16:01:34 UTC DEBUG2 sched_wakeup_node(): no_id=1 (0 threads + worker signaled)
+2006-03-29 16:01:34 UTC DEBUG2 main: last local event sequence = 7
+2006-03-29 16:01:34 UTC CONFIG main: configuration complete - starting threads
+2006-03-29 16:01:34 UTC DEBUG1 localListenThread: thread starts
+2006-03-29 16:01:34 UTC FATAL  localListenThread: "select "_test1538".cleanupNodelock(); insert into "_test1538".sl_nodelock values (    1, 0, "pg_catalog".pg_backend_pid()); " - ERROR:  duplicate key violates unique constraint "sl_nodelock-pkey"
+
+2006-03-29 16:01:34 UTC FATAL  Do you already have a slon running against this node?
+2006-03-29 16:01:34 UTC FATAL  Or perhaps a residual idle backend connection from a dead slon?
+</screen>
+
+</question>
+
+<answer><para> The table <envar>sl_nodelock</envar> is used as an
+<quote>interlock</quote> to prevent two &lslon; processes from trying
+to manage the same node at the same time.  The &lslon; tries inserting
+a record into the table; it can only succeed if it is the only node
+manager. </para></answer>
+
+<answer><para> This error message is typically a sign that you have
+started up a second &lslon; process for a given node.  The &lslon; asks
+the obvious question: <quote>Do you already have a slon running
+against this node?</quote> </para></answer>
+
+<answer><para> Supposing you experience some sort of network outage,
+the connection between &lslon; and database may fail, and the &lslon;
+may figure this out long before the &postgres; instance it was
+connected to does.  The result is that there will be some number of
+idle connections left on the database server, which won't be closed
+out until TCP/IP timeouts complete, which seems to normally take about
+two hours.  For that two hour period, the &lslon; will try to connect,
+over and over, and will get the above fatal message, over and
+over. </para>
+
+<para> An administrator may clean this out by logging onto the server
+and issuing <command>kill -2</command> to any of the offending
+connections.  Unfortunately, since the problem took place within the
+networking layer, neither &postgres; nor &slony1; have a direct way of
+detecting this. </para> 
+
+<para> You can <emphasis>mostly</emphasis> avoid this by making sure
+that &lslon; processes always run somewhere nearby the server that
+each one manages.  If the &lslon; runs on the same server as the
+database it manages, any <quote>networking failure</quote> that could
+interrupt local connections would be likely to be serious enough to
+threaten the entire server.  </para></answer>
 </qandaentry>
 
 </qandadiv>
@@ -650,7 +711,7 @@ DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
 
 </question>
 
-<answer><para> If you see a <xref linkend="slon"> shutting down with
+<answer><para> If you see a &lslon; shutting down with
 <emphasis>ignore new events due to shutdown</emphasis> log entries,
 you typically need to step back in the log to
 <emphasis>before</emphasis> they started failing to see indication of
@@ -717,7 +778,7 @@ DEBUG2 remoteListenThread_1: queue event 1,4897523 SYNC
 
 </para></question>
 
-<answer><para> If you see a <xref linkend="slon"> shutting down with
+<answer><para> If you see a &lslon; shutting down with
 <emphasis>ignore new events due to shutdown</emphasis> log entries,
 you'll typically have to step back to <emphasis>before</emphasis> they
 started failing to see indication of the root cause of the problem.
@@ -988,7 +1049,7 @@ sync through.</para></question>
 linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
 do a summary to see if there are any really enormous &slony1;
 transactions in there.  Up until at least 1.0.2, there needs to be a
-<xref linkend="slon"> connected to the origin in order for
+&lslon; connected to the origin in order for
 <command>SYNC</command> events to be generated.</para>
 
 <para>If none are being generated, then all of the updates until the
@@ -1046,7 +1107,7 @@ nodes.</para> </answer></qandaentry>
 </qandadiv>
 <qandadiv id="faqbugs"> <title> &slony1; FAQ: &slony1; Bugs in Elder Versions </title>
 <qandaentry>
-<question><para>The <xref linkend="slon"> processes servicing my
+<question><para>The &lslon; processes servicing my
 subscribers are growing to enormous size, challenging system resources
 both in terms of swap space as well as moving towards breaking past
 the 2GB maximum process size on my system. </para> 
@@ -1056,14 +1117,14 @@ large records.  We have records that are tens of megabytes in size.
 Perhaps that is somehow relevant? </para> </question>
 
 <answer> <para> Yes, those very large records are at the root of the
-problem.  The problem is that <xref linkend="slon"> normally draws in
+problem.  The problem is that &lslon; normally draws in
 about 100 records at a time when a subscriber is processing the query
 which loads data from the provider.  Thus, if the average record size
 is 10MB, this will draw in 1000MB of data which is then transformed
 into <command>INSERT</command> or <command>UPDATE</command>
-statements, in the <xref linkend="slon"> process' memory.</para>
+statements, in the &lslon; process' memory.</para>
 
-<para> That obviously leads to <xref linkend="slon"> growing to a
+<para> That obviously leads to &lslon; growing to a
 fairly tremendous size. </para>
 
 <para> The number of records that are fetched is controlled by the
@@ -1085,7 +1146,7 @@ this is shown below. </para>
 
 <para> If you are experiencing this problem, you might modify the
 definition of <envar> SLON_DATA_FETCH_SIZE </envar>, perhaps reducing
-by a factor of 10, and recompile <xref linkend="slon">.  There are two
+by a factor of 10, and recompile &lslon;.  There are two
 definitions as <envar> SLON_CHECK_CMDTUPLES</envar> allows doing some
 extra monitoring to ensure that subscribers have not fallen out of
 SYNC with the provider.  By default, this option is turned off, so the
@@ -1112,7 +1173,7 @@ linkend="slon-config-max-largemem">.  By default, this restricts
 consumption of this sort to about 5MB.  This value is not a strict
 upper bound; if you have a tuple with attributes 50MB in size, it
 forcibly <emphasis>must</emphasis> be loaded into memory.  There is no
-way around that.  But <xref linkend="slon"> at least won't be trying
+way around that.  But &lslon; at least won't be trying
 to load in 100 such records at a time, chewing up 10GB of memory by
 the time it's done.  </para> </listitem>
 </itemizedlist>
@@ -1327,7 +1388,7 @@ linkend="stmtsetdropsequence">.</para></answer></qandaentry>
 <qandadiv id="faqobsolete"> <title> &slony1; FAQ: Hopefully Obsolete Issues </title>
 
 <qandaentry>
-<question><para> <xref linkend="slon"> does not restart after
+<question><para> &lslon; does not restart after
 crash</para>
 
 <para> After an immediate stop of &postgres; (simulation of system
@@ -1798,7 +1859,7 @@ update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''
 <qandaentry> 
 
 <question><para> Node #1 was dropped via <xref
-linkend="stmtdropnode">, and the <xref linkend="slon"> one of the
+linkend="stmtdropnode">, and the &lslon; one of the
 other nodes is repeatedly failing with the error message:</para>
 
 <screen>

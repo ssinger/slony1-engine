@@ -1,4 +1,4 @@
-<!-- $Id: man.sgml,v 1.6 2006-02-28 22:51:37 cbbrowne Exp $ -->
+<!-- $Id: man.sgml,v 1.7 2006-03-29 16:48:14 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -45,6 +45,7 @@
   <!ENTITY slconfirm "<envar>sl_confirm</envar>">
   <!ENTITY bestpracticelink "Best Practice">
   <!ENTITY pglistener "<envar>pg_listener</envar>">
+  <!ENTITY lslon "<xref linkend=slon>">
 ]>
 
 <book id="slony">
