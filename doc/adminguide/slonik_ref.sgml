@@ -2552,6 +2552,63 @@ WAIT FOR EVENT (
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
+
+<!-- **************************************** -->
+
+  <refentry id="stmtrepairconfig"><refmeta><refentrytitle>REPAIR CONFIG</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+
+   <refnamediv><refname>REPAIR CONFIG</refname>
+    
+    <refpurpose> Resets the name-to-oid mapping of tables in a replication set, useful for restoring a node after a <application>pg_dump</application>. </refpurpose></refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>REPAIR CONFIG (options);</command>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    
+    <para> Resets name-to-oid mapping.</para>
+    
+     <variablelist>
+      <varlistentry><term><literal> SET ID = ival </literal></term>
+       <listitem><para> Which set to clean up after.</para></listitem>
+       
+      </varlistentry>
+      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
+       
+       <listitem><para> The node ID where this should be submitted.</para></listitem>
+       
+      </varlistentry>
+      <varlistentry><term><literal> EXECUTE ONLY ON = ival </literal></term>
+
+       <listitem><para> The ID of the only node where the mappings are
+       to be updated.  If not specified, the default is to execute
+       this on all nodes subscribed to the set.</para></listitem>
+       
+      </varlistentry>
+     </variablelist>
+
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+REPAIR CONFIG (
+  SET ID = 1,
+  EVENT NODE = 2
+);
+    </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.1 </para>
+   </refsect1>
+  </refentry>
+
+
  </reference>
 <!-- Keep this comment at the end of the file
 Local variables:
