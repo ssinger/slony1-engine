@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.40 2006-03-01 20:18:42 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.41 2006-04-04 18:28:58 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -491,7 +491,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		HeapTuple	new_row = tg->tg_trigtuple;
 		TupleDesc	tupdesc = tg->tg_relation->rd_att;
 		char	   *col_ident;
-		char	  **col_value;
+		char	   *col_value;
 		int			len_ident;
 		int			len_value;
 		int			i;
@@ -501,20 +501,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		/*
 		 * INSERT
 		 *
-		 * cmdtype = 'I' cmddata = ("non-NULL-col" [, ...]) values ('value' [,
-		 * ...])
+		 * cmdtype = 'I' cmddata = ("col" [, ...]) values ('value' [, ...])
 		 */
 		cmdtype = cs->cmdtype_I;
-
-		/*
-		 * Allocate an array of char pointers to hold the values. We need to
-		 * go over the tuple descriptor 2 times, first to add the column names
-		 * of non-null columns, second to add the values. But we can identify
-		 * what's NULL only by getting the value via SPI_getvalue() in the
-		 * first pass.
-		 */
-		col_value = (char **)palloc(sizeof(char *) *
-									tg->tg_relation->rd_att->natts);
 
 		/*
 		 * Specify all the columns
@@ -523,16 +512,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
-			 * Skip dropped columns and NULL values
+			 * Skip dropped columns
 			 */
 			if (tupdesc->attrs[i]->attisdropped)
 				continue;
-			if ((col_value[i] = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
-				continue;
 
 			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
-			col_value[i] = slon_quote_literal(col_value[i]);
-
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident));
 			if (cs->cmddata_size < cmddata_need)
@@ -575,15 +560,21 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
-			 * Skip dropped columns and NULL values
+			 * Skip dropped columns
 			 */
 			if (tupdesc->attrs[i]->attisdropped)
 				continue;
-			if (col_value[i] == NULL)
-				continue;
+			if ((col_value = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
+			{
+				col_value = "NULL";
+			}
+			else
+			{
+				col_value = slon_quote_literal(col_value);
+			}
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
-				(len_value = strlen(col_value[i]));
+				(len_value = strlen(col_value));
 			if (cs->cmddata_size < cmddata_need)
 			{
 				int			have = (cp - (char *)(cs->cmddata_buf));
@@ -599,7 +590,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 				need_comma = true;
 
-			memcpy(cp, col_value[i], len_value);
+			memcpy(cp, col_value, len_value);
 			cp += len_value;
 		}
 
