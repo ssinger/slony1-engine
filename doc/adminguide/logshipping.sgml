@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.13 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.14 2006-04-11 14:39:51 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -95,10 +95,11 @@ the <quote>present</quote> state of the subscriber node.</para>
 </link></application> for the subscriber node with logging turned on.
 At any point after that, you can run
 <application>slony1_dump.sh</application>, which will pull the state
-of that subscriber as of some <command>SYNC</command> event.  Once the dump completes,
-all the <command>SYNC</command> logs generated from the time that dump
-<emphasis>started</emphasis> may be added to the dump in order to get
-a <quote>log shipping subscriber.</quote> </para></answer>
+of that subscriber as of some <command>SYNC</command> event.  Once the
+dump completes, all the <command>SYNC</command> logs generated from
+the time that dump <emphasis>started</emphasis> may be added to the
+dump in order to get a <quote>log shipping subscriber.</quote>
+</para></answer>
 </qandaentry>
 
 <qandaentry> <question><para> What are the limitations of log
@@ -148,7 +149,30 @@ contain updates to the set.</para>
 <command>MERGE_SET</command>, will be handled
 <quote>appropriately</quote>.</para></listitem>
 
-<listitem><para><command> SUBSCRIBE_SET </command></para></listitem> 
+<listitem><para><command> SUBSCRIBE_SET </command></para>
+
+<para> Unfortunately, there is some <quote>strangeness</quote> in the
+handling of this...  When <command>SUBSCRIBE_SET</command> occurs, it
+leads to an event being raised, and processed, <emphasis>purely on the
+subscriber</emphasis>, called <command>ENABLE_SUBSCRIPTION</command>.</para>
+
+<para> <command> SUBSCRIBE_SET </command> is really quite a simple
+event; it merely <emphasis>declares</emphasis> that a node is
+subscribing to a particular set via a particular provider.  <emphasis>
+It doesn't copy data!</emphasis> </para>
+
+<para> The meat of the subscription work is done by
+<command>ENABLE_SUBSCRIPTION</command>, which is an event that is
+raised on the local node, not in the same sequence as the other events
+coming from other nodes (notably the data provider). </para>
+
+<para> Unfortunately, the upshot of this is that when a node newly
+subscribes to a set, the log that actually contains the data is in a
+separate sequencing from the sequencing of the normal
+<command>SYNC</command> logs.  Blindly loading these logs will throw
+things off :-(. </para>
+
+</listitem> 
 
 <listitem><para> The various events involved in node configuration are
 irrelevant to log shipping:
