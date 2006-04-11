@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.22 2006-03-27 22:43:05 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.23 2006-04-11 14:40:43 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -57,6 +57,13 @@ gmake all; gmake install
 <sect2>
 <title>Configuration</title>
 
+<para> &slony1; normally needs to be built and installed by the
+&postgres; Unix user.  The installation target must be identical to
+the existing &postgres; installation particularly in view of the fact
+that several &slony1; components represent libraries and SQL scripts
+that need to be in the &slony1; <filename>lib</filename> and
+<filename>share</filename> directories. </para>
+
 <para>The first step of the installation procedure is to configure the
 source tree for your system.  This is done by running the
 <application>configure</application> script.  In early versions,
@@ -70,6 +77,25 @@ installation.  Therefore, &slony1; is configured by pointing it to the
 various library, binary, and include directories.  For a full list of
 these options, use the command <command>./configure --help</command>
 </para>
+
+<para>On certain platforms (AIX and Solaris are known to need this;
+Linux does not), the compile of &postgres; must be expressly
+configured with the option <command>--enable-thread-safety</command>
+to provide correct client libraries. </para>
+
+<para> &postgres; version 8 installs the server header
+<command>#include</command> files by default; with version 7.4 and
+earlier, you need to make sure that the build installation included
+doing <command>make install-all-headers</command>, otherwise the
+server headers will not be installed, and &slony1; will be unable to
+compile.</para>
+
+<para>After running configure, you may wish to review the file
+<filename>Makefile.global</filename> to ensure it is looking in the
+right places for all of the components. If you failed to specify some
+of those locations, you may discover that your system fills in some
+surprising values... </para>
+
 
 </sect2>
 
@@ -148,7 +174,71 @@ specified by the <command>configure</command>
 Make sure you have appropriate permissions to write into that area.
 Commonly you need to do this either as root or as the postgres user.
 </para>
+
+<para>The main list of files installed within the PostgreSQL instance is:</para>
+<itemizedlist>
+<listitem><para><filename> $bindir/slon</filename></para></listitem>
+<listitem><para><filename> $bindir/slonik</filename></para></listitem>
+<listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
+<listitem><para><filename> $libdir/xxid($DLSUFFIX)</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.v73.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.v74.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v73.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v74.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/xxid.v73.sql </filename></para></listitem>
+</itemizedlist>
+
+<para>The <filename>.sql</filename> files are not fully substituted
+yet.  And yes, both the 7.3 and the 7.4 files get installed on every
+system, irrespective of its version.  The <xref linkend="slonik">
+admin utility does namespace/cluster substitutions within these files,
+and loads the files when creating replication nodes.  At that point in
+time, the database being initialized may be remote and may run a
+different version of &postgres; than that of the local host.</para>
+
+<para> At the very least, the two shared objects installed in the
+<filename>$libdir</filename> directory must be installed onto every
+computer that is supposed to become a &slony1; node. (Other components
+may be able to be loaded remotely from other hosts.) </para>
+
 </sect2>
+
+<sect2> <title> Building Documentation: Admin Guide </title>
+
+<para> The document you are reading now is a fairly extensive
+<quote>Administrator's Guide</quote> containing what wisdom has been
+discovered and written down about the care and feeding of &slony1;.</para>
+
+<para> This is only built if you specify <command>--with-docs</command></para>
+
+<para> Note that you may have difficulty building the documentation on Red
+Hat-based systems due to NAMELEN being set way too low.  Havoc
+Pennington opened a bug on this back in mid-2001, back in the days of
+Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
+appear to have been much progress since then.  The second URL below
+indicates that there is intent to address the issue by bumping up the
+value of NAMELEN in some future release of Red Hat Enterprise Linux,
+but that won't likely help you in 2005.  Fedora Core 4 should have the
+issue addressed somewhat sooner. </para>
+
+<para>
+<ulink url=
+"https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058"> Bug
+36058 </ulink> </para>
+
+<para>
+<ulink url=
+"https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382"> Bug
+159382 (For RHEL) </ulink> </para>
+
+<para>A pre-built copy of the "admin guide" should be readily available,
+either in the form of a separate tarball nearby, or in the directory
+<filename>doc/adminguide/prebuilt</filename> </para>
+
+<para> See the <filename>INSTALL</filename> file for a workaround for
+Fedora...</para>
 
 <sect2>
 <title> Installing &slony1; from RPMs</title>
