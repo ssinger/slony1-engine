@@ -1,3 +1,5 @@
+# $Id: slon.conf-sample,v 1.5 2006-04-11 14:43:46 cbbrowne Exp $
+#
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3
 #vac_frequency=3
@@ -72,7 +74,7 @@
 # Sets the program name used to identify slon messages in syslog.
 #syslog_ident=slon
 
-# Set the clsuter name that this instance of slon is running against
+# Set the cluster name that this instance of slon is running against
 # default is to read it off the command line
 #cluster_name='sloncluster'
 
@@ -91,3 +93,15 @@
 # settings.  You can specify multiple statements by seperating
 # them with a ;
 #sql_on_connection="SET log_min_duration_statement TO '1000';"
+
+# Command to run upon committing a log archive.
+# This command is passed one parameter, namely the full pathname of
+# the archive file
+#command_on_logarchive="/usr/local/bin/movearchivetoarchive"
+
+# A PostgreSQL value compatible with ::interval which indicates how
+# far behind this node should lag its providers.
+# lag_interval="8 minutes"
+
+# Directory in which to stow sync archive files
+# archive_dir="/tmp/somewhere"
