@@ -6,7 +6,7 @@
 .\"	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 .\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-concept.nr,v 1.3 2004-02-20 15:13:27 wieck Exp $
+.\"	$Id: Slony-I-concept.nr,v 1.4 2006-04-11 14:42:23 cbbrowne Exp $
 .\" ----------
 .\" format this document with
 .\"
@@ -197,7 +197,7 @@ triggers called on schema changes, so a transparent way to
 replicate schema changes is not possible without substantial work
 in the core PostgreSQL system.
 .PP
-Moreover, very often database schema chages are not single,
+Moreover, very often database schema changes are not single,
 isolated DDL statements that can occur at any time within a
 running system.  Instead they tend to be groups of DDL and DML
 statements that modify multiple database objects and do mass data
@@ -283,7 +283,7 @@ set.
 .pso pic figure-1.pic
 .PP
 Figure 1 illustrates a replication configuration that has 2 data
-sets with different origins. To replicate both date sets to Node\
+sets with different origins. To replicate both data sets to Node\
 C it is not required that Node\ C really communicates with the
 origin of Set\ 1. This scenario has full redundancy for every
 node.  Obviously if Node\ C fails, the masters of Set\ 1 and Set\
@@ -597,7 +597,7 @@ from this moment on has to keep delta information for the case
 that node C might fail at any time, even before it would be able
 to provide the current data snapshot or even the subscribe
 message itself to D and D would be reconfigured to talk to B as a
-substiture provider.
+substitute provider.
 .PP
 As a side note, the configuration in figure 2 with a set
 originating on node A is the very setup the author used during
@@ -617,7 +617,7 @@ sections
 and
 .XREF subscribing SN
 .PP
-Configuration chage events carry all necessary information to
+Configuration change events carry all necessary information to
 modify the local configuration information in the event data row.
 Processing consists more or less of storing or deleting a row in
 one of the \*[Slony1] control tables.
@@ -788,7 +788,7 @@ replication trigger on all these tables.
 All triggers on the tables in the set get disabled to speed up
 the data copy process and to avoid possible foreign key conflicts
 resulting from copying the data in the wrong order or because of
-circular dependancies.
+circular dependencies.
 .IP 3.
 For each table it will use the PostgreSQL command COPY on both
 sides and forward the data stream.

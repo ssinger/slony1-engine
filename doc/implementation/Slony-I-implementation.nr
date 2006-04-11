@@ -6,7 +6,7 @@
 .\"	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 .\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-implementation.nr,v 1.5 2004-02-22 15:42:53 wieck Exp $
+.\"	$Id: Slony-I-implementation.nr,v 1.6 2006-04-11 14:42:23 cbbrowne Exp $
 .\" ----------
 .\" format this document with
 .\"
@@ -120,7 +120,7 @@ able to connect to each other. But it is good practice to define
 all possible connections so that the configuration is in place
 for an eventual failover. An sl_path entry alone does not
 actually cause a connection to be established. This requires
-sl_listen and or sl_subscribe entries as well.
+sl_listen and/or sl_subscribe entries as well.
 .\" ****
 .NH 2
 Table sl_listen
