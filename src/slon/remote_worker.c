@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.110 2006-03-21 17:59:24 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.111 2006-04-19 22:03:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -590,7 +590,7 @@ remoteWorkerThread_main(void *cdata)
 
 			/*
 			 * replace query1 with the forwarding of all the grouped sync
-			 * events and a commit. Also free all the WMSG structres except
+			 * events and a commit. Also free all the WMSG structures except
 			 * the last one (it's freed further down).
 			 */
 			dstring_reset(&query1);
@@ -4078,7 +4078,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (rc < 0)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "Cannot write to archive file %s - %s",
+					 "Cannot write to archive file %s - %s\n",
 					 node->no_id, archive_tmp, strerror(errno));
 			return 60;
 		}
@@ -4431,7 +4431,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				if (rc < 0)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-							 "Cannot write to archive file %s - %s",
+							 "Cannot write to archive file %s - %s\n",
 							 node->no_id, archive_tmp, strerror(errno));
 					return 60;
 				}
@@ -4471,7 +4471,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			if (rc < 0)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-						 "Could not close out archive file %s - %s",
+						 "Could not close out archive file %s - %s\n",
 						 node->no_id, archive_tmp, strerror(errno));
 				return 60;
 			}
@@ -4487,7 +4487,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	res1 = PQexec(local_dbconn, dstring_data(&query));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
 				 node->no_id, dstring_data(&query),
 				 PQresultErrorMessage(res1));
 		PQclear(res1);
@@ -4499,7 +4499,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	ntuples1 = PQntuples(res1);
 	if (ntuples1 != 1)
 	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: cannot determine current log status",
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: cannot determine current log status\n",
 				 node->no_id);
 		PQclear(res1);
 		TERMINATE_QUERY_AND_ARCHIVE;
@@ -4634,7 +4634,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						if (rc < 0)
 						{
 							slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-									 "Cannot write to archive file %s - %s",
+									 "Cannot write to archive file %s - %s\n",
 								  node->no_id, archive_tmp, strerror(errno));
 							return 60;
 						}
@@ -4769,7 +4769,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
 					 node->no_id, dstring_data(&query),
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
@@ -4808,7 +4808,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				if (rc < 0)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-							 "Cannot write to archive file %s - %s",
+							 "Cannot write to archive file %s - %s\n",
 							 node->no_id, archive_tmp, strerror(errno));
 					return 60;
 				}
@@ -4885,9 +4885,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	if (PQntuples(res1) > 0)
 	{
 		slon_mkquery(&query,
-					 "insert into %s.sl_seqlog "
-			   "	(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-					 "	values (0, %d, '%s', '%s'); ",
+			     "insert into %s.sl_seqlog "
+			     "	(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+			     "	values (0, %d, '%s', '%s'); ",
 					 rtcfg_namespace, node->no_id,
 					 seqbuf, PQgetvalue(res1, 0, 0));
 		if (query_execute(node, local_dbconn, &query) < 0)
@@ -5030,7 +5030,7 @@ sync_helper(void *cdata)
 			if (rc != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR,
-						 "remoteWorkerThread_%d: \"%s\" %s %s",
+						 "remoteWorkerThread_%d: \"%s\" %s %s\n",
 						 node->no_id, dstring_data(&query),
 						 PQresStatus(rc),
 						 PQresultErrorMessage(res3));
