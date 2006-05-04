@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.111 2006-04-19 22:03:43 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.112 2006-05-04 14:39:09 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -457,7 +457,7 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
-			SlonWorkMsg_event *sync_group[100];
+			SlonWorkMsg_event *sync_group[10000];
 			int			sync_group_size;
 
 			int			seconds;
@@ -476,8 +476,8 @@ remoteWorkerThread_main(void *cdata)
 				/* Force last_sync_group_size to a reasonable range */
 				if (last_sync_group_size < 1)
 					last_sync_group_size = 1;
-				if (last_sync_group_size > 100)
-					last_sync_group_size = 1;
+				if (last_sync_group_size > 10000)
+					last_sync_group_size = 10000;
 
 				gettimeofday(&sync_end, NULL);
 				last_sync_length =
@@ -504,7 +504,7 @@ remoteWorkerThread_main(void *cdata)
 					{
 						ideal_sync = sync_group_maxsize;
 					}
-					max_sync = ((last_sync_group_size * 110) / 100) + 1;
+					max_sync = ((last_sync_group_size * 200) / 100) + 1;
 					next_sync_group_size = ideal_sync;
 					if (next_sync_group_size > max_sync)
 						next_sync_group_size = max_sync;
