@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.112 2006-05-04 14:39:09 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.113 2006-05-04 14:42:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,6 +29,8 @@
 #include "confoptions.h"
 #include "../parsestatements/scanner.h"
 extern STMTS[MAXSTATEMENTS];
+
+#define MAXGROUPSIZE 10000    /* What is the largest number of SYNCs we'd want to group together??? */
 
 /* ----------
  * Local definitions 
@@ -457,7 +459,7 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
-			SlonWorkMsg_event *sync_group[10000];
+			SlonWorkMsg_event *sync_group[MAXGROUPSIZE];
 			int			sync_group_size;
 
 			int			seconds;
@@ -476,8 +478,8 @@ remoteWorkerThread_main(void *cdata)
 				/* Force last_sync_group_size to a reasonable range */
 				if (last_sync_group_size < 1)
 					last_sync_group_size = 1;
-				if (last_sync_group_size > 10000)
-					last_sync_group_size = 10000;
+				if (last_sync_group_size > MAXGROUPSIZE)
+					last_sync_group_size = MAXGROUPSIZE;
 
 				gettimeofday(&sync_end, NULL);
 				last_sync_length =
