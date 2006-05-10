@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.17 2006-03-27 22:43:05 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.18 2006-05-10 02:33:09 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <para>&slony1; actually does a lot of its necessary maintenance
@@ -49,12 +49,28 @@ occurring. </para> </listitem>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
-<para>There are a couple of <quote>watchdog</quote> scripts available that
-monitor things, and restart the <application>slon</application> processes should
-they happen to die for some reason, such as a network <quote>glitch</quote>
-that causes loss of connectivity.</para>
+<para>There are a couple of <quote>watchdog</quote> scripts available
+that monitor things, and restart the <application>slon</application>
+processes should they happen to die for some reason, such as a network
+<quote>glitch</quote> that causes loss of connectivity.</para>
 
 <para>You might want to run them...</para>
+
+<para> The <quote>best new way</quote> of managing <xref
+linkend="slon"> processes is via the combination of <xref
+linkend="mkslonconf">, which creates a configuration file for each
+node in a cluster, and <xref linkend="launchclusters">, which uses
+those configuration files.</para>
+
+<para> This approach is preferable to elder <quote>watchdog</quote>
+systems in that you can very precisely <quote>nail down,</quote> in
+each config file, the exact desired configuration for each node, and
+not need to be concerned with what options the watchdog script may or
+may not give you.  This is particularly important if you are using
+<link linkend="logshipping"> log shipping </link>, where forgetting
+the <command>-a</command> option could ruin your log shipped node, and
+thereby your whole day.</para>
+
 </sect2>
 <sect2><title>Parallel to Watchdog: generate_syncs.sh</title>
 
@@ -202,7 +218,7 @@ to set up a view on some frequently updated table that pulls
 application-specific information.  </para>
 
 <para> For instance, one might look either at some statistics about a
-most recently created application object, or an applicaton
+most recently created application object, or an application
 transaction.  For instance:</para>
 
 <para> <command> create view replication_test as select now() -
@@ -212,6 +228,13 @@ desc limit 1; </command> </para>
 <para> <command> create view replication_test as select now() -
 created_on as age, object_name from object_table order by id desc
 limit 1; </command> </para>
+
+<para> There is a downside: This approach requires that you have
+regular activity going through the system that will lead to there
+being new transactions on a regular basis.  If something breaks down
+with your application, you may start getting spurious warnings about
+replication being behind, despite the fact that replication is working
+fine.</para>
 
 </listitem>
 
