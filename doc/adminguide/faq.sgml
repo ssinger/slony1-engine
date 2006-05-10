@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.55 2006-03-29 16:48:13 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.56 2006-05-10 02:33:55 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -220,6 +220,11 @@ denied on the system table, <envar>pg_class</envar>.</para></answer>
 update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
 </programlisting>
 </answer>
+
+<answer><para> In version 8.1 and higher, you may also need the following:
+<programlisting>
+update pg_authid set rolcatupdate = 't', rolsuper='t' where rolname = 'slony';
+</programlisting>
 </qandaentry>
 
 <qandaentry>
