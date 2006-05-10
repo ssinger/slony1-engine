@@ -2474,6 +2474,27 @@ UPDATE FUNCTIONS (
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
+   <refsect1> <title> Oddities </title>
+
+    <para> Any mismatch between <xref linkend="slonik"> and the C
+    libraries <quote>living</quote> in the &postgres; installation
+    will result in this failing to do what is expected, and, more than
+    likely, failing to run at all.  You may <emphasis>think</emphasis>
+    you are upgrading to version 1.1.5, but if you are running <xref
+    linkend="slonik"> from version 1.1.2, or if you didn't restart the
+    database with a version that has 1.1.5 libraries, and instead are
+    referencing C stored functions from version 1.1.1, the attempt to
+    upgrade will fail, because the sets of C functions have regularly
+    changed between major versions.</para>
+
+    <para> Before &slony1; 1.2, the error messages that would result
+    would be not terribly informative; what you'd find, in &postgres;
+    logs, is some error message about being unable to load some stored
+    function that happens to be implemented in C.  As of 1.2, one of
+    the first things done is to load a stored function to verify
+    version numbers; it complains in a much more direct fashion if you
+    have some versioning mismatch.  </para>
+   </refsect1>
   </refentry>
 
 <!-- **************************************** -->
@@ -2551,6 +2572,20 @@ WAIT FOR EVENT (
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
+   
+   <refsect1> <title> Oddities </title> <para> Not all events return
+   interesting results.  For instance, many people have run afoul of
+   problems with <xref linkend="stmtsubscribeset">, when subscribing a
+   new set.  Be aware (and beware!) that a <xref
+   linkend="stmtsubscribeset"> request will return the event
+   confirmation almost immediately, even though there might be several
+   hours of work to do before the subscription is ready. </para>
+
+   <para> There is no reliable way, at present, to monitor from within
+   a <xref linkend="slonik"> script that <xref
+   linkend="stmtsubscribeset"> is complete.</para>
+   </refsect1>
+   
   </refentry>
 
 <!-- **************************************** -->
