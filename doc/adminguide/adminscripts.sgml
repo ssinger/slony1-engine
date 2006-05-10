@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.31 2006-04-11 20:22:29 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.32 2006-05-10 02:31:15 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -236,7 +236,7 @@ This is a <emphasis>VERY</emphasis> unsafe script!</para>
 from one version of &slony1; to another.</para>
 </sect2>
 
-<sect2><title>mkslonconf.sh</title>
+<sect2 id="mkslonconf"><title>mkslonconf.sh</title>
 
 <para> This is a shell script designed to rummage through a &slony1;
 cluster and generate a set of <filename>slon.conf</filename> files
@@ -309,7 +309,7 @@ WAN), this script will happily create fresh new config files for
 &lslon;s.  </para>
 
 <para> This would usually only cause some minor inconvenience due to,
-for instance, a &slon; running at a non-preferred site, and either
+for instance, a &lslon; running at a non-preferred site, and either
 failing due to lack of network connectivity (in which no damage is
 done!) or running a bit less efficiently than it might have due to
 living at the wrong end of the network <quote>pipe.</quote> </para>
@@ -330,7 +330,7 @@ section... </para>
 
 </sect2>
 
-<sect2><title> launch_clusters.sh </title>
+<sect2 id="launchclusters"><title> launch_clusters.sh </title>
 
 <para> This is another shell script which uses the configuration as
 set up by <filename>mkslonconf.sh</filename> and is intended to be run
