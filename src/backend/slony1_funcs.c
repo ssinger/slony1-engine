@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.41 2006-04-04 18:28:58 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.42 2006-05-15 14:47:13 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -796,6 +796,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
+			if (col_value == NULL)
+				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on UPDATE", 
+					NameStr(tg->tg_relation->rd_rel->relname), col_ident);
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident)) +
@@ -860,6 +863,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 			col_ident = (char *)slon_quote_identifier(SPI_fname(tupdesc, i + 1));
 			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
+			if (col_value == NULL)
+				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on DELETE", 
+					NameStr(tg->tg_relation->rd_rel->relname), col_ident);
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident)) +
@@ -1055,6 +1061,9 @@ slon_quote_literal(char *str)
 	char	   *cp2;
 	int			len;
 	int			wl;
+
+	if (str == NULL)
+		return NULL;
 
 	len = strlen(str);
 	result = palloc(len * 2 + 3);
