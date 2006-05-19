@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.32 2006-05-10 02:31:15 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.33 2006-05-19 20:43:48 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -374,6 +374,46 @@ under management. </para></listitem>
 <para> In effect, you could run this every five minutes, and it would
 launch any missing &lslon; processes. </para>
 
+<sect2><title> slony-cluster-analysis </title>
+
+<para> If you are running a lot of replicated databases, where there
+are numerous &slony1; clusters, it can get painful to track and
+document this.  The following tools may be of some assistance in this.</para>
+
+<para> <application>slony-cluster-analysis.sh</application> is a shell
+script intended to provide some over-time analysis of the
+configuration of a &slony1; cluster.  You pass in the usual
+<application>libpq</application> environment variables
+(<envar>PGHOST</envar>, <envar>PGPORT</envar>,
+<envar>PGDATABASE</envar>, and such) to connect to a member of a
+&slony1; cluster, and pass the name of the cluster as an argument.</para>
+
+<para> The script then does the following:</para>
+<itemizedlist>
+<listitem><para> Runs a series of queries against the &slony1; tables to get lists of nodes, paths, sets, and tables. </para> </listitem>
+<listitem><para> This is stowed in a temporary file in <filename>/tmp</filename> </para> </listitem>
+<listitem><para> A comparison is done between the present configuration and the configuration the last time the tool was run.  If the configuration differs, an email of the difference (generated using <application>diff</application>) is sent to a configurable email address. </para> </listitem>
+<listitem><para> If the configuration has changed, the old configuration file is renamed to indicate when the script noticed the change. </para></listitem>
+<listitem><para> Ultimately, the current configuration is stowed in <envar>LOGDIR</envar> in a filename like <filename>cluster.last </filename> </para> </listitem>
+</itemizedlist>
+
+<para> There is a sample <quote>wrapper</quote> script,
+<filename>slony-cluster-analysis-mass.sh</filename>, which sets things
+up to point to a whole bunch of &slony1; clusters.</para>
+
+<para> This should make it easier for a group of DBAs to keep track of
+two things: </para>
+
+<itemizedlist>
+
+<listitem><para> Documenting the current state of system
+configuration.  </para></listitem>
+
+<listitem><para> Noticing when configuration
+changes. </para></listitem>
+</itemizedlist>
+
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
