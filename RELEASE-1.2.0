@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.2 2006-03-21 19:10:26 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.3 2006-05-19 20:45:48 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -94,3 +94,11 @@ There are also numerous enhancements that are more directly visible:
 
   You can specify a program to run each time a SYNC event
   is successfully closed off.
+
+
+- Bug 1538 - if there is only one node, sl_event, sl_log_1 never get
+  cleared out
+
+  Logic added to cleanupevent() to clear out old sl_event entries if
+  there is just one node.  That then allows the cleanup thread to
+  clear sl_log_1 etc.
