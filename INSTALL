@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.8 2005-11-30 20:24:56 cbbrowne Exp $
+$Id: INSTALL,v 1.9 2006-05-19 20:45:15 cbbrowne Exp $
 
 Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
 
@@ -123,7 +123,17 @@ build PostgreSQL yourself.
 
 If you are looking for what software dependancies there are, it may be
 useful to look at the file redhat/slony-I.spec to see what
-dependancies they point to.
+dependancies they point to.  There is also a .spec file around for
+SuSE.  If you have difficulties building on distributions based on
+either Red Hat or SuSE's distributions, the ".spec" files may be quite
+useful to help puzzle things out.
+
+On RHAS/RHEL/Centos, people have frequently reported problems relating
+to missing Kerberos #include files; apparently the use of OpenSSH for
+authentication draws in a dependancy on Kerberos that isn't
+automatically detected.  You may need to add an -I path for
+/usr/kerberos/include; see postgresql-slony1-engine.spec for more
+details.
 
 On Debian, there is now an official package; see
 <http://packages.qa.debian.org/s/slony1.html> for more details.
