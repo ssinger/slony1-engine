@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.83 2006-03-28 20:48:51 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.84 2006-05-26 18:00:50 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -1721,8 +1721,6 @@ declare
 	p_provider	alias for $2;
 	p_receiver	alias for $3;
 begin
-	return -1;
-
 	perform @NAMESPACE@.storeListen_int (p_origin, p_provider, p_receiver);
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
 			p_origin, p_provider, p_receiver);
@@ -1810,8 +1808,6 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
-	return -1;
-
 	perform @NAMESPACE@.dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
@@ -1838,8 +1834,6 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
-	return -1;
-
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
