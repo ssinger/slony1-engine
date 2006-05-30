@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.33 2006-05-19 20:43:48 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.34 2006-05-30 14:52:35 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -125,12 +125,20 @@ sequence that &slony1; generates</para>
 <envar>nvar>@SERIALT</envar>nvar>, and <envar>@SEQUENCES</envar></para></listitem>
 </itemizedlist>
 </sect2>
+<sect2><title>slonik_print_preamble</title>
+
+<para>This generates just the <quote>preamble</quote> that is required
+by all slonik scripts.  In effect, this provides a
+<quote>skeleton</quote> slonik script that does not do
+anything.</para>
+</sect2>
 <sect2><title>slonik_create_set</title>
 
 <para>This requires <envar>SLONYSET</envar> to be set as well as
-<envar>SLONYNODES</envar>; it is used to generate the <command>slonik</command> script to set up
-a replication set consisting of a set of tables and sequences that are
-to be replicated.</para>
+<envar>SLONYNODES</envar>; it is used to generate the
+<command>slonik</command> script to set up a replication set
+consisting of a set of tables and sequences that are to be
+replicated.</para>
 </sect2>
 <sect2><title>slonik_drop_node</title>
 
@@ -142,6 +150,14 @@ to be replicated.</para>
 (<emphasis>e.g.</emphasis> - set of tables and sequences) from a
 &slony1; cluster.</para>
 </sect2>
+
+<sect2><title>slonik_drop_table</title>
+
+<para>Generates Slonik script to drop a table from replication.
+Requires, as input, the ID number of the table (available from table
+<envar>sl_table</envar>) that is to be dropped. </para>
+</sect2>
+
 <sect2><title>slonik_execute_script</title>
 
 <para>Generates Slonik script to push DDL changes to a replication set.</para>
