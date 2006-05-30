@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_store_node.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_store_node.pl,v 1.2 2006-05-30 14:50:52 cbbrowne Exp $
 # Author: Steve Simms
 # Copyright 2005 PostgreSQL Global Development Group
 
@@ -79,20 +79,6 @@ foreach my $nodea (@NODES) {
     }
 }
 
-# STORE LISTEN
-print SLONIK "\n# STORE LISTEN\n";
-foreach my $origin (@NODES) {
-    my $dsna = $DSN[$origin];
-    foreach my $receiver (@NODES) {
-	if ($origin != $receiver) {
-	    my $provider = $VIA[$origin][$receiver];
-	    next unless ($node == $origin   or
-			 $node == $receiver or
-			 $node == $provider);
-	    print SLONIK "  store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
-	}
-    }
-}
 print SLONIK "  echo 'Replication nodes prepared';\n";
 print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
 close SLONIK;
