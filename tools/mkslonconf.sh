@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkslonconf.sh,v 1.1 2006-04-11 20:22:28 cbbrowne Exp $
+# $Id: mkslonconf.sh,v 1.2 2006-05-31 21:11:29 cbbrowne Exp $
 # mkslonconf.sh
 # Build a set of slon.conf files compatible with launch_clusters.sh
 
@@ -160,19 +160,19 @@ while read line <&3; do
 	echo "config file $conffile already exists."
 	echo "Do you want to (Overwrite) it or (Skip) it (Anything else aborts) [Overwrite|Skip]?"
 	read nl
-	case nl in
+	case $nl in
 	    (Overwrite)
 	    echo "overwriting..."
-	    create_conf_file $node $dsn
+	    create_conf_file $node "$dsn"
 	    (Skip)
 	    echo "skipping..."
 	    (*)
-	    echo "invalid input - aborting..."
+	    echo "invalid input - [$nl] aborting..."
 	    exit -1
 	esac
     else
 	echo "creating conf file for new node $node with DSN [$dsn]"
-	create_conf_file $node $dsn
+	create_conf_file $node "$dsn"
     fi
 done
 rm $queryoutput
