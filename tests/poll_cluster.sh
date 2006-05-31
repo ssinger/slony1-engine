@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: poll_cluster.sh,v 1.2 2006-03-17 19:12:53 cbbrowne Exp $
+# $Id: poll_cluster.sh,v 1.3 2006-05-31 20:09:54 cbbrowne Exp $
 
 mktmp=$1
 cluster=$2
@@ -33,7 +33,7 @@ fi
 
 if [ -n "${cluster}" ]; then
   sleep 15
-  SQL="SELECT count(l.*) FROM \"_${cluster}\".sl_log_1 l WHERE l.log_xid > (SELECT ev_maxxid FROM \"_${cluster}\".sl_event WHERE ev_timestamp = (SELECT max(ev_timestamp) FROM \"_${cluster}\".sl_event))"
+  SQL="SELECT count(l.*) FROM \"_${cluster}\".sl_log_1 l WHERE l.log_xid > (SELECT ev_maxxid FROM \"_${cluster}\".sl_event WHERE ev_timestamp = (SELECT max(ev_timestamp) FROM \"_${cluster}\".sl_event) limit 1)"
   SQL2="SELECT max(st_lag_num_events) FROM \"_${cluster}\".sl_status"
   while : ; do
     lag=`${pgbindir}/psql -q -A -t -c "${SQL}" ${conninfo} 2>>$mktmp/poll.log | sed -e '/^$/d'`
