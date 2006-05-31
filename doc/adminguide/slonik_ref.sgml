@@ -914,8 +914,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <para> No application-visible locking should take place. </para>
    </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
-   was introduced in &slony1; 1.0.  As of version 1.1, you should no
-   longer need to use this command. </para>
+   was introduced in &slony1; 1.0.  As of version 1.1, you <emphasis>should</emphasis> no
+   longer need to use this command, as listen paths are generated automatically. </para>
    </refsect1>
   </refentry>
 
