@@ -1,5 +1,13 @@
+slony_subdir = src/parsestatements
+slony_top_builddir = ../..
+include $(slony_top_builddir)/Makefile.global
+
 PROG=test-scanner
 FLEX=flex
+
+ifeq ($(PORTNAME), win32)
+SUFFIX=.win32
+endif
 
 all: $(PROG) test
 
@@ -12,9 +20,9 @@ test-scanner.o: test-scanner.c
 
 test: test-scanner
 	./test-scanner < /dev/null > emptytestresult.log
-	cmp ./emptytestresult.log emptytestresult.expected
+	cmp ./emptytestresult.log emptytestresult.expected$(SUFFIX)
 	./test-scanner < ./test_sql.sql > test_sql.log
-	cmp ./test_sql.log ./test_sql.expected
+	cmp ./test_sql.log ./test_sql.expected$(SUFFIX)
 
 install:
 
