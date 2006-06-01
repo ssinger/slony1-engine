@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: test_B_notables.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_B_notables.in,v 1.2 2006-06-01 12:35:52 dpage Exp $
 # **********
 # test_B_notables
 #
@@ -258,7 +258,7 @@ kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
-psql $DB1 >dump.tmp.1.$$ <<_EOF_
+psql $DB1 -o dump.tmp.1.$$ <<_EOF_
 	select id, "user"
 			from "Schema.name"."user" order by id;
 	select "user", description
@@ -266,7 +266,7 @@ psql $DB1 >dump.tmp.1.$$ <<_EOF_
 	select id, name, "eViL StudlyCaps.column"
 		        from public.evil_index_table order by id;
 _EOF_
-psql $DB2 >dump.tmp.2.$$ <<_EOF_
+psql $DB2 -o dump.tmp.2.$$ <<_EOF_
 	select id, "user"
 			from "Schema.name"."user" order by id;
 	select "user", description

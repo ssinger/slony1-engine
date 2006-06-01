@@ -381,7 +381,7 @@ done
 
 echo -n "**** comparing databases ... "
 for node in 1 2 3 4 5 6 ; do
-  psql slony_test$node >dump.tmp.$node.$$ <<_EOF_
+  psql slony_test$node -o dump.tmp.$node.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler

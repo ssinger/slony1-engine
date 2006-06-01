@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_2_pgbench.in,v 1.2 2006-06-01 12:35:52 dpage Exp $
 # **********
 # test_2_pgbench
 #
@@ -365,7 +365,7 @@ kill $slon2_pid 2>/dev/null
 kill $slon3_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
-psql $DB1 >dump.tmp.1.$$ <<_EOF_
+psql $DB1 -o dump.tmp.1.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler
@@ -375,7 +375,7 @@ psql $DB1 >dump.tmp.1.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
-psql $DB2 >dump.tmp.2.$$ <<_EOF_
+psql $DB2 -o dump.tmp.2.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler
@@ -385,7 +385,7 @@ psql $DB2 >dump.tmp.2.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
-psql $DB3 >dump.tmp.3.$$ <<_EOF_
+psql $DB3 -o dump.tmp.3.$$ <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
 			from accounts order by aid;
 	select 'branches:'::text, bid, bbalance, filler
