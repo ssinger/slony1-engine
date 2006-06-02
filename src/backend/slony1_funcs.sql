@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.16 2006-01-06 17:07:46 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.17 2006-06-02 17:28:50 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -287,7 +287,7 @@ declare
     p_tab_fqname alias for $1;
     v_fqname text default '''';
 begin
-    v_fqname := ''"'' || replace(p_tab_fqname,''\"'',''\\\\"'') || ''"'';
+    v_fqname := ''"'' || replace(p_tab_fqname,''"'',''""'') || ''"'';
     return v_fqname;
 end;
 ' language plpgsql;
@@ -304,84 +304,70 @@ comment on function @NAMESPACE@.slon_quote_brute(text) is
 --
 --	This function will be used to quote user input.
 -- ----------------------------------------------------------------------
-
---create or replace function @NAMESPACE@.slon_quote_input (text) returns text
---as '
---declare
---    p_tab_fqname alias for $1;
---    v_temp_fqname text default '''';
---    v_pre_quoted text[] default ''{}'';
---    v_pre_quote_counter smallint default 0;
---    v_count_fqname smallint default 0;
---    v_fqname_split text[];
---    v_quoted_fqname text default '''';
---begin
---    v_temp_fqname := p_tab_fqname;
-
---    LOOP
---	v_pre_quote_counter := v_pre_quote_counter + 1;
---	v_pre_quoted[v_pre_quote_counter] := 
---	    substring(v_temp_fqname from ''%#"\"%\"#"%'' for ''#'');
---	IF v_pre_quoted[v_pre_quote_counter] <> '''' THEN
---	    v_temp_fqname := replace(v_temp_fqname,
---	        v_pre_quoted[v_pre_quote_counter], ''@'' ||
---		v_pre_quote_counter);
---	ELSE
---	    EXIT;
---	END IF;
---    END LOOP;
-
---    v_fqname_split := string_to_array(v_temp_fqname , ''.'');
---    v_count_fqname := array_upper (v_fqname_split, 1);
-
---    FOR i in 1..v_count_fqname LOOP
---        IF substring(v_fqname_split[i],1,1) = ''@'' THEN
---            v_quoted_fqname := v_quoted_fqname || 
---		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
---        ELSE
---            v_quoted_fqname := v_quoted_fqname || ''"'' || 
---		v_fqname_split[i] || ''"'';
---        END IF;
-
---        IF i < v_count_fqname THEN
---            v_quoted_fqname := v_quoted_fqname || ''.'' ;
---        END IF;
---    END LOOP;
-	
---    return v_quoted_fqname;
---end;
---' language plpgsql;
-
-
 create or replace function @NAMESPACE@.slon_quote_input(text) returns text as '
   declare
      p_tab_fqname alias for $1;
      v_nsp_name text;
      v_tab_name text;
+	 v_i integer;
+	 v_l integer;
      v_pq2 integer;
 begin
-  if (p_tab_fqname like ''"%"."%"'') then
-    v_pq2 := position (''"'' in substr(p_tab_fqname, 2));
-    v_nsp_name := substr(p_tab_fqname, 2, v_pq2 - 1);
-    v_tab_name := substr(p_tab_fqname, v_pq2 + 4, length(p_tab_fqname) - (v_pq2 + 4));
-  elsif (p_tab_fqname like ''"%".%'') then
-    v_pq2 := position (''"'' in substr(p_tab_fqname, 2));
-    v_nsp_name := substr(p_tab_fqname, 2, v_pq2 - 1);
-    v_tab_name := substr(p_tab_fqname, v_pq2 + 3, length(p_tab_fqname) - (v_pq2 + 2));
-  elsif (p_tab_fqname like ''%."%"'') then
-    v_pq2 := position (''.'' in substr(p_tab_fqname, 2));
-    v_nsp_name := substr(p_tab_fqname, 1, v_pq2);
-    v_tab_name := substr(p_tab_fqname, v_pq2 + 3, length(p_tab_fqname) - (v_pq2 + 3));
-  elsif (p_tab_fqname like ''%.%'') then
-    v_pq2 := position (''.'' in substr(p_tab_fqname, 2));
-    v_nsp_name := substr(p_tab_fqname, 1, v_pq2);
-    v_tab_name := substr(p_tab_fqname, v_pq2 + 2);
-  elsif (p_tab_fqname like ''"%"'') then
-    return p_tab_fqname;
-  else
-     return ''"'' || p_tab_fqname || ''"'';
-  end if;
-  return ''"'' || v_nsp_name || ''"."'' || v_tab_name || ''"'';
+	v_l := length(p_tab_fqname);
+
+	-- Let us search for the dot
+	if p_tab_fqname like ''"%'' then
+		-- if the first part of the ident starts with a double quote, search
+		-- for the closing double quote, skipping over double double quotes.
+		v_i := 2;
+		while v_i <= v_l loop
+			if substr(p_tab_fqname, v_i, 1) != ''"'' then
+				v_i := v_i + 1;
+				continue;
+			end if;
+			v_i := v_i + 1;
+			if substr(p_tab_fqname, v_i, 1) != ''"'' then
+				exit;
+			end if;
+			v_i := v_i + 1;
+		end loop;
+	else
+		-- first part of ident is not quoted, search for the dot directly
+		v_i := 1;
+		while v_i <= v_l loop
+			if substr(p_tab_fqname, v_i, 1) = ''.'' then
+				exit;
+			end if;
+			v_i := v_i + 1;
+		end loop;
+	end if;
+
+	-- v_i now points at the dot or behind the string.
+
+	if substr(p_tab_fqname, v_i, 1) = ''.'' then
+		-- There is a dot now, so split the ident into its namespace
+		-- and objname parts and make sure each is quoted
+		v_nsp_name := substr(p_tab_fqname, 1, v_i - 1);
+		v_tab_name := substr(p_tab_fqname, v_i + 1);
+		if v_nsp_name not like ''"%'' then
+			v_nsp_name := ''"'' || replace(v_nsp_name, ''"'', ''""'') ||
+						  ''"'';
+		end if;
+		if v_tab_name not like ''"%'' then
+			v_tab_name := ''"'' || replace(v_tab_name, ''"'', ''""'') ||
+						  ''"'';
+		end if;
+
+		return v_nsp_name || ''.'' || v_tab_name;
+	else
+		-- No dot ... must be just an ident without schema
+		if p_tab_fqname like ''"%'' then
+			return p_tab_fqname;
+		else
+			return ''"'' || replace(p_tab_fqname, ''"'', ''""'') || ''"'';
+		end if;
+	end if;
+
 end;' language plpgsql;
 
 comment on function @NAMESPACE@.slon_quote_input(text) is
@@ -2515,11 +2501,11 @@ begin
 			and @NAMESPACE@.slon_quote_input(p_fqname) = @NAMESPACE@.slon_quote_brute(PGN.nspname) ||
 					''.'' || @NAMESPACE@.slon_quote_brute(PGC.relname);
 	if not found then
-		raise exception ''Slony-I: setAddTable(): table % not found'', 
+		raise exception ''Slony-I: setAddTable_int(): table % not found'', 
 				p_fqname;
 	end if;
 	if v_relkind != ''r'' then
-		raise exception ''Slony-I: setAddTable(): % is not a regular table'',
+		raise exception ''Slony-I: setAddTable_int(): % is not a regular table'',
 				p_fqname;
 	end if;
 
@@ -2529,7 +2515,7 @@ begin
 				and PGX.indexrelid = PGC.oid
 				and PGC.relname = p_tab_idxname)
 	then
-		raise exception ''Slony-I: setAddTable(): table % has no index %'',
+		raise exception ''Slony-I: setAddTable_int(): table % has no index %'',
 				p_fqname, p_tab_idxname;
 	end if;
 

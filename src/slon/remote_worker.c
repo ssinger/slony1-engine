@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.12 2006-01-06 17:07:47 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.86.2.13 2006-06-02 17:28:50 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2402,8 +2402,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select T.tab_id, "
-		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
-		     "    PGC.relname || '\"') as tab_fqname, "
+		     "    %s.slon_quote_brute(PGN.nspname) || '.' || "
+		     "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
 		     "    T.tab_idxname, T.tab_comment "
 		     "from %s.sl_table T, "
 		     "    \"pg_catalog\".pg_class PGC, "
@@ -2412,6 +2412,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "    and T.tab_reloid = PGC.oid "
 		     "    and PGC.relnamespace = PGN.oid "
 		     "order by tab_id; ",
+		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     set_id);
@@ -2535,8 +2536,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select SQ.seq_id, "
-		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
-		     "    PGC.relname || '\"') as tab_fqname, "
+		     "    %s.slon_quote_brute(PGN.nspname) || '.' || "
+		     "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
 		     "		SQ.seq_comment "
 		     "	from %s.sl_sequence SQ, "
 		     "		\"pg_catalog\".pg_class PGC, "
@@ -2544,6 +2545,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "	where SQ.seq_set = %d "
 		     "		and PGC.oid = SQ.seq_reloid "
 		     "		and PGN.oid = PGC.relnamespace; ",
+		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     set_id);
@@ -2597,8 +2599,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select T.tab_id, "
-		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
-		     "    PGC.relname || '\"') as tab_fqname, "
+		     "    %s.slon_quote_brute(PGN.nspname) || '.' || "
+		     "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
 		     "    T.tab_idxname, T.tab_comment "
 		     "from %s.sl_table T, "
 		     "    \"pg_catalog\".pg_class PGC, "
@@ -2607,6 +2609,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "    and T.tab_reloid = PGC.oid "
 		     "    and PGC.relnamespace = PGN.oid "
 		     "order by tab_id; ",
+		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     set_id);
@@ -3194,8 +3197,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	slon_mkquery(&query1,
 		     "select SL.seql_seqid, SL.seql_last_value, "
-		     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
-		     "    PGC.relname || '\"') as tab_fqname "
+		     "    %s.slon_quote_brute(PGN.nspname) || '.' || "
+		     "    %s.slon_quote_brute(PGC.relname) as tab_fqname "
 		     "	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
 		     "		\"pg_catalog\".pg_class PGC, "
 		     "		\"pg_catalog\".pg_namespace PGN "
@@ -3204,6 +3207,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "		and SL.seql_ev_seqno = '%s' "
 		     "		and PGC.oid = SQ.seq_reloid "
 		     "		and PGN.oid = PGC.relnamespace; ",
+		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     rtcfg_namespace, 
 		     rtcfg_namespace,
@@ -3846,14 +3850,15 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 */
 			slon_mkquery(&query,
 				     "select T.tab_id, T.tab_set, "
-				     "    %s.slon_quote_input('\"' || PGN.nspname || '\".\"' || "
-				     "    PGC.relname || '\"') as tab_fqname "
+				     "    %s.slon_quote_brute(PGN.nspname) || '.' || "
+				     "    %s.slon_quote_brute(PGC.relname) as tab_fqname "
 				     "from %s.sl_table T, "
 				     "    \"pg_catalog\".pg_class PGC, "
 				     "    \"pg_catalog\".pg_namespace PGN "
 				     "where T.tab_set = %d "
 				     "    and PGC.oid = T.tab_reloid "
 				     "    and PGC.relnamespace = PGN.oid; ",
+				     rtcfg_namespace, 
 				     rtcfg_namespace, 
 				     rtcfg_namespace, 
 				     sub_set);
