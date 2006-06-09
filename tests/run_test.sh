@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.10 2006-03-17 19:12:53 cbbrowne Exp $
+# $Id: run_test.sh,v 1.11 2006-06-09 17:12:20 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -447,8 +447,8 @@ launch_slon()
   eval cluster=\$CLUSTER1
 
   conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
-  status "launching originnode : $opgbindir/slon -s500 -g10 $cluster -d2 \"$conninfo\""
-  $opgbindir/slon -s500 -g10 $cluster -d2 "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
+  status "launching originnode : $opgbindir/slon -s500 -g10 -d2 $cluster \"$conninfo\""
+  $opgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
   tmppid=$!
   tmpppid=$$
   sleep 1
@@ -480,9 +480,9 @@ launch_slon()
 
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
-        status "launching: $pgbindir/slon -s500 -g10 $cluster -d2 \"$conninfo\""
+        status "launching: $pgbindir/slon -s500 -g10 -d2 $cluster \"$conninfo\""
 
-        $pgbindir/slon -s500 -g10 $cluster -d2 "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
+        $pgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
         tmppid=$!
         tmpppid=$$
         sleep 1
