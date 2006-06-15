@@ -1,6 +1,10 @@
-<!-- $Id: failover.sgml,v 1.20 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.21 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
+<indexterm><primary>failover</primary>
+           <secondary>switchover</secondary>
+</indexterm>
+
 <sect2><title>Foreword</title>
 
 <para>&slony1; is an asynchronous replication system.  Because of
@@ -28,7 +32,7 @@ simple 2 node replication system with &slony1;.</para></sect2>
 <sect2><title> Controlled Switchover</title>
 
 <indexterm>
- <primary>Controlled switchover</primary>
+ <primary>controlled switchover</primary>
 </indexterm>
 
 <para> We assume a current <quote>origin</quote> as node1 with one
@@ -89,7 +93,7 @@ be any loss of data.</para>
 <sect2><title> Failover</title>
 
 <indexterm>
- <primary>failover upon system failure</primary>
+ <primary>failover due to system failure</primary>
 </indexterm>
 
 <para> If some more serious problem occurs on the
@@ -178,6 +182,8 @@ implications.</para>
 
 <sect2><title> Automating <command> FAIL OVER </command> </title>
 
+<indexterm><primary>automating failover</primary></indexterm>
+
 <para> If you do choose to automate <command>FAIL OVER </command>, it
 is important to do so <emphasis>carefully.</emphasis> You need to have
 good assurance that the failed node is well and truly failed, and you
@@ -212,7 +218,9 @@ would remain accessible to system administrators.  </para> </listitem>
 </sect2>
 
 <sect2 id="rebuildnode1"><title>After Failover, Reconfiguring
-node 1</title>
+Former Origin</title>
+
+<indexterm><primary>rebuilding after failover</primary></indexterm>
 
 <para> What happens to the failed node will depend somewhat on the
 nature of the catastrophe that lead to needing to fail over to another

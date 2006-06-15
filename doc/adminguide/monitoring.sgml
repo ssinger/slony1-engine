@@ -1,6 +1,8 @@
-<!-- $Id: monitoring.sgml,v 1.22 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.23 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
+
+<indexterm><primary>monitoring &slony1;</primary></indexterm>
 
 <para>Here are some of things that you may find in your &slony1; logs,
 and explanations of what they mean.</para>
@@ -152,7 +154,9 @@ about how the threads work, what to expect in the logs after you run a
 </para>
 </sect2>
 
-<sect2> <title> &nagios& Replication Checks </title>
+<sect2> <title> &nagios; Replication Checks </title>
+
+<indexterm><primary>&nagios; for monitoring replication</primary></indexterm>
 
 <para> The script in the <filename>tools</filename> directory called
 <command> pgsql_replication_check.pl </command> represents some of the
@@ -206,6 +210,8 @@ that is to be monitored; that is the way &nagios; works. </para>
 </sect2>
 
 <sect2 id="slonymrtg"> <title> Monitoring &slony1; using MRTG </title>
+
+<indexterm><primary>MRTG for monitoring replication</primary></indexterm>
 
 <para> One user reported on the &slony1; mailing list how to configure
 <ulink url="http://people.ee.ethz.ch/~oetiker/webtools/mrtg/">

@@ -1,5 +1,7 @@
-<!-- $Id: maintenance.sgml,v 1.18 2006-05-10 02:33:09 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.19 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
+
+<indexterm><primary>maintaining &slony1;</primary></indexterm>
 
 <para>&slony1; actually does a lot of its necessary maintenance
 itself, in a <quote>cleanup</quote> thread:
@@ -48,6 +50,8 @@ occurring. </para> </listitem>
 </para>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
+
+<indexterm><primary>watchdogs to keep slon daemons running</primary></indexterm>
 
 <para>There are a couple of <quote>watchdog</quote> scripts available
 that monitor things, and restart the <application>slon</application>
@@ -103,6 +107,8 @@ regularly, this script won't bother doing anything.</para>
 </sect2>
 
 <sect2><title>Testing &slony1; State </title>
+
+<indexterm><primary>testing cluster status</primary></indexterm>
 
 <para> In the <filename>tools</filename> directory, you may find
 scripts called <filename>test_slony_state.pl</filename> and
@@ -250,6 +256,8 @@ discussion. </para></listitem>
 </itemizedlist>
 
 <sect2><title> Log Files</title>
+
+<indexterm><primary>log files</primary></indexterm>
 
 <para><xref linkend="slon"> daemons generate some more-or-less verbose
 log files, depending on what debugging level is turned on.  You might

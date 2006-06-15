@@ -1,6 +1,8 @@
-<!-- $Id: defineset.sgml,v 1.23 2006-02-24 18:44:18 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.24 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
+
+<indexterm><primary>defining replication sets</primary></indexterm>
 
 <para>Defining the nodes indicated the shape of the cluster of
 database servers; it is now time to determine what data is to be
@@ -19,6 +21,8 @@ suitable primary key</para></listitem>
 </itemizedlist>
 
 <sect2><title>Primary Keys</title>
+
+<indexterm><primary>primary key requirement</primary></indexterm>
 
 <para>&slony1; <emphasis>needs</emphasis> to have a primary key or
 candidate thereof on each table that is replicated.  PK values are
@@ -135,6 +139,8 @@ intrude on your applications.</para>
 </sect2>
 
 <sect2> <title> The Pathology of Sequences </title>
+
+<indexterm><primary>sequence pathology</primary></indexterm>
 
 <para> Each time a SYNC is processed, values are recorded for
 <emphasis>all</emphasis> of the sequences in the set.  If there are a

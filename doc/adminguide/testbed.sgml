@@ -1,5 +1,7 @@
-<!-- $Id: testbed.sgml,v 1.7 2006-03-07 22:45:56 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.8 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
+
+<indexterm><primary>test bed framework</primary></indexterm>
 
 <para> As of version 1.1.5, &slony1; has a common test bed framework
 intended to better support performing a comprehensive set of tests.

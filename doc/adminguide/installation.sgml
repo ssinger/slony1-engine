@@ -1,6 +1,8 @@
-<!-- $Id: installation.sgml,v 1.23 2006-04-11 14:40:43 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.24 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
+
+<indexterm><primary>installation instructions</primary></indexterm>
 
 <note> <para>For &windows; users: Unless you are planning on hacking
 the &slony1; code, it is highly recommended that you download and
@@ -57,6 +59,8 @@ gmake all; gmake install
 <sect2>
 <title>Configuration</title>
 
+<indexterm><primary>configuration instructions</primary></indexterm>
+
 <para> &slony1; normally needs to be built and installed by the
 &postgres; Unix user.  The installation target must be identical to
 the existing &postgres; installation particularly in view of the fact
@@ -74,8 +78,9 @@ is no longer necessary, as &slony1; has included within its own code
 base certain parts needed for platform portability.  It now only needs
 to make reference to parts of &postgres; that are actually part of the
 installation.  Therefore, &slony1; is configured by pointing it to the
-various library, binary, and include directories.  For a full list of
-these options, use the command <command>./configure --help</command>
+various &postgres; library, binary, and include directories.  For a
+full list of these options, use the command <command>./configure
+--help</command>
 </para>
 
 <para>On certain platforms (AIX and Solaris are known to need this;
@@ -160,7 +165,7 @@ install.  </command></para>
 </sect2>
 
 <sect2>
-<title> Installing &slony1;</title>
+<title> Installing &slony1 Once Built;</title>
 
 <para> To install &slony1;, enter
 
@@ -276,6 +281,8 @@ docs are installed in
 
 <sect2>
 <title> Installing the &slony1; service on &windows;</title>
+
+<indexterm><primary>installing &slony1; on &windows;</primary></indexterm>
 
 <para> On &windows; systems, instead of running one <xref
 linkend="slon"> daemon per node, a single slon service is installed

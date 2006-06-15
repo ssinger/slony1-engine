@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.16 2006-03-29 16:48:13 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.17 2006-06-15 19:23:42 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -36,8 +36,12 @@ either cause unexpected problems or mask the real problem. </para>
 <para> Numerous users have reported problems resulting from mismatches
 between &slony1; versions, local libraries, and &postgres; libraries.
 Details count; you need to be clear on what hosts are running what
-versions of what software.
-</para>
+versions of what software.  
+
+<para> This is normally a matter of being meticulous about checking
+what versions of software are in place everywhere, and is the natural
+result of having a distributed system comprised of a large number of
+components that need to match. </para>
 </listitem>
 
 <listitem>
@@ -132,16 +136,17 @@ local network as the node that it is servicing, as it does a
 running the &lslon; on the database server that it is
 servicing. </para>
 
-<para> In practice, having the &lslon; processes strewn
-across a dozen servers turns out to be really inconvenient to manage,
-as making changes to their configuration requires logging onto a whole
-bunch of servers.  In environments where it is necessary to use
+<para> In practice, having the &lslon; processes strewn across a dozen
+servers turns out to be really inconvenient to manage, as making
+changes to their configuration requires logging onto a whole bunch of
+servers.  In environments where it is necessary to use
 <application>sudo</application> for users to switch to application
 users, this turns out to be seriously inconvenient.  It turns out to
 be <emphasis>much</emphasis> easier to manage to group the <xref
 linkend="slon"> processes on one server per local network, so that
 <emphasis>one</emphasis> script can start, monitor, terminate, and
-otherwise maintain <emphasis>all</emphasis> of the nearby nodes.</para>
+otherwise maintain <emphasis>all</emphasis> of the nearby
+nodes.</para>
 
 <para> That also has the implication that configuration data and
 configuration scripts only need to be maintained in one place,
@@ -149,9 +154,9 @@ eliminating duplication of configuration efforts.</para>
 </listitem>
 
 <listitem>
-<para>The <link linkend="ddlchanges"> Database Schema
-Changes </link> section outlines some practices that have been found
-useful for handling changes to database schemas. </para></listitem>
+<para>The <link linkend="ddlchanges"> Database Schema Changes </link>
+section outlines some practices that have been found useful for
+handling changes to database schemas. </para></listitem>
 
 <listitem>
 <para> Handling of Primary Keys </para> 
@@ -197,6 +202,90 @@ tables being replicated. </para>
 <para> Depending on the kind of activity on the databases, this may or
 may not have the effect of requiring a (hopefully brief) database
 outage. </para>
+</listitem>
+
+<listitem><para> What to do about DDL. </para>
+
+<para> &slony1; operates via detecting updates to table data via
+triggers that are attached to those tables.  That means that updates
+that take place via methods that do not fire triggers will not notice
+those updates.  <command>ALTER TABLE</command>, <command>CREATE OR
+REPLACE FUNCTION</command>, <command>CREATE TABLE</command>, all
+represent SQL requests that &slony1; has no way to notice. </para>
+
+<para> A philosophy underlying &slony1;'s handling of this is that
+competent system designers do not write self-modifying code, and
+database schemas that get modified by the application are an instance
+of this.  It does not try hard to make it convenient to modify
+database schemas. </para>
+
+<para> There will be cases where that is necessary, so the <link
+linkend="stmtddlscript"> <command>execute script</command> is provided
+which will apply DDL changes at the same location in the transaction
+stream on all servers.  </link> </para>
+
+<para> Unfortunately, this introduces a great deal of locking of
+database objects.  Altering tables requires taking out an exclusive
+lock on them; doing so via <command>execute script</command> requires
+that &slony1; take out an exclusive lock on <emphasis>all</emphasis>
+replicated tables.  This can prove quite inconvenient when
+applications are running; you run into deadlocks and such. </para>
+
+<para> One particularly dogmatic position that some hold is that
+<emphasis>all</emphasis> schema changes should
+<emphasis>always</emphasis> be propagated using <command>execute
+script</command>.  This guarantees that nodes will be consistent, but
+the costs of locking and deadlocking may be too high for some
+users.</para>
+
+<para> At Afilias, our approach has been less dogmatic; there
+<emphasis>are</emphasis> sorts of changes that
+<emphasis>must</emphasis> be applied using <command>execute
+script</command>, but we apply others independently.</para>
+
+<itemizedlist>
+<listitem><para> Changes that must be applied using <command>execute script</command> </para>
+<itemizedlist>
+<listitem><para> All instances of <command>ALTER TABLE</command></para></listitem>
+</itemizedlist>
+
+</listitem>
+<listitem><para> Changes that are not normally applied using <command>execute script</command> </para>
+<itemizedlist>
+<listitem><para> <command>CREATE INDEX</command> </para></listitem>
+<listitem><para> <command>CREATE TABLE</command> </para>
+<para> Tables that are not being replicated do not require &slony1; <quote>permission</quote>. </para></listitem>
+
+<listitem><para> <command>CREATE OR REPLACE FUNCTION </command> 
+
+<para> Typically, new versions of functions may be done without
+&slony1; being <quote>aware</quote> of them.  The obvious exception is
+when a new function is being deployed to accomodate a table
+alteration; in that case, the new version must be added in in a manner
+synchronized with the <command>execute script</command> for the table
+alteration. </para>
+
+<para> Similarly, <command>CREATE TYPE</command>, <command> CREATE
+AGGREGATE </command>,  and such will
+commonly not need to be forcibly applied in <quote>perfectly
+synchronized</quote> manner across nodes. </para></listitem>
+
+<listitem><para> Security management, such as <command> CREATE USER
+</command>, <command> CREATE ROLE </command>, <command>GRANT
+</command>, and such are largely irrelevant to &slony1; as it runs as
+a <quote>superuser</quote>. </para>
+
+<para> Indeed, we have frequently found it useful to have different
+security arrangements on different nodes.  Access to the
+<quote>master</quote> node should be restricted to applications that
+truly need access to it; <quote>reporting</quote> users commonly are
+restricted much more there than on subscriber nodes.</para>
+
+</listitem>
+</itemizedlist>
+</listitem>
+</itemizedlist>
+
 </listitem>
 
 <listitem id="slonyuser"> <para> &slony1;-specific user names. </para>
@@ -245,6 +334,23 @@ to be configured by hand.  Many seemingly inexplicable communications
 failures, where nodes failed to talk to one another even though they
 technically could, were a result of incorrect listen path
 configuration. </para>
+</listitem>
+
+<listitem><para> Use <filename>test_slony_state.pl</filename> to look
+for configuration problems.</para>
+
+<para>This is a Perl script which connects to a &slony1; node and then
+rummages through &slony1; configuration looking for quite a variety of
+conditions that tend to indicate problems, including:
+<itemizedlist>
+<listitem><para>Bloating of some config tables</para></listitem>
+<listitem><para>Analysis of listen paths</para></listitem>
+<listitem><para>Analysis of event propagation and confirmation</para></listitem>
+</itemizedlist></para>
+
+<para> If replication mysteriously <quote>isn't working</quote>, this
+tool can run through many of the possible problems for you. </para>
+
 </listitem>
 
 <listitem>

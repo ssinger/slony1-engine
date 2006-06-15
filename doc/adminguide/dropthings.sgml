@@ -1,10 +1,14 @@
-<!-- $Id: dropthings.sgml,v 1.13 2005-02-23 23:18:58 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.14 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
+
+<indexterm><primary>dropping objects from replication</primary></indexterm>
 
 <para>There are several things you might want to do involving dropping
 things from &slony1; replication.</para>
 
 <sect2><title>Dropping A Whole Node</title>
+
+<indexterm><primary>dropping a node from replication</primary></indexterm>
 
 <para>If you wish to drop an entire node from replication, the <xref
 linkend="slonik"> command <xref linkend="stmtdropnode"> should do the
@@ -32,6 +36,8 @@ prior to 1.0.5.</para></sect2>
 
 <sect2><title>Dropping An Entire Set</title>
 
+<indexterm><primary>dropping a set from replication</primary></indexterm>
+
 <para>If you wish to stop replicating a particular replication set,
 the <xref linkend="slonik"> command <xref linkend="stmtdropset"> is
 what you need to use.</para>
@@ -54,6 +60,8 @@ there isn't anything to prevent potentially career-limiting
 
 <sect2><title>Unsubscribing One Node From One Set</title>
 
+<indexterm><primary>unsubscribing a node from a set</primary></indexterm>
+
 <para>The <xref linkend="stmtunsubscribeset"> operation is a little
 less invasive than either <xref linkend="stmtdropset"> or <xref
 linkend="stmtdropnode">; it involves dropping &slony1; triggers and
@@ -73,7 +81,9 @@ fact that the data was recently being replicated isn't good enough;
 </para>
 
 </sect2>
-<sect2><title> Dropping A Table From A Set</title>
+<sect2><title> Dropping A Table From Replication</title>
+
+<indexterm><primary>dropping a table from replication</primary></indexterm>
 
 <para>In &slony1; 1.0.5 and above, there is a Slonik command <xref
 linkend="stmtsetdroptable"> that allows dropping a single table from
@@ -107,7 +117,9 @@ three queries using <xref linkend="stmtddlscript"> could do that; see
 to connect to each database and submit the queries by hand.</para>
 </sect2>
 
-<sect2><title>Dropping A Sequence From A Set</title>
+<sect2><title>Dropping A Sequence From Replication</title>
+
+<indexterm><primary>dropping a sequence from replication</primary></indexterm>
 
 <para>Just as with <xref linkend="stmtsetdroptable">, version 1.0.5
 introduces the operation <xref linkend="stmtsetdropsequence">.</para>

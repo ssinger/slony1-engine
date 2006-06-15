@@ -2418,13 +2418,13 @@ EXECUTE SCRIPT (
     that column later in the same request. </para>
 
     <para> In &slony1; version 1.2, the DDL script is split into
-    statements, and each is submitted separately.  As a result, it is
-    fine for later statements to refer to objects or attributes
-    created or modified in earlier statements.  Furthermore, in
-    version 1.2, the <command>slonik</command> output includes a
-    listing of each statement as it is processed, on the set origin
-    node.  Similarly, the statements processed are listed in slon logs
-    on the other nodes.</para>
+    statements, and each statement is submitted separately.  As a
+    result, it is fine for later statements to refer to objects or
+    attributes created or modified in earlier statements.
+    Furthermore, in version 1.2, the <command>slonik</command> output
+    includes a listing of each statement as it is processed, on the
+    set origin node.  Similarly, the statements processed are listed
+    in slon logs on the other nodes.</para>
    </refsect1>
   </refentry>
 

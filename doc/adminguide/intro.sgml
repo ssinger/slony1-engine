@@ -1,6 +1,7 @@
-<!-- $Id: intro.sgml,v 1.23 2006-03-14 18:46:42 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.24 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
+
 <sect2> <title>What &slony1; is</title>
 
 <para>&slony1; is a <quote>master to multiple slaves</quote>
@@ -133,6 +134,8 @@ replication services.</para></sect2>
 
 <sect2><title> Current Limitations</title>
 
+<indexterm><primary>limitations to &slony1;</primary></indexterm>
+
 <para>&slony1; does not automatically propagate schema changes, nor
 does it have any ability to replicate large objects.  There is a
 single common reason for these limitations, namely that &slony1;
@@ -189,6 +192,8 @@ server</quote> which cannot be used without it ceasing to be
 </sect2>
 
 <sect2><title>Replication Models</title>
+
+<indexterm><primary>replication models</primary></indexterm>
 
 <para>There are a number of distinct models for database replication;
 it is impossible for one replication system to be all things to all

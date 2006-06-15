@@ -1,6 +1,8 @@
 <article id="supportedplatforms">
 <title>&slony1; Supported Platforms</title>
 
+<indexterm><primary>platforms supported</primary></indexterm>
+
 <para>
 Slony-I has been verified by to work on the platforms which are listed 
 below. Slony-I can be successfully built, installed and run on these 

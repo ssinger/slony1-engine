@@ -1,6 +1,8 @@
-<!-- $Id: concepts.sgml,v 1.18 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.19 2006-06-15 19:23:42 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
+
+<indexterm><primary>concepts and terminology</primary></indexterm>
 
 <para>In order to set up a set of &slony1; replicas, it is necessary
 to understand the following major abstractions that it uses:</para>
@@ -112,6 +114,8 @@ replication set.</para>
 
 <sect2><title>slon Daemon</title>
 
+<indexterm><primary>slon daemon</primary></indexterm>
+
 <para>For each node in the cluster, there will be a <xref
 linkend="slon"> process to manage replication activity for that node.
 </para>
@@ -137,6 +141,8 @@ applied together to the subscriber nodes.  </para>
 </sect2>
 
 <sect2><title>slonik Configuration Processor</title>
+
+<indexterm><primary>slonik configuration processor</primary></indexterm>
 
 <para> The <xref linkend="slonik"> command processor processes scripts
 in a <quote>little language</quote> that are used to submit events to
