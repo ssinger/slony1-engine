@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.17 2006-06-15 19:23:42 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.18 2006-06-15 19:37:26 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -451,8 +451,9 @@ slower than simply copying the data into the table, and then
 recreating each index <quote>ex nihilo</quote>, as the latter can take
 substantial advantage of sort memory. </para>
 
-<para> In a future release, it is hopeful that indices will be dropped
-and recreated automatically, which would eliminate this.</para>
+<para> In &slony1; version 1.1.5 and later versions, indices are
+dropped and recreated automatically, which mostly eliminates the need
+for this.</para>
 </listitem>
 
 <listitem><para> If there are large numbers of updates taking place as
