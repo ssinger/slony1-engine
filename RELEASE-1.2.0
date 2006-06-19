@@ -1,9 +1,9 @@
-$Id: RELEASE-1.2.0,v 1.3 2006-05-19 20:45:48 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.4 2006-06-19 15:57:11 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
 
-Many of them should represent near-invisible enhancements to improve
+Many of them should represent near-invisible enhancements that improve
 how Slony-I manages replication configuration.  These include:
 
 - A major revision of memory management to limit memory usage by slon
@@ -25,7 +25,9 @@ how Slony-I manages replication configuration.  These include:
   diminishes the number of dead tuples you will find in this table.
 
   This, along with log switching, should improve Slony-I behaviour on
-  systems where long-running transactions are common.
+  systems where long-running transactions are common.  Older versions
+  of Slony-I could suffer quite badly on systems that get hit by
+  long-running transactions.
 
 - DDL scripts are broken into individual statements
 
@@ -41,7 +43,16 @@ how Slony-I manages replication configuration.  These include:
   column didn't exist as at "before the DDL ran."
 
   There is now a statement parser which splits scripts into individual
-  SQL statements and passes them to the back end individually.
+  SQL statements and passes them to the database back end
+  individually.
+
+- Slony-I tables are now marked "WITHOUT OIDS" so that they do not
+  consume OIDS.
+
+  It's only particularly important for sl_log_1/sl_log_2/sl_seqlog,
+  but the change has been applied to all the tables Slony-I uses.
+  UPGRADE FUNCTIONS will remove OIDs from Slony-I tables in existing
+  schemas, too.
 
 These features are generally configurable, but the defaults ought to
 allow improved behaviour for all but the most "Extreme Uses."
@@ -66,8 +77,8 @@ There are also numerous enhancements that are more directly visible:
   (The slon will automatically try again; the irritation is that you
   may have been depending on that getting done by Monday morning...)
 
-- A lot of fixes to build environment (this needs to be tested on lots
-  of platforms)
+- A lot of fixes to the build environment (this needs to be tested on
+  lots of platforms)
 
 - slon "lag interval" option
 
@@ -88,13 +99,12 @@ There are also numerous enhancements that are more directly visible:
   You can tell a slon to terminate itself as soon as it receives a
   certain event from a certain node.
 
-  As with "lag interval," this could be a bit of a foot gun...
+  Just as with "lag interval," this could be a bit of a foot gun...
 
 - slon "run program after each log shipped SYNC" option
 
   You can specify a program to run each time a SYNC event
   is successfully closed off.
-
 
 - Bug 1538 - if there is only one node, sl_event, sl_log_1 never get
   cleared out
