@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.16 2006-06-15 19:23:42 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.17 2006-06-19 18:12:39 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <indexterm><primary>using slonik</primary></indexterm>
@@ -48,7 +48,15 @@ as:
 
 <para> This is supported in &slony1; 1.1 by the <xref
 linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
-</para></listitem>
+</para>
+
+<para> The use of <xref linkend="stmtinclude"> to allow creating
+<quote>preamble files</quote> has proven an invaluable tool to reduce
+errors.  The preamble file is set up <emphasis>once</emphasis>,
+verified <emphasis>once</emphasis>, and then that verified script may
+be used with confidence for each slonik script.
+</para>
+</listitem>
 
 <listitem><para> Looping and control constructs</para>
 
@@ -279,9 +287,9 @@ the &slony1; stored functions.</para>
 may wish to develop graphical tools as an alternative to Slonik; it
 would be entirely appropriate in such cases to submit configuration
 requests directly via the stored functions.  If you plan to do so, it
-is suggested that you examine how the stored procedures get used in
-<filename>slonik.c</filename>, as that should be the most
-representative way of seeing correct use of the functions.</para>
+is suggested that you examine how the stored procedures are used in
+<filename>slonik.c</filename>, as that represents the most correct use
+of the functions.</para>
 
 <para> When debugging problems in <quote>troubled</quote> &slony1;
 clusters, it has also occasionally proven useful to use the stored
