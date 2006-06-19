@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.85 2006-06-02 18:49:05 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.86 2006-06-19 15:53:18 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -5625,7 +5625,23 @@ begin
 						reg_int4		int4,
 						reg_text		text,
 						reg_timestamp	timestamp
-					)'';
+					) without oids'';
+                execute ''alter table @NAMESPACE@.sl_config_lock set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_confirm set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_event set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_listen set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_log_1 set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_log_2 set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_node set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_nodelock set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_path set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_seqlog set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_sequence set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_set set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_setsync set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_subscribe set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_table set without oids;'';
+                execute ''alter table @NAMESPACE@.sl_trigger set without oids;'';
 	end if;
 
 	return p_old;

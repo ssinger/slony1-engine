@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.30 2006-03-01 20:18:42 wieck Exp $
+-- $Id: slony1_base.sql,v 1.31 2006-06-19 15:53:18 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -26,7 +26,7 @@ create table @NAMESPACE@.sl_node (
 
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with this namespace.';
 comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the node';  
 comment on column @NAMESPACE@.sl_node.no_active is 'Is the node active in replication yet?';  
@@ -44,7 +44,7 @@ create table @NAMESPACE@.sl_nodelock (
 
 	CONSTRAINT "sl_nodelock-pkey"
 		PRIMARY KEY (nl_nodeid, nl_conncnt)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_nodelock is 'Used to prevent multiple slon instances and to identify the backends to kill in terminateNodeConnections().';
 comment on column @NAMESPACE@.sl_nodelock.nl_nodeid is 'Clients node_id';
 comment on column @NAMESPACE@.sl_nodelock.nl_conncnt is 'Clients connection number';
@@ -65,7 +65,7 @@ create table @NAMESPACE@.sl_set (
 	CONSTRAINT "set_origin-no_id-ref"
 		FOREIGN KEY (set_origin)
 		REFERENCES @NAMESPACE@.sl_node (no_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_set is 'Holds definitions of replication sets.';
 comment on column @NAMESPACE@.sl_set.set_id is 'A unique ID number for the set.';
 comment on column @NAMESPACE@.sl_set.set_origin is 
@@ -94,7 +94,7 @@ create table @NAMESPACE@.sl_setsync (
 	CONSTRAINT "ssy_origin-no_id-ref"
 		FOREIGN KEY (ssy_origin)
 		REFERENCES @NAMESPACE@.sl_node (no_id)
-);
+) WITHOUT OIDS;
 comment on table  @NAMESPACE@.sl_setsync is 'SYNC information';
 comment on column @NAMESPACE@.sl_setsync.ssy_setid is 'ID number of the replication set';
 comment on column @NAMESPACE@.sl_setsync.ssy_origin is 'ID number of the node';
@@ -123,7 +123,7 @@ create table @NAMESPACE@.sl_table (
 	CONSTRAINT "tab_set-set_id-ref"
 		FOREIGN KEY (tab_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_table is 'Holds information about the tables being replicated.';
 comment on column @NAMESPACE@.sl_table.tab_id is 'Unique key for Slony-I to use to identify the table';
 comment on column @NAMESPACE@.sl_table.tab_reloid is 'The OID of the table in pg_catalog.pg_class.oid';
@@ -148,7 +148,7 @@ create table @NAMESPACE@.sl_trigger (
 		FOREIGN KEY (trig_tabid)
 		REFERENCES @NAMESPACE@.sl_table (tab_id)
 		ON DELETE CASCADE
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_trigger is 'Holds information about triggers on tables managed using Slony-I';
 comment on column @NAMESPACE@.sl_trigger.trig_tabid is 'Slony-I ID number of table the trigger is on';
 comment on column @NAMESPACE@.sl_trigger.trig_tgname is 'Indicates the name of a trigger';
@@ -170,7 +170,7 @@ create table @NAMESPACE@.sl_sequence (
 	CONSTRAINT "seq_set-set_id-ref"
 		FOREIGN KEY (seq_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_sequence is 'Similar to sl_table, each entry identifies a sequence being replicated.';
 comment on column @NAMESPACE@.sl_sequence.seq_id is 'An internally-used ID for Slony-I to use in its sequencing of updates';
 comment on column @NAMESPACE@.sl_sequence.seq_reloid is 'The OID of the sequence object';
@@ -197,7 +197,7 @@ create table @NAMESPACE@.sl_path (
 	CONSTRAINT "pa_client-no_id-ref"
 		FOREIGN KEY (pa_client)
 		REFERENCES @NAMESPACE@.sl_node (no_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_path is 'Holds connection information for the paths between nodes, and the synchronisation delay';
 comment on column @NAMESPACE@.sl_path.pa_server is 'The Node ID # (from sl_node.no_id) of the data source';
 comment on column @NAMESPACE@.sl_path.pa_client is 'The Node ID # (from sl_node.no_id) of the data target';
@@ -221,7 +221,7 @@ create table @NAMESPACE@.sl_listen (
 	CONSTRAINT "sl_listen-sl_path-ref"
 		FOREIGN KEY (li_provider, li_receiver)
 		REFERENCES @NAMESPACE@.sl_path (pa_server, pa_client)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_listen is 'Indicates how nodes listen to events from other nodes in the Slony-I network.';
 comment on column @NAMESPACE@.sl_listen.li_origin is 'The ID # (from sl_node.no_id) of the node this listener is operating on';
 comment on column @NAMESPACE@.sl_listen.li_provider is 'The ID # (from sl_node.no_id) of the source node for this listening event';
@@ -246,7 +246,7 @@ create table @NAMESPACE@.sl_subscribe (
 	CONSTRAINT "sub_set-set_id-ref"
 		FOREIGN KEY (sub_set)
 		REFERENCES @NAMESPACE@.sl_set (set_id)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_subscribe is 'Holds a list of subscriptions on sets';
 comment on column @NAMESPACE@.sl_subscribe.sub_set is 'ID # (from sl_set) of the set being subscribed to';
 comment on column @NAMESPACE@.sl_subscribe.sub_provider is 'ID# (from sl_node) of the node providing data';
@@ -277,7 +277,7 @@ create table @NAMESPACE@.sl_event (
 
 	CONSTRAINT "sl_event-pkey"
 		PRIMARY KEY (ev_origin, ev_seqno)
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_event is 'Holds information about replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_confirm table.';
 comment on column @NAMESPACE@.sl_event.ev_origin is 'The ID # (from sl_node.no_id) of the source node for this event';
 comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
@@ -334,7 +334,7 @@ create table @NAMESPACE@.sl_confirm (
 	con_received		int4,
 	con_seqno			int8,
 	con_timestamp		timestamp DEFAULT timeofday()::timestamp
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_confirm is 'Holds confirmation of replication events.  After a period of time, Slony removes old confirmed events from both this table and the sl_event table.';
 
 comment on column @NAMESPACE@.sl_confirm.con_origin is 'The ID # (from sl_node.no_id) of the source node for this event';
@@ -354,7 +354,7 @@ create table @NAMESPACE@.sl_seqlog (
 	seql_origin			int4,
 	seql_ev_seqno		int8,
 	seql_last_value		int8
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_seqlog is 'Log of Sequence updates';
 
 comment on column @NAMESPACE@.sl_seqlog.seql_seqid is 'Sequence ID';
@@ -402,7 +402,7 @@ create table @NAMESPACE@.sl_log_1 (
 	log_actionseq		int8,
 	log_cmdtype			char,
 	log_cmddata			text
-);
+) WITHOUT OIDS;
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
 	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
 
@@ -427,7 +427,7 @@ create table @NAMESPACE@.sl_log_2 (
 	log_actionseq		int8,
 	log_cmdtype			char,
 	log_cmddata			text
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
 comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
 comment on column @NAMESPACE@.sl_log_2.log_xid is 'Transaction ID on the origin node';
@@ -450,7 +450,7 @@ create table @NAMESPACE@.sl_registry (
 	reg_int4			int4,
 	reg_text			text,
 	reg_timestamp		timestamp
-);
+) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_registry is 'Stores miscellaneous runtime data';
 comment on column @NAMESPACE@.sl_registry.reg_key is 'Unique key of the runtime option';
 comment on column @NAMESPACE@.sl_registry.reg_int4 is 'Option value if type int4';
