@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.18 2006-06-15 19:37:26 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.19 2006-06-19 18:13:07 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -132,8 +132,8 @@ central server for each network has proven preferable. </para>
 local network as the node that it is servicing, as it does a
 <emphasis>lot</emphasis> of communications with its database.  </para>
 
-<para> In theory, the <quote>best</quote> speed would come from
-running the &lslon; on the database server that it is
+<para> In theory, the <quote>best</quote> speed might be expected to
+come from running the &lslon; on the database server that it is
 servicing. </para>
 
 <para> In practice, having the &lslon; processes strewn across a dozen
@@ -151,6 +151,28 @@ nodes.</para>
 <para> That also has the implication that configuration data and
 configuration scripts only need to be maintained in one place,
 eliminating duplication of configuration efforts.</para>
+
+</listitem>
+
+<listitem><para> &lslon; processes should run in the same
+<quote>network context</quote> as the node that each is responsible
+for managing so that the connection to that node is a
+<quote>local</quote> one.  Do <emphasis>not</emphasis> run such links
+across a WAN. </para>
+
+<para> A WAN outage can leave database connections
+<quote>zombied</quote>, and typical TCP/IP behaviour will allow those
+connections to persist for around two hours.  If such a connection is
+the <quote>master</quote> connection which &slony1; uses to identify
+which &lslon; is managing the node, you will have the situation where
+the original &lslon; dies, due to the WAN outage, and subsequent
+&lslon;s will be unable to connect for the next two hours until that
+<quote>master</quote> connection times out.  </para>
+
+<para> It is not difficult to remedy this; you need only <command>kill
+SIGINT</command> the offending backend connection.  But by running the
+&lslon; locally, you will generally not be vulnerable to this
+condition. </para>
 </listitem>
 
 <listitem>
@@ -427,6 +449,23 @@ set.</para>
 <para> The notes on <link linkend="usingslonik"> Using Slonik </link>
 describe some of the lessons learned from managing large numbers of
 <xref linkend="slonik"> scripts.</para>
+
+<para> Notable principles that have fallen out of generating many
+slonik scripts are that:
+
+<itemizedlist>
+
+<listitem><para>Using <quote>preamble</quote> files is
+<emphasis>highly recommended</emphasis> as it means that you use
+heavily-verified preambles over and over.</para></listitem>
+
+<listitem><para>Any opportunity that you have to automatically
+generate configuration whether by drawing it from a database or by
+using a script that generates repetitively similar elements will help
+prevent human error.</para></listitem>
+
+</itemizedlist>
+</para>
 </listitem>
 
 <listitem><para> Handling Very Large Replication Sets </para>
