@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.19 2006-06-19 18:13:07 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.20 2006-06-20 18:47:23 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -44,22 +44,38 @@ result of having a distributed system comprised of a large number of
 components that need to match. </para>
 </listitem>
 
+<listitem><para> If a slonik script does not run as expected in a
+first attempt, it would be foolhardy to attempt to run it again until
+a problem has been found and resolved.  </para>
+
+<para> There are a very few slonik commands such as <xref
+linkend="stmtstorepath"> that behave in a nearly idempotent manner; if
+you run <xref linkend="stmtstorepath"> again, that merely updates
+table <envar>sl_path</envar> with the same value.  </para>
+
+<para> In contrast <xref linkend="stmtsubscribeset"> behaves in two
+<emphasis>very</emphasis> different ways depending on whether the
+subscription has been activated yet or not; if initiating the
+subscription didn't work at a first attempt, submitting the request
+again <emphasis>won't</emphasis> help make it happen. </para>
+</listitem>
+
 <listitem>
 <para> Principle: Use an unambiguous, stable time zone such
 as UTC or GMT.</para>
 
-<para> Users have run into problems when their system uses a time zone
-that &postgres; was unable to recognize such as CUT0 or WST.  It is
-necessary that you use a timezone that &postgres; can recognize
-correctly.
-</para>
-
-<para> It is furthermore preferable to use a time zone where times do
-not shift around due to Daylight Savings Time. </para>
+<para> Users have run into problems with &lslon; functioning properly
+when their system uses a time zone that &postgres; was unable to
+recognize such as CUT0 or WST.  It is necessary that you use a
+timezone that &postgres; can recognize correctly.  It is furthermore
+preferable to use a time zone where times do not shift around due to
+Daylight Savings Time. </para>
 
 <para> The <quote>geographically unbiased</quote> choice seems to be
 <command><envar>TZ</envar>=UTC</command> or
-<command><envar>TZ</envar>=GMT</command>. </para>
+<command><envar>TZ</envar>=GMT</command>, and to make sure that
+systems are <quote>in sync</quote> by using NTP to syncchronize clocks
+throughout the environment. </para>
 
 <para> See also <xref linkend="times">.</para>
 </listitem>
@@ -87,7 +103,8 @@ busy systems won't generate many dead tuples in that table
 <listitem><para> The system will periodically rotate (using
 <command>TRUNCATE</command> to clean out the old table) between the
 two log tables, <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-log-2">.  </para></listitem>
+linkend="table.sl-log-2">, preventing unbounded growth of dead space
+there.  </para></listitem>
 </itemizedlist>
 
 </listitem>
@@ -114,8 +131,7 @@ preventative maintenance to prevent problems from becoming serious
 enough to require <link linkend="failover"> failover </link>. </para>
 </listitem>
 
-<listitem>
-<para> <command>VACUUM</command> policy needs to be
+<listitem> <para> <command>VACUUM</command> policy needs to be
 carefully defined.</para>
 
 <para> As mentioned above, <quote>long running transactions are
@@ -124,33 +140,20 @@ Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
 transaction with all the known ill effects.</para>
 </listitem>
 
-<listitem>
-<para> Running all of the &lslon; daemons on a
-central server for each network has proven preferable. </para> 
+<listitem> <para> Running all of the &lslon; daemons on a central
+server for each network has proven preferable. </para>
 
-<para> Each &lslon; should run on a host on the same
-local network as the node that it is servicing, as it does a
-<emphasis>lot</emphasis> of communications with its database.  </para>
+<para> Each &lslon; should run on a host on the same local network as
+the node that it is servicing, as it does a <emphasis>lot</emphasis>
+of communications with its database, and that connection needs to be
+as reliable as possible.  </para>
 
 <para> In theory, the <quote>best</quote> speed might be expected to
 come from running the &lslon; on the database server that it is
 servicing. </para>
 
-<para> In practice, having the &lslon; processes strewn across a dozen
-servers turns out to be really inconvenient to manage, as making
-changes to their configuration requires logging onto a whole bunch of
-servers.  In environments where it is necessary to use
-<application>sudo</application> for users to switch to application
-users, this turns out to be seriously inconvenient.  It turns out to
-be <emphasis>much</emphasis> easier to manage to group the <xref
-linkend="slon"> processes on one server per local network, so that
-<emphasis>one</emphasis> script can start, monitor, terminate, and
-otherwise maintain <emphasis>all</emphasis> of the nearby
-nodes.</para>
-
-<para> That also has the implication that configuration data and
-configuration scripts only need to be maintained in one place,
-eliminating duplication of configuration efforts.</para>
+<para> In practice, strewing &lslon; processes and configuration
+across a dozen servers turns out to be inconvenient to manage.</para>
 
 </listitem>
 
@@ -161,13 +164,10 @@ for managing so that the connection to that node is a
 across a WAN. </para>
 
 <para> A WAN outage can leave database connections
-<quote>zombied</quote>, and typical TCP/IP behaviour will allow those
-connections to persist for around two hours.  If such a connection is
-the <quote>master</quote> connection which &slony1; uses to identify
-which &lslon; is managing the node, you will have the situation where
-the original &lslon; dies, due to the WAN outage, and subsequent
-&lslon;s will be unable to connect for the next two hours until that
-<quote>master</quote> connection times out.  </para>
+<quote>zombied</quote>, and typical TCP/IP behaviour <link
+linkend="multipleslonconnections"> will allow those connections to
+persist, preventing a slon restart for around two hours. </link>
+</para>
 
 <para> It is not difficult to remedy this; you need only <command>kill
 SIGINT</command> the offending backend connection.  But by running the
@@ -186,7 +186,8 @@ handling changes to database schemas. </para></listitem>
 <para> Discussed in the section on <link linkend="definingsets">
 Replication Sets, </link> it is <emphasis>ideal</emphasis> if each
 replicated table has a true primary key constraint; it is
-<emphasis>acceptable</emphasis> to use a <quote>candidate primary key.</quote></para>
+<emphasis>acceptable</emphasis> to use a <quote>candidate primary
+key.</quote></para>
 
 <para> It is <emphasis>not recommended</emphasis> that a
 &slony1;-defined key (created via <xref linkend="stmttableaddkey">) be
@@ -475,7 +476,7 @@ tens to hundreds of gigabytes in size, which puts some added
 <quote>strain</quote> on the system, in particular where it may take
 several days for the <command>COPY_SET</command> event to complete.
 Here are some principles that have been observed for dealing with
-these sorts of situtations.</para></listitem>
+these sorts of situations.</para></listitem>
 
 </itemizedlist>
 
