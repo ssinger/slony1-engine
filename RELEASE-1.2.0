@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.4 2006-06-19 15:57:11 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.5 2006-06-20 22:11:35 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -63,6 +63,22 @@ There are also numerous enhancements that are more directly visible:
 
   A group of developers has contributed changes to allow running
   Slony-I as a Windows service.
+
+- Process structure is revised considerably; in 1.1.0, an attempt was
+  made to create an internal 'watchdog' that would restart threads
+  that fell over for whatever reason.
+
+  In 1.2, this is massively revised.  The "main" slon thread should,
+  as of 1.2, never fall down, which means that there should no longer
+  be a need for watchdog processes to watch carefully.
+
+  This makes slon very much less fragile than it was in earlier
+  versions.  This may revise how you want to start it up...  In the
+  past, slon processes tended to fall over easily, mandating having
+  some form of "watchdog."  The new behaviour points more towards
+  "init" / "rc.d"-like handling, where, upon bootup, one "rc.d" script
+  might start up PostgreSQL, another one starts pgpool, and a third
+  (which must run third!) starts up a slon.
 
 - Subscribe set aggressively locks tables on the subscriber to avoid
   failures
