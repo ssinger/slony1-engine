@@ -2,6 +2,8 @@
 # ----------
 # slony1_dump.sh
 #
+# $Id: slony1_dump.sh,v 1.8 2006-06-20 18:48:07 cbbrowne Exp $
+#
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that
 #	has the user schema of the replicated database installed, will
