@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.10 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: dbutil.c,v 1.11 2006-06-21 17:40:20 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -625,7 +625,7 @@ slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 
 					case 'q':
 						s = va_arg(ap, char *);
-						while (*s != '\0')
+						while (s && *s != '\0')
 						{
 							switch (*s)
 							{
