@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.42 2006-05-15 14:47:13 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.43 2006-06-21 23:52:11 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1320,8 +1320,12 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		xxid_typename->names =
 			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
 					makeString("xxid"));
-		xxid_typid = typenameTypeId(xxid_typename);
 
+#ifdef HAVE_TYPENAMETYPEID_2
+		xxid_typid = typenameTypeId(NULL,xxid_typename);
+#else
+		xxid_typid = typenameTypeId(xxid_typename);
+#endif
 		plan_types[0] = INT4OID;
 
 		/*
@@ -1400,7 +1404,11 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		xxid_typename->names =
 			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
 					makeString("xxid"));
+#ifdef HAVE_TYPENAMETYPEID_2
+		xxid_typid = typenameTypeId(NULL, xxid_typename);
+#else
 		xxid_typid = typenameTypeId(xxid_typename);
+#endif
 
 		/*
 		 * Create the saved plan's

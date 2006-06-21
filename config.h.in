@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * $Id: config.h.in,v 1.15 2005-12-14 17:57:26 wieck Exp $
+ * $Id: config.h.in,v 1.16 2006-06-21 23:52:10 darcyb Exp $
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
@@ -80,6 +80,12 @@
 
 /* Set to 1 if server/utils/typcache.h exists */
 #undef HAVE_TYPCACHE
+
+/* Set to 1 if typenameTypeId() takes 1 args */
+#undef HAVE_TYPENAMETYPEID_1
+
+/* Set to 1 if typenameTypeId() takes 2 args */
+#undef HAVE_TYPENAMETYPEID_2
 
 /* For PostgreSQL 8.0 and up we need to use GetTopTransactionId() */
 #undef HAVE_DECL_GETTOPTRANSACTIONID
