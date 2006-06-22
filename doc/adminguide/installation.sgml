@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.24 2006-06-15 19:23:42 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.25 2006-06-22 15:35:29 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -244,6 +244,8 @@ either in the form of a separate tarball nearby, or in the directory
 
 <para> See the <filename>INSTALL</filename> file for a workaround for
 Fedora...</para>
+
+</sect2>
 
 <sect2>
 <title> Installing &slony1; from RPMs</title>

@@ -1051,7 +1051,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refsect1> <title> Locking Behaviour </title>
 
     <para> On the origin node, this will take out an exclusive lock on
-    the table being modified for as long as it takes to:
+    the table being modified for as long as it takes to:</para>
     <itemizedlist>
     <listitem><para> Alter the table, adding the column;</para></listitem>
     <listitem><para> Alter each row in the table, attaching the sequence value;</para></listitem>

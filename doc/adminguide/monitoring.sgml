@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.24 2006-06-22 14:34:18 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.25 2006-06-22 15:35:29 devrim Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -229,13 +229,13 @@ that is to be monitored; that is the way &nagios; works. </para>
 <para> ... Since I use <application>mrtg</application> to graph data
 from multiple servers I use snmp (<application>net-snmp</application>
 to be exact).  On database server, I added the following line to
-<application>snmpd</application> configuration:
+<application>snmpd</application> configuration:</para>
 
 <programlisting>
 exec replicationLagTime  /cvs/scripts/snmpReplicationLagTime.sh 2
+where <filename> /cvs/scripts/snmpReplicationLagTime.sh</filename> looks like this:
 </programlisting>
 
-where <filename> /cvs/scripts/snmpReplicationLagTime.sh</filename> looks like this:
 
 <programlisting>
 #!/bin/bash

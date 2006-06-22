@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.36 2006-06-22 14:31:55 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.37 2006-06-22 15:35:29 devrim Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -358,7 +358,7 @@ be run at system boot time, as an addition to the
 <filename>rc.d</filename> processes, or regularly, as a cron process,
 to ensure that &lslon; processes are running.</para>
 
-<para> It uses the following environment variables:
+<para> It uses the following environment variables:</para>
 
 <itemizedlist>
 
@@ -377,7 +377,7 @@ with filenames of the form <filename>node1.conf</filename>,
 
 <para> If you remove some of these files, or rename them so their
 names do not conform to the <command>find</command> command, they
-won't be found; that is an easy way to drop nodes out of this system.
+won't be found; that is an easy way to drop nodes out of this system.</para>
 </listitem>
 
 <listitem><para><envar>LOGHOME </envar> indicates the
@@ -386,7 +386,7 @@ won't be found; that is an easy way to drop nodes out of this system.
 <para> This script does not assume the use of the Apache log rotator
 to manage logs; in that &postgres; version 8 does its own log
 rotation, it seems undesirable to retain a dependancy on specific log
-rotation <quote>technology.</quote> </listitem>
+rotation <quote>technology.</quote> </para></listitem>
 
 <listitem><para><envar>CLUSTERS</envar> is a list of &slony1; clusters
 under management. </para></listitem>
@@ -395,7 +395,7 @@ under management. </para></listitem>
 
 <para> In effect, you could run this every five minutes, and it would
 launch any missing &lslon; processes. </para>
-
+</sect2>
 <sect2><title> slony-cluster-analysis </title>
 
 <para> If you are running a lot of replicated databases, where there

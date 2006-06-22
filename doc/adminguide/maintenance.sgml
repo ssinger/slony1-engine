@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.19 2006-06-15 19:23:42 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.20 2006-06-22 15:35:29 devrim Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -212,10 +212,10 @@ again.</para></listitem>
 to minimizing the cost of submitting replication test queries; on a
 busy cluster, supporting hundreds of users, the cost associated with
 running a few queries is likely to be pretty irrelevant, and the setup
-cost to configure the tables and data injectors is pretty high.<para>
+cost to configure the tables and data injectors is pretty high.</para>
 
 <para> Three other methods for analyzing the state of replication have
-stood out:
+stood out:</para>
 
 <itemizedlist>
 
@@ -254,7 +254,7 @@ generated on other nodes are generally ignorable. </para>
 discussion. </para></listitem>
 
 </itemizedlist>
-
+</sect2>
 <sect2><title> Log Files</title>
 
 <indexterm><primary>log files</primary></indexterm>

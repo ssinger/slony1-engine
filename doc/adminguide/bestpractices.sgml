@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.20 2006-06-20 18:47:23 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.21 2006-06-22 15:35:29 devrim Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -36,7 +36,7 @@ either cause unexpected problems or mask the real problem. </para>
 <para> Numerous users have reported problems resulting from mismatches
 between &slony1; versions, local libraries, and &postgres; libraries.
 Details count; you need to be clear on what hosts are running what
-versions of what software.  
+versions of what software. </para>
 
 <para> This is normally a matter of being meticulous about checking
 what versions of software are in place everywhere, and is the natural
@@ -279,7 +279,7 @@ script</command>, but we apply others independently.</para>
 <listitem><para> <command>CREATE TABLE</command> </para>
 <para> Tables that are not being replicated do not require &slony1; <quote>permission</quote>. </para></listitem>
 
-<listitem><para> <command>CREATE OR REPLACE FUNCTION </command> 
+<listitem><para> <command>CREATE OR REPLACE FUNCTION </command> </para>
 
 <para> Typically, new versions of functions may be done without
 &slony1; being <quote>aware</quote> of them.  The obvious exception is

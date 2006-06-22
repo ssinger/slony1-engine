@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.13 2006-06-15 19:23:41 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.14 2006-06-22 15:35:29 devrim Exp $ -->
 <sect1 id="addthings">
 <title>Adding Things to Replication</title>
 
@@ -91,20 +91,22 @@ Request subscription <xref linkend="stmtsubscribeset"> for this new set. If ther
 </para></listitem>
 <listitem><para> 
 Once the subscriptions have all been set up so that the new set has an identical set of subscriptions to the old set, you can merge the new set in alongside the old one via <xref linkend="stmtmergeset">
+</para></listitem>
+<listitem><para> How to add columns to a replicated table </para></listitem>
 </itemizedlist>
-</listitem>
-<listitem><para> How to add columns to a replicated table </para>
 
-<para> This also answers the question <quote>How do I rename columns
+<itemizedlist>
+<listitem><para> This also answers the question <quote>How do I rename columns
 on a replicated table?</quote>, and, more generally, other questions
 to the effect of <quote>How do I modify the definitions of replicated
-tables?</quote></para>
+tables?</quote></para></listitem>
 
-<para>If you change the <quote>shape</quote> of a replicated table, this needs to take place at exactly the same point in all of the <quote>transaction streams</quote> on all nodes that are subscribed to the set containing the table.</para>
+<listitem><para>If you change the <quote>shape</quote> of a replicated table, this needs to take place at exactly the same point in all of the <quote>transaction streams</quote> on all nodes that are subscribed to the set containing the table.</para></listitem>
 
-<para> Thus, the way to do this is to construct an SQL script consisting of the DDL changes, and then submit that script to all of the nodes via the Slonik command <xref linkend="stmtddlscript">.
+<listitem><para> Thus, the way to do this is to construct an SQL script consisting of the DDL changes, and then submit that script to all of the nodes via the Slonik command <xref linkend="stmtddlscript">.</para></listitem>
 
-<para> There are a number of <quote>sharp edges</quote> to note...
+<listitem><para> There are a number of <quote>sharp edges</quote> to note...</para></listitem>
+</itemizedlist>
 <itemizedlist>
     <listitem><para> You absolutely <emphasis>must not</emphasis> include transaction control commands, particularly <command>BEGIN</command> and <command>COMMIT</command>, inside these DDL scripts. &slony1; wraps DDL scripts with a <command>BEGIN</command>/<command>COMMIT</command> pair; adding extra transaction control will mean that parts of the DDL will commit outside the control of &slony1; </para></listitem>
 
@@ -112,7 +114,7 @@ tables?</quote></para>
 </itemizedlist>
 
 </para></listitem>
-<listitem><para> How to remove replication for a node
+<listitem><para> How to remove replication for a node</para>
 <para> You will want to remove the various &slony1; components connected to the database(s).</para>
 
 <para> We will just consider, for now, doing this to one node. If you have multiple nodes, you will have to repeat this as many times as necessary.</para>
@@ -175,7 +177,7 @@ tables?</quote></para>
 </itemizedlist>
 </listitem>
 
-<listitem><para> How do I reshape the subscriptions?
+<listitem><para> How do I reshape the subscriptions?</para>
 
 <para> For instance, I want subscriber node 3 to draw data from node
 1, when it is presently drawing data from node 2. </para>

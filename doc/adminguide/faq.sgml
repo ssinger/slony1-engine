@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.57 2006-06-22 14:34:49 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.58 2006-06-22 15:35:29 devrim Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -221,10 +221,11 @@ update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
 </programlisting>
 </answer>
 
-<answer><para> In version 8.1 and higher, you may also need the following:
+<answer><para> In version 8.1 and higher, you may also need the following:</para>
 <programlisting>
 update pg_authid set rolcatupdate = 't', rolsuper='t' where rolname = 'slony';
 </programlisting>
+</answer>
 </qandaentry>
 
 <qandaentry>
