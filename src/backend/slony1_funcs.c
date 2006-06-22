@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.43 2006-06-21 23:52:11 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.44 2006-06-22 13:46:12 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -34,6 +34,7 @@
 #include <signal.h>
 #include <errno.h>
 
+PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
 PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
