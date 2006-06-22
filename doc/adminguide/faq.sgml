@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.56 2006-05-10 02:33:55 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.57 2006-06-22 14:34:49 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -296,8 +296,8 @@ CLUSTER</emphasis>, or at least re-cycle all your open connections
 after the event!  </para></warning>
 
 <para> The connections <quote>remember</quote> or refer to OIDs which
-are removed by the uninstall node script. And you get lots of errors
-as a result...
+are removed by the uninstall node script. And you will get lots of
+errors as a result...
 </para>
 
 </question>
