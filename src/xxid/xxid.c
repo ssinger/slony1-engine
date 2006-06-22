@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.11 2006-06-22 13:46:12 darcyb Exp $
+ *	$Id: xxid.c,v 1.12 2006-06-22 14:14:42 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -19,7 +19,9 @@
 #include "access/transam.h"
 #include "executor/spi.h"
 
+#ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
+#endif
 
 #ifndef PG_GETARG_TRANSACTIONID
 #define PG_GETARG_TRANSACTIONID(n)	DatumGetTransactionId(PG_GETARG_DATUM(n))
