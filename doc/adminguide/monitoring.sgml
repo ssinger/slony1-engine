@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.23 2006-06-15 19:23:42 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.24 2006-06-22 14:34:18 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -62,8 +62,9 @@ events.</para></listitem></varlistentry>
 
 <sect2> <title> How to read &slony1; logs </title>
 
-<para> Note that as far as slon is concerned, there is no "master" or
-"slave."  They are just nodes. </para>
+<para> Note that as far as slon is concerned, there is no
+<quote>master</quote> or <quote>slave.</quote> They are just
+nodes. </para>
 
 <para>What you can expect, initially, is to see, on both nodes, some
 events propagating back and forth.  Firstly, there should be some
@@ -75,20 +76,25 @@ communicate with one another, and nothing else will happen... </para>
 
 <listitem><para>Create the two nodes.</para> 
 
-<para> No slons are running yet, so there are no logs to look at.</para>
+<para> No slons are running yet, so there are no logs to look
+at.</para>
+
 </listitem>
 
 <listitem><para> Start the two slons</para>
 
 <para> The logs for each will start out very quiet, as neither node
-has much to say, and neither node knows how to talk to any other node.
-</para>
+has much to say, and neither node knows how to talk to another
+node. </para>
 
 </listitem>
 
-<listitem><para> Do the <command>STORE PATH</command> for the
+<listitem><para> Do the <xref linkend="stmtstorepath"> to set up
 communications paths.  That will allow the nodes to start to become
 aware of one another.</para>
+
+<para> The slon logs should now start to receive events from
+<quote>foreign</quote> nodes.</para>
 
 <para> In version 1.0, <xref linkend="table.sl-listen"> is not set up
 automatically, so things still remain quiet until you explicitly
@@ -108,7 +114,7 @@ missing.</para>
 </listitem>
 
 <listitem><para> If needed (<emphasis>e.g.</emphasis> - before version
-1.1), submit <command>STORE LISTEN</command> requests to indicate how
+1.1), submit <xref linkend="stmtstorelisten"> requests to indicate how
 the nodes will use the communications paths. </para>
 
 <para> Once this has been done, the nodes' logs should show a greater
@@ -116,13 +122,15 @@ level of activity, with events periodically being initiated on one
 node or the other, and propagating to the other. </para>
 </listitem>
 
-<listitem> <para> You'll set up the set (<command>CREATE
-SET</command>), add tables (<command>SET ADD TABLE</command>), and
-sequences (<command>SET ADD SEQUENCE</command>), and will see relevant
-events only on the origin node for the set. </para></listitem>
+<listitem> <para> You'll set up the set (<xref
+linkend="stmtcreateset">), add tables (<xref
+linkend="stmtsetaddtable">), and sequences (<xref
+linkend="stmtsetaddsequence">), and will see relevant events only on
+the origin node for the set. </para></listitem>
 
-<listitem><para> Then, when you submit the <command>SUBSCRIBE SET</command>
-request, the event should go to both nodes. </para>
+<listitem><para> Then, when you submit the <xref
+linkend="stmtsubscribeset"> request, the event should go to both
+nodes. </para>
 
 <para> The origin node has little more to do, after that...  The
 subscriber will then have a <command>COPY_SET</command> event, which
@@ -135,9 +143,9 @@ its data.</para></listitem>
 
 <itemizedlist>
 
-<listitem><para> On the origin, there won't be much logged, just
-indication that some <command>SYNC</command> events are being
-generated and confirmed by other nodes.</para></listitem>
+<listitem><para> On the origin, there won't be too terribly much
+logged, just indication that some <command>SYNC</command> events are
+being generated and confirmed by other nodes.</para></listitem>
 
 <listitem><para> On the subscriber, there will be reports of
 <command>SYNC</command> events, and that the subscriber pulls data
