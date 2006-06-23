@@ -1,0 +1,1 @@
+SELECT id,ts,tsz,ds,nowts,nowtsz,nowds FROM table1 ORDER BY id
