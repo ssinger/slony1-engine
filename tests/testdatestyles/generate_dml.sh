@@ -64,6 +64,14 @@ generate_initdata()
 	  done
        done
      done     
+     for u1 in 0 1 2 3 4 5 6 7 8 9; do
+        for inc in 0 1 2 3 4 5 6 7 8 9 10; do
+           echo "update table1 set ts = ts - '5 days'::interval + '${inc} days'::interval,
+                                   tsz = tsz - '5 days'::interval + '${inc} days'::interval,
+                                   ds = ds - '5 days'::interval + '${inc} days'::interval
+                 where id in (select id from table1 order by random() limit 5);" >> $GENDATA
+	done
+     done
   done
   status "done"
 }
