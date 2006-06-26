@@ -1,4 +1,4 @@
-<!-- $Id: startslons.sgml,v 1.17 2006-06-22 14:33:10 cbbrowne Exp $ -->
+<!-- $Id: startslons.sgml,v 1.18 2006-06-26 18:09:39 cbbrowne Exp $ -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
 <indexterm><primary>running slon</primary></indexterm>
@@ -50,8 +50,9 @@ responsible to service a particular node across a WAN link if at all
 possible.  Any problems with that connection can kill the connection
 whilst leaving <quote>zombied</quote> database connections on the node
 that (typically) will not die off for around two hours.  This prevents
-starting up another slon, as described <xref
-linkend="multipleslonconnections">. </para> </warning>
+starting up another slon, as described in the <link linkend="FAQ"> FAQ
+</link> under <link linkend="multipleslonconnections"> multiple slon
+connections</link>. </para> </warning>
 
 
 <para> Historically, <application>slon</application> processes have
