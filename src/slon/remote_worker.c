@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.114 2006-06-02 18:49:06 wieck Exp $
+ *	$Id: remote_worker.c,v 1.115 2006-06-28 21:40:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4915,7 +4915,15 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	if (archive_dir)
 	{
-		close_log_archive();
+		rc = close_log_archive();
+		if (rc < 0)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 "Could not close out archive file %s - %s\n",
+				 node->no_id, archive_tmp, strerror(errno));
+			return 60;
+			
+		}
 		if (command_on_logarchive) {
 			char command[512];
 			sprintf(command, "%s %s", command_on_logarchive, archive_name);
@@ -4973,6 +4981,12 @@ sync_helper(void *cdata)
 
 	int			line_no;
 	int			line_ncmds;
+
+	int num_inserts, num_deletes, num_updates;
+
+	num_inserts = 0;
+	num_deletes = 0;
+	num_updates = 0;
 
 	dstring_init(&query);
 	dstring_init(&query2);
@@ -5417,6 +5431,7 @@ sync_helper(void *cdata)
 											 "insert into %s %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
+							num_inserts ++;
 							break;
 
 						case 'U':
@@ -5424,6 +5439,7 @@ sync_helper(void *cdata)
 											 "update only %s set %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
+							num_updates ++;
 							break;
 
 						case 'D':
@@ -5431,6 +5447,7 @@ sync_helper(void *cdata)
 										   "delete from only %s where %s;\n",
 											 wd->tab_fqname[log_tableid],
 											 log_cmddata);
+							num_deletes ++;
 							break;
 					}
 					line_ncmds++;
@@ -5534,6 +5551,13 @@ sync_helper(void *cdata)
 				 node->no_id, provider->no_id,
 				 TIMEVAL_DIFF(&tv_start, &tv_now));
 
+		slon_log(SLON_DEBUG2, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
+			 node->no_id, provider->no_id, num_inserts, num_updates, num_deletes);
+
+		num_inserts = 0;
+		num_deletes = 0;
+		num_updates = 0;
+		
 		/*
 		 * Change our helper status to DONE and tell the worker thread about
 		 * it.
