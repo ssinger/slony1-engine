@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_state-dbi.pl,v 1.2 2006-03-27 21:50:13 cbbrowne Exp $
+# $Id: test_slony_state-dbi.pl,v 1.3 2006-06-28 21:11:10 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -46,9 +46,9 @@ print "Rummage for DSNs\n=============================\n";
 my $dsnsquery = qq{
    select p.pa_server, p.pa_conninfo
    from "_$cluster".sl_path p
-   where exists (select * from "_$cluster".sl_subscribe s where
-                          (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
-                          sub_active = 't')
+--   where exists (select * from "_$cluster".sl_subscribe s where
+--                          (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
+--                          sub_active = 't')
    group by pa_server, pa_conninfo;
 };
 
