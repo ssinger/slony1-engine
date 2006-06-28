@@ -30,6 +30,7 @@ generate_initdata()
   status "generating ${numrows} tranactions of random data"
   percent=`expr $j \* 5`
   status "$percent %"
+  GENDATA="$mktmp/generate.data"
   while : ; do
     txtalen=$(random_number 1 100)
     txta=$(random_string ${txtalen})
@@ -37,7 +38,6 @@ generate_initdata()
     txtblen=$(random_number 1 100)
     txtb=$(random_string ${txtblen})
     txtb=`echo ${txtb} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
-    GENDATA="$mktmp/generate.data"
     echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
     echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA

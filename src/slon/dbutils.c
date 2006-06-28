@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.21 2006-03-28 21:32:53 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.22 2006-06-28 04:47:14 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -55,6 +55,8 @@ slon_connectdb(char *conninfo, char *symname)
 {
 	PGconn	   *dbconn;
 	SlonConn   *conn;
+	PGresult   *res;
+	SlonDString query;
 
 	/*
 	 * Create the native database connection
@@ -81,13 +83,12 @@ slon_connectdb(char *conninfo, char *symname)
 		PQfinish(dbconn);
 		return NULL;
 	}
+
+	dstring_init(&query);
+
 	if (sql_on_connection != NULL)
 	{
 
-		PGresult   *res;
-		SlonDString query;
-
-		dstring_init(&query);
 		slon_mkquery(&query, "%s", sql_on_connection);
 		res = PQexec(dbconn, dstring_data(&query));
 		if (!((PQresultStatus(res) == PGRES_TUPLES_OK) ||
@@ -100,6 +101,15 @@ slon_connectdb(char *conninfo, char *symname)
 		PQclear(res);
 	}
 
+	/* set the datestyle to ISO */
+	slon_mkquery(&query, "set datestyle to 'ISO'");
+	res = PQexec(dbconn, dstring_data(&query));
+	if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
+	{
+		slon_log(SLON_ERROR, "Unable to set the datestyle to ISO\n");
+	}
+	PQclear(res);
+	
 	/*
 	 * Embed it into a SlonConn structure used to exchange it with the
 	 * scheduler. On return this new connection object is locked.

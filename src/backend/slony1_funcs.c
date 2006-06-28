@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.45 2006-06-22 14:14:42 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.46 2006-06-28 04:47:14 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -495,10 +495,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		TupleDesc	tupdesc = tg->tg_relation->rd_att;
 		char	   *col_ident;
 		char	   *col_value;
+		
 		int			len_ident;
 		int			len_value;
 		int			i;
 		int			need_comma = false;
+		int			OldDateStyle = DateStyle;
 		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
@@ -567,6 +569,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			 */
 			if (tupdesc->attrs[i]->attisdropped)
 				continue;
+
+			DateStyle = USE_ISO_DATES;
+
 			if ((col_value = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 			{
 				col_value = "NULL";
@@ -575,6 +580,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			{
 				col_value = slon_quote_literal(col_value);
 			}
+
+			DateStyle = OldDateStyle;
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_value = strlen(col_value));
@@ -622,6 +629,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		int			i;
 		int			need_comma = false;
 		int			need_and = false;
+		int		OldDateStyle = DateStyle;
+
 		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
@@ -715,8 +724,11 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			if (new_isnull)
 				col_value = "NULL";
 			else
+			{
+				DateStyle=USE_ISO_DATES;
 				col_value = slon_quote_literal(SPI_getvalue(new_row, tupdesc, i + 1));
-
+				DateStyle=OldDateStyle;
+			}
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident)) +
 				(len_value = strlen(col_value));

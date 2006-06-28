@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.11 2006-06-21 17:40:20 cbbrowne Exp $
+ *	$Id: dbutil.c,v 1.12 2006-06-28 04:47:14 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -111,6 +111,7 @@ int
 db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGconn	   *dbconn;
+	SlonDString	query;
 
 	db_notice_stmt = stmt;
 
@@ -136,7 +137,18 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 #else
 	PQsetNoticeProcessor(dbconn, db_notice_recv, NULL);
 #endif   /* !HAVE_PQSETNOTICERECEIVER */
+
+	dstring_init(&query);
+	slon_mkquery(&query,"SET datestyle to 'ISO'");
+
 	adminfo->dbconn = dbconn;
+	if (db_exec_command(stmt, adminfo, &query) < 0)
+	{
+		printf("Unable to set datestyle\n");
+		dstring_free(&query);
+		return -1;
+	}
+	dstring_free(&query); 
 	return 0;
 }
 
