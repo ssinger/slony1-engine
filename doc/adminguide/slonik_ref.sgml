@@ -1923,6 +1923,49 @@ SUBSCRIBE SET (
 );
     </programlisting>
    </refsect1>
+
+   <refsect1> <title> Forwarding Behaviour </title>
+
+    <para> The <command>FORWARD=boolean</command> flag indicates
+    whether the subscriber will store log information in tables
+    &sllog1; and &sllog2;.  Several implications fall from
+    this...</para>
+
+    <para> By storing the data in these tables on the subscriber,
+    there is some additional processing burden.  If you are certain
+    that you would never want to <xref linkend="stmtmoveset"> or <xref
+    linkend="stmtfailover"> to a particular subscriber, it is worth
+    considering turning off forwarding on that node.  </para>
+
+    <para> There is, however, a case where having forwarding turned
+    off opens up a perhaps-unexpected failure condition; a rule of
+    thumb should be that <emphasis>all nodes that connect directly to
+    the origin</emphasis> should have forwarding turned on.  Supposing
+    one such <quote>direct subscriber</quote> has forwarding turned
+    off, it is possible for that node to be forcibly lost in a case of
+    failover.  The problem comes if that node gets ahead of other
+    nodes.</para>
+
+    <para> Let's suppose that the origin, node 1 is at SYNC number
+    88901, a non-forwarding node, node 2 has processed up to SYNC
+    88897, and other forwarding nodes, 3, 4, and 5, have only
+    processed data up to SYNC 88895.  At that moment, the disk system
+    on the origin node catches fire.  Node 2 has the
+    <emphasis>data</emphasis> up to SYNC 88897, but there is no
+    remaining node that contains, in &sllog1; or &sllog2;, the data
+    for SYNCs 88896 and 88897, so there is no way to bring nodes 3-5
+    up to that point.</para>
+
+    <para> At that point, there are only two choices: To drop node 2,
+    because there is no way to continue managing it, or to drop all
+    nodes <emphasis>but</emphasis> 2, because there is no way to bring
+    them up to SYNC 88897.</para>
+
+    <para> That dilemma may be avoided by making sure that all nodes
+    directly subscribing to the origin have forwarding turned
+    on. </para>
+
+   </refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
     <para> This operation does <emphasis>not</emphasis> require

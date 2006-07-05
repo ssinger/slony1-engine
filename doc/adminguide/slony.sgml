@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.29 2006-03-29 16:48:14 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.30 2006-07-05 18:12:50 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -42,6 +42,8 @@
   <!ENTITY bestpracticelink "<link linkend=bestpractices>Best Practice</link>">
   <!ENTITY rmissingoids "<link linkend=missingoids>error messages indicating missing OIDs</link>">
   <!ENTITY slnode "<xref linkend=table.sl-node>">
+  <!ENTITY sllog1 "<xref linkend=table.sl-log-1>">
+  <!ENTITY sllog2 "<xref linkend=table.sl-log-2>">
   <!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
   <!ENTITY rplainpaths "<xref linkend=plainpaths>">
   <!ENTITY rlistenpaths "<xref linkend=listenpaths>">

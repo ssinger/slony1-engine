@@ -1,4 +1,4 @@
-<!-- $Id: man.sgml,v 1.7 2006-03-29 16:48:14 cbbrowne Exp $ -->
+<!-- $Id: man.sgml,v 1.8 2006-07-05 18:12:50 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -42,6 +42,8 @@
   <!ENTITY funstoretrigger "<function>storetrigger(integer,name)</function>">
   <!ENTITY funsubscribeset "<function>subscribeset(integer,integer,integer,boolean)</function>">
   <!ENTITY slnode "<envar>sl_node</envar>">
+  <!ENTITY sllog1 "<envar>sl_log_1</envar>">
+  <!ENTITY sllog2 "<envar>sl_log_2</envar>">
   <!ENTITY slconfirm "<envar>sl_confirm</envar>">
   <!ENTITY bestpracticelink "Best Practice">
   <!ENTITY pglistener "<envar>pg_listener</envar>">
