@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.1 2006-04-11 20:22:28 cbbrowne Exp $
+# $Id: launch_clusters.sh,v 1.2 2006-07-05 21:00:20 cbbrowne Exp $
 # Cluster starter
 
 # This script should be run periodically to search for slon
@@ -79,7 +79,12 @@ start_slon_if_needed () {
 	    echo "Slon already running - $SLONPID"
 	fi
     else
-	invoke_slon $LOGHOME $NODENUM $CLUSTER $SLONCONF
+	
+	if [[ PID=ps auxww | egrep "[s]lon -f $CONFIGPATH/conf/node${NODENUM}.conf" > /dev/null ]] ; then
+            echo "Slon already running - but PID marked dead"
+	else
+	    invoke_slon $LOGHOME $NODENUM $CLUSTER $SLONCONF
+	fi
     fi
 }
 
