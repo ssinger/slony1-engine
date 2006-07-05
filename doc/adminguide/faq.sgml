@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.58 2006-06-22 15:35:29 devrim Exp $ -->
+<!-- $Id: faq.sgml,v 1.59 2006-07-05 20:57:40 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1774,6 +1774,57 @@ node.  It is straightforward to do this: </para>
 % pg_dump -h subscribernode.example.info -p 5432 --data-only --schema=public ourdb > data_backup.sql
 </screen>
 
+</answer>
+</qandaentry>
+
+<qandaentry> <question> <para> I was trying to request <xref
+linkend="stmtddlscript"> or <xref linkend="stmtmoveset">, and found
+messages as follows on one of the subscribers:</para>
+
+<screen>
+NOTICE: Slony-I: multiple instances of trigger defrazzle on table frobozz
+NOTICE: Slony-I: multiple instances of trigger derez on table tron
+ERROR: Slony-I: Unable to disable triggers
+</screen>
+</question>
+
+<answer> <para> The trouble would seem to be that you have added
+triggers on tables whose names conflict with triggers that were hidden
+by &slony1;. </para>
+
+<para> &slony1; hides triggers (save for those <quote>unhidden</quote>
+via <xref linkend="stmtstoretrigger">) by repointing them to the
+primary key of the table.  In the case of foreign key triggers, or
+other triggers used to do data validation, it should be quite
+unnecessary to run them on a subscriber, as equivalent triggers should
+have been invoked on the origin node.  In contrast, triggers that do
+some form of <quote>cache invalidation</quote> are ones you might want
+to have run on a subscriber.</para>
+
+<para> The <emphasis>Right Way</emphasis> to handle such triggers is
+normally to use <xref linkend="stmtstoretrigger">, which tells
+&slony1; that a trigger should not get deactivated. </para> </answer>
+
+<answer> <para> But some intrepid DBA might take matters into their
+own hands and install a trigger by hand on a subscriber, and the above
+condition generally has that as the cause.  What to do?  What to do?
+</para>
+
+<para> The answer is normally fairly simple: Drop out the
+<quote>extra</quote> trigger on the subscriber before the event that
+tries to restore them runs.  Ideally, if the DBA is particularly
+intrepid, and aware of this issue, that should take place
+<emphasis>before</emphasis> there is ever a chance for the error
+message to appear.  </para>
+
+<para> If the DBA is not that intrepid, the answer is to connect to
+the offending node and drop the <quote>visible</quote> version of the
+trigger using the <acronym>SQL</acronym> <command>DROP
+TRIGGER</command> command.  That should allow the event to proceed.
+If the event was <xref linkend="stmtddlscript">, then the
+<quote>not-so-intrepid</quote> DBA may need to add the trigger back,
+by hand, or, if they are wise, they should consider activating it
+using <xref linkend="stmtstoretrigger">.</para>
 </answer>
 </qandaentry>
 

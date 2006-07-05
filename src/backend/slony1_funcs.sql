@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.86 2006-06-19 15:53:18 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.87 2006-07-05 20:57:40 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -3774,6 +3774,8 @@ declare
 	v_tab_fqname		text;
 	v_tab_attkind		text;
 	v_n					int4;
+	v_trec	record;
+	v_tgbad	boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -3838,6 +3840,32 @@ begin
 		-- to disable all user- and foreign key triggers and rules.
 		-- ----
 
+
+		-- ----
+		-- Check to see if there are any trigger conflicts...
+		-- ----
+		v_tgbad := ''false'';
+		for v_trec in 
+			select pc.relname, tg1.tgname from
+			"pg_catalog".pg_trigger tg1, 
+			"pg_catalog".pg_trigger tg2,
+			"pg_catalog".pg_class pc,
+			"pg_catalog".pg_index pi,
+			@NAMESPACE@.sl_table tab
+			where 
+			 tg1.tgname = tg2.tgname and        -- Trigger names match
+			 tg1.tgrelid = tab.tab_reloid and   -- trigger 1 is on the table
+			 pi.indexrelid = tg2.tgrelid and    -- trigger 2 is on the index
+			 pi.indrelid = tab.tab_reloid and   -- indexes table is this table
+			 pc.oid = tab.tab_reloid
+                loop
+			raise notice ''Slony-I: multiple instances of trigger % on table %'',
+				v_trec.tgname, v_trec.relname;
+			v_tgbad := ''true'';
+		end loop;
+		if v_tgbad then
+			raise exception ''Slony-I: Unable to disable triggers'';
+		end if;  		
 
 		-- ----
 		-- Disable all existing triggers
