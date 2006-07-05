@@ -1,18 +1,27 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.9 2006-05-19 20:45:15 cbbrowne Exp $
+$Id: INSTALL,v 1.10 2006-07-05 21:35:01 cbbrowne Exp $
 
-Slony currently supports PostgreSQL 7.3.3 (and higher),  7.4.x, and 8.x.
+Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x, and
+8.1.x.
+
+Note that earlier versions supported versions in the 7.3.x series; as
+of Slony-I 1.2.0, 7.3 support has been dropped.  
+
+If you require 7.3 support, please avail yourself of an earlier
+Slony-I release; seeing as how 7.3 is very old, dating back to 2002,
+you really should consider upgrading to a newer version of PostgreSQL.
 
 Important Configuration parameters
 ====================================
 
-Slony normally needs to be built and installed by the PostgreSQL Unix
-user.  The installation target must be identical to the existing
-PostgreSQL installation particularly in view of the fact that several
-Slony-I components represent libraries and SQL scripts that need to be
-in the PostgreSQL lib and share directories.
+Slony-I normally needs to be built and installed by the same user that
+owns the PostgreSQL binaries.  The installation target must be
+identical to the existing PostgreSQL installation particularly in view
+of the fact that several Slony-I components represent libraries and
+SQL scripts that need to be in the PostgreSQL lib/ and share/
+directories.
 
 On certain platforms (AIX and Solaris are known to need this),
 PostgreSQL must be configured with the option --enable-thread-safety
@@ -62,7 +71,7 @@ The main list of files installed within the PostgreSQL instance is:
 The .sql files are not fully substituted yet.  And yes, both the 7.3
 and the 7.4 files get installed on a system, irrespective of its
 version.  The slonik admin utility does namespace/cluster
-substitutions within the files, and loads them files when creating
+substitutions within the files, and loads those files when creating
 replication nodes.  At that point in time, the database being
 initialized may be remote and may run a different version of
 PostgreSQL than that of the local host.
