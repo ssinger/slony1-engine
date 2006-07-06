@@ -19,3 +19,9 @@ CREATE TABLE table3(
   CONSTRAINT table3_date_check	CHECK (mod_date <= now())
 ); 
 
+create table table4 (
+  id serial NOT NULL,
+  id2 integer
+);
+
+create unique index no_good_candidate_pk on table4 (id, id2);
