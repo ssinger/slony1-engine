@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.87 2006-07-05 20:57:40 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.88 2006-07-06 17:00:37 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -2648,6 +2648,8 @@ declare
 	v_sub_provider		int4;
 	v_relkind		char;
 	v_tab_reloid		oid;
+	v_pkcand_nn		boolean;
+	v_prec			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -2702,6 +2704,22 @@ begin
 	then
 		raise exception ''Slony-I: setAddTable_int(): table % has no index %'',
 				p_fqname, p_tab_idxname;
+	end if;
+
+	v_pkcand_nn := ''f'';
+	for v_prec in select attname from "pg_catalog".pg_attribute where attrelid = 
+                        (select oid from "pg_catalog".pg_class where oid = v_tab_reloid) 
+                    and attname in (select attname from "pg_catalog".pg_attribute where 
+                                    attrelid = (select oid from "pg_catalog".pg_class PGC, 
+                                    "pg_catalog".pg_index PGX where 
+                                    PGC.relname = p_tab_idxname and PGX.indexrelid=PGC.oid and
+                                    PGX.indrelid = v_tab_reloid)) and attnotnull <> ''t''
+	loop
+		raise notice ''Slony-I: setAddTable_int: table % PK column % nullable'', p_fqname, v_prec.attname;
+		v_pkcand_nn := ''t'';
+	end loop;
+	if v_pkcand_nn then
+		raise exception ''Slony-I: setAddTable_int: table % not replicable!'', p_fqname;
 	end if;
 
 	-- ----
