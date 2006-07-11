@@ -1,3 +1,7 @@
+Event Documentation
+---------------------
+$Id: README.events,v 1.7 2006-07-11 14:34:00 cbbrowne Exp $
+
 STORE_NODE
 	ev_data1		no_id
 	ev_data2		no_comment

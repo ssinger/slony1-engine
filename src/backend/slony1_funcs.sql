@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.88 2006-07-06 17:00:37 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.89 2006-07-11 14:34:00 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -661,7 +661,8 @@ comment on function @NAMESPACE@.cleanupNodelock() is
 -- ----------------------------------------------------------------------
 -- FUNCTION registerNodeConnection (nodeid)
 --
---	
+-- register a node connection for a slon so that only that slon services
+-- the node
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.registerNodeConnection (int4)
 returns int4
@@ -1017,7 +1018,7 @@ begin
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_provider = p_no_id)
 	then
-		raise exception ''Slony-I: Node % is still configured as data provider'',
+		raise exception ''Slony-I: Node % is still configured as a data provider'',
 				p_no_id;
 	end if;
 
@@ -1125,7 +1126,7 @@ begin
 
 	-- ----
 	-- All consistency checks first
-	-- Check that every system that has a path to the failed node
+	-- Check that every node that has a path to the failed node
 	-- also has a path to the backup node.
 	-- ----
 	for v_row in select P.pa_client
@@ -1149,7 +1150,7 @@ begin
 	loop
 		-- ----
 		-- Check that the backup node is subscribed to all sets
-		-- that origin on the failed node
+		-- that originate on the failed node
 		-- ----
 		select into v_row2 sub_forward, sub_active
 				from @NAMESPACE@.sl_subscribe
@@ -1204,7 +1205,7 @@ begin
 		-- If the backup node is the only direct subscriber ...
 		-- ----
 		if v_row.num_direct_receivers = 0 then
-raise notice ''failedNode: set % has no other direct receivers - move now'', v_row.set_id;
+		        raise notice ''failedNode: set % has no other direct receivers - move now'', v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
 			-- right now. On the backup node itself that includes restoring
@@ -1236,7 +1237,7 @@ raise notice ''failedNode: set % has no other direct receivers - move now'', v_r
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
-raise notice ''failedNode: set % has other direct receivers - change providers only'', v_row.set_id;
+			raise notice ''failedNode: set % has other direct receivers - change providers only'', v_row.set_id;
 			-- ----
 			-- Backup node is not the only direct subscriber. This
 			-- means that at this moment, we redirect all direct
@@ -5372,7 +5373,7 @@ BEGIN
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 3);
 		perform @NAMESPACE@.registry_set_timestamp(
 				''logswitch.laststart'', now()::timestamp);
-		raise notice ''Logswitch to sl_log_2 initiated'';
+		raise notice ''Slony-I: Logswitch to sl_log_2 initiated'';
 		return 2;
 	end if;
 
@@ -5384,7 +5385,7 @@ BEGIN
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 2);
 		perform @NAMESPACE@.registry_set_timestamp(
 				''logswitch.laststart'', now()::timestamp);
-		raise notice ''Logswitch to sl_log_1 initiated'';
+		raise notice ''Slony-I: Logswitch to sl_log_1 initiated'';
 		return 1;
 	end if;
 
