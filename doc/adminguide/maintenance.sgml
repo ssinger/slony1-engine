@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.20 2006-06-22 15:35:29 devrim Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.21 2006-07-11 14:35:18 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -35,7 +35,6 @@ transaction that is still running.  This will most notably lead to
 &pglistener; growing large and will slow
 replication.</para></listitem>
 
-
 <listitem> <para> The <link linkend="dupkey"> Duplicate Key Violation
 </link> bug has helped track down some &postgres; race conditions.
 One remaining issue is that it appears that is a case where
@@ -45,6 +44,13 @@ to corruption of B-trees. </para>
 <para> It may be helpful to run the command <command> REINDEX TABLE
 sl_log_1;</command> periodically to avoid the problem
 occurring. </para> </listitem>
+
+<listitem><para> As of version 1.2, <quote>log switching</quote>
+functionality is in place; every so often, it seeks to switch between
+storing data in &sl-log-1; and &sl-log-2; so that it may seek
+to <command>TRUNCATE</command> the <quote>elder</quote> data.</para>
+
+<para> That means that on a regular basis, these tables are completely cleared out, so that you will not suffer from them having grown to some significant size, due to heavy load, after which they are incapable of shrinking back down </para> </listitem>
 
 </itemizedlist>
 </para>

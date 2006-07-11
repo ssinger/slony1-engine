@@ -578,7 +578,8 @@ INIT CLUSTER (
        <listitem><para> Node ID of the node to remove.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       <listitem><para> Node ID of the node to generate the event.</para></listitem>
+       <listitem><para> Node ID of the node to generate the event; default is 1.
+       </para></listitem>
       </varlistentry>
      </variablelist>
     </para>
@@ -596,6 +597,11 @@ INIT CLUSTER (
 
    <para>After dropping a node, you may also need to recycle
    connections in your application.</para></warning>
+
+   <warning><para> You cannot submit this to an <command>EVENT
+   NODE</command> that is the number of the node being dropped; the
+   request must go to some node that will remain in the
+   cluster. </para></warning>
 
    </refsect1>
    <refsect1><title>Example</title>

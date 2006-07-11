@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.30 2006-07-05 18:12:50 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.31 2006-07-11 14:35:18 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -39,16 +39,16 @@
 <!ENTITY fununinstallnode "<xref linkend=function.uninstallnode>">
 <!ENTITY fununlockset "<xref linkend=function.unlockset-integer>">
 <!ENTITY fununsubscribeset "<xref linkend=function.unsubscribeset-integer-integer>">
-  <!ENTITY bestpracticelink "<link linkend=bestpractices>Best Practice</link>">
-  <!ENTITY rmissingoids "<link linkend=missingoids>error messages indicating missing OIDs</link>">
-  <!ENTITY slnode "<xref linkend=table.sl-node>">
-  <!ENTITY sllog1 "<xref linkend=table.sl-log-1>">
-  <!ENTITY sllog2 "<xref linkend=table.sl-log-2>">
-  <!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
-  <!ENTITY rplainpaths "<xref linkend=plainpaths>">
-  <!ENTITY rlistenpaths "<xref linkend=listenpaths>">
-  <!ENTITY pglistener "<envar>pg_listener</envar>">
-  <!ENTITY lslon "<xref linkend=slon>">
+<!ENTITY bestpracticelink "<link linkend=bestpractices>Best Practice</link>">
+<!ENTITY rmissingoids "<link linkend=missingoids>error messages indicating missing OIDs</link>">
+<!ENTITY slnode "<xref linkend=table.sl-node>">
+<!ENTITY sllog1 "<xref linkend=table.sl-log-1>">
+<!ENTITY sllog2 "<xref linkend=table.sl-log-2>">
+<!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
+<!ENTITY rplainpaths "<xref linkend=plainpaths>">
+<!ENTITY rlistenpaths "<xref linkend=listenpaths>">
+<!ENTITY pglistener "<envar>pg_listener</envar>">
+<!ENTITY lslon "<xref linkend=slon>">
 
 ]>
 
