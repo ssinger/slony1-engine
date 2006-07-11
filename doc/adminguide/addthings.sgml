@@ -1,13 +1,17 @@
-<!-- $Id: addthings.sgml,v 1.15 2006-07-11 14:35:18 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.16 2006-07-11 16:28:43 cbbrowne Exp $ -->
 <sect1 id="addthings">
-<title>Adding Things to Replication</title>
+<title>A Task-Oriented View of &slony1;</title>
 
 <indexterm><primary>adding objects to replication</primary></indexterm>
 
 <para>You may discover that you have missed replicating things that
 you wish you were replicating.</para>
 
-<para>This can generally be fairly easily remedied.</para>
+<para>This can generally be fairly easily remedied.  This section
+attempts to provide a <quote>task-oriented</quote> view of how to use
+&slony1;; in effect, to answer the question <quote>How do I do
+<emphasis>X</emphasis> with &slony1;?</quote>, for various values of
+<emphasis>X</emphasis>.</para>
 
 <para>You cannot directly use <xref linkend="slonik"> <xref
 linkend="stmtsetaddtable"> or <xref linkend="stmtsetaddsequence"> in
