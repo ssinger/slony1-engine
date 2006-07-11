@@ -1,4 +1,4 @@
-/* $Id: scanner.c,v 1.1 2006-02-24 18:33:02 cbbrowne Exp $ */
+/* $Id: scanner.c,v 1.2 2006-07-11 18:33:56 darcyb Exp $ */
 #include <stdio.h>
 #include "scanner.h"
 
@@ -75,7 +75,7 @@ int scan_for_statements (const char *extended_statement) {
 	  state = Q_DOLLAR_QUOTING;   /* Return to dollar quoting mode */
 	  break;
 	}
-	int d1stemp = d1start;
+	d1stemp = d1start;
 	while (d1stemp < d1end) {
 	  if (extended_statement[d1stemp] != extended_statement[d2start]) {
 	    /* mismatch - these aren't the droids... */

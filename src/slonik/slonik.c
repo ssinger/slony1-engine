@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.64 2006-03-29 17:02:37 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.65 2006-07-11 18:33:56 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3813,6 +3813,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonDString query;
 	SlonDString script;
 	int			rc;
+	int num_statements = -1, stmtno, startpos;
 	char		buf[4096];
 	char		rex1[256];
 	char		rex2[256];
@@ -3820,6 +3821,12 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	char		rex4[256];
 	PGresult *res;
 	ExecStatusType rstat;
+
+#define PARMCOUNT 1  
+
+        const char *params[PARMCOUNT];
+        int paramlens[PARMCOUNT];
+        int paramfmts[PARMCOUNT];
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -3859,7 +3866,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 
 	/* Split the script into a series of SQL statements - each needs to
 	   be submitted separately */
-	int num_statements = -1, stmtno, startpos;
 	num_statements = scan_for_statements (dstring_data(&script));
 	printf("DDL script consisting of %d SQL statements\n", num_statements);
 
@@ -3908,12 +3914,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		     stmt->hdr.script->clustername,
 		     stmt->ddl_setid,  
 		     stmt->only_on_node);
-
-#define PARMCOUNT 1
-
-	const char *params[PARMCOUNT];
-	int paramlens[PARMCOUNT];
-	int paramfmts[PARMCOUNT];
 
 	paramlens[PARMCOUNT-1] = 0;
 	paramfmts[PARMCOUNT-1] = 0;

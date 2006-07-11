@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.115 2006-06-28 21:40:05 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.116 2006-07-11 18:33:56 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1461,6 +1461,8 @@ remoteWorkerThread_main(void *cdata)
 				int			ddl_setid = (int)strtol(event->ev_data1, NULL, 10);
 				char	   *ddl_script = event->ev_data2;
 				int			ddl_only_on_node = (int)strtol(event->ev_data3, NULL, 10);
+				int num_statements = -1, stmtno, startpos;
+
 				PGresult *res;
 				ExecStatusType rstat;
 
@@ -1476,7 +1478,6 @@ remoteWorkerThread_main(void *cdata)
 						slon_retry();
 				}
 
-				int num_statements = -1, stmtno, startpos;
 				num_statements = scan_for_statements (ddl_script);
 				slon_log(SLON_CONFIG, "remoteWorkerThread_%d: DDL request with %d statements\n",
 					 node->no_id, num_statements);
