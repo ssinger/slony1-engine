@@ -1322,7 +1322,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       <varlistentry><term><literal> KEY = { 'string' | SERIAL }
 	</literal></term> <listitem><para>
 	 <emphasis>(Optional)</emphasis> The index name that covers the
-	 unique and not null column set to be used as the row identifier
+	 unique and not null set of columns to be used as the row identifier
 	 for replication purposes. Or the keyword SERIAL to use the
 	 special column added with a previous <xref
 	  linkend="stmttableaddkey"> command. Default
