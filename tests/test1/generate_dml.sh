@@ -58,9 +58,9 @@ generate_initdata()
 
 do_initdata()
 {
-   originnode=${ORIGINNODE:-"1"}
+  originnode=${ORIGINNODE:-"1"}
   eval db=\$DB${originnode}
-   eval host=\$HOST${originnode}
+  eval host=\$HOST${originnode}
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
