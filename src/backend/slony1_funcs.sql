@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.89 2006-07-11 14:34:00 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.90 2006-07-11 22:22:28 darcyb Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -181,10 +181,13 @@ comment on function @NAMESPACE@.getModuleVersion () is
   'Returns the compiled-in version number of the Slony-I shared object';
 
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as '
+declare
+  moduleversion	text;
 begin
-  if @NAMESPACE@.getModuleVersion() <> ''@MODULEVERSION@'' then
-      raise exception ''Slonik version: % != Slony-I version in PG build %'',
-             ''@MODULEVERSION@'', @NAMESPACE@.getModuleVersion();
+  select into moduleversion @NAMESPACE@.getModuleVersion();
+  if moduleversion <> ''@MODULEVERSION@'' then
+      raise exception ''Slonik version: @MODULEVERSION@ != Slony-I version in PG build %'',
+             moduleversion;
   end if;
   return null;
 end;' language plpgsql;
