@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.16 2006-07-11 16:28:43 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.17 2006-07-12 08:41:18 xfade Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -129,7 +129,7 @@ the <emphasis>beginning,</emphasis> before any modifications had been
 made.  As of 1.2, if there are 12 SQL statements, they are each
 submitted individually, so that <command> alter table x add column c1
 integer; </command> may now be followed by <command> alter table x
-alter column c1 set not null; </command>.</para>
+alter column c1 set not null; </command>.</para></listitem>
 
 </itemizedlist>
 
@@ -288,7 +288,7 @@ reported for SYNC processing includes counts of the numbers of tables
 processed, as well as numbers of tuples inserted, deleted, and
 updated.</para> </listitem>
 
-<listitem><para> Look in the view <command> sl_status <command>, on
+<listitem><para> Look in the view <command> sl_status </command>, on
 the origin node. </para>
 
 <para> This view will tell how far behind the various subscribing
