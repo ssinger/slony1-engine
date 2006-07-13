@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.65 2006-07-11 18:33:56 darcyb Exp $
+ *	$Id: slonik.c,v 1.66 2006-07-13 21:38:02 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1671,6 +1671,7 @@ static SlonikAdmInfo *
 get_active_adminfo(SlonikStmt * stmt, int no_id)
 {
 	SlonikAdmInfo *adminfo;
+	int version;
 
 	if ((adminfo = get_adminfo(stmt, no_id)) == NULL)
 	{
@@ -1684,12 +1685,14 @@ get_active_adminfo(SlonikStmt * stmt, int no_id)
 		if (db_connect(stmt, adminfo) < 0)
 			return NULL;
 
-		if (adminfo->pg_version = db_get_version(stmt, adminfo) < 0)
+		version = db_get_version(stmt, adminfo);
+		if (version < 0)
 		{
 			PQfinish(adminfo->dbconn);
 			adminfo->dbconn = NULL;
 			return NULL;
 		}
+		adminfo->pg_version = version;
 
 		if (db_rollback_xact(stmt, adminfo) < 0)
 		{
@@ -1849,18 +1852,17 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	}
 
 	/* determine what schema version we should load */
-
-	if (adminfo->pg_version > 70300)	/* 7.2 and lower */
+	if (adminfo->pg_version < 70300)	/* 7.3 and lower */
 	{
 		printf("%s:%d: unsupported PostgreSQL "
-			"version %d.%d\n",
+			"version %d.%d (versions < 7.3 were never supported by Slony-I)\n",
 			stmt->stmt_filename, stmt->stmt_lno,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}
 	else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
 	{
 		printf("%s:%d: unsupported PostgreSQL "
-			"version %d.%d\n",
+			"version %d.%d (try Slony-I 1.1.5)\n",
 			stmt->stmt_filename, stmt->stmt_lno,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}
