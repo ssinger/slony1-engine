@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.90 2006-07-11 22:22:28 darcyb Exp $
+-- $Id: slony1_funcs.sql,v 1.91 2006-07-13 21:39:25 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -341,13 +341,13 @@ begin
 		while v_i <= v_l loop
 			if substr(p_tab_fqname, v_i, 1) != ''"'' then
 				v_i := v_i + 1;
-				continue;
+			else
+				v_i := v_i + 1;
+				if substr(p_tab_fqname, v_i, 1) != ''"'' then
+					exit;
+				end if;
+				v_i := v_i + 1;
 			end if;
-			v_i := v_i + 1;
-			if substr(p_tab_fqname, v_i, 1) != ''"'' then
-				exit;
-			end if;
-			v_i := v_i + 1;
 		end loop;
 	else
 		-- first part of ident is not quoted, search for the dot directly
@@ -2709,6 +2709,10 @@ begin
 		raise exception ''Slony-I: setAddTable_int(): table % has no index %'',
 				p_fqname, p_tab_idxname;
 	end if;
+
+	-- ----
+	-- Verify that the columns in the PK (or candidate) are not NULLABLE
+	-- ----
 
 	v_pkcand_nn := ''f'';
 	for v_prec in select attname from "pg_catalog".pg_attribute where attrelid = 
