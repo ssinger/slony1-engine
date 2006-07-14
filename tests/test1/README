@@ -1,13 +1,20 @@
-$Id: README,v 1.3 2006-07-11 15:43:07 cbbrowne Exp $
+$Id: README,v 1.4 2006-07-14 21:29:01 cbbrowne Exp $
+  
+test1 is a basic test that replication generally functions.  
+  
+It doesn't try to do anything too terribly fancy: It creates three
+simple tables as one replication set, and replicates them from one
+database to another.
+  
+The three tables are of the three interesting types:
+  
+1.  table1 has a formal primary key
 
-test-odd-subscribes creates a "multi-flow" situation that does not, at
-this time, function.
+2.  table2 lacks a formal primary key, but has a candidate primary key
 
-It doesn't try to do anything too terribly fancy: It creates two
-replication sets, and replicates them in two ways:
+3.  table3 has no candidate primary key; Slony-I is expected to
+    generate one on its own.
 
-set 1:
-1 --> 2 --> 4
-
-set 2:
-1 --> 3 --> 4
+It actually tries replicating a fourth table, which has an invalid
+candidate primary key (columns not defined NOT NULL), which should
+cause it to be rejected.  That is done in a slonik TRY {} block.
