@@ -25,16 +25,16 @@ BuildRequires:	docbook-style-dsssl
 %define prefix /usr
 
 %description
-Slony-I will be a "master to multiple slaves" replication 
-system with cascading and failover.
+Slony-I is a "master to multiple slaves" replication 
+system for PostgreSQL with cascading and failover.
 
-The big picture for the development of Slony-I is to build 
-a master-slave system that includes all features and 
-capabilities needed to replicate large databases to a 
+The big picture for the development of Slony-I is to build
+a master-slave system that includes all features and
+capabilities needed to replicate large databases to a
 reasonably limited number of slave systems.
 
-Slony-I is planned as a system for data centers and backup 
-sites, where the normal mode of operation is that all nodes 
+Slony-I is a system for data centers and backup
+sites, where the normal mode of operation is that all nodes
 are available
 
 %if %docs
