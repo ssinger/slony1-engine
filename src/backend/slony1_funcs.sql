@@ -6,9 +6,8 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.91 2006-07-13 21:39:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.92 2006-07-18 18:25:25 cbbrowne Exp $
 -- ----------------------------------------------------------------------
-
 
 -- **********************************************************************
 -- * C functions in src/backend/slony1_base.c
@@ -1271,6 +1270,9 @@ begin
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform @NAMESPACE@.addPartialLogIndices();
+
 	-- ----
 	-- Make sure the node daemon will restart
 	-- ----
@@ -1915,6 +1917,9 @@ begin
 				(p_set_id, p_set_origin, p_set_comment);
 	end if;
 
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform @NAMESPACE@.addPartialLogIndices();
+
 	return p_set_id;
 end;
 ' language plpgsql;
@@ -2337,6 +2342,9 @@ begin
 	-- Regenerate sl_listen since we revised the subscriptions
 	perform @NAMESPACE@.RebuildListenEntries();
 
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform @NAMESPACE@.addPartialLogIndices();
+
 	-- ----
 	-- If we are the new or old origin, we have to
 	-- put all the tables into altered state again.
@@ -2445,6 +2453,9 @@ begin
 
 	-- Regenerate sl_listen since we revised the subscriptions
 	perform @NAMESPACE@.RebuildListenEntries();
+
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform @NAMESPACE@.addPartialLogIndices();
 
 	return p_set_id;
 end;
@@ -2730,6 +2741,13 @@ begin
 		raise exception ''Slony-I: setAddTable_int: table % not replicable!'', p_fqname;
 	end if;
 
+	select * into v_prec from @NAMESPACE@.sl_table where tab_id = p_tab_id;
+	if not found then
+		v_pkcand_nn := ''t'';  -- No-op -- All is well
+	else
+		raise exception ''Slony-I: setAddTable_int: table id % has already been assigned!'', p_tab_id;
+	end if;
+
 	-- ----
 	-- Add the table to sl_table and create the trigger on it.
 	-- ----
@@ -2904,7 +2922,7 @@ begin
 		raise exception ''Slony-I: setAddSequence(): set % not found'', p_set_id;
 	end if;
 	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setAddSequence(): set % has remote origin'', p_set_id;
+		raise exception ''Slony-I: setAddSequence(): set % has remote origin - submit to origin node'', p_set_id;
 	end if;
 
 	if exists (select true from @NAMESPACE@.sl_subscribe
@@ -2996,6 +3014,13 @@ begin
 				p_fqname;
 	end if;
 
+        select 1 into v_sync_row from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
+	if not found then
+               v_sync_row := NULL;   -- all is OK
+        else
+                raise exception ''Slony-I: setAddSequence_int(): sequence ID % has already been assigned'', p_seq_id;
+        end if;
+
 	-- ----
 	-- Add the sequence to sl_sequence
 	-- ----
@@ -3069,7 +3094,7 @@ begin
 		raise exception ''Slony-I: setDropSequence(): set % not found'', v_set_id;
 	end if;
 	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setDropSequence(): set % has remote origin'', v_set_id;
+		raise exception ''Slony-I: setDropSequence(): set % has origin at another node - submit this to that node'', v_set_id;
 	end if;
 
 	-- ----
@@ -5529,6 +5554,9 @@ BEGIN
 		raise notice ''Slony-I: log switch to sl_log_1 complete - truncate sl_log_2'';
 		truncate @NAMESPACE@.sl_log_2;
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 0);
+		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+		perform @NAMESPACE@.addPartialLogIndices();
+
 		return 1;
 	end if;
 
@@ -5552,6 +5580,8 @@ BEGIN
 		raise notice ''Slony-I: log switch to sl_log_2 complete - truncate sl_log_1'';
 		truncate @NAMESPACE@.sl_log_1;
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 1);
+		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+		perform @NAMESPACE@.addPartialLogIndices();
 		return 2;
 	end if;
 END;
@@ -5560,6 +5590,69 @@ comment on function @NAMESPACE@.logswitch_finish() is
 'logswitch_finish()
 
 Attempt to finalize a log table switch in progress';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION addPartialLogIndices ()
+-- Add partial indices to sl_log_? tables that aren't currently in use
+-- ----------------------------------------------------------------------
+
+create or replace function @NAMESPACE@.addPartialLogIndices () returns integer as '
+DECLARE
+	v_current_status	int4;
+	v_log			int4;
+	v_dummy		record;
+	idef 		text;
+	v_count		int4;
+BEGIN
+	v_count := 0;
+	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
+
+	-- If status is 2 or 3 --> in process of cleanup --> unsafe to create indices
+	if v_current_status in (2, 3) then
+		return 0;
+	end if;
+
+	if v_current_status = 0 then   -- Which log should get indices?
+		v_log := 2;
+	else
+		v_log := 1;
+	end if;
+
+	-- Add missing indices...
+	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set
+		where not exists 
+                     (select * from pg_catalog.pg_indexes where schemaname = ''@NAMESPACE@''
+                      and tablename = ''sl_log_'' || v_log and 
+                      indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin) loop	   
+		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin ||
+                        ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
+		execute idef;
+		v_count := v_count + 1;
+	end loop;
+
+	-- Remove unneeded indices...
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.schemaname = ''@NAMESPACE''
+                       and i.tablename = ''sl_log_'' || v_log and
+                       not exists (select 1 from @NAMESPACE@.sl_set where
+				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin)
+	loop
+		idef := ''drop index "@NAMESPACE@"."'' || v_dummy.indexname || ''";'';
+		execute idef;
+		v_count := v_count - 1;
+	end loop;
+	return v_count;
+END
+' language plpgsql;
+
+
+comment on function @NAMESPACE@.addPartialLogIndices () is 
+'Add partial indexes, if possible, to the unused sl_log_? table for
+all origin nodes, and drop any that are no longer needed.
+
+This function presently gets run any time set origins are manipulated
+(FAILOVER, STORE SET, MOVE SET, DROP SET), as well as each time the
+system switches between sl_log_1 and sl_log_2.';
 
 
 -- ----------------------------------------------------------------------
