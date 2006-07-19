@@ -1349,6 +1349,74 @@ SET ADD TABLE (
 );
     </programlisting>
    </refsect1>
+   <refsect1> <title> Error Messages </title>
+
+    <para> Here are some of the error messages you may encounter if
+    adding tables incorrectly: </para>
+
+   <variablelist>    
+       <varlistentry><term><literal>Slony-I: setAddTable_int: table public.my_table PK column id nullable </literal></term>
+
+        <listitem><para> Primary keys (or candidates thereof) are
+        required to have all column defined as <command>NOT
+        NULL</command>.  If you have a PK candidate that has columns
+        that are not thus restricted, &slony1; will reject the table
+        with this message. </para> </listitem> </varlistentry>
+
+       <varlistentry><term><literal>Slony-I: setAddTable_int: table id 14 has already been assigned! </literal></term>
+
+        <listitem><para> The table id, stored in
+        <envar>sl_table.tab_id</envar>, is required to be unique
+        across all tables/nodes/sets.  Apparently you have tried to
+        reused a table ID. </para> </listitem> </varlistentry>
+
+       <varlistentry><term><literal> Slony-I: setAddTable_int(): table public.my_table has no index mt_idx_14</literal></term>
+
+        <listitem><para> This will normally occur with candidate
+        primary keys; apparently the index specified is not available
+        on this node. </para> </listitem> </varlistentry>
+
+       <varlistentry><term><literal>Slony-I: setAddTable_int(): table public.my_table not found </literal></term>
+
+        <listitem><para> Worse than an index missing, the whole table
+        is missing.  Apparently whatever process you were using to get
+        the schema into place everywhere didn't work properly. </para>
+        </listitem> </varlistentry>
+
+       <varlistentry><term><literal> Slony-I: setAddTable_int(): public.my_view is not a regular table </literal></term>
+
+        <listitem><para> You can only replicate (at least, using
+        <command>SET ADD TABLE</command>) objects that are ordinary
+        tables.  That doesn't include views or indexes.  (Indexes can
+        come along for the ride, but you don't ask to replicate an
+        index...)  </para> </listitem> </varlistentry>
+
+       <varlistentry><term><literal> Slony-I: setAddTable_int(): set 4 not found </literal></term>
+
+        <listitem><para> You need to define a replication set before
+        assigning tables to it. </para> </listitem> </varlistentry>
+
+       <varlistentry><term><literal> Slony-I: setAddTable(): set 4 has remote origin </literal></term>
+
+        <listitem><para> This will occur if set 4 is configured with,
+        as origin, node 1, and then you submit a <command>SET ADD
+        TABLE</command> request involving that set to some other node
+        than node 1.  This would be expected to occur if there was
+        some confusion in the <command>admin conninfo</command>
+        configuration in the slonik script preamble...</para>
+        </listitem>
+        </varlistentry>
+
+       <varlistentry><term><literal>Slony-I: cannot add table to currently subscribed set 1 </literal></term>
+
+        <listitem><para> &slony1; does not support adding tables to
+        sets that are already participating in subscriptions.
+        Probably you need to define a new set to associate additional
+        tables to. </para> </listitem> </varlistentry>
+
+   </variablelist>    
+
+   </refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
     <para> On the origin node, this operation requires a brief
