@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.22 2006-02-28 22:49:50 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.23 2006-07-24 16:04:12 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -23,12 +23,12 @@ changes, but if you want to do upgrades that take place while
 transactions are still winding their way through your systems, this is
 necessary.  </para>
 
-<para>It is also necessary to use <command>EXECUTE SCRIPT</command> if
-you alter tables so as to change their schemas.  If you do not, then
-you may run into the problems <link linkend="neededexecddl"> described
+<para>It is essential to use <command>EXECUTE SCRIPT</command> if you
+alter tables so as to change their schemas.  If you do not, then you
+may run into the problems <link linkend="neededexecddl"> described
 here </link> where triggers on modified tables do not take account of
 the schema change.  This has the potential to corrupt data on
-subscriber nodes.  </para>
+subscriber nodes.</para>
 
 <para>It's worth making a couple of comments on <quote>special
 things</quote> about <xref linkend="stmtddlscript">:</para>
@@ -93,6 +93,14 @@ SELECT _oxrsorg.altertableforreplication(tab_id);
 --tab_id is _slony_schema.sl_table.tab_id
 COMMIT;
 </screen></para>
+
+<para>Note that this is what allows &slony1; to take notice of
+alterations to tables: <emphasis>before</emphasis>
+that <command>SYNC</command>, &slony1; has been replicating tuples
+based on the <emphasis>old</emphasis>
+schema; <emphasis>after</emphasis> the <command>DDL_SCRIPT</command>,
+tuples are being replicated based on the <emphasis>new<emphasis>
+schema. </para></listitem>
 
 <para> On a system which is busily taking updates, it may be
 troublesome to <quote>get in edgewise</quote> to actually successfully
