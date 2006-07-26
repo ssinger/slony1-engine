@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.92 2006-07-18 18:25:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.93 2006-07-26 18:58:46 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3016,7 +3016,7 @@ begin
 
         select 1 into v_sync_row from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
 	if not found then
-               v_sync_row := NULL;   -- all is OK
+               v_relkind := ''O'';   -- all is OK
         else
                 raise exception ''Slony-I: setAddSequence_int(): sequence ID % has already been assigned'', p_seq_id;
         end if;
