@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.22 2006-06-28 04:47:14 darcyb Exp $
+ *	$Id: dbutils.c,v 1.23 2006-07-26 12:32:09 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -125,9 +125,20 @@ slon_connectdb(char *conninfo, char *symname)
                 PQfinish(dbconn);
                 return NULL;
         }
+	
         slon_log(SLON_DEBUG4,
                 "version for \"%s\" is %d\n", conninfo, conn->pg_version);
 
+	if (conn->pg_version >= 80200)
+	{
+		slon_mkquery(&query, "set standard_conforming_strings to 'off'");
+		res = PQexec(dbconn, dstring_data(&query));
+		if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
+		{
+			slon_log(SLON_ERROR, "Unable to set the standard_conforming_strings to off\n");
+        	}
+		PQclear(res);
+	}
 	return conn;
 }
 
