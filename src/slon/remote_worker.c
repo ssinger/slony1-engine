@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.116 2006-07-11 18:33:56 darcyb Exp $
+ *	$Id: remote_worker.c,v 1.117 2006-07-26 18:29:06 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3477,6 +3477,17 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (archive_dir)
 		{
 			rc = submit_string_to_archive("\\.");
+			if (rc < 0) {
+			  PQclear(res2);
+			  PQclear(res1);
+			  slon_disconnectdb(pro_conn);
+			  dstring_free(&query1);
+			  dstring_free(&query2);
+			  dstring_free(&query3);
+			  dstring_free(&indexregenquery);
+			  terminate_log_archive();
+			  return -1;
+			}
 		}
 #else							/* ! HAVE_PQPUTCOPYDATA */
 		copydone = false;
@@ -3494,20 +3505,45 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			{
 				switch (rc)
 				{
-					case EOF:
-						copydone = true;
-						break;
-					case 0:
-						PQputline(loc_dbconn, copybuf);
-						PQputline(loc_dbconn, "\n");
-						if (archive_dir)
-							submit_string_to_archive(copybuf);
-						break;
-					case 1:
-						PQputline(loc_dbconn, copybuf);
-						if (archive_dir)
-							submit_raw_data_to_archive(copybuf);
-						break;
+				case EOF:
+				  copydone = true;
+				  break;
+				case 0:
+				  PQputline(loc_dbconn, copybuf);
+				  PQputline(loc_dbconn, "\n");
+				  if (archive_dir) {
+				    rc = submit_string_to_archive(copybuf);
+				    if (rc < 0) {
+				      PQclear(res2);
+				      PQclear(res1);
+				      slon_disconnectdb(pro_conn);
+				      dstring_free(&query1);
+				      dstring_free(&query2);
+				      dstring_free(&query3);
+				      dstring_free(&indexregenquery);
+				      terminate_log_archive();
+				      return -1;
+				    }
+				  }
+				  break;
+				case 1:
+				  PQputline(loc_dbconn, copybuf);
+				  if (archive_dir) {
+				    rc = submit_raw_data_to_archive(copybuf);
+				    if (rc < 0) {
+				      PQclear(res2);
+				      PQclear(res1);
+				      slon_disconnectdb(pro_conn);
+				      dstring_free(&query1);
+				      dstring_free(&query2);
+				      dstring_free(&query3);
+				      dstring_free(&indexregenquery);
+				      terminate_log_archive();
+				      return -1;
+				    }
+
+				  }
+				  break;
 
 				}
 			}
@@ -3516,6 +3552,17 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (archive_dir)
 		{
 			rc = submit_string_to_archive("\\.");
+			if (rc < 0) {
+			  PQclear(res2);
+			  PQclear(res1);
+			  slon_disconnectdb(pro_conn);
+			  dstring_free(&query1);
+			  dstring_free(&query2);
+			  dstring_free(&query3);
+			  dstring_free(&indexregenquery);
+			  terminate_log_archive();
+			  return -1;
+			}
 		}
 
 		/*
@@ -3590,7 +3637,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		if (archive_dir)
 		{
-			submit_query_to_archive(&query1);
+		  rc = submit_query_to_archive(&query1);
+		  if (rc < 0) {
+		    return -1;
+		  }
 		}
 
 		gettimeofday(&tv_now, NULL);
@@ -3663,7 +3713,17 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 			if (archive_dir)
 			{
-				submit_query_to_archive(&query1);
+				rc = submit_query_to_archive(&query1);
+				if (rc < 0) {
+				  PQclear(res1);
+				  slon_disconnectdb(pro_conn);
+				  dstring_free(&query1);
+				  dstring_free(&query2);
+				  dstring_free(&query3);
+				  dstring_free(&indexregenquery);
+				  terminate_log_archive();
+				  return -1;
+				}
 			}
 		}
 		else
@@ -6074,5 +6134,3 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	}
 	slon_log(SLON_DEBUG3, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
-
-
