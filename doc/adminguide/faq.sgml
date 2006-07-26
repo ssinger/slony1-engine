@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.59 2006-07-05 20:57:40 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.60 2006-07-26 00:36:03 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -460,6 +460,63 @@ each one manages.  If the &lslon; runs on the same server as the
 database it manages, any <quote>networking failure</quote> that could
 interrupt local connections would be likely to be serious enough to
 threaten the entire server.  </para></answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> When can I shut down &lslon; processes?</para></question>
+
+<question><para> Are there risks to doing so?  How about
+benefits?</para></question>
+
+<answer><para> Generally, it's no big deal to shut down a &lslon;
+process.  Each one is <quote>merely</quote> a &postgres; client,
+managing one node, which spawns threads to manage receiving events
+from other nodes.  </para>
+
+<para>The <quote>event listening</quote> threads are no big deal; they
+are doing nothing fancier than periodically checking remote nodes to
+see if they have work to be done on this node.  If you kill off the
+&lslon; these threads will be closed, which should have little or no
+impact on much of anything.  Events generated while the &lslon; is
+down will be picked up when it is restarted.</para>
+
+<para> The <quote>node managing</quote> thread is a bit more
+interesting; most of the time, you can expect, on a subscriber, for
+this thread to be processing <command>SYNC</command> events.  If you
+shut off the &lslon; during an event, the transaction
+will fail, and be rolled back, so that when the &lslon; restarts, it
+will have to go back and reprocess the event.</para>
+
+<para> The only situation where this will
+cause <emphasis>particular</emphasis> <quote>heartburn</quote> is if
+the event being processed was one which takes a long time to process,
+such as <command>COPY_SET</command> for a large replication
+set. </para>
+
+<para> The other thing that <emphasis>might</emphasis> cause trouble
+is if the &lslon; runs fairly distant from nodes that it connects to;
+you could discover that database connections are left <command>idle in
+transaction</command>.  This would normally only occur if the network
+connection is destroyed without either &lslon; or database being made
+aware of it.  In that case, you may discover
+that <quote>zombied</quote> connections are left around for as long as
+two hours if you don't go in by hand and kill off the &postgres;
+backends.</para>
+
+<para> There is one other case that could cause trouble; when the
+&lslon; managing the origin node is not running,
+no <command>SYNC</command> events run against that node.  If the
+&lslon; stays down for an extended period of time, and something
+like <xref linkend="gensync"> isn't running, you could be left
+with <emphasis>one big <command>SYNC</command></emphasis> to process
+when it comes back up.  But that is only a concern if that &lslon; is
+down for an extended period of time; shutting it down for a few
+seconds shouldn't cause any great problem. </para> </answer>
+
+<answer><para> In short, if you don't have something like an 18
+hour <command>COPY_SET</command> under way, it's normally not at all a
+big deal to take a &lslon; down for a little while, or perhaps even
+cycle <emphasis>all</emphasis> the &lslon;s. </para> </answer>
 </qandaentry>
 
 </qandadiv>

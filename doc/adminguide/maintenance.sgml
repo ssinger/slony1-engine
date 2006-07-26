@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.22 2006-07-11 14:37:18 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.23 2006-07-26 00:36:03 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -82,7 +82,8 @@ the <command>-a</command> option could ruin your log shipped node, and
 thereby your whole day.</para>
 
 </sect2>
-<sect2><title>Parallel to Watchdog: generate_syncs.sh</title>
+
+<sect2 id="gensync"><title>Parallel to Watchdog: generate_syncs.sh</title>
 
 <para>A new script for &slony1; 1.1 is
 <application>generate_syncs.sh</application>, which addresses the following kind of

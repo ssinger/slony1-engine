@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.21 2006-06-22 15:35:29 devrim Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.22 2006-07-26 00:36:03 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -154,7 +154,6 @@ servicing. </para>
 
 <para> In practice, strewing &lslon; processes and configuration
 across a dozen servers turns out to be inconvenient to manage.</para>
-
 </listitem>
 
 <listitem><para> &lslon; processes should run in the same
@@ -174,6 +173,31 @@ SIGINT</command> the offending backend connection.  But by running the
 &lslon; locally, you will generally not be vulnerable to this
 condition. </para>
 </listitem>
+
+<listitem><para> Before getting too excited about having fallen into
+some big problem, consider killing and restarting all the &lslon;
+processes.  Historically, this has frequently been able to
+resolve <quote>stickiness.</quote> </para>
+
+<para> With a very few exceptions, it is generally not a big deal to
+kill off and restart the &lslon; processes.  Each &lslon; connects to
+one database for which it is the manager, and then connects to other
+databases as needed to draw in events.  If you kill off a &lslon;, all
+you do is to interrupt those connections.  If
+a <command>SYNC</command> or other event is sitting there
+half-processed, there's no problem: the transaction will roll back,
+and when the &lslon; restarts, it will restart that event from
+scratch.</para>
+
+<para> The exception, where it is undesirable to restart a &lslon;, is
+where a <command>COPY_SET</command> is running on a large replication
+set, such that stopping the &lslon; may discard several hours worth of
+load work. </para>
+
+<para> In early versions of &slony1;, it was frequently the case that
+connections could get a bit <quote>deranged</quote> which restarting
+&lslon;s would clean up.  This has become much more rare, but it has
+occasionally proven useful to restart the &lslon;.</para> </listitem>
 
 <listitem>
 <para>The <link linkend="ddlchanges"> Database Schema Changes </link>
