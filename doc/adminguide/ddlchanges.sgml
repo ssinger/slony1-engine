@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.23 2006-07-24 16:04:12 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.24 2006-07-27 19:55:00 xfade Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -99,15 +99,14 @@ alterations to tables: <emphasis>before</emphasis>
 that <command>SYNC</command>, &slony1; has been replicating tuples
 based on the <emphasis>old</emphasis>
 schema; <emphasis>after</emphasis> the <command>DDL_SCRIPT</command>,
-tuples are being replicated based on the <emphasis>new<emphasis>
-schema. </para></listitem>
+tuples are being replicated based on the <emphasis>new</emphasis>
+schema. </para>
 
 <para> On a system which is busily taking updates, it may be
 troublesome to <quote>get in edgewise</quote> to actually successfully
 engage all the required locks.  The locks may run into deadlocks.
 This points to two ways to address this:
-
-<itemizedlist>
+</para></listitem>
 
 <listitem><para> You may be able to <link linkend="definesets"> define
 replication sets </link> that consist of smaller sets of tables so
@@ -122,8 +121,6 @@ tables.</para></listitem>
 order to ensure that your applications are not demanding locks that
 will conflict with the ones you need to take in order to update the
 database schema.</para></listitem>
-
-</itemizedlist></para></listitem>
 
 <listitem><para> In &slony1; versions 1.0 thru 1.1.5, the script is
 processed as a single query request, which can cause problems if you
