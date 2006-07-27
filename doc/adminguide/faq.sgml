@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.60 2006-07-26 00:36:03 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.61 2006-07-27 19:52:19 xfade Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -465,9 +465,6 @@ threaten the entire server.  </para></answer>
 <qandaentry>
 <question><para> When can I shut down &lslon; processes?</para></question>
 
-<question><para> Are there risks to doing so?  How about
-benefits?</para></question>
-
 <answer><para> Generally, it's no big deal to shut down a &lslon;
 process.  Each one is <quote>merely</quote> a &postgres; client,
 managing one node, which spawns threads to manage receiving events
@@ -512,6 +509,11 @@ with <emphasis>one big <command>SYNC</command></emphasis> to process
 when it comes back up.  But that is only a concern if that &lslon; is
 down for an extended period of time; shutting it down for a few
 seconds shouldn't cause any great problem. </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> Are there risks to doing so?  How about
+benefits?</para></question>
 
 <answer><para> In short, if you don't have something like an 18
 hour <command>COPY_SET</command> under way, it's normally not at all a
