@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.93 2006-07-26 18:58:46 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.94 2006-07-28 00:12:14 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -561,7 +561,7 @@ BEGIN
 		end if;
 	else
 		if v_value is null then
-			raise exception ''Slony-I: registry key % is not an text value'',
+			raise exception ''Slony-I: registry key % is not a text value'',
 					p_key;
 		end if;
 	end if;
@@ -3016,7 +3016,7 @@ begin
 
         select 1 into v_sync_row from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
 	if not found then
-               v_relkind := ''O'';   -- all is OK
+               v_relkind := ''o'';   -- all is OK
         else
                 raise exception ''Slony-I: setAddSequence_int(): sequence ID % has already been assigned'', p_seq_id;
         end if;
@@ -3333,22 +3333,22 @@ begin
 	select seq_set into v_old_set_id from @NAMESPACE@.sl_sequence
 			where seq_id = p_seq_id;
 	if not found then
-		raise exception ''Slony-I: sequence %d not found'', p_seq_id;
+		raise exception ''Slony-I: setMoveSequence(): sequence %d not found'', p_seq_id;
 	end if;
 	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
 	if p_new_set_id = v_old_set_id then
-		raise exception ''Slony-I: set ids cannot be identical'';
+		raise exception ''Slony-I: setMoveSequence(): set ids cannot be identical'';
 	end if;
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_new_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_new_set_id;
+		raise exception ''Slony-I: setMoveSequence(): set % not found'', p_new_set_id;
 	end if;
 	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+		raise exception ''Slony-I: setMoveSequence(): set % does not originate on local node'',
 				p_new_set_id;
 	end if;
 
@@ -3456,7 +3456,7 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception ''Slony-I: sequence % not found'', p_seq_id;
+		raise exception ''Slony-I: sequenceSetValue(): sequence % not found'', p_seq_id;
 	end if;
 
 	-- ----
@@ -3859,11 +3859,11 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
+		raise exception ''Slony-I: alterTableForReplication(): Table with id % not found'', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 	if v_tab_row.tab_altered then
-		raise exception ''Slony-I: Table % is already in altered state'',
+		raise exception ''Slony-I: alterTableForReplication(): Table % is already in altered state'',
 				v_tab_fqname;
 	end if;
 
@@ -3910,7 +3910,7 @@ begin
 			 pi.indrelid = tab.tab_reloid and   -- indexes table is this table
 			 pc.oid = tab.tab_reloid
                 loop
-			raise notice ''Slony-I: multiple instances of trigger % on table %'',
+			raise notice ''Slony-I: alterTableForReplication(): multiple instances of trigger % on table %'',
 				v_trec.tgname, v_trec.relname;
 			v_tgbad := ''true'';
 		end loop;
@@ -4023,11 +4023,11 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: Table with id % not found'', p_tab_id;
+		raise exception ''Slony-I: alterTableRestore(): Table with id % not found'', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 	if not v_tab_row.tab_altered then
-		raise exception ''Slony-I: Table % is not in altered state'',
+		raise exception ''Slony-I: alterTableRestore(): Table % is not in altered state'',
 				v_tab_fqname;
 	end if;
 
@@ -4130,15 +4130,15 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_sub_set;
+		raise exception ''Slony-I: subscribeSet(): set % not found'', p_sub_set;
 	end if;
 	if v_set_origin = p_sub_receiver then
 		raise exception 
-				''Slony-I: set origin and receiver cannot be identical'';
+				''Slony-I: subscribeSet(): set origin and receiver cannot be identical'';
 	end if;
 	if p_sub_receiver = p_sub_provider then
 		raise exception 
-				''Slony-I: set provider and receiver cannot be identical'';
+				''Slony-I: subscribeSet(): set provider and receiver cannot be identical'';
 	end if;
 
 	-- ---
@@ -4150,7 +4150,7 @@ begin
 			where sub_set = p_sub_set and 
                               sub_receiver = p_sub_provider and
 			      sub_forward and sub_active) then
-			raise exception ''Slony-I: provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
+			raise exception ''Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
 		end if;
 	end if;
 
@@ -4204,7 +4204,7 @@ begin
 				and sub_receiver = p_sub_receiver;
 		if found then
 			if not v_sub_row.sub_active then
-				raise exception ''Slony-I: set % is not active, cannot change provider'',
+				raise exception ''Slony-I: subscribeSet_int(): set % is not active, cannot change provider'',
 						p_sub_set;
 			end if;
 		end if;
@@ -4252,7 +4252,7 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_sub_set;
+		raise exception ''Slony-I: subscribeSet_int(): set % not found'', p_sub_set;
 	end if;
 
 	if v_set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
@@ -4599,7 +4599,7 @@ begin
 		select ev_origin, ev_seqno into v_min_row from @NAMESPACE@.sl_event
 		where ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
 		order by ev_origin desc, ev_seqno desc limit 1;
-		raise notice ''Single node - deleting events < %'', v_min_row.ev_seqno;
+		raise notice ''Slony-I: cleanupEvent(): Single node - deleting events < %'', v_min_row.ev_seqno;
 			delete from @NAMESPACE@.sl_event
 			where
 				ev_origin = v_min_row.ev_origin and
@@ -4668,7 +4668,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
+		raise exception ''Slony-I: tableAddKey(): table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4734,7 +4734,7 @@ begin
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception ''Slony-I: table with ID % not found'', p_tab_id;
+		raise exception ''Slony-I: tableDropKey(): table with ID % not found'', p_tab_id;
 	end if;
 
 	-- ----
@@ -4784,7 +4784,7 @@ begin
 				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
+		raise exception ''Slony-I: determineIdxnameUnique(): table % not found'', v_tab_fqname_quoted;
 	end if;
 
 	--
