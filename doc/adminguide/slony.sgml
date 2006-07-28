@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.31 2006-07-11 14:35:18 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.32 2006-07-28 00:43:45 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -49,6 +49,7 @@
 <!ENTITY rlistenpaths "<xref linkend=listenpaths>">
 <!ENTITY pglistener "<envar>pg_listener</envar>">
 <!ENTITY lslon "<xref linkend=slon>">
+<!ENTITY lslonik "<xref linkend=slonik>">
 
 ]>
 
