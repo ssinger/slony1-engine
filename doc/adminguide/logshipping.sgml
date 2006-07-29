@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.14 2006-04-11 14:39:51 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.15 2006-07-29 11:30:05 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -294,6 +294,10 @@ sl_setsync_offline.</para>
 represent the time you will wish to have apply to all of the data in
 the given log shipping transaction log. </para>
 </listitem>
+
+<listitem><para> You may find information on how relevant activity is
+logged in <xref linkend="logshiplog">. </para></listitem>
+
 </itemizedlist>
 </sect2>
 </sect1>

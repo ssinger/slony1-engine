@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.17 2006-07-12 08:41:18 xfade Exp $ -->
+<!-- $Id: addthings.sgml,v 1.18 2006-07-29 11:30:05 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -39,9 +39,9 @@ latter.</para>
 things.  For instance, submitting multiple subscription requests for a
 particular set in one <xref linkend="slonik"> script often turns out
 quite badly.  If it is <emphasis>truly</emphasis> necessary to
-automate this, you'll probably want to submit <xref
-linkend="stmtwaitevent"> requests in between subscription requests in
-order that the <xref linkend="slonik"> script wait for one
+automate this, you'll probably want to
+submit <xref linkend="stmtwaitevent"> requests in between subscription
+requests in order that the <xref linkend="slonik"> script wait for one
 subscription to complete processing before requesting the next
 one.</para>
 
@@ -111,7 +111,12 @@ tables?</quote></para></listitem>
 <listitem><para> There are a number of <quote>sharp edges</quote> to note...</para></listitem>
 </itemizedlist>
 <itemizedlist>
-    <listitem><para> You absolutely <emphasis>must not</emphasis> include transaction control commands, particularly <command>BEGIN</command> and <command>COMMIT</command>, inside these DDL scripts. &slony1; wraps DDL scripts with a <command>BEGIN</command>/<command>COMMIT</command> pair; adding extra transaction control will mean that parts of the DDL will commit outside the control of &slony1; </para></listitem>
+<listitem><para> You absolutely <emphasis>must not</emphasis> include
+transaction control commands, particularly <command>BEGIN</command>
+and <command>COMMIT</command>, inside these DDL scripts. &slony1;
+wraps DDL scripts with a <command>BEGIN</command>/<command>COMMIT</command> 
+pair; adding extra transaction control will mean that parts of the DDL
+will commit outside the control of &slony1; </para></listitem>
 
 <listitem><para> Before version 1.2, it was necessary to be
 exceedingly restrictive about what you tried to process using
@@ -137,7 +142,8 @@ alter column c1 set not null; </command>.</para></listitem>
 
 <listitem><para> How to remove replication for a node</para>
 
-<para> You will want to remove the various &slony1; components connected to the database(s).</para>
+<para> You will want to remove the various &slony1; components
+connected to the database(s).</para>
 
 <para> We will just consider, for now, doing this to one node. If you
 have multiple nodes, you will have to repeat this as many times as
@@ -149,13 +155,15 @@ necessary.</para>
 <listitem><para> Log Triggers / Update Denial Triggers
 
 </para></listitem>
-<listitem><para>    The "cluster" schema containing &slony1; tables indicating the state of the node as well as various stored functions 
+<listitem><para> The <quote>cluster</quote> schema containing &slony1;
+tables indicating the state of the node as well as various stored
+functions
 </para></listitem>
-<listitem><para>
-    <xref linkend="slon"> process that manages the node 
-</para></listitem>
-<listitem><para>
-    Optionally, the SQL and pl/pgsql scripts and &slony1; binaries that are part of the &postgres; build. (Of course, this would make it challenging to restart replication; it is unlikely that you truly need to do this...) 
+<listitem><para> &lslon; process that manages the node </para></listitem>
+<listitem><para> Optionally, the SQL and pl/pgsql scripts and &slony1;
+binaries that are part of the &postgres; build. (Of course, this would
+make it challenging to restart replication; it is unlikely that you
+truly need to do this...)
 </para></listitem>
 </itemizedlist>
 
@@ -186,8 +194,8 @@ could submit the SQL command <command>DROP SCHEMA "_ClusterName"
 CASCADE;</command>, which will drop out &slony1; functions, tables,
 and triggers alike.  That is generally less suitable
 than <xref linkend="stmtuninstallnode">, because that command not only
-drops the schema and its contents, but also removes any columns added
-in using <xref linkend= "stmttableaddkey">.
+drops the schema and its contents, but also removes any columns
+previously added in using <xref linkend= "stmttableaddkey">.
 </para></listitem>
 </itemizedlist>
 </listitem>
@@ -306,15 +314,31 @@ node. </para> </listitem>
 
 </listitem>
 
+<listitem><para> <link linkend="slonyupgrade">How do I upgrade
+&slony1; to a newer version?<linkend> </para> </listitem>
+
 <listitem><para> What happens when I fail over?</para> 
 
-<para> To be written...</para> </listitem>
+<para> Some of this is described under <xref linkend="failover"> but
+more of a procedure should be written...</para> </listitem>
 
 <listitem><para> How do I <quote>move master</quote> to a new node? </para> 
 
-<para> Obviously, use <xref linkend="stmtmoveset">; more details
-should be added...</para>
-</listitem>
+<para> You must first pick a node that is connected to the former
+origin (otherwise it is not straightforward to reverse connections in
+the move to keep everything connected). </para>
+
+<para> Second, you must run a &lslonik; script with the
+command <xref linkend="stmtlockset"> to lock the set on the origin
+node.  Note that at this point you have an application outage under
+way, as what this does is to put triggers on the origin that rejects
+updates. </para>
+
+<para> Now, submit the &lslonik; <xref linkend="stmtmoveset"> request.
+It's perfectly reasonable to submit both requests in the same
+&lslonik; script.  Now, the origin gets switched over to the new
+origin node.  If the new node is a few events behind, it may take a
+little while for this to take place. </para> </listitem>
 
 </itemizedlist>
 </sect1>

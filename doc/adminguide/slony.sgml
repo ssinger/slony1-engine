@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.32 2006-07-28 00:43:45 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.33 2006-07-29 11:30:05 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -83,6 +83,7 @@
   <corpauthor>The PostgreSQL Global Development Group</corpauthor>
   <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
  </articleinfo>
+ &bestpractices;
  &firstdb;
  &startslons;
  &subscribenodes;
@@ -99,9 +100,10 @@
  &ddlchanges;
  &usingslonik;
  &adminscripts;
+ &slonyupgrade;
  &versionupgrade;
- &bestpractices;
  &testbed;
+ &loganalysis;
  &help;
 </article>
 

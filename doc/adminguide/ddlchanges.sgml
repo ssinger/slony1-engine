@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.24 2006-07-27 19:55:00 xfade Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.25 2006-07-29 11:30:05 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -40,42 +40,45 @@ transaction <command>BEGIN</command> or <command>END</command>
 statements, as the script is already executed inside a transaction.
 In &postgres; version 8, the introduction of nested transactions
 changes this somewhat, but you must still remain aware that the
-actions in the script are wrapped inside a single
-transaction.</para></listitem>
+actions in the script are processed within the scope of a single
+transaction whose <command>BEGIN</command> and <command>END</command>
+you do not control.</para></listitem>
 
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
 the script, or about how it executes on a particular node, this will
 cause the <xref linkend="slon"> daemon for that node to panic and
-crash. If you restart the node, it will, more likely than not, try to
+crash.  You may see various expected messages (positive and negative)
+in <xref linkend="ddllogs">.  If you restart the &lslon;, it will,
+more likely than not, try to
 <emphasis>repeat</emphasis> the DDL script, which will, almost
-certainly, fail the second time just as it did the first time.  I have
-found this scenario to lead to a need to go to the
-<quote>master</quote> node to delete the event to stop it from
-continuing to fail.</para>
+certainly, fail the second time in the same way it did the first time.
+I have found this scenario to lead to a need to go to the
+<quote>master</quote> node to delete the event from the
+table <envar>sl_event</envar> in order to stop it from continuing to
+fail.</para>
 
 <para> The implication of this is that it is
 <emphasis>vital</emphasis> that modifications not be made in a
 haphazard way on one node or another.  The schemas must always stay in
 sync.</para> </listitem>
 
-<listitem><para> For <application>slon</application> to, at that
-point, <quote>panic</quote> is probably the
+<listitem><para> For &lslon; to, at that point, <quote>panic</quote>
+is probably the
 <emphasis>correct</emphasis> answer, as it allows the DBA to head over
 to the database node that is broken, and manually fix things before
 cleaning out the defective event and restarting
-<application>slon</application>.  You can be certain that the updates
+&lslon;.  You can be certain that the updates
 made <emphasis>after</emphasis> the DDL change on the provider node
 are queued up, waiting to head to the subscriber.  You don't run the
 risk of there being updates made that depended on the DDL changes in
 order to be correct.</para></listitem>
 
 <listitem><para> When you run <xref linkend="stmtddlscript">, this
-causes the <application>slonik</application> to request, <emphasis>for
-each table in the specified set</emphasis>, an exclusive table
-lock.</para>
+causes the &lslonik; to request, <emphasis>for each table in the
+specified set</emphasis>, an exclusive table lock.</para>
 
-<para> It starts by requesting the lock, and altering the table to
-remove &slony1; triggers:
+<para> It starts by requesting the lock, altering the table to remove
+&slony1; triggers, and restoring any triggers that had been hidden:
 
 <screen>
 BEGIN;
@@ -115,7 +118,14 @@ it into place.</para>
 
 <para> If a particular DDL script only affects one table, it should be
 unnecessary to lock <emphasis>all</emphasis> application
-tables.</para></listitem>
+tables.</para>
+
+<note><para> Actually, as of version 1.1.5 and later, this
+is <emphasis>NOT TRUE.</emphasis> The danger of someone making DDL
+changes that crosses replication sets seems sufficiently palpable that
+&lslon; has been changed to lock <emphasis>ALL</emphasis> replicated
+tables, whether they are in the specified replication set or
+not. </para></note></listitem>
 
 <listitem><para> You may need to take a brief application outage in
 order to ensure that your applications are not demanding locks that
@@ -124,18 +134,18 @@ database schema.</para></listitem>
 
 <listitem><para> In &slony1; versions 1.0 thru 1.1.5, the script is
 processed as a single query request, which can cause problems if you
-are making complex changes.  In version 1.2, the script is parsed into
-individual SQL statements, and each statement is submitted separately,
-which is a preferable handling of this.  </para>
+are making complex changes.  Starting in version 1.2, the script is
+properly parsed into individual SQL statements, and each statement is
+submitted separately, which is a preferable handling of this.  </para>
 
 <para> The trouble with one query processing a <quote>compound
-statement</quote> is that the SQL parser does its processing for that
+statement</quote> is that the SQL parser does its planning for that
 entire set of queries based on the state of the database at the
 <emphasis>beginning</emphasis> of the query.</para>   
 
 <para> This causes no particular trouble if those statements are
-independent of one another, such as if you add two columns to a
-table.</para>
+independent of one another, such as if you have two statements to add
+two columns to a table.</para>
 
 <para> <command> alter table t1 add column c1 integer; alter table t1 add
 column c2 integer; </command></para>
@@ -206,10 +216,9 @@ no special use of &slony1;.</para>
 
 <para> If it <emphasis>does</emphasis> matter that the object be
 propagated at the same location in the transaction stream on all the
-nodes, then you but no tables need to be locked, then you might create
-a replication set that contains <emphasis>no</emphasis> tables,
-subscribe all the appropriate nodes to it, and use <command>EXECUTE
-SCRIPT</command>, specifying that <quote>empty set.</quote></para></listitem>
+nodes, then you but no tables need to be locked, then you need to use
+<command>EXECUTE SCRIPT</command>, locking challenges or
+no.</quote></para></listitem>
 
 <listitem><para> You may want an extra index on some replicated
 node(s) in order to improve performance there.</para>
@@ -228,7 +237,7 @@ subscriber(s) will be unable to apply changes coming from the origin
 that violate the constraints.</para>
 
 <para> But it's no big deal to add some performance-enhancing indices.
-You should almost certainly <emphasis> not</emphasis> use
+You should almost certainly <emphasis>not</emphasis> use
 <command>EXECUTE SCRIPT</command> to add them; that leads to some
 replication set locking and unlocking tables, and possibly failing to
 apply the event due to some locks outstanding on objects and having to
@@ -264,7 +273,7 @@ BEGIN; </command> at the beginning, and <command> ROLLBACK; </command>
 at the end, so that the would-be changes roll back.</para>
 
 <para> If this script works OK on all of the nodes, that suggests that
-it should work fine everywhere if executed via Slonik.  If problems
+it should work fine everywhere if executed via &lslonik;.  If problems
 are encountered on some nodes, that will hopefully allow you to fix
 the state of affairs on those nodes so that the script
 <emphasis>will</emphasis> run without error.
