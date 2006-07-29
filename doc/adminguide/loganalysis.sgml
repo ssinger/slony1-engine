@@ -1,0 +1,945 @@
+<!-- $Id: loganalysis.sgml,v 1.1 2006-07-29 12:26:54 cbbrowne Exp $ -->
+<sect1 id="loganalysis">
+<title>Log Analysis</title>
+
+<indexterm><primary>Log analysis</primary></indexterm>
+
+<para>Here are some of things that you may find in your &slony1; logs,
+and explanations of what they mean.</para>
+
+<sect2><title>CONFIG notices</title>
+
+<para>These entries are pretty straightforward. They are informative
+messages about your configuration.</para>
+
+<para>Here are some typical entries that you will probably run into in
+your logs:
+
+<screen>
+CONFIG main: local node id = 1
+CONFIG main: loading current cluster configuration
+CONFIG storeNode: no_id=3 no_comment='Node 3'
+CONFIG storePath: pa_server=5 pa_client=1 pa_conninfo="host=127.0.0.1 dbname=foo user=postgres port=6132" pa_connretry=10
+CONFIG storeListen: li_origin=3 li_receiver=1 li_provider=3
+CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
+CONFIG main: configuration complete - starting threads
+</screen></para></sect2>
+
+<sect2><title>DEBUG Notices</title>
+
+<para>Debug notices are always prefaced by the name of the thread that
+the notice originates from. You will see messages from the following
+threads:
+
+<variablelist>
+<varlistentry><term>localListenThread</term> 
+
+<listitem><para> This is the local thread that listens for events on
+the local node.</para></listitem></varlistentry>
+
+<varlistentry><term>remoteWorkerThread-X</term> 
+
+<listitem><para> The thread processing remote events.  You can expect
+to see one of these for each node that this node communicates
+with.</para></listitem></varlistentry>
+
+<varlistentry><term>remoteListenThread-X</term>
+
+<listitem><para>Listens for events on a remote node database.  You may
+expect to see one of these for each node in the
+cluster.</para></listitem></varlistentry>
+
+<varlistentry><term>cleanupThread</term> <listitem><para> Takes care
+of things like vacuuming, cleaning out the confirm and event tables,
+and deleting old data.</para></listitem></varlistentry>
+
+<varlistentry><term>syncThread</term> <listitem><para> Generates SYNC
+events.</para></listitem></varlistentry>
+
+</variablelist>
+</para>
+</sect2>
+
+<sect2> <title> How to read &slony1; logs </title>
+
+<para> Note that as far as slon is concerned, there is no
+<quote>master</quote> or <quote>slave.</quote> They are just
+nodes. </para>
+
+<para>What you can expect, initially, is to see, on both nodes, some
+events propagating back and forth.  Firstly, there should be some
+events published to indicate creation of the nodes and paths.  If you
+don't see those, then the nodes aren't properly communicating with one
+another, and nothing else will happen... </para>
+
+<itemizedlist>
+
+<listitem><para>Create the two nodes.</para> 
+
+<para> No slons are running yet, so there are no logs to look
+at.</para>
+
+</listitem>
+
+<listitem><para> Start the two slons</para>
+
+<para> The logs for each will start out very quiet, as neither node
+has much to say, and neither node knows how to talk to another node.
+Each node will periodically generate a <command>SYNC</command> event,
+but recognize <emphasis>nothing</emphasis> about what is going on on
+other nodes.</para>
+
+</listitem>
+
+<listitem><para> Do the <xref linkend="stmtstorepath"> to set up
+communications paths.  That will allow the nodes to start to become
+aware of one another.</para>
+
+<para> The slon logs should now start to receive events from
+<quote>foreign</quote> nodes.</para>
+
+<para> In version 1.0, <xref linkend="table.sl-listen"> is not set up
+automatically, so things still remain quiet until you explicitly
+submit <command>STORE LISTEN</command> requests. In version 1.1, the
+<quote>listen paths</quote> are set up automatically, which will much
+more quickly get the communications network up and running.  </para>
+
+<para> If you look at the contents of the tables <xref
+linkend="table.sl-node"> and <xref linkend="table.sl-path"> and <xref
+linkend="table.sl-listen">, on each node, that should give a good idea
+as to where things stand.  Until the <xref linkend="slon"> starts,
+each node may only be partly configured.  If there are two nodes,
+there should be two entries in all three of these tables once the
+communications configuration is set up properly.  If there are fewer
+entries than that, well, that should give you some idea of what is
+missing.</para>
+</listitem>
+
+<listitem><para> If needed (<emphasis>e.g.</emphasis> - before version
+1.1), submit <xref linkend="stmtstorelisten"> requests to indicate how
+the nodes will use the communications paths. </para>
+
+<para> Once this has been done, the nodes' logs should show a greater
+level of activity, with events periodically being initiated on one
+node or the other, and propagating to the other. </para>
+</listitem>
+
+<listitem> <para> You'll set up the set
+(<xref linkend="stmtcreateset">), add tables
+(<xref linkend="stmtsetaddtable">), and sequences
+(<xref linkend="stmtsetaddsequence">), and will see relevant
+events <xref linkend="logaddobjects"> only in the logs for the origin
+node for the set. </para></listitem>
+
+<listitem><para> Then, when you submit the <xref
+linkend="stmtsubscribeset"> request, the event should go to both
+nodes. </para>
+
+<para> The origin node has little more to do, after that...  The
+subscriber will then have a <command>COPY_SET</command> event, which
+will lead to logging information about adding each table and copying
+its data.  See <xref linkend="logsubtime"> for more
+details.</para></listitem>
+
+</itemizedlist>
+
+<para>After that, you'll mainly see two sorts of behaviour:</para>
+
+<itemizedlist>
+
+<listitem><para> On the origin, there won't be too terribly much
+logged, just indication that some <command>SYNC</command> events are
+being generated and confirmed by other nodes.
+See <xref linkend="lognormalsync"> to see the sorts of log entries to
+expect.</para></listitem>
+
+<listitem><para> On the subscriber, there will be reports of
+<command>SYNC</command> events, and that the subscriber pulls data
+from the provider for the relevant set(s).  This will happen
+infrequently if there are no updates going to the origin node; it will
+happen frequently when the origin sees heavy updates. </para>
+</listitem>
+
+</itemizedlist>
+
+</sect2>
+
+<sect2> <title> Log Messages and Implications </title>
+
+<para> This section lists numerous of the error messages found in
+&slony1;, along with a brief explanation of implications.  It is a
+fairly well comprehensive list, leaving out mostly some of
+the <command>DEBUG4</command> messages that are generally
+uninteresting.</para>
+
+<sect3 id="logshiplog"><title> Log Messages Associated with Log
+Shipping <title>
+
+<para> Most of these represent errors that come up if
+the <xref linkend="logshipping"> functionality breaks.  You may expect
+things to break if the filesystem being used for log shipping fills,
+or if permissions on that directory are wrongly set. </para>
+
+<itemizedlist>
+<listitem><para><command>ERROR: remoteWorkerThread_%d: log archive failed %s - %s\n</command> </para> 
+
+<para> This indicates that an error was encountered trying to write a
+log shipping file.  Normally the &lslon; will retry, and hopefully
+succeed. </para> </listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: writing archive log...</command></para> 
+
+<para> This indicates that a log shipping archive log is being written for a particular <command>SYNC</command> set. </para></listitem>
+
+<listitem><para><command>INFO: remoteWorkerThread_%d: Run Archive Command %s</command></para> 
+
+<para> If &lslon; has been configured (<option>-x</option>
+aka <envar>command_on_logarchive</envar>) to run a command after
+generating each log shipping archive log, this reports when that
+process is spawned using <function>system()</function>. </para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not open
+COPY SET archive file %s - %s</command></para>
+
+<para> Seems pretty self-explanatory... </para></listitem>
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not generate COPY SET archive header %s - %s</command></para> 
+
+<para> Probably means that we just filled up a filesystem... </para></listitem>
+</itemizedlist>
+</sect3>
+
+<sect3 id="ddllogs"><title> Log Messages -  DDL scripts </title> 
+
+<para> The handling of DDL is somewhat fragile, as described
+in <xref linkend="ddlchanges">; here are both informational and error
+messages that may occur in the progress of
+an <xref linkend="stmtddlscript"> request.</para>
+
+<itemizedlist>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: DDL preparation
+failed - set %d - only on node %</command></para>
+
+<para> Something broke when applying a DDL script on one of the nodes.
+This is quite likely indicates that the node's schema differed from
+that on the origin; you may need to apply a change manually to the
+node to allow the event to proceed.  The scary, scary alternative
+might be to delete the offending event, assuming it can't possibly
+work...</para> </listitem>
+<listitem><para><command>SLON_CONFIG: remoteWorkerThread_%d: DDL request with %d statements</command></para> 
+<para> This is informational, indicating how many SQL statements were processed. </listitem>
+<listitem><para><command>SLON_ERROR: remoteWorkerThread_%d: DDL had invalid number of statements - %d</command></para> 
+
+<para> Occurs if there were < 0 statements (which should be impossible) or > MAXSTATEMENTS statements.  Probably the script was bad...</listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: malloc()
+failure in DDL_SCRIPT - could not allocate %d bytes of
+memory</command></para>
+
+<para> This should only occur if you submit some extraordinarily large
+DDL script that makes a &lslon; run out of memory </para></listitem>
+
+<listitem><para><command>CONFIG: remoteWorkerThread_%d: DDL Statement %d: [%s]</command></para> 
+
+<para> This lists each DDL statement as it is submitted. </listitem>
+<listitem><para><command>ERROR: DDL Statement failed - %s</command></para> 
+
+<para> Oh, dear, one of the DDL statements that worked on the origin
+failed on this remote node... </para></listitem>
+
+<listitem><para><command>CONFIG: DDL Statement success - %s</command></para> 
+
+<para> All's well...  </para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not generate DDL archive tracker %s - %s</command></para> 
+
+<para> Apparently the DDL script couldn't be written to a log shipping file... </para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not submit DDL script %s - %s</command></para> 
+
+<para>Couldn't write the script to a log shipping file.</para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not close DDL script %s - %s</command></para> 
+
+<para>Couldn't close a log shipping file for a DDL script.</para> </listitem>
+<listitem><para><command>ERROR: Slony-I ddlScript_prepare(): set % not found</command></para> 
+
+<para> Set wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I ddlScript_prepare_int(): set % not found</command></para> 
+
+<para> Set wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: alterTableForReplication(): Table with id % not found</command></para> 
+<para> Apparently the table wasn't found; could the schema be messed up? </para> </listitem>
+
+<listitem><para><command>ERROR: Slony-I: alterTableForReplication(): Table % is already in altered state</command></para> 
+
+<para> Curious...  We're trying to set a table up for replication
+a <emphasis>second</emphasis> time?  </para> </listitem>
+
+<listitem><para><command>ERROR: Slony-I: alterTableRestore(): Table with id % not found</command></para> 
+
+<para> This runs when a table is being restored to <quote>non-replicated</quote> state; apparently the replicated table wasn't found.</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: alterTableRestore(): Table % is not in altered state</command></para> 
+
+<para> Hmm.  The table isn't in altered replicated state.  That shouldn't be, if replication had been working properly...</para> </listitem>
+<listitem><para><command>NOTICE: Slony-I: alterTableForReplication(): multiple instances of trigger % on table %'',</command></para> 
+
+<para> This normally happens if you have a table that had a trigger attached to it that replication hid due to this being a subscriber node, and then you added a trigger by the same name back to replication.  Now, when trying to "fix up" triggers, those two triggers conflict. </para>
+
+<para> The DDL script will keep running and rerunning, or the UNINSTALL NODE will keep failing, until you drop the <quote>visible</quote> trigger, by hand, much as you must have added it, by hand, earlier. </para>
+</listitem>
+<listitem><para><command>ERROR: Slony-I: Unable to disable triggers</command></para> 
+<para> This is the error that follows the <quote>multiple triggers</quote> problem. </para></listitem>
+</itemizedlist>
+</sect3>
+
+<sect3><title> Threading Issues </title>
+
+<para> There should not be any <quote>user-serviceable</quote> aspects
+to the &slony1; threading model; each &lslon; creates a quite
+well-specified set of helper threads to manage the various database
+connections that it requires.  The only way that anything should break
+on the threading side is if you have not compiled &postgres; libraries
+to <quote>play well</quote> with threading, in which case you will be
+unable to compile &slony1; in the first place. </para>
+
+<itemizedlist>
+<listitem><para><command>FATAL: remoteWorkerThread_%d: pthread_create() - %s</command></para> 
+
+<para> Couldn't create a new remote worker thread. </para>
+</listitem>
+<listitem><para><command>DEBUG1 remoteWorkerThread_%d: helper thread for provider %d created</command></para> 
+
+<para> This normally happens when the &lslon; starts: a thread is created for each node to which the local node should be listening for events.</para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: helper thread for provider %d terminated </command></para> 
+
+<para> If subscriptions reshape such that a node no longer provides a
+subscription, then the thread that works on that node can be
+dropped. </para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: disconnecting
+from data provider %d </command></para>
+
+<para> A no-longer-used data provider may be dropped; if connection
+information is changed, the &lslon; needs to disconnect and
+reconnect. </para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: ignore new events due to shutdown</command></para> 
+
+<para> If the &lslon; is shutting down, it is futile to process more events</listitem>
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: node %d - no worker thread</command></para> 
+
+<para> Curious: we can't wake up the worker thread; there probably
+should already be one... </para></listitem>
+
+</itemizedlist>
+</sect3>
+
+<sect3 id="logsubtime"><title> Log Entries At Subscription Time </title>
+
+<para> Subscription time is quite a special time in &slony1;.  If you
+have a large amount of data to be copied to subscribers, this may take
+a considerable period of time.  &slony1; logs a fairly considerable
+amount of information about its progress, which is sure to be useful
+to the gentle reader.  In particular, it generates log output every
+time it starts and finishes copying data for a given table as well as
+when it completes reindexing the table.  That may not make a 28 hour
+subscription go any faster, but at least helps you have some idea of
+how it is progressing. </para>
+
+<itemizedlist>
+<listitem><para><command>DEBUG1: copy_set %d</command></para> 
+
+<para> This indicates the beginning of copying data for a new subscription. </para></listitem>
+<listitem><para><command>ERROR: remoteWorkerThread_%d: set %d not found in runtime configuration </command></para> 
+
+<para> &lslon; tried starting up a subscription; it couldn't find conninfo for the data source.  Perhaps paths are not properly propagated?</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: node %d has no pa_conninfo </command></para> 
+
+<para> Apparently the conninfo configuration
+was <emphasis>wrong</emphasis>...</para></listitem>
+
+<listitem><para><command>ERROR: copy set %d cannot connect to provider DB node %d </command></para> 
+
+<para> &lslon; couldn't connect to the provider.  Is the conninfo
+wrong?  Or perhaps authentication is misconfigured?  Or perhaps the
+database is down?</para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: connected to provider DB </command></para> 
+
+<para> Excellent: the copy set has a connection to its provider</para></listitem>
+<listitem><para><command>ERROR: Slony-I: sequenceSetValue(): sequence % not found</command></para> 
+<para> Curious; the sequence object is missing.  Could someone have dropped it from the schema by hand (e.g. - not using <xref linkend="stmtddlscript">)?</listitem>
+
+<listitem><para><command>ERROR: Slony-I: subscribeSet() must be called on provider</command></para> 
+<para> This function should only get called on the provider node.  &lslonik; normally handles this right, unless one had wrong DSNs in a &lslonik; script...</para>
+</listitem>
+
+<listitem><para><command>ERROR: Slony-I: subscribeSet(): set % not found</command></para> 
+<para> Hmm.  The provider node isn't aware of this set.  Wrong parms to a &lslonik; script?</para> </listitem>
+
+<listitem><para><command>ERROR: Slony-I: subscribeSet(): set origin and receiver cannot be identical</command></para> 
+<para> Duh, an origin node can't subscribe to itself.</para> </listitem>
+
+<listitem><para><command>ERROR: Slony-I: subscribeSet(): set provider and receiver cannot be identical</command></para> 
+<para> A receiver must subscribe to a <emphasis>different</emphasis> node...</para> </listitem>
+<listitem><para><command>Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %</command></para> 
+
+<para> You can only use a live, active, forwarding provider as a data
+source.  </para></listitem>
+
+<listitem><para>Slony-I: subscribeSet_int(): set % is not active, cannot change provider<command></command></para> 
+<para> You can't change the provider just yet...</para></listitem>
+<listitem><para><command>Slony-I: subscribeSet_int(): set % not found</command></para> 
+<para> This node isn't aware of the set...  Perhaps you submitted wrong parms?</para></listitem>
+<listitem><para><command>Slony-I: unsubscribeSet() must be called on receiver</command></para> 
+<para> Seems obvious...  This probably indicates a bad &lslonik; admin DSN...</para></listitem>
+<listitem><para><command>Slony-I: Cannot unsubscribe set % while being provider</command></para> 
+
+<para> This should seem obvious; <xref linkend="stmtunsubscribeset"> will fail if a node has dependent subscribers for which it is the provider </para> </listitem>
+
+<listitem><para><command>Slony-I: cleanupEvent(): Single node - deleting events < %</command></para> 
+<para> If there's only one node, the cleanup event will delete old events so that you don't get <quote>build-up of crud.</quote></para></listitem>
+<listitem><para><command>Slony-I: tableAddKey(): table % not found</command></para> 
+<para> Perhaps you didn't copy the schema over properly?</para></listitem>
+<listitem><para><command>Slony-I: tableDropKey(): table with ID% not found</command></para> 
+<para> Seems curious; you were presumably replicating to this table, so for this to be gone seems rather odd...</para></listitem>
+<listitem><para><command>Slony-I: determineIdxnameUnique(): table % not found</command></para> 
+
+<para>Did you properly copy over the schema to a new node???</para></listitem>
+<listitem><para><command>Slony-I: table % has no primary key</command></para> 
+
+<para> This likely signifies a bad loading of schema...</para></listitem>
+
+<listitem><para><command>Slony-I: table % has no unique index %</command></para> 
+
+<para> This likely signifies a bad loading of schema...</para></listitem>
+<listitem><para><command>WARN: remoteWorkerThread_%d: transactions
+earlier than XID %s are still in progress</command></para>
+
+<para> This indicates that some old transaction is in progress from before the earliest available <command>SYNC</command> on the provider.  &slony1; cannot start replicating until that transaction completes.  This will repeat until thetransaction completes...
+</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: prepare to copy table %s </command></para> 
+
+<para> This indicates that &lslon; is beginning preparations to set up subscription for a table.</para></listitem>
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: table %s will require Slony-I serial key</command></para> 
+
+<para> Evidently this is a table defined with <xref linkend="stmttableaddkey"> where &slony1; has to add a surrogate primary key.</listitem>
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not lock table %s on subscriber</command></para> 
+
+<para> For whatever reason, the table could not be locked, so the
+subscription needs to be restarted.  If the problem was something like
+a deadlock, retrying may help.  If the problem was otherwise, you may
+need to intervene...</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: all tables for set %d found on subscriber</command></para> 
+
+<para> An informational message indicating that the first pass through the tables found no problems... </para></listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: copy sequence %s</command></para> 
+
+<para> Processing some sequence... </para></listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: copy table %s</command></para> 
+
+<para> &lslon; is starting to copy a table... </para></listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: table %s Slony-I serial key added local</command></para> 
+
+<para> Just added new column to the table to provide surrogate primary key.</listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: local table %s already has Slony-I serial key</command></para> 
+
+<para> Did not need to add serial key; apparently it was already there.</listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: table %s does not require Slony-I serial key</command></para> 
+
+<para> Apparently this table didn't require a special serial key... </para>
+</listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: table %s Slony-I serial key added local</command></para> </listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: Begin COPY of table %s</command></para> 
+
+<para> &lslon; is about to start the COPY on both sides to copy a table... </para></listitem>
+<listitem><para><command>ERROR: remoteWorkerThread_%d: Could not generate copy_set request for %s - %s</command></para> 
+
+<para> This indicates that the <command>delete/copy</command> requests
+failed on the subscriber.  The &lslon; will repeat
+the <command>COPY_SET</command> attempt; it will probably continue to
+fail.. </para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: copy to stdout on provider - %s %s</command></para> 
+
+<para> Evidently something about the COPY to <filename>stdout</filename> on the provider node broke...  The event will be retried... </para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: copy from stdin on local node - %s %s</command></para> 
+
+<para> Evidently something about the COPY into the table on the
+subscriber node broke...  The event will be
+retried... </para> </listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: %d bytes copied for table %s</command></para> 
+
+<para> This message indicates that the COPY of the table has
+completed.  This is followed by running <command>ANALYZE</command> and
+reindexing the table on the subscriber.</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: %.3f seconds
+to copy table %s</command></para>
+
+<para> After this message, copying and reindexing and analyzing the table on the subscriber is complete.</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: set last_value of sequence %s (%s) to %s</command></para> 
+
+<para> As should be no surprise, this indicates that a sequence has been processed on the subscriber.</para>
+</listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: %.3 seconds to copy sequences</command></para> 
+
+<para> Summarizing the time spent processing sequences in the <command>COPY_SET</command> event. </para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: query %s did not return a result </command></para> 
+
+<para> This indicates that the query, as part of final processing of <command>COPY_SET</command>, failed.  The copy will restart... </para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: copy_set no previous SYNC found, use enable event</command></para> 
+
+<para> This takes place if no past SYNC event was found; the current
+event gets set to the event point of
+the <command>ENABLE_SUBSCRIPTION</command> event.
+</para> </listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: copy_set SYNC found, use event seqno %s</command></para> 
+
+<para> This takes place if a SYNC event was found; the current
+event gets set as shown. </para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: sl_setsync entry for set %d not found on provider</command></para> 
+
+<para> SYNC synchronization information was expected to be drawn from
+an existing subscriber, but wasn't found.  Something
+replication-breakingly-bad has probably
+happened... </para> </listitem>
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: could not insert to sl_setsync_offline</command></para> 
+
+<para> Oh, dear.  After setting up a subscriber, and getting pretty
+well everything ready, some writes to a log shipping file failed.
+Perhaps disk filled up...  </para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: %.3f seconds to build initial setsync status</command></para> 
+
+<para> Indicates the total time required to get the copy_set event finalized...</para>
+</listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: disconnected from provider DB</command></para> 
+
+<para> At the end of a subscribe set event, the subscriber's &lslon;
+will disconnect from the provider, clearing out
+connections... </listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: copy_set %d done in %.3f seconds</command></para> 
+
+<para> Indicates the total time required to complete copy_set...  This indicates a successful subscription!</para>
+</listitem>
+</itemizedlist>
+</sect3>
+
+<sect3 id="lognormalsync"><title> Log Entries Associated With Normal SYNC activity </title>
+
+<para> Some of these messages indicate exceptions, but
+the <quote>normal</quote> stuff represents what you should expect to
+see most of the time when replication is just plain working.</para>
+
+<itemizedlist>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: forward confirm %d,%s received by %d</command></para> 
+
+<para> These events should occur frequently and routinely as nodes report confirations of the events they receive. </para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: SYNC %d processing</command></para> 
+
+<para> This indicates the start of processing of a <command>SYNC</command> </para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: No pa_conninfo
+for data provider %d</command></para>
+
+<para> Oh dear, we haven't connection information to connect to the
+data provider.  That shouldn't be possible,
+normally...</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: cannot connect to data provider %d on 'dsn'</command></para>
+
+<para> Oh dear, we haven't got <emphasis>correct</emphasis> connection
+information to connect to the data provider.</para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: connected to data provider %d on 'dsn'</command></para> 
+
+<para> Excellent; the &lslon; has connected to the provider. </para> </listitem>
+
+<listitem><para><command>WARN: remoteWorkerThread_%d: don't know what ev_seqno node %d confirmed for ev_origin %d</command></para> 
+
+<para> There's no confirmation information available for this node's provider; need to abort the <command>SYNC</command> and wait a bit in hopes that that information will emerge soon...</para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: data provider %d only confirmed up to ev_seqno %d for ev_origin %d </command></para> 
+
+<para> The provider for this node is a subscriber, and apparently that subscriber is a bit behind.  The &lslon; will need to wait for the provider to catch up until it has <emphasis> new</emphasis> data. </para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: data provider %d confirmed up to ev_seqno %s for ev_origin %d - OK</command></para> 
+
+<para> All's well; the provider should have the data that the subscriber needs...</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: syncing set %d with %d table(s) from provider %d</command></para> 
+
+<para> This is declaring the plans for a <command>SYNC</command>: we have a set with some tables to process.</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: ssy_action_list value: %s length: %d</command></para> 
+
+<para> This portion of the query to collect log data to be applied has been known to <quote>bloat up</quote>; this shows how it has gotten compressed... </para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: Didn't add OR to provider</command></para> 
+
+<para> This indicates that there wasn't anything in a <quote>provider</quote> clause in the query to collect log data to be applied, which shouldn't be.  Things are quite likely to go bad at this point... </para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: no sets need syncing for this event</command></para> 
+
+<para>This will be the case for all <command>SYNC</command> events generated on nodes that are not originating replication sets.  You can expect to see these messages reasonably frequently. </para></listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: activate helper %d</command></para> 
+
+<para> We're about to kick off a thread to help process <command>SYNC</command> data...</para></listitem>
+
+<listitem><para><command>DEBUG4: remoteWorkerThread_%d: waiting for log data</command></para> 
+
+<para> The thread is waiting to get data to consume (e.g. - apply to the replica).</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: %s %s - qualification was %s </command></para> 
+
+<para> Apparently an application of replication data to the subscriber failed...  This quite likely indicates some sort of serious corruption.</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: replication query did not affect one row (cmdTuples = %s) - query was: %s qualification was: %s</command></para> 
+
+<para> If <envar> SLON_CHECK_CMDTUPLES</envar> is set, &lslon; applies
+changes one tuple at a time, and verifies that each change affects
+exactly one tuple.  Apparently that wasn't the case here, which
+suggests a corruption of replication.  That's a rather bad
+thing...</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: SYNC aborted</command></para> 
+
+<para> If any errors have been encountered that haven't already aborted the <command>SYNC</command>, this catches and aborts it.</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: new sl_rowid_seq value: %s</command></para> 
+
+<para> This marks the progression of this internal &slony1; sequence. </para></listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: SYNC %d done in %.3f seconds</command></para> 
+
+<para> This indicates the successful completion of a <command>SYNC</command>.  Hurray!</para></listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d_d:%.3f seconds delay for first row </command></para> 
+
+<para> This indicates how long it took to get the first row from the LOG cursor that pulls in data from the sl_log tables.</para> </listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d_d: large log_cmddata for actionseq %s not found</command></para> 
+
+<para> &lslon; could not find the data for one of the <quote>very large</quote> sl_log table tuples that are pulled individually.  This shouldn't happen.</para></listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d_d:%.3f seconds until close cursor </command></para> 
+
+<para> This indicates how long it took to complete reading data from the LOG cursor that pulls in data from the sl_log tables.</para> </listitem>
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d_d: inserts=%d updates=%d deletes=%d </command></para> 
+
+<para> This reports how much activity was recorded in the current <command>SYNC</command> set. </para> </listitem>
+
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: compress_actionseq(list,subquery) Action list: %s</command></para> 
+
+<para> This indicates a portion of the LOG cursor query that is about to be compressed.  (In some cases, this could grow to <emphasis>enormous</emphasis> size, blowing up the query parser...) </para></listitem>
+<listitem><para><command>DEBUG3: remoteWorkerThread_%d: compressed actionseq subquery %s</command></para> 
+
+<para> This indicates what that subquery compressed into. </para></listitem>
+
+</itemizedlist>
+</sect3>
+
+<sect3 id="logaddobjects"><title> Log Entries - Adding Objects to Sets  </title>
+
+<para> These entries will be seen on an origin node's logs at the time
+you are configuring a replication set; some of them will be seen on
+subscribers at subscription time.  </para>
+
+<itemizedlist>
+<listitem><para><command>ERROR: Slony-I: setAddTable_int(): table % has no index %</command></para> 
+
+<para> Apparently a PK index was specified that is absent on this node...</para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddTable_int(): table % not found</command></para> 
+
+<para> Table wasn't found on this node; did you load the schema in properly?. </para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddTable_int(): table % is not a regular table</command></para> 
+
+<para> You tried to replicate something that isn't a table; you can't do that! </para></listitem>
+<listitem><para><command>NOTICE: Slony-I setAddTable_int(): table % PK column % nullable</command></para> 
+
+<para> You tried to replicate a table where one of the columns in the would-be primary key is allowed to be null.  All PK columns must be <command>NOT NULL.</command> This request is about to fail. </para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddTable_int(): table % not replicable!</command></para> 
+
+<para> 
+This happens because of the NULLable PK column. </para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddTable_int(): table id % has already been assigned!</command></para> 
+
+<para> The table ID value needs to be assigned uniquely
+in <xref linkend="stmtsetaddtable">; apparently you requested a value
+already in use.
+</para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddSequence(): set % not found</command></para> 
+<para> Apparently the set you requested is not available...</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setAddSequence(): set % has remote origin</command></para> 
+<para> You may only add things at the origin node.</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setAddSequence(): cannot add sequence to currently subscribed set %</command></para> 
+<para> Apparently the set you requested has already been subscribed.  You cannot add tables/sequences to an already-subscribed set.  You will need to create a new set, add the objects to that new set, and set up subscriptions to that.</para></listitem>
+<listitem><para><command>ERROR: Slony-I setAddSequence_int(): set % not found</command></para> 
+<para> Apparently the set you requested is not available...</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setAddSequence_int(): sequence % not found</command></para> 
+<para> Apparently the sequence you requested is not available on this node.  How did you set up the schemas on the subscribers???</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setAddSequence_int(): % is not a sequence</command></para> 
+<para> Seems pretty obvious :-).</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setAddSequence_int(): sequence ID % has already been assigned</command></para> 
+<para> Each sequence ID added must be unique; apparently you have reused an ID.</para></listitem>
+
+</itemizedlist>
+</sect3>
+
+<sect3><title> Logging When Moving Objects Between Sets  </title>
+
+<itemizedlist>
+<listitem><para><command>ERROR: Slony-I setMoveTable_int(): table % not found</command></para> 
+
+<para> Table wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveTable_int(): set ids cannot be identical</command></para> 
+
+<para> Does it make sense to move a table from a set into the very same set? </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveTable_int(): set % not found</command></para> 
+
+<para> Set wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveTable_int(): set % does not originate on local node</command></para> 
+
+<para> Set wasn't found to have origin on this node; you probably gave the wrong EVENT NODE... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveTable_int(): subscriber lists of set % and % are different</command></para> 
+
+<para> You can only move objects between sets that have identical subscriber lists. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveSequence_int(): sequence % not found</command></para> 
+
+<para> Sequence wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveSequence_int(): set ids cannot be identical</command></para> 
+
+<para> Does it make sense to move a sequence from a set into the very same set? </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveSequence_int(): set % not found</command></para> 
+
+<para> Set wasn't found on this node; you probably gave the wrong ID number... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveSequence_int(): set % does not originate on local node</command></para> 
+
+<para> Set wasn't found to have origin on this node; you probably gave the wrong EVENT NODE... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setMoveSequence_int(): subscriber lists of set % and % are different</command></para> 
+
+<para> You can only move objects between sets that have identical subscriber lists. </para></listitem>
+</itemizedlist>
+</sect3>
+
+<sect3><title> Issues with Dropping Objects  </title>
+
+<itemizedlist>
+<listitem><para><command>ERROR: Slony-I setDropTable(): table % not found</command></para> 
+
+<para> Table wasn't found on this node; are you sure you had the ID right? </para></listitem>
+<listitem><para><command>ERROR: Slony-I setDropTable(): set % not found</command></para> 
+
+<para> The replication set wasn't found on this node; are you sure you had the ID right? </para></listitem>
+<listitem><para><command>ERROR: Slony-I setDropTable(): set % has remote origin</command></para> 
+
+<para> The replication set doesn't originate on this node; you probably need to specify an <command>EVENT NODE</command> in the <xref linkend="stmtsetdroptable"> command. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setDropSequence_int(): sequence % not found</command></para> 
+<para> Could this sequence be in another set?</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setDropSequence_int(): set % not found</command></para> 
+<para> Could you have gotten the set ID wrong?</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I setDropSequence_int(): set % has origin at another node - submit this to that node</command></para> 
+
+<para> This message seems fairly self-explanatory...</para></listitem>
+
+</itemizedlist>
+</sect3>
+
+<sect3><title> Issues with MOVE SET, FAILOVER, DROP NODE  </title>
+
+<para> Many of these errors will occur if you submit a &lslonik;
+script that describes a reconfiguration incompatible with your
+cluster's current configuration.  Those will lead to the
+feeling: <quote>Whew, I'm glad &lslonik; caught that for me!</quote> </quote>
+
+<para> Some of the others lead to a &lslon; telling itself to fall
+over; all <emphasis>should</emphasis> be well when you restart it, as
+it will read in the revised, newly-correct configuration when it
+starts up.</para>
+
+<para> Alas, a few indicate that <quote>something bad
+happened,</quote> for which the resolution may not necessarily be
+easy.  Nobody said that replication was easy, alas...</para>
+
+<itemizedlist>
+<listitem><para><command>ERROR: Slony-I: DROP_NODE cannot initiate on the dropped node</command></para> 
+
+<para> You need to have an EVENT NODE other than the node that is to be dropped.... </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: Node % is still configured as a data provider</command></para> 
+
+<para> You cannot drop a node that is in use as a data provider; you
+need to reshape subscriptions so no nodes are dependent on it first. </para></listitem>
+<listitem><para><command>ERROR: Slony-I: Node % is still origin of one or more sets</command></para> 
+
+<para> You can't drop a node if it is the origin for a set!  Use <xref linkend="stmtmoveset"> or <xref linkend="stmtfailover"> first. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: cannot failover - node % has no path to the backup node</command></para> 
+
+<para> You cannot failover to a node that isn't connected to all the subscribers, at least indirectly. </para></listitem>
+<listitem><para><command>ERROR: Slony-I: cannot failover - node % is not subscribed to set %</command></para> 
+
+<para> You can't failover to a node that doesn't subscribe to all the relevant sets. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: cannot failover - subscription for set % is not active</command></para> <para> If the subscription has been set up, but isn't yet active, that's still no good.</para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: cannot failover - node % is not a forwarder of set %</command></para> 
+
+<para> You can only failover or move a set to a node that has
+forwarding turned on. </para></listitem>
+
+<listitem><para><command>NOTICE: failedNode: set % has no other direct receivers - move now</command></para> 
+
+<para> If the backup node is the only direct subscriber, then life is a bit simplified...  No need to reshape any subscriptions!</para></listitem>
+<listitem><para><command>NOTICE: failedNode set % has other direct receivers - change providers only</command></para> 
+<para> In this case, all direct subscribers are pointed to the backup node, and the backup node is pointed to receive from another node so it can get caught up.</para></listitem>
+<listitem><para><command>NOTICE: Slony-I: Please drop schema _@CLUSTERNAME@</command></para> 
+
+<para> A node has been uninstalled; you may need to drop the schema... </para></listitem>
+
+
+</itemizedlist>
+</sect3>
+
+<sect3><title> Log Switching </title>
+
+<para> These messages relate to the new-in-1.2 facility whereby
+&slony1; periodically switches back and forth between storing data
+in <envar>sl_log_1</envar> and <envar>sl_log_2</envar>.</para>
+
+<itemizedlist>
+<listitem><para><command>Slony-I: Logswitch to sl_log_2 initiated'</command></para> 
+<para> Indicates that &lslon; is in the process of switching over to this log table.</para></listitem>
+<listitem><para><command>Slony-I: Logswitch to sl_log_1 initiated'</command></para> 
+<para> Indicates that &lslon; is in the process of switching over to this log table.</para></listitem>
+<listitem><para><command>Previous logswitch still in progress</command></para> 
+
+<para> An attempt was made to do a log switch while one was in progress...</para></listitem>
+
+<listitem><para><command>ERROR: remoteWorkerThread_%d: cannot determine current log status</command></para> 
+
+<para> The attempt to read from sl_log_status, which determines
+whether we're working on <envar>sl_log_1</envar>
+or <envar>sl_log_2</envar> got no results; that can't be a good thing,
+as there certainly should be data here...  Replication is likely about
+to halt...</para> </listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: current local log_status is %d</command></para> 
+<para> This indicates which of <envar>sl_log_1</envar> and <envar>sl_log_2</envar> are being used to store replication data. </para> 
+</listitem>
+
+</itemizedlist>
+</sect3>
+<sect3><title> Miscellanea </title>
+
+<para> Perhaps these messages should be categorized further; that
+remains a task for the documentors.</para>
+
+<itemizedlist>
+
+<listitem><para><command>ERROR: Slonik version: @MODULEVERSION@ != Slony-I version in PG build %</command></para> 
+
+<para> This is raised in <function>checkmoduleversion()</function> if there is a mismatch between the version of &slony1; as reported by &lslonik; versus what the &postgres; build has.</para></listitem>
+<listitem><para><command>ERROR: Slony-I: registry key % is not an int4 value</command></para> 
+
+<para> Raised in <function>registry_get_int4()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<listitem><para><command>ERROR: registry key % is not a text value</command></para> 
+
+<para> Raised in <function>registry_get_text()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<listitem><para><command>ERROR: registry key % is not a timestamp value</command></para> 
+
+<para> Raised in <function>registry_get_timestamp()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<listitem><para><command>NOTICE: Slony-I: cleanup stale sl_nodelock entry for pid=%</command></para> 
+
+<para> This will occur when a &lslon; starts up after another has crashed; this is routine cleanup.</para></listitem>
+<listitem><para><command>ERROR: Slony-I: This node is already initialized</command></para> 
+
+<para> This would typically happen if you submit <xref linkend="stmtstorenode"> gainst a node that has already been set up with the &slony1; schema. </para></listitem>
+<listitem><para><command>ERROR: Slony-I: node % not found</command></para> 
+
+<para> An attempt to mark a node not listed locally as enabled should fail...</para></listitem>
+<listitem><para><command>ERROR: Slony-I: node % is already active</command></para> 
+
+<para> An attempt to mark a node already marked as active as active should fail...</para></listitem>
+<listitem><para><command>DEBUG4: remoteWorkerThread_%d: added active set %d to provider %d</command></para> 
+
+<para> Indicates that this set is being provided by this
+provider.</para></listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: event %d
+ignored - unknown origin</command></para>
+
+<para> Probably happens if events arrive before
+the <command>STORE_NODE</command> event that tells that the new node
+now exists... </para></listitem>
+
+<listitem><para><command>WARN: remoteWorkerThread_%d: event %d ignored - origin inactive</command></para> 
+
+<para> This shouldn't occur now (2006) as we don't support the notion
+of deactivating a node... </para>
+</listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: event %d ignored - duplicate </command></para>
+
+<para> This might be expected to happen if the event notification
+comes in concurrently from two sources... </para> </listitem>
+
+<listitem><para><command>DEBUG2: remoteWorkerThread_%d: unknown node %d</command></para> 
+
+<para> Happens if the &lslon; is unaware of this node; probably a sign
+of <command>STORE_NODE</command> requests not
+propagating... </para> </listitem>
+</itemizedlist>
+</sect3>
+</sect2>
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"book.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:"/usr/lib/sgml/catalog"
+sgml-local-ecat-files:nil
+End:
+-->
