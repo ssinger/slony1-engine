@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.6 2006-07-11 21:22:33 darcyb Exp $
+$Id: RELEASE-1.2.0,v 1.7 2006-07-31 18:49:52 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -53,6 +53,13 @@ how Slony-I manages replication configuration.  These include:
   but the change has been applied to all the tables Slony-I uses.
   UPGRADE FUNCTIONS will remove OIDs from Slony-I tables in existing
   schemas, too.
+
+- When possible (based on log switching functionality), partial
+  indexes on sl_log_1 and sl_log_2 are created on a per-origin-node
+  basis.  This provides the performance boost of having an easily
+  recognizable index, but without the risk of having XIDs from
+  different nodes mixed together in one index, where rollover could
+  Cause Problems...
 
 These features are generally configurable, but the defaults ought to
 allow improved behaviour for all but the most "Extreme Uses."
