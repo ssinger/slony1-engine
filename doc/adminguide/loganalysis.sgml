@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.1 2006-07-29 12:26:54 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.2 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -61,6 +61,8 @@ events.</para></listitem></varlistentry>
 </sect2>
 
 <sect2> <title> How to read &slony1; logs </title>
+
+<indexterm><primary>reading and understanding &slony1; logs</primary></indexterm>
 
 <para> Note that as far as slon is concerned, there is no
 <quote>master</quote> or <quote>slave.</quote> They are just
@@ -172,8 +174,7 @@ fairly well comprehensive list, leaving out mostly some of
 the <command>DEBUG4</command> messages that are generally
 uninteresting.</para>
 
-<sect3 id="logshiplog"><title> Log Messages Associated with Log
-Shipping <title>
+<sect3 id="logshiplog"><title> Log Messages Associated with Log Shipping </title>
 
 <para> Most of these represent errors that come up if
 the <xref linkend="logshipping"> functionality breaks.  You may expect
@@ -785,7 +786,7 @@ already in use.
 <para> Many of these errors will occur if you submit a &lslonik;
 script that describes a reconfiguration incompatible with your
 cluster's current configuration.  Those will lead to the
-feeling: <quote>Whew, I'm glad &lslonik; caught that for me!</quote> </quote>
+feeling: <quote>Whew, I'm glad &lslonik; caught that for me!</quote> </para>
 
 <para> Some of the others lead to a &lslon; telling itself to fall
 over; all <emphasis>should</emphasis> be well when you restart it, as

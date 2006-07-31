@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.25 2006-07-29 11:30:05 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.26 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -218,7 +218,7 @@ no special use of &slony1;.</para>
 propagated at the same location in the transaction stream on all the
 nodes, then you but no tables need to be locked, then you need to use
 <command>EXECUTE SCRIPT</command>, locking challenges or
-no.</quote></para></listitem>
+no.</para></listitem>
 
 <listitem><para> You may want an extra index on some replicated
 node(s) in order to improve performance there.</para>

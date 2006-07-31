@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.18 2006-07-29 11:30:05 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.19 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -315,7 +315,7 @@ node. </para> </listitem>
 </listitem>
 
 <listitem><para> <link linkend="slonyupgrade">How do I upgrade
-&slony1; to a newer version?<linkend> </para> </listitem>
+&slony1; to a newer version?</link> </para> </listitem>
 
 <listitem><para> What happens when I fail over?</para> 
 

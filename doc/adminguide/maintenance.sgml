@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.23 2006-07-26 00:36:03 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.24 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -50,7 +50,10 @@ functionality is in place; every so often, it seeks to switch between
 storing data in &sllog1; and &sllog2; so that it may seek
 to <command>TRUNCATE</command> the <quote>elder</quote> data.</para>
 
-<para> That means that on a regular basis, these tables are completely cleared out, so that you will not suffer from them having grown to some significant size, due to heavy load, after which they are incapable of shrinking back down </para> </listitem>
+<para> That means that on a regular basis, these tables are completely
+cleared out, so that you will not suffer from them having grown to
+some significant size, due to heavy load, after which they are
+incapable of shrinking back down </para> </listitem>
 
 </itemizedlist>
 </para>

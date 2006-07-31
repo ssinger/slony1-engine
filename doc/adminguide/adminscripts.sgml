@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.37 2006-06-22 15:35:29 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.38 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -119,6 +119,7 @@ sequence that &slony1; generates</para>
 </itemizedlist>
 </sect2>
 <sect2><title>slonik_build_env</title>
+<indexterm><primary>slonik_build_env</primary></indexterm>
 
 <para>Queries a database, generating output hopefully suitable for
 <filename>slon_tools.conf</filename> consisting of:</para>
@@ -258,6 +259,8 @@ from one version of &slony1; to another.</para>
 
 <sect2 id="mkslonconf"><title>mkslonconf.sh</title>
 
+<indexterm><primary>script - mkslonconf.sh</primary></indexterm>
+
 <para> This is a shell script designed to rummage through a &slony1;
 cluster and generate a set of <filename>slon.conf</filename> files
 that &lslon; accesses via the <command> slon -f slon.conf </command>
@@ -352,6 +355,9 @@ section... </para>
 
 <sect2 id="launchclusters"><title> launch_clusters.sh </title>
 
+<indexterm><primary>script - launch_clusters.sh</primary></indexterm>
+
+
 <para> This is another shell script which uses the configuration as
 set up by <filename>mkslonconf.sh</filename> and is intended to either
 be run at system boot time, as an addition to the
@@ -397,6 +403,9 @@ under management. </para></listitem>
 launch any missing &lslon; processes. </para>
 </sect2>
 <sect2><title> slony-cluster-analysis </title>
+
+<indexterm><primary>script - slony-cluster-analysis</primary></indexterm>
+
 
 <para> If you are running a lot of replicated databases, where there
 are numerous &slony1; clusters, it can get painful to track and

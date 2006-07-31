@@ -1,11 +1,11 @@
-<!-- $Id: slonyupgrade.sgml,v 1.1 2006-07-31 14:48:45 cbbrowne Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.2 2006-07-31 18:50:55 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
 
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
-command <xref linkend="stmtupgradefunctions">.</para>
+command <xref linkend="stmtupdatefunctions">.</para>
 
 <para> While this requires temporarily stopping replication, it does
 not forcibly require an outage for applications that submit
