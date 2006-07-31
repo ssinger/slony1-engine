@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.14 2006-06-15 19:23:42 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.15 2006-07-31 19:42:09 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>
@@ -138,7 +138,7 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </para>
 
 <para> Those two queries could be submitted to all of the nodes via
-<xref linkend="function.ddlscript-integer-text-integer"> / <xref
+&funddlscript; / <xref
 linkend="stmtddlscript">, thus eliminating the sequence everywhere
 <quote>at once.</quote> Or they may be applied by hand to each of the
 nodes.</para>

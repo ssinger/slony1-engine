@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.61 2006-07-27 19:52:19 xfade Exp $ -->
+<!-- $Id: faq.sgml,v 1.62 2006-07-31 19:42:09 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1439,7 +1439,7 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting></para>
 
 <para>Those two queries could be submitted to all of the nodes via
-<xref linkend="function.ddlscript-integer-text-integer"> / <xref
+&funddlscript; / <xref
 linkend="stmtddlscript">, thus eliminating the sequence everywhere
 <quote>at once.</quote> Or they may be applied by hand to each of the
 nodes.</para>

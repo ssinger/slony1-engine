@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.33 2006-07-29 11:30:05 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.34 2006-07-31 19:42:09 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -26,7 +26,7 @@
   <!ENTITY funsetdropsequence "<xref linkend= function.setdropsequence-integer>">
   <!ENTITY funsetmovetable "<xref linkend= function.setmovetable-integer-integer>">
 <!ENTITY fundroptrigger "<xref linkend=function.droptrigger-integer-name>">
-<!ENTITY funddlscript "<xref linkend=function.ddlscript-integer-text-integer>">
+<!ENTITY funddlscript "<xref linkend=function.ddlscript-complete-integer-text-integer>">
 <!ENTITY fundropnode "<xref linkend=function.dropnode-integer>">
 <!ENTITY funenablenode "<xref linkend=function.enablenode-integer>">
 <!ENTITY funfailednode "<xref linkend=function.failednode-integer-integer>">
