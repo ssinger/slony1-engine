@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.8 2006-07-31 19:04:32 darcyb Exp $
+$Id: RELEASE-1.2.0,v 1.9 2006-07-31 20:43:05 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -99,6 +99,15 @@ There are also numerous enhancements that are more directly visible:
   18GB replication set, hit a deadlock, and have to start all over.
   (The slon will automatically try again; the irritation is that you
   may have been depending on that getting done by Monday morning...)
+
+- As has been the case for fairly much each release that has been
+  made, the documentation has been significantly extended.  The "admin
+  guide" has been augmented and cleaned up.  
+
+  Notable additions include a listing of "Best Practices" (due in
+  great part to discoveries by the oft-unsung heroes of Afilias' Data
+  Services department) and a fairly comprehensive listing of log
+  messages you may expect to see in your Slony-I logs.
 
 - A lot of fixes to the build environment (this needs to be tested on
   lots of platforms)
