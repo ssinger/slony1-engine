@@ -1,4 +1,4 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.6 2005-05-04 20:55:56 cbbrowne Exp $ -->
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.7 2006-07-31 18:56:24 cbbrowne Exp $ -->
 
 
 
@@ -385,6 +385,7 @@
 				STORE_TRIGGER		=
 				DROP_TRIGGER		=
 				MOVE_SET			=
+				ACCEPT_SET			=
 				SET_DROP_TABLE			=
 				SET_DROP_SEQUENCE		=
 				SET_MOVE_TABLE			=
@@ -1127,6 +1128,10 @@
 
               </para>
 
+              <para>
+                Is the node being used for log shipping?
+              </para>
+
             </listitem>
           </varlistentry>
 
@@ -1174,6 +1179,119 @@
           </listitem>
 
         </itemizedlist>
+
+
+
+
+
+
+      </para>
+    </section>
+
+      <section id="table.sl-nodelock"
+               xreflabel="sl_nodelock">
+        <title id="table.sl-nodelock-title">
+         Table:
+         
+         <structname>sl_nodelock</structname>
+        </title>
+ 
+
+        <para>
+          Used to prevent multiple slon instances and to identify the backends to kill in terminateNodeConnections().
+        </para>
+
+
+        <para>
+          <variablelist>
+            <title>
+              Structure of <structname>sl_nodelock</structname>
+            </title>
+
+
+            <varlistentry>
+              <term><structfield>nl_nodeid</structfield></term>
+              <listitem><para>
+                <type>integer</type>
+
+
+                <literal>PRIMARY KEY</literal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Clients node_id
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>nl_conncnt</structfield></term>
+              <listitem><para>
+                <type>serial</type>
+
+
+                <literal>PRIMARY KEY</literal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Clients connection number
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>nl_backendpid</structfield></term>
+              <listitem><para>
+                <type>integer</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                PID of database backend owning this lock
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+        </variablelist>
+
+
+
+
 
 
 
@@ -1348,6 +1466,130 @@
           </listitem>
 
         </itemizedlist>
+
+
+
+
+
+
+      </para>
+    </section>
+
+      <section id="table.sl-registry"
+               xreflabel="sl_registry">
+        <title id="table.sl-registry-title">
+         Table:
+         
+         <structname>sl_registry</structname>
+        </title>
+ 
+
+        <para>
+          Stores miscellaneous runtime data
+        </para>
+
+
+        <para>
+          <variablelist>
+            <title>
+              Structure of <structname>sl_registry</structname>
+            </title>
+
+
+            <varlistentry>
+              <term><structfield>reg_key</structfield></term>
+              <listitem><para>
+                <type>text</type>
+
+
+                <literal>PRIMARY KEY</literal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Unique key of the runtime option
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>reg_int4</structfield></term>
+              <listitem><para>
+                <type>integer</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Option value if type int4
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>reg_text</structfield></term>
+              <listitem><para>
+                <type>text</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Option value if type text
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>reg_timestamp</structfield></term>
+              <listitem><para>
+                <type>timestamp without time zone</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Option value if type timestamp
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+        </variablelist>
+
+
+
+
 
 
 
@@ -2342,7 +2584,7 @@ WHERE (
               </para>
 
               <para>
-                Has this subscription been activated?  This is not set until the subscriber has received COPY data from the provider
+                Has this subscription been activated?  This is not set on the subscriber until AFTER the subscriber has received COPY data from the provider
               </para>
 
             </listitem>
@@ -2761,6 +3003,84 @@ END;</programlisting>
       </para>
     </section>
 
+<!-- Function addpartiallogindices(  ) -->
+    <section id="function.addpartiallogindices"
+             xreflabel="schemadocaddpartiallogindices(  )">
+      <title id="function.addpartiallogindices-title">
+       addpartiallogindices(  )
+      </title>
+      <titleabbrev id="function.addpartiallogindices-titleabbrev">
+       addpartiallogindices(  )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Add partial indexes, if possible, to the unused sl_log_? table for
+all origin nodes, and drop any that are no longer needed.
+
+This function presently gets run any time set origins are manipulated
+(FAILOVER, STORE SET, MOVE SET, DROP SET), as well as each time the
+system switches between sl_log_1 and sl_log_2.
+        <programlisting>
+DECLARE
+	v_current_status	int4;
+	v_log			int4;
+	v_dummy		record;
+	idef 		text;
+	v_count		int4;
+BEGIN
+	v_count := 0;
+	select last_value into v_current_status from sl_log_status;
+
+	-- If status is 2 or 3 --&gt; in process of cleanup --&gt; unsafe to create indices
+	if v_current_status in (2, 3) then
+		return 0;
+	end if;
+
+	if v_current_status = 0 then   -- Which log should get indices?
+		v_log := 2;
+	else
+		v_log := 1;
+	end if;
+
+	-- Add missing indices...
+	for v_dummy in select distinct set_origin from sl_set
+		where not exists 
+                     (select * from pg_catalog.pg_indexes where schemaname = &#39;schemadoc&#39;
+                      and tablename = &#39;sl_log_&#39; || v_log and 
+                      indexname = &#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || set_origin) loop	   
+		idef := &#39;create index &quot;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || v_dummy.set_origin ||
+                        &#39;&quot; on sl_log_&#39; || v_log || &#39; USING btree(log_xid xxid_ops) where (log_origin = &#39; || v_dummy.set_origin || &#39;);&#39;;
+		execute idef;
+		v_count := v_count + 1;
+	end loop;
+
+	-- Remove unneeded indices...
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.schemaname = &#39;@NAMESPACE&#39;
+                       and i.tablename = &#39;sl_log_&#39; || v_log and
+                       not exists (select 1 from sl_set where
+				i.indexname = &#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || set_origin)
+	loop
+		idef := &#39;drop index &quot;schemadoc&quot;.&quot;&#39; || v_dummy.indexname || &#39;&quot;;&#39;;
+		execute idef;
+		v_count := v_count - 1;
+	end loop;
+	return v_count;
+END
+</programlisting>
+      </para>
+    </section>
+
 <!-- Function altertableforreplication( integer ) -->
     <section id="function.altertableforreplication-integer"
              xreflabel="schemadocaltertableforreplication( integer )">
@@ -2799,6 +3119,8 @@ declare
 	v_tab_fqname		text;
 	v_tab_attkind		text;
 	v_n					int4;
+	v_trec	record;
+	v_tgbad	boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -2831,11 +3153,11 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception &#39;Slony-I: Table with id % not found&#39;, p_tab_id;
+		raise exception &#39;Slony-I: alterTableForReplication(): Table with id % not found&#39;, p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 	if v_tab_row.tab_altered then
-		raise exception &#39;Slony-I: Table % is already in altered state&#39;,
+		raise exception &#39;Slony-I: alterTableForReplication(): Table % is already in altered state&#39;,
 				v_tab_fqname;
 	end if;
 
@@ -2863,6 +3185,32 @@ begin
 		-- to disable all user- and foreign key triggers and rules.
 		-- ----
 
+
+		-- ----
+		-- Check to see if there are any trigger conflicts...
+		-- ----
+		v_tgbad := &#39;false&#39;;
+		for v_trec in 
+			select pc.relname, tg1.tgname from
+			&quot;pg_catalog&quot;.pg_trigger tg1, 
+			&quot;pg_catalog&quot;.pg_trigger tg2,
+			&quot;pg_catalog&quot;.pg_class pc,
+			&quot;pg_catalog&quot;.pg_index pi,
+			sl_table tab
+			where 
+			 tg1.tgname = tg2.tgname and        -- Trigger names match
+			 tg1.tgrelid = tab.tab_reloid and   -- trigger 1 is on the table
+			 pi.indexrelid = tg2.tgrelid and    -- trigger 2 is on the index
+			 pi.indrelid = tab.tab_reloid and   -- indexes table is this table
+			 pc.oid = tab.tab_reloid
+                loop
+			raise notice &#39;Slony-I: alterTableForReplication(): multiple instances of trigger % on table %&#39;,
+				v_trec.tgname, v_trec.relname;
+			v_tgbad := &#39;true&#39;;
+		end loop;
+		if v_tgbad then
+			raise exception &#39;Slony-I: Unable to disable triggers&#39;;
+		end if;  		
 
 		-- ----
 		-- Disable all existing triggers
@@ -2987,11 +3335,11 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception &#39;Slony-I: Table with id % not found&#39;, p_tab_id;
+		raise exception &#39;Slony-I: alterTableRestore(): Table with id % not found&#39;, p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 	if not v_tab_row.tab_altered then
-		raise exception &#39;Slony-I: Table % is not in altered state&#39;,
+		raise exception &#39;Slony-I: alterTableRestore(): Table % is not in altered state&#39;,
 				v_tab_fqname;
 	end if;
 
@@ -3050,6 +3398,45 @@ begin
 	return p_tab_id;
 end;
 </programlisting>
+      </para>
+    </section>
+
+<!-- Function checkmoduleversion(  ) -->
+    <section id="function.checkmoduleversion"
+             xreflabel="schemadoccheckmoduleversion(  )">
+      <title id="function.checkmoduleversion-title">
+       checkmoduleversion(  )
+      </title>
+      <titleabbrev id="function.checkmoduleversion-titleabbrev">
+       checkmoduleversion(  )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Inline test function that verifies that slonik request for STORE
+NODE/INIT CLUSTER is being run against a conformant set of
+schema/functions.
+        <programlisting>
+declare
+  moduleversion	text;
+begin
+  select into moduleversion getModuleVersion();
+  if moduleversion &lt;&gt; &#39;@MODULEVERSION@&#39; then
+      raise exception &#39;Slonik version: @MODULEVERSION@ != Slony-I version in PG build %&#39;,
+             moduleversion;
+  end if;
+  return null;
+end;</programlisting>
       </para>
     </section>
 
@@ -3130,20 +3517,45 @@ begin
 		end if;
 	end loop;
 
+	-- ----
+	-- If cluster has only one node, then remove all events up to
+	-- the last SYNC - Bug #1538
+        -- http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1538
+	-- ----
+
+	select * into v_min_row from sl_node where
+			no_id &lt;&gt; getLocalNodeId(&#39;_schemadoc&#39;) limit 1;
+	if not found then
+		select ev_origin, ev_seqno into v_min_row from sl_event
+		where ev_origin = getLocalNodeId(&#39;_schemadoc&#39;)
+		order by ev_origin desc, ev_seqno desc limit 1;
+		raise notice &#39;Slony-I: cleanupEvent(): Single node - deleting events &lt; %&#39;, v_min_row.ev_seqno;
+			delete from sl_event
+			where
+				ev_origin = v_min_row.ev_origin and
+				ev_seqno &lt; v_min_row.ev_seqno;
+
+        end if;
+
+	-- ----
+	-- Also remove stale entries from the nodelock table.
+	-- ----
+	perform cleanupNodelock();
+
 	return 0;
 end;
 </programlisting>
       </para>
     </section>
 
-<!-- Function cleanuplistener(  ) -->
-    <section id="function.cleanuplistener"
-             xreflabel="schemadoccleanuplistener(  )">
-      <title id="function.cleanuplistener-title">
-       cleanuplistener(  )
+<!-- Function cleanupnodelock(  ) -->
+    <section id="function.cleanupnodelock"
+             xreflabel="schemadoccleanupnodelock(  )">
+      <title id="function.cleanupnodelock-title">
+       cleanupnodelock(  )
       </title>
-      <titleabbrev id="function.cleanuplistener-titleabbrev">
-       cleanuplistener(  )
+      <titleabbrev id="function.cleanupnodelock-titleabbrev">
+       cleanupnodelock(  )
       </titleabbrev>
 
       <para>
@@ -3153,13 +3565,79 @@ end;
         <segtitle>Language</segtitle>
         <segtitle>Return Type</segtitle>
         <seglistitem>
-         <seg>C</seg>
+         <seg>PLPGSQL</seg>
          <seg>integer</seg>
         </seglistitem>
        </segmentedlist>
  
-       look for stale pg_listener entries and submit Async_Unlisten() to them
-        <programlisting>_Slony_I_cleanupListener</programlisting>
+       Clean up stale entries when restarting slon
+        <programlisting>
+declare
+	v_row		record;
+begin
+	for v_row in select nl_nodeid, nl_conncnt, nl_backendpid
+			from sl_nodelock
+			for update
+	loop
+		if killBackend(v_row.nl_backendpid, &#39;NULL&#39;) &lt; 0 then
+			raise notice &#39;Slony-I: cleanup stale sl_nodelock entry for pid=%&#39;,
+					v_row.nl_backendpid;
+			delete from sl_nodelock where
+					nl_nodeid = v_row.nl_nodeid and
+					nl_conncnt = v_row.nl_conncnt;
+		end if;
+	end loop;
+
+	return 0;
+end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function copyfields( integer ) -->
+    <section id="function.copyfields-integer"
+             xreflabel="schemadoccopyfields( integer )">
+      <title id="function.copyfields-integer-title">
+       copyfields( integer )
+      </title>
+      <titleabbrev id="function.copyfields-integer-titleabbrev">
+       copyfields( integer )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Return a string consisting of what should be appended to a COPY statement
+to specify fields for the passed-in tab_id.  
+
+In PG versions &gt; 7.3, this looks like (field1,field2,...fieldn)
+        <programlisting>
+declare
+	result text;
+	prefix text;
+	prec record;
+begin
+	result := &#39;&#39;;
+	prefix := &#39;(&#39;;   -- Initially, prefix is the opening paren
+
+	for prec in select slon_quote_input(a.attname) as column from sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum &gt; 0 and a.attisdropped = false order by attnum
+	loop
+		result := result || prefix || prec.column;
+		prefix := &#39;,&#39;;   -- Subsequently, prepend columns with commas
+	end loop;
+	result := result || &#39;)&#39;;
+	return result;
+end;
+</programlisting>
       </para>
     </section>
 
@@ -3424,14 +3902,14 @@ Create an sl_event entry
       </para>
     </section>
 
-<!-- Function ddlscript( integer, text, integer ) -->
-    <section id="function.ddlscript-integer-text-integer"
-             xreflabel="schemadocddlscript( integer, text, integer )">
-      <title id="function.ddlscript-integer-text-integer-title">
-       ddlscript( integer, text, integer )
+<!-- Function ddlscript_complete( integer, text, integer ) -->
+    <section id="function.ddlscript-complete-integer-text-integer"
+             xreflabel="schemadocddlscript_complete( integer, text, integer )">
+      <title id="function.ddlscript-complete-integer-text-integer-title">
+       ddlscript_complete( integer, text, integer )
       </title>
-      <titleabbrev id="function.ddlscript-integer-text-integer-titleabbrev">
-       ddlscript( integer, text, integer )
+      <titleabbrev id="function.ddlscript-complete-integer-text-integer-titleabbrev">
+       ddlscript_complete( integer, text, integer )
       </titleabbrev>
 
       <para>
@@ -3442,20 +3920,103 @@ Create an sl_event entry
         <segtitle>Return Type</segtitle>
         <seglistitem>
          <seg>PLPGSQL</seg>
-         <seg>bigint</seg>
+         <seg>integer</seg>
         </seglistitem>
        </segmentedlist>
  
-       ddlScript(set_id, script, only_on_node)
+       ddlScript_complete(set_id, script, only_on_node)
 
-Generates a SYNC event, runs the script on the origin, and then
-generates a DDL_SCRIPT event to request it to be run on replicated
-slaves.
+After script has run on origin, this fixes up relnames, restores
+triggers, and generates a DDL_SCRIPT event to request it to be run on
+replicated slaves.
         <programlisting>
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
 	p_only_on_node		alias for $3;
+	v_set_origin		int4;
+begin
+	perform updateRelname(p_set_id, p_only_on_node);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
+			p_set_id, p_script, p_only_on_node);
+end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function ddlscript_complete_int( integer, integer ) -->
+    <section id="function.ddlscript-complete-int-integer-integer"
+             xreflabel="schemadocddlscript_complete_int( integer, integer )">
+      <title id="function.ddlscript-complete-int-integer-integer-title">
+       ddlscript_complete_int( integer, integer )
+      </title>
+      <titleabbrev id="function.ddlscript-complete-int-integer-integer-titleabbrev">
+       ddlscript_complete_int( integer, integer )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       ddlScript_complete_int(set_id, script, only_on_node)
+
+Complete processing the DDL_SCRIPT event.  This puts tables back into
+replicated mode.
+        <programlisting>
+declare
+	p_set_id			alias for $1;
+	p_only_on_node		alias for $2;
+	v_row				record;
+begin
+	-- ----
+	-- Put all tables back into replicated mode
+	-- ----
+	for v_row in select * from sl_table
+	loop
+		perform alterTableForReplication(v_row.tab_id);
+	end loop;
+
+	return p_set_id;
+end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function ddlscript_prepare( integer, integer ) -->
+    <section id="function.ddlscript-prepare-integer-integer"
+             xreflabel="schemadocddlscript_prepare( integer, integer )">
+      <title id="function.ddlscript-prepare-integer-integer-title">
+       ddlscript_prepare( integer, integer )
+      </title>
+      <titleabbrev id="function.ddlscript-prepare-integer-integer-titleabbrev">
+       ddlscript_prepare( integer, integer )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Prepare for DDL script execution on origin
+        <programlisting>
+declare
+	p_set_id			alias for $1;
+	p_only_on_node		alias for $2;
 	v_set_origin		int4;
 begin
 	-- ----
@@ -3482,23 +4043,20 @@ begin
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
 	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
-	perform ddlScript_int(p_set_id, p_script, p_only_on_node);
-	perform updateRelname(p_set_id, p_only_on_node);
-	return  createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
-			p_set_id, p_script, p_only_on_node);
+	return 1;
 end;
 </programlisting>
       </para>
     </section>
 
-<!-- Function ddlscript_int( integer, text, integer ) -->
-    <section id="function.ddlscript-int-integer-text-integer"
-             xreflabel="schemadocddlscript_int( integer, text, integer )">
-      <title id="function.ddlscript-int-integer-text-integer-title">
-       ddlscript_int( integer, text, integer )
+<!-- Function ddlscript_prepare_int( integer, integer ) -->
+    <section id="function.ddlscript-prepare-int-integer-integer"
+             xreflabel="schemadocddlscript_prepare_int( integer, integer )">
+      <title id="function.ddlscript-prepare-int-integer-integer-title">
+       ddlscript_prepare_int( integer, integer )
       </title>
-      <titleabbrev id="function.ddlscript-int-integer-text-integer-titleabbrev">
-       ddlscript_int( integer, text, integer )
+      <titleabbrev id="function.ddlscript-prepare-int-integer-integer-titleabbrev">
+       ddlscript_prepare_int( integer, integer )
       </titleabbrev>
 
       <para>
@@ -3513,16 +4071,14 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       ddlScript_int(set_id, script, only_on_node)
+       ddlScript_prepare_int (set_id, only_on_node)
 
-Processes the DDL_SCRIPT event.  On slave nodes, this restores
-original triggers/rules, runs the script, and then puts tables back
-into replicated mode.
+Do preparatory work for a DDL script, restoring 
+triggers/rules to original state.
         <programlisting>
 declare
 	p_set_id			alias for $1;
-	p_script			alias for $2;
-	p_only_on_node		alias for $3;
+	p_only_on_node		alias for $2;
 	v_set_origin		int4;
 	v_no_id				int4;
 	v_row				record;
@@ -3561,28 +4117,12 @@ begin
 	end if;
 
 	-- ----
-	-- Restore all original triggers and rules
+	-- Restore all original triggers and rules of all sets
 	-- ----
 	for v_row in select * from sl_table
-			where tab_set = p_set_id
 	loop
 		perform alterTableRestore(v_row.tab_id);
 	end loop;
-
-	-- ----
-	-- Run the script
-	-- ----
-	execute p_script;
-
-	-- ----
-	-- Put all tables back into replicated mode
-	-- ----
-	for v_row in select * from sl_table
-			where tab_set = p_set_id
-	loop
-		perform alterTableForReplication(v_row.tab_id);
-	end loop;
-
 	return p_set_id;
 end;
 </programlisting>
@@ -3941,7 +4481,7 @@ begin
 				where slon_quote_brute(PGN.nspname) || &#39;.&#39; ||
 					slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
+		raise exception &#39;Slony-I: determineIdxnameUnique(): table % not found&#39;, v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4094,8 +4634,6 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
-	return -1;
-
 	perform dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
@@ -4138,8 +4676,6 @@ declare
 	p_li_provider	alias for $2;
 	p_li_receiver	alias for $3;
 begin
-	return -1;
-
 	-- ----
 	-- Grab the central configuration lock
 	-- ----
@@ -4212,7 +4748,7 @@ begin
 	if exists (select true from sl_subscribe
 			where sub_provider = p_no_id)
 	then
-		raise exception &#39;Slony-I: Node % is still configured as data provider&#39;,
+		raise exception &#39;Slony-I: Node % is still configured as a data provider&#39;,
 				p_no_id;
 	end if;
 
@@ -4569,6 +5105,9 @@ begin
 
 	-- Regenerate sl_listen since we revised the subscriptions
 	perform RebuildListenEntries();
+
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform addPartialLogIndices();
 
 	return p_set_id;
 end;
@@ -5009,7 +5548,7 @@ begin
 
 	-- ----
 	-- All consistency checks first
-	-- Check that every system that has a path to the failed node
+	-- Check that every node that has a path to the failed node
 	-- also has a path to the backup node.
 	-- ----
 	for v_row in select P.pa_client
@@ -5033,7 +5572,7 @@ begin
 	loop
 		-- ----
 		-- Check that the backup node is subscribed to all sets
-		-- that origin on the failed node
+		-- that originate on the failed node
 		-- ----
 		select into v_row2 sub_forward, sub_active
 				from sl_subscribe
@@ -5069,46 +5608,7 @@ begin
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
-	perform terminateNodeConnections(
-			&#39;_schemadoc_Node_&#39; || p_failed_node);
-
--- Note that the following code should all become obsolete in the wake
--- of the availability of RebuildListenEntries()...
-
-if false then
-	-- ----
-	-- Let every node that listens for something on the failed node
-	-- listen for that on the backup node instead.
-	-- ----
-	for v_row in select * from sl_listen
-			where li_provider = p_failed_node
-				and li_receiver &lt;&gt; p_backup_node
-	loop
-		perform storeListen_int(v_row.li_origin,
-				p_backup_node, v_row.li_receiver);
-	end loop;
-
-	-- ----
-	-- Let the backup node listen for all events where the
-	-- failed node did listen for it.
-	-- ----
-	for v_row in select li_origin, li_provider
-			from sl_listen
-			where li_receiver = p_failed_node
-				and li_provider &lt;&gt; p_backup_node
-	loop
-		perform storeListen_int(v_row.li_origin,
-				v_row.li_provider, p_backup_node);
-	end loop;
-
-	-- ----
-	-- Remove all sl_listen entries that receive anything from the
-	-- failed node.
-	-- ----
-	delete from sl_listen
-			where li_provider = p_failed_node
-				or li_receiver = p_failed_node;
-end if;
+	perform terminateNodeConnections(p_failed_node);
 
 	-- ----
 	-- Move the sets
@@ -5127,7 +5627,7 @@ end if;
 		-- If the backup node is the only direct subscriber ...
 		-- ----
 		if v_row.num_direct_receivers = 0 then
-raise notice &#39;failedNode: set % has no other direct receivers - move now&#39;, v_row.set_id;
+		        raise notice &#39;failedNode: set % has no other direct receivers - move now&#39;, v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
 			-- right now. On the backup node itself that includes restoring
@@ -5141,12 +5641,10 @@ raise notice &#39;failedNode: set % has no other direct receivers - move now&#39
 				loop
 					perform alterTableRestore(v_row2.tab_id);
 				end loop;
-			end if;
 
-			update sl_set set set_origin = p_backup_node
-					where set_id = v_row.set_id;
+				update sl_set set set_origin = p_backup_node
+						where set_id = v_row.set_id;
 
-			if p_backup_node = getLocalNodeId(&#39;_schemadoc&#39;) then
 				delete from sl_setsync
 						where ssy_setid = v_row.set_id;
 
@@ -5161,7 +5659,7 @@ raise notice &#39;failedNode: set % has no other direct receivers - move now&#39
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
-raise notice &#39;failedNode: set % has other direct receivers - change providers only&#39;, v_row.set_id;
+			raise notice &#39;failedNode: set % has other direct receivers - change providers only&#39;, v_row.set_id;
 			-- ----
 			-- Backup node is not the only direct subscriber. This
 			-- means that at this moment, we redirect all direct
@@ -5191,6 +5689,9 @@ raise notice &#39;failedNode: set % has other direct receivers - change provider
 
 	-- Rewrite sl_listen table
 	perform RebuildListenEntries();
+
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform addPartialLogIndices();
 
 	-- ----
 	-- Make sure the node daemon will restart
@@ -5231,7 +5732,7 @@ end;
        FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 
 On the node that has the highest sequence number of the failed node,
-fake the FAILED_NODE event.
+fake the FAILOVER_SET event.
         <programlisting>
 declare
 	p_failed_node		alias for $1;
@@ -5346,6 +5847,15 @@ begin
 		loop
 			perform alterTableForReplication(v_row.tab_id);
 		end loop;
+		insert into sl_event
+				(ev_origin, ev_seqno, ev_timestamp,
+				ev_minxid, ev_maxxid, ev_xip,
+				ev_type, ev_data1, ev_data2, ev_data3)
+				values
+				(p_backup_node, &quot;pg_catalog&quot;.nextval(&#39;sl_event_seq&#39;), CURRENT_TIMESTAMP,
+				&#39;0&#39;, &#39;0&#39;, &#39;&#39;,
+				&#39;ACCEPT_SET&#39;, p_set_id::text,
+				p_failed_node::text, p_backup_node::text);
 	else
 		delete from sl_subscribe
 				where sub_set = p_set_id
@@ -5475,7 +5985,7 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       Generate a sync event if there has not been one in 30 seconds.
+       Generate a sync event if there has not been one in the requested interval.
         <programlisting>
 declare
 	p_interval     alias for $1;
@@ -5640,6 +6150,33 @@ end;
       </para>
     </section>
 
+<!-- Function killbackend( integer, text ) -->
+    <section id="function.killbackend-integer-text"
+             xreflabel="schemadockillbackend( integer, text )">
+      <title id="function.killbackend-integer-text-title">
+       killbackend( integer, text )
+      </title>
+      <titleabbrev id="function.killbackend-integer-text-titleabbrev">
+       killbackend( integer, text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>C</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       Send a signal to a postgres process. Requires superuser rights
+        <programlisting>_Slony_I_killBackend</programlisting>
+      </para>
+    </section>
+
 <!-- Function lockedset(  ) -->
     <section id="function.lockedset"
              xreflabel="schemadoclockedset(  )">
@@ -5753,6 +6290,268 @@ begin
 
 	return p_set_id;
 end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function logswitch_finish(  ) -->
+    <section id="function.logswitch-finish"
+             xreflabel="schemadoclogswitch_finish(  )">
+      <title id="function.logswitch-finish-title">
+       logswitch_finish(  )
+      </title>
+      <titleabbrev id="function.logswitch-finish-titleabbrev">
+       logswitch_finish(  )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       logswitch_finish()
+
+Attempt to finalize a log table switch in progress
+        <programlisting>
+DECLARE
+	v_current_status	int4;
+	v_dummy				record;
+BEGIN
+	-- ----
+	-- Grab the central configuration lock to prevent race conditions
+	-- while changing the sl_log_status sequence value.
+	-- ----
+	lock table sl_config_lock;
+
+	-- ----
+	-- Get the current log status.
+	-- ----
+	select last_value into v_current_status from sl_log_status;
+
+	-- ----
+	-- status value 0 or 1 means that there is no log switch in progress
+	-- ----
+	if v_current_status = 0 or v_current_status = 1 then
+		return 0;
+	end if;
+
+	-- ----
+	-- status = 2: sl_log_1 active, cleanup sl_log_2
+	-- ----
+	if v_current_status = 2 then
+		-- ----
+		-- The cleanup thread calls us after it did the delete and
+		-- vacuum of both log tables. If sl_log_2 is empty now, we
+		-- can truncate it and the log switch is done.
+		-- ----
+		for v_dummy in select 1 from sl_log_2 loop
+			-- ----
+			-- Found a row ... log switch is still in progress.
+			-- ----
+			raise notice &#39;Slony-I: log switch to sl_log_1 still in progress - sl_log_2 not truncated&#39;;
+			return -1;
+		end loop;
+
+		raise notice &#39;Slony-I: log switch to sl_log_1 complete - truncate sl_log_2&#39;;
+		truncate sl_log_2;
+		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 0);
+		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+		perform addPartialLogIndices();
+
+		return 1;
+	end if;
+
+	-- ----
+	-- status = 3: sl_log_2 active, cleanup sl_log_1
+	-- ----
+	if v_current_status = 3 then
+		-- ----
+		-- The cleanup thread calls us after it did the delete and
+		-- vacuum of both log tables. If sl_log_2 is empty now, we
+		-- can truncate it and the log switch is done.
+		-- ----
+		for v_dummy in select 1 from sl_log_1 loop
+			-- ----
+			-- Found a row ... log switch is still in progress.
+			-- ----
+			raise notice &#39;Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated&#39;;
+			return -1;
+		end loop;
+
+		raise notice &#39;Slony-I: log switch to sl_log_2 complete - truncate sl_log_1&#39;;
+		truncate sl_log_1;
+		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 1);
+		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+		perform addPartialLogIndices();
+		return 2;
+	end if;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function logswitch_start(  ) -->
+    <section id="function.logswitch-start"
+             xreflabel="schemadoclogswitch_start(  )">
+      <title id="function.logswitch-start-title">
+       logswitch_start(  )
+      </title>
+      <titleabbrev id="function.logswitch-start-titleabbrev">
+       logswitch_start(  )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       logswitch_start()
+
+Initiate a log table switch if none is in progress
+        <programlisting>
+DECLARE
+	v_current_status	int4;
+BEGIN
+	-- ----
+	-- Grab the central configuration lock to prevent race conditions
+	-- while changing the sl_log_status sequence value.
+	-- ----
+	lock table sl_config_lock;
+
+	-- ----
+	-- Get the current log status.
+	-- ----
+	select last_value into v_current_status from sl_log_status;
+
+	-- ----
+	-- status = 0: sl_log_1 active, sl_log_2 clean
+	-- Initiate a switch to sl_log_2.
+	-- ----
+	if v_current_status = 0 then
+		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 3);
+		perform registry_set_timestamp(
+				&#39;logswitch.laststart&#39;, now()::timestamp);
+		raise notice &#39;Slony-I: Logswitch to sl_log_2 initiated&#39;;
+		return 2;
+	end if;
+
+	-- ----
+	-- status = 1: sl_log_2 active, sl_log_1 clean
+	-- Initiate a switch to sl_log_1.
+	-- ----
+	if v_current_status = 1 then
+		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 2);
+		perform registry_set_timestamp(
+				&#39;logswitch.laststart&#39;, now()::timestamp);
+		raise notice &#39;Slony-I: Logswitch to sl_log_1 initiated&#39;;
+		return 1;
+	end if;
+
+	raise exception &#39;Previous logswitch still in progress&#39;;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function logswitch_weekly(  ) -->
+    <section id="function.logswitch-weekly"
+             xreflabel="schemadoclogswitch_weekly(  )">
+      <title id="function.logswitch-weekly-title">
+       logswitch_weekly(  )
+      </title>
+      <titleabbrev id="function.logswitch-weekly-titleabbrev">
+       logswitch_weekly(  )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       logswitch_weekly()
+
+Ensure a logswitch is done at least weekly
+        <programlisting>
+DECLARE
+	v_now			timestamp;
+	v_now_dow		int4;
+	v_auto_dow		int4;
+	v_auto_time		time;
+	v_auto_ts		timestamp;
+	v_lastrun		timestamp;
+	v_laststart		timestamp;
+	v_days_since	int4;
+BEGIN
+	-- ----
+	-- Check that today is the day to run at all
+	-- ----
+	v_auto_dow := registry_get_int4(
+			&#39;logswitch_weekly.dow&#39;, 0);
+	v_now := &quot;pg_catalog&quot;.now();
+	v_now_dow := extract (DOW from v_now);
+	if v_now_dow &lt;&gt; v_auto_dow then
+		perform registry_set_timestamp(
+				&#39;logswitch_weekly.lastrun&#39;, v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- Check that the last run of this procedure was before and now is
+	-- after the time we should automatically switch logs.
+	-- ----
+	v_auto_time := registry_get_text(
+			&#39;logswitch_weekly.time&#39;, &#39;02:00&#39;);
+	v_auto_ts := current_date + v_auto_time;
+	v_lastrun := registry_get_timestamp(
+			&#39;logswitch_weekly.lastrun&#39;, &#39;epoch&#39;);
+	if v_lastrun &gt;= v_auto_ts or v_now &lt; v_auto_ts then
+		perform registry_set_timestamp(
+				&#39;logswitch_weekly.lastrun&#39;, v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- This is the moment configured in dow+time. Check that the
+	-- last logswitch was done more than 2 days ago.
+	-- ----
+	v_laststart := registry_get_timestamp(
+			&#39;logswitch.laststart&#39;, &#39;epoch&#39;);
+	v_days_since := extract (days from (v_now - v_laststart));
+	if v_days_since &lt; 2 then
+		perform registry_set_timestamp(
+				&#39;logswitch_weekly.lastrun&#39;, v_now);
+		return 0;
+	end if;
+
+	-- ----
+	-- Fire off an automatic logswitch
+	-- ----
+	perform logswitch_start();
+	perform registry_set_timestamp(
+			&#39;logswitch_weekly.lastrun&#39;, v_now);
+	return 1;
+END;
 </programlisting>
       </para>
     </section>
@@ -6113,17 +6912,9 @@ begin
 
 	-- On the new origin, raise an event - ACCEPT_SET
 	if v_local_node_id = p_new_origin then
-		-- Find the event number from the origin
-		select max(ev_seqno) as seqno into v_sub_row 
-			from sl_event
-			where ev_type = &#39;MOVE_SET&#39; and
-			  ev_data1 = p_set_id and
-			  ev_data2 = p_old_origin and
-			  ev_data3 = p_new_origin and
-			  ev_origin = p_old_origin;
 		
 		perform createEvent(&#39;_schemadoc&#39;, &#39;ACCEPT_SET&#39;, 
-			p_set_id, p_old_origin, p_new_origin, v_sub_row.seqno);
+			p_set_id, p_old_origin, p_new_origin);
 	end if;
 
 	-- ----
@@ -6246,6 +7037,9 @@ begin
 	-- Regenerate sl_listen since we revised the subscriptions
 	perform RebuildListenEntries();
 
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform addPartialLogIndices();
+
 	-- ----
 	-- If we are the new or old origin, we have to
 	-- put all the tables into altered state again.
@@ -6261,6 +7055,64 @@ begin
 
 	return p_set_id;
 end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function reachablefromnode( integer, integer[] ) -->
+    <section id="function.reachablefromnode-integer-integerARRAY"
+             xreflabel="schemadocreachablefromnode( integer, integer[] )">
+      <title id="function.reachablefromnode-integer-integerARRAY-title">
+       reachablefromnode( integer, integer[] )
+      </title>
+      <titleabbrev id="function.reachablefromnode-integer-integerARRAY-titleabbrev">
+       reachablefromnode( integer, integer[] )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>SET OF integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       ReachableFromNode(receiver, blacklist)
+
+Find all nodes that &lt;receiver&gt; can receive events from without
+using nodes in &lt;blacklist&gt; as a relay.
+        <programlisting>
+declare
+	v_node alias for $1 ;
+	v_blacklist alias for $2 ;
+	v_ignore int4[] ;
+	v_reachable_edge_last int4[] ;
+	v_reachable_edge_new int4[] default &#39;{}&#39; ;
+	v_server record ;
+begin
+	v_reachable_edge_last := array[v_node] ;
+	v_ignore := v_blacklist || array[v_node] ;
+	return next v_node ;
+	while v_reachable_edge_last != &#39;{}&#39; loop
+		v_reachable_edge_new := &#39;{}&#39; ;
+		for v_server in select pa_server as no_id
+			from sl_path
+			where pa_client = ANY(v_reachable_edge_last) and pa_server != ALL(v_ignore)
+		loop
+			if v_server.no_id != ALL(v_ignore) then
+				v_ignore := v_ignore || array[v_server.no_id] ;
+				v_reachable_edge_new := v_reachable_edge_new || array[v_server.no_id] ;
+				return next v_server.no_id ;
+			end if ;
+		end loop ;
+		v_reachable_edge_last := v_reachable_edge_new ;
+	end loop ;
+	return ;
+end ;
 </programlisting>
       </para>
     </section>
@@ -6287,40 +7139,61 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       RebuildListenEntries(p_provider, p_receiver)
+       RebuildListenEntries()
 
 Invoked by various subscription and path modifying functions, this
 rewrites the sl_listen entries, adding in all the ones required to
 allow communications between nodes in the Slony-I cluster.
         <programlisting>
 declare
-	v_row			record;
+	v_receiver record ;
+	v_provider record ;
+	v_origin record ;
+	v_reachable int4[] ;
 begin
 	-- First remove the entire configuration
 	delete from sl_listen;
 
-	-- The loop over every possible pair of origin, receiver
-	for v_row in select N1.no_id as origin, N2.no_id as receiver
-			from sl_node N1, sl_node N2
-			where N1.no_id &lt;&gt; N2.no_id
-	loop
-		perform RebuildListenEntriesOne(v_row.origin, v_row.receiver);
-	end loop;
+	-- Loop over every possible pair of receiver and provider
+	for v_receiver in select no_id from sl_node loop
+		for v_provider in select pa_server as no_id from sl_path where pa_client = v_receiver.no_id loop
 
-	return 0;
-end;
+			-- Find all nodes that v_provider.no_id can receiver events from without using v_receiver.no_id			
+			for v_origin in select * from ReachableFromNode(v_provider.no_id, array[v_receiver.no_id]) as r(no_id) loop
+
+				-- If v_receiver.no_id subscribes a set from v_provider.no_id, events have to travel the same
+				-- path as the data. Ignore possible sl_listen that would break that rule.
+				perform 1 from sl_subscribe
+					join sl_set on sl_set.set_id = sl_subscribe.sub_set
+		 			where
+						sub_receiver = v_receiver.no_id and
+						sub_provider != v_provider.no_id and
+						set_origin = v_origin.no_id ;
+				if not found then
+					insert into sl_listen (li_receiver, li_provider, li_origin)
+						values (v_receiver.no_id, v_provider.no_id, v_origin.no_id) ;
+				end if ;
+
+
+			end loop ;
+
+		end loop ;
+	end loop ;
+
+	return null ;
+end ;
 </programlisting>
       </para>
     </section>
 
-<!-- Function rebuildlistenentriesone( integer, integer ) -->
-    <section id="function.rebuildlistenentriesone-integer-integer"
-             xreflabel="schemadocrebuildlistenentriesone( integer, integer )">
-      <title id="function.rebuildlistenentriesone-integer-integer-title">
-       rebuildlistenentriesone( integer, integer )
+<!-- Function registernodeconnection( integer ) -->
+    <section id="function.registernodeconnection-integer"
+             xreflabel="schemadocregisternodeconnection( integer )">
+      <title id="function.registernodeconnection-integer-title">
+       registernodeconnection( integer )
       </title>
-      <titleabbrev id="function.rebuildlistenentriesone-integer-integer-titleabbrev">
-       rebuildlistenentriesone( integer, integer )
+      <titleabbrev id="function.registernodeconnection-integer-titleabbrev">
+       registernodeconnection( integer )
       </titleabbrev>
 
       <para>
@@ -6335,85 +7208,315 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       RebuildListenEntriesOne(p_origin, p_receiver)
-
-Rebuilding of sl_listen entries for one origin, receiver pair.
+       Register (uniquely) the node connection so that only one slon can service the node
         <programlisting>
 declare
-	p_origin		alias for $1;
-	p_receiver		alias for $2;
-	v_row			record;
+	p_nodeid	alias for $1;
 begin
-	-- 1. If the receiver is subscribed to any set from the origin,
-	--    listen on the same provider(s).
-	for v_row in select distinct sub_provider
-			from sl_subscribe, sl_set,
-				sl_path
-			where sub_set = set_id
-			and set_origin = p_origin
-			and sub_receiver = p_receiver
-			and sub_provider = pa_server
-			and sub_receiver = pa_client
-	loop
-		perform storeListen_int(p_origin, 
-				v_row.sub_provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
-
-	-- 2. If the receiver has a direct path to the provider,
-	--    use that.
-	if exists (select true
-			from sl_path
-			where pa_server = p_origin
-			and pa_client = p_receiver)
-	then
-		perform storeListen_int(p_origin, p_origin, p_receiver);
-		return 1;
-	end if;
-
-	-- 3. Listen on every node that is either provider for the
-	--    receiver or is using the receiver as provider (follow the
-	--    normal subscription routes).
-	for v_row in select distinct provider from (
-			select sub_provider as provider
-					from sl_subscribe
-					where sub_receiver = p_receiver
-			union
-			select sub_receiver as provider
-					from sl_subscribe
-					where sub_provider = p_receiver
-					and exists (select true from sl_path
-								where pa_server = sub_receiver
-								and pa_client = sub_provider)
-			) as S
-	loop
-		perform storeListen_int(p_origin,
-				v_row.provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
-
-	-- 4. If all else fails - meaning there are no subscriptions to
-	--    guide us to the right path - use every node we have a path
-	--    to as provider. This normally only happens when the cluster
-	--    is built or a new node added. This brute force fallback
-	--    ensures that events will propagate if possible at all.
-	for v_row in select pa_server as provider
-			from sl_path
-			where pa_client = p_receiver
-	loop
-		perform storeListen_int(p_origin, 
-				v_row.provider, p_receiver);
-	end loop;
-	if found then
-		return 1;
-	end if;
+	insert into sl_nodelock
+		(nl_nodeid, nl_backendpid)
+		values
+		(p_nodeid, pg_backend_pid());
 
 	return 0;
 end;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_get_int4( text, integer ) -->
+    <section id="function.registry-get-int4-text-integer"
+             xreflabel="schemadocregistry_get_int4( text, integer )">
+      <title id="function.registry-get-int4-text-integer-title">
+       registry_get_int4( text, integer )
+      </title>
+      <titleabbrev id="function.registry-get-int4-text-integer-titleabbrev">
+       registry_get_int4( text, integer )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_get_int4(key, value)
+
+Get a registry value. If not present, set and return the default.
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		int4;
+BEGIN
+	select reg_int4 into v_value from sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform registry_set_int4(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception &#39;Slony-I: registry key % is not an int4 value&#39;,
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_get_text( text, text ) -->
+    <section id="function.registry-get-text-text-text"
+             xreflabel="schemadocregistry_get_text( text, text )">
+      <title id="function.registry-get-text-text-text-title">
+       registry_get_text( text, text )
+      </title>
+      <titleabbrev id="function.registry-get-text-text-text-titleabbrev">
+       registry_get_text( text, text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_get_text(key, value)
+
+Get a registry value. If not present, set and return the default.
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		text;
+BEGIN
+	select reg_text into v_value from sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform registry_set_text(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception &#39;Slony-I: registry key % is not a text value&#39;,
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_get_timestamp( text, timestamp without time zone ) -->
+    <section id="function.registry-get-timestamp-text-timestamp-without-time-zone"
+             xreflabel="schemadocregistry_get_timestamp( text, timestamp without time zone )">
+      <title id="function.registry-get-timestamp-text-timestamp-without-time-zone-title">
+       registry_get_timestamp( text, timestamp without time zone )
+      </title>
+      <titleabbrev id="function.registry-get-timestamp-text-timestamp-without-time-zone-titleabbrev">
+       registry_get_timestamp( text, timestamp without time zone )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>timestamp without time zone</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_get_timestamp(key, value)
+
+Get a registry value. If not present, set and return the default.
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_default	alias for $2;
+	v_value		timestamp;
+BEGIN
+	select reg_timestamp into v_value from sl_registry
+			where reg_key = p_key;
+	if not found then 
+		v_value = p_default;
+		if p_default notnull then
+			perform registry_set_timestamp(p_key, p_default);
+		end if;
+	else
+		if v_value is null then
+			raise exception &#39;Slony-I: registry key % is not an timestamp value&#39;,
+					p_key;
+		end if;
+	end if;
+	return v_value;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_set_int4( text, integer ) -->
+    <section id="function.registry-set-int4-text-integer"
+             xreflabel="schemadocregistry_set_int4( text, integer )">
+      <title id="function.registry-set-int4-text-integer-title">
+       registry_set_int4( text, integer )
+      </title>
+      <titleabbrev id="function.registry-set-int4-text-integer-titleabbrev">
+       registry_set_int4( text, integer )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>integer</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_set_int4(key, value)
+
+Set or delete a registry value
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from sl_registry
+				where reg_key = p_key;
+	else
+		lock table sl_registry;
+		update sl_registry
+				set reg_int4 = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into sl_registry (reg_key, reg_int4)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_set_text( text, text ) -->
+    <section id="function.registry-set-text-text-text"
+             xreflabel="schemadocregistry_set_text( text, text )">
+      <title id="function.registry-set-text-text-text-title">
+       registry_set_text( text, text )
+      </title>
+      <titleabbrev id="function.registry-set-text-text-text-titleabbrev">
+       registry_set_text( text, text )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>text</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_set_text(key, value)
+
+Set or delete a registry value
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from sl_registry
+				where reg_key = p_key;
+	else
+		lock table sl_registry;
+		update sl_registry
+				set reg_text = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into sl_registry (reg_key, reg_text)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
+</programlisting>
+      </para>
+    </section>
+
+<!-- Function registry_set_timestamp( text, timestamp without time zone ) -->
+    <section id="function.registry-set-timestamp-text-timestamp-without-time-zone"
+             xreflabel="schemadocregistry_set_timestamp( text, timestamp without time zone )">
+      <title id="function.registry-set-timestamp-text-timestamp-without-time-zone-title">
+       registry_set_timestamp( text, timestamp without time zone )
+      </title>
+      <titleabbrev id="function.registry-set-timestamp-text-timestamp-without-time-zone-titleabbrev">
+       registry_set_timestamp( text, timestamp without time zone )
+      </titleabbrev>
+
+      <para>
+       <segmentedlist>
+        <title>Function Properties</title>
+        <?dbhtml list-presentation="list"?>
+        <segtitle>Language</segtitle>
+        <segtitle>Return Type</segtitle>
+        <seglistitem>
+         <seg>PLPGSQL</seg>
+         <seg>timestamp without time zone</seg>
+        </seglistitem>
+       </segmentedlist>
+ 
+       registry_set_timestamp(key, value)
+
+Set or delete a registry value
+        <programlisting>
+DECLARE
+	p_key		alias for $1;
+	p_value		alias for $2;
+BEGIN
+	if p_value is null then
+		delete from sl_registry
+				where reg_key = p_key;
+	else
+		lock table sl_registry;
+		update sl_registry
+				set reg_timestamp = p_value
+				where reg_key = p_key;
+		if not found then
+			insert into sl_registry (reg_key, reg_timestamp)
+					values (p_key, p_value);
+		end if;
+	end if;
+	return p_value;
+END;
 </programlisting>
       </para>
     </section>
@@ -6440,13 +7543,16 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       
+       sequenceLastValue(p_seqname)
+
+Utility function used in sl_seqlastvalue view to compactly get the
+last value from the requested sequence.
         <programlisting>
 declare
 	p_seqname	alias for $1;
 	v_seq_row	record;
 begin
-	for v_seq_row in execute &#39;select last_value from &#39; || p_seqname
+	for v_seq_row in execute &#39;select last_value from &#39; || slon_quote_input(p_seqname)
 	loop
 		return v_seq_row.last_value;
 	end loop;
@@ -6501,7 +7607,7 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception &#39;Slony-I: sequence % not found&#39;, p_seq_id;
+		raise exception &#39;Slony-I: sequenceSetValue(): sequence % not found&#39;, p_seq_id;
 	end if;
 
 	-- ----
@@ -6570,7 +7676,7 @@ begin
 		raise exception &#39;Slony-I: setAddSequence(): set % not found&#39;, p_set_id;
 	end if;
 	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
-		raise exception &#39;Slony-I: setAddSequence(): set % has remote origin&#39;, p_set_id;
+		raise exception &#39;Slony-I: setAddSequence(): set % has remote origin - submit to origin node&#39;, p_set_id;
 	end if;
 
 	if exists (select true from sl_subscribe
@@ -6678,6 +7784,13 @@ begin
 		raise exception &#39;Slony-I: setAddSequence_int(): % is not a sequence&#39;,
 				p_fqname;
 	end if;
+
+        select 1 into v_sync_row from sl_sequence where seq_id = p_seq_id;
+	if not found then
+               v_relkind := &#39;o&#39;;   -- all is OK
+        else
+                raise exception &#39;Slony-I: setAddSequence_int(): sequence ID % has already been assigned&#39;, p_seq_id;
+        end if;
 
 	-- ----
 	-- Add the sequence to sl_sequence
@@ -6827,6 +7940,8 @@ declare
 	v_sub_provider		int4;
 	v_relkind		char;
 	v_tab_reloid		oid;
+	v_pkcand_nn		boolean;
+	v_prec			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -6865,11 +7980,11 @@ begin
 			and slon_quote_input(p_fqname) = slon_quote_brute(PGN.nspname) ||
 					&#39;.&#39; || slon_quote_brute(PGC.relname);
 	if not found then
-		raise exception &#39;Slony-I: setAddTable(): table % not found&#39;, 
+		raise exception &#39;Slony-I: setAddTable_int(): table % not found&#39;, 
 				p_fqname;
 	end if;
 	if v_relkind != &#39;r&#39; then
-		raise exception &#39;Slony-I: setAddTable(): % is not a regular table&#39;,
+		raise exception &#39;Slony-I: setAddTable_int(): % is not a regular table&#39;,
 				p_fqname;
 	end if;
 
@@ -6879,8 +7994,35 @@ begin
 				and PGX.indexrelid = PGC.oid
 				and PGC.relname = p_tab_idxname)
 	then
-		raise exception &#39;Slony-I: setAddTable(): table % has no index %&#39;,
+		raise exception &#39;Slony-I: setAddTable_int(): table % has no index %&#39;,
 				p_fqname, p_tab_idxname;
+	end if;
+
+	-- ----
+	-- Verify that the columns in the PK (or candidate) are not NULLABLE
+	-- ----
+
+	v_pkcand_nn := &#39;f&#39;;
+	for v_prec in select attname from &quot;pg_catalog&quot;.pg_attribute where attrelid = 
+                        (select oid from &quot;pg_catalog&quot;.pg_class where oid = v_tab_reloid) 
+                    and attname in (select attname from &quot;pg_catalog&quot;.pg_attribute where 
+                                    attrelid = (select oid from &quot;pg_catalog&quot;.pg_class PGC, 
+                                    &quot;pg_catalog&quot;.pg_index PGX where 
+                                    PGC.relname = p_tab_idxname and PGX.indexrelid=PGC.oid and
+                                    PGX.indrelid = v_tab_reloid)) and attnotnull &lt;&gt; &#39;t&#39;
+	loop
+		raise notice &#39;Slony-I: setAddTable_int: table % PK column % nullable&#39;, p_fqname, v_prec.attname;
+		v_pkcand_nn := &#39;t&#39;;
+	end loop;
+	if v_pkcand_nn then
+		raise exception &#39;Slony-I: setAddTable_int: table % not replicable!&#39;, p_fqname;
+	end if;
+
+	select * into v_prec from sl_table where tab_id = p_tab_id;
+	if not found then
+		v_pkcand_nn := &#39;t&#39;;  -- No-op -- All is well
+	else
+		raise exception &#39;Slony-I: setAddTable_int: table id % has already been assigned!&#39;, p_tab_id;
 	end if;
 
 	-- ----
@@ -6961,7 +8103,7 @@ begin
 		raise exception &#39;Slony-I: setDropSequence(): set % not found&#39;, v_set_id;
 	end if;
 	if v_set_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
-		raise exception &#39;Slony-I: setDropSequence(): set % has remote origin&#39;, v_set_id;
+		raise exception &#39;Slony-I: setDropSequence(): set % has origin at another node - submit this to that node&#39;, v_set_id;
 	end if;
 
 	-- ----
@@ -7247,7 +8389,9 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       
+       setMoveSequence(p_seq_id, p_new_set_id) - This generates the
+SET_MOVE_SEQUENCE event, after validation, notably that both sets
+exist, are distinct, and have exactly the same subscription lists
         <programlisting>
 declare
 	p_seq_id			alias for $1;
@@ -7266,22 +8410,22 @@ begin
 	select seq_set into v_old_set_id from sl_sequence
 			where seq_id = p_seq_id;
 	if not found then
-		raise exception &#39;Slony-I: sequence %d not found&#39;, p_seq_id;
+		raise exception &#39;Slony-I: setMoveSequence(): sequence %d not found&#39;, p_seq_id;
 	end if;
 	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
 	if p_new_set_id = v_old_set_id then
-		raise exception &#39;Slony-I: set ids cannot be identical&#39;;
+		raise exception &#39;Slony-I: setMoveSequence(): set ids cannot be identical&#39;;
 	end if;
 	select set_origin into v_origin from sl_set
 			where set_id = p_new_set_id;
 	if not found then
-		raise exception &#39;Slony-I: set % not found&#39;, p_new_set_id;
+		raise exception &#39;Slony-I: setMoveSequence(): set % not found&#39;, p_new_set_id;
 	end if;
 	if v_origin != getLocalNodeId(&#39;_schemadoc&#39;) then
-		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+		raise exception &#39;Slony-I: setMoveSequence(): set % does not originate on local node&#39;,
 				p_new_set_id;
 	end if;
 
@@ -7351,7 +8495,9 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       
+       setMoveSequence_int(p_seq_id, p_new_set_id) - processes the
+SET_MOVE_SEQUENCE event, moving a sequence to another replication
+set.
         <programlisting>
 declare
 	p_seq_id			alias for $1;
@@ -7549,7 +8695,11 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       not yet documented
+       setSessionRole(username, role) - set role for session.
+
+role can be &quot;normal&quot; or &quot;slon&quot;; setting the latter is necessary, on
+subscriber nodes, in order to override the denyaccess() trigger
+attached to subscribing tables.
         <programlisting>_Slony_I_setSessionRole</programlisting>
       </para>
     </section>
@@ -7582,7 +8732,7 @@ declare
     p_tab_fqname alias for $1;
     v_fqname text default &#39;&#39;;
 begin
-    v_fqname := &#39;&quot;&#39; || replace(p_tab_fqname,&#39;&quot;&#39;,&#39;\\&quot;&#39;) || &#39;&quot;&#39;;
+    v_fqname := &#39;&quot;&#39; || replace(p_tab_fqname,&#39;&quot;&#39;,&#39;&quot;&quot;&#39;) || &#39;&quot;&#39;;
     return v_fqname;
 end;
 </programlisting>
@@ -7613,50 +8763,70 @@ end;
  
        quote all words that aren&apos;t quoted yet
         <programlisting>
-declare
-    p_tab_fqname alias for $1;
-    v_temp_fqname text default &#39;&#39;;
-    v_pre_quoted text[] default &#39;{}&#39;;
-    v_pre_quote_counter smallint default 0;
-    v_count_fqname smallint default 0;
-    v_fqname_split text[];
-    v_quoted_fqname text default &#39;&#39;;
+  declare
+     p_tab_fqname alias for $1;
+     v_nsp_name text;
+     v_tab_name text;
+	 v_i integer;
+	 v_l integer;
+     v_pq2 integer;
 begin
-    v_temp_fqname := p_tab_fqname;
+	v_l := length(p_tab_fqname);
 
-    LOOP
-	v_pre_quote_counter := v_pre_quote_counter + 1;
-	v_pre_quoted[v_pre_quote_counter] := 
-	    substring(v_temp_fqname from &#39;%#&quot;&quot;%&quot;#&quot;%&#39; for &#39;#&#39;);
-	IF v_pre_quoted[v_pre_quote_counter] &lt;&gt; &#39;&#39; THEN
-	    v_temp_fqname := replace(v_temp_fqname,
-	        v_pre_quoted[v_pre_quote_counter], &#39;@&#39; ||
-		v_pre_quote_counter);
-	ELSE
-	    EXIT;
-	END IF;
-    END LOOP;
+	-- Let us search for the dot
+	if p_tab_fqname like &#39;&quot;%&#39; then
+		-- if the first part of the ident starts with a double quote, search
+		-- for the closing double quote, skipping over double double quotes.
+		v_i := 2;
+		while v_i &lt;= v_l loop
+			if substr(p_tab_fqname, v_i, 1) != &#39;&quot;&#39; then
+				v_i := v_i + 1;
+			else
+				v_i := v_i + 1;
+				if substr(p_tab_fqname, v_i, 1) != &#39;&quot;&#39; then
+					exit;
+				end if;
+				v_i := v_i + 1;
+			end if;
+		end loop;
+	else
+		-- first part of ident is not quoted, search for the dot directly
+		v_i := 1;
+		while v_i &lt;= v_l loop
+			if substr(p_tab_fqname, v_i, 1) = &#39;.&#39; then
+				exit;
+			end if;
+			v_i := v_i + 1;
+		end loop;
+	end if;
 
-    v_fqname_split := string_to_array(v_temp_fqname , &#39;.&#39;);
-    v_count_fqname := array_upper (v_fqname_split, 1);
+	-- v_i now points at the dot or behind the string.
 
-    FOR i in 1..v_count_fqname LOOP
-        IF substring(v_fqname_split[i],1,1) = &#39;@&#39; THEN
-            v_quoted_fqname := v_quoted_fqname || 
-		v_pre_quoted[substring (v_fqname_split[i] from 2)::int];
-        ELSE
-            v_quoted_fqname := v_quoted_fqname || &#39;&quot;&#39; || 
-		v_fqname_split[i] || &#39;&quot;&#39;;
-        END IF;
+	if substr(p_tab_fqname, v_i, 1) = &#39;.&#39; then
+		-- There is a dot now, so split the ident into its namespace
+		-- and objname parts and make sure each is quoted
+		v_nsp_name := substr(p_tab_fqname, 1, v_i - 1);
+		v_tab_name := substr(p_tab_fqname, v_i + 1);
+		if v_nsp_name not like &#39;&quot;%&#39; then
+			v_nsp_name := &#39;&quot;&#39; || replace(v_nsp_name, &#39;&quot;&#39;, &#39;&quot;&quot;&#39;) ||
+						  &#39;&quot;&#39;;
+		end if;
+		if v_tab_name not like &#39;&quot;%&#39; then
+			v_tab_name := &#39;&quot;&#39; || replace(v_tab_name, &#39;&quot;&#39;, &#39;&quot;&quot;&#39;) ||
+						  &#39;&quot;&#39;;
+		end if;
 
-        IF i &lt; v_count_fqname THEN
-            v_quoted_fqname := v_quoted_fqname || &#39;.&#39; ;
-        END IF;
-    END LOOP;
-	
-    return v_quoted_fqname;
-end;
-</programlisting>
+		return v_nsp_name || &#39;.&#39; || v_tab_name;
+	else
+		-- No dot ... must be just an ident without schema
+		if p_tab_fqname like &#39;&quot;%&#39; then
+			return p_tab_fqname;
+		else
+			return &#39;&quot;&#39; || replace(p_tab_fqname, &#39;&quot;&#39;, &#39;&quot;&quot;&#39;) || &#39;&quot;&#39;;
+		end if;
+	end if;
+
+end;</programlisting>
       </para>
     </section>
 
@@ -7749,7 +8919,7 @@ end;
        Returns the minor version number of the slony schema
         <programlisting>
 begin
-	return 1;
+	return 2;
 end;
 </programlisting>
       </para>
@@ -7819,8 +8989,6 @@ declare
 	p_provider	alias for $2;
 	p_receiver	alias for $3;
 begin
-	return -1;
-
 	perform storeListen_int (p_origin, p_provider, p_receiver);
 	return  createEvent (&#39;_schemadoc&#39;, &#39;STORE_LISTEN&#39;,
 			p_origin, p_provider, p_receiver);
@@ -8250,6 +9418,9 @@ begin
 				(p_set_id, p_set_origin, p_set_comment);
 	end if;
 
+	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
+	perform addPartialLogIndices();
+
 	return p_set_id;
 end;
 </programlisting>
@@ -8411,6 +9582,7 @@ declare
 	p_sub_forward		alias for $4;
 	v_set_origin		int4;
 	v_ev_seqno			int8;
+	v_rec			record;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -8418,7 +9590,7 @@ begin
 	lock table sl_config_lock;
 
 	-- ----
-	-- Check that this is called on the receiver node
+	-- Check that this is called on the provider node
 	-- ----
 	if p_sub_provider != getLocalNodeId(&#39;_schemadoc&#39;) then
 		raise exception &#39;Slony-I: subscribeSet() must be called on provider&#39;;
@@ -8431,26 +9603,28 @@ begin
 			from sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
+		raise exception &#39;Slony-I: subscribeSet(): set % not found&#39;, p_sub_set;
 	end if;
 	if v_set_origin = p_sub_receiver then
 		raise exception 
-				&#39;Slony-I: set origin and receiver cannot be identical&#39;;
+				&#39;Slony-I: subscribeSet(): set origin and receiver cannot be identical&#39;;
 	end if;
 	if p_sub_receiver = p_sub_provider then
 		raise exception 
-				&#39;Slony-I: set provider and receiver cannot be identical&#39;;
+				&#39;Slony-I: subscribeSet(): set provider and receiver cannot be identical&#39;;
 	end if;
 
-
 	-- ---
-	-- Check to see if the set contains any tables - gripe if not - bug #1226
+	-- Verify that the provider is either the origin or an active subscriber
+	-- Bug report #1362
 	-- ---
-	if not exists (select true 
-		from sl_table
-		where tab_set = p_sub_set) then
-		raise notice &#39;subscribeSet:: set % has no tables - risk of problems - see bug 1226&#39;, p_sub_set;
-		raise notice &#39;http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226&#39;;
+	if v_set_origin &lt;&gt; p_sub_provider then
+		if not exists (select 1 from sl_subscribe
+			where sub_set = p_sub_set and 
+                              sub_receiver = p_sub_provider and
+			      sub_forward and sub_active) then
+			raise exception &#39;Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %&#39;, p_sub_provider, p_sub_set;
+		end if;
 	end if;
 
 	-- ----
@@ -8465,11 +9639,6 @@ begin
 	-- ----
 	perform subscribeSet_int(p_sub_set, p_sub_provider,
 			p_sub_receiver, p_sub_forward);
-
-	-- ----
-	-- Submit listen management events
-	-- ----
-	perform RebuildListenEntries();
 
 	return v_ev_seqno;
 end;
@@ -8526,7 +9695,7 @@ begin
 				and sub_receiver = p_sub_receiver;
 		if found then
 			if not v_sub_row.sub_active then
-				raise exception &#39;Slony-I: set % is not active, cannot change provider&#39;,
+				raise exception &#39;Slony-I: subscribeSet_int(): set % is not active, cannot change provider&#39;,
 						p_sub_set;
 			end if;
 		end if;
@@ -8541,6 +9710,11 @@ begin
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	if found then
+		-- ----
+		-- Rewrite sl_listen table
+		-- ----
+		perform RebuildListenEntries();
+
 		return p_sub_set;
 	end if;
 
@@ -8569,7 +9743,7 @@ begin
 			from sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception &#39;Slony-I: set % not found&#39;, p_sub_set;
+		raise exception &#39;Slony-I: subscribeSet_int(): set % not found&#39;, p_sub_set;
 	end if;
 
 	if v_set_origin = getLocalNodeId(&#39;_schemadoc&#39;) then
@@ -8580,7 +9754,9 @@ begin
 				p_sub_provider, p_sub_receiver);
 	end if;
 
+	-- ----
 	-- Rewrite sl_listen table
+	-- ----
 	perform RebuildListenEntries();
 
 	return p_sub_set;
@@ -8653,7 +9829,7 @@ begin
 	-- anything means the table does not exist.
 	--
 	if not found then
-		raise exception &#39;Slony-I: table % not found&#39;, v_tab_fqname_quoted;
+		raise exception &#39;Slony-I: tableAddKey(): table % not found&#39;, v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -8734,7 +9910,7 @@ begin
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception &#39;Slony-I: table with ID % not found&#39;, p_tab_id;
+		raise exception &#39;Slony-I: tableDropKey(): table with ID % not found&#39;, p_tab_id;
 	end if;
 
 	-- ----
@@ -8805,14 +9981,14 @@ end;
       </para>
     </section>
 
-<!-- Function terminatenodeconnections( name ) -->
-    <section id="function.terminatenodeconnections-name"
-             xreflabel="schemadocterminatenodeconnections( name )">
-      <title id="function.terminatenodeconnections-name-title">
-       terminatenodeconnections( name )
+<!-- Function terminatenodeconnections( integer ) -->
+    <section id="function.terminatenodeconnections-integer"
+             xreflabel="schemadocterminatenodeconnections( integer )">
+      <title id="function.terminatenodeconnections-integer-title">
+       terminatenodeconnections( integer )
       </title>
-      <titleabbrev id="function.terminatenodeconnections-name-titleabbrev">
-       terminatenodeconnections( name )
+      <titleabbrev id="function.terminatenodeconnections-integer-titleabbrev">
+       terminatenodeconnections( integer )
       </titleabbrev>
 
       <para>
@@ -8822,13 +9998,30 @@ end;
         <segtitle>Language</segtitle>
         <segtitle>Return Type</segtitle>
         <seglistitem>
-         <seg>C</seg>
+         <seg>PLPGSQL</seg>
          <seg>integer</seg>
         </seglistitem>
        </segmentedlist>
  
-       terminates connections to the node and terminates the process
-        <programlisting>_Slony_I_terminateNodeConnections</programlisting>
+       terminates all backends that have registered to be from the given node
+        <programlisting>
+declare
+	p_failed_node	alias for $1;
+	v_row			record;
+begin
+	for v_row in select nl_nodeid, nl_conncnt,
+			nl_backendpid from sl_nodelock
+			where nl_nodeid = p_failed_node for update
+	loop
+		perform killBackend(v_row.nl_backendpid, &#39;TERM&#39;);
+		delete from sl_nodelock
+			where nl_nodeid = v_row.nl_nodeid
+			and nl_conncnt = v_row.nl_conncnt;
+	end loop;
+
+	return 0;
+end;
+</programlisting>
       </para>
     </section>
 
@@ -9020,7 +10213,7 @@ begin
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
-		raise exception &#39;Slony-I: Cannot unsubscibe set % while being provider&#39;,
+		raise exception &#39;Slony-I: Cannot unsubscribe set % while being provider&#39;,
 				p_sub_set;
 	end if;
 
@@ -9319,7 +10512,7 @@ declare
         p_old   alias for $1;
 begin
 	-- upgrade sl_table
-	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;) then
 		-- Add new column(s) sl_table.tab_relname, sl_table.tab_nspname
 		execute &#39;alter table sl_table add column tab_relname name&#39;;
 		execute &#39;alter table sl_table add column tab_nspname name&#39;;
@@ -9338,7 +10531,7 @@ begin
 	end if;
 
 	-- upgrade sl_sequence
-	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;) then
 		-- Add new column(s) sl_sequence.seq_relname, sl_sequence.seq_nspname
 		execute &#39;alter table sl_sequence add column seq_relname name&#39;;
 		execute &#39;alter table sl_sequence add column seq_nspname name&#39;;
@@ -9358,11 +10551,60 @@ begin
 	-- ----
 	-- Changes from 1.0.x to 1.1.0
 	-- ----
-	if p_old = &#39;1.0.2&#39; or p_old = &#39;1.0.5&#39; then
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;) then
 		-- Add new column sl_node.no_spool for virtual spool nodes
 		execute &#39;alter table sl_node add column no_spool boolean&#39;;
 		update sl_node set no_spool = false;
 	end if;
+
+	-- ----
+	-- Changes for 1.1.3
+	-- ----
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;, &#39;1.1.0&#39;, &#39;1.1.1&#39;, &#39;1.1.2&#39;) then
+		-- Add new table sl_nodelock
+		execute &#39;create table sl_nodelock (
+						nl_nodeid		int4,
+						nl_conncnt		serial,
+						nl_backendpid	int4,
+
+						CONSTRAINT &quot;sl_nodelock-pkey&quot;
+						PRIMARY KEY (nl_nodeid, nl_conncnt)
+					)&#39;;
+		-- Drop obsolete functions
+		execute &#39;drop function terminateNodeConnections(name)&#39;;
+		execute &#39;drop function cleanupListener()&#39;;
+		execute &#39;drop function truncateTable(text)&#39;;
+	end if;
+
+	-- ----
+	-- Changes for 1.2
+	-- ----
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;, &#39;1.1.0&#39;, &#39;1.1.1&#39;, &#39;1.1.2&#39;, &#39;1.1.3&#39;) then
+		-- Add new table sl_registry
+		execute &#39;create table sl_registry (
+						reg_key			text primary key,
+						reg_int4		int4,
+						reg_text		text,
+						reg_timestamp	timestamp
+					) without oids&#39;;
+                execute &#39;alter table sl_config_lock set without oids;&#39;;
+                execute &#39;alter table sl_confirm set without oids;&#39;;
+                execute &#39;alter table sl_event set without oids;&#39;;
+                execute &#39;alter table sl_listen set without oids;&#39;;
+                execute &#39;alter table sl_log_1 set without oids;&#39;;
+                execute &#39;alter table sl_log_2 set without oids;&#39;;
+                execute &#39;alter table sl_node set without oids;&#39;;
+                execute &#39;alter table sl_nodelock set without oids;&#39;;
+                execute &#39;alter table sl_path set without oids;&#39;;
+                execute &#39;alter table sl_seqlog set without oids;&#39;;
+                execute &#39;alter table sl_sequence set without oids;&#39;;
+                execute &#39;alter table sl_set set without oids;&#39;;
+                execute &#39;alter table sl_setsync set without oids;&#39;;
+                execute &#39;alter table sl_subscribe set without oids;&#39;;
+                execute &#39;alter table sl_table set without oids;&#39;;
+                execute &#39;alter table sl_trigger set without oids;&#39;;
+	end if;
+
 	return p_old;
 end;
 </programlisting>
