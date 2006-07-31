@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.7 2006-07-31 18:49:52 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.8 2006-07-31 19:04:32 darcyb Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -58,7 +58,7 @@ how Slony-I manages replication configuration.  These include:
   indexes on sl_log_1 and sl_log_2 are created on a per-origin-node
   basis.  This provides the performance boost of having an easily
   recognizable index, but without the risk of having XIDs from
-  different nodes mixed together in one index, where rollover could
+  different nodes mixed together in one index, where roll-over could
   Cause Problems...
 
 These features are generally configurable, but the defaults ought to
@@ -83,7 +83,7 @@ There are also numerous enhancements that are more directly visible:
   versions.  This may revise how you want to start it up...  In the
   past, slon processes tended to fall over easily, mandating having
   some form of "watchdog."  The new behaviour points more towards
-  "init" / "rc.d"-like handling, where, upon bootup, one "rc.d" script
+  "init" / "rc.d"-like handling, where, upon boot-up, one "rc.d" script
   might start up PostgreSQL, another one starts pgpool, and a third
   (which must run third!) starts up a slon.
 
@@ -136,6 +136,10 @@ There are also numerous enhancements that are more directly visible:
   there is just one node.  That then allows the cleanup thread to
   clear sl_log_1 etc.
 
-- Bug 1566 - Force all replication to occure in the ISO datestyle.
+- Bug 1566 - Force all replication to occur in the ISO datestyle.
   This ensures that we can apply date/timestamps regardless of the datestyle
   they were entered in.
+
+- Force all replication to occur with standards_conforming_strings set to off.
+  This ensures we can replicate a node running on 8.2 without extra escape chars 
+  showing up in the data.
