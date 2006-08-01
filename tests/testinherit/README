@@ -1,0 +1,6 @@
+$Id: README,v 1.1 2006-08-01 21:28:18 cbbrowne Exp $
+  
+testinherit does some simple handling of inheritance...
+
+A "master" table is created; three "sub tables" inherit from it, and
+all four tables are replicated.
