@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.62 2006-07-31 19:42:09 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.63 2006-08-02 17:14:24 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1168,6 +1168,25 @@ were made <quote>obsolete</quote> at any time after the start time of
 the eldest transaction that is still open.  Long running transactions
 will cause trouble, and should be avoided, even on subscriber
 nodes.</para> </answer></qandaentry>
+
+<qandaentry> <question> <para> I have submitted a <xref
+linkend="stmtmoveset"> / <xref linkend="stmtddlscript"> request, and
+it seems to be stuck on one of my nodes.  &slony1; logs aren't
+displaying any errors or warnings </para> </question>
+
+<answer> <para> Is it possible that you are running
+<application>pg_autovacuum</application>, and it has taken out locks
+on some tables in the replication set?  That would somewhat-invisibly
+block &slony1; from performing operations that require <link
+linkend="locking"> acquisition of exclusive locks. </link> </para>
+
+<para> You might check for these sorts of locks using the following
+query: <command> select l.*, c.relname from pg_locks l, pg_class c
+where c.oid = l.relation ; </command> A
+<envar>ShareUpdateExclusiveLock</envar> lock will block the &slony1;
+operations that need their own exclusive locks, which are likely
+queued up, marked as not being granted. </para>
+</answer> </qandaentry>
 
 </qandadiv>
 <qandadiv id="faqbugs"> <title> &slony1; FAQ: &slony1; Bugs in Elder Versions </title>

@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.8 2006-03-21 19:07:05 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.9 2006-08-02 17:14:25 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -78,6 +78,13 @@ other process having held on to a table. </para>
 the new subscriber.</emphasis> They are <emphasis>not</emphasis>
 applied on the provider or on the origin. </para>
 
+</listitem>
+
+<listitem><para> <application>pg_autovacuum</application> may not be
+part of &slony1;, but those that run it find that it wakes up roughly
+once per minute and may, at any time, start vacuuming a table, thereby
+taking out a <envar>ShareUpdateExclusiveLock</envar> lock.  This may
+block the other events for an unpredictable period of time.<para>
 </listitem>
 
 </itemizedlist>
