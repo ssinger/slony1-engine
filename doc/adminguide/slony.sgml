@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.34 2006-07-31 19:42:09 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.35 2006-08-02 17:14:55 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -147,7 +147,6 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"book.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil

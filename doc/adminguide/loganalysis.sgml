@@ -1,11 +1,11 @@
-<!-- $Id: loganalysis.sgml,v 1.2 2006-07-31 18:50:55 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.3 2006-08-02 17:14:55 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
 <indexterm><primary>Log analysis</primary></indexterm>
 
 <para>Here are some of things that you may find in your &slony1; logs,
-and explanations of what they mean.</para>
+and explanations of what they mean.
 
 <sect2><title>CONFIG notices</title>
 
@@ -35,7 +35,7 @@ threads:
 <varlistentry><term>localListenThread</term> 
 
 <listitem><para> This is the local thread that listens for events on
-the local node.</para></listitem></varlistentry>
+the local node.</listitem></varlistentry>
 
 <varlistentry><term>remoteWorkerThread-X</term> 
 
@@ -228,10 +228,10 @@ node to allow the event to proceed.  The scary, scary alternative
 might be to delete the offending event, assuming it can't possibly
 work...</para> </listitem>
 <listitem><para><command>SLON_CONFIG: remoteWorkerThread_%d: DDL request with %d statements</command></para> 
-<para> This is informational, indicating how many SQL statements were processed. </listitem>
+<para> This is informational, indicating how many SQL statements were processed. </para></listitem>
 <listitem><para><command>SLON_ERROR: remoteWorkerThread_%d: DDL had invalid number of statements - %d</command></para> 
 
-<para> Occurs if there were < 0 statements (which should be impossible) or > MAXSTATEMENTS statements.  Probably the script was bad...</listitem>
+<para> Occurs if there were < 0 statements (which should be impossible) or > MAXSTATEMENTS statements.  Probably the script was bad...</para></listitem>
 
 <listitem><para><command>ERROR: remoteWorkerThread_%d: malloc()
 failure in DDL_SCRIPT - could not allocate %d bytes of
@@ -242,7 +242,7 @@ DDL script that makes a &lslon; run out of memory </para></listitem>
 
 <listitem><para><command>CONFIG: remoteWorkerThread_%d: DDL Statement %d: [%s]</command></para> 
 
-<para> This lists each DDL statement as it is submitted. </listitem>
+<para> This lists each DDL statement as it is submitted. </para></listitem>
 <listitem><para><command>ERROR: DDL Statement failed - %s</command></para> 
 
 <para> Oh, dear, one of the DDL statements that worked on the origin
@@ -331,7 +331,7 @@ reconnect. </para></listitem>
 
 <listitem><para><command>DEBUG2: remoteWorkerThread_%d: ignore new events due to shutdown</command></para> 
 
-<para> If the &lslon; is shutting down, it is futile to process more events</listitem>
+<para> If the &lslon; is shutting down, it is futile to process more events</para></listitem>
 <listitem><para><command>DEBUG1: remoteWorkerThread_%d: node %d - no worker thread</command></para> 
 
 <para> Curious: we can't wake up the worker thread; there probably
@@ -375,7 +375,7 @@ database is down?</para></listitem>
 
 <para> Excellent: the copy set has a connection to its provider</para></listitem>
 <listitem><para><command>ERROR: Slony-I: sequenceSetValue(): sequence % not found</command></para> 
-<para> Curious; the sequence object is missing.  Could someone have dropped it from the schema by hand (e.g. - not using <xref linkend="stmtddlscript">)?</listitem>
+<para> Curious; the sequence object is missing.  Could someone have dropped it from the schema by hand (<emphasis>e.g.</emphasis> - not using <xref linkend="stmtddlscript">)?</para></listitem>
 
 <listitem><para><command>ERROR: Slony-I: subscribeSet() must be called on provider</command></para> 
 <para> This function should only get called on the provider node.  &lslonik; normally handles this right, unless one had wrong DSNs in a &lslonik; script...</para>
@@ -431,7 +431,7 @@ earlier than XID %s are still in progress</command></para>
 <para> This indicates that &lslon; is beginning preparations to set up subscription for a table.</para></listitem>
 <listitem><para><command>DEBUG1: remoteWorkerThread_%d: table %s will require Slony-I serial key</command></para> 
 
-<para> Evidently this is a table defined with <xref linkend="stmttableaddkey"> where &slony1; has to add a surrogate primary key.</listitem>
+<para> Evidently this is a table defined with <xref linkend="stmttableaddkey"> where &slony1; has to add a surrogate primary key.</para></listitem>
 <listitem><para><command>ERROR: remoteWorkerThread_%d: Could not lock table %s on subscriber</command></para> 
 
 <para> For whatever reason, the table could not be locked, so the
@@ -450,10 +450,10 @@ need to intervene...</para></listitem>
 <para> &lslon; is starting to copy a table... </para></listitem>
 <listitem><para><command>DEBUG3: remoteWorkerThread_%d: table %s Slony-I serial key added local</command></para> 
 
-<para> Just added new column to the table to provide surrogate primary key.</listitem>
+<para> Just added new column to the table to provide surrogate primary key.</para></listitem>
 <listitem><para><command>DEBUG3: remoteWorkerThread_%d: local table %s already has Slony-I serial key</command></para> 
 
-<para> Did not need to add serial key; apparently it was already there.</listitem>
+<para> Did not need to add serial key; apparently it was already there.</para></listitem>
 <listitem><para><command>DEBUG3: remoteWorkerThread_%d: table %s does not require Slony-I serial key</command></para> 
 
 <para> Apparently this table didn't require a special serial key... </para>
@@ -535,7 +535,7 @@ Perhaps disk filled up...  </para></listitem>
 
 <para> At the end of a subscribe set event, the subscriber's &lslon;
 will disconnect from the provider, clearing out
-connections... </listitem>
+connections... </para></listitem>
 
 <listitem><para><command>DEBUG1: remoteWorkerThread_%d: copy_set %d done in %.3f seconds</command></para> 
 
@@ -878,13 +878,13 @@ remains a task for the documentors.</para>
 <para> This is raised in <function>checkmoduleversion()</function> if there is a mismatch between the version of &slony1; as reported by &lslonik; versus what the &postgres; build has.</para></listitem>
 <listitem><para><command>ERROR: Slony-I: registry key % is not an int4 value</command></para> 
 
-<para> Raised in <function>registry_get_int4()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<para> Raised in <function>registry_get_int4()</function>, this complains if a requested value turns out to be NULL.</para> </listitem>
 <listitem><para><command>ERROR: registry key % is not a text value</command></para> 
 
-<para> Raised in <function>registry_get_text()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<para> Raised in <function>registry_get_text()</function>, this complains if a requested value turns out to be NULL.</para></listitem>
 <listitem><para><command>ERROR: registry key % is not a timestamp value</command></para> 
 
-<para> Raised in <function>registry_get_timestamp()</function>, this complains if a requested value turns out to be NULL.</listitem>
+<para> Raised in <function>registry_get_timestamp()</function>, this complains if a requested value turns out to be NULL.</para></listitem>
 <listitem><para><command>NOTICE: Slony-I: cleanup stale sl_nodelock entry for pid=%</command></para> 
 
 <para> This will occur when a &lslon; starts up after another has crashed; this is routine cleanup.</para></listitem>
@@ -938,7 +938,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"book.sgml"
+sgml-parent-document:"slony.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:"/usr/lib/sgml/catalog"
 sgml-local-ecat-files:nil
