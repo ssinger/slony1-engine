@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.117 2006-07-26 18:29:06 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.118 2006-08-02 07:20:01 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -28,7 +28,7 @@
 #include "slon.h"
 #include "confoptions.h"
 #include "../parsestatements/scanner.h"
-extern STMTS[MAXSTATEMENTS];
+extern int STMTS[MAXSTATEMENTS];
 
 #define MAXGROUPSIZE 10000    /* What is the largest number of SYNCs we'd want to group together??? */
 
@@ -5030,13 +5030,13 @@ sync_helper(void *cdata)
 	int			rc;
 
 	WorkerGroupLine *data_line[SLON_DATA_FETCH_SIZE];
-	int			data_line_alloc;
-	int			data_line_first;
-	int			data_line_last;
+	int			data_line_alloc = 0;
+	int			data_line_first = 0;
+	int			data_line_last = 0;
 
-	PGresult   *res;
-	PGresult   *res2;
-	PGresult   *res3;
+	PGresult   *res = NULL;
+	PGresult   *res2 = NULL;
+	PGresult   *res3 = NULL;
 	int			ntuples;
 	int			tupno;
 
@@ -5891,6 +5891,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	int			first_subquery;
 	char		curr_char;
 
+	curr_number = 0;
 	curr_min = MINMAXINITIAL;
 	curr_max = MINMAXINITIAL;
 	first_subquery = 1;
