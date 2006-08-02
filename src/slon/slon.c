@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.65 2006-03-21 17:59:25 cbbrowne Exp $
+ *	$Id: slon.c,v 1.66 2006-08-02 14:29:39 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -126,24 +126,14 @@ main(int argc, char *const argv[])
 {
 	char	   *cp1;
 	char	   *cp2;
-	SlonDString query;
-	PGresult   *res;
-	int			i,
-				n;
 	int			c;
 	int			errors = 0;
-	char		pipe_c;
-	pid_t		pid;
 	extern int	optind;
 	extern char *optarg;
 
 #ifdef WIN32
 	WSADATA		wsaData;
 	int			err;
-#endif
-
-#if !defined(CYGWIN) && !defined(WIN32)
-	struct sigaction act;
 #endif
 
 
@@ -375,7 +365,6 @@ SlonMain(void)
 	SlonDString query;
 	int			i,
 				n;
-	char		pipe_c;
 	PGconn	   *startup_conn;
 
 	slon_pid = getpid();
