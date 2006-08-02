@@ -1,11 +1,11 @@
-<!-- $Id: loganalysis.sgml,v 1.3 2006-08-02 17:14:55 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.4 2006-08-02 18:34:59 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
 <indexterm><primary>Log analysis</primary></indexterm>
 
 <para>Here are some of things that you may find in your &slony1; logs,
-and explanations of what they mean.
+and explanations of what they mean.</para>
 
 <sect2><title>CONFIG notices</title>
 
@@ -35,7 +35,7 @@ threads:
 <varlistentry><term>localListenThread</term> 
 
 <listitem><para> This is the local thread that listens for events on
-the local node.</listitem></varlistentry>
+the local node.</para></listitem></varlistentry>
 
 <varlistentry><term>remoteWorkerThread-X</term> 
 

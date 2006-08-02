@@ -1,4 +1,4 @@
-<!-- $Id: slonik.sgml,v 1.16 2006-01-17 16:16:09 cbbrowne Exp $ -->
+<!-- $Id: slonik.sgml,v 1.17 2006-08-02 18:34:59 cbbrowne Exp $ -->
 <refentry id="slonik">
 <refmeta>
     <refentrytitle id="app-slonik-title"><application>slonik</application></refentrytitle>
@@ -90,7 +90,7 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"book.sgml"
+sgml-parent-document:"slony.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:"/usr/lib/sgml/catalog"
 sgml-local-ecat-files:nil

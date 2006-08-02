@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.15 2006-07-31 19:42:09 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.16 2006-08-02 18:34:57 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>
@@ -153,10 +153,9 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"book.sgml"
+sgml-parent-document:"slony.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil
 End:
 -->
-

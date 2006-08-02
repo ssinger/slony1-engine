@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.9 2006-08-02 17:14:25 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.10 2006-08-02 18:34:59 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -84,7 +84,7 @@ applied on the provider or on the origin. </para>
 part of &slony1;, but those that run it find that it wakes up roughly
 once per minute and may, at any time, start vacuuming a table, thereby
 taking out a <envar>ShareUpdateExclusiveLock</envar> lock.  This may
-block the other events for an unpredictable period of time.<para>
+block the other events for an unpredictable period of time.</para>
 </listitem>
 
 </itemizedlist>
@@ -193,10 +193,9 @@ sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
 sgml-indent-step:1
 sgml-indent-data:t
-sgml-parent-document:"book.sgml"
+sgml-parent-document:"slony.sgml"
 sgml-exposed-tags:nil
 sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil
 End:
 -->
-
