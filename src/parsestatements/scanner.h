@@ -1,4 +1,4 @@
-/* $Id: scanner.h,v 1.1 2006-02-24 18:33:02 cbbrowne Exp $ */
+/* $Id: scanner.h,v 1.2 2006-08-02 06:59:42 xfade Exp $ */
 #define MAXSTATEMENTS 1000
 enum quote_states {
 	Q_NORMAL_STATE,
@@ -15,3 +15,4 @@ enum quote_states {
 	Q_DONE               /* NULL ends it all... */
 };
 
+extern int scan_for_statements (const char *extended_statement);
