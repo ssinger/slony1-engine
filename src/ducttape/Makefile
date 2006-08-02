@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.11 2005-07-27 18:36:58 cbbrowne Exp $
+#	$Id: Makefile,v 1.12 2006-08-02 15:32:02 xfade Exp $
 # ----------
 
 slony_subdir = src/ducttape
@@ -41,13 +41,13 @@ installdirs:
 
 test:
 	for script in $(TESTS) ; do \
-	  ./$$script ; \
+	  ./$$script || exit; \
 	done
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-      cp $$file $(distdir)/$(subdir)/$$file ; \
+      cp $$file $(distdir)/$(subdir)/$$file || exit; \
     done
 

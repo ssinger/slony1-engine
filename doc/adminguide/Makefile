@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.18 2005-12-08 20:44:58 xfade Exp $
+# $Id: Makefile,v 1.19 2006-08-02 15:32:01 xfade Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -75,16 +75,16 @@ endif
 install: installdirs
 ifdef docdir
 	for file in $(wildcard $(srcdir)/*.sgml) ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/sgml; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/sgml || exit; \
 	done
 	for file in $(wildcard man1/*) ; do \
-	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1 ;\
+	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1 || exit;\
 	done
 	for file in $(wildcard man7/*) ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man7 ;\
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man7 || exit;\
 	done
 	for file in $(wildcard *.html) stylesheet.css ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/html ;\
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/html || exit;\
 	done
 endif
 
@@ -274,6 +274,6 @@ distdir:	$(DISTFILES)
 	mkdir -p $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	@for file in $(DISTFILES) ; do \
-		cp $$file $(distdir)/$(subdir)/$$file ; \
+		cp $$file $(distdir)/$(subdir)/$$file || exit; \
 	done
 

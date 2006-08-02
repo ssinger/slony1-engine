@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.13 2006-03-28 20:55:46 cbbrowne Exp $
+#       $Id: Makefile,v 1.14 2006-08-02 15:32:02 xfade Exp $
 #
 # ----------
 
@@ -23,14 +23,15 @@ ifndef SED
 	exit 1;
 endif
 	@for file in $(wildcard *.pl) $(wildcard *.pm); do \
-		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` ; \
+		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` && \
 		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
                        -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
                        -e "s#@@PGBINDIR@@#$(pgbindir)#;" \
                        -e "s#@@TOOLSBIN@@#$(toolsbin)#;" \
-                       $$file > $$tmpname; \
-		chmod 755 $$tmpname; \
+                       $$file > $$tmpname && \
+		chmod 755 $$tmpname \
+		|| exit; \
 	done
 endif
 
@@ -41,8 +42,9 @@ else
 	$(INSTALL_DATA)   slon_tools.conf-sample $(DESTDIR)$(sysconfdir)
 	$(INSTALL_DATA)   slon-tools             $(DESTDIR)$(perlsharedir)/slon-tools.pm
 	for file in $(wildcard *.pl) ; do \
-		tmpname=`echo $$file | $(SED) "s#\.pl##"` ; \
-		$(INSTALL_SCRIPT) $$tmpname $(DESTDIR)$(toolsbin) ; \
+		tmpname=`echo $$file | $(SED) "s#\.pl##"` && \
+		$(INSTALL_SCRIPT) $$tmpname $(DESTDIR)$(toolsbin) \
+		|| exit; \
 	done
 endif
 
@@ -55,12 +57,12 @@ distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-		cp $$file $(distdir)/$(subdir)/$$file ; \
+		cp $$file $(distdir)/$(subdir)/$$file || exit; \
 	done
 
 clean distclean maintainer-clean:
 	@for file in $(wildcard *.pl) $(wildcard *.pm); do \
-		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` ; \
-		rm -f $$tmpname ; \
+		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` && \
+		rm -f $$tmpname \
+		|| exit; \
 	done
-

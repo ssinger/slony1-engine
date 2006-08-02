@@ -15,7 +15,7 @@ distdir: $(DISTFILES)
 	mkdir -p $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-      cp $$file $(distdir)/$(subdir)/$$file ; \
+      cp $$file $(distdir)/$(subdir)/$$file || exit; \
     done
 
 all:
@@ -28,6 +28,6 @@ endif
 install: all installdirs
 ifdef docdir
 	for file in $(wildcard *.txt) $(wildcard *.html ); do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/howto ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/howto || exit; \
 	done
 endif

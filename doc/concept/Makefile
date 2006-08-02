@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.12 2005-12-01 19:48:13 xfade Exp $
+# $Id: Makefile,v 1.13 2006-08-02 15:32:01 xfade Exp $
 # ----------
 
 slony_subdir = doc/concept
@@ -50,7 +50,7 @@ endif
 install: installdirs all
 ifdef docdir
 	for file in $(PS) $(PDF) $(TXT) Slon_$(IMG_WID)x$(IMG_HT).jpg ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/concept ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/concept || exit; \
 	done
 endif
 
@@ -126,6 +126,6 @@ distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-      cp $$file $(distdir)/$(subdir)/$$file ; \
+      cp $$file $(distdir)/$(subdir)/$$file || exit; \
     done
 

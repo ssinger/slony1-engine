@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.21 2005-11-11 13:53:24 wieck Exp $
+#	$Id: Makefile,v 1.22 2006-08-02 15:32:02 xfade Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -70,6 +70,6 @@ distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-      cp $$file $(distdir)/$(subdir)/$$file ; \
+      cp $$file $(distdir)/$(subdir)/$$file || exit; \
     done
 
