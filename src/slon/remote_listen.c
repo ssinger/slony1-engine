@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.30 2005-12-14 02:07:01 wieck Exp $
+ *	$Id: remote_listen.c,v 1.31 2006-08-02 07:05:53 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -85,10 +85,12 @@ remoteListenThread_main(void *cdata)
 	SlonDString query1;
 	PGconn	   *dbconn = NULL;
 	PGresult   *res;
+	/* Don't bother doing anything about CONFIRM notifications
 	PGnotify   *notification;
-	char		notify_confirm[256];
 	int			forward_confirm = true;
-
+	*/
+	char		notify_confirm[256];
+	
 	struct listat *listat_head;
 	struct listat *listat_tail;
 	int64		last_config_seq = 0;
