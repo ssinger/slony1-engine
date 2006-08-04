@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.66 2006-07-13 21:38:02 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67 2006-08-04 20:31:27 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -34,7 +34,7 @@
 #include "slonik.h"
 #include "config.h"
 #include "../parsestatements/scanner.h"
-extern STMTS[MAXSTATEMENTS];
+extern int STMTS[MAXSTATEMENTS];
 
 /*
  * Global data
@@ -1947,7 +1947,7 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 
         /* determine what schema version we should load */
 
-        if (adminfo->pg_version > 70300)        /* 7.2 and lower */
+        if (adminfo->pg_version < 70300)        /* 7.2 and lower */
         {
                 printf("%s:%d: unsupported PostgreSQL "
                         "version %d.%d\n",
@@ -3815,7 +3815,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonDString query;
 	SlonDString script;
 	int			rc;
-	int num_statements = -1, stmtno, startpos;
+	int num_statements = -1, stmtno;
 	char		buf[4096];
 	char		rex1[256];
 	char		rex2[256];
