@@ -1,4 +1,4 @@
-$Id: README,v 1.4 2006-07-14 21:29:01 cbbrowne Exp $
+$Id: README,v 1.5 2006-08-04 20:06:24 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -18,3 +18,9 @@ The three tables are of the three interesting types:
 It actually tries replicating a fourth table, which has an invalid
 candidate primary key (columns not defined NOT NULL), which should
 cause it to be rejected.  That is done in a slonik TRY {} block.
+
+It also creates...
+
+5.  table5 which has columns of all sorts of vaguely esoteric types to
+exercise that points, paths, bitmaps, mac addresses, and inet types
+replicate properly.
