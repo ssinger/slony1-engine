@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.23 2005-11-22 05:11:59 wieck Exp $
+ *	$Id: scheduler.c,v 1.24 2006-08-04 21:01:18 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -62,7 +62,7 @@ static pthread_cond_t sched_master_cond;
 static void *sched_mainloop(void *);
 static void sched_add_fdset(int fd, fd_set * fds);
 static void sched_remove_fdset(int fd, fd_set * fds);
-static void sched_shutdown();
+/* static void sched_shutdown(); */
 
 
 /* ----------

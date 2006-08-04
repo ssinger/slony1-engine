@@ -104,6 +104,7 @@ build_conf_variables(void)
 }
 
 
+#ifdef NEED_ADD_CONF_VARIABLE
 static bool
 add_conf_variable(struct config_generic * var, int elevel)
 {
@@ -140,6 +141,7 @@ add_conf_variable(struct config_generic * var, int elevel)
 		  sizeof(struct config_generic *), conf_var_compare);
 	return true;
 }
+#endif
 
 void
 InitializeConfOptions(void)
@@ -436,7 +438,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_BOOL:
 			{
 				struct config_bool *conf = (struct config_bool *) record;
-				bool		newval;
+				bool		newval = FALSE;
 
 				if (value)
 				{
@@ -458,7 +460,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_INT:
 			{
 				struct config_int *conf = (struct config_int *) record;
-				int			newval;
+				int			newval=0;
 
 				if (value)
 				{
@@ -484,7 +486,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_REAL:
 			{
 				struct config_real *conf = (struct config_real *) record;
-				double		newval;
+				double		newval = 0;
 
 				if (value)
 				{
