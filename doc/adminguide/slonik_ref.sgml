@@ -2478,15 +2478,14 @@ FAILOVER (
     <para> Note that this is a &rlocking; operation, which means that
     it can get stuck behind other database activity.</para>
      
-    <para> At the start of this event, all tables in the specified set
-    are unlocked via the function
+    <para> At the start of this event, all replicated tables are
+    unlocked via the function
     <function>alterTableRestore(tab_id)</function>.  After the SQL
     script has run, they are returned to <quote>replicating
     state</quote> using
     <function>alterTableForReplication(tab_id)</function>.  This means
-    that all of these tables are locked by this <application> slon
-    </application> process for the duration of the SQL script
-    execution.</para>
+    that all of these tables are locked by this &lslon process for the
+    duration of the SQL script execution.</para>
 
     <para> If a table's columns are modified, it is very important
     that the triggers be regenerated, otherwise they may be
@@ -2542,6 +2541,13 @@ EXECUTE SCRIPT (
     includes a listing of each statement as it is processed, on the
     set origin node.  Similarly, the statements processed are listed
     in slon logs on the other nodes.</para>
+
+    <para> In &slony1; version 1.0, this would only lock the tables in
+    the specified replication set.  As of 1.1, <emphasis>all
+    replicated tables</emphasis> are locked (<emphasis>e.g.</emphasis>
+    - triggers are removed at the start, and restored at the end).
+    This deals with the risk that one might request DDL changes on
+    tables in multiple replication sets.</para>
    </refsect1>
   </refentry>
 
