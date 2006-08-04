@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.32 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: cleanup_thread.c,v 1.33 2006-08-04 20:48:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -272,10 +272,10 @@ cleanupThread_main(void *dummy)
 				dstring_reset(&query3);
 			}
 			latest_xid = get_earliest_xid(dbconn);
+			vacuum_action = "";
 			if (earliest_xid == latest_xid)
 			{
 				
-				vacuum_action = "";
 				slon_log(SLON_DEBUG4,
 					"cleanupThread: xid %d still active - analyze instead\n",
 					earliest_xid);
