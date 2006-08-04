@@ -1,4 +1,4 @@
-/* $Id: scanner.c,v 1.2 2006-07-11 18:33:56 darcyb Exp $ */
+/* $Id: scanner.c,v 1.3 2006-08-04 20:40:19 cbbrowne Exp $ */
 #include <stdio.h>
 #include "scanner.h"
 
@@ -9,7 +9,7 @@ int scan_for_statements (const char *extended_statement) {
   int bpos;
   enum quote_states state;
   char cchar;
-  int d1start, d1end, d2start, d2end, d1stemp, j;
+  int d1start, d1end, d2start, d2end, d1stemp;
   int statements;
   
   /* Initialize */
@@ -17,6 +17,9 @@ int scan_for_statements (const char *extended_statement) {
   statements = 0;
   bquote = 0;
   bpos = 0;  /* Location of last backquote */
+  d1start = 0;
+  d2start = 0;
+  d1end = 0;
   state = Q_NORMAL_STATE;
   
   while (state != Q_DONE) {
