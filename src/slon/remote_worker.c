@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.118 2006-08-02 07:20:01 xfade Exp $
+ *	$Id: remote_worker.c,v 1.119 2006-08-04 08:01:50 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1461,7 +1461,7 @@ remoteWorkerThread_main(void *cdata)
 				int			ddl_setid = (int)strtol(event->ev_data1, NULL, 10);
 				char	   *ddl_script = event->ev_data2;
 				int			ddl_only_on_node = (int)strtol(event->ev_data3, NULL, 10);
-				int num_statements = -1, stmtno, startpos;
+				int num_statements = -1, stmtno;
 
 				PGresult *res;
 				ExecStatusType rstat;
@@ -2542,7 +2542,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	SlonDString indexregenquery;
 	int			ntuples1;
 	int			ntuples2;
-	int			ntuples3;
 	int			tupno1;
 	int			tupno2;
 	PGresult   *res1;
@@ -5022,7 +5021,6 @@ sync_helper(void *cdata)
 	SlonDString query;
 	SlonDString query2;
 	int			errors;
-	int			alloc_lines = 0;
 	struct timeval tv_start;
 	struct timeval tv_now;
 	int			first_fetch;
