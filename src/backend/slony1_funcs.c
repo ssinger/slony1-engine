@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.47 2006-08-01 17:56:28 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.48 2006-08-04 20:44:25 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1059,6 +1059,7 @@ _Slony_I_killBackend(PG_FUNCTION_ARGS)
 	}
 	else
 	{
+		signo = 0;
 		elog(ERROR, "Slony-I: unsupported signal");
 	}
 
