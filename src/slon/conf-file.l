@@ -152,7 +152,7 @@ void ProcessConfigFile(const char *filename)
 	opt_name = NULL;
 	opt_value = opt_name;
 
-	while ((token = yylex()))
+	while ( (token = yylex()) )
 	{
 		switch(parse_state)
 		{
