@@ -31,3 +31,5 @@ ifdef docdir
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/howto || exit; \
 	done
 endif
+
+clean:
