@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.119 2006-08-04 08:01:50 xfade Exp $
+ *	$Id: remote_worker.c,v 1.120 2006-08-04 21:32:59 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -263,7 +263,9 @@ static void terminate_log_archive();
 static int	generate_archive_header(int node_id, const char *seqbuf);
 static int	submit_query_to_archive(SlonDString * ds);
 static int	submit_string_to_archive(const char *s);
+#ifndef HAVE_PQPUTCOPYDATA
 static int	submit_raw_data_to_archive(const char *s);
+#endif
 static int logarchive_tracking(const char *namespace, int sub_set, const char *firstseq,
 					const char *seqbuf, const char *timestamp);
 static int	write_void_log(int node_id, char *seqbuf, const char *message);
@@ -5785,6 +5787,7 @@ submit_string_to_archive(const char *s)
 	return fprintf(archive_fp, "%s\n", s);
 }
 
+#ifndef HAVE_PQPUTCOPYDATA
 /* ----------
  * submit_raw_data_to_archive
  *
@@ -5796,6 +5799,7 @@ submit_raw_data_to_archive(const char *s)
 {
 	return fprintf(archive_fp, "%s", s);
 }
+#endif
 
 /* ----------
  * terminate_log_archive
