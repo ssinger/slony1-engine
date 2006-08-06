@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.49 2006-08-04 20:49:33 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.50 2006-08-06 14:57:50 darcyb Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -501,7 +501,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		int			len_value;
 		int			i;
 		int			need_comma = false;
-		int			OldDateStyle = DateStyle;
+		char			*OldDateStyle;
 		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
@@ -563,6 +563,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 * Append the values
 		 */
 		need_comma = false;
+		OldDateStyle=GetConfigOptionByName("DateStyle", NULL);
+		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
@@ -571,7 +573,6 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			if (tupdesc->attrs[i]->attisdropped)
 				continue;
 
-			DateStyle = USE_ISO_DATES;
 
 			if ((col_value = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 			{
@@ -581,8 +582,6 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			{
 				col_value = slon_quote_literal(col_value);
 			}
-
-			DateStyle = OldDateStyle;
 
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_value = strlen(col_value));
@@ -604,6 +603,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			memcpy(cp, col_value, len_value);
 			cp += len_value;
 		}
+
+		set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
 
 		/*
 		 * Terminate and done
@@ -630,7 +631,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		int			i;
 		int			need_comma = false;
 		int			need_and = false;
-		int		OldDateStyle = DateStyle;
+		char		*OldDateStyle;
 
 		char	   *cp = VARDATA(cs->cmddata_buf);
 
@@ -726,9 +727,10 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				col_value = "NULL";
 			else
 			{
-				DateStyle=USE_ISO_DATES;
+				OldDateStyle=GetConfigOptionByName("DateStyle", NULL);
+				set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
 				col_value = slon_quote_literal(SPI_getvalue(new_row, tupdesc, i + 1));
-				DateStyle=OldDateStyle;
+				set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
 			}
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident)) +
