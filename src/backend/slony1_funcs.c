@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.50 2006-08-06 14:57:50 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.51 2006-08-08 16:16:42 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -25,6 +25,7 @@
 #include "access/transam.h"
 #include "utils/builtins.h"
 #include "utils/elog.h"
+#include "utils/guc.h"
 #ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
 #else
