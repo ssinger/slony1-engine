@@ -102,10 +102,10 @@ struct config_string
 
 
 
-extern struct config_int ConfigureNamesInt[];
-extern struct config_bool ConfigureNamesBool[];
-extern struct config_real ConfigureNamesReal[];
-extern struct config_string ConfigureNamesString[];
+static struct config_int ConfigureNamesInt[];
+static struct config_bool ConfigureNamesBool[];
+static struct config_real ConfigureNamesReal[];
+static struct config_string ConfigureNamesString[];
 
 #endif
 /*
