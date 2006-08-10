@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.9 2006-07-31 20:43:05 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.10 2006-08-10 18:01:33 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -112,6 +112,12 @@ There are also numerous enhancements that are more directly visible:
 - A lot of fixes to the build environment (this needs to be tested on
   lots of platforms)
 
+  One noticeable upshot of this should be that (on Unix-like systems;
+  Windows(tm) appears to differ) you oughtn't need to specify a whole
+  lot of --with-pg[options] on the ./configure command line. You should
+  be able to get most of what's needed simply by specifying the path to
+  pg_config via --with-pgconfigdir.
+
 - slon "lag interval" option
 
   You can tell a node to lag behind by a particular interval of time.
@@ -146,9 +152,9 @@ There are also numerous enhancements that are more directly visible:
   clear sl_log_1 etc.
 
 - Bug 1566 - Force all replication to occur in the ISO datestyle.
-  This ensures that we can apply date/timestamps regardless of the datestyle
-  they were entered in.
+  This ensures that we can apply date/timestamps regardless of the
+  datestyle they were entered in.
 
-- Force all replication to occur with standards_conforming_strings set to off.
-  This ensures we can replicate a node running on 8.2 without extra escape chars 
-  showing up in the data.
+- Force all replication to occur with standards_conforming_strings set
+  to off. This ensures we can replicate a node running on 8.2 without
+  extra escape chars showing up in the data.
