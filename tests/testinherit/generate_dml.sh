@@ -48,7 +48,7 @@ generate_initdata()
     echo "INSERT INTO sub2(data) VALUES ('sub2 ${txtb}');" >> $GENDATA
     echo "INSERT INTO sub3(data) VALUES ('sub3 ${txtc}');" >> $GENDATA
     echo "INSERT INTO master(data) VALUES ('master ${txtd}');" >> $GENDATA
-
+    echo "select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from regions, products order by random() limit 3;" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;
     else

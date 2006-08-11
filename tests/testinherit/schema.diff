@@ -1,2 +1,6 @@
 select id, trans_on, data from master order by id
+select 'main', * from only sales_data order by id
+select 'us west', * from us_west order by id
+select 'us east', * from us_east order by id
+select 'canada', * from canada order by id
 
