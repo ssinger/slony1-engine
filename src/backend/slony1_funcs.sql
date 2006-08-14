@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.94 2006-07-28 00:12:14 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.95 2006-08-14 20:38:55 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5602,8 +5602,10 @@ DECLARE
 	v_current_status	int4;
 	v_log			int4;
 	v_dummy		record;
+	v_dummy2	record;
 	idef 		text;
 	v_count		int4;
+        v_iname         text;
 BEGIN
 	v_count := 0;
 	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
@@ -5618,26 +5620,32 @@ BEGIN
 	else
 		v_log := 1;
 	end if;
-
+--                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
-	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set
-		where not exists 
-                     (select * from pg_catalog.pg_indexes where schemaname = ''@NAMESPACE@''
-                      and tablename = ''sl_log_'' || v_log and 
-                      indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin) loop	   
+	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
+            v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
+	    raise notice ''Consider adding partial index % on sl_log_%'', v_iname, v_log;
+	    raise notice ''schema: [_@CLUSTERNAME@] tablename:[sl_log_%]'', v_log;
+            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
+            if not found then
+		raise notice ''index was not found - add it!'';
 		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin ||
                         ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
 		execute idef;
 		v_count := v_count + 1;
+            else
+                raise notice ''Index % already present - skipping'', v_iname;
+            end if;
 	end loop;
 
 	-- Remove unneeded indices...
-	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.schemaname = ''@NAMESPACE''
-                       and i.tablename = ''sl_log_'' || v_log and
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = ''sl_log_'' || v_log and
+                       i.indexname like (''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-%'') and
                        not exists (select 1 from @NAMESPACE@.sl_set where
 				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin)
 	loop
-		idef := ''drop index "@NAMESPACE@"."'' || v_dummy.indexname || ''";'';
+		raise notice ''Dropping obsolete index %d'', v_dummy.indexname;
+		idef := ''drop index @NAMESPACE@."'' || v_dummy.indexname || ''";'';
 		execute idef;
 		v_count := v_count - 1;
 	end loop;
