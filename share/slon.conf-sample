@@ -1,4 +1,4 @@
-# $Id: slon.conf-sample,v 1.5 2006-04-11 14:43:46 cbbrowne Exp $
+# $Id: slon.conf-sample,v 1.6 2006-08-15 15:55:36 cbbrowne Exp $
 #
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3
@@ -90,7 +90,7 @@
 
 # Execute the following SQL on each node at slon connect time
 # useful to set logging levels, or to tune the planner/memory
-# settings.  You can specify multiple statements by seperating
+# settings.  You can specify multiple statements by separating
 # them with a ;
 #sql_on_connection="SET log_min_duration_statement TO '1000';"
 
