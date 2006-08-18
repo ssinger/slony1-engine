@@ -2180,7 +2180,7 @@ UNSUBSCRIBE SET (
     <Programlisting>
 LOCK SET (
    ID = 1,
-   RECEIVER = 3
+   ORIGIN = 3
 );
     </Programlisting>
    </Refsect1>
