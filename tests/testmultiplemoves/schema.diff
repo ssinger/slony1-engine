@@ -1,0 +1,20 @@
+select 'table1', id, data from table1 order by id
+select 'table1a', id, table1_id, data from table1a order by id
+select 'table2', id, data from table2 order by id
+select 'table2a', id, table2_id, data from table2a order by id
+select 'table3', id, data from table3 order by id
+select 'table3a', id, table3_id, data from table3a order by id
+select 'table4', id, data from table4 order by id
+select 'table4a', id, table4_id, data from table4a order by id
+select 'table5', id, data from table5 order by id
+select 'table5a', id, table5_id, data from table5a order by id
+select 'table6', id, data from table6 order by id
+select 'table6a', id, table6_id, data from table6a order by id
+select 'table7', id, data from table7 order by id
+select 'table7a', id, table7_id, data from table7a order by id
+select 'table8', id, data from table8 order by id
+select 'table8a', id, table8_id, data from table8a order by id
+select 'table9', id, data from table9 order by id
+select 'table9a', id, table9_id, data from table9a order by id
+select 'tableA', id, data from tableA order by id
+select 'tableAa', id, tableA_id, data from tableAa order by id
