@@ -1,6 +1,12 @@
-$Id: README,v 1.1 2006-08-18 18:46:25 cbbrowne Exp $
+$Id: README,v 1.2 2006-08-18 18:59:40 cbbrowne Exp $
 
 testmultiplemoves is a test that exercises MOVE SET on a 3 node
 cluster with 10 replication sets.
   
 The interesting bit is that it requests MOVE SET on all 10 sets...
+
+This may be expected to "stress" things such as...
+
+- Auto generation of partial indexes on sl_log_? tables
+- Locking and unlocking sets
+
