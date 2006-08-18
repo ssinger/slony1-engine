@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.120 2006-08-04 21:32:59 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.121 2006-08-18 18:51:45 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1218,8 +1218,8 @@ remoteWorkerThread_main(void *cdata)
 
 				slon_mkquery(&query1,
 							 "select sub_provider from %s.sl_subscribe "
-							 "	where sub_receiver = %d",
-							 rtcfg_namespace, rtcfg_nodeid);
+							 "	where sub_receiver = %d and sub_set = %d",
+					     rtcfg_namespace, rtcfg_nodeid, set_id);
 				res = PQexec(local_dbconn, dstring_data(&query1));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
