@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.37 2006-03-29 16:10:05 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.38 2006-09-07 13:00:12 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -511,8 +511,8 @@ localListenThread_main(void *dummy)
 				dstring_init(&query2);
 				slon_mkquery(&query2,
 							 "select sub_provider from %s.sl_subscribe "
-							 "    where sub_receiver = %d",
-							 rtcfg_namespace, rtcfg_nodeid);
+					     "    where sub_receiver = %d and sub_set = %d",
+					     rtcfg_namespace, rtcfg_nodeid, set_id);
 				res2 = PQexec(dbconn, dstring_data(&query2));
 				if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 				{
