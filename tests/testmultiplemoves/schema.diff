@@ -1,0 +1,4 @@
+select 'table1', id, data from table1 order by id
+select 'table1a', id, table1_id, data from table1a order by id
+select 'table2', id, data from table2 order by id
+select 'table2a', id, table2_id, data from table2a order by id
