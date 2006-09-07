@@ -1,10 +1,3 @@
 create set (id=1, origin=1, comment='all tables in set 1');
 create set (id=2, origin=1, comment='all tables in set 2');
-create set (id=3, origin=1, comment='all tables in set 3');
-create set (id=4, origin=1, comment='all tables in set 4');
-create set (id=5, origin=1, comment='all tables in set 5');
-create set (id=6, origin=1, comment='all tables in set 6');
-create set (id=7, origin=1, comment='all tables in set 7');
-create set (id=8, origin=1, comment='all tables in set 8');
-create set (id=9, origin=1, comment='all tables in set 9');
-create set (id=10, origin=1, comment='all tables in set 10');
+

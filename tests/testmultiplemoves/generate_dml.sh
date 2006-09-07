@@ -32,7 +32,7 @@ generate_initdata()
   status "$percent %"
   GENDATA="$mktmp/generate.data"
   while : ; do
-    for set in 1 2 3 4 5 6 7 8 9 A; do
+    for set in 1 2 3; do
 	txtalen=$(random_number 1 100)
 	txta=$(random_string ${txtalen})
 	txta=`echo ${txta} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
@@ -79,7 +79,7 @@ do_initdata()
   status "Completed moving sets"
 
   ORIGINNODE=3
-  originnode=${ORIGINNODE:-"1"}
+  originnode=3
   eval db=\$DB${originnode}
   eval host=\$HOST${originnode}
   eval user=\$USER${originnode}
@@ -89,6 +89,6 @@ do_initdata()
   generate_initdata
   status "loading extra data"
 
-  $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
+  $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   status "done"
 }
