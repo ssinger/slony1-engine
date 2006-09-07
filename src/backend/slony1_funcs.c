@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.52 2006-09-07 13:12:45 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.53 2006-09-07 13:21:16 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -453,6 +453,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			 * subscriber on a replicated table fires, and
 			 * modifies a tuple in a replication set for
 			 * which this node is the origin */
+			break;
 	}
 
 	/*
