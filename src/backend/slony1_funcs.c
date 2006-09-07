@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.51 2006-08-08 16:16:42 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.52 2006-09-07 13:12:45 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -449,7 +449,10 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			break;
 
 		case SLON_ROLE_SLON:	/* non-client session ??? */
-			elog(ERROR, "Slony-I: logTrigger() called in non-client session");
+			/* This would happen when a trigger on a
+			 * subscriber on a replicated table fires, and
+			 * modifies a tuple in a replication set for
+			 * which this node is the origin */
 	}
 
 	/*
