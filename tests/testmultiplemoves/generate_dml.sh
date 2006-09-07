@@ -77,6 +77,7 @@ do_initdata()
   cat ${testname}/move_sets.ik >> $mktmp/slonik.script
   do_ik
   status "Completed moving sets"
+  stop_poll
 
   ORIGINNODE=3
   originnode=3
@@ -88,6 +89,7 @@ do_initdata()
   status "Generate some more data, switching origin to node 3"
   generate_initdata
   status "loading extra data"
+  launch_poll
 
   $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   status "done"
