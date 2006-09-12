@@ -2232,7 +2232,7 @@ LOCK SET (
     <programlisting>
 UNLOCK SET (
    ID = 1,
-   RECEIVER = 3
+   ORIGIN = 3
 );
     </programlisting>
    </refsect1>
