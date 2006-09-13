@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.121 2006-08-18 18:51:45 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.122 2006-09-13 22:42:09 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1176,14 +1176,37 @@ remoteWorkerThread_main(void *cdata)
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
 					PQclear(res);
-					slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - done\n");
+					slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
 
+					/*
+					 * Finalize the setsync status to mave the ACCEPT_SET's
+					 * seqno and snapshot info.
+					 */
+					slon_appendquery(&query1,
+								"update %s.sl_setsync "
+								"    set ssy_seqno = '%s', "
+								"        ssy_minxid = '%s', "
+								"        ssy_maxxid = '%s', "
+								"        ssy_xip = '%q', "
+								"        ssy_action_list = '' "
+								"    where ssy_setid = %d; ",
+								rtcfg_namespace,
+								seqbuf,
+								event->ev_minxid_c,
+								event->ev_maxxid_c,
+								event->ev_xip,
+								set_id);
+
+					/*
+					 * Execute all queries and restart slon.
+					 */
 					slon_appendquery(&query1,
 									 "notify \"_%s_Restart\"; ",
 									 rtcfg_cluster_name);
 					query_append_event(&query1, event);
 					slon_appendquery(&query1, "commit transaction;");
 					query_execute(node, local_dbconn, &query1);
+					slon_log(SLON_DEBUG2, "ACCEPT_SET - done\n");
 					slon_retry();
 
 					need_reloadListen = true;
