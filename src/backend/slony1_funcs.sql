@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.96 2006-09-13 22:42:09 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.97 2006-09-14 16:16:04 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1338,7 +1338,7 @@ begin
 	notify "_@CLUSTERNAME@_Restart";
 
 	perform @NAMESPACE@.failoverSet_int(p_failed_node,
-			p_backup_node, p_set_id);
+			p_backup_node, p_set_id, p_ev_seqfake);
 
 	return p_ev_seqfake;
 end;
@@ -1351,17 +1351,18 @@ On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION failoverSet_int (failed_node, backup_node, set_id)
+-- FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 --
 --	Finish failover for one set.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failoverSet_int (int4, int4, int4)
+create or replace function @NAMESPACE@.failoverSet_int (int4, int4, int4, int8)
 returns int4
 as '
 declare
 	p_failed_node		alias for $1;
 	p_backup_node		alias for $2;
 	p_set_id			alias for $3;
+	p_wait_seqno		alias for $4;
 	v_row				record;
 	v_last_sync			int8;
 begin
@@ -1399,12 +1400,13 @@ begin
 		insert into @NAMESPACE@.sl_event
 				(ev_origin, ev_seqno, ev_timestamp,
 				ev_minxid, ev_maxxid, ev_xip,
-				ev_type, ev_data1, ev_data2, ev_data3)
+				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
 				values
 				(p_backup_node, "pg_catalog".nextval(''@NAMESPACE@.sl_event_seq''), CURRENT_TIMESTAMP,
 				''0'', ''0'', '''',
 				''ACCEPT_SET'', p_set_id::text,
-				p_failed_node::text, p_backup_node::text);
+				p_failed_node::text, p_backup_node::text,
+				p_wait_seqno::text);
 	else
 		delete from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
@@ -1455,8 +1457,8 @@ begin
 	return p_failed_node;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.failoverSet_int (int4, int4, int4) is
-'FUNCTION failoverSet_int (failed_node, backup_node, set_id)
+comment on function @NAMESPACE@.failoverSet_int (int4, int4, int4, int8) is
+'FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 
 Finish failover for one set.';
 
@@ -2144,7 +2146,7 @@ begin
 	-- Reconfigure everything
 	-- ----
 	perform @NAMESPACE@.moveSet_int(p_set_id, v_local_node_id,
-			p_new_origin);
+			p_new_origin, 0);
 
 	perform @NAMESPACE@.RebuildListenEntries();
 
@@ -2173,17 +2175,18 @@ comment on function @NAMESPACE@.moveSet(int4, int4) is
 Generate MOVE_SET event to request that the origin for set set_id be moved to node new_origin';
 
 -- ----------------------------------------------------------------------
--- FUNCTION moveSet_int (set_id, old_origin, new_origin)
+-- FUNCTION moveSet_int (set_id, old_origin, new_origin, wait_seqno)
 --
 --	Process the MOVE_SET event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.moveSet_int (int4, int4, int4)
+create or replace function @NAMESPACE@.moveSet_int (int4, int4, int4, int8)
 returns int4
 as '
 declare
 	p_set_id			alias for $1;
 	p_old_origin		alias for $2;
 	p_new_origin		alias for $3;
+	p_wait_seqno		alias for $4;
 	v_local_node_id		int4;
 	v_tab_row			record;
 	v_sub_row			record;
@@ -2223,7 +2226,7 @@ begin
 		-- finalize the setsync status.
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
-			p_set_id, p_old_origin, p_new_origin);
+			p_set_id, p_old_origin, p_new_origin, p_wait_seqno);
 	end if;
 
 	-- ----
@@ -2365,8 +2368,8 @@ begin
 	return p_set_id;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.moveSet_int(int4, int4, int4) is 
-'moveSet(set_id, old_origin, new_origin)
+comment on function @NAMESPACE@.moveSet_int(int4, int4, int4, int8) is 
+'moveSet(set_id, old_origin, new_origin, wait_seqno)
 
 Process MOVE_SET event to request that the origin for set set_id be
 moved from old_origin to node new_origin';

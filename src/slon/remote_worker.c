@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.122 2006-09-13 22:42:09 wieck Exp $
+ *	$Id: remote_worker.c,v 1.123 2006-09-14 16:16:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1119,8 +1119,8 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			set_id,
 							old_origin,
-							new_origin,
-							event_no;
+							new_origin;
+				char	   *wait_seqno;
 				PGresult   *res;
 
 				slon_log(SLON_DEBUG2, "start processing ACCEPT_SET\n");
@@ -1130,8 +1130,8 @@ remoteWorkerThread_main(void *cdata)
 				slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
 				new_origin = (int)strtol(event->ev_data3, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
-				event_no = event->ev_seqno;
-				slon_log(SLON_DEBUG2, "ACCEPT: move set seq=%d\n", event_no);
+				wait_seqno = event->ev_data4;
+				slon_log(SLON_DEBUG2, "ACCEPT: move set seq=%s\n", wait_seqno);
 
 				slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
 
@@ -1151,20 +1151,22 @@ remoteWorkerThread_main(void *cdata)
 								 "select 1 from %s.sl_event "
 								 "where "
 								 "     (ev_origin = %d and "
+								 "      ev_seqno = %s and "
 								 "      ev_type = 'MOVE_SET' and "
 								 "      ev_data1 = '%d' and "
 								 "      ev_data2 = '%d' and "
 								 "      ev_data3 = '%d') "
 								 "or "
 								 "     (ev_origin = %d and "
+								 "      ev_seqno = %s and "
 								 "      ev_type = 'FAILOVER_SET' and "
 								 "      ev_data1 = '%d' and "
 								 "      ev_data2 = '%d' and "
 								 "      ev_data3 = '%d'); ",
 
 								 rtcfg_namespace,
-								 old_origin, set_id, old_origin, new_origin,
-								 old_origin, old_origin, new_origin, set_id);
+								 old_origin, wait_seqno, set_id, old_origin, new_origin,
+								 old_origin, wait_seqno, old_origin, new_origin, set_id);
 
 					res = PQexec(local_dbconn, dstring_data(&query2));
 					while (PQntuples(res) == 0)
@@ -1184,13 +1186,15 @@ remoteWorkerThread_main(void *cdata)
 					 */
 					slon_appendquery(&query1,
 								"update %s.sl_setsync "
-								"    set ssy_seqno = '%s', "
+								"    set ssy_origin = %d, "
+								"        ssy_seqno = '%s', "
 								"        ssy_minxid = '%s', "
 								"        ssy_maxxid = '%s', "
 								"        ssy_xip = '%q', "
 								"        ssy_action_list = '' "
 								"    where ssy_setid = %d; ",
 								rtcfg_namespace,
+								new_origin,
 								seqbuf,
 								event->ev_minxid_c,
 								event->ev_maxxid_c,
@@ -1233,9 +1237,9 @@ remoteWorkerThread_main(void *cdata)
 				 */
 
 				slon_appendquery(&query1,
-								 "select %s.moveSet_int(%d, %d, %d); ",
+								 "select %s.moveSet_int(%d, %d, %d, %s); ",
 								 rtcfg_namespace,
-								 set_id, old_origin, new_origin);
+								 set_id, old_origin, new_origin, seqbuf);
 				if (query_execute(node, local_dbconn, &query1) < 0)
 					slon_retry();
 
@@ -1277,9 +1281,9 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_storeSet(set_id, backup_node, NULL);
 
 				slon_appendquery(&query1,
-								 "select %s.failoverSet_int(%d, %d, %d); ",
+								 "select %s.failoverSet_int(%d, %d, %d, %s); ",
 								 rtcfg_namespace,
-								 failed_node, backup_node, set_id);
+								 failed_node, backup_node, set_id, seqbuf);
 
 				if (archive_dir)
 				{
