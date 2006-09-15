@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.26 2006-08-02 18:34:58 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.27 2006-09-15 21:50:17 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -43,18 +43,11 @@ the installation procedure.</para>
 <screen>
 PGMAIN=/usr/local/pgsql746-freebsd-2005-04-01 \
 ./configure \
-    --prefix=$PGMAIN \
-    --bindir=$PGMAIN/bin \
-    --datadir=$PGMAIN/share \
-    --libdir=$PGMAIN/lib \
-    --with-pgconfigdir=$PGMAIN/bin \
-    --with-pgbindir=$PGMAIN/bin \
-    --with-pgincludedir=$PGMAIN/include \
-    --with-pglibdir=$PGMAIN/lib \
-    --with-pgsharedir=$PGMAIN/share
+    --with-pgconfigdir=$PGMAIN/bin
 gmake all; gmake install
 </screen>
-</para></sect2>
+</para>
+</sect2>
 
 <sect2>
 <title>Configuration</title>
@@ -80,8 +73,17 @@ to make reference to parts of &postgres; that are actually part of the
 installation.  Therefore, &slony1; is configured by pointing it to the
 various &postgres; library, binary, and include directories.  For a
 full list of these options, use the command <command>./configure
---help</command>
-</para>
+--help</command>.</para>
+
+<para> <emphasis>Normally,</emphasis> it ought to be sufficient to run
+<command>configure
+<option>--pgconfigdir=/some/path/somewhere</option></command>, where
+<filename>/some/path/somewhere</filename> is the place where the
+&postgres; program <application>pg_config</application> is located.
+From <application>pg_config</application>, the
+<filename>configure</filename> will determine the various locations
+where &postgres; components are found, which indicates where the
+essential components of &slony1; must be installed.</para>
 
 <para>On certain platforms (AIX and Solaris are known to need this;
 Linux does not), the compile of &postgres; must be expressly
@@ -97,9 +99,7 @@ compile.</para>
 
 <para>After running configure, you may wish to review the file
 <filename>Makefile.global</filename> to ensure it is looking in the
-right places for all of the components. If you failed to specify some
-of those locations, you may discover that your system fills in some
-surprising values... </para>
+right places for all of the components. </para>
 
 
 </sect2>
@@ -114,15 +114,7 @@ installed in
 <screen>
 PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 ./configure \
-    --prefix=$PGMAIN \
-    --bindir=$PGMAIN/bin \
-    --datadir=$PGMAIN/share \
-    --libdir=$PGMAIN/lib \
-    --with-pgconfigdir=$PGMAIN/bin \
-    --with-pgbindir=$PGMAIN/bin \
-    --with-pgincludedir=$PGMAIN/include \
-    --with-pglibdir=$PGMAIN/lib \
-    --with-pgsharedir=$PGMAIN/share
+    --with-pgconfigdir=$PGMAIN/bin 
 </screen>
 
 <para>The <application>configure</application> script will run a
