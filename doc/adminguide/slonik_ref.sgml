@@ -2322,7 +2322,11 @@ MOVE SET (
 
     <para> Exclusive locks on each replicated table will be taken out
     on both the old origin node and the new origin node, as
-    replication triggers are changed on both nodes.</para>
+    replication triggers are changed on both nodes: on the former
+    origin, each table has two triggers (logtrigger and lockset)
+    dropped and a denyaccess trigger added; on the new origin, the
+    denyaccess trigger is dropped and a logtrigger trigger
+    added. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
