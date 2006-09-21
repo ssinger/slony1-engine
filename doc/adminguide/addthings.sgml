@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.20 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.21 2006-09-21 19:43:07 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -54,8 +54,7 @@ the interaction of five things that have all broken.</para>
 <para> Here are a set of <quote>recipes</quote> for how to do various
 sorts of modifications to replication configuration:</para>
 
-<itemizedlist>
-<listitem><para> Adding a table to replication </para>
+<sect2><title> Adding a table to replication </title>
 
 <para> &slony1; does not allow you to add a table to a replication set
 that is already being replicated. In principle, it would certainly be
@@ -95,21 +94,22 @@ Request subscription <xref linkend="stmtsubscribeset"> for this new set. If ther
 <listitem><para> 
 Once the subscriptions have all been set up so that the new set has an identical set of subscriptions to the old set, you can merge the new set in alongside the old one via <xref linkend="stmtmergeset">
 </para></listitem>
-<listitem><para> How to add columns to a replicated table </para></listitem>
 </itemizedlist>
+</sect2>
 
-<itemizedlist>
-<listitem><para> This also answers the question <quote>How do I rename columns
+<sect2><title> How to add columns to a replicated table </title>
+
+<para> This also answers the question <quote>How do I rename columns
 on a replicated table?</quote>, and, more generally, other questions
 to the effect of <quote>How do I modify the definitions of replicated
-tables?</quote></para></listitem>
+tables?</quote></para>
 
-<listitem><para>If you change the <quote>shape</quote> of a replicated table, this needs to take place at exactly the same point in all of the <quote>transaction streams</quote> on all nodes that are subscribed to the set containing the table.</para></listitem>
+<para>If you change the <quote>shape</quote> of a replicated table, this needs to take place at exactly the same point in all of the <quote>transaction streams</quote> on all nodes that are subscribed to the set containing the table.</para>
 
-<listitem><para> Thus, the way to do this is to construct an SQL script consisting of the DDL changes, and then submit that script to all of the nodes via the Slonik command <xref linkend="stmtddlscript">.</para></listitem>
+<para> Thus, the way to do this is to construct an SQL script consisting of the DDL changes, and then submit that script to all of the nodes via the Slonik command <xref linkend="stmtddlscript">.</para>
 
-<listitem><para> There are a number of <quote>sharp edges</quote> to note...</para></listitem>
-</itemizedlist>
+<para> There are a number of <quote>sharp edges</quote> to note...</para>
+
 <itemizedlist>
 <listitem><para> You absolutely <emphasis>must not</emphasis> include
 transaction control commands, particularly <command>BEGIN</command>
@@ -137,10 +137,9 @@ integer; </command> may now be followed by <command> alter table x
 alter column c1 set not null; </command>.</para></listitem>
 
 </itemizedlist>
+</sect2>
 
-</para></listitem>
-
-<listitem><para> How to remove replication for a node</para>
+<sect2><title> How to remove replication for a node</title>
 
 <para> You will want to remove the various &slony1; components
 connected to the database(s).</para>
@@ -198,9 +197,9 @@ drops the schema and its contents, but also removes any columns
 previously added in using <xref linkend= "stmttableaddkey">.
 </para></listitem>
 </itemizedlist>
-</listitem>
+</sect2>
 
-<listitem><para> Adding A Node To Replication</para>
+<sect2><title> Adding A Node To Replication</title>
 
 <para>Things are not fundamentally different whether you are adding a
 brand new, fresh node, or if you had previously dropped a node and are
@@ -262,9 +261,9 @@ some replication set.
 </para></listitem>
 
 </itemizedlist>
-</listitem>
+</sect2>
 
-<listitem><para> How do I reshape subscriptions?</para>
+<sect2><title> How do I reshape subscriptions?</title>
 
 <para> For instance, I want subscriber node 3 to draw data from node
 1, when it is presently drawing data from node 2. </para>
@@ -275,11 +274,13 @@ shifting the origin, just reshaping the subscribers. </para>
 <para> For this purpose, you can simply submit <xref
 linkend="stmtsubscribeset"> requests to <emphasis>revise</emphasis>
 the subscriptions.  Subscriptions will not be started from scratch;
-they will merely be reconfigured.  </para></listitem>
+they will merely be reconfigured.  </para></sect2>
 
-<listitem><para> How do I use <xref linkend="logshipping"> </para> </listitem>
+<sect2><title> How do I use <xref linkend="logshipping"> </title> 
+<para> Discussed in the <xref linkend="logshipping"> section... </para>
+</sect2>
 
-<listitem><para> How do I know replication is working?</para> 
+<sect2><title> How do I know replication is working?</title> 
 
 <para> The ultimate proof is in looking at whether data added at the
 origin makes it to the subscribers.  That's a <quote>simply matter of
@@ -312,17 +313,18 @@ node. </para> </listitem>
 
 </itemizedlist>
 
-</listitem>
+</sect2>
 
-<listitem><para> <link linkend="slonyupgrade">How do I upgrade
-&slony1; to a newer version?</link> </para> </listitem>
+<sect2><title>How do I upgrade &slony1; to a newer version? </title>
 
-<listitem><para> What happens when I fail over?</para> 
+<para> Discussed  <link linkend="slonyupgrade"> here </link> </para> </sect2>
+
+<sect2><title> What happens when I fail over?</title> 
 
 <para> Some of this is described under <xref linkend="failover"> but
-more of a procedure should be written...</para> </listitem>
+more of a procedure should be written...</para> </sect2>
 
-<listitem><para> How do I <quote>move master</quote> to a new node? </para> 
+<sect2><title> How do I <quote>move master</quote> to a new node? </title> 
 
 <para> You must first pick a node that is connected to the former
 origin (otherwise it is not straightforward to reverse connections in
@@ -338,9 +340,8 @@ updates. </para>
 It's perfectly reasonable to submit both requests in the same
 &lslonik; script.  Now, the origin gets switched over to the new
 origin node.  If the new node is a few events behind, it may take a
-little while for this to take place. </para> </listitem>
+little while for this to take place. </para> </sect2>
 
-</itemizedlist>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
