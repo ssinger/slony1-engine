@@ -1892,6 +1892,11 @@ DROP TRIGGER (
    <refsect1>
     <title>Description</title>
     
+    <para> This performs one of two actions: </para>
+
+    <itemizedlist>
+ 
+    <listitem><para> Initiates replication for a replication set </para>
     <para> Causes a node (subscriber) to start replicating a set of
     tables either from the origin or from another provider node, which
     must itself already be be an active, forwarding subscriber.</para>
@@ -1950,14 +1955,21 @@ DROP TRIGGER (
      until the provider is ready.</para>
 </warning>
 
-     <note><para> If you need to revise subscription information for a
+     </listitem>
+
+     <listitem><para> Revising subscription information for already-subscribed nodes. </para>
+
+     <para> If you need to revise subscription information for a
        node, you <emphasis>also</emphasis> submit the new information
        using this command, and the new configuration will be propagated
        throughout the replication network.  The normal reason to revise
        this information is that you want a node to subscribe to a
        <emphasis> different </emphasis> provider node, or for a node to
        become a <quote>forwarding</quote> subscriber so it may later
-       become the provider for a later subscriber.</para> </note>
+       become the provider for a later subscriber.</para>
+
+     </listitem>
+     </itemizedlist>
 
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
@@ -1984,7 +1996,6 @@ DROP TRIGGER (
 
       </varlistentry>
      </variablelist>
-    </para>
     <para> This uses &funsubscribeset;. </para>
    </refsect1>
    <refsect1><title>Example</title>

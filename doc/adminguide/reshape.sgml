@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.19 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.20 2006-09-21 16:17:58 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <indexterm><primary>reshaping replication</primary></indexterm>
@@ -19,8 +19,11 @@ subscriptions of other nodes.  You might want to modify a node to get
 its data from a different provider, or to change it to turn forwarding
 on or off.  This can be accomplished by issuing the slonik <xref
 linkend="stmtsubscribeset"> operation with the new subscription
-information for the node; &slony1; will change the
-configuration.</para></listitem>
+information for the node; &slony1; will change the configuration.  No
+need to ask for <xref linkend="stmtunsubscribeset">; no need for it to
+start copying data from scratch; the <xref linkend="stmtsubscribeset">
+request will reshape the subscription <quote>on the fly</quote> and
+allow data to remain consistent between nodes.  </para></listitem>
 
 <listitem><para> If the directions of data flows have changed, it is
 doubtless appropriate to issue a set of <xref
