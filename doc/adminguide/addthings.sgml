@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.21 2006-09-21 19:43:07 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.22 2006-09-22 07:22:48 xfade Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -64,7 +64,7 @@ SUBSCRIBE_SET event being invoked to initialize the table. That would,
 regrettably, significantly complicate the logic of all of these
 components, so this is not permitted. </para>
 
-<para>Instead, what you must do is thus:
+<para>Instead, what you must do is thus:</para>
 
 <itemizedlist>
 <listitem><para> Add the new table on each node. </para>

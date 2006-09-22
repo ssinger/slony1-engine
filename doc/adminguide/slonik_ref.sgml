@@ -1914,7 +1914,7 @@ DROP TRIGGER (
     
     <para> If the tables on the subscriber are <emphasis>not</emphasis> empty, then
      the <command>COPY SET</command> process winds up doing more work than should be
-     strictly necessary:
+     strictly necessary:</para>
      <itemizedlist>
       
       <listitem><para> It deletes all <quote>old</quote> entries in
