@@ -167,6 +167,13 @@ if test -n "$PG_CONFIG_LOCATION"; then
 			AC_MSG_RESULT(yes)
 		fi
 	;;
+        *mingw32*)
+                if test $PG_VERSION_MAJOR -ge 8 -a $PG_VERSION_MINOR -ge 2; then
+                        AC_SUBST(NEED_PG_DLLINIT, 0)
+                else
+                        AC_SUBST(NEED_PG_DLLINIT, 1)
+                fi
+        ;;
 	*)
 	;;
     esac
