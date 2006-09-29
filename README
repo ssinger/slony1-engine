@@ -1,6 +1,6 @@
 Slony-I
 ------------------
-$Id: README,v 1.11 2005-04-15 19:33:15 cbbrowne Exp $
+$Id: README,v 1.12 2006-09-29 18:42:02 cbbrowne Exp $
 
 Slony-I is a "master to multiple slaves" replication system with
 cascading and failover.
@@ -10,7 +10,9 @@ system that includes all features and capabilities needed to replicate
 large databases to a reasonably limited number of slave systems.
 
 Slony-I is a system for data centers and backup sites, where the
-normal mode of operation is that all nodes are available.
+normal mode of operation is that all nodes are available, and where
+systems may be expected to be managed in a reasonably disciplined
+fashion.
 
 1.  Build and install
 
@@ -20,14 +22,28 @@ normal mode of operation is that all nodes are available.
 
     See the SAMPLE file nearby
 
+    There is also a "test" directory in the source tree which contains
+    a variety of regression tests.  Looking at how they work may also
+    be helpful.
+
 3.  Help!  I ran into a problem.
 
     The file in the documentation area named "helpitsbroken.txt"
     contains a variety of notes describing problems that people have
-    run into in setting up Slony-I instances.
+    run into in setting up Slony-I instances.  This has been extended
+    into a full scale FAQ.
 
     It may be worth checking there to see if the problem you are
     having has already been documented and diagnosed by someone else.
+
+    There is an extensive "administrative guide" in the documentation
+    tree that includes manual pages for binaries and for the Slonik
+    language, as well as overviews of various aspects of how Slony-I
+    works and should be used, including a "Best Practices" document
+    that distills some of the hard-learned lessons and a FAQ.
+
+    This "admin guide" may be found online at:
+    <http://linuxdatabases.info/info/slony.html>
 
 You may also wish to contact the Slony-I mailing list, findable at
 <http://slony.info/>. or take a peek at who might be available to chat
