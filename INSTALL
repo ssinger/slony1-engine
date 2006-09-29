@@ -1,13 +1,14 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.10 2006-07-05 21:35:01 cbbrowne Exp $
+$Id: INSTALL,v 1.11 2006-09-29 18:41:04 cbbrowne Exp $
 
 Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x, and
-8.1.x.
+8.1.x.  There have also been changes made to support features expected
+in 8.2.
 
 Note that earlier versions supported versions in the 7.3.x series; as
-of Slony-I 1.2.0, 7.3 support has been dropped.  
+of Slony-I 1.2.0, 7.3 support has been dropped.
 
 If you require 7.3 support, please avail yourself of an earlier
 Slony-I release; seeing as how 7.3 is very old, dating back to 2002,
