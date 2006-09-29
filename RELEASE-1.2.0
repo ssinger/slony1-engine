@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.10 2006-08-10 18:01:33 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.11 2006-09-29 17:27:21 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -85,7 +85,8 @@ There are also numerous enhancements that are more directly visible:
   some form of "watchdog."  The new behaviour points more towards
   "init" / "rc.d"-like handling, where, upon boot-up, one "rc.d" script
   might start up PostgreSQL, another one starts pgpool, and a third
-  (which must run third!) starts up a slon.
+  (which must be invoked after PostgreSQL is started) starts up a
+  slon.
 
 - Subscribe set aggressively locks tables on the subscriber to avoid
   failures
