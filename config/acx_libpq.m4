@@ -142,19 +142,19 @@ if test -n "$PG_CONFIG_LOCATION"; then
     PG_VERSION_MINOR=`echo $PG_VERSION |\
            sed 's/\([[0-9]]*\).\([[0-9]]*\)/\2/'`
     if test "$PG_VERSION_MAJOR" = "7"; then
-	if test $PG_VERSION_MINOR -gt 2; then
+	if test $PG_VERSION_MINOR -gt 3; then
 	    AC_MSG_RESULT($PG_VERSION)
-	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
+	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.4 or later])
 	else
 	    AC_MSG_RESULT("error")
 	    AC_MSG_ERROR(Your version of PostgreSQL ($PG_VERSION) is lower 
-	    than the required 7.3.3. Slony-I needs functions included in
+	    than the required 7.4.  Slony-I needs functions included in
 	    a newer version.)
 	fi
     fi
     if test "$PG_VERSION_MAJOR" = "8"; then
       AC_MSG_RESULT($PG_VERSION)
-      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.3.3 or later])
+      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.4 or later])
     fi
     case ${host_os} in
 	aix*|*solaris*)
