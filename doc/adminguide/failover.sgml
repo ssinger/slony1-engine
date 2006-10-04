@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.22 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.23 2006-10-04 16:09:30 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -191,9 +191,22 @@ need to be able to assure that the failed node will not accidentally
 return into service, thereby allowing there to be two nodes out there
 able to respond in a <quote>master</quote> role. </para>
 
-<para> When failover occurs, there needs to be a mechanism to forcibly
-knock the failed node off the network.  This could take place via
-having an SNMP interface that does some combination of the following:
+<note> <para> The problem here requiring that you <quote>shoot the
+failed node in the head</quote> is not fundamentally about replication
+or &slony1;; &slony1; handles this all reasonably gracefully, as once
+the node is marked as failed, the other nodes will <quote>shun</quote>
+it, effectively ignoring it.  The problem is instead with
+<emphasis>your application.</emphasis> Supposing the failed node can
+come back up sufficiently that it can respond to application requests,
+<emphasis>that</emphasis> is likely to be a problem, and one that
+hasn't anything to do with &slony1;.  The trouble is if there are two
+databases that can respond as if they are <quote>master</quote>
+systems. </para> </note>
+
+<para> When failover occurs, there therefore needs to be a mechanism
+to forcibly knock the failed node off the network in order to prevent
+applications from getting confused.  This could take place via having
+an SNMP interface that does some combination of the following:
 
 <itemizedlist>
 
