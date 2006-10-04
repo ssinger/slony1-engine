@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.64 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.65 2006-10-04 21:16:10 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -237,25 +237,12 @@ DEBUG1 copy_set 1
 DEBUG1 remoteWorkerThread_1: connected to provider DB
 WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
 WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
-</screen></para>
+</screen></para></question>
 
-<para>Oops.  What I forgot to mention, as well, was that I was trying
-to add <emphasis>TWO</emphasis> subscribers, concurrently.</para></question>
 
-<answer><para> That doesn't work out: &slony1; won't work on the
-<command>COPY</command> commands concurrently.  See
-<filename>src/slon/remote_worker.c</filename>, function
-<function>copy_set()</function></para>
-
-<para>This has the (perhaps unfortunate) implication that you cannot
-populate two slaves concurrently from a single provider.  You have to
-subscribe one to the set, and only once it has completed setting up
-the subscription (copying table contents and such) can the second
-subscriber start setting up the subscription.</para>
-
-<para>It could also be possible for there to be an old outstanding
+<answer> <para> There is evidently some reasonably old outstanding
 transaction blocking &slony1; from processing the sync.  You might
-want to take a look at pg_locks to see what's up:
+want to take a look at pg_locks to see what's up:</para>
 
 <screen>
 sampledb=# select * from pg_locks where transaction is not null order by transaction;
@@ -264,19 +251,17 @@ sampledb=# select * from pg_locks where transaction is not null order by transac
           |          |   127314921 | 2605100 | ExclusiveLock | t
           |          |   127326504 | 5660904 | ExclusiveLock | t
 (2 rows)
-</screen></para>
+</screen>
 
-<para>See?  127314921 is indeed older than 127314958, and it's still running.
+<para>See?  127314921 is indeed older than 127314958, and it's still
+running.</para>
 
-<screen>
-$ ps -aef | egrep '[2]605100'
-postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
-</screen></para>
-
-<para>This happens to be a <command>COPY</command> transaction involved in setting up the
-subscription for one of the nodes.  All is well; the system is busy
-setting up the first subscriber; it won't start on the second one
-until the first one has completed subscribing.</para>
+<para> A long running G/L report, a runaway
+<application>RT3</application> query, a
+<application>pg_dump</application>, all will open up transactions that
+may run for substantial periods of time.  Until they complete, or are
+interrupted, you will continue to see the message <quote> data copy
+for set 1 failed - sleep 60 seconds </quote>.</para>
 
 <para>By the way, if there is more than one database on the &postgres;
 cluster, and activity is taking place on the OTHER database, that will
@@ -285,6 +270,34 @@ whatever</quote> being found to be still in progress.  The fact that
 it's a separate database on the cluster is irrelevant; &slony1; will
 wait until those old transactions terminate.</para>
 </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>Same as the above.  What I forgot to mention, as well,
+was that I was trying to add <emphasis>TWO</emphasis> subscribers,
+concurrently.</para></question>
+
+<answer><para> That doesn't work out: &slony1; can't work on the
+<command>COPY</command> commands concurrently.  See
+<filename>src/slon/remote_worker.c</filename>, function
+<function>copy_set()</function></para>
+
+<screen>
+$ ps -aef | egrep '[2]605100'
+postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
+</screen>
+
+<para>This happens to be a <command>COPY</command> transaction
+involved in setting up the subscription for one of the nodes.  All is
+well; the system is busy setting up the first subscriber; it won't
+start on the second one until the first one has completed subscribing.
+That represents one possible cause.</para>
+
+<para>This has the (perhaps unfortunate) implication that you cannot
+populate two slaves concurrently from a single provider.  You have to
+subscribe one to the set, and only once it has completed setting up
+the subscription (copying table contents and such) can the second
+subscriber start setting up the subscription.</para></answer>
 </qandaentry>
 
 <qandaentry id="missingoids"> <question> <para> We got bitten by
