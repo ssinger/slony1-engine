@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.1 2006-10-04 15:52:13 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.2 2006-10-04 16:21:57 cbbrowne Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -33,7 +33,7 @@ regenerate <filename>configure</filename> from
 <listitem><para>Purge directory <filename>autom4te.cache</filename> so it is not included in the build 
 
   </para></listitem> 
-<listitem><para>Need to make sure that all references to CVS tags properly point to the tag for the release. 
+<listitem><para>Need to make sure that all references to CVS tags properly point to the tag for the release. </para>
 
 <para>For instance, configure should contain, for release 1.1.2:
 <itemizedlist>
@@ -42,7 +42,7 @@ regenerate <filename>configure</filename> from
 <listitem><para>PACKAGE_STRING=postgresql-slony1-engine REL_1_1_2</para></listitem>
 </itemizedlist>
 
-<para> RPM spec files used to contain release tags as well as names of tarballs which needed to be updated. As of 2005-12-13, there is less of this...   For those platforms with specific spec files such as SuSE, some editing still needs to be done. see the file(s) in the <filename>suse</filename> dir for more information 
+<para> RPM spec files used to contain release tags as well as names of tarballs which needed to be updated. As of 2005-12-13, there is less of this...   For those platforms with specific spec files such as SuSE, some editing still needs to be done. see the file(s) in the <filename>suse</filename> dir for more information </para>
 
 <para> The admin guide <filename>version.sgml</filename> file needs to contain the release name. This should not need to be touched; version.sgml is generated automatically with the release name/tag on demand. </para>
 
@@ -75,12 +75,13 @@ make all && make clean</command> but that is a somewhat ugly approach.
 <listitem><para>Generate a tarball - <command>tar tfvj slony1-1.1.2.tar.bz2 slony1-1.1.2 </command>
 
   </para></listitem> 
-<listitem><para>Build the administrative documentation, and build a tarball as <filename>slony1-1.1.2-html.tar.bz2</filename> <para> Make sure that the docs are inside a subdir in the tarball.
+<listitem><para>Build the administrative documentation, and build a tarball as <filename>slony1-1.1.2-html.tar.bz2</filename></para>
+ <para> Make sure that the docs are inside a subdir in the tarball.
 
 </para></listitem> 
 <listitem><para>Put these tarballs in a temporary area, and notify everyone (on some mailing list???) that they should test them out ASAP based on the Standard Test Plan. 
 </para></listitem></itemizedlist>
-
+</article>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
