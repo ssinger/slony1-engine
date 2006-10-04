@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.35 2006-08-02 17:14:55 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.36 2006-10-04 15:52:13 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -133,6 +133,7 @@ worth documenting</emphasis>.</para>
 </part>
 
 &supportedplatforms;
+&releasechecklist;
 &schemadoc;
 &bookindex;
 
