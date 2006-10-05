@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.123 2006-09-14 16:16:04 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124 2006-10-05 14:40:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -290,6 +290,7 @@ remoteWorkerThread_main(void *cdata)
 	PGconn	   *local_dbconn;
 	SlonDString query1;
 	SlonDString query2;
+	SlonDString lsquery;
 	SlonWorkMsg *msg;
 	SlonWorkMsg_event *event;
 	int			check_config = true;
@@ -325,6 +326,7 @@ remoteWorkerThread_main(void *cdata)
 
 	dstring_init(&query1);
 	dstring_init(&query2);
+	dstring_init(&lsquery);
 
 	/*
 	 * Connect to the local database
@@ -893,11 +895,11 @@ remoteWorkerThread_main(void *cdata)
 								 node->no_id, archive_tmp, strerror(errno));
 						slon_retry();
 					}
-					slon_mkquery(&query1,
+					slon_mkquery(&lsquery,
 								 "delete from %s.sl_setsync_offline "
 								 "  where ssy_setid= %d;",
 								 rtcfg_namespace, set_id);
-					rc = submit_query_to_archive(&query1);
+					rc = submit_query_to_archive(&lsquery);
 					if (rc < 0)
 					{
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s",
@@ -945,11 +947,11 @@ remoteWorkerThread_main(void *cdata)
 								 node->no_id, archive_tmp, strerror(errno));
 						slon_retry();
 					}
-					rc = slon_mkquery(&query1,
-									  "delete from %s.sl_setsync_offline "
-									  "  where ssy_setid= %d;",
-									  rtcfg_namespace, add_id);
-					rc = submit_query_to_archive(&query1);
+					rc = slon_mkquery(&lsquery,
+							  "delete from %s.sl_setsync_offline "
+							  "  where ssy_setid= %d;",
+							  rtcfg_namespace, add_id);
+					rc = submit_query_to_archive(&lsquery);
 					if (rc < 0)
 					{
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s",
@@ -1465,11 +1467,11 @@ remoteWorkerThread_main(void *cdata)
 								 node->no_id, archive_tmp, strerror(errno));
 						slon_retry();
 					}
-					slon_mkquery(&query1,
+					slon_mkquery(&lsquery,
 								 "delete from %s.sl_setsync_offline "
 								 "  where ssy_setid= %d;",
 								 rtcfg_namespace, sub_set);
-					rc = submit_query_to_archive(&query1);
+					rc = submit_query_to_archive(&lsquery);
 					if (rc < 0)
 					{
 						slon_log(SLON_ERROR, "remoteWorkerThread_%d: log archive failed %s - %s",
@@ -2568,6 +2570,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	SlonDString query1;
 	SlonDString query2;
 	SlonDString query3;
+	SlonDString lsquery;
 	SlonDString indexregenquery;
 	int			ntuples1;
 	int			ntuples2;
@@ -2665,6 +2668,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	dstring_init(&query1);
 	dstring_init(&query2);
 	dstring_init(&query3);
+	dstring_init(&lsquery);
 	dstring_init(&indexregenquery);
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
@@ -2687,6 +2691,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2701,6 +2706,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2719,6 +2725,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -2752,6 +2759,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2766,6 +2774,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2783,6 +2792,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2830,6 +2840,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -2867,6 +2878,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -2894,6 +2906,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -2985,6 +2998,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -3011,6 +3025,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3049,6 +3064,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -3090,6 +3106,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3117,6 +3134,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3141,6 +3159,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					dstring_free(&query1);
 					dstring_free(&query2);
 					dstring_free(&query3);
+					dstring_free(&lsquery);
 					dstring_free(&indexregenquery);
 					terminate_log_archive();
 					return -1;
@@ -3180,6 +3199,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3204,6 +3224,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3222,6 +3243,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3253,6 +3275,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3274,6 +3297,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3306,6 +3330,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3326,6 +3351,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3358,6 +3384,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3389,6 +3416,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3413,6 +3441,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					dstring_free(&query1);
 					dstring_free(&query2);
 					dstring_free(&query3);
+					dstring_free(&lsquery);
 					dstring_free(&indexregenquery);
 					terminate_log_archive();
 					return -1;
@@ -3437,6 +3466,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3461,6 +3491,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3481,6 +3512,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3498,6 +3530,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3512,6 +3545,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			  dstring_free(&query1);
 			  dstring_free(&query2);
 			  dstring_free(&query3);
+			  dstring_free(&lsquery);
 			  dstring_free(&indexregenquery);
 			  terminate_log_archive();
 			  return -1;
@@ -3548,6 +3582,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				      dstring_free(&query1);
 				      dstring_free(&query2);
 				      dstring_free(&query3);
+				      dstring_free(&lsquery);
 				      dstring_free(&indexregenquery);
 				      terminate_log_archive();
 				      return -1;
@@ -3565,6 +3600,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				      dstring_free(&query1);
 				      dstring_free(&query2);
 				      dstring_free(&query3);
+				      dstring_free(&lsquery);
 				      dstring_free(&indexregenquery);
 				      terminate_log_archive();
 				      return -1;
@@ -3587,6 +3623,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			  dstring_free(&query1);
 			  dstring_free(&query2);
 			  dstring_free(&query3);
+			  dstring_free(&lsquery);
 			  dstring_free(&indexregenquery);
 			  terminate_log_archive();
 			  return -1;
@@ -3609,6 +3646,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3634,6 +3672,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3659,6 +3698,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3713,6 +3753,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -3748,6 +3789,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				  dstring_free(&query1);
 				  dstring_free(&query2);
 				  dstring_free(&query3);
+				  dstring_free(&lsquery);
 				  dstring_free(&indexregenquery);
 				  terminate_log_archive();
 				  return -1;
@@ -3770,6 +3812,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3817,6 +3860,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3831,6 +3875,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3881,6 +3926,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3895,6 +3941,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				dstring_free(&query1);
 				dstring_free(&query2);
 				dstring_free(&query3);
+				dstring_free(&lsquery);
 				dstring_free(&indexregenquery);
 				terminate_log_archive();
 				return -1;
@@ -3941,6 +3988,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3985,6 +4033,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -3999,6 +4048,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -4031,17 +4081,18 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
 	}
 	if (archive_dir)
 	{
-		slon_mkquery(&query1,
+		slon_mkquery(&lsquery,
 			     "insert into %s.sl_setsync_offline (ssy_setid, ssy_seqno) "
 			     "values ('%d', '%d');",
 			     rtcfg_namespace, set_id, ssy_seqno);
-		rc = submit_query_to_archive(&query1);
+		rc = submit_query_to_archive(&lsquery);
 		if (rc < 0)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
@@ -4051,6 +4102,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -4074,6 +4126,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			dstring_free(&query1);
 			dstring_free(&query2);
 			dstring_free(&query3);
+			dstring_free(&lsquery);
 			dstring_free(&indexregenquery);
 			terminate_log_archive();
 			return -1;
@@ -4092,6 +4145,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_free(&query1);
 		dstring_free(&query2);
 		dstring_free(&query3);
+		dstring_free(&lsquery);
 		dstring_free(&indexregenquery);
 		terminate_log_archive();
 		return -1;
@@ -4100,6 +4154,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	dstring_free(&query1);
 	dstring_free(&query2);
 	dstring_free(&query3);
+	dstring_free(&lsquery);
 	dstring_free(&indexregenquery);
 
 	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
@@ -4141,6 +4196,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 	SlonDString new_qual;
 	SlonDString query;
+	SlonDString lsquery;
 	SlonDString *provider_qual;
 	SlonDString actionseq_subquery;
 
@@ -4153,6 +4209,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 	dstring_init(&query);
+	dstring_init(&lsquery);
 
 	/*
 	 * If this slon is running in log archiving mode, open a temporary file
@@ -4896,11 +4953,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 */
 			if (archive_dir)
 			{
-				slon_mkquery(&query,
+				slon_mkquery(&lsquery,
 							 "select %s.sequenceSetValue_offline(%s,'%s');\n",
 							 rtcfg_namespace,
 							 seql_seqid, seql_last_value);
-				rc = submit_query_to_archive(&query);
+				rc = submit_query_to_archive(&lsquery);
 				if (rc < 0)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
