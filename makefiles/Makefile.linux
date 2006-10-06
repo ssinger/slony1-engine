@@ -16,3 +16,5 @@ endif
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+sqlmansect = 7
