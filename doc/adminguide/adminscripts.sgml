@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.39 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40 2006-10-06 20:19:43 cbbrowne Exp $ -->
 <sect1 id="altperl">
 <title>&slony1; Administration Scripts</title>
 
@@ -402,10 +402,38 @@ under management. </para></listitem>
 <para> In effect, you could run this every five minutes, and it would
 launch any missing &lslon; processes. </para>
 </sect2>
+
+<sect2 id="extractschema"><title> <filename> slony1_extract_schema.sh </filename> </title>
+
+<indexterm><primary>script - slony1_extract_schema.sh</primary></indexterm>
+
+<para> You may find that you wish to create a new node some time well
+after creating a cluster.  The script <filename>
+slony1_extract_schema.sh </filename> will help you with this.</para>
+
+<para> A command line might look like the following:</para>
+
+<para><command> PGPORT=5881 PGHOST=master.int.example.info ./slony1_extract_schema.sh payroll payroll temppayroll </command> </para>
+
+<para> It performs the following:</para>
+
+<itemizedlist>
+<listitem><para> It dumps the origin node's schema, including the data in the &slony1; cluster schema. </para>
+
+<para> Note that the extra environment variables <envar>PGPORT</envar>
+and <envar>PGHOST</envar> to indicate additional information about
+where the database resides. </para></listitem>
+
+<listitem><para> This data is loaded into the freshly created temporary database, <envar>temppayroll</envar> </para> </listitem>
+<listitem><para> The table and sequence OIDs in &slony1; tables are corrected   to point to the temporary database's configuration.  </para> </listitem>
+<listitem><para>  A slonik script is run to perform <xref linkend="stmtuninstallnode"> on the temporary database.   This eliminates all the special &slony1; tables, schema, and removes &slony1; triggers from replicated tables. </para> </listitem>
+<listitem><para> Finally, <application>pg_dump</application> is run against the temporary database, delivering a copy of the cleaned up schema to standard output. </para> </listitem>
+</itemizedlist>
+
+</sect2>
 <sect2><title> slony-cluster-analysis </title>
 
 <indexterm><primary>script - slony-cluster-analysis</primary></indexterm>
-
 
 <para> If you are running a lot of replicated databases, where there
 are numerous &slony1; clusters, it can get painful to track and

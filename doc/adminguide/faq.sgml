@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.65 2006-10-04 21:16:10 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66 2006-10-06 20:19:43 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1416,8 +1416,9 @@ command SET DROP TABLE, which will "do the trick."</para></listitem>
 <emphasis>essential functionality of <xref linkend="stmtsetdroptable">
 involves the functionality in <function>droptable_int()</function>.
 You can fiddle this by hand by finding the table ID for the table you
-want to get rid of, which you can find in <xref linkend="table.sl-table">, and then run the
-following three queries, on each host:</emphasis>
+want to get rid of, which you can find in <xref
+linkend="table.sl-table">, and then run the following three queries,
+on each host:</emphasis>
 
 <programlisting>
   select _slonyschema.alterTableRestore(40);

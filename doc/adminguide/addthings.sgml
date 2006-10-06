@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.22 2006-09-22 07:22:48 xfade Exp $ -->
+<!-- $Id: addthings.sgml,v 1.23 2006-10-06 20:19:43 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -217,10 +217,10 @@ information.
 </para>
 
 <para> If you do not have a perfectly clean SQL script to add in the
-tables, then run the tool <command> slony1_extract_schema.sh</command>
-from the <filename>tools</filename> directory to get the user schema
-from the origin node with all &slony1; <quote>cruft</quote>
-removed.  </para>
+tables, then run the tool <link linkend="extractschema"> <command>
+slony1_extract_schema.sh</command> </link> from the
+<filename>tools</filename> directory to get the user schema from the
+origin node with all &slony1; <quote>cruft</quote> removed.  </para>
 </listitem>
 
 <listitem><para> If the node had been a failed node, you may need to

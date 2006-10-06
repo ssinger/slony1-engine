@@ -1,4 +1,4 @@
-<!-- $Id: ddlchanges.sgml,v 1.28 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: ddlchanges.sgml,v 1.29 2006-10-06 20:19:43 cbbrowne Exp $ -->
 <sect1 id="ddlchanges">
 <title>Database Schema Changes (DDL)</title>
 
@@ -250,6 +250,13 @@ cause any particular problems.  If you add an index on a table that
 takes 20 minutes to build, replication will block for 20 minutes, but
 should catch up quickly enough once the index is
 created.</para></listitem>
+
+<listitem><para> &slony1; stores the <quote>primary index</quote> name
+in <xref linkend="table.sl-table">, and uses that name to control what
+columns are considered the <quote>key columns</quote> when the log
+trigger is attached.  It would be plausible to drop that index and
+replace it with another primary key candidate, but changing the name
+of the primary key candidate would break things. </para> </listitem>
 
 </itemizedlist></para></sect2>
 
