@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.11 2006-09-29 18:41:04 cbbrowne Exp $
+$Id: INSTALL,v 1.12 2006-10-17 18:33:17 cbbrowne Exp $
 
 Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x, and
 8.1.x.  There have also been changes made to support features expected
@@ -40,6 +40,10 @@ specified individually, such as:
 --with-pglibdir=<dir>           Location of the PostgreSQL libs.
 --with-pgpkglibdir=<dir>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so
 --with-pgsharedir=<dir>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample
+
+*USUALLY*, all you should need to specify is the first of those
+locations, namely --with-pgconfigdir=/path/to/pg_config/bin; the
+others should be able to be inferred based on the output of pg_config.
 
 PostgreSQL version 8 installs the server header #include files by
 default; with version 7.4 and earlier, you need to make sure that the

@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.27 2006-09-15 21:50:17 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.28 2006-10-17 18:33:18 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -77,13 +77,13 @@ full list of these options, use the command <command>./configure
 
 <para> <emphasis>Normally,</emphasis> it ought to be sufficient to run
 <command>configure
-<option>--pgconfigdir=/some/path/somewhere</option></command>, where
-<filename>/some/path/somewhere</filename> is the place where the
+<option>--with-pgconfigdir=/some/path/somewhere</option></command>,
+where <filename>/some/path/somewhere</filename> is the place where the
 &postgres; program <application>pg_config</application> is located.
 From <application>pg_config</application>, the
-<filename>configure</filename> will determine the various locations
-where &postgres; components are found, which indicates where the
-essential components of &slony1; must be installed.</para>
+<filename>configure</filename> script can determine the various
+locations where &postgres; components are found, which indicates where
+the essential components of &slony1; must be installed.</para>
 
 <para>On certain platforms (AIX and Solaris are known to need this;
 Linux does not), the compile of &postgres; must be expressly
