@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.13 2006-06-02 17:28:50 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.14 2006-10-23 22:00:31 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -40,7 +40,7 @@
 #define WMSG_WAKEUP		1
 #define WMSG_CONFIRM	2
 
-
+#define MAXGROUPSIZE 100
 /*
  * Message structure resulting from a remote event
  */
@@ -435,7 +435,7 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
-			SlonWorkMsg_event *sync_group[100];
+			SlonWorkMsg_event *sync_group[MAXGROUPSIZE+1];
 			int			sync_group_size;
 
 			int			seconds;
@@ -454,7 +454,7 @@ remoteWorkerThread_main(void *cdata)
 			  /* Force last_sync_group_size to a reasonable range */
 				if (last_sync_group_size < 1)
 					last_sync_group_size = 1;
-				if (last_sync_group_size > 100)
+				if (last_sync_group_size > MAXGROUPSIZE)
 					last_sync_group_size = 1;
 
 				gettimeofday(&sync_end, NULL);
@@ -492,7 +492,7 @@ remoteWorkerThread_main(void *cdata)
 				gettimeofday(&sync_start, NULL);
 
 				pthread_mutex_lock(&(node->message_lock));
-				while (sync_group_size < next_sync_group_size && node->message_head != NULL)
+				while (sync_group_size < next_sync_group_size && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
 						break;
