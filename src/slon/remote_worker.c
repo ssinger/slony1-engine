@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124 2006-10-05 14:40:37 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.125 2006-10-23 21:56:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -463,7 +463,7 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
-			SlonWorkMsg_event *sync_group[MAXGROUPSIZE];
+			SlonWorkMsg_event *sync_group[MAXGROUPSIZE+1];
 			int			sync_group_size;
 
 			int			seconds;
@@ -544,7 +544,7 @@ remoteWorkerThread_main(void *cdata)
 				gettimeofday(&sync_start, NULL);
 
 				pthread_mutex_lock(&(node->message_lock));
-				while (sync_group_size < next_sync_group_size && node->message_head != NULL)
+				while (sync_group_size < next_sync_group_size && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
 						break;
@@ -5827,7 +5827,7 @@ close_log_archive()
 			return -1;
 		rc = fclose(archive_fp);
 		archive_fp = NULL;
-		if (rc < 0)
+		if (rc != 0)
 			return -1;
 		rc = rename(archive_tmp, archive_name);
 	}
