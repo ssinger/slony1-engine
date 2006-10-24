@@ -1,0 +1,1 @@
+SELECT id,data FROM table1 ORDER BY id

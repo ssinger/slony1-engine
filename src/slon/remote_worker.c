@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.125 2006-10-23 21:56:10 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.126 2006-10-24 18:27:44 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5504,13 +5504,21 @@ sync_helper(void *cdata)
 					if (log_cmdsize >= sync_max_rowsize)
 					{
 						slon_mkquery(&query2,
-								"select log_cmddata "
-								"from %s.sl_log_1 "
-								"where log_origin = '%s' "
-								"  and log_xid = '%s' "
-								"  and log_actionseq = '%s'",
-								rtcfg_namespace,
-								log_origin, log_xid, log_actionseq);
+							     "select log_cmddata "
+							     "from %s.sl_log_1 "
+							     "where log_origin = '%s' "
+							     "  and log_xid = '%s' "
+							     "  and log_actionseq = '%s' "
+							     "UNION ALL "
+							     "select log_cmddata "
+							     "from %s.sl_log_2 "
+							     "where log_origin = '%s' "
+							     "  and log_xid = '%s' "
+							     "  and log_actionseq = '%s'",
+							     rtcfg_namespace,
+							     log_origin, log_xid, log_actionseq,
+							     rtcfg_namespace,
+							     log_origin, log_xid, log_actionseq);
 						res2 = PQexec(dbconn, dstring_data(&query2));
 						if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 						{
@@ -5526,7 +5534,6 @@ sync_helper(void *cdata)
 						{
 							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: large log_cmddata for actionseq %s not found\n",
 									 node->no_id, provider->no_id,
-									 dstring_data(&query),
 									 log_actionseq);
 							PQclear(res2);
 							errors++;
