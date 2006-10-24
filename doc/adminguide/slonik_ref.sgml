@@ -589,20 +589,6 @@ INIT CLUSTER (
     <para> When you invoke <command>DROP NODE</command>, one of the
     steps is to run <command>UNINSTALL NODE</command>.</para>
 
-   <warning><para> If you are using connections that cache query plans
-   (this is particularly common for Java application frameworks with
-   connection pools), the connections may cache query plans that
-   include the pre-<command>DROP NODE</command> state of things, and
-   you will get &rmissingoids;.</para>
-
-   <para>After dropping a node, you may also need to recycle
-   connections in your application.</para></warning>
-
-   <warning><para> You cannot submit this to an <command>EVENT
-   NODE</command> that is the number of the node being dropped; the
-   request must go to some node that will remain in the
-   cluster. </para></warning>
-
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -615,6 +601,22 @@ INIT CLUSTER (
     require exclusive access to each replicated table on the node
     being discarded.</para>
    </refsect1>
+   <refsect1><title>Dangerous/Unintuitive Behaviour</title>
+   <para> If you are using connections that cache query plans
+   (this is particularly common for Java application frameworks with
+   connection pools), the connections may cache query plans that
+   include the pre-<command>DROP NODE</command> state of things, and
+   you will get &rmissingoids;.</para>
+
+   <para>After dropping a node, you may also need to recycle
+   connections in your application.</para>
+
+   <para> You cannot submit this to an <command>EVENT
+   NODE</command> that is the number of the node being dropped; the
+   request must go to some node that will remain in the
+   cluster. </para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -656,15 +658,6 @@ INIT CLUSTER (
     NODE</command> does is to remove the &slony1; configuration; it
     doesn't drop the node's configuration from replication.</para>
 
-   <warning><para> If you are using connections that cache query plans
-   (this is particularly common for Java application frameworks with
-   connection pools), the connections may cache query plans that
-   include the pre-<command>UNINSTALL NODE</command> state of things,
-   and you will get &rmissingoids;.</para>
-
-   <para>After dropping a node, you may also need to recycle
-   connections in your application.</para></warning>
-
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -676,6 +669,16 @@ INIT CLUSTER (
     <para> When dropping triggers off of application tables, this will
     require exclusive access to each replicated table on the node
     being discarded.</para>
+   </refsect1>
+   <refsect1><title> Dangerous/Unintuitive Behaviour </title>
+   <para> If you are using connections that cache query plans
+   (this is particularly common for Java application frameworks with
+   connection pools), the connections may cache query plans that
+   include the pre-<command>UNINSTALL NODE</command> state of things,
+   and you will get &rmissingoids;.</para>
+
+   <para>After dropping a node, you may also need to recycle
+   connections in your application.</para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -1263,8 +1266,18 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
-   <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.0.5 </para>
+   <refsect1><title> Dangerous/Unintuitive Behaviour </title>
+
+   <para> Merging takes place based on the configuration on the origin
+   node.  If a merge is requested while subscriptions are still being
+   processed, this can cause in-progress subscribers' replication to
+   break, as they'll be looking for configuration for this set which
+   the merge request deletes.  Do not be too quick to merge sets.
+   </para>
+
+   </refsect1>
+   <refsect1> <title> Version Information </title> <para> This command
+   was introduced in &slony1; 1.0.5 </para>
    </refsect1>
   </refentry>
 
@@ -2051,6 +2064,30 @@ SUBSCRIBE SET (
     on. </para>
 
    </refsect1>
+   <refsect1> <title> Dangerous/Unintuitive Behaviour </title>
+
+   <itemizedlist>
+
+     <listitem><para> The fact that the request returns immediately
+     even though the subscription may take considerable time to
+     complete may be a bit surprising. </para> </listitem>
+
+     <listitem><para> This command has <emphasis>two</emphasis>
+     purposes; setting up subscriptions (which should be unsurprising)
+     and <emphasis>revising subscriptions</emphasis>, which isn't so
+     obvious to intuition. </para> </listitem>
+
+     <listitem><para> New subscriptions are set up by using
+     <command>DELETE</command> or <command>TRUNCATE</emphasis> to
+     empty the table on a subscriber.  If you created a new node by
+     copying data from an existing node, it might <quote>seem
+     intuitive</quote> that that data should be kept; that is not the
+     case - the former contents are discarded and the node is
+     populated <emphasis>from scratch</emphasis>.</para> </listitem>
+
+   </itemizedlist>
+
+   </refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
     <para> This operation does <emphasis>not</emphasis> require
@@ -2092,11 +2129,6 @@ SUBSCRIBE SET (
      modified. All original triggers, rules and constraints are
      restored.
      
-     <warning><para> Resubscribing an unsubscribed set requires a
-       <emphasis>complete fresh copy</emphasis> of data from the
-       provider to be transferred since the tables have been subject to
-       possible independent modifications.  </para></warning>
-     
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to unsubscribe</para></listitem>
@@ -2124,6 +2156,15 @@ UNSUBSCRIBE SET (
     <para> Exclusive locks on each replicated table will be taken out
     on the subscriber in order to drop replication triggers from the
     tables and restore other triggers/rules. </para>
+   </refsect1>
+
+   <refsect1><title> Dangerous/Unintuitive Behaviour </title>
+
+     <para> Resubscribing an unsubscribed set requires a
+     <emphasis>complete fresh copy</emphasis> of data from the
+     provider to be transferred since the tables have been subject to
+     possible independent modifications.  </para>
+
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
@@ -2380,14 +2421,6 @@ MOVE SET (
      configuration with <xref linkend="stmtdropnode">.
     </para>
     
-    <warning><para> This command will abandon the status of the failed
-    node.  There is no possibility to let the failed node join the
-    cluster again without rebuilding it from scratch as a slave.  If
-    at all possible, you would likely prefer to use <xref
-    linkend="stmtmoveset"> instead, as that does
-    <emphasis>not</emphasis> abandon the failed node.
-    </para></warning>
-    
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the failed node</para></listitem>
@@ -2419,6 +2452,15 @@ FAILOVER (
     data must be drawn from some other node that is more up to date,
     the new origin will not become usable until those updates are
     complete. </para>
+   </refsect1>
+   <refsect1><title> Dangerous/Unintuitive Behaviour </title>
+    <para> This command will abandon the status of the failed
+    node.  There is no possibility to let the failed node join the
+    cluster again without rebuilding it from scratch as a slave.  If
+    at all possible, you would likely prefer to use <xref
+    linkend="stmtmoveset"> instead, as that does
+    <emphasis>not</emphasis> abandon the failed node.
+    </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
