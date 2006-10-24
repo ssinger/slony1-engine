@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66 2006-10-06 20:19:43 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.67 2006-10-24 14:47:43 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -346,6 +346,29 @@ problem is persistent, the connections will keep recycling which will
 drop the effect of the pooling, in the latter case the pooling code
 could also announce an admin to take a look...  </para> </answer>
 
+</qandaentry>
+
+<qandaentry><question><para> I upgraded my cluster to &slony1; version
+1.2.  I'm now getting the following notice in the logs:</para>
+
+<screen>NOTICE:  Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated</screen>
+
+<para> Both <envar>sl_log_1</envar> and <envar>sl_log_2</envar> are
+continuing to grow, and <envar>sl_log_1</envar> is never getting
+truncated.  What's wrong?
+</para> </question>
+
+<answer><para> This is symptomatic of the same issue as above with
+dropping replication: if there are still old connections lingering
+that are using old query plans that reference the old stored
+functions, resulting in the inserts to <envar>sl_log_1</envar> </para>
+
+<para> Closing those connections and opening new ones will resolve the
+issue. </para> </answer> 
+
+<answer> <para> In the longer term, there is an item on the &postgres;
+TODO list to implement dependancy checking that would flush cached
+query plans when dependent objects change.  </para> </answer>
 </qandaentry>
 
 <qandaentry>
