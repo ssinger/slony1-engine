@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2006-10-24 18:27:44 cbbrowne Exp $
+$Id: README,v 1.1.2.1 2006-10-24 18:32:25 cbbrowne Exp $
   
 testlargetuples, based on test1, checks that large tuples are replicated
 properly.
