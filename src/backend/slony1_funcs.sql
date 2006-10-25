@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.17 2006-06-02 17:28:50 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.18 2006-10-25 19:40:21 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -323,13 +323,13 @@ begin
 		while v_i <= v_l loop
 			if substr(p_tab_fqname, v_i, 1) != ''"'' then
 				v_i := v_i + 1;
-				continue;
+			else
+				v_i := v_i + 1;
+				if substr(p_tab_fqname, v_i, 1) != ''"'' then
+					exit;
+				end if;
+				v_i := v_i + 1;
 			end if;
-			v_i := v_i + 1;
-			if substr(p_tab_fqname, v_i, 1) != ''"'' then
-				exit;
-			end if;
-			v_i := v_i + 1;
 		end loop;
 	else
 		-- first part of ident is not quoted, search for the dot directly
