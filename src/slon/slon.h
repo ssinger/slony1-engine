@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.59 2006-03-08 18:29:10 darcyb Exp $
+ *	$Id: slon.h,v 1.59.2.1 2006-10-25 13:53:33 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -105,6 +105,10 @@ struct SlonNode_s
 	pthread_cond_t message_cond;	/* condition variable for queue */
 	SlonWorkMsg *message_head;
 	SlonWorkMsg *message_tail;
+
+	char	   *archive_name;
+	char	   *archive_temp;
+	FILE	   *archive_fp;
 
 	SlonNode   *prev;
 	SlonNode   *next;
