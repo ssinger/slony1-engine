@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.42.2.4 2006-01-06 17:07:48 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.42.2.5 2006-10-26 20:43:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1051,6 +1051,25 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				}
 				break;
 
+			case STMT_SYNC:
+				{
+					SlonikStmt_sync *stmt =
+					(SlonikStmt_sync *) hdr;
+
+					if (stmt->no_id == -1)
+					{
+						printf("%s:%d: Error: "
+							   "node ID must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
+
+				}
+				break;
+
 		}
 
 		hdr = hdr->next;
@@ -1472,6 +1491,16 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_wait_event *) hdr;
 
 					if (slonik_wait_event(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_SYNC:
+				{
+					SlonikStmt_sync *stmt =
+					(SlonikStmt_sync *) hdr;
+
+					if (slonik_sync(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -4056,6 +4085,36 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 }
 
 
+int
+slonik_sync(SlonikStmt_sync * stmt)
+{
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+				 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
 /*
  * scanint8 --- try to parse a string into an int8.
  *
@@ -4121,6 +4180,52 @@ slon_scanint64(char *str, int64 * result)
 
 	return true;
 }
+
+
+/*
+ * make a copy of the array of lines, with token replaced by replacement
+ * the first time it occurs on each line.
+ *
+ * This does most of what sed was used for in the shell script, but
+ * doesn't need any regexp stuff.
+ */
+static void
+replace_token(char *resout, char *lines, const char *token, const char *replacement)
+{
+	int			numlines = 1;
+	int			i,
+				o;
+	char		result_set[4096];
+	int			toklen,
+				replen;
+
+	for (i = 0; lines[i]; i++)
+		numlines++;
+
+	toklen = strlen(token);
+	replen = strlen(replacement);
+
+	for (i = o = 0; i < numlines; i++, o++)
+	{
+		/* just copy pointer if NULL or no change needed */
+		if (!lines[i] || (strncmp((const char *)lines + i, token, toklen)))
+		{
+			if (lines[i] == 0x0d)		/* ||(lines[i] == 0x0a)) */
+				break;
+
+			result_set[o] = lines[i];
+			continue;
+		}
+		/* if we get here a change is needed - set up new line */
+		strncpy((char *)result_set + o, replacement, replen);
+		o += replen - 1;
+		i += toklen - 1;
+	}
+
+	result_set[o] = '\0';
+	memcpy(resout, result_set, o);
+}
+
 
 /*
  * Local Variables:

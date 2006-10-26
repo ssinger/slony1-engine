@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.23.2.1 2006-01-06 17:07:48 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.23.2.2 2006-10-26 20:43:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -48,6 +48,7 @@ typedef struct SlonikStmt_move_set_s SlonikStmt_move_set;
 typedef struct SlonikStmt_ddl_script_s SlonikStmt_ddl_script;
 typedef struct SlonikStmt_update_functions_s SlonikStmt_update_functions;
 typedef struct SlonikStmt_wait_event_s SlonikStmt_wait_event;
+typedef struct SlonikStmt_sync_s SlonikStmt_sync;
 
 typedef enum
 {
@@ -85,7 +86,8 @@ typedef enum
 	STMT_UNSUBSCRIBE_SET,
 	STMT_UPDATE_FUNCTIONS,
 	STMT_WAIT_EVENT,
-	STMT_ERROR
+	STMT_ERROR,
+	STMT_SYNC
 }	Slonik_stmttype;
 
 struct SlonikScript_s
@@ -423,6 +425,13 @@ struct SlonikStmt_wait_event_s
 };
 
 
+struct SlonikStmt_sync_s
+{
+	SlonikStmt	hdr;
+	int			no_id;
+};
+
+
 
 
 extern SlonikScript *parser_script;
@@ -544,6 +553,7 @@ extern int	slonik_move_set(SlonikStmt_move_set * stmt);
 extern int	slonik_ddl_script(SlonikStmt_ddl_script * stmt);
 extern int	slonik_update_functions(SlonikStmt_update_functions * stmt);
 extern int	slonik_wait_event(SlonikStmt_wait_event * stmt);
+extern int	slonik_sync(SlonikStmt_sync * stmt);
 
 extern int	slon_scanint64(char *str, int64 * result);
 

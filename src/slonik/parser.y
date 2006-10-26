@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.22.2.1 2006-01-06 17:07:48 cbbrowne Exp $
+ *	$Id: parser.y,v 1.22.2.2 2006-10-26 20:43:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -159,6 +159,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_update_functions
 %type <statement>	stmt_repair_config
 %type <statement>	stmt_wait_event
+%type <statement>	stmt_sync
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -238,6 +239,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_UPDATE
 %token	K_YES
 %token	K_WAIT
+%token	K_SYNC
 
 /*
  * Other scanner tokens
@@ -478,6 +480,8 @@ try_stmt			: stmt_echo
 					| stmt_error ';' 
 						{ yyerrok;
 						  $$ = $1; }
+					| stmt_sync
+						{ $$ = $1; }
 					;
 
 stmt_echo			: lno K_ECHO literal ';'
@@ -1435,6 +1439,32 @@ stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 							new->wait_confirmed	= opt[1].ival;
 							new->wait_on		= opt[2].ival;
 							new->wait_timeout	= opt[3].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_sync			: lno K_SYNC option_list
+					{
+						SlonikStmt_sync *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_sync *)
+								malloc(sizeof(SlonikStmt_sync));
+						memset(new, 0, sizeof(SlonikStmt_sync));
+						new->hdr.stmt_type		= STMT_SYNC;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $3) == 0)
+						{
+							new->no_id			= opt[0].ival;
 						}
 						else
 							parser_errors++;

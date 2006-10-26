@@ -17,18 +17,7 @@ DB2=slony_test2
 # 
 ######################################################################
 
-cat >test_5_tmp.sql <<_EOF_
-	alter table accounts add column lastuser name;
-
-	create function accounts_lastuser () returns trigger as '
-	begin
-		NEW.lastuser = SESSION_USER;
-		return NEW;
-	end;
-	' language plpgsql;
-	create trigger accounts_lastuser before insert or update on accounts
-		for each row execute procedure accounts_lastuser();
-
+cat >test_5_tmp1.sql <<_EOF_
 	create table accounts_audit (
 		au_aid		integer,
 		au_seqno	serial,
@@ -39,6 +28,26 @@ cat >test_5_tmp.sql <<_EOF_
 		primary key (au_aid, au_seqno),
 		foreign key (au_aid) references accounts
 	);
+
+	create table tellers_sum (
+		su_tid		integer,
+		su_sum		integer,
+
+		primary key (su_tid),
+		foreign key (su_tid) references tellers
+	);
+_EOF_
+cat >test_5_tmp2.sql <<_EOF_
+	alter table accounts add column lastuser name;
+
+	create function accounts_lastuser () returns trigger as '
+	begin
+		NEW.lastuser = SESSION_USER;
+		return NEW;
+	end;
+	' language plpgsql;
+	create trigger accounts_lastuser before insert or update on accounts
+		for each row execute procedure accounts_lastuser();
 
 	create function accounts_audit_trig () returns trigger as '
 	begin
@@ -58,13 +67,6 @@ cat >test_5_tmp.sql <<_EOF_
 	create trigger accounts_audit_trig after update on accounts
 		for each row execute procedure accounts_audit_trig();
 
-	create table tellers_sum (
-		su_tid		integer,
-		su_sum		integer,
-
-		primary key (su_tid),
-		foreign key (su_tid) references tellers
-	);
 	insert into tellers_sum (su_tid, su_sum)
 		select tid, 0 from tellers;
 
@@ -81,7 +83,9 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
-		execute script (set id = 1, filename = 'test_5_tmp.sql',
+		execute script (set id = 1, filename = 'test_5_tmp1.sql',
+			event node = 1);
+		execute script (set id = 1, filename = 'test_5_tmp2.sql',
 			event node = 1);
 
 		create set (id = 999, origin = 1, comment = 'temp set for new objects');
@@ -100,4 +104,4 @@ slonik <<_EOF_
 	}
 _EOF_
 
-rm test_5_tmp.sql
+rm test_5_tmp[12].sql

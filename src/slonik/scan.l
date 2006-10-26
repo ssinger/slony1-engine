@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.23.2.1 2006-01-06 17:07:48 cbbrowne Exp $
+ *	$Id: scan.l,v 1.23.2.2 2006-10-26 20:43:25 wieck Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer
@@ -66,17 +66,17 @@ identifier		({ident_start}{ident_cont}*)
 include{space}* { BEGIN(incl); }
 define{space}*  { BEGIN(define); }
 
-add			{ return K_ADD;				}
+add				{ return K_ADD;				}
 admin			{ return K_ADMIN;			}
-all			{ return K_ALL;				}
+all				{ return K_ALL;				}
 backup			{ return K_BACKUP;			}
 client			{ return K_CLIENT;			}
 cluster			{ return K_CLUSTER;			}
 comment			{ return K_COMMENT;			}
 config			{ return K_CONFIG;			}
-confirmed		{ return K_CONFIRMED;			}
-conninfo		{ return K_CONNINFO;			}
-connretry		{ return K_CONNRETRY;			}
+confirmed		{ return K_CONFIRMED;		}
+conninfo		{ return K_CONNINFO;		}
+connretry		{ return K_CONNRETRY;		}
 create			{ return K_CREATE;			}
 drop			{ return K_DROP;			}
 echo			{ return K_ECHO;			}
@@ -84,59 +84,60 @@ error			{ return K_ERROR;			}
 event			{ return K_EVENT;			}
 execute			{ return K_EXECUTE;			}
 exit			{ return K_EXIT;			}
-failover		{ return K_FAILOVER;			}
+failover		{ return K_FAILOVER;		}
 false			{ return K_FALSE;			}
-filename		{ return K_FILENAME;			}
-for			{ return K_FOR;				}
+filename		{ return K_FILENAME;		}
+for				{ return K_FOR;				}
 forward			{ return K_FORWARD;			}
 full			{ return K_FULL;			}
 fully			{ return K_FULL;			}
-functions		{ return K_FUNCTIONS;			}
-id			{ return K_ID;				}
+functions		{ return K_FUNCTIONS;		}
+id				{ return K_ID;				}
 init			{ return K_INIT;			}
-key			{ return K_KEY;				}
+key				{ return K_KEY;				}
 listen			{ return K_LISTEN;			}
 lock			{ return K_LOCK;			}
 merge			{ return K_MERGE;			}
 move			{ return K_MOVE;			}
 name			{ return K_NAME;			}
-new			{ return K_NEW;				}
-no			{ return K_NO;				}
+new				{ return K_NEW;				}
+no				{ return K_NO;				}
 node			{ return K_NODE;			}
-off			{ return K_OFF;				}
-old			{ return K_OLD;				}
-on			{ return K_ON;				}
+off				{ return K_OFF;				}
+old				{ return K_OLD;				}
+on				{ return K_ON;				}
 only			{ return K_ONLY;			}
 origin			{ return K_ORIGIN;			}
 path			{ return K_PATH;			}
-provider		{ return K_PROVIDER;			}
-qualified		{ return K_QUALIFIED;			}
-receiver		{ return K_RECEIVER;			}
+provider		{ return K_PROVIDER;		}
+qualified		{ return K_QUALIFIED;		}
+receiver		{ return K_RECEIVER;		}
 repair			{ return K_REPAIR;			}
 restart			{ return K_RESTART;			}
 script			{ return K_SCRIPT;			}
-sequence		{ return K_SEQUENCE;			}
+sequence		{ return K_SEQUENCE;		}
 serial			{ return K_SERIAL;			}
 server			{ return K_SERVER;			}
-set			{ return K_SET;				}
-spoolnode		{ return K_SPOOLNODE;			}
+set				{ return K_SET;				}
+spoolnode		{ return K_SPOOLNODE;		}
 store			{ return K_STORE;			}
-subscribe		{ return K_SUBSCRIBE;			}
+subscribe		{ return K_SUBSCRIBE;		}
 success			{ return K_SUCCESS;			}
+sync			{ return K_SYNC;			}
 table			{ return K_TABLE;			}
 timeout			{ return K_TIMEOUT;			}
 trigger			{ return K_TRIGGER;			}
 true			{ return K_TRUE;			}
-try			{ return K_TRY;				}
-uninstall		{ return K_UNINSTALL;			}
+try				{ return K_TRY;				}
+uninstall		{ return K_UNINSTALL;		}
 unlock			{ return K_UNLOCK;			}
-unsubscribe		{ return K_UNSUBSCRIBE;			}
+unsubscribe		{ return K_UNSUBSCRIBE;		}
 update			{ return K_UPDATE;			}
-yes			{ return K_YES;				}
+yes				{ return K_YES;				}
 wait			{ return K_WAIT;			}
 
-{digit}+	{ return T_NUMBER;				}
-{identifier}	{ return T_IDENT;				}
+{digit}+		{ return T_NUMBER;			}
+{identifier}	{ return T_IDENT;			}
 
 {space}+		;
 
