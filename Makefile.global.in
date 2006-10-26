@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile.global.in,v 1.34 2005-12-08 20:44:57 xfade Exp $
+# $Id: Makefile.global.in,v 1.35 2006-10-26 19:07:18 wieck Exp $
 # ----------
 
 #location substitutions
@@ -32,6 +32,7 @@ VERSION=		@PACKAGE_VERSION@
 
 #build tools
 CC=			@CC@
+GCC=		@GCC@
 PTHREAD_CC=		@PTHREAD_CC@
 YACC=			@YACC@
 FLEX=			@LEX@
