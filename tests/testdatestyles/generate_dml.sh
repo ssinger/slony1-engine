@@ -24,7 +24,7 @@ generate_initdata()
 {
   GENDATA="$mktmp/generate.data"
   for datestyle in DMY European German ISO MDY NonEuropean Postgres SQL US YMD; do
-     status "generating tranactions of date data for datestyle ${datestyle}"
+     status "generating transactions of date data for datestyle ${datestyle}"
      echo "SET DATESTYLE TO ${datestyle};" >> $GENDATA
      echo "insert into table1(ts, tsz, ds) values ('infinity', 'infinity', now());" >> $GENDATA
      echo "insert into table1(ts, tsz, ds) values ('-infinity', '-infinity', now());" >> $GENDATA

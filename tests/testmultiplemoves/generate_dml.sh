@@ -27,7 +27,7 @@ generate_initdata()
   trippoint=`expr $numrows / 20`
   j=0;
   percent=0
-  status "generating ${numrows} tranactions of random data"
+  status "generating ${numrows} transactions of random data"
   percent=`expr $j \* 5`
   status "$percent %"
   GENDATA="$mktmp/generate.data"
