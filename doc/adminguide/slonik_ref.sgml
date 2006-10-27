@@ -1257,9 +1257,14 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     MERGE SET ( ID = 2, 
-     ADD ID = 9999,
-     ORIGIN = 1 );
+     # Assuming that set 1 has direct subscribers 2 and 3
+     SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
+     WAIT FOR EVENT (ORIGIN = 2, CONFIRMED = 1);
+     SYNC (ID=1);
+     SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
+     WAIT FOR EVENT (ORIGIN = 3, CONFIRMED = 1);
+     SYNC (ID=1);
+     MERGE SET ( ID = 2, ADD ID = 9999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -2070,7 +2075,19 @@ SUBSCRIBE SET (
 
      <listitem><para> The fact that the request returns immediately
      even though the subscription may take considerable time to
-     complete may be a bit surprising. </para> </listitem>
+     complete may be a bit surprising. </para> 
+
+     <para> Processing of the subscription involves
+     <emphasis>two</emphasis> events; the
+     <command>SUBSCRIBE_SET</command>, initiated from the provider
+     node, and an <command>ENABLE_SUBSCRIPTION</command>, which is
+     initiated on the subscriber node.  This means that <xref
+     linkend="stmtwaitevent"> cannot directly wait for completion of a
+     subscription.  If you need to wait for completion of a
+     subscription, then what you need to do instead is to submit a
+     <xref linkend="stmtsync"> request, and wait for
+     <emphasis>that</emphasis> event.</para>
+     </listitem>
 
      <listitem><para> This command has <emphasis>two</emphasis>
      purposes; setting up subscriptions (which should be unsurprising)
@@ -2078,7 +2095,7 @@ SUBSCRIBE SET (
      obvious to intuition. </para> </listitem>
 
      <listitem><para> New subscriptions are set up by using
-     <command>DELETE</command> or <command>TRUNCATE</emphasis> to
+     <command>DELETE</command> or <command>TRUNCATE</command> to
      empty the table on a subscriber.  If you created a new node by
      copying data from an existing node, it might <quote>seem
      intuitive</quote> that that data should be kept; that is not the
@@ -2820,6 +2837,48 @@ REPAIR CONFIG (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.1 </para>
+   </refsect1>
+  </refentry>
+<!-- **************************************** -->
+
+  <refentry id="stmtsync"><refmeta><refentrytitle>SYNC</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+
+   <refnamediv><refname>SYNC</refname>
+    
+    <refpurpose> Generate an ordinary SYNC event </refpurpose></refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>SYNC (options);</command>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    
+    <para> Generates a SYNC event on a specified node.</para>
+    
+     <variablelist>
+      <varlistentry><term><literal> ID = ival </literal></term>
+       <listitem><para> The node on which to generate the SYNC event.</para></listitem>
+       
+      </varlistentry>
+     </variablelist>
+
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+     SUBSCRIBE SET (ID = 10, PROVIDER = 1, RECEIVER = 2);
+     WAIT FOR EVENT (ORIGIN = 2, CONFIRMED = 1);
+     SYNC (ID = 1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2);
+    </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> No application-visible locking should take place. </para>
+   </refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.1.6 / 1.2.1 </para>
    </refsect1>
   </refentry>
 
