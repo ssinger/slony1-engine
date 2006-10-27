@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.29 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.29.2.1 2006-10-27 15:35:32 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -100,8 +100,8 @@ Options[db_replication_lagtime]: gauge,nopercent,growright
 
 <indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
 
-<para> This script is in preliminary stages, and may be used to do
-some analysis of the state of a &slony1; cluster.</para>
+<para> This script does various sorts of analysis of the state of a
+&slony1; cluster.</para>
 
 <para> You specify arguments including <option>database</option>,
 <option>host</option>, <option>user</option>,
