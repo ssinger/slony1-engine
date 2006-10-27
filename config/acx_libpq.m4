@@ -107,6 +107,7 @@ if test -n "$PG_CONFIG_LOCATION"; then
             PG_INCLUDEDIR=$WIN32_PG_LOCATION/include
             PG_PKGLIBDIR=$WIN32_PG_LOCATION/lib
             PG_INCLUDESERVERDIR=$WIN32_PG_LOCATION/include/server
+            PG_SHAREDIR=$WIN32_PG_LOCATION/share
             ;;
         
         *)
@@ -130,6 +131,10 @@ if test -n "$PG_CONFIG_LOCATION"; then
         	PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
 		echo "pg_config says pg_includeserverdir is $PG_INCLUDESERVERDIR"
 	    fi
+            if test "$PG_SHAREDIR" = ""; then
+                PG_SHAREDIR=`$PG_CONFIG_LOCATION --sharedir`/ 2>/dev/null
+                echo "pg_config says pg_sharedir is $PG_SHAREDIR"
+            fi
             ;;
     esac
     
