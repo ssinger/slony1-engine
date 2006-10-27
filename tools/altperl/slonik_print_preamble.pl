@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_print_preamble.pl,v 1.2 2006-10-27 17:08:17 cbbrowne Exp $
+# $Id: slonik_print_preamble.pl,v 1.3 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
@@ -32,8 +32,7 @@ if ($SHOW_USAGE) {
 require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-$FILE="/tmp/print_preamble.$$";
-open (SLONIK, ">", $FILE);
-print SLONIK genheader();
-close SLONIK;
-run_slonik_script($FILE);
+my $slonik = '';
+$slonik .= genheader();
+
+run_slonik_script($slonik, 'PRINT PREAMBLE');

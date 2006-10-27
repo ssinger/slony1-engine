@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_unsubscribe_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_unsubscribe_set.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -43,15 +43,15 @@ if ($set =~ /^(?:set)?(\d+)$/) {
   die $USAGE;
 }
 
-open(SLONIK, ">", "/tmp/slonik-unsubscribe.$$");
-print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "      unsubscribe set (id = $set, receiver = $node);\n";
-print SLONIK "  }\n";
-print SLONIK "  on error {\n";
-print SLONIK "      echo 'Failed to unsubscribe node $node from set $set';\n";
-print SLONIK "      exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'unsubscribed node $node from set $set';\n";
-close SLONIK;
-run_slonik_script("/tmp/slonik-unsubscribe.$$");
+my $slonik = '';
+$slonik .= genheader();
+$slonik .= "  try {\n";
+$slonik .= "      unsubscribe set (id = $set, receiver = $node);\n";
+$slonik .= "  }\n";
+$slonik .= "  on error {\n";
+$slonik .= "      echo 'Failed to unsubscribe node $node from set $set';\n";
+$slonik .= "      exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'unsubscribed node $node from set $set';\n";
+
+run_slonik_script($slonik, 'UNSUBSCRIBE SET');

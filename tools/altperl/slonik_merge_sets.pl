@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_merge_sets.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_merge_sets.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -53,14 +53,15 @@ if ($set2 =~ /^(?:set)?(\d+)$/) {
 
 my ($dbname, $dbhost) = ($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
 
-open(SLONIK, ">", "/tmp/slonik.$$");
-print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "    merge set (id = $set1, add id = $set2, origin = $node);\n";
-print SLONIK "  } on error {\n";
-print SLONIK "    echo 'Failure to merge sets $set1 and $set2 with origin $node';\n";
-print SLONIK "    exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'Replication set $set2 merged in with $set1 on origin $node';\n";
-close SLONIK;
-run_slonik_script("/tmp/slonik.$$");
+my $slonik = '';
+
+$slonik .= genheader();
+$slonik .= "  try {\n";
+$slonik .= "    merge set (id = $set1, add id = $set2, origin = $node);\n";
+$slonik .= "  } on error {\n";
+$slonik .= "    echo 'Failure to merge sets $set1 and $set2 with origin $node';\n";
+$slonik .= "    exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'Replication set $set2 merged in with $set1 on origin $node';\n";
+
+run_slonik_script($slonik, 'MERGE SET');

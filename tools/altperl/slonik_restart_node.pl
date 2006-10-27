@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: slonik_restart_node.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_restart_node.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -47,11 +47,10 @@ else {
 
 die $USAGE unless scalar @nodes;
 
-my $FILE="/tmp/restart.$$";
-open(SLONIK, ">", $FILE);
-print SLONIK genheader();
+my $slonik = '';
+$slonik .= genheader();
 foreach my $node (@nodes) {
-    print SLONIK "  restart node $node;\n";
+    $slonik .= "  restart node $node;\n";
 }
-close SLONIK;
-run_slonik_script($FILE);
+
+run_slonik_script($slonik, 'RESTART NODE');

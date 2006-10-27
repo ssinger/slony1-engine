@@ -1,9 +1,10 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_execute_script.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
 use Getopt::Long;
+use File::Temp qw(tempfile);
 
 # Defaults
 $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
@@ -13,6 +14,10 @@ $SCRIPT_ARG  = "";
 # Allow this to be specified.  Otherwise it will be pulled from
 # the get_set function.
 $node = 0;
+
+# temp file variable for script handling
+my $filename = '';
+my $fh       = undef;
 
 # Read command-line options
 GetOptions("config=s" => \$CONFIG_FILE,
@@ -69,9 +74,7 @@ if ($file) {
 }
 elsif ($SCRIPT_ARG) {
     # Put the script into a file
-    $file = "/tmp/execute_script.sql.$$";
-    my $fh;
-    open $fh, ">", $file;
+    ($fh, $filename) = tempfile();
     print $fh $SCRIPT_ARG;
     close $fh;
 }
@@ -80,13 +83,13 @@ else {
     die $USAGE;
 }
 
-my $FILE="/tmp/gensql.$$";
-open(SLONIK, ">", $FILE);
-print SLONIK genheader();
-print SLONIK "  execute script (\n";
-print SLONIK "    set id = $set,\n";
-print SLONIK "    filename = '$file',\n";
-print SLONIK "    event node = $node\n";
-print SLONIK "  );\n";
-close SLONIK;
-run_slonik_script($FILE);
+my $slonik = '';
+
+$slonik .= genheader();
+$slonik .= "  execute script (\n";
+$slonik .= "    set id = $set,\n";
+$slonik .= "    filename = '$filename',\n";
+$slonik .= "    event node = $node\n";
+$slonik .= "  );\n";
+
+run_slonik_script($slonik, 'EXECUTE SCRIPT');

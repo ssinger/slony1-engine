@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_uninstall_nodes.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_uninstall_nodes.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -28,13 +28,12 @@ if ($SHOW_USAGE) {
 require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-$FILE="/tmp/slonik.$$";
-open(SLONIK, ">$FILE");
-print SLONIK genheader();
+my $slonik = '';
+$slonik .= genheader();
 foreach my $node (@NODES) {
     next if $node == $MASTERNODE; # Do this one last
-    print SLONIK "  uninstall node (id=$node);\n";
+    $slonik .= "  uninstall node (id=$node);\n";
 }
-print SLONIK "  uninstall node (id=$MASTERNODE);\n";
-close SLONIK;
-run_slonik_script($FILE);
+$slonik .= "  uninstall node (id=$MASTERNODE);\n";
+
+run_slonik_script($slonik, 'UNINSTALL NODE');

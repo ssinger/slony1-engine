@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_node.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_drop_node.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -35,15 +35,15 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-my $FILE="/tmp/slonik-drop.$$";
-open(SLONIK, ">", $FILE);
-print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "      drop node (id = $node, event node = $MASTERNODE);\n";
-print SLONIK "  } on error {\n";
-print SLONIK "      echo 'Failed to drop node $node from cluster';\n";
-print SLONIK "      exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'dropped node $node cluster';\n";
-close SLONIK;
-run_slonik_script($FILE);
+my $slonik = '';
+
+$slonik .= genheader();
+$slonik .= "  try {\n";
+$slonik .= "      drop node (id = $node, event node = $MASTERNODE);\n";
+$slonik .= "  } on error {\n";
+$slonik .= "      echo 'Failed to drop node $node from cluster';\n";
+$slonik .= "      exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'dropped node $node cluster';\n";
+
+run_slonik_script($slonik, 'DROP NODE');

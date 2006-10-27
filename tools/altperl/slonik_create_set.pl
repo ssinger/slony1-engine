@@ -1,6 +1,6 @@
 #!@@PERL@@
 
-# $Id: slonik_create_set.pl,v 1.3 2005-11-15 18:09:59 cbbrowne Exp $
+# $Id: slonik_create_set.pl,v 1.4 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -20,6 +20,8 @@ my $USAGE =
 
 ";
 
+my $slonik = ''; 
+
 if ($SHOW_USAGE) {
     print $USAGE;
     exit 0;
@@ -34,58 +36,56 @@ unless ($SET_ID) {
     die $USAGE;
 }
 
-$FILE="/tmp/add_tables.$$";
-open (SLONIK, ">", $FILE);
-print SLONIK genheader();
+$slonik .= genheader();
 
 # Tables without primary keys
-print SLONIK "\n";
-print SLONIK "# TABLE ADD KEY\n";
+$slonik .= "\n";
+$slonik .= "# TABLE ADD KEY\n";
 foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
     $table = lc($table) if $FOLD_CASE;
-    print SLONIK "  echo '  Adding unique key to table $table...';\n";
-    print SLONIK "  table add key (\n";
-    print SLONIK "    node id = $SET_ORIGIN,\n";
-    print SLONIK "    full qualified name='$table'\n";
-    print SLONIK "  );\n";
+    $slonik .= "  echo '  Adding unique key to table $table...';\n";
+    $slonik .= "  table add key (\n";
+    $slonik .= "    node id = $SET_ORIGIN,\n";
+    $slonik .= "    full qualified name='$table'\n";
+    $slonik .= "  );\n";
 }
 
 # CREATE SET
-print SLONIK "\n";
-print SLONIK "# CREATE SET\n";
-print SLONIK "  try {\n";
-print SLONIK "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
-print SLONIK "  } on error {\n";
-print SLONIK "    echo 'Could not create subscription set $SET_ID for $CLUSTER_NAME!';\n";
-print SLONIK "    exit -1;\n";
-print SLONIK "  }\n";
+$slonik .= "\n";
+$slonik .= "# CREATE SET\n";
+$slonik .= "  try {\n";
+$slonik .= "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
+$slonik .= "  } on error {\n";
+$slonik .= "    echo 'Could not create subscription set $SET_ID for $CLUSTER_NAME!';\n";
+$slonik .= "    exit -1;\n";
+$slonik .= "  }\n";
 
 # SET ADD TABLE
-print SLONIK "\n";
-print SLONIK "# SET ADD TABLE\n";
-print SLONIK "  echo 'Subscription set $SET_ID created';\n";
-print SLONIK "  echo 'Adding tables to the subscription set';\n";
+$slonik .= "\n";
+$slonik .= "# SET ADD TABLE\n";
+$slonik .= "  echo 'Subscription set $SET_ID created';\n";
+$slonik .= "  echo 'Adding tables to the subscription set';\n";
 
 $TABLE_ID = 1 if $TABLE_ID < 1;
 
 foreach my $table (@SERIALTABLES) {
     $table = ensure_namespace($table);
 	$table = lc($table) if $FOLD_CASE;
-    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
-    print SLONIK "                 full qualified name = '$table', key=serial,\n";
-    print SLONIK "                 comment = 'Table $table without primary key');\n";
-    print SLONIK "  echo 'Add unkeyed table $table';\n";
+    $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
+    $slonik .= "                 full qualified name = '$table', key=serial,\n";
+    $slonik .= "                 comment = 'Table $table without primary key');\n";
+    $slonik .= "  echo 'Add unkeyed table $table';\n";
     $TABLE_ID++;
 }
 
 foreach my $table (@PKEYEDTABLES) {
     $table = ensure_namespace($table);
 	$table = lc($table) if $FOLD_CASE;
-    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
-    print SLONIK "                 full qualified name = '$table',\n";
-    print SLONIK "                 comment = 'Table $table with primary key');\n";
-    print SLONIK "  echo 'Add primary keyed table $table';\n";
+    $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
+    $slonik .= "                 full qualified name = '$table',\n";
+    $slonik .= "                 comment = 'Table $table with primary key');\n";
+    $slonik .= "  echo 'Add primary keyed table $table';\n";
     $TABLE_ID++;
 }
 
@@ -93,32 +93,31 @@ foreach my $table (keys %KEYEDTABLES) {
     my $key = $KEYEDTABLES{$table};
     $table = ensure_namespace($table);
 	$table = lc($table) if $FOLD_CASE;
-    print SLONIK "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
-    print SLONIK "                 full qualified name = '$table', key='$key',\n";
-    print SLONIK "                 comment = 'Table $table with candidate primary key $key');\n";
-    print SLONIK "  echo 'Add candidate primary keyed table $table';\n";
+    $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
+    $slonik .= "                 full qualified name = '$table', key='$key',\n";
+    $slonik .= "                 comment = 'Table $table with candidate primary key $key');\n";
+    $slonik .= "  echo 'Add candidate primary keyed table $table';\n";
     $TABLE_ID++;
 }
 
 # SET ADD SEQUENCE
-print SLONIK "\n";
-print SLONIK "# SET ADD SEQUENCE\n";
-print SLONIK "  echo 'Adding sequences to the subscription set';\n";
+$slonik .= "\n";
+$slonik .= "# SET ADD SEQUENCE\n";
+$slonik .= "  echo 'Adding sequences to the subscription set';\n";
 
 $SEQUENCE_ID = 1 if $SEQUENCE_ID < 1;
 foreach my $seq (@SEQUENCES) {
     $seq = ensure_namespace($seq);
 	$seq = lc($seq) if $FOLD_CASE;
-    print SLONIK "  set add sequence (set id = $SET_ID, origin = $SET_ORIGIN, id = $SEQUENCE_ID,\n";
-    print SLONIK "                    full qualified name = '$seq',\n";
-    print SLONIK "                    comment = 'Sequence $seq');\n";
-    print SLONIK "  echo 'Add sequence $seq';\n";
+    $slonik .= "  set add sequence (set id = $SET_ID, origin = $SET_ORIGIN, id = $SEQUENCE_ID,\n";
+    $slonik .= "                    full qualified name = '$seq',\n";
+    $slonik .= "                    comment = 'Sequence $seq');\n";
+    $slonik .= "  echo 'Add sequence $seq';\n";
     $SEQUENCE_ID++;
 }
-print SLONIK "  echo 'All tables added';\n";
+$slonik .= "  echo 'All tables added';\n";
 
-close SLONIK;
-run_slonik_script($FILE);
+run_slonik_script($slonik, 'CREATE SET');
 
 ### If object hasn't a namespace specified, assume it's in "public", and make it so...
 sub ensure_namespace {

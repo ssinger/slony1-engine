@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_update_nodes.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_update_nodes.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -28,10 +28,10 @@ if ($SHOW_USAGE) {
 require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-open(SLONIK, ">", "/tmp/update_nodes.$$");
-print SLONIK genheader();
+my $slonik = '';
+$slonik .= genheader();
 foreach my $node (@NODES) {
-  print SLONIK "  update functions (id = $node);\n";
+  $slonik .= "  update functions (id = $node);\n";
 };
-close SLONIK;
-run_slonik_script("/tmp/update_nodes.$$");
+
+run_slonik_script($slonik, 'UPDATE FUNCTIONS');
