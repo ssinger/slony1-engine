@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.26 2005-11-15 18:09:59 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.26.2.1 2006-10-27 15:25:11 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -83,18 +83,15 @@ sub genheader {
 # then invokes it and deletes it
 sub run_slonik_script {
   my ($script) = @_;
-  chomp $script;
   open(OUT, ">>$LOGDIR/slonik_scripts.log");
   my $now = `date`;
   chomp $now;
   print OUT "# -------------------------------------------------------------\n";
   print OUT "# Script: $script submitted at $now \n";
   print OUT "# -------------------------------------------------------------\n";
+  print OUT $script;
   close OUT;
-  `cat $script >> $LOGDIR/slonik_scripts.log`;
-  #print `slonik < $script`;
-  print `cat $script`;
-  unlink($script);
+  print $script;
 }
 
 sub ps_args {

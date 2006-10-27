@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_subscribe_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_subscribe_set.pl,v 1.1.4.1 2006-10-27 15:25:11 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -45,10 +45,10 @@ if ($set =~ /^(?:set)?(\d+)$/) {
 
 get_set($set) or die "Non-existent set specified.\n";
 
-$FILE="/tmp/slonik-subscribe.$$";
-open(SLONIK, ">$FILE");
-print SLONIK genheader();
-print SLONIK "  try {\n";
+my $slonik = '';
+
+$slonik .= genheader();
+$slonik .= "  try {\n";
 
 if ($DSN[$node]) {
   my $provider = $SET_ORIGIN;
@@ -61,15 +61,14 @@ if ($DSN[$node]) {
   } else {
     $forward = "yes";
   }
-  print SLONIK "    subscribe set (id = $set, provider = $provider, receiver = $node, forward = $forward);\n";
+  $slonik .= "    subscribe set (id = $set, provider = $provider, receiver = $node, forward = $forward);\n";
 } else {
   die "Node $node not found\n";
 }
 
-print SLONIK "  }\n";
-print SLONIK "  on error {\n";
-print SLONIK "    exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'Subscribed nodes to set $set';\n";
-close SLONIK;
-run_slonik_script($FILE);
+$slonik .= "  }\n";
+$slonik .= "  on error {\n";
+$slonik .= "    exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'Subscribed nodes to set $set';\n";
+run_slonik_script($slonik);
