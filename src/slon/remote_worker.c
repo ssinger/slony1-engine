@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.127 2006-10-25 15:44:47 wieck Exp $
+ *	$Id: remote_worker.c,v 1.128 2006-10-27 20:10:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -22,11 +22,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#include "libpq-fe.h"
-#include "c.h"
-
 #include "slon.h"
-#include "confoptions.h"
 #include "../parsestatements/scanner.h"
 extern int STMTS[MAXSTATEMENTS];
 

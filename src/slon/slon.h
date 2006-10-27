@@ -6,17 +6,19 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.60 2006-10-25 15:44:47 wieck Exp $
+ *	$Id: slon.h,v 1.61 2006-10-27 20:10:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
 #ifndef SLON_H_INCLUDED
 #define SLON_H_INCLUDED
 
-
 #include "config.h"
+#include "libpq-fe.h"
+#include "postgres_fe.h"
 #include "misc.h"
 #include "conf-file.h"
+#include "confoptions.h"
 
 #define SLON_MEMDEBUG	1
 

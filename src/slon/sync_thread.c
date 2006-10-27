@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.17 2005-11-22 05:11:59 wieck Exp $
+ *	$Id: sync_thread.c,v 1.18 2006-10-27 20:10:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -21,9 +21,6 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
-
-#include "libpq-fe.h"
-#include "c.h"
 
 #include "slon.h"
 

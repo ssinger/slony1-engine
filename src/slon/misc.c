@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.22 2005-11-22 05:11:58 wieck Exp $
+ *	$Id: misc.c,v 1.23 2006-10-27 20:10:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -31,10 +31,6 @@
 #endif
 #include <stdarg.h>
 
-#include "libpq-fe.h"
-#include "c.h"
-
-#include "confoptions.h"
 #include "slon.h"
 
 

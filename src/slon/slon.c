@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.66 2006-08-02 14:29:39 xfade Exp $
+ *	$Id: slon.c,v 1.67 2006-10-27 20:10:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,11 +29,7 @@
 #include "port/win32service.h"
 #endif
 
-#include "libpq-fe.h"
-#include "c.h"
-
 #include "slon.h"
-#include "confoptions.h"
 
 
 /* ---------- 

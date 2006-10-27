@@ -4,8 +4,6 @@
  * Functions in misc.c
  * ----------
  */
-#include "config.h"
-#include "c.h"
 
 typedef enum
 {

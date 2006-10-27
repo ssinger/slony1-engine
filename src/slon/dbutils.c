@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.23 2006-07-26 12:32:09 darcyb Exp $
+ *	$Id: dbutils.c,v 1.24 2006-10-27 20:10:57 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -22,9 +22,6 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
-
-#include "libpq-fe.h"
-#include "c.h"
 
 #include "slon.h"
 
