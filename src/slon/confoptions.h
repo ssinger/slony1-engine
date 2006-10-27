@@ -1,6 +1,8 @@
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 
+#include "c.h"
+
 void		InitializeConfOptions(void);
 
 bool		set_config_option(const char *name, const char *value);

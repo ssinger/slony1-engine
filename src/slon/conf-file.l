@@ -12,7 +12,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "slon.h"
+#include "misc.h"
+#include "confoptions.h"
 
 
 #define CONFIG_FILENAME "./slon.conf"

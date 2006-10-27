@@ -1,8 +1,11 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
-#include "slon.h"
-
+#include "libpq-fe.h"
+#include "confoptions.h"
+#include "postgres.h"
+#include "misc.h"
+ 
 #ifdef qsort 
 #undef qsort 
 #endif

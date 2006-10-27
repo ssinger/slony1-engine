@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.27.2.1 2006-10-27 19:49:21 cbbrowne Exp $
+ *	$Id: runtime_config.c,v 1.27.2.2 2006-10-27 20:09:56 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -23,6 +23,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "libpq-fe.h"
+#include "c.h"
 #include "slon.h"
 
 
