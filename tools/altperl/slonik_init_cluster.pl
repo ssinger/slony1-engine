@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.1.4.1 2006-10-27 15:03:08 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.1.4.2 2006-10-27 17:54:21 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -61,20 +61,29 @@ foreach my $nodea (@NODES) {
       my $providerba = $VIA[$nodea][$nodeb];
       my $providerab = $VIA[$nodeb][$nodea];
       if (!$printed[$nodea][$nodeb] and $providerab == $nodea) {
-	print SLONIK "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
+	$slonik .= "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
 	$printed[$nodea][$nodeb] = "done";
       }
       if (!$printed[$nodeb][$nodea] and $providerba == $nodea) {
-	print SLONIK "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
+	$slonik .= "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
 	$printed[$nodeb][$nodea] = "done";
       }
     }
   }
 }
 
+# STORE LISTEN
+print SLONIK "\n# STORE LISTEN\n";
+foreach my $origin (@NODES) {
+  my $dsna = $DSN[$origin];
+  foreach my $receiver (@NODES) {
+    if ($origin != $receiver) {
+      my $provider = $VIA[$origin][$receiver];
+      print SLONIK "  store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
+    }
+  }
+}
 print SLONIK "  echo 'Replication nodes prepared';\n";
 print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
 close SLONIK;
 run_slonik_script($FILE);
-
-

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_store_node.pl,v 1.2 2006-05-30 14:50:52 cbbrowne Exp $
+# $Id: slonik_store_node.pl,v 1.2.2.1 2006-10-27 17:54:21 cbbrowne Exp $
 # Author: Steve Simms
 # Copyright 2005 PostgreSQL Global Development Group
 
@@ -39,26 +39,25 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-my $FILE="/tmp/store_node.$$";
+my $slonik = '';
 
-open(SLONIK, ">", $FILE);
-print SLONIK genheader();
+$slonik .= genheader();
 
 # STORE NODE
-print SLONIK "\n# STORE NODE\n";
+$slonik .= "\n# STORE NODE\n";
 my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
-print SLONIK "  store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
-print SLONIK "  echo 'Set up replication nodes';\n";
+$slonik .= "  store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
+$slonik .= "  echo 'Set up replication nodes';\n";
 
 # STORE PATH
-print SLONIK "\n# STORE PATH\n";
+$slonik .= "\n# STORE PATH\n";
 
 my @COST;
 my @VIA;
 my @PATH;
 generate_listen_paths();
 
-print SLONIK "  echo 'Next: configure paths for each node/origin';\n";
+$slonik .= "  echo 'Next: configure paths for each node/origin';\n";
 foreach my $nodea (@NODES) {
     my $dsna = $DSN[$nodea];
     foreach my $nodeb (@NODES) {
@@ -68,21 +67,21 @@ foreach my $nodea (@NODES) {
 	    my $providerba = $VIA[$nodea][$nodeb];
 	    my $providerab = $VIA[$nodeb][$nodea];
 	    if (!$printed[$nodea][$nodeb] and $providerab == $nodea) {
-		print SLONIK "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
+		$slonik .= "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
 		$printed[$nodea][$nodeb] = "done";
 	    }
 	    if (!$printed[$nodeb][$nodea] and $providerba == $nodea) {
-		print SLONIK "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
+		$slonik .= "  store path (server = $nodeb, client = $nodea, conninfo = '$dsnb');\n";
 		$printed[$nodeb][$nodea] = "done";
 	    }
 	}
     }
 }
 
-print SLONIK "  echo 'Replication nodes prepared';\n";
-print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
-close SLONIK;
-run_slonik_script($FILE);
+$slonik .= "  echo 'Replication nodes prepared';\n";
+$slonik .= "  echo 'Please start a slon replication daemon for each node';\n";
+
+run_slonik_script($slonik, 'STORE NODE');
 report_on_paths();
 
 sub generate_listen_paths {

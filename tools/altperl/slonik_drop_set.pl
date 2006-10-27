@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_set.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_drop_set.pl,v 1.1.4.1 2006-10-27 17:54:21 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -38,14 +38,14 @@ if ($set =~ /^(?:set)?(\d+)$/) {
 
 get_set($set) or die "Non-existent set specified.\n";
 
-$FILE = "/tmp/dropset.$$";
-open(SLONIK, ">", $FILE);
-print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "        drop set (id = $set, origin = $SET_ORIGIN);\n";
-print SLONIK "  } on error {\n";
-print SLONIK "        exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'Dropped set $set';\n";
-close SLONIK;
-run_slonik_script($FILE);
+my $slonik = '';
+
+$slonik .= genheader();
+$slonik .= "  try {\n";
+$slonik .= "        drop set (id = $set, origin = $SET_ORIGIN);\n";
+$slonik .= "  } on error {\n";
+$slonik .= "        exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'Dropped set $set';\n";
+
+run_slonik_script($slonik, 'DROP SET');

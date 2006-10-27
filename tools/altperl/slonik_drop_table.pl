@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_table.pl,v 1.1.2.1 2006-10-27 17:10:27 cbbrowne Exp $
+# $Id: slonik_drop_table.pl,v 1.1.2.2 2006-10-27 17:54:21 cbbrowne Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
@@ -40,20 +40,18 @@ unless ($TABLE_ID && $SET_ID) {
     die $USAGE;
 }
 
-$FILE="/tmp/drop_table.$$";
-open (SLONIK, ">", $FILE);
-print SLONIK genheader();
+my $slonik = '';
+
+$slonik .= genheader();
 
 # DROP TABLE
-print SLONIK "\n";
-print SLONIK "# DROP TABLE \n";
-print SLONIK "  try {\n";
-print SLONIK "    SET DROP TABLE (id = $TABLE_ID, origin = $SET_ORIGIN);\n";
-print SLONIK "  } on error {\n";
-print SLONIK "    echo 'Could not drop table $TABLE_ID for $CLUSTER_NAME!';\n";
-print SLONIK "    exit -1;\n";
-print SLONIK "  }\n";
+$slonik .= "\n";
+$slonik .= "# DROP TABLE \n";
+$slonik .= "  try {\n";
+$slonik .= "    SET DROP TABLE (id = $TABLE_ID, origin = $SET_ORIGIN);\n";
+$slonik .= "  } on error {\n";
+$slonik .= "    echo 'Could not drop table $TABLE_ID for $CLUSTER_NAME!';\n";
+$slonik .= "    exit -1;\n";
+$slonik .= "  }\n";
 
-
-close SLONIK;
-run_slonik_script($FILE);
+run_slonik_script($slonik, 'DROP TABLE');

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_failover.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_failover.pl,v 1.1.4.1 2006-10-27 17:54:21 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -45,14 +45,14 @@ if ($node2 =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-open(SLONIK, ">", "/tmp/slonik.$$");
-print SLONIK genheader();
-print SLONIK "  try {\n";
-print SLONIK "      failover (id = $node1, backup node = $node2);\n";
-print SLONIK "  } on error {\n";
-print SLONIK "      echo 'Failure to fail node $node1 over to $node2';\n";
-print SLONIK "      exit 1;\n";
-print SLONIK "  }\n";
-print SLONIK "  echo 'Replication sets originating on $node1 failed over to $node2';\n";
-close SLONIK;
-run_slonik_script("/tmp/slonik.$$");
+my $slonik = '';
+$slonik .= genheader();
+$slonik .= "  try {\n";
+$slonik .= "      failover (id = $node1, backup node = $node2);\n";
+$slonik .= "  } on error {\n";
+$slonik .= "      echo 'Failure to fail node $node1 over to $node2';\n";
+$slonik .= "      exit 1;\n";
+$slonik .= "  }\n";
+$slonik .= "  echo 'Replication sets originating on $node1 failed over to $node2';\n";
+
+run_slonik_script($slonik, 'FAILOVER');
