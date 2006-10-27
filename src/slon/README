@@ -1,4 +1,4 @@
-$Id: README,v 1.7 2004-12-02 21:41:43 cbbrowne Exp $
+$Id: README,v 1.7.4.1 2006-10-27 21:15:06 cbbrowne Exp $
 
 Directory src/slon
 
@@ -37,8 +37,10 @@ Major components:
 
   This thread runs every so often and does various forms of cleanup:
    - Cleans up event table to remove old entries
-   - Removes obsolete entries from sl_log_1, sl_seqlog
+   - Removes obsolete entries from sl_log_1, sl_log_2, sl_seqlog
    - Vacuums tables that Slony-I uses
+   - Once in a while, it calls logswitch_weekly(), which tries to
+     rotate between sl_log_1 and sl_log_2 periodically
 
  - conf-file.l
    A lex grammar for slon configuration files
