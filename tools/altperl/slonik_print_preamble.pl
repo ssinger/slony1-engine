@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_print_preamble.pl,v 1.1 2006-05-30 14:52:35 cbbrowne Exp $
+# $Id: slonik_print_preamble.pl,v 1.1.2.1 2006-10-27 17:10:27 cbbrowne Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
@@ -7,7 +7,7 @@
 
 use Getopt::Long;
 
-$CONFIG_FILE = '/usr/local/etc/slon_tools.conf';
+$CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
@@ -29,7 +29,7 @@ if ($SHOW_USAGE) {
     exit 0;
 }
 
-require '/usr/local/pgsql/lib//slon-tools.pm';
+require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 $FILE="/tmp/print_preamble.$$";
