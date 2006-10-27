@@ -1,11 +1,11 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
-#include "libpq-fe.h"
-#include "confoptions.h"
-#include "postgres.h"
-#include "misc.h"
+#include "slon.h"
 
+#ifdef qsort 
+#undef qsort 
+#endif
 
 static struct config_generic **conf_variables;
 static int	size_conf_variables;

@@ -6,9 +6,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "libpq-fe.h"
-#include "c.h"
-
 #include "slon.h"
 
 #include <net-snmp/net-snmp-includes.h>

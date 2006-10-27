@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.31 2006-08-02 07:05:53 xfade Exp $
+ *	$Id: remote_listen.c,v 1.31.2.1 2006-10-27 19:49:21 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -22,9 +22,6 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
-
-#include "libpq-fe.h"
-#include "c.h"
 
 #include "slon.h"
 
