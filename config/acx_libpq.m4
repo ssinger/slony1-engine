@@ -139,13 +139,12 @@ if test -n "$PG_CONFIG_LOCATION"; then
     esac
     
     PG_CONFIGURE=`$PG_CONFIG_LOCATION --configure`
-    PG_VERSION=`$PG_CONFIG_LOCATION --version|cut -f2- -d' '|cut -f1 -d'd'|cut -f-2 -d'.'`
+    pg_config_version=`$PG_CONFIG_LOCATION --version`
+    PG_VERSION=`expr "$pg_config_version" : '[[^0-9]]*\([[0-9]]*\.[[0-9]]*\)'`
 
     AC_MSG_CHECKING(for correct version of PostgreSQL)
-    PG_VERSION_MAJOR=`echo $PG_VERSION |\
-           sed 's/\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-    PG_VERSION_MINOR=`echo $PG_VERSION |\
-           sed 's/\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+    PG_VERSION_MAJOR=`echo $PG_VERSION | cut -d. -f1`
+    PG_VERSION_MINOR=`echo $PG_VERSION | cut -d. -f2`
     if test "$PG_VERSION_MAJOR" = "7"; then
 	if test $PG_VERSION_MINOR -gt 3; then
 	    AC_MSG_RESULT($PG_VERSION)
