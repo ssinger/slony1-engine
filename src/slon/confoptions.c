@@ -71,7 +71,7 @@ build_conf_variables(void)
 	conf_vars = (struct config_generic **) malloc(size_vars * sizeof(struct config_generic *));
 	if (conf_vars == NULL)
 	{
-		slon_log(FATAL, "malloc failed");
+		slon_log(SLON_FATAL, "malloc failed");
 		return;
 	}
 	num_vars = 0;
