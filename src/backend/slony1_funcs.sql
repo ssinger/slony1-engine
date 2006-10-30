@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98 2006-09-14 18:48:34 xfade Exp $
+-- $Id: slony1_funcs.sql,v 1.99 2006-10-30 14:48:18 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -2537,6 +2537,20 @@ begin
 	then
 		raise exception ''Slony-I: subscriber lists of set % and % are different'',
 				p_add_id, p_set_id;
+	end if;
+
+	-- ----
+	-- Check that all ENABLE_SUBSCRIPTION events for the set are confirmed
+	-- ----
+	if exists (select true from @NAMESPACE@.sl_event
+			where ev_type = ''ENABLE_SUBSCRIPTION''
+			and ev_data1 = p_add_id
+			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
+					where con_origin = ev_origin
+					and con_received = ev_data3))
+	then
+		raise exception ''Slony-I: set % has subscriptions in progress - cannot merge'',
+				p_add_id;
 	end if;
 
 	-- ----
