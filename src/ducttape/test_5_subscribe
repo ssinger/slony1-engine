@@ -33,7 +33,7 @@ slonik <<_EOF_
 	echo '***** Subscribe set received on origin - issue SYNC';
 	sync (id = 1);
 	echo '***** Waiting for SYNC to be done on subscriber';
-	wait for event (origin = 1, confirmed = 2);
+	wait for event (origin = 1, confirmed = 2, wait on = 1);
 	echo '***** Subscription complete';
 _EOF_
 
