@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.24 2006-10-27 15:34:16 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.25 2006-10-30 16:29:45 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -26,7 +26,11 @@ linkend="stmtmergeset">.</para>
 if <xref linkend="stmtmergeset"> is issued while other
 subscription-related events are pending, it is possible for things to
 get pretty confused on the nodes where other things were pending.
-This problem was resolved in 1.0.5.</para>
+This problem was resolved in 1.0.5.  Up until 1.2.1, there was still a
+problem where <xref linkend="stmtmergeset"> could be requested before
+all the subscriptions were complete, which would <quote>muss things
+up</quote> on nodes where subscription activity was still under
+way. </para>
 
 <para> Note that if you add nodes, you will need to add both <xref
 linkend="stmtstorepath"> statements to indicate how nodes communicate
@@ -109,9 +113,7 @@ WAIT FOR EVENT (ORIGIN=1, CONFIRMED=2);
 <listitem><para> Once the subscriptions have all been set up so that
 the new set has an identical set of subscriptions to the old set, you
 can merge the new set in alongside the old one via <xref
-linkend="stmtmergeset"> If you submit the request too soon, there is
-the risk that the subscription won't actually be complete on all
-nodes, and some subscribers may break down.  </para></listitem>
+linkend="stmtmergeset"> </para></listitem>
 </itemizedlist>
 </sect2>
 

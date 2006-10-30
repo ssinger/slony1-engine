@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.4 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.5 2006-10-30 16:29:45 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -541,6 +541,48 @@ connections... </para></listitem>
 
 <para> Indicates the total time required to complete copy_set...  This indicates a successful subscription!</para>
 </listitem>
+
+<listitem><para><command>DEBUG1: remoteWorkerThread_%d: copy_set %d done in %.3f seconds</command></para> 
+
+<para> Indicates the total time required to complete copy_set...  This indicates a successful subscription!</para>
+</listitem>
+
+</itemizedlist>
+</sect3>
+<sect3 id="logmergeset"> <title> Log Entries Associated with MERGE SET</title>
+
+<para> These various exceptions cause <xref linkend="stmtmergeset"> to
+be rejected; something ought to be corrected before submitting the request again. </para>
+
+<itemizedlist>
+<listitem><para><command>ERROR: Slony-I: merged set ids cannot be identical</command></para> 
+
+<para> It is illogical to try to merge a set with itself. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: set % not found </command></para> 
+
+<para> A missing set cannot be merged. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: set % does not originate on local node</command></para> 
+
+<para> The <xref linkend="stmtmergeset"> request must be submitted to
+the origin node for the sets that are to be merged. </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: subscriber lists of set % and % are different</command></para> 
+
+<para> Sets can only be merged if they have identical subscriber
+lists.  </para></listitem>
+
+<listitem><para><command>ERROR: Slony-I: set % has subscriptions in progress - cannot merge</command></para> 
+
+<para> <xref linkend="stmtmergeset"> cannot proceed until all
+subscriptions have completed processing.  If this message arises, that
+indicates that the subscriber lists <emphasis>are</emphasis> the same,
+but that one or more of the nodes has not yet completed setting up its
+subscription.  It may be that waiting a short while will permit
+resubmitting the <xref linkend="stmtmergeset"> request.
+</para></listitem>
+
 </itemizedlist>
 </sect3>
 

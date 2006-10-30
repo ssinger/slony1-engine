@@ -1282,7 +1282,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
    </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
-   was introduced in &slony1; 1.0.5 </para>
+   was introduced in &slony1; 1.0.5.  In 1.2.1, a race condition was
+   rectified where the merge request would be submitted while
+   subscriptions were still in process on subscribers; it refuses to
+   merge before subscriptions are complete.  </para>
    </refsect1>
   </refentry>
 
@@ -1304,7 +1307,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refsect1>
     <title>Description</title>
     
-    <para> Add an existing user table to a replication set. The set
+    <para> Add an existing usep table to a replication set. The set
     cannot currently be subscribed by any other node - that
     functionality is supported by the <xref linkend="stmtmergeset">
     command.
