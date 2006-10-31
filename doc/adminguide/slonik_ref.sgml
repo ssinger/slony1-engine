@@ -2316,6 +2316,36 @@ WAIT FOR EVENT (
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
+<!-- **************************************** -->
+  
+  <refentry id ="stmtsleep"><refmeta><refentrytitle>SLEEP</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+   
+   <refnamediv><refname>SLEEP</refname>
+    
+    <refpurpose> Sleep using system <function>sleep()</function> </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>sleep </command>
+     <arg><replaceable class="parameter"> seconds</replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+     Sleeps for the specified number of seconds.
+    </para>
+   </Refsect1>
+   <Refsect1><Title>Example</Title>
+    <Programlisting>
+     sleep (seconds = 5);
+    </Programlisting>
+   </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.1.6 / 1.2.1. </para>
+   </refsect1>
+  </Refentry>
  </reference>
 <!-- Keep this comment at the end of the file
 Local variables:

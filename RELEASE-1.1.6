@@ -1,0 +1,16 @@
+$Id: RELEASE-1.1.6,v 1.1.2.1 2006-10-31 22:17:24 cbbrowne Exp $
+
+A number of minor bugs have been dealt with, plus the following more significant changes:
+
+- Added a SYNC slonik command to allow requesting a SYNC event.
+  This is a more useful thing to wait for than a SUBSCRIBE SET.
+
+- MERGE SET now refuses to be applied if a subscriber has not
+  yet confirmed post-subscription events
+
+- Added a SLEEP slonik command to allow writing code that tells
+  the script to pause for some number of seconds
+
+- Fixed a concurrency problem where if you had multiple log
+  shipped nodes, the threads processing them shared a single
+  file descriptor as well as other variables.

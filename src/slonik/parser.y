@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.22.2.2 2006-10-26 20:43:25 wieck Exp $
+ *	$Id: parser.y,v 1.22.2.3 2006-10-31 22:17:25 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -39,6 +39,7 @@ typedef enum {
 	O_ORIGIN,
 	O_PROVIDER,
 	O_RECEIVER,
+	O_SECONDS,
 	O_SERVER,
 	O_SER_KEY,
 	O_SET_ID,
@@ -160,6 +161,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_repair_config
 %type <statement>	stmt_wait_event
 %type <statement>	stmt_sync
+%type <statement>	stmt_sleep
 %type <opt_list>	option_list
 %type <opt_list>	option_list_item
 %type <opt_list>	option_list_items
@@ -179,8 +181,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_CLUSTER
 %token	K_CLUSTERNAME
 %token	K_COMMENT
-%token	K_CONFIRMED
 %token	K_CONFIG
+%token	K_CONFIRMED
 %token	K_CONNINFO
 %token	K_CONNRETRY
 %token	K_CREATE
@@ -217,17 +219,18 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_PROVIDER
 %token	K_QUALIFIED
 %token	K_RECEIVER
-%token  K_REPAIR
 %token	K_RESTART
 %token	K_SCRIPT
 %token	K_SEQUENCE
 %token	K_SERIAL
 %token	K_SERVER
 %token	K_SET
+%token	K_SLEEP
 %token	K_SPOOLNODE
 %token	K_STORE
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
+%token	K_SYNC
 %token	K_TABLE
 %token	K_TIMEOUT
 %token	K_TRIGGER
@@ -237,9 +240,10 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_UNLOCK
 %token	K_UNSUBSCRIBE
 %token	K_UPDATE
-%token	K_YES
 %token	K_WAIT
-%token	K_SYNC
+%token	K_YES
+%token  K_REPAIR
+%token  K_SECONDS
 
 /*
  * Other scanner tokens
@@ -472,8 +476,8 @@ try_stmt			: stmt_echo
 					| stmt_ddl_script
 						{ $$ = $1; }
 					| stmt_update_functions
-					| stmt_repair_config
 						{ $$ = $1; }
+					| stmt_repair_config
 						{ $$ = $1; }
 					| stmt_wait_event
 						{ $$ = $1; }
@@ -481,6 +485,8 @@ try_stmt			: stmt_echo
 						{ yyerrok;
 						  $$ = $1; }
 					| stmt_sync
+						{ $$ = $1; }
+					| stmt_sleep
 						{ $$ = $1; }
 					;
 
@@ -1473,6 +1479,32 @@ stmt_sync			: lno K_SYNC option_list
 					}
 					;
 
+stmt_sleep			: lno K_SLEEP option_list
+					{
+						SlonikStmt_sleep *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_SECONDS, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_sleep *)
+								malloc(sizeof(SlonikStmt_sleep));
+						memset(new, 0, sizeof(SlonikStmt_sleep));
+						new->hdr.stmt_type		= STMT_SLEEP;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $3) == 0)
+						{
+							new->num_secs			= opt[0].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
 option_list			: ';'
 					{ $$ = NULL; }
 					| '(' option_list_items ')' ';'
@@ -1664,6 +1696,11 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_SPOOLNODE;
 						$$ = $3;
 					}
+					| K_SECONDS '=' option_item_id
+					{
+						$3->opt_code	= O_SECONDS;
+						$$ = $3;
+					}
 					;
 
 option_item_id		: id
@@ -1797,6 +1834,7 @@ option_str(option_code opt_code)
 		case O_ORIGIN:			return "origin";
 		case O_PROVIDER:		return "provider";
 		case O_RECEIVER:		return "receiver";
+    	case O_SECONDS:         return "seconds";
 		case O_SERVER:			return "server";
 		case O_SER_KEY:			return "key";
 		case O_SET_ID:			return "set id";
