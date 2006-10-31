@@ -108,7 +108,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.1.5
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.0 RELEASE-1.2.1
 %if %docs
 %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
