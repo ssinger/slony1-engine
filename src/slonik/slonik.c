@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.1 2006-10-26 20:09:55 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.2 2006-10-31 22:03:40 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1114,6 +1114,22 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 
 				}
 				break;
+			case STMT_SLEEP:
+				{
+					SlonikStmt_sleep *stmt =
+					(SlonikStmt_sleep *) hdr;
+
+					if (stmt->num_secs < 0)
+					{
+						printf("%s:%d: Error: "
+							   " sleep time (%d) must be positive\n",
+						       hdr->stmt_filename, hdr->stmt_lno, stmt->num_secs);
+						errors++;
+					}
+
+
+				}
+				break;
 
 		}
 
@@ -1556,6 +1572,15 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_sync *) hdr;
 
 					if (slonik_sync(stmt) < 0)
+						errors++;
+				}
+				break;
+			case STMT_SLEEP:
+				{
+					SlonikStmt_sleep *stmt =
+					(SlonikStmt_sleep *) hdr;
+
+					if (slonik_sleep(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -4198,6 +4223,13 @@ slonik_sync(SlonikStmt_sync * stmt)
 	}
 
 	dstring_free(&query);
+	return 0;
+}
+
+int
+slonik_sleep(SlonikStmt_sleep * stmt)
+{
+	sleep(stmt->num_secs);
 	return 0;
 }
 
