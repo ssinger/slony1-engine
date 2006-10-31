@@ -1,3 +1,5 @@
+$Id: README,v 1.2 2006-10-31 22:09:39 cbbrowne Exp $
+
 scanner.c is a scanner which uses a state machine to walk through a
 set of SQL statements and identify where the ends of statements are
 (e.g. - relevant ";"'s).
@@ -5,6 +7,10 @@ set of SQL statements and identify where the ends of statements are
 It needs to handle various forms of quoting, notably with "double
 quotes", 'single quotes', and $dol$dollar quoting$dol$.
 
-This will need to get integrated into both slon and slonik in order
-to split DDL requests being submitted via EXECUTE SCRIPT into
-individual statements.
+This is integrated into both slon and slonik in order to split DDL
+requests being submitted via EXECUTE SCRIPT into individual
+statements, each submitted to the backend as a separate query.
+
+If you're running this test on Windows, you will need to convert line
+endings in emptytestresult.expected and test_sql.expected into DOS
+form...
