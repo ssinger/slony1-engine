@@ -6,14 +6,14 @@
 %define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
-Name:           @PACKAGE_NAME@
+Name:           postgresql-slony1-engine
 Version:        @PACKAGE_VERSION@
 Release:        2_PG%{pg_version}
 License:        BSD
 Group:          Applications/Databases
 URL:            http://slony.info/
 Packager:       Devrim Gunduz <devrim@commandprompt.com>
-Source0:        @PACKAGE_NAME@-%{version}.tar.gz
+Source0:        @PACKAGE_NAME@-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
@@ -44,7 +44,7 @@ Group: Applications/Databases
 Prereq: @PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
 
 %description docs
-The @PACKAGE_NAME@-docs package includes some documentation for Slony-I.
+The %{name}-docs package includes some documentation for Slony-I.
 %endif
 
 %prep
@@ -65,7 +65,7 @@ export LIBNAME=%{_lib}
         --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
 %if %docs
-        --with-docs --with-docdir=/usr/share/doc \
+        --with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
         --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
 
@@ -95,12 +95,13 @@ make %{?_smp_mflags} DESTDIR=$RPM_BUILD_ROOT install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
 install -m 0644 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
 install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
-install -m 0644 altperl/slon-tools  $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools
+install -m 0644 altperl/slon-tools  $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
 /bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
 /bin/rm -f $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools.pm
 /bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools
+/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/pgsql/slon-tools
 %endif
 
 %clean
@@ -108,7 +109,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.1.5
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-%{version}
 %if %docs
 %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
@@ -118,11 +119,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/pgsql/*.sql
 %config(noreplace) %{_sysconfdir}/slon.conf
 %if %perltools
-%{_libdir}/pgsql/slon-tools
+%{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
 %endif
 
 %changelog
+* Tue Oct 31 2006 Trevor Astrope <astrope@sitesell.com>
+- Fixup tar name and install slon-tools as slon-tools.pm
+
 * Mon Jul 17 2006 Devrim Gunduz <devrim@CommandPrompt.com> postgresql-slony1-engine
 - Updated spec and cleaned up rpmlint errors and warnings
 
