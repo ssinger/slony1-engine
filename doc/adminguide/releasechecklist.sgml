@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.3.2.1 2006-10-27 15:35:32 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.3.2.2 2006-11-01 22:12:29 cbbrowne Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -49,18 +49,29 @@ regenerate <filename>configure</filename> from
 <listitem><para>PACKAGE_VERSION=REL_1_1_2</para></listitem>
 
 <listitem><para>PACKAGE_STRING=postgresql-slony1-engine REL_1_1_2</para></listitem>
+
 </itemizedlist>
 
-<para> RPM spec files used to contain release tags as well as names of tarballs which needed to be updated. As of 2005-12-13, there is less of this...   For those platforms with specific spec files such as SuSE, some editing still needs to be done. see the file(s) in the <filename>suse</filename> dir for more information </para>
+<para> RPM spec files used to contain release tags as well as names of
+tarballs which needed to be updated. As of 2005-12-13, there is less
+of this...  For those platforms with specific spec files such as SuSE,
+some editing still needs to be done. see the file(s) in the
+<filename>suse</filename> dir for more information </para>
 
 <para> The admin guide <filename>version.sgml</filename> file needs to
 contain the release name. This should not need to be touched;
 <filename>version.sgml</filename> is generated automatically with the
 release name/tag on demand. </para>
 
-<para> It sure would be nice if more of these could be assigned automatically, somehow.
+<para> <filename>src/backend/slony1_funcs.sql</filename> has
+major/minor/patch versions in functions
+<function>slonyVersionMajor()</function>,
+<function>slonyVersionMinor()</function>, and
+<function>slonyVersionPatchlevel()</function>.  These need to be
+assigned <quote>by hand</quote> at this point.</para>
 
-</para></listitem>
+<para> It sure would be nice if more of these could be assigned
+automatically, somehow.</para></listitem>
 
 <listitem><para><emphasis>Don't</emphasis> commit the new configure.
 </para></listitem> 
