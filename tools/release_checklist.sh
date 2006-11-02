@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: release_checklist.sh,v 1.1 2006-11-02 21:54:20 cbbrowne Exp $
+# $Id: release_checklist.sh,v 1.1.2.1 2006-11-02 21:56:44 cbbrowne Exp $
 
 # This script runs through what it can of the release checklist
 # run via:  "sh tools/release_checklist.sh"
