@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.25 2006-10-30 16:29:45 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.26 2006-11-07 20:34:38 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -302,8 +302,8 @@ linkend="stmtsubscribeset"> requests to <emphasis>revise</emphasis>
 the subscriptions.  Subscriptions will not be started from scratch;
 they will merely be reconfigured.  </para></sect2>
 
-<sect2><title> How do I use <xref linkend="logshipping"> </title> 
-<para> Discussed in the <xref linkend="logshipping"> section... </para>
+<sect2><title> How do I use <link linkend="logshipping">Log Shipping?</link> </title> 
+<para> Discussed in the <link linkend="logshipping"> Log Shipping </link> section... </para>
 </sect2>
 
 <sect2><title> How do I know replication is working?</title> 
@@ -367,6 +367,35 @@ It's perfectly reasonable to submit both requests in the same
 &lslonik; script.  Now, the origin gets switched over to the new
 origin node.  If the new node is a few events behind, it may take a
 little while for this to take place. </para> </sect2>
+
+<sect2> <title> How Do I Do A <quote>Full Sync</quote> On A Table? </title>
+
+<para> The &slony1; notion of a <command>SYNC</command> is actually
+always an <emphasis>incremental</emphasis> thing; a
+<command>SYNC</command> represents the set of updates that were
+committed during the scope of a particular <command>SYNC</command>
+event on the origin node.  If a set of updates that altered the entire
+contents of a table were committed in a single
+<command>SYNC</command>, that would affect the entire contents of the
+table.  But as far as &slony1; is concerned, this change is
+<quote>incremental</quote> even though the increment happened to be
+<quote>the whole table.</quote> </para>
+
+<para> The only time that &slony1; <quote>synchronizes</quote> the
+contents of a table is at the time the subscription is set up, at
+which time it uses <command>COPY</command> to draw in the entire
+contents from the provider node.</para>
+
+<para> Since subscriber tables are protected against modification by
+anything other than &slony1;, there should be no way (aside from
+horrible bugs) for tables to fall out of synchronization.  If they do,
+there is some rather serious problem with &slony1;. </para>
+
+<para> If some such severe corruption takes place, the answer is to
+drop the table from replication, then create a new replication set and
+add it back. </para>
+
+</sect2>
 
 </sect1>
 <!-- Keep this comment at the end of the file
