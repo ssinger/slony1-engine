@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.4 2006-11-07 15:53:12 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.5 2006-11-07 16:08:41 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -30,29 +30,26 @@ if ($SHOW_USAGE) {
 require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my $FILE="/tmp/init-cluster.$$";
-
 # INIT CLUSTER
-open(SLONIK, ">", $FILE);
-print SLONIK "\n# INIT CLUSTER\n";
-print SLONIK genheader();
+$slonik .=  "\n# INIT CLUSTER\n";
+$slonik .=  genheader();
 my ($dbname, $dbhost) = ($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
-print SLONIK "  init cluster (id = $MASTERNODE, comment = 'Node $MASTERNODE - $dbname\@$dbhost');\n";
+$slonik .=  "  init cluster (id = $MASTERNODE, comment = 'Node $MASTERNODE - $dbname\@$dbhost');\n";
 
 # STORE NODE
-print SLONIK "\n# STORE NODE\n";
+$slonik .=  "\n# STORE NODE\n";
 foreach my $node (@NODES) {
   if ($node != $MASTERNODE) {		# skip the master node; it's already initialized!
     my ($dbname, $dbhost) = ($DBNAME[$node], $HOST[$node]);
-    print SLONIK "  store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
+    $slonik .=  "  store node (id = $node, event node = $MASTERNODE, comment = 'Node $node - $dbname\@$dbhost');\n";
   }
 }
-print SLONIK "  echo 'Set up replication nodes';\n";
+$slonik .=  "  echo 'Set up replication nodes';\n";
 
 # STORE PATH
-print SLONIK "\n# STORE PATH\n";
+$slonik .=  "\n# STORE PATH\n";
 
-print SLONIK "  echo 'Next: configure paths for each node/origin';\n";
+$slonik .=  "  echo 'Next: configure paths for each node/origin';\n";
 foreach my $nodea (@NODES) {
   my $dsna = $DSN[$nodea];
   foreach my $nodeb (@NODES) {
@@ -72,7 +69,6 @@ foreach my $nodea (@NODES) {
   }
 }
 
-print SLONIK "  echo 'Replication nodes prepared';\n";
-print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
-close SLONIK;
-run_slonik_script($FILE);
+$slonik .=  "  echo 'Replication nodes prepared';\n";
+$slonik .=  "  echo 'Please start a slon replication daemon for each node';\n";
+run_slonik_script($slonik, 'INIT CLUSTER');
