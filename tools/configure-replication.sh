@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.1 2006-10-20 16:01:01 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.1.2.1 2006-11-07 16:02:17 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
