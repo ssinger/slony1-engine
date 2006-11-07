@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.3 2006-10-27 17:52:10 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.4 2006-11-07 15:53:12 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -72,17 +72,6 @@ foreach my $nodea (@NODES) {
   }
 }
 
-# STORE LISTEN
-print SLONIK "\n# STORE LISTEN\n";
-foreach my $origin (@NODES) {
-  my $dsna = $DSN[$origin];
-  foreach my $receiver (@NODES) {
-    if ($origin != $receiver) {
-      my $provider = $VIA[$origin][$receiver];
-      print SLONIK "  store listen (origin = $origin, receiver = $receiver, provider = $provider);\n";
-    }
-  }
-}
 print SLONIK "  echo 'Replication nodes prepared';\n";
 print SLONIK "  echo 'Please start a slon replication daemon for each node';\n";
 close SLONIK;
