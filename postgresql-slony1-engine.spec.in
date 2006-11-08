@@ -3,7 +3,7 @@
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
+%define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		@PACKAGE_NAME@
@@ -12,7 +12,6 @@ Release:	1_PG%{pg_version}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
-Packager:	Devrim Gunduz <devrim@commandprompt.com>
 Source0:	@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
@@ -125,6 +124,8 @@ rm -rf %{buildroot}
 
 %changelog
 * Wed Nov 8 2006 Devrim Gunduz <devrim@CommandPrompt.com>
+- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. Fix version check
+script
 - Revert tar name patch
 - Macros cannot be used in various parts of the spec file. Revert that commit
 - Spec file cleanup
