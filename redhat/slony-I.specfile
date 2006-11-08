@@ -1,20 +1,19 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 0}
+%{!?docs:%define docs 1}
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
+%define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
-Summary:	A "master to multiple slaves" replication system with cascading and failover.
-Name:		slony1
-Version:	1.1.1
+Summary:	A "master to multiple slaves" replication system with cascading and failover
+Name:		postgresql-slony1-engine
+Version:	1.2.STABLE
 Release:	1_PG%{pg_version}
-License:	Berkeley/BSD
+License:	BSD
 Group:		Applications/Databases
 URL:		http://slony.info/
-Packager:	Devrim Gunduz <devrim@PostgreSQL.org>
-Source0:	slony1-%{version}.tar.bz2
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Source0:	postgresql-slony1-engine-%{version}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
 
@@ -25,31 +24,30 @@ BuildRequires:	docbook-style-dsssl
 %define prefix /usr
 
 %description
-Slony-I will be a "master to multiple slaves" replication 
-system with cascading and failover.
+Slony-I is a "master to multiple slaves" replication 
+system for PostgreSQL with cascading and failover.
 
-The big picture for the development of Slony-I is to build 
-a master-slave system that includes all features and 
-capabilities needed to replicate large databases to a 
+The big picture for the development of Slony-I is to build
+a master-slave system that includes all features and
+capabilities needed to replicate large databases to a
 reasonably limited number of slave systems.
 
-Slony-I is planned as a system for data centers and backup 
-sites, where the normal mode of operation is that all nodes 
+Slony-I is a system for data centers and backup
+sites, where the normal mode of operation is that all nodes
 are available
 
 %if %docs
 %package docs
-Summary: Documentation for Slony-I
-Group: Applications/Databases
-Prereq: postgresql-slony1-engine-HEAD_20050917-%{release}
+Summary:	Documentation for Slony-I
+Group:		Applications/Databases
+Prereq:		postgresql-slony1-engine-1.2.STABLE-%{release}
 
 %description docs
 The postgresql-slony1-engine-docs package includes some documentation for Slony-I.
 %endif
 
-
 %prep
-%setup -q -n slony1-%{version}
+%setup -q -n postgresql-slony1-engine-%{version}
 
 %build
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
@@ -63,53 +61,57 @@ CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
 ./configure --includedir %{_includedir}/pgsql \
 %if %perltools
-        --with-perltools=%{_bindir} \
+        --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
 %if %docs
-        --with-docs --with-docdir=/usr/share/doc \
+        --with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
+        --datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
 
 autoconf
 
-make
+make %{?_smp_mflags}
 %if %perltools
- cd tools
- make
+        make %{?_smp_mflags} -C tools
 %endif
 
 %install
-rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_sysconfdir}
-install -d $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -d $RPM_BUILD_ROOT%{_libdir}/pgsql/
-make DESTDIR=$RPM_BUILD_ROOT install
-install -m 0755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT%{_libdir}/pgsql/slony1_funcs.so
-install -m 0755 src/xxid/xxid.so $RPM_BUILD_ROOT%{_libdir}/pgsql/xxid.so
-install -m 0755 src/backend/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -m 0755 src/xxid/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -m 0755 tools/*.sh  $RPM_BUILD_ROOT%{_bindir}/
-install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/slon.conf
+rm -rf %{buildroot}
+install -d %{buildroot}%{_sysconfdir}
+install -d %{buildroot}%{_datadir}/pgsql/
+install -d %{buildroot}%{_libdir}/pgsql/
+make %{?_smp_mflags} DESTDIR=%{buildroot} install
+install -m 0755 src/backend/slony1_funcs.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.so
+install -m 0755 src/xxid/xxid.so %{buildroot}%{_libdir}/pgsql/xxid.so
+install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
+install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 
 %if %perltools
 cd tools
-make DESTDIR=$RPM_BUILD_ROOT install
+make %{?_smp_mflags} DESTDIR=%{buildroot} install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
-install -m 0755 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
-install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
-install -m 0755 altperl/slon-tools  $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
-/bin/rm -f  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
-/bin/rm -f  $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
-/bin/rm -f $RPM_BUILD_ROOT%{_libdir}/slon-tools.pm
-/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools.pm
+install -m 0644 altperl/slon_tools.conf-sample  %{buildroot}%{_sysconfdir}/slon_tools.conf
+install -m 0755 altperl/* %{buildroot}%{_bindir}/
+install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
+/bin/rm -f %{buildroot}%{_sysconfdir}/slon_tools.conf-sample
+/bin/rm -f %{buildroot}%{_bindir}/slon_tools.conf-sample
+#/bin/rm -f %{buildroot}%{_libdir}/pgsql/slon-tools.pm
+/bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
+/bin/rm -f %{buildroot}%{_bindir}/slon-tools
+/bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1
+%if %docs
+%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -120,13 +122,20 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
 %endif
 
-%if %docs
-%files docs
-%defattr(-,root,root)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
-%endif
-
 %changelog
+* Wed Nov 8 2006 Devrim Gunduz <devrim@CommandPrompt.com>
+- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. Fix version check
+script
+- Revert tar name patch
+- Macros cannot be used in various parts of the spec file. Revert that commit
+- Spec file cleanup
+
+* Tue Oct 31 2006 Trevor Astrope <astrope@sitesell.com>
+- Fixup tar name and install slon-tools as slon-tools.pm
+
+* Mon Jul 17 2006 Devrim Gunduz <devrim@CommandPrompt.com> postgresql-slony1-engine
+- Updated spec and cleaned up rpmlint errors and warnings
+
 * Wed Dec 21 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
 - Added a buildrhel3 macro to fix RHEL 3 RPM builds
 - Added a kerbdir macro
@@ -142,6 +151,8 @@ rm -rf $RPM_BUILD_ROOT
 
 * Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Created a new package : -docs and moved all the docs there.
+
+* Tue Oct 18 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Fixed the problem in http://gborg.postgresql.org/pipermail/slony1-general/2005-October/003105.html
 
 * Sat Oct 01 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
@@ -149,7 +160,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Tue Jul 12 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
 - Added a line to check postgresql RPM version and tag SlonyI RPM with it.
-
 - Updated Requires files so that it checks correct PostgreSQL version
 - Moved autoconf line into correct place.
 
