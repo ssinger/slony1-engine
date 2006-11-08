@@ -98,7 +98,7 @@ install -m 0755 altperl/* %{buildroot}%{_bindir}/
 install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_sysconfdir}/slon_tools.conf-sample
 /bin/rm -f %{buildroot}%{_bindir}/slon_tools.conf-sample
-/bin/rm -f %{buildroot}%{_libdir}/pgsql/slon-tools.pm
+#/bin/rm -f %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
@@ -109,7 +109,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-%{version}
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1
 %if %docs
 %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
