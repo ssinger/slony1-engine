@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.3.2.3 2006-11-02 21:56:44 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.3.2.4 2006-11-08 19:49:25 devrim Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -8,28 +8,23 @@
 
   <listitem><para>Positive build reports for each supported platform -
   although it is arguably less necessary for a comprehensive list if
-  we are releasing a minor upgrade
+  we are releasing a minor upgrade </para></listitem> 
 
-  </para></listitem> 
+<listitem><para>Some kind of Standard Test Plan</para></listitem> 
+<listitem><para>Binary RPM packages</para></listitem> 
 
-<listitem><para>Some kind of Standard Test Plan 
-
-  </para></listitem> 
-<listitem><para>Binary RPM packages 
-
-  </para></listitem> 
-
-<listitem><para>If the release is a <quote>.0</quote> one, we need to
+<listitem>
+ <para>If the release is a <quote>.0</quote> one, we need to
 open a new STABLE branch</para>
 
-<para> <command> cvs tag -b REL_1_2_STABLE</command>
-
-<listitem><para>Tag the with the release ID. For version 1.1.2, this
+ <para> <command> cvs tag -b REL_1_2_STABLE</command></para>
+</listitem>
+<listitem>
+ <para>Tag the with the release ID. For version 1.1.2, this
 would be <envar>REL_1_1_2 </envar></para>
 
-<para> <command> cvs tag REL_1_1_2 </command>
-
-</para></listitem> 
+ <para> <command> cvs tag REL_1_1_2 </command></para>
+</listitem> 
 
 <listitem><para>Check out a copy via <command>cvs export -rREL_1_1_2 </command>
 
@@ -48,16 +43,15 @@ regenerate <filename>configure</filename> from
 <para> This does a bunch of consistency checks to make sure that
 various files that are supposed to contain version numbers contain
 consistent values.</para> 
+</listitem>
+<listitem><para>For instance, configure should contain, for release 1.1.2:</para></listitem>
 
-<itemizedlist>
-<listitem><para>For instance, configure should contain, for release 1.1.2:</para>
-<itemizedlist>
 <listitem><para>PACKAGE_VERSION=REL_1_1_2</para></listitem>
 
 <listitem><para>PACKAGE_STRING=postgresql-slony1-engine REL_1_1_2</para></listitem>
 
-</itemizedlist></listitem>
-
+</itemizedlist>
+<itemizedlist>
 <listitem><para> <filename> config.h.in </filename> needs to contain the version
 number in two forms; the definitions for
 <envar>SLONY_I_VERSION_STRING</envar> and
@@ -71,12 +65,12 @@ major/minor/patch versions in functions
 <function>slonyVersionPatchlevel()</function>.  These need to be
 assigned <quote>by hand</quote> at this point.</para> </listitem>
 
-<para> It sure would be nice if more of these could be assigned
+<listitem><para> It sure would be nice if more of these could be assigned
 automatically, somehow.</para>
 
 <para><emphasis>Don't</emphasis> commit the new
 <filename>configure</filename>; we shouldn't be tracking this in CVS.
-</para>
+</para></listitem>
 
 <listitem><para>make sure that the generated files from .l and .y are
 created, for example <filename>slony/conf-file.[ch]</filename> </para>
