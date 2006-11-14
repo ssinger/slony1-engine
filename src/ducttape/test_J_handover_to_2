@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# **********
+# test_1_handover_to_2
+#
+#	Script to change the origin of set 1 from node 1 to node 2.
+#	This still requires that node 1 is alive. This is called
+#	handover or move, not failover.
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+
+######################################################################
+# Move set 1 to node 2
+######################################################################
+
+echo "**** Move sets 100..400 to node 2"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	lock set (id = 100, origin = 1);
+	lock set (id = 200, origin = 1);
+	lock set (id = 300, origin = 1);
+	lock set (id = 400, origin = 1);
+	move set (id = 100, old origin = 1, new origin = 2);
+	move set (id = 200, old origin = 1, new origin = 2);
+	move set (id = 300, old origin = 1, new origin = 2);
+	move set (id = 400, old origin = 1, new origin = 2);
+_EOF_
+
