@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.3 2006-11-15 16:57:23 cbbrowne Exp $
+# $Id: launch_clusters.sh,v 1.4 2006-11-15 20:01:11 cbbrowne Exp $
 # Cluster starter
 
 # This script should be run periodically to search for slon
@@ -68,15 +68,24 @@ start_slon_if_needed () {
 	log_action "Could not find node configuration in $CONFIGPATH/conf/node${NODENUM}.conf"
 	return
     fi
+
+    # Determine what the format name should be in the ps command
+    case `uname` in
+	SunOS) 
+              PSCOMM="comm"
+	      BPS="/usr/ucb/ps"
+	      ;;
+	Darwin) 
+	      PSCOMM="command"
+	      BPS="/bin/ps"
+	      ;;
+	*) 
+	      PSCOMM="command" 
+	      BPS="ps"
+	      ;;
+    esac
     if [[ -e $SLONPIDFILE ]] ; then
 	SLONPID=`cat $SLONPIDFILE`
-
-	# Determine what the format name should be in the ps command
-	case `uname` in
-	    SunOS) PSCOMM="comm" ;;
-	    Darwin) PSCOMM="command" ;;
-	    *) PSCOMM="command" ;;
-	esac
 
 	FINDIT=`ps -p ${SLONPID} -o ${PSCOMM}= | grep slon`
 	if [[ -z $FINDIT ]]; then
@@ -87,8 +96,8 @@ start_slon_if_needed () {
 	    echo "Slon already running - $SLONPID"
 	fi
     else
-	
-	if [[ PID=ps auxww | egrep "[s]lon -f $CONFIGPATH/conf/node${NODENUM}.conf" > /dev/null ]] ; then
+        ${BPS} auxww | egrep "[s]lon -f $CONFIGPATH/conf/node${NODENUM}.conf" > /dev/null
+	if [[ $? -eq 0 ]] ; then 	
             echo "Slon already running - but PID marked dead"
 	else
 	    invoke_slon $LOGHOME $NODENUM $CLUSTER $SLONCONF
