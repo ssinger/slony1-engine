@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.2 2006-07-05 21:00:20 cbbrowne Exp $
+# $Id: launch_clusters.sh,v 1.3 2006-11-15 16:57:23 cbbrowne Exp $
 # Cluster starter
 
 # This script should be run periodically to search for slon
@@ -70,7 +70,15 @@ start_slon_if_needed () {
     fi
     if [[ -e $SLONPIDFILE ]] ; then
 	SLONPID=`cat $SLONPIDFILE`
-	FINDIT=`ps auxww $SLONPID | grep slon`
+
+	# Determine what the format name should be in the ps command
+	case `uname` in
+	    SunOS) PSCOMM="comm" ;;
+	    Darwin) PSCOMM="command" ;;
+	    *) PSCOMM="command" ;;
+	esac
+
+	FINDIT=`ps -p ${SLONPID} -o ${PSCOMM}= | grep slon`
 	if [[ -z $FINDIT ]]; then
         # Need to restart slon
 	    log_action "slon died for config $CONFIGPATH/conf/node${NODENUM}.conf"
