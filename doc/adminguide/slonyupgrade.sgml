@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.3 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.4 2006-11-15 22:07:00 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -23,6 +23,14 @@ each node in the cluster.</para></listitem>
 <listitem><para> Start all slons.  </para> </listitem>
 </itemizedlist>
 
+<para> The overall operation is relatively safe: If there is any
+mismatch between component versions, the &lslon; will refuse to start
+up, which provides protection against corruption. </para>
+
+<para> You need to be sure that the C library containing SPI trigger
+functions has been copied into place in the &postgres; build.  There
+are multiple possible approaches to this:</para>
+
 <para> The trickiest part of this is ensuring that the C library
 containing SPI functions is copied into place in the &postgres; build;
 the easiest and safest way to handle this is to have two separate
@@ -37,6 +45,35 @@ the <quote>install</quote> step.  That might <emphasis>not</emphasis>
 work on <trademark>Windows</trademark> if it locks library files that
 are in use.</para>
 
+<variablelist>
+
+<varlistentry><term>Run <command>make install</command> to install new
+&slony1; components on top of the old</term>
+
+<listitem><para>If you build &slony1; on the same system on which it
+is to be deployed, and build from sources, overwriting the old with
+the new is as easy as <command>make install</command>.  There is no
+need to restart a database backend; just to stop &lslon; processes,
+run the <command>UPDATE FUNCTIONS</command> script, and start new
+&lslon; processes.</para>
+
+<para> Unfortunately, this approach requires having a build
+environment on the same host as the deployment.  That may not be
+consistent with efforts to use common &postgres; and &slony1; binaries
+across a set of nodes. </para>
+</listitem></varlistentry>
+
+<varlistentry><term>Create a new &postgres; and &slony1; build</term>
+
+<listitem><para>With this approach, the old &postgres; build with old
+&slony1; components persists after switching to a new &postgres; build
+with new &slony1; components. In order to switch to the new &slony1;
+build, you need to restart the
+&postgres; <command>postmaster</command>, therefore interrupting
+applications, in order to get it to be aware of the location of the
+new components. </para></listitem></varlistentry>
+
+</variablelist>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
