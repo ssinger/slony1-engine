@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.41 2006-10-20 16:01:55 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.42 2006-11-16 19:01:56 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -226,7 +226,7 @@ course!</para>
 <para>This starts a slon daemon for the specified cluster and node, and uses
 slon_watchdog to keep it running.</para>
 </sect3>
-<sect3><title>slon_watchdog</title>
+<sect3 id="slonwatchdog"><title>slon_watchdog</title>
 
 <para>Used by <command>slon_start</command>.</para>
 
