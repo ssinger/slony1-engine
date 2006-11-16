@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.29.2.1 2006-10-27 15:35:32 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.29.2.2 2006-11-16 19:03:35 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -158,6 +158,23 @@ FAQ</link>.</para></listitem>
 script; if you don't like the values, pick your favorites!</para>
 
 </sect2>
+
+<sect2 id="search-logs"> <title> <command>search-logs.sh</command> </title>
+
+<para> This script is constructed to search for &slony1; log files at
+a given path (<envar>LOGHOME</envar>), based both on the naming
+conventions used by the <xref linkend="launchclusters"> and <xref
+linkend="slonwatchdog"> systems used for launching &lslon; processes.
+
+<para> Errors, if found, are listed, by log file, and emailed to the
+specified user (<ENVAR>LOGRECIPIENT</ENVAR>); if no email address is
+specified, output goes to standard output. </para>
+
+<para> <ENVAR>LOGTIMESTAMP</envar> allows overriding what hour to
+evaluate (rather than the last hour). </para>
+
+<para> An administrator might run this script once an hour to monitor
+for replication problems. </para>
 
 </sect1>
 <!-- Keep this comment at the end of the file

@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.40.2.2 2006-11-08 19:49:25 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40.2.3 2006-11-16 19:03:35 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -226,7 +226,7 @@ course!</para>
 <para>This starts a slon daemon for the specified cluster and node, and uses
 slon_watchdog to keep it running.</para>
 </sect3>
-<sect3><title>slon_watchdog</title>
+<sect3 id="slonwatchdog"><title>slon_watchdog</title>
 
 <para>Used by <command>slon_start</command>.</para>
 
@@ -534,7 +534,6 @@ values, so that if you run
 environment variables, you will get a set of slonik scripts.  They may
 not correspond, of course, to any database you actually want to
 use...</para>
-</sect3>
 
 <sect3><title>Node-Specific Values</title>
 
@@ -607,8 +606,7 @@ replication won't start until #5...</para>
 
 <para>There are two assumptions in this script that could be
 invalidated by circumstances:</para>
-</listitem>
-</itemizedlist>
+
 <itemizedlist>
      <listitem><para> That all of the tables and sequences have been
      included.</para>
@@ -626,7 +624,10 @@ invalidated by circumstances:</para>
      linkend="stmttableaddkey">, you will have to modify this script
      by hand to accomodate that. </para></listitem>
 
-<listitem><para> <filename> subscribe_set_2.slonik </filename></para>
+</itemizedlist>
+</listitem>
+
+<listitem><para> <filename> subscribe_set_2.slonik </filename>
 
   <para> And 3, and 4, and 5, if you set the number of nodes
   higher... </para>
@@ -644,7 +645,7 @@ invalidated by circumstances:</para>
   attempt running this step.  To do otherwise would be rather
   foolish.</para> </listitem>
 </itemizedlist>
-</sect3>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
