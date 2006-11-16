@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.1,v 1.1.2.1 2006-10-31 22:08:56 cbbrowne Exp $
+$Id: RELEASE-1.2.1,v 1.1.2.2 2006-11-16 20:12:30 cbbrowne Exp $
 
 Release 1.2.1 of Slony-I has the following improvements over 1.2.0:
 
@@ -14,3 +14,24 @@ Release 1.2.1 of Slony-I has the following improvements over 1.2.0:
 - Fixed a concurrency problem where if you had multiple log
   shipped nodes, the threads processing them shared a single
   file descriptor as well as other variables.
+
+- If a child process exits with return code of 0, that means it
+  *asked* to exit, presumably because configuration changed that it
+  needs to reload.  In that case, there's no need to wait 10s before
+  restarting the thread; we should restart the thread immediately.
+
+  This causes operations like MOVE SET to run ~10s faster per
+  subscription change.
+
+- Added a script, tools/release_checklist.sh, which performs some of
+  the release checklist checks, such as verifying that the Slony-I
+  version number (e.g. - 1.2.1) is consistent across various places
+  that need to reference it.
+
+- altperl scripts have had "listen path" generation removed as that is
+  handled automatically as clusters are built.
+
+- Fixed some portability problems in tools/launch_cluster.sh
+
+- Added a new script, tools/search_logs.sh, meant to search hourly for
+  errors in slon logs and warn an administrator about them.
