@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.40.2.4 2006-11-17 08:09:32 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40.2.5 2006-11-17 08:50:40 devrim Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -535,6 +535,8 @@ environment variables, you will get a set of slonik scripts.  They may
 not correspond, of course, to any database you actually want to
 use...</para>
 
+</sect3>
+
 <sect3><title>Node-Specific Values</title>
 
 <para>For each node, there are also four environment variables; for node 1: </para>
@@ -646,6 +648,7 @@ invalidated by circumstances:</para>
   foolish.</para> </listitem>
 </itemizedlist>
 
+</sect3>
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file

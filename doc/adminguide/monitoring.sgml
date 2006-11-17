@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.29.2.3 2006-11-17 08:09:32 devrim Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.29.2.4 2006-11-17 08:50:40 devrim Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -175,7 +175,7 @@ evaluate (rather than the last hour). </para>
 
 <para> An administrator might run this script once an hour to monitor
 for replication problems. </para>
-
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
