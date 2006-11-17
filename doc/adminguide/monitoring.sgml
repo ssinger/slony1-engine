@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.29.2.2 2006-11-16 19:03:35 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.29.2.3 2006-11-17 08:09:32 devrim Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -164,7 +164,7 @@ script; if you don't like the values, pick your favorites!</para>
 <para> This script is constructed to search for &slony1; log files at
 a given path (<envar>LOGHOME</envar>), based both on the naming
 conventions used by the <xref linkend="launchclusters"> and <xref
-linkend="slonwatchdog"> systems used for launching &lslon; processes.
+linkend="slonwatchdog"> systems used for launching &lslon; processes.</para>
 
 <para> Errors, if found, are listed, by log file, and emailed to the
 specified user (<ENVAR>LOGRECIPIENT</ENVAR>); if no email address is
