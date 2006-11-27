@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.25 2006-08-02 18:34:58 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.26 2006-11-27 23:14:17 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 
@@ -141,9 +141,9 @@ does it have any ability to replicate large objects.  There is a
 single common reason for these limitations, namely that &slony1;
 collects updates using triggers, and neither schema changes, large
 object operations, nor <command>TRUNCATE</command> requests are able
-to triggers suitable to inform &slony1; when those sorts of changes
-take place.  As a result, the only database objects where &slony1; can
-replicate updates are tables and sequences.  </para>
+to have triggers suitable to inform &slony1; when those sorts of
+changes take place.  As a result, the only database objects where
+&slony1; can replicate updates are tables and sequences.  </para>
 
 <para> Note that with the <emphasis>use</emphasis> of triggers comes
 some additional <emphasis>fiddling around with triggers</emphasis>.
