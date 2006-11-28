@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.5 2006-11-07 16:08:41 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.6 2006-11-28 21:41:37 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -55,9 +55,7 @@ foreach my $nodea (@NODES) {
   foreach my $nodeb (@NODES) {
     if ($nodea != $nodeb) {
       my $dsnb = $DSN[$nodeb];
-      my $providerba = $VIA[$nodea][$nodeb];
-      my $providerab = $VIA[$nodeb][$nodea];
-      if (!$printed[$nodea][$nodeb] and $providerab == $nodea) {
+      if (!$printed[$nodea][$nodeb]) {
 	$slonik .= "  store path (server = $nodea, client = $nodeb, conninfo = '$dsna');\n";
 	$printed[$nodea][$nodeb] = "done";
       }
