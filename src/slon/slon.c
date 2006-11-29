@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.67 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: slon.c,v 1.68 2006-11-29 20:13:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,7 +29,12 @@
 #include "port/win32service.h"
 #endif
 
+#include "libpq-fe.h"
+#include "c.h"
+ 
 #include "slon.h"
+#include "confoptions.h"
+
 
 
 /* ---------- 
@@ -856,8 +861,15 @@ SlonWatchdog(void)
 		case SLON_WATCHDOG_NORMAL:
 		case SLON_WATCHDOG_RETRY:
 			watchdog_status = SLON_WATCHDOG_RETRY;
-			slon_log(SLON_DEBUG1, "slon: restart of worker in 10 seconds\n");
-			sleep(10);
+			if (child_status != 0)
+			{
+				slon_log(SLON_DEBUG1, "slon: restart of worker in 10 seconds\n");
+				sleep(10);
+			}
+			else
+			{
+				slon_log(SLON_DEBUG1, "slon: restart of worker\n");
+			}
 			if (watchdog_status == SLON_WATCHDOG_RETRY)
 			{
 				execvp(main_argv[0], main_argv);
