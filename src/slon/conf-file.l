@@ -246,11 +246,12 @@ void ProcessConfigFile(const char *filename)
 		free_name_value_list(head);
 		if (token == SLON_EOL)
 		{
-			slon_log(elevel, "syntax error in file \"%s\" line %u, near end of line", filename, ConfigFileLineno - 1);
+			slon_log(elevel, "syntax error in file \"%s\" line %u, near end of line\n", filename, ConfigFileLineno - 1);
 		}
+		
 		else
 		{
-			slon_log(elevel, "syntax error in file \"%s\" line %u, near end of line", filename, ConfigFileLineno - 1);
+			slon_log(elevel, "syntax error in file \"%s\" line %u, near end of line\n", filename, ConfigFileLineno - 1);
 		}
 }
 
@@ -277,7 +278,7 @@ char *SLON_scanstr(char *s)
 
         newStr = malloc(len + 1);       /* string cannot get longer */
         if (newStr == NULL)
-		slon_log(SLON_FATAL, "out of memory");
+		slon_log(SLON_FATAL, "out of memory\n");
 
         for (i = 0, j = 0; i < len; i++)
         {
