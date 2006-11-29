@@ -131,10 +131,6 @@ if test -n "$PG_CONFIG_LOCATION"; then
         	PG_INCLUDESERVERDIR=`$PG_CONFIG_LOCATION --includedir-server`/
 		echo "pg_config says pg_includeserverdir is $PG_INCLUDESERVERDIR"
 	    fi
-            if test "$PG_SHAREDIR" = ""; then
-                PG_SHAREDIR=`$PG_CONFIG_LOCATION --sharedir`/ 2>/dev/null
-                echo "pg_config says pg_sharedir is $PG_SHAREDIR"
-            fi
             ;;
     esac
     
@@ -160,6 +156,16 @@ if test -n "$PG_CONFIG_LOCATION"; then
       AC_MSG_RESULT($PG_VERSION)
       AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.4 or later])
     fi
+
+    if test "$PG_VERSION_MAJOR" = "8"; then
+	if test $PG_VERSION_MINOR -gt 0; then
+            if test "$PG_SHAREDIR" = ""; then
+                PG_SHAREDIR=`$PG_CONFIG_LOCATION --sharedir`/ 2>/dev/null
+                echo "pg_config says pg_sharedir is $PG_SHAREDIR"
+            fi
+	fi
+    fi
+
     case ${host_os} in
 	aix*|*solaris*)
 		AC_MSG_CHECKING(PostgreSQL for enable-thread-safety as required on ${host_os})
