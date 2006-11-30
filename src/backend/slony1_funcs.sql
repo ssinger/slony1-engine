@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.3 2006-11-30 15:45:28 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.4 2006-11-30 20:31:25 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5646,17 +5646,17 @@ BEGIN
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
             v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
-	    raise notice ''Consider adding partial index % on sl_log_%'', v_iname, v_log;
-	    raise notice ''schema: [_@CLUSTERNAME@] tablename:[sl_log_%]'', v_log;
+	    -- raise notice ''Consider adding partial index % on sl_log_%'', v_iname, v_log;
+	    -- raise notice ''schema: [_@CLUSTERNAME@] tablename:[sl_log_%]'', v_log;
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
             if not found then
-		raise notice ''index was not found - add it!'';
+		-- raise notice ''index was not found - add it!'';
 		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin ||
                         ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
 		execute idef;
 		v_count := v_count + 1;
             else
-                raise notice ''Index % already present - skipping'', v_iname;
+                -- raise notice ''Index % already present - skipping'', v_iname;
             end if;
 	end loop;
 
@@ -5666,7 +5666,7 @@ BEGIN
                        not exists (select 1 from @NAMESPACE@.sl_set where
 				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin)
 	loop
-		raise notice ''Dropping obsolete index %d'', v_dummy.indexname;
+		-- raise notice ''Dropping obsolete index %d'', v_dummy.indexname;
 		idef := ''drop index @NAMESPACE@."'' || v_dummy.indexname || ''";'';
 		execute idef;
 		v_count := v_count - 1;
