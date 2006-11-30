@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.99 2006-10-30 14:48:18 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.100 2006-11-30 15:44:30 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -416,7 +416,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as '
 begin
-	return 2;
+	return 3;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
@@ -5775,7 +5775,7 @@ begin
 	-- ----
 	-- Changes for 1.1.3
 	-- ----
-	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'') then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'', ''1.1.5'', ''1.1.6'') then
 		-- Add new table sl_nodelock
 		execute ''create table @NAMESPACE@.sl_nodelock (
 						nl_nodeid		int4,
