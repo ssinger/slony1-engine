@@ -1,0 +1,31 @@
+$Id: RELEASE-1.2.2,v 1.1.2.1 2006-12-01 22:41:44 cbbrowne Exp $
+
+Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
+
+- SGML tagging fixes to allow docs to be generated on Fedora
+
+- Fixes to altperl scripts (init cluster, store node) so they would
+  properly generate STORE PATH requests (which had broken when STORE
+  LISTEN code was removed)
+
+- If PostgreSQL version is 8.1 or greater, we can use pg_config
+  sharedir. Otherwise we will resort to the default guessing mode.
+
+- Some makefile hygenic fixes
+
+- Added \n to a number of log requests
+
+- Fix to UPDATE FUNCTIONS which did not consider versions 1.1.5/1.1.6
+  to be members of the 1.1 stream...
+
+- Removed some confusing NOTICEs concerning management of partial
+  indexes on sl_log_1 and sl_log_2.
+
+- Close file descriptors upon running slon_terminate_worker() so that
+  we don't run out of file descriptors
+
+- Added in sleep(10) requests in several places where attempts to
+  access the database in the main thread fails; this means that, for
+  instance, the main DB is down, the slon doesn't simply sit there
+  continually attempting to reconnect, as many times per second as it
+  can.
