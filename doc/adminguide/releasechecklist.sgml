@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.6 2006-11-02 21:54:20 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.7 2006-12-01 23:16:27 cbbrowne Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -77,6 +77,14 @@ automatically, somehow.</para>
 <para><emphasis>Don't</emphasis> commit the new
 <filename>configure</filename>; we shouldn't be tracking this in CVS.
 </para>
+
+<listitem><para> One test that seems inherently troublesome to
+automate is the set of version numbers listed in upgradeSchema() in
+src/backend/slony1_funcs.sql. </para>
+
+<para> As new versions are released, the lists of version numbers will
+need to get changed; this does not seem amenable to much
+automation. </para> </listitem>
 
 <listitem><para>make sure that the generated files from .l and .y are
 created, for example <filename>slony/conf-file.[ch]</filename> </para>
