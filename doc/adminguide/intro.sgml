@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.26 2006-11-27 23:14:17 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.27 2006-12-01 23:15:43 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 
@@ -166,7 +166,7 @@ schemas on subscribers. </para>
 database modifications, notably DDL changes, if you submit them as
 scripts via the <application>slonik</application> <xref
 linkend="stmtddlscript"> operation.  That is not handled
-<quote>automaticly;</quote> you, as a database administrator, will
+<quote>automatically;</quote> you, as a database administrator, will
 have to construct an SQL DDL script and submit it, via <xref
 linkend="stmtddlscript"> and there are a number of further <link
 linkend="ddlchanges"> caveats.</link> </para>
