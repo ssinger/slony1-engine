@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.68 2006-11-29 20:13:37 cbbrowne Exp $
+ *	$Id: slon.c,v 1.69 2006-12-01 22:29:49 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -392,15 +392,17 @@ SlonMain(void)
 	startup_conn = PQconnectdb(rtcfg_conninfo);
 	if (startup_conn == NULL)
 	{
-		slon_log(SLON_FATAL, "main: PQconnectdb() failed\n");
+		slon_log(SLON_FATAL, "main: PQconnectdb() failed - sleep 10s\n");
+		sleep (10);
 		slon_retry();
 		exit(-1);
 	}
 	if (PQstatus(startup_conn) != CONNECTION_OK)
 	{
-		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s\n",
+		slon_log(SLON_FATAL, "main: Cannot connect to local database - %s - sleep 10s\n",
 				 PQerrorMessage(startup_conn));
 		PQfinish(startup_conn);
+		sleep(10);
 		slon_retry();
 		exit(-1);
 	}
@@ -411,7 +413,8 @@ SlonMain(void)
 	rtcfg_nodeid = db_getLocalNodeId(startup_conn);
 	if (rtcfg_nodeid < 0)
 	{
-		slon_log(SLON_FATAL, "main: Node is not initialized properly\n");
+		slon_log(SLON_FATAL, "main: Node is not initialized properly - sleep 10s\n");
+		sleep(10);
 		slon_retry();
 		exit(-1);
 	}
@@ -469,8 +472,9 @@ SlonMain(void)
 				 "set transaction isolation level serializable;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		slon_log(SLON_FATAL, "Cannot start transaction - %s\n",
+		slon_log(SLON_FATAL, "Cannot start transaction - %s - sleep 10s\n",
 				 PQresultErrorMessage(res));
+		sleep (10);
 		PQclear(res);
 		slon_retry();
 	}
@@ -951,7 +955,8 @@ slon_terminate_worker()
 		kill(slon_worker_pid, SIGKILL);
 		slon_exit(-1);
 	}
-
+        close(sched_wakeuppipe[0]);
+	close(sched_wakeuppipe[1]);
 	alarm(20);
 }
 #endif
