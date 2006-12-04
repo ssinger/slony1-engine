@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.31 2006-11-16 19:01:56 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.32 2006-12-04 07:29:02 devrim Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -164,7 +164,8 @@ script; if you don't like the values, pick your favorites!</para>
 <para> This script is constructed to search for &slony1; log files at
 a given path (<envar>LOGHOME</envar>), based both on the naming
 conventions used by the <xref linkend="launchclusters"> and <xref
-linkend="slonwatchdog"> systems used for launching &lslon; processes.
+linkend="slonwatchdog"> systems used for launching &lslon; 
+processes.</para>
 
 <para> Errors, if found, are listed, by log file, and emailed to the
 specified user (<ENVAR>LOGRECIPIENT</ENVAR>); if no email address is
@@ -175,7 +176,7 @@ evaluate (rather than the last hour). </para>
 
 <para> An administrator might run this script once an hour to monitor
 for replication problems. </para>
-
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

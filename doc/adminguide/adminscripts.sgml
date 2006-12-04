@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.42 2006-11-16 19:01:56 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.43 2006-12-04 07:29:02 devrim Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -627,7 +627,7 @@ invalidated by circumstances:</para>
 </itemizedlist>
 </listitem>
 
-<listitem><para> <filename> subscribe_set_2.slonik </filename>
+<listitem><para> <filename> subscribe_set_2.slonik </filename></para>
 
   <para> And 3, and 4, and 5, if you set the number of nodes
   higher... </para>
@@ -646,6 +646,7 @@ invalidated by circumstances:</para>
   foolish.</para> </listitem>
 </itemizedlist>
 
+</sect3>
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
