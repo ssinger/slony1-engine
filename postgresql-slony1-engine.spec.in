@@ -3,18 +3,17 @@
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version   %(rpm -q --queryformat '%{VERSION}' postgresql-devel)
+%define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
-Name:           postgresql-slony1-engine
-Version:        @PACKAGE_VERSION@
-Release:        2_PG%{pg_version}
-License:        BSD
-Group:          Applications/Databases
-URL:            http://slony.info/
-Packager:       Devrim Gunduz <devrim@commandprompt.com>
-Source0:        @PACKAGE_NAME@-%{version}.tar.bz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Name:		@PACKAGE_NAME@
+Version:	@PACKAGE_VERSION@
+Release:	1_PG%{pg_version}
+License:	BSD
+Group:		Applications/Databases
+URL:		http://slony.info/
+Source0:	@PACKAGE_NAME@-%{version}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
 
@@ -39,12 +38,12 @@ are available
 
 %if %docs
 %package docs
-Summary: Documentation for Slony-I
-Group: Applications/Databases
-Prereq: @PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
+Summary:	Documentation for Slony-I
+Group:		Applications/Databases
+Prereq:		@PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
 
 %description docs
-The %{name}-docs package includes some documentation for Slony-I.
+The @PACKAGE_NAME@-docs package includes some documentation for Slony-I.
 %endif
 
 %prep
@@ -67,7 +66,7 @@ export LIBNAME=%{_lib}
 %if %docs
         --with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=/etc --with-pglibdir=%{_libdir}/pgsql 
+        --datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
 
 autoconf
 
@@ -77,39 +76,39 @@ make %{?_smp_mflags}
 %endif
 
 %install
-rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_sysconfdir}
-install -d $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -d $RPM_BUILD_ROOT%{_libdir}/pgsql/
-make %{?_smp_mflags} DESTDIR=$RPM_BUILD_ROOT install
-install -m 0755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT%{_libdir}/pgsql/slony1_funcs.so
-install -m 0755 src/xxid/xxid.so $RPM_BUILD_ROOT%{_libdir}/pgsql/xxid.so
-install -m 0644 src/backend/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -m 0644 src/xxid/*.sql $RPM_BUILD_ROOT%{_datadir}/pgsql/
-install -m 0755 tools/*.sh  $RPM_BUILD_ROOT%{_bindir}/
-install -m 0644 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/slon.conf
+rm -rf %{buildroot}
+install -d %{buildroot}%{_sysconfdir}
+install -d %{buildroot}%{_datadir}/pgsql/
+install -d %{buildroot}%{_libdir}/pgsql/
+make %{?_smp_mflags} DESTDIR=%{buildroot} install
+install -m 0755 src/backend/slony1_funcs.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.so
+install -m 0755 src/xxid/xxid.so %{buildroot}%{_libdir}/pgsql/xxid.so
+install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
+install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 
 %if %perltools
 cd tools
-make %{?_smp_mflags} DESTDIR=$RPM_BUILD_ROOT install
+make %{?_smp_mflags} DESTDIR=%{buildroot} install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
-install -m 0644 altperl/slon_tools.conf-sample  $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf
-install -m 0755 altperl/* $RPM_BUILD_ROOT%{_bindir}/
-install -m 0644 altperl/slon-tools  $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
-/bin/rm -f $RPM_BUILD_ROOT%{_sysconfdir}/slon_tools.conf-sample
-/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon_tools.conf-sample
-/bin/rm -f $RPM_BUILD_ROOT%{_libdir}/pgsql/slon-tools.pm
-/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools.pm
-/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/slon-tools
-/bin/rm -f $RPM_BUILD_ROOT%{_bindir}/pgsql/slon-tools
+install -m 0644 altperl/slon_tools.conf-sample  %{buildroot}%{_sysconfdir}/slon_tools.conf
+install -m 0755 altperl/* %{buildroot}%{_bindir}/
+install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
+/bin/rm -f %{buildroot}%{_sysconfdir}/slon_tools.conf-sample
+/bin/rm -f %{buildroot}%{_bindir}/slon_tools.conf-sample
+#/bin/rm -f %{buildroot}%{_libdir}/pgsql/slon-tools.pm
+/bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
+/bin/rm -f %{buildroot}%{_bindir}/slon-tools
+/bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-%{version}
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1
 %if %docs
 %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
@@ -124,6 +123,13 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Mon Dec 4 2006 Devrim Gunduz <devrim@CommandPrompt.com>
+- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. Fix version check
+script
+- Revert tar name patch
+- Macros cannot be used in various parts of the spec file. Revert that commit
+- Spec file cleanup
+
 * Tue Oct 31 2006 Trevor Astrope <astrope@sitesell.com>
 - Fixup tar name and install slon-tools as slon-tools.pm
 
