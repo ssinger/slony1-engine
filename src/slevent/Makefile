@@ -9,6 +9,7 @@
 slony_subdir = src/slevent
 slony_top_builddir = ../..
 SLFILEDESC="Slony-I Eventlog Message Library"
+SLFILESHLIB=1
 include $(slony_top_builddir)/Makefile.global
 
 OBJS=slevent.o slmsgevent.o
