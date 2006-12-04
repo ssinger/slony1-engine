@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.13 2006-12-04 06:28:52 devrim Exp $
+$Id: INSTALL,v 1.14 2006-12-04 07:12:49 devrim Exp $
 
 Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x, and
 8.1.x.  There have also been changes made to support features expected
@@ -71,6 +71,7 @@ The main list of files installed within the PostgreSQL instance is:
     * $datadir/slony1_base.v80.sql
     * $datadir/slony1_funcs.sql
     * $datadir/slony1_funcs.v73.sql
+    * $datadir/slony1_funcs.v74.sql
     * $datadir/slony1_funcs.v80.sql
 
 The .sql files are not fully substituted yet.  And yes, both the 7.3

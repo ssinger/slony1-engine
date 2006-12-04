@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.30 2006-12-04 06:28:52 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.31 2006-12-04 07:12:49 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -184,6 +184,7 @@ Commonly you need to do this either as root or as the postgres user.
 <listitem><para><filename> $datadir/slony1_base.v80.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.v73.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v74.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
 </itemizedlist>
 
