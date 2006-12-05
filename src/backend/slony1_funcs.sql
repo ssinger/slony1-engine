@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.4 2006-11-30 20:31:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.5 2006-12-05 18:53:07 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4629,6 +4629,9 @@ begin
 
         end if;
 
+	if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_seqlog'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
+                execute ''alter table @NAMESPACE@.sl_seqlog set without oids;'';
+	end if;		
 	-- ----
 	-- Also remove stale entries from the nodelock table.
 	-- ----
@@ -5575,6 +5578,9 @@ BEGIN
 
 		raise notice ''Slony-I: log switch to sl_log_1 complete - truncate sl_log_2'';
 		truncate @NAMESPACE@.sl_log_2;
+		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_log_2'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
+	                execute ''alter table @NAMESPACE@.sl_log_2 set without oids;'';
+		end if;		
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 0);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform @NAMESPACE@.addPartialLogIndices();
@@ -5601,6 +5607,9 @@ BEGIN
 
 		raise notice ''Slony-I: log switch to sl_log_2 complete - truncate sl_log_1'';
 		truncate @NAMESPACE@.sl_log_1;
+		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_log_1'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
+	                execute ''alter table @NAMESPACE@.sl_log_1 set without oids;'';
+		end if;		
 		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 1);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform @NAMESPACE@.addPartialLogIndices();
@@ -5807,12 +5816,9 @@ begin
                 execute ''alter table @NAMESPACE@.sl_confirm set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_event set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_listen set without oids;'';
-                execute ''alter table @NAMESPACE@.sl_log_1 set without oids;'';
-                execute ''alter table @NAMESPACE@.sl_log_2 set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_node set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_nodelock set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_path set without oids;'';
-                execute ''alter table @NAMESPACE@.sl_seqlog set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_sequence set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_set set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_setsync set without oids;'';
