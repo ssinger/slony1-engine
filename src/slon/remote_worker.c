@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.5 2006-10-27 20:09:56 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.6 2006-12-05 10:16:07 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4850,6 +4850,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 * Good job!
 	 */
 	dstring_free(&query);
+	dstring_free(&lsquery);
 	gettimeofday(&tv_now, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC "
 			 INT64_FORMAT " done in %.3f seconds\n",
