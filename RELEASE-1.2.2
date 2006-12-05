@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.2,v 1.1.2.1 2006-12-01 22:41:44 cbbrowne Exp $
+$Id: RELEASE-1.2.2,v 1.1.2.2 2006-12-05 16:04:52 cbbrowne Exp $
 
 Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
 
@@ -16,7 +16,10 @@ Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
 - Added \n to a number of log requests
 
 - Fix to UPDATE FUNCTIONS which did not consider versions 1.1.5/1.1.6
-  to be members of the 1.1 stream...
+  to be members of the 1.1 stream.  The minor problem with this was
+  that Slony-I tables wouldn't get altered to drop out OIDs.  The
+  major problem was that the new table sl_registry wouldn't get
+  created
 
 - Removed some confusing NOTICEs concerning management of partial
   indexes on sl_log_1 and sl_log_2.
@@ -29,3 +32,12 @@ Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
   instance, the main DB is down, the slon doesn't simply sit there
   continually attempting to reconnect, as many times per second as it
   can.
+
+- Several fixes to RPM .spec files
+
+- Environment fix to Win32 service
+
+- Set escape_string_warning to off, to prevent pgsql log noise when
+  replicating cross versions
+
+- Fix memory leak: free logshipping query 
