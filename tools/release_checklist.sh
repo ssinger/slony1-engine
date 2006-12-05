@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: release_checklist.sh,v 1.1 2006-11-02 21:54:20 cbbrowne Exp $
+# $Id: release_checklist.sh,v 1.2 2006-12-05 23:37:39 cbbrowne Exp $
 
 # This script runs through what it can of the release checklist
 # run via:  "sh tools/release_checklist.sh"
@@ -51,11 +51,11 @@ fi
 
 STOREDPROCVERS=`awk  -f tools/awk-for-stored-proc-vers.awk  src/backend/slony1_funcs.sql`
 
-if [[ x"$STOREDPROCVERS"] = x"$VERSTRING" ]]; then
+if [[ x"$STOREDPROCVERS" = x"$VERSTRING" ]]; then
    OK=1
    echo "Stored proc version numbers match ${VERSTRING}"
 else
-   echo "ERROR: Stored proc versions in src/backend/slony1_funcs.sql indicates version ${STOREDPROCVERS}"
+   echo "ERROR: Stored proc versions in src/backend/slony1_funcs.sql indicates version [${STOREDPROCVERS}] (versus [${VERSTRING}])"
 fi
 
 
