@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.2,v 1.1.2.2 2006-12-05 16:04:52 cbbrowne Exp $
+$Id: RELEASE-1.2.2,v 1.1.2.3 2006-12-05 23:29:55 cbbrowne Exp $
 
 Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
 
@@ -41,3 +41,21 @@ Release 1.2.2 of Slony-I has the following bug fixes over 1.2.1:
   replicating cross versions
 
 - Fix memory leak: free logshipping query 
+
+- Bug #1585 - on 8.0+, if TRUNCATE failed, indices were not being
+  deactivated during SUBSCRIBE SET COPY request, greatly slowing loading
+  of data.  Added a deactivation inside the exception block, so that
+  indices are deactivated during the COPY no matter what.
+
+- X-Fade noticed that UPGRADE FUNCTIONS was taking out exclusive locks
+  on sl_log_1, sl_log_2, sl_seqlog, which means that doing a Slony-I
+  upgrade involved imposing an application outage.
+
+  Moved the ALTER TABLE ... WITHOUT OIDS requests for these tables to
+  cleanup loops, elsewhere, so that these tables no longer need to be 
+  locked as part of the upgrade process.
+
+- Documentation changes: Need for client/server encodings to match
+
+- Fixes to parameter handling and interpreter name for
+  test_slony_state*.pl scripts
