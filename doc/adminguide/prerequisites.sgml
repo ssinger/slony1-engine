@@ -131,6 +131,16 @@ experience any problems.  </para>
 invalid encodings.  This can lead to <link linkend="faqunicode">
 replication problems.</link> </para>
 
+<para> Note also that if the client encoding (configured assortedly in
+<filename>postgresql.conf</filename>, parameter
+<envar>client_encoding</envar>, or via the
+<application>psql</application> <command>\encoding </command> command,
+or the <application>psql</application> internal variable
+<envar>ENCODING</envar>) varies from the server encoding, this
+mismatch may lead to &slony1; being unable to replicate those
+characters supported by the client encoding but not by the server
+encoding. </para>
+
 </sect2>
 
 <sect2 id="times">
