@@ -1,5 +1,5 @@
-#!perl   # -*- perl -*-
-# $Id: test_slony_state-dbi.pl,v 1.3 2006-06-28 21:11:10 cbbrowne Exp $
+#!/usr/bin/perl   # -*- perl -*-
+# $Id: test_slony_state-dbi.pl,v 1.4 2006-12-05 23:25:53 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -15,27 +15,28 @@ my %PROBLEMS;
 
 my $sleep_seconds = 4;
 
-my $goodopts = GetOptions("help", "database=s", "host=s", "user=s", "cluster=s",
-			  "password=s", "port=s", "recipient=s", "mailprog=s");
-if (defined($opt_help)) {
+GetOptions
+ ("H|help" => \$help,
+  "d|database=s" => \$database,
+  "h|host=s" => \$host,
+  "u|user=s" => \$user,
+  "c|cluster=s" => \$cluster,
+  "p|password=s" => \$password,
+  "P|port=i" => \$port,
+  "m|mailprog=s" => \$mailprog,
+  "f|finalquery=s" => \$finalquery,
+  "r|recipient=s" => \$recipient);
+
+if (defined($help)) {
   show_usage();
 }
-my ($database,$user, $port, $cluster, $host, $password, $set, $finalquery);
+my $initialDSN = "dbi:Pg:";
 
-$database = $opt_database if (defined($opt_database));
-$port = 5432;
-$port = $opt_port if (defined($opt_port));
-$user = `uname`;  chomp $user;
-$user = $opt_user if (defined($opt_user));
-$password = $opt_password if (defined($opt_password));
-$host = "localhost";
-$host = $opt_host if (defined($opt_host));
-$cluster = $opt_cluster if (defined($opt_cluster));
-$recipient = $opt_recipient if (defined($opt_recipient));
-$mailprog = $opt_mailprog if (defined($opt_mailprog));
-
-my $initialDSN = "dbi:Pg:dbname=$database;host=$host;port=$port;user=$user";
-$initialDSN = $initialDSN . ";password=$password" if defined($opt_password);
+$initialDSN .= "dbname=$database;" if (defined $database);
+$initialDSN .= "host=$host;" if (defined $host);
+$initialDSN .= "port=$port;" if (defined $port);
+$initialDSN .= "user=$user;" if (defined $user);
+$initialDSN .= "password=$password;" if (defined $password);
 
 print "DSN: $initialDSN\n===========================\n";
 
@@ -294,7 +295,7 @@ sub show_usage {
     chomp $inerr;
     print $inerr, "\n";
   }
-  die "$0  --host --database --user --cluster --port=integer --password --recipient --mailprog";
+  die "$0  --host --database --user --cluster --port=integer --password --recipient --mailprog\nnote also that libpq environment variables PGDATABASE, PGPORT, ... may also be passed in";
 }
 
 sub add_problem {

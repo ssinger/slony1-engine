@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.32 2006-12-04 07:29:02 devrim Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.33 2006-12-05 23:25:53 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -110,6 +110,12 @@ Options[db_replication_lagtime]: gauge,nopercent,growright
 You also specify a <option>mailprog</option> command (which should be
 a program equivalent to <productname>Unix</productname>
 <application>mailx</application>) and a recipient of email. </para>
+
+<para> You may alternatively specify database connection parameters
+via the environment variables used by
+<application>libpq</application>, <emphasis>e.g.</emphasis> - using
+<envar>PGPORT</envar>, <envar>PGDATABASE</envar>,
+<envar>PGUSER</envar>, <envar>PGSERVICE</envar>, and such.</para>
 
 <para> The script then rummages through <xref linkend="table.sl-path">
 to find all of the nodes in the cluster, and the DSNs to allow it to,
