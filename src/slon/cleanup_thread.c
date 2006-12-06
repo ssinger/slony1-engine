@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.34 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.35 2006-12-06 09:36:16 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -414,6 +414,8 @@ get_earliest_xid(PGconn *dbconn)
 	}
 	xid = strtoll(PQgetvalue(res, 0, 0), NULL, 10);
 	slon_log(SLON_DEBUG3, "cleanupThread: minxid: %d\n", xid);
+	PQclear(res);
+	dstring_free(&query1);
 	return (unsigned long)xid;
 }
 
