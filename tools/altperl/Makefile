@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.14 2006-08-02 15:32:02 xfade Exp $
+#       $Id: Makefile,v 1.14.2.1 2006-12-06 18:38:41 cbbrowne Exp $
 #
 # ----------
 
@@ -28,6 +28,7 @@ endif
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
                        -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
                        -e "s#@@PGBINDIR@@#$(pgbindir)#;" \
+                       -e "s#@@SLONBINDIR@@#$(slonbindir)#;" \
                        -e "s#@@TOOLSBIN@@#$(toolsbin)#;" \
                        $$file > $$tmpname && \
 		chmod 755 $$tmpname \
