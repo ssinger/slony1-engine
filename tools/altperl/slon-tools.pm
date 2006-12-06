@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.27 2006-10-27 15:24:12 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.28 2006-12-06 18:37:58 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -133,7 +133,7 @@ sub start_slon {
   my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
   $SYNC_CHECK_INTERVAL ||= 1000;
   system("mkdir -p $LOGDIR/slony1/node$nodenum");
-  my $cmd = "@@PGBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d2 $CLUSTER_NAME '$dsn' 2>&1 ";
+  my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d2 $CLUSTER_NAME '$dsn' 2>&1 ";
   if ($APACHE_ROTATOR) {
     $cmd .= "| $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M &";
   } else {
