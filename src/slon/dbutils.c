@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.23.2.3 2006-12-04 15:43:42 darcyb Exp $
+ *	$Id: dbutils.c,v 1.23.2.4 2006-12-06 09:46:09 xfade Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -149,6 +149,7 @@ slon_connectdb(char *conninfo, char *symname)
         	}
 		PQclear(res);
 	}
+	dstring_free(&query);
 	return conn;
 }
 
@@ -531,7 +532,7 @@ static int db_get_version(PGconn *conn)
 	PQclear(res);
 	snprintf(versionstr, 7, "%.2d%.2d%.2d", major, minor, patch);
 	version=atoi(versionstr);
-
+	dstring_free(&query);
 	return version;
 }
 	
