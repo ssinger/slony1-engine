@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.6 2006-12-05 10:16:07 xfade Exp $
+ *	$Id: remote_worker.c,v 1.124.2.7 2006-12-12 19:25:33 xfade Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4014,6 +4014,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (rc < 0)
 		{
 			dstring_free(&query);
+			dstring_free(&lsquery);
 			return 60;
 		}
 	}
@@ -4040,6 +4041,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 "No pa_conninfo for data provider %d\n",
 						 node->no_id, provider->no_id);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return 10;
 			}
@@ -4054,6 +4056,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 provider->pa_conninfo);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return provider->pa_connretry;
 			}
@@ -4067,6 +4070,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			if (query_execute(node, provider->conn->dbconn, &query) < 0)
 			{
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				slon_disconnectdb(provider->conn);
 				provider->conn = NULL;
@@ -4104,6 +4108,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 event->ev_origin);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return 10;
 			}
@@ -4115,6 +4120,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						 node->no_id, provider->no_id,
 						 prov_seqno, event->ev_origin);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return 10;
 			}
@@ -4183,6 +4189,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			PQclear(res1);
 			dstring_free(&new_qual);
 			dstring_free(&query);
+			dstring_free(&lsquery);
 			archive_terminate(node);
 			return 60;
 		}
@@ -4233,6 +4240,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				PQclear(res1);
 				dstring_free(&new_qual);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return 60;
 			}
@@ -4402,6 +4410,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 "no sets need syncing for this event\n",
 				 node->no_id);
 		dstring_free(&query);
+		dstring_free(&lsquery);
 		if (archive_dir)
 		{
 			rc = archive_close(node);
@@ -4424,6 +4433,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 PQresultErrorMessage(res1));
 		PQclear(res1);
 		dstring_free(&query);
+		dstring_free(&lsquery);
 		archive_terminate(node);
 		slon_disconnectdb(provider->conn);
 		provider->conn = NULL;
@@ -4436,6 +4446,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 node->no_id);
 		PQclear(res1);
 		dstring_free(&query);
+		dstring_free(&lsquery);
 		archive_terminate(node);
 		slon_disconnectdb(provider->conn);
 		provider->conn = NULL;
@@ -4661,6 +4672,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	if (num_errors != 0)
 	{
 		dstring_free(&query);
+		dstring_free(&lsquery);
 		archive_terminate(node);
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 				 node->no_id);
@@ -4699,6 +4711,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
 			dstring_free(&query);
+			dstring_free(&lsquery);
 			archive_terminate(node);
 			slon_disconnectdb(provider->conn);
 			provider->conn = NULL;
@@ -4718,6 +4731,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			{
 				PQclear(res1);
 				dstring_free(&query);
+				dstring_free(&lsquery);
 				archive_terminate(node);
 				return 60;
 			}
@@ -4776,6 +4790,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 PQresultErrorMessage(res1));
 			PQclear(res1);
 			dstring_free(&query);
+			dstring_free(&lsquery);
 			archive_terminate(node);
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: SYNC aborted\n",
 					 node->no_id);
@@ -4803,6 +4818,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 PQresultErrorMessage(res1));
 		PQclear(res1);
 		dstring_free(&query);
+		dstring_free(&lsquery);
 		archive_terminate(node);
 		return 60;
 	}
@@ -4818,6 +4834,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		{
 			PQclear(res1);
 			dstring_free(&query);
+			dstring_free(&lsquery);
 			archive_terminate(node);
 			return 60;
 		}
