@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.130 2006-12-12 19:27:04 xfade Exp $
+ *	$Id: remote_worker.c,v 1.131 2006-12-12 20:13:01 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2741,6 +2741,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				archive_terminate(node);
 				return -1;
 			}
+			PQclear(res2);
 		}
 		/* Request an exclusive lock on each table
 
@@ -2762,6 +2763,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			archive_terminate(node);
 			return -1;
 		}
+		PQclear(res2);
 	}
 	PQclear(res1);
 
