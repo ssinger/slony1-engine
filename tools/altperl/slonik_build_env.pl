@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_build_env.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_build_env.pl,v 1.2 2006-12-13 22:19:55 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
@@ -19,12 +19,16 @@ my $dataBaseUser;
 my $dataBasePassword;
 my $dataBasePort;
 my @nodes;
-my $usage = "$0 -node host:database:user[:password:port] [-node ...]
-First node is assumed to be the master.\n";
+my $schema = 'public';
+my $usage = "$0 -node host:database:user[:password:port] [-node ...] [-schema myschema]
+First node is assumed to be the master.
+Default schema is \"public\"\n";
 
 &usage if(!GetOptions('node=s@'=>\@nodes));
 
 die "At least one node is required" if ( scalar(@nodes) < 1 );
+
+
 
 my $nodeNumber = 1;
 my $parentString;
@@ -53,14 +57,14 @@ my $connectString = "dbi:Pg:dbname=$dataBase;host=$host;port=$dataBasePort";
 my $dbh = DBI->connect($connectString,$dataBaseUser,$dataBasePassword,
 		       {RaiseError => 0, PrintError => 0, AutoCommit => 1});
 die "connect: $DBI::errstr" if ( !defined($dbh) || $DBI::err );
-# Read in all the user 'normal' tables in public.
+# Read in all the user 'normal' tables in $schema (public by default).
 my $tableQuery = $dbh->prepare("
 SELECT pg_namespace.nspname || '.' || pg_class.relname,pg_class.relkind,pg_class.relhaspkey 
 FROM pg_namespace,pg_class
 WHERE pg_class.reltype > 0
 AND pg_class.relnamespace = pg_catalog.pg_namespace.oid
 AND (pg_class.relkind = 'r' OR pg_class.relkind = 'S')
-AND pg_namespace.nspname = 'public' AND pg_namespace.oid = pg_class.relnamespace");
+AND pg_namespace.nspname = '$schema' AND pg_namespace.oid = pg_class.relnamespace");
 
 die "prepare(tableQuery): $DBI::errstr" if ( !defined($tableQuery) || $DBI::err );
 die "execute(tableQuery): $DBI::errstr" if ( !$tableQuery->execute() );
