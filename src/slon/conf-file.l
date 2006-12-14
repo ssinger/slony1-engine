@@ -67,7 +67,7 @@ ESCAPED_STRING  \"([^"\n]|\\.)*\"
 
 \n              ConfigFileLineno++; return SLON_EOL;
 [ \t\r]+        /* eat whitespace */
-#.*$            /* eat comment */
+#.*             /* eat comment */
 
 {ID}            return SLON_ID;
 {QUALIFIED_ID}  return SLON_QUALIFIED_ID;
@@ -218,9 +218,45 @@ void ProcessConfigFile(const char *filename)
 					}
 					tail = item;
 				}
-			parse_state = 0;
-			break;
+				parse_state = 0;
+				break;
 		}
+	}
+	/*
+	 * If we encountered an EOF after we've already
+	 * reached parse_state of 2, we already have a complete
+	 * configuration line, it's just terminated with EOF
+	 * instead of EOL. Store that config option.
+	 */
+	if(parse_state == 2) 
+	{
+		item = malloc(sizeof *item);
+		item->name = opt_name;
+		item->value = opt_value;
+		if (strcmp(opt_name, "custom_variable_classes") == 0)
+		{
+			item->next = head;
+			head = item;
+			if (!tail)
+			{
+				tail = item;
+			}
+		}
+		else
+		{
+			/* append to list */
+			item->next = NULL;
+			if (!head)
+			{
+				head = item;
+			}
+			else
+			{
+				tail->next = item;
+			}
+			tail = item;
+		}
+		parse_state = 0;
 	}
 
 	fclose(fp);
