@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.20.2.2 2006-12-12 22:10:25 cbbrowne Exp $
+#	$Id: Makefile,v 1.20.2.3 2006-12-14 15:42:56 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -19,7 +19,7 @@ NAME		= xxid
 
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAME80	= $(NAME).v80.sql
-SQL_NAMES	= $(SQL_NAME74) $(SQL_NAME80)
+SQL_NAMES	= $(SQL_NAME80)
 
 SO_OBJS		= xxid.o $(WIN32RES)
 
