@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.102 2006-12-05 18:52:25 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.103 2006-12-15 05:34:18 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3700,6 +3700,8 @@ begin
 	-- ----
 	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
 	-- ----
+    perform @NAMESPACE@.alterTableRestore(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
+
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	return 1;
 end;
@@ -3725,6 +3727,7 @@ declare
 	v_set_origin		int4;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+    perform @NAMESPACE@.alterTableForReplication(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
 			p_set_id, p_script, p_only_on_node);
 end;
@@ -5784,7 +5787,7 @@ begin
 	-- ----
 	-- Changes for 1.1.3
 	-- ----
-	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'', ''1.1.5'', ''1.1.6'') then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'') then
 		-- Add new table sl_nodelock
 		execute ''create table @NAMESPACE@.sl_nodelock (
 						nl_nodeid		int4,
@@ -5803,7 +5806,7 @@ begin
 	-- ----
 	-- Changes for 1.2
 	-- ----
-	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'') then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'', ''1.1.5'', ''1.1.6'') then
 		-- Add new table sl_registry
 		execute ''create table @NAMESPACE@.sl_registry (
 						reg_key			text primary key,
