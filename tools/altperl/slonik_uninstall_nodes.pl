@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_uninstall_nodes.pl,v 1.1.4.1 2006-10-27 17:54:21 cbbrowne Exp $
+# $Id: slonik_uninstall_nodes.pl,v 1.1.4.2 2007-01-02 17:16:00 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -17,6 +17,15 @@ my $USAGE =
 "Usage: uninstall_nodes [--config file]
 
     Removes Slony configuration from all nodes in a cluster.
+
+Restores all tables to the unlocked state, with all original user       
+triggers, constraints and rules, eventually added Slony-I specific      
+serial key columns dropped and the Slony-I schema dropped. The node     
+becomes a standalone database. The data is left untouched.              
+ 
+The difference between UNINSTALL NODE and DROP NODE is that all         
+UNINSTALL NODE does is to remove the Slony-I configuration; it doesn't  
+drop the node's configuration from replication.                         
 
 ";
 
