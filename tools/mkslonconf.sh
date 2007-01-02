@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkslonconf.sh,v 1.2 2006-05-31 21:11:29 cbbrowne Exp $
+# $Id: mkslonconf.sh,v 1.3 2007-01-02 20:17:34 cbbrowne Exp $
 # mkslonconf.sh
 # Build a set of slon.conf files compatible with launch_clusters.sh
 
@@ -36,7 +36,7 @@ cat <<_EOF_ > $conffile
 # Range: [0,100], default: 3
 #vac_frequency=3
 
-# Debug log level (higher value ==> more output).  Range: [0,4], default 4
+# Debug log level (higher value ==> more output).  Range: [0,4], default 2
 #log_level=2
 
 # Check for updates at least this often in milliseconds.
