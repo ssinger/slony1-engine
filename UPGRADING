@@ -1,6 +1,6 @@
-Upgrading from an earlier version of Slony-I to 1.1
+Upgrading from an earlier version of Slony-I to 1.2
 -----------------------------------------------------
-$Id: UPGRADING,v 1.1 2005-04-15 21:59:34 cbbrowne Exp $
+$Id: UPGRADING,v 1.1.4.1 2007-01-02 17:04:09 cbbrowne Exp $
 
 When upgrading Slony-I, the Slony installation on all nodes in a cluster
 must be upgraded at once, using the slonik command UPDATE FUNCTIONS.
@@ -17,4 +17,14 @@ The proper upgrade procedure is thus:
 		update functions (id = [whatever]);
 		for each node in the cluster.
 
+  If you installed the "altperl" tools via "./configure --with-altperl",
+  this step may be done more simply, assuming you have a suitable
+  slon_tools.conf file configured.  You may instead run:
+
+  % slonik_update_nodes | slonik
+
 	4. Start all slons. 
+
+Upgrading is also discussed in more detail in the "Admin Guide."
+The section is entitled "Slony-I Upgrade", distributed as
+doc/adminguide/slonyupgrade.html in the documentation package.
