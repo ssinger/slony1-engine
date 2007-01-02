@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.41 2006-08-02 15:32:02 xfade Exp $
+#	$Id: Makefile,v 1.42 2007-01-02 23:34:48 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slon
@@ -12,6 +12,8 @@ slony_top_builddir = ../..
 SLFILEDESC="Slony replication engine"
 include $(slony_top_builddir)/Makefile.global
 
+SFILES=$(wildcard *.c)
+SFILES2=$(filter-out snmp_thread.c, $(SFILES))
 CC = $(PTHREAD_CC)
 
 override CFLAGS += $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(slony_top_builddir)/$(slony_subdir)
@@ -100,7 +102,8 @@ install: all installdirs
 installdirs:
 	$(mkinstalldirs) $(DESTDIR)$(slonbindir)
 
-
+splint:
+	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(SFILES2)
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
