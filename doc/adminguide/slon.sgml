@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.29 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.30 2007-01-02 20:16:58 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -40,16 +40,17 @@
   
   <variablelist>
    <varlistentry>
-    <term><option>-d</option><replaceable class="parameter"> debuglevel</replaceable></term>
+    <term><option>-d</option><replaceable class="parameter"> log_level</replaceable></term>
     <listitem>
      <para>
-      The <envar>log_level</envar> specifies which Debug levels
+      The <envar>log_level</envar> specifies which levels of debugging messages
       <application>slon</application> should display when logging its
       activity.
      </para>
-     <para>
-      The eight levels of logging are:
+     <para id="nineloglevels">
+      The nine levels of logging are:
       <itemizedlist>
+       <listitem><para>Fatal</para></listitem>
        <listitem><para>Error</para></listitem>
        <listitem><para>Warn</para></listitem>
        <listitem><para>Config</para></listitem>
@@ -60,11 +61,13 @@
        <listitem><para>Debug4</para></listitem>
       </itemizedlist>
      </para>
-     <para> Thus, <emphasis>all</emphasis> the non-debugging log
-     levels are always displayed in the logs.  If
-     <envar>log_level</envar> is set to 2 (a routine, and, seemingly
+
+     <para> The first five non-debugging log levels (from Fatal to
+     Info) are <emphasis>always</emphasis> displayed in the logs.  If
+     <envar>log_level</envar> is set to 2 (a routine, and, seemingly,
      preferable choice), then output at debugging levels 1 and 2 will
      also be displayed.</para>
+
     </listitem>
    </varlistentry>
    

@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.7 2005-11-15 18:09:59 cbbrowne Exp $
+# $Id: slon_tools.conf-sample,v 1.8 2007-01-02 20:16:58 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -36,6 +36,9 @@ if ($ENV{"SLONYNODES"}) {
 
     # Which node is the default master for all sets?
     $MASTERNODE = 1;
+
+    # Which debugging level to use?  [0-4]
+    $DEBUGLEVEL = 2;
 
     # Include add_node lines for each node in the cluster.  Be sure to
     # use host names that will resolve properly on all nodes

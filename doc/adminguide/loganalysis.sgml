@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.5 2006-10-30 16:29:45 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.6 2007-01-02 20:16:58 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -58,6 +58,12 @@ events.</para></listitem></varlistentry>
 
 </variablelist>
 </para>
+
+<para> How much information they display is controlled by
+the <envar>log_level</envar> &lslon; parameter;
+ERROR/WARN/CONFIG/INFO messages will always be displayed, while
+choosing increasing values from 1 to 4 will lead to additional DEBUG
+level messages being displayed. </para>
 </sect2>
 
 <sect2> <title> How to read &slony1; logs </title>

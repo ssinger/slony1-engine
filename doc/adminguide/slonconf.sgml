@@ -86,7 +86,13 @@
         <primary><varname>log_level</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 4</para>
+        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 2</para>
+
+	<para> There are <link linkend="nineloglevels">nine log
+	message types</link>; using this option, some or all of
+	the <quote>debugging</quote> levels may be left out of the
+	slon logs. </para>
+
       </listitem>
     </varlistentry>
 
