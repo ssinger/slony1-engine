@@ -1,6 +1,6 @@
 #!@@PERL@@
 
-# $Id: slonik_create_set.pl,v 1.4 2006-10-27 17:52:10 cbbrowne Exp $
+# $Id: slonik_create_set.pl,v 1.5 2007-01-02 17:12:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -31,8 +31,14 @@ require '@@PGLIBDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($set) = @ARGV;
+
+die $USAGE unless $set;
 $SET_ID = get_set($set);
 unless ($SET_ID) {
+    my $possible_sets = join "\n\t", keys %$SLONY_SETS;
+    print "No set was found with the name provided.  Possible valid names include:\n\t"
+          . $possible_sets . "\n\n"
+          . "New sets may be defined in your slon_tools.conf file\n\n";
     die $USAGE;
 }
 

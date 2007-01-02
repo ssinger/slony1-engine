@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_node.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
+# $Id: slonik_drop_node.pl,v 1.3 2007-01-02 17:12:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -18,6 +18,20 @@ my $USAGE =
 
     Drops a node.
 
+This will lead to Slony-I dropping the triggers (generally that deny the
+ability to update data), restoring the \"native\" triggers, dropping the
+schema used by Slony-I, and the slon process for that node terminating
+itself.
+ 
+As a result, the database should be available for whatever use your     
+application makes of the database.                                      
+ 
+This is a pretty major operation, with considerable potential to cause  
+substantial destruction; make sure you drop the right node!             
+ 
+The operation will fail if there are any nodes subscribing to the node  
+that you attempt to drop, so there is a bit of a failsafe to protect    
+you from errors.                                                        
 ";
 
 if ($SHOW_USAGE) {

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_set.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
+# $Id: slonik_drop_set.pl,v 1.3 2007-01-02 17:12:33 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -13,12 +13,24 @@ $SHOW_USAGE  = 0;
 GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
-my $USAGE =
+my $USAGE = <<EOF
 "Usage: drop_set [--config file] set#
 
     Drops a set.
 
-";
+Much as with DROP NODE, this leads to Slony-I dropping the Slony-I triggers on 
+the tables and restoring "native" triggers. One difference is that this takes 
+place on all nodes in the cluster, rather than on just one node. Another 
+difference is that this does not clear out the Slony-I cluster's namespace, as 
+there might be other sets being serviced. 
+ 
+This operation is quite a bit more dangerous than DROP NODE, as there isn't the 
+same sort of "failsafe." If you tell DROP SET to drop the wrong set, there 
+isn't anything to prevent potentially career-limiting "unfortunate results." 
+Handle with care... 
+
+EOF
+;
 
 if ($SHOW_USAGE) {
   print $USAGE;
