@@ -1,5 +1,5 @@
 #!/usr/bin/perl   # -*- perl -*-
-# $Id: test_slony_state-dbi.pl,v 1.4 2006-12-05 23:25:53 cbbrowne Exp $
+# $Id: test_slony_state-dbi.pl,v 1.5 2007-01-02 19:34:11 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -261,7 +261,7 @@ Could listen paths be missing so that confirmations are not propagating?
   print "\n";
 
   print "\n------------------------------------------------------------------------------\n";
-  print "\nListing of old open connections\n";
+  printf "\nListing of old open connections on node %d\n", $node;
   printf "%15s %15s %15s %12s %20s\n", "Database", "PID", "User", "Query Age", "Query";
   print "================================================================================\n";
 
