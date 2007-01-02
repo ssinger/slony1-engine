@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.24 2006-08-02 15:32:02 xfade Exp $
+#	$Id: Makefile,v 1.25 2007-01-02 23:34:35 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -65,6 +65,9 @@ else
 	@echo "Missing flex $< $@"
 	@exit
 endif
+
+splint:
+	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(wildcard *.c)
 
 clean distclean:
 	rm -f $(ALL) $(OBJS) $(PROG).core
