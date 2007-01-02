@@ -1,12 +1,12 @@
 -- ----------
--- xxid.v73.sql.in
+-- xxid.v74.sql.in
 --
 --	SQL script for loading the transaction ID compatible datatype 
 --
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v74.sql,v 1.1.2.1 2006-12-14 15:40:57 cbbrowne Exp $
+-- $Id: xxid.v74.sql,v 1.1.2.2 2007-01-02 16:47:31 xfade Exp $
 -- ----------
 
 --
@@ -14,7 +14,7 @@
 --
 CREATE FUNCTION @NAMESPACE@."xxidin"(cstring) RETURNS @NAMESPACE@."xxid"
 	AS '$libdir/xxid', '_Slony_I_xxidin'
-	LANGUAGE C;
+	LANGUAGE C STRICT;
 CREATE FUNCTION @NAMESPACE@."xxidout"(@NAMESPACE@."xxid") RETURNS cstring
 	AS '$libdir/xxid', '_Slony_I_xxidout'
 	LANGUAGE C;
