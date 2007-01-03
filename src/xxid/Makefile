@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.24 2007-01-03 15:32:41 cbbrowne Exp $
+#	$Id: Makefile,v 1.25 2007-01-03 15:36:52 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -20,6 +20,7 @@ NAME		= xxid
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAME80	= $(NAME).v80.sql
 SQL_NAMES	= $(SQL_NAME74) $(SQL_NAME80)
+GENSQLNAMES = $(filter-out $(SQL_NAME74), $(SQL_NAMES))
 
 SO_OBJS		= xxid.o $(WIN32RES)
 
@@ -38,7 +39,7 @@ $(SO_NAME):     $(SO_OBJS) $(POSTGRES_IMP)
 
 clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
-	rm -f $(SQL_NAMES)
+	rm -f $(GENSQLNAMES)
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)
