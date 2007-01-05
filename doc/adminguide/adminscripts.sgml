@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.43 2006-12-04 07:29:02 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.44 2007-01-05 19:11:28 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -165,7 +165,7 @@ replicated.</para>
 &slony1; cluster.</para>
 </sect3>
 
-<sect3><title>slonik_drop_table</title>
+<sect3 id="slonik-drop-table"><title>slonik_drop_table</title>
 
 <para>Generates Slonik script to drop a table from replication.
 Requires, as input, the ID number of the table (available from table
