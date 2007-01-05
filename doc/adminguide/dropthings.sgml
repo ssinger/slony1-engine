@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.16 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.16.2.1 2007-01-05 19:11:44 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>
@@ -82,8 +82,22 @@ fact that the data was recently being replicated isn't good enough;
 
 </sect2>
 <sect2><title> Dropping A Table From Replication</title>
-
 <indexterm><primary>dropping a table from replication</primary></indexterm>
+
+<sect3><title> Using the altperl tools </title>
+
+<para>
+If the <link linkend="altperl"> altperl </link> utilities are
+installed, you can use the <link linkend="slonik-drop-table">
+slonik_drop_table </link> helper script to drop a table from
+replication. Simply run <command>slonik_drop_table</command> with no
+arguments to review the correct usage of the script. After dropping
+the table, you should also remove it from
+<filename>slon_tools.conf</filename>.
+</para>
+
+</sect3>
+<sect3><title> Using Direct slonik commands </title>
 
 <para>In &slony1; 1.0.5 and above, there is a Slonik command <xref
 linkend="stmtsetdroptable"> that allows dropping a single table from
@@ -115,6 +129,7 @@ statement with a new &slony1; event would do that.  Submitting the
 three queries using <xref linkend="stmtddlscript"> could do that; see
 <xref linkend="ddlchanges"> for more details.  Also possible would be
 to connect to each database and submit the queries by hand.</para>
+</sect3>
 </sect2>
 
 <sect2><title>Dropping A Sequence From Replication</title>

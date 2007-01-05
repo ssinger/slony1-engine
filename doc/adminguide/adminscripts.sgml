@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.40.2.5 2006-11-17 08:50:40 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40.2.6 2007-01-05 19:11:44 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -165,7 +165,7 @@ replicated.</para>
 &slony1; cluster.</para>
 </sect3>
 
-<sect3><title>slonik_drop_table</title>
+<sect3 id="slonik-drop-table"><title>slonik_drop_table</title>
 
 <para>Generates Slonik script to drop a table from replication.
 Requires, as input, the ID number of the table (available from table
@@ -534,8 +534,6 @@ values, so that if you run
 environment variables, you will get a set of slonik scripts.  They may
 not correspond, of course, to any database you actually want to
 use...</para>
-
-</sect3>
 
 <sect3><title>Node-Specific Values</title>
 
