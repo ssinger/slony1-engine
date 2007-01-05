@@ -1,0 +1,10 @@
+$Id: RELEASE-1.2.5,v 1.1.2.1 2007-01-05 20:50:08 cbbrowne Exp $
+
+Release 1.2.5 of Slony-I has the following bug fixes over 1.2.2:
+
+- Fixed issue with xxid C functions - these functions need to be
+  defined STRICT so that NULL values don't cause the functions to
+  barf.  This has been causing users of PostgreSQL 8.2 to see
+  postmasters falling over.
+
+- Several improvements to internal documentation of altperl scripts
