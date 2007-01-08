@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: release_checklist.sh,v 1.2 2006-12-05 23:37:39 cbbrowne Exp $
+# $Id: release_checklist.sh,v 1.3 2007-01-08 17:42:17 cbbrowne Exp $
 
 # This script runs through what it can of the release checklist
 # run via:  "sh tools/release_checklist.sh"
@@ -7,14 +7,16 @@
 
 echo "Slony-I Release Checklist"
 
-VERSTRING=`egrep 'SLONY_I_VERSION_STRING.*"[0-9]+\.[0-9]+\.[0-9]+"' config.h.in | cut -d'"' -f 2`
-MAJOR=`echo $VERSTRING | cut -d '.' -f 1`
-MINOR=`echo $VERSTRING | cut -d '.' -f 2`
-PATCHLEVEL=`echo $VERSTRING | cut -d '.' -f 3`
+echo "pulling version information from config.h.in"
+VERDOTTED=`egrep 'SLONY_I_VERSION_STRING.*"[0-9]+\.[0-9]+\.[0-9]+"' config.h.in | cut -d'"' -f 2`
+MAJOR=`echo $VERDOTTED | cut -d '.' -f 1`
+MINOR=`echo $VERDOTTED | cut -d '.' -f 2`
+PATCHLEVEL=`echo $VERDOTTED | cut -d '.' -f 3`
 
-echo "Slony-I version: ${VERSTRING} - Major=${MAJOR} Minor=${MINOR} Patchlevel=${PATCHLEVEL}"
+echo "Slony-I version: ${VERDOTTED} - Major=${MAJOR} Minor=${MINOR} Patchlevel=${PATCHLEVEL} per config.h.in"
 
 VERCOMMA="${MAJOR},${MINOR},${PATCHLEVEL}"
+VERUNDERSCORE="${MAJOR}_${MINOR}_${PATCHLEVEL}"
 if [[ `egrep "#define SLONY_I_VERSION_STRING_DEC ${VERCOMMA}\$" config.h.in` ]]; then
    echo "SLONY_I_VERSION_STRING_DEC matches"
 else
@@ -23,18 +25,17 @@ else
 fi
 
 echo "Verifying configure..."
-VERUNDERSCORE="${MAJOR}_${MINOR}_${PATCHLEVEL}"
-if [[ `egrep "^PACKAGE_VERSION=${VERUNDERSCORE=}\$" configure` ]]; then
-   echo "configure PACKAGE_VERSION matches ${VERUNDERSCORE}"
+if [[ `egrep "^PACKAGE_VERSION='${VERDOTTED}'\$" configure` ]]; then
+   echo "configure PACKAGE_VERSION matches ${VERDOTTED}"
 else
-   echo "ERROR: configure PACKAGE_VERSION does not match ${VERUNDERSCORE}"
+   echo "ERROR: PACKAGE_VERSION in configure does not match ${VERDOTTED}"
    egrep "PACKAGE_VERSION\=" configure
 fi
 
-if [[ `egrep "^PACKAGE_STRING=postgresql-slony1-engine ${VERUNDERSCORE=}\$" configure` ]]; then
-   echo "configure PACKAGE_STRING matches ${VERUNDERSCORE}"
+if [[ `egrep "^PACKAGE_STRING='postgresql-slony1-engine ${VERDOTTED}'\$" configure` ]]; then
+   echo "PACKAGE_STRING in configure matches ${VERDOTTED}"
 else
-   echo "ERROR: configure PACKAGE_STRING does not match ${VERUNDERSCORE}"
+   echo "ERROR: configure PACKAGE_STRING does not match ${VERDOTTED}"
    egrep "PACKAGE_STRING\=" configure
 fi
 
@@ -51,11 +52,11 @@ fi
 
 STOREDPROCVERS=`awk  -f tools/awk-for-stored-proc-vers.awk  src/backend/slony1_funcs.sql`
 
-if [[ x"$STOREDPROCVERS" = x"$VERSTRING" ]]; then
+if [[ x"$STOREDPROCVERS" = x"$VERDOTTED" ]]; then
    OK=1
-   echo "Stored proc version numbers match ${VERSTRING}"
+   echo "Stored proc version numbers match ${VERDOTTED}"
 else
-   echo "ERROR: Stored proc versions in src/backend/slony1_funcs.sql indicates version [${STOREDPROCVERS}] (versus [${VERSTRING}])"
+   echo "ERROR: Stored proc versions in src/backend/slony1_funcs.sql indicates version [${STOREDPROCVERS}] (versus [${VERDOTTED}])"
 fi
 
 
