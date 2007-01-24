@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.25 2007-01-03 15:36:52 cbbrowne Exp $
+#	$Id: Makefile,v 1.26 2007-01-24 15:59:45 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/xxid
@@ -64,3 +64,6 @@ ifeq ($(PORTNAME), aix)
 $(POSTGRES_IMP): $(pgbindir)/postgres
 	$(MKLDEXPORT) $(pgbindir)/postgres > $@
 endif
+
+splint:
+	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers xxid.c
