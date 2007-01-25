@@ -83,8 +83,19 @@ a:hover{
             </tbody>
           </table>
 
-          <h1><font face="lucida,arial,helvetica" size=
-          "2">Slony-I</font></h1>
+          <h1>Drafty Slony-I Site</h1>
+
+          <p>Please note that this site is presently <b>under heavy
+          construction</b> .</p>
+
+          <p>It will soon be able to be actively used for Slony-I
+          CVS, downloads, and mailing lists; it's not <i>quite</i>
+          ready yet, so for now, you likely want to look to the
+          <a href=
+          "http://gborg.postgresql.org/project/slony1/projdisplay.php">
+          gBorg Slony-I project</a></p>
+
+          <h1>Slony-I</h1>
 
           <p><b>Slony-I</b> is a "master to multiple slaves"
           replication system with cascading and failover.</p>
@@ -108,63 +119,51 @@ a:hover{
           "http://developer.postgresql.org/%7Ewieck/slony1/Slony-I-concept.pdf">
           here</a>.</p>
 
-          <h2><font face="lucida,arial,helvetica" size="2">Slony-I
-          1.2.6</font></h2>
+          <h1>Slony-I 1.2.6</h1>
 
-          <p><font face="lucida,arial,helvetica" size="2">At long
-          last, here is version 1.2.6. It has many enhancements as
-          listed in the <a href=
+          <p>At long last, here is version 1.2.6. It has many
+          enhancements as listed in the <a href=
           "http://pgfoundry.org/frs/shownotes.php?release_id=730">Release
-          Notes</a> .</font></p>
+          Notes</a> .</p>
 
-          <p><font face="lucida,arial,helvetica" size="2">This has
-          been run thru the <a href=
+          <p>This has been run thru the <a href=
           "http://linuxdatabases.info/info/releasechecklist.html">Release
-          Checklist</a></font></p>
+          Checklist</a></p>
 
-          <p><font face="lucida,arial,helvetica" size="2">There are
-          two tarballs available <a href=
-          "http://pgfoundry.org/frs/?group_id=1000122">here</a></font></p>
+          <p>There are two tarballs available <a href=
+          "http://pgfoundry.org/frs/?group_id=1000122">here</a></p>
 
-          <h2><font face="lucida,arial,helvetica" size="2">Slony-I
-          and PostgreSQL 8.1</font></h2><font face=
-          "lucida,arial,helvetica" size="2">There is a known
-          incompatibility of versions earlier than 1.1.5 with
-          version 8.1; you can expect to see the following error
-          message when compiling:</font>
+          <h1>Slony-I and PostgreSQL 8.1</h1>
+
+          <p>There is a known incompatibility of versions earlier
+          than 1.1.5 with version 8.1; you can expect to see the
+          following error message when compiling:</p>
           <pre>
-<font face="lucida,arial,helvetica" size=
-"2">slony1_funcs.c:1081: error: too many arguments to function
-`Async_Unlisten' </font>
+slony1_funcs.c:1081: error: too many arguments to function
+`Async_Unlisten' 
 </pre>
 
-          <p><font face="lucida,arial,helvetica" size="2">A patch
-          for both version 1.1 "STABLE" and CVS HEAD has been
-          committed to CVS; look at both CVS HEAD as well as
+          <p>A patch for both version 1.1 "STABLE" and CVS HEAD has
+          been committed to CVS; look at both CVS HEAD as well as
           <tt>REL_1_1_STABLE</tt>. It is in the 1.1.5 release
-          candidate described above.</font></p>
+          candidate described above.</p>
 
-          <h3><font face="lucida,arial,helvetica" size=
-          "2">Upgrading Slony-I</font></h3>
+          <h1>Upgrading Slony-I</h1>
 
-          <p><font face="lucida,arial,helvetica" size="2">Beginning
-          with version 1.0.5 the slon replication engine refuses to
-          work against any database that does not have the stored
-          procedures for the same version loaded or where the
-          shared object containing the C language support functions
-          and the log trigger does not match the version
-          number.</font></p>
+          <p>Beginning with version 1.0.5 the slon replication
+          engine refuses to work against any database that does not
+          have the stored procedures for the same version loaded or
+          where the shared object containing the C language support
+          functions and the log trigger does not match the version
+          number.</p>
 
-          <p><font face="lucida,arial,helvetica" size="2">This
-          means that the Slony installation on all nodes in a
-          cluster must be upgraded at once.</font></p>
+          <p>This means that the Slony installation on all nodes in
+          a cluster must be upgraded at once.</p>
 
-          <p><font face="lucida,arial,helvetica" size="2">The
-          proper upgrade procedure is this:</font></p>
+          <p>The proper upgrade procedure is this:</p>
 
           <ol>
-            <li><font face="lucida,arial,helvetica" size="2">Stop
-            the slon replication engine on all nodes.</font></li>
+            <li>Stop the slon replication engine on all nodes.</li>
 
             <li>Install the new Slony version on all nodes.</li>
 
@@ -176,7 +175,7 @@ a:hover{
 
             <li>Start all slon replication engines.
 
-              <h2>Libpq requirements</h2>
+              <h1>Libpq requirements</h1>
 
               <p>The multithreaded replication engine requires the
               libpq client library to be compiled with
@@ -191,7 +190,7 @@ a:hover{
               "http://developer.postgresql.org/%7Ewieck/slony1/download/threadsafe-libpq-742.diff.gz">
               threadsafe-libpq-742.diff.gz.</a></p>
 
-              <h2>RPMs</h2>
+              <h1>RPMs</h1>
 
               <p>RPM files for some versions of Red Hat Linux are
               available <a href=
@@ -211,7 +210,7 @@ a:hover{
             Browne</a>
           </address><!-- Created: Thu Jan 25 11:13:08 EST 2007 -->
           <!-- hhmts start -->
-          Last modified: Thu Jan 25 11:48:37 EST 2007 
+          Last modified: Thu Jan 25 12:01:53 EST 2007 
           <!-- hhmts end -->
         </td>
       </tr>
