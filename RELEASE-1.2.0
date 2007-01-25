@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.0,v 1.12 2006-10-06 20:21:35 cbbrowne Exp $
+$Id: RELEASE-1.2.0,v 1.12.2.1 2007-01-25 02:37:05 cbbrowne Exp $
 
 Release 1.2 of Slony-I has numerous improvements over previous
 versions.  
@@ -171,3 +171,4 @@ There are also numerous enhancements that are more directly visible:
 - Force all replication to occur with standards_conforming_strings set
   to off. This ensures we can replicate a node running on 8.2 without
   extra escape chars showing up in the data.
+ 
