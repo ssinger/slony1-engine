@@ -24,157 +24,198 @@ a:hover{
 }
 </style>
 </head>
+
 <body>
+  <table border="0" cellpadding="2" cellspacing="0" width="100%">
+    <tbody>
+      <tr>
+        <td>
+          <table border="0">
+            <tbody>
+              <tr>
+                <td align="left" valign="top"><img src=
+                "images/Slon_450x320.jpg" align="left"></td>
 
-	<table border="0" cellpadding="2" cellspacing="0" width="100%">
-	<tbody><tr>
-	<td>
-	<font face="lucida,arial,helvetica" size="2"><table border="0">
-<tbody><tr><td align="left" valign="top">
-<img src="images/Slon_450x320.jpg" align="left">
-</td><td align="left" valign="top">
-</td></tr>
-</tbody></table>
-		<table border="0" cellpadding="2" cellspacing="0" width="100%">
-		<!-- if proj id not empty display proj nav -->
-				<tbody><tr bgcolor="#000000">
-		<td colspan="2"><img src="images/shim.gif" height="1" width="1"></td>
-		<td><img src="images/shim.gif" height="1" width="1"></td>
-		</tr>
-		<tr bgcolor="#eeeeee">
-		<td nowrap="nowrap"><img src="images/shim.gif" height="1" width="1"><b><a class="adminNav" href="admin.html">Project Admin Area</a></b></td>
-		<td align="right" nowrap="nowrap" width="100%"><b><a class="projNav" href="http://main.slony.info">slony1 Home</a>
-| <a class="projNav" href="http://slony.info/">Slony-I Website</a>
-| <a class="projNav" href="cvs.html">Slony-I CVS</a>
-| <a class="projNav" href="http://lists.slony.info/mailman/listinfo">Mailing Lists</a>
-</b></td>
-		<td><img src="images/shim.gif" height="1" width="1"></td>
-		</tr>
-		<tr bgcolor="#000000">
-		<td colspan="2"><img src="images/shim.gif" height="1" width="1"></td>
-		<td><img src="images/shim.gif" height="1" width="1"></td>
-		</tr>
-				</tbody></table>
+                <td align="left" valign="top"></td>
+              </tr>
+            </tbody>
+          </table>
 
-  <h1>Slony-I</h1>
+          <table border="0" cellpadding="2" cellspacing="0" width=
+          "100%">
+            <!-- if proj id not empty display proj nav -->
 
-  <p><b>Slony-I</b> is a "master to multiple slaves" replication
-  system with cascading and failover.</p>
+            <tbody>
+              <tr bgcolor="#000000">
+                <td colspan="2"><img src="images/shim.gif" height=
+                "1" width="1"></td>
 
-  <p>The <i>big picture</i> for the development of Slony-I is a
-  master-slave system that includes all features and capabilities
-  needed to replicate large databases to a reasonably limited
-  number of slave systems.</p>
+                <td><img src="images/shim.gif" height="1" width=
+                "1"></td>
+              </tr>
 
-  <p>Slony-I is a system for data centers and backup sites, where
-  the normal mode of operation is that all nodes are available.</p>
+              <tr bgcolor="#EEEEEE">
+                <td nowrap="nowrap"><img src="images/shim.gif"
+                height="1" width="1"><b><a class="adminNav" href=
+                "admin.html">Project Admin Area</a></b></td>
 
-  <p>A fairly extensive "admin guide" comprising material in the
-  CVS tree may be found <a href=
-  "http://linuxdatabases.info/info/slony.html">here</a></p>
+                <td align="right" nowrap="nowrap" width="100%">
+                <b><a class="projNav" href=
+                "http://main.slony.info">slony1 Home</a> |
+                <a class="projNav" href=
+                "http://slony.info/">Slony-I Website</a> |
+                <a class="projNav" href="cvs.html">Slony-I CVS</a>
+                | <a class="projNav" href=
+                "http://lists.slony.info/mailman/listinfo">Mailing
+                Lists</a></b></td>
 
-  <p>The original design document is available <a href=
-  "http://developer.postgresql.org/%7Ewieck/slony1/Slony-I-concept.pdf">
-  here</a>.</p>
+                <td><img src="images/shim.gif" height="1" width=
+                "1"></td>
+              </tr>
 
-  <h2><font face="lucida,arial,helvetica" size="2">Slony-I
-  1.2.6</font></h2>
+              <tr bgcolor="#000000">
+                <td colspan="2"><img src="images/shim.gif" height=
+                "1" width="1"></td>
 
-  <p><font face="lucida,arial,helvetica" size="2">At long last,
-  here is version 1.2.6. It has many enhancements as listed in the
-  <a href=
-  "http://pgfoundry.org/frs/shownotes.php?release_id=730">Release
-  Notes</a> .</font></p>
+                <td><img src="images/shim.gif" height="1" width=
+                "1"></td>
+              </tr>
+            </tbody>
+          </table>
 
-  <p><font face="lucida,arial,helvetica" size="2">This has been run
-  thru the <a href=
-  "http://linuxdatabases.info/info/releasechecklist.html">Release
-  Checklist</a></font></p>
+          <h1><font face="lucida,arial,helvetica" size=
+          "2">Slony-I</font></h1>
 
-  <p><font face="lucida,arial,helvetica" size="2">There are two
-  tarballs available <a href=
-  "http://pgfoundry.org/frs/?group_id=1000122">here</a></font></p>
+          <p><b>Slony-I</b> is a "master to multiple slaves"
+          replication system with cascading and failover.</p>
 
-  <h2><font face="lucida,arial,helvetica" size="2">Slony-I and
-  PostgreSQL 8.1</font></h2><font face="lucida,arial,helvetica"
-  size="2">There is a known incompatibility of versions earlier
-  than 1.1.5 with version 8.1; you can expect to see the following
-  error message when compiling:</font>
-  <pre>
+          <p>The <i>big picture</i> for the development of Slony-I
+          is a master-slave system that includes all features and
+          capabilities needed to replicate large databases to a
+          reasonably limited number of slave systems.</p>
+
+          <p>Slony-I is a system for data centers and backup sites,
+          where the normal mode of operation is that all nodes are
+          available.</p>
+
+          <p>A fairly extensive "admin guide" comprising material
+          in the CVS tree may be found <a href=
+          "http://linuxdatabases.info/info/slony.html">here</a>
+          There is also a local copy <a href=
+          "adminguide/slony1-1.2.6/doc/adminguide/index.html">here</a></p>
+
+          <p>The original design document is available <a href=
+          "http://developer.postgresql.org/%7Ewieck/slony1/Slony-I-concept.pdf">
+          here</a>.</p>
+
+          <h2><font face="lucida,arial,helvetica" size="2">Slony-I
+          1.2.6</font></h2>
+
+          <p><font face="lucida,arial,helvetica" size="2">At long
+          last, here is version 1.2.6. It has many enhancements as
+          listed in the <a href=
+          "http://pgfoundry.org/frs/shownotes.php?release_id=730">Release
+          Notes</a> .</font></p>
+
+          <p><font face="lucida,arial,helvetica" size="2">This has
+          been run thru the <a href=
+          "http://linuxdatabases.info/info/releasechecklist.html">Release
+          Checklist</a></font></p>
+
+          <p><font face="lucida,arial,helvetica" size="2">There are
+          two tarballs available <a href=
+          "http://pgfoundry.org/frs/?group_id=1000122">here</a></font></p>
+
+          <h2><font face="lucida,arial,helvetica" size="2">Slony-I
+          and PostgreSQL 8.1</font></h2><font face=
+          "lucida,arial,helvetica" size="2">There is a known
+          incompatibility of versions earlier than 1.1.5 with
+          version 8.1; you can expect to see the following error
+          message when compiling:</font>
+          <pre>
 <font face="lucida,arial,helvetica" size=
 "2">slony1_funcs.c:1081: error: too many arguments to function
 `Async_Unlisten' </font>
 </pre>
 
-  <p><font face="lucida,arial,helvetica" size="2">A patch for both
-  version 1.1 "STABLE" and CVS HEAD has been committed to CVS; look
-  at both CVS HEAD as well as <tt>REL_1_1_STABLE</tt>. It is in the
-  1.1.5 release candidate described above.</font></p>
+          <p><font face="lucida,arial,helvetica" size="2">A patch
+          for both version 1.1 "STABLE" and CVS HEAD has been
+          committed to CVS; look at both CVS HEAD as well as
+          <tt>REL_1_1_STABLE</tt>. It is in the 1.1.5 release
+          candidate described above.</font></p>
 
-  <h3><font face="lucida,arial,helvetica" size="2">Upgrading
-  Slony-I</font></h3>
+          <h3><font face="lucida,arial,helvetica" size=
+          "2">Upgrading Slony-I</font></h3>
 
-  <p><font face="lucida,arial,helvetica" size="2">Beginning with
-  version 1.0.5 the slon replication engine refuses to work against
-  any database that does not have the stored procedures for the
-  same version loaded or where the shared object containing the C
-  language support functions and the log trigger does not match the
-  version number.</font></p>
+          <p><font face="lucida,arial,helvetica" size="2">Beginning
+          with version 1.0.5 the slon replication engine refuses to
+          work against any database that does not have the stored
+          procedures for the same version loaded or where the
+          shared object containing the C language support functions
+          and the log trigger does not match the version
+          number.</font></p>
 
-  <p><font face="lucida,arial,helvetica" size="2">This means that
-  the Slony installation on all nodes in a cluster must be upgraded
-  at once.</font></p>
+          <p><font face="lucida,arial,helvetica" size="2">This
+          means that the Slony installation on all nodes in a
+          cluster must be upgraded at once.</font></p>
 
-  <p><font face="lucida,arial,helvetica" size="2">The proper
-  upgrade procedure is this:</font></p>
+          <p><font face="lucida,arial,helvetica" size="2">The
+          proper upgrade procedure is this:</font></p>
 
-  <ol>
-    <li><font face="lucida,arial,helvetica" size="2">Stop the slon
-    replication engine on all nodes.</font></li>
+          <ol>
+            <li><font face="lucida,arial,helvetica" size="2">Stop
+            the slon replication engine on all nodes.</font></li>
 
-    <li>Install the new Slony version on all nodes.</li>
+            <li>Install the new Slony version on all nodes.</li>
 
-    <li>Execute a slonik script containing the command
-      <pre>
+            <li>Execute a slonik script containing the command
+              <pre>
     update functions (id = );
 </pre>for every node in the cluster.
-    </li>
+            </li>
 
-    <li>Start all slon replication engines.
+            <li>Start all slon replication engines.
 
-      <h2>Libpq requirements</h2>
+              <h2>Libpq requirements</h2>
 
-      <p>The multithreaded replication engine requires the libpq
-      client library to be compiled with --enable-thread-safety on
-      certain operating systems. Known are thus far Solaris and
-      AIX. Other operating systems are known to not require this
-      (Linux-X86, FreeBSD-X86, FreeBSD-Alpha, OpenBSD-Sparc64 and
-      OSX). The configuration script is broken with respect to the
-      --enable-thread-safety switch for Solaris. Please apply this
-      patch, configure and recompile libpq: <a href=
-      "http://developer.postgresql.org/%7Ewieck/slony1/download/threadsafe-libpq-742.diff.gz">
-      threadsafe-libpq-742.diff.gz.</a></p>
+              <p>The multithreaded replication engine requires the
+              libpq client library to be compiled with
+              --enable-thread-safety on certain operating systems.
+              Known are thus far Solaris and AIX. Other operating
+              systems are known to not require this (Linux-X86,
+              FreeBSD-X86, FreeBSD-Alpha, OpenBSD-Sparc64 and OSX).
+              The configuration script is broken with respect to
+              the --enable-thread-safety switch for Solaris. Please
+              apply this patch, configure and recompile libpq:
+              <a href=
+              "http://developer.postgresql.org/%7Ewieck/slony1/download/threadsafe-libpq-742.diff.gz">
+              threadsafe-libpq-742.diff.gz.</a></p>
 
-      <h2>RPMs</h2>
+              <h2>RPMs</h2>
 
-      <p>RPM files for some versions of Red Hat Linux are available
-      <a href="http://pgfoundry.org/projects/slony1">here</a> ,
-      including SRPM (Source RPM) files that may be helpful if you
-      wish to generate RPM files for distributions not yet
-      supported.</p>
+              <p>RPM files for some versions of Red Hat Linux are
+              available <a href=
+              "http://pgfoundry.org/projects/slony1">here</a> ,
+              including SRPM (Source RPM) files that may be helpful
+              if you wish to generate RPM files for distributions
+              not yet supported.</p>
 
-      <p>This project is released under the Berkeley/BSD
-      license.</p>
-    </li>
-  </ol>
-  <hr>
+              <p>This project is released under the Berkeley/BSD
+              license.</p>
+            </li>
+          </ol>
+          <hr>
 
-  <address>
-    <a href="mailto:cbbrowne@ca.afilias.info">Christopher
-    Browne</a>
-  </address><!-- Created: Thu Jan 25 11:13:08 EST 2007 -->
-  <!-- hhmts start -->
-Last modified: Thu Jan 25 11:46:10 EST 2007
-<!-- hhmts end -->
+          <address>
+            <a href="mailto:cbbrowne@ca.afilias.info">Christopher
+            Browne</a>
+          </address><!-- Created: Thu Jan 25 11:13:08 EST 2007 -->
+          <!-- hhmts start -->
+          Last modified: Thu Jan 25 11:48:37 EST 2007 
+          <!-- hhmts end -->
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </body>
 </html>
