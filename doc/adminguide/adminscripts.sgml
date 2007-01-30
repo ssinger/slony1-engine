@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.45 2007-01-05 19:32:29 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.46 2007-01-30 19:23:19 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -13,23 +13,26 @@ linkend="maintenance"> discusses them. </para>
 
 <indexterm><primary>altperl scripts for &slony1;</primary></indexterm>
 
-<para>In the <filename>altperl</filename> directory in the
-<application>CVS</application> tree, there is a sizable set of
-<application>Perl</application> scripts that may be used to administer
-a set of &slony1; instances, which support having arbitrary numbers of
-nodes.</para>
+<para>There is a set of scripts to simplify administeration
+of set of &slony1; instances. The scripts support having arbitrary numbers of
+nodes. They may be installed as part of the installation process:</para>
 
-<para>Most of them generate Slonik scripts that are then to be passed
-on to the <xref linkend="slonik"> utility to be submitted to all of
-the &slony1; nodes in a particular cluster.  At one time, this
-embedded running <xref linkend="slonik"> on the slonik scripts.
+<para><command>
+ ./configure --with-perltools
+</command></para>
+
+<para>This will produce a number of scripts with the prefix <command>slonik_</command>.
+They eliminate tedium by always referring to a central configuration file
+for the details of your site configuration. Most also include some command 
+line help with the "-h" option, making them easier to learn and use.
+</para>
+
+<para>Most generate Slonik scripts that are printed to STDOUT. 
+At one time, the commands were passed directly to <xref linkend="slonik"> for execution. 
 Unfortunately, this turned out to be a pretty large calibre
 <quote>foot gun</quote>, as minor typos on the command line led, on a
-couple of occasions, to pretty calamitous actions, so the behavior has
-been changed so that the scripts simply submit output to standard
-output.  The savvy administrator should review the script
-<emphasis>before</emphasis> submitting it to <xref
-linkend="slonik">.</para>
+couple of occasions, to pretty calamitous actions. The savvy administrator should review the script
+<emphasis>before</emphasis> piping it to <xref linkend="slonik">.</para>
 
 <sect3><title>Node/Cluster Configuration - cluster.nodes</title>
 <indexterm><primary>cluster.nodes - node/cluster configuration for Perl tools</primary></indexterm>

@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.20 2006-08-02 18:34:58 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.21 2007-01-30 19:23:19 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -139,9 +139,47 @@ database running on localhost as the pgbench user.
 <para>Creating the configuration tables, stored procedures, triggers
 and configuration is all done through the <xref linkend="slonik">
 tool. It is a specialized scripting aid that mostly calls stored
-procedures in the master/slave (node) databases.  The script to create
+procedures in the master/slave (node) databases. </para>
+
+<sect3><title>Using the altperl scripts</title>
+
+<para>
+Using the <xref linkend="altperl"> scripts is an easy way to get started.  The
+<command>slonik_build_env</command> script will generate output providing
+details you need to  omplete building a <filename>slon_tools.conf</filename>. 
+An example <filename>slon_tools.conf</filename> is provided in the distribution
+to get you started.  The altperl scripts will all reference
+this central configuration file in the future to ease administration. Once 
+slon_tools.conf has been created, you can proceed as follows:
+</para>
+
+<programlisting>
+# Initialize cluster:
+$ slonik_init_cluster  | slonik 
+
+# Start slon  (here 1 and 2 are node numbers)
+$ slon_start 1    
+$ slon_start 2
+
+# Create Sets (here 1 is a set number)
+$ slonik_create_set 1             
+
+# subscribe set to second node (1= set ID, 2= node ID)
+$ slonik_subscribe_set  2 | slonik
+</programlisting>
+
+<para> You have now replicated your first database.  You can skip the following section
+of documentation if you'd like, which documents more of a <quote>bare-metal</quote> approach.</para>
+</sect3>
+
+<sect3><title>Using slonik command directly</title>
+<para>The traditional approach to administering slony is to craft slonik
+commands directly. An example of this given here. </para>
+
+
+<para> The script to create
 the initial configuration for the simple master-slave setup of our
-<application>pgbench</application> database looks like this:
+<application>pgbench</application> database looks like this:</para>
 
 <programlisting>
 #!/bin/sh
@@ -202,7 +240,7 @@ slonik <<_EOF_
 	store listen (origin=1, provider = 1, receiver =2);
 	store listen (origin=2, provider = 2, receiver =1);
 _EOF_
-</programlisting></para>
+</programlisting>
 
 <para>Is the <application>pgbench</application> still running?  If
 not, then start it again.</para>
@@ -282,7 +320,7 @@ are in fact the same.</para>
 databases and compare them.  Make sure that
 <application>pgbench</application> has completed, so that there are no
 new updates hitting the origin node, and that your slon sessions have
-caught up.
+caught up.</para>
 
 <programlisting>
 #!/bin/sh
@@ -318,7 +356,6 @@ else
 	 echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
 </programlisting>
-</para>
 
 <para>Note that there is somewhat more sophisticated documentation of
 the process in the &slony1; source code tree in a file called
