@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.71 2006-12-12 14:54:48 xfade Exp $
+ *	$Id: slonik.c,v 1.72 2007-01-30 17:30:19 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3034,11 +3034,13 @@ slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 				 stmt->hdr.script->clustername);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
+		printf("Failed to exec uninstallNode() for node %d\n", stmt->no_id);
 		dstring_free(&query);
 		return -1;
 	}
 	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
+		printf("Failed to commit uninstallNode() for node %d\n", stmt->no_id);
 		dstring_free(&query);
 		return -1;
 	}
@@ -3048,11 +3050,13 @@ slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 				 stmt->hdr.script->clustername);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
+		printf("Failed to drop schema for node %d\n", stmt->no_id);
 		dstring_free(&query);
 		return -1;
 	}
 	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
+		printf("Failed to commit drop schema for node %d\n", stmt->no_id);
 		dstring_free(&query);
 		return -1;
 	}
