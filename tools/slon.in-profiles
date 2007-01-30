@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+# $FreeBSD$
+# Modified by Brian A. Seklecki <bseklecki@collaborativefusion.com>
+#                               <lavalamp@spiritual-machines.org>
+# $Id: slon.in-profiles,v 1.1 2007-01-30 19:57:11 cbbrowne Exp $ 
+#
+
+# sed -e 's/%%PREFIX%%/\/usr\/local/g' < slon.in > slon
+
+# PROVIDE: slon
+# REQUIRE: postgresql
+# KEYWORD: shutdown
+
+. "/etc/rc.subr"
+
+name="slon"
+rcvar=`set_rcvar`
+
+load_rc_config "$name"
+_pidprefix="/var/run/${name}"
+pidfile="${_pidprefix}.pid" # Used as fall-through in event of no profiles
+
+# From global rc.conf(5); if unset, set them here
+[ -z "$slon_enable" ]       && slon_enable="NO"
+[ -z "$slon_profiles" ]     && slon_profiles=""
+
+configfile_path="/usr/local/etc/${name}.conf"
+command_args="-f ${configfile_path} -p ${pidfile} &"
+required_files="${configfile_path}"
+
+# Example: User has to define the following
+# $slon_enable=true
+# $slon_profiles="sex drugs unix"
+# $slon_unix_configfile="/path/to.conf"
+# $slon_sex_flags="-hawtte"
+
+command="/usr/local/bin/slon"
+
+isProfile() {
+        match=0;
+        for curMember in $slon_profiles; do
+                if [ "$curMember" = "$1" ]; then
+                        echo "Match"
+                        match=1
+                fi
+        done
+        return $match;
+}
+
+
+
+if [ -n "$2" ]; then
+	profile="$2" # A profile argument has been given (presumably)
+	if [ "x${slon_profiles}" != "x" ]; then # This checks that profiles are indeed defined
+		# Now let's check to make sure that both the profile, the profile's config path variable, config file exists
+		pidfile="${_pidprefix}-${profile}.pid"
+		configfile_varname="\$${name}_${profile}_configfile" # Basic string substitution gets variable name
+		eval configfile_path="${configfile_varname}"
+		isProfile $profile
+		searchForProfile=$?
+		# testing for true
+		if [ -z "$configfile_varname" -o ! -r "$configfile_path" -o $searchForProfile -lt 1 ]; then
+			echo "$0: no such profile defined, profile config file defined, or cant read profile config file!";
+			exit 1;
+		fi
+		required_files=${configfile_path}
+		eval command_args="\$${name}_${profile}_flags"
+	else
+		echo "$0: extra profile argument ignored, no profiles defined"
+	fi
+	
+
+else
+	# We get to here if $2 is not defined at command line, but we do have profiles
+	# This block uses recursion to call ourself with each-profile defined as $2
+	if [ "x${slon_profiles}" != "x" -a "x$1" != "x" ]; then
+		if [ "x$1" != "xrestart" ]; then
+			for profile in ${slon_profiles}; do
+				echo "===> ${name} profile: ${profile}"
+				/usr/local/etc/rc.d/${name} $1 ${profile}
+				retcode="$?"
+				if [ "0${retcode}" -ne 0 ]; then
+					failed="${profile} (${retcode}) ${failed:-}"
+				else
+					success="${profile} ${success:-}"
+				fi
+			done
+			exit 0
+		else
+			restart_precmd=""
+		fi
+	fi
+# else = no profile argument given
+fi
+
+run_rc_command "$1"

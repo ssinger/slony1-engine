@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.46 2007-01-30 19:23:19 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.47 2007-01-30 19:57:11 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -651,6 +651,16 @@ invalidated by circumstances:</para>
 </itemizedlist>
 
 </sect3>
+</sect2>
+
+<sect2 id="bsd-ports-profile"> <title> <filename> slon.in-profiles </filename> </title>
+<subtitle> Apache-Style profiles for FreeBSD <filename>ports/databases/slony/*</filename> </subtitle>
+
+<para> In the tools area, <filename>slon.in-profiles</filename> is a
+script that might be used to start up &lslon; instances at the time of
+system startup.  It is designed to interact with the FreeBSD Ports
+system.</para>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
