@@ -1264,7 +1264,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
      WAIT FOR EVENT (ORIGIN = 3, CONFIRMED = 1);
      SYNC (ID=1);
-     MERGE SET ( ID = 2, ADD ID = 9999, ORIGIN = 1 );
+     MERGE SET ( ID = 1, ADD ID = 9999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
