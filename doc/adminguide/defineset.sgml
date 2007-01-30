@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.25 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.26 2007-01-30 19:48:35 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -42,7 +42,7 @@ there is a primary key, and use it.</para></listitem>
 <listitem><para> If the table hasn't got a primary key, but has some
 <emphasis>candidate</emphasis> primary key, that is, some index on a
 combination of fields that is both UNIQUE and NOT NULL, then you can
-specify the key, as in</para>
+specify that key, as shown in the following example. </para>
 
 <programlisting>
 SET ADD TABLE (set id = 1, origin = 1, id = 42, 
@@ -50,6 +50,20 @@ SET ADD TABLE (set id = 1, origin = 1, id = 42,
                key = 'this_by_that', 
      comment='this_table has this_by_that as a candidate primary key');
 </programlisting>
+
+<para> However, once you have come this far, there is little reason not
+to just declare some suitable index to be a primary key, which requires
+that the columns involved are NOT NULL, and which will establish a unique
+index. Here is an example of this: </para>
+
+<programlisting>
+DROP INDEX my_table_name_col1_col2_uniq_idx;
+ALTER TABLE my_table_name ADD PRIMARY KEY (col1, col2);
+</programlisting>
+
+<para>If your application is not somehow referencing the index by name,
+the this should not lose you anything, and it gives you the clear design
+benefit that a primary key has been declared for the table. </para>
 
 <para> Notice that while you need to specify the namespace for the
 table, you must <emphasis>not</emphasis> specify the namespace for the
@@ -67,13 +81,13 @@ should be used.</para></listitem>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
-key;</quote> it is, however, recommended that you have one of those
-instead of having &slony1; populate the PK column for you.  If you
-don't have a suitable primary key, that means that the table hasn't
-got any mechanism from your application's standpoint for keeping
-values unique.  &slony1; may therefore introduce a new failure mode
-for your application, and this also implies that you had a way to
-enter confusing data into the database.</para>
+key;</quote> it is, however, strongly recommended that you have one of
+those instead of having &slony1; populate the PK column for you. If you
+don't have a suitable primary key, that means that the table hasn't got
+any mechanism, from your application's standpoint, for keeping values
+unique. &slony1; may, therefore, introduce a new failure mode for your
+application, and this also implies that you had a way to enter confusing
+data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>
