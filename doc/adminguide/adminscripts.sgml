@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.47 2007-01-30 19:57:11 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.48 2007-02-01 19:09:08 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -21,10 +21,13 @@ nodes. They may be installed as part of the installation process:</para>
  ./configure --with-perltools
 </command></para>
 
-<para>This will produce a number of scripts with the prefix <command>slonik_</command>.
-They eliminate tedium by always referring to a central configuration file
-for the details of your site configuration. Most also include some command 
-line help with the "-h" option, making them easier to learn and use.
+<para>This will produce a number of scripts with the prefix
+<command>slonik_</command>.  They eliminate tedium by always referring
+to a central configuration file for the details of your site
+configuration. A documented sample of this file is provided in
+<filename>altperl/slon_tools.conf-sample</filename>. Most also include
+some command line help with the "--help" option, making them easier to
+learn and use.
 </para>
 
 <para>Most generate Slonik scripts that are printed to STDOUT. 
@@ -34,12 +37,14 @@ Unfortunately, this turned out to be a pretty large calibre
 couple of occasions, to pretty calamitous actions. The savvy administrator should review the script
 <emphasis>before</emphasis> piping it to <xref linkend="slonik">.</para>
 
-<sect3><title>Node/Cluster Configuration - cluster.nodes</title>
-<indexterm><primary>cluster.nodes - node/cluster configuration for Perl tools</primary></indexterm>
+<sect3><title>Support for Multiple Clusters</title>
+<indexterm><primary>Multiple Cluster support for the altperl tools</primary></indexterm>
 
 <para>The UNIX environment variable <envar>SLONYNODES</envar> is used
 to determine what Perl configuration file will be used to control the
-shape of the nodes in a &slony1; cluster.</para>
+shape of the nodes in a &slony1; cluster. If it is not provided, a
+default <filename>slon_tools.conf</filename> location will be
+referenced. </para>
 
 <para>What variables are set up.
 <itemizedlist>
@@ -87,6 +92,7 @@ my %PARAMS =   (host=> undef,		# Host name
 );
 </programlisting>
 </sect3>
+
 <sect3><title>Set configuration - cluster.set1, cluster.set2</title>
 <indexterm><primary>cluster.set1 - replication set configuration for Perl tools</primary></indexterm>
 
@@ -100,35 +106,6 @@ scripts, this only needs to be set when running
 <filename>create_set</filename>, as that is the only script used to
 control what tables will be in a particular replication set.</para>
 
-<para>What variables are set up.</para>
-<itemizedlist>
-<listitem><para>$TABLE_ID = 44;</para>
-<para> Each table must be identified by a unique number; this variable controls where numbering starts</para>
-</listitem>
-<listitem><para>$SEQUENCE_ID = 17;</para>
-<para> Each sequence must be identified by a unique number; this variable controls where numbering starts</para>
-</listitem>
-<listitem><para>@PKEYEDTABLES</para>
-
-<para> An array of names of tables to be replicated that have a
-defined primary key so that &slony1; can automatically select its key</para>
-</listitem>
-<listitem><para>%KEYEDTABLES</para>
-<para> A hash table of tables to be replicated, where the hash index
-is the table name, and the hash value is the name of a unique not null
-index suitable as a "candidate primary key."</para>
-</listitem>
-<listitem><para>@SERIALTABLES</para>
-
-<para> An array of names of tables to be replicated that have no
-candidate for primary key.  &slony1; will add a key field based on a
-sequence that &slony1; generates</para>
-</listitem>
-<listitem><para>@SEQUENCES</para>
-
-<para> An array of names of sequences that are to be replicated</para>
-</listitem>
-</itemizedlist>
 </sect3>
 <sect3><title>slonik_build_env</title>
 <indexterm><primary>slonik_build_env</primary></indexterm>
