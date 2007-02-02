@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.31.2.2 2006-10-27 20:09:56 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.31.2.3 2007-02-02 20:23:46 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -66,6 +66,7 @@ static PollState	poll_state;
 static int			poll_sleep;
 
 extern char *lag_interval;
+int remote_listen_timeout;
 
 /* ----------
  * slon_remoteListenThread
@@ -733,15 +734,15 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		return -1;
 	}
 	time(&timeout);
-	timeout += 300;
+	timeout += remote_listen_timeout;
 	while (PQisBusy(conn->dbconn) != 0)
 	{
 		time(&now);
 		if (now >= timeout)
 		{
 			slon_log(SLON_ERROR,
-					 "remoteListenThread_%d: timeout for event selection\n",
-					 node->no_id);
+				 "remoteListenThread_%d: timeout (%d s) for event selection\n",
+				 node->no_id, remote_listen_timeout);
 			dstring_free(&query);
 			return -1;
 		}

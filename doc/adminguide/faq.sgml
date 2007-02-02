@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66.2.1 2006-10-24 14:48:35 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66.2.3 2007-02-02 20:23:46 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -996,6 +996,39 @@ are required to be unique <emphasis>ACROSS ALL SETS</emphasis>.  Thus,
 you can't restart numbering at 1 for a second set; if you are
 numbering them consecutively, a subsequent set has to start with IDs
 after where the previous set(s) left off.</para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> One of my nodes fell over (&lslon; / postmaster was
+down) and nobody noticed for several days.  Now, when the &lslon; for
+that node starts up, it runs for about five minutes, then terminates,
+with the error message: <command>ERROR: remoteListenThread_%d: timeout
+for event selection</command> What's wrong, and what do I do? </para> 
+</question>
+
+<answer><para> The problem is that the listener thread (in
+<filename>src/slon/remote_listener.c</filename>) timed out when trying
+to determine what events were outstanding for that node.  By default,
+the query will run for five minutes; if there were many days worth of
+outstanding events, this might take too long.
+ </para> </answer>
+
+<answer><para> On  versions of &slony1; before 1.1.7, 1.2.7, and 1.3, one answer would be to increase the timeout in 
+<filename>src/slon/remote_listener.c</filename>, recompile &lslon;, and retry.  </para> </answer>
+
+<answer><para> Another would be to treat the node as having failed,
+and use the &slonik; command <xref linkend="stmtdropnode"> to drop the
+node, and recreate it.  If the database is heavily updated, it may
+well be cheaper to do this than it is to find a way to let it catch
+up.  </para> </answer>
+
+<answer><para> In newer versions of &slony1;, there is a new
+configuration parameter called <xref
+linkend="slon-config-remote-listen-timeout">; you'd alter the config
+file to increase the timeout, and try again.  Of course, as mentioned
+above, it could be faster to drop the node and recreate it than to let
+it catch up across a week's worth of updates...  </para> </answer>
+
 </qandaentry>
 
 </qandadiv>

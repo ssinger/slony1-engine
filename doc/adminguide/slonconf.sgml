@@ -430,6 +430,17 @@
         <para> The default value is 5242880.</para>
       </listitem>
     </varlistentry>
+    <varlistentry id="slon-config-remote-listen-timeout" xreflabel="slon_conf_remote_listen_timeout">
+      <term><varname>remote_listen_timeout</varname> (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>remote_listen_timeout</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>How long should the remote listener wait before treating the event selection criteria as having timed out?
+          Range: [30-30000], default 300
+        </para>
+      </listitem>
+    </varlistentry>
   </variablelist>
 </sect1>
 </article>

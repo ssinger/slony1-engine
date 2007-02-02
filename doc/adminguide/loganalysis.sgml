@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.4.2.1 2006-10-30 16:29:27 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.4.2.2 2007-02-02 20:23:46 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -608,6 +608,27 @@ for data provider %d</command></para>
 <para> Oh dear, we haven't connection information to connect to the
 data provider.  That shouldn't be possible,
 normally...</para></listitem>
+
+<listitem><para><command>ERROR: remoteListenThread_%d: timeout for event selection</command></para>
+
+<para> This means that the listener thread
+(<filename>src/slon/remote_listener.c</filename>) timed out when
+trying to determine what events were outstanding for it.</para>
+
+<para> This could occur because network connections broke, in which case restarting the &lslon; might help. </para>
+
+<para> Alternatively, this might occur because the &lslon; for this
+node has been broken for a long time, and there are an enormous number
+of entries in <envar>sl_event</envar> on this or other nodes for the
+node to work through, and it is taking more than <xref
+linkend="slon-config-remote-listen-timeout"> seconds to run the query.
+In older versions of &slony1;, that configuration parameter did not
+exist; the timeout was fixed at 300 seconds.  In newer versions, you
+might increase that timeout in the &lslon; config file to a larger
+value so that it can continue to completion.  And then investigate why
+nobody was monitoring things such that replication broke for such a
+long time... </para>
+</listitem>
 
 <listitem><para><command>ERROR: remoteWorkerThread_%d: cannot connect to data provider %d on 'dsn'</command></para>
 
