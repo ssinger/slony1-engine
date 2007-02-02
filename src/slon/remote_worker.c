@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.131 2006-12-12 20:13:01 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.132 2007-02-02 22:21:36 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4345,9 +4345,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 								 "(log_xid >= '%s')",
 								 ssy_maxxid);
 			actionlist_len = strlen(ssy_action_list);
-			slon_log(SLON_DEBUG2, " ssy_action_list value: %s length: %d\n",
-					 ssy_action_list, actionlist_len);
-
+			slon_log(SLON_DEBUG4, " ssy_action_list value: %s\n",
+					 ssy_action_list);
+			slon_log(SLON_DEBUG2, " ssy_action_list length: %d\n",
+					 actionlist_len);
 			if (actionlist_len == 0)
 			{
 				slon_appendquery(provider_qual, "\n) ");
@@ -5854,7 +5855,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	state = START_STATE;
 	slon_mkquery(action_subquery, " ");
 
-	slon_log(SLON_DEBUG3, "compress_actionseq(list,subquery) Action list: %s\n", ssy_actionlist);
+	slon_log(SLON_DEBUG4, "compress_actionseq(list,subquery) Action list: %s\n", ssy_actionlist);
 	while (state != DONE)
 	{
 		curr_char = *ssy_actionlist;
@@ -5988,7 +5989,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 				if (state == COLLECTING_DIGITS)
 				{
 					/* Finished another number... Fold it into the ranges... */
-					slon_log(SLON_DEBUG4, "Finished number: %d\n", curr_number);
+					slon_log(SLON_DEBUG5, "Finished number: %d\n", curr_number);
 
 					/*
 					 * If we haven't a range, then the range is the current
@@ -6039,13 +6040,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 						}
 						if (curr_max == curr_min)
 						{
-							slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+							slon_log(SLON_DEBUG5, "simple entry - %d\n", curr_max);
 							slon_appendquery(action_subquery,
 										" log_actionseq <> '%d' ", curr_max);
 						}
 						else
 						{
-							slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+							slon_log(SLON_DEBUG5, "between entry - %d %d\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
 								 " log_actionseq not between '%d' and '%d' ",
@@ -6074,13 +6075,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 		}
 		if (curr_max == curr_min)
 		{
-			slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+			slon_log(SLON_DEBUG5, "simple entry - %d\n", curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq <> '%d' ", curr_max);
 		}
 		else
 		{
-			slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+			slon_log(SLON_DEBUG5, "between entry - %d %d\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq not between '%d' and '%d' ",
@@ -6089,5 +6090,5 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 
 
 	}
-	slon_log(SLON_DEBUG3, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
+	slon_log(SLON_DEBUG4, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
