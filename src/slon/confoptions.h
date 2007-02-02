@@ -188,6 +188,18 @@ static struct config_int ConfigureNamesInt[] =
 		2
 	},
 #endif
+	{
+		{
+			(const char *)"remote_listen_timeout",		/* conf name */
+			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* short desc */
+			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&remote_listen_timeout,			/* var name */
+		300,					/* default val */
+		30,					/* min val */
+		30000					/* max val */
+	},
     {0}
 };
 
