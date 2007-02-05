@@ -1,7 +1,14 @@
-$Id: RELEASE-1.1.7,v 1.1.2.1 2007-02-02 20:22:59 cbbrowne Exp $
+$Id: RELEASE-1.1.7,v 1.1.2.2 2007-02-05 22:03:30 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
 This addresses the problem where a slon times out when accessing
 sl_event if a node has been out of commission for a long time (several
 days)
+
+- Add node numbers to error reports in slonik
+
+If portions of UNINSTALL NODE break, report in the error message which node
+it was working on.  That way the gentle user gets an indication as to 
+which node 'broke' if the slonik script contained multiple such
+requests.
