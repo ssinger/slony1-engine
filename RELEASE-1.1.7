@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.7,v 1.1.2.2 2007-02-05 22:03:30 cbbrowne Exp $
+$Id: RELEASE-1.1.7,v 1.1.2.3 2007-02-05 22:18:06 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -12,3 +12,10 @@ If portions of UNINSTALL NODE break, report in the error message which node
 it was working on.  That way the gentle user gets an indication as to 
 which node 'broke' if the slonik script contained multiple such
 requests.
+
+- Applied bug fix for #1538
+
+If cluster has only one node, then remove all events up to the last
+SYNC.  That allows the cleanup loop to clear out sl_log_{1/2}.
+Otherwise, the log tables will forever bloat until you add a second
+node...

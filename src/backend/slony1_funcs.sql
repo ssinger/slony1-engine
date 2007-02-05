@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.64.2.19 2006-11-01 22:13:05 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.64.2.20 2007-02-05 22:18:06 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -4283,6 +4283,25 @@ begin
 		end if;
 	end loop;
 
+	-- ----
+	-- If cluster has only one node, then remove all events up to
+	-- the last SYNC - Bug #1538
+	-- http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1538
+	-- ----
+
+	select * into v_min_row from @NAMESPACE@.sl_node where
+			no_id <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') limit 1;
+	if not found then
+		select ev_origin, ev_seqno into v_min_row from @NAMESPACE@.sl_event
+		where ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
+		order by ev_origin desc, ev_seqno desc limit 1;
+		raise notice ''Slony-I: cleanupEvent(): Single node - deleting events < %'', v_min_row.ev_seqno;
+			delete from @NAMESPACE@.sl_event
+			where
+				ev_origin = v_min_row.ev_origin and
+				ev_seqno < v_min_row.ev_seqno;
+
+	end if;
 	-- ----
 	-- Also remove stale entries from the nodelock table.
 	-- ----
