@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.7,v 1.1.2.2 2007-02-02 22:23:16 cbbrowne Exp $
+$Id: RELEASE-1.2.7,v 1.1.2.3 2007-02-05 22:06:52 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -11,3 +11,9 @@ days)
 In this bug, big "action lists" that need to get compressed could cause
 a logging printf to blow up.  Changed the logging level so that detail
 is only shown at levels 4/5, which won't bite people by default.
+
+- UNINSTALL NODE failures now show node # in slonik error messages
+
+If a user ran several UNINSTALL NODE requests in a single slonik
+script, and one of them broke, you'd have no ready way to tell which
+node this failed on.  Added code to report the node # where it failed.
