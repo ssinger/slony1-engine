@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.132 2007-02-02 22:21:36 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.133 2007-02-06 21:03:11 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5989,7 +5989,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 				if (state == COLLECTING_DIGITS)
 				{
 					/* Finished another number... Fold it into the ranges... */
-					slon_log(SLON_DEBUG5, "Finished number: %d\n", curr_number);
+					slon_log(SLON_DEBUG4, "Finished number: %d\n", curr_number);
 
 					/*
 					 * If we haven't a range, then the range is the current
@@ -6040,13 +6040,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 						}
 						if (curr_max == curr_min)
 						{
-							slon_log(SLON_DEBUG5, "simple entry - %d\n", curr_max);
+							slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
 							slon_appendquery(action_subquery,
 										" log_actionseq <> '%d' ", curr_max);
 						}
 						else
 						{
-							slon_log(SLON_DEBUG5, "between entry - %d %d\n",
+							slon_log(SLON_DEBUG4, "between entry - %d %d\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
 								 " log_actionseq not between '%d' and '%d' ",
@@ -6075,13 +6075,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 		}
 		if (curr_max == curr_min)
 		{
-			slon_log(SLON_DEBUG5, "simple entry - %d\n", curr_max);
+			slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq <> '%d' ", curr_max);
 		}
 		else
 		{
-			slon_log(SLON_DEBUG5, "between entry - %d %d\n",
+			slon_log(SLON_DEBUG4, "between entry - %d %d\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq not between '%d' and '%d' ",
