@@ -1,4 +1,4 @@
-$Id: README,v 1.6 2006-10-27 14:45:51 cbbrowne Exp $
+$Id: README,v 1.7 2007-02-07 19:13:17 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -23,3 +23,9 @@ It also creates...
 5.  table5 which has columns of all sorts of vaguely esoteric types to
 exercise that points, paths, bitmaps, mac addresses, and inet types
 replicate properly.
+
+6.  It does a test of the function generate_sync_event() to make sure
+that it works as expected
+
+7.  It does a test of make_function_strict(), a function used in
+'UPDATE FUNCTIONS' to change the xxidin() function to be STRICT.
