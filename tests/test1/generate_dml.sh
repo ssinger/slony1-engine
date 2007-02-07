@@ -81,5 +81,10 @@ do_initdata()
   if [ $rc -ne 0 ]; then
       warn 3 "generate_sync_event() failed - rc=${rc} see $mktmp/gensync.log* for details"
   fi
+  $pgbindir/psql -h $host -p $port -d $db -U $user -c "select \"_${CLUSTER1}\".make_function_strict('xxidin', '(cstring)');" 1> $mktmp/gensync.log.1 2> $mktmp/gensync.log
+  rc=$?
+  if [ $rc -ne 0 ]; then
+      warn 3 "make_function_strict('xxidin', '(cstring)') failed - rc=${rc} see $mktmp/gensync.log* for details"
+  fi
   status "done"
 }
