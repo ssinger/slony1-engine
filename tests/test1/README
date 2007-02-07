@@ -1,5 +1,31 @@
-$Id: README,v 1.1.2.1 2005-11-30 17:35:23 cbbrowne Exp $
-
-test1 is a basic test that replication generally functions.  It
-creates three simple tables as one replication set, and replicates
+$Id: README,v 1.1.2.2 2007-02-07 19:16:02 cbbrowne Exp $
+  
+test1 is a basic test that replication generally functions.  
+  
+It creates three simple tables as one replication set, and replicates
 them from one database to another.
+  
+The three tables are of the three interesting types:
+  
+1.  table1 has a formal primary key
+
+2.  table2 lacks a formal primary key, but has a candidate primary key
+
+3.  table3 has no candidate primary key; Slony-I is expected to
+    generate one on its own.
+
+It actually tries replicating a fourth table, which has an invalid
+candidate primary key (columns not defined NOT NULL), which should
+cause it to be rejected.  That is done in a slonik TRY {} block.
+
+It also creates...
+
+5.  table5 which has columns of all sorts of vaguely esoteric types to
+exercise that points, paths, bitmaps, mac addresses, and inet types
+replicate properly.
+
+6.  It does a test of the function generate_sync_event() to make sure
+that it works as expected
+
+7.  It does a test of make_function_strict(), a function used in
+'UPDATE FUNCTIONS' to change the xxidin() function to be STRICT.
