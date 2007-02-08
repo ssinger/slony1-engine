@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v80.sql,v 1.2.2.2 2007-02-08 22:55:58 cbbrowne Exp $
+-- $Id: slony1_funcs.v80.sql,v 1.2.2.3 2007-02-08 22:57:28 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -56,6 +56,7 @@ begin
 	return 1;
 	exception when others then
 		raise notice ''truncate of % failed - doing delete'', v_tab_fqname;
+	update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
 		execute ''delete from only '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 		return 0;
 end;
