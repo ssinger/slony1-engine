@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v73.sql,v 1.7.2.3 2006-01-06 17:07:46 cbbrowne Exp $
+-- $Id: slony1_funcs.v73.sql,v 1.7.2.4 2007-02-08 22:52:40 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -102,3 +102,13 @@ as 'select 1' language sql;
 comment on function @NAMESPACE@.pre74() is 
 'Returns 1/0 based on whether or not the DB is running a
 version earlier than 7.4';
+
+create or replace function @NAMESPACE@.make_function_strict (text, text) returns void as
+'
+   update "pg_catalog"."pg_proc" set proisstrict = ''t'' where 
+        proname = $1 and pronamespace = (select oid from "pg_catalog"."pg_namespace" where nspname = '_@CLUSTERNAME@') and prolang = (select oid from "pg_catalog"."pg_language" where lanname = ''c'');
+' language sql;
+
+comment on function @NAMESPACE@.make_function_strict (text, text) is
+'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
+

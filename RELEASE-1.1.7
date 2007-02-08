@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.7,v 1.1.2.3 2007-02-05 22:18:06 cbbrowne Exp $
+$Id: RELEASE-1.1.7,v 1.1.2.4 2007-02-08 22:52:40 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -19,3 +19,15 @@ If cluster has only one node, then remove all events up to the last
 SYNC.  That allows the cleanup loop to clear out sl_log_{1/2}.
 Otherwise, the log tables will forever bloat until you add a second
 node...
+
+- Added test to test1 for function generate_sync_event() and make_function_strict
+
+- Added "v81" files (for slony1_base.v81.sql, slony1_funcs.v81.sql,
+xxid.v81.sql), necessary to support 8.1 "ALTER FUNCTION ... STRICT";
+
+- Fixed quoting problem in generate_sync_event()
+
+- Added functionality to UPDATE FUNCTIONS to make xxidin() function
+STRICT; the absence of this caused postmaster to fall over when
+processing MOVE SET event in PG v8.2 (not to say that Slony-I 1.1 now
+*supports* 8.2; it does not)
