@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.7,v 1.1.2.3 2007-02-05 22:06:52 cbbrowne Exp $
+$Id: RELEASE-1.2.7,v 1.1.2.4 2007-02-08 22:55:57 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -10,10 +10,21 @@ days)
 
 In this bug, big "action lists" that need to get compressed could cause
 a logging printf to blow up.  Changed the logging level so that detail
-is only shown at levels 4/5, which won't bite people by default.
+is only shown at level 4, which won't bite people by default.
 
 - UNINSTALL NODE failures now show node # in slonik error messages
 
 If a user ran several UNINSTALL NODE requests in a single slonik
 script, and one of them broke, you'd have no ready way to tell which
 node this failed on.  Added code to report the node # where it failed.
+
+- Added test to test1 for function generate_sync_event() and make_function_strict
+
+- Added "v81" files (for slony1_base.v81.sql, slony1_funcs.v81.sql,
+xxid.v81.sql), necessary to support 8.1 "ALTER FUNCTION ... STRICT";
+
+- Fixed quoting problem in generate_sync_event()
+
+- Added functionality to UPDATE FUNCTIONS to make xxidin() function
+STRICT; the absence of this caused postmaster to fall over when
+processing MOVE SET event in PG v8.2

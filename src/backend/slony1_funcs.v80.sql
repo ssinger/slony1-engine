@@ -3,10 +3,10 @@
 --
 --    Version 8.0 specific part of the replication support functions.
 --
---	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v80.sql,v 1.2.2.1 2006-12-05 18:04:46 cbbrowne Exp $
+-- $Id: slony1_funcs.v80.sql,v 1.2.2.2 2007-02-08 22:55:58 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -24,7 +24,7 @@ declare
 	v_tab_fqname	text;
 begin
 	-- ----
-	-- Get the OID and fully qualified name for the table
+	-- Get the tables OID and fully qualified name
 	-- ---
 	select	PGC.oid,
 			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
@@ -56,7 +56,6 @@ begin
 	return 1;
 	exception when others then
 		raise notice ''truncate of % failed - doing delete'', v_tab_fqname;
-		update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
 		execute ''delete from only '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 		return 0;
 end;
@@ -114,3 +113,15 @@ as 'select 0' language sql;
 comment on function @NAMESPACE@.pre74() is 
 'Returns 1/0 based on whether or not the DB is running a
 version earlier than 7.4';
+
+create or replace function @NAMESPACE@.make_function_strict (text, text) returns integer as
+'
+begin
+   update "pg_catalog"."pg_proc" set proisstrict = ''t'' where 
+     proname = $1 and pronamespace = (select oid from "pg_catalog"."pg_namespace" where nspname = ''_@CLUSTERNAME@'') and prolang = (select oid from "pg_catalog"."pg_language" where lanname = ''c'');
+   return 1 ;
+end
+' language plpgsql;
+
+comment on function @NAMESPACE@.make_table_strict (text, text) is
+'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';

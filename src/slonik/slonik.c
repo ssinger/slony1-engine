@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.4 2007-02-05 22:06:53 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.5 2007-02-08 22:55:58 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1882,17 +1882,22 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 7;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80300)	/* 8.0, 8.1 and 8.2 */ 
+	else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80100)	/* 8.0 */
 	{
 		use_major = 8;
 		use_minor = 0;
 	}
-	else	/* 8.3 and above */
+	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80300)	/* 8.1 and 8.2 */
 	{
 		use_major = 8;
-		use_minor = 0;
+		use_minor = 1;
+	}
+	else	/* 8.3+ */
+	{
+		use_major = 8;
+		use_minor = 1;
 		printf("%s:%d: Possible unsupported PostgreSQL "
-			"version (%d) %d.%d, defaulting to 8.0 support\n",
+			"version (%d) %d.%d, defaulting to 8.1 support\n",
                         stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}

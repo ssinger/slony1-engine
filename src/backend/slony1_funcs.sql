@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.8 2007-01-08 17:31:40 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.9 2007-02-08 22:55:58 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -430,7 +430,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as '
 begin
-	return 6;
+	return 7;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -5218,11 +5218,11 @@ declare
 
 BEGIN
 	select 1 into v_node_row from @NAMESPACE@.sl_event 
-       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''@NAMESPACE@'')
+       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 		return 1;
 	else
 		return 0;
@@ -5829,6 +5829,8 @@ begin
                 execute ''alter table @NAMESPACE@.sl_trigger set without oids;'';
 	end if;
 
+	-- In any version, make sure that the xxidin() functions are defined STRICT
+	perform @NAMESPACE@.make_function_strict (''xxidin'', ''(cstring)'');
 	return p_old;
 end;
 ' language plpgsql;
@@ -5902,3 +5904,4 @@ comment on function @NAMESPACE@.copyFields(integer) is
 to specify fields for the passed-in tab_id.  
 
 In PG versions > 7.3, this looks like (field1,field2,...fieldn)';
+
