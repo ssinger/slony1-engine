@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.103 2006-12-15 05:34:18 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.104 2007-02-08 18:01:15 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5218,11 +5218,11 @@ declare
 
 BEGIN
 	select 1 into v_node_row from @NAMESPACE@.sl_event 
-       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''@NAMESPACE@'')
+       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent(''@NAMESPACE@'', ''SYNC'', NULL);
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 		return 1;
 	else
 		return 0;
@@ -5829,6 +5829,8 @@ begin
                 execute ''alter table @NAMESPACE@.sl_trigger set without oids;'';
 	end if;
 
+	-- In any version, make sure that the xxidin() functions are defined as STRICT
+	perform @NAMESPACE@.make_function_strict (''xxidin'', ''(cstring)'');
 	return p_old;
 end;
 ' language plpgsql;
