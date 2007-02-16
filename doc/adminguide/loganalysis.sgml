@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.4.2.2 2007-02-02 20:23:46 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.4.2.3 2007-02-16 23:36:18 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -58,6 +58,12 @@ events.</para></listitem></varlistentry>
 
 </variablelist>
 </para>
+
+<para> How much information they display is controlled by
+the <envar>log_level</envar> &lslon; parameter;
+ERROR/WARN/CONFIG/INFO messages will always be displayed, while
+choosing increasing values from 1 to 4 will lead to additional DEBUG
+level messages being displayed. </para>
 </sect2>
 
 <sect2> <title> How to read &slony1; logs </title>
@@ -739,11 +745,42 @@ subscribers at subscription time.  </para>
 <para> You tried to replicate something that isn't a table; you can't do that! </para></listitem>
 <listitem><para><command>NOTICE: Slony-I setAddTable_int(): table % PK column % nullable</command></para> 
 
-<para> You tried to replicate a table where one of the columns in the would-be primary key is allowed to be null.  All PK columns must be <command>NOT NULL.</command> This request is about to fail. </para></listitem>
+<para> You tried to replicate a table where one of the columns in the would-be primary key is allowed to be null.  All PK columns must be <command>NOT NULL.</command> This request is about to fail. </para>
+
+<para> A check for this condition was introduced in &slony1; version
+1.2.  If you have a 1.1 replica, it will continue to function after
+upgrading to 1.2, but you will experience this complaint when you try
+to add new subscribers. </para>
+
+<para> You can look for table/index combinations on an existing
+node that have NULLABLE columns in the primary key via the
+following query:
+<screen>
+select c.relname as table_name, ic.relname as index_name, att.attname, att2.attnotnull
+from _cluster.sl_table t, pg_catalog.pg_class c, pg_index i, pg_catalog.pg_class ic, pg_catalog.pg_attribute att, pg_catalog.pg_attribute att2
+where t.tab_reloid = c.oid 
+    and t.tab_idxname = ic.relname 
+    and  ic.oid = i.indexrelid
+    and att.attrelid = i.indexrelid
+    and att2.attname = att.attname
+    and att2.attrelid = c.oid
+    and att2.attnotnull = 'f';
+</screen> </para>
+
+<para> These may be rectified via submitting, for each one, a query of
+the form: <command> alter table mytable alter column nullablecol set
+not null; </command> Running this against a subscriber where the table
+is empty will complete very quickly. It will take longer to apply this
+change to a table that already contains a great deal of data, as the
+alteration will scan the table to verify that there are no tuples
+where the column is NULL.
+</para>
+
+</listitem>
+
 <listitem><para><command>ERROR: Slony-I setAddTable_int(): table % not replicable!</command></para> 
 
-<para> 
-This happens because of the NULLable PK column. </para></listitem>
+<para> This happens because of the NULLable PK column. </para></listitem>
 <listitem><para><command>ERROR: Slony-I setAddTable_int(): table id % has already been assigned!</command></para> 
 
 <para> The table ID value needs to be assigned uniquely

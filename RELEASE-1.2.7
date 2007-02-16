@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.7,v 1.1.2.4 2007-02-08 22:55:57 cbbrowne Exp $
+$Id: RELEASE-1.2.7,v 1.1.2.5 2007-02-16 23:36:18 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -28,3 +28,6 @@ xxid.v81.sql), necessary to support 8.1 "ALTER FUNCTION ... STRICT";
 - Added functionality to UPDATE FUNCTIONS to make xxidin() function
 STRICT; the absence of this caused postmaster to fall over when
 processing MOVE SET event in PG v8.2
+
+- Added documentation of an issue surrounding NULLABLE columns to the
+log analysis chapter of the admin guide and to the UPGRADING docs.

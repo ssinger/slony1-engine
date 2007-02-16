@@ -1,6 +1,6 @@
 Upgrading from an earlier version of Slony-I to 1.2
 -----------------------------------------------------
-$Id: UPGRADING,v 1.1.4.1 2007-01-02 17:04:09 cbbrowne Exp $
+$Id: UPGRADING,v 1.1.4.2 2007-02-16 23:36:18 cbbrowne Exp $
 
 When upgrading Slony-I, the Slony installation on all nodes in a cluster
 must be upgraded at once, using the slonik command UPDATE FUNCTIONS.
@@ -28,3 +28,38 @@ The proper upgrade procedure is thus:
 Upgrading is also discussed in more detail in the "Admin Guide."
 The section is entitled "Slony-I Upgrade", distributed as
 doc/adminguide/slonyupgrade.html in the documentation package.
+
+Nullable Column issue in version 1.2
+===================================
+
+In version 1.2, a check has been added to reject subscriptions to
+tables where the candidate primary key has columns that are "Nullable"
+(e.g. - that are not defined in the schema as NOT NULL).
+
+This was not checked in earlier versions, and people may have set up
+constraints (e.g. - via triggers) to enforce NOT NULL as opposed to
+using the NOT NULL column constraint.  As a result, a replica running
+on version 1.1 may have violations of this check.
+
+You may search for these violations via the following query:
+
+select c.relname as table_name, ic.relname as index_name, att.attname, att2.attnotnull
+from _cluster.sl_table t, pg_catalog.pg_class c, pg_index i, pg_catalog.pg_class ic, pg_catalog.pg_attribute att, pg_catalog.pg_attribute att2
+where t.tab_reloid = c.oid 
+    and t.tab_idxname = ic.relname 
+    and  ic.oid = i.indexrelid
+    and att.attrelid = i.indexrelid
+    and att2.attname = att.attname
+    and att2.attrelid = c.oid
+    and att2.attnotnull = 'f';
+
+The problem may be rectified by submitting, for each entry found, a
+query of the form:
+   alter table mytable alter column nullablecol set not null;
+
+It would minimally suffice to apply this to the schema of new
+subscribers; such queries will run rapidly against empty tables.
+
+It will take longer to apply this change to a table that already
+contains a great deal of data, as the alteration will scan the table
+to verify that there are no tuples where the column is NULL.
