@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.21 2007-01-30 19:23:19 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.22 2007-02-18 21:17:57 devrim Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -363,10 +363,9 @@ the process in the &slony1; source code tree in a file called
 
 <para>If this script returns <command>FAILED</command> please contact the
 developers at <ulink url="http://slony.info/">
-http://slony.info/</ulink></para></sect2>
-
+http://slony.info/</ulink></para></sect3>
+</sect2>
 </sect1>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
