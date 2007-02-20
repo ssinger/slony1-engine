@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.57.2.1 2006-10-26 18:55:05 wieck Exp $
+# $Id: configure.ac,v 1.57.2.2 2007-02-20 11:29:39 xfade Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -141,12 +141,23 @@ AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all
 AC_ARG_WITH(d2mdir,		[  --with-d2mdir=<dir>              Location of docbook2man-spec.pl (Manpages will be skipped if not specified)])
 AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the manpages. Default is $PREFIX/man.])
 
+
+SLON_AC_ARG_BOOL(enable, engine, yes,
+              [  --disable-engine          Don't build slony1-engine source. (Used when building documentation only)])
+
+AC_SUBST(enable_engine)
+
 #Our current path
 SLONYPATH=`pwd`
 
 # ----
 # PostgreSQL checks
 # ----
+AC_MSG_CHECKING(if you have requested slony1-engine building)
+AC_MSG_RESULT($enable_engine)
+
+if test "$enable_engine" = "yes"; then
+
 ACX_LIBPQ()
 ACX_LIBSNMP()
 ACX_SLONYTOOLS()
@@ -172,6 +183,8 @@ else
   SLONBINDIR="${prefix}/bin"
 fi
 AC_SUBST(SLONBINDIR,$SLONBINDIR)
+
+fi
 
 # ----
 # Documentation checks
