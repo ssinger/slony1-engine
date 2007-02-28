@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.7,v 1.1.2.5 2007-02-16 23:36:18 cbbrowne Exp $
+$Id: RELEASE-1.2.7,v 1.1.2.6 2007-02-28 22:08:32 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -31,3 +31,14 @@ processing MOVE SET event in PG v8.2
 
 - Added documentation of an issue surrounding NULLABLE columns to the
 log analysis chapter of the admin guide and to the UPGRADING docs.
+
+- When you run MOVE SET, this populates sl_setsync for the moved set
+  even on nodes that are not subscribed.  If, subsequent to doing this, 
+  you attempt a SUBSCRIBE SET for a formerly-unsubscribed node, the
+  subscription will fail right at the end when the slon tries to insert a
+  new value to sl_setsync.
+
+  The fix: DELETE from sl_setsync immediately before the INSERT.  This
+  will silently blow away any 'offending' sl_setsync row.
+
+  (As observed by Afilias staff...)
