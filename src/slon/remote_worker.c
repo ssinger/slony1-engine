@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.15 2006-10-25 12:57:07 wieck Exp $
+ *	$Id: remote_worker.c,v 1.86.2.16 2007-02-28 22:07:49 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3478,10 +3478,12 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * Create our own initial setsync entry
 	 */
 	slon_mkquery(&query1,
+		     "delete from %s.sl_setsync where ssy_setid = %d;"
 		     "insert into %s.sl_setsync "
 		     "    (ssy_setid, ssy_origin, ssy_seqno, "
 		     "     ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) "
 		     "    values ('%d', '%d', '%s', '%s', '%s', '%q', '%q'); ",
+		     rtcfg_namespace, set_id,
 		     rtcfg_namespace,
 		     set_id, node->no_id, ssy_seqno, ssy_minxid, ssy_maxxid, ssy_xip,
 		     dstring_data(&ssy_action_list));

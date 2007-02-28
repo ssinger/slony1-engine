@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.42.2.7 2007-02-05 22:03:30 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.42.2.8 2007-02-28 22:07:49 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2746,7 +2746,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 
 	/*
-	 * Wait until all slon replication engines that where running have
+	 * Wait until all slon replication engines that were running have
 	 * restarted.
 	 */
 	n = 0;

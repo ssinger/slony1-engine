@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.7,v 1.1.2.4 2007-02-08 22:52:40 cbbrowne Exp $
+$Id: RELEASE-1.1.7,v 1.1.2.5 2007-02-28 22:07:49 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -31,3 +31,14 @@ xxid.v81.sql), necessary to support 8.1 "ALTER FUNCTION ... STRICT";
 STRICT; the absence of this caused postmaster to fall over when
 processing MOVE SET event in PG v8.2 (not to say that Slony-I 1.1 now
 *supports* 8.2; it does not)
+
+- When you run MOVE SET, this populates sl_setsync for the moved set
+  even on nodes that are not subscribed.  If, subsequent to doing this, 
+  you attempt a SUBSCRIBE SET for a formerly-unsubscribed node, the
+  subscription will fail right at the end when the slon tries to insert a
+  new value to sl_setsync.
+
+  The fix: DELETE from sl_setsync immediately before the INSERT.  This
+  will silently blow away any 'offending' sl_setsync row.
+
+  (As observed by Afilias staff...)
