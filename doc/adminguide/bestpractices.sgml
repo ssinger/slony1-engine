@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.24 2006-10-17 18:45:15 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.25 2007-03-01 21:02:31 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -373,6 +373,45 @@ of problems while the subscription is in progress.
 <para> The section on <link linkend="plainpaths"> Path Communications
 </link> discusses the issues surrounding what network connections need
 to be in place in order for &slony1; to function.</para>
+</listitem>
+
+<listitem><para> Lowering Authority </para>
+
+<para> Traditionally, it has been stated that <quote>&slony; needs to
+use superuser connections.</quote> It turns out that this is not
+entirely true, and and if there are particular concerns about
+excessive use of superuser accounts, it is possible to reduce this
+considerably. </para>
+
+<para> It is true to say that each &lslon; <emphasis>must</emphasis>
+have a superuser connection in order to manage the node that it is
+assigned to.  It needs to be able to alter the system catalogue in
+order to set up subscriptions and to process alterations
+(<emphasis>e.g</emphasis> - to run <xref linkend="stmtddlscript"> and
+other events that may alter the role of replicated tables on the local
+node).  </para>
+
+<para> However, the connections that &lslon; processes open to other
+nodes to access events and process subcriptions do not need to have
+nearly so much permission.  Indeed, one could set up a <quote>weak
+user</quote> assigned to all <xref linkend="stmtstorepath"> requests.
+The minimal permissions that this user, let's call it
+<command>weakuser</command>, requires are as follows:</para>
+
+<itemizedlist>
+<listitem><para> It must have read access to the &slony1;-specific namespace </para> </listitem>
+<listitem><para> It must have read access to all tables and sequences in that namespace</para> </listitem>
+<listitem><para> It must have write access to the &slony1; table <envar>sl_nodelock</envar> and sequence <envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
+<listitem><para> At subscribe time, it must have read access to all of the replicated tables. </para> 
+<para> Outside of subscription time, there is no need for access to access to the replicated tables. </para> </listitem>
+<listitem><para> There is some need for read access to tables in pg_catalog; it has not been verified how little access would be suitable. </para> </listitem>
+</itemizedlist>
+
+<para> In version 1.3, the tests in the <xref linkend="testbed">
+support using a <envar>WEAKUSER</envar> so that testing can regularly
+confirm the minimal set of permissions needed to support
+replication.</para>
+
 </listitem>
 
 <listitem><para> The section on <link linkend="listenpaths"> listen

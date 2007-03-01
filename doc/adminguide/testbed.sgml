@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.10 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.11 2007-03-01 21:02:31 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -93,6 +93,20 @@ databases. </para>
 <envar>USER13</envar> which allow specifying a separate user name for
 each database instance.  As always, with &slony1;, this needs
 to be a &postgres; <quote>superuser.</quote> </para>  </glossdef> </glossentry>
+
+<glossentry><glossterm> <envar>WEAKUSER</envar> </glossterm>
+<glossdef><para> By default, the user <filename>postgres</filename> is
+used; this is taken as the default user ID to use for the <xref linkend="stmtstorepath"> connections to all of the
+databases. </para>
+
+<para> There are also variables <envar>WEAKUSER1</envar> thru
+<envar>WEAKUSER13</envar> which allow specifying a separate user name
+for each database instance.  This user <emphasis> does not </emphasis>
+need to be a &postgres; <quote>superuser.</quote> This user can start
+out with no permissions; it winds up granted read permissions on the
+tables that the test uses, plus read access throughout the &slony1;
+schema, plus write access to one table and sequence used to manage
+node locks. </para> </glossdef> </glossentry>
 
 <glossentry><glossterm> <envar>HOST</envar> </glossterm>
 <glossdef><para> By default, <filename>localhost</filename> is used.

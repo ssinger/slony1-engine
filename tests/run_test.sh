@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.11 2006-06-09 17:12:20 cbbrowne Exp $
+# $Id: run_test.sh,v 1.12 2007-03-01 21:02:31 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -209,10 +209,10 @@ store_path()
         if [ ${i} -ne ${j} ]; then
           eval bdb=\$DB${j}
           eval bhost=\$HOST${j}
-          eval buser=\$USER${j}
+          eval buser=\$WEAKUSER${j}
           eval bport=\$PORT${j}
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
-	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/slonik.script
+	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
           else
             err 3 "No conninfo"
           fi
@@ -240,6 +240,7 @@ init_origin_rdbms()
         eval db=\$DB${originnode}
         eval host=\$HOST${originnode}
         eval user=\$USER${originnode}
+        eval weakuser=\$WEAKUSER${originnode}
 	eval pgbindir=\$PGBINDIR${originnode}
 	eval port=\$PORT${originnode}
 
@@ -256,6 +257,9 @@ init_origin_rdbms()
         $pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 	status "loading origin DB with $testname/init_schema.sql"
 	$pgbindir/psql -h $host -p $port $db $user < $testname/init_schema.sql 1> ${mktmp}/init_schema.sql.${originnode} 2>${mktmp}/init_schema.sql.${originnode}
+	status "setting up user ${weakuser} to have weak access to data"
+	. ${testname}/gen_weak_user.sh ${weakuser} > ${mktmp}/grant_weak_access.sql
+                 $pgbindir/psql -h $host -p $port -d $db -U $user < ${mktmp}/grant_weak_access.sql > ${mktmp}/genweakuser.sql.${originnode} 2> ${mktmp}/genweakuser.sql.${originnode}
 	status "done"
 }
 
@@ -265,6 +269,7 @@ create_subscribers()
         eval odb=\$DB${originnode}
         eval ohost=\$HOST${originnode}
         eval ouser=\$USER${originnode}
+        eval oweakuser=\$WEAKUSER${originnode}
 	eval opgbindir=\$PGBINDIR${originnode}
 	eval oport=\$PORT${originnode}
 
@@ -274,6 +279,7 @@ create_subscribers()
             eval db=\$DB${alias}
             eval host=\$HOST${alias}
             eval user=\$USER${alias}
+            eval weakuser=\$WEAKUSER${alias}
 	    eval pgbindir=\$PGBINDIR${alias}
 	    eval port=\$PORT${alias}
 
@@ -300,6 +306,43 @@ create_subscribers()
 	
 	  err 3 "No ORIGINNODE defined"
 	fi
+}
+
+generate_weak_slony_grants ()
+{
+  alias=1
+
+  ROTBLS="sl_action_seq sl_config_lock sl_confirm sl_event
+  sl_event_seq sl_listen sl_local_node_id sl_log_1 sl_log_2
+  sl_log_status sl_node  sl_path sl_registry
+  sl_rowid_seq sl_seqlastvalue sl_seqlog sl_sequence sl_set sl_setsync
+  sl_status sl_subscribe sl_table sl_trigger"
+
+  RWTBLS="sl_nodelock sl_nodelock_nl_conncnt_seq"
+
+  while : ; do
+    eval db=\$DB${alias}
+    eval host=\$HOST${alias}
+    eval user=\$USER${alias}
+    eval weakuser=\$WEAKUSER${alias}
+    eval pgbindir=\$PGBINDIR${alias}
+    eval port=\$PORT${alias}
+
+    if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
+      $pgbindir/psql -h $host -p $port -U $user -d $db -c "grant usage on schema \"_${CLUSTER1}\" to ${weakuser};" > /dev/null 2> /dev/null
+      for table in `echo $ROTBLS`; do
+        $pgbindir/psql -h $host -p $port -U $user -d $db -c "grant select on \"_${CLUSTER1}\".${table} to ${weakuser};" > /dev/null 2> /dev/null
+      done
+      for table in `echo $RWTBLS`; do
+        $pgbindir/psql -h $host -p $port -U $user -d $db -c "grant all on \"_${CLUSTER1}\".${table} to ${weakuser};" > /dev/null 2> /dev/null
+      done
+    fi
+    if [ ${alias} -ge ${NUMNODES} ]; then
+       break;
+    else
+       alias=$((${alias} + 1))
+    fi   
+  done    
 }
 
 drop_databases()
@@ -522,7 +565,7 @@ poll_cluster()
       if [ ${alias} -ge ${NUMCLUSTERS} ]; then
         break;
       else
-        alias=expr ${alias} + 1
+        alias=`expr ${alias} + 1`
       fi
     else
       break;
@@ -660,6 +703,10 @@ status "storing nodes"
 init_preamble
 store_node
 do_ik
+status "done"
+
+status "Granting weak access on Slony-I schema"
+generate_weak_slony_grants
 status "done"
 
 status "storing paths"

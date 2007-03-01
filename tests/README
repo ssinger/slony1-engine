@@ -35,10 +35,14 @@ PostgreSQL 8.0.x using the following command line:
       different versions of PostgreSQL.
   PGUSER
       By default, the user postgres is used; this is taken as the default user
-      ID to use for all of the databases.
+      ID to use for all of the databases as the 'generic' user and as the user
+      that a slon connects to its node as.
       There are also variables USER1 thru USER13 which allow specifying a
       separate user name for each database instance.  As always, with Slony-I,
       this needs to be a PostgreSQL "superuser."
+  WEAKUSER
+      By default, this user is 'weakuser'.  It is set up to have read-only 
+      permissions on the Slony-I schema and on the replicated tables.
   HOST
       By default, localhost is used.
       There are also variables HOST1 thru HOST13 which allow specifying a
