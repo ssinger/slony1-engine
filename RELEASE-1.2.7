@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.7,v 1.1.2.6 2007-02-28 22:08:32 cbbrowne Exp $
+$Id: RELEASE-1.2.7,v 1.1.2.7 2007-03-06 18:47:45 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -42,3 +42,6 @@ log analysis chapter of the admin guide and to the UPGRADING docs.
   will silently blow away any 'offending' sl_setsync row.
 
   (As observed by Afilias staff...)
+
+- Log shipping fix - storage of sl_setsync_offline call had a wrong
+  printf type; change from %d to %s
