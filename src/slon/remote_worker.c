@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.16 2007-02-28 22:07:49 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.86.2.17 2007-03-06 18:47:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3502,7 +3502,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	if (archive_dir) {
 		slon_mkquery(&query1,
 			     "insert into %s.sl_setsync_offline (ssy_setid, ssy_seqno) "
-			     "values ('%d', '%d');",
+			     "values ('%d', '%s');",
 			     rtcfg_namespace, set_id, ssy_seqno);
 		rc = archive_append_ds(node, &query1);
 		if (rc < 0) {

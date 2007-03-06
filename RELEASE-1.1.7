@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.7,v 1.1.2.5 2007-02-28 22:07:49 cbbrowne Exp $
+$Id: RELEASE-1.1.7,v 1.1.2.6 2007-03-06 18:47:23 cbbrowne Exp $
 
 - Add remote_listen_timeout parameter to slon.conf
 
@@ -42,3 +42,6 @@ processing MOVE SET event in PG v8.2 (not to say that Slony-I 1.1 now
   will silently blow away any 'offending' sl_setsync row.
 
   (As observed by Afilias staff...)
+
+- Log shipping fix - storage of sl_setsync_offline call had a wrong
+  printf type; change from %d to %s
