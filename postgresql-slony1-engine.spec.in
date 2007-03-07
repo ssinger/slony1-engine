@@ -98,7 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %if %docs
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support RELEASE-1.1.5 RELEASE-1.1.2 RELEASE-1.1.1
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support RELEASE-1.1.5 RELEASE-1.1.2 RELEASE-1.1.1 RELEASE-1.1.6 RELEASE-1.1.7
 %endif
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Mar 06 2007 Christopher Browne <cbbrowne@ca.afilias.info> postgresql-slony1-engine
+- Added release notes for 1.1.6 and 1.1.7
+
 * Wed Dec 21 2005 Devrim Gunduz <devrim@commandprompt.com> postgresql-slony1-engine
 - Added a buildrhel3 macro to fix RHEL 3 RPM builds
 - Added a kerbdir macro
