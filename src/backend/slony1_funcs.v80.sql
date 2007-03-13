@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2006, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v80.sql,v 1.2.2.3 2007-02-08 22:57:28 cbbrowne Exp $
+-- $Id: slony1_funcs.v80.sql,v 1.2.2.4 2007-03-13 19:27:20 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -124,5 +124,5 @@ begin
 end
 ' language plpgsql;
 
-comment on function @NAMESPACE@.make_table_strict (text, text) is
+comment on function @NAMESPACE@.make_function_strict (text, text) is
 'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
