@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.1.4.1 2006-10-27 17:54:21 cbbrowne Exp $
+# $Id: slonik_execute_script.pl,v 1.1.4.2 2007-03-13 15:35:30 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -71,6 +71,7 @@ if ($file) {
 	print STDERR "SQL script path needs to be a full path, e.g. /tmp/my_script.sql\n\n";
 	die $USAGE;
     }
+    $filename = $file
 }
 elsif ($SCRIPT_ARG) {
     # Put the script into a file
