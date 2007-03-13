@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slonik_execute_script.pl,v 1.1.2.1 2007-03-13 15:35:43 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -71,6 +71,7 @@ elsif ($SCRIPT_ARG) {
     # Put the script into a file
     $file = "/tmp/execute_script.sql.$$";
     my $fh;
+    $filename = $file
     open $fh, ">", $file;
     print $fh $SCRIPT_ARG;
     close $fh;
