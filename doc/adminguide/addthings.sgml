@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.26 2006-11-07 20:34:38 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.27 2007-03-13 21:00:11 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -133,6 +133,17 @@ the set containing the table.</para>
 consisting of the DDL changes, and then submit that script to all of
 the nodes via the Slonik command <xref
 linkend="stmtddlscript">.</para>
+
+<para> Alternatively, if you have the <link linkend="altperl"> altperl
+scripts </link> installed, you may use
+<command>slonik_execute_script</command> for this purpose: </para>
+
+<para> <command> slonik_execute_script [options] set#
+full_path_to_sql_script_file </command></para>
+
+<para> See <command>slonik_execute_script -h</command> for further
+options; note that this uses <xref linkend="stmtddlscript">
+underneath. </para>
 
 <para> There are a number of <quote>sharp edges</quote> to note...</para>
 
