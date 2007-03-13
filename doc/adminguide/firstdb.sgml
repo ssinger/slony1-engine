@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.22 2007-02-18 21:17:57 devrim Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.23 2007-03-13 16:06:28 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -237,8 +237,6 @@ slonik <<_EOF_
 	store node (id=2, comment = 'Slave node');
 	store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER');
 	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
-	store listen (origin=1, provider = 1, receiver =2);
-	store listen (origin=2, provider = 2, receiver =1);
 _EOF_
 </programlisting>
 
