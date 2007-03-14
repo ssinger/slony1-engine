@@ -21,9 +21,8 @@ CREATE TABLE table3(
 
 -- Table to perform UTF8 tests (checks multibyte; should be helpful in
 -- preventing problems with Asian character sets too)
-CREATE SEQUENCE utf8_id;
 CREATE TABLE utf8table (
-    id integer not null unique default nextval('utf8_id'),
+    id serial,
     string text,
     primary key(id)
 );
