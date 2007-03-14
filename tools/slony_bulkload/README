@@ -1,0 +1,12 @@
+The bulk_load_for_slony.pl tool will do a bulk load of a table that
+is being replicated by Slony-I but that is not being actively used.
+Note that this bulk load tool has features that can and will break
+replication if you are the least bit unwary and if you do not understand
+what it is doing.  PLEASE READ THE DOCUMENTATION.
+
+For documentation, see the perldoc documentation included in the
+enclosed file. PLEASE READ IT. Use perldoc bulk_load_for_slony.pl to
+read it.
+
+If this script breaks your replication cluster, well, we told you
+it would.
