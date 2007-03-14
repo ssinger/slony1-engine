@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.104 2007-02-08 18:01:15 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.105 2007-03-14 15:59:32 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5222,7 +5222,9 @@ BEGIN
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL) 
+                                         from @NAMESPACE@.sl_node n where no_id = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') 
+			and exists (select 1 from @NAMESPACE@.sl_set where set_origin = no_id);
 		return 1;
 	else
 		return 0;
@@ -5231,7 +5233,7 @@ end;
 ' language plpgsql;
 
 comment on function @NAMESPACE@.generate_sync_event(interval) is
-  'Generate a sync event if there has not been one in the requested interval.';
+  'Generate a sync event if there has not been one in the requested interval, and this is a provider node.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION tableHasSerialKey (tab_fqname)
