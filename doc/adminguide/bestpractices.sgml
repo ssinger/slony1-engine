@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.25 2007-03-01 21:02:31 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.26 2007-03-14 16:53:51 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -377,7 +377,7 @@ to be in place in order for &slony1; to function.</para>
 
 <listitem><para> Lowering Authority </para>
 
-<para> Traditionally, it has been stated that <quote>&slony; needs to
+<para> Traditionally, it has been stated that <quote>&slony1; needs to
 use superuser connections.</quote> It turns out that this is not
 entirely true, and and if there are particular concerns about
 excessive use of superuser accounts, it is possible to reduce this

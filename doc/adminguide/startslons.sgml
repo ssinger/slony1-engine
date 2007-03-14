@@ -1,4 +1,4 @@
-<!-- $Id: startslons.sgml,v 1.19 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: startslons.sgml,v 1.20 2007-03-14 16:53:51 cbbrowne Exp $ -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
 <indexterm><primary>running slon</primary></indexterm>
@@ -87,8 +87,9 @@ issue.</para></listitem>
 <emphasis>usually</emphasis> the preferable thing to run.  It was at
 one point not preferable to run it whilst subscribing a very large
 replication set where it is expected to take many hours to do the
-initial <command>COPY SET</command>.  The problem that came up in that
-case was that it figured that since it hasn't done a
+<command>COPY SET</command> (the main event that processes a
+<command>SUBSCRIBE SET</command> request).  The problem that came up
+in that case was that it figured that since it hasn't done a
 <command>SYNC</command> in 2 hours, something was broken requiring
 restarting slon, thereby restarting the <command>COPY SET</command>
 event.  More recently, the script has been changed to detect

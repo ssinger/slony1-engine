@@ -1933,22 +1933,28 @@ DROP TRIGGER (
      accidental updates by the application.
     </para>
     
-    <para> If the tables on the subscriber are <emphasis>not</emphasis> empty, then
-     the <command>COPY SET</command> process winds up doing more work than should be
-     strictly necessary:</para>
+    <para> If the tables on the subscriber are
+    <emphasis>not</emphasis> empty, then the <command>COPY
+    SET</command> event (which is part of the subscription process)
+    may wind up doing more work than should be strictly
+    necessary:</para>
      <itemizedlist>
-      
-      <listitem><para> It deletes all <quote>old</quote> entries in
-      the table</para></listitem>
 
-      <listitem><para> Those old entries
-	clutter up the table until it is next
-	<command>VACUUM</command>ed <emphasis>after</emphasis> the
-	subscription process is complete</para></listitem>
+      <listitem><para> It attempts to <command>TRUNCATE</command> the
+      table, which will be efficient. </para> </listitem>
+      
+      <listitem><para> If that fails (a foreign key relationship might
+      prevent TRUNCATE from working), it uses
+      <command>DELETE</command> to delete all <quote>old</quote>
+      entries in the table</para></listitem>
+
+      <listitem><para> Those old entries clutter up the table until it
+      is next <command>VACUUM</command>ed <emphasis>after</emphasis>
+      the subscription process is complete</para></listitem>
       
       <listitem><para> The indices for the table will contain entries
-	for the old, deleted entries, which will slow the process of
-	inserting new entries into the index.</para></listitem>
+      for the old, deleted entries, which will slow the process of
+      inserting new entries into the index.</para></listitem>
      </itemizedlist>
 
      <warning><para> This operation can take a (potentially distinctly)
@@ -1959,14 +1965,15 @@ DROP TRIGGER (
      complete.</para>
 
      <para> The <command>SUBSCRIBE SET</command> request will,
-     nonetheless, return fairly much immediately, even though the work
-     is merely <quote>in progress.</quote> If you need to set up
-     subscriptions for a set of cascading nodes, you will need to wait
-     for each subscriber to complete subscribing before submitting
-     requests for subscriptions that use that node as a provider.  If
-     you don't, it won't be a big deal: <command>slonik</command> will
-     check the node, discover that it is not yet an active provider
-     for the set, and report back:</para>
+     nonetheless, return fairly much immediately, even though the
+     work, being handled by the <command>COPY SET</command> event, is
+     still in progress.  If you need to set up subscriptions for a set
+     of cascading nodes, you will need to wait for each subscriber to
+     complete subscribing before submitting requests for subscriptions
+     that use that node as a provider.  If you don't, it won't be a
+     big deal: <command>slonik</command> will check the node, discover
+     that it is not yet an active provider for the set, and report
+     back:</para>
 
 <programlisting>
  Slony-I: provider 2 is not an active forwarding node for replication set 1

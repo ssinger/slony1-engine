@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.68 2007-02-02 20:24:16 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.69 2007-03-14 16:53:51 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -238,7 +238,6 @@ DEBUG1 remoteWorkerThread_1: connected to provider DB
 WARN	remoteWorkerThread_1: transactions earlier than XID 127314958 are still in progress
 WARN	remoteWorkerThread_1: data copy for set 1 failed - sleep 60 seconds
 </screen></para></question>
-
 
 <answer> <para> There is evidently some reasonably old outstanding
 transaction blocking &slony1; from processing the sync.  You might
@@ -1017,7 +1016,7 @@ outstanding events, this might take too long.
 <filename>src/slon/remote_listener.c</filename>, recompile &lslon;, and retry.  </para> </answer>
 
 <answer><para> Another would be to treat the node as having failed,
-and use the &slonik; command <xref linkend="stmtdropnode"> to drop the
+and use the &lslonik; command <xref linkend="stmtdropnode"> to drop the
 node, and recreate it.  If the database is heavily updated, it may
 well be cheaper to do this than it is to find a way to let it catch
 up.  </para> </answer>
@@ -1678,9 +1677,9 @@ SET</command> runs.  Why is that?  </para></question>
 <answer><para> &slony1; depends on there being an already existant
 index on the primary key, and leaves all indexes alone whilst using
 the &postgres; <command>COPY</command> command to load the data.
-Further hurting performane, the <command>COPY SET</command> event
-starts by deleting the contents of tables, which potentially leaves a
-lot of dead tuples
+Further hurting performance, the <command>COPY SET</command> event (an
+event that the subscription process generates) starts by deleting the
+contents of tables, which leaves the table full of dead tuples.
 </para>
 
 <para> When you use <command>pg_dump</command> to dump the contents of
