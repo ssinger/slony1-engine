@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.42.2.8 2007-02-28 22:07:49 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.42.2.9 2007-03-15 18:55:34 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1866,10 +1866,10 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 					use_minor = 0;
 					break;
 				case 1:
-					use_minor = 0;
+					use_minor = 1;
 					break;
 				default:
-					use_minor = 0;
+					use_minor = 1;
 					printf("%s:%d: Possible unsupported PostgreSQL "
 						   "version %d.%d\n",
 						   stmt->stmt_filename, stmt->stmt_lno,
@@ -1969,7 +1969,7 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 					use_minor = 0;
 					break;
 				default:
-					use_minor = 0;
+					use_minor = 1;
 					printf("%s:%d: Possible unsupported PostgreSQL "
 						"version %d.%d\n",
 						stmt->stmt_filename, stmt->stmt_lno,

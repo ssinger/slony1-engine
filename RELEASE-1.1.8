@@ -1,4 +1,4 @@
-$Id: RELEASE-1.1.8,v 1.1.2.4 2007-03-13 20:05:28 cbbrowne Exp $
+$Id: RELEASE-1.1.8,v 1.1.2.5 2007-03-15 18:55:34 cbbrowne Exp $
 
 - Change to rotatelogs configuration to support older versions of Apache
 log rotator
@@ -9,3 +9,5 @@ log rotator
 use, and should be copied to generate the other versions.
 
 - Fix to src/backend/slony1_funcs.v80.sql - comment on the right function in v8.0
+
+- Fix to src/slonik/slonik.c - it wasn't pulling in the right version of slony1_funcs.?.sql for late breaking versions of PostgreSQL
