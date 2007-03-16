@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.28 2006-10-17 18:33:18 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.28.2.1 2007-03-16 19:01:26 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -181,14 +181,15 @@ Commonly you need to do this either as root or as the postgres user.
 <listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_base.v73.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_base.v74.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.v80.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.v73.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.v74.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/xxid.v73.sql </filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
 </itemizedlist>
 
 <para>The <filename>.sql</filename> files are not fully substituted
-yet.  And yes, both the 7.3 and the 7.4 files get installed on every
+yet.  And yes, both the 7.3, 7.4 and the 8.0 files get installed on every
 system, irrespective of its version.  The <xref linkend="slonik">
 admin utility does namespace/cluster substitutions within these files,
 and loads the files when creating replication nodes.  At that point in
@@ -306,6 +307,21 @@ Engine added.
 &lt;service name&gt;</command>, <command>slon -listengines 
 &lt;service name&gt;</command> and <command>slon -delengine 
 &lt;service name&gt; &lt;config file&gt;</command>.</para> 
+
+<para> For further information about the &windows; port, you may want
+to see the following URLs: </para>
+
+<itemizedlist>
+
+<listitem><para> <ulink
+url="http://developer.pgadmin.org/~hiroshi/Slony-I/"> Slony-I Windows
+installer sample </ulink> </para> </listitem>
+
+<listitem><para> <ulink url=
+"http://people.planetpostgresql.org/xzilla/index.php?/archives/200-Alpha-testing-Slony-on-win32-Crib-Notes.html">
+xzilla's Alpha testing Slony on win32 Crib Notes </ulink> </para> </listitem>
+
+</itemizedlist>
 
 </sect2>
 

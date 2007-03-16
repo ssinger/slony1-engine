@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.18.2.1 2006-10-27 15:35:32 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.18.2.2 2007-03-16 19:01:26 cbbrowne Exp $ -->
 <sect1 id="help">
 <title>More &slony1; Help</title>
 <indexterm><primary>help - how to get more assistance</primary></indexterm>
@@ -74,9 +74,6 @@ Slonik script</para></listitem>
 
 <listitem><para><ulink url="http://freshmeat.net/projects/slonyi/">
 Freshmeat on &slony1; </ulink></para></listitem>
-
-<listitem> <para><ulink url="http://www.slony2.org/wiki/index.php"> 
-Slony-II Wiki</ulink> </para> </listitem> 
 
 </itemizedlist>
 </sect2>

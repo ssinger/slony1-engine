@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.3.2.1 2006-11-15 22:10:45 cbbrowne Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.3.2.2 2007-03-16 19:01:26 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -19,7 +19,10 @@ updates. </para>
 nodes.</para></listitem>
 <listitem><para> Execute a &lslonik; script containing the
 command <command>update functions (id = [whatever]);</command> for
-each node in the cluster.</para></listitem>
+each node in the cluster.</para>
+<note><para>Remember that your slonik upgrade script like all other 
+slonik scripts must contain the proper preamble commands to function.
+</para></note></listitem>
 <listitem><para> Start all slons.  </para> </listitem>
 </itemizedlist>
 

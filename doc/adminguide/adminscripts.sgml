@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.40.2.7 2007-01-05 19:28:48 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40.2.8 2007-03-16 19:01:26 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -13,30 +13,38 @@ linkend="maintenance"> discusses them. </para>
 
 <indexterm><primary>altperl scripts for &slony1;</primary></indexterm>
 
-<para>In the <filename>altperl</filename> directory in the
-<application>CVS</application> tree, there is a sizable set of
-<application>Perl</application> scripts that may be used to administer
-a set of &slony1; instances, which support having arbitrary numbers of
-nodes.</para>
+<para>There is a set of scripts to simplify administeration
+of set of &slony1; instances. The scripts support having arbitrary numbers of
+nodes. They may be installed as part of the installation process:</para>
 
-<para>Most of them generate Slonik scripts that are then to be passed
-on to the <xref linkend="slonik"> utility to be submitted to all of
-the &slony1; nodes in a particular cluster.  At one time, this
-embedded running <xref linkend="slonik"> on the slonik scripts.
+<para><command>
+ ./configure --with-perltools
+</command></para>
+
+<para>This will produce a number of scripts with the prefix
+<command>slonik_</command>.  They eliminate tedium by always referring
+to a central configuration file for the details of your site
+configuration. A documented sample of this file is provided in
+<filename>altperl/slon_tools.conf-sample</filename>. Most also include
+some command line help with the "--help" option, making them easier to
+learn and use.
+</para>
+
+<para>Most generate Slonik scripts that are printed to STDOUT. 
+At one time, the commands were passed directly to <xref linkend="slonik"> for execution. 
 Unfortunately, this turned out to be a pretty large calibre
 <quote>foot gun</quote>, as minor typos on the command line led, on a
-couple of occasions, to pretty calamitous actions, so the behavior has
-been changed so that the scripts simply submit output to standard
-output.  The savvy administrator should review the script
-<emphasis>before</emphasis> submitting it to <xref
-linkend="slonik">.</para>
+couple of occasions, to pretty calamitous actions. The savvy administrator should review the script
+<emphasis>before</emphasis> piping it to <xref linkend="slonik">.</para>
 
-<sect3><title>Node/Cluster Configuration - cluster.nodes</title>
-<indexterm><primary>cluster.nodes - node/cluster configuration for Perl tools</primary></indexterm>
+<sect3><title>Support for Multiple Clusters</title>
+<indexterm><primary>Multiple Cluster support for the altperl tools</primary></indexterm>
 
 <para>The UNIX environment variable <envar>SLONYNODES</envar> is used
 to determine what Perl configuration file will be used to control the
-shape of the nodes in a &slony1; cluster.</para>
+shape of the nodes in a &slony1; cluster. If it is not provided, a
+default <filename>slon_tools.conf</filename> location will be
+referenced. </para>
 
 <para>What variables are set up.
 <itemizedlist>
@@ -84,6 +92,7 @@ my %PARAMS =   (host=> undef,		# Host name
 );
 </programlisting>
 </sect3>
+
 <sect3><title>Set configuration - cluster.set1, cluster.set2</title>
 <indexterm><primary>cluster.set1 - replication set configuration for Perl tools</primary></indexterm>
 
@@ -97,35 +106,6 @@ scripts, this only needs to be set when running
 <filename>create_set</filename>, as that is the only script used to
 control what tables will be in a particular replication set.</para>
 
-<para>What variables are set up.</para>
-<itemizedlist>
-<listitem><para>$TABLE_ID = 44;</para>
-<para> Each table must be identified by a unique number; this variable controls where numbering starts</para>
-</listitem>
-<listitem><para>$SEQUENCE_ID = 17;</para>
-<para> Each sequence must be identified by a unique number; this variable controls where numbering starts</para>
-</listitem>
-<listitem><para>@PKEYEDTABLES</para>
-
-<para> An array of names of tables to be replicated that have a
-defined primary key so that &slony1; can automatically select its key</para>
-</listitem>
-<listitem><para>%KEYEDTABLES</para>
-<para> A hash table of tables to be replicated, where the hash index
-is the table name, and the hash value is the name of a unique not null
-index suitable as a "candidate primary key."</para>
-</listitem>
-<listitem><para>@SERIALTABLES</para>
-
-<para> An array of names of tables to be replicated that have no
-candidate for primary key.  &slony1; will add a key field based on a
-sequence that &slony1; generates</para>
-</listitem>
-<listitem><para>@SEQUENCES</para>
-
-<para> An array of names of sequences that are to be replicated</para>
-</listitem>
-</itemizedlist>
 </sect3>
 <sect3><title>slonik_build_env</title>
 <indexterm><primary>slonik_build_env</primary></indexterm>
@@ -535,6 +515,7 @@ environment variables, you will get a set of slonik scripts.  They may
 not correspond, of course, to any database you actually want to
 use...</para>
 </sect3>
+
 <sect3><title>Node-Specific Values</title>
 
 <para>For each node, there are also four environment variables; for node 1: </para>
@@ -647,6 +628,16 @@ invalidated by circumstances:</para>
 </itemizedlist>
 
 </sect3>
+</sect2>
+
+<sect2 id="bsd-ports-profile"> <title> <filename> slon.in-profiles </filename> </title>
+<subtitle> Apache-Style profiles for FreeBSD <filename>ports/databases/slony/*</filename> </subtitle>
+
+<para> In the tools area, <filename>slon.in-profiles</filename> is a
+script that might be used to start up &lslon; instances at the time of
+system startup.  It is designed to interact with the FreeBSD Ports
+system.</para>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
