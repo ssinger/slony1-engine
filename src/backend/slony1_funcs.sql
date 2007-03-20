@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.11 2007-03-16 14:43:00 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.12 2007-03-20 16:20:18 xfade Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5806,7 +5806,7 @@ begin
 	-- ----
 	-- Changes for 1.2
 	-- ----
-	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'',''1.1.5'', ''1.1.6'', "1.1.7", "1.1.8") then
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'',''1.1.5'', ''1.1.6'', ''1.1.7'', ''1.1.8'') then
 		-- Add new table sl_registry
 		execute ''create table @NAMESPACE@.sl_registry (
 						reg_key			text primary key,
