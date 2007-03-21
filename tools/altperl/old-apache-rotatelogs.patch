@@ -1,0 +1,20 @@
+===================================================================
+RCS file: /home/cvsd/slony1/slony1-engine/tools/altperl/slon-tools.pm,v
+retrieving revision 1.23.2.1
+retrieving revision 1.23.2.2
+diff -C2 -d -r1.23.2.1 -r1.23.2.2
+*** slon-tools.pm	25 Jul 2005 21:49:38 -0000	1.23.2.1
+--- slon-tools.pm	12 Mar 2007 22:17:54 -0000	1.23.2.2
+***************
+*** 139,143 ****
+    my $cmd = "@@PGBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d2 $CLUSTER_NAME '$dsn' 2>&1 ";
+    if ($APACHE_ROTATOR) {
+!     $cmd .= "| $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M &";
+    } else {
+      my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
+--- 139,143 ----
+    my $cmd = "@@PGBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d2 $CLUSTER_NAME '$dsn' 2>&1 ";
+    if ($APACHE_ROTATOR) {
+!     $cmd .= "| $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_%Y-%m.log\" 86400 &";
+    } else {
+      my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
