@@ -78,4 +78,5 @@ do_initdata()
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/loadmoredata.log 2> $mktmp/loadmoredata.log
   status "done"
+  sleep 20   # Give it a little while for replication to catch up
 }
