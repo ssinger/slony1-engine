@@ -108,7 +108,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -126,6 +126,9 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Wed Mar 22 2007 Christopher Browne <cbbrowne@ca.afilias.info>
+- Added more recent release notes
+
 * Wed Mar 7 2007 Christopher Browne <cbbrowne@ca.afilias.info>
 - Added more recent release notes
 
