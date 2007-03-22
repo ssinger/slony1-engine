@@ -78,5 +78,6 @@ do_initdata()
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
+  wait_for_catchup
   status "done"
 }

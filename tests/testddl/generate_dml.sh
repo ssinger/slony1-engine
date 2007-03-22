@@ -85,6 +85,6 @@ do_initdata()
   eval db=\$DB${originnode}
   status "loading extra data to node $db"
   $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
-
+  wait_for_catchup
   status "done"
 }
