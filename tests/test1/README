@@ -1,4 +1,4 @@
-$Id: README,v 1.7 2007-02-07 19:13:17 cbbrowne Exp $
+$Id: README,v 1.8 2007-03-22 20:44:13 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -29,3 +29,6 @@ that it works as expected
 
 7.  It does a test of make_function_strict(), a function used in
 'UPDATE FUNCTIONS' to change the xxidin() function to be STRICT.
+
+8.  It does a run of UPDATE FUNCTIONS against node 1.  This verifies
+that there are at least no syntax errors in the stored function.
