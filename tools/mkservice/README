@@ -1,0 +1,23 @@
+$Id: README,v 1.1 2007-03-30 14:49:46 cbbrowne Exp $
+
+contributed by Andrew Hammond <andrew.george.hammond@gmail.com>
+
+slon-mkservice.sh
+-------------------
+Create a slon service directory for use with svscan from daemontools.
+This uses multilog in a pretty basic way. See logrep for cleverness.
+Currently very limited error handling. This probably needs to be
+fixed...
+
+It asks for configuration information interactively, if run
+interactively.
+
+For non-interactive use, set the following environment variables.
+BASEDIR SYSUSR PASSFILE DBUSER HOST PORT DATABASE CLUSTER SLON_BINARY
+
+logrep-mkservice.sh
+--------------------
+
+This uses "tail -F" to pull data from Slony-I log files to allow
+creating special purpose log files to report specially desired
+information.
