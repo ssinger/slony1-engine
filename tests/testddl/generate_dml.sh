@@ -30,6 +30,8 @@ generate_initdata()
   status "generating ${numrows} transactions of random data"
   percent=`expr $j \* 5`
   status "$percent %"
+  GENDATA="$mktmp/generate.data"
+  echo "" > ${GENDATA}
   while : ; do
     txtalen=$(random_number 1 100)
     txta=$(random_string ${txtalen})
@@ -37,7 +39,6 @@ generate_initdata()
     txtblen=$(random_number 1 100)
     txtb=$(random_string ${txtblen})
     txtb=`echo ${txtb} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
-    GENDATA="$mktmp/generate.data"
     echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
     echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
@@ -86,5 +87,21 @@ do_initdata()
   status "loading extra data to node $db"
   $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
   wait_for_catchup
+
+  status "Execute a script on each node, one by one"
+  for node in 1 2 3; do
+      init_preamble
+      sh ${testname}/individual_ddl.sh ${testname} ${node} >> ${SCRIPT}
+      status "execute DDL script only on node ${node}"
+      do_ik
+  done
+
+  status "Generate still more data"
+  generate_initdata
+  eval db=\$DB${originnode}
+  status "loading extra data to node $db"
+  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
+  wait_for_catchup
+
   status "done"
 }
