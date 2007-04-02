@@ -23,6 +23,7 @@ commit()
 generate_initdata()
 {
   GENDATA="$mktmp/generate.data"
+  echo "" > ${GENDATA}
   numrows=$(random_number 50 1000)
   i=0;
   trippoint=`expr $numrows / 20`

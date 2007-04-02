@@ -31,6 +31,7 @@ generate_initdata()
   status "generating ${numrows} transactions of random data"
   percent=`expr $j \* 5`
   status "$percent %"
+  echo "" > ${GENDATA}
   while : ; do
     txtalen=$(random_number 1 100)
     txta=$(random_string ${txtalen})
