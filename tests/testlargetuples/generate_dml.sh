@@ -31,6 +31,7 @@ generate_initdata()
   percent=`expr $j \* 5`
   status "$percent %"
   GENDATA="$mktmp/generate.data"
+  echo "" > ${GENDATA}
   while : ; do
     txtalen=$(random_number 1 100)
     txta=$(random_string ${txtalen})
