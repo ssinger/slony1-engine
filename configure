@@ -686,6 +686,7 @@ CPP
 GREP
 EGREP
 HAVE_POSIX_SIGNALS
+enable_engine
 NEED_PG_DLLINIT
 NLSLIB
 PGINCLUDEDIR
@@ -1306,6 +1307,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-debug          build with debugging symbols (-g)
   --disable-rpath         do not embed shared library search path in executables
+  --disable-engine          Don't build slony1-engine source. (Used when building documentation only)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -6595,12 +6597,48 @@ if test "${with_mandir+set}" = set; then
 fi
 
 
+
+
+
+# Check whether --enable-engine was given.
+if test "${enable_engine+set}" = set; then
+  enableval=$enable_engine;
+  case $enableval in
+    yes)
+      :
+      ;;
+    no)
+      :
+      ;;
+    *)
+      { { echo "$as_me:$LINENO: error: no argument expected for --enable-engine option" >&5
+echo "$as_me: error: no argument expected for --enable-engine option" >&2;}
+   { (exit 1); exit 1; }; }
+      ;;
+  esac
+
+else
+  enable_engine=yes
+
+fi
+
+
+
+
+
 #Our current path
 SLONYPATH=`pwd`
 
 # ----
 # PostgreSQL checks
 # ----
+{ echo "$as_me:$LINENO: checking if you have requested slony1-engine building" >&5
+echo $ECHO_N "checking if you have requested slony1-engine building... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: result: $enable_engine" >&5
+echo "${ECHO_T}$enable_engine" >&6; }
+
+if test "$enable_engine" = "yes"; then
+
 
 
 
@@ -10054,6 +10092,8 @@ fi
 SLONBINDIR=$SLONBINDIR
 
 
+fi
+
 # ----
 # Documentation checks
 # ----
@@ -11383,6 +11423,7 @@ CPP!$CPP$ac_delim
 GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 HAVE_POSIX_SIGNALS!$HAVE_POSIX_SIGNALS$ac_delim
+enable_engine!$enable_engine$ac_delim
 NEED_PG_DLLINIT!$NEED_PG_DLLINIT$ac_delim
 NLSLIB!$NLSLIB$ac_delim
 PGINCLUDEDIR!$PGINCLUDEDIR$ac_delim
@@ -11406,7 +11447,6 @@ DJPEG!$DJPEG$ac_delim
 PNMTOPS!$PNMTOPS$ac_delim
 CONVERT!$CONVERT$ac_delim
 PGAUTODOC!$PGAUTODOC$ac_delim
-NSGMLS!$NSGMLS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -11448,6 +11488,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+NSGMLS!$NSGMLS$ac_delim
 SGMLSPL!$SGMLSPL$ac_delim
 d2mdir!$d2mdir$ac_delim
 JADE!$JADE$ac_delim
@@ -11459,7 +11500,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 9; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 10; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

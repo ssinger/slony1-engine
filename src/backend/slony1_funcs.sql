@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.13 2007-03-22 20:41:27 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.14 2007-04-03 21:55:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3683,8 +3683,11 @@ begin
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
 
+	
 	-- ----
 	-- Check that the set exists and originates here
+	-- unless only_on_node was specified (then it can be applied to
+	-- that node because that is what the user wanted)
 	-- ----
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
@@ -3693,16 +3696,23 @@ begin
 	if not found then
 		raise exception ''Slony-I: set % not found'', p_set_id;
 	end if;
-	if v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
-				p_set_id;
-	end if;
 
-	-- ----
-	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
-	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
-	perform @NAMESPACE@.alterTableRestore(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
+	if p_only_on_node = -1 then
+		if v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+			raise exception ''Slony-I: set % does not originate on local node'',
+				p_set_id;
+		end if;
+		-- ----
+		-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
+		-- ----
+		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+		perform @NAMESPACE@.alterTableRestore(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
+	else
+		-- ----
+		-- If doing "only on one node" - restore ALL tables irrespective of set
+		-- ----
+		perform @NAMESPACE@.alterTableRestore(tab_id) from @NAMESPACE@.sl_table;
+	end if;
 	return 1;
 end;
 ' language plpgsql;
@@ -3728,8 +3738,11 @@ declare
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	perform @NAMESPACE@.alterTableForReplication(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
+	if p_only_on_node = -1 then
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
 			p_set_id, p_script, p_only_on_node);
+	end if;
+	return NULL;
 end;
 ' language plpgsql;
 
@@ -5904,4 +5917,3 @@ comment on function @NAMESPACE@.copyFields(integer) is
 to specify fields for the passed-in tab_id.  
 
 In PG versions > 7.3, this looks like (field1,field2,...fieldn)';
-

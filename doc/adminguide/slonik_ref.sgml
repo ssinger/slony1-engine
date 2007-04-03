@@ -2548,11 +2548,13 @@ FAILOVER (
       
      </varlistentry>
      <varlistentry><term><literal> EXECUTE ONLY ON = ival
-       </literal></term> <listitem><para> (Optional) The ID of the only
-	node to actually execute the script.  This option causes the
-	script to be propagated by all nodes but executed only by one.
-	The default is to execute the script on all nodes that are
-	subscribed to the set.</para></listitem>
+
+       </literal></term> <listitem><para> (Optional) The ID of the
+       only node to actually execute the script.  This option causes
+       the script to be executed, by <xref linkend="slonik">,
+       <emphasis>only</emphasis> on the one node specified.  The
+       default is to execute the script on all nodes that are
+       subscribed to the set.</para></listitem>
       
      </varlistentry>
     </variablelist>

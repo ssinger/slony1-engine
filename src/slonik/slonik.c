@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.6 2007-03-15 18:52:02 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.7 2007-04-03 21:55:04 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3849,13 +3849,18 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	PGresult *res;
 	ExecStatusType rstat;
 
+
 #define PARMCOUNT 1  
 
         const char *params[PARMCOUNT];
         int paramlens[PARMCOUNT];
         int paramfmts[PARMCOUNT];
 
-	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
+	if(stmt->only_on_node > -1) {
+		adminfo1 = get_active_adminfo((SlonikStmt*) stmt,stmt->only_on_node);
+	} else {
+		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
+	}
 	if (adminfo1 == NULL)
 		return -1;
 
@@ -3882,6 +3887,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	slon_mkquery(&query,
 		     "select \"_%s\".ddlScript_prepare(%d, %d); ",
 		     stmt->hdr.script->clustername,
+
 		     stmt->ddl_setid, /* dstring_data(&script),  */ 
 		     stmt->only_on_node);
 
@@ -3935,33 +3941,32 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		/* printf ("Success - %s\n", PQresStatus(rstat)); */
 	}
 	
-	printf("Submit DDL Event to subscribers...\n");
-
-	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
-		     stmt->hdr.script->clustername,
-		     stmt->ddl_setid,  
-		     stmt->only_on_node);
-
-	paramlens[PARMCOUNT-1] = 0;
-	paramfmts[PARMCOUNT-1] = 0;
-	params[PARMCOUNT-1] = dstring_data(&script);
-
-	res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
-			   NULL, params, paramlens, paramfmts, 0);
-	
-	if (PQresultStatus(res) != PGRES_COMMAND_OK && 
-	    PQresultStatus(res) != PGRES_TUPLES_OK &&
-	    PQresultStatus(res) != PGRES_EMPTY_QUERY)
-	{
-		rstat = PQresultStatus(res);
-		printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
-		dstring_free(&query);
-		return -1;
-	} else {
-		rstat = PQresultStatus(res);
-		printf ("DDL on origin - %s\n", PQresStatus(rstat));
-	}
-	
+		printf("Complete DDL Event...\n");
+		
+		slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
+					 stmt->hdr.script->clustername,
+					 stmt->ddl_setid,  
+					 stmt->only_on_node);
+		
+		paramlens[PARMCOUNT-1] = 0;
+		paramfmts[PARMCOUNT-1] = 0;
+		params[PARMCOUNT-1] = dstring_data(&script);
+		
+		res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
+						   NULL, params, paramlens, paramfmts, 0);
+		
+		if (PQresultStatus(res) != PGRES_COMMAND_OK && 
+			PQresultStatus(res) != PGRES_TUPLES_OK &&
+			PQresultStatus(res) != PGRES_EMPTY_QUERY)
+			{
+				rstat = PQresultStatus(res);
+				printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
+				dstring_free(&query);
+				return -1;
+			} else {
+				rstat = PQresultStatus(res);
+				printf ("DDL submission to initial node - %s\n", PQresStatus(rstat));
+			}
 	dstring_free(&script);
 	dstring_free(&query);
 	return 0;

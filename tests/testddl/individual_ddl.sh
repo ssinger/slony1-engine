@@ -4,7 +4,7 @@ echo "
   EXECUTE SCRIPT (
        SET ID = 1,
        FILENAME = '${testname}/ddl_update_part2.sql',
-       EVENT NODE = 1,
+       EVENT NODE = ${node},
        EXECUTE ONLY ON = ${node}
     );
 "

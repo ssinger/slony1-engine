@@ -1,0 +1,5 @@
+$Id: RELEASE-1.2.10,v 1.1.2.1 2007-04-03 21:55:03 cbbrowne Exp $
+
+- Fixed problem with EXECUTE SCRIPT (EXECUTE ONLY ON = <node>)
+
+  - The script was being executed on too many nodes...
