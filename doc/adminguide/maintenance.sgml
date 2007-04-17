@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.25 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.26 2007-04-17 21:58:47 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -285,6 +285,100 @@ periodically.</para></listitem>
 
 </itemizedlist>
 </para>
+</sect2>
+<sect2><title>mkservice </title>
+
+<sect3><title>slon-mkservice.sh</title>
+
+<para> Create a slon service directory for use with svscan from
+daemontools.  This uses multilog in a pretty basic way, which seems to
+be standard for daemontools / multilog setups. If you want clever
+logging, see logrep below. Currently this script has very limited
+error handling capabilities.</para>
+
+<para> For non-interactive use, set the following environment
+variables.  <envar>BASEDIR</envar> <envar>SYSUSR</envar>
+<envar>PASSFILE</envar> <envar>DBUSER</envar> <envar>HOST</envar>
+<envar>PORT</envar> <envar>DATABASE</envar> <envar>CLUSTER</envar>
+<envar>SLON_BINARY</envar> If any of the above are not set, the script
+asks for configuration information interactively.</para>
+
+<itemizedlist>
+<listitem><para>
+<envar>BASEDIR</envar> where you want the service directory structure for the slon
+to be created. This should <emphasis>not</emphasis> be the <filename>/var/service</filename> directory.</para></listitem>
+<listitem><para>
+<envar>SYSUSR</envar> the unix user under which the slon (and multilog) process should run.</para></listitem>
+<listitem><para>
+<envar>PASSFILE</envar> location of the <filename>.pgpass</filename> file to be used. (default <filename>~sysusr/.pgpass</filename>)</para></listitem>
+<listitem><para>
+<envar>DBUSER</envar> the postgres user the slon should connect as (default slony)</para></listitem>
+<listitem><para>
+<envar>HOST</envar> what database server to connect to (default localhost)</para></listitem>
+<listitem><para>
+<envar>PORT</envar> what port to connect to (default 5432)</para></listitem>
+<listitem><para>
+<envar>DATABASE</envar> which database to connect to (default dbuser)</para></listitem>
+<listitem><para>
+<envar>CLUSTER</envar> the name of your Slony1 cluster? (default database)</para></listitem>
+<listitem><para>
+<envar>SLON_BINARY</envar> the full path name of the slon binary (default <command>which slon</command>)</para></listitem>
+</itemizedlist>
+
+<sect3><title>logrep-mkservice.sh</title>
+
+<para>This uses <command>tail -F</command> to pull data from log files allowing
+you to use multilog filters (by setting the CRITERIA) to create
+special purpose log files. The goal is to provide a way to monitor log
+files in near realtime for <quote>interesting</quote> data without either
+hacking up the initial log file or wasting CPU/IO by re-scanning the
+same log repeatedly.
+</para>
+
+<para>For non-interactive use, set the following environment
+variables.  <envar>BASEDIR</envar> <envar>SYSUSR</envar> <envar>SOURCE</envar>
+<envar>EXTENSION</envar> <envar>CRITERIA</envar> If any of the above are not set,
+the script asks for configuration information interactively.
+</para>
+
+<itemizedlist>
+<listitem><para>
+<envar>BASEDIR</envar> where you want the service directory structure for the logrep
+to be created. This should <emphasis>not</emphasis> be the <filename>/var/service</filename> directory.</para></listitem>
+<listitem><para><envar>SYSUSR</envar> unix user under which the service should run.</para></listitem>
+<listitem><para><envar>SOURCE</envar> name of the service with the log you want to follow.</para></listitem>
+<listitem><para><envar>EXTENSION</envar> a tag to differentiate this logrep from others using the same source.</para></listitem>
+<listitem><para><envar>CRITERIA</envar> the multilog filter you want to use.</para></listitem>
+</itemizedlist>
+
+<para> A trivial example of this would be to provide a log file of all slon
+ERROR messages which could be used to trigger a nagios alarm.
+<command>EXTENSION='ERRORS'</command>
+<command>CRITERIA="'-*' '+* * ERROR*'"</command>
+(Reset the monitor by rotating the log using <command>svc -a $svc_dir</command>)
+</para>
+
+<para> A more interesting application is a subscription progress log.
+<command>EXTENSION='COPY'</command>
+<command>CRITERIA="'-*' '+* * ERROR*' '+* * WARN*' '+* * CONFIG enableSubscription*' '+* * DEBUG2 remoteWorkerThread_* prepare to copy table*' '+* * DEBUG2 remoteWorkerThread_* all tables for set * found on subscriber*' '+* * DEBUG2 remoteWorkerThread_* copy*' '+* * DEBUG2 remoteWorkerThread_* Begin COPY of table*' '+* * DEBUG2 remoteWorkerThread_* * bytes copied for table*' '+* * DEBUG2 remoteWorkerThread_* * seconds to*' '+* * DEBUG2 remoteWorkerThread_* set last_value of sequence*' '+* * DEBUG2 remoteWorkerThread_* copy_set*'"</command>
+</para>
+
+<para>If you have a subscription log then it's easy to determine if a given
+slon is in the process of handling copies or other subscription activity.
+If the log isn't empty, and doesn't end with a 
+<command>"CONFIG enableSubscription: sub_set:1"</command>
+(or whatever set number you've subscribed) then the slon is currently in
+the middle of initial copies.</para>
+
+<para> If you happen to be monitoring the mtime of your primary slony logs to 
+determine if your slon has gone brain-dead, checking this is a good way
+to avoid mistakenly clobbering it in the middle of a subscribe. As a bonus,
+recall that since the the slons are running under svscan, you only need to
+kill it (via the svc interface) and let svscan start it up again laster.
+I've also found the COPY logs handy for following subscribe activity 
+interactively.</para>
+</sect3>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file

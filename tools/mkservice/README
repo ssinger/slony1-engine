@@ -1,23 +1,72 @@
-$Id: README,v 1.1 2007-03-30 14:49:46 cbbrowne Exp $
+$Id: README,v 1.2 2007-04-17 21:58:47 cbbrowne Exp $
 
 contributed by Andrew Hammond <andrew.george.hammond@gmail.com>
 
 slon-mkservice.sh
 -------------------
 Create a slon service directory for use with svscan from daemontools.
-This uses multilog in a pretty basic way. See logrep for cleverness.
-Currently very limited error handling. This probably needs to be
-fixed...
-
-It asks for configuration information interactively, if run
-interactively.
+This uses multilog in a pretty basic way, which seems to be standard 
+for daemontools / multilog setups. If you want clever logging, see
+logrep below. Currently this script has very limited error handling
+capabilities.
 
 For non-interactive use, set the following environment variables.
 BASEDIR SYSUSR PASSFILE DBUSER HOST PORT DATABASE CLUSTER SLON_BINARY
+If any of the above are not set, the script asks for configuration
+information interactively.
+
+BASEDIR where you want the service directory structure for the slon
+to be created. This should _not_ be the /var/service directory.
+SYSUSR the unix user under which the slon (and multilog) process should run.
+PASSFILE location of the .pgpass file to be used. (default ~sysusr/.pgpass)
+DBUSER the postgres user the slon should connect as (default slony)
+HOST what database server to connect to (default localhost)
+PORT what port to connect to (default 5432)
+DATABASE which database to connect to (default dbuser)
+CLUSTER the name of your Slony1 cluster? (default database)
+SLON_BINARY the full path name of the slon binary (default `which slon`)
 
 logrep-mkservice.sh
 --------------------
 
-This uses "tail -F" to pull data from Slony-I log files to allow
-creating special purpose log files to report specially desired
-information.
+This uses "tail -F" to pull data from log files allowing you to use
+multilog filters (by setting the CRITERIA) to create special purpose
+log files. The goal is to provide a way to monitor log files in near 
+realtime for "interesting" data without either hacking up the initial
+log file or wasting CPU/IO by re-scanning the same log repeatedly.
+
+For non-interactive use, set the following environment variables.
+BASEDIR SYSUSR SOURCE EXTENSION CRITERIA 
+If any of the above are not set, the script asks for configuration
+information interactively.
+
+BASEDIR where you want the service directory structure for the logrep
+to be created. This should _not_ be the /var/service directory.
+SYSUSR unix user under which the service should run.
+SOURCE name of the service with the log you want to follow.
+EXTENSION a tag to differentiate this logrep from others using the same source.
+CRITERIA the multilog filter you want to use.
+
+A trivial example of this would be to provide a log file of all slon
+ERROR messages which could be used to trigger a nagios alarm.
+EXTENSION='ERRORS'
+CRITERIA="'-*' '+* * ERROR*'"
+(Reset the monitor by rotating the log using svc -a $svc_dir)
+
+A more interesting application is a subscription progress log.
+EXTENSION='COPY'
+CRITERIA="'-*' '+* * ERROR*' '+* * WARN*' '+* * CONFIG enableSubscription*' '+* * DEBUG2 remoteWorkerThread_* prepare to copy table*' '+* * DEBUG2 remoteWorkerThread_* all tables for set * found on subscriber*' '+* * DEBUG2 remoteWorkerThread_* copy*' '+* * DEBUG2 remoteWorkerThread_* Begin COPY of table*' '+* * DEBUG2 remoteWorkerThread_* * bytes copied for table*' '+* * DEBUG2 remoteWorkerThread_* * seconds to*' '+* * DEBUG2 remoteWorkerThread_* set last_value of sequence*' '+* * DEBUG2 remoteWorkerThread_* copy_set*'"
+
+If you have a subscription log then it's easy to determine if a given
+slon is in the process of handling copies or other subscription activity.
+If the log isn't empty, and doesn't end with a 
+"CONFIG enableSubscription: sub_set:1"
+(or whatever set number you've subscribed) then the slon is currently in
+the middle of initial copies.
+If you happen to be monitoring the mtime of your primary slony logs to 
+determine if your slon has gone brain-dead, checking this is a good way
+to avoid mistakenly clobbering it in the middle of a subscribe. As a bonus,
+recall that since the the slons are running under svscan, you only need to
+kill it (via the svc interface) and let svscan start it up again laster.
+I've also found the COPY logs handy for following subscribe activity 
+interactively.
