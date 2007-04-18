@@ -6,27 +6,26 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.7 2007-04-03 21:55:04 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.8 2007-04-18 19:28:27 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
 
+#ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <time.h>
 #else
 #define sleep(x) Sleep(x*1000)
 #define vsnprintf _vsnprintf
-#define INT64_FORMAT "%I64d"
 #endif
-#include <errno.h>
-#include <time.h>
 
 #include "postgres.h"
 #include "libpq-fe.h"

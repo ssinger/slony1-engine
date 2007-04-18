@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.14 2007-04-03 21:55:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.15 2007-04-18 19:28:27 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3737,10 +3737,13 @@ declare
 	v_set_origin		int4;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
-	perform @NAMESPACE@.alterTableForReplication(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
 	if p_only_on_node = -1 then
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
+		perform @NAMESPACE@.alterTableForReplication(tab_id) from @NAMESPACE@.sl_table where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''));
+
+		return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
 			p_set_id, p_script, p_only_on_node);
+	else
+		perform @NAMESPACE@.alterTableForReplication(tab_id) from @NAMESPACE@.sl_table;
 	end if;
 	return NULL;
 end;

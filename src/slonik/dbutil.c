@@ -6,15 +6,15 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.12 2006-06-28 04:47:14 darcyb Exp $
+ *	$Id: dbutil.c,v 1.12.2.1 2007-04-18 19:28:27 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
 
+#ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>

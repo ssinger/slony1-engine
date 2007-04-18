@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.53 2006-09-07 13:21:16 xfade Exp $
+ *	$Id: slony1_funcs.c,v 1.53.2.1 2007-04-18 19:28:27 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -38,6 +38,11 @@
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
+#endif
+
+/* -- Change from PostgreSQL Ver 8.3 -- */
+#ifndef VARATT_SIZEP
+#define VARATT_SIZEP VARATT_SIZEP_DEPRECATED
 #endif
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
