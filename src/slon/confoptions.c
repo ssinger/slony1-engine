@@ -100,7 +100,7 @@ build_conf_variables(void)
 	conf_variables = conf_vars;
 	num_conf_variables = num_vars;
 	size_conf_variables = size_vars;
-	qsort((void *)conf_variables, num_conf_variables, sizeof(struct config_generic *), conf_var_compare);
+	qsort((void *)conf_variables, (size_t) num_conf_variables, sizeof(struct config_generic *), conf_var_compare);
 }
 
 
@@ -204,7 +204,7 @@ InitializeConfOptions(void)
 static bool
 parse_bool(const char *value, bool * result)
 {
-	size_t		len = strlen(value);
+	int		len = (int)  strlen(value);
 
 	if (strncasecmp(value, "true", len) == 0)
 	{
@@ -325,7 +325,7 @@ find_option(const char *name, int elevel)
 	res = (struct config_generic **)
 		bsearch((void *)&key,
 				(void *)conf_variables,
-				num_conf_variables,
+				(size_t) num_conf_variables,
 				sizeof(struct config_generic *),
 				conf_var_compare);
 	if (res)
@@ -366,7 +366,7 @@ conf_name_compare(const char *namea, const char *nameb)
 		if (chb >= 'A' && chb <= 'Z')
 			chb += 'a' - 'A';
 		if (cha != chb)
-			return cha - chb;
+			return (int) (cha - chb);
 	}
 	if (*namea)
 		return 1;				/* a is longer */
@@ -393,28 +393,28 @@ get_config_option(const char *name)
 				struct config_bool *conf = (struct config_bool *) record;
 
 				return (void *)conf->variable;
-				break;
+				/* break; */
 			}
 		case SLON_C_INT:
 			{
 				struct config_int *conf = (struct config_int *) record;
 
 				return (void *)conf->variable;
-				break;
+				/* break; */
 			}
 		case SLON_C_REAL:
 			{
 				struct config_real *conf = (struct config_real *) record;
 
 				return (void *)conf->variable;
-				break;
+				/* break; */
 			}
 		case SLON_C_STRING:
 			{
 				struct config_string *conf = (struct config_string *) record;
 
 				return (void *)*conf->variable;
-				break;
+				/* break; */
 			}
 	}
 	return NULL;
@@ -495,12 +495,14 @@ set_config_option(const char *name, const char *value)
 						slon_log(SLON_WARN, "parameter \"%s\" requires a numeric value\n", name);
 						return false;
 					}
+					/* @ -realcompare @ */
 					if (newval < conf->min || newval > conf->max)
 					{
 						slon_log(SLON_WARN, "%g is outside the valid range for parameter \"%s\" (%g .. %g)\n",
 								 newval, name, conf->min, conf->max);
 						return false;
 					}
+					/* @ +realcompare @ */
 				}
 				else
 				{

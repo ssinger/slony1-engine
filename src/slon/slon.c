@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.70 2006-12-13 14:37:18 darcyb Exp $
+ *	$Id: slon.c,v 1.71 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -46,7 +46,7 @@
 #define		SLON_WATCHDOG_RESTART		1
 #define		SLON_WATCHDOG_RETRY			2
 #define		SLON_WATCHDOG_SHUTDOWN		3
-int			watchdog_status = SLON_WATCHDOG_NORMAL;
+static int			watchdog_status = SLON_WATCHDOG_NORMAL;
 #endif
 int			sched_wakeuppipe[2];
 
@@ -79,7 +79,7 @@ static void slon_terminate_worker(void);
 int			slon_log_level;
 char	   *pid_file;
 char	   *archive_dir = NULL;
-int			child_status;
+static int			child_status;
 
 
 /* ----------

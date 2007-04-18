@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.39 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.40 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -66,7 +66,7 @@ localListenThread_main(void *dummy)
 	/*
 	 * Listen for local events
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 		     /* "listen \"_%s_Event\"; " */
 		     "listen \"_%s_Restart\"; ",
 		     /*	 rtcfg_cluster_name,  */
@@ -88,7 +88,7 @@ localListenThread_main(void *dummy)
 	 */
 #define NODELOCKERROR "ERROR:  duplicate key violates unique constraint \"sl_nodelock-pkey\""
 
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select %s.cleanupNodelock(); "
 				 "insert into %s.sl_nodelock values ("
 				 "    %d, 0, \"pg_catalog\".pg_backend_pid()); ",
@@ -147,13 +147,13 @@ localListenThread_main(void *dummy)
 		/*
 		 * Drain notifications.
 		 */
-		PQconsumeInput(dbconn);
+		(void) PQconsumeInput(dbconn);
 		restart_request = false;
 		while ((notification = PQnotifies(dbconn)) != NULL)
 		{
 			if (strcmp(restart_notify, notification->relname) == 0)
 				restart_request = true;
-			PQfreemem(notification);
+			(void) PQfreemem(notification);
 		}
 		if (restart_request)
 		{
@@ -171,7 +171,7 @@ localListenThread_main(void *dummy)
 		/*
 		 * Query the database for new local events
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select ev_seqno, ev_timestamp, "
 					 "       ev_minxid, ev_maxxid, ev_xip, "
 					 "       ev_type, "
@@ -506,7 +506,7 @@ localListenThread_main(void *dummy)
 				 * rules we must have a provider now.
 				 */
 				dstring_init(&query2);
-				slon_mkquery(&query2,
+				(void) slon_mkquery(&query2,
 							 "select sub_provider from %s.sl_subscribe "
 					     "    where sub_receiver = %d and sub_set = %d",
 					     rtcfg_namespace, rtcfg_nodeid, set_id);

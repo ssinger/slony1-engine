@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.61 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: slon.h,v 1.62 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -361,7 +361,7 @@ do { \
 	pthread_mutex_lock(&slon_watchdog_lock); \
 	if (slon_watchdog_pid >= 0) { \
 		slon_log(SLON_DEBUG2, "slon_abort() from pid=%d\n", slon_pid); \
-		kill(slon_watchdog_pid, SIGTERM); \
+		(void) kill(slon_watchdog_pid, SIGTERM);			\
 		slon_watchdog_pid = -1; \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \
@@ -372,7 +372,7 @@ do { \
 	pthread_mutex_lock(&slon_watchdog_lock); \
 	if (slon_watchdog_pid >= 0) { \
 		slon_log(SLON_DEBUG2, "slon_restart() from pid=%d\n", slon_pid); \
-		kill(slon_watchdog_pid, SIGHUP); \
+		(void) kill(slon_watchdog_pid, SIGHUP);			\
 		slon_watchdog_pid = -1; \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \
@@ -383,7 +383,7 @@ do { \
 	pthread_mutex_lock(&slon_watchdog_lock); \
 	if (slon_watchdog_pid >= 0) { \
 		slon_log(SLON_DEBUG2, "slon_retry() from pid=%d\n", slon_pid); \
-		kill(slon_watchdog_pid, SIGUSR1); \
+		(void) kill(slon_watchdog_pid, SIGUSR1);			\
 		slon_watchdog_pid = -1; \
 	} \
 	pthread_mutex_unlock(&slon_watchdog_lock); \

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.33 2007-02-02 20:24:16 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.34 2007-04-18 22:19:07 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -240,7 +240,7 @@ remoteListenThread_main(void *cdata)
 			 * Listen on the connection for events and confirmations and
 			 * register the node connection.
 			 */
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 				     /* "listen \"_%s_Event\"; " */
 				     /*	 skip confirms "listen \"_%s_Confirm\"; " */
 				     "select %s.registerNodeConnection(%d); ",
@@ -343,7 +343,7 @@ remoteListenThread_main(void *cdata)
 					 "remoteListenThread_%d: UNLISTEN\n",
 					 node->no_id);
 
-				slon_mkquery(&query1,
+				(void) slon_mkquery(&query1,
 					     "unlisten \"_%s_Event\"; ",
 					     rtcfg_cluster_name);
 				break;
@@ -351,7 +351,7 @@ remoteListenThread_main(void *cdata)
 				slon_log(SLON_DEBUG2, 
 					 "remoteListenThread_%d: LISTEN\n",
 					 node->no_id);
-				slon_mkquery(&query1,
+				(void) slon_mkquery(&query1,
 					     "listen \"_%s_Event\"; ",
 					     rtcfg_cluster_name);
 				break;
@@ -598,7 +598,7 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
 	 * Select the max(con_seqno) grouped by con_origin and con_received from
 	 * the sl_confirm table.
 	 */
-	slon_mkquery(&query,
+	(void) slon_mkquery(&query,
 				 "select con_origin, con_received, "
 				 "    max(con_seqno) as con_seqno, "
 				 "    max(con_timestamp) as con_timestamp "
@@ -674,7 +674,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	 * <remote_node> and ev_seqno > <last_seqno>) per remote node we're listen
 	 * for here.
 	 */
-	slon_mkquery(&query,
+	(void) slon_mkquery(&query,
 				 "select ev_origin, ev_seqno, ev_timestamp, "
 				 "       ev_minxid, ev_maxxid, ev_xip, "
 				 "       ev_type, "
@@ -691,7 +691,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	if (lag_interval)
 	{
 		dstring_init(&q2);
-		slon_mkquery(&q2, "where ev_timestamp < now() - '%s'::interval and (", lag_interval);
+		(void) slon_mkquery(&q2, "where ev_timestamp < now() - '%s'::interval and (", lag_interval);
 		where_or_or = dstring_data(&q2);
 	}
 	while (listat)
@@ -730,11 +730,11 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		dstring_free(&query);
 		return -1;
 	}
-	time(&timeout);
+	(void) time(&timeout);
 	timeout += remote_listen_timeout;
 	while (PQisBusy(conn->dbconn) != 0)
 	{
-		time(&now);
+		(void) time(&now);
 		if (now >= timeout)
 		{
 			slon_log(SLON_ERROR,
@@ -779,8 +779,8 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		int			ev_origin;
 		int64		ev_seqno;
 
-		ev_origin = strtol(PQgetvalue(res, tupno, 0), NULL, 10);
-		slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
+		ev_origin = (int) strtol(PQgetvalue(res, tupno, 0), NULL, 10);
+		(void) slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
 
 		slon_log(SLON_DEBUG2, "remoteListenThread_%d: "
 				 "queue event %d,%s %s\n",

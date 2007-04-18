@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.136 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.137 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -285,11 +285,11 @@ remoteWorkerThread_main(void *cdata)
 	SlonDString lsquery;
 	SlonWorkMsg *msg;
 	SlonWorkMsg_event *event;
-	int			check_config = true;
+	bool			check_config = true;
 	int64		curr_config = -1;
 	char		seqbuf[64];
-	int			event_ok;
-	int			need_reloadListen = false;
+	bool			event_ok;
+	bool			need_reloadListen = false;
 	int			rc;
 
 	slon_log(SLON_DEBUG1,
@@ -300,7 +300,12 @@ remoteWorkerThread_main(void *cdata)
 	 * Initialize local data
 	 */
 	wd = (WorkerGroupData *) malloc(sizeof(WorkerGroupData));
-	memset(wd, 0, sizeof(WorkerGroupData));
+	if (wd == 0) {
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: could not malloc() space for WorkerGroupData\n");
+		slon_retry();
+	} else {
+		memset(wd, 0, sizeof(WorkerGroupData));
+	}
 
 	pthread_mutex_init(&(wd->workdata_lock), NULL);
 	pthread_cond_init(&(wd->repldata_cond), NULL);
@@ -314,7 +319,7 @@ remoteWorkerThread_main(void *cdata)
 	wd->tab_fqname = (char **)malloc(sizeof(char *) * wd->tab_fqname_size);
 	memset(wd->tab_fqname, 0, sizeof(char *) * wd->tab_fqname_size);
 	wd->tab_forward = malloc(wd->tab_fqname_size);
-	memset(wd->tab_forward, 0, wd->tab_fqname_size);
+	memset(wd->tab_forward, 0, (size_t) (wd->tab_fqname_size));
 
 	dstring_init(&query1);
 	dstring_init(&query2);
@@ -330,7 +335,7 @@ remoteWorkerThread_main(void *cdata)
 	/*
 	 * Put the connection into replication mode
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select %s.setSessionRole('_%s', 'slon'); ",
 				 rtcfg_namespace, rtcfg_cluster_name);
 	if (query_execute(node, local_dbconn, &query1) < 0)
@@ -446,7 +451,7 @@ remoteWorkerThread_main(void *cdata)
 		 * transaction commits, every other remote node listening for events
 		 * with us as a provider will pick up the news.
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "begin transaction; "
 					 "set transaction isolation level serializable; ");
 
@@ -576,7 +581,7 @@ remoteWorkerThread_main(void *cdata)
 				 * Something went wrong. Rollback and try again after the
 				 * specified timeout.
 				 */
-				slon_mkquery(&query2, "rollback transaction");
+				(void) slon_mkquery(&query2, "rollback transaction");
 				if (query_execute(node, local_dbconn, &query2) < 0)
 					slon_retry();
 
@@ -692,12 +697,12 @@ remoteWorkerThread_main(void *cdata)
 					if (query_execute(node, local_dbconn, &query1) < 0)
 						slon_retry();
 
-					slon_mkquery(&query1, "select %s.uninstallNode(); ",
+					(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
 								 rtcfg_namespace);
 					if (query_execute(node, local_dbconn, &query1) < 0)
 						slon_retry();
 
-					slon_mkquery(&query1, "drop schema %s cascade; ",
+					(void) slon_mkquery(&query1, "drop schema %s cascade; ",
 								 rtcfg_namespace);
 					query_execute(node, local_dbconn, &query1);
 
@@ -840,7 +845,7 @@ remoteWorkerThread_main(void *cdata)
 				 */
 				if (archive_dir)
 				{
-					slon_mkquery(&lsquery,
+					(void) slon_mkquery(&lsquery,
 								 "delete from %s.sl_setsync_offline "
 								 "  where ssy_setid= %d;",
 								 rtcfg_namespace, set_id);
@@ -1028,7 +1033,7 @@ remoteWorkerThread_main(void *cdata)
 				if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin))
 				{
 					slon_log(SLON_DEBUG2, "ACCEPT_SET - node not origin\n");
-					slon_mkquery(&query2,
+					(void) slon_mkquery(&query2,
 								 "select 1 from %s.sl_event "
 								 "where "
 								 "     (ev_origin = %d and "
@@ -1124,7 +1129,7 @@ remoteWorkerThread_main(void *cdata)
 				if (query_execute(node, local_dbconn, &query1) < 0)
 					slon_retry();
 
-				slon_mkquery(&query1,
+				(void) slon_mkquery(&query1,
 							 "select sub_provider from %s.sl_subscribe "
 							 "	where sub_receiver = %d and sub_set = %d",
 					     rtcfg_namespace, rtcfg_nodeid, set_id);
@@ -1213,7 +1218,7 @@ remoteWorkerThread_main(void *cdata)
 					int			sched_rc;
 					int			sleeptime = 15;
 
-					slon_mkquery(&query2, "rollback transaction");
+					(void) slon_mkquery(&query2, "rollback transaction");
 					check_config = true;
 
 					while (true)
@@ -1262,7 +1267,7 @@ remoteWorkerThread_main(void *cdata)
 						if (copy_set(node, local_conn, sub_set, event) == 0)
 						{
 							rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
-							slon_mkquery(&query1,
+							(void) slon_mkquery(&query1,
 								"select %s.enableSubscription(%d, %d, %d); ",
 										 rtcfg_namespace,
 										 sub_set, sub_provider, sub_receiver);
@@ -1324,7 +1329,7 @@ remoteWorkerThread_main(void *cdata)
 				need_reloadListen = true;
 				if (archive_dir)
 				{
-					slon_mkquery(&lsquery,
+					(void) slon_mkquery(&lsquery,
 								 "delete from %s.sl_setsync_offline "
 								 "  where ssy_setid= %d;",
 								 rtcfg_namespace, sub_set);
@@ -1382,7 +1387,7 @@ remoteWorkerThread_main(void *cdata)
 					}
 					strncpy(dest, ddl_script + startpos, endpos-startpos);
 					dest[STMTS[stmtno]-startpos] = 0;
-					slon_mkquery(&query1, dest);
+					(void) slon_mkquery(&query1, dest);
 					slon_log(SLON_CONFIG, "remoteWorkerThread_%d: DDL Statement %d: [%s]\n", 
 						 node->no_id, stmtno, dest);						 
 					free(dest);
@@ -1402,7 +1407,7 @@ remoteWorkerThread_main(void *cdata)
 					slon_log (SLON_CONFIG, "DDL success - %s\n", PQresStatus(rstat));
 				}
 	
-				slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
+				(void) slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
 					     rtcfg_namespace,
 					     ddl_setid,
 					     ddl_only_on_node);
@@ -1465,7 +1470,7 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else
 			{
-				slon_mkquery(&query1, "rollback transaction;");
+				(void) slon_mkquery(&query1, "rollback transaction;");
 			}
 			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_retry();
@@ -2313,7 +2318,7 @@ store_confirm_forward(SlonNode * node, SlonConn * conn,
 			 "remoteWorkerThread_%d: forward confirm %d,%s received by %d\n",
 			 node->no_id, confirm->con_origin, seqbuf, confirm->con_received);
 
-	slon_mkquery(&query,
+	(void) slon_mkquery(&query,
 				 "select %s.forwardConfirm(%d, %d, '%s', '%q'); ",
 				 rtcfg_namespace,
 				 confirm->con_origin, confirm->con_received,
@@ -2516,7 +2521,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	/*
 	 * Register this connection in sl_nodelock
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select %s.registerNodeConnection(%d); ",
 				 rtcfg_namespace, rtcfg_nodeid);
 	if (query_execute(node, pro_dbconn, &query1) < 0)
@@ -2543,7 +2548,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 */
 	if (sub_provider == set_origin)
 	{
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "start transaction; "
 					 "set transaction isolation level serializable; "
 					 "select %s.getMinXid() <= '%s'::%s.xxid; ",
@@ -2583,7 +2588,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	else
 	{
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "start transaction; "
 					 "set transaction isolation level serializable; ");
 		if (query_execute(node, pro_dbconn, &query1) < 0)
@@ -2613,7 +2618,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	/*
 	 * Select the list of all tables the provider currently has in the set.
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select T.tab_id, "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
@@ -2659,7 +2664,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 "prepare to copy table %s\n",
 				 node->no_id, tab_fqname);
 
-		slon_mkquery(&query3, "select * from %s limit 0;",
+		(void) slon_mkquery(&query3, "select * from %s limit 0;",
 			     tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query3));
 		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
@@ -2682,7 +2687,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		   or another table.
 		 */
 		
-		slon_mkquery(&query3, "lock table %s;\n", tab_fqname);
+		(void) slon_mkquery(&query3, "lock table %s;\n", tab_fqname);
 		res2 = PQexec(loc_dbconn, dstring_data(&query3));
 		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
 		{
@@ -2706,7 +2711,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	/*
 	 * Add in the sequences contained in the set
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select SQ.seq_id, "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
@@ -2748,7 +2753,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 "copy sequence %s\n",
 				 node->no_id, seq_fqname);
 
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select %s.setAddSequence_int(%d, %s, '%q', '%q')",
 					 rtcfg_namespace, set_id, seq_id,
 					 seq_fqname, seq_comment);
@@ -2771,7 +2776,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	/*
 	 * Select the list of all tables the provider currently has in the set.
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select T.tab_id, "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname, "
@@ -2826,7 +2831,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * have not been subscribed to the set, this should have been
 		 * suppressed.
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
 					 rtcfg_namespace,
 					 set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
@@ -2846,7 +2851,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Copy the content of sl_trigger for this table
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select trig_tgname from %s.sl_trigger "
 					 "where trig_tabid = %d; ",
 					 rtcfg_namespace, tab_id);
@@ -2870,7 +2875,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		ntuples2 = PQntuples(res2);
 		for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
 		{
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 						 "select %s.storeTrigger(%d, '%q'); ",
 					   rtcfg_namespace, tab_id, PQgetvalue(res2, tupno2, 0));
 			if (query_execute(node, loc_dbconn, &query1) < 0)
@@ -2897,7 +2902,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 "Begin COPY of table %s\n",
 				 node->no_id, tab_fqname);
 
-		slon_mkquery(&query2, "select %s.copyFields(%d);",
+		(void) slon_mkquery(&query2, "select %s.copyFields(%d);",
 					 rtcfg_namespace, tab_id);
 
 		res3 = PQexec(pro_dbconn, dstring_data(&query2));
@@ -2919,7 +2924,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			return -1;
 		}
 
-		slon_mkquery(&query2, "select %s.pre74();",
+		(void) slon_mkquery(&query2, "select %s.pre74();",
 					 rtcfg_namespace);
 		res4 = PQexec(loc_dbconn, dstring_data(&query2));
 
@@ -2948,7 +2953,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 " nodeon73 is %d\n",
 				 node->no_id, nodeon73);
 
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select %s.prepareTableForCopy(%d); "
 					 "copy %s %s from stdin; ",
 					 rtcfg_namespace,
@@ -2975,7 +2980,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		if (archive_dir)
 		{
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 			 "delete from %s;copy %s %s from stdin;", tab_fqname, tab_fqname,
 						 nodeon73 ? "" : PQgetvalue(res3, 0, 0));
 			rc = archive_append_ds(node, &query1);
@@ -2995,7 +3000,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Begin a COPY to stdout for the table on the provider DB
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 			   "copy %s %s to stdout; ", tab_fqname, PQgetvalue(res3, 0, 0));
 		PQclear(res3);
 		res3 = PQexec(pro_dbconn, dstring_data(&query1));
@@ -3318,7 +3323,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Analyze the table to update statistics
 		 */
-		slon_mkquery(&query1, "select %s.finishTableAfterCopy(%d); "
+		(void) slon_mkquery(&query1, "select %s.finishTableAfterCopy(%d); "
 					 "analyze %s; ",
 					 rtcfg_namespace, tab_id,
 					 tab_fqname);
@@ -3356,7 +3361,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * And copy over the sequence last_value corresponding to the
 	 * ENABLE_SUBSCRIPTION event.
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 				 "select SL.seql_seqid, SL.seql_last_value, "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname "
@@ -3407,7 +3412,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 */
 		if (strtol(seql_seqid, NULL, 10) != 0)
 		{
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 						 "select \"pg_catalog\".setval('%q', '%s'); ",
 						 seq_fqname, seql_last_value);
 
@@ -3475,7 +3480,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * points. So to get to the next sync point, we'll have to take this
 		 * and all
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select max(ev_seqno) as ssy_seqno "
 					 "from %s.sl_event "
 					 "where ev_origin = %d and ev_type = 'SYNC'; ",
@@ -3526,7 +3531,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 "copy_set no previous SYNC found, use enable event.\n",
 					 node->no_id);
 
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 						 "select log_actionseq "
 						 "from %s.sl_log_1 where log_origin = %d "
 						 "union select log_actionseq "
@@ -3540,7 +3545,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * Use the last SYNC's snapshot information and set the action
 			 * sequence list to all actions after that.
 			 */
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 						 "select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
 						 "from %s.sl_event "
 						 "where ev_origin = %d and ev_seqno = '%s'; ",
@@ -3582,7 +3587,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			ssy_maxxid = PQgetvalue(res1, 0, 2);
 			ssy_xip = PQgetvalue(res1, 0, 3);
 
-			slon_mkquery(&query2,
+			(void) slon_mkquery(&query2,
 						 "log_xid >= '%s' or (log_xid >= '%s'",
 						 ssy_maxxid, ssy_minxid);
 			if (strlen(ssy_xip) != 0)
@@ -3594,7 +3599,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 "copy_set SYNC found, use event seqno %s.\n",
 					 node->no_id, ssy_seqno);
 
-			slon_mkquery(&query1,
+			(void) slon_mkquery(&query1,
 						 "select log_actionseq "
 						 "from %s.sl_log_1 where log_origin = %d and %s "
 						 "union select log_actionseq "
@@ -3648,7 +3653,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * Our provider is another subscriber, so we can copy the existing
 		 * setsync from him.
 		 */
-		slon_mkquery(&query1,
+		(void) slon_mkquery(&query1,
 					 "select ssy_seqno, ssy_minxid, ssy_maxxid, "
 					 "    ssy_xip, ssy_action_list "
 					 "from %s.sl_setsync where ssy_setid = %d; ",
@@ -3696,7 +3701,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	/*
 	 * Create our own initial setsync entry
 	 */
-	slon_mkquery(&query1,
+	(void) slon_mkquery(&query1,
 		     "delete from %s.sl_setsync where ssy_setid = %d;"
 		     "insert into %s.sl_setsync "
 		     "    (ssy_setid, ssy_origin, ssy_seqno, "
@@ -3721,7 +3726,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	if (archive_dir)
 	{
-		slon_mkquery(&lsquery,
+		(void) slon_mkquery(&lsquery,
 			     "insert into %s.sl_setsync_offline (ssy_setid, ssy_seqno) "
 			     "values ('%d', '%s');",
 			     rtcfg_namespace, set_id, ssy_seqno);
@@ -3768,7 +3773,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * Roll back the transaction we used on the provider and close the
 	 * database connection.
 	 */
-	slon_mkquery(&query1, "rollback transaction");
+	(void) slon_mkquery(&query1, "rollback transaction");
 	if (query_execute(node, pro_dbconn, &query1) < 0)
 	{
 		slon_disconnectdb(pro_conn);
@@ -3901,7 +3906,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			/*
 			 * Listen on the special relation telling our node relationship
 			 */
-			slon_mkquery(&query,
+			(void) slon_mkquery(&query,
 						 "select %s.registerNodeConnection(%d); ",
 						 rtcfg_namespace, rtcfg_nodeid);
 			if (query_execute(node, provider->conn->dbconn, &query) < 0)
@@ -3972,14 +3977,14 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	dstring_init(&new_qual);
 
 	if (strlen(event->ev_xip) != 0)
-		slon_mkquery(&new_qual,
+		(void) slon_mkquery(&new_qual,
 					 "(log_xid < '%s' and "
 					 "%s.xxid_lt_snapshot(log_xid, '%s:%s:%q'))",
 					 event->ev_maxxid_c,
 					 rtcfg_namespace,
 					 event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip);
 	else
-		slon_mkquery(&new_qual,
+		(void) slon_mkquery(&new_qual,
 					 "(log_xid < '%s')",
 					 event->ev_maxxid_c);
 
@@ -3995,7 +4000,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 		provider_qual = &(provider->helper_qualification);
 		dstring_reset(provider_qual);
-		slon_mkquery(provider_qual,
+		(void) slon_mkquery(provider_qual,
 					 "where log_origin = %d and ( ",
 					 node->no_id);
 
@@ -4003,7 +4008,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 * Select all sets we receive from this provider and which are not
 		 * synced better than this SYNC already.
 		 */
-		slon_mkquery(&query,
+		(void) slon_mkquery(&query,
 					 "select SSY.ssy_setid, SSY.ssy_seqno, "
 					 "    SSY.ssy_minxid, SSY.ssy_maxxid, SSY.ssy_xip, "
 					 "    SSY.ssy_action_list "
@@ -4053,7 +4058,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			/*
 			 * Select the tables in that set ...
 			 */
-			slon_mkquery(&query,
+			(void) slon_mkquery(&query,
 						 "select T.tab_id, T.tab_set, "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname "
@@ -4261,7 +4266,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	/*
 	 * Get the current sl_log_status
 	 */
-	slon_mkquery(&query, "select last_value from %s.sl_log_status",
+	(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
 			rtcfg_namespace);
 	res1 = PQexec(local_dbconn, dstring_data(&query));
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
@@ -4525,7 +4530,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			ntuples1;
 		int			tupno1;
 
-		slon_mkquery(&query,
+		(void) slon_mkquery(&query,
 					 "select SL.seql_seqid, SL.seql_last_value "
 					 "	from %s.sl_seqlog SL, "
 					 "		%s.sl_sequence SQ "
@@ -4561,7 +4566,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			char	   *seql_seqid = PQgetvalue(res1, tupno1, 0);
 			char	   *seql_last_value = PQgetvalue(res1, tupno1, 1);
 
-			slon_mkquery(&query,
+			(void) slon_mkquery(&query,
 						 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
 						 rtcfg_namespace,
 						 seql_seqid, node->no_id, seqbuf, seql_last_value);
@@ -4579,7 +4584,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 */
 			if (archive_dir)
 			{
-				slon_mkquery(&lsquery,
+				(void) slon_mkquery(&lsquery,
 							 "select %s.sequenceSetValue_offline(%s,'%s');\n",
 							 rtcfg_namespace,
 							 seql_seqid, seql_last_value);
@@ -4595,7 +4600,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 * Light's are still green ... update the setsync status of all the sets
 	 * we've just replicated ...
 	 */
-	slon_mkquery(&query,
+	(void) slon_mkquery(&query,
 				 "update %s.sl_setsync set "
 			   "    ssy_seqno = '%s', ssy_minxid = '%s', ssy_maxxid = '%s', "
 				 "    ssy_xip = '%q', ssy_action_list = '' "
@@ -4755,7 +4760,7 @@ sync_helper(void *cdata)
 			/*
 			 * Start a transaction
 			 */
-			slon_mkquery(&query, "start transaction; "
+			(void) slon_mkquery(&query, "start transaction; "
 						 "set enable_seqscan = off; "
 						 "set enable_indexscan = on; ");
 			if (query_execute(node, dbconn, &query) < 0)
@@ -4767,7 +4772,7 @@ sync_helper(void *cdata)
 			/*
 			 * Get the current sl_log_status value
 			 */
-			slon_mkquery(&query, "select last_value from %s.sl_log_status",
+			(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
 						rtcfg_namespace);
 			res3 = PQexec(dbconn, dstring_data(&query));
 			rc = PQresultStatus(res3);
@@ -4807,7 +4812,7 @@ sync_helper(void *cdata)
 			switch (log_status)
 			{
 				case 0:
-					slon_mkquery(&query,
+					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select "
 						 "    log_origin, log_xid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
@@ -4822,7 +4827,7 @@ sync_helper(void *cdata)
 					break;
 
 				case 1:
-					slon_mkquery(&query,
+					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select "
 						 "    log_origin, log_xid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
@@ -4838,7 +4843,7 @@ sync_helper(void *cdata)
 
 				case 2:
 				case 3:
-					slon_mkquery(&query,
+					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select * from ("
 						 "  select log_origin, log_xid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
@@ -4884,7 +4889,7 @@ sync_helper(void *cdata)
 				break;
 			}
 
-			slon_mkquery(&query, "fetch %d from LOG; ",
+			(void) slon_mkquery(&query, "fetch %d from LOG; ",
 						 SLON_DATA_FETCH_SIZE * SLON_COMMANDS_PER_LINE);
 			data_line_alloc = 0;
 			data_line_first = 0;
@@ -5081,7 +5086,7 @@ sync_helper(void *cdata)
 
 					if (log_cmdsize >= sync_max_rowsize)
 					{
-						slon_mkquery(&query2,
+						(void) slon_mkquery(&query2,
 							     "select log_cmddata "
 							     "from %s.sl_log_1 "
 							     "where log_origin = '%s' "
@@ -5266,10 +5271,10 @@ sync_helper(void *cdata)
 		/*
 		 * Close the cursor and rollback the transaction.
 		 */
-		slon_mkquery(&query, "close LOG; ");
+		(void) slon_mkquery(&query, "close LOG; ");
 		if (query_execute(node, dbconn, &query) < 0)
 			errors++;
-		slon_mkquery(&query, "rollback transaction; "
+		(void) slon_mkquery(&query, "rollback transaction; "
 					 "set enable_seqscan = default; "
 					 "set enable_indexscan = default; ");
 		if (query_execute(node, dbconn, &query) < 0)
@@ -5646,7 +5651,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	curr_max = MINMAXINITIAL;
 	first_subquery = 1;
 	state = START_STATE;
-	slon_mkquery(action_subquery, " ");
+	(void) slon_mkquery(action_subquery, " ");
 
 	slon_log(SLON_DEBUG4, "compress_actionseq(list,subquery) Action list: %s\n", ssy_actionlist);
 	while (state != DONE)

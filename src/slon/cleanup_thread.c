@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.35 2006-12-06 09:36:16 xfade Exp $
+ *	$Id: cleanup_thread.c,v 1.36 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -35,7 +35,9 @@ static unsigned long earliest_xid = 0;
 static unsigned long get_earliest_xid(PGconn *dbconn);
 
 /* The list of tables that need to be vacuumed by Slony-I */
-static char *table_list[] = {"%s.sl_event",
+/* @-nullassign @*/
+static char *table_list[] = {
+	"%s.sl_event",
 	"%s.sl_confirm",
 	"%s.sl_setsync",
 	"%s.sl_log_1",
@@ -43,9 +45,9 @@ static char *table_list[] = {"%s.sl_event",
 	"%s.sl_seqlog",
 	"pg_catalog.pg_listener",
 	"pg_catalog.pg_statistic",
-	NULL
+	NULL  
 };
-
+ /* @end@ */
 
 static char tstring[255];		/* string used to store table names for the
 								 * VACUUM statements */
@@ -57,9 +59,11 @@ static char tstring[255];		/* string used to store table names for the
  * vacuums those tables. 
  * ----------
  */
+/* @ -paramuse @ */
 void *
 cleanupThread_main(void *dummy)
 {
+/* @ +paramuse @ */
 	SlonConn   *conn;
 	SlonDString query1;
 	SlonDString query2;
@@ -94,15 +98,15 @@ cleanupThread_main(void *dummy)
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_cleanup")) == NULL)
 	{
 #ifndef WIN32
-		kill(getpid(), SIGTERM);
+		(void)	kill(getpid(), SIGTERM);
 		pthread_exit(NULL);
 #else
 		exit(0);
 #endif
 		/* slon_retry(); */
 	}
+	
 	dbconn = conn->dbconn;
-
 	/*
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */

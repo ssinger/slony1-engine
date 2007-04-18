@@ -17,7 +17,7 @@ extern int	slon_log_level;
 void
 init_nstAgentSubagentObject(void)
 {
-	static oid	nstAgentSubagentObject_oid[] =
+	static oid nstAgentSubagentObject_oid[] =
 	{1, 3, 6, 1, 4, 1, 20366, 32, 2, 3, 32, 1};
 
 	netsnmp_register_int_instance("nstAgentSubagentObject",

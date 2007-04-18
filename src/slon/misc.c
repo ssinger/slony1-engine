@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.23 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: misc.c,v 1.24 2007-04-18 22:19:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -76,6 +76,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	static char *outbuf = NULL;
 	static int	outsize = -1;
 	int			off;
+	int  len;
 	char	   *level_c = NULL;
 
 	char		time_buf[128];
@@ -140,7 +141,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	if (outbuf == NULL)
 	{
 		outsize = 8192;
-		outbuf = malloc(outsize);
+		outbuf = malloc((size_t) outsize);
 		if (outbuf == NULL)
 		{
 			perror("slon_log: malloc()");
@@ -148,7 +149,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 			slon_retry();
 		}
 	}
-	outbuf[0] = 0;
+	outbuf[0] = (char) 0;
 
 	if (logtimestamp == true && (Use_syslog != 1)
 #ifdef WIN32
@@ -156,7 +157,11 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 #endif
 		)
 	{
-		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
+		len = strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
+		if (len == 0 && time_buf[0] != '\0') {
+			perror("slon_log: problem with strftime()");
+			slon_retry();
+		}
 		sprintf(outbuf, "%s ", time_buf);
 	}
 	if (logpid == true)
@@ -165,12 +170,12 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	}
 	sprintf(outbuf, "%s%-6.6s ", outbuf, level_c);
 
-	off = strlen(outbuf);
+	off = (int) strlen(outbuf);
 
-	while (vsnprintf(&outbuf[off], outsize - off, fmt, ap) >= outsize - off)
+	while (vsnprintf(&outbuf[off], (size_t) (outsize - off), fmt, ap) >= outsize - off)
 	{
 		outsize *= 2;
-		outbuf = realloc(outbuf, outsize);
+		outbuf = realloc(outbuf, (size_t) outsize);
 		if (outbuf == NULL)
 		{
 			perror("slon_log: realloc()");
@@ -187,8 +192,8 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	if (win32_isservice)
 		win32_eventlog(level, outbuf);
 #endif
-	fwrite(outbuf, strlen(outbuf), 1, stdout);
-	fflush(stdout);
+	(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
+	(void) fflush(stdout);
 	pthread_mutex_unlock(&log_mutex);
 
 	va_end(ap);
@@ -232,7 +237,7 @@ slon_scanint64(char *str, int64 * result)
 		if (strcmp(ptr, "9223372036854775808") == 0)
 		{
 			*result = -INT64CONST(0x7fffffffffffffff) - 1;
-			return true;
+			return (int) true;
 		}
 #endif
 	}
@@ -274,7 +279,7 @@ write_syslog(int level, const char *line)
 	static unsigned long seq = 0;
 	static int	syslog_fac = LOG_LOCAL0;
 
-	int			len = strlen(line);
+	int			len = (int) strlen(line);
 
 	if (Use_syslog == 0)
 		return;
@@ -332,7 +337,7 @@ write_syslog(int level, const char *line)
 			if (strchr(buf, '\n') != NULL)
 				*strchr(buf, '\n') = '\0';
 
-			buflen = strlen(buf);
+			buflen = (int) strlen(buf);
 
 			if (buflen <= 0)
 				return;
