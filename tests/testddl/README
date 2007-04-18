@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2005-11-18 17:15:21 cbbrowne Exp $
+$Id: README,v 1.2 2007-04-18 19:26:54 cbbrowne Exp $
 
 testddl performs some DDL changes via the EXECUTE SCRIPT capability.
 
@@ -9,3 +9,6 @@ This includes:
 3.  Renaming a column that is part of the primary key
 4.  Inserting new data as part of the script
 5.  Updating data as part of the script
+
+2007-03-31 - Add in a third node, and add in a series of "EXECUTE ONLY
+ON" clauses.

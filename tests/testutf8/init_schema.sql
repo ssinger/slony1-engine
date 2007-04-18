@@ -16,7 +16,8 @@ CREATE TABLE table3(
 					ON UPDATE SET NULL ON DELETE SET NULL,
   mod_date	TIMESTAMPTZ	NOT NULL DEFAULT now(),
   data		FLOAT		NOT NULL DEFAULT random()
-  CONSTRAINT table3_date_check	CHECK (mod_date <= now())
+  CONSTRAINT table3_date_check	CHECK (mod_date <= now()),
+  primary key (id)
 ); 
 
 -- Table to perform UTF8 tests (checks multibyte; should be helpful in

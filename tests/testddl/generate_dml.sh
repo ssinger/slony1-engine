@@ -22,7 +22,7 @@ commit()
 
 generate_initdata()
 {
-  numrows=$(random_number 50 1000)
+  numrows=$(random_number 150 350)
   i=0;
   trippoint=`expr $numrows / 20`
   j=0;
@@ -92,7 +92,7 @@ do_initdata()
   for node in 1 2 3; do
       init_preamble
       sh ${testname}/individual_ddl.sh ${testname} ${node} >> ${SCRIPT}
-      status "execute DDL script only on node ${node}"
+      status "execute DDL script on node ${node}"
       do_ik
   done
 
