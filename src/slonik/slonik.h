@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.29 2006-10-31 22:09:40 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.30 2007-04-18 15:03:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -37,7 +37,6 @@ typedef struct SlonikStmt_set_drop_table_s SlonikStmt_set_drop_table;
 typedef struct SlonikStmt_set_drop_sequence_s SlonikStmt_set_drop_sequence;
 typedef struct SlonikStmt_set_move_table_s SlonikStmt_set_move_table;
 typedef struct SlonikStmt_set_move_sequence_s SlonikStmt_set_move_sequence;
-typedef struct SlonikStmt_table_add_key_s SlonikStmt_table_add_key;
 typedef struct SlonikStmt_store_trigger_s SlonikStmt_store_trigger;
 typedef struct SlonikStmt_drop_trigger_s SlonikStmt_drop_trigger;
 typedef struct SlonikStmt_subscribe_set_s SlonikStmt_subscribe_set;
@@ -82,7 +81,6 @@ typedef enum
 	STMT_STORE_PATH,
 	STMT_STORE_TRIGGER,
 	STMT_SUBSCRIBE_SET,
-	STMT_TABLE_ADD_KEY,
 	STMT_UNINSTALL_NODE,
 	STMT_UNLOCK_SET,
 	STMT_UNSUBSCRIBE_SET,
@@ -279,7 +277,6 @@ struct SlonikStmt_set_add_table_s
 	int			set_id;
 	int			set_origin;
 	int			tab_id;
-	int			use_serial;
 	char	   *use_key;
 	char	   *tab_fqname;
 	char	   *tab_comment;
@@ -328,14 +325,6 @@ struct SlonikStmt_set_move_sequence_s
 	int			set_origin;
 	int			seq_id;
 	int			new_set_id;
-};
-
-
-struct SlonikStmt_table_add_key_s
-{
-	SlonikStmt	hdr;
-	int			no_id;
-	char	   *tab_fqname;
 };
 
 
@@ -558,7 +547,6 @@ extern int	slonik_set_drop_table(SlonikStmt_set_drop_table * stmt);
 extern int	slonik_set_drop_sequence(SlonikStmt_set_drop_sequence * stmt);
 extern int	slonik_set_move_table(SlonikStmt_set_move_table * stmt);
 extern int	slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt);
-extern int	slonik_table_add_key(SlonikStmt_table_add_key * stmt);
 extern int	slonik_store_trigger(SlonikStmt_store_trigger * stmt);
 extern int	slonik_drop_trigger(SlonikStmt_drop_trigger * stmt);
 extern int	slonik_subscribe_set(SlonikStmt_subscribe_set * stmt);

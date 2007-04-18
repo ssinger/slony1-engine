@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.32 2006-07-18 17:59:59 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.33 2007-04-18 15:03:51 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -511,17 +511,6 @@ create sequence @NAMESPACE@.sl_action_seq;
 comment on sequence @NAMESPACE@.sl_action_seq is 'The sequence to number statements in the transaction logs, so that the replication engines can figure out the "agreeable" order of statements.';
 
 
-
--- ----------------------------------------------------------------------
--- SEQUENCE sl_rowid_seq
---
---	Application tables that do not have a natural primary key must
---	be modified and an int8 column added that serves as a rowid for us.
---	The values are assigned with a default from this sequence.
--- ----------------------------------------------------------------------
-create sequence @NAMESPACE@.sl_rowid_seq;
-grant select, update on @NAMESPACE@.sl_rowid_seq to public;
-comment on sequence @NAMESPACE@.sl_rowid_seq is 'Application tables that do not have a natural primary key must be modified and an int8 column added that serves as a rowid for us.  The values are assigned with a default from this sequence.';
 
 
 -- ----------------------------------------------------------------------

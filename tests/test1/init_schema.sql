@@ -10,23 +10,14 @@ CREATE TABLE table2(
   data		TEXT
 );
 
-CREATE TABLE table3(
-  id		SERIAL,
-  table2_id	INT4		REFERENCES table2(id)
-					ON UPDATE SET NULL ON DELETE SET NULL,
-  mod_date	TIMESTAMPTZ	NOT NULL DEFAULT now(),
-  data		FLOAT		NOT NULL DEFAULT random()
-  CONSTRAINT table3_date_check	CHECK (mod_date <= now())
-); 
-
-create table table4 (
+create table table3 (
   id serial NOT NULL,
   id2 integer
 );
 
-create unique index no_good_candidate_pk on table4 (id, id2);
+create unique index no_good_candidate_pk on table3 (id, id2);
 
-create table table5 (
+create table table4 (
   id serial primary key,
   numcol numeric(12,4), -- 1.23
   realcol real,     -- (1.23)

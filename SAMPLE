@@ -1,7 +1,7 @@
 Creating a sample database with application
---------------------------------------------
+-----------------------------------------------------------------
 
-$Id: SAMPLE,v 1.2 2005-12-14 07:54:16 xfade Exp $
+$Id: SAMPLE,v 1.3 2007-04-18 15:03:51 cbbrowne Exp $
 
 
 As a first test scenario, the pgbench test program that is shipped with

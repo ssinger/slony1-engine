@@ -1009,12 +1009,19 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      satisfies this requirement.
     </para>
     <para>
-     As a last resort, this command can be used to add such an
-     attribute to a table that does not have a primary key. Since
-     this modification can have unwanted side effects, <emphasis>it is
-      strongly recommended that users add a unique and not null
-      attribute by other means.</emphasis>
+     As a last resort, <emphasis>in versions of &slony1; prior to
+     2.0</emphasis>, this command can be used to add such an attribute
+     to a table that does not have a primary key. Since this
+     modification can have unwanted side effects, <emphasis>it is
+     strongly recommended that users add a unique and not null
+     attribute by other means.</emphasis>
     </para>
+
+   <para> If you intend to use &slony1; version 2.0, you
+   <emphasis>must</emphasis> arrange for a more proper primary key.
+   &slony1; will not provide one for you, and if you have cases of
+   keys created via <command>TABLE ADD KEY</command>, you cannot
+   expect &slony1; to function properly. </para>
 
     <variablelist>
      <varlistentry><term><literal> NODE ID = ival </literal></term>
@@ -1081,6 +1088,17 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+
+    <para> This command is <emphasis> no longer supported </emphasis>
+    as of &slony1; version 2.0.  In version 2, the various
+    <quote>catalogue breakages</quote> done in &postgres; versions
+    prior to 8.3 are being eliminated so that schema dumps may be
+    taken from any node.  That leaves the <quote>kludgy</quote>
+    columns created via <command>TABLE ADD KEY</command> as the only
+    thing that prevents <xref linkend="stmtuninstallnode"> from being
+    comprised of the SQL statement <command>drop schema _ClusterName
+    cascade;</command>.</para>
+
    </refsect1>
   </refentry>
   

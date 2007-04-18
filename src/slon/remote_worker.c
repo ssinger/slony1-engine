@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.135 2007-03-14 15:55:06 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.136 2007-04-18 15:03:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2659,90 +2659,22 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 "prepare to copy table %s\n",
 				 node->no_id, tab_fqname);
 
-		/*
-		 * Find out if the table we're copying has the special slony serial
-		 * number key on the provider DB
-		 */
-		slon_mkquery(&query1,
-					 "select %s.tableHasSerialKey('%q');",
-					 rtcfg_namespace, tab_fqname);
-		res2 = PQexec(pro_dbconn, dstring_data(&query1));
+		slon_mkquery(&query3, "select * from %s limit 0;",
+			     tab_fqname);
+		res2 = PQexec(loc_dbconn, dstring_data(&query3));
 		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2));
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: Could not find table %s "
+				 "on subscriber\n", node->no_id, tab_fqname);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
-			dstring_free(&query2);
 			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
 			archive_terminate(node);
 			return -1;
 		}
-		rc = *PQgetvalue(res2, 0, 0) == 't';
 		PQclear(res2);
-
-		if (rc)
-		{
-			/*
-			 * It has, check if the table has this on the local DB too.
-			 */
-			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s will require Slony-I serial key\n",
-					 node->no_id, tab_fqname);
-			res2 = PQexec(loc_dbconn, dstring_data(&query1));
-			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-						 node->no_id, dstring_data(&query1),
-						 PQresultErrorMessage(res2));
-				PQclear(res2);
-				PQclear(res1);
-				slon_disconnectdb(pro_conn);
-				dstring_free(&query1);
-				dstring_free(&query2);
-				dstring_free(&query3);
-				dstring_free(&lsquery);
-				dstring_free(&indexregenquery);
-				archive_terminate(node);
-				return -1;
-			}
-			rc = *PQgetvalue(res2, 0, 0) == 't';
-			PQclear(res2);
-
-			if (!rc)
-			{
-				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-						 "table %s Slony-I serial key to be added local\n",
-						 node->no_id, tab_fqname);
-			}
-		}
-		else
-		{
-			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s does not require Slony-I serial key\n",
-					 node->no_id, tab_fqname);
-			slon_mkquery(&query3, "select * from %s limit 0;",
-						 tab_fqname);
-			res2 = PQexec(loc_dbconn, dstring_data(&query3));
-			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d: Could not find table %s "
-						 "on subscriber\n", node->no_id, tab_fqname);
-				PQclear(res2);
-				PQclear(res1);
-				slon_disconnectdb(pro_conn);
-				dstring_free(&query1);
-				dstring_free(&query3);
-				archive_terminate(node);
-				return -1;
-			}
-			PQclear(res2);
-		}
 		/* Request an exclusive lock on each table
 
 		   We do this immediately so that we don't get stuck
@@ -2888,102 +2820,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				 "copy table %s\n",
 				 node->no_id, tab_fqname);
-
-		/*
-		 * Find out if the table we're copying has the special slony serial
-		 * number key on the provider DB
-		 */
-		slon_mkquery(&query1,
-					 "select %s.tableHasSerialKey('%q');",
-					 rtcfg_namespace, tab_fqname);
-		res2 = PQexec(pro_dbconn, dstring_data(&query1));
-		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-					 node->no_id, dstring_data(&query1),
-					 PQresultErrorMessage(res2));
-			PQclear(res2);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			dstring_free(&query2);
-			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
-			archive_terminate(node);
-			return -1;
-		}
-		rc = *PQgetvalue(res2, 0, 0) == 't';
-		PQclear(res2);
-
-		if (rc)
-		{
-			/*
-			 * It has, check if the table has this on the local DB too.
-			 */
-			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s requires Slony-I serial key\n",
-					 node->no_id, tab_fqname);
-			res2 = PQexec(loc_dbconn, dstring_data(&query1));
-			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-						 node->no_id, dstring_data(&query1),
-						 PQresultErrorMessage(res2));
-				PQclear(res2);
-				PQclear(res1);
-				slon_disconnectdb(pro_conn);
-				dstring_free(&query1);
-				dstring_free(&query2);
-				dstring_free(&query3);
-				dstring_free(&lsquery);
-				dstring_free(&indexregenquery);
-				archive_terminate(node);
-				return -1;
-			}
-			rc = *PQgetvalue(res2, 0, 0) == 't';
-			PQclear(res2);
-
-			if (!rc)
-			{
-				/*
-				 * Nope, so we gotta add the key here.
-				 */
-				slon_mkquery(&query1,
-							 "select %s.tableAddKey('%q'); "
-							 "select %s.determineAttkindSerial('%q'); ",
-							 rtcfg_namespace, tab_fqname,
-							 rtcfg_namespace, tab_fqname);
-				if (query_execute(node, loc_dbconn, &query1) < 0)
-				{
-					PQclear(res1);
-					slon_disconnectdb(pro_conn);
-					dstring_free(&query1);
-					dstring_free(&query2);
-					dstring_free(&query3);
-					dstring_free(&lsquery);
-					dstring_free(&indexregenquery);
-					archive_terminate(node);
-					return -1;
-				}
-				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-						 "table %s Slony-I serial key added local\n",
-						 node->no_id, tab_fqname);
-			}
-			else
-			{
-				slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-						 "local table %s already has Slony-I serial key\n",
-						 node->no_id, tab_fqname);
-			}
-		}
-		else
-		{
-			slon_log(SLON_DEBUG3, "remoteWorkerThread_%d: "
-					 "table %s does not require Slony-I serial key\n",
-					 node->no_id, tab_fqname);
-		}
-
 
 		/*
 		 * Call the setAddTable_int() stored procedure. Up to now, while we
@@ -4800,51 +4636,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 		PQclear(res1);
 	}
-
-	/*
-	 * Get the nodes rowid sequence at that sync time just in case we are
-	 * later on asked to restore the node after a failover.
-	 */
-	slon_mkquery(&query,
-				 "select seql_last_value from %s.sl_seqlog "
-				 "	where seql_seqid = 0 "
-				 "	and seql_origin = %d "
-				 "	and seql_ev_seqno = '%s'; ",
-				 rtcfg_namespace, node->no_id,
-				 seqbuf);
-	res1 = PQexec(wd->provider_head->conn->dbconn, dstring_data(&query));
-	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-				 node->no_id, dstring_data(&query),
-				 PQresultErrorMessage(res1));
-		PQclear(res1);
-		dstring_free(&query);
-		dstring_free(&lsquery);
-		archive_terminate(node);
-		return 60;
-	}
-	if (PQntuples(res1) > 0)
-	{
-		slon_mkquery(&query,
-			     "insert into %s.sl_seqlog "
-			     "	(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-			     "	values (0, %d, '%s', '%s'); ",
-					 rtcfg_namespace, node->no_id,
-					 seqbuf, PQgetvalue(res1, 0, 0));
-		if (query_execute(node, local_dbconn, &query) < 0)
-		{
-			PQclear(res1);
-			dstring_free(&query);
-			dstring_free(&lsquery);
-			archive_terminate(node);
-			return 60;
-		}
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "new sl_rowid_seq value: %s\n",
-				 node->no_id, PQgetvalue(res1, 0, 0));
-	}
-	PQclear(res1);
 
 	/*
 	 * Add the final commit to the archive log, close it and rename the

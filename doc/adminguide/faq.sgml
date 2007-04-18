@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.69 2007-03-14 16:53:51 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.70 2007-04-18 15:03:51 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -13,7 +13,6 @@ Package Manager) package management system.  It comes with
 I am using for my databases, but they don't include &slony1; in the
 packaging.  How do I add &slony1; to this?  </para>
 </question>
-
 
 <answer><para> <productname>Frotznik Freenix</productname> is new to
 me, so it's a bit dangerous to give really hard-and-fast definitive

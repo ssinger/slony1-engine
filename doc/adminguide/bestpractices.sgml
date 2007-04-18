@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.26 2007-03-14 16:53:51 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.27 2007-04-18 15:03:51 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -223,7 +223,13 @@ key.</quote></para>
 used to introduce a candidate primary key, as this introduces the
 possibility that updates to this table can fail due to the introduced
 unique index, which means that &slony1; has introduced a new failure
-mode for your application.</para>
+mode for your application.  
+</para>
+
+<warning><para> In version 2 of &slony1;, <xref
+linkend="stmttableaddkey"> is no longer supported.  You
+<emphasis>must</emphasis> have either a true primary key or a
+candidate primary key.  </para></warning>
 </listitem>
 
 <listitem>

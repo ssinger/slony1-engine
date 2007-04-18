@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.27 2006-10-31 22:09:40 cbbrowne Exp $
+ *	$Id: parser.y,v 1.28 2007-04-18 15:03:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -41,7 +41,6 @@ typedef enum {
 	O_RECEIVER,
 	O_SECONDS,
 	O_SERVER,
-	O_SER_KEY,
 	O_SET_ID,
 	O_SPOOLNODE,
 	O_TAB_ID,
@@ -148,7 +147,6 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_set_drop_sequence
 %type <statement>	stmt_set_move_table
 %type <statement>	stmt_set_move_sequence
-%type <statement>	stmt_table_add_key
 %type <statement>	stmt_store_trigger
 %type <statement>	stmt_drop_trigger
 %type <statement>	stmt_subscribe_set
@@ -226,7 +224,6 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SCRIPT
 %token  K_SECONDS
 %token	K_SEQUENCE
-%token	K_SERIAL
 %token	K_SERVER
 %token	K_SET
 %token	K_SPOOLNODE
@@ -447,8 +444,6 @@ try_stmt			: stmt_echo
 					| stmt_drop_set
 						{ $$ = $1; }
 					| stmt_merge_set
-						{ $$ = $1; }
-					| stmt_table_add_key
 						{ $$ = $1; }
 					| stmt_set_add_table
 						{ $$ = $1; }
@@ -919,33 +914,6 @@ stmt_merge_set		: lno K_MERGE K_SET option_list
 					}
 					;
 
-stmt_table_add_key	: lno K_TABLE K_ADD K_KEY option_list
-					{
-						SlonikStmt_table_add_key *new;
-						statement_option opt[] = {
-							STMT_OPTION_INT( O_NODE_ID, -1 ),
-							STMT_OPTION_STR( O_FQNAME, NULL ),
-							STMT_OPTION_END
-						};
-
-						new = (SlonikStmt_table_add_key *)
-								malloc(sizeof(SlonikStmt_table_add_key));
-						memset(new, 0, sizeof(SlonikStmt_table_add_key));
-						new->hdr.stmt_type		= STMT_TABLE_ADD_KEY;
-						new->hdr.stmt_filename	= current_file;
-						new->hdr.stmt_lno		= $1;
-
-						if (assign_options(opt, $5) == 0)
-						{
-							new->no_id			= opt[0].ival;
-							new->tab_fqname		= opt[1].str;
-						}
-						else
-							parser_errors++;
-
-						$$ = (SlonikStmt *)new;
-					}
-					;
 
 stmt_set_add_table	: lno K_SET K_ADD K_TABLE option_list
 					{
@@ -956,7 +924,6 @@ stmt_set_add_table	: lno K_SET K_ADD K_TABLE option_list
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_STR( O_FQNAME, NULL ),
 							STMT_OPTION_STR( O_USE_KEY, NULL ),
-							STMT_OPTION_INT( O_SER_KEY, 0 ),
 							STMT_OPTION_STR( O_COMMENT, NULL ),
 							STMT_OPTION_END
 						};
@@ -975,8 +942,7 @@ stmt_set_add_table	: lno K_SET K_ADD K_TABLE option_list
 							new->tab_id			= opt[2].ival;
 							new->tab_fqname		= opt[3].str;
 							new->use_key		= opt[4].str;
-							new->use_serial		= opt[5].ival;
-							new->tab_comment	= opt[6].str;
+							new->tab_comment	= opt[5].str;
 						}
 						else
 							parser_errors++;
@@ -1653,19 +1619,6 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_USE_KEY;
 						$$ = $3;
 					}
-					| K_KEY '=' K_SERIAL
-					{
-						option_list *new;
-						new = (option_list *)malloc(sizeof(option_list));
-
-						new->opt_code	= O_SER_KEY;
-						new->ival	= 1;
-						new->str	= NULL;
-						new->lineno	= yylineno;
-						new->next	= NULL;
-
-						$$ = new;
-					}
 					| K_FORWARD '=' option_item_yn
 					{
 						$3->opt_code	= O_FORWARD;
@@ -1867,7 +1820,6 @@ option_str(option_code opt_code)
 		case O_RECEIVER:		return "receiver";
     	case O_SECONDS:         return "seconds";
 		case O_SERVER:			return "server";
-		case O_SER_KEY:			return "key";
 		case O_SET_ID:			return "set id";
 		case O_SPOOLNODE:		return "spoolnode";
 		case O_TAB_ID:			return "table id";

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.57 2007-01-16 21:40:19 darcyb Exp $
+ *	$Id: slony1_funcs.c,v 1.58 2007-04-18 15:03:51 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -38,6 +38,11 @@
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
+#endif
+
+/* -- Change from PostgreSQL Ver 8.3 -- */
+#ifndef VARATT_SIZEP
+#define VARATT_SIZEP VARATT_SIZEP_DEPRECATED
 #endif
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
@@ -1393,20 +1398,19 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * events.
 		 */
 		sprintf(query,
-				"insert into %s.sl_seqlog "
-				"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-		   "select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
-				"from %s.sl_seqlastvalue "
-				"where seq_origin = '%d'; "
-				"insert into %s.sl_seqlog "
-				"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-				"select '0', '%d', currval('%s.sl_event_seq'), "
-				" last_value from %s.sl_rowid_seq; ",
-				cs->clusterident,
-				cs->localNodeId, cs->clusterident,
-				cs->clusterident, cs->localNodeId,
-				cs->clusterident, cs->localNodeId,
-				cs->clusterident, cs->clusterident);
+			"insert into %s.sl_seqlog "
+			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
+			"select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
+			"from %s.sl_seqlastvalue "
+			"where seq_origin = '%d'; "
+			"insert into %s.sl_seqlog "
+			"(seql_seqid, seql_origin, seql_ev_seqno) "
+			"select '0', '%d', currval('%s.sl_event_seq'); ",
+			cs->clusterident,
+			cs->localNodeId, cs->clusterident,
+			cs->clusterident, cs->localNodeId,
+			cs->clusterident, cs->localNodeId,
+			cs->clusterident);
 
 		cs->plan_record_sequences = SPI_saveplan(SPI_prepare(query, 0, NULL));
 		if (cs->plan_record_sequences == NULL)

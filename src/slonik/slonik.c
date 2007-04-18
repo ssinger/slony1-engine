@@ -6,27 +6,26 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.74 2007-03-16 22:38:01 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.75 2007-04-18 15:03:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
 
+#ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <time.h>
 #else
 #define sleep(x) Sleep(x*1000)
 #define vsnprintf _vsnprintf
-#define INT64_FORMAT "%I64d"
 #endif
-#include <errno.h>
-#include <time.h>
 
 #include "postgres.h"
 #include "libpq-fe.h"
@@ -554,15 +553,6 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->use_serial && stmt->use_key != NULL)
-					{
-						printf("%s:%d: Error: "
-							   "unique key name or SERIAL are "
-							   "mutually exclusive\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
-					}
-
 					if (stmt->tab_comment == NULL)
 						stmt->tab_comment = strdup(stmt->tab_fqname);
 				}
@@ -777,40 +767,6 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				}
 				break;
 
-			case STMT_TABLE_ADD_KEY:
-				{
-					SlonikStmt_table_add_key *stmt =
-					(SlonikStmt_table_add_key *) hdr;
-
-					/*
-					 * Check that we have the node id and that we can reach
-					 * it.
-					 */
-					if (stmt->no_id < 0)
-					{
-						printf("%s:%d: Error: "
-							   "node id must be specified\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
-					}
-					else
-					{
-						if (script_check_adminfo(hdr, stmt->no_id) < 0)
-							errors++;
-					}
-
-					/*
-					 * Check that we have the table name
-					 */
-					if (stmt->tab_fqname == NULL)
-					{
-						printf("%s:%d: Error: "
-							   "table FQ-name must be specified\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
-					}
-				}
-				break;
 
 			case STMT_STORE_TRIGGER:
 				{
@@ -1442,16 +1398,6 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_set_move_sequence *) hdr;
 
 					if (slonik_set_move_sequence(stmt) < 0)
-						errors++;
-				}
-				break;
-
-			case STMT_TABLE_ADD_KEY:
-				{
-					SlonikStmt_table_add_key *stmt =
-					(SlonikStmt_table_add_key *) hdr;
-
-					if (slonik_table_add_key(stmt) < 0)
 						errors++;
 				}
 				break;
@@ -2401,34 +2347,6 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	}
 	PQclear(res);
 	
-	/*
-	 * If available, bump the rowid sequence to the last known value.
-	 */
-	slon_mkquery(&query,
-		     "select max(seql_last_value) from \"_%s\".sl_seqlog "
-		     "	where seql_seqid = 0 "
-		     "	and seql_origin = %d; ",
-		     stmt->hdr.script->clustername, stmt->no_id);
-	res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
-	if (res == NULL)
-	{
-		dstring_free(&query);
-		return -1;
-	}
-	if (PQntuples(res) == 1 && !PQgetisnull(res, 0, 0))
-	{
-		slon_mkquery(&query,
-			     "select \"pg_catalog\".setval('\"_%s\".sl_rowid_seq', '%s'); ",
-			     stmt->hdr.script->clustername, PQgetvalue(res, 0, 0));
-		if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
-		{
-			dstring_free(&query);
-			PQclear(res);
-			return -1;
-		}
-	}
-	PQclear(res);
-
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
 				 "select \"_%s\".storeNode(%d, '%q', '%s'); "
@@ -3315,35 +3233,19 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 
 	dstring_init(&query);
 
-	/*
-	 * Determine the attkind of the table. The stored procedure for KEY =
-	 * SERIAL might actually add a bigserial column to the table.
-	 */
-	if (stmt->use_serial)
+	if (stmt->use_key == NULL)
 	{
 		slon_mkquery(&query,
-					 "select \"_%s\".determineIdxnameSerial('%q'), "
-					 "       \"_%s\".determineAttKindSerial('%q'); ",
-					 stmt->hdr.script->clustername, stmt->tab_fqname,
-					 stmt->hdr.script->clustername, stmt->tab_fqname);
+			     "select \"_%s\".determineIdxnameUnique('%q', NULL); ",
+			     stmt->hdr.script->clustername, stmt->tab_fqname);
 
 	}
 	else
 	{
-		if (stmt->use_key == NULL)
-		{
-			slon_mkquery(&query,
-					   "select \"_%s\".determineIdxnameUnique('%q', NULL); ",
-						 stmt->hdr.script->clustername, stmt->tab_fqname);
-
-		}
-		else
-		{
-			slon_mkquery(&query,
-					   "select \"_%s\".determineIdxnameUnique('%q', '%q'); ",
-						 stmt->hdr.script->clustername,
-						 stmt->tab_fqname, stmt->use_key);
-		}
+		slon_mkquery(&query,
+			     "select \"_%s\".determineIdxnameUnique('%q', '%q'); ",
+			     stmt->hdr.script->clustername,
+			     stmt->tab_fqname, stmt->use_key);
 	}
 
 	db_notice_silent = true;
@@ -3530,43 +3432,6 @@ slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt)
 	dstring_free(&query);
 	return 0;
 }
-
-
-int
-slonik_table_add_key(SlonikStmt_table_add_key * stmt)
-{
-	SlonikAdmInfo *adminfo1;
-	SlonDString query;
-
-	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
-	if (adminfo1 == NULL)
-		return -1;
-
-	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
-		return -1;
-
-	dstring_init(&query);
-
-	/*
-	 * call tableAddKey()
-	 */
-	db_notice_silent = true;
-	slon_mkquery(&query,
-				 "select \"_%s\".tableAddKey('%q'); ",
-				 stmt->hdr.script->clustername,
-				 stmt->tab_fqname);
-	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
-	{
-		db_notice_silent = false;
-		dstring_free(&query);
-		return -1;
-	}
-	db_notice_silent = false;
-
-	dstring_free(&query);
-	return 0;
-}
-
 
 int
 slonik_store_trigger(SlonikStmt_store_trigger * stmt)

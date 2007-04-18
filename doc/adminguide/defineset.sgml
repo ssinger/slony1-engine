@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.26 2007-01-30 19:48:35 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.27 2007-04-18 15:03:51 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -70,24 +70,26 @@ table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
 <listitem><para> If the table hasn't even got a candidate primary key,
-you can ask &slony1; to provide one.  This is done by first using
-<xref linkend="stmttableaddkey"> to add a column populated using a
-&slony1; sequence, and then having the <xref
-linkend="stmtsetaddtable"> include the directive
-<option>key=serial</option>, to indicate that &slony1;'s own column
-should be used.</para></listitem>
+you might ask &slony1; to provide one using 
+<xref linkend="stmttableaddkey">.</para>
+
+<warning><para> <xref linkend="stmttableaddkey"> was always considered
+a <quote>kludge</quote>, at best, and as of version 2.0, it is
+considered such a misfeature that it is being removed.  </para>
+</warning>
+</listitem>
 
 </itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
 key;</quote> it is, however, strongly recommended that you have one of
-those instead of having &slony1; populate the PK column for you. If you
-don't have a suitable primary key, that means that the table hasn't got
-any mechanism, from your application's standpoint, for keeping values
-unique. &slony1; may, therefore, introduce a new failure mode for your
-application, and this also implies that you had a way to enter confusing
-data into the database.</para>
+those instead of having &slony1; populate the PK column for you. If
+you don't have a suitable primary key, that means that the table
+hasn't got any mechanism, from your application's standpoint, for
+keeping values unique.  &slony1; may, therefore, introduce a new
+failure mode for your application, and this also implies that you had
+a way to enter confusing data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>

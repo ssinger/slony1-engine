@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.5 2006-11-23 17:16:40 darcyb Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.6 2007-04-18 15:03:51 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -77,6 +77,119 @@ applications, in order to get it to be aware of the location of the
 new components. </para></listitem></varlistentry>
 
 </variablelist>
+
+<sect2> <title> TABLE ADD KEY issue in &slony1; 2.0 </title> 
+
+<para> Usually, upgrades between &slony1; versions have required no
+special attention to the condition of the existing replica.  That is,
+you fairly much merely need to stop &lslon;s, put new binaries in
+place, run <xref linkend="stmtupdatefunctions"> against each node, and
+restart &lslon;s.  Schema changes have been internal to the cluster
+schema, and <xref linkend="stmtupdatefunctions"> has been capable to
+make all of the needed alterations.  With version 2, this changes, if
+there are tables that used <xref linkend="stmttableaddkey">.  Version
+2 does not support the <quote>extra</quote> column, and
+<quote>fixing</quote> the schema to have a proper primary key is not
+within the scope of what <xref linkend="stmtupdatefunctions"> can
+perform.  </para>
+
+<para> When upgrading from versions 1.0.x, 1.1.x, or 1.2.x to version
+2, it will be necessary to have already eliminated any such
+&slony1;-managed primary keys. </para>
+
+<para> One may identify the tables affected via the following SQL
+query: <command> select n.nspname, c.relname from pg_class c,
+pg_namespace n where c.oid in (select attrelid from pg_attribute where
+attname like '_Slony-I_%rowID' and not attisdropped) and reltype <> 0
+and n.oid = c.relnamespace order by n.nspname, c.relname; </command>
+</para>
+
+<para> The simplest approach that may be taken to rectify the
+<quote>broken</quote> state of such tables is as follows: </para>
+
+<itemizedlist>
+
+<listitem><para> Drop the table from replication using the &lslonik;
+command <xref linkend="stmtsetdroptable">. </para>
+
+<para> This does <emphasis>not</emphasis> drop out the &slony1;-generated column. </para>
+
+</listitem>
+<listitem><para> On each node, run an SQL script to alter the table, dropping the extra column.</para> 
+<para> <command> alter table whatever drop column "_Slony-I_cluster-rowID";</command> </para>
+
+<para> This needs to be run individually against each node.  Depending
+on your preferences, you might wish to use <xref
+linkend="stmtddlscript"> to do this. </para>
+
+<para> If the table is a heavily updated one, it is worth observing
+that this alteration will require acquiring an exclusive lock on the
+table.  It will not hold this lock for terribly long; dropping the
+column should be quite a rapid operation as all it does internally is
+to mark the column as being dropped; it <emphasis>does not</emphasis>
+require rewriting the entire contents of the table.  Tuples that have
+values in that column will continue to have that value; new tuples
+will leave it NULL, and queries will ignore the column.  Space for
+those columns will get reclaimed as tuples get updated.  </para>
+
+<para> Note that at this point in the process, this table is not being
+replicated.  If a failure takes place, replication is not, at this
+point, providing protection on this table.  This is unfortunate but
+unavoidable. </para>
+</listitem>
+
+<listitem><para> Make sure the table has a legitimate candidate for
+primary key, some set of NOT NULL, UNIQUE columns.  </para>
+
+<para> The possible variations to this are the reason that the
+developers have made no effort to try to assist automation of
+this.</para>
+
+<itemizedlist>
+
+<listitem><para> If the table is a small one, it may be perfectly
+reasonable to do alterations (note that they must be applied to
+<emphasis>every node</emphasis>!) to add a new column, assign it via a
+new sequence, and then declare it to be a primary key.  </para>
+
+<para> If there are only a few tuples, this should take a fraction of
+a second, and, with luck, be unnoticeable to a running
+application. </para>
+
+<para> Even if the table is fairly large, if it is not frequently
+accessed by the application, the locking of the table that takes place
+when you run <command>ALTER TABLE</command> may not cause much
+inconvenience. </para></listitem>
+
+<listitem> <para> If the table is a large one, and is vital to and
+heavily accessed by the application, then it may be necessary to take
+an application outage in order to accomplish the alterations, leaving
+you necessarily somewhat vulnerable until the process is
+complete. </para>
+
+<para> If it is troublesome to take outages, then the upgrade to
+&slony1; version 2 may take some planning... </para>
+</listitem>
+
+</itemizedlist>
+</listitem>
+
+<listitem><para> Create a new replication set (<xref
+linkend="stmtcreateset">) and re-add the table to that set (<xref
+linkend="stmtsetaddtable">).  </para>
+
+<para> If there are multiple tables, they may be handled via a single
+replication set.</para>
+</listitem>
+
+<listitem><para> Subscribe the set (<xref linkend="stmtsubscribeset">)
+on all the nodes desired. </para> </listitem>
+
+<listitem><para> Once subscriptions are complete, merge the set(s) in,
+if desired (<xref linkend="stmtmergeset">). </para> </listitem>
+
+</itemizedlist>
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
