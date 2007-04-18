@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.26 2007-04-17 21:58:47 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.27 2007-04-18 15:28:16 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -58,6 +58,57 @@ incapable of shrinking back down </para> </listitem>
 </itemizedlist>
 </para>
 
+<sect2 id="maintenance-autovac"> <title> Interaction with &postgres; autovacuum </title>
+
+<indexterm><primary>autovacuum interaction</primary></indexterm>
+
+<para> Recent versions of &postgres; support an <quote/autovacuum/
+process which notices when tables are modified, thereby creating dead
+tuples, and vacuums those tables, <quote/on demand./ It has been
+observed that this can interact somewhat negatively with &slony1;'s
+own  vacuuming policies on its own tables. </para>
+
+<para> &slony1; requests vacuums on its tables immediately after
+completing transactions that are expected to clean out old data, which
+may be expected to be the ideal time to do so.  It appears as though
+autovacuum may notice the changes a bit earlier, and attempts
+vacuuming when transactions are not complete, rendering the work
+pretty useless.  It seems preferable to configure autovacuum to avoid
+vacuum &slony1;-managed configuration tables. </para>
+
+<para> The following query (change the cluster name to match your
+local configuration) will identify the tables that autovacuum should
+be configured not to process: </para>
+
+<programlisting>
+mycluster=# select oid, relname from pg_class where relnamespace = (select oid from pg_namespace where nspname = '_' || 'MyCluster') and relhasindex;
+  oid  |   relname    
+-------+--------------
+ 17946 | sl_nodelock
+ 17963 | sl_setsync
+ 17994 | sl_trigger
+ 17980 | sl_table
+ 18003 | sl_sequence
+ 17937 | sl_node
+ 18034 | sl_listen
+ 18017 | sl_path
+ 18048 | sl_subscribe
+ 17951 | sl_set
+ 18062 | sl_event
+ 18069 | sl_confirm
+ 18074 | sl_seqlog
+ 18078 | sl_log_1
+ 18085 | sl_log_2
+(15 rows)
+</programlisting>
+
+<para> The following query will populate
+<envar>pg_catalog.pg_autovacuum</envar> with suitable configuration
+information: <command> insert into pg_catalog.pg_autovacuum (vacrelid,
+enabled) select oid, 'f' from pg_catalog.pg_class where relnamespace =
+(select oid from pg_namespace where nspname = '_' || 'MyCluster') and
+relhasindex; </command> </para>
+
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
 <indexterm><primary>watchdogs to keep slon daemons running</primary></indexterm>
@@ -88,6 +139,7 @@ thereby your whole day.</para>
 
 <sect2 id="gensync"><title>Parallel to Watchdog: generate_syncs.sh</title>
 
+<indexterm><primary>generate SYNCs</primary></indexterm>
 <para>A new script for &slony1; 1.1 is
 <application>generate_syncs.sh</application>, which addresses the following kind of
 situation.</para>
@@ -218,6 +270,8 @@ again.</para></listitem>
 
 <sect2><title> Other Replication Tests </title>
 
+<indexterm><primary>testing replication</primary></indexterm>
+
 <para> The methodology of the previous section is designed with a view
 to minimizing the cost of submitting replication test queries; on a
 busy cluster, supporting hundreds of users, the cost associated with
@@ -287,6 +341,7 @@ periodically.</para></listitem>
 </para>
 </sect2>
 <sect2><title>mkservice </title>
+<indexterm><primary>mkservice for BSD </primary></indexterm>
 
 <sect3><title>slon-mkservice.sh</title>
 

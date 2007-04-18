@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.27 2007-04-18 15:03:51 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.28 2007-04-18 15:28:16 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -142,6 +142,15 @@ Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
 <command>VACUUM</command> on a huge table will open a long-running
 transaction with all the known ill effects.</para>
 </listitem>
+
+<listitem><para> If you are using the autovacuum process in recent
+versions of &postgres;, you may wish to leave &slony1; tables out, as
+&slony1; is a bit more intelligent about vacuuming when it is expected
+to be conspicuously useful (<emphasis>e.g.</emphasis> - immediately
+after purging old data) to do so than autovacuum can be. </para>
+
+<para> See <xref linkend="maintenance-autovac"> for more
+details. </para> </listitem>
 
 <listitem> <para> Running all of the &lslon; daemons on a central
 server for each network has proven preferable. </para>
