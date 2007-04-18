@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.23 2007-02-08 18:01:15 cbbrowne Exp $
+#	$Id: Makefile,v 1.24 2007-04-18 21:20:22 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -57,6 +57,9 @@ $(SO_NAME):	$(SO_OBJS)
 
 clean distclean maintainer-clean:
 	rm -f $(SO_NAME) $(SO_OBJS)
+
+splint:
+	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(wildcard *.c)
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)

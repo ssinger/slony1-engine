@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.58 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.59 2007-04-18 21:20:22 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -35,6 +35,9 @@
 
 #include <signal.h>
 #include <errno.h>
+/*@+matchanyintegral@*/
+/*@-compmempass@*/
+/*@-immediatetrans@*/
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
@@ -71,7 +74,6 @@ Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
-
 
 #ifdef CYGWIN
 extern DLLIMPORT Node *newNodeMacroHolder;
@@ -121,12 +123,12 @@ typedef struct slony_I_cluster_status
 	struct slony_I_cluster_status *next;
 }	Slony_I_ClusterStatus;
 
-
-static Slony_I_ClusterStatus *clusterStatusList = NULL;
+/*@null@*/
+static Slony_I_ClusterStatus *clusterStatusList = NULL;  
 static Slony_I_ClusterStatus *
 getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
-const char *slon_quote_identifier(const char *ident);
+static const char *slon_quote_identifier(const char *ident);
 static char *slon_quote_literal(char *str);
 
 
@@ -142,7 +144,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	char	   *buf;
 	size_t		buf_size;
 	int			rc;
-	int			xcnt;
+	uint32			xcnt;
 	char	   *cp;
 	int			i;
 	int64		retval;
@@ -172,9 +174,11 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		/*
 		 * Once per transaction notify on the sl_event relation
 		 */
+/*@-nullpass@*/
 		if ((rc = SPI_execp(cs->plan_notify_event, NULL, NULL, 0)) < 0)
 			elog(ERROR, "Slony-I: SPI_execp() failed for \"NOTIFY event\"");
 
+/*@+nullpass@*/
 		cs->currentXid = newXid;
 	}
 
@@ -183,6 +187,8 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	 * datum.
 	 */
 	*(cp = buf) = '\0';
+	/*@-nullderef@*/
+	/*@-mustfreeonly@*/
 	for (xcnt = 0; xcnt < SerializableSnapshot->xcnt; xcnt++)
 	{
 		if ((cp + 30) >= (buf + buf_size))
@@ -191,17 +197,23 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 			buf = repalloc(buf, buf_size);
 			cp = buf + strlen(buf);
 		}
+/*@-bufferoverflowhigh@*/
 		sprintf(cp, "%s'%u'", (xcnt > 0) ? "," : "",
 				SerializableSnapshot->xip[xcnt]);
+/*@+bufferoverflowhigh@*/
 		cp += strlen(cp);
 	}
+	/*@+nullderef@*/
+        /*@+mustfreeonly@*/
 	ev_xip = DatumGetTextP(DirectFunctionCall1(textin, PointerGetDatum(buf)));
 
 	/*
 	 * Call the saved INSERT plan
 	 */
+	/*@-nullderef@*/
 	argv[0] = TransactionIdGetDatum(SerializableSnapshot->xmin);
 	argv[1] = TransactionIdGetDatum(SerializableSnapshot->xmax);
+	/*@+nullderef@*/
 	argv[2] = PointerGetDatum(ev_xip);
 	nulls[0] = ' ';
 	nulls[1] = ' ';
@@ -244,15 +256,18 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 		if (strcmp(ev_type_c, "SYNC") == 0 ||
 			strcmp(ev_type_c, "ENABLE_SUBSCRIPTION") == 0)
 		{
+/*@-nullpass@*/
 			if ((rc = SPI_execp(cs->plan_record_sequences, NULL, NULL, 0)) < 0)
 				elog(ERROR, "Slony-I: SPI_execp() failed for \"INSERT INTO sl_seqlog ...\"");
+/*@+nullpass@*/
 		}
 	}
 
-	SPI_finish();
-
+	(void) SPI_finish();
+/*@-mustfreefresh@*/
 	PG_RETURN_INT64(retval);
 }
+/*@+mustfreefresh@*/
 
 
 /*
@@ -1134,7 +1149,7 @@ slon_quote_literal(char *str)
  *
  * Version: pgsql/src/backend/utils/adt/ruleutils.c,v 1.188 2005/01/13 17:19:10
  */
-const char *
+static const char *
 slon_quote_identifier(const char *ident)
 {
 	/*
@@ -1471,6 +1486,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		if (cs->plan_insert_log_2 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
+		/*@-nullderef@*/
 		/*
 		 * Also create the 3 rather static text values for the log_cmdtype
 		 * parameter and initialize the cmddata_buf.
@@ -1499,6 +1515,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	}
 
 	return cs;
+	/*@+nullderef@*/
 }
 
 
