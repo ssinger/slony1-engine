@@ -1,18 +1,41 @@
 #!/bin/sh
 #
-# $Id: slon-mkservice.sh,v 1.1 2007-03-30 14:49:46 cbbrowne Exp $
+# $Id: slon-mkservice.sh,v 1.2 2007-04-18 14:57:31 cbbrowne Exp $
 #
 # contributed by Andrew Hammond <andrew.george.hammond@gmail.com>
 #
 # Create a slon service directory for use with svscan from deamontools.
-# This uses multilog in a pretty basic way. See logrep for cleverness.
-# Currently very limited error handling. This probably needs to be fixed...
-#
+# This uses multilog in a pretty basic way, which seems to be standard 
+# for daemontools / multilog setups. If you want clever logging, see
+# logrep below. Currently this script has very limited error handling
+# capabilities.
+# 
 # For non-interactive use, set the following environment variables.
-# BASEDIR SYSUSR PASSFILE DBUSER HOST PORT DATABASE CLUSTER SLON_BINARY
+# BASEDIR LOGBASE SYSUSR PASSFILE DBUSER HOST PORT DATABASE CLUSTER SLON_BINARY
+# If any of the above are not set, the script asks for configuration
+# information interactively. The following environment variables are optional.
+# LOGMAX LOGNUM
+# If they are not set, they will silently default to reasonable values.
+# 
+# BASEDIR where you want the service directory structure for the slon
+# to be created. This should _not_ be the /var/service directory.
+# (default /usr/local/etc)
+# LOGBASE where you want your logs to end up. (default /var/log)
+# if set to - then revert to old behaviour and put logs under log/main.
+# SYSUSR the unix user under which the slon (and multilog) process should run.
+# PASSFILE location of the .pgpass file to be used. (default ~sysusr/.pgpass)
+# DBUSER the postgres user the slon should connect as (default slony)
+# HOST what database server to connect to (default localhost)
+# PORT what port to connect to (default 5432)
+# DATABASE which database to connect to (default dbuser)
+# CLUSTER name of your Slony1 cluster? (default database)
+# SLON_BINARY full path name of the slon binary (default `which slon`)
+# LOGMAX maximum size (in bytes) of logfiles (default 10485760 which is 10MB)
+# LOGNUM number of files to maintain (default 99, assume other tool prunes)
 
 DEFAULT_SLON_BINARY=`which slon`                # silly, wild-ass guess
 DEFAULT_BASEDIR='/usr/local/etc'
+DEFAULT_LOGBASE='/var/log'
 DEFAULT_SYSUSR='pgsql'                          # FreeBSD-centric. Oh well.
 DEFAULT_DBUSR='slony'                           # Best Practice...
 DEFAULT_SLON_DEBUG_LEVEL=2                      # default to "debug2" level
@@ -20,7 +43,11 @@ DEFAULT_HOST='localhost'                        # maybe the unix socket would be
 DEFAULT_PORT=5432
 
 if [ -z "$BASEDIR" ]; then
-    echo -n "Where do you want the service dir created? Don't want to created this in /service or /var/service. Once it's created, either link or move it to the service directory (since linking is an atomic filesystem action). If your service directory is on a small, relatively static partition, you will almost certainly want to put this on a partition that can handle some log files and then link.
+    echo -n "Where do you want the service dir created? Don't create this in 
+/service or /var/service. Once it's created, either symlink or move
+it to the service directory (since linking is an atomic filesystem action). 
+Note that log files will not be stored here (that's the next question), so 
+this doesn't have to be on a high storage / IO capacity filesystem.
 [$DEFAULT_BASEDIR]: "
     read BASEDIR
     if [ -z "$BASEDIR" ]; then
@@ -28,6 +55,19 @@ if [ -z "$BASEDIR" ]; then
     fi
 fi
 echo "BASEDIR=$BASEDIR"
+
+if [ -z "$LOGBASE" ]; then
+    echo -n "Where should the logfiles live? You probably want to put this
+somewhere with plenty of storage and some IO capacity. Note that this
+creates a subdirectory where the actual log files are stored.
+Use - to disable this (putting the log files under log/main according to
+daemontools convention).
+[$DEFAULT_LOGDIR]: "
+    read LOGDIR
+    if [ -z "$LOGDIR" ]; then
+        LOGDIR="$DEFAULT_LOGDIR"
+    fi
+fi
 
 if [ -z "$SYSUSR" ]; then
     echo -n "System user name for slon to run under [$DEFAULT_SYSUSR]: "
@@ -114,13 +154,22 @@ if [ -z "$SLON_BINARY" ]; then
 fi
 echo "SLON_BINARY=$SLON_BINARY"
 
-DIR="$BASEDIR/slon_${CLUSTER}_${HOST}_${PORT}_$DATABASE"
+SVCNAME="slon_${CLUSTER}_${HOST}_${PORT}_$DATABASE"
+DIR="$BASEDIR/$SVCNAME"
+LOGDIR="$DIR/log/main"
+if [ '-' != "$LOGBASE" ]; then      # - means don't use a different logdir
+    LOGDIR="$LOGBASE/$SVCNAME"      # otherwise we're logging somewhere else
+fi
 CONFIGFILE="$DIR/slon.conf"
 echo "CONFIGFILE=$CONFIGFILE"
 
 echo "Service dir will be created under $DIR"
+echo "Logs will live under $LOGDIR"
 
-mkdir -p "$DIR/env" "$DIR/supervise" "$DIR/log/supervise" "$DIR/log/main" || exit -1
+mkdir -p "$DIR/env" "$DIR/supervise" "$DIR/log/env" "$DIR/log/supervise" "$LOGDIR" || exit -1
+if [ '-' != "$LOGBASE" ]; then          # - means it's not a linked logdir
+    ln -s "$LOGDIR" "$DIR/log/main"
+fi
 # Make sure the log file initially exists. This allows others to tail -F it
 # before it starts getting populated. go go logrep!
 touch "$DIR/log/main/current" || exit -1
@@ -276,14 +325,15 @@ log_timestamp  0    # multilog will insert a tai64n timestamp
 
 EOF
 
-# Set up the envdir contents. Generously.
+# Set up the envdir contents for the admins. Generously.
 echo "$SLON_BINARY"                 > $DIR/env/SLON_BINARY
 echo "$CONFIGFILE"                  > $DIR/env/CONFIGFILE
 echo "$CLUSTER"                     > $DIR/env/CLUSTER
 echo "$HOST"                        > $DIR/env/PGHOST
 echo "$PORT"                        > $DIR/env/PGPORT
 echo "$DATABASE"                    > $DIR/env/PGDATABASE
-# The absence of PGPASSWORD is not an oversight. Use .pgpass
+# The absence of PGPASSWORD is not an oversight. Use .pgpass, see
+# http://www.postgresql.org/docs/current/interactive/libpq-pgpass.html
 # Configure the location of .pgpass file here...
 # I'd like a better solution than this for expanding the homedir.
 echo "$PASSFILE"                    > $DIR/env/PGPASSFILE 
@@ -292,40 +342,106 @@ echo "$DBUSER"                      > $DIR/env/PGUSER
 echo 'ISO'                          > $DIR/env/PGDATESTYLE
 echo 'UTC'                          > $DIR/env/PGTZ
 
+# Avoid some subtle errors by documenting stuff... such as
+cat > "$DIR/README.txt" <<EOF
+This service will start on boot. If you do not want it to, then
+touch $DIR/down
+
+To upgrade your slon, first update env/SLON_BINARY to the full
+path and name of the new slon binary. Then stop the slon.
+svc -d $DIR
+Apply your slonik UPDATE FUNCTIONS script(s) then restart your slon.
+svc -u $DIR
+Finally, check your logs to ensure that the new slon has started and
+is running happily.
+
+If you need to have a special purpose config file, or test version,
+then you can simply copy the existing slon.conf to some other name,
+make your changes there, update env/CONFIGFILE to point at the new
+config and restart the slon.
+svc -k $DIR
+
+Note that changing variables such as CLUSTER, PGHOST, PGPORT,
+PGDATABASE and PGUSER in the env directory will not change where
+the slon connects. They are only there for admin/DBA convenience.
+exec envdir $DIR/env bash
+Is a quick way to get your variables all set up.
+
+If you want to change where the slon connects, you need to edit
+$CONFIGFILE
+But you probably should not be doing that anyway, because then you
+have to rename a whole bunch of stuff and edit all over the place
+to keep the naming scheme consistent. Yuck. You should probably
+just create a new slon service directory with the correct information,
+and shut this one down.
+touch $DIR/down; svc -dx $DIR $DIR/log
+
+EOF
+
+cat > "$DIR/env/README.txt" <<EOF
+Many of these environment variables are only set as a convenience
+for administrators and DBAs. To load them, try
+exec envdir $DIR/env bash
+Before you change stuff here, please read ../README.txt
+EOF
+
 # create the run script for the slon
 cat > "$DIR/run" <<EOF
 #!/bin/sh
-# Note that the slon binary is a variable, so you can edit your envdir
-# settings to upgrade slons then restart them.
+# Note that the slon binary is a variable, so you can edit the value in
+# env/SLON_BINARY and restart to upgrade slons. See README.txt in this dir.
 exec 2>&1
 exec envdir ./env sh -c 'exec setuidgid ${SYSUSR} "\${SLON_BINARY}" -f "\${CONFIGFILE}"'
 EOF
 chmod a+x "$DIR/run"
 echo "$DIR/run created"
 
+# setup an envdir for multilog
+echo ${LOGMAX-"10485760"}           > $DIR/log/env/LOGMAX
+echo ${LOGNUM-"99"}                 > $DIR/log/env/LOGNUM
+
+cat > "$DIR/log/README.txt" <<EOF
+To force a log rotation, use
+svc -a $DIR/log
+
+The size (in bytes) of the log files (before they get rotated) is controlled
+by the s parameter for multilog. This is set up as an envdir variable at
+$DIR/log/env/LOGMAX
+You might want to increase or decrease this. It goes up to a maximum of
+16777215 (15MB) and defaults to 99999 (97kB) if unset. Leaving it unset 
+will break this script. It defaults to 10485760 (which is 10MB).
+You need to restart multilog for changes to this to take effect.
+svc -k $DIR/log
+
+The n paramter decides how many old log files to keep around. This is set
+up as an envdir variable at
+$DIR/log/env/LOGNUM
+You will probably want to decrease this if you are not using some other
+tool to manage old logfiles. Multilog defaults to 10 if this is unset, but
+like the size above, it will break this script if left unset. The script
+defaults to 99 under the assumption that you are using some other, system
+wide tool (like cfengine) to prune your logs.
+EOF
+
 # create the run file for the multilog
 cat > "$DIR/log/run" <<EOF
 #!/bin/sh
 # This puts everything in the main log. Unfortunately multilog only allows
 # you to select which log you want to write to as opposed to writing each
-# line to every log which matches the criteria.
-#
-# Note that size (in bytes) of the log files (before they get rotated) is 
-# controlled by the s parameter. You might want to increase this. It goes
-# up to a maximum of 16777215 (15MB) and defaults to 99999 (97kB).
-# I'm using 10485760 (10MB)
-# The n paramter decides how many old log files to keep around. Defaults
-# to 10. 
-exec setuidgid $SYSUSR multilog t s10485760 n99 ./main
+# line to every log which matches the criteria. Split up logs would make
+# debugging harder. See also README.txt in this directory.
+
+exec envdir ./env sh -c 'exec setuidgid $SYSUSR multilog t s"\$LOGMAX" n"\$LOGNUM" ./main'
 EOF
 chmod a+x "$DIR/log/run"
 echo "$DIR/log/run created"
 
-# create and fix permissions for .pgpass appropriately
+# create and fix ownerships and permissions for .pgpass appropriately
 touch "$PASSFILE"
-chmod 600 "$PASSSFILE"
+chown "$SYSUSR" "$PASSFILE"
+chmod 600 "$PASSFILE"
 if [ ! -s "$PASSFILE" ]; then
-    echo "Populating $PASSFILE"
+    echo "Populating $PASSFILE with header and example."
     cat > "$PASSFILE" <<EOF
 #hostname:port:database:username:password
 #$HOST:$PORT:*:$DBUSER:secret
@@ -356,6 +472,7 @@ Finally, you need to make sure that $PASSFILE
 is correctly in place. If you didn't have one before (or it was empty), it
 has been created and populated with some sample data.
 
+Logfiles can be found at $LOGDIR
 You may also want to set up a logrep to filter out the more intresting
 log lines. See logrep-mkservice.sh.
 EOF
