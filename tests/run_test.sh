@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.13 2007-04-18 15:03:51 cbbrowne Exp $
+# $Id: run_test.sh,v 1.14 2007-04-20 21:43:14 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -175,10 +175,15 @@ store_node()
       eval host=\$HOST${alias}
       eval user=\$USER${alias}
       eval port=\$PORT${alias}
+      eval logship=\$LOGSHIP${alias}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         if [ ${alias} -ne ${originnode} ]; then
-          echo "STORE NODE (id=${alias}, comment='node ${alias}');" >> $mktmp/slonik.script
+          if [ "x${logship}" == "xtrue" ]; then    # Don't bother generating nodes used for log shipping
+            status "Node ${alias} is a log shipping node - no need for STORE NODE"
+          else
+            echo "STORE NODE (id=${alias}, comment='node ${alias}');" >> $mktmp/slonik.script
+         fi
         fi
         if [ ${alias} -ge ${NUMNODES} ]; then
           break;
@@ -202,6 +207,7 @@ store_path()
     eval host=\$HOST${i}
     eval user=\$USER${i}
     eval port=\$PORT${i}
+    eval logship=\$LOGSHIP${i}
 
     if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
       j=1
@@ -211,8 +217,14 @@ store_path()
           eval bhost=\$HOST${j}
           eval buser=\$WEAKUSER${j}
           eval bport=\$PORT${j}
+          eval blogship=\$LOGSHIP${j}
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
+             if [[ "x${logship}" == "xtrue" || "x${blogship}" == "xtrue" ]]; then
+                 # log shipping node - no paths need exist that involve this node
+                 status "log shipping between nodes(${i}/${j}) - ls(${logship}/${blogship}) - omit STORE PATH"
+             else
 	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
+             fi
           else
             err 3 "No conninfo"
           fi
@@ -513,6 +525,8 @@ launch_slon()
       eval pgbindir=\$PGBINDIR${alias}
       eval port=\$PORT${alias}
       eval cluster=\$CLUSTER1
+      eval archive=\$ARCHIVE{alias}
+      eval logship=\$LOGSHIP${alias}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         unset conninfo
@@ -521,21 +535,30 @@ launch_slon()
         unset tmpppid
         eval slon${alias}_pid=
 
+        if [ "x${archive}" != "xtrue" ]; then
+          status "Creating log shipping directory - $mktmp/archive_logs_${alias}"
+          mkdir -p $mktmp/archive_logs_${alias}
+          archiveparm="-a ${mktmp}/archive_logs_${alias}"
+       fi
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
-        status "launching: $pgbindir/slon -s500 -g10 -d2 $cluster \"$conninfo\""
+        if [ "x${logship}" == "xtrue" ]; then
+          status "do not launch slon for node ${alias} - it receives data via log shipping"
+        else
+          status "launching: $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster \"$conninfo\""
 
-        $pgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
-        tmppid=$!
-        tmpppid=$$
-        sleep 1
+          $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
+          tmppid=$!
+          tmpppid=$$
+          sleep 1
 
-        foo=$(_check_pid slon ${tmppid} ${tmpppid})
+          foo=$(_check_pid slon ${tmppid} ${tmpppid})
 
 
-        eval slon${alias}_pid=${foo}
-        if [ -z "${foo}" -o "${tmppid}" != "${foo}" ]; then
-          warn 3 "Failed to launch slon on node ${alias} check $mktmp/slon_log.${alias} for details"
+          eval slon${alias}_pid=${foo}
+          if [ -z "${foo}" -o "${tmppid}" != "${foo}" ]; then
+            warn 3 "Failed to launch slon on node ${alias} check $mktmp/slon_log.${alias} for details"
+          fi
         fi
       fi
     fi
