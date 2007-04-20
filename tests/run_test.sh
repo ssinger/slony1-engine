@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.11.2.1 2007-04-20 20:51:09 cbbrowne Exp $
+# $Id: run_test.sh,v 1.11.2.2 2007-04-20 21:40:02 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -493,7 +493,7 @@ launch_slon()
         eval slon${alias}_pid=
 
         if [ "x${archive}" != "xtrue" ]; then
-          status "Creating log shipping directory - $mktmp/archive_logs_3}${alias}"
+          status "Creating log shipping directory - $mktmp/archive_logs_${alias}"
           mkdir -p $mktmp/archive_logs_${alias}
           archiveparm="-a ${mktmp}/archive_logs_${alias}"
        fi

@@ -64,6 +64,7 @@ generate_initdata()
 do_initdata()
 {
   originnode=${ORIGINNODE:-"1"}
+  SCRIPT=${mktmp}/slonik.script
   eval db=\$DB${originnode}
   eval host=\$HOST${originnode}
   eval user=\$USER${originnode}
@@ -95,7 +96,21 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/moredata.log 2> $mktmp/moredata.log
   if [ $? -ne 0 ]; then
     warn 3 "loading data failed, see $mktmp/moredata.log for details"
-  fi 
+  fi
+  wait_for_catchup
+
+  status "execute DDL script"
+  init_preamble
+  sh ${testname}/exec_ddl.sh ${testname} >> $SCRIPT
+  do_ik
+  status "completed DDL script"
+
+  status "Generate some more data"
+  generate_initdata
+  eval db=\$DB${originnode}
+  status "loading extra data to node $db"
+  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
+
   wait_for_catchup
   status "second data load complete - now load files into log shipped node"
   for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*.sql" -type f | sort`; do

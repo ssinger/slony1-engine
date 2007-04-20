@@ -1,4 +1,4 @@
-$Id: README,v 1.1.2.1 2007-04-20 20:51:09 cbbrowne Exp $
+$Id: README,v 1.1.2.2 2007-04-20 21:40:02 cbbrowne Exp $
   
 testlogship is a basic test that replication generally functions with
 log shipping.  
@@ -18,6 +18,13 @@ be rejected.  That is done in a slonik TRY {} block.
 
 It also creates...
 
-3.  table3 which has columns of all sorts of vaguely esoteric types to
+3.  table4 which has columns of all sorts of vaguely esoteric types to
 exercise that points, paths, bitmaps, mac addresses, and inet types
 replicate properly.
+
+It then loads data into these tables.
+
+The test proceeds to run a DDL script which alters the schema for
+table 4, adding two new columns, one to be populated via a default,
+for new tuples; the other has no default, but we assign the value 42
+to all tuples existing at the time that the DDL script runs.

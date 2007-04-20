@@ -1,7 +1,10 @@
-$Id: RELEASE-1.2.10,v 1.1.2.3 2007-04-20 20:51:09 cbbrowne Exp $
+$Id: RELEASE-1.2.10,v 1.1.2.4 2007-04-20 21:40:02 cbbrowne Exp $
 
 - Fixed problem with EXECUTE SCRIPT (EXECUTE ONLY ON = <node>)
 
   - The script was being executed on too many nodes...
 
 - Added a test script for log shipping
+
+  ... And alter it to add invocation of a DDL script.  This
+  allows testing for an event-counting problem in log shipping.
