@@ -1,4 +1,4 @@
-# $Id: settings.ik,v 1.4 2005-12-13 21:45:55 cbbrowne Exp $
+# $Id: settings.ik,v 1.4.2.1 2007-04-20 20:51:09 cbbrowne Exp $
 # This file contains the various sets of possible DB
 # configuration defaults/overrides
 
@@ -86,3 +86,6 @@ HOST13=${HOST13:-"localhost"}
 USER13=${USER13:-${PGUSER:-"postgres"}}
 PORT13=${PORT13:-${PGPORT:-"5432"}}
 PGBINDIR13=${PGBINDIR13:-${PGBINDIR:-"/usr/local/pgsql/bin"}}
+
+# Where to look for tools (e.g. - slony1_dump.sh)
+SLTOOLDIR=${SLTOOLDIR:-"../tools"}

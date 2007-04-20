@@ -1,6 +1,7 @@
-$Id: RELEASE-1.2.10,v 1.1.2.2 2007-04-18 19:28:27 cbbrowne Exp $
+$Id: RELEASE-1.2.10,v 1.1.2.3 2007-04-20 20:51:09 cbbrowne Exp $
 
 - Fixed problem with EXECUTE SCRIPT (EXECUTE ONLY ON = <node>)
 
   - The script was being executed on too many nodes...
 
+- Added a test script for log shipping
