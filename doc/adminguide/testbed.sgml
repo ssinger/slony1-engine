@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.11 2007-03-01 21:02:31 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.12 2007-04-20 20:55:33 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -145,6 +145,40 @@ to the location of the desired temporary file/directory, then set this
 value.  </para></glossdef>
 
 </glossentry>
+
+<glossentry>
+<glossterm><envar>SLTOOLDIR</envar></glossterm>
+
+<glossdef><para> Where to look for &slony1; tools such as
+<application>slony1_dump.sh</application>.  </para></glossdef>
+
+</glossentry>
+
+<glossentry>
+<glossterm><envar>ARCHIVE[n]</envar></glossterm>
+
+<glossdef><para> If set to <quote>true</quote>, for a particular node,
+which will normally get configured out of human sight in the
+generic-to-a-particular-test file <filename>settings.ik</filename>,
+then this node will be used as a data source for <xref
+linkend="logshipping">, and this causes the test tools to set up a
+directory for the <link linkend="slon-config-archive-dir">
+archive_dir</link> option.  </para></glossdef>
+
+</glossentry>
+
+<glossentry>
+<glossterm><envar>LOGSHIP[n]</envar></glossterm>
+
+<glossdef><para> If set to <quote>true</quote>, for a particular node,
+which will normally get configured out of human sight in
+<filename>settings.ik</filename> for a particular test, then this
+indicates that this node is being created via <xref
+linkend="logshipping">, and a &lslon; is not required for this node.
+</para></glossdef>
+
+</glossentry>
+
 
 </glosslist>
 
