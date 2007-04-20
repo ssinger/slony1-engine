@@ -1,0 +1,23 @@
+$Id: README,v 1.2 2007-04-20 20:54:55 cbbrowne Exp $
+  
+testlogship is a basic test that replication generally functions with
+log shipping.  
+  
+It creates three simple tables as one replication set, and replicates
+them from one database to another.
+  
+The three tables are of the three interesting types:
+  
+1.  table1 has a formal primary key
+
+2.  table2 lacks a formal primary key, but has a candidate primary key
+
+It tries replicating a third table, which has an invalid candidate
+primary key (columns not defined NOT NULL), which should cause it to
+be rejected.  That is done in a slonik TRY {} block.
+
+It also creates...
+
+3.  table3 which has columns of all sorts of vaguely esoteric types to
+exercise that points, paths, bitmaps, mac addresses, and inet types
+replicate properly.
