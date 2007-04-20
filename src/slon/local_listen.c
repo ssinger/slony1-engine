@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.40 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.41 2007-04-20 20:53:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -35,7 +35,7 @@
  * ----------
  */
 void *
-localListenThread_main(void *dummy)
+localListenThread_main(/* @unused@ */ void *dummy)
 {
 	SlonConn   *conn;
 	SlonDString query1;

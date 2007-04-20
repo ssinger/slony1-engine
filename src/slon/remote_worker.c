@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.137 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.138 2007-04-20 20:53:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -212,21 +212,21 @@ struct node_confirm_status
 };
 static struct node_confirm_status *node_confirm_head = NULL;
 static struct node_confirm_status *node_confirm_tail = NULL;
-pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int			sync_group_maxsize;
 int			sync_max_rowsize;
 int			sync_max_largemem;
 
-int			last_sync_group_size;
-int			next_sync_group_size;
+static int			last_sync_group_size;
+static int			next_sync_group_size;
 
 int			desired_sync_time;
-int			ideal_sync;
-struct timeval sync_start;
-struct timeval sync_end;
-int			last_sync_length;
-int			max_sync;
+static int			ideal_sync;
+static struct timeval sync_start;
+static struct timeval sync_end;
+static int			last_sync_length;
+static  int			max_sync;
 int			min_sync;
 int			quit_sync_provider;
 int			quit_sync_finalsync;

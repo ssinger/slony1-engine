@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.71 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: slon.c,v 1.72 2007-04-20 20:53:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -57,6 +57,7 @@ pthread_cond_t slon_wait_listen_cond;
  * Local data 
  * ----------
  */
+static void slon_exit(int code);
 static pthread_t local_event_thread;
 static pthread_t local_cleanup_thread;
 static pthread_t local_sync_thread;
@@ -788,7 +789,7 @@ SlonWatchdog(void)
 	 */
 #ifndef CYGWIN
 	act.sa_handler = &sighandler;
-	sigemptyset(&act.sa_mask);
+	(void) sigemptyset(&act.sa_mask);
 	act.sa_flags = SA_NODEFER;
 
 	if (sigaction(SIGHUP, &act, NULL) < 0)
@@ -851,12 +852,12 @@ SlonWatchdog(void)
 	}
 	slon_log(SLON_DEBUG2, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
 
-	alarm(0);
+	(void) alarm(0);
 
 	switch (watchdog_status)
 	{
 		case SLON_WATCHDOG_RESTART:
-			execvp(main_argv[0], main_argv);
+			(void) execvp(main_argv[0], main_argv);
 			slon_log(SLON_FATAL, "slon: cannot restart via execvp() - %s\n",
 					 strerror(errno));
 			slon_exit(-1);
@@ -868,7 +869,7 @@ SlonWatchdog(void)
 			if (child_status != 0)
 			{
 				slon_log(SLON_DEBUG1, "slon: restart of worker in 10 seconds\n");
-				sleep(10);
+				(void) sleep(10);
 			}
 			else
 			{
@@ -876,7 +877,7 @@ SlonWatchdog(void)
 			}
 			if (watchdog_status == SLON_WATCHDOG_RETRY)
 			{
-				execvp(main_argv[0], main_argv);
+				(void) execvp(main_argv[0], main_argv);
 				slon_log(SLON_FATAL, "slon: cannot restart via execvp() - %s\n",
 						 strerror(errno));
 				slon_exit(-1);
@@ -952,12 +953,12 @@ slon_terminate_worker()
 	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
 	{
 		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno, strerror(errno));
-		kill(slon_worker_pid, SIGKILL);
+		(void) kill(slon_worker_pid, SIGKILL);
 		slon_exit(-1);
 	}
-        close(sched_wakeuppipe[0]);
-	close(sched_wakeuppipe[1]);
-	alarm(20);
+        (void) close(sched_wakeuppipe[0]);
+	(void) close(sched_wakeuppipe[1]);
+	(void) alarm(20);
 }
 #endif
 
@@ -965,7 +966,7 @@ slon_terminate_worker()
  * slon_exit 
  * ----------
  */
-void
+static void
 slon_exit(int code)
 {
 #ifdef WIN32
@@ -976,7 +977,7 @@ slon_exit(int code)
 	if (pid_file)
 	{
 		slon_log(SLON_DEBUG2, "slon: remove pid file\n");
-		unlink(pid_file);
+		(void) unlink(pid_file);
 	}
 
 	slon_log(SLON_DEBUG2, "slon: exit(%d)\n", code);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.36 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.37 2007-04-20 20:53:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -59,11 +59,9 @@ static char tstring[255];		/* string used to store table names for the
  * vacuums those tables. 
  * ----------
  */
-/* @ -paramuse @ */
 void *
-cleanupThread_main(void *dummy)
+cleanupThread_main(/*@unused@*/ void *dummy)
 {
-/* @ +paramuse @ */
 	SlonConn   *conn;
 	SlonDString query1;
 	SlonDString query2;
@@ -407,14 +405,14 @@ get_earliest_xid(PGconn *dbconn)
 	SlonDString query1;
 
 	dstring_init(&query1);
-	slon_mkquery(&query1, "select %s.getMinXid();", rtcfg_namespace);
+	(void) slon_mkquery(&query1, "select %s.getMinXid();", rtcfg_namespace);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_FATAL, "cleanupThread: could not getMinXid()!\n");
 		PQclear(res);
 		slon_retry();
-		return -1;
+		return (unsigned long) -1;
 	}
 	xid = strtoll(PQgetvalue(res, 0, 0), NULL, 10);
 	slon_log(SLON_DEBUG3, "cleanupThread: minxid: %d\n", xid);

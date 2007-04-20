@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.24 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: misc.c,v 1.25 2007-04-20 20:53:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -157,7 +157,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 #endif
 		)
 	{
-		len = strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
+		len = (int) strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
 		if (len == 0 && time_buf[0] != '\0') {
 			perror("slon_log: problem with strftime()");
 			slon_retry();

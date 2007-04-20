@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.34 2007-04-18 22:19:07 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.35 2007-04-20 20:53:18 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -152,7 +152,7 @@ remoteListenThread_main(void *cdata)
 			 */
 			if (node->listen_status == SLON_TSTAT_NONE ||
 				node->listen_status == SLON_TSTAT_SHUTDOWN ||
-				!node->no_active)
+			    !((bool) node->no_active))
 			{
 				rtcfg_unlock();
 				break;
@@ -484,7 +484,7 @@ remoteListen_adjust_listat(SlonNode * node, struct listat ** listat_head,
 			{
 				lnode = rtcfg_findNode(listat->li_origin);
 				if (lnode != NULL && lnode->no_active)
-					found = true;
+					found = (int) true;
 				break;
 			}
 		}
