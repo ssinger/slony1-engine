@@ -1832,7 +1832,20 @@ SET MOVE SEQUENCE (
       </varlistentry>
      </variablelist>
     </para>
-    <para> This uses &funstoretrigger;. </para>
+    <note><para> A nifty trick is that you can run <command>STORE
+    TRIGGER</command> <emphasis>before the trigger is
+    installed;</emphasis> that will not cause any errors.  You could
+    thus add &slony1;'s handling of the trigger
+    <emphasis>before</emphasis> it is installed.  That allows you to
+    be certain that it becomes active on all nodes immediately upon
+    its installation via <xref linkend="stmtddlscript">; there is no
+    risk of events getting through in between the <command>EXECUTE
+    SCRIPT</command> and <command>STORE TRIGGER</command>
+    events. </para>
+    </note>
+
+   <para> This uses
+    &funstoretrigger;. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1846,7 +1859,7 @@ STORE TRIGGER (
 
     <para> This operation will need to acquire an exclusive lock on
     the specified table on each node to which it applies in order to
-    alter table schemas to add back the trigger. </para>
+    alter table schemas to add back the trigger, but only briefly. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
