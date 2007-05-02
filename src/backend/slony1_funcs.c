@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.53.2.1 2007-04-18 19:28:27 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.53.2.2 2007-05-02 21:37:07 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -41,8 +41,8 @@ PG_MODULE_MAGIC;
 #endif
 
 /* -- Change from PostgreSQL Ver 8.3 -- */
-#ifndef VARATT_SIZEP
-#define VARATT_SIZEP VARATT_SIZEP_DEPRECATED
+#if !((PG_VERSION_MAJOR > 8) || ((PG_VERSION_MAJOR == 8) && (PG_VERSION_MINOR >= 3)))
+#define SET_VARSIZE(datum, size) (VARATT_SIZEP(datum)=(size))
 #endif
 
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
@@ -295,7 +295,8 @@ _Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
 
 	len = strlen(SLONY_I_VERSION_STRING);
 	retval = palloc(VARHDRSZ + len);
-	VARATT_SIZEP(retval) = VARHDRSZ + len;
+
+        SET_VARSIZE(retval,VARHDRSZ + len);
 	memcpy(VARDATA(retval), SLONY_I_VERSION_STRING, len);
 
 	PG_RETURN_TEXT_P(retval);
@@ -368,19 +369,19 @@ _Slony_I_getSessionRole(PG_FUNCTION_ARGS)
 		case SLON_ROLE_UNSET:
 			cs->session_role = SLON_ROLE_NORMAL;
 			retval = palloc(VARHDRSZ + 6);
-			VARATT_SIZEP(retval) = VARHDRSZ + 6;
+			SET_VARSIZE(retval, VARHDRSZ + 6);
 			memcpy(VARDATA(retval), "normal", 6);
 			break;
 
 		case SLON_ROLE_NORMAL:
 			retval = palloc(VARHDRSZ + 6);
-			VARATT_SIZEP(retval) = VARHDRSZ + 6;
+			SET_VARSIZE(retval, VARHDRSZ + 6);
 			memcpy(VARDATA(retval), "normal", 6);
 			break;
 
 		case SLON_ROLE_SLON:
 			retval = palloc(VARHDRSZ + 4);
-			VARATT_SIZEP(retval) = VARHDRSZ + 4;
+			SET_VARSIZE(retval, VARHDRSZ + 4);
 			memcpy(VARDATA(retval), "slon", 4);
 			break;
 	}
@@ -475,7 +476,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			elog(ERROR, "Slony-I: cannot determine log status");
 		if (SPI_processed != 1)
 			elog(ERROR, "Slony-I: cannot determine log status");
-		
+
 		log_status = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
 									SPI_tuptable->tupdesc, 1, NULL));
 		SPI_freetuptable(SPI_tuptable);
@@ -621,8 +622,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 */
 		*cp++ = ')';
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) =
-			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		SET_VARSIZE(cs->cmddata_buf, 
+                        VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
 	}
 	else if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))
 	{
@@ -859,8 +860,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			cp += len_value;
 		}
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) =
-			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		SET_VARSIZE(cs->cmddata_buf,
+			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
 	}
 	else if (TRIGGER_FIRED_BY_DELETE(tg->tg_event))
 	{
@@ -926,8 +927,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			cp += len_value;
 		}
 		*cp = '\0';
-		VARATT_SIZEP(cs->cmddata_buf) =
-			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf));
+		SET_VARSIZE(cs->cmddata_buf,
+			VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
 	}
 	else
 		elog(ERROR, "Slony-I: logTrigger() fired for unhandled event");
@@ -1235,7 +1236,7 @@ _slon_quote_ident(PG_FUNCTION_ARGS)
 
 	len = strlen(qstr);
 	result = (text *) palloc(len + VARHDRSZ);
-	VARATT_SIZEP(result) = len + VARHDRSZ;
+	SET_VARSIZE(result, len + VARHDRSZ);
 	memcpy(VARDATA(result), qstr, len);
 
 	PG_RETURN_TEXT_P(result);
@@ -1477,13 +1478,13 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * parameter and initialize the cmddata_buf.
 		 */
 		cs->cmdtype_I = malloc(VARHDRSZ + 1);
-		VARATT_SIZEP(cs->cmdtype_I) = VARHDRSZ + 1;
+		SET_VARSIZE(cs->cmdtype_I, VARHDRSZ + 1);
 		*VARDATA(cs->cmdtype_I) = 'I';
 		cs->cmdtype_U = malloc(VARHDRSZ + 1);
-		VARATT_SIZEP(cs->cmdtype_U) = VARHDRSZ + 1;
+		SET_VARSIZE(cs->cmdtype_U, VARHDRSZ + 1);
 		*VARDATA(cs->cmdtype_U) = 'U';
 		cs->cmdtype_D = malloc(VARHDRSZ + 1);
-		VARATT_SIZEP(cs->cmdtype_D) = VARHDRSZ + 1;
+		SET_VARSIZE(cs->cmdtype_D, VARHDRSZ + 1);
 		*VARDATA(cs->cmdtype_D) = 'D';
 
 		/*

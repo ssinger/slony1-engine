@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.10,v 1.1.2.4 2007-04-20 21:40:02 cbbrowne Exp $
+$Id: RELEASE-1.2.10,v 1.1.2.5 2007-05-02 21:37:06 cbbrowne Exp $
 
 - Fixed problem with EXECUTE SCRIPT (EXECUTE ONLY ON = <node>)
 
@@ -8,3 +8,5 @@ $Id: RELEASE-1.2.10,v 1.1.2.4 2007-04-20 21:40:02 cbbrowne Exp $
 
   ... And alter it to add invocation of a DDL script.  This
   allows testing for an event-counting problem in log shipping.
+
+- Changes to support PostgreSQL 8.3 as VARATT_SIZEP has been deprecated

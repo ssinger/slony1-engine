@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.57.2.2 2007-02-20 11:29:39 xfade Exp $
+# $Id: configure.ac,v 1.57.2.3 2007-05-02 21:37:06 cbbrowne Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -161,6 +161,10 @@ if test "$enable_engine" = "yes"; then
 ACX_LIBPQ()
 ACX_LIBSNMP()
 ACX_SLONYTOOLS()
+
+AC_SUBST(PG_VERSION_MAJOR, $PG_VERSION_MAJOR)
+AC_SUBST(PG_VERSION_MINOR, $PG_VERSION_MINOR)
+AC_SUBST(PG_VERSION, $PG_VERSION)
 
 AC_SUBST(PGINCLUDEDIR, $PG_INCLUDEDIR)
 AC_SUBST(PGINCLUDESERVERDIR, $PG_INCLUDESERVERDIR)
