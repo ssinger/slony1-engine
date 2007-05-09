@@ -5,7 +5,7 @@
 
 %define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
-Summary:	A "master to multiple slaves" replication system with cascading and failover
+Summary:	A "master to multiple slaves" replication system with cascading, node rearrangement and failover
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
 Release:	1_PG%{pg_version}
