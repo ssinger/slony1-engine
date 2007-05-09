@@ -1,4 +1,4 @@
-$Id: RELEASE-1.2.10,v 1.1.2.5 2007-05-02 21:37:06 cbbrowne Exp $
+$Id: RELEASE-1.2.10,v 1.1.2.6 2007-05-09 18:00:24 cbbrowne Exp $
 
 - Fixed problem with EXECUTE SCRIPT (EXECUTE ONLY ON = <node>)
 
@@ -10,3 +10,10 @@ $Id: RELEASE-1.2.10,v 1.1.2.5 2007-05-02 21:37:06 cbbrowne Exp $
   allows testing for an event-counting problem in log shipping.
 
 - Changes to support PostgreSQL 8.3 as VARATT_SIZEP has been deprecated
+
+- in xxid.c, changes to support PostgreSQL 8.3 as tuple compression has
+  more extensive support
+
+  VARDATA_ANY(PG_DETOAST_DATUM_PACKED((PG_GETARG_DATUM(0))))
+  tends to replace
+  PG_GETARG_VARLENA(0)
