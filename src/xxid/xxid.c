@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.13 2007-05-09 13:39:16 wieck Exp $
+ *	$Id: xxid.c,v 1.14 2007-05-09 17:42:57 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -25,12 +25,6 @@ PG_MODULE_MAGIC;
 
 #ifndef SET_VARSIZE
 #define SET_VARSIZE(PTR,len) (*((uint32 *)(PTR)) = (len) & 0x3FFFFFFF)
-#endif
-#ifndef VARDATA_ANY
-#define VARDATA_ANY(PTR) VARDATA(PTR)
-#endif
-#ifndef PG_DETOAST_DATUM_PACKED
-#define PG_DETOAST_DATUM_PACKED(X) PG_DETOAST_DATUM(X)
 #endif
 
 #ifndef PG_GETARG_TRANSACTIONID
@@ -346,7 +340,7 @@ _Slony_I_xxid_snapshot_in(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_xxid_snapshot_out(PG_FUNCTION_ARGS)
 {
-	xxid_snapshot *snap = (xxid_snapshot *) VARDATA_ANY(PG_DETOAST_DATUM_PACKED((PG_GETARG_DATUM(0))));
+	xxid_snapshot *snap = (xxid_snapshot *) VARDATA(PG_DETOAST_DATUM((PG_GETARG_DATUM(0))));
 
 	char	   *str = palloc(28 + snap->nxip * 13);
 	char	   *cp = str;
@@ -374,7 +368,7 @@ Datum
 _Slony_I_xxid_lt_snapshot(PG_FUNCTION_ARGS)
 {
 	TransactionId value = PG_GETARG_TRANSACTIONID(0);
-	xxid_snapshot *snap = (xxid_snapshot *) VARDATA_ANY(PG_DETOAST_DATUM_PACKED((PG_GETARG_DATUM(1))));
+	xxid_snapshot *snap = (xxid_snapshot *) VARDATA(PG_DETOAST_DATUM((PG_GETARG_DATUM(1))));
 	int			i;
 
 	if (TransactionIdPrecedes(value, snap->xmin))
@@ -400,7 +394,7 @@ Datum
 _Slony_I_xxid_ge_snapshot(PG_FUNCTION_ARGS)
 {
 	TransactionId value = PG_GETARG_TRANSACTIONID(0);
-	xxid_snapshot *snap = (xxid_snapshot *) VARDATA_ANY(PG_DETOAST_DATUM_PACKED((PG_GETARG_DATUM(1))));
+	xxid_snapshot *snap = (xxid_snapshot *) VARDATA(PG_DETOAST_DATUM((PG_GETARG_DATUM(1))));
 	int			i;
 
 	if (TransactionIdEquals(value, snap->xmax))
