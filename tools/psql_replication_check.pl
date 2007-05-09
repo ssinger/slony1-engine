@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: psql_replication_check.pl,v 1.3 2005-07-11 22:00:30 cbbrowne Exp $#
+# $Id: psql_replication_check.pl,v 1.4 2007-05-09 19:20:03 devrim Exp $#
 # Documentation listed below.
 # Credits:
 # Afilias Canada
@@ -9,7 +9,7 @@
 
 use strict;
 
-use Pg;
+use DBD::Pg;
 use Getopt::Std;
 
 our ($opt_h, $opt_d, $opt_p, $opt_U, $opt_w, $opt_c) = '';
@@ -43,7 +43,7 @@ my $password = "piTyThaF00!";
 $conn = Pg::setdbLogin($opt_h, $opt_p, '', '', $opt_d, $opt_U, $password);
 $status = $conn->status;
 
-if ($status ne PGRES_CONNECTION_OK)
+if ($status ne 'PGRES_CONNECTION_OK')
 {
 	chomp(my $error = $conn->errorMessage);
 	print("$error\n");
@@ -53,7 +53,7 @@ if ($status ne PGRES_CONNECTION_OK)
 # Do the query
 $res = $conn->exec($query);
 $status = $res->resultStatus;
-if ($status ne PGRES_TUPLES_OK)
+if ($status ne 'PGRES_TUPLES_OK')
 {
 	chomp(my $error = $conn->errorMessage);
 	print("$error\n");

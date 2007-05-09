@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.35 2007-01-30 19:23:19 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.36 2007-05-09 19:20:03 devrim Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -9,7 +9,7 @@
 <indexterm><primary>&nagios; for monitoring replication</primary></indexterm>
 
 <para> The script in the <filename>tools</filename> directory called
-<command> pgsql_replication_check.pl </command> represents some of the
+<command> psql_replication_check.pl </command> represents some of the
 best answers arrived at in attempts to build replication tests to plug
 into the <ulink url="http://www.nagios.org/"> &nagios; </ulink> system
 monitoring tool.</para>
@@ -34,7 +34,7 @@ You need to set up a &nagios; monitoring rule for each and every node
 being monitored.  </para> </listitem>
 </itemizedlist>
 
-<para> The new script, <command>pgsql_replication_check.pl</command>,
+<para> The new script, <command>psql_replication_check.pl</command>,
 takes the minimalist approach of assuming that the system is an online
 system that sees regular <quote>traffic,</quote> so that you can
 define a view specifically for the replication test called
