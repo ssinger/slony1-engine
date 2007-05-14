@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.12.2.2 2007-05-09 17:43:10 wieck Exp $
+ *	$Id: xxid.c,v 1.12.2.3 2007-05-14 22:04:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -23,9 +23,11 @@
 PG_MODULE_MAGIC;
 #endif
 
-#ifndef SET_VARSIZE
-#define SET_VARSIZE(PTR,len) (*((uint32 *)(PTR)) = (len) & 0x3FFFFFFF)
+/* -- Change from PostgreSQL Ver 8.3 -- */
+#if !((PG_VERSION_MAJOR > 8) || ((PG_VERSION_MAJOR == 8) && (PG_VERSION_MINOR >= 3)))
+#define SET_VARSIZE(datum, size) (VARATT_SIZEP(datum)=(size))
 #endif
+
 
 #ifndef PG_GETARG_TRANSACTIONID
 #define PG_GETARG_TRANSACTIONID(n)	DatumGetTransactionId(PG_GETARG_DATUM(n))
