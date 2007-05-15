@@ -16,3 +16,4 @@ test_D_moveset
 test_G_stopat
 test_H_lag
 test_I_droptab
+test_J_pgbench
