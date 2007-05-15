@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.75 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.76 2007-05-15 19:40:16 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3972,7 +3972,17 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 			 * nothing to wait for.
 			 */
 			if (adminfo->last_event < 0)
+			{
+				if (adminfo->no_id == stmt->wait_origin)
+				{
+					printf("%s:%d: Error: "
+					   "script did not generate any event on node %d\n",
+							   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+							   stmt->wait_origin);
+					return -1;
+				}
 				continue;
+			}
 
 			if (stmt->wait_confirmed < 0)
 			{
@@ -4095,7 +4105,7 @@ slonik_sync(SlonikStmt_sync * stmt)
 				 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;

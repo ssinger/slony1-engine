@@ -28,9 +28,7 @@ slonik <<_EOF_
 	on error {
 		exit 1;
 	}
-	echo '***** Waiting for subscribe set to arrive on origin';
-	wait for event (origin = 2, confirmed = 1);
-	echo '***** Subscribe set received on origin - issue SYNC';
+	echo '***** Subscribe set queued - issue SYNC';
 	sync (id = 1);
 	echo '***** Waiting for SYNC to be done on subscriber';
 	wait for event (origin = 1, confirmed = 2, wait on = 1);
