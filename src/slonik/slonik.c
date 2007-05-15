@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.8 2007-04-18 19:28:27 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.9 2007-05-15 16:56:37 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4234,7 +4234,7 @@ slonik_sync(SlonikStmt_sync * stmt)
 				 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
-	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
