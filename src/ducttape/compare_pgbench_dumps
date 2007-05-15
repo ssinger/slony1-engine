@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: compare_pgbench_dumps,v 1.4 2005-10-27 19:20:40 wieck Exp $
+# $Id: compare_pgbench_dumps,v 1.5 2007-05-15 14:05:15 wieck Exp $
 # **********
 # compare_pgbench_dumps
 # **********
@@ -16,7 +16,7 @@ psql -o dump.tmp.1.$$ $DB1 <<_EOF_
 	select 'tellers:'::text, tid, bid, tbalance, filler
 			from tellers order by tid;
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+			seqno from history order by seqno;
 _EOF_
 psql -o dump.tmp.2.$$ $DB2 <<_EOF_
 	select 'accounts:'::text, aid, bid, abalance, filler
@@ -26,7 +26,7 @@ psql -o dump.tmp.2.$$ $DB2 <<_EOF_
 	select 'tellers:'::text, tid, bid, tbalance, filler
 			from tellers order by tid;
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+			seqno from history order by seqno;
 _EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then

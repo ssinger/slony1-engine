@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_1_pgbench.in,v 1.2 2007-05-15 14:05:15 wieck Exp $
 # **********
 # test_1_pgbench
 #
@@ -88,6 +88,13 @@ echo "**** creating database for Node 11"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
+psql $DB1 <<_EOF_
+	create sequence history_seq;
+	alter table history add column seqno int8;
+	alter table history alter column seqno set default nextval('history_seq');
+	update history set seqno = nextval('history_seq') where seqno is null;
+	alter table history add primary key (seqno);
+_EOF_
 pg_dump -s $DB1 >pgbench_schema.sql
 
 #####
@@ -137,13 +144,6 @@ slonik <<_EOF_
 $PREAMBLE
 
 	try {
-		table add key (node id = 11, fully qualified name = 'public.history');
-	}
-	on error {
-		exit 1;
-	}
-
-	try {
 		create set (id = 1, origin = 11, comment = 'Set 1 - pgbench tables');
 		set add table (set id = 1, origin = 11,
 			id = 1, fully qualified name = 'public.accounts',
@@ -156,7 +156,7 @@ $PREAMBLE
 			comment = 'Table tellers');
 		set add table (set id = 1, origin = 11,
 			id = 4, fully qualified name = 'public.history',
-			key = serial, comment = 'Table accounts');
+			comment = 'Table history');
 	}
 	on error {
 		exit 1;
