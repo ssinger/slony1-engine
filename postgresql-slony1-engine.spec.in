@@ -59,7 +59,7 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-./configure --includedir %{_includedir}/pgsql \
+./configure --includedir %{_includedir}/pgsql --with_pgconfigdir=%{_bindir} \
 %if %perltools
         --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
@@ -126,6 +126,10 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Thu May 17 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Fix rpm build problem when the system has pg_config in both under
+  /usr/local/pgsql/bin and /usr/bin
+
 * Wed Mar 22 2007 Christopher Browne <cbbrowne@ca.afilias.info>
 - Added more recent release notes
 
