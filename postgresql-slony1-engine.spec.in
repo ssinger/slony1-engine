@@ -1,5 +1,5 @@
 %{!?perltools:%define perltools 1}
-%{!?docs:%define docs 1}
+%{!?docs:%define docs 0}
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
@@ -11,7 +11,7 @@ Version:	@PACKAGE_VERSION@
 Release:	1_PG%{pg_version}
 License:	BSD
 Group:		Applications/Databases
-URL:		http://slony.info/
+URL:		http://main.slony.info/
 Source0:	@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
@@ -59,7 +59,7 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-./configure --includedir %{_includedir}/pgsql --with_pgconfigdir=%{_bindir} \
+./configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} \
 %if %perltools
         --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
@@ -78,6 +78,7 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 install -d %{buildroot}%{_sysconfdir}
+install -d %{buildroot}%{_sysconfdir}/init.d/
 install -d %{buildroot}%{_datadir}/pgsql/
 install -d %{buildroot}%{_libdir}/pgsql/
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
@@ -87,6 +88,7 @@ install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
+install -m 0755 redhat/slon.init %{buildroot}%{_sysconfdir}/init.d/slon
 
 %if %perltools
 cd tools
@@ -108,12 +110,13 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
 %{_datadir}/pgsql/*.sql
 %config(noreplace) %{_sysconfdir}/slon.conf
+%{_sysconfdir}/init.d/slon
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
