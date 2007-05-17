@@ -48,7 +48,7 @@ SLONENGINE=/usr/bin
 SLONDAEMON=$SLONENGINE/slon
 SLONCONF=/etc/slon.conf
 SLONPID=/var/run/slon.pid
-
+SLONLOG=/var/log/slony1
 test -x $SLONDAEMON || exit 5
 
 
@@ -58,7 +58,7 @@ start(){
 	SLON_START=$"Starting ${NAME} service: "
 
 	echo -n "$SLON_START"
-	daemon $SLONDAEMON -f $SLONCONF -p $SLONPID 2>&1 </dev/null &
+	$SU -l postgres -c "$SLONDAEMON -f $SLONCONF &" >> "$SLONLOG" 2>&1 < /dev/null
 	sleep 2
 
 	pid=`pidof -s "$SLONDAEMON"`
@@ -110,7 +110,7 @@ case "$1" in
         stop
         ;;
   status)
-        status postmaster
+        status slon
         script_result=$?
         ;;
   restart)
