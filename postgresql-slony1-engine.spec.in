@@ -5,7 +5,7 @@
 
 %define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
-Summary:	A "master to multiple slaves" replication system with cascading, node rearrangement and failover
+Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
 Release:	1_PG%{pg_version}
@@ -59,7 +59,7 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-./configure --includedir %{_includedir}/pgsql \
+./configure --includedir %{_includedir}/pgsql --with_pgconfigdir=%{_bindir} \
 %if %perltools
         --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
@@ -108,10 +108,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1
-%if %docs
-%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
-%endif
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -122,10 +119,29 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
 %endif
 
+%if %docs
+%files docs
+%defattr(-,root,root,-)
+%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%endif
+
 %changelog
-* Mon Dec 4 2006 Devrim Gunduz <devrim@CommandPrompt.com>
-- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. Fix version check
-script
+* Thu May 17 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Fix rpm build problem when the system has pg_config in both under
+  /usr/local/pgsql/bin and /usr/bin
+
+* Wed Mar 22 2007 Christopher Browne <cbbrowne@ca.afilias.info>
+- Added more recent release notes
+
+* Wed Mar 7 2007 Christopher Browne <cbbrowne@ca.afilias.info>
+- Added more recent release notes
+
+* Thu Jan 4 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Add docs package (It should be added before but...)
+
+* Wed Nov 8 2006 Devrim Gunduz <devrim@CommandPrompt.com>
+- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. 
+  Fix version check script
 - Revert tar name patch
 - Macros cannot be used in various parts of the spec file. Revert that commit
 - Spec file cleanup
