@@ -88,6 +88,13 @@ install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 
+if [ -d /etc/rc.d/init.d ]
+then
+	install -d %{buildroot}/etc/rc.d/init.d
+	install -m 755 redhat/slon.init %{buildroot}/etc/rc.d/init.d/slon
+fi
+
+
 %if %perltools
 cd tools
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
@@ -106,6 +113,21 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 %clean
 rm -rf %{buildroot}
 
+%post
+chkconfig --add pypgreplicate
+
+%preun
+if [ $1 = 0 ] ; then
+	/sbin/service slon condstop >/dev/null 2>&1
+	chkconfig --del slon
+fi
+
+%postun
+if [ $1 -ge 1 ]; then
+	/sbin/service slon condrestart >/dev/null 2>&1
+fi
+
+
 %files
 %defattr(-,root,root,-)
 %doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
@@ -117,6 +139,7 @@ rm -rf %{buildroot}
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
+%{_sysconfdir}/rc.d/init.d/slon
 %endif
 
 %if %docs
