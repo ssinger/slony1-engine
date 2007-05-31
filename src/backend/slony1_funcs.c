@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.60 2007-05-02 21:36:17 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.61 2007-05-31 16:46:18 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -43,17 +43,10 @@
 PG_MODULE_MAGIC;
 #endif
 
-/* -- Change from PostgreSQL Ver 8.3 -- */
-#if !((PG_VERSION_MAJOR > 8) || ((PG_VERSION_MAJOR == 8) && (PG_VERSION_MINOR >= 3)))
-#define SET_VARSIZE(datum, size) (VARATT_SIZEP(datum)=(size))
-#endif
-
 PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
 PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
 PG_FUNCTION_INFO_V1(_Slony_I_getModuleVersion);
 
-PG_FUNCTION_INFO_V1(_Slony_I_setSessionRole);
-PG_FUNCTION_INFO_V1(_Slony_I_getSessionRole);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
@@ -66,8 +59,6 @@ Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
 
-Datum		_Slony_I_setSessionRole(PG_FUNCTION_ARGS);
-Datum		_Slony_I_getSessionRole(PG_FUNCTION_ARGS);
 Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
@@ -102,7 +93,6 @@ typedef struct slony_I_cluster_status
 	char	   *clusterident;
 	int32		localNodeId;
 	TransactionId currentXid;
-	int			session_role;
 	void	   *plan_active_log;
 
 	int			have_plan;
@@ -319,93 +309,6 @@ _Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_setSessionRole(PG_FUNCTION_ARGS)
-{
-	Slony_I_ClusterStatus *cs;
-	int			rc;
-	text	   *new_role_t = PG_GETARG_TEXT_P(1);
-	int			new_role = SLON_ROLE_UNSET;
-
-	if ((rc = SPI_connect()) < 0)
-		elog(ERROR, "Slony-I: SPI_connect() failed in setSessionRole()");
-
-	cs = getClusterStatus(PG_GETARG_NAME(0), PLAN_NONE);
-
-	SPI_finish();
-
-	if (VARSIZE(new_role_t) == VARHDRSZ + 6 &&
-		memcmp(VARDATA(new_role_t), "normal", 6) == 0)
-	{
-		new_role = SLON_ROLE_NORMAL;
-	}
-	else if (VARSIZE(new_role_t) == VARHDRSZ + 4 &&
-			 memcmp(VARDATA(new_role_t), "slon", 4) == 0)
-	{
-		if (!superuser())
-			elog(ERROR, "Slony-I: insufficient privilege for replication role");
-
-		new_role = SLON_ROLE_SLON;
-	}
-	else
-	{
-		elog(ERROR, "Slony-I: invalid session role");
-	}
-
-	if (cs->session_role == SLON_ROLE_UNSET ||
-		cs->session_role == new_role)
-	{
-		cs->session_role = new_role;
-	}
-	else
-	{
-		elog(ERROR, "Slony-I: cannot change session role once set");
-	}
-
-	PG_RETURN_TEXT_P(new_role_t);
-}
-
-
-Datum
-_Slony_I_getSessionRole(PG_FUNCTION_ARGS)
-{
-	Slony_I_ClusterStatus *cs;
-	int			rc;
-	text	   *retval = NULL;
-
-	if ((rc = SPI_connect()) < 0)
-		elog(ERROR, "Slony-I: SPI_connect() failed in getSessionRole()");
-
-	cs = getClusterStatus(PG_GETARG_NAME(0), PLAN_NONE);
-
-	SPI_finish();
-
-	switch (cs->session_role)
-	{
-		case SLON_ROLE_UNSET:
-			cs->session_role = SLON_ROLE_NORMAL;
-			retval = palloc(VARHDRSZ + 6);
-			SET_VARSIZE(retval, VARHDRSZ + 6);
-			memcpy(VARDATA(retval), "normal", 6);
-			break;
-
-		case SLON_ROLE_NORMAL:
-			retval = palloc(VARHDRSZ + 6);
-			SET_VARSIZE(retval, VARHDRSZ + 6);
-			memcpy(VARDATA(retval), "normal", 6);
-			break;
-
-		case SLON_ROLE_SLON:
-			retval = palloc(VARHDRSZ + 4);
-			SET_VARSIZE(retval, VARHDRSZ + 4);
-			memcpy(VARDATA(retval), "slon", 4);
-			break;
-	}
-
-	PG_RETURN_TEXT_P(retval);
-}
-
-
-Datum
 _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 {
 	TransactionId newXid = GetTopTransactionId();
@@ -419,6 +322,12 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	char	   *attkind;
 	int			attkind_idx;
 	int			cmddata_need;
+
+	/*
+	 * Don't do any logging if the current session role isn't Origin.
+	 */
+	if (SessionReplicationRole != SESSION_REPLICATION_ROLE_ORIGIN)
+		return PointerGetDatum(NULL);
 
 	/*
 	 * Get the trigger call context
@@ -456,26 +365,6 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	 * SPI plans that we need here.
 	 */
 	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
-
-	/*
-	 * Check/set the session role
-	 */
-	switch (cs->session_role)
-	{
-		case SLON_ROLE_UNSET:	/* Nobody told us, force it to normal */
-			cs->session_role = SLON_ROLE_NORMAL;
-			break;
-
-		case SLON_ROLE_NORMAL:	/* Normal, that's good */
-			break;
-
-		case SLON_ROLE_SLON:	/* non-client session ??? */
-			/* This would happen when a trigger on a
-			 * subscriber on a replicated table fires, and
-			 * modifies a tuple in a replication set for
-			 * which this node is the origin */
-			break;
-	}
 
 	/*
 	 * Do the following only once per transaction.
@@ -965,10 +854,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 {
-	Slony_I_ClusterStatus *cs;
 	TriggerData *tg;
-	int			rc;
-	Name		cluster_name;
 
 	/*
 	 * Get the trigger call context
@@ -990,38 +876,13 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 	/*
 	 * Connect to the SPI manager
 	 */
-	if ((rc = SPI_connect()) < 0)
+	if (SPI_connect() < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in denyAccess()");
 
-	/*
-	 * Get all the trigger arguments
-	 */
-	cluster_name = DatumGetName(DirectFunctionCall1(namein,
-								CStringGetDatum(tg->tg_trigger->tgargs[0])));
-
-	/*
-	 * Get or create the cluster status information and make sure it has the
-	 * SPI plans that we need here.
-	 */
-	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
-
-	/*
-	 * Check/set the session role
-	 */
-	switch (cs->session_role)
-	{
-		case SLON_ROLE_UNSET:	/* Unknown or Normal is not allowed here */
-		case SLON_ROLE_NORMAL:
-			cs->session_role = SLON_ROLE_NORMAL;
-			elog(ERROR,
-				 "Slony-I: Table %s is replicated and cannot be "
-				 "modified on a subscriber node",
-				 NameStr(tg->tg_relation->rd_rel->relname));
-			break;
-
-		case SLON_ROLE_SLON:	/* Replication session, nothing to do here */
-			break;
-	}
+	elog(ERROR,
+		 "Slony-I: Table %s is replicated and cannot be "
+		 "modified on a subscriber node",
+		 NameStr(tg->tg_relation->rd_rel->relname));
 
 	SPI_finish();
 	if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))

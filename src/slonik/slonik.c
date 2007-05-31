@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.76 2007-05-15 19:40:16 wieck Exp $
+ *	$Id: slonik.c,v 1.77 2007-05-31 16:46:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1809,52 +1809,27 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	}
 
 	/* determine what schema version we should load */
-	if (adminfo->pg_version < 70300)	/* 7.3 and lower */
+	if (adminfo->pg_version < 80300)	/* before 8.3 */
 	{
 		printf("%s:%d: unsupported PostgreSQL "
-			"version %d.%d (versions < 7.3 were never supported by Slony-I)\n",
+			"version %d.%d (versions < 8.3 are not supported by Slony-I >= 2.0)\n",
 			stmt->stmt_filename, stmt->stmt_lno,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+			return -1;
 	}
-	else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
-	{
-		printf("%s:%d: unsupported PostgreSQL "
-			"version %d.%d (try Slony-I 1.1.8)\n",
-			stmt->stmt_filename, stmt->stmt_lno,
-			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
-	}
-	else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
-	{
-		use_major = 7;
-		use_minor = 4;
-	}
-	else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80100)	/* 8.0 */ 
+	else if ((adminfo->pg_version >= 80300) && (adminfo->pg_version < 80400)) /* 8.3 */
 	{
 		use_major = 8;
-		use_minor = 0;
+		use_minor = 3;
 	}
-	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80300)	/* 8.1 and 8.2 */ 
+	else	/* above 8.3 ??? */
 	{
 		use_major = 8;
-		use_minor = 1;
-	}
-	else	/* 8.3 and above */
-	{
-		use_major = 8;
-		use_minor = 1;
+		use_minor = 3;
 		printf("%s:%d: Possible unsupported PostgreSQL "
-			"version (%d) %d.%d, defaulting to 8.1 support\n",
+			"version (%d) %d.%d, defaulting to 8.3 support\n",
                         stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
-	}
-
-#define ROWIDBITS "_Slony-I__rowID"
-
-	if (strlen(stmt->script->clustername) + strlen("ROWIDBITS") > NAMEDATALEN)
-	{
-		printf("Cluster name %s too long to permit creation of columns containing %s - maximum name length: %d\n",
-			   stmt->script->clustername, ROWIDBITS, NAMEDATALEN);
-		return -1;
 	}
 
 	dstring_init(&query);
@@ -1909,41 +1884,25 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 
         /* determine what schema version we should load */
 
-        if (adminfo->pg_version < 70300)        /* 7.2 and lower */
+        if (adminfo->pg_version < 80300)        /* before 8.3 */
         {
                 printf("%s:%d: unsupported PostgreSQL "
                         "version %d.%d\n",
                         stmt->stmt_filename, stmt->stmt_lno,
                         (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+			return -1;
         }
-        else if ((adminfo->pg_version >= 70300) && (adminfo->pg_version<70400)) /* 7.3 */
-        {
-                printf("%s:%d: unsupported PostgreSQL "
-                        "version %d.%d\n",
-                        stmt->stmt_filename, stmt->stmt_lno,
-                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
-        }
-        else if ((adminfo->pg_version >= 70400) && (adminfo->pg_version<70500)) /* 7.4 */
-        {
-                use_major = 7;
-                use_minor = 4;
-        }
-        else if ((adminfo->pg_version >= 70500) && adminfo->pg_version < 80100) /* 8.0 */
+        else if ((adminfo->pg_version >= 80300) && adminfo->pg_version < 80400) /* 8.0 */
         {
                 use_major = 8;
-                use_minor = 0;
+                use_minor = 3;
         }
-        else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80300) /* 8.1, 8.2 */
+        else    /* above 8.3 */
         {
                 use_major = 8;
-                use_minor = 1;
-        }
-        else    /* 8.3 and above */
-        {
-                use_major = 8;
-                use_minor = 1;
+                use_minor = 3;
                 printf("%s:%d: Possible unsupported PostgreSQL "
-                        "version %d.%d, defaulting to 8.1 support\n",
+                        "version %d.%d, defaulting to 8.3 support\n",
                         stmt->stmt_filename, stmt->stmt_lno,
                         (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
         }

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.139 2007-05-31 13:29:27 wieck Exp $
+ *	$Id: remote_worker.c,v 1.140 2007-05-31 16:46:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -335,7 +335,7 @@ remoteWorkerThread_main(void *cdata)
 	 * Put the connection into replication mode
 	 */
 	(void) slon_mkquery(&query1,
-				 "select %s.setSessionRole('_%s', 'slon'); ",
+				 "set session_replication_role = replica; ",
 				 rtcfg_namespace, rtcfg_cluster_name);
 	if (query_execute(node, local_dbconn, &query1) < 0)
 		slon_retry();
@@ -2354,8 +2354,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	PGresult   *res1;
 	PGresult   *res2;
 	PGresult   *res3;
-	PGresult   *res4;
-	int			nodeon73;
 	int			rc;
 	int			set_origin = 0;
 	SlonNode   *sub_node;
@@ -2366,13 +2364,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	char	   *ssy_xip = NULL;
 	SlonDString ssy_action_list;
 	char		seqbuf[64];
-
-#ifdef HAVE_PQPUTCOPYDATA
 	char	   *copydata = NULL;
-#else
-	char		copybuf[8192];
-	int			copydone;
-#endif
 	struct timeval tv_start;
 	struct timeval tv_start2;
 	struct timeval tv_now;
@@ -2853,41 +2845,12 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			return -1;
 		}
 
-		(void) slon_mkquery(&query2, "select %s.pre74();",
-					 rtcfg_namespace);
-		res4 = PQexec(loc_dbconn, dstring_data(&query2));
-
-		if (PQresultStatus(res4) != PGRES_TUPLES_OK)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
-					 node->no_id, dstring_data(&query2),
-					 PQresultErrorMessage(res4));
-			PQclear(res4);
-			PQclear(res3);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			dstring_free(&query2);
-			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
-			archive_terminate(node);
-			return -1;
-		}
-
-		/* Are we running on < PG 7.4???  result =	*/
-		nodeon73 = atoi(PQgetvalue(res4, 0, 0));
-
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 " nodeon73 is %d\n",
-				 node->no_id, nodeon73);
-
 		(void) slon_mkquery(&query1,
 					 "select %s.prepareTableForCopy(%d); "
 					 "copy %s %s from stdin; ",
 					 rtcfg_namespace,
 					 tab_id, tab_fqname,
-					 nodeon73 ? "" : PQgetvalue(res3, 0, 0)
+					 PQgetvalue(res3, 0, 0)
 			);
 		res2 = PQexec(loc_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res2) != PGRES_COPY_IN)
@@ -2911,7 +2874,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		{
 			(void) slon_mkquery(&query1,
 			 "delete from %s;\ncopy %s %s from stdin;", tab_fqname, tab_fqname,
-						 nodeon73 ? "" : PQgetvalue(res3, 0, 0));
+						 PQgetvalue(res3, 0, 0));
 			rc = archive_append_ds(node, &query1);
 			if (rc < 0)
 			{
@@ -2939,12 +2902,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 node->no_id, dstring_data(&query1),
 					 PQresultErrorMessage(res2),
 					 PQerrorMessage(pro_dbconn));
-#ifdef HAVE_PQPUTCOPYDATA
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
-#else
-			PQputline(loc_dbconn, "\\.\n");
-			PQendcopy(loc_dbconn);
-#endif
 			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
@@ -2961,7 +2919,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Copy the data over
 		 */
-#ifdef HAVE_PQPUTCOPYDATA
 		while ((rc = PQgetCopyData(pro_dbconn, &copydata, 0)) > 0)
 		{
 			int			len = strlen(copydata);
@@ -3116,133 +3073,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			  return -1;
 			}
 		}
-#else							/* ! HAVE_PQPUTCOPYDATA */
-		copydone = false;
-		while (!copydone)
-		{
-			rc = PQgetline(pro_dbconn, copybuf, sizeof(copybuf));
-
-			if (copybuf[0] == '\\' &&
-				copybuf[1] == '.' &&
-				copybuf[2] == '\0')
-			{
-				copydone = true;
-			}
-			else
-			{
-				switch (rc)
-				{
-				case EOF:
-				  copydone = true;
-				  break;
-				case 0:
-				  PQputline(loc_dbconn, copybuf);
-				  PQputline(loc_dbconn, "\n");
-				  if (archive_dir) {
-				    rc = archive_append_str(node, copybuf);
-				    if (rc < 0) {
-				      PQclear(res2);
-				      PQclear(res1);
-				      slon_disconnectdb(pro_conn);
-				      dstring_free(&query1);
-				      dstring_free(&query2);
-				      dstring_free(&query3);
-				      dstring_free(&lsquery);
-				      dstring_free(&indexregenquery);
-				      archive_terminate(node);
-				      return -1;
-				    }
-				  }
-				  break;
-				case 1:
-				  PQputline(loc_dbconn, copybuf);
-				  if (archive_dir) {
-				    rc = archive_append_data(node, copybuf, strlen(copybuf));
-				    if (rc < 0) {
-				      PQclear(res2);
-				      PQclear(res1);
-				      slon_disconnectdb(pro_conn);
-				      dstring_free(&query1);
-				      dstring_free(&query2);
-				      dstring_free(&query3);
-				      dstring_free(&lsquery);
-				      dstring_free(&indexregenquery);
-				      archive_terminate(node);
-				      return -1;
-				    }
-
-				  }
-				  break;
-
-				}
-			}
-		}
-		PQputline(loc_dbconn, "\\.\n");
-		if (archive_dir)
-		{
-			rc = archive_append_str(node, "\\.");
-			if (rc < 0) {
-			  PQclear(res2);
-			  PQclear(res1);
-			  slon_disconnectdb(pro_conn);
-			  dstring_free(&query1);
-			  dstring_free(&query2);
-			  dstring_free(&query3);
-			  dstring_free(&lsquery);
-			  dstring_free(&indexregenquery);
-			  archive_terminate(node);
-			  return -1;
-			}
-		}
-
-		/*
-		 * End the COPY to stdout on the provider
-		 */
-		if (PQendcopy(pro_dbconn) != 0)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGendcopy() on provider%s",
-					 node->no_id, PQerrorMessage(pro_dbconn));
-			PQclear(res3);
-			PQendcopy(loc_dbconn);
-			PQclear(res2);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			dstring_free(&query2);
-			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
-			archive_terminate(node);
-			return -1;
-		}
-		PQclear(res3);
-
-		/*
-		 * Check that the COPY to stdout on the provider node finished
-		 * successful.
-		 */
-
-		/*
-		 * End the COPY from stdin on the local node with success
-		 */
-		if (PQendcopy(loc_dbconn) != 0)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 "PGendcopy() on local DB%s",
-					 node->no_id, PQerrorMessage(loc_dbconn));
-			PQclear(res2);
-			PQclear(res1);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			dstring_free(&query2);
-			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
-			archive_terminate(node);
-			return -1;
-		}
-#endif   /* HAVE_PQPUTCOPYDATA */
 
 		PQclear(res2);
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
