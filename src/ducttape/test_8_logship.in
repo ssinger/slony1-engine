@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_8_logship.in,v 1.2 2007-05-31 13:29:26 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -23,10 +23,12 @@ WHICHPROG=which
 
 export PATH
 TMPOUT=/tmp/output.$$
-LOGSHIPDIR=/tmp/logs.$$
+LOGSHIPDIR=./offline_logs
 mkdir -p $LOGSHIPDIR
+rm -f $LOGSHIPDIR/*
 DB1=slony_test1
 DB2=slony_test2
+DB3=slony_test3
 CLUSTERNAME=T1
 PGBENCH_SCALE=1
 PGBENCH_CLIENTS=5
@@ -95,6 +97,8 @@ dropdb $DB1 || echo "**** ignored"
 sleep 1
 dropdb $DB2 || echo "**** ignored"
 sleep 1
+dropdb $DB3 || echo "**** ignored"
+sleep 1
 
 #####
 # Create the "Primary Node"
@@ -103,6 +107,13 @@ echo "**** creating database for Node 11"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
+psql $DB1 <<_EOF_
+	create sequence history_seq;
+	alter table history add column seqno int8;
+	alter table history alter column seqno set default nextval('history_seq');
+	update history set seqno = nextval('history_seq') where seqno is null;
+	alter table history add primary key (seqno);
+_EOF_
 pg_dump -s $DB1 >pgbench_schema.sql
 
 #####
@@ -145,12 +156,6 @@ echo "slon[$slon1_pid] on dbname=$DB1"
 echo "**** creating a replication set containing the 4 pgbench tables ... "
 slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
-	try {
-		table add key (node id = @origin, fully qualified name = 'public.history');
-	}
-	on error {
-		exit 1;
-	}
 
 	try {
 		create set (id = 1, origin = @origin, comment = 'Set 1 - pgbench tables');
@@ -165,7 +170,7 @@ slonik <<_EOF_
 			comment = 'Table tellers');
 		set add table (set id = 1, origin = @origin,
 			id = 4, fully qualified name = 'public.history',
-			key = serial, comment = 'Table accounts');
+			comment = 'Table history');
 	}
 	on error {
 		exit 1;
@@ -234,10 +239,13 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-echo "**** starting the Slony-I node daemon for $DB1"
+echo "**** starting the Slony-I node daemon for $DB2"
 $TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
+
+echo "**** taking offline_dump.sql from $DB2 for logshipping"
+sh ../../tools/slony1_dump.sh $DB2 T1 >offline_dump.sql
 
 #####
 # Check that pgbench is still running
@@ -281,5 +289,22 @@ kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 
-./compare_pgbench_dumps $DB1 $DB2
+sh ./compare_pgbench_dumps $DB1 $DB2
+
+echo "**** creating database for offline node"
+if ! createdb $DB3 ; then
+	exit 1
+fi
+
+echo "---- loading pgbench schema into $DB3"
+psql -q $DB3 <./pgbench_schema.sql
+echo "---- loading Slony-I offline replica schema into $DB3"
+psql -q $DB3 <./offline_dump.sql
+echo "---- loading all offline log archives"
+for afile in $LOGSHIPDIR/*.sql ; do
+	psql -q $DB3 <$afile
+done
+
+sh ./compare_pgbench_dumps $DB1 $DB3
+
 rm $PREAMBLE_FILE

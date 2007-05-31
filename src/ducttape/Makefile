@@ -4,7 +4,7 @@
 #	Copyright (c) 2003, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.12 2006-08-02 15:32:02 xfade Exp $
+#	$Id: Makefile,v 1.13 2007-05-31 13:29:26 wieck Exp $
 # ----------
 
 slony_subdir = src/ducttape
@@ -32,6 +32,8 @@ clean distclean maintainer-clean:
 			rm -f $$script; \
 		fi; \
 	done;\
+	rm -rf dump.tmp.*
+	rm -rf offline_dump.sql offline_logs
 
 install: all installdirs
 
