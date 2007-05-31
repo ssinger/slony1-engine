@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.109 2007-05-31 16:46:18 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.110 2007-05-31 17:44:02 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3954,6 +3954,123 @@ Set the enable/disable configuration for the replication triggers
 according to the origin of the set.';
 
 -- ----------------------------------------------------------------------
+-- FUNCTION alterTableRestore (tab_id)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.alterTableRestore (int4)
+returns int4
+as '
+declare
+	p_tab_id			alias for $1;
+	v_no_id				int4;
+	v_tab_row			record;
+	v_tab_fqname		text;
+	v_n					int4;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Get our local node ID
+	-- ----
+	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+
+	-- ----
+	-- Get the sl_table row and the current tables origin. Check
+	-- that the table currently IS in altered state.
+	-- ----
+	select T.tab_reloid, T.tab_set, T.tab_altered,
+			S.set_origin, PGX.indexrelid,
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
+			into v_tab_row
+			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
+				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
+				"pg_catalog".pg_index PGX, "pg_catalog".pg_class PGXC
+			where T.tab_id = p_tab_id
+				and T.tab_set = S.set_id
+				and T.tab_reloid = PGC.oid
+				and PGC.relnamespace = PGN.oid
+				and PGX.indrelid = T.tab_reloid
+				and PGX.indexrelid = PGXC.oid
+				and PGXC.relname = T.tab_idxname
+				for update;
+	if not found then
+		raise exception ''Slony-I: alterTableRestore(): Table with id % not found'', p_tab_id;
+	end if;
+	v_tab_fqname = v_tab_row.tab_fqname;
+	if not v_tab_row.tab_altered then
+		raise exception ''Slony-I: alterTableRestore(): Table % is not in altered state'',
+				v_tab_fqname;
+	end if;
+
+	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
+
+	-- ----
+	-- Procedures are different on origin and subscriber
+	-- ----
+	if v_no_id = v_tab_row.set_origin then
+		-- ----
+		-- On the Origin we just drop the trigger we originally added
+		-- ----
+		execute ''drop trigger "_@CLUSTERNAME@_logtrigger_'' || 
+				p_tab_id || ''" on '' || v_tab_fqname;
+	else
+		-- ----
+		-- On the subscriber drop the denyAccess trigger
+		-- ----
+		execute ''drop trigger "_@CLUSTERNAME@_denyaccess_'' || 
+				p_tab_id || ''" on '' || v_tab_fqname;
+				
+		-- ----
+		-- Restore all original triggers
+		-- ----
+		update "pg_catalog".pg_trigger
+				set tgrelid = v_tab_row.tab_reloid
+				where tgrelid = v_tab_row.indexrelid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			update "pg_catalog".pg_class
+					set reltriggers = reltriggers + v_n
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+		-- ----
+		-- Restore all original rewrite rules
+		-- ----
+		update "pg_catalog".pg_rewrite
+				set ev_class = v_tab_row.tab_reloid
+				where ev_class = v_tab_row.indexrelid;
+		get diagnostics v_n = row_count;
+		if v_n > 0 then
+			update "pg_catalog".pg_class
+					set relhasrules = true
+					where oid = v_tab_row.tab_reloid;
+		end if;
+
+	end if;
+
+	-- ----
+	-- Mark the table not altered in our configuration
+	-- ----
+	update @NAMESPACE@.sl_table
+			set tab_altered = false where tab_id = p_tab_id;
+
+	return p_tab_id;
+end;
+' language plpgsql;
+comment on function @NAMESPACE@.alterTableRestore (int4) is
+'alterTableRestore (tab_id)
+
+Restores table tab_id from being replicated.
+
+On the origin, this simply involves dropping the "logtrigger" trigger.
+
+On subscriber nodes, this involves dropping the "denyaccess" trigger,
+and restoring user triggers and rules.';
+
+-- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
@@ -5273,7 +5390,8 @@ create or replace function @NAMESPACE@.upgradeSchema(text)
 returns text as '
 
 declare
-        p_old   alias for $1;
+        p_old   	alias for $1;
+		v_tab_row	record;
 begin
 	-- ----
 	-- Changes for 2.0
@@ -5284,10 +5402,26 @@ begin
 	end if;
 
 	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'') then
+		-- ---- 
+		-- Upgrading from a pre-2.0 ... repair the system catalog
+		-- ----
+		for v_tab_row in select * from @NAMESPACE@.sl_table loop
+			perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
+		end loop;
 
+		-- ----
+		-- drop obsolete functions
+		-- ----
 		execute ''drop function @NAMESPACE@.alterTableForReplication(int4)'';
-		execute ''drop function @NAMESPACE@.alterTableRestore(int4)'';
 		execute ''drop function @NAMESPACE@.pre74()'';
+
+		-- ----
+		-- and create the new versions of the log and deny access triggers.
+		-- ----
+		for v_tab_row in select * from @NAMESPACE@.sl_table loop
+			perform @NAMESPACE@.alterTableAddTriggers(v_tab_row.tab_id);
+			perform @NAMESPACE@.alterTableConfigureTriggers(v_tab_row.tab_id);
+		end loop;
 	end if;
 
 	-- In any version, make sure that the xxidin() functions are defined as STRICT
