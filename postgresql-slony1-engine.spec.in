@@ -150,6 +150,8 @@ fi
 
 %changelog
 * Thu May 17 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Install init script with rpm.
+- Fix --with-pgconfigdir parameter.
 - Fix rpm build problem when the system has pg_config in both under
   /usr/local/pgsql/bin and /usr/bin
 
