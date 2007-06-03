@@ -114,7 +114,7 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 rm -rf %{buildroot}
 
 %post
-chkconfig --add pypgreplicate
+chkconfig --add slon
 
 %preun
 if [ $1 = 0 ] ; then
