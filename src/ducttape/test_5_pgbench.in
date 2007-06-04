@@ -264,13 +264,24 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when caught up."
-wait $slon1_pid
-wait $slon2_pid
+sleep 1
+
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+
+	echo '**** Issuing slonik SYNC against DB1';
+	sync (id = 1);
+
+	echo '**** Waiting for DB2 to catch up';
+	wait for event (origin = 1, confirmed = 2, wait on = 1);
+_EOF_
+
+
+echo "**** you can terminate the replication engines."
 
 kill $pgbench_pid 2>/dev/null
-kill $slon1_pid 2>/dev/null
-kill $slon2_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
 psql $DB1 -o dump.tmp.1.$$ <<_EOF_

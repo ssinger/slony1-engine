@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.9 2007-05-15 16:56:37 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.10 2007-06-04 22:51:19 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3934,38 +3934,59 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 			rstat = PQresultStatus(res);
 			printf("DDL Statement failed - %s\n", PQresStatus(rstat));
 			dstring_free(&query);
+			PQclear(res);
 			return -1;
 		}
 		/* rstat = PQresultStatus(res); */
 		/* printf ("Success - %s\n", PQresStatus(rstat)); */
+
+		PQclear(res);
 	}
 	
-		printf("Complete DDL Event...\n");
-		
-		slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
-					 stmt->hdr.script->clustername,
-					 stmt->ddl_setid,  
-					 stmt->only_on_node);
-		
-		paramlens[PARMCOUNT-1] = 0;
-		paramfmts[PARMCOUNT-1] = 0;
-		params[PARMCOUNT-1] = dstring_data(&script);
-		
-		res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
-						   NULL, params, paramlens, paramfmts, 0);
-		
-		if (PQresultStatus(res) != PGRES_COMMAND_OK && 
-			PQresultStatus(res) != PGRES_TUPLES_OK &&
-			PQresultStatus(res) != PGRES_EMPTY_QUERY)
-			{
-				rstat = PQresultStatus(res);
-				printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
-				dstring_free(&query);
-				return -1;
-			} else {
-				rstat = PQresultStatus(res);
-				printf ("DDL submission to initial node - %s\n", PQresStatus(rstat));
-			}
+	printf("Complete DDL Event...\n");
+	
+	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
+				 stmt->hdr.script->clustername,
+				 stmt->ddl_setid,  
+				 stmt->only_on_node);
+	
+	paramlens[PARMCOUNT-1] = 0;
+	paramfmts[PARMCOUNT-1] = 0;
+	params[PARMCOUNT-1] = dstring_data(&script);
+	
+	res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
+					   NULL, params, paramlens, paramfmts, 0);
+	
+	/*
+	 * Check that the event submission returned exactly one result row
+	 */
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		rstat = PQresultStatus(res);
+		printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
+		dstring_free(&script);
+		dstring_free(&query);
+		PQclear(res);
+		return -1;
+	}
+	if (PQntuples(res) != 1)
+	{
+		printf("Event submission for DDL failed - query returned %d rows (expected 1)\n", PQntuples(res));
+		dstring_free(&script);
+		dstring_free(&query);
+		PQclear(res);
+		return -1;
+	}
+
+	/*
+	 * ... which should be the event-seqno for the DDL_SCRIPT event.
+	 * We remember that in the admin conninfo for WAIT.
+	 */
+	slon_scanint64(PQgetvalue(res, 0, 0), &(adminfo1->last_event));
+
+	rstat = PQresultStatus(res);
+	PQclear(res);
+	printf ("DDL submission to initial node - %s\n", PQresStatus(rstat));
 	dstring_free(&script);
 	dstring_free(&query);
 	return 0;
