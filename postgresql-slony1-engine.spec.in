@@ -3,16 +3,16 @@
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
+%define pg_version	%(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
-Release:	1_PG%{pg_version}
+Release:	2_PG%{pg_version}%{?dist}
 License:	BSD
 Group:		Applications/Databases
-URL:		http://slony.info/
-Source0:	@PACKAGE_NAME@-%{version}.tar.gz
+URL:		http://main.slony.info/
+Source0:	http://main.slony.info/downloads/1.2/source/@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}
@@ -43,13 +43,25 @@ Group:		Applications/Databases
 Prereq:		@PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
 
 %description docs
-The @PACKAGE_NAME@-docs package includes some documentation for Slony-I.
+The @PACKAGE_NAME@-docs package includes some 
+documentation for Slony-I.
 %endif
 
 %prep
 %setup -q -n @PACKAGE_NAME@-%{version}
 
 %build
+
+# Temporary measure for 1.2.9
+%if %docs
+chmod 644 doc/concept/*
+chmod 644 doc/adminguide/*
+chmod 644 doc/implementation/*
+chmod 644 doc/howto/*
+chmod 644 doc/concept/*
+chmod 644 doc/support/*
+%endif
+
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
 CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
@@ -61,18 +73,18 @@ CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
 ./configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} \
 %if %perltools
-        --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
+	--with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
 %if %docs
-        --with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
+	--with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
+	--datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
 
 autoconf
 
 make %{?_smp_mflags}
 %if %perltools
-        make %{?_smp_mflags} -C tools
+	make %{?_smp_mflags} -C tools
 %endif
 
 %install
@@ -91,9 +103,14 @@ install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 if [ -d /etc/rc.d/init.d ]
 then
 	install -d %{buildroot}/etc/rc.d/init.d
-	install -m 755 redhat/slon.init %{buildroot}/etc/rc.d/init.d/slon
+	install -m 755 redhat/@PACKAGE_NAME@.init %{buildroot}/etc/rc.d/init.d/@PACKAGE_NAME@
 fi
 
+# Temporary measure for 1.2.9
+%if %docs
+	rm -f doc/implementation/.cvsignore
+	rm -f doc/concept/.cvsignore
+%endif
 
 %if %perltools
 cd tools
@@ -104,7 +121,6 @@ install -m 0755 altperl/* %{buildroot}%{_bindir}/
 install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_sysconfdir}/slon_tools.conf-sample
 /bin/rm -f %{buildroot}%{_bindir}/slon_tools.conf-sample
-#/bin/rm -f %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
@@ -114,23 +130,22 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 rm -rf %{buildroot}
 
 %post
-chkconfig --add slon
+chkconfig --add @PACKAGE_NAME@
 
 %preun
 if [ $1 = 0 ] ; then
-	/sbin/service slon condstop >/dev/null 2>&1
-	chkconfig --del slon
+	/sbin/service @PACKAGE_NAME@ condstop >/dev/null 2>&1
+	chkconfig --del @PACKAGE_NAME@
 fi
 
 %postun
 if [ $1 -ge 1 ]; then
-	/sbin/service slon condrestart >/dev/null 2>&1
+	/sbin/service @PACKAGE_NAME@ condrestart >/dev/null 2>&1
 fi
-
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
+%attr(644,root,root) %doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -139,16 +154,21 @@ fi
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
-%{_sysconfdir}/rc.d/init.d/slon
+%attr(755,root,root) %{_sysconfdir}/rc.d/init.d/@PACKAGE_NAME@
 %endif
 
 %if %docs
 %files docs
-%defattr(-,root,root,-)
+%defattr(644,root,root,-)
+%attr(755,root,root) %{_docdir}/%{name}-%{version}
 %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 
 %changelog
+* Sun Jun 3 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.9-2
+- Some more fixes for Fedora review.
+- Remove executable bits from docs.
+
 * Thu May 17 2007 Devrim Gunduz <devrim@CommandPrompt.com>
 - Install init script with rpm.
 - Fix --with-pgconfigdir parameter.
