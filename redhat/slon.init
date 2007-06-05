@@ -9,6 +9,8 @@
 #
 # v1.0.0 Devrim GUNDUZ <devrim@CommandPrompt.com>
 # - Initial version of Red Hat / Fedora init script, based on Ubuntu one.
+# v1.0.0 Devrim GUNDUZ <devrim@CommandPrompt.com>
+# - Added reload()
 
 if [ -r /etc/sysconfig/slony1 ]; then
     . /etc/sysconfig/slony1
@@ -48,7 +50,7 @@ SLONENGINE=/usr/bin
 SLONDAEMON=$SLONENGINE/slon
 SLONCONF=/etc/slon.conf
 SLONPID=/var/run/slon.pid
-
+SLONLOG=/var/log/slony1
 test -x $SLONDAEMON || exit 5
 
 
@@ -58,7 +60,7 @@ start(){
 	SLON_START=$"Starting ${NAME} service: "
 
 	echo -n "$SLON_START"
-	daemon $SLONDAEMON -f $SLONCONF -p $SLONPID 2>&1 </dev/null &
+	$SU -l postgres -c "$SLONDAEMON -f $SLONCONF &" >> "$SLONLOG" 2>&1 < /dev/null
 	sleep 2
 
 	pid=`pidof -s "$SLONDAEMON"`
@@ -93,6 +95,17 @@ restart(){
     start
 }
 
+reload(){
+echo -n $"Reloading ${NAME}: "
+   if [ -n "`pidfileofproc $SLONDAEMON`" ] ; then
+      killproc $SLONDAEMON -HUP
+   else
+      failure $"Reloading ${NAME}"
+   fi
+   RETVAL=$?
+   echo
+}
+
 condrestart(){
     [ -e /var/lock/subsys/${NAME} ] && restart
 }
@@ -110,11 +123,14 @@ case "$1" in
         stop
         ;;
   status)
-        status postmaster
+        status slon
         script_result=$?
         ;;
   restart)
         restart
+        ;;
+  reload|force-reload)
+        reload
         ;;
   condrestart)
         condrestart
@@ -123,7 +139,7 @@ case "$1" in
         condstop
         ;;
   *)
-        echo $"Usage: $0 {start|stop|status|restart|condrestart|condstop}"
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|condstop|reload|force-reload}"
         exit 1
 esac
 
