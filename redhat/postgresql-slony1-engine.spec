@@ -1,20 +1,23 @@
+%define sname	slony1
+
 %{!?perltools:%define perltools 1}
 %{!?docs:%define docs 1}
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version   %(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
+%define pg_version	%(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		postgresql-slony1-engine
-Version:	1.2.STABLE
-Release:	1_PG%{pg_version}
+Version:	1.2.9
+Release:	2_PG%{pg_version}%{?dist}
 License:	BSD
 Group:		Applications/Databases
-URL:		http://slony.info/
-Source0:	postgresql-slony1-engine-%{version}.tar.gz
+URL:		http://main.slony.info/
+Source0:	http://main.slony.info/downloads/1.2/source/%{sname}-%{version}.tar.bz2
+Source2:	postgresql-%{sname}-engine.init
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	postgresql-devel
+BuildRequires:	postgresql-devel = %{pg_version}
 Requires:	postgresql-server = %{pg_version}
 
 %if %docs
@@ -40,16 +43,28 @@ are available
 %package docs
 Summary:	Documentation for Slony-I
 Group:		Applications/Databases
-Prereq:		postgresql-slony1-engine-1.2.STABLE-%{release}
+Requires:	%{name}-%{version}-%{release}
 
 %description docs
-The postgresql-slony1-engine-docs package includes some documentation for Slony-I.
+The postgresql-slony1-engine-docs package includes some 
+documentation for Slony-I.
 %endif
 
 %prep
-%setup -q -n postgresql-slony1-engine-%{version}
+%setup -q -n %{sname}-%{version}
 
 %build
+
+# Temporary measure for 1.2.9
+%if %docs
+chmod 644 doc/concept/*
+chmod 644 doc/adminguide/*
+chmod 644 doc/implementation/*
+chmod 644 doc/howto/*
+chmod 644 doc/concept/*
+chmod 644 doc/support/*
+%endif
+
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
 CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
 CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
@@ -59,20 +74,20 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-./configure --includedir %{_includedir}/pgsql \
+%configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} \
 %if %perltools
-        --with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
+	--with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
 %if %docs
-        --with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
+	--with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
-        --datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
+	--datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
 
 autoconf
 
 make %{?_smp_mflags}
 %if %perltools
-        make %{?_smp_mflags} -C tools
+	make %{?_smp_mflags} -C tools
 %endif
 
 %install
@@ -88,6 +103,18 @@ install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 
+if [ -d /etc/rc.d/init.d ]
+then
+	install -d %{buildroot}/etc/rc.d/init.d
+	install -m 755 %{SOURCE2} %{buildroot}/etc/rc.d/init.d/postgresql-slony1-engine
+fi
+
+# Temporary measure for 1.2.9
+%if %docs
+	rm -f doc/implementation/.cvsignore
+	rm -f doc/concept/.cvsignore
+%endif
+
 %if %perltools
 cd tools
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
@@ -101,17 +128,31 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
+/bin/rm -f altperl/old-apache-rotatelogs.patch
 %endif
 
 %clean
 rm -rf %{buildroot}
 
+%post
+chkconfig --add postgresql-slony1-engine
+
+%preun
+if [ $1 = 0 ] ; then
+	/sbin/service slon condstop >/dev/null 2>&1
+	chkconfig --del postgresql-slony1-engine
+fi
+
+%postun
+if [ $1 -ge 1 ]; then
+	/sbin/service postgresql-slony1-engine condrestart >/dev/null 2>&1
+fi
+
+
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1
-%if %docs
-%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
-%endif
+%attr(755,root,root) %{_docdir}/%{name}
+%attr(644,root,root) %doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -120,12 +161,37 @@ rm -rf %{buildroot}
 %if %perltools
 %{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
+%attr(755,root,root) %{_sysconfdir}/rc.d/init.d/postgresql-slony1-engine
+%endif
+
+%if %docs
+%files docs
+%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 
 %changelog
+* Sun Jun 3 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Some more fixes for Fedora review.
+- Remove executable bits from docs.
+
+* Thu May 17 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Install init script with rpm.
+- Fix --with-pgconfigdir parameter
+- Fix rpm build problem when the system has pg_config in both under
+  /usr/local/pgsql/bin and /usr/bin
+
+* Wed Mar 22 2007 Christopher Browne <cbbrowne@ca.afilias.info>
+- Added more recent release notes
+
+* Wed Mar 7 2007 Christopher Browne <cbbrowne@ca.afilias.info>
+- Added more recent release notes
+
+* Thu Jan 4 2007 Devrim Gunduz <devrim@CommandPrompt.com>
+- Add docs package (It should be added before but...)
+
 * Wed Nov 8 2006 Devrim Gunduz <devrim@CommandPrompt.com>
-- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. Fix version check
-script
+- On 64-bit boxes, both 32 and 64 bit -devel packages may be installed. 
+  Fix version check script
 - Revert tar name patch
 - Macros cannot be used in various parts of the spec file. Revert that commit
 - Spec file cleanup
@@ -167,7 +233,7 @@ script
 - Added UPGRADING, HISTORY-1.1, INSTALL, SAMPLE among installed files, reflecting the change in GNUMakefile.in
 
 * Thu Jun 02 2005 Devrim Gunduz <devrim@PostgreSQL.org> postgresql-slony1-engine
-- Apply a new %docs macro and disable building of docs by default.
+- Apply a new docs macro and disable building of docs by default.
 - Remove slon-tools.conf-sample from bindir.
 - Removed --bindir and --libdir, since they are not needed.
 
