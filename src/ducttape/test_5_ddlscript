@@ -81,9 +81,19 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
+		echo '  execute script';
 		execute script (set id = 1, filename = 'test_5_tmp.sql',
 			event node = 1);
+	}
+	on error {
+		exit 1;
+	}
 
+	echo '  wait for execute script';
+	wait for event (origin = 1, confirmed = 2);
+
+	try {
+		echo '  create temporary set 999';
 		create set (id = 999, origin = 1, comment = 'temp set for new objects');
 
 		set add table (set id = 999, origin = 1,
@@ -98,6 +108,10 @@ slonik <<_EOF_
 	on error {
 		exit 1;
 	}
+
+	echo '  wait for create set &co';
+	wait for event (origin = 1, confirmed = all, wait on = 1);
+	echo '  temporary set 999 ready for subscription';
 _EOF_
 
 rm test_5_tmp.sql

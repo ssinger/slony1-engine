@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.13 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: dbutil.c,v 1.14 2007-06-05 22:22:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -139,7 +139,8 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 #endif   /* !HAVE_PQSETNOTICERECEIVER */
 
 	dstring_init(&query);
-	slon_mkquery(&query,"SET datestyle to 'ISO'");
+	slon_mkquery(&query,"SET datestyle TO 'ISO'; "
+						"SET session_replication_role TO local; ");
 
 	adminfo->dbconn = dbconn;
 	if (db_exec_command(stmt, adminfo, &query) < 0)
@@ -230,6 +231,55 @@ db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * quer
 		return -1;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		fprintf(stderr, "%s:%d: %s %s - %s",
+				stmt->stmt_filename, stmt->stmt_lno,
+				PQresStatus(PQresultStatus(res)),
+				dstring_data(query), PQresultErrorMessage(res));
+		PQclear(res);
+		return -1;
+	}
+	if (PQntuples(res) != 1)
+	{
+		fprintf(stderr, "%s:%d: %s - did not return 1 row",
+				stmt->stmt_filename, stmt->stmt_lno,
+				dstring_data(query));
+		PQclear(res);
+		return -1;
+	}
+
+	slon_scanint64(PQgetvalue(res, 0, 0), &(adminfo->last_event));
+	PQclear(res);
+
+	return 0;
+}
+
+
+/* ----------
+ * db_exec_evcommand_p
+ *
+ *	Execute a stored procedure returning an event sequence and remember
+ *	that in the admin info for later wait events. Differs from
+ *	db_exec_evcommand by using PQexecParams().
+ * ----------
+ */
+int
+db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo, 
+		SlonDString * query, int nParams, const Oid *paramTypes,
+		const char *const *paramValues, const int *paramLengths,
+		const int *paramFormats, int resultFormat)
+{
+	PGresult   *res;
+
+	db_notice_stmt = stmt;
+
+	if (db_begin_xact(stmt, adminfo) < 0)
+		return -1;
+
+	res = PQexecParams(adminfo->dbconn, dstring_data(query),
+			nParams, paramTypes, paramValues, paramLengths,
+			paramFormats, resultFormat);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "%s:%d: %s %s - %s",

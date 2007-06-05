@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.140 2007-05-31 16:46:18 wieck Exp $
+ *	$Id: remote_worker.c,v 1.141 2007-06-05 22:22:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1314,6 +1314,7 @@ remoteWorkerThread_main(void *cdata)
 
 
 				slon_appendquery(&query1,
+						 "set session_replication_role to local; "
 						 "select %s.ddlScript_prepare_int(%d, %d); ",
 						 rtcfg_namespace,
 						 ddl_setid, ddl_only_on_node);
@@ -1370,7 +1371,9 @@ remoteWorkerThread_main(void *cdata)
 					slon_log (SLON_CONFIG, "DDL success - %s\n", PQresStatus(rstat));
 				}
 	
-				(void) slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
+				(void) slon_mkquery(&query1,
+						"select %s.ddlScript_complete_int(%d, %d); " 
+						"set session_replication_role to replica; ",
 					     rtcfg_namespace,
 					     ddl_setid,
 					     ddl_only_on_node);

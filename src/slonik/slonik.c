@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.77 2007-05-31 16:46:18 wieck Exp $
+ *	$Id: slonik.c,v 1.78 2007-06-05 22:22:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3664,14 +3664,12 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonDString query;
 	SlonDString script;
 	int			rc;
-	int num_statements = -1, stmtno;
+	int			num_statements = -1, stmtno;
 	char		buf[4096];
 	char		rex1[256];
 	char		rex2[256];
 	char		rex3[256];
 	char		rex4[256];
-	PGresult *res;
-	ExecStatusType rstat;
 
 #define PARMCOUNT 1  
 
@@ -3744,19 +3742,11 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		printf("DDL Statement %d: (%d,%d) [%s]\n", stmtno, startpos, endpos, dest);
 		free(dest);
 
-		res = PQexec(adminfo1->dbconn, dstring_data(&query));
-
-		if (PQresultStatus(res) != PGRES_COMMAND_OK && 
-		    PQresultStatus(res) != PGRES_TUPLES_OK &&
-		    PQresultStatus(res) != PGRES_EMPTY_QUERY)
+		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
 		{
-			rstat = PQresultStatus(res);
-			printf("DDL Statement failed - %s\n", PQresStatus(rstat));
 			dstring_free(&query);
 			return -1;
 		}
-		/* rstat = PQresultStatus(res); */
-		/* printf ("Success - %s\n", PQresStatus(rstat)); */
 	}
 	
 	printf("Submit DDL Event to subscribers...\n");
@@ -3770,20 +3760,11 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	paramfmts[PARMCOUNT-1] = 0;
 	params[PARMCOUNT-1] = dstring_data(&script);
 
-	res = PQexecParams(adminfo1->dbconn, dstring_data(&query), PARMCOUNT,
-			   NULL, params, paramlens, paramfmts, 0);
-	
-	if (PQresultStatus(res) != PGRES_COMMAND_OK && 
-	    PQresultStatus(res) != PGRES_TUPLES_OK &&
-	    PQresultStatus(res) != PGRES_EMPTY_QUERY)
+	if (db_exec_evcommand_p((SlonikStmt *)stmt, adminfo1, &query,
+				PARMCOUNT, NULL, params, paramlens, paramfmts, 0) < 0)
 	{
-		rstat = PQresultStatus(res);
-		printf("Event submission for DDL failed - %s\n", PQresStatus(rstat));
 		dstring_free(&query);
 		return -1;
-	} else {
-		rstat = PQresultStatus(res);
-		printf ("DDL on origin - %s\n", PQresStatus(rstat));
 	}
 	
 	dstring_free(&script);

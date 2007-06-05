@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.30 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.31 2007-06-05 22:22:07 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -578,17 +578,21 @@ void		db_notice_recv(void *arg, const char *msg);
 int			db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_disconnect(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 
-int db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+int			db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 				SlonDString * query);
-int db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				  SlonDString * query);
-PGresult *db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-			   SlonDString * query);
-int db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
-int db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				   char *clustername);
-int db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-					  char *clustername);
+int			db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				SlonDString * query);
+int			db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				SlonDString * query, int nParams, const Oid *paramTypes, 
+				const char *const *paramValues, const int *paramLengths, 
+				const int *paramFormats, int resultFormat);
+PGresult   *db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				SlonDString * query);
+int			db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
+int			db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				char *clustername);
+int			db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				char *clustername);
 int			db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_commit_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
