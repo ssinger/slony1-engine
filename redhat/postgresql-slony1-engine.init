@@ -4,8 +4,8 @@
 # chkconfig: - 64 36
 # description: Starts and stops the Slon daemon that handles
 #              Slony-I replication.
-# processname: slon
-# pidfile:	/var/run/slon.pid
+# processname: postgresql-slony1-engine
+# pidfile:	/var/run/postgresql-slony1-engine.pid
 #
 # v1.0.0 Devrim GUNDUZ <devrim@CommandPrompt.com>
 # - Initial version of Red Hat / Fedora init script, based on Ubuntu one.
@@ -35,15 +35,11 @@ else
 fi
 
 # Check that networking is up.
-# We need it for slon
+# We need it for postgresql-slony1-engine
 [ "${NETWORKING}" = "no" ] && exit 0
 
 # Find the name of the script
-NAME=`basename $0`
-if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
-then
-	NAME=${NAME:3}
-fi
+NAME=postgresql-slony1-engine
 
 # Set defaults for configuration variables
 SLONENGINE=/usr/bin
