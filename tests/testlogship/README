@@ -1,4 +1,4 @@
-$Id: README,v 1.1.2.2 2007-04-20 21:40:02 cbbrowne Exp $
+$Id: README,v 1.1.2.3 2007-06-05 14:38:06 cbbrowne Exp $
   
 testlogship is a basic test that replication generally functions with
 log shipping.  
@@ -28,3 +28,7 @@ The test proceeds to run a DDL script which alters the schema for
 table 4, adding two new columns, one to be populated via a default,
 for new tuples; the other has no default, but we assign the value 42
 to all tuples existing at the time that the DDL script runs.
+
+Surrounding that DDL script are several STORE TRIGGER requests in
+order to try to ensure that we have a series of non-SYNC events in a
+row.
