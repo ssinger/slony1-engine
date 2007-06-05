@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.1 2007-05-28 20:12:46 devrim Exp $
+$Id: RELEASE,v 1.1.2.2 2007-06-05 16:14:54 cbbrowne Exp $
 
 RELEASE 1.2.10
 
@@ -20,15 +20,23 @@ RELEASE 1.2.10
   tends to replace
   PG_GETARG_VARLENA(0)
 
-
 - Slonik's SYNC command never recorded the new seqno in the admin
   conninfo, with potential wacky results for WAIT FOR EVENT
-
 
 - Fix rpm build problem when the system has pg_config in both under
   /usr/local/pgsql/bin and /usr/bin
 
 - Add init script for Red Hat / Fedora
+
+- Fix archive log ship tracking. Slon now tracks the setsync status in
+  memory and generates a void archive with the correct old,new event
+  seqno for all events.
+
+- EXECUTE SCRIPT wasn't setting sl_setsync, which broke WAIT FOR EVENT
+  on these events
+
+- Ducttape test #5 (which performs DDL changes) augmented to test use
+  of WAIT FOR EVENT
 
 RELEASE 1.2.9
 
