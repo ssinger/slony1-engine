@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.141 2007-06-05 22:22:07 wieck Exp $
+ *	$Id: remote_worker.c,v 1.142 2007-06-06 16:20:56 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1390,7 +1390,11 @@ remoteWorkerThread_main(void *cdata)
 					if ((ddl_only_on_node < 1) || (ddl_only_on_node == rtcfg_nodeid))
 					{
 
+						if (archive_append_str(node, "set session_replication_role to local;\n") < 0)
+							slon_retry();
 						if (archive_append_str(node, ddl_script) < 0)
+							slon_retry();
+						if (archive_append_str(node, "set session_replication_role to replica;\n") < 0)
 							slon_retry();
 					}
 				}
@@ -5169,6 +5173,7 @@ archive_open(SlonNode *node, char *seqbuf)
 	rc = fprintf(node->archive_fp,
 				   "-- Slony-I log shipping archive\n"
 				   "-- Node %d, Event %s\n"
+				   "set session_replication_role to replica;\n"
 				   "start transaction;\n",
 				   node->no_id, seqbuf);
 	if (rc < 0)

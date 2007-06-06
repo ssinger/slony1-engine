@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.2 2007-05-31 13:29:26 wieck Exp $
+# $Id: test_8_logship.in,v 1.3 2007-06-06 16:20:55 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -281,13 +281,14 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when caught up."
-wait $slon1_pid
-wait $slon2_pid
+slonik <<_EOF_
+	include <$PREAMBLE_FILE>;
 
-kill $pgbench_pid 2>/dev/null
-kill $slon1_pid 2>/dev/null
-kill $slon2_pid 2>/dev/null
+	echo '**** waiting for DB2 to catch up';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = 2, wait on = 1);
+_EOF_
+echo "**** you can terminate the replication engines."
 
 sh ./compare_pgbench_dumps $DB1 $DB2
 
