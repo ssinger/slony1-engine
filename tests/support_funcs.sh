@@ -87,6 +87,9 @@ random_number()
   _lowerbound=$1
   _upperbound=$2
 
+  if [ -e ./random_number ] ; then
+    rannum=`./random_number ${_lowerbound} ${_upperbound}`
+  else
   case `uname` in
   *BSD|Darwin)
     rannum=`jot -r 1 ${_lowerbound} ${_upperbound}`
@@ -112,6 +115,7 @@ random_number()
     rannum=`${opath}/psql -c "SELECT round(random()* ${_upperbound} + ${_lowerbound});" -t -A -h ${ohost} -p ${oport} -d ${odb} -U ${ouser}`
   ;;
   esac
+  fi
   echo ${rannum}
 }
 
@@ -122,6 +126,9 @@ random_string()
   fi
 
   _length=$1
+  if [ -e ./random_string ] ; then
+    rannum=`./random_string ${_length}`
+  else
   case `uname` in
   *BSD|Darwin)
     ranstring=`jot -r -c ${_length} a Z | rs -g 0 ${_length}`
@@ -150,7 +157,7 @@ random_string()
     done;
   ;;
   esac
-
+  fi
   echo ${ranstring}
 }
 
