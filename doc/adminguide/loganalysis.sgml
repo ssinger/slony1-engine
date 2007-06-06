@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.4.2.3 2007-02-16 23:36:18 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.4.2.4 2007-06-06 22:17:10 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -694,7 +694,15 @@ thing...</para></listitem>
 
 <listitem><para><command>ERROR: remoteWorkerThread_%d: SYNC aborted</command></para> 
 
-<para> If any errors have been encountered that haven't already aborted the <command>SYNC</command>, this catches and aborts it.</para></listitem>
+<para>The <command>SYNC</command> has been aborted. The &lslon; will
+likely retry this <command>SYNC</command> some time soon.  If the
+<command>SYNC</command> continues to fail, there is some continuing
+problem, and replication will likely never catch up without
+intervention.  It may be necessary to unsubscribe/resubscribe the
+affected slave set, or, if there is only one set on the slave node, it
+may be simpler to drop and recreate the slave node.  If application
+connections may be shifted over to the master during this time,
+application downtime may not be necessary.  </para></listitem>
 
 <listitem><para><command>DEBUG2: remoteWorkerThread_%d: new sl_rowid_seq value: %s</command></para> 
 

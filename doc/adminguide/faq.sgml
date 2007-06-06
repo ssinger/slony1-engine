@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66.2.4 2007-03-16 19:01:26 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66.2.5 2007-06-06 22:17:10 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -344,6 +344,10 @@ which is a recognized condition, this won't help either, and if the
 problem is persistent, the connections will keep recycling which will
 drop the effect of the pooling, in the latter case the pooling code
 could also announce an admin to take a look...  </para> </answer>
+
+<answer><para> As of &postgres; 8.3, this should no longer be an
+issue, as this version has code which invalidates query plans when
+tables are altered. </para> </answer>
 
 </qandaentry>
 
