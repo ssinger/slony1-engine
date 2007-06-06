@@ -126,6 +126,9 @@ random_string()
   fi
 
   _length=$1
+  if [ -e ./random_string ] ; then
+    rannum=`./random_string ${_length}`
+  else
   case `uname` in
   *BSD|Darwin)
     ranstring=`jot -r -c ${_length} a Z | rs -g 0 ${_length}`
@@ -154,7 +157,7 @@ random_string()
     done;
   ;;
   esac
-
+  fi
   echo ${ranstring}
 }
 
