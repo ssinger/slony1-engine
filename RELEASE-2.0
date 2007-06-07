@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.1 2007-06-07 16:03:25 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.2 2007-06-07 16:06:35 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -24,3 +24,10 @@ regular configuration options for ENABLE [REPLICA/ALWAYS] or DISABLE.
 
 - Let the logshipping files also switch to session_replication_role =
 "replica" or "local" (for DDL).
+
+- Sequence tracking becomes enormously less expensive; rather than
+polling *ALL* sequence values for each and every SYNC, the slon
+stores the last value, and only records entries in sl_seqlog when
+the value changes from that last value.  If most sequences are
+relatively inactive, they won't require entries in sl_seqlog very
+often.
