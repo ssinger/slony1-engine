@@ -6,12 +6,14 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.61 2007-05-31 16:46:18 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.62 2007-06-07 13:01:10 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
 #include "postgres.h"
 #include "config.h"
+
+#include "avl_tree.c"
 
 #include "miscadmin.h"
 #include "nodes/makefuncs.h"
@@ -51,6 +53,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 PG_FUNCTION_INFO_V1(_Slony_I_killBackend);
+PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
 
 PG_FUNCTION_INFO_V1(_slon_quote_ident);
 
@@ -63,6 +66,7 @@ Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
+Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
 
@@ -74,11 +78,6 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 #define PLAN_NOTIFY_EVENT	(1 << 0)
 #define PLAN_INSERT_EVENT	(1 << 1)
 #define PLAN_INSERT_LOG		(1 << 2)
-
-#define SLON_ROLE_UNSET		0
-#define SLON_ROLE_NORMAL	1
-#define SLON_ROLE_SLON		2
-
 
 
 /* ----
@@ -959,6 +958,70 @@ _Slony_I_killBackend(PG_FUNCTION_ARGS)
 }
 
 
+typedef struct {
+	int32	seqid;
+	int64	seqval;
+} SeqTrack_elem;
+
+static int
+seqtrack_cmp(void *seq1, void *seq2)
+{
+	return (((SeqTrack_elem *)seq1)->seqid - ((SeqTrack_elem *)seq2)->seqid);
+}
+
+static void 
+seqtrack_free(void *seq)
+{
+	free(seq);
+}
+
+Datum
+_Slony_I_seqtrack(PG_FUNCTION_ARGS)
+{
+	static AVLtree seqmem = AVL_INITIALIZER(seqtrack_cmp, seqtrack_free);
+	AVLnode		   *node;
+	SeqTrack_elem  *elem;
+	int32			seqid;
+	int64			seqval;
+
+	seqid = PG_GETARG_INT32(0);
+	seqval = PG_GETARG_INT64(1);
+
+	/*
+	 * Try to insert the sequence id into the AVL tree.
+	 */
+	if ((node = avl_insert(&seqmem, &seqid)) == NULL)
+		elog(ERROR, "Slony-I: unexpected NULL return from avl_insert()");
+
+	if (AVL_DATA(node) == NULL)
+	{
+		/*
+		 * This is a new (not seen before) sequence. Create the element,
+		 * remember the current lastval and return it to the caller.
+		 */
+		elem = (SeqTrack_elem *)malloc(sizeof(SeqTrack_elem));
+		elem->seqid = seqid;
+		elem->seqval = seqval;
+		AVL_SETDATA(node, elem);
+
+		PG_RETURN_INT64(seqval);
+	}
+
+	/*
+	 * This is a sequence seen before. If the value has changed
+	 * remember and return it. If it did not, return NULL.
+	 */
+	elem = AVL_DATA(node);
+
+	if (elem->seqval == seqval)
+		PG_RETURN_NULL();
+	else
+		elem->seqval = seqval;
+
+	PG_RETURN_INT64(seqval);
+}
+
+
 static char *
 slon_quote_literal(char *str)
 {
@@ -1277,15 +1340,13 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		sprintf(query,
 			"insert into %s.sl_seqlog "
 			"(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value) "
-			"select seq_id, '%d', currval('%s.sl_event_seq'), seq_last_value "
+			"select * from ("
+			"select seq_id, %d, currval('%s.sl_event_seq'), seq_last_value "
 			"from %s.sl_seqlastvalue "
-			"where seq_origin = '%d'; "
-			"insert into %s.sl_seqlog "
-			"(seql_seqid, seql_origin, seql_ev_seqno) "
-			"select '0', '%d', currval('%s.sl_event_seq'); ",
+			"where seq_origin = '%d') as FOO "
+			"where NOT %s.seqtrack(seq_id, seq_last_value) IS NULL; ",
 			cs->clusterident,
 			cs->localNodeId, cs->clusterident,
-			cs->clusterident, cs->localNodeId,
 			cs->clusterident, cs->localNodeId,
 			cs->clusterident);
 

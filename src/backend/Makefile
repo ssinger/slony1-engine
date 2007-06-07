@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.25 2007-05-31 16:46:18 wieck Exp $
+#	$Id: Makefile,v 1.26 2007-06-07 13:01:10 wieck Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -41,8 +41,16 @@ all:	$(ALL)
 
 $(SO_NAME):	$(SO_OBJS)
 
+$(NAME).o:	$(NAME).c avl_tree.c avl_tree.h
+
+avl_tree.c:	../misc/avl_tree.c
+	cp $< $@
+
+avl_tree.h:	../misc/avl_tree.h
+	cp $< $@
+
 clean distclean maintainer-clean:
-	rm -f $(SO_NAME) $(SO_OBJS)
+	rm -f $(SO_NAME) $(SO_OBJS) avl_tree.c avl_tree.h
 
 splint:
 	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(wildcard *.c)

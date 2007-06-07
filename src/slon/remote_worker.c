@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.142 2007-06-06 16:20:56 wieck Exp $
+ *	$Id: remote_worker.c,v 1.143 2007-06-07 13:01:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3128,7 +3128,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	 * ENABLE_SUBSCRIPTION event.
 	 */
 	(void) slon_mkquery(&query1,
-				 "select SL.seql_seqid, SL.seql_last_value, "
+				 "select SL.seql_seqid, max(SL.seql_last_value), "
 				 "    %s.slon_quote_brute(PGN.nspname) || '.' || "
 				 "    %s.slon_quote_brute(PGC.relname) as tab_fqname "
 				 "	from %s.sl_sequence SQ, %s.sl_seqlog SL, "
@@ -3136,9 +3136,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				 "		\"pg_catalog\".pg_namespace PGN "
 				 "	where SQ.seq_set = %d "
 				 "		and SL.seql_seqid = SQ.seq_id "
-				 "		and SL.seql_ev_seqno = '%s' "
+				 "		and SL.seql_ev_seqno <= '%s' "
 				 "		and PGC.oid = SQ.seq_reloid "
-				 "		and PGN.oid = PGC.relnamespace; ",
+				 "		and PGN.oid = PGC.relnamespace "
+				 "  group by 1, 3; ",
 				 rtcfg_namespace,
 				 rtcfg_namespace,
 				 rtcfg_namespace,
@@ -3173,33 +3174,26 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 
 
-		/*
-		 * sequence with ID 0 is a nodes rowid ... only remember in seqlog.
-		 */
-		if (strtol(seql_seqid, NULL, 10) != 0)
-		{
-			(void) slon_mkquery(&query1,
-						 "select \"pg_catalog\".setval('%q', '%s'); ",
-						 seq_fqname, seql_last_value);
+		(void) slon_mkquery(&query1,
+					 "select \"pg_catalog\".setval('%q', '%s'); ",
+					 seq_fqname, seql_last_value);
 
-			if (archive_dir)
-			{
-				rc = archive_append_ds(node, &query1);
-				if (rc < 0) {
-				  PQclear(res1);
-				  slon_disconnectdb(pro_conn);
-				  dstring_free(&query1);
-				  dstring_free(&query2);
-				  dstring_free(&query3);
-				  dstring_free(&lsquery);
-				  dstring_free(&indexregenquery);
-				  archive_terminate(node);
-				  return -1;
-				}
+		if (archive_dir)
+		{
+			rc = archive_append_ds(node, &query1);
+			if (rc < 0) {
+			  PQclear(res1);
+			  slon_disconnectdb(pro_conn);
+			  dstring_free(&query1);
+			  dstring_free(&query2);
+			  dstring_free(&query3);
+			  dstring_free(&lsquery);
+			  dstring_free(&indexregenquery);
+			  archive_terminate(node);
+			  return -1;
 			}
 		}
-		else
-			dstring_reset(&query1);
+
 		slon_appendquery(&query1,
 						 "insert into %s.sl_seqlog "
 					"		(seql_seqid, seql_origin, seql_ev_seqno, "
@@ -3587,6 +3581,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString actionseq_subquery;
 
 	int			actionlist_len;
+	int64		min_ssy_seqno;
 
 	gettimeofday(&tv_start, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT
@@ -3739,6 +3734,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 					 "(log_xid < '%s')",
 					 event->ev_maxxid_c);
 
+	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
 		int			ntuples1;
@@ -3805,6 +3801,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			char	   *ssy_maxxid = PQgetvalue(res1, tupno1, 3);
 			char	   *ssy_xip = PQgetvalue(res1, tupno1, 4);
 			char	   *ssy_action_list = PQgetvalue(res1, tupno1, 5);
+			int64		ssy_seqno;
+
+			slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
+			if (min_ssy_seqno < 0 || ssy_seqno < min_ssy_seqno)
+				min_ssy_seqno = ssy_seqno;
 
 			/*
 			 * Select the tables in that set ...
@@ -4280,22 +4281,27 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	{
 		int			ntuples1;
 		int			tupno1;
+		char		min_ssy_seqno_buf[64];
+
+		sprintf(min_ssy_seqno_buf, INT64_FORMAT, min_ssy_seqno);
 
 		(void) slon_mkquery(&query,
-					 "select SL.seql_seqid, SL.seql_last_value "
+					 "select SL.seql_seqid, max(SL.seql_last_value) "
 					 "	from %s.sl_seqlog SL, "
 					 "		%s.sl_sequence SQ "
 					 "	where SQ.seq_id = SL.seql_seqid "
 					 "		and SL.seql_origin = %d "
-					 "		and SL.seql_ev_seqno = '%s' "
+					 "		and SL.seql_ev_seqno <= '%s' "
+					 "		and SL.seql_ev_seqno >= '%s' "
 					 "		and SQ.seq_set in (",
 					 rtcfg_namespace, rtcfg_namespace,
-					 node->no_id, seqbuf);
+					 node->no_id, seqbuf, min_ssy_seqno_buf);
 		for (pset = provider->set_head; pset; pset = pset->next)
 			slon_appendquery(&query, "%s%d",
 							 (pset->prev == NULL) ? "" : ",",
 							 pset->set_id);
-		slon_appendquery(&query, "); ");
+		slon_appendquery(&query, ") "
+					"  group by 1; ");
 
 		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)

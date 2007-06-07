@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.110 2007-05-31 17:44:02 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.111 2007-06-07 13:01:10 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -253,6 +253,18 @@ create or replace function @NAMESPACE@.killBackend (int4, text) returns int4
 
 comment on function @NAMESPACE@.killBackend(int4, text) is
   'Send a signal to a postgres process. Requires superuser rights';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION seqtrack (seqid, seqval)
+--
+--	
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.seqtrack (int4, int8) returns int8
+    as '$libdir/slony1_funcs', '_Slony_I_seqtrack'
+	strict language C;
+
+comment on function @NAMESPACE@.seqtrack(int4, int8) is
+  'Returns NULL if seqval has not changed since the last call for seqid';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION slon_quote_brute(text)

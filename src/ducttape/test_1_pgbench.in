@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.2 2007-05-15 14:05:15 wieck Exp $
+# $Id: test_1_pgbench.in,v 1.3 2007-06-07 13:01:10 wieck Exp $
 # **********
 # test_1_pgbench
 #
@@ -157,6 +157,9 @@ $PREAMBLE
 		set add table (set id = 1, origin = 11,
 			id = 4, fully qualified name = 'public.history',
 			comment = 'Table history');
+		set add sequence (set id = 1, origin = 11,
+			id = 5, fully qualified name = 'public.history_seq',
+			comment = 'Sequence history_seq');
 	}
 	on error {
 		exit 1;
