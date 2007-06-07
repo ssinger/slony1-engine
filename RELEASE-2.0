@@ -1,0 +1,26 @@
+$Id: RELEASE-2.0,v 1.1 2007-06-07 16:03:25 cbbrowne Exp $
+
+Differences from 1.2 stream
+
+- Removal of TABLE ADD KEY
+
+- It drops all support for databases prior to Postgres version 8.3.
+
+This is required because we now make use of new functionality in
+Postgres, namely the trigger and rule support for session replication
+role. As of now, every node (origin/subscriber/mixed) can be dumped with
+pg_dump and result in a consistent snapshot of the database.
+
+- Still need alterTableRestore() for the upgrade from 1.2.x to 2.0.
+upgradeSchema() will restore the system catalog to a consistent
+state and define+configure the new versions of the log and deny_access
+triggers. 
+
+- Fix EXECUTE SCRIPT so that it records the ev_seqno for WAIT FOR EVENT
+and make sure all DDL is executed in session_replication_role "local"
+on the origin as well as all subscribers. This will cause the slony
+triggers to ignore all DML statements while user triggers follow the
+regular configuration options for ENABLE [REPLICA/ALWAYS] or DISABLE.
+
+- Let the logshipping files also switch to session_replication_role =
+"replica" or "local" (for DDL).
