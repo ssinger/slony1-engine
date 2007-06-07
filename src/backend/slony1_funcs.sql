@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.111 2007-06-07 13:01:10 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.112 2007-06-07 22:40:23 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -728,7 +728,8 @@ begin
 	end if;
 	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment, p_no_spool);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
-									p_no_id, p_no_comment, v_no_spool_txt);
+									p_no_id::text, p_no_comment::text, 
+									v_no_spool_txt::text);
 end;
 ' language plpgsql
 	called on null input;
@@ -834,7 +835,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.enableNode_int (p_no_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_NODE'',
-									p_no_id);
+									p_no_id::text);
 end;
 ' language plpgsql;
 
@@ -1014,7 +1015,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.dropNode_int(p_no_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_NODE'',
-									p_no_id);
+									p_no_id::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.dropNode(int4) is
@@ -1476,7 +1477,8 @@ begin
 	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client,
 			p_pa_conninfo, p_pa_connretry);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_PATH'', 
-			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
+			p_pa_server::text, p_pa_client::text, 
+			p_pa_conninfo::text, p_pa_connretry::text);
 end;
 ' language plpgsql;
 
@@ -1610,7 +1612,7 @@ begin
 	perform @NAMESPACE@.RebuildListenEntries();
 
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
-			p_pa_server, p_pa_client);
+			p_pa_server::text, p_pa_client::text);
 end;
 ' language plpgsql;
 
@@ -1679,7 +1681,7 @@ declare
 begin
 	perform @NAMESPACE@.storeListen_int (p_origin, p_provider, p_receiver);
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
-			p_origin, p_provider, p_receiver);
+			p_origin::text, p_provider::text, p_receiver::text);
 end;
 ' language plpgsql
 	called on null input;
@@ -1768,7 +1770,7 @@ begin
 			p_li_provider, p_li_receiver);
 	
 	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_LISTEN'',
-			p_li_origin, p_li_provider, p_li_receiver);
+			p_li_origin::text, p_li_provider::text, p_li_receiver::text);
 end;
 ' language plpgsql;
 
@@ -1838,7 +1840,7 @@ begin
 			(p_set_id, v_local_node_id, p_set_comment);
 
 	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_SET'', 
-			p_set_id, v_local_node_id, p_set_comment);
+			p_set_id::text, v_local_node_id::text, p_set_comment::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.storeSet(int4, text) is
@@ -2127,7 +2129,7 @@ begin
 	-- Finally we generate the real event
 	-- ----
 	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
-			p_set_id, v_local_node_id, p_new_origin);
+			p_set_id::text, v_local_node_id::text, p_new_origin::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.moveSet(int4, int4) is 
@@ -2174,7 +2176,8 @@ begin
 		-- finalize the setsync status.
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
-			p_set_id, p_old_origin, p_new_origin, p_wait_seqno);
+			p_set_id::text, p_old_origin::text, 
+			p_new_origin::text, p_wait_seqno::text);
 	end if;
 
 	-- ----
@@ -2357,7 +2360,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.dropSet_int(p_set_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_SET'', 
-			p_set_id);
+			p_set_id::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.dropSet(int4) is 
@@ -2506,7 +2509,7 @@ begin
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	perform @NAMESPACE@.mergeSet_int(p_set_id, p_add_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MERGE_SET'', 
-			p_set_id, p_add_id);
+			p_set_id::text, p_add_id::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.mergeSet(int4, int4) is 
@@ -2598,8 +2601,8 @@ begin
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
-			p_set_id, p_tab_id, p_fqname,
-			p_tab_idxname, p_tab_comment);
+			p_set_id::text, p_tab_id::text, p_fqname::text,
+			p_tab_idxname::text, p_tab_comment::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.setAddTable(int4, int4, text, name, text) is
@@ -2783,7 +2786,8 @@ begin
 	-- Drop the table from the set and generate the SET_ADD_TABLE event
 	-- ----
 	perform @NAMESPACE@.setDropTable_int(p_tab_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_TABLE'', p_tab_id);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_TABLE'', 
+				p_tab_id::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.setDropTable(int4) is
@@ -2905,7 +2909,8 @@ begin
 	perform @NAMESPACE@.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
 			p_seq_comment);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_SEQUENCE'',
-			p_set_id, p_seq_id, p_fqname, p_seq_comment);
+						p_set_id::text, p_seq_id::text, 
+						p_fqname::text, p_seq_comment::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.setAddSequence (int4, int4, text, text) is
@@ -3069,7 +3074,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.setDropSequence_int(p_seq_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_SEQUENCE'',
-			p_seq_id);
+					p_seq_id::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.setDropSequence (int4) is
@@ -3234,7 +3239,7 @@ begin
 	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
 	perform @NAMESPACE@.setMoveTable_int(p_tab_id, p_new_set_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_TABLE'', 
-			p_tab_id, p_new_set_id);
+			p_tab_id::text, p_new_set_id::text);
 end;
 ' language plpgsql;
 
@@ -3357,7 +3362,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.setMoveSequence_int(p_seq_id, p_new_set_id);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_SEQUENCE'', 
-			p_seq_id, p_new_set_id);
+			p_seq_id::text, p_new_set_id::text);
 end;
 ' language plpgsql;
 
@@ -3456,7 +3461,7 @@ declare
 begin
 	perform @NAMESPACE@.storeTrigger_int(p_trig_tabid, p_trig_tgname);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_TRIGGER'',
-			p_trig_tabid, p_trig_tgname);
+			p_trig_tabid::text, p_trig_tgname::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.storeTrigger (int4, name) is
@@ -3527,7 +3532,7 @@ declare
 begin
 	perform @NAMESPACE@.dropTrigger_int(p_trig_tabid, p_trig_tgname);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_TRIGGER'',
-			p_trig_tabid, p_trig_tgname);
+			p_trig_tabid::text, p_trig_tgname::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.dropTrigger (int4, name) is
@@ -3646,7 +3651,7 @@ begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	if p_only_on_node = -1 then
 		return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
-			p_set_id, p_script, p_only_on_node);
+			p_set_id::text, p_script::text, p_only_on_node::text);
 	end if;
 	return NULL;
 end;
@@ -4144,7 +4149,7 @@ begin
 	-- Create the SUBSCRIBE_SET event
 	-- ----
 	v_ev_seqno :=  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
-			p_sub_set, p_sub_provider, p_sub_receiver, 
+			p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 			case p_sub_forward when true then ''t'' else ''f'' end);
 
 	-- ----
@@ -4243,7 +4248,7 @@ begin
 
 	if v_set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_SUBSCRIPTION'', 
-				p_sub_set, p_sub_provider, p_sub_receiver, 
+				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 				case p_sub_forward when true then ''t'' else ''f'' end);
 		perform @NAMESPACE@.enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
@@ -4338,7 +4343,7 @@ begin
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''UNSUBSCRIBE_SET'', 
-			p_sub_set, p_sub_receiver);
+			p_sub_set::text, p_sub_receiver::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.unsubscribeSet (int4, int4) is
@@ -5058,7 +5063,7 @@ begin
 			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_nspname);
 
         return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''RESET_CONFIG'',
-                        p_set_id, p_only_on_node);
+                        p_set_id::text, p_only_on_node::text);
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.updateReloid(int4, int4) is
