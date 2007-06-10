@@ -14,7 +14,7 @@ Group:		Applications/Databases
 URL:		http://main.slony.info/
 Source0:	http://main.slony.info/downloads/1.2/source/@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	postgresql-devel
+BuildRequires:	postgresql-devel, postgresql-server, autoconf
 Requires:	postgresql-server = %{pg_version}
 
 %if %docs
@@ -40,7 +40,8 @@ are available
 %package docs
 Summary:	Documentation for Slony-I
 Group:		Applications/Databases
-Prereq:		@PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
+Requires:	@PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
+BuildRequires:	libjpeg, netpbm-progs, groff, docbook-style-dsssl, ghostscript
 
 %description docs
 The @PACKAGE_NAME@-docs package includes some 
@@ -71,7 +72,7 @@ CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
 CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
-./configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} \
+./configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} --libdir=%{_libdir} \
 %if %perltools
 	--with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
 %endif
