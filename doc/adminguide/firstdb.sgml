@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.23 2007-03-13 16:06:28 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.24 2007-06-11 16:02:50 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -143,6 +143,8 @@ procedures in the master/slave (node) databases. </para>
 
 <sect3><title>Using the altperl scripts</title>
 
+<indexterm><primary> altperl script usage </primary></indexterm>
+
 <para>
 Using the <xref linkend="altperl"> scripts is an easy way to get started.  The
 <command>slonik_build_env</command> script will generate output providing
@@ -173,9 +175,9 @@ of documentation if you'd like, which documents more of a <quote>bare-metal</quo
 </sect3>
 
 <sect3><title>Using slonik command directly</title>
-<para>The traditional approach to administering slony is to craft slonik
-commands directly. An example of this given here. </para>
 
+<para>The traditional approach to administering slony is to craft
+slonik commands directly. An example of this given here. </para>
 
 <para> The script to create
 the initial configuration for the simple master-slave setup of our

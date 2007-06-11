@@ -1,8 +1,11 @@
 <!-- $Id -->
 <sect1 id="requirements">
-<title>System Requirements</title> <para>Any platform that can run
-&postgres; should be able to run
-&slony1;.</para>
+<title>System Requirements</title> 
+
+<para>Any platform that can run &postgres; should be able, in
+principle, to run &slony1;.</para>
+
+<indexterm><primary> platforms where &slony1; runs </primary> </indexterm>
 
 <para>The platforms that have received specific testing at the time of
 this release are FreeBSD-4X-i368, FreeBSD-5X-i386, FreeBSD-5X-alpha,
@@ -13,6 +16,8 @@ and &windows; 2000, XP and 2003 (32 bit).</para>
 
 <sect2>
 <title> &slony1; Software Dependancies</title>
+
+<indexterm><primary> software dependancies </primary> </indexterm>
 
 <para> At present, &slony1; <emphasis>as well as &postgres;</emphasis>
 need to be able to be compiled from source at your site.</para>
@@ -54,6 +59,12 @@ installed.  If installing from sources, this is done via the command
 encounter the <link linkend="missingheaders"> missing headers for
 libpqserver</link> problem described in the FAQ.
 </para>
+
+<para> If you are running versions 8.1.0 thru 8.1.3, there is a bug
+(addressed in 8.1.4) which prevents <xref
+linkend="stmtupdatefunctions"> from running properly.  For more
+details see the <xref linkend="FAQ">, <link
+linkend="pg81funs"> on &postgres; 8.1.[0-3] </link>. </para>
 
 </listitem>
 
@@ -102,15 +113,19 @@ will need to be prepared to compile &slony1; yourself.  </para></note>
 <sect2>
 <title> Getting &slony1; Source</title>
 
+<indexterm><primary>downloading &slony1; sources</primary></indexterm>
+
 <para>You can get the &slony1; source from <ulink
-    url="http://developer.postgresql.org/~wieck/slony1/download/">
-http://developer.postgresql.org/~wieck/slony1/download/</ulink>
+    url="http://main.slony.info/downloads/">
+http://main.slony.info/downloads/</ulink>
 </para>
 
 </sect2>
 
 <sect2 id="encoding">
 <title> Database Encoding </title>
+
+<indexterm><primary> database encodings</primary></indexterm>
 
 <para> &postgres; databases may be created in a number of language
 encodings, set up via the <command>createdb --encoding=$ENCODING
@@ -145,6 +160,8 @@ encoding. </para>
 
 <sect2 id="times">
 <title> Time Synchronization</title>
+
+<indexterm><primary> time synchronization</primary></indexterm>
 
 <para> All the servers used within the replication cluster need to
 have their Real Time Clocks in sync. This is to ensure that <xref
@@ -197,6 +214,8 @@ leaping around due to Daylight Savings Time.</para>
 </sect2>
 
 <sect2><title> Network Connectivity</title>
+
+<indexterm><primary> network connectivity</primary></indexterm>
 
 <para>It is necessary that the hosts that are to replicate between one
 another have <emphasis>bidirectional</emphasis> network communications

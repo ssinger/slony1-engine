@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.31 2006-12-04 07:12:49 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.32 2007-06-11 16:02:50 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -38,6 +38,8 @@ the installation procedure.</para>
 
 <sect2>
 <title>Short Version</title>
+
+<indexterm><primary> installation: short version </primary></indexterm>
 
 <para>
 <screen>
@@ -188,6 +190,9 @@ Commonly you need to do this either as root or as the postgres user.
 <listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
 </itemizedlist>
 
+<para> (Note that as things change, the list of version-specific files
+may grow...) </para>
+
 <para>The <filename>.sql</filename> files are not fully substituted
 yet.  And yes, both the 7.3, 7.4 and the 8.0 files get installed on every
 system, irrespective of its version.  The <xref linkend="slonik">
@@ -204,6 +209,8 @@ may be able to be loaded remotely from other hosts.) </para>
 </sect2>
 
 <sect2> <title> Building Documentation: Admin Guide </title>
+
+<indexterm><primary> building &slony1; documentation </primary></indexterm>
 
 <para> The document you are reading now is a fairly extensive
 <quote>Administrator's Guide</quote> containing what wisdom has been

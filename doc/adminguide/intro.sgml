@@ -1,6 +1,8 @@
-<!-- $Id: intro.sgml,v 1.27 2006-12-01 23:15:43 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.28 2007-06-11 16:02:50 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
+
+<indexterm><primary> introduction to &slony1; </primary></indexterm>
 
 <sect2> <title>What &slony1; is</title>
 

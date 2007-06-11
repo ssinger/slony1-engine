@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.27 2007-04-18 15:03:51 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.28 2007-06-11 16:02:50 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -93,6 +93,8 @@ a way to enter confusing data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>
+
+<indexterm><primary> grouping tables into replication sets </primary></indexterm>
 
 <para> It will be vital to group tables together into a single set if
 those tables are related via foreign key constraints.  If tables that

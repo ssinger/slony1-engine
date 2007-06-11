@@ -1,13 +1,13 @@
-<!-- $Id: listenpaths.sgml,v 1.19 2006-08-02 18:34:58 cbbrowne Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.20 2007-06-11 16:02:50 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
 
 <indexterm><primary>listen paths</primary></indexterm>
 
-<note><para> If you are running version
-&slony1; 1.1 or later it should be
-<emphasis>completely unnecessary</emphasis> to read this section as it
-introduces a way to automatically manage this part of its
-configuration.  For earlier versions, however, it is needful.</para>
+<note><para> If you are running version &slony1; 1.2 or later it
+should be <emphasis>completely unnecessary</emphasis> to read this
+section as it introduces a way to automatically manage this part of
+its configuration.  For earlier versions, however, it is
+needful.</para>
 </note>
 
 <para>If you have more than two or three nodes, and any degree of
@@ -32,6 +32,8 @@ therefore be purged.  this extra communication is needful so
 locations.</para>
 
 <sect2><title>How listening can break</title>
+
+<indexterm><primary> listening breakage </primary></indexterm>
 
 <para>On one occasion, I had a need to drop a subscriber node (#2) and
 recreate it.  That node was the data provider for another subscriber
@@ -173,6 +175,8 @@ communicating.</para></listitem>
 </sect2>
 
 <sect2 id="autolisten"><title>Automated Listen Path Generation</title>
+
+<indexterm><primary> automated listen path generation </primary></indexterm>
 
 <para> In &slony1; version 1.1, a heuristic scheme is introduced to
 automatically generate <envar>sl_listen</envar> entries.  This
