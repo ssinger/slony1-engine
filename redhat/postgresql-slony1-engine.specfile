@@ -5,20 +5,17 @@
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version	%(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
-
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		postgresql-slony1-engine
 Version:	1.2.9
-Release:	2_PG%{pg_version}%{?dist}
+Release:	3%{?dist}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://main.slony.info/
 Source0:	http://main.slony.info/downloads/1.2/source/%{sname}-%{version}.tar.bz2
-Source2:	postgresql-%{sname}-engine.init
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	postgresql-devel = %{pg_version}
-Requires:	postgresql-server = %{pg_version}
+BuildRequires:	postgresql-devel, postgresql-server
+Requires:	postgresql-server
 
 %if %docs
 BuildRequires:	docbook-style-dsssl
@@ -44,6 +41,7 @@ are available
 Summary:	Documentation for Slony-I
 Group:		Applications/Databases
 Requires:	%{name}-%{version}-%{release}
+BuildRequires	libjpeg, netpbm-progs, groff, docbook-style-dsssl, ghostscript
 
 %description docs
 The postgresql-slony1-engine-docs package includes some 
@@ -81,9 +79,7 @@ export LIBNAME=%{_lib}
 %if %docs
 	--with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
-	--datadir %{_datadir}/pgsql --sysconfdir=%{_sysconfdir} --with-pglibdir=%{_libdir}/pgsql 
-
-autoconf
+	--datadir %{_datadir}/pgsql --with-pglibdir=%{_libdir}/pgsql 
 
 make %{?_smp_mflags}
 %if %perltools
@@ -128,7 +124,6 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
-/bin/rm -f altperl/old-apache-rotatelogs.patch
 %endif
 
 %clean
@@ -148,11 +143,9 @@ if [ $1 -ge 1 ]; then
 	/sbin/service postgresql-slony1-engine condrestart >/dev/null 2>&1
 fi
 
-
 %files
 %defattr(-,root,root,-)
-%attr(755,root,root) %{_docdir}/%{name}
-%attr(644,root,root) %doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 RELEASE-1.2.5 RELEASE-1.2.6 RELEASE-1.2.7 RELEASE-1.2.8 RELEASE-1.2.9
+%attr(644,root,root) %doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE*
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
 %{_libdir}/pgsql/xxid.so
@@ -170,6 +163,10 @@ fi
 %endif
 
 %changelog
+* Mon Jun 11 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.9-3
+- Add BuildRequires for docs subpackage, per RH#199154 (Thanks Ruben)
+- Various small fixes
+
 * Sun Jun 3 2007 Devrim Gunduz <devrim@CommandPrompt.com>
 - Some more fixes for Fedora review.
 - Remove executable bits from docs.
