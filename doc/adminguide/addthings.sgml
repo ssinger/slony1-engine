@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.23.2.4 2007-03-16 19:01:26 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.23.2.5 2007-06-11 16:01:33 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -60,6 +60,8 @@ sorts of modifications to replication configuration:</para>
 
 <sect2><title> Adding a table to replication </title>
 
+<indexterm><primary> adding a table to replication </primary></indexterm>
+
 <para> &slony1; does not allow you to add a table to a replication set
 that is already being replicated. In principle, it would certainly be
 <emphasis>possible;</emphasis> what would happen is that the
@@ -118,6 +120,8 @@ linkend="stmtmergeset"> </para></listitem>
 </sect2>
 
 <sect2><title> How to add columns to a replicated table </title>
+
+<indexterm><primary> adding columns to a replicated table </primary></indexterm>
 
 <para> This also answers the question <quote>How do I rename columns
 on a replicated table?</quote>, and, more generally, other questions
