@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66.2.5 2007-06-06 22:17:10 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66.2.6 2007-06-11 16:00:58 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -159,6 +159,76 @@ against <application>slon</application>.</para> </answer>
 further <link linkend="threadpatch"> thread patch </link> was
 required; similar is also required for &postgres; version 8.0.
 </para>
+</answer>
+</qandaentry>
+
+<qandaentry id="pg81funs">
+
+<question> <para> I'm trying to upgrade to a newer version of &slony1;
+and am running into a problem with <xref
+linkend="stmtupdatefunctions">.  When I run <xref
+linkend="stmtupdatefunctions">, my
+<application>postmaster</application> falls over with a Signal 11.
+There aren't any seeming errors in the log files, aside from the
+&postgres; logs indicating that, yes indeed, the postmaster fell
+over.</para>
+
+<para> I connected a debugger to the core file, and it indicates that
+it was trying to commit a transaction at the time of the
+failure. </para>
+
+<para> By the way I'm on &postgres; 8.1.[0-3]. </para>
+</question>
+
+<answer> <para> Unfortunately, early releases of &postgres; 8.1 had a
+problem where if you redefined a function (such as, say,
+<function>upgradeSchema(text)</function>), and then, in the same
+transaction, ran that function, the
+<application>postmaster</application> would fall over, and the
+transaction would fail to commit.  </para>
+
+<para> The &lslonik; command <xref linkend="stmtupdatefunctions">
+functions like that; it, in one transaction, tries to:
+
+<itemizedlist>
+<listitem><para> Load the new functions (from <filename>slony1_funcs.sql</filename>), notably including <function>upgradeSchema(text)</function>.  </para> </listitem>
+<listitem><para> Run <function>upgradeSchema(text)</function> to do any necessary upgrades to the database schema. </para> </listitem>
+<listitem><para> Notify &lslon; processes of a change of configuration.</para> </listitem>
+</itemizedlist>
+</para>
+
+<para> Unfortunately, on &postgres; 8.1.0, 8.1.1, 8.1.2, and 8.1.3,
+this conflicts with a bug where using and modifying a plpgsql function
+in the same transaction leads to a crash. </para>
+
+<para> Several workarounds are available. </para>
+
+</answer>
+
+<answer> <para> The preferred answer would be to upgrade &postgres; to
+8.1.4 or some later version.  Changes between minor versions do not
+require rebuilding databases; it should merely require copying a
+suitable 8.1.x build into place, and restarting the
+<application>postmaster</application> with the new version.  </para>
+</answer>
+
+<answer><para> If that is unsuitable, it would be possible to perform
+the upgrade via a series of transactions, performing the equivalent of
+what &lslonik; does <quote>by hand</quote>: </para>
+
+<itemizedlist>
+<listitem><para> Take <filename>slony1_funcs.sql</filename> and do three replacements within it: </para> 
+
+<itemizedlist>
+<listitem><para> Replace <quote>@CLUSTERNAME@</quote> with the name of the cluster </para> </listitem>
+<listitem><para> Replace <quote>@MODULEVERSION@</quote> with the &slony1; version string, such as <quote>1.2.10</quote> </para> </listitem>
+<listitem><para> Replace <quote>@NAMESPACE@</quote> with the <quote>double-quoted</quote> name of the cluster namespace, such as "_MyCluster" </para> </listitem>
+</itemizedlist>
+</listitem>
+<listitem><para> Load that <quote>remapped</quote> set of functions into the database.</para> </listitem>
+<listitem><para> Run the stored function via <command>select <function>upgradeSchema('1.2.7')</function>; </command>, assuming that the previous version of &slony1; in use was version 1.2.7. </para> </listitem>
+<listitem><para> Restarting all &lslon; processes would probably be a wise move with this sort of <quote>surgery.</quote> </para> </listitem>
+</itemizedlist>
 </answer>
 </qandaentry>
 
