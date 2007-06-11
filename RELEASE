@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.2 2007-06-05 16:14:54 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.3 2007-06-11 17:59:37 cbbrowne Exp $
 
 RELEASE 1.2.10
 
@@ -37,6 +37,16 @@ RELEASE 1.2.10
 
 - Ducttape test #5 (which performs DDL changes) augmented to test use
   of WAIT FOR EVENT
+
+- Backpatch fixes for restricted text casts in 8.3
+
+  create_event() calls (notably, but they're not alone) need to be
+  augmented to cast data types expressly.
+
+- PostgreSQL 8.3 is now a supported version for 1.2.10
+
+- Discovered and documented a problem with UPDATE FUNCTIONS on
+  versions 8.1.[0-3].
 
 RELEASE 1.2.9
 
