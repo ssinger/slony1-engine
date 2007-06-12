@@ -96,7 +96,7 @@ install -d %{buildroot}%{_libdir}/pgsql/
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
 install -m 0755 src/backend/slony1_funcs.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.so
 install -m 0755 src/xxid/xxid.so %{buildroot}%{_libdir}/pgsql/xxid.so
-	install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
