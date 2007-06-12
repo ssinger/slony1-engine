@@ -22,7 +22,7 @@ commit()
 
 generate_initdata()
 {
-  numrows=$(random_number 50 1000)
+  numrows=$(random_number 150 200)
   i=0;
   trippoint=`expr $numrows / 20`
   j=0;
