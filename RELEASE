@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.3 2007-06-11 17:59:37 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.4 2007-06-13 16:01:49 cbbrowne Exp $
 
 RELEASE 1.2.10
 
@@ -45,8 +45,17 @@ RELEASE 1.2.10
 
 - PostgreSQL 8.3 is now a supported version for 1.2.10
 
+  The hope/intent is that 1.2.10 will be the last version of Slony-I
+  in the "1.x" series, and will permit upgrades to PostgreSQL 8.3.
+  The subsequent Slony-I 2.x series will require PostgreSQL 8.3.
+
 - Discovered and documented a problem with UPDATE FUNCTIONS on
   versions 8.1.[0-3].
+
+- Fixes to log shipping test
+
+- Change to tools/slony1_dump.sh (used to generate log shipping dump);
+  change quoting of "\\\backslashes\\\" to get rid of warning
 
 RELEASE 1.2.9
 
