@@ -86,6 +86,8 @@ do_initdata()
   sleep 5
   status "pull log shipping dump" 
   PGHOST=${HOST2} PGPORT=${PORT2} PGUSER=${USER2} ${SLTOOLDIR}/slony1_dump.sh ${DB2} ${CLUSTER1} > ${mktmp}/logship_dump.sql
+  status "load schema for replicated tables into node #3"
+  ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${testname}/init_schema.sql
   status "load log shipping dump into node #3"
   ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${mktmp}/logship_dump.sql
   
