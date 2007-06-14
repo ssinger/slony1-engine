@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.72 2007-04-20 20:53:18 cbbrowne Exp $
+ *	$Id: slon.c,v 1.73 2007-06-14 14:58:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -27,6 +27,7 @@
 #ifdef WIN32
 #include <winsock2.h>
 #include "port/win32service.h"
+#define sleep(x) Sleep(x*1000)
 #endif
 
 #include "libpq-fe.h"
