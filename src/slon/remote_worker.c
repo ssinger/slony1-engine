@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.143 2007-06-07 13:01:10 wieck Exp $
+ *	$Id: remote_worker.c,v 1.144 2007-06-14 15:17:55 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1193,7 +1193,8 @@ remoteWorkerThread_main(void *cdata)
 						 * the data provider, wait until the data provider has
 						 * synced up far enough.
 						 */
-						if (event->event_provider != sub_provider)
+						if (event->ev_origin != sub_provider &&
+							event->event_provider != sub_provider)
 						{
 							int64		prov_seqno = get_last_forwarded_confirm(
 															event->ev_origin,
