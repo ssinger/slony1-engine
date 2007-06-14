@@ -53,14 +53,9 @@ documentation for Slony-I.
 
 %build
 
-# Temporary measure for 1.2.9
+# Temporary measure for 1.2.10-pre
 %if %docs
-chmod 644 doc/concept/*
-chmod 644 doc/adminguide/*
-chmod 644 doc/implementation/*
-chmod 644 doc/howto/*
-chmod 644 doc/concept/*
-chmod 644 doc/support/*
+chmod -R 644 doc/*
 %endif
 
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
@@ -125,6 +120,7 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
+/bin/rm -f %{buildroot}%{_bindir}/old-apache-rotatelogs.patch
 %endif
 
 %clean
@@ -160,9 +156,8 @@ fi
 
 %if %docs
 %files docs
-%defattr(644,root,root,-)
 %attr(755,root,root) %{_docdir}/%{name}-%{version}
-%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%attr(644,root,root) %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 
 %changelog
