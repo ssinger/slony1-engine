@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.29 2006-08-02 15:32:01 xfade Exp $
+# $Id: GNUmakefile.in,v 1.29.2.1 2007-06-18 17:25:23 cbbrowne Exp $
 # ----------
 
 top_builddir = .
@@ -37,6 +37,10 @@ DISTFILES = aclocal.m4 \
   $(wildcard share/*) \
   $(wildcard makefiles/*)
 
+CVSIGNORES = doc/implementation/.cvsignore doc/concept/.cvsignore \
+	src/ducttape/.cvsignore src/xxid/.cvsignore \
+	src/slon/.cvsignore src/slonik/.cvsignore src/backend/.cvsignore \
+	.cvsignore
 
 all:
 	@for subdir in $(DEFAULTBUILDS) ; do \
@@ -64,6 +68,8 @@ distclean: clean
 	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 	rm -f postgres.imp
 	rm -rf autom4te.cache
+	rm -f $(CVSIGNORES)
+	chmod 0644 tests/one-offs/bug1538/README tools/configure-replication.txt
 
 maintainer-clean: distclean
 	rm -rf configure autom4te.cache

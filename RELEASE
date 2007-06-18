@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.4 2007-06-13 16:01:49 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.5 2007-06-18 17:25:23 cbbrowne Exp $
 
 RELEASE 1.2.10
 
@@ -56,6 +56,14 @@ RELEASE 1.2.10
 
 - Change to tools/slony1_dump.sh (used to generate log shipping dump);
   change quoting of "\\\backslashes\\\" to get rid of warning
+
+- Win32 fix for MinGW+gcc
+
+- cvs distclean changed to clean the build up more...
+
+- On copy_set() check that we have forwarded the confirmation of
+ENABLE_SUBSCRIPTION by the data provider only if the data provider is
+not the origin of the set.
 
 RELEASE 1.2.9
 
