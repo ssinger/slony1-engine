@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.144 2007-06-14 15:17:55 wieck Exp $
+ *	$Id: remote_worker.c,v 1.145 2007-06-19 19:14:49 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3968,14 +3968,26 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 */
 			if (archive_dir)
 			{
+				for (pset = provider->set_head; pset; pset = pset->next)
+					if (pset->set_id == sub_set) break;
+				if (pset == NULL)
+				{
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+							"set %d not found in runtime config\n",
+							node->no_id, sub_set);
+					slon_retry();
+				}
+
 				slon_log(SLON_DEBUG2, "writing archive log...\n");
 				fflush(stderr);
 				fflush(stdout);
 				rc = archive_tracking(node, rtcfg_namespace, sub_set,
-										 PQgetvalue(res1, tupno1, 1), seqbuf,
+										 pset->ssy_seqno, seqbuf,
 										 event->ev_timestamp_c);
 				if (rc < 0)
 					slon_retry();
+
+				strcpy(pset->ssy_seqno, seqbuf);
 			}
 		}
 		PQclear(res1);
