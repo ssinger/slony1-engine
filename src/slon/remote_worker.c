@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.15 2007-06-14 15:17:45 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.16 2007-06-19 15:51:18 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -268,7 +268,7 @@ static int archive_tracking(SlonNode *node, const char *namespace,
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
 
-static int process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
+static void process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
 							  PGconn * local_dbconn, char * seqbuf );
 static int check_set_subscriber(int set_id, int node_id,PGconn * local_dbconn);
 
@@ -4209,14 +4209,26 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			 */
 			if (archive_dir)
 			{
+				for (pset = provider->set_head; pset; pset = pset->next)
+					if (pset->set_id == sub_set) break;
+				if (pset == NULL)
+				{
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+							"set %d not found in runtime config\n",
+							node->no_id, sub_set);
+					slon_retry();
+				}
+
 				slon_log(SLON_DEBUG2, "writing archive log...\n");
 				fflush(stderr);
 				fflush(stdout);
 				rc = archive_tracking(node, rtcfg_namespace, sub_set,
-										 PQgetvalue(res1, tupno1, 1), seqbuf,
+										 pset->ssy_seqno, seqbuf,
 										 event->ev_timestamp_c);
 				if (rc < 0)
 					slon_retry();
+
+				strcpy(pset->ssy_seqno, seqbuf);
 			}
 		}
 		PQclear(res1);
@@ -5975,7 +5987,8 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
  *
  * Process a ddl_script command.
  */
-static int process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
+static void
+process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
 							  PGconn * local_dbconn,
 							  char * seqbuf) 
 {
