@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.5 2007-06-18 17:25:23 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.6 2007-06-21 20:29:12 cbbrowne Exp $
 
 RELEASE 1.2.10
 
@@ -54,16 +54,18 @@ RELEASE 1.2.10
 
 - Fixes to log shipping test
 
-- Change to tools/slony1_dump.sh (used to generate log shipping dump);
-  change quoting of "\\\backslashes\\\" to get rid of warning
-
 - Win32 fix for MinGW+gcc
 
 - cvs distclean changed to clean the build up more...
 
 - On copy_set() check that we have forwarded the confirmation of
-ENABLE_SUBSCRIPTION by the data provider only if the data provider is
-not the origin of the set.
+  ENABLE_SUBSCRIPTION by the data provider only if the data provider
+  is not the origin of the set.
+
+- For logshipping we need to use the internally tracked ssy_seqno for
+  SYNC events as well.  
+
+  This allows "run_test.sh testlogship" to run successfully!
 
 RELEASE 1.2.9
 

@@ -2,7 +2,7 @@
 # ----------
 # slony1_dump.sh
 #
-# $Id: slony1_dump.sh,v 1.8.2.1 2007-06-13 15:56:13 cbbrowne Exp $
+# $Id: slony1_dump.sh,v 1.8.2.2 2007-06-21 20:29:13 cbbrowne Exp $
 #
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that
@@ -187,7 +187,7 @@ echo "set transaction isolation level serializable;"
 # ----
 echo "select 'copy $clname.sl_sequence_offline from stdin;';"
 echo "select seq_id::text || '	' || seq_relname  || '	' || seq_nspname from $clname.sl_sequence;"
-printf "select E'\\\\\\\\.';"
+printf "select '\\\\\\\\.';"
 
 for seq in $sequences ; do
 	eval seqname=\$seqname_$seq
@@ -214,7 +214,7 @@ for tab in $tables ; do
  	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
  	echo "select 'copy $tabname $fields from stdin;';"
 	echo "copy $tabname $fields to stdout;"
- 	printf "select E'\\\\\\\\.';"
+ 	printf "select '\\\\\\\\.';"
 done
 
 # ----
