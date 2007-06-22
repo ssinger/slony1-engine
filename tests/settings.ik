@@ -1,4 +1,4 @@
-# $Id: settings.ik,v 1.6 2007-04-20 21:43:14 cbbrowne Exp $
+# $Id: settings.ik,v 1.7 2007-06-22 16:12:22 cbbrowne Exp $
 # This file contains the various sets of possible DB
 # configuration defaults/overrides
 
@@ -102,3 +102,6 @@ PGBINDIR13=${PGBINDIR13:-${PGBINDIR:-"/usr/local/pgsql/bin"}}
 
 # Where to look for tools (e.g. - slony1_dump.sh)
 SLTOOLDIR=${SLTOOLDIR:-"../tools"}
+
+# Email address of the tester
+SLONYTESTER=${SLONYTESTER:-"j.random.luser@example.net"}
