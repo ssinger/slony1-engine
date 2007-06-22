@@ -222,7 +222,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>CLUSTER NAME = </command>
-     <arg><replaceable class="parameter"> 'clustername';</replaceable></arg>
+     <arg><replaceable class="parameter"> clustername;</replaceable></arg>
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
@@ -250,7 +250,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     CLUSTER NAME = 'testcluster';
+     CLUSTER NAME = testcluster;
     </programlisting>
    </refsect1>
    <refsect1> <title> Version Information </title>
