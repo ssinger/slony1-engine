@@ -1,7 +1,7 @@
 Creating a sample database with application
 -----------------------------------------------------------------
 
-$Id: SAMPLE,v 1.3 2007-04-18 15:03:51 cbbrowne Exp $
+$Id: SAMPLE,v 1.4 2007-06-22 15:29:07 cbbrowne Exp $
 
 
 As a first test scenario, the pgbench test program that is shipped with
@@ -43,12 +43,17 @@ PREPARING THE TWO DATABASES
 
 As of this writing Slony-I does not attempt to automatically copy the
 table definitions when a node subscribes to a data set.  Because of this,
-we have to create one full and one schema-only pgbench database.
+we have to create one full and one schema-only pgbench database.  Note
+that we alter the pgbench table, "history", to give it a primary key.
+All tables must have a primary key (or a candidate thereof) defined
+for Slony-I to use.  The pgbench history table lacks this, so we add
+one in
 
 createdb -O $PGBENCH_USER -h $HOST1 $DBNAME1
 createdb -O $PGBENCH_USER -h $HOST2 $DBNAME2
 pgbench -i -s 1 -U $PGBENCH_USER -h $HOST1 $DBNAME1
-pg_dump -s -U postgres -h $HOST1 $DBNAME1 | psql -U postgres -h $HOST2 $DBNAME2
+psql -U $PGBENCH_USER -h $HOST1 -d $DBNAME1 -c "begin; alter table history add column id serial; update history set id = nextval('history_id_seq'); alter table history add primary key(id); commit"
+pg_dump -s -U $SLONY_USER -h $HOST1 $DBNAME1 | psql -U $SLONY_USER -h $HOST2 $DBNAME2
 
 From this moment on, the pgbench test program can be started to
 produce transaction load.  It is recommended to run the pgbench
@@ -111,16 +116,6 @@ slonik <<_EOF_
     init cluster ( id = 1, comment = 'Node 1' );
 
     # ----
-    # The pgbench table history does not have a primary key or
-    # any other unique constraint that could be used to identify
-    # a row.  The following command adds a bigint column named
-    # "_Slony-I_test1_rowID" to the table.  It will have a default
-    # value of nextval('"_test1".sl_rowid_seq'), be unique and not
-    # null.  All existing rows will be initialized with a number.
-    # ----
-    table add key ( node id = 1, fully qualified name = 'public.history' );
-
-    # ----
     # The Slony replication system organizes tables in sets.  The
     # smallest unit another node can subscribe is a set.  Usually the
     # tables contained in one set would be all tables that have
@@ -140,7 +135,6 @@ slonik <<_EOF_
         comment = 'Table tellers' );
     set add table ( set id = 1, origin = 1,
         id = 4, fully qualified name = 'public.history',
-        key = serial,
         comment = 'Table history' );
 
     # ----
@@ -265,8 +259,8 @@ psql -U $PGBENCH_USER -h $HOST1 $DBNAME1 >dump.tmp.1.$$ <<_EOF_
     select 'tellers:'::text, tid, bid, tbalance, filler
         from tellers order by tid;
     select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-        "_Slony-I_${CLUSTER}_rowID"
-        from history order by "_Slony-I_${CLUSTER}_rowID";
+        id
+        from history order by id;
 _EOF_
 psql -U $PGBENCH_USER -h $HOST2 $DBNAME2 >dump.tmp.2.$$ <<_EOF_
     select 'accounts:'::text, aid, bid, abalance, filler
@@ -276,8 +270,8 @@ psql -U $PGBENCH_USER -h $HOST2 $DBNAME2 >dump.tmp.2.$$ <<_EOF_
     select 'tellers:'::text, tid, bid, tbalance, filler
         from tellers order by tid;
     select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-        "_Slony-I_${CLUSTER}_rowID"
-        from history order by "_Slony-I_${CLUSTER}_rowID";
+        id
+        from history order by id;
 _EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_1.diff ; then
