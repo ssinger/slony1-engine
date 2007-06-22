@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.24 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.25 2007-06-22 16:15:57 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -92,6 +92,24 @@ createuser -A -D $PGBENCHUSER
 createdb -O $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 createdb -O $PGBENCHUSER -h $SLAVEHOST $SLAVEDBNAME
 pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
+</programlisting>
+
+<para> One of the tables created by
+<application>pgbench</application>, <envar>history</envar>, does not
+have a primary key.  In earlier versions of &slony1;, a &lslonik;
+command called <xref linkend="stmttableaddkey"> could be used to
+introduce one.  This caused a number of problems, and so this feature
+has been removed in version 2 of &slony1;.  It now
+<emphasis>requires</emphasis> that there is a suitable candidate
+primary key. </para>
+
+<para> The following SQL requests will establish a proper primary key on this table: </para>
+
+<programlisting>
+psql -U $PGBENCH_USER -h $HOST1 -d $DBNAME1 -c "begin; alter table
+history add column id serial; update history set id =
+nextval('history_id_seq'); alter table history add primary key(id);
+commit"
 </programlisting>
 
 <para>Because &slony1; depends on the databases having the pl/pgSQL
@@ -229,7 +247,7 @@ slonik <<_EOF_
 	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
 	set add table (set id=1, origin=1, id=2, fully qualified name = 'public.branches', comment='branches table');
 	set add table (set id=1, origin=1, id=3, fully qualified name = 'public.tellers', comment='tellers table');
-	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table', key = serial);
+	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table');
 
 	#--
 	# Create the second node (the slave) tell the 2 nodes how to connect to

@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.9 2007-03-16 17:22:53 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.10 2007-06-22 16:15:57 cbbrowne Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -52,9 +52,13 @@ would be <envar>REL_1_1_2 </envar></para>
 regenerate <filename>configure</filename> from
 <filename>configure.ac</filename></para></listitem> 
 
-<listitem><para>Purge directory <filename>autom4te.cache</filename> so it is not included in the build  </para></listitem> 
+<listitem><para>Purge directory <filename>autom4te.cache</filename> so it is not included in the build  </para>
+<para> Does not need to be done by hand - the later <command> make distclean </command> step does this for you. </para>
+</listitem> 
 
-<listitem><para>Purge out .cvsignore files; this can be done with the command <command> find . -name .cvsignore | xargs rm </command>  </para></listitem> 
+<listitem><para>Purge out .cvsignore files; this can be done with the command <command> find . -name .cvsignore | xargs rm </command>  </para>
+<para> Does not need to be done by hand - the later <command> make distclean </command> step does this for you. </para>
+</listitem> 
 <listitem><para> Run <filename>tools/release_checklist.sh</filename> </para>
 
 <para> This does a bunch of consistency checks to make sure that
@@ -95,13 +99,22 @@ created, for example <filename>slony/conf-file.[ch]</filename> </para>
 <para> Currently this is best done by issuing <command> ./configure &&
 make all && make clean</command> but that is a somewhat ugly approach.
 
+<para> Slightly better may be <command> ./configure && make
+src/slon/conf-file.c src/slonik/parser.c src/slonik/scan.c </command>
+
 </para></listitem> 
 
 <listitem><para> Make sure that generated Makefiles and such from the
 previous step(s) are removed.</para>
 
-<para> <command>make distclean</command> ought to do
-that... </para></listitem>
+<para> <command>make distclean</command> will do
+that... </para>
+
+<para> Note that <command>make distclean</command> also clears out
+<filename>.cvsignore</filename> files and
+<filename>autom4te.cache</filename>, thus obsoleting some former steps
+that suggested that it was needful to delete them. </para>
+</listitem>
 
 <listitem><para>Generate HTML tarball, and RTF/PDF, if
 possible... Note that the HTML version should include *.html (duh!),

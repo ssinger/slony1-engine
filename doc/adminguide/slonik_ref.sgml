@@ -222,7 +222,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>CLUSTER NAME = </command>
-     <arg><replaceable class="parameter"> 'clustername';</replaceable></arg>
+     <arg><replaceable class="parameter"> clustername;</replaceable></arg>
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
@@ -250,7 +250,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     CLUSTER NAME = 'testcluster';
+     CLUSTER NAME = testcluster;
     </programlisting>
    </refsect1>
    <refsect1> <title> Version Information </title>
@@ -1089,7 +1089,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
-    <para> This command is <emphasis> no longer supported </emphasis>
+<warning>    <para> This command is <emphasis> no longer supported </emphasis>
     as of &slony1; version 2.0.  In version 2, the various
     <quote>catalogue breakages</quote> done in &postgres; versions
     prior to 8.3 are being eliminated so that schema dumps may be
@@ -1097,7 +1097,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     columns created via <command>TABLE ADD KEY</command> as the only
     thing that prevents <xref linkend="stmtuninstallnode"> from being
     comprised of the SQL statement <command>drop schema _ClusterName
-    cascade;</command>.</para>
+    cascade;</command>.</para> </warning>
 
    </refsect1>
   </refentry>
