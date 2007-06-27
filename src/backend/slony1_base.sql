@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.33 2007-04-18 15:03:51 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.34 2007-06-27 15:51:35 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -561,6 +561,10 @@ create table @NAMESPACE@.sl_config_lock (
 );
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
+
+create type @NAMESPACE@.vactables as (nspname name, relname name);
+
+comment on type @NAMESPACE@.vactables is 'used as return type for SRF function TablesToVacuum';
 
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.

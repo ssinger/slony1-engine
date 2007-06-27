@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.112 2007-06-07 22:40:23 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.113 2007-06-27 15:51:35 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1442,14 +1442,6 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
-	-- This is us ... time for suicide! Restore all tables to
-	-- their original status.
-	-- ----
-	for v_tab_row in select * from @NAMESPACE@.sl_table loop
-		perform @NAMESPACE@.alterTableDropTriggers(v_tab_row.tab_id);
-	end loop;
 
 	raise notice ''Slony-I: Please drop schema "_@CLUSTERNAME@"'';
 	return 0;
@@ -5439,6 +5431,12 @@ begin
 			perform @NAMESPACE@.alterTableAddTriggers(v_tab_row.tab_id);
 			perform @NAMESPACE@.alterTableConfigureTriggers(v_tab_row.tab_id);
 		end loop;
+
+		-- ----
+		-- create new type - vactables - used by TablesToVacuum()
+		-- ----
+		execute ''create type @NAMESPACE@.vactables as (nspname name, relname name);'';
+
 	end if;
 
 	-- In any version, make sure that the xxidin() functions are defined as STRICT
@@ -5615,6 +5613,11 @@ end;
 comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 'Reenable index maintenance and reindex the table';
 
+-- ----------------------------------------------------------------------
+-- FUNCTION make_function_strict(function, parms)
+--
+--	Make function be STRICT
+-- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.make_function_strict (text, text) returns void as
 '
 declare
@@ -5630,3 +5633,113 @@ end
 
 comment on function @NAMESPACE@.make_function_strict (text, text) is
 'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
+
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION AutoVacExcludesTable (nspname, tabname)
+--
+--	Returns 't' if the table needs to be vacuumed by Slony-I
+--      Returns 'f' if autovac handles the table, so Slony-I should not
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.AutoVacExcludesTable (name, name) returns boolean as
+$$
+declare
+	i_nspname alias for $1;
+	i_tblname alias for $2;
+	c_table oid;
+	c_namespace oid;
+	c_enabled boolean;
+	v_dummy int4;
+begin
+	select 1 into v_dummy from "pg_catalog".pg_settings where name = 'autovacuum' and setting = 'on';
+	if not found then
+		return 't'::boolean;       -- If autovac is turned off, then we gotta vacuum
+	end if;
+	
+	select into c_namespace oid from "pg_catalog".pg_namespace where nspname = i_nspname;
+	if not found then
+		raise exception 'Slony-I: namespace % does not exist', i_nspname;
+	end if;
+	select into c_table oid from "pg_catalog".pg_class where relname = i_tblname and relnamespace = c_namespace;
+	if not found then
+		raise exception 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
+	end if;
+	
+	-- So, the table is legit; try to look it up for autovacuum policy
+	select enabled into c_enabled from "pg_catalog".pg_autovacuum where vacrelid = c_table;
+
+	if not found then
+		return 'f'::boolean;   -- Autovac is turned on, and this table has no overriding handling
+	end if;
+
+	if c_enabled then
+		return 'f'::boolean;   -- Autovac is expressly turned on for this table
+	end if;
+
+	return 't'::boolean;
+end;$$ language plpgsql;
+
+comment on function @NAMESPACE@.AutoVacExcludesTable (name, name) is 
+'returns false if autovacuum handles vacuuming of the table; returns true if Slony-I should manage it';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION TablesToVacuum()
+--
+--	Make function be STRICT
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.TablesToVacuum () returns setof @NAMESPACE@.vactables as 
+'
+declare
+	prec @NAMESPACE@.vactables%rowtype;
+begin
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_event'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_confirm'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_setsync'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_log_1'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_log_2'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_seqlog'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''pg_catalog'';
+	prec.relname := ''pg_listener'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''pg_catalog'';
+	prec.relname := ''pg_statistic'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+
+   return;
+end
+' language plpgsql;
+
+comment on function @NAMESPACE@.TablesToVacuum () is 
+'Return a list of tables that require frequent vacuuming.  We use this
+function so that we do not hardcode this into C code.';
+
