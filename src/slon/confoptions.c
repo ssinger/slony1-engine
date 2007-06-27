@@ -450,7 +450,7 @@ set_config_option(const char *name, const char *value)
 				}
 				else
 				{
-					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
+					slon_log(SLON_CONFIG, "parameter \"%s\"\n", name);
 				}
 
 				*conf->variable = newval;
@@ -478,7 +478,7 @@ set_config_option(const char *name, const char *value)
 				}
 				else
 				{
-					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
+					slon_log(SLON_CONFIG, "parameter \"%s\"\n", name);
 				}
 				*conf->variable = newval;
 				break;
@@ -506,7 +506,7 @@ set_config_option(const char *name, const char *value)
 				}
 				else
 				{
-					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
+					slon_log(SLON_CONFIG, "parameter \"%s\"\n", name);
 				}
 				*conf->variable = newval;
 				break;
@@ -526,7 +526,7 @@ set_config_option(const char *name, const char *value)
 				}
 				else
 				{
-					slon_log(SLON_DEBUG2, "parameter \"%s\"\n", name);
+					slon_log(SLON_CONFIG, "parameter \"%s\"\n", name);
 					free(newval);
 				}
 				*conf->variable = newval;

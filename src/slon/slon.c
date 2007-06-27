@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.73 2007-06-14 14:58:54 cbbrowne Exp $
+ *	$Id: slon.c,v 1.74 2007-06-27 16:20:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -455,7 +455,7 @@ SlonMain(void)
 	}
 #endif
 
-	slon_log(SLON_DEBUG2, "main: main process started\n");
+	slon_log(SLON_INFO, "main: main process started\n");
 
 	/*
 	 * Start the event scheduling system
@@ -783,7 +783,7 @@ SlonWatchdog(void)
 #if !defined(CYGWIN) && !defined(WIN32)
 	struct sigaction act;
 #endif
-	slon_log(SLON_DEBUG2, "slon: watchdog process started\n");
+	slon_log(SLON_INFO, "slon: watchdog process started\n");
 
 	/*
 	 * Install signal handlers
@@ -833,7 +833,7 @@ SlonWatchdog(void)
 		slon_exit(-1);
 	}
 
-	slon_log(SLON_DEBUG2, "slon: watchdog ready - pid = %d\n", slon_watchdog_pid);
+	slon_log(SLON_CONFIG, "slon: watchdog ready - pid = %d\n", slon_watchdog_pid);
 
 	slon_worker_pid = fork();
 	if (slon_worker_pid == 0)
@@ -842,7 +842,7 @@ SlonWatchdog(void)
 		exit(-1);
 	}
 
-	slon_log(SLON_DEBUG2, "slon: worker process created - pid = %d\n",
+	slon_log(SLON_CONFIG, "slon: worker process created - pid = %d\n",
 			 slon_worker_pid);
 	while ((pid = wait(&child_status)) != slon_worker_pid)
 	{
@@ -977,11 +977,11 @@ slon_exit(int code)
 
 	if (pid_file)
 	{
-		slon_log(SLON_DEBUG2, "slon: remove pid file\n");
+		slon_log(SLON_INFO, "slon: remove pid file\n");
 		(void) unlink(pid_file);
 	}
 
-	slon_log(SLON_DEBUG2, "slon: exit(%d)\n", code);
+	slon_log(SLON_INFO, "slon: exit(%d)\n", code);
 
 	exit(code);
 }

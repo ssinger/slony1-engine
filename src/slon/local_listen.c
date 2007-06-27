@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.41 2007-04-20 20:53:18 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.42 2007-06-27 16:20:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -48,7 +48,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	int			restart_request;
 	int poll_sleep = 0;
 
-	slon_log(SLON_DEBUG1, "localListenThread: thread starts\n");
+	slon_log(SLON_INFO, "localListenThread: thread starts\n");
 
 	/*
 	 * Connect to the local database
@@ -625,7 +625,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				/*
 				 * Nothing to do locally
 				 */
-				slon_log(SLON_DEBUG2, "localListenThread: ACCEPT_SET");
+				slon_log(SLON_DEBUG1, "localListenThread: ACCEPT_SET");
 				rtcfg_reloadListen(dbconn);
 			}
 			else
@@ -699,7 +699,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	conn = NULL;
 #endif
 
-	slon_log(SLON_DEBUG1, "localListenThread: thread done\n");
+	slon_log(SLON_INFO, "localListenThread: thread done\n");
 	pthread_exit(NULL);
 }
 

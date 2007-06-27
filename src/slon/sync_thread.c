@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.19 2007-03-14 15:59:32 cbbrowne Exp $
+ *	$Id: sync_thread.c,v 1.20 2007-06-27 16:20:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -52,7 +52,7 @@ syncThread_main(void *dummy)
 	int			timeout_count;
 	bool first_time = TRUE;
 
-	slon_log(SLON_DEBUG1,
+	slon_log(SLON_INFO,
 			 "syncThread: thread starts\n");
 
 	/*
@@ -194,7 +194,7 @@ syncThread_main(void *dummy)
 	dstring_free(&query3);
 	slon_disconnectdb(conn);
 
-	slon_log(SLON_DEBUG1, "syncThread: thread done\n");
+	slon_log(SLON_INFO, "syncThread: thread done\n");
 	pthread_exit(NULL);
 }
 

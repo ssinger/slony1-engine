@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.145 2007-06-19 19:14:49 wieck Exp $
+ *	$Id: remote_worker.c,v 1.146 2007-06-27 16:20:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -291,7 +291,7 @@ remoteWorkerThread_main(void *cdata)
 	bool			event_ok;
 	bool			need_reloadListen = false;
 
-	slon_log(SLON_DEBUG1,
+	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread starts\n",
 			 node->no_id);
 
@@ -985,7 +985,7 @@ remoteWorkerThread_main(void *cdata)
 				char	   *wait_seqno;
 				PGresult   *res;
 
-				slon_log(SLON_DEBUG2, "start processing ACCEPT_SET\n");
+				slon_log(SLON_DEBUG1, "start processing ACCEPT_SET\n");
 				set_id = (int)strtol(event->ev_data1, NULL, 10);
 				slon_log(SLON_DEBUG2, "ACCEPT: set=%d\n", set_id);
 				old_origin = (int)strtol(event->ev_data2, NULL, 10);
@@ -1008,7 +1008,7 @@ remoteWorkerThread_main(void *cdata)
 
 				if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin))
 				{
-					slon_log(SLON_DEBUG2, "ACCEPT_SET - node not origin\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - node not origin\n");
 					(void) slon_mkquery(&query2,
 								 "select 1 from %s.sl_event "
 								 "where "
@@ -1033,14 +1033,14 @@ remoteWorkerThread_main(void *cdata)
 					res = PQexec(local_dbconn, dstring_data(&query2));
 					while (PQntuples(res) == 0)
 					{
-						slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+						slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
 						if (sched_msleep(node, 10000) != SCHED_STATUS_OK)
 							slon_retry();
 						PQclear(res);
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
 					PQclear(res);
-					slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
 
 					/*
 					 * Finalize the setsync status to mave the ACCEPT_SET's
@@ -1072,7 +1072,7 @@ remoteWorkerThread_main(void *cdata)
 					query_append_event(&query1, event);
 					slon_appendquery(&query1, "commit transaction;");
 					query_execute(node, local_dbconn, &query1);
-					slon_log(SLON_DEBUG2, "ACCEPT_SET - done\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - done\n");
 					archive_close(node);
 					slon_retry();
 
@@ -1080,7 +1080,7 @@ remoteWorkerThread_main(void *cdata)
 				}
 				else
 				{
-					slon_log(SLON_DEBUG2, "ACCEPT_SET - on origin node...\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - on origin node...\n");
 				}
 
 			}
@@ -1470,7 +1470,7 @@ remoteWorkerThread_main(void *cdata)
 #endif
 	free(wd);
 
-	slon_log(SLON_DEBUG1,
+	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread done\n",
 			 node->no_id);
 	pthread_exit(NULL);
@@ -1491,7 +1491,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 	SlonSet    *rtcfg_set;
 	int			i;
 
-	slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+	slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 			 "update provider configuration\n",
 			 node->no_id);
 
@@ -1584,7 +1584,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 								 node->no_id, strerror(errno));
 						slon_retry();
 					}
-					slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+					slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 							 "helper thread for provider %d created\n",
 							 node->no_id, provider->no_id);
 
@@ -1636,7 +1636,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 				DLLIST_ADD_TAIL(provider->set_head,
 								provider->set_tail, pset);
 
-				slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: "
+				slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 						 "added active set %d to provider %d\n",
 						 node->no_id, pset->set_id, provider->no_id);
 			}
@@ -1671,7 +1671,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 			pthread_cond_destroy(&(provider->helper_cond));
 			pthread_mutex_destroy(&(provider->helper_lock));
 
-			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+			slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 					 "helper thread for provider %d terminated\n",
 					 node->no_id, provider->no_id);
 
@@ -1699,7 +1699,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 			 */
 			if (provider->conn != NULL)
 			{
-				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+				slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 						 "disconnecting from data provider %d\n",
 						 node->no_id, provider->no_id);
 				slon_disconnectdb(provider->conn);
@@ -1732,7 +1732,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 		{
 			if (provider->conn != NULL)
 			{
-				slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+				slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 						 "disconnecting from data provider %d\n",
 						 node->no_id, provider->no_id);
 				slon_disconnectdb(provider->conn);
@@ -1795,7 +1795,7 @@ remoteWorker_event(int event_provider,
 	 */
 	if (sched_get_status() != SCHED_STATUS_OK)
 	{
-		slon_log(SLON_DEBUG2,
+		slon_log(SLON_DEBUG1,
 				 "remoteWorker_event: ignore new events due to shutdown\n");
 		return;
 	}
@@ -1979,7 +1979,7 @@ remoteWorker_wakeup(int no_id)
 	if (node == NULL)
 	{
 		rtcfg_unlock();
-		slon_log(SLON_DEBUG2,
+		slon_log(SLON_DEBUG1,
 				 "remoteWorker_wakeup: unknown node %d\n",
 				 no_id);
 		return;
@@ -2377,7 +2377,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	struct timeval tv_start2;
 	struct timeval tv_now;
 
-	slon_log(SLON_DEBUG1, "copy_set %d\n", set_id);
+	slon_log(SLON_INFO, "copy_set %d\n", set_id);
 	gettimeofday(&tv_start, NULL);
 
 	/*
@@ -2434,7 +2434,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	free(conninfo);
 	conninfo = NULL;
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
+	slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 			 "connected to provider DB\n",
 			 node->no_id);
 
@@ -2589,7 +2589,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		char	   *tab_fqname = PQgetvalue(res1, tupno1, 1);
 
 		gettimeofday(&tv_start2, NULL);
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "prepare to copy table %s\n",
 				 node->no_id, tab_fqname);
 
@@ -2633,7 +2633,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	PQclear(res1);
 
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+	slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 			 "all tables for set %d found on subscriber\n",
 			 node->no_id, set_id);
 
@@ -2678,7 +2678,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		char	   *seq_fqname = PQgetvalue(res1, tupno1, 1);
 		char	   *seq_comment = PQgetvalue(res1, tupno1, 2);
 
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "copy sequence %s\n",
 				 node->no_id, seq_fqname);
 
@@ -2751,7 +2751,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		int64		copysize = 0;
 
 		gettimeofday(&tv_start2, NULL);
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "copy table %s\n",
 				 node->no_id, tab_fqname);
 
@@ -2827,7 +2827,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
 		 */
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "Begin COPY of table %s\n",
 				 node->no_id, tab_fqname);
 
@@ -3083,7 +3083,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 
 		PQclear(res2);
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 INT64_FORMAT " bytes copied for table %s\n",
 				 node->no_id, copysize, tab_fqname);
 
@@ -3115,7 +3115,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 
 		gettimeofday(&tv_now, NULL);
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "%.3f seconds to copy table %s\n",
 				 node->no_id,
 				 TIMEVAL_DIFF(&tv_start2, &tv_now), tab_fqname);
@@ -3169,7 +3169,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		char	   *seql_last_value = PQgetvalue(res1, tupno1, 1);
 		char	   *seq_fqname = PQgetvalue(res1, tupno1, 2);
 
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "set last_value of sequence %s (%s) to %s\n",
 				 node->no_id, seql_seqid, seq_fqname, seql_last_value);
 
@@ -3220,7 +3220,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	if (ntuples1 > 0)
 	{
 		gettimeofday(&tv_now, NULL);
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 				 "%.3f seconds to copy sequences\n",
 				 node->no_id,
 				 TIMEVAL_DIFF(&tv_start2, &tv_now));
@@ -3288,7 +3288,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			ssy_maxxid = event->ev_maxxid_c;
 			ssy_xip = event->ev_xip;
 
-			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "copy_set no previous SYNC found, use enable event.\n",
 					 node->no_id);
 
@@ -3356,7 +3356,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			else
 				slon_appendquery(&query2, ")");
 
-			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "copy_set SYNC found, use event seqno %s.\n",
 					 node->no_id, ssy_seqno);
 
@@ -3510,7 +3510,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 	PQclear(res1);
 	gettimeofday(&tv_now, NULL);
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+	slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 			 "%.3f seconds to build initial setsync status\n",
 			 node->no_id,
 			 TIMEVAL_DIFF(&tv_start2, &tv_now));
@@ -3543,7 +3543,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 node->no_id);
 
 	gettimeofday(&tv_now, NULL);
-	slon_log(SLON_DEBUG1, "copy_set %d done in %.3f seconds\n", set_id,
+	slon_log(SLON_INFO, "copy_set %d done in %.3f seconds\n", set_id,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
 	return 0;
 }
@@ -3713,7 +3713,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				archive_terminate(node);
 				return 10;
 			}
-			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 					 "data provider %d confirmed up to "
 					 "ev_seqno %s for ev_origin %d - OK\n",
 					 node->no_id, provider->no_id,
@@ -3840,7 +3840,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				return 60;
 			}
 			ntuples2 = PQntuples(res2);
-			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "syncing set %d with %d table(s) from provider %d\n",
 					 node->no_id, sub_set, ntuples2,
 					 provider->no_id);
@@ -4014,7 +4014,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	if (num_sets == 0)
 	{
-		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+		slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: "
 				 "no sets need syncing for this event\n",
 				 node->no_id);
 		dstring_free(&query);
@@ -4258,7 +4258,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		pthread_mutex_unlock(&(provider->helper_lock));
 	}
 
-	slon_log(SLON_DEBUG4, "remoteWorkerThread_%d: cleanup\n",
+	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: cleanup\n",
 			 node->no_id);
 
 	/*
@@ -4425,7 +4425,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (command_on_logarchive) {
 			char command[512];
 			sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
-			slon_log(SLON_INFO, "remoteWorkerThread_%d: Run Archive Command %s\n",
+			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
 				 node->no_id, command);
 			system(command);
 		}
@@ -4437,7 +4437,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	dstring_free(&query);
 	dstring_free(&lsquery);
 	gettimeofday(&tv_now, NULL);
-	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC "
+	slon_log(SLON_INFO, "remoteWorkerThread_%d: SYNC "
 			 INT64_FORMAT " done in %.3f seconds\n",
 			 node->no_id, event->ev_seqno,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
@@ -4804,7 +4804,7 @@ sync_helper(void *cdata)
 					if (first_fetch)
 					{
 						gettimeofday(&tv_now, NULL);
-						slon_log(SLON_DEBUG2,
+						slon_log(SLON_DEBUG1,
 								 "remoteHelperThread_%d_%d: %.3f seconds delay for first row\n",
 								 node->no_id, provider->no_id,
 								 TIMEVAL_DIFF(&tv_start, &tv_now));
@@ -5051,12 +5051,12 @@ sync_helper(void *cdata)
 			errors++;
 
 		gettimeofday(&tv_now, NULL);
-		slon_log(SLON_DEBUG2,
+		slon_log(SLON_DEBUG1,
 			   "remoteHelperThread_%d_%d: %.3f seconds until close cursor\n",
 				 node->no_id, provider->no_id,
 				 TIMEVAL_DIFF(&tv_start, &tv_now));
 
-		slon_log(SLON_DEBUG2, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
+		slon_log(SLON_INFO, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
 			 node->no_id, provider->no_id, num_inserts, num_updates, num_deletes);
 
 		num_inserts = 0;

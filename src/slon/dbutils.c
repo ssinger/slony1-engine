@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.27 2007-06-25 16:34:57 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.28 2007-06-27 16:20:24 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -123,7 +123,7 @@ slon_connectdb(char *conninfo, char *symname)
                 return NULL;
         }
 	
-        slon_log(SLON_DEBUG4,
+        slon_log(SLON_CONFIG,
                 "version for \"%s\" is %d\n", conninfo, conn->pg_version);
 
 	if (conn->pg_version >= 80100)

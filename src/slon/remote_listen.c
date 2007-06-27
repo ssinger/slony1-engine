@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.35 2007-04-20 20:53:18 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.36 2007-06-27 16:20:24 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -96,7 +96,7 @@ remoteListenThread_main(void *cdata)
 
 	PollState	oldpstate;
 
-	slon_log(SLON_DEBUG1,
+	slon_log(SLON_INFO,
 			 "remoteListenThread_%d: thread starts\n",
 			 node->no_id);
 
@@ -135,7 +135,7 @@ remoteListenThread_main(void *cdata)
 				if (node->pa_conninfo == NULL ||
 					strcmp(conn_conninfo, node->pa_conninfo) != 0)
 				{
-					slon_log(SLON_DEBUG1,
+					slon_log(SLON_CONFIG,
 							 "remoteListenThread_%d: "
 							 "disconnecting from '%s'\n",
 							 node->no_id, conn_conninfo);
