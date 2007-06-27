@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.30 2007-01-02 20:16:58 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.31 2007-06-27 17:56:11 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -63,10 +63,13 @@
      </para>
 
      <para> The first five non-debugging log levels (from Fatal to
-     Info) are <emphasis>always</emphasis> displayed in the logs.  If
-     <envar>log_level</envar> is set to 2 (a routine, and, seemingly,
-     preferable choice), then output at debugging levels 1 and 2 will
-     also be displayed.</para>
+     Info) are <emphasis>always</emphasis> displayed in the logs.  In
+     early versions of &slony1;, the <quote>suggested</quote>
+     <envar>log_level</envar> value was 2, which would list output at
+     all levels down to debugging level 2.  In &slony1; version 2, it
+     is recommended to set <envar>log_level</envar> to 0; most of the
+     consistently interesting log information is generated at levels
+     higher than that. </para>
 
     </listitem>
    </varlistentry>

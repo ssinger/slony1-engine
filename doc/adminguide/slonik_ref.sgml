@@ -2395,7 +2395,9 @@ UNLOCK SET (
      origin).  You would probably prefer to <command>MOVE SET</command>
      instead of <command>FAILOVER</command>, if at all possible, as
      <command>FAILOVER</command> winds up discarding the old origin
-     node as being corrupted.</para>
+     node as being corrupted. Before <commadand>MOVE SET</command> will
+     function a <command>LOCK SET</command> is needed.
+</para>
      
     <para> Note that this is a &rlocking; operation, which means that
     it can get stuck behind other database activity.
@@ -2421,6 +2423,10 @@ UNLOCK SET (
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
+LOCK SET (
+   ID = 1,
+   ORIGIN = 1
+);
 MOVE SET (
    ID = 1,
    OLD ORIGIN = 1,

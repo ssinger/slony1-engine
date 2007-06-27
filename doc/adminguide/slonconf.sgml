@@ -86,12 +86,17 @@
         <primary><varname>log_level</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 2</para>
+        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 0</para>
 
 	<para> There are <link linkend="nineloglevels">nine log
-	message types</link>; using this option, some or all of
-	the <quote>debugging</quote> levels may be left out of the
-	slon logs. </para>
+	message types</link>; using this option, some or all of the
+	<quote>debugging</quote> levels may be left out of the slon
+	logs.  In &slony1; version 2, a lot of log message levels have
+	been revised in an attempt to ensure the <quote>interesting
+	stuff</quote> comes in at CONFIG/INFO levels, so that you
+	could run at level 0, omitting all of the <quote>DEBUG</quote>
+	messages, and still have meaningful contents in the
+	logs. </para>
 
       </listitem>
     </varlistentry>
