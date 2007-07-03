@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.146 2007-06-27 16:20:24 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.147 2007-07-03 12:45:23 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3931,11 +3931,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			/* add the <snapshot_qual_of_setsync> */
 			if (strlen(ssy_xip) != 0)
 				slon_appendquery(provider_qual,
-								 "(log_xid >= '%s' and "
-								 "%s.xxid_ge_snapshot(log_xid, '%s:%s:%q'))",
-								 ssy_minxid,
-								 rtcfg_namespace,
-								 ssy_minxid, ssy_maxxid, ssy_xip);
+								 "(log_xid >= '%s' or "
+								 "log_xid IN (%s))",
+								 ssy_maxxid, ssy_xip);
 			else
 				slon_appendquery(provider_qual,
 								 "(log_xid >= '%s')",
