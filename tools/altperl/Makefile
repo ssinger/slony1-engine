@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.15 2006-12-06 18:37:58 cbbrowne Exp $
+#       $Id: Makefile,v 1.16 2007-07-04 15:10:40 cbbrowne Exp $
 #
 # ----------
 
@@ -26,7 +26,7 @@ endif
 		tmpname=`echo $$file | $(SED) "s#\.p[lm]##"` && \
 		$(SED) -e "s#@@PERL@@#$(PERL)#;" \
                        -e "s#@@SYSCONFDIR@@#$(sysconfdir)#;" \
-                       -e "s#@@PGLIBDIR@@#$(pglibdir)#;" \
+                       -e "s#@@PGLIBDIR@@#$(pgsharedir)#;" \
                        -e "s#@@PGBINDIR@@#$(pgbindir)#;" \
                        -e "s#@@SLONBINDIR@@#$(slonbindir)#;" \
                        -e "s#@@TOOLSBIN@@#$(toolsbin)#;" \
