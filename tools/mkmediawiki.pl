@@ -1,5 +1,5 @@
 #!/usr/bin/perl   # -*- perl -*-
-# $Id: mkmediawiki.pl,v 1.1 2007-01-24 15:43:01 cbbrowne Exp $
+# $Id: mkmediawiki.pl,v 1.2 2007-07-05 20:52:06 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2007
 # PostgreSQL Global Development Group
@@ -28,7 +28,8 @@ GetOptions
   "P|port=i" => \$port,
   "m|mailprog=s" => \$mailprog,
   "f|finalquery=s" => \$finalquery,
-  "r|recipient=s" => \$recipient);
+  "r|recipient=s" => \$recipient,
+  "g|categories=s" => \$categories);
 
 if (defined($help)) {
   show_usage();
@@ -160,6 +161,7 @@ while (my @row = $tq->fetchrow_array) {
 };
 }
 &mktblfooter();
+&gencategories();
 
 sub gennodeline {
   my ($node, $port, $host, $version, $origin, $providers, $dsn, $comment) = @_;
@@ -202,7 +204,7 @@ sub show_usage {
     chomp $inerr;
     print $inerr, "\n";
   }
-  die "$0  --host --database --user --cluster --port=integer --password --recipient --mailprog\nnote also that libpq environment variables PGDATABASE, PGPORT, ... may also be passed in";
+  die "$0  --host --database --user --cluster --port=integer --password --recipient --mailprog --categories\nnote also that libpq environment variables PGDATABASE, PGPORT, ... may also be passed in";
 }
 
 sub mknodeheader {
@@ -221,7 +223,7 @@ print qq[
 }
 
 sub mktblfooter {
-print "|};\n\n";
+print "|}\n\n";
 }
 
 sub mktblheader {
@@ -258,4 +260,14 @@ print qq[
 ! Receiver
 ! Forwarding?
 ];
+}
+
+# End off by splitting the --categories option into a comma-delimited
+# list of categories and dropping them into place
+sub gencategories {
+  if ($categories ne "") {
+    foreach my $cat (split(',', $categories)) {
+      print "[Category:${cat}]\n";
+    }
+  }
 }

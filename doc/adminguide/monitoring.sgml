@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.37 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.38 2007-07-05 20:52:06 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -94,6 +94,41 @@ Title[db_replication_lagtime]: db: replication lag time
 PageTop[db_replication_lagtime]: &lt;H1&gt;db: replication lag time&lt;/H1&gt;
 Options[db_replication_lagtime]: gauge,nopercent,growright
 </programlisting>
+
+<para> Alternatively, Ismail Yenigul points out how he managed to
+monitor slony using <application>MRTG</application> without installing
+<application>SNMPD</application>.</para>
+
+<para> Here is the mrtg configuration</para>
+
+<programlisting>
+Target[db_replication_lagtime]:`/bin/snmpReplicationLagTime.sh 2`
+MaxBytes[db_replication_lagtime]: 400000000
+Title[db_replication_lagtime]: db: replication lag time
+PageTop[db_replication_lagtime]: <H1>db: replication lag time</H1>
+Options[db_replication_lagtime]: gauge,nopercent,growright
+</programlisting>
+
+<para> and here is the modified version of the script</para>
+
+<programlisting>
+# cat /bin/snmpReplicationLagTime.sh
+#!/bin/bash
+
+output=`/usr/bin/psql -U slony -h 192.168.1.1 -d endersysecm -qAt -c
+"select cast(extract(epoch from st_lag_time) as int8) FROM _mycluster.sl_status WHERE st_received = $1"`
+echo $output
+echo $output
+echo 
+echo
+# end of script#
+</programlisting>
+
+
+<note><para> MRTG expects four lines from the script, and since there
+are only two lines provided, the output must be padded to four
+lines. </para> </note>
+
 </sect2>
 
 <sect2 id="testslonystate"> <title> test_slony_state</title>
@@ -193,14 +228,20 @@ for replication problems. </para>
 <para> The script <filename>mkmediawiki.pl </filename>, in
 <filename>tools</filename>, may be used to generate a cluster summary
 compatible with the popular <ulink url="http://www.mediawiki.org/">
-MediaWiki </ulink> software. </para>
+MediaWiki </ulink> software.  Note that the
+<option>--categories</option> permits the user to specify a set of
+(comma-delimited) categories with which to associate the output.  If
+you have a series of &slony1; clusters, passing in the option
+<option>--categories=&slony1;</option> leads to the MediaWiki instance
+generating a category page listing all &slony1; clusters so
+categorized on the wiki.  </para>
 
 <para> The gentle user might use the script as follows: </para>
 
 <screen>
 ~/logtail.en>         mvs login -d mywiki.example.info -u "Chris Browne" -p `cat ~/.wikipass` -w wiki/index.php                     
 Doing login with host: logtail and lang: en
-~/logtail.en> perl $SLONYHOME/tools/mkmediawiki.pl --host localhost --database slonyregress1 --cluster slony_regress1  > Slony_replication.wiki
+~/logtail.en> perl $SLONYHOME/tools/mkmediawiki.pl --host localhost --database slonyregress1 --cluster slony_regress1 --categories=Slony-I  > Slony_replication.wiki
 ~/logtail.en> mvs commit -m "More sophisticated generated Slony-I cluster docs" Slony_replication.wiki
 Doing commit Slony_replication.wiki with host: logtail and lang: en
 </screen>
