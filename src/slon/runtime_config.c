@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.27.2.2 2006-10-27 20:09:56 cbbrowne Exp $
+ *	$Id: runtime_config.c,v 1.27.2.3 2007-07-05 21:34:24 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -275,7 +275,7 @@ rtcfg_disableNode(int no_id)
 		rtcfg_unlock();
 
 		slon_log(SLON_FATAL,
-				 "enableNode: unknown node ID %d\n", no_id);
+				 "disableNode: unknown node ID %d\n", no_id);
 		slon_retry();
 		return;
 	}
