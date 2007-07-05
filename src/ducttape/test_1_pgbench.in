@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.4 2007-06-08 13:25:02 wieck Exp $
+# $Id: test_1_pgbench.in,v 1.5 2007-07-05 18:19:04 wieck Exp $
 # **********
 # test_1_pgbench
 #
@@ -280,7 +280,7 @@ $PREAMBLE
 
 	sync (id = 11);
 	echo '**** waiting for node 22 to catch up';
-	wait for event (origin = 11, confirmed = 22, wait on = 11);
+	wait for event (origin = 11, confirmed = 22, wait on = 11, timeout = 0);
 	echo '**** done.';
 _EOF_
 echo "**** you might terminate the replication engines."

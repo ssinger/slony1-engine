@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.28 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: parser.y,v 1.29 2007-07-05 18:19:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -147,8 +147,6 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_set_drop_sequence
 %type <statement>	stmt_set_move_table
 %type <statement>	stmt_set_move_sequence
-%type <statement>	stmt_store_trigger
-%type <statement>	stmt_drop_trigger
 %type <statement>	stmt_subscribe_set
 %type <statement>	stmt_unsubscribe_set
 %type <statement>	stmt_lock_set
@@ -233,7 +231,6 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SWITCH
 %token	K_TABLE
 %token	K_TIMEOUT
-%token	K_TRIGGER
 %token	K_TRUE
 %token	K_TRY
 %token	K_UNINSTALL
@@ -456,10 +453,6 @@ try_stmt			: stmt_echo
 					| stmt_set_move_table
 						{ $$ = $1; }
 					| stmt_set_move_sequence
-						{ $$ = $1; }
-					| stmt_store_trigger
-						{ $$ = $1; }
-					| stmt_drop_trigger
 						{ $$ = $1; }
 					| stmt_subscribe_set
 						{ $$ = $1; }
@@ -1097,66 +1090,6 @@ stmt_set_move_sequence : lno K_SET K_MOVE K_SEQUENCE option_list
 					}
 					;
 
-stmt_store_trigger	: lno K_STORE K_TRIGGER option_list
-					{
-						SlonikStmt_store_trigger *new;
-						statement_option opt[] = {
-							STMT_OPTION_INT( O_TAB_ID, -1 ),
-							STMT_OPTION_STR( O_TRIG_NAME, NULL ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
-							STMT_OPTION_END
-						};
-
-						new = (SlonikStmt_store_trigger *)
-								malloc(sizeof(SlonikStmt_store_trigger));
-						memset(new, 0, sizeof(SlonikStmt_store_trigger));
-						new->hdr.stmt_type		= STMT_STORE_TRIGGER;
-						new->hdr.stmt_filename	= current_file;
-						new->hdr.stmt_lno		= $1;
-
-						if (assign_options(opt, $4) == 0)
-						{
-							new->trig_tabid		= opt[0].ival;
-							new->trig_tgname	= opt[1].str;
-							new->ev_origin		= opt[2].ival;
-						}
-						else
-							parser_errors++;
-
-						$$ = (SlonikStmt *)new;
-					}
-					;
-
-stmt_drop_trigger	: lno K_DROP K_TRIGGER option_list
-					{
-						SlonikStmt_drop_trigger *new;
-						statement_option opt[] = {
-							STMT_OPTION_INT( O_TAB_ID, -1 ),
-							STMT_OPTION_STR( O_TRIG_NAME, NULL ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
-							STMT_OPTION_END
-						};
-
-						new = (SlonikStmt_drop_trigger *)
-								malloc(sizeof(SlonikStmt_drop_trigger));
-						memset(new, 0, sizeof(SlonikStmt_drop_trigger));
-						new->hdr.stmt_type		= STMT_DROP_TRIGGER;
-						new->hdr.stmt_filename	= current_file;
-						new->hdr.stmt_lno		= $1;
-
-						if (assign_options(opt, $4) == 0)
-						{
-							new->trig_tabid		= opt[0].ival;
-							new->trig_tgname	= opt[1].str;
-							new->ev_origin		= opt[2].ival;
-						}
-						else
-							parser_errors++;
-
-						$$ = (SlonikStmt *)new;
-					}
-					;
-
 stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 					{
 						SlonikStmt_subscribe_set *new;
@@ -1604,11 +1537,6 @@ option_list_item	: K_ID '=' option_item_id
 						$4->opt_code	= O_TAB_ID;
 						$$ = $4;
 					}
-					| K_TRIGGER K_NAME '=' option_item_literal
-					{
-						$4->opt_code	= O_TRIG_NAME;
-						$$ = $4;
-					}
 					| K_FULL K_QUALIFIED K_NAME '=' option_item_literal
 					{
 						$5->opt_code	= O_FQNAME;
@@ -1824,7 +1752,6 @@ option_str(option_code opt_code)
 		case O_SPOOLNODE:		return "spoolnode";
 		case O_TAB_ID:			return "table id";
 		case O_TIMEOUT:			return "timeout";
-		case O_TRIG_NAME:		return "trigger name";
 		case O_USE_KEY:			return "key";
 		case O_WAIT_CONFIRMED:	return "confirmed";
 		case O_WAIT_ON:			return "wait on";

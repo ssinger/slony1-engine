@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.38 2007-06-27 15:51:36 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.39 2007-07-05 18:19:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -33,24 +33,6 @@ int			vac_frequency = SLON_VACUUM_FREQUENCY;
 static int	vac_bias = 0;
 static unsigned long earliest_xid = 0;
 static unsigned long get_earliest_xid(PGconn *dbconn);
-
-/* The list of tables that need to be vacuumed by Slony-I */
-/* @-nullassign @*/
-static char *table_list[] = {
-	"%s.sl_event",
-	"%s.sl_confirm",
-	"%s.sl_setsync",
-	"%s.sl_log_1",
-	"%s.sl_log_2",
-	"%s.sl_seqlog",
-	"pg_catalog.pg_listener",
-	"pg_catalog.pg_statistic",
-	NULL  
-};
- /* @end@ */
-
-static char tstring[255];		/* string used to store table names for the
-								 * VACUUM statements */
 
 /* ----------
  * cleanupThread_main

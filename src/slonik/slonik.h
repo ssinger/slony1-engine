@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.31 2007-06-05 22:22:07 wieck Exp $
+ *	$Id: slonik.h,v 1.32 2007-07-05 18:19:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -37,8 +37,6 @@ typedef struct SlonikStmt_set_drop_table_s SlonikStmt_set_drop_table;
 typedef struct SlonikStmt_set_drop_sequence_s SlonikStmt_set_drop_sequence;
 typedef struct SlonikStmt_set_move_table_s SlonikStmt_set_move_table;
 typedef struct SlonikStmt_set_move_sequence_s SlonikStmt_set_move_sequence;
-typedef struct SlonikStmt_store_trigger_s SlonikStmt_store_trigger;
-typedef struct SlonikStmt_drop_trigger_s SlonikStmt_drop_trigger;
 typedef struct SlonikStmt_subscribe_set_s SlonikStmt_subscribe_set;
 typedef struct SlonikStmt_unsubscribe_set_s SlonikStmt_unsubscribe_set;
 typedef struct SlonikStmt_lock_set_s SlonikStmt_lock_set;
@@ -60,7 +58,6 @@ typedef enum
 	STMT_DROP_NODE,
 	STMT_DROP_PATH,
 	STMT_DROP_SET,
-	STMT_DROP_TRIGGER,
 	STMT_ECHO,
 	STMT_EXIT,
 	STMT_FAILED_NODE,
@@ -79,7 +76,6 @@ typedef enum
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_STORE_PATH,
-	STMT_STORE_TRIGGER,
 	STMT_SUBSCRIBE_SET,
 	STMT_UNINSTALL_NODE,
 	STMT_UNLOCK_SET,
@@ -328,24 +324,6 @@ struct SlonikStmt_set_move_sequence_s
 };
 
 
-struct SlonikStmt_store_trigger_s
-{
-	SlonikStmt	hdr;
-	int			trig_tabid;
-	char	   *trig_tgname;
-	int			ev_origin;
-};
-
-
-struct SlonikStmt_drop_trigger_s
-{
-	SlonikStmt	hdr;
-	int			trig_tabid;
-	char	   *trig_tgname;
-	int			ev_origin;
-};
-
-
 struct SlonikStmt_subscribe_set_s
 {
 	SlonikStmt	hdr;
@@ -547,8 +525,6 @@ extern int	slonik_set_drop_table(SlonikStmt_set_drop_table * stmt);
 extern int	slonik_set_drop_sequence(SlonikStmt_set_drop_sequence * stmt);
 extern int	slonik_set_move_table(SlonikStmt_set_move_table * stmt);
 extern int	slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt);
-extern int	slonik_store_trigger(SlonikStmt_store_trigger * stmt);
-extern int	slonik_drop_trigger(SlonikStmt_drop_trigger * stmt);
 extern int	slonik_subscribe_set(SlonikStmt_subscribe_set * stmt);
 extern int	slonik_unsubscribe_set(SlonikStmt_unsubscribe_set * stmt);
 extern int	slonik_lock_set(SlonikStmt_lock_set * stmt);

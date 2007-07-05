@@ -1,4 +1,4 @@
---- $Id: test_listen_path_gen.sql,v 1.1 2006-03-20 22:20:48 cbbrowne Exp $
+--- $Id: test_listen_path_gen.sql,v 1.2 2007-07-05 18:19:04 wieck Exp $
 
 -- This SQL script is used to test the new listen path generation code
 -- to make sure the resulting sl_listen allows all nodes to be 
@@ -102,7 +102,7 @@ end;' language plpgsql;
 --Test1
 -- 21 <-> 20 <-> 1 <-> 10 <-> 11
 
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node(no_id) values (1);
 insert into _slony_regress1.sl_node(no_id) values (10);
@@ -145,7 +145,7 @@ select "_slony_regress1".are_all_nodes_audible();
 -- | / \ |
 -- v / \ v
 -- 3 5
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node(no_id) values (1);
 insert into _slony_regress1.sl_node(no_id) values (2);
@@ -168,7 +168,7 @@ select "_slony_regress1".are_all_nodes_audible();
 
 --Test3
 --Fully meshed setup with 10 nodes
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node (no_id) select * from nodes;
 
@@ -186,7 +186,7 @@ select "_slony_regress1".are_all_nodes_audible();
 --Test4
 --A transitiv graph with 10 nodes
 --This should warn about unreachable nodes
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node (no_id) select * from nodes;
 
@@ -203,7 +203,7 @@ select "_slony_regress1".are_all_nodes_audible();
 --Test5
 --A (nearly) transitiv graph with 10 nodes, but with the missing
 --connection (1 -> 10) added.
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node (no_id) select * from nodes;
 
@@ -224,7 +224,7 @@ select "_slony_regress1".are_all_nodes_audible();
 --Test6
 -- 21 <-> 20 <-> 1 <-> 10 <-> 11
 
-truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_trigger, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
+truncate _slony_regress1.sl_set, _slony_regress1.sl_setsync, _slony_regress1.sl_table, _slony_regress1.sl_sequence, _slony_regress1.sl_subscribe, _slony_regress1.sl_listen, _slony_regress1.sl_path, _slony_regress1.sl_node;
 
 insert into _slony_regress1.sl_node(no_id) values (1);
 insert into _slony_regress1.sl_node(no_id) values (10);

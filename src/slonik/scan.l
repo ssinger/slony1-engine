@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.27 2007-04-18 15:03:51 cbbrowne Exp $
+ *	$Id: scan.l,v 1.28 2007-07-05 18:19:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer
@@ -129,7 +129,6 @@ switch			{ return K_SWITCH;			}
 sync			{ return K_SYNC;			}
 table			{ return K_TABLE;			}
 timeout			{ return K_TIMEOUT;			}
-trigger			{ return K_TRIGGER;			}
 true			{ return K_TRUE;			}
 try				{ return K_TRY;				}
 uninstall		{ return K_UNINSTALL;		}

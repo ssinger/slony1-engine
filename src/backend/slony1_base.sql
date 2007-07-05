@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.34 2007-06-27 15:51:35 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.35 2007-07-05 18:19:04 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -133,25 +133,6 @@ comment on column @NAMESPACE@.sl_table.tab_set is 'ID of the replication set the
 comment on column @NAMESPACE@.sl_table.tab_idxname is 'The name of the primary index of the table';
 comment on column @NAMESPACE@.sl_table.tab_altered is 'Has the table been modified for replication?';
 comment on column @NAMESPACE@.sl_table.tab_comment is 'Human-oriented description of the table';
-
-
--- ----------------------------------------------------------------------
--- TABLE sl_trigger
--- ----------------------------------------------------------------------
-create table @NAMESPACE@.sl_trigger (
-	trig_tabid			int4,
-	trig_tgname			name,
-
-	CONSTRAINT "sl_trigger-pkey"
-		PRIMARY KEY (trig_tabid, trig_tgname),
-	CONSTRAINT "trig_tabid-tab_id-ref"
-		FOREIGN KEY (trig_tabid)
-		REFERENCES @NAMESPACE@.sl_table (tab_id)
-		ON DELETE CASCADE
-) WITHOUT OIDS;
-comment on table @NAMESPACE@.sl_trigger is 'Holds information about triggers on tables managed using Slony-I';
-comment on column @NAMESPACE@.sl_trigger.trig_tabid is 'Slony-I ID number of table the trigger is on';
-comment on column @NAMESPACE@.sl_trigger.trig_tgname is 'Indicates the name of a trigger';
 
 
 -- ----------------------------------------------------------------------
