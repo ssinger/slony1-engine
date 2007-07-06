@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.4 2007-07-05 19:50:01 cbbrowne Exp $
+$Id: TODO,v 1.5 2007-07-06 18:40:25 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -52,6 +52,18 @@ Longer Term Items
 - Windows-compatible version of tools/slony1_dump.sh
 
 - Clone Node - use pg_dump/PITR to populate a new subscriber node
+
+- test scripts should generate output that can be readily aggregated.
+
+  Initial prototype has them generating SQL output; unfortunately,
+  if we accept this from arbitrary sources, this is the very picture
+  of an SQL injection attack.  Before doing that, we'll need to
+  turn it into some suitable tabular/delimited format that can be
+  parsed into SQL.
+
+  When defining what data there should be, it is useful to use SQL for
+  now.  But this needs NOT to be the form transmitted "across the
+  wire."
 
 Wishful Thinking
 ----------------------------
