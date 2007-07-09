@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.7 2007-07-09 19:31:10 cbbrowne Exp $
+$Id: TODO,v 1.8 2007-07-09 19:34:35 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -31,6 +31,15 @@ Longer Term Items
 - Add more tests (what???) to test_slony_state script(s).
 
   e.g. - add a warning if there exist tables with generated PK.
+
+  Arguably, that isn't really a good thing to do; if there is a table
+  with column generated via TABLE ADD KEY, then we have the
+  undesirable result that there will be an error/warning reported
+  every time test_slony_state is run.
+
+  Perhaps there should be a second script that looks for "static"
+  problems, so we can leave test_slony_state to look for "dynamic"
+  problems.
 
 - Use PGXS
 
