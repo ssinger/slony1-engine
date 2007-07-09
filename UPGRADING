@@ -1,6 +1,6 @@
 Upgrading from an earlier version of Slony-I to 1.2
 -----------------------------------------------------
-$Id: UPGRADING,v 1.3 2007-02-16 23:35:13 cbbrowne Exp $
+$Id: UPGRADING,v 1.4 2007-07-09 19:10:20 cbbrowne Exp $
 
 When upgrading Slony-I, the Slony installation on all nodes in a cluster
 must be upgraded at once, using the slonik command UPDATE FUNCTIONS.
@@ -30,7 +30,7 @@ The section is entitled "Slony-I Upgrade", distributed as
 doc/adminguide/slonyupgrade.html in the documentation package.
 
 Nullable Column issue in version 1.2
-===================================
+=====================================
 
 In version 1.2, a check has been added to reject subscriptions to
 tables where the candidate primary key has columns that are "Nullable"
@@ -63,3 +63,14 @@ subscribers; such queries will run rapidly against empty tables.
 It will take longer to apply this change to a table that already
 contains a great deal of data, as the alteration will scan the table
 to verify that there are no tuples where the column is NULL.
+
+TABLE ADD KEY change in version 2.0
+=====================================
+
+In version 2.0, Slony-I drops out support for creating
+system-generated "pseudo primary keys" that involve adding in a custom
+Slony-I-generated column.
+
+There is documentation in the Admin Guide (slonyupgrade.sgml,
+slonyupgrade.html) explaining approaches to "cleaning up" after having
+used TABLE ADD KEY.
