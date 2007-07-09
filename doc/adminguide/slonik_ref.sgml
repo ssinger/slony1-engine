@@ -1863,6 +1863,11 @@ STORE TRIGGER (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+
+    <para> In &slony1; version 2.0, this command is removed as
+    obsolete because triggers are no longer <quote>messed around
+    with</quote> in the system catalogue. </para>
+
    </refsect1>
   </refentry>
 
@@ -1925,6 +1930,11 @@ DROP TRIGGER (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+
+    <para> In &slony1; version 2.0, this command is removed as
+    obsolete because triggers are no longer <quote>messed around
+    with</quote> in the system catalogue. </para>
+
    </refsect1>
   </refentry>
   
@@ -2395,7 +2405,7 @@ UNLOCK SET (
      origin).  You would probably prefer to <command>MOVE SET</command>
      instead of <command>FAILOVER</command>, if at all possible, as
      <command>FAILOVER</command> winds up discarding the old origin
-     node as being corrupted. Before <commadand>MOVE SET</command> will
+     node as being corrupted. Before <command>MOVE SET</command> will
      function a <command>LOCK SET</command> is needed.
 </para>
      
