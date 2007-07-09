@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.38 2007-07-05 20:52:06 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.39 2007-07-09 15:21:28 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -105,7 +105,7 @@ monitor slony using <application>MRTG</application> without installing
 Target[db_replication_lagtime]:`/bin/snmpReplicationLagTime.sh 2`
 MaxBytes[db_replication_lagtime]: 400000000
 Title[db_replication_lagtime]: db: replication lag time
-PageTop[db_replication_lagtime]: <H1>db: replication lag time</H1>
+PageTop[db_replication_lagtime]: &lt;H1&gt;db: replication lag time&lt;/H1&gt;
 Options[db_replication_lagtime]: gauge,nopercent,growright
 </programlisting>
 
