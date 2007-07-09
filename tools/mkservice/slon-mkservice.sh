@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: slon-mkservice.sh,v 1.2 2007-04-18 14:57:31 cbbrowne Exp $
+# $Id: slon-mkservice.sh,v 1.2.2.1 2007-07-09 19:07:01 cbbrowne Exp $
 #
 # contributed by Andrew Hammond <andrew.george.hammond@gmail.com>
 #

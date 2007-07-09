@@ -1,4 +1,8 @@
-$Id: RELEASE,v 1.1.2.6 2007-06-21 20:29:12 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.7 2007-07-09 19:07:01 cbbrowne Exp $
+
+RELEASE 1.2.???
+
+- Add in tools/mkservice scripts previously added to CVS HEAD
 
 RELEASE 1.2.10
 
