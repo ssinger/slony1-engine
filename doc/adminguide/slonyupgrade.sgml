@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.6 2007-04-18 15:03:51 cbbrowne Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.7 2007-07-09 15:19:49 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -112,11 +112,13 @@ and n.oid = c.relnamespace order by n.nspname, c.relname; </command>
 <listitem><para> Drop the table from replication using the &lslonik;
 command <xref linkend="stmtsetdroptable">. </para>
 
-<para> This does <emphasis>not</emphasis> drop out the &slony1;-generated column. </para>
-
+<para> This does <emphasis>not</emphasis> drop out the
+&slony1;-generated column. </para>
 </listitem>
-<listitem><para> On each node, run an SQL script to alter the table, dropping the extra column.</para> 
-<para> <command> alter table whatever drop column "_Slony-I_cluster-rowID";</command> </para>
+
+<listitem><para> On each node, run an SQL script to alter the table,
+dropping the extra column.</para> <para> <command> alter table
+whatever drop column "_Slony-I_cluster-rowID";</command> </para>
 
 <para> This needs to be run individually against each node.  Depending
 on your preferences, you might wish to use <xref
@@ -189,6 +191,51 @@ on all the nodes desired. </para> </listitem>
 if desired (<xref linkend="stmtmergeset">). </para> </listitem>
 
 </itemizedlist>
+
+<para> This approach should be fine for tables that are relatively
+small, or infrequently used.  If, on the other hand, the table is
+large and heavily used, another approach may prove necessary, namely
+to create your own sequence, and <quote>promote</quote> the formerly
+&slony1;-generated column into a <quote>real</quote> column in your
+database schema.  An outline of the steps is as follows: </para>
+
+<itemizedlist>
+
+<listitem><para> Add a sequence that assigns values to the
+column. </para>
+
+<para> Setup steps will include SQL <command>CREATE
+SEQUENCE</command>, SQL <command>SELECT SETVAL()</command> (to set the
+value of the sequence high enough to reflect values used in the
+table), Slonik <xref linkend="stmtcreateset"> (to create a set to
+assign the sequence to), Slonik <xref linkend="stmtsetaddsequence">
+(to assign the sequence to the set), Slonik <xref
+linkend="stmtsubscribeset"> (to set up subscriptions to the new
+set)</para>
+</listitem>
+
+<listitem><para> Attach the sequence to the column on the
+table. </para>
+
+<para> This involves <command>ALTER TABLE ALTER COLUMN</command>,
+which must be submitted via the Slonik command <xref
+linkend="stmtddlscript">. </para>
+</listitem>
+
+<listitem><para> Rename the column
+<envar>_Slony-I_@CLUSTERNAME@_rowID</envar> so that &slony1; won't
+consider it to be under its control.</para>
+
+<para> This involves <command>ALTER TABLE ALTER COLUMN</command>,
+which must be submitted via the Slonik command <xref
+linkend="stmtddlscript">. </para>
+
+<para> Note that these two alterations might be accomplished via the
+same <xref linkend="stmtddlscript"> request. </para>
+</listitem>
+
+</itemizedlist>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
