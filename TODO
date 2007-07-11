@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.8 2007-07-09 19:34:35 cbbrowne Exp $
+$Id: TODO,v 1.9 2007-07-11 17:21:31 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -25,6 +25,10 @@ verify that upgrades work properly.
 - update autoconf to be better aware of where DocBook document
   generation tools live
 
+- Clone Node - use pg_dump/PITR to populate a new subscriber node
+
+  Jan working on this
+
 Longer Term Items
 ---------------------------
 
@@ -44,20 +48,6 @@ Longer Term Items
 - Use PGXS
 
 - Windows-compatible version of tools/slony1_dump.sh
-
-- Clone Node - use pg_dump/PITR to populate a new subscriber node
-
-- test scripts should generate output that can be readily aggregated.
-
-  Initial prototype has them generating SQL output; unfortunately,
-  if we accept this from arbitrary sources, this is the very picture
-  of an SQL injection attack.  Before doing that, we'll need to
-  turn it into some suitable tabular/delimited format that can be
-  parsed into SQL.
-
-  When defining what data there should be, it is useful to use SQL for
-  now.  But this needs NOT to be the form transmitted "across the
-  wire."
 
 Wishful Thinking
 ----------------------------
