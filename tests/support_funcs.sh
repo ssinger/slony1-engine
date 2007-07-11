@@ -5,6 +5,8 @@ err()
     shift
     echo 1>&2 "$0: ERROR: $*"
     numerrors=`expr ${numerrors} + 1`
+
+    gen_testinfo "$*"
     exit $exitval
 }
 
@@ -197,4 +199,36 @@ random_az()
   esac
 
   echo ${ranstring}
+}
+
+gen_testinfo ()
+{
+    DESC=$1;
+    UNAMEM=`uname -m`
+    UNAMER=`uname -r`
+    UNAMES=`uname -s`
+    UNAMEV=`uname -v`
+    HOST=`hostname -f`
+    USERNAME=`whoami`
+    
+    #TESTSTARTTIME is calculated at the very beginning...
+    TESTENDTIME=`date +"%Y-%m-%d %H:%M:%S %Z"`
+
+    CLNAME="\"_${CLUSTER1}\""
+
+    if [[ x$DESC = x'' ]]; then
+	OK="true"
+    else
+	OK="false"
+    fi
+
+    BASEOUTPUT="select ${CLNAME}.getModuleversion() || '|' || ${CLNAME}.slonyVersionMajor() || '|' || ${CLNAME}.slonyVersionMinor() || '|' || ${CLNAME}.slonyVersionPatchlevel() || '|' || version() || '|';"
+
+    BASEOUTPUT=`${pgbindir}/psql -d ${DB1} -h ${HOST1} -p ${PORT1} -U ${USER1} -c "${QUERY}" -qAt`
+    BASEOUTPUT="${BASEOUTPUT}|${UNAMEM}|${UNAMER}|${UNAMES}|${UNAMEV}|"
+    BASEOUTPUT="${BASEOUTPUT}|${HOST}|${SLONYTESTER}|${testname}|${TESTSTARTTIME}|${TESTENDTIME}|${OK}|${DESC}"
+
+
+    echo "${BASEOUTPUT}" >> ${SLONYTESTFILE}
+    echo "${BASEOUTPUT}"
 }

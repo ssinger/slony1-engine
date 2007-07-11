@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.14 2007-04-20 21:43:14 cbbrowne Exp $
+# $Id: run_test.sh,v 1.15 2007-07-11 17:20:18 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -38,8 +38,11 @@ if [ -z "$2" ]; then
   esac
 fi
 
+TESTSTARTTIME=`date +"%Y-%m-%d %H:%M:%S %Z"`
+
+
 if [ ! -x "$pgbindir/psql" ]; then
-  echo "please set the PGBINDIR envvar to the directory containing psql, createdb, ..."
+  echo "please set the PGBINDIR environment variable to the directory containing psql, createdb, ..."
   exit 1;
 fi
 
@@ -54,6 +57,8 @@ echo "----------------------------------------------------"
 . settings.ik
 . $testname/settings.ik
 . support_funcs.sh
+
+echo "Test by ${SLONYTESTER} to be summarized in ${SLONYTESTFILE}"
 
 trap '
 	echo ""
@@ -758,5 +763,7 @@ status "waiting for slons to die"
 sleep 5
 status "done"
 
+gen_testinfo
 drop_databases
 cleanup
+

@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.12 2007-04-20 20:55:33 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.13 2007-07-11 17:20:18 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -179,6 +179,22 @@ linkend="logshipping">, and a &lslon; is not required for this node.
 
 </glossentry>
 
+<glossentry>
+<glossterm><envar>SLONYTESTER</envar></glossterm>
+
+<glossdef><para> Email address of the person who might be
+contacted about the test results. This is stored in the
+<envar>SLONYTESTFILE</envar>, and may eventually be aggregated in some
+sort of buildfarm-like registry. </para> </glossdef>
+</glossentry>
+
+<glossentry>
+<glossterm><envar>SLONYTESTFILE</envar></glossterm>
+
+<glossdef><para> File in which to store summary results from tests.
+Eventually, this may be used to construct a buildfarm-like repository of
+aggregated test results. </para> </glossdef>
+</glossentry>
 
 </glosslist>
 

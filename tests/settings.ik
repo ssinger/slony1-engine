@@ -1,4 +1,4 @@
-# $Id: settings.ik,v 1.7 2007-06-22 16:12:22 cbbrowne Exp $
+# $Id: settings.ik,v 1.8 2007-07-11 17:20:18 cbbrowne Exp $
 # This file contains the various sets of possible DB
 # configuration defaults/overrides
 
@@ -105,3 +105,6 @@ SLTOOLDIR=${SLTOOLDIR:-"../tools"}
 
 # Email address of the tester
 SLONYTESTER=${SLONYTESTER:-"j.random.luser@example.net"}
+
+# File in which to stow SQL queries that summarize test results
+SLONYTESTFILE=${SLONYTESTFILE:-"/tmp/Slony-I-test-results.log"}
