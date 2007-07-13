@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.9 2007-07-11 17:21:31 cbbrowne Exp $
+$Id: TODO,v 1.10 2007-07-13 22:08:23 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -21,9 +21,6 @@ CANCEL SUBSCRIPTION
 
 Improve script that tries to run UPDATE FUNCTIONS across versions to
 verify that upgrades work properly.
-
-- update autoconf to be better aware of where DocBook document
-  generation tools live
 
 - Clone Node - use pg_dump/PITR to populate a new subscriber node
 
@@ -48,6 +45,10 @@ Longer Term Items
 - Use PGXS
 
 - Windows-compatible version of tools/slony1_dump.sh
+
+- Consider pulling the lexer from psql
+
+  http://developer.postgresql.org/cvsweb.cgi/pgsql/src/bin/psql/psqlscan.l?rev=1.21;content-type=text%2Fx-cvsweb-markup
 
 Wishful Thinking
 ----------------------------
