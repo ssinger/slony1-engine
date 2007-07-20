@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.66.2.6 2007-06-14 14:56:22 cbbrowne Exp $
+ *	$Id: slon.c,v 1.66.2.7 2007-07-20 19:53:25 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -94,6 +94,8 @@ Usage(char *const argv[])
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Options:\n");
 
+	fprintf(stderr, "    -h                    print usage message and exit\n");
+	fprintf(stderr, "    -v                    print version and exit\n");
 	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
 	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
