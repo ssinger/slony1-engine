@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.11 2007-06-07 19:36:14 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.12 2007-07-20 19:55:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3921,7 +3921,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		}
 		strncpy(dest, dstring_data(&script) + startpos, endpos-startpos);
 		dest[STMTS[stmtno]-startpos] = 0;
-		slon_mkquery(&query, dest);
+		slon_mkquery(&query, "%s", dest);
 		printf("DDL Statement %d: (%d,%d) [%s]\n", stmtno, startpos, endpos, dest);
 		free(dest);
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.16 2007-06-19 15:51:18 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.17 2007-07-20 19:55:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -6063,7 +6063,7 @@ process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
 			}
 			strncpy(dest, ddl_script + startpos, endpos-startpos);
 			dest[STMTS[stmtno]-startpos] = 0;
-			slon_mkquery(&query1, dest);
+			slon_mkquery(&query1, "%s", dest);
 			slon_log(SLON_CONFIG, "remoteWorkerThread_%d: DDL Statement %d: [%s]\n", 
 					 node->no_id, stmtno, dest);						 
 			free(dest);
