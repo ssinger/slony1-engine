@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.80 2007-07-20 17:33:29 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.81 2007-07-20 19:59:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -82,12 +82,7 @@ main(int argc, const char *argv[])
 	extern int	optind;
 	int			opt;
 
-    static struct option longopts[] = {
-        { "help",       no_argument,    NULL,   "h"},
-        { "version",    no_argument,    NULL,   "v"}
-    };
-
-	while ((opt = getopt_long(argc, (char **)argv, "hv", longopts, NULL)) != -1)
+	while ((opt = getopt(argc, (char **)argv, "hv")) != EOF)
 	{
 		switch (opt)
 		{

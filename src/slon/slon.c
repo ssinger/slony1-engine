@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.75 2007-07-20 17:33:29 cbbrowne Exp $
+ *	$Id: slon.c,v 1.76 2007-07-20 19:59:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -95,8 +95,8 @@ Usage(char *const argv[])
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Options:\n");
 
-    fprintf(stderr, "    -h, --help            print usage message and exit\n")
-    fprintf(stedrr, "    -v, --version         print version and exit\n");
+	fprintf(stderr, "    -h                    print usage message and exit\n");
+	fprintf(stderr, "    -v                    print version and exit\n");
 	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
 	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
 	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
@@ -136,10 +136,6 @@ main(int argc, char *const argv[])
 	extern int	optind;
 	extern char *optarg;
 
-    static struct option longopts[] = {
-        { "help",       no_argument,    NULL,   "h"},
-        { "version",    no_argument,    NULL,   "v"}
-    };
 
 #ifdef WIN32
 	WSADATA		wsaData;
@@ -172,7 +168,7 @@ main(int argc, char *const argv[])
 
 	InitializeConfOptions();
 
-	while ((c = getopt_long(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:x:hv?", longopts, NULL)) != -1)
+	while ((c = getopt(argc, argv, "f:a:d:s:t:g:c:p:o:q:r:l:x:hv?")) != EOF)
 	{
 		switch (c)
 		{
