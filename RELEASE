@@ -1,8 +1,11 @@
-$Id: RELEASE,v 1.1.2.7 2007-07-09 19:07:01 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.8 2007-07-27 21:39:11 cbbrowne Exp $
 
 RELEASE 1.2.???
 
 - Add in tools/mkservice scripts previously added to CVS HEAD
+
+- During subscription, do UPDATE to pg_class.relhasindex *after* the
+  TRUNCATE because, in 8.2+, TRUNCATE resets this attribute
 
 RELEASE 1.2.10
 
