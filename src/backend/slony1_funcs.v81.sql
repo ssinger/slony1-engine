@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v81.sql,v 1.1.2.1 2007-02-08 22:55:58 cbbrowne Exp $
+-- $Id: slony1_funcs.v81.sql,v 1.1.2.2 2007-07-27 21:37:33 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -40,6 +40,13 @@ begin
 	end if;
 
 	-- ----
+	-- Try using truncate to empty the table and fallback to
+	-- delete on error.
+	-- ----
+	execute ''truncate '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+	raise notice ''truncate of % succeeded'', v_tab_fqname;
+
+	-- ----
 	-- Setting pg_class.relhasindex to false will cause copy not to
 	-- maintain any indexes. At the end of the copy we will reenable
 	-- them and reindex the table. This bulk creating of indexes is
@@ -47,12 +54,6 @@ begin
 	-- ----
 	update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
 
-	-- ----
-	-- Try using truncate to empty the table and fallback to
-	-- delete on error.
-	-- ----
-	execute ''truncate '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
-	raise notice ''truncate of % succeeded'', v_tab_fqname;
 	return 1;
 	exception when others then
 		raise notice ''truncate of % failed - doing delete'', v_tab_fqname;
