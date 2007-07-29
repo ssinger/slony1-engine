@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.3 2007-05-15 14:05:15 wieck Exp $
+# $Id: test_2_pgbench.in,v 1.4 2007-07-29 20:15:41 wieck Exp $
 # **********
 # test_2_pgbench
 #
@@ -364,51 +364,5 @@ kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 kill $slon3_pid 2>/dev/null
 
-echo -n "**** comparing databases ... "
-psql $DB1 -o dump.tmp.1.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
-			from accounts order by aid;
-	select 'branches:'::text, bid, bbalance, filler
-			from branches order by bid;
-	select 'tellers:'::text, tid, bid, tbalance, filler
-			from tellers order by tid;
-	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
-_EOF_
-psql $DB2 -o dump.tmp.2.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
-			from accounts order by aid;
-	select 'branches:'::text, bid, bbalance, filler
-			from branches order by bid;
-	select 'tellers:'::text, tid, bid, tbalance, filler
-			from tellers order by tid;
-	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
-_EOF_
-psql $DB3 -o dump.tmp.3.$$ <<_EOF_
-	select 'accounts:'::text, aid, bid, abalance, filler
-			from accounts order by aid;
-	select 'branches:'::text, bid, bbalance, filler
-			from branches order by bid;
-	select 'tellers:'::text, tid, bid, tbalance, filler
-			from tellers order by tid;
-	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
-_EOF_
-
-if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_2.1-2.diff ; then
-	echo "success - databases 1 and 2 are equal."
-	rm dump.tmp.2.$$
-	rm test_2.1-2.diff
-else
-	echo "FAILED - see test_2.1-2.diff for database differences"
-fi
-echo -n "**** comparing databases ... "
-if diff dump.tmp.1.$$ dump.tmp.3.$$ >test_2.1-3.diff ; then
-	echo "success - databases 1 and 3 are equal."
-	rm dump.tmp.3.$$
-	rm dump.tmp.1.$$
-	rm test_2.1-3.diff
-else
-	echo "FAILED - see test_2.1-3.diff for database differences"
-fi
+./compare_pgbench_dumps $DB1 $DB2
+./compare_pgbench_dumps $DB1 $DB3
