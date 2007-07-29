@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.149 2007-07-20 20:20:13 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.150 2007-07-29 17:38:23 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -386,10 +386,17 @@ remoteWorkerThread_main(void *cdata)
 						for(pset = pinfo->set_head; pset != NULL; pset = pset->next)
 						{
 							slon_mkquery(&query1,
-								"select max(ssy_seqno) from %s.sl_setsync "
+								"select max(ssy_seqno) from ("
+								"select ssy_seqno from %s.sl_setsync "
 								"  where ssy_setid = %d "
-								"    and ssy_origin = %d; ",
-								rtcfg_namespace, pset->set_id, node->no_id);
+								"    and ssy_origin = %d "
+								"union "
+								"select ev_seqno from %s.sl_event "
+								"  where ev_origin = %d "
+								"    and ev_type <> 'SYNC' "
+								") as S; ",
+								rtcfg_namespace, pset->set_id, node->no_id,
+								rtcfg_namespace, node->no_id);
 							if (query_execute(node, local_dbconn, &query1) < 0)
 								slon_retry();
 
