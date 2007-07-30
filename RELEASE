@@ -1,11 +1,19 @@
-$Id: RELEASE,v 1.1.2.8 2007-07-27 21:39:11 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.9 2007-07-30 22:33:15 cbbrowne Exp $
 
-RELEASE 1.2.???
+RELEASE 1.2.11
 
 - Add in tools/mkservice scripts previously added to CVS HEAD
 
 - During subscription, do UPDATE to pg_class.relhasindex *after* the
   TRUNCATE because, in 8.2+, TRUNCATE resets this attribute
+
+- Fixed a problem with the setsync tracking with Log Shipping in cases
+  where slon does an internal restart (thereby rereading the
+  pset.ssy_seqno) and ignoring non-SYNC events because those don't
+  change the sl_setsync table.
+
+- More explicit type casting of text objects for compatibility with
+  PostgreSQL 8.3
 
 RELEASE 1.2.10
 

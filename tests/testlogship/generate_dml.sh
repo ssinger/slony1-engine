@@ -114,7 +114,24 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
 
   wait_for_catchup
-  status "second data load complete - now load files into log shipped node"
+
+  status "move set to node 4"
+
+  init_preamble
+  sh ${testname}/moveset.sh ${testname} >> $SCRIPT
+  do_ik
+
+  status "origin moved"
+
+  generate_initdata
+  eval db=\$DB4
+  status "loading extra data to node $db"
+  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
+
+  wait_for_catchup
+
+
+  status "final data load complete - now load files into log shipped node"
   for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*.sql" -type f | sort`; do
     $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
     status "load file ${logfile} - ${?}"
