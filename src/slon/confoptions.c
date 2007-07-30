@@ -558,7 +558,7 @@ static struct config_int ConfigureNamesInt[] =
 			SLON_C_INT
 		},
 		&slon_log_level,
-		2,
+		0,
 		0,
 		4
 	},
