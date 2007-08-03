@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.9 2007-07-30 22:33:15 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.10 2007-08-03 16:09:11 cbbrowne Exp $
 
 RELEASE 1.2.11
 
@@ -14,6 +14,22 @@ RELEASE 1.2.11
 
 - More explicit type casting of text objects for compatibility with
   PostgreSQL 8.3
+
+- Fixed problem with DDL SCRIPT statement parser: it wasn't 'quoting'
+  semicolons inside parentheses (this notably occurs in CREATE RULE).
+
+- Fixed problem with DDL SCRIPT statement submission; it was
+  interpreting the statement as a format string, which would have
+  ill effects in the presence of things that are interpreted such
+  as format strings (%d, %f, %s) and \backslashed things like \\, \n.
+
+- Further DDL Script issue: non-terminated statement at the end
+  (e.g. - without trailing semicolon ";") would get omitted.
+
+- Typo fix: when trying to disable a node, the logs would report
+  "enableNode" rather than "disableNode".  Fixed.
+
+- Add usage/version options to help output in slon.
 
 RELEASE 1.2.10
 
