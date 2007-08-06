@@ -2364,7 +2364,7 @@ UNLOCK SET (
      origin).  You would probably prefer to <command>MOVE SET</command>
      instead of <command>FAILOVER</command>, if at all possible, as
      <command>FAILOVER</command> winds up discarding the old origin
-     node as being corrupted. Before <commadand>MOVE SET</command> will
+     node as being corrupted. Before <command>MOVE SET</command> will
      function a <command>LOCK SET</command> is needed.
 </para>
      
