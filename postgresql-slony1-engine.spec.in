@@ -1,27 +1,22 @@
-%{!?perltools:%define perltools 1}
 %{!?docs:%define docs 1}
 %{?buildrhel3:%define kerbdir /usr/kerberos}
 %{!?kerbdir:%define kerbdir "/usr"}
 
-%define pg_version	%(rpm -qv postgresql-devel|head -n 1|awk -F '-' '{print $3}')
-
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
-Release:	1_PG%{pg_version}%{?dist}
+Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://main.slony.info/
-Source0:	http://main.slony.info/downloads/1.2/source/@PACKAGE_NAME@-%{version}.tar.gz
+Source0:	http://main.slony.info/downloads/1.2/source/@PACKAGE_NAME@-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	postgresql-devel, postgresql-server, autoconf
-Requires:	postgresql-server = %{pg_version}
+BuildRequires:	postgresql-devel, postgresql-server, initscripts
+Requires:	postgresql-server 
 
 %if %docs
 BuildRequires:	docbook-style-dsssl
 %endif
-
-%define prefix /usr
 
 %description
 Slony-I is a "master to multiple slaves" replication 
@@ -53,9 +48,9 @@ documentation for Slony-I.
 
 %build
 
-# Temporary measure for 1.2.10-pre
+# Temporary measure for 1.2.10
 %if %docs
-chmod -R 644 doc/*
+find doc/ -type f -exec chmod 600 {} \;
 %endif
 
 CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS
@@ -63,25 +58,16 @@ CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS
 CPPFLAGS="${CPPFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CPPFLAGS
 CFLAGS="${CFLAGS} -I%{_includedir}/et -I%{kerbdir}/include" ; export CFLAGS
 
-# Strip out -ffast-math from CFLAGS....
-
-CFLAGS=`echo $CFLAGS|xargs -n 1|grep -v ffast-math|xargs -n 100`
 export LIBNAME=%{_lib}
 %configure --includedir %{_includedir}/pgsql --with-pgconfigdir=%{_bindir} --libdir=%{_libdir} \
-%if %perltools
 	--with-perltools=%{_bindir} --with-toolsbin=%{_bindir} \
-%endif
 %if %docs
 	--with-docs --with-docdir=%{_docdir}/%{name}-%{version} \
 %endif
 	--datadir %{_datadir}/pgsql --with-pglibdir=%{_libdir}/pgsql 
 
-autoconf
-
 make %{?_smp_mflags}
-%if %perltools
-	make %{?_smp_mflags} -C tools
-%endif
+make %{?_smp_mflags} -C tools
 
 %install
 rm -rf %{buildroot}
@@ -95,20 +81,17 @@ install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
+/bin/chmod 644 COPYRIGHT UPGRADING SAMPLE HISTORY-1.1 RELEASE
 
-if [ -d /etc/rc.d/init.d ]
-then
-	install -d %{buildroot}/etc/rc.d/init.d
-	install -m 755 redhat/@PACKAGE_NAME@.init %{buildroot}/etc/rc.d/init.d/@PACKAGE_NAME@
-fi
+install -d %{buildroot}%{_initrddir}
+install -m 755 redhat/postgresql-slony1-engine.init %{buildroot}%{_initrddir}/postgresql-slony1-engine
 
-# Temporary measure for 1.2.9
+# Temporary measure for 1.2.10
 %if %docs
 	rm -f doc/implementation/.cvsignore
 	rm -f doc/concept/.cvsignore
 %endif
 
-%if %perltools
 cd tools
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
 /bin/rm -rf altperl/*.pl altperl/ToDo altperl/README altperl/Makefile altperl/CVS
@@ -121,7 +104,6 @@ install -m 0644 altperl/slon-tools  %{buildroot}%{_libdir}/pgsql/slon-tools.pm
 /bin/rm -f %{buildroot}%{_bindir}/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/pgsql/slon-tools
 /bin/rm -f %{buildroot}%{_bindir}/old-apache-rotatelogs.patch
-%endif
 
 %clean
 rm -rf %{buildroot}
@@ -148,19 +130,22 @@ fi
 %{_libdir}/pgsql/xxid.so
 %{_datadir}/pgsql/*.sql
 %config(noreplace) %{_sysconfdir}/slon.conf
-%if %perltools
 %{_libdir}/pgsql/slon-tools.pm
 %config(noreplace) %{_sysconfdir}/slon_tools.conf
 %attr(755,root,root) %{_sysconfdir}/rc.d/init.d/@PACKAGE_NAME@
-%endif
 
 %if %docs
 %files docs
-%attr(755,root,root) %{_docdir}/%{name}-%{version}
 %attr(644,root,root) %doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 
 %changelog
+* Mon Aug 6 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.10-2
+- Fix Source0
+- Spec file cleanup (removed macro for perltools)
+- Added initscripts as BR.
+- Fix doc package installation path (and ownership issue)
+
 * Wed Jun 13 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.10-1
 - Update to 1.2.10
 
