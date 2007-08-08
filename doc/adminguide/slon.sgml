@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.31 2007-06-27 17:56:11 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.32 2007-08-08 15:24:23 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -82,7 +82,7 @@
       The <envar>sync_interval</envar>, measured in milliseconds,
       indicates how often <application>slon</application> should check
       to see if a <command>SYNC</command> should be introduced.
-      Default is 10000 ms.  The main loop in
+      Default is 2000 ms.  The main loop in
       <function>sync_Thread_main()</function> sleeps for intervals of
       <envar>sync_interval</envar> milliseconds between iterations.
      </para>
@@ -114,14 +114,48 @@
      <para>
       At the end of each <envar>sync_interval_timeout</envar> timeout
       period, a <command>SYNC</command> will be generated on the
-      <quote>local</quote> node even if there has been no replicatable
-      data updated that would have pushed out a
-      <command>SYNC</command>.
+      <quote>local</quote> node even if there has been no replicable
+      data updated that would have caused a
+      <command>SYNC</command> to be generated. </para>
+
+     <para> If application activity ceases, whether because the
+     application is shut down, or because human users have gone home
+     and stopped introducing updates, the &lslon; will iterate away,
+     waking up every <envar>sync_interval</envar> milliseconds, and,
+     as no updates are being made, no <command>SYNC</command> events
+     would be generated.  Without this timeout parameter,
+     <emphasis>no</emphasis> <command>SYNC</command> events would be
+     generated, and it would appear that replication was falling
+     behind. </para>
+
+     <para> The <envar>sync_interval_timeout</envar> value will lead
+     to eventually generating a <command>SYNC</command>, even though
+     there was no real replication work to be done.  The lower that
+     this parameter is set, the more frequently &lslon; will generate
+     <command>SYNC</command> events when the application is not
+     generating replicable activity; this will have two effects:</para>
+      <itemizedlist>
+
+      <listitem><para> The system will do more replication work.</para> 
+
+      <para> (Of course, since there is no application load on the
+      database, and no data to replicate, this load will be very easy
+      to handle.  </para></listitem>
+
+      <listitem><para> Replication will appear to be kept more
+      <quote>up to date.</quote></para>
+
+      <para> (Of course, since there is no replicable activity going
+      on, being <quote>more up to date</quote> is something of a
+      mirage.) </para></listitem>
+
+      </itemizedlist>
+
      </para>
      <para>
-      Default, and maximum, is 60000 ms, so that you can expect each
-      node to <quote>report in</quote> with a <command>SYNC</command>
-      once each minute.
+      Default is 10000 ms and maximum is 120000 ms. By default, you
+      can expect each node to <quote>report in</quote> with a
+      <command>SYNC</command> every 10 seconds.
      </para>
      <para>
       Note that <command>SYNC</command> events are also generated on
