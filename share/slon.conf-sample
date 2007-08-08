@@ -1,4 +1,4 @@
-# $Id: slon.conf-sample,v 1.6.2.1 2006-12-12 19:50:36 cbbrowne Exp $
+# $Id: slon.conf-sample,v 1.6.2.2 2007-08-08 15:23:30 cbbrowne Exp $
 #
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3
@@ -8,8 +8,8 @@
 #log_level=4
 
 # Check for updates at least this often in milliseconds.
-# Range: [10-60000], default 100
-#sync_interval=100
+# Range: [10-60000], default 2000
+#sync_interval=2000
 
 # Maximum amount of time in milliseconds before issuing a SYNC event, 
 # This prevents a possible race condition in which the action sequence 
@@ -21,8 +21,8 @@
 # next SYNC.  But if all application activity suddenly stops, 
 # there will be no more sequence bumps, so the high frequent -s check 
 # won't detect that.  Thus, the need for sync_interval_timeout.
-# Range: [0-120000], default 1000
-#sync_interval_timeout=1000
+# Range: [0-120000], default 10000
+#sync_interval_timeout=10000
 
 # Maximum number of SYNC events to group together when/if a subscriber
 # falls behind.  SYNCs are batched only if there are that many available 
