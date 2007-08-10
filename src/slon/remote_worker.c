@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.18 2007-07-29 17:29:18 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.19 2007-08-10 18:32:21 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3740,6 +3740,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		archive_terminate(node);
 		return -1;
 	}
+	PQclear(res1);
 	if (archive_dir)
 	{
 		slon_mkquery(&lsquery,
@@ -3750,7 +3751,49 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (rc < 0)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 " could not insert to sl_setsync_offline",
+					 " could not add data to archive",
+					 node->no_id);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			dstring_free(&query2);
+			dstring_free(&query3);
+			dstring_free(&lsquery);
+			dstring_free(&indexregenquery);
+			archive_terminate(node);
+			return -1;
+		}
+
+		/*
+		 * Refresh the sl_sequence_offline table
+		 */
+		slon_mkquery(&lsquery,
+				"delete from %s.sl_sequence_offline;\n",
+				rtcfg_namespace);
+		rc = archive_append_ds(node, &lsquery);
+		if (rc < 0)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					 " could not add data to archive",
+					 node->no_id);
+			slon_disconnectdb(pro_conn);
+			dstring_free(&query1);
+			dstring_free(&query2);
+			dstring_free(&query3);
+			dstring_free(&lsquery);
+			dstring_free(&indexregenquery);
+			archive_terminate(node);
+			return -1;
+		}
+
+		slon_mkquery(&query1,
+				"select seq_id, seq_relname, seq_nspname "
+				"from %s.sl_sequence; ",
+				rtcfg_namespace);
+		res1 = PQexec(pro_dbconn, dstring_data(&query1));
+		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+					 " could not select from sl_sequence",
 					 node->no_id);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
@@ -3762,8 +3805,38 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			archive_terminate(node);
 			return -1;
 		}
+
+		ntuples1 = PQntuples(res1);
+		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+		{
+			slon_mkquery(&lsquery,
+					"insert into %s.sl_sequence_offline "
+					"(seq_id, seq_relname, seq_nspname) "
+					"values ('%q', '%q', '%q'); ",
+					rtcfg_namespace,
+					PQgetvalue(res1, tupno1, 0),
+					PQgetvalue(res1, tupno1, 1),
+					PQgetvalue(res1, tupno1, 2));
+			
+			rc = archive_append_ds(node, &lsquery);
+			if (rc < 0)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+						 " could not add data to archive",
+						 node->no_id);
+				PQclear(res1);
+				slon_disconnectdb(pro_conn);
+				dstring_free(&query1);
+				dstring_free(&query2);
+				dstring_free(&query3);
+				dstring_free(&lsquery);
+				dstring_free(&indexregenquery);
+				archive_terminate(node);
+				return -1;
+			}
+		}
+		PQclear(res1);
 	}
-	PQclear(res1);
 	gettimeofday(&tv_now, NULL);
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 			 "%.3f seconds to build initial setsync status\n",
