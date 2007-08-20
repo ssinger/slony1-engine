@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.35 2007-07-05 18:19:04 wieck Exp $
+-- $Id: slony1_base.sql,v 1.36 2007-08-20 18:22:25 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -546,6 +546,21 @@ comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prev
 create type @NAMESPACE@.vactables as (nspname name, relname name);
 
 comment on type @NAMESPACE@.vactables is 'used as return type for SRF function TablesToVacuum';
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_archive_counter
+--
+--	This table is used to generate the archive number for logshipping.
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_archive_counter (
+	ac_num			bigint,
+	ac_timestamp	timestamp
+) without oids;
+comment on table @NAMESPACE@.sl_archive_counter is 'Table used to generate the log shipping archive number.
+';
+
+insert into @NAMESPACE@.sl_archive_counter (ac_num, ac_timestamp)
+	values (0, 'epoch'::timestamp);
 
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.

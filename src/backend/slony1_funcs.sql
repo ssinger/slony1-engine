@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.117 2007-07-29 20:15:41 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.118 2007-08-20 18:22:25 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5303,6 +5303,22 @@ begin
 		-- create new type - vactables - used by TablesToVacuum()
 		-- ----
 		execute ''create type @NAMESPACE@.vactables as (nspname name, relname name);'';
+	end if;
+
+	-- ----
+	-- The following is already in 1.2.11, do not add any future
+	-- 1.2 version numbers.
+	-- ----
+	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'') then
+		-- ----
+		-- Add new table sl_archive_counter
+		-- ----
+		execute ''create table @NAMESPACE@.sl_archive_counter (
+					ac_num			bigint,
+					ac_timestamp	timestamp
+				) without oids'';
+		execute ''insert into @NAMESPACE@.sl_archive_counter
+				(ac_num, ac_timestamp) values (0, ''''epoch''''::timestamp)'';
 
 	end if;
 
