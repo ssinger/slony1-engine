@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.19 2007-08-03 16:16:08 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.20 2007-08-20 17:02:28 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5848,6 +5848,19 @@ begin
                 execute ''alter table @NAMESPACE@.sl_subscribe set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_table set without oids;'';
                 execute ''alter table @NAMESPACE@.sl_trigger set without oids;'';
+	end if;
+
+	-- ----
+	-- Changes for 1.2.11
+	-- ----
+	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'', ''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'',''1.1.5'', ''1.1.6'', ''1.1.7'', ''1.1.8'', ''1.1.9'', ''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'') then
+		-- Add new table sl_archive_counter
+		execute ''create table @NAMESPACE@.sl_archive_counter (
+						ac_num			bigint,
+						ac_timestamp	timestamp
+					) without oids'';
+		execute ''insert into @NAMESPACE@.sl_archive_counter
+					(ac_num, ac_timestamp) values (0, ''''epoch''''::timestamp)'';
 	end if;
 
 	-- In any version, make sure that the xxidin() functions are defined STRICT

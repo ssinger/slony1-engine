@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.32 2006-07-18 17:59:59 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.32.2.1 2007-08-20 17:02:28 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -572,6 +572,21 @@ create table @NAMESPACE@.sl_config_lock (
 );
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_archive_counter
+--
+--	This table is used to generate the archive number for logshipping.
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_archive_counter (
+	ac_num			bigint,
+	ac_timestamp	timestamp
+) without oids;
+comment on table @NAMESPACE@.sl_archive_counter is 'Table used to generate the log shipping archive number.
+';
+
+insert into @NAMESPACE@.sl_archive_counter (ac_num, ac_timestamp)
+	values (0, 'epoch'::timestamp);
 
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.

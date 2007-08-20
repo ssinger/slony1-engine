@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.19 2007-08-10 18:32:21 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.20 2007-08-20 17:02:28 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -262,8 +262,7 @@ static int	archive_append_ds(SlonNode *node, SlonDString * ds);
 static int	archive_append_str(SlonNode *node, const char *s);
 static int	archive_append_data(SlonNode *node, const char *s, int len);
 static int archive_tracking(SlonNode *node, const char *namespace, 
-					int sub_set, const char *firstseq,
-					const char *seqbuf, const char *timestamp);
+					PGconn *local_dbconn);
 
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
@@ -691,17 +690,9 @@ remoteWorkerThread_main(void *cdata)
 				if (archive_append_str(node, buf) < 0)
 					slon_retry();
 
-				for (pinfo=wd->provider_head; pinfo != NULL; pinfo = pinfo->next)
-				{
-					for(pset = pinfo->set_head; pset != NULL; pset = pset->next)
-					{
-						if (archive_tracking(node, rtcfg_namespace, 
-								pset->set_id, pset->ssy_seqno, seqbuf, 
-								event->ev_timestamp_c) < 0)
-							slon_retry();
-						strcpy(pset->ssy_seqno, seqbuf);
-					}
-				}
+				if (archive_tracking(node, rtcfg_namespace, 
+						local_dbconn) < 0)
+					slon_retry();
 
 				/*
 				 * Leave the archive open for event specific actions.
@@ -875,19 +866,6 @@ remoteWorkerThread_main(void *cdata)
 				slon_appendquery(&query1,
 								 "select %s.dropSet_int(%d); ",
 								 rtcfg_namespace, set_id);
-
-				/*
-				 * The table deleted needs to be dropped from log shipping too
-				 */
-				if (archive_dir)
-				{
-					slon_mkquery(&lsquery,
-								 "delete from %s.sl_setsync_offline "
-								 "  where ssy_setid= %d;",
-								 rtcfg_namespace, set_id);
-					if (archive_append_ds(node, &lsquery) < 0)
-						slon_retry();
-				}
 			}
 			else if (strcmp(event->ev_type, "MERGE_SET") == 0)
 			{
@@ -901,19 +879,6 @@ remoteWorkerThread_main(void *cdata)
 								 rtcfg_namespace,
 								 set_id, add_id);
 
-				/*
-				 * Log shipping gets the change here that we need to delete
-				 * the table being merged from the set being maintained.
-				 */
-				if (archive_dir)
-				{
-					slon_mkquery(&lsquery,
-							  "delete from %s.sl_setsync_offline "
-							  "  where ssy_setid= %d;",
-							  rtcfg_namespace, add_id);
-					if (archive_append_ds(node, &lsquery) < 0)
-						slon_retry();
-				}
 			}
 			else if (strcmp(event->ev_type, "SET_ADD_TABLE") == 0)
 			{
@@ -1301,15 +1266,6 @@ remoteWorkerThread_main(void *cdata)
 								 sub_set, sub_receiver);
 
 				need_reloadListen = true;
-				if (archive_dir)
-				{
-					slon_mkquery(&lsquery,
-								 "delete from %s.sl_setsync_offline "
-								 "  where ssy_setid= %d;",
-								 rtcfg_namespace, sub_set);
-					if (archive_append_ds(node, &lsquery) < 0)
-						slon_retry();
-				}
 			}
 			else if (strcmp(event->ev_type, "DDL_SCRIPT") == 0)
 			{
@@ -3743,26 +3699,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	PQclear(res1);
 	if (archive_dir)
 	{
-		slon_mkquery(&lsquery,
-			     "insert into %s.sl_setsync_offline (ssy_setid, ssy_seqno) "
-			     "values ('%d', '%s');",
-			     rtcfg_namespace, set_id, ssy_seqno);
-		rc = archive_append_ds(node, &lsquery);
-		if (rc < 0)
-		{
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					 " could not add data to archive",
-					 node->no_id);
-			slon_disconnectdb(pro_conn);
-			dstring_free(&query1);
-			dstring_free(&query2);
-			dstring_free(&query3);
-			dstring_free(&lsquery);
-			dstring_free(&indexregenquery);
-			archive_terminate(node);
-			return -1;
-		}
-
 		/*
 		 * Refresh the sl_sequence_offline table
 		 */
@@ -4281,37 +4217,20 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			}
 
 			PQclear(res2);
-
-			/*
-			 * Add a call to the setsync tracking function to the archive log.
-			 * This function ensures that all archive log files are applied in
-			 * the right order.
-			 */
-			if (archive_dir)
-			{
-				for (pset = provider->set_head; pset; pset = pset->next)
-					if (pset->set_id == sub_set) break;
-				if (pset == NULL)
-				{
-					slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-							"set %d not found in runtime config\n",
-							node->no_id, sub_set);
-					slon_retry();
-				}
-
-				slon_log(SLON_DEBUG2, "writing archive log...\n");
-				fflush(stderr);
-				fflush(stdout);
-				rc = archive_tracking(node, rtcfg_namespace, sub_set,
-										 pset->ssy_seqno, seqbuf,
-										 event->ev_timestamp_c);
-				if (rc < 0)
-					slon_retry();
-
-				strcpy(pset->ssy_seqno, seqbuf);
-			}
 		}
 		PQclear(res1);
+
+		/*
+		 * Add a call to the archive tracking function to the archive log.
+		 * This function ensures that all archive log files are applied in
+		 * the right order.
+		 */
+		if (archive_dir)
+		{
+			rc = archive_tracking(node, rtcfg_namespace, local_dbconn);
+			if (rc < 0)
+				slon_retry();
+		}
 
 		/*
 		 * We didn't add anything good in the provider clause. That shouldn't
@@ -5591,7 +5510,7 @@ archive_close(SlonNode *node)
 		"-- End Of Archive Log\n"
 		"------------------------------------------------------------------\n"
 		"commit;\n"
-		"vacuum analyze %s.sl_setsync_offline;\n",
+		"vacuum analyze %s.sl_archive_tracking;\n",
 		rtcfg_namespace);
 	if (rc < 0)
 	{
@@ -5644,30 +5563,64 @@ archive_terminate(SlonNode *node)
  * ----------
  */
 static int
-archive_tracking(SlonNode *node, const char *namespace, int sub_set, 
-					const char *firstseq, const char *seqbuf, 
-					const char *timestamp)
+archive_tracking(SlonNode *node, const char *namespace, 
+					PGconn *local_dbconn)
 {
-	int		rc;
+	SlonDString query;
+	PGresult	*res;
+	int			rc;
 
 	if (!archive_dir)
 		return 0;
+
+	dstring_init(&query);
+	slon_mkquery(&query,
+			"update %s.sl_archive_counter "
+			"    set ac_num = ac_num + 1, "
+			"        ac_timestamp = CURRENT_TIMESTAMP; "
+			"select ac_num, ac_timestamp from %s.sl_archive_counter; ",
+			namespace, namespace);
+	res = PQexec(local_dbconn, dstring_data(&query));
+	if ((rc = PQresultStatus(res)) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+				 node->no_id, dstring_data(&query),
+				 PQresStatus(rc),
+				 PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query);
+		return -1;
+	}
+	if ((rc = PQntuples(res)) != 1)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: expected 1 row in sl_archive_counter - found %d",
+				 node->no_id, rc);
+		PQclear(res);
+		dstring_free(&query);
+		return -1;
+	}
 
 	if (node->archive_fp == NULL)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 				"Cannot write to archive file %s - not open\n",
 				node->no_id, node->archive_temp);
+		PQclear(res);
+		dstring_free(&query);
 		return -1;
 	}
 
 	rc = fprintf(node->archive_fp, 
-		"\nselect %s.setsyncTracking_offline(%d, '%s', '%s', '%s');\n"
+		"\nselect %s.archiveTracking_offline('%s', '%s');\n"
 		"-- end of log archiving header\n"
 		"------------------------------------------------------------------\n"
 		"-- start of Slony-I data\n"
 		"------------------------------------------------------------------\n",
-		namespace, sub_set, firstseq, seqbuf, timestamp);
+		namespace, PQgetvalue(res, 0, 0), PQgetvalue(res, 0, 1));
+	PQclear(res);
+	dstring_free(&query);
 	if (rc < 0)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "

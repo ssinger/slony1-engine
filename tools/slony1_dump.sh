@@ -2,7 +2,7 @@
 # ----------
 # slony1_dump.sh
 #
-# $Id: slony1_dump.sh,v 1.8.2.2 2007-06-21 20:29:13 cbbrowne Exp $
+# $Id: slony1_dump.sh,v 1.8.2.3 2007-08-20 17:02:28 wieck Exp $
 #
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that
@@ -88,15 +88,12 @@ create table $clname.sl_sequence_offline (
 
 
 -- ----------------------------------------------------------------------
--- TABLE sl_setsync_offline
+-- TABLE sl_archive_tracking
 -- ----------------------------------------------------------------------
-create table $clname.sl_setsync_offline (
-	ssy_setid			int4,
-	ssy_seqno			int8,
-	ssy_synctime                    timestamptz,
-
-	CONSTRAINT "sl_setsync-pkey"
-		PRIMARY KEY (ssy_setid)
+create table $clname.sl_archive_tracking (
+	at_counter			bigint,
+	at_created			timestamp,
+	at_applied			timestamp
 );
 
 -- -----------------------------------------------------------------------------
@@ -138,31 +135,32 @@ create or replace function $clname.finishTableAfterCopy(int4) returns int4 as
 language sql;
 
 -- ---------------------------------------------------------------------------------------
--- FUNCTION setsyncTracking_offline (seq_id, seq_origin, ev_seqno, sync_time)
+-- FUNCTION archiveTracking_offline (new_counter, created_timestamp)
 -- ---------------------------------------------------------------------------------------
-create or replace function $clname.setsyncTracking_offline(int4, int8, int8, timestamptz) returns int8
+create or replace function $clname.archiveTracking_offline(int8, timestamp) returns int8
 as '
 declare
-	p_set_id	alias for \$1;
-	p_old_seq	alias for \$2;
-	p_new_seq	alias for \$3;
-	p_sync_time	alias for \$4;
-	v_row		record;
+	p_new_seq	alias for \$1;
+	p_created	alias for \$2;
+	v_exp_seq	int8;
+	v_old_seq	int8;
 begin
-	select ssy_seqno into v_row from $clname.sl_setsync_offline
-		where ssy_setid = p_set_id for update;
+	select at_counter into v_old_seq from $clname.sl_archive_tracking;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception ''Slony-I: current archive tracking status not found'';
 	end if;
 
-	if v_row.ssy_seqno <> p_old_seq then
-		raise exception ''Slony-I: set % is on sync %, this archive log expects %'', 
-			p_set_id, v_row.ssy_seqno, p_old_seq;
+	v_exp_seq := p_new_seq - 1;
+	if v_old_seq <> v_exp_seq then
+		raise exception ''Slony-I: node is on archive counter %, this archive log expects %'', 
+			v_old_seq, v_exp_seq;
 	end if;
-	raise notice ''Slony-I: Process set % sync % time %'', p_set_id, p_new_seq, p_sync_time;
+	raise notice ''Slony-I: Process archive with counter % created %'', p_new_seq, p_created;
 
-	update $clname.sl_setsync_offline set ssy_seqno = p_new_seq, ssy_synctime = p_sync_time
-		where ssy_setid = p_set_id;
+	update $clname.sl_archive_tracking
+		set at_counter = p_new_seq,
+			at_created = p_created,
+			at_applied = CURRENT_TIMESTAMP;
 	return p_new_seq;
 end;
 ' language plpgsql;
@@ -197,12 +195,10 @@ done
 # ----
 # Fill the setsync tracking table with the current status
 # ----
-echo "select 'insert into $clname.sl_setsync_offline values (' ||
-			ssy_setid::text || ', ''' || ssy_seqno || ''');'
-			from $clname.sl_setsync where exists (select 1
-						from $clname.sl_subscribe
-						where ssy_setid = sub_set
-							and sub_receiver = $nodeid);"
+echo "select 'insert into $clname.sl_archive_tracking values (' ||
+			ac_num::text || ', ''' || ac_timestamp::text || 
+			''', CURRENT_TIMESTAMP);'
+			from $clname.sl_archive_counter";
 
 # ----
 # Now dump all the user table data
