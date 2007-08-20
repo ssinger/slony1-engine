@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.10 2007-08-03 16:09:11 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.11 2007-08-20 22:35:32 cbbrowne Exp $
 
 RELEASE 1.2.11
 
@@ -26,10 +26,22 @@ RELEASE 1.2.11
 - Further DDL Script issue: non-terminated statement at the end
   (e.g. - without trailing semicolon ";") would get omitted.
 
+- Added tests to the log shipping case to check for
+  invalidly-evaluated printf() format strings; added data that
+  contains such data, and prepared a DDL script that contained gory
+  format strings.
+
 - Typo fix: when trying to disable a node, the logs would report
   "enableNode" rather than "disableNode".  Fixed.
 
 - Add usage/version options to help output in slon.
+
+- Fix archive logging for replicated sequences.
+
+- Fix to log shipping - added another table, sl_archive_counter where
+  the log writing slon simply tracks when it wrote the last offline
+  archive file and maintains a counter. This counter is now tracked in
+  the offline replica and must increment gap free.
 
 RELEASE 1.2.10
 
