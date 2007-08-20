@@ -2,7 +2,7 @@
 # ----------
 # slony1_dump.sh
 #
-# $Id: slony1_dump.sh,v 1.10 2007-08-20 18:22:26 wieck Exp $
+# $Id: slony1_dump.sh,v 1.11 2007-08-20 22:36:24 cbbrowne Exp $
 #
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that
@@ -198,7 +198,7 @@ done
 echo "select 'insert into $clname.sl_archive_tracking values (' ||
 			ac_num::text || ', ''' || ac_timestamp::text || 
 			''', CURRENT_TIMESTAMP);'
-			from $clname.sl_archive_counter";
+			from $clname.sl_archive_counter;";
 
 # ----
 # Now dump all the user table data
