@@ -1,4 +1,4 @@
-/* $Id: scanner.c,v 1.3 2006-08-04 20:40:19 cbbrowne Exp $ */
+/* $Id: scanner.c,v 1.4 2007-08-21 22:17:55 cbbrowne Exp $ */
 #include <stdio.h>
 #include "scanner.h"
 
@@ -11,6 +11,9 @@ int scan_for_statements (const char *extended_statement) {
   char cchar;
   int d1start, d1end, d2start, d2end, d1stemp;
   int statements;
+  int nparens;
+  int nbrokets;
+  int nsquigb;
   
   /* Initialize */
   cpos = 0;
@@ -21,13 +24,49 @@ int scan_for_statements (const char *extended_statement) {
   d2start = 0;
   d1end = 0;
   state = Q_NORMAL_STATE;
+  nparens = 0;
+  nbrokets = 0;
+  nsquigb = 0;
   
   while (state != Q_DONE) {
     cchar = extended_statement[cpos];
     switch (cchar) {
     case '\0':
+      STMTS[statements++] = ++cpos;
       state = Q_DONE;
       break;
+
+    case '(':
+      if (state == Q_NORMAL_STATE) {
+	nparens ++;
+	break;
+      }
+    case ')':
+      if (state == Q_NORMAL_STATE) {
+	nparens --;
+	break;
+      }
+    case '[':
+      if (state == Q_NORMAL_STATE) {
+	nbrokets ++;
+	break;
+      }
+    case ']':
+      if (state == Q_NORMAL_STATE) {
+	nbrokets --;
+	break;
+      }
+    case '{':
+      if (state == Q_NORMAL_STATE) {
+	nsquigb ++;
+	break;
+      }
+    case '}':
+      if (state == Q_NORMAL_STATE) {
+	nsquigb --;
+	break;
+      }
+
     case '/':
       if (state == Q_NORMAL_STATE) {
 	state = Q_HOPE_TO_CCOMMENT;
@@ -51,8 +90,7 @@ int scan_for_statements (const char *extended_statement) {
 	  bpos = cpos;
 	  break;
 	}
-      } 
-
+      }
       break;
     case '$':
       if (state == Q_NORMAL_STATE) {
@@ -123,7 +161,7 @@ int scan_for_statements (const char *extended_statement) {
       }
       break;
     case '-':
-      if (state == Q_NORMAL_STATE) {
+      if (state == Q_NORMAL_STATE && extended_statement[cpos+1] == '-') {
 	state = Q_HOPE_TO_DASH;
 	break;
       }
@@ -151,7 +189,7 @@ int scan_for_statements (const char *extended_statement) {
       if (state == Q_DOLLAR_UNBUILDING) state = Q_DOLLAR_QUOTING;
       break;
     case ';':
-      if (state == Q_NORMAL_STATE) {
+      if ((state == Q_NORMAL_STATE) && (nparens == 0) && (nbrokets == 0) && (nsquigb == 0)) {
 	STMTS[statements++] = ++cpos;
 	if (statements >= MAXSTATEMENTS) {
 	  return statements;
