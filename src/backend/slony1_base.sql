@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.32.2.1 2007-08-20 17:02:28 wieck Exp $
+-- $Id: slony1_base.sql,v 1.32.2.2 2007-08-21 22:13:22 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -572,6 +572,7 @@ create table @NAMESPACE@.sl_config_lock (
 );
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
+comment on column @NAMESPACE@.sl_config_lock.dummy is 'No data ever goes in this table so the contents never matter.  Indeed, this column does not really need to exist.';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_archive_counter
@@ -584,6 +585,8 @@ create table @NAMESPACE@.sl_archive_counter (
 ) without oids;
 comment on table @NAMESPACE@.sl_archive_counter is 'Table used to generate the log shipping archive number.
 ';
+comment on column @NAMESPACE@.sl_archive_counter.ac_num is 'Counter of SYNC ID used in log shipping as the archive number';
+comment on column @NAMESPACE@.sl_archive_counter.ac_timestamp is 'Time at which the archive log was generated on the subscriber';
 
 insert into @NAMESPACE@.sl_archive_counter (ac_num, ac_timestamp)
 	values (0, 'epoch'::timestamp);
