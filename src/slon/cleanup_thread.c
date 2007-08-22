@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.33.2.3 2006-12-06 09:37:29 xfade Exp $
+ *	$Id: cleanup_thread.c,v 1.33.2.4 2007-08-22 21:20:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,12 +38,14 @@ static unsigned long earliest_xid = 0;
 static unsigned long get_earliest_xid(PGconn *dbconn);
 
 /* The list of tables that need to be vacuumed by Slony-I */
-static char *table_list[] = {"%s.sl_event",
+static char *table_list[] = {
+	"%s.sl_event",
 	"%s.sl_confirm",
 	"%s.sl_setsync",
 	"%s.sl_log_1",
 	"%s.sl_log_2",
 	"%s.sl_seqlog",
+        "%s.sl_archive_counter",
 	"pg_catalog.pg_listener",
 	"pg_catalog.pg_statistic",
 	NULL
