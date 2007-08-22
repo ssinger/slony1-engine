@@ -1,0 +1,93 @@
+<!-- $Id: raceconditions.sgml,v 1.1 2007-08-22 22:06:48 cbbrowne Exp $ -->
+<sect1 id="raceconditions"><title>Race Conditions and &slony1;</title>
+
+<indexterm><primary>race conditions</primary></indexterm>
+
+<para> No, this has nothing to do with racial harmony or lack thereof;
+the <ulink url="http://www.wikipedia.org/"> Wikipedia </ulink>
+describes it thus: <quote>A race condition or race hazard is a flaw in
+a system or process whereby the output of the process is unexpectedly
+and critically dependent on the sequence or timing of other
+events. </quote> In computing applications, race conditions arise most
+frequently in distributed or threaded applications when multiple parts
+of the application depend on some piece of shared state, and, if this
+state is not properly managed, confusion (error!) arises. More
+particularly, this usually involves situations where the state can
+change between the time it was checked and the time of use of the
+state. </para>
+
+<para> &slony1; has run into a number of race conditions during its history:
+
+<itemizedlist>
+
+<listitem><para> <xref linkend="stmtmoveset"> had, during the 1.0 and
+1.1 branches, the problem that nodes did not have any way to prevent
+them from processing <command>SYNC</command> events from the new
+origin node (which their state would cause them to consider a mere
+provider, and therefore <emphasis>not</emphasis> a source of
+replicable data) before recognizing the role change from subscriber to
+provider. </para>
+
+<para> This was fixed by introducing a new <command>ACCEPT
+SET</command> event that would be submitted by the new origin; this
+allowed subscribers to be aware of their need to wait for the
+<command> MOVE SET </command> event.</para> </listitem>
+
+<listitem><para>In a number of places, &slony1; has the SQL
+<command>lock table sl_config_lock;</command> in order to prevent race
+conditions while changing the sl_log_status sequence value. </para>
+</listitem>
+
+<listitem><para> The &lslon; option <xref
+linkend="slon-config-sync-interval-timeout"> is used to prevent a
+possible race condition in which the action sequence is bumped by the
+trigger while inserting the log row, which makes this bump is
+immediately visible to the sync thread, but where the resulting log
+rows are not visible yet.  </para> </listitem>
+
+<listitem><para> The <quote>snapshot visibility</quote> approach used
+by &slony1; to determine what replicated data is to be associated with
+a specific <command>SYNC</command> avoids race conditions that would
+be associated with trying to purely use timestamps or ID ranges to
+determine what data is to be replicated.  </para> </listitem>
+
+<listitem><para> In the 1.2 branch, up to version 1.2.11, which fixed
+this, <link linkend="logshipping"> log shipping </link> had a race
+condition where any time configuration is reloaded by the &lslon; (as
+takes place with a number of events, notably <xref
+linkend="stmtsubscribeset">), there was a risk of the
+<command>SYNC</command> IDs used to ensure proper ordering and
+application of log shipping archive log files being off by one.
+</para>
+
+<para> This was resolved in 1.2.11 by moving the ID number from an
+in-memory variable (susceptible to all sorts of troubles) to being
+managed, transaction-safe, in the subscriber database. </para>
+
+<para> The problem was never exposed by the <link linkend="testbed">
+test bed framework, </link> nicely demonstrating the common finding
+that race conditions are frequently highly dependent on patterns of
+data input or of application timing. </para>
+</listitem>
+
+</itemizedlist>
+
+</para>
+
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"slony.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->
