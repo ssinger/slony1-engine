@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.39 2007-07-09 15:21:28 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.40 2007-08-22 22:05:00 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -232,7 +232,7 @@ MediaWiki </ulink> software.  Note that the
 <option>--categories</option> permits the user to specify a set of
 (comma-delimited) categories with which to associate the output.  If
 you have a series of &slony1; clusters, passing in the option
-<option>--categories=&slony1;</option> leads to the MediaWiki instance
+<option>--categories=slony1</option> leads to the MediaWiki instance
 generating a category page listing all &slony1; clusters so
 categorized on the wiki.  </para>
 
