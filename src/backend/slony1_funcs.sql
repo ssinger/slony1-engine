@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.118 2007-08-20 18:22:25 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.119 2007-08-22 21:21:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5604,6 +5604,11 @@ begin
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_seqlog'';
+	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := ''_@CLUSTERNAME@'';
+	prec.relname := ''sl_archive_counter'';
 	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
