@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.21 2007-08-23 18:04:35 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.22 2007-08-23 18:08:53 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5465,16 +5465,9 @@ archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 	}
 	strcpy(node->archive_counter, PQgetvalue(res, 0, 0));
 	strcpy(node->archive_timestamp, PQgetvalue(res, 0, 1));
-
 	PQclear(res);
 	dstring_free(&query);
-	if (rc < 0)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				"Cannot write to archive file %s - %s\n",
-				node->no_id, node->archive_temp, strerror(errno));
-		return -1;
-	}
+
 	sprintf(node->archive_name, "%s/slony1_log_%d_", archive_dir, 
 			node->no_id);
 	for (i = strlen(node->archive_counter); i < 20; i++)
