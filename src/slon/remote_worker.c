@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.151 2007-08-20 18:22:26 wieck Exp $
+ *	$Id: remote_worker.c,v 1.152 2007-08-23 18:12:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -252,14 +252,13 @@ static int sync_event(SlonNode * node, SlonConn * local_conn,
 static void *sync_helper(void *cdata);
 
 
-static int	archive_open(SlonNode *node, char *seqbuf);
+static int	archive_open(SlonNode *node, char *seqbuf, 
+					PGconn *dbconn);
 static int	archive_close(SlonNode *node);
 static void archive_terminate(SlonNode *node);
 static int	archive_append_ds(SlonNode *node, SlonDString * ds);
 static int	archive_append_str(SlonNode *node, const char *s);
 static int	archive_append_data(SlonNode *node, const char *s, int len);
-static int archive_tracking(SlonNode *node, const char *namespace, 
-					PGconn *local_dbconn);
 
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
@@ -679,18 +678,12 @@ remoteWorkerThread_main(void *cdata)
 			 */
 			if (archive_dir)
 			{
-				ProviderInfo   *pinfo;
-				ProviderSet	   *pset;
 				char			buf[256];
 
-				if (archive_open(node, seqbuf) < 0)
+				if (archive_open(node, seqbuf, local_dbconn) < 0)
 					slon_retry();
 				sprintf(buf, "-- %s", event->ev_type);
 				if (archive_append_str(node, buf) < 0)
-					slon_retry();
-
-				if (archive_tracking(node, rtcfg_namespace, 
-						local_dbconn) < 0)
 					slon_retry();
 
 				/*
@@ -3470,7 +3463,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	if (archive_dir)
 	{
-		rc = archive_open(node, seqbuf);
+		rc = archive_open(node, seqbuf, local_dbconn);
 		if (rc < 0)
 		{
 			dstring_free(&query);
@@ -3830,18 +3823,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			PQclear(res2);
 		}
 		PQclear(res1);
-
-		/*
-		 * Add a call to the archive tracking function to the archive log.
-		 * This function ensures that all archive log files are applied in
-		 * the right order.
-		 */
-		if (archive_dir)
-		{
-			rc = archive_tracking(node, rtcfg_namespace, local_dbconn);
-			if (rc < 0)
-				slon_retry();
-		}
 
 		/*
 		 * We didn't add anything good in the provider clause. That shouldn't
@@ -4968,9 +4949,6 @@ sync_helper(void *cdata)
  *
  * - Second, you generate the header using generate_archive_header()
  *
- * - Third, you need to set up the sync tracking function in the log
- *	 using logarchive_tracking()
- *
  * ========  Here Ends The Header of the Log Shipping Archive ========
  *
  * Then come the various queries (inserts/deletes/updates) that
@@ -4994,8 +4972,10 @@ sync_helper(void *cdata)
  * ----------
  */
 static int
-archive_open(SlonNode *node, char *seqbuf)
+archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 {
+	SlonDString query;
+	PGresult	*res;
 	int		i;
 	int		rc;
 
@@ -5006,7 +4986,10 @@ archive_open(SlonNode *node, char *seqbuf)
 	{
 		node->archive_name = malloc(SLON_MAX_PATH);
 		node->archive_temp = malloc(SLON_MAX_PATH);
-		if (node->archive_name == NULL || node->archive_temp == NULL)
+		node->archive_counter = malloc(64);
+		node->archive_timestamp = malloc(256);
+		if (node->archive_name == NULL || node->archive_temp == NULL || 
+			node->archive_counter == NULL || node->archive_timestamp == NULL)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
 					"Out of memory in archive_open()\n",
@@ -5023,11 +5006,44 @@ archive_open(SlonNode *node, char *seqbuf)
 		return -1;
 	}
 
+	dstring_init(&query);
+	slon_mkquery(&query,
+			"update %s.sl_archive_counter "
+			"    set ac_num = ac_num + 1, "
+			"        ac_timestamp = CURRENT_TIMESTAMP; "
+			"select ac_num, ac_timestamp from %s.sl_archive_counter; ",
+			rtcfg_namespace, rtcfg_namespace);
+	res = PQexec(dbconn, dstring_data(&query));
+	if ((rc = PQresultStatus(res)) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+				 node->no_id, dstring_data(&query),
+				 PQresStatus(rc),
+				 PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query);
+		return -1;
+	}
+	if ((rc = PQntuples(res)) != 1)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: expected 1 row in sl_archive_counter - found %d",
+				 node->no_id, rc);
+		PQclear(res);
+		dstring_free(&query);
+		return -1;
+	}
+	strcpy(node->archive_counter, PQgetvalue(res, 0, 0));
+	strcpy(node->archive_timestamp, PQgetvalue(res, 0, 1));
+	PQclear(res);
+	dstring_free(&query);
+	
 	sprintf(node->archive_name, "%s/slony1_log_%d_", archive_dir, 
 			node->no_id);
-	for (i = strlen(seqbuf); i < 20; i++)
+	for (i = strlen(node->archive_counter); i < 20; i++)
 		strcat(node->archive_name, "0");
-	strcat(node->archive_name, seqbuf);
+	strcat(node->archive_name, node->archive_counter);
 	strcat(node->archive_name, ".sql");
 	strcpy(node->archive_temp, node->archive_name);
 	strcat(node->archive_temp, ".tmp");
@@ -5041,11 +5057,27 @@ archive_open(SlonNode *node, char *seqbuf)
 	}
 
 	rc = fprintf(node->archive_fp,
-				   "-- Slony-I log shipping archive\n"
-				   "-- Node %d, Event %s\n"
-				   "set session_replication_role to replica;\n"
-				   "start transaction;\n",
-				   node->no_id, seqbuf);
+		"------------------------------------------------------------------\n"
+		"-- Slony-I log shipping archive\n"
+		"-- Node %d, Event %s\n"
+		"------------------------------------------------------------------\n"
+		"set session_replication_role to replica;\n"
+		"start transaction;\n",
+		node->no_id, seqbuf);
+	if (rc < 0)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				"Cannot write to archive file %s - %s\n",
+				node->no_id, node->archive_temp, strerror(errno));
+		return -1;
+	}
+	rc = fprintf(node->archive_fp,
+		"select %s.archiveTrackingOffline('%s', '%s');\n"
+		"-- end of log archiving header\n"
+		"------------------------------------------------------------------\n"
+		"-- start of Slony-I data\n"
+		"------------------------------------------------------------------\n",
+		rtcfg_namespace, node->archive_counter, node->archive_timestamp);
 	if (rc < 0)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
@@ -5128,80 +5160,6 @@ archive_terminate(SlonNode *node)
 		fclose(node->archive_fp);
 		node->archive_fp = NULL;
 	}
-}
-
-/* ----------
- * archive_tracking
- * ----------
- */
-static int
-archive_tracking(SlonNode *node, const char *namespace, 
-					PGconn *local_dbconn)
-{
-	SlonDString query;
-	PGresult	*res;
-	int			rc;
-
-	if (!archive_dir)
-		return 0;
-
-	dstring_init(&query);
-	slon_mkquery(&query,
-			"update %s.sl_archive_counter "
-			"    set ac_num = ac_num + 1, "
-			"        ac_timestamp = CURRENT_TIMESTAMP; "
-			"select ac_num, ac_timestamp from %s.sl_archive_counter; ",
-			namespace, namespace);
-	res = PQexec(local_dbconn, dstring_data(&query));
-	if ((rc = PQresultStatus(res)) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_ERROR,
-				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
-				 node->no_id, dstring_data(&query),
-				 PQresStatus(rc),
-				 PQresultErrorMessage(res));
-		PQclear(res);
-		dstring_free(&query);
-		return -1;
-	}
-	if ((rc = PQntuples(res)) != 1)
-	{
-		slon_log(SLON_ERROR,
-				 "remoteWorkerThread_%d: expected 1 row in sl_archive_counter - found %d",
-				 node->no_id, rc);
-		PQclear(res);
-		dstring_free(&query);
-		return -1;
-	}
-
-	if (node->archive_fp == NULL)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				"Cannot write to archive file %s - not open\n",
-				node->no_id, node->archive_temp);
-		PQclear(res);
-		dstring_free(&query);
-		return -1;
-	}
-
-	rc = fprintf(node->archive_fp, 
-		"\nselect %s.archiveTracking_offline('%s', '%s');\n"
-		"-- end of log archiving header\n"
-		"------------------------------------------------------------------\n"
-		"-- start of Slony-I data\n"
-		"------------------------------------------------------------------\n",
-		namespace, PQgetvalue(res, 0, 0), PQgetvalue(res, 0, 1));
-	PQclear(res);
-	dstring_free(&query);
-	if (rc < 0)
-	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-				"Cannot write to archive file %s - %s\n",
-				node->no_id, node->archive_temp, strerror(errno));
-		return -1;
-	}
-
-	return 0;
 }
 
 /* ----------

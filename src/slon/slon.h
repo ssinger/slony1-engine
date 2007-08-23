@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.63 2007-04-20 20:53:18 cbbrowne Exp $
+ *	$Id: slon.h,v 1.64 2007-08-23 18:12:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -110,6 +110,8 @@ struct SlonNode_s
 
 	char	   *archive_name;
 	char	   *archive_temp;
+	char	   *archive_counter;
+	char	   *archive_timestamp;
 	FILE	   *archive_fp;
 
 	SlonNode   *prev;
