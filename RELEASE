@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.11 2007-08-20 22:35:32 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.12 2007-08-23 22:10:36 cbbrowne Exp $
 
 RELEASE 1.2.11
 
@@ -42,6 +42,11 @@ RELEASE 1.2.11
   the log writing slon simply tracks when it wrote the last offline
   archive file and maintains a counter. This counter is now tracked in
   the offline replica and must increment gap free.
+
+- Change the filenames of archive logs to be based on internal archive
+  tracking number.  This makes it easy for the mechanism applying
+  archives to figure out what needs to be applied next - just look in
+  sl_archive_tracking.
 
 RELEASE 1.2.10
 
