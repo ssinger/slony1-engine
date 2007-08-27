@@ -132,9 +132,24 @@ do_initdata()
 
 
   status "final data load complete - now load files into log shipped node"
-  for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*.sql" -type f | sort`; do
-    $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
-    status "load file ${logfile} - ${?}"
+  firstseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | head -1`
+  lastseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | tail -1`
+  status "Logs numbered from ${firstseq} to ${lastseq}"
+  currseq=${firstseq}
+  while : ; do
+#      00000000000000000000
+#      12345678901234567890
+    cs=`printf "%020d" ${currseq}`
+    status "current sequence value: ${cs}"
+    for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*_${cs}.sql" -type f`; do
+      $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
+      status "load file ${logfile} - ${?}"
+    done
+    if [ ${currseq} -gt ${lastseq} ]; then
+      break;
+    else
+      currseq=`expr ${currseq} + 1`
+    fi
   done
   status "done"
 }
