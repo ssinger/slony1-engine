@@ -42,10 +42,10 @@ generate_initdata()
     ra=$(random_number 1 9)
     rb=$(random_number 1 9)
     rc=$(random_number 1 9)
-    echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
-    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
-    echo "INSERT INTO table5(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('${ra}${rb}.${rc}','${ra}.${rb}${rc}','(${ra},${rb})','((${ra},${ra}),(${rb},${rb}),(${rc},${rc}),(${ra},${rc}))','((${ra},${rb}),(${rc},${ra}),(${rb},${rc}),(${rc},${rb}))','<(${ra},${rb}),${rc}>','192.168.${ra}.${rb}${rc}','08:00:2d:0${ra}:0${rb}:0${rc}',X'${ra}${rb}${rc}');" >> $GENDATA
+    echo "INSERT INTO table1(data) VALUES ('${txta} - Gross C format string: %d%05d%s%s%f%l%-72.52LG');" >> ${GENDATA}
+    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> ${GENDATA}
+    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> ${GENDATA}
+    echo "INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('${ra}${rb}.${rc}','${ra}.${rb}${rc}','(${ra},${rb})','((${ra},${ra}),(${rb},${rb}),(${rc},${rc}),(${ra},${rc}))','((${ra},${rb}),(${rc},${ra}),(${rb},${rc}),(${rc},${rb}))','<(${ra},${rb}),${rc}>','192.168.${ra}.${rb}${rc}','08:00:2d:0${ra}:0${rb}:0${rc}',X'${ra}${rb}${rc}');" >> ${GENDATA}
     if [ ${i} -ge ${numrows} ]; then
       break;
     else
@@ -86,6 +86,8 @@ do_initdata()
   sleep 5
   status "pull log shipping dump" 
   PGHOST=${HOST2} PGPORT=${PORT2} PGUSER=${USER2} ${SLTOOLDIR}/slony1_dump.sh ${DB2} ${CLUSTER1} > ${mktmp}/logship_dump.sql
+  status "load schema for replicated tables into node #3"
+  ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${testname}/init_schema.sql
   status "load log shipping dump into node #3"
   ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${mktmp}/logship_dump.sql
   
@@ -112,10 +114,42 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
 
   wait_for_catchup
-  status "second data load complete - now load files into log shipped node"
-  for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*.sql" -type f | sort`; do
-    $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
-    status "load file ${logfile} - ${?}"
+
+  status "move set to node 4"
+
+  init_preamble
+  sh ${testname}/moveset.sh ${testname} >> $SCRIPT
+  do_ik
+
+  status "origin moved"
+
+  generate_initdata
+  eval db=\$DB4
+  status "loading extra data to node $db"
+  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
+
+  wait_for_catchup
+
+
+  status "final data load complete - now load files into log shipped node"
+  firstseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | head -1`
+  lastseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | tail -1`
+  status "Logs numbered from ${firstseq} to ${lastseq}"
+  currseq=${firstseq}
+  while : ; do
+#      00000000000000000000
+#      12345678901234567890
+    cs=`printf "%020d" ${currseq}`
+    status "current sequence value: ${cs}"
+    for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*_${cs}.sql" -type f`; do
+      $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
+      status "load file ${logfile} - ${?}"
+    done
+    if [ ${currseq} -gt ${lastseq} ]; then
+      break;
+    else
+      currseq=`expr ${currseq} + 1`
+    fi
   done
   status "done"
 }

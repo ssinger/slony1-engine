@@ -1,5 +1,5 @@
 NUMCLUSTERS=${NUMCLUSTERS:-"1"}
-NUMNODES=${NUMNODES:-"3"}
+NUMNODES=${NUMNODES:-"4"}
 ORIGINNODE=1
 WORKERS=${WORKERS:-"1"}
 ARCHIVE2=true   # Node #2 needs to run log archiving
