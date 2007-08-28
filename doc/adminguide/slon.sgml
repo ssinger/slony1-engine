@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.29.2.2 2007-08-08 15:23:30 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.29.2.3 2007-08-28 19:27:29 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -148,7 +148,6 @@
 
       </itemizedlist>
 
-     </para>
      <para>
       Default is 10000 ms and maximum is 120000 ms. By default, you
       can expect each node to <quote>report in</quote> with a

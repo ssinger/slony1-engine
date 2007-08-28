@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.16.2.1 2007-08-28 19:19:22 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.16.2.2 2007-08-28 19:27:29 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -76,9 +76,8 @@ place?</para></question>
 <answer><para> Nothing special.  So long as the archiving node remains
 a subscriber, it will continue to generate logs.</para></answer>
 
-<answer><para> <warning> If the archiving node becomes the
-<emphasis>origin,</emphasis> on the other hand, it will
-<emphasis>continue</emphasis> to generate logs.</para> </answer>
+<answer> <warning> <para>If the archiving node becomes the origin, on
+the other hand, it will continue to generate logs.</para> </warning></answer>
 </qandaentry>
 
 <qandaentry> <question> <para> What if we run out of <quote>spool
