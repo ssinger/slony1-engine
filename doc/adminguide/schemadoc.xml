@@ -1,4 +1,5 @@
-<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.7 2006-07-31 18:56:24 cbbrowne Exp $ -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Header: /local/home/ssinger/cvs2svn/cvs2svn-2.3.0/slony-cvsd/slony1-engine/doc/adminguide/Attic/schemadoc.xml,v 1.7.2.1 2007-08-28 19:18:12 cbbrowne Exp $ -->
 
 
 
@@ -10,6 +11,82 @@
     <title>Schema schemadoc</title>
     <para></para>
 
+
+      <section id="table.sl-archive-counter"
+               xreflabel="sl_archive_counter">
+        <title id="table.sl-archive-counter-title">
+         Table:
+         
+         <structname>sl_archive_counter</structname>
+        </title>
+ 
+
+        <para>
+          Table used to generate the log shipping archive number.
+
+        </para>
+
+
+        <para>
+          <variablelist>
+            <title>
+              Structure of <structname>sl_archive_counter</structname>
+            </title>
+
+
+            <varlistentry>
+              <term><structfield>ac_num</structfield></term>
+              <listitem><para>
+                <type>bigint</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Counter of SYNC ID used in log shipping as the archive number
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+            <varlistentry>
+              <term><structfield>ac_timestamp</structfield></term>
+              <listitem><para>
+                <type>timestamp without time zone</type>
+
+
+
+
+
+
+
+              </para>
+
+              <para>
+                Time at which the archive log was generated on the subscriber
+              </para>
+
+            </listitem>
+          </varlistentry>
+
+        </variablelist>
+
+
+
+
+
+
+
+
+
+
+      </para>
+    </section>
 
       <section id="table.sl-config-lock"
                xreflabel="sl_config_lock">
@@ -44,6 +121,10 @@
 
 
 
+              </para>
+
+              <para>
+                No data ever goes in this table so the contents never matter.  Indeed, this column does not really need to exist.
               </para>
 
             </listitem>
@@ -3036,8 +3117,10 @@ DECLARE
 	v_current_status	int4;
 	v_log			int4;
 	v_dummy		record;
+	v_dummy2	record;
 	idef 		text;
 	v_count		int4;
+        v_iname         text;
 BEGIN
 	v_count := 0;
 	select last_value into v_current_status from sl_log_status;
@@ -3052,26 +3135,32 @@ BEGIN
 	else
 		v_log := 1;
 	end if;
-
+--                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
-	for v_dummy in select distinct set_origin from sl_set
-		where not exists 
-                     (select * from pg_catalog.pg_indexes where schemaname = &#39;schemadoc&#39;
-                      and tablename = &#39;sl_log_&#39; || v_log and 
-                      indexname = &#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || set_origin) loop	   
+	for v_dummy in select distinct set_origin from sl_set loop
+            v_iname := &#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || v_dummy.set_origin;
+	    -- raise notice &#39;Consider adding partial index % on sl_log_%&#39;, v_iname, v_log;
+	    -- raise notice &#39;schema: [_schemadoc] tablename:[sl_log_%]&#39;, v_log;
+            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = &#39;sl_log_&#39; || v_log and  indexname = v_iname;
+            if not found then
+		-- raise notice &#39;index was not found - add it!&#39;;
 		idef := &#39;create index &quot;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || v_dummy.set_origin ||
                         &#39;&quot; on sl_log_&#39; || v_log || &#39; USING btree(log_xid xxid_ops) where (log_origin = &#39; || v_dummy.set_origin || &#39;);&#39;;
 		execute idef;
 		v_count := v_count + 1;
+            else
+                -- raise notice &#39;Index % already present - skipping&#39;, v_iname;
+            end if;
 	end loop;
 
 	-- Remove unneeded indices...
-	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.schemaname = &#39;@NAMESPACE&#39;
-                       and i.tablename = &#39;sl_log_&#39; || v_log and
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = &#39;sl_log_&#39; || v_log and
+                       i.indexname like (&#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-%&#39;) and
                        not exists (select 1 from sl_set where
 				i.indexname = &#39;PartInd_schemadoc_sl_log_&#39; || v_log || &#39;-node-&#39; || set_origin)
 	loop
-		idef := &#39;drop index &quot;schemadoc&quot;.&quot;&#39; || v_dummy.indexname || &#39;&quot;;&#39;;
+		-- raise notice &#39;Dropping obsolete index %d&#39;, v_dummy.indexname;
+		idef := &#39;drop index &quot;&#39; || v_dummy.indexname || &#39;&quot;;&#39;;
 		execute idef;
 		v_count := v_count - 1;
 	end loop;
@@ -3537,6 +3626,9 @@ begin
 
         end if;
 
+	if exists (select * from &quot;pg_catalog&quot;.pg_class c, &quot;pg_catalog&quot;.pg_namespace n, &quot;pg_catalog&quot;.pg_attribute a where c.relname = &#39;sl_seqlog&#39; and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = &#39;oid&#39;) then
+                execute &#39;alter table sl_seqlog set without oids;&#39;;
+	end if;		
 	-- ----
 	-- Also remove stale entries from the nodelock table.
 	-- ----
@@ -3937,8 +4029,15 @@ declare
 	v_set_origin		int4;
 begin
 	perform updateRelname(p_set_id, p_only_on_node);
-	return  createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
-			p_set_id, p_script, p_only_on_node);
+	if p_only_on_node = -1 then
+		perform alterTableForReplication(tab_id) from sl_table where tab_set in (select set_id from sl_set where set_origin = getLocalNodeId(&#39;_schemadoc&#39;));
+
+		return  createEvent(&#39;_schemadoc&#39;, &#39;DDL_SCRIPT&#39;, 
+			p_set_id::text, p_script::text, p_only_on_node::text);
+	else
+		perform alterTableForReplication(tab_id) from sl_table;
+	end if;
+	return NULL;
 end;
 </programlisting>
       </para>
@@ -4024,8 +4123,11 @@ begin
 	-- ----
 	lock table sl_config_lock;
 
+	
 	-- ----
 	-- Check that the set exists and originates here
+	-- unless only_on_node was specified (then it can be applied to
+	-- that node because that is what the user wanted)
 	-- ----
 	select set_origin into v_set_origin
 			from sl_set
@@ -4034,15 +4136,23 @@ begin
 	if not found then
 		raise exception &#39;Slony-I: set % not found&#39;, p_set_id;
 	end if;
-	if v_set_origin &lt;&gt; getLocalNodeId(&#39;_schemadoc&#39;) then
-		raise exception &#39;Slony-I: set % does not originate on local node&#39;,
-				p_set_id;
-	end if;
 
-	-- ----
-	-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
-	-- ----
-	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+	if p_only_on_node = -1 then
+		if v_set_origin &lt;&gt; getLocalNodeId(&#39;_schemadoc&#39;) then
+			raise exception &#39;Slony-I: set % does not originate on local node&#39;,
+				p_set_id;
+		end if;
+		-- ----
+		-- Create a SYNC event, run the script and generate the DDL_SCRIPT event
+		-- ----
+		perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
+		perform alterTableRestore(tab_id) from sl_table where tab_set in (select set_id from sl_set where set_origin = getLocalNodeId(&#39;_schemadoc&#39;));
+	else
+		-- ----
+		-- If doing &quot;only on one node&quot; - restore ALL tables irrespective of set
+		-- ----
+		perform alterTableRestore(tab_id) from sl_table;
+	end if;
 	return 1;
 end;
 </programlisting>
@@ -4147,7 +4257,7 @@ end;
         <segtitle>Return Type</segtitle>
         <seglistitem>
          <seg>C</seg>
-         <seg>&quot;trigger&quot;</seg>
+         <seg>trigger</seg>
         </seglistitem>
        </segmentedlist>
  
@@ -4638,7 +4748,7 @@ begin
 			p_li_provider, p_li_receiver);
 	
 	return  createEvent (&#39;_schemadoc&#39;, &#39;DROP_LISTEN&#39;,
-			p_li_origin, p_li_provider, p_li_receiver);
+			p_li_origin::text, p_li_provider::text, p_li_receiver::text);
 end;
 </programlisting>
       </para>
@@ -4767,7 +4877,7 @@ begin
 	-- ----
 	perform dropNode_int(p_no_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_NODE&#39;,
-									p_no_id);
+									p_no_id::text);
 end;
 </programlisting>
       </para>
@@ -4917,7 +5027,7 @@ begin
 	perform RebuildListenEntries();
 
 	return  createEvent (&#39;_schemadoc&#39;, &#39;DROP_PATH&#39;,
-			p_pa_server, p_pa_client);
+			p_pa_server::text, p_pa_client::text);
 end;
 </programlisting>
       </para>
@@ -5038,7 +5148,7 @@ begin
 	-- ----
 	perform dropSet_int(p_set_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_SET&#39;, 
-			p_set_id);
+			p_set_id::text);
 end;
 </programlisting>
       </para>
@@ -5148,7 +5258,7 @@ declare
 begin
 	perform dropTrigger_int(p_trig_tabid, p_trig_tgname);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;DROP_TRIGGER&#39;,
-			p_trig_tabid, p_trig_tgname);
+			p_trig_tabid::text, p_trig_tgname::text);
 end;
 </programlisting>
       </para>
@@ -5288,7 +5398,7 @@ begin
 	-- ----
 	perform enableNode_int (p_no_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_NODE&#39;,
-									p_no_id);
+									p_no_id::text);
 end;
 </programlisting>
       </para>
@@ -5775,7 +5885,7 @@ begin
 	notify &quot;_schemadoc_Restart&quot;;
 
 	perform failoverSet_int(p_failed_node,
-			p_backup_node, p_set_id);
+			p_backup_node, p_set_id, p_ev_seqfake);
 
 	return p_ev_seqfake;
 end;
@@ -5783,14 +5893,14 @@ end;
       </para>
     </section>
 
-<!-- Function failoverset_int( integer, integer, integer ) -->
-    <section id="function.failoverset-int-integer-integer-integer"
-             xreflabel="schemadocfailoverset_int( integer, integer, integer )">
-      <title id="function.failoverset-int-integer-integer-integer-title">
-       failoverset_int( integer, integer, integer )
+<!-- Function failoverset_int( integer, integer, integer, bigint ) -->
+    <section id="function.failoverset-int-integer-integer-integer-bigint"
+             xreflabel="schemadocfailoverset_int( integer, integer, integer, bigint )">
+      <title id="function.failoverset-int-integer-integer-integer-bigint-title">
+       failoverset_int( integer, integer, integer, bigint )
       </title>
-      <titleabbrev id="function.failoverset-int-integer-integer-integer-titleabbrev">
-       failoverset_int( integer, integer, integer )
+      <titleabbrev id="function.failoverset-int-integer-integer-integer-bigint-titleabbrev">
+       failoverset_int( integer, integer, integer, bigint )
       </titleabbrev>
 
       <para>
@@ -5805,7 +5915,7 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       FUNCTION failoverSet_int (failed_node, backup_node, set_id)
+       FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 
 Finish failover for one set.
         <programlisting>
@@ -5813,6 +5923,7 @@ declare
 	p_failed_node		alias for $1;
 	p_backup_node		alias for $2;
 	p_set_id			alias for $3;
+	p_wait_seqno		alias for $4;
 	v_row				record;
 	v_last_sync			int8;
 begin
@@ -5850,12 +5961,13 @@ begin
 		insert into sl_event
 				(ev_origin, ev_seqno, ev_timestamp,
 				ev_minxid, ev_maxxid, ev_xip,
-				ev_type, ev_data1, ev_data2, ev_data3)
+				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
 				values
 				(p_backup_node, &quot;pg_catalog&quot;.nextval(&#39;sl_event_seq&#39;), CURRENT_TIMESTAMP,
 				&#39;0&#39;, &#39;0&#39;, &#39;&#39;,
 				&#39;ACCEPT_SET&#39;, p_set_id::text,
-				p_failed_node::text, p_backup_node::text);
+				p_failed_node::text, p_backup_node::text,
+				p_wait_seqno::text);
 	else
 		delete from sl_subscribe
 				where sub_set = p_set_id
@@ -5993,11 +6105,11 @@ declare
 
 BEGIN
 	select 1 into v_node_row from sl_event 
-       	  where ev_type = &#39;SYNC&#39; and ev_origin = getLocalNodeId(&#39;schemadoc&#39;)
+       	  where ev_type = &#39;SYNC&#39; and ev_origin = getLocalNodeId(&#39;_schemadoc&#39;)
           and ev_timestamp &gt; now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform createEvent(&#39;schemadoc&#39;, &#39;SYNC&#39;, NULL);
+		perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
 		return 1;
 	else
 		return 0;
@@ -6195,7 +6307,7 @@ end;
         <segtitle>Return Type</segtitle>
         <seglistitem>
          <seg>C</seg>
-         <seg>&quot;trigger&quot;</seg>
+         <seg>trigger</seg>
         </seglistitem>
        </segmentedlist>
  
@@ -6361,6 +6473,9 @@ BEGIN
 
 		raise notice &#39;Slony-I: log switch to sl_log_1 complete - truncate sl_log_2&#39;;
 		truncate sl_log_2;
+		if exists (select * from &quot;pg_catalog&quot;.pg_class c, &quot;pg_catalog&quot;.pg_namespace n, &quot;pg_catalog&quot;.pg_attribute a where c.relname = &#39;sl_log_2&#39; and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = &#39;oid&#39;) then
+	                execute &#39;alter table sl_log_2 set without oids;&#39;;
+		end if;		
 		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 0);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform addPartialLogIndices();
@@ -6387,6 +6502,9 @@ BEGIN
 
 		raise notice &#39;Slony-I: log switch to sl_log_2 complete - truncate sl_log_1&#39;;
 		truncate sl_log_1;
+		if exists (select * from &quot;pg_catalog&quot;.pg_class c, &quot;pg_catalog&quot;.pg_namespace n, &quot;pg_catalog&quot;.pg_attribute a where c.relname = &#39;sl_log_1&#39; and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = &#39;oid&#39;) then
+	                execute &#39;alter table sl_log_1 set without oids;&#39;;
+		end if;		
 		perform &quot;pg_catalog&quot;.setval(&#39;sl_log_status&#39;, 1);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform addPartialLogIndices();
@@ -6574,7 +6692,7 @@ END;
         <segtitle>Return Type</segtitle>
         <seglistitem>
          <seg>C</seg>
-         <seg>&quot;trigger&quot;</seg>
+         <seg>trigger</seg>
         </seglistitem>
        </segmentedlist>
  
@@ -6671,12 +6789,27 @@ begin
 	end if;
 
 	-- ----
+	-- Check that all ENABLE_SUBSCRIPTION events for the set are confirmed
+	-- ----
+	if exists (select true from sl_event
+			where ev_type = &#39;ENABLE_SUBSCRIPTION&#39;
+			and ev_data1 = p_add_id::text
+			and ev_seqno &gt; (select max(con_seqno) from sl_confirm
+					where con_origin = ev_origin
+					and con_received::text = ev_data3))
+	then
+		raise exception &#39;Slony-I: set % has subscriptions in progress - cannot merge&#39;,
+				p_add_id;
+	end if;
+			  
+
+	-- ----
 	-- Create a SYNC event, merge the sets, create a MERGE_SET event
 	-- ----
 	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
 	perform mergeSet_int(p_set_id, p_add_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;MERGE_SET&#39;, 
-			p_set_id, p_add_id);
+			p_set_id::text, p_add_id::text);
 end;
 </programlisting>
       </para>
@@ -6822,7 +6955,7 @@ begin
 	-- Reconfigure everything
 	-- ----
 	perform moveSet_int(p_set_id, v_local_node_id,
-			p_new_origin);
+			p_new_origin, 0);
 
 	perform RebuildListenEntries();
 
@@ -6842,20 +6975,20 @@ begin
 	-- Finally we generate the real event
 	-- ----
 	return createEvent(&#39;_schemadoc&#39;, &#39;MOVE_SET&#39;, 
-			p_set_id, v_local_node_id, p_new_origin);
+			p_set_id::text, v_local_node_id::text, p_new_origin::text);
 end;
 </programlisting>
       </para>
     </section>
 
-<!-- Function moveset_int( integer, integer, integer ) -->
-    <section id="function.moveset-int-integer-integer-integer"
-             xreflabel="schemadocmoveset_int( integer, integer, integer )">
-      <title id="function.moveset-int-integer-integer-integer-title">
-       moveset_int( integer, integer, integer )
+<!-- Function moveset_int( integer, integer, integer, bigint ) -->
+    <section id="function.moveset-int-integer-integer-integer-bigint"
+             xreflabel="schemadocmoveset_int( integer, integer, integer, bigint )">
+      <title id="function.moveset-int-integer-integer-integer-bigint-title">
+       moveset_int( integer, integer, integer, bigint )
       </title>
-      <titleabbrev id="function.moveset-int-integer-integer-integer-titleabbrev">
-       moveset_int( integer, integer, integer )
+      <titleabbrev id="function.moveset-int-integer-integer-integer-bigint-titleabbrev">
+       moveset_int( integer, integer, integer, bigint )
       </titleabbrev>
 
       <para>
@@ -6870,7 +7003,7 @@ end;
         </seglistitem>
        </segmentedlist>
  
-       moveSet(set_id, old_origin, new_origin)
+       moveSet(set_id, old_origin, new_origin, wait_seqno)
 
 Process MOVE_SET event to request that the origin for set set_id be
 moved from old_origin to node new_origin
@@ -6879,6 +7012,7 @@ declare
 	p_set_id			alias for $1;
 	p_old_origin		alias for $2;
 	p_new_origin		alias for $3;
+	p_wait_seqno		alias for $4;
 	v_local_node_id		int4;
 	v_tab_row			record;
 	v_sub_row			record;
@@ -6912,9 +7046,14 @@ begin
 
 	-- On the new origin, raise an event - ACCEPT_SET
 	if v_local_node_id = p_new_origin then
-		
+		-- Create a SYNC event as well so that the ACCEPT_SET has
+		-- the same snapshot as the last SYNC generated by the new
+		-- origin. This snapshot will be used by other nodes to
+		-- finalize the setsync status.
+		perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
 		perform createEvent(&#39;_schemadoc&#39;, &#39;ACCEPT_SET&#39;, 
-			p_set_id, p_old_origin, p_new_origin);
+			p_set_id::text, p_old_origin::text, 
+			p_new_origin::text, p_wait_seqno::text);
 	end if;
 
 	-- ----
@@ -7692,7 +7831,8 @@ begin
 	perform setAddSequence_int(p_set_id, p_seq_id, p_fqname,
 			p_seq_comment);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_SEQUENCE&#39;,
-			p_set_id, p_seq_id, p_fqname, p_seq_comment);
+						p_set_id::text, p_seq_id::text, 
+						p_fqname::text, p_seq_comment::text);
 end;
 </programlisting>
       </para>
@@ -7891,8 +8031,8 @@ begin
 	perform setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_ADD_TABLE&#39;,
-			p_set_id, p_tab_id, p_fqname,
-			p_tab_idxname, p_tab_comment);
+			p_set_id::text, p_tab_id::text, p_fqname::text,
+			p_tab_idxname::text, p_tab_comment::text);
 end;
 </programlisting>
       </para>
@@ -8111,7 +8251,7 @@ begin
 	-- ----
 	perform setDropSequence_int(p_seq_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_SEQUENCE&#39;,
-			p_seq_id);
+					p_seq_id::text);
 end;
 </programlisting>
       </para>
@@ -8273,7 +8413,8 @@ begin
 	-- Drop the table from the set and generate the SET_ADD_TABLE event
 	-- ----
 	perform setDropTable_int(p_tab_id);
-	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_TABLE&#39;, p_tab_id);
+	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_DROP_TABLE&#39;, 
+				p_tab_id::text);
 end;
 </programlisting>
       </para>
@@ -8467,7 +8608,7 @@ begin
 	-- ----
 	perform setMoveSequence_int(p_seq_id, p_new_set_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_SEQUENCE&#39;, 
-			p_seq_id, p_new_set_id);
+			p_seq_id::text, p_new_set_id::text);
 end;
 </programlisting>
       </para>
@@ -8621,7 +8762,7 @@ begin
 	perform createEvent(&#39;_schemadoc&#39;, &#39;SYNC&#39;, NULL);
 	perform setMoveTable_int(p_tab_id, p_new_set_id);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;SET_MOVE_TABLE&#39;, 
-			p_tab_id, p_new_set_id);
+			p_tab_id::text, p_new_set_id::text);
 end;
 </programlisting>
       </para>
@@ -8950,7 +9091,7 @@ end;
        Returns the version patch level of the slony schema
         <programlisting>
 begin
-	return 0;
+	return 11;
 end;
 </programlisting>
       </para>
@@ -8991,7 +9132,7 @@ declare
 begin
 	perform storeListen_int (p_origin, p_provider, p_receiver);
 	return  createEvent (&#39;_schemadoc&#39;, &#39;STORE_LISTEN&#39;,
-			p_origin, p_provider, p_receiver);
+			p_origin::text, p_provider::text, p_receiver::text);
 end;
 </programlisting>
       </para>
@@ -9112,7 +9253,8 @@ begin
 	end if;
 	perform storeNode_int (p_no_id, p_no_comment, p_no_spool);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_NODE&#39;,
-									p_no_id, p_no_comment, v_no_spool_txt);
+									p_no_id::text, p_no_comment::text, 
+									v_no_spool_txt::text);
 end;
 </programlisting>
       </para>
@@ -9223,7 +9365,8 @@ begin
 	perform storePath_int(p_pa_server, p_pa_client,
 			p_pa_conninfo, p_pa_connretry);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_PATH&#39;, 
-			p_pa_server, p_pa_client, p_pa_conninfo, p_pa_connretry);
+			p_pa_server::text, p_pa_client::text, 
+			p_pa_conninfo::text, p_pa_connretry::text);
 end;
 </programlisting>
       </para>
@@ -9356,7 +9499,7 @@ begin
 			(p_set_id, v_local_node_id, p_set_comment);
 
 	return createEvent(&#39;_schemadoc&#39;, &#39;STORE_SET&#39;, 
-			p_set_id, v_local_node_id, p_set_comment);
+			p_set_id::text, v_local_node_id::text, p_set_comment::text);
 end;
 </programlisting>
       </para>
@@ -9460,7 +9603,7 @@ declare
 begin
 	perform storeTrigger_int(p_trig_tabid, p_trig_tgname);
 	return  createEvent(&#39;_schemadoc&#39;, &#39;STORE_TRIGGER&#39;,
-			p_trig_tabid, p_trig_tgname);
+			p_trig_tabid::text, p_trig_tgname::text);
 end;
 </programlisting>
       </para>
@@ -9631,7 +9774,7 @@ begin
 	-- Create the SUBSCRIBE_SET event
 	-- ----
 	v_ev_seqno :=  createEvent(&#39;_schemadoc&#39;, &#39;SUBSCRIBE_SET&#39;, 
-			p_sub_set, p_sub_provider, p_sub_receiver, 
+			p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 			case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
 
 	-- ----
@@ -9748,7 +9891,7 @@ begin
 
 	if v_set_origin = getLocalNodeId(&#39;_schemadoc&#39;) then
 		perform createEvent(&#39;_schemadoc&#39;, &#39;ENABLE_SUBSCRIPTION&#39;, 
-				p_sub_set, p_sub_provider, p_sub_receiver, 
+				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 				case p_sub_forward when true then &#39;t&#39; else &#39;f&#39; end);
 		perform enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
@@ -10259,7 +10402,7 @@ begin
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
 	return  createEvent(&#39;_schemadoc&#39;, &#39;UNSUBSCRIBE_SET&#39;, 
-			p_sub_set, p_sub_receiver);
+			p_sub_set::text, p_sub_receiver::text);
 end;
 </programlisting>
       </para>
@@ -10477,7 +10620,7 @@ begin
 			and slon_quote_brute(PGN.nspname) = slon_quote_brute(sl_sequence.seq_nspname);
 
         return  createEvent(&#39;_schemadoc&#39;, &#39;RESET_CONFIG&#39;,
-                        p_set_id, p_only_on_node);
+                        p_set_id::text, p_only_on_node::text);
 end;
 </programlisting>
       </para>
@@ -10579,7 +10722,7 @@ begin
 	-- ----
 	-- Changes for 1.2
 	-- ----
-	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;, &#39;1.1.0&#39;, &#39;1.1.1&#39;, &#39;1.1.2&#39;, &#39;1.1.3&#39;) then
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;, &#39;1.1.0&#39;, &#39;1.1.1&#39;, &#39;1.1.2&#39;, &#39;1.1.3&#39;,&#39;1.1.5&#39;, &#39;1.1.6&#39;, &#39;1.1.7&#39;, &#39;1.1.8&#39;, &#39;1.1.9&#39;) then
 		-- Add new table sl_registry
 		execute &#39;create table sl_registry (
 						reg_key			text primary key,
@@ -10591,12 +10734,9 @@ begin
                 execute &#39;alter table sl_confirm set without oids;&#39;;
                 execute &#39;alter table sl_event set without oids;&#39;;
                 execute &#39;alter table sl_listen set without oids;&#39;;
-                execute &#39;alter table sl_log_1 set without oids;&#39;;
-                execute &#39;alter table sl_log_2 set without oids;&#39;;
                 execute &#39;alter table sl_node set without oids;&#39;;
                 execute &#39;alter table sl_nodelock set without oids;&#39;;
                 execute &#39;alter table sl_path set without oids;&#39;;
-                execute &#39;alter table sl_seqlog set without oids;&#39;;
                 execute &#39;alter table sl_sequence set without oids;&#39;;
                 execute &#39;alter table sl_set set without oids;&#39;;
                 execute &#39;alter table sl_setsync set without oids;&#39;;
@@ -10605,6 +10745,21 @@ begin
                 execute &#39;alter table sl_trigger set without oids;&#39;;
 	end if;
 
+	-- ----
+	-- Changes for 1.2.11
+	-- ----
+	if p_old IN (&#39;1.0.2&#39;, &#39;1.0.5&#39;, &#39;1.0.6&#39;, &#39;1.1.0&#39;, &#39;1.1.1&#39;, &#39;1.1.2&#39;, &#39;1.1.3&#39;,&#39;1.1.5&#39;, &#39;1.1.6&#39;, &#39;1.1.7&#39;, &#39;1.1.8&#39;, &#39;1.1.9&#39;, &#39;1.2.0&#39;, &#39;1.2.1&#39;, &#39;1.2.2&#39;, &#39;1.2.3&#39;, &#39;1.2.4&#39;, &#39;1.2.5&#39;, &#39;1.2.6&#39;, &#39;1.2.7&#39;, &#39;1.2.8&#39;, &#39;1.2.9&#39;, &#39;1.2.10&#39;) then
+		-- Add new table sl_archive_counter
+		execute &#39;create table sl_archive_counter (
+						ac_num			bigint,
+						ac_timestamp	timestamp
+					) without oids&#39;;
+		execute &#39;insert into sl_archive_counter
+					(ac_num, ac_timestamp) values (0, &#39;&#39;epoch&#39;&#39;::timestamp)&#39;;
+	end if;
+
+	-- In any version, make sure that the xxidin() functions are defined STRICT
+	perform make_function_strict (&#39;xxidin&#39;, &#39;(cstring)&#39;);
 	return p_old;
 end;
 </programlisting>
