@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.12 2007-08-23 22:10:36 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.13 2007-08-28 19:28:17 cbbrowne Exp $
 
 RELEASE 1.2.11
 
@@ -47,6 +47,9 @@ RELEASE 1.2.11
   tracking number.  This makes it easy for the mechanism applying
   archives to figure out what needs to be applied next - just look in
   sl_archive_tracking.
+
+- Fix log shipping test to accomodate the new tracking scheme, and
+  update documentation to describe this better.  
 
 RELEASE 1.2.10
 
