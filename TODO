@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.10 2007-07-13 22:08:23 cbbrowne Exp $
+$Id: TODO,v 1.11 2007-08-28 18:17:49 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -26,6 +26,29 @@ verify that upgrades work properly.
 
   Jan working on this
 
+- UPDATE FUNCTIONS needs to be able to reload version-specific
+  functions in v2.0, so that if we do an upgrade via:
+    "pg_dump -p $OLDVPORT dbname | psql -p $NEWVERPORT -d dbname"
+  we may then run "UPDATE FUNCTIONS" to tell the instance to know
+  about the new PostgreSQL version.
+
+  This probably involves refactoring the code that loads the
+  version-specific SQL into a function that is called by both STORE
+  NODE and UPDATE FUNCTIONS.
+
+- Script to "duplicate node"; create a new node that looks just like
+  an existing node, that is, with the same replication sets.
+
+  Overview:
+   - Run slony1_extract_schema.sh against the origin node for the sets
+     subscribed to; this gives an SQL script.
+
+   - Generate slonik script to do:
+     * STORE NODE for new node
+     * STORE PATH to get the new node to communicate with the node it's
+       duplicating
+     * SUBSCRIBE SET for all the relevant sets
+
 Longer Term Items
 ---------------------------
 
@@ -41,6 +64,12 @@ Longer Term Items
   Perhaps there should be a second script that looks for "static"
   problems, so we can leave test_slony_state to look for "dynamic"
   problems.
+
+- Partitioning Support
+
+  Add stored procedures to support adding in subscriptions to empty
+  tables; verify emptiness on origin, TRUNCATE on subscribers.  The
+  stored proc(s) would be run as part of EXECUTE SCRIPT...
 
 - Use PGXS
 
@@ -115,3 +144,7 @@ Data Transformations on Subscriber
 
     - Omit columns on a subscriber
     - Omit tuples
+
+SL-Set
+
+- Could it have some policy in it as to preferred failover targets?
