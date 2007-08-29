@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.22 2007-08-23 18:08:53 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.23 2007-08-29 20:02:55 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -6023,7 +6023,7 @@ process_ddl_script(SlonWorkMsg_event * event,SlonNode * node,
 						 ddl_setid, ddl_only_on_node);
 		
 		if (query_execute(node, local_dbconn, &query1) < 0) {
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL preparation failed - set %d - only on node %\n",
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: DDL preparation failed - set %d - only on node %d\n",
 					 node->no_id, ddl_setid, ddl_only_on_node);			
 			slon_retry();
 		}
