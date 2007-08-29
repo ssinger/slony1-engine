@@ -84,7 +84,7 @@ install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 /bin/chmod 644 COPYRIGHT UPGRADING SAMPLE HISTORY-1.1 RELEASE
 
 install -d %{buildroot}%{_initrddir}
-install -m 755 redhat/postgresql-slony1-engine.init %{buildroot}%{_initrddir}/postgresql-slony1-engine
+install -m 755 redhat/postgresql-slony1.init %{buildroot}%{_initrddir}/postgresql-slony1
 
 # Temporary measure for 1.2.10
 %if %docs
@@ -140,6 +140,10 @@ fi
 %endif
 
 %changelog
+* Wed Aug 29 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.11-1
+- Update to 1.2.11
+- Remove the word "engine" from init script name.
+
 * Mon Aug 6 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.10-2
 - Fix Source0
 - Spec file cleanup (removed macro for perltools)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: release_checklist.sh,v 1.1.2.4 2007-01-08 17:41:56 cbbrowne Exp $
+# $Id: release_checklist.sh,v 1.1.2.5 2007-08-29 05:44:58 devrim Exp $
 
 # This script runs through what it can of the release checklist
 # run via:  "sh tools/release_checklist.sh"
@@ -32,7 +32,7 @@ else
    egrep "PACKAGE_VERSION\=" configure
 fi
 
-if [[ `egrep "^PACKAGE_STRING='postgresql-slony1-engine ${VERDOTTED}'\$" configure` ]]; then
+if [[ `egrep "^PACKAGE_STRING='postgresql-slony1 ${VERDOTTED}'\$" configure` ]]; then
    echo "PACKAGE_STRING in configure matches ${VERDOTTED}"
 else
    echo "ERROR: configure PACKAGE_STRING does not match ${VERDOTTED}"

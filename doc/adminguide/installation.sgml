@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.28.2.2 2007-06-11 16:01:33 cbbrowne Exp $ -->
+<!-- $Id: installation.sgml,v 1.28.2.3 2007-08-29 05:44:58 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -266,7 +266,7 @@ you should manually ignore the RPM dependencies related to
 <para>Installing &slony1; using these RPMs is as easy as 
 installing any RPM.</para>
 
-<screen>rpm -ivh postgresql-slony1-engine-....rpm</screen>
+<screen>rpm -ivh postgresql-slony1-....rpm</screen>
 
 <para>If you want to upgrade the previous version, just use 
 <command>rpm -Uvh</command> to upgrade it. But please remember to follow 
@@ -277,7 +277,7 @@ configuration files are installed under <filename>/etc</filename>, the
 binary files are installed in <filename>/usr/bin</filename>, libraries
 are installed in <filename>/usr/lib/pgsql</filename>, and finally the
 docs are installed in
-<filename>/usr/share/doc/postgresql-slony1-engine</filename>.</para>
+<filename>/usr/share/doc/postgresql-slony1</filename>.</para>
 
 </sect2>
 

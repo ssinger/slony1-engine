@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.12.2.1 2007-06-11 17:59:37 cbbrowne Exp $
+$Id: INSTALL,v 1.12.2.2 2007-08-29 05:44:57 devrim Exp $
 
 Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x,
 8.1.x, and 8.2.x.  There have also been changes made to support
@@ -147,7 +147,7 @@ On RHAS/RHEL/Centos, people have frequently reported problems relating
 to missing Kerberos #include files; apparently the use of OpenSSH for
 authentication draws in a dependancy on Kerberos that isn't
 automatically detected.  You may need to add an -I path for
-/usr/kerberos/include; see postgresql-slony1-engine.spec for more
+/usr/kerberos/include; see postgresql-slony1.spec for more
 details.
 
 On Debian, there is now an official package; see
