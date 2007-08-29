@@ -1,0 +1,144 @@
+#!/bin/sh
+# postgresql    This is the init script for starting up the Slony-I
+#
+# chkconfig: - 64 36
+# description: Starts and stops the Slon daemon that handles
+#              Slony-I replication.
+# processname: postgresql-slony1
+# pidfile:	/var/run/postgresql-slony1.pid
+#
+# v1.0.0 Devrim GUNDUZ <devrim@CommandPrompt.com>
+# - Initial version of Red Hat / Fedora init script, based on Ubuntu one.
+# v1.0.1 Devrim GUNDUZ <devrim@CommandPrompt.com>
+# - Added reload()
+# v1.0.2 Devrim GUNDUZ <devrim@CommandPrompt.com>
+# - Removed -engine from package name
+
+if [ -r /etc/sysconfig/slony1 ]; then
+    . /etc/sysconfig/slony1
+fi
+
+# Source function library.
+INITD=/etc/rc.d/init.d
+. $INITD/functions
+
+# Get function listing for cross-distribution logic.
+TYPESET=`typeset -f|grep "declare"`
+
+# Get config.
+. /etc/sysconfig/network
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+	SU=runuser
+else
+	SU=su
+fi
+
+# Check that networking is up.
+# We need it for postgresql-slony1
+[ "${NETWORKING}" = "no" ] && exit 0
+
+# Find the name of the script
+NAME=postgresql-slony1
+
+# Set defaults for configuration variables
+SLONENGINE=/usr/bin
+SLONDAEMON=$SLONENGINE/slon
+SLONCONF=/etc/slon.conf
+SLONPID=/var/run/slon.pid
+SLONLOG=/var/log/slony1
+test -x $SLONDAEMON || exit 5
+
+
+script_result=0
+
+start(){
+	SLON_START=$"Starting ${NAME} service: "
+
+	echo -n "$SLON_START"
+	$SU -l postgres -c "$SLONDAEMON -f $SLONCONF &" >> "$SLONLOG" 2>&1 < /dev/null
+	sleep 2
+
+	pid=`pidof -s "$SLONDAEMON"`
+	if [ $pid ] 
+	then
+		success "$SLON_START"
+		touch /var/lock/subsys/${NAME}
+		echo
+	else
+		failure "$PSQL_START"
+		echo
+		script_result=1
+	fi
+}
+
+stop(){
+	echo -n $"Stopping ${NAME} service: "
+        if [ $UID -ne 0 ]; then
+                RETVAL=1
+                failure
+        else
+                killproc /usr/bin/slon
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/${NAME}
+        fi;
+        echo
+        return $RETVAL
+}
+
+restart(){
+    stop
+    start
+}
+
+reload(){
+echo -n $"Reloading ${NAME}: "
+   if [ -n "`pidfileofproc $SLONDAEMON`" ] ; then
+      killproc $SLONDAEMON -HUP
+   else
+      failure $"Reloading ${NAME}"
+   fi
+   RETVAL=$?
+   echo
+}
+
+condrestart(){
+    [ -e /var/lock/subsys/${NAME} ] && restart
+}
+
+condstop(){
+    [ -e /var/lock/subsys/${NAME} ] && stop
+}
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status slon
+        script_result=$?
+        ;;
+  restart)
+        restart
+        ;;
+  reload|force-reload)
+        reload
+        ;;
+  condrestart)
+        condrestart
+        ;;
+  condstop)
+        condstop
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|condstop|reload|force-reload}"
+        exit 1
+esac
+
+exit $script_result
