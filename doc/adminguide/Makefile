@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.19 2006-08-02 15:32:01 xfade Exp $
+# $Id: Makefile,v 1.19.2.1 2007-09-04 20:42:14 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ D2MSCRIPT=$(D2MDIR)/docbook2man-spec.pl
 endif
 
 # Enable some extra warnings
-override SPFLAGS += -wall -wno-unused-param -wno-empty
+override SPFLAGS += -wall -wno-unused-param -wno-empty -wfully-tagged
 
 ##
 ## Man pages

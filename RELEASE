@@ -1,4 +1,8 @@
-$Id: RELEASE,v 1.1.2.13 2007-08-28 19:28:17 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.14 2007-09-04 20:42:14 cbbrowne Exp $
+
+RELEASE 1.2.12
+- Fixed problem with DDL SCRIPT parser where C-style comments were
+  not being processed properly
 
 RELEASE 1.2.11
 
