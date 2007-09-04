@@ -1,4 +1,4 @@
-/* $Id: scanner.c,v 1.4 2007-08-21 22:17:55 cbbrowne Exp $ */
+/* $Id: scanner.c,v 1.5 2007-09-04 20:37:21 cbbrowne Exp $ */
 #include <stdio.h>
 #include "scanner.h"
 
@@ -41,32 +41,40 @@ int scan_for_statements (const char *extended_statement) {
 	nparens ++;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
+      
     case ')':
       if (state == Q_NORMAL_STATE) {
 	nparens --;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
     case '[':
       if (state == Q_NORMAL_STATE) {
 	nbrokets ++;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
     case ']':
       if (state == Q_NORMAL_STATE) {
 	nbrokets --;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
     case '{':
       if (state == Q_NORMAL_STATE) {
 	nsquigb ++;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
+
     case '}':
       if (state == Q_NORMAL_STATE) {
 	nsquigb --;
 	break;
       }
 
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
     case '/':
       if (state == Q_NORMAL_STATE) {
 	state = Q_HOPE_TO_CCOMMENT;
@@ -82,6 +90,11 @@ int scan_for_statements (const char *extended_statement) {
 	state = Q_CCOMMENT;
 	break;
       }
+      if (state == Q_CCOMMENT) {
+	state = Q_HOPE_CEND;
+	break;
+      }
+
       break;
     case '\\':
       if ((state == Q_DOUBLE_QUOTING) || (state == Q_SINGLE_QUOTING)) {
@@ -91,6 +104,7 @@ int scan_for_statements (const char *extended_statement) {
 	  break;
 	}
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '$':
       if (state == Q_NORMAL_STATE) {
@@ -131,6 +145,7 @@ int scan_for_statements (const char *extended_statement) {
 	  break;
 	}
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '"':
       if (state == Q_NORMAL_STATE) {
@@ -145,6 +160,7 @@ int scan_for_statements (const char *extended_statement) {
 	state = Q_NORMAL_STATE;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '\'':
       if (state == Q_NORMAL_STATE) {
@@ -159,6 +175,7 @@ int scan_for_statements (const char *extended_statement) {
 	state = Q_NORMAL_STATE;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '-':
       if (state == Q_NORMAL_STATE && extended_statement[cpos+1] == '-') {
@@ -169,6 +186,7 @@ int scan_for_statements (const char *extended_statement) {
 	state = Q_DASHING_STATE;
 	break;
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '\n':
       if (state == Q_DASHING_STATE) {
@@ -176,6 +194,7 @@ int scan_for_statements (const char *extended_statement) {
       }
       if (state == Q_DOLLAR_BUILDING) state = Q_NORMAL_STATE;
       if (state == Q_DOLLAR_UNBUILDING) state = Q_DOLLAR_QUOTING;
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case '\r':
       if (state == Q_DASHING_STATE) {
@@ -183,10 +202,12 @@ int scan_for_statements (const char *extended_statement) {
       }
       if (state == Q_DOLLAR_BUILDING) state = Q_NORMAL_STATE;
       if (state == Q_DOLLAR_UNBUILDING) state = Q_DOLLAR_QUOTING;
+      if (state == Q_HOPE_CEND) state = Q_CCOMMENT;
       break;
     case ' ':
       if (state == Q_DOLLAR_BUILDING) state = Q_NORMAL_STATE;
       if (state == Q_DOLLAR_UNBUILDING) state = Q_DOLLAR_QUOTING;
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     case ';':
       if ((state == Q_NORMAL_STATE) && (nparens == 0) && (nbrokets == 0) && (nsquigb == 0)) {
@@ -195,8 +216,10 @@ int scan_for_statements (const char *extended_statement) {
 	  return statements;
 	}
       }
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     default:
+      if (state == Q_HOPE_CEND)	state = Q_CCOMMENT;
       break;
     }
     cpos++;
