@@ -59,8 +59,7 @@ USING btree ((substring(dic_russian, E'^([^(]*[^( ]) *\\('::text)))
 WHERE (dic_category_id = 26);
 
 -- Some more torturing per Weslee Bilodeau
-
--- I figure the $_$, $$, etc edge-casees would be another fun one to roll
+-- I figure the $_$, $$, etc edge-cases would be another fun one to roll
 -- into a custom parser.
 
 CREATE FUNCTION test( ) RETURNS text AS $_$ SELECT ';', E'\';\'',
