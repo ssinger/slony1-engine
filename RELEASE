@@ -1,8 +1,14 @@
-$Id: RELEASE,v 1.1.2.14 2007-09-04 20:42:14 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.15 2007-09-05 21:22:37 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
   not being processed properly
+
+- Added stored functions and documentation for adding empty tables
+  (notably *partitions*) to replication
+
+- Added a fairly substantial partitioning test to exercise the
+  new stored functions
 
 RELEASE 1.2.11
 
