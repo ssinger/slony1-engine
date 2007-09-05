@@ -1,0 +1,125 @@
+<!-- $Id: partitioning.sgml,v 1.1 2007-09-05 21:35:25 cbbrowne Exp $ -->
+<sect1 id="partitioning">
+<title>Partitioning Support </title>
+<indexterm><primary>partitioning</primary></indexterm>
+
+<para> &slony1; does not directly provide support for the &postgres;
+methodology of partitioning via inheritance, but it does not, by the
+same token, prevent the Gentle User from using that sort of
+replication scheme, and then replicating the underlying
+tables. </para>
+
+<para> One of the tests in the <xref linkend="testbed">, called
+<filename>testinherit</filename>, tests that &slony1; behaves as
+expected to replicate data across partitions.  This test creates a
+master <envar>sales_data</envar> table, from which various children
+inherit: </para>
+
+<itemizedlist>
+<listitem><para> <envar>us_east</envar></para> </listitem>
+<listitem><para> <envar>us_west</envar></para> </listitem>
+<listitem><para> <envar>canada</envar></para> </listitem>
+</itemizedlist>
+
+<para> The example is somewhat simplistic as it only provides rules to
+handle initial insertion into the respective partitions; it does not
+then support allowing tuples to migrate from partition to partition if
+they are altered via an <COMMAND>UPDATE</COMMAND> statement.  On the
+other hand, unlike with many partitioning cases, this one permits the
+<quote>parent</quote> table to contain tuples. </para>
+
+<para> Things worth observing include:</para>
+
+<itemizedlist>
+<listitem><para> Each partition table must be added to replication individually. </para> </listitem>
+<listitem><para> &slony1; is not aware of the relationship between partitions; it simply regards them as a series of individual tables. </para> </listitem>
+</itemizedlist>
+
+
+<sect2><title> Support for Dynamic Partition Addition</title>
+
+<para> One common <quote>use case</quote> of replication is to
+partition large data sets based on time period, whether weekly,
+monthly, quarterly, or annually, where there is therefore a need to
+periodically add a new partition. </para>
+
+<para> The traditional approach taken to this in &slony1; would be the
+following: </para>
+
+<itemizedlist>
+<listitem><para> <xref linkend="stmtddlscript"> to add the new partition(s) on each node </para> </listitem>
+<listitem><para> <xref linkend="stmtcreateset"> to create a temporary replication set </para> </listitem>
+<listitem><para> <xref linkend="stmtsetaddtable"> to add the table(s) to that set </para> </listitem>
+<listitem><para> <xref linkend="stmtsubscribeset">, once for each subscriber node, to set up replication of the table on each node </para> </listitem>
+<listitem><para> <xref linkend="stmtmergeset">, once subscriptions are running, to eliminate the temporary set </para> </listitem>
+</itemizedlist>
+
+<para> In view of the fact that we can be certain that a
+thus-far-unused partition will be empty, we offer an alternative
+mechanism which evades the need to create extra replication sets and
+the need to submit multiple <xref linkend="stmtsubscribeset">
+requests.  The alternative is as follows; we use <xref
+linkend="stmtddlscript">, extending the DDL script thus: </para>
+
+<itemizedlist>
+<listitem><para> Add the new partition(s) on each node </para> </listitem>
+<listitem><para> Run a &slony1; stored function to mark the new partition as being a replicated table </para> 
+
+<para> On the origin node, if the table is found to have tuples in it,
+the DDL script will be aborted, as the precondition that it be empty
+has been violated. </para> 
+
+<para> On subscriber nodes, we may safely <command>TRUNCATE</command> the new table. </para>
+</listitem>
+</itemizedlist>
+
+<para> There are several stored functions provided to support this;
+the Gentle User may use whichever seems preferable.  The <quote>base
+function</quote> is <function>add_empty_table_to_replication()</function>; the others
+provide additional structure and validation of the arguments </para>
+
+<itemizedlist>
+<listitem><para> <function> add_empty_table_to_replication (set_id, tab_id, nspname, tabname, idxname, comment);</function> </para> 
+
+<para> This is the <quote>base</quote> function; you must specify the
+set ID, table ID, namespace name, table name, index name, and a
+comment, and this table will be added to replication. </para>
+
+<para> Note that the index name is optional; if NULL, the function
+will look up the primary key for the table, assuming one exists, and
+fail if it does not exist. </para>
+
+</listitem>
+
+<listitem><para> <function> replicate_partition(tab_id, nspname, tabname, idxname, comment); </function> </para> 
+
+<para> If it is known that the table to be replicated inherits from a
+replicated parent table, then this function can draw set and origin
+information from that parent table.  </para>
+
+</listitem>
+</itemizedlist>
+
+
+<note><para> As has been observed previously, &slony1; is unaware that
+tables are partitioned.  Therefore, this approach may also be used
+with confidence to add any table to replication that is known to be
+empty. </para> </note>
+
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"slony.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->

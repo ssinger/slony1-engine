@@ -1,0 +1,6 @@
+select id, trans_on, quantity, amount from sales_txns order by id
+select 'main', * from only sales_txns order by id
+select '2006_01', * from sales_txns_2006_01 order by id
+select '2006_02', * from sales_txns_2006_02 order by id
+select '2006_03', * from sales_txns_2006_03 order by id
+select '2006_04', * from sales_txns_2006_04 order by id
