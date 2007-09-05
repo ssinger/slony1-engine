@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.119 2007-08-22 21:21:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.120 2007-09-05 21:39:57 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5630,4 +5630,116 @@ end
 comment on function @NAMESPACE@.TablesToVacuum () is 
 'Return a list of tables that require frequent vacuuming.  We use this
 function so that we do not hardcode this into C code.';
+
+-- -------------------------------------------------------------------------
+-- FUNCTION add_empty_table_to_replication (set_id, tab_id, tab_nspname,
+--         tab_tabname, tab_idxname, tab_comment)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) returns bigint as '
+declare
+  p_set_id alias for $1;
+  p_tab_id alias for $2;
+  p_nspname alias for $3;
+  p_tabname alias for $4;
+  p_idxname alias for $5;
+  p_comment alias for $6;
+
+  prec record;
+  v_origin int4;
+  v_isorigin boolean;
+  v_fqname text;
+  query text;
+  v_rows integer;
+  v_idxname text;
+
+begin
+-- Need to validate that the set exists; the set will tell us if this is the origin
+  select set_origin into v_origin from @NAMESPACE@.sl_set where set_id = p_set_id;
+  if not found then
+	raise exception ''add_empty_table_to_replication: set % not found!'', p_set_id;
+  end if;
+
+-- Need to be aware of whether or not this node is origin for the set
+   v_isorigin := ( v_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') );
+
+   v_fqname := ''"'' || p_nspname || ''"."'' || p_tabname || ''"'';
+-- Take out a lock on the table
+   query := ''lock '' || v_fqname || '';'';
+   execute query;
+
+   if v_isorigin then
+	-- On the origin, verify that the table is empty, failing if it has any tuples
+        query := ''select 1 as tuple from '' || v_fqname || '' limit 1;'';
+	execute query into prec;
+        GET DIAGNOSTICS v_rows = ROW_COUNT;
+	if v_rows = 0 then
+		raise notice ''add_empty_table_to_replication: table % empty on origin - OK'', v_fqname;
+	else
+		raise exception ''add_empty_table_to_replication: table % contained tuples on origin node %'', v_fqname, v_origin;
+	end if;
+   else
+	-- On other nodes, TRUNCATE the table
+        query := ''truncate '' || v_fqname || '';'';
+	execute query;
+   end if;
+-- If p_idxname is NULL, then look up the PK index, and RAISE EXCEPTION if one does not exist
+   if p_idxname is NULL then
+	select c2.relname into prec from pg_catalog.pg_index i, pg_catalog.pg_class c1, pg_catalog.pg_class c2, pg_catalog.pg_namespace n where i.indrelid = c1.oid and i.indexrelid = c2.oid and c1.relname = p_tabname and i.indisprimary and n.nspname = p_nspname and n.oid = c1.relnamespace;
+	if not found then
+		raise exception ''add_empty_table_to_replication: table % has no primary key and no candidate specified!'', v_fqname;
+	else
+		v_idxname := prec.relname;
+	end if;
+   else
+	v_idxname := p_idxname;
+   end if;
+   perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, v_fqname, v_idxname, p_comment);
+   return @NAMESPACE@.alterTableRestore(p_tab_id);
+end
+' language plpgsql;
+
+comment on function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) is
+'Verify that a table is empty, and add it to replication.  
+tab_idxname is optional - if NULL, then we use the primary key.';
+
+-- -------------------------------------------------------------------------
+-- FUNCTION replicate_partition (tab_id, tab_nspname, tab_tabname,
+--         tab_idxname, tab_comment)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.replicate_partition(int4, text, text, text, text) returns bigint as '
+declare
+  p_tab_id alias for $1;
+  p_nspname alias for $2;
+  p_tabname alias for $3;
+  p_idxname alias for $4;
+  p_comment alias for $5;
+
+  prec record;
+  prec2 record;
+  v_set_id int4;
+
+begin
+-- Look up the parent table; fail if it does not exist
+   select c1.oid into prec from pg_catalog.pg_class c1, pg_catalog.pg_class c2, pg_catalog.pg_inherits i, pg_catalog.pg_namespace n where c1.oid = i.inhparent  and c2.oid = i.inhrelid and n.oid = c2.relnamespace and n.nspname = p_nspname and c2.relname = p_tabname;
+   if not found then
+	raise exception ''replicate_partition: No parent table found for %.%!'', p_nspname, p_tabname;
+   end if;
+
+-- The parent table tells us what replication set to use
+   select tab_set into prec2 from @NAMESPACE@.sl_table where tab_reloid = prec.oid;
+   if not found then
+	raise exception ''replicate_partition: Parent table % for new partition %.% is not replicated!'', prec.oid, p_nspname, p_tabname;
+   end if;
+
+   v_set_id := prec2.tab_set;
+
+-- Now, we have all the parameters necessary to run add_empty_table_to_replication...
+   return @NAMESPACE@.add_empty_table_to_replication(v_set_id, p_tab_id, p_nspname, p_tabname, p_idxname, p_comment);
+end
+' language plpgsql;
+
+comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text) is
+'Add a partition table to replication.
+tab_idxname is optional - if NULL, then we use the primary key.
+This function looks up replication configuration via the parent table.';
 
