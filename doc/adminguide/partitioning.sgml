@@ -1,4 +1,4 @@
-<!-- $Id: partitioning.sgml,v 1.1 2007-09-05 21:35:25 cbbrowne Exp $ -->
+<!-- $Id: partitioning.sgml,v 1.1.2.1 2007-09-05 21:36:31 cbbrowne Exp $ -->
 <sect1 id="partitioning">
 <title>Partitioning Support </title>
 <indexterm><primary>partitioning</primary></indexterm>
