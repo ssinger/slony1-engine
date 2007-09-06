@@ -23,8 +23,10 @@ commit()
 more_data ()
 {
   GENDATA="$mktmp/generate.data"
-  for year in 2006 2007 2008 2009 2010 2011 2012; do
-     for month in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  #for year in 2006 2007 2008 2009 2010 2011 2012; do
+  for year in 2006 ; do
+     #for month in 1 2 3 4 5 6 7 8 9 10 11 12; do
+     for month in 1 2 3 ; do
 	 echo "" > ${GENDATA}
          numrows=$(random_number 50 75)
          status "Generating ${numrows} transactions of random data for ${year}/${month}"
