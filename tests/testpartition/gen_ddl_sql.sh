@@ -23,6 +23,6 @@ do instead (
       insert into sales_txns_${year}_${month} select new.id, new.trans_on, new.region_code, new.product_id, new.quantity, new.amount;
 );
 
-select \"_${cluster}\".replicate_partition(${tableid}, 'public', 'sales_txns_${year}_${month}', NULL::text, 'Sales Partition for ${year} ${month}');
+select \"_${cluster}\".replicate_partition(${tableid}, 'public'::text, 'sales_txns_${year}_${month}'::text, NULL::text, 'Sales Partition for ${year} ${month}'::text);
 
 "
