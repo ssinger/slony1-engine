@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2006-10-24 18:27:44 cbbrowne Exp $
+$Id: README,v 1.2 2007-09-07 19:50:11 cbbrowne Exp $
   
 testlargetuples, based on test1, checks that large tuples are replicated
 properly.
@@ -11,3 +11,8 @@ Data is replicated in table1; there is a mixture of large and small tuples.
 The function logswitch_start() is called shortly after replication
 begins to request a log switch to test that tuples are passed properly
 in both sl_log_1 and sl_log_2.
+
+The origin node's slon is configured via slon.conf file, to verify that
+this functionality works for the origin (because the logic for handling
+this for the origin is separate from that for other nodes, in the test
+harness).

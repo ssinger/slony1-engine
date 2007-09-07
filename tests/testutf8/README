@@ -1,4 +1,6 @@
-$Id: README,v 1.1 2005-11-15 21:25:36 cbbrowne Exp $
+$Id: README,v 1.2 2007-09-07 19:50:11 cbbrowne Exp $
 
 This test involves creating databases in UNICODE form, and stowing
 UTF-8 values in a relevant table.
+
+Both nodes use slon .conf files

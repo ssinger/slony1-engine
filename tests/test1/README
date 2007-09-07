@@ -1,4 +1,4 @@
-$Id: README,v 1.9 2007-04-18 15:03:51 cbbrowne Exp $
+$Id: README,v 1.10 2007-09-07 19:50:10 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -29,3 +29,6 @@ that it works as expected
 
 8.  It does a run of UPDATE FUNCTIONS against node 1.  This verifies
 that there are at least no syntax errors in the stored function.
+
+9.  It uses a slon.conf file for node #2 to make sure that the logic
+of the config file parser gets exercised.

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.15 2007-07-11 17:20:18 cbbrowne Exp $
+# $Id: run_test.sh,v 1.16 2007-09-07 19:50:10 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -495,6 +495,36 @@ launch_poll()
   esac
 }
 
+build_slonconf()
+{
+    node=$1
+    conninfo=$2
+    eval archive=\$ARCHIVE{node}
+    CONFFILE=$mktmp/slon-conf.${node}
+    echo "log_level=2" > ${CONFFILE}
+    echo "vac_frequency=2" >> ${CONFFILE}
+    echo "sync_interval=2010" >> ${CONFFILE}
+    echo "sync_interval_timeout=15000" >> ${CONFFILE}
+    echo "sync_group_maxsize=8" >> ${CONFFILE}
+    echo "sync_max_rowsize=4096" >> ${CONFFILE}
+    echo "sync_max_largemem=1048576" >> ${CONFFILE}
+    echo "syslog=1" >> ${CONFFILE}
+    echo "log_timestamp=true" >> ${CONFFILE}
+    echo "log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'" >> ${CONFFILE}
+    echo "pid_file='${mktmp}/slon-pid.${alias}'" >> ${CONFFILE}
+    echo "syslog_facility=LOCAL0" >> ${CONFFILE}
+    echo "syslog_ident=slon-${cluster}-${alias}" >> ${CONFFILE}
+    echo "cluster_name='${cluster}'" >> ${CONFFILE}
+    echo "conn_info='${conninfo}'" >> ${CONFFILE}
+    echo "desired_sync_time=60000" >> ${CONFFILE}
+    echo "sql_on_connection=\"SET log_min_duration_statement to '1000';\"" >> ${CONFFILE}
+    echo "command_on_log_archive='/bin/true'" >> ${CONFFILE}
+    echo "lag_interval=\"0 minutes\"" >> ${CONFFILE}
+    if [ "x${archive}" == "xtrue" ]; then
+	echo "archive_dir='${mktmp}/archive_logs_${alias}'" >> ${CONFFILE}
+    fi
+}
+
 launch_slon()
 {
   alias=1
@@ -504,11 +534,20 @@ launch_slon()
   eval ouser=\$USER${originnode}
   eval opgbindir=\$PGBINDIR${originnode}
   eval oport=\$PORT${originnode}
+  eval oslonconf=\$SLONCONF${originnode}
   eval cluster=\$CLUSTER1
 
   conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
-  status "launching originnode : $opgbindir/slon -s500 -g10 -d2 $cluster \"$conninfo\""
-  $opgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
+  if [ "x${slonconf}" == "xtrue" ]; then
+      build_slonconf ${originnode} "${conninfo}"
+      slonparms=" -f ${mktmp}/slon-conf.${originnode} "
+      status "launching originnode : $opgbindir/slon ${slonparms}"
+      $opgbindir/slon -f ${mktmp}/slon-conf.${originnode} 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
+  else
+      slonparms=" -s500 -g10 -d2 $cluster \"$conninfo\""
+      status "launching originnode : $opgbindir/slon ${slonparms}"
+      $opgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
+  fi
   tmppid=$!
   tmpppid=$$
   sleep 1
@@ -532,6 +571,7 @@ launch_slon()
       eval cluster=\$CLUSTER1
       eval archive=\$ARCHIVE{alias}
       eval logship=\$LOGSHIP${alias}
+      eval slonconf=\$SLONCONF${alias}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         unset conninfo
@@ -544,15 +584,23 @@ launch_slon()
           status "Creating log shipping directory - $mktmp/archive_logs_${alias}"
           mkdir -p $mktmp/archive_logs_${alias}
           archiveparm="-a ${mktmp}/archive_logs_${alias}"
-       fi
+        fi
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
+	if [ "x${slonconf}" == "xtrue" ]; then
+	    build_slonconf ${alias} "${conninfo}"
+        fi
         if [ "x${logship}" == "xtrue" ]; then
           status "do not launch slon for node ${alias} - it receives data via log shipping"
         else
-          status "launching: $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster \"$conninfo\""
 
-          $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
+	  if [ "x${slonconf}" == "xtrue" ]; then
+	      status "launching: $pgbindir/slon -f ${CONFFILE}"
+	      $pgbindir/slon -f ${CONFFILE} 1>> $mktmp/slon_log.${alias} 2>&1 &
+	  else
+	      status "launching: $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster \"$conninfo\""
+	      $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
+	  fi
           tmppid=$!
           tmpppid=$$
           sleep 1

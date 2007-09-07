@@ -1,4 +1,4 @@
-$Id: README,v 1.2 2006-06-23 21:38:05 cbbrowne Exp $
+$Id: README,v 1.3 2007-09-07 19:50:11 cbbrowne Exp $
 
 This test involves submitting date and timestamps in various DATESTYLE
 forms, and verifying that all load in properly.
@@ -9,3 +9,7 @@ Note that it tests several derivations:
 - TIMESTAMPTZ
 - A domain that derives from TIMESTAMPTZ
 - An array of TIMESTAMPTZ values
+
+Both master + slave have slon configuration managed via slon.conf to
+verify that the testing framework functions properly for handling this
+with both nodes.
