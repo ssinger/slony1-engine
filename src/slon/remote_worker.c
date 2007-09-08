@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.23 2007-08-29 20:02:55 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.24 2007-09-08 14:21:40 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2946,7 +2946,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		if (archive_dir)
 		{
 			slon_mkquery(&query1,
-			 "delete from %s;\ncopy %s %s from stdin;", tab_fqname, tab_fqname,
+			 "delete from only %s;\ncopy %s %s from stdin;", tab_fqname, tab_fqname,
 						 nodeon73 ? "" : PQgetvalue(res3, 0, 0));
 			rc = archive_append_ds(node, &query1);
 			if (rc < 0)

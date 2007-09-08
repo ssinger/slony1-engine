@@ -18,6 +18,7 @@ DB2=slony_test2
 ######################################################################
 
 cat >test_5_tmp.sql <<_EOF_
+	set search_path = public;
 	alter table accounts add column lastuser name;
 
 	create function accounts_lastuser () returns trigger as '

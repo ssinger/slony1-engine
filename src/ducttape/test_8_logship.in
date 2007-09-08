@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.1.2.1 2007-05-31 13:29:48 wieck Exp $
+# $Id: test_8_logship.in,v 1.1.2.2 2007-09-08 14:21:40 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -50,6 +50,7 @@ trap '
 		echo "**** killing node daemon 2"
 		kill -15 $slon2_pid
 	fi
+	slony_logshipper -T ./test_8_logshipper.conf
 	exit 1
 ' 2 15
 
@@ -81,8 +82,8 @@ rm $TMPOUT
 
 PREAMBLE_FILE=/tmp/preamble.$$
 cat <<EOF > $PREAMBLE_FILE
-define origin 11;
-define sub1 22;
+define origin 1;
+define sub1 2;
 cluster name = $CLUSTERNAME;
 node @origin admin conninfo='dbname=$DB1';
 node @sub1 admin conninfo='dbname=$DB2';
@@ -103,7 +104,7 @@ sleep 1
 #####
 # Create the "Primary Node"
 #####
-echo "**** creating database for Node 11"
+echo "**** creating database for Node 1"
 
 createdb $DB1 || exit 1
 pgbench -i -s $PGBENCH_SCALE $DB1
@@ -134,7 +135,7 @@ echo "**** initializing $DB1 as Primary Node for Slony-I cluster $CLUSTERNAME"
 slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
 	init cluster (id = @origin, comment = 'Node @origin');
-	echo 'Database $DB1 initialized as Node 11';
+	echo 'Database $DB1 initialized as Node 1';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
@@ -142,7 +143,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-$TERMPROG -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 $CLUSTERNAME dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 1" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 $CLUSTERNAME dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
@@ -151,7 +152,7 @@ slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
 
 	try {
-		table add key (node id = 11, fully qualified name = 'public.history');
+		table add key (node id = 1, fully qualified name = 'public.history');
 	}
 	on error {
 		exit 1;
@@ -206,17 +207,17 @@ echo ""
 # Setup DB2 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-echo "**** creating database for node 22"
+echo "**** creating database for node 2"
 if ! createdb $DB2 ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	exit 1
 fi
 
-echo "**** initializing $DB2 as node 22 of Slony-I cluster $CLUSTERNAME"
+echo "**** initializing $DB2 as node 2 of Slony-I cluster $CLUSTERNAME"
 slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
-	echo 'Creating node 22';
+	echo 'Creating node 2';
 	try {
 		store node (id = @sub1, comment = 'node @sub1', event node = @origin);
         } on error {
@@ -238,14 +239,36 @@ if [ $? -ne 0 ] ; then
 	kill $slon1_pid 2>/dev/null
 	exit 1
 fi
-
-echo "**** starting the Slony-I node daemon for $DB2"
-$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
-slon2_pid=$!
-echo "slon[$slon2_pid] on dbname=$DB2"
-
+echo "**** creating pgbench tables in node 2"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB2
 echo "**** taking offline_dump.sql from $DB2 for logshipping"
 sh ../../tools/slony1_dump.sh $DB2 T1 >offline_dump.sql
+
+######################################################################
+# Prepare DB3 for receiving offline logs from the slony_logshipper
+######################################################################
+echo "**** creating database for offline node"
+if ! createdb $DB3 ; then
+	exit 1
+fi
+
+echo "**** loading pgbench schema into $DB3"
+psql -q $DB3 <./pgbench_schema.sql
+echo "**** loading Slony-I offline replica schema into $DB3"
+psql -q $DB3 <./offline_dump.sql
+psql -q $DB3 <<_EOF_
+	alter table history add column "_Slony-I_T1_rowID" bigint;
+_EOF_
+
+######################################################################
+# Start the slon for node 2, which also fires the logshipper
+######################################################################
+echo "**** starting the Slony-I node daemon for $DB2"
+$TERMPROG -title "Slon node 2" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR -x 'slony_logshipper ./test_8_logshipper.conf' $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
+slon2_pid=$!
+echo "slon[$slon2_pid] on dbname=$DB2"
 
 #####
 # Check that pgbench is still running
@@ -260,10 +283,7 @@ fi
 # And now comes the moment where the big elephant starts to pee
 # and the attendants in the first row climb on their chairs ...
 ######################################################################
-echo "**** creating pgbench tables and subscribing node 22 to set 1"
-(
-	cat pgbench_schema.sql
-) | psql -q $DB2
+echo "**** Subscribing node 2 to set 1"
 slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
 	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
@@ -288,26 +308,9 @@ wait $slon2_pid
 kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
+slony_logshipper -t ./test_8_logshipper.conf
 
 sh ./compare_pgbench_dumps $DB1 $DB2
-
-echo "**** creating database for offline node"
-if ! createdb $DB3 ; then
-	exit 1
-fi
-
-echo "---- loading pgbench schema into $DB3"
-psql -q $DB3 <./pgbench_schema.sql
-echo "---- loading Slony-I offline replica schema into $DB3"
-psql -q $DB3 <./offline_dump.sql
-psql -q $DB3 <<_EOF_
-	alter table history add column "_Slony-I_T1_rowID" bigint;
-_EOF_
-echo "---- loading all offline log archives"
-for afile in $LOGSHIPDIR/*.sql ; do
-	psql -q $DB3 <$afile
-done
-
 sh ./compare_pgbench_dumps $DB1 $DB3
 
 rm $PREAMBLE_FILE
