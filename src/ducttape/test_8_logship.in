@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.4 2007-06-19 19:14:49 wieck Exp $
+# $Id: test_8_logship.in,v 1.5 2007-09-09 02:37:04 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -50,6 +50,7 @@ trap '
 		echo "**** killing node daemon 2"
 		kill -15 $slon2_pid
 	fi
+	slony_logshipper -T ./test_8_logshipper.conf
 	exit 1
 ' 2 15
 
@@ -88,8 +89,6 @@ node @origin admin conninfo='dbname=$DB1';
 node @sub1 admin conninfo='dbname=$DB2';
 EOF
 
-
-#####
 # Remove old databases, if they exist
 #####
 echo "**** remove old test databases"
@@ -239,8 +238,29 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
+echo "**** creating pgbench tables in node 22"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB2
+
+echo "**** creating database for offline node"
+if ! createdb $DB3 ; then
+	exit 1
+fi
+
+######################################################################
+# Create the offline database for node 3
+######################################################################
+echo "**** loading pgbench schema into $DB3"
+psql -q $DB3 <./pgbench_schema.sql
+echo "**** loading Slony-I offline replica schema into $DB3"
+psql -q $DB3 <./offline_dump.sql
+
+######################################################################
+# Start the replication daemon for node 2
+######################################################################
 echo "**** starting the Slony-I node daemon for $DB2"
-$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR -x 'slony_logshipper ./test_8_logshipper.conf' $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -260,10 +280,7 @@ fi
 # And now comes the moment where the big elephant starts to pee
 # and the attendants in the first row climb on their chairs ...
 ######################################################################
-echo "**** creating pgbench tables and subscribing node 22 to set 1"
-(
-	cat pgbench_schema.sql
-) | psql -q $DB2
+echo "**** subscribing node 22 to set 1"
 slonik <<_EOF_
 	include <$PREAMBLE_FILE>;
 	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
@@ -290,23 +307,9 @@ slonik <<_EOF_
 			wait on = @origin, timeout = 0);
 _EOF_
 echo "**** you can terminate the replication engines."
+slony_logshipper -t ./test_8_logshipper.conf
 
 sh ./compare_pgbench_dumps $DB1 $DB2
-
-echo "**** creating database for offline node"
-if ! createdb $DB3 ; then
-	exit 1
-fi
-
-echo "---- loading pgbench schema into $DB3"
-psql -q $DB3 <./pgbench_schema.sql
-echo "---- loading Slony-I offline replica schema into $DB3"
-psql -q $DB3 <./offline_dump.sql
-echo "---- loading all offline log archives"
-for afile in $LOGSHIPDIR/*.sql ; do
-	psql -q $DB3 <$afile
-done
-
 sh ./compare_pgbench_dumps $DB1 $DB3
 
 rm $PREAMBLE_FILE

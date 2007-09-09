@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.153 2007-09-05 21:28:23 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.154 2007-09-09 02:37:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5072,7 +5072,7 @@ archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 		return -1;
 	}
 	rc = fprintf(node->archive_fp,
-		"select %s.archiveTrackingOffline('%s', '%s');\n"
+		"select %s.archiveTracking_offline('%s', '%s');\n"
 		"-- end of log archiving header\n"
 		"------------------------------------------------------------------\n"
 		"-- start of Slony-I data\n"
