@@ -1,11 +1,11 @@
-<!-- $Id: logshipping.sgml,v 1.16 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.17 2007-09-10 22:23:57 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
 
-<para> One of the new features for 1.1 is the ability to serialize the
-updates to go out into log files that can be kept in a spool
-directory.</para>
+<para> One of the new features for 1.1, that only really stabilized as
+of 1.2.11, is the ability to serialize the updates to go out into log
+files that can be kept in a spool directory.</para>
 
 <para> The spool files could then be transferred via whatever means
 was desired to a <quote>slave system,</quote> whether that be via FTP,
@@ -32,7 +32,8 @@ in this form, including:
   of queries in detail</para>
 
   <para> This makes log shipping potentially useful even though you
-  might not intend to actually create a log-shipped node.</para></listitem>
+  might not intend to actually create a log-shipped
+  node.</para></listitem>
 
   <listitem><para> This is a really slick scheme for building load for
   doing tests</para></listitem>
@@ -74,6 +75,9 @@ place?</para></question>
 
 <answer><para> Nothing special.  So long as the archiving node remains
 a subscriber, it will continue to generate logs.</para></answer>
+
+<answer> <warning> <para>If the archiving node becomes the origin, on
+the other hand, it will continue to generate logs.</para> </warning></answer>
 </qandaentry>
 
 <qandaentry> <question> <para> What if we run out of <quote>spool
@@ -166,11 +170,8 @@ It doesn't copy data!</emphasis> </para>
 raised on the local node, not in the same sequence as the other events
 coming from other nodes (notably the data provider). </para>
 
-<para> Unfortunately, the upshot of this is that when a node newly
-subscribes to a set, the log that actually contains the data is in a
-separate sequencing from the sequencing of the normal
-<command>SYNC</command> logs.  Blindly loading these logs will throw
-things off :-(. </para>
+<para> With revisions in sequencing of logs that took place in 1.2.11,
+this now presents no problem for the user.</para>
 
 </listitem> 
 
@@ -299,6 +300,116 @@ the given log shipping transaction log. </para>
 logged in <xref linkend="logshiplog">. </para></listitem>
 
 </itemizedlist>
+
+<para> As of 1.2.11, there is an <emphasis>even better idea</emphasis>
+for application of logs, as the sequencing of their names becomes more
+predictable.</para>
+
+<itemizedlist>
+
+<listitem><para> The table, on the log shipped node, tracks which log
+it most recently applied in table
+<envar>sl_archive_tracking</envar>. </para>
+
+<para> Thus, you may predict the ID number of the next file by taking
+the latest counter from this table and adding 1.</para>
+</listitem>
+
+<listitem><para> There is still variation as to the filename,
+depending on what the overall set of nodes in the cluster are.  All
+nodes periodically generate <command>SYNC</command> events, even if
+they are not an origin node, and the log shipping system does generate
+logs for such events. </para>
+
+<para> As a result, when searching for the next file, it is necessary
+to search for files in a manner similar to the following:
+
+<programlisting>
+ARCHIVEDIR=/var/spool/slony/archivelogs/node4
+SLONYCLUSTER=mycluster
+PGDATABASE=logshipdb
+PGHOST=logshiphost
+NEXTQUERY="select at_counter+1 from \"_${SLONYCLUSTER}\".sl_archive_tracking;"
+nextseq=`psql -d ${PGDATABASE} -h ${PGHOST} -A -t -c "${NEXTQUERY}"
+filespec=`printf "slony1_log_*_%20d.sql"
+for file in `find $ARCHIVEDIR -name "${filespec}"; do
+   psql -d ${PGDATABASE} -h ${PGHOST} -f ${file}
+done
+</programlisting>
+</para>
+</listitem>
+
+<listitem><para> </para> </listitem>
+</itemizedlist>
+
+</sect2>
+<sect2> <title> <application>slony_logshipper </application> Tool </title>
+
+
+<para> As of version 1.2.12, &slony1; has a tool designed to help
+apply logs, called <application>slony_logshipper</application>.  It is
+run with three sorts of parameters:</para>
+
+<itemizedlist>
+<listitem><para> Options, chosen from the following: </para> 
+<itemizedlist>
+<listitem><para><option>h</option> </para> <para>    display this help text and exit </para> </listitem>
+<listitem><para><option>v</option> </para> <para>    display program version and exit </para> </listitem>
+<listitem><para><option>q</option> </para> <para>    quiet mode </para> </listitem>
+<listitem><para><option>l</option> </para> <para>    cause running daemon to reopen its logfile </para> </listitem>
+<listitem><para><option>r</option> </para> <para>    cause running daemon to resume after error </para> </listitem>
+<listitem><para><option>t</option> </para> <para>    cause running daemon to enter smart shutdown mode </para> </listitem>
+<listitem><para><option>T</option> </para> <para>    cause running daemon to enter immediate shutdown mode </para> </listitem>
+<listitem><para><option>c</option> </para> <para>    destroy existing semaphore set and message queue            (use with caution) </para> </listitem>
+<listitem><para><option>f</option> </para> <para>    stay in foreground (don't daemonize) </para> </listitem>
+<listitem><para><option>w</option> </para> <para>    enter smart shutdown mode immediately </para> </listitem>
+</itemizedlist>
+</listitem>
+<listitem><para> A specified log shipper configuration file </para>
+<para> This configuration file consists of the following specifications:</para>
+<itemizedlist>
+<listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para> 
+<para> Where the log shipper will leave messages.</para> </listitem>
+<listitem><para> <command>cluster name = 'T1';</command></para> <para> Cluster name </para> </listitem>
+<listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to thisdatabase, and apply logs to it. </para> </listitem>
+<listitem><para> <command>archive dir = './offline_logs';</command></para> <para>The archive directory is required when running in <quote>database-connected</quote> mode to have a place to scan for missing (unapplied) archives. </para> </listitem>
+<listitem><para> <command>destination dir = './offline_result';</command></para> <para> If specified, the log shipper will write the results of data massaging into result logfiles in this directory.</para> </listitem>
+<listitem><para> <command>max archives = 3600;</command></para> <para> This fights eventual resource leakage; the daemon will enter <quote>smart shutdown</quote> mode automatically after processing this many archives. </para> </listitem>
+<listitem><para> <command>ignore table "public"."history";</command></para> <para> One may filter out single tables  from log shipped replication </para> </listitem>
+<listitem><para> <command>ignore namespace "public";</command></para> <para> One may filter out entire namespaces  from log shipped replication </para> </listitem>
+<listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
+<listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
+<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> 
+
+<para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
+
+<para> Pre- and post-processing commands have two further special variables defined: </para>
+<itemizedlist>
+<listitem><para> <envar>$inarchive</envar>  - indicating incoming archive filename </para> </listitem>
+<listitem><para> <envar>$outnarchive</envar>  - indicating outgoing archive filename </para> </listitem>
+</itemizedlist>
+</listitem>
+
+<listitem><para> <command>error command = ' ( echo
+"archive=$inarchive" echo "error messages:" echo "$errortext" ) | mail
+-s "Slony log shipping failed" postgres@localhost ';</command></para>
+
+<para>  The error command indicates a command to execute upon encountering an error.  All logging since the last successful completion of an archive is available in the <envar>$errortext</envar> variable. </para> 
+
+<para> In the example shown, this sends an email to the DBAs upon
+encountering an error.</para> </listitem>
+</itemizedlist>
+
+<listitem><para> Archive File Names</para>
+
+<para> Each filename is added to the SystemV Message queue for
+processing by a <application>slony_logshipper</application>
+process. </para>
+
+</listitem>
+
+</itemizedlist>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
