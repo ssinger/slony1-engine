@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.16.2.2 2007-08-28 19:27:29 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.16.2.3 2007-09-10 22:23:32 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -340,6 +340,74 @@ done
 </listitem>
 
 <listitem><para> </para> </listitem>
+</itemizedlist>
+
+</sect2>
+<sect2> <title> <application>slony_logshipper </application> Tool </title>
+
+
+<para> As of version 1.2.12, &slony1; has a tool designed to help
+apply logs, called <application>slony_logshipper</application>.  It is
+run with three sorts of parameters:</para>
+
+<itemizedlist>
+<listitem><para> Options, chosen from the following: </para> 
+<itemizedlist>
+<listitem><para><option>h</option> </para> <para>    display this help text and exit </para> </listitem>
+<listitem><para><option>v</option> </para> <para>    display program version and exit </para> </listitem>
+<listitem><para><option>q</option> </para> <para>    quiet mode </para> </listitem>
+<listitem><para><option>l</option> </para> <para>    cause running daemon to reopen its logfile </para> </listitem>
+<listitem><para><option>r</option> </para> <para>    cause running daemon to resume after error </para> </listitem>
+<listitem><para><option>t</option> </para> <para>    cause running daemon to enter smart shutdown mode </para> </listitem>
+<listitem><para><option>T</option> </para> <para>    cause running daemon to enter immediate shutdown mode </para> </listitem>
+<listitem><para><option>c</option> </para> <para>    destroy existing semaphore set and message queue            (use with caution) </para> </listitem>
+<listitem><para><option>f</option> </para> <para>    stay in foreground (don't daemonize) </para> </listitem>
+<listitem><para><option>w</option> </para> <para>    enter smart shutdown mode immediately </para> </listitem>
+</itemizedlist>
+</listitem>
+<listitem><para> A specified log shipper configuration file </para>
+<para> This configuration file consists of the following specifications:</para>
+<itemizedlist>
+<listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para> 
+<para> Where the log shipper will leave messages.</para> </listitem>
+<listitem><para> <command>cluster name = 'T1';</command></para> <para> Cluster name </para> </listitem>
+<listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to thisdatabase, and apply logs to it. </para> </listitem>
+<listitem><para> <command>archive dir = './offline_logs';</command></para> <para>The archive directory is required when running in <quote>database-connected</quote> mode to have a place to scan for missing (unapplied) archives. </para> </listitem>
+<listitem><para> <command>destination dir = './offline_result';</command></para> <para> If specified, the log shipper will write the results of data massaging into result logfiles in this directory.</para> </listitem>
+<listitem><para> <command>max archives = 3600;</command></para> <para> This fights eventual resource leakage; the daemon will enter <quote>smart shutdown</quote> mode automatically after processing this many archives. </para> </listitem>
+<listitem><para> <command>ignore table "public"."history";</command></para> <para> One may filter out single tables  from log shipped replication </para> </listitem>
+<listitem><para> <command>ignore namespace "public";</command></para> <para> One may filter out entire namespaces  from log shipped replication </para> </listitem>
+<listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
+<listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
+<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> 
+
+<para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
+
+<para> Pre- and post-processing commands have two further special variables defined: </para>
+<itemizedlist>
+<listitem><para> <envar>$inarchive</envar>  - indicating incoming archive filename </para> </listitem>
+<listitem><para> <envar>$outnarchive</envar>  - indicating outgoing archive filename </para> </listitem>
+</itemizedlist>
+</listitem>
+
+<listitem><para> <command>error command = ' ( echo
+"archive=$inarchive" echo "error messages:" echo "$errortext" ) | mail
+-s "Slony log shipping failed" postgres@localhost ';</command></para>
+
+<para>  The error command indicates a command to execute upon encountering an error.  All logging since the last successful completion of an archive is available in the <envar>$errortext</envar> variable. </para> 
+
+<para> In the example shown, this sends an email to the DBAs upon
+encountering an error.</para> </listitem>
+</itemizedlist>
+
+<listitem><para> Archive File Names</para>
+
+<para> Each filename is added to the SystemV Message queue for
+processing by a <application>slony_logshipper</application>
+process. </para>
+
+</listitem>
+
 </itemizedlist>
 
 </sect2>
