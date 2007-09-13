@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.22 2007-09-05 21:37:57 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.23 2007-09-13 14:20:29 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5956,7 +5956,7 @@ declare
   v_origin int4;
   v_isorigin boolean;
   v_fqname text;
-  query text;
+  v_query text;
   v_rows integer;
   v_idxname text;
 
@@ -5972,13 +5972,13 @@ begin
 
    v_fqname := ''"'' || p_nspname || ''"."'' || p_tabname || ''"'';
 -- Take out a lock on the table
-   query := ''lock '' || v_fqname || '';'';
-   execute query;
+   v_query := ''lock '' || v_fqname || '';'';
+   execute v_query;
 
    if v_isorigin then
 	-- On the origin, verify that the table is empty, failing if it has any tuples
-        query := ''select 1 as tuple from '' || v_fqname || '' limit 1;'';
-	execute query into prec;
+        v_query := ''select 1 as tuple from '' || v_fqname || '' limit 1;'';
+	execute v_query into prec;
         GET DIAGNOSTICS v_rows = ROW_COUNT;
 	if v_rows = 0 then
 		raise notice ''add_empty_table_to_replication: table % empty on origin - OK'', v_fqname;
@@ -5987,8 +5987,8 @@ begin
 	end if;
    else
 	-- On other nodes, TRUNCATE the table
-        query := ''truncate '' || v_fqname || '';'';
-	execute query;
+        v_query := ''truncate '' || v_fqname || '';'';
+	execute v_query;
    end if;
 -- If p_idxname is NULL, then look up the PK index, and RAISE EXCEPTION if one does not exist
    if p_idxname is NULL then
