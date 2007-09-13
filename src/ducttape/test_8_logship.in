@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.5 2007-09-09 02:37:04 wieck Exp $
+# $Id: test_8_logship.in,v 1.6 2007-09-13 14:19:58 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -253,6 +253,8 @@ fi
 ######################################################################
 echo "**** loading pgbench schema into $DB3"
 psql -q $DB3 <./pgbench_schema.sql
+echo "**** taking offline_dump.sql from $DB2 for logshipping"
+sh ../../tools/slony1_dump.sh $DB2 T1 >offline_dump.sql
 echo "**** loading Slony-I offline replica schema into $DB3"
 psql -q $DB3 <./offline_dump.sql
 
@@ -263,9 +265,6 @@ echo "**** starting the Slony-I node daemon for $DB2"
 $TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR -x 'slony_logshipper ./test_8_logshipper.conf' $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
-
-echo "**** taking offline_dump.sql from $DB2 for logshipping"
-sh ../../tools/slony1_dump.sh $DB2 T1 >offline_dump.sql
 
 #####
 # Check that pgbench is still running
