@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.154 2007-09-09 02:37:04 wieck Exp $
+ *	$Id: remote_worker.c,v 1.155 2007-09-17 22:04:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -665,7 +665,7 @@ remoteWorkerThread_main(void *cdata)
 		{
 			/*
 			 * Avoid deadlock problems during configuration changes by locking
-			 * the central confiuration lock right from the start.
+			 * the central configuration lock right from the start.
 			 */
 			slon_appendquery(&query1,
 							 "lock table %s.sl_config_lock; ",
