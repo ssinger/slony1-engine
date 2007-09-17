@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.16 2007-09-07 19:50:10 cbbrowne Exp $
+# $Id: run_test.sh,v 1.17 2007-09-17 22:03:33 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -69,17 +69,17 @@ trap '
 
 stop_processes()
 {
-	alias=1
+	node=1
 	while : ; do
-	  eval workerpid=\$worker${alias}_pid
+	  eval workerpid=\$worker${node}_pid
 	  if [ ! -z $workerpid ]; then
-	    echo "**** killing worker $alias"
+	    echo "**** killing worker $node"
 	    kill -15 $workerpid
 	  fi
-	  if [ ${alias} -ge ${WORKERS} ]; then
+	  if [ ${node} -ge ${WORKERS} ]; then
 	    break;
 	  else
-	    alias=`expr ${alias} + 1`
+	    node=`expr ${node} + 1`
 	  fi
 	done
 	stop_poll
@@ -110,53 +110,53 @@ stop_poll()
 
 stop_slons()
 {
-	alias=1
+	node=1
         while : ; do
-          eval slonpid=\$slon${alias}_pid
+          eval slonpid=\$slon${node}_pid
 	  if [ ! -z $slonpid ]; then
-            echo "**** killing slon node $alias"
+            echo "**** killing slon node $node"
             kill -15 $slonpid
 	  fi
-          if [ ${alias} -ge ${NUMNODES} ]; then
+          if [ ${node} -ge ${NUMNODES} ]; then
             break;
           else
-            alias=`expr ${alias} + 1`
+            node=`expr ${node} + 1`
           fi
         done
 }
 
 
 init_preamble() {
-	alias=1
+	node=1
 	while : ; do
-	  eval cluster=\$CLUSTER${alias}
+	  eval cluster=\$CLUSTER${node}
 	  if [ -n "${cluster}" ]; then
 	    echo "CLUSTER NAME = ${cluster};" > $mktmp/slonik.script
-	    if [ ${alias} -ge ${NUMCLUSTERS} ]; then
+	    if [ ${node} -ge ${NUMCLUSTERS} ]; then
 	      break;
 	    else
-	      alias=expr ${alias} + 1
+	      node=expr ${node} + 1
 	    fi
 	  else
 	    break;
 	  fi
 	done
 
-	alias=1
+	node=1
 
 	while : ; do
-	  eval db=\$DB${alias}
-	  eval host=\$HOST${alias}
-	  eval user=\$USER${alias}
-	  eval port=\$PORT${alias}
+	  eval db=\$DB${node}
+	  eval host=\$HOST${node}
+	  eval user=\$USER${node}
+	  eval port=\$PORT${node}
 	
 	  if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
 	    conninfo="dbname=${db} host=${host} user=${user} port=${port}"
-	    echo "NODE ${alias} ADMIN CONNINFO = '${conninfo}';" >> $mktmp/slonik.script
-	    if [ ${alias} -ge ${NUMNODES} ]; then
+	    echo "NODE ${node} ADMIN CONNINFO = '${conninfo}';" >> $mktmp/slonik.script
+	    if [ ${node} -ge ${NUMNODES} ]; then
 	      break;
 	    else
-	      alias=`expr ${alias} + 1`
+	      node=`expr ${node} + 1`
 	    fi   
 	  else
 	    break;
@@ -174,26 +174,26 @@ store_node()
   eval oport=\$PORT${originnode}
 
   if [ -n "${odb}" -a "${ohost}" -a "${ouser}" -a "${oport}" ]; then
-    alias=1
+    node=1
     while : ; do
-      eval db=\$DB${alias}
-      eval host=\$HOST${alias}
-      eval user=\$USER${alias}
-      eval port=\$PORT${alias}
-      eval logship=\$LOGSHIP${alias}
+      eval db=\$DB${node}
+      eval host=\$HOST${node}
+      eval user=\$USER${node}
+      eval port=\$PORT${node}
+      eval logship=\$LOGSHIP${node}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
-        if [ ${alias} -ne ${originnode} ]; then
+        if [ ${node} -ne ${originnode} ]; then
           if [ "x${logship}" == "xtrue" ]; then    # Don't bother generating nodes used for log shipping
-            status "Node ${alias} is a log shipping node - no need for STORE NODE"
+            status "Node ${node} is a log shipping node - no need for STORE NODE"
           else
-            echo "STORE NODE (id=${alias}, comment='node ${alias}');" >> $mktmp/slonik.script
+            echo "STORE NODE (id=${node}, comment='node ${node}');" >> $mktmp/slonik.script
          fi
         fi
-        if [ ${alias} -ge ${NUMNODES} ]; then
+        if [ ${node} -ge ${NUMNODES} ]; then
           break;
         else
-          alias=$((${alias} + 1))
+          node=$((${node} + 1))
         fi
       else
         break;
@@ -291,29 +291,29 @@ create_subscribers()
 	eval oport=\$PORT${originnode}
 
         if [ -n "${odb}" -a "${ohost}" -a "${ouser}" ]; then
-          alias=1
+          node=1
           while : ; do
-            eval db=\$DB${alias}
-            eval host=\$HOST${alias}
-            eval user=\$USER${alias}
-            eval weakuser=\$WEAKUSER${alias}
-	    eval pgbindir=\$PGBINDIR${alias}
-	    eval port=\$PORT${alias}
+            eval db=\$DB${node}
+            eval host=\$HOST${node}
+            eval user=\$USER${node}
+            eval weakuser=\$WEAKUSER${node}
+	    eval pgbindir=\$PGBINDIR${node}
+	    eval port=\$PORT${node}
 
             if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
-              if [ ${alias} -ne ${originnode} ]; then
-		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
-	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
+              if [ ${node} -ne ${originnode} ]; then
+		status "creating subscriber ${node} DB: $user -h $host -U $user -p $port $db"
+	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${node} 2> ${mktmp}/createdb.${node}
 		status "add plpgsql to subscriber"
 		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
-		status "loading subscriber ${alias} DB from $odb"
-	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${alias} 2> ${mktmp}/init_schema.sql.${alias}
+		status "loading subscriber ${node} DB from $odb"
+	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${node} 2> ${mktmp}/init_schema.sql.${node}
 		status "done"
               fi
-              if [ ${alias} -ge ${NUMNODES} ]; then
+              if [ ${node} -ge ${NUMNODES} ]; then
                 break;
               else
-                alias=$((${alias} + 1))
+                node=$((${node} + 1))
               fi   
             else
               break;
@@ -327,7 +327,7 @@ create_subscribers()
 
 generate_weak_slony_grants ()
 {
-  alias=1
+  node=1
 
   ROTBLS="sl_action_seq sl_config_lock sl_confirm sl_event
   sl_event_seq sl_listen sl_local_node_id sl_log_1 sl_log_2
@@ -338,12 +338,12 @@ generate_weak_slony_grants ()
   RWTBLS="sl_nodelock sl_nodelock_nl_conncnt_seq"
 
   while : ; do
-    eval db=\$DB${alias}
-    eval host=\$HOST${alias}
-    eval user=\$USER${alias}
-    eval weakuser=\$WEAKUSER${alias}
-    eval pgbindir=\$PGBINDIR${alias}
-    eval port=\$PORT${alias}
+    eval db=\$DB${node}
+    eval host=\$HOST${node}
+    eval user=\$USER${node}
+    eval weakuser=\$WEAKUSER${node}
+    eval pgbindir=\$PGBINDIR${node}
+    eval port=\$PORT${node}
 
     if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
       $pgbindir/psql -h $host -p $port -U $user -d $db -c "grant usage on schema \"_${CLUSTER1}\" to ${weakuser};" > /dev/null 2> /dev/null
@@ -354,33 +354,33 @@ generate_weak_slony_grants ()
         $pgbindir/psql -h $host -p $port -U $user -d $db -c "grant all on \"_${CLUSTER1}\".${table} to ${weakuser};" > /dev/null 2> /dev/null
       done
     fi
-    if [ ${alias} -ge ${NUMNODES} ]; then
+    if [ ${node} -ge ${NUMNODES} ]; then
        break;
     else
-       alias=$((${alias} + 1))
+       node=$((${node} + 1))
     fi   
   done    
 }
 
 drop_databases()
 {
-	alias=1
+	node=1
 	status "dropping database"
 	while : ; do
-	  eval db=\$DB${alias}
-	  eval host=\$HOST${alias}
-	  eval user=\$USER${alias}
-	  eval pgbindir=\$PGBINDIR${alias}
-	  eval port=\$PORT${alias}
+	  eval db=\$DB${node}
+	  eval host=\$HOST${node}
+	  eval user=\$USER${node}
+	  eval pgbindir=\$PGBINDIR${node}
+	  eval port=\$PORT${node}
 
 	  status "${db}"
 
 	  if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
-	    $pgbindir/dropdb -U $user -h $host -p $port $db 1> ${mktmp}/dropdb.${alias} 2> ${mktmp}/dropdb.${alias}
-	    if [ ${alias} -ge ${NUMNODES} ]; then
+	    $pgbindir/dropdb -U $user -h $host -p $port $db 1> ${mktmp}/dropdb.${node} 2> ${mktmp}/dropdb.${node}
+	    if [ ${node} -ge ${NUMNODES} ]; then
               break;
             else
-              alias=$((${alias} + 1))
+              node=$((${node} + 1))
             fi
 	  else
             break;
@@ -495,11 +495,33 @@ launch_poll()
   esac
 }
 
+build_logshipconf ()
+{
+    destnode=$1
+    srcnode=$2
+    CONFFILE=${mktmp}/logship-${destnode}.conf
+
+    eval ldb=\$DB${destnode}
+    eval lhost=\$HOST${destnode}
+    eval luser=\$USER${destnode}
+    eval lport=\$PORT${destnode}
+
+    mkdir -p ${mktmp}/offline_logs
+
+    echo "logfile='${mktmp}/offline_logs/logshipper.log';" > ${CONFFILE}
+    echo "cluster name = '${cluster}';" >> ${CONFFILE}
+    echo "destination database ='dbname=${ldb} port=${lport} user=${luser} host=${lhost}';" >> ${CONFFILE}
+    echo "archive dir = '${mktmp}/archive_logs_${srcnode}';" >> ${CONFFILE}
+    echo "### destination dir ='${mktmp}/offline_result';" >> ${CONFFILE}
+    echo "max archives = 3600;" >> ${CONFFILE}
+#    echo "post processing command = 'gzip -9 \$inarchive';" >> ${CONFFILE}
+}
+
 build_slonconf()
 {
     node=$1
     conninfo=$2
-    eval archive=\$ARCHIVE{node}
+    eval archive=\$ARCHIVE${node}
     CONFFILE=$mktmp/slon-conf.${node}
     echo "log_level=2" > ${CONFFILE}
     echo "vac_frequency=2" >> ${CONFFILE}
@@ -511,23 +533,56 @@ build_slonconf()
     echo "syslog=1" >> ${CONFFILE}
     echo "log_timestamp=true" >> ${CONFFILE}
     echo "log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'" >> ${CONFFILE}
-    echo "pid_file='${mktmp}/slon-pid.${alias}'" >> ${CONFFILE}
+    echo "pid_file='${mktmp}/slon-pid.${node}'" >> ${CONFFILE}
     echo "syslog_facility=LOCAL0" >> ${CONFFILE}
-    echo "syslog_ident=slon-${cluster}-${alias}" >> ${CONFFILE}
+    echo "syslog_ident=slon-${cluster}-${node}" >> ${CONFFILE}
     echo "cluster_name='${cluster}'" >> ${CONFFILE}
     echo "conn_info='${conninfo}'" >> ${CONFFILE}
     echo "desired_sync_time=60000" >> ${CONFFILE}
     echo "sql_on_connection=\"SET log_min_duration_statement to '1000';\"" >> ${CONFFILE}
-    echo "command_on_log_archive='/bin/true'" >> ${CONFFILE}
     echo "lag_interval=\"0 minutes\"" >> ${CONFFILE}
     if [ "x${archive}" == "xtrue" ]; then
-	echo "archive_dir='${mktmp}/archive_logs_${alias}'" >> ${CONFFILE}
+	echo "archive_dir='${mktmp}/archive_logs_${node}'" >> ${CONFFILE}
+	eval pgbindir=\$PGBINDIR${node}
+	echo "command_on_logarchive='${pgbindir}/slony_logshipper ${mktmp}/logship-${LOGSHIPNODE}.conf '" >> ${CONFFILE}
     fi
+}
+
+launch_logshipper()
+{
+  node=1
+  while : ; do
+    if [ ${node} -ne ${originnode} ]; then
+
+      eval db=\$DB${node}
+      eval host=\$HOST${node}
+      eval user=\$USER${node}
+      eval pgbindir=\$PGBINDIR${node}
+      eval port=\$PORT${node}
+      eval cluster=\$CLUSTER1
+      eval archive=\$ARCHIVE${node}
+      eval logship=\$LOGSHIP${node}
+      eval slonconf=\$SLONCONF${node}
+
+      if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
+        if [ "x${logship}" == "xtrue" ]; then
+          status "launch logshipper for node ${node}"
+	  build_logshipconf ${node} ${ARCHIVENODE}
+	  $pgbindir/slony_logshipper ${mktmp}/logship-${node}.conf &
+        fi
+      fi
+    fi
+    if [ ${node} -ge ${NUMNODES} ]; then
+      break;
+    else
+      node=$((${node} + 1))
+    fi
+  done
 }
 
 launch_slon()
 {
-  alias=1
+  node=1
   originnode=${ORIGINNODE:-"1"}
   eval odb=\$DB${originnode}
   eval ohost=\$HOST${originnode}
@@ -560,46 +615,65 @@ launch_slon()
 
   sleep 10
 
+  node=1
   while : ; do
-    if [ ${alias} -ne ${originnode} ]; then
+      eval logship=\$LOGSHIP${node}
+      eval archive=\$ARCHIVE${node}
+      if [ "x${archive}" == "xtrue" ]; then
+	  ARCHIVENODE=${node}
+      fi
+      if [ "x${logship}" == "xtrue" ]; then
+	  LOGSHIPNODE=${node}
+      fi
+      if [ ${node} -ge ${NUMNODES} ]; then
+	  break;
+      else
+	  node=$((${node} + 1))
+      fi
+  done
+  status "Archive node: ${ARCHIVENODE}"
+  status "Log shipping node: ${LOGSHIPNODE}"
 
-      eval db=\$DB${alias}
-      eval host=\$HOST${alias}
-      eval user=\$USER${alias}
-      eval pgbindir=\$PGBINDIR${alias}
-      eval port=\$PORT${alias}
+  node=1
+  while : ; do
+    if [ ${node} -ne ${originnode} ]; then
+
+      eval db=\$DB${node}
+      eval host=\$HOST${node}
+      eval user=\$USER${node}
+      eval pgbindir=\$PGBINDIR${node}
+      eval port=\$PORT${node}
       eval cluster=\$CLUSTER1
-      eval archive=\$ARCHIVE{alias}
-      eval logship=\$LOGSHIP${alias}
-      eval slonconf=\$SLONCONF${alias}
+      eval archive=\$ARCHIVE${node}
+      eval logship=\$LOGSHIP${node}
+      eval slonconf=\$SLONCONF${node}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         unset conninfo
-
         unset tmppid
         unset tmpppid
-        eval slon${alias}_pid=
+        eval slon${node}_pid=
+	status "Considering node ${node}"
 
-        if [ "x${archive}" != "xtrue" ]; then
-          status "Creating log shipping directory - $mktmp/archive_logs_${alias}"
-          mkdir -p $mktmp/archive_logs_${alias}
-          archiveparm="-a ${mktmp}/archive_logs_${alias}"
+        if [ "x${archive}" == "xtrue" ]; then
+          status "Creating log shipping directory - $mktmp/archive_logs_${node}"
+          mkdir -p $mktmp/archive_logs_${node}
+          archiveparm="-a ${mktmp}/archive_logs_${node}"
         fi
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
 	if [ "x${slonconf}" == "xtrue" ]; then
-	    build_slonconf ${alias} "${conninfo}"
+	    build_slonconf ${node} "${conninfo}"
         fi
         if [ "x${logship}" == "xtrue" ]; then
-          status "do not launch slon for node ${alias} - it receives data via log shipping"
+          status "logshipper node - no slon to launch"
         else
-
 	  if [ "x${slonconf}" == "xtrue" ]; then
 	      status "launching: $pgbindir/slon -f ${CONFFILE}"
-	      $pgbindir/slon -f ${CONFFILE} 1>> $mktmp/slon_log.${alias} 2>&1 &
+	      $pgbindir/slon -f ${CONFFILE} 1>> $mktmp/slon_log.${node} 2>&1 &
 	  else
 	      status "launching: $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster \"$conninfo\""
-	      $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${alias} 2>&1 &
+	      $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${node} 2>&1 &
 	  fi
           tmppid=$!
           tmpppid=$$
@@ -607,18 +681,17 @@ launch_slon()
 
           foo=$(_check_pid slon ${tmppid} ${tmpppid})
 
-
-          eval slon${alias}_pid=${foo}
+          eval slon${node}_pid=${foo}
           if [ -z "${foo}" -o "${tmppid}" != "${foo}" ]; then
-            warn 3 "Failed to launch slon on node ${alias} check $mktmp/slon_log.${alias} for details"
+            warn 3 "Failed to launch slon on node ${node} check $mktmp/slon_log.${node} for details"
           fi
         fi
       fi
     fi
-    if [ ${alias} -ge ${NUMNODES} ]; then
+    if [ ${node} -ge ${NUMNODES} ]; then
       break;
     else
-      alias=$((${alias} + 1))
+      node=$((${node} + 1))
     fi
   done
 }
@@ -632,16 +705,16 @@ poll_cluster()
   eval opgbindir=\$PGBINDIR${originnode}
   eval oport=\$PORT${originnode}
 
-  alias=1
+  node=1
   while : ; do
-    eval cluster=\$CLUSTER${alias}
+    eval cluster=\$CLUSTER${node}
     if [ -n "${cluster}" ]; then
       SQL="SELECT * FROM \"_${cluster}\".sl_status"
       ${opgbindir}/psql -c "${SQL}" -h ${ohost} -p ${oport} ${odb} ${ouser}
-      if [ ${alias} -ge ${NUMCLUSTERS} ]; then
+      if [ ${node} -ge ${NUMCLUSTERS} ]; then
         break;
       else
-        alias=`expr ${alias} + 1`
+        node=`expr ${node} + 1`
       fi
     else
       break;
@@ -651,7 +724,7 @@ poll_cluster()
 
 wait_for_catchup()
 {
-  alias=1
+  node=1
   status "waiting for nodes to catchup"
 
   poll_cluster
@@ -679,39 +752,39 @@ diff_db()
     ${opgbindir}/psql -c "${SQL}" -h ${ohost} -p ${oport} ${odb} ${ouser} >> ${mktmp}/db_${originnode}.dmp
   done
   status "done"
-  alias=1
+  node=1
   while : ; do
-    eval db=\$DB${alias}
-    eval host=\$HOST${alias}
-    eval user=\$USER${alias}
-    eval port=\$PORT${alias}
-    eval pgbindir=\$PGBINDIR${alias}
+    eval db=\$DB${node}
+    eval host=\$HOST${node}
+    eval user=\$USER${node}
+    eval port=\$PORT${node}
+    eval pgbindir=\$PGBINDIR${node}
 
     if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
-      if [ ${alias} -ne ${originnode} ]; then
-        if [ -f ${mktmp}/db_${alias}.dmp ]; then
-          err 3 "${mktmp}/db_${alias}.dmp exists but should not"
+      if [ ${node} -ne ${originnode} ]; then
+        if [ -f ${mktmp}/db_${node}.dmp ]; then
+          err 3 "${mktmp}/db_${node}.dmp exists but should not"
         fi
-	status "getting data from node ${alias} for diffing against origin"
+	status "getting data from node ${node} for diffing against origin"
         cat ${testname}/schema.diff | while read SQL; do
-          ${pgbindir}/psql -h ${host} -c "${SQL}" -p ${port} ${db} ${user} >> ${mktmp}/db_${alias}.dmp
+          ${pgbindir}/psql -h ${host} -c "${SQL}" -p ${port} ${db} ${user} >> ${mktmp}/db_${node}.dmp
         done
 	status "comparing"
-	diff ${mktmp}/db_${originnode}.dmp ${mktmp}/db_${alias}.dmp > ${mktmp}/db_diff.${alias}
+	diff ${mktmp}/db_${originnode}.dmp ${mktmp}/db_${node}.dmp > ${mktmp}/db_diff.${node}
         if [ $? -ne 0 ]; then
-          warn 3 "${mktmp}/db_${originnode}.dmp ${mktmp}/db_${alias}.dmp differ, see ${mktmp}/db_diff.${alias} for details"
+          warn 3 "${mktmp}/db_${originnode}.dmp ${mktmp}/db_${node}.dmp differ, see ${mktmp}/db_diff.${node} for details"
 	else
-	  echo "subscriber node ${alias} is the same as origin node ${originnode}"
+	  echo "subscriber node ${node} is the same as origin node ${originnode}"
         fi
 	status "done"
       fi
     else
       err 3 "Not Found ${db} -a ${host} ${user}"
     fi
-    if [ ${alias} -ge ${NUMNODES} ]; then
+    if [ ${node} -ge ${NUMNODES} ]; then
       break;
     else
-      alias=$((${alias} + 1))
+      node=$((${node} + 1))
     fi
   done
 }
@@ -804,7 +877,6 @@ if [ ! -z ${poll_pid} ]; then
 fi
 
 diff_db
-
 stop_processes
 
 status "waiting for slons to die"
