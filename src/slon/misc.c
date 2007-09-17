@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.25 2007-04-20 20:53:18 cbbrowne Exp $
+ *	$Id: misc.c,v 1.26 2007-09-17 22:12:20 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -59,9 +59,13 @@ extern char *Syslog_facility;	/* openlog() parameters */
 extern char *Syslog_ident;
 
 static void write_syslog(int level, const char *line);
-#else
+
+#define set_syslog_level(x) syslog_level = x;
+#else    /* HAVE_SYSLOG */
 
 #define Use_syslog 0
+
+#define set_syslog_level(x) ;
 #endif   /* HAVE_SYSLOG */
 
 
@@ -82,6 +86,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	char		time_buf[128];
 	time_t		stamp_time = time(NULL);
 
+	
 #ifdef HAVE_SYSLOG
 	int			syslog_level = LOG_ERR;
 #endif
@@ -92,46 +97,39 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	{
 		case SLON_DEBUG4:
 			level_c = "DEBUG4";
+			set_syslog_level(LOG_DEBUG);
 			break;
 		case SLON_DEBUG3:
 			level_c = "DEBUG3";
+			set_syslog_level(LOG_DEBUG);
 			break;
 		case SLON_DEBUG2:
 			level_c = "DEBUG2";
+			set_syslog_level(LOG_DEBUG);
 			break;
 		case SLON_DEBUG1:
 			level_c = "DEBUG1";
-#ifdef HAVE_SYSLOG
-			syslog_level = LOG_DEBUG;
-#endif
+			set_syslog_level(LOG_DEBUG);
 			break;
 		case SLON_INFO:
 			level_c = "INFO";
-#ifdef HAVE_SYSLOG
-			syslog_level = LOG_INFO;
-#endif
+			set_syslog_level(LOG_INFO);
 			break;
 		case SLON_CONFIG:
 			level_c = "CONFIG";
+			set_syslog_level(LOG_NOTICE);
 			break;
 		case SLON_WARN:
 			level_c = "WARN";
-#ifdef HAVE_SYSLOG
-			syslog_level = LOG_WARNING;
-#endif
+			set_syslog_level(LOG_WARNING);
 			break;
 		case SLON_ERROR:
 			level_c = "ERROR";
-#ifdef HAVE_SYSLOG
-			syslog_level = LOG_ERR;
-#endif
+			set_syslog_level(LOG_ERR);
 			break;
 		case SLON_FATAL:
 			level_c = "FATAL";
-#ifdef HAVE_SYSLOG
-			syslog_level = LOG_ERR;
-#endif
-
+			set_syslog_level(LOG_ERR);
 			break;
 	}
 
