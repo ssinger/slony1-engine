@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.17 2007-09-17 22:03:33 cbbrowne Exp $
+# $Id: run_test.sh,v 1.18 2007-09-21 21:53:40 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -131,7 +131,7 @@ init_preamble() {
 	while : ; do
 	  eval cluster=\$CLUSTER${node}
 	  if [ -n "${cluster}" ]; then
-	    echo "CLUSTER NAME = ${cluster};" > $mktmp/slonik.script
+	    echo "CLUSTER NAME = ${cluster};" > $mktmp/slonik.preamble
 	    if [ ${node} -ge ${NUMCLUSTERS} ]; then
 	      break;
 	    else
@@ -149,10 +149,11 @@ init_preamble() {
 	  eval host=\$HOST${node}
 	  eval user=\$USER${node}
 	  eval port=\$PORT${node}
+	  echo "define node${node} ${node};" >> $mktmp/slonik.preamble
 	
 	  if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
 	    conninfo="dbname=${db} host=${host} user=${user} port=${port}"
-	    echo "NODE ${node} ADMIN CONNINFO = '${conninfo}';" >> $mktmp/slonik.script
+	    echo "NODE ${node} ADMIN CONNINFO = '${conninfo}';" >> $mktmp/slonik.preamble
 	    if [ ${node} -ge ${NUMNODES} ]; then
 	      break;
 	    else
@@ -162,6 +163,7 @@ init_preamble() {
 	    break;
 	  fi
 	done
+	echo "include <${mktmp}/slonik.preamble>;" > $mktmp/slonik.script
 }
 
 
@@ -187,7 +189,7 @@ store_node()
           if [ "x${logship}" == "xtrue" ]; then    # Don't bother generating nodes used for log shipping
             status "Node ${node} is a log shipping node - no need for STORE NODE"
           else
-            echo "STORE NODE (id=${node}, comment='node ${node}');" >> $mktmp/slonik.script
+            echo "STORE NODE (id=@node${node}, comment='node ${node}');" >> $mktmp/slonik.script
          fi
         fi
         if [ ${node} -ge ${NUMNODES} ]; then
@@ -228,7 +230,7 @@ store_path()
                  # log shipping node - no paths need exist that involve this node
                  status "log shipping between nodes(${i}/${j}) - ls(${logship}/${blogship}) - omit STORE PATH"
              else
-	    echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
+	    echo "STORE PATH (SERVER=@node${i}, CLIENT=@node${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
              fi
           else
             err 3 "No conninfo"
