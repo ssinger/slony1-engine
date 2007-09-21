@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.11 2007-08-28 18:17:49 cbbrowne Exp $
+$Id: TODO,v 1.12 2007-09-21 22:11:14 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -48,6 +48,18 @@ verify that upgrades work properly.
      * STORE PATH to get the new node to communicate with the node it's
        duplicating
      * SUBSCRIBE SET for all the relevant sets
+
+- Need to draw some "ducttape" tests into NG tests
+
+   - Need to add a MERGE SET test; should do a pretty mean torture of
+     this!
+
+   - Duplicate duct tape test #6 - create 6 nodes:
+          - #2 and #3 subscribe to #1
+	  - #4 to #3
+          - #5 and #6 subscribe to #4
+
+   - Have a test that does a bunch of subtransactions
 
 Longer Term Items
 ---------------------------
@@ -148,3 +160,13 @@ Data Transformations on Subscriber
 SL-Set
 
 - Could it have some policy in it as to preferred failover targets?
+
+Have Tuple Application Work take place on the subscriber
+
+    - When data is pulled from sl_log_*, turn the output into a COPY
+      statement
+
+    - Thus, the data is input, in bulk, using a COPY statement
+
+    - Then have triggers on sl_log_* that perform the "distribution"
+      work to insert/delete/update data on the subscriber	
