@@ -1,0 +1,10 @@
+$Id: README,v 1.1 2007-09-21 21:34:56 cbbrowne Exp $
+  
+testlistenpaths verifies that some wacky listen-generation cases work
+properly.
+  
+It creates three simple tables as one replication set, and replicates
+them across nodes 1 and 3.
+
+It sets up the same tables as a second replication set, and replicates
+those across 2, 4, and 5.
