@@ -18,3 +18,5 @@ slony1_initcluster.sh [-f] <clustername> <conninfo> <comment>
 
 
 
+- test9_fileconf is duplicated in NG tests via the "SLONCONF" option that varies in various settings.ik files
+- test7_defines is duplicated in NG tests; ALL tests now use INCLUDE, and the listenpath test extensively uses DEFINE references
