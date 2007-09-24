@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.48 2007-02-01 19:09:08 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.49 2007-09-24 21:07:45 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -633,10 +633,68 @@ invalidated by circumstances:</para>
 <sect2 id="bsd-ports-profile"> <title> <filename> slon.in-profiles </filename> </title>
 <subtitle> Apache-Style profiles for FreeBSD <filename>ports/databases/slony/*</filename> </subtitle>
 
-<para> In the tools area, <filename>slon.in-profiles</filename> is a
+<indexterm><primary> Apache-style profiles for FreeBSD </primary> <secondary>FreeBSD </secondary> </indexterm>
+
+<para> In the <filename>tools</filename> area, <filename>slon.in-profiles</filename> is a
 script that might be used to start up &lslon; instances at the time of
 system startup.  It is designed to interact with the FreeBSD Ports
 system.</para>
+
+</sect2>
+
+<sect2 id="duplicate-node"> <title> <filename> duplicate-node.sh </filename> </title>
+<indexterm><primary> duplicating nodes </primary> </indexterm>
+<para> In the <filename>tools</filename> area,
+<filename>duplicate-node.sh</filename> is a script that may be used to
+help create a new node that duplicates one of the ones in the
+cluster. </para>
+
+<para> The script expects the following parameters: </para>
+<itemizedlist>
+<listitem><para> Cluster name </para> </listitem>
+<listitem><para> New node number </para> </listitem>
+<listitem><para> Origin node </para> </listitem>
+<listitem><para> Node being duplicated </para> </listitem>
+<listitem><para> New node </para> </listitem>
+</itemizedlist>
+
+<para> For each of the nodes specified, the script offers flags to
+specify <function>libpq</function>-style parameters for
+<envar>PGHOST</envar>, <envar>PGPORT</envar>,
+<envar>PGDATABASE</envar>, and <envar>PGUSER</envar>; it is expected
+that <filename>.pgpass</filename> will be used for storage of
+passwords, as is generally considered best practice. Those values may
+inherit from the <function>libpq</function> environment variables, if
+not set, which is useful when using this for testing.  When
+<quote>used in anger,</quote> however, it is likely that nearly all of
+the 14 available parameters should be used. </para>
+
+<para> The script prepares files, normally in
+<filename>/tmp</filename>, and will report the name of the directory
+that it creates that contain SQL and &lslonik; scripts to set up the
+new node. </para>
+
+<itemizedlist>
+<listitem><para> <filename> schema.sql </filename> </para> 
+<para> This is drawn from the origin node, and contains the <quote>pristine</quote> database schema that must be applied first.</listitem>
+<listitem><para> <filename> slonik.preamble </filename> </para> 
+
+<para> This <quote>preamble</quote> is used by the subsequent set of slonik scripts. </para> </listitem>
+<listitem><para> <filename> step1-storenode.slonik </filename> </para> 
+<para> A &lslonik; script to set up the new node. </para> </listitem>
+<listitem><para> <filename> step2-storepath.slonik </filename> </para> 
+<para> A &lslonik; script to set up path communications between the provider node and the new node. </para> </listitem>
+<listitem><para> <filename> step3-subscribe-sets.slonik </filename> </para> 
+<para> A &lslonik; script to request subscriptions for all replications sets.</para> </listitem>
+</itemizedlist>
+
+<para> For testing purposes, this is sufficient to get a new node working.  The configuration may not necessarily reflect what is desired as a final state:</para>
+
+<itemizedlist>
+<listitem><para> Additional communications paths may be desirable in order to have redundancy. </para> </listitem>
+<listitem><para> It is assumed, in the generated scripts, that the new node should support forwarding; that may not be true. </para> </listitem>
+<listitem><para> It may be desirable later, after the subscription process is complete, to revise subscriptions. </para> </listitem>
+</itemizedlist>
 
 </sect2>
 </sect1>
