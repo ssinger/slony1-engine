@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.23 2007-09-13 14:20:29 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.24 2007-09-25 18:33:38 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5137,38 +5137,84 @@ create or replace function @NAMESPACE@.RebuildListenEntries()
 returns int
 as '
 declare
-	v_receiver record ;
-	v_provider record ;
-	v_origin record ;
-	v_reachable int4[] ;
+	v_row	record;
 begin
 	-- First remove the entire configuration
 	delete from @NAMESPACE@.sl_listen;
 
-	-- Loop over every possible pair of receiver and provider
-	for v_receiver in select no_id from @NAMESPACE@.sl_node loop
-		for v_provider in select pa_server as no_id from @NAMESPACE@.sl_path where pa_client = v_receiver.no_id loop
+	-- Second populate the sl_listen configuration with a full
+	-- network of all possible paths.
+	insert into @NAMESPACE@.sl_listen
+				(li_origin, li_provider, li_receiver)
+			select pa_server, pa_server, pa_client from @NAMESPACE@.sl_path;
+	while true loop
+		insert into @NAMESPACE@.sl_listen
+					(li_origin, li_provider, li_receiver)
+			select distinct li_origin, pa_server, pa_client
+				from @NAMESPACE@.sl_listen, @NAMESPACE@.sl_path
+				where li_receiver = pa_server
+				  and li_origin <> pa_client
+			except
+			select li_origin, li_provider, li_receiver
+				from @NAMESPACE@.sl_listen;
 
-			-- Find all nodes that v_provider.no_id can receiver events from without using v_receiver.no_id			
-			for v_origin in select * from @NAMESPACE@.ReachableFromNode(v_provider.no_id, array[v_receiver.no_id]) as r(no_id) loop
+		if not found then
+			exit;
+		end if;
+	end loop;
 
-				-- If v_receiver.no_id subscribes a set from v_provider.no_id, events have to travel the same
-				-- path as the data. Ignore possible sl_listen that would break that rule.
-				perform 1 from @NAMESPACE@.sl_subscribe
-					join @NAMESPACE@.sl_set on sl_set.set_id = sl_subscribe.sub_set
-		 			where
-						sub_receiver = v_receiver.no_id and
-						sub_provider != v_provider.no_id and
-						set_origin = v_origin.no_id ;
-				if not found then
-					insert into @NAMESPACE@.sl_listen (li_receiver, li_provider, li_origin)
-						values (v_receiver.no_id, v_provider.no_id, v_origin.no_id) ;
-				end if ;
+	-- We now replace specific event-origin,receiver combinations
+	-- with a configuration that tries to avoid events arriving at
+	-- a node before the data provider actually has the data ready.
 
+	-- Loop over every possible pair of receiver and event origin
+	for v_row in select N1.no_id as receiver, N2.no_id as origin
+			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
+			where N1.no_id <> N2.no_id
+	loop
+		-- 1st choice:
+		-- If we use the event origin as a data provider for any
+		-- set that originates on that very node, we are a direct
+		-- subscriber to that origin and listen there only.
+		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+				where set_origin = v_row.origin
+				  and sub_set = set_id
+				  and sub_provider = v_row.origin
+				  and sub_receiver = v_row.receiver
+				  and sub_active)
+		then
+			delete from @NAMESPACE@.sl_listen
+				where li_origin = v_row.origin
+				  and li_receiver = v_row.receiver;
+			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
+				values (v_row.origin, v_row.origin, v_row.receiver);
+			continue;
+		end if;
 
-			end loop ;
+		-- 2nd choice:
+		-- If we are subscribed to any set originating on this
+		-- event origin, we want to listen on all data providers
+		-- we use for this origin. We are a cascaded subscriber
+		-- for sets from this node.
+		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+						where set_origin = v_row.origin
+						  and sub_set = set_id
+						  and sub_receiver = v_row.receiver
+						  and sub_active)
+		then
+			delete from @NAMESPACE@.sl_listen
+					where li_origin = v_row.origin
+					  and li_receiver = v_row.receiver;
+			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
+					select distinct set_origin, sub_provider, v_row.receiver
+						from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+						where set_origin = v_row.origin
+						  and sub_set = set_id
+						  and sub_receiver = v_row.receiver
+						  and sub_active;
+			continue;
+		end if;
 
-		end loop ;
 	end loop ;
 
 	return null ;
