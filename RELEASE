@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.15 2007-09-05 21:22:37 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.16 2007-09-25 20:04:24 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
@@ -9,6 +9,9 @@ RELEASE 1.2.12
 
 - Added a fairly substantial partitioning test to exercise the
   new stored functions
+
+- Backport "listen path" generator function from CVS HEAD (2.0) to
+  1.2 branch
 
 RELEASE 1.2.11
 
