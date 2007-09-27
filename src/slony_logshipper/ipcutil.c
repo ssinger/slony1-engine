@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: ipcutil.c,v 1.2 2007-09-09 02:37:05 wieck Exp $
+ *	$Id: ipcutil.c,v 1.3 2007-09-27 18:02:52 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -85,7 +85,7 @@ ipc_init(char *archive_dir)
 		/*
 		 * Create or attach to the semaphore set
 		 */
-		semid = semget(semkey, 2, 0700 | IPC_CREAT);
+		semid = semget(semkey, 3, 0700 | IPC_CREAT);
 		if (semid < 0)
 		{
 			fprintf(stderr, "cannot create or attache to semaphore set\n"
@@ -486,7 +486,13 @@ ipc_recv_path(char *buf)
 int
 ipc_send_term(char *archive_dir, bool immediate)
 {
-	return ipc_send_code(archive_dir, (immediate) ? 3 : 2);
+	int		rc;
+
+	rc = ipc_send_code(archive_dir, (immediate) ? 3 : 2);
+	if (rc != 0)
+		return rc;
+
+	return ipc_wait_for_destroy();
 }
 
 
@@ -596,6 +602,29 @@ ipc_unlock(void)
 		fprintf(stderr, "semop() failed in ipc_lock(): %s\n",
 				strerror(errno));
 		return -1;
+	}
+	return 0;
+}
+
+
+/*
+ * ipc_wait_for_destroy()
+ *
+ *	Wait until the semaphore set is destroyed.
+ */
+int
+ipc_wait_for_destroy(void)
+{
+	struct sembuf	sops[1] = {{2, -1, 0}};
+
+	if (semop(semid, sops, 1) < 0)
+	{
+		if (errno != EIDRM && errno != EINVAL)
+		{
+			fprintf(stderr, "semop() failed in ipc_wait_for_destroy(): %s\n",
+					strerror(errno));
+			return -1;
+		}
 	}
 	return 0;
 }
