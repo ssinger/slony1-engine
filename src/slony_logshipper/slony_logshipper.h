@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.h,v 1.1.2.1 2007-09-08 14:21:40 wieck Exp $
+ *	$Id: slony_logshipper.h,v 1.1.2.2 2007-09-27 18:03:02 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -220,6 +220,7 @@ int			ipc_send_logswitch(char *archive_dir);
 int			ipc_send_resume(char *archive_dir);
 int			ipc_lock(void);
 int			ipc_unlock(void);
+int			ipc_wait_for_destroy(void);
 int			ipc_cleanup(char *archive_dir);
 void		ipc_set_shutdown_smart(void);
 void		ipc_set_shutdown_immed(void);
