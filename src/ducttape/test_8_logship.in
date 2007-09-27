@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_8_logship.in,v 1.6 2007-09-13 14:19:58 wieck Exp $
+# $Id: test_8_logship.in,v 1.7 2007-09-27 14:22:59 wieck Exp $
 # **********
 # test_8_logship
 #
@@ -7,33 +7,39 @@
 #	as slony_test1 and then:
 #
 #	- initializes a primary node and starts the node daemon
-#	- creates a set containing all 4 pgbench tables
+#	- creates two sets containing all 4 pgbench tables
 #	- creates a second database as slony_test2
 #	- adds database slony_test2 to the system
 #	- starts the second replication daemon
 #	- creates the pgbench tables (schema only)
 #	- subscribes the replication set from the primary node
-#
-#  The nature of the test has to do with the use of the new slonik
-#  log shipping functionality...
+#	- creates a 3rd database node similar that replicates
+#	  cascaded from the second node.
+#	- waits until the pgbench is terminated and the user
+#	  stopped all 3 replication engines.
+#	- compares the 3 database.
 # **********
 
 TERMPROG=xterm
 WHICHPROG=which
 
+PATH=/usr/local/slony1/bin:$PATH
 export PATH
 TMPOUT=/tmp/output.$$
+
 LOGSHIPDIR=./offline_logs
 mkdir -p $LOGSHIPDIR
 rm -f $LOGSHIPDIR/*
+
 DB1=slony_test1
 DB2=slony_test2
 DB3=slony_test3
-CLUSTERNAME=T1
-PGBENCH_SCALE=1
-PGBENCH_CLIENTS=5
-PGBENCH_TRANS=`expr 30000 / $PGBENCH_CLIENTS`
+DB4=slony_test4
 DEBUG_LEVEL=2
+
+PGBENCH_SCALE=1
+PGBENCH_CLIENTS=10
+PGBENCH_TRANS=`expr 25000 / $PGBENCH_CLIENTS`
 
 trap '
 	echo ""
@@ -50,8 +56,12 @@ trap '
 		echo "**** killing node daemon 2"
 		kill -15 $slon2_pid
 	fi
+	if [ ! -z $slon3_pid ] ; then
+		echo "**** killing node daemon 3"
+		kill -15 $slon3_pid
+	fi
 	slony_logshipper -T ./test_8_logshipper.conf
-	exit 1
+	exit 2
 ' 2 15
 
 ######################################################################
@@ -75,20 +85,12 @@ else
 fi
 echo -n "**** running 'make install' in src directory ... "
 if ! ${MAKE} -C .. install >$TMPOUT 2>&1 ; then
-    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit 1
+    echo "failed"; cat $TMPOUT; rm $TMPOUT; exit -1
 fi
 echo "done"
 rm $TMPOUT
 
-PREAMBLE_FILE=/tmp/preamble.$$
-cat <<EOF > $PREAMBLE_FILE
-define origin 11;
-define sub1 22;
-cluster name = $CLUSTERNAME;
-node @origin admin conninfo='dbname=$DB1';
-node @sub1 admin conninfo='dbname=$DB2';
-EOF
-
+#####
 # Remove old databases, if they exist
 #####
 echo "**** remove old test databases"
@@ -98,13 +100,15 @@ dropdb $DB2 || echo "**** ignored"
 sleep 1
 dropdb $DB3 || echo "**** ignored"
 sleep 1
+dropdb $DB4 || echo "**** ignored"
+sleep 1
 
 #####
 # Create the "Primary Node"
 #####
-echo "**** creating database for Node 11"
+echo "**** creating database for Node 1"
 
-createdb $DB1 || exit 1
+createdb $DB1 || exit -1
 pgbench -i -s $PGBENCH_SCALE $DB1
 psql $DB1 <<_EOF_
 	create sequence history_seq;
@@ -118,7 +122,7 @@ pg_dump -s $DB1 >pgbench_schema.sql
 #####
 # Start pgbench in the background and give it rampup time
 #####
-pgbench -n -s $PGBENCH_SCALE -c $PGBENCH_CLIENTS -t $PGBENCH_TRANS $DB1 &
+pgbench -n -f test_8_pgbench-1.sql -s $PGBENCH_SCALE -c $PGBENCH_CLIENTS -t $PGBENCH_TRANS $DB1 &
 pgbench_pid=$!
 echo "**** pgbench is running in background with pid $pgbench_pid"
 echo -n "**** sleeping 10 seconds to give pgbench time for rampup ... "
@@ -136,53 +140,60 @@ echo ""
 # and create a replication set containing the pgbench tables.
 ######################################################################
 
-echo "**** initializing $DB1 as Primary Node for Slony-I cluster $CLUSTERNAME"
+echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	init cluster (id = @origin, comment = 'Node @origin');
-	echo 'Database $DB1 initialized as Node 11';
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB1';
+	node 3 admin conninfo = 'dbname=$DB1';
+	init cluster (id = 1, comment = 'Node 1');
+	echo 'Database $DB1 initialized as Node 1';
 _EOF_
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
-	exit 1
+	exit -1
 fi
 
 echo "**** starting the Slony-I node daemon for $DB1"
-$TERMPROG -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 $CLUSTERNAME dbname=$DB1; echo -n 'Enter>'; read line" &
+$TERMPROG -sb -sl 3000 -title "Slon node 1" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB1; echo -n 'Enter>'; read line" &
 slon1_pid=$!
 echo "slon[$slon1_pid] on dbname=$DB1"
 
 echo "**** creating a replication set containing the 4 pgbench tables ... "
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
 
 	try {
-		create set (id = 1, origin = @origin, comment = 'Set 1 - pgbench tables');
-		set add table (set id = 1, origin = @origin,
+		create set (id = 1, origin = 1, comment = 'Set 1 - pgbench tables');
+		set add table (set id = 1, origin = 1,
 			id = 1, fully qualified name = 'public.accounts',
 			comment = 'Table accounts');
-		set add table (set id = 1, origin = @origin,
+		set add table (set id = 1, origin = 1,
 			id = 2, fully qualified name = 'public.branches',
 			comment = 'Table branches');
-		set add table (set id = 1, origin = @origin,
+		set add table (set id = 1, origin = 1,
 			id = 3, fully qualified name = 'public.tellers',
 			comment = 'Table tellers');
-		set add table (set id = 1, origin = @origin,
+
+		create set (id = 2, origin = 1, comment = 'Set 2 - pgbench history');
+		set add table (set id = 2, origin = 1,
 			id = 4, fully qualified name = 'public.history',
 			comment = 'Table history');
 	}
 	on error {
-		exit 1;
+		exit -1;
 	}
 _EOF_
-
 if [ $? -ne 0 ] ; then
 	echo "failed"
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
 	cat $TMPOUT
 	rm $TMPOUT
-	exit 1
+	exit -1
 fi
 echo "**** set created"
 
@@ -192,7 +203,7 @@ echo "**** set created"
 if ! kill -0 $pgbench_pid 2>/dev/null ; then
 	echo "**** pgbench terminated ???"
 	kill $slon1_pid 2>/dev/null
-	exit 1
+	exit -1
 fi
 
 echo ""
@@ -205,64 +216,37 @@ echo ""
 # Setup DB2 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-echo "**** creating database for node 22"
+echo "**** creating database for Node 2"
 if ! createdb $DB2 ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
-	exit 1
+	exit -1
 fi
 
-echo "**** initializing $DB2 as node 22 of Slony-I cluster $CLUSTERNAME"
+echo "**** initializing $DB2 as Node 2 of Slony-I cluster T1"
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	echo 'Creating node 22';
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
 	try {
-		store node (id = @sub1, comment = 'node @sub1', event node = @origin);
-        } on error {
-	    echo 'could not establish node @sub1';
-	    exit -1;
+		store node (id = 2, comment = 'Node 2');
+		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
+		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
 	}
-	try {
-		store path (server = @origin, client = @sub1, conninfo = 'dbname=$DB1');
-		store path (server = @sub1, client = @origin, conninfo = 'dbname=$DB2');
-	}
-	on error { 
-	    echo 'could not establish paths between @origin and @sub1';
-	    exit -1; 
-	}
-	echo 'Database $DB2 added as node @sub1';
+	on error { exit -1; }
+	echo 'Database $DB2 added as Node 2';
 _EOF_
+
 if [ $? -ne 0 ] ; then
 	kill $pgbench_pid 2>/dev/null
 	kill $slon1_pid 2>/dev/null
-	exit 1
+	exit -1
 fi
 
-echo "**** creating pgbench tables in node 22"
-(
-	cat pgbench_schema.sql
-) | psql -q $DB2
-
-echo "**** creating database for offline node"
-if ! createdb $DB3 ; then
-	exit 1
-fi
-
-######################################################################
-# Create the offline database for node 3
-######################################################################
-echo "**** loading pgbench schema into $DB3"
-psql -q $DB3 <./pgbench_schema.sql
-echo "**** taking offline_dump.sql from $DB2 for logshipping"
-sh ../../tools/slony1_dump.sh $DB2 T1 >offline_dump.sql
-echo "**** loading Slony-I offline replica schema into $DB3"
-psql -q $DB3 <./offline_dump.sql
-
-######################################################################
-# Start the replication daemon for node 2
-######################################################################
 echo "**** starting the Slony-I node daemon for $DB2"
-$TERMPROG -title "Slon node 22" -e sh -c "slon -d$DEBUG_LEVEL -s10000 -o10000 -g10 -a $LOGSHIPDIR -x 'slony_logshipper ./test_8_logshipper.conf' $CLUSTERNAME dbname=$DB2; echo -n 'Enter>'; read line" &
+$TERMPROG -sb -sl 3000 -title "Slon node 2" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB2; echo -n 'Enter>'; read line" &
 slon2_pid=$!
 echo "slon[$slon2_pid] on dbname=$DB2"
 
@@ -272,24 +256,140 @@ echo "slon[$slon2_pid] on dbname=$DB2"
 if ! kill -0 $pgbench_pid 2>/dev/null ; then
 	echo "**** pgbench terminated ???"
 	kill $slon1_pid 2>/dev/null
-	exit 1
+	exit -1
 fi
 
 ######################################################################
 # And now comes the moment where the big elephant starts to pee
 # and the attendants in the first row climb on their chairs ...
 ######################################################################
-echo "**** subscribing node 22 to set 1"
+echo "**** creating pgbench tables and subscribing Node 2 to set 1"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB2
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-	subscribe set ( id = 1, provider = @origin, receiver = @sub1, forward = yes );
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	try {
+		subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
+		subscribe set ( id = 2, provider = 1, receiver = 2, forward = yes );
+	}
+	on error {
+		exit 1;
+	}
+	echo '***** Subscribe set queued - issue SYNC';
+	sync (id = 1);
+	echo '***** Waiting for SYNC to be done on subscriber';
+	wait for event (origin = 1, confirmed = 2, wait on = 1);
+	echo '***** Subscription complete';
 _EOF_
 
 echo ""
 echo "**********************************************************************"
-echo "**** $DB2 should now be copying data and attempting to catch up."
+echo "**** $DB2 should now be attempting to catch up."
 echo "**********************************************************************"
 echo ""
+
+######################################################################
+# Setup DB3 as a subscriber node and let it subscribe the replication
+# set of the running pgbench
+######################################################################
+echo "**** creating database for Node 3"
+if ! createdb $DB3 ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	exit -1
+fi
+
+echo "**** initializing $DB3 as Node 3 of Slony-I cluster T1"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	store node (id = 3, comment = 'Node 3');
+
+	store path (server = 1, client = 3, conninfo = 'dbname=$DB1');
+	store path (server = 2, client = 3, conninfo = 'dbname=$DB2');
+	store path (server = 3, client = 1, conninfo = 'dbname=$DB3');
+	store path (server = 3, client = 2, conninfo = 'dbname=$DB3');
+
+	echo 'Database $DB3 added as Node 3';
+_EOF_
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	exit -1
+fi
+
+######################################################################
+# Create the pgbench tables and subscribe to set 1
+######################################################################
+echo "**** creating pgbench tables and subscribing Node 3 to set 1"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB3
+
+######################################################################
+# Create the offline database for node 4
+######################################################################
+echo "**** creating database for offline node 4"
+if ! createdb $DB4 ; then
+	exit 1
+fi
+echo "**** loading pgbench schema into $DB4"
+psql -q $DB4 <./pgbench_schema.sql
+echo "**** taking offline_dump.sql from $DB3 for logshipping"
+sh ../../tools/slony1_dump.sh $DB3 T1 >offline_dump.sql
+echo "**** loading Slony-I offline replica schema into $DB4"
+psql -q $DB4 <./offline_dump.sql
+
+######################################################################
+# Start the replication daemon for node 3
+######################################################################
+echo "**** starting the Slony-I node daemon for $DB3"
+$TERMPROG -sb -sl 3000 -title "Slon node 3" -e sh -c "slon -d$DEBUG_LEVEL -a $LOGSHIPDIR -x 'slony_logshipper ./test_8_logshipper.conf' T1 dbname=$DB3; echo -n 'Enter>'; read line" &
+slon3_pid=$!
+echo "slon[$slon3_pid] on dbname=$DB3"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	kill $slon3_pid 2>/dev/null
+	slony_logshipper -T ./test_8_logshipper.conf
+	exit -1
+fi
+
+######################################################################
+# Subscribe node 3 to set 1
+######################################################################
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	subscribe set ( id = 1, provider = 2, receiver = 3, forward = no );
+	subscribe set ( id = 2, provider = 2, receiver = 3, forward = no );
+_EOF_
+
+echo ""
+echo "**********************************************************************"
+echo "**** $DB3 should now be copying data and attempting to catch up."
+echo "**********************************************************************"
+echo ""
+
+
 
 echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do
@@ -298,17 +398,19 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 done
 echo "**** pgbench finished"
 slonik <<_EOF_
-	include <$PREAMBLE_FILE>;
-
-	echo '**** waiting for node @sub1 to catch up';
-	sync (id = @origin);
-	wait for event (origin = @origin, confirmed = @sub1, 
-			wait on = @origin, timeout = 0);
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	
+	sync (id = 1);
+	echo '**** waiting for node 3 to catch up';
+	wait for event (origin = 1, confirmed = all, wait on = 1, timeout = 0);
+	echo '**** done.';
 _EOF_
-echo "**** you can terminate the replication engines."
+echo "**** you might terminate the replication engines."
+
+./compare_pgbench_dumps $DB1 $DB2
+./compare_pgbench_dumps $DB1 $DB3
 slony_logshipper -t ./test_8_logshipper.conf
-
-sh ./compare_pgbench_dumps $DB1 $DB2
-sh ./compare_pgbench_dumps $DB1 $DB3
-
-rm $PREAMBLE_FILE
+./compare_pgbench_dumps $DB1 $DB4

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.155 2007-09-17 22:04:18 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.156 2007-09-27 14:22:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -584,6 +584,10 @@ remoteWorkerThread_main(void *cdata)
 						if (event->ev_seqno >= quit_sync_finalsync)
 						{
 							slon_log(SLON_FATAL, "ABORT at sync %d per command line request%n", quit_sync_finalsync);
+							slon_mkquery(&query2, "rollback transaction; ");
+							query_execute(node, local_dbconn, &query2);
+							dstring_reset(&query2);
+
 							slon_retry();
 						}
 					}
@@ -632,6 +636,7 @@ remoteWorkerThread_main(void *cdata)
 				 * Something went wrong. Rollback and try again after the
 				 * specified timeout.
 				 */
+				archive_terminate(node);
 				(void) slon_mkquery(&query2, "rollback transaction");
 				if (query_execute(node, local_dbconn, &query2) < 0)
 					slon_retry();
@@ -661,7 +666,7 @@ remoteWorkerThread_main(void *cdata)
 			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_retry();
 		}
-		else
+		else /* not SYNC */
 		{
 			/*
 			 * Avoid deadlock problems during configuration changes by locking
@@ -670,6 +675,9 @@ remoteWorkerThread_main(void *cdata)
 			slon_appendquery(&query1,
 							 "lock table %s.sl_config_lock; ",
 							 rtcfg_namespace);
+			if (query_execute(node, local_dbconn, &query1) < 0)
+				slon_retry();
+			dstring_reset(&query1);
 
 			/*
 			 * For all non-SYNC events, we write at least a standard
@@ -4253,14 +4261,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		rc = archive_close(node);
 		if (rc < 0)
 			slon_retry();
-			
-		if (command_on_logarchive) {
-			char command[512];
-			sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
-			slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
-				 node->no_id, command);
-			system(command);
-		}
 	}
 
 	/*
@@ -5040,7 +5040,7 @@ archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 	dstring_free(&query);
 	
 	sprintf(node->archive_name, "%s/slony1_log_%d_", archive_dir, 
-			node->no_id);
+			rtcfg_nodeid);
 	for (i = strlen(node->archive_counter); i < 20; i++)
 		strcat(node->archive_name, "0");
 	strcat(node->archive_name, node->archive_counter);
@@ -5143,6 +5143,14 @@ archive_close(SlonNode *node)
 				node->no_id, node->archive_temp, node->archive_name, 
 				strerror(errno));
 		return -1;
+	}
+
+	if (command_on_logarchive) {
+		char command[1024];
+		sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
+		slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
+			 node->no_id, command);
+		system(command);
 	}
 
 	return 0;
