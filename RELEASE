@@ -1,17 +1,27 @@
-$Id: RELEASE,v 1.1.2.16 2007-09-25 20:04:24 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.17 2007-09-28 21:17:12 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
   not being processed properly
 
 - Added stored functions and documentation for adding empty tables
-  (notably *partitions*) to replication
+  (notably *partitions*) to replication.  Note these functions
+  do no work when not specifically requested.
 
 - Added a fairly substantial partitioning test to exercise the
-  new stored functions
+  new stored functions above.
 
 - Backport "listen path" generator function from CVS HEAD (2.0) to
-  1.2 branch
+  1.2 branch.
+
+- Fixed a problem with "EXECUTE SCRIPT" (introduced in remote_worker.c
+  version 1.124.2.13) where moving the relevant code into a subroutine
+  at the end led to losing the "BEGIN; SET TRANSACTION ISOLATION LEVEL
+  SERIALIZABLE;" query that needs to be the first thing run...
+
+- Fixing the archive sequence generations. All non-SYNC events must
+  start the local transaction before creating the archive as well, so
+  that the lock on the archive counter table serializes archive creation.
 
 RELEASE 1.2.11
 
