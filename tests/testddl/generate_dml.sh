@@ -89,10 +89,10 @@ do_initdata()
   wait_for_catchup
 
   status "Execute a script on each node, one by one"
-  for node in 1 2 3; do
+  for tnode in 1 2 3; do
       init_preamble
-      sh ${testname}/individual_ddl.sh ${testname} ${node} >> ${SCRIPT}
-      status "execute DDL script on node ${node}"
+      sh ${testname}/individual_ddl.sh ${testname} ${tnode} >> ${SCRIPT}
+      status "execute DDL script on node ${tnode}"
       do_ik
   done
 
