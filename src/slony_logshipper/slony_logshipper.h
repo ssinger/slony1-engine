@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.h,v 1.1.2.2 2007-09-27 18:03:02 wieck Exp $
+ *	$Id: slony_logshipper.h,v 1.1.2.3 2007-10-04 15:20:16 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -167,7 +167,7 @@ extern bool			logfile_switch_requested;
 extern bool			wait_for_resume;
 extern bool			shutdown_smart_requested;
 extern bool			shutdown_immed_requested;
-extern SlonDString	errlog_messages;
+/* extern SlonDString	errlog_messages; */
 
 extern char		   *archive_dir;
 extern char		   *destination_dir;
