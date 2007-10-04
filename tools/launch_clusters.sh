@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.2.2.2 2006-11-15 20:01:33 cbbrowne Exp $
+# $Id: launch_clusters.sh,v 1.2.2.3 2007-10-04 15:17:38 cbbrowne Exp $
 # Cluster starter
 
 # This script should be run periodically to search for slon
@@ -62,7 +62,7 @@ start_slon_if_needed () {
 
     if [[ -e $CONFIGPATH/conf/node${NODENUM}.conf ]] ; then
 	SLONCONF="$CONFIGPATH/conf/node${NODENUM}.conf"
-	SLONPIDFILE=`grep "^ *pid_file=" $SLONCONF | cut -d "=" -f 2 | cut -d "#" -f 1 | cut -d " " -f 1`
+	SLONPIDFILE=`grep "^ *pid_file=" $SLONCONF | cut -d "=" -f 2 | cut -d "#" -f 1 | cut -d " " -f 1 | cut -d "'" -f 2`
 	CLUSTER=`grep "^ *cluster_name=" $SLONCONF | cut -d "=" -f 2 | cut -d "'" -f 2`
     else
 	log_action "Could not find node configuration in $CONFIGPATH/conf/node${NODENUM}.conf"
