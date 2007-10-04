@@ -208,7 +208,7 @@ gen_testinfo ()
     UNAMER=`uname -r`
     UNAMES=`uname -s`
     UNAMEV=`uname -v`
-    HOST=`hostname -f`
+    HOST=`hostname`
     USERNAME=`whoami`
     
     #TESTSTARTTIME is calculated at the very beginning...
