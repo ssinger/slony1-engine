@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.42 2007-06-27 16:20:24 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.43 2007-10-04 15:33:45 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -75,7 +75,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_FATAL,
-				 "localListenThread: \"%s\" - %s",
+				 "localListenThread: \"%s\" - %s\n",
 				 dstring_data(&query1), PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query1);
@@ -135,7 +135,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_FATAL,
-					 "localListenThread: cannot start transaction - %s",
+					 "localListenThread: cannot start transaction - %s\n",
 					 PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
@@ -186,7 +186,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_FATAL,
-					 "localListenThread: \"%s\" - %s",
+					 "localListenThread: \"%s\" - %s\n",
 					 dstring_data(&query1), PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&query1);
@@ -275,7 +275,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				notify_res = PQexec(dbconn, notify_query);
 				if (PQresultStatus(notify_res) != PGRES_COMMAND_OK)
 				{
-					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s",
+					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s\n",
 							 notify_query, PQresultErrorMessage(notify_res));
 					PQclear(notify_res);
 					slon_restart();
@@ -513,7 +513,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				res2 = PQexec(dbconn, dstring_data(&query2));
 				if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 				{
-					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s",
+					slon_log(SLON_FATAL, "localListenThread: \"%s\" %s\n",
 							 dstring_data(&query2),
 							 PQresultErrorMessage(res2));
 					dstring_free(&query2);
@@ -625,7 +625,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				/*
 				 * Nothing to do locally
 				 */
-				slon_log(SLON_DEBUG1, "localListenThread: ACCEPT_SET");
+				slon_log(SLON_DEBUG1, "localListenThread: ACCEPT_SET\n");
 				rtcfg_reloadListen(dbconn);
 			}
 			else
@@ -649,7 +649,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				slon_log(SLON_FATAL,
-						 "localListenThread: \"%s\" - %s",
+						 "localListenThread: \"%s\" - %s\n",
 						 dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				dstring_free(&query1);
@@ -673,7 +673,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				slon_log(SLON_FATAL,
-						 "localListenThread: \"rollback transaction;\" - %s",
+						 "localListenThread: \"rollback transaction;\" - %s\n",
 						 PQresultErrorMessage(res));
 				PQclear(res);
 				slon_retry();
