@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.17 2007-09-28 21:17:12 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.18 2007-10-04 15:22:40 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
@@ -22,6 +22,12 @@ RELEASE 1.2.12
 - Fixing the archive sequence generations. All non-SYNC events must
   start the local transaction before creating the archive as well, so
   that the lock on the archive counter table serializes archive creation.
+
+- Fixed logging done in local_listener.c - various places, there was
+  no '\n' in some cases, which would lead to entries being folded
+  together.
+
+- Fix launch_slons.sh - was not stripping quotes from PID file name
 
 RELEASE 1.2.11
 
