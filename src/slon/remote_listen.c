@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.36 2007-06-27 16:20:24 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.37 2007-10-19 18:38:35 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -676,7 +676,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	 */
 	(void) slon_mkquery(&query,
 				 "select ev_origin, ev_seqno, ev_timestamp, "
-				 "       ev_minxid, ev_maxxid, ev_xip, "
+				 "       ev_snapshot, "
+				 "       \"public\".txid_snapshot_xmin(ev_snapshot), "
+				 "       \"public\".txid_snapshot_xmax(ev_snapshot), "
 				 "       ev_type, "
 				 "       ev_data1, ev_data2, "
 				 "       ev_data3, ev_data4, "
@@ -790,9 +792,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		remoteWorker_event(node->no_id,
 						   ev_origin, ev_seqno,
 						   PQgetvalue(res, tupno, 2),	/* ev_timestamp */
-						   PQgetvalue(res, tupno, 3),	/* ev_minxid */
-						   PQgetvalue(res, tupno, 4),	/* ev_maxxid */
-						   PQgetvalue(res, tupno, 5),	/* ev_xip */
+						   PQgetvalue(res, tupno, 3),	/* ev_snapshot */
+						   PQgetvalue(res, tupno, 4),	/* mintxid */
+						   PQgetvalue(res, tupno, 5),	/* maxtxid */
 						   PQgetvalue(res, tupno, 6),	/* ev_type */
 			 (PQgetisnull(res, tupno, 7)) ? NULL : PQgetvalue(res, tupno, 7),
 			 (PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),

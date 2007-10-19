@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.43 2007-10-04 15:33:45 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.44 2007-10-19 18:38:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -173,7 +173,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		 */
 		(void) slon_mkquery(&query1,
 					 "select ev_seqno, ev_timestamp, "
-					 "       ev_minxid, ev_maxxid, ev_xip, "
+					 "       'dummy', 'dummy', 'dummy', "
 					 "       ev_type, "
 					 "       ev_data1, ev_data2, ev_data3, ev_data4, "
 					 "       ev_data5, ev_data6, ev_data7, ev_data8 "

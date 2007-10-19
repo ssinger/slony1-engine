@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.64 2007-08-23 18:12:59 wieck Exp $
+ *	$Id: slon.h,v 1.65 2007-10-19 18:38:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -531,7 +531,7 @@ extern void *remoteWorkerThread_main(void *cdata);
 extern void remoteWorker_event(int event_provider,
 				   int ev_origin, int64 ev_seqno,
 				   char *ev_timestamp,
-				   char *ev_minxid, char *ev_maxxid, char *ev_xip,
+				   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
 				   char *ev_type,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,

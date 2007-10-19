@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.39 2007-07-05 18:19:04 wieck Exp $
+ *	$Id: cleanup_thread.c,v 1.40 2007-10-19 18:38:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -130,7 +130,8 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 		 */
 		gettimeofday(&tv_start, NULL);
 		slon_mkquery(&query2,
-					 "select ev_origin, ev_seqno, ev_minxid "
+					 "select ev_origin, ev_seqno, "
+					 "  \"public\".txid_snapshot_xmin(ev_snapshot) "
 					 "from %s.sl_event "
 					 "where (ev_origin, ev_seqno) in "
 					 "    (select ev_origin, min(ev_seqno) "
@@ -154,10 +155,10 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 			slon_mkquery(&query2,
 						 "delete from %s.sl_log_1 "
 						 "where log_origin = '%s' "
-						 "and log_xid < '%s'; "
+						 "and log_txid < '%s'; "
 						 "delete from %s.sl_log_2 "
 						 "where log_origin = '%s' "
-						 "and log_xid < '%s'; "
+						 "and log_txid < '%s'; "
 						 "delete from %s.sl_seqlog "
 						 "where seql_origin = '%s' "
 						 "and seql_ev_seqno < '%s'; "

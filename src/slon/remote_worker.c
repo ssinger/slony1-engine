@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.156 2007-09-27 14:22:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.157 2007-10-19 18:38:35 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -56,9 +56,9 @@ struct SlonWorkMsg_event_s
 	int			ev_origin;
 	int64		ev_seqno;
 	char	   *ev_timestamp_c;
-	char	   *ev_minxid_c;
-	char	   *ev_maxxid_c;
-	char	   *ev_xip;
+	char	   *ev_snapshot_c;
+	char	   *ev_mintxid_c;
+	char	   *ev_maxtxid_c;
 	char	   *ev_type;
 	char	   *ev_data1;
 	char	   *ev_data2;
@@ -1003,17 +1003,13 @@ remoteWorkerThread_main(void *cdata)
 								"update %s.sl_setsync "
 								"    set ssy_origin = %d, "
 								"        ssy_seqno = '%s', "
-								"        ssy_minxid = '%s', "
-								"        ssy_maxxid = '%s', "
-								"        ssy_xip = '%q', "
+								"        ssy_snapshot = '%s', "
 								"        ssy_action_list = '' "
 								"    where ssy_setid = %d; ",
 								rtcfg_namespace,
 								new_origin,
 								seqbuf,
-								event->ev_minxid_c,
-								event->ev_maxxid_c,
-								event->ev_xip,
+								event->ev_snapshot_c,
 								set_id);
 
 					/*
@@ -1709,7 +1705,7 @@ void
 remoteWorker_event(int event_provider,
 				   int ev_origin, int64 ev_seqno,
 				   char *ev_timestamp,
-				   char *ev_minxid, char *ev_maxxid, char *ev_xip,
+				   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
 				   char *ev_type,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,
@@ -1721,9 +1717,9 @@ remoteWorker_event(int event_provider,
 	int			len;
 	char	   *cp;
 	int			len_timestamp;
-	int			len_minxid;
-	int			len_maxxid;
-	int			len_xip;
+	int			len_snapshot;
+	int			len_mintxid;
+	int			len_maxtxid;
 	int			len_type;
 	int			len_data1 = 0;
 	int			len_data2 = 0;
@@ -1795,9 +1791,9 @@ remoteWorker_event(int event_provider,
 	 */
 	len = offsetof(SlonWorkMsg_event, raw_data)
 		+ (len_timestamp = strlen(ev_timestamp) + 1)
-		+ (len_minxid = strlen(ev_minxid) + 1)
-		+ (len_maxxid = strlen(ev_maxxid) + 1)
-		+ (len_xip = strlen(ev_xip) + 1)
+		+ (len_snapshot = strlen(ev_snapshot) + 1)
+		+ (len_mintxid = strlen(ev_mintxid) + 1)
+		+ (len_maxtxid = strlen(ev_maxtxid) + 1)
 		+ (len_type = strlen(ev_type) + 1)
 		+ ((ev_data1 == NULL) ? 0 : (len_data1 = strlen(ev_data1) + 1))
 		+ ((ev_data2 == NULL) ? 0 : (len_data2 = strlen(ev_data2) + 1))
@@ -1826,15 +1822,15 @@ remoteWorker_event(int event_provider,
 	msg->ev_timestamp_c = cp;
 	strcpy(cp, ev_timestamp);
 	cp += len_timestamp;
-	msg->ev_minxid_c = cp;
-	strcpy(cp, ev_minxid);
-	cp += len_minxid;
-	msg->ev_maxxid_c = cp;
-	strcpy(cp, ev_maxxid);
-	cp += len_maxxid;
-	msg->ev_xip = cp;
-	strcpy(cp, ev_xip);
-	cp += len_xip;
+	msg->ev_snapshot_c = cp;
+	strcpy(cp, ev_snapshot);
+	cp += len_snapshot;
+	msg->ev_mintxid_c = cp;
+	strcpy(cp, ev_mintxid);
+	cp += len_mintxid;
+	msg->ev_maxtxid_c = cp;
+	strcpy(cp, ev_maxtxid);
+	cp += len_maxtxid;
 	msg->ev_type = cp;
 	strcpy(cp, ev_type);
 	cp += len_type;
@@ -2100,7 +2096,7 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 					 "notify \"_%s_Confirm\"; "
 					 "insert into %s.sl_event "
 					 "    (ev_origin, ev_seqno, ev_timestamp, "
-					 "     ev_minxid, ev_maxxid, ev_xip, ev_type ",
+					 "     ev_snapshot, ev_type ",
 					 rtcfg_cluster_name, rtcfg_cluster_name,
 					 rtcfg_namespace);
 	if (event->ev_data1 != NULL)
@@ -2120,9 +2116,9 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	if (event->ev_data8 != NULL)
 		dstring_append(dsp, ", ev_data8");
 	slon_appendquery(dsp,
-					 "    ) values ('%d', '%s', '%s', '%s', '%s', '%q', '%s'",
+					 "    ) values ('%d', '%s', '%s', '%s', '%s'",
 					 event->ev_origin, seqbuf, event->ev_timestamp_c,
-					 event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip,
+					 event->ev_snapshot_c, 
 					 event->ev_type);
 	if (event->ev_data1 != NULL)
 		slon_appendquery(dsp, ", '%q'", event->ev_data1);
@@ -2309,9 +2305,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	SlonNode   *sub_node;
 	int			sub_provider = 0;
 	char	   *ssy_seqno = NULL;
-	char	   *ssy_minxid = NULL;
-	char	   *ssy_maxxid = NULL;
-	char	   *ssy_xip = NULL;
+	char	   *ssy_snapshot = NULL;
 	SlonDString ssy_action_list;
 	char		seqbuf[64];
 	char	   *copydata = NULL;
@@ -2422,8 +2416,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		(void) slon_mkquery(&query1,
 					 "start transaction; "
 					 "set transaction isolation level serializable; "
-					 "select %s.getMinXid() <= '%s'::%s.xxid; ",
-					 rtcfg_namespace, event->ev_maxxid_c, rtcfg_namespace);
+					 "select \"public\".txid_snapshot_xmin(\"public\".txid_current_snapshot()) <= '%s'; ",
+					 event->ev_maxtxid_c);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -2444,7 +2438,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		{
 			slon_log(SLON_WARN, "remoteWorkerThread_%d: "
 				  "transactions earlier than XID %s are still in progress\n",
-					 node->no_id, event->ev_maxxid_c);
+					 node->no_id, event->ev_maxtxid_c);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
@@ -3179,9 +3173,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * point of the ENABLE_SUBSCRIPTION
 			 */
 			ssy_seqno = seqbuf;
-			ssy_minxid = event->ev_minxid_c;
-			ssy_maxxid = event->ev_maxxid_c;
-			ssy_xip = event->ev_xip;
+			ssy_snapshot = event->ev_snapshot_c;
 
 			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "copy_set no previous SYNC found, use enable event.\n",
@@ -3202,7 +3194,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * sequence list to all actions after that.
 			 */
 			(void) slon_mkquery(&query1,
-						 "select ev_seqno, ev_minxid, ev_maxxid, ev_xip "
+						 "select ev_seqno, ev_snapshot "
 						 "from %s.sl_event "
 						 "where ev_origin = %d and ev_seqno = '%s'; ",
 					   rtcfg_namespace, node->no_id, PQgetvalue(res1, 0, 0));
@@ -3239,17 +3231,13 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 				return -1;
 			}
 			ssy_seqno = PQgetvalue(res1, 0, 0);
-			ssy_minxid = PQgetvalue(res1, 0, 1);
-			ssy_maxxid = PQgetvalue(res1, 0, 2);
-			ssy_xip = PQgetvalue(res1, 0, 3);
+			ssy_snapshot = PQgetvalue(res1, 0, 1);
 
 			(void) slon_mkquery(&query2,
-						 "log_xid >= '%s' or (log_xid >= '%s'",
-						 ssy_maxxid, ssy_minxid);
-			if (strlen(ssy_xip) != 0)
-				slon_appendquery(&query2, " and log_xid in (%s))", ssy_xip);
-			else
-				slon_appendquery(&query2, ")");
+						 "log_txid >= \"public\".txid_snapshot_xmax('%s') "
+						 "or (log_txid >= \"public\".txid_snapshot_xmin('%s')",
+						 ssy_snapshot, ssy_snapshot);
+			slon_appendquery(&query2, " and log_txid in (select * from \"public\".txid_snapshot_xip('%s')))", ssy_snapshot);
 
 			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "copy_set SYNC found, use event seqno %s.\n",
@@ -3310,8 +3298,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 * setsync from him.
 		 */
 		(void) slon_mkquery(&query1,
-					 "select ssy_seqno, ssy_minxid, ssy_maxxid, "
-					 "    ssy_xip, ssy_action_list "
+					 "select ssy_seqno, ssy_snapshot, "
+					 "    ssy_action_list "
 					 "from %s.sl_setsync where ssy_setid = %d; ",
 					 rtcfg_namespace, set_id);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
@@ -3347,9 +3335,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		dstring_init(&ssy_action_list);
 		ssy_seqno = PQgetvalue(res1, 0, 0);
-		ssy_minxid = PQgetvalue(res1, 0, 1);
-		ssy_maxxid = PQgetvalue(res1, 0, 2);
-		ssy_xip = PQgetvalue(res1, 0, 3);
+		ssy_snapshot = PQgetvalue(res1, 0, 1);
 		dstring_append(&ssy_action_list, PQgetvalue(res1, 0, 4));
 		dstring_terminate(&ssy_action_list);
 	}
@@ -3361,11 +3347,11 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		     "delete from %s.sl_setsync where ssy_setid = %d;"
 		     "insert into %s.sl_setsync "
 		     "    (ssy_setid, ssy_origin, ssy_seqno, "
-		     "     ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list) "
-		     "    values ('%d', '%d', '%s', '%s', '%s', '%q', '%q'); ",
+		     "     ssy_snapshot, ssy_action_list) "
+		     "    values ('%d', '%d', '%s', '%q', '%q'); ",
 		     rtcfg_namespace, set_id,
 		     rtcfg_namespace,
-		     set_id, node->no_id, ssy_seqno, ssy_minxid, ssy_maxxid, ssy_xip,
+		     set_id, node->no_id, ssy_seqno, ssy_snapshot,
 		     dstring_data(&ssy_action_list));
 	dstring_free(&ssy_action_list);
 	if (query_execute(node, loc_dbconn, &query1) < 0)
@@ -3595,17 +3581,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 	dstring_init(&new_qual);
 
-	if (strlen(event->ev_xip) != 0)
-		(void) slon_mkquery(&new_qual,
-					 "(log_xid < '%s' and "
-					 "%s.xxid_lt_snapshot(log_xid, '%s:%s:%q'))",
-					 event->ev_maxxid_c,
-					 rtcfg_namespace,
-					 event->ev_minxid_c, event->ev_maxxid_c, event->ev_xip);
-	else
-		(void) slon_mkquery(&new_qual,
-					 "(log_xid < '%s')",
-					 event->ev_maxxid_c);
+	(void) slon_mkquery(&new_qual,
+				 "(log_txid < '%s' and "
+				 "\"public\".txid_visible_in_snapshot(log_txid, '%s'))",
+				 event->ev_maxtxid_c, event->ev_snapshot_c);
 
 	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
@@ -3630,7 +3609,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 */
 		(void) slon_mkquery(&query,
 					 "select SSY.ssy_setid, SSY.ssy_seqno, "
-					 "    SSY.ssy_minxid, SSY.ssy_maxxid, SSY.ssy_xip, "
+					 "    \"public\".txid_snapshot_xmax(SSY.ssy_snapshot), "
+					 "    SSY.ssy_snapshot, "
 					 "    SSY.ssy_action_list "
 					 "from %s.sl_setsync SSY "
 					 "where SSY.ssy_seqno < '%s' "
@@ -3663,6 +3643,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (ntuples1 == 0)
 		{
 			PQclear(res1);
+			slon_appendquery(provider_qual, " false ) ");
 			continue;
 		}
 		num_sets += ntuples1;
@@ -3670,9 +3651,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
 		{
 			int			sub_set = strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
-			char	   *ssy_maxxid = PQgetvalue(res1, tupno1, 3);
-			char	   *ssy_xip = PQgetvalue(res1, tupno1, 4);
-			char	   *ssy_action_list = PQgetvalue(res1, tupno1, 5);
+			char	   *ssy_maxxid = PQgetvalue(res1, tupno1, 2);
+			char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
+			char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
 			int64		ssy_seqno;
 
 			slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
@@ -3800,15 +3781,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 							 dstring_data(&new_qual));
 
 			/* add the <snapshot_qual_of_setsync> */
-			if (strlen(ssy_xip) != 0)
-				slon_appendquery(provider_qual,
-								 "(log_xid >= '%s' or "
-								 "log_xid IN (%s))",
-								 ssy_maxxid, ssy_xip);
-			else
-				slon_appendquery(provider_qual,
-								 "(log_xid >= '%s')",
-								 ssy_maxxid);
+			slon_appendquery(provider_qual,
+							 "(log_txid >= '%s' or "
+							 "log_txid IN (select * from \"public\".txid_snapshot_xip('%s')))",
+							 ssy_maxxid, ssy_snapshot);
 			actionlist_len = strlen(ssy_action_list);
 			slon_log(SLON_DEBUG4, " ssy_action_list value: %s\n",
 					 ssy_action_list);
@@ -4212,12 +4188,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	(void) slon_mkquery(&query,
 				 "update %s.sl_setsync set "
-			   "    ssy_seqno = '%s', ssy_minxid = '%s', ssy_maxxid = '%s', "
-				 "    ssy_xip = '%q', ssy_action_list = '' "
+			   "    ssy_seqno = '%s', ssy_snapshot = '%s', "
+				 "    ssy_action_list = '' "
 				 "where ssy_setid in (",
 				 rtcfg_namespace,
-				 seqbuf, event->ev_minxid_c, event->ev_maxxid_c,
-				 event->ev_xip);
+				 seqbuf, event->ev_snapshot_c);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -4416,7 +4391,7 @@ sync_helper(void *cdata)
 				case 0:
 					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select "
-						 "    log_origin, log_xid, log_tableid, "
+						 "    log_origin, log_txid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
 						 "    octet_length(log_cmddata), "
 						 "    case when octet_length(log_cmddata) <= %d "
@@ -4431,7 +4406,7 @@ sync_helper(void *cdata)
 				case 1:
 					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select "
-						 "    log_origin, log_xid, log_tableid, "
+						 "    log_origin, log_txid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
 						 "    octet_length(log_cmddata), "
 						 "    case when octet_length(log_cmddata) <= %d "
@@ -4447,7 +4422,7 @@ sync_helper(void *cdata)
 				case 3:
 					(void) slon_mkquery(&query,
 						 "declare LOG cursor for select * from ("
-						 "  select log_origin, log_xid, log_tableid, "
+						 "  select log_origin, log_txid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
 						 "    octet_length(log_cmddata), "
 						 "    case when octet_length(log_cmddata) <= %d "
@@ -4455,7 +4430,7 @@ sync_helper(void *cdata)
 						 "        else null end "
 						 "  from %s.sl_log_1 %s "
 						 "  union all "
-						 "  select log_origin, log_xid, log_tableid, "
+						 "  select log_origin, log_txid, log_tableid, "
 						 "    log_actionseq, log_cmdtype, "
 						 "    octet_length(log_cmddata), "
 						 "    case when octet_length(log_cmddata) <= %d "
@@ -4674,7 +4649,7 @@ sync_helper(void *cdata)
 				while (tupno < ntuples && line_no < data_line_alloc)
 				{
 					char	   *log_origin = PQgetvalue(res, tupno, 0);
-					char	   *log_xid = PQgetvalue(res, tupno, 1);
+					char	   *log_txid = PQgetvalue(res, tupno, 1);
 					int			log_tableid = strtol(PQgetvalue(res, tupno, 2),
 													 NULL, 10);
 					char	   *log_actionseq = PQgetvalue(res, tupno, 3);
@@ -4692,18 +4667,18 @@ sync_helper(void *cdata)
 							     "select log_cmddata "
 							     "from %s.sl_log_1 "
 							     "where log_origin = '%s' "
-							     "  and log_xid = '%s' "
+							     "  and log_txid = '%s' "
 							     "  and log_actionseq = '%s' "
 							     "UNION ALL "
 							     "select log_cmddata "
 							     "from %s.sl_log_2 "
 							     "where log_origin = '%s' "
-							     "  and log_xid = '%s' "
+							     "  and log_txid = '%s' "
 							     "  and log_actionseq = '%s'",
 							     rtcfg_namespace,
-							     log_origin, log_xid, log_actionseq,
+							     log_origin, log_txid, log_actionseq,
 							     rtcfg_namespace,
-							     log_origin, log_xid, log_actionseq);
+							     log_origin, log_txid, log_actionseq);
 						res2 = PQexec(dbconn, dstring_data(&query2));
 						if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 						{
@@ -4747,12 +4722,12 @@ sync_helper(void *cdata)
 					{
 						slon_appendquery(&(line->log),
 									"insert into %s.sl_log_%d "
-									"    (log_origin, log_xid, log_tableid, "
+									"    (log_origin, log_txid, log_tableid, "
 									"     log_actionseq, log_cmdtype, "
 									"     log_cmddata) values "
 									"    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
 									rtcfg_namespace, wd->active_log_table,
-									log_origin, log_xid, log_tableid,
+									log_origin, log_txid, log_tableid,
 									log_actionseq, log_cmdtype, log_cmddata);
 						largemem *= 2;
 					}
