@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.27 2007-09-28 21:15:53 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.28 2007-10-19 18:37:03 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -4170,6 +4170,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		if (ntuples1 == 0)
 		{
 			PQclear(res1);
+			slon_appendquery(provider_qual, " false ) ");
 			continue;
 		}
 		num_sets += ntuples1;
