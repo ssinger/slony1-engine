@@ -22,7 +22,7 @@ commit()
 
 generate_initdata()
 {
-  numrows=$(random_number 50 1000)
+  numrows=$(random_number 125 150)
   i=0;
   trippoint=`expr $numrows / 20`
   j=0;
@@ -77,19 +77,8 @@ do_initdata()
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
   status "data load complete - nodes are seeded reasonably"
-
-  status "purge archive log files up to present in order to eliminate those that cannot be used"
-  for file in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*.sql" -type f`; do
-    status "purge ${file}"
-    rm ${file}
-  done
-  sleep 5
   status "pull log shipping dump" 
   PGHOST=${HOST2} PGPORT=${PORT2} PGUSER=${USER2} ${SLTOOLDIR}/slony1_dump.sh ${DB2} ${CLUSTER1} > ${mktmp}/logship_dump.sql
-  status "load schema for replicated tables into node #3"
-  ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${testname}/init_schema.sql
-  status "load log shipping dump into node #3"
-  ${PGBINDIR3}/psql -h ${HOST3} -p ${PORT3} -U ${USER3} -d ${DB3} -f ${mktmp}/logship_dump.sql
   
   status "generate more data to test log shipping"
   generate_initdata
@@ -115,7 +104,7 @@ do_initdata()
 
   wait_for_catchup
 
-  status "move set to node 4"
+  status "move set to node 3"
 
   init_preamble
   sh ${testname}/moveset.sh ${testname} >> $SCRIPT
@@ -124,25 +113,34 @@ do_initdata()
   status "origin moved"
 
   generate_initdata
-  eval db=\$DB4
-  status "loading extra data to node $db"
-  $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
+  status "loading extra data to node 3"
+  $pgbindir/psql -h $HOST3 -p $PORT3 -U $USER3 -d $DB3 < $mktmp/generate.data 1> ${mktmp}/even_more_data.log 2> ${mktmp}/even_more_data.log2
 
   wait_for_catchup
-
+  status "done"
 
   status "final data load complete - now load files into log shipped node"
-  firstseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | head -1`
+  status "set up database for log shipped node"
+  ${PGBINDIR4}/createdb -p ${PORT4} -U ${USER4} ${DB4}
+  ${PGBINDIR4}/createlang plpgsql ${DB4}
+
+  status "load schema for replicated tables into node #4"
+  ${PGBINDIR4}/psql -h ${HOST4} -p ${PORT4} -U ${USER4} -d ${DB4} -f ${testname}/init_schema.sql
+  status "load log shipping dump into node #4"
+  ${PGBINDIR4}/psql -h ${HOST4} -p ${PORT4} -U ${USER4} -d ${DB4} -f ${mktmp}/logship_dump.sql
+  
+  
+  firstseq=`psql -At -d ${DB4} -p ${PORT4} -c 'select at_counter from _slony_regress1.sl_archive_tracking ;'`
   lastseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | tail -1`
   status "Logs numbered from ${firstseq} to ${lastseq}"
   currseq=${firstseq}
   while : ; do
-#      00000000000000000000
-#      12345678901234567890
     cs=`printf "%020d" ${currseq}`
     status "current sequence value: ${cs}"
+    firstseq=`psql -At -d ${DB4} -p ${PORT4} -c 'select at_counter from _slony_regress1.sl_archive_tracking ;'`
+    status "archive tracking ID: ${firstseq}"
     for logfile in `/usr/bin/find ${mktmp}/archive_logs_2 -name "slony1_log_*_${cs}.sql" -type f`; do
-      $pgbindir/psql -h ${HOST3} -p ${PORT3} -d ${DB3} -U ${USER3} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
+      ${PGBINDIR4}/psql -h ${HOST4} -p ${PORT4} -d ${DB4} -U ${USER4} -f ${logfile} >> $mktmp/logshipping_output.log 2>> $mktmp/logshipping_errors.log
       status "load file ${logfile} - ${?}"
     done
     if [ ${currseq} -gt ${lastseq} ]; then
@@ -151,5 +149,9 @@ do_initdata()
       currseq=`expr ${currseq} + 1`
     fi
   done
-  status "done"
+  status "done loading data into log shipping node"
+
+  NUMNODES=4
+  status "Changed number of nodes to 4 to reflect the log shipping node"
+
 }
