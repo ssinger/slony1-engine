@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2007-09-24 21:26:34 cbbrowne Exp $
+$Id: README,v 1.2 2007-10-19 15:20:05 cbbrowne Exp $
   
 Create 3 nodes, and two replication sets:
 
@@ -21,3 +21,4 @@ This ought to work; according to recent reports, it doesn't.
 
 See:
 <http://lists.slony.info/pipermail/slony1-general/2007-September/006642.html>
+
