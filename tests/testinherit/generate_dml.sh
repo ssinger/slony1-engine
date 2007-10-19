@@ -64,40 +64,35 @@ generate_initdata()
   done
   status "done initial test"
 
-  SUBTRANSACTIONQUERY=<<EOF
+  SUBTRANSACTIONQUERY="
   begin;
-  -- Get a random list of products/regions
   select product_id into temp table products_foo from products order by random() limit 10;
   select region_code into temp table regions_foo from regions order by random() limit 10;
   savepoint a;
-  -- Purchase some products...
   select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from products_foo, regions_foo order by random() limit 10;
-\!sh -c 'sleep2'
+\!sh -c 'sleep 2'
   savepoint b;
-  -- Then purchase some more products
   select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from products_foo, regions_foo order by random() limit 5;
-  -- but psyche!!!  rollback to the previous savepoint!
   rollback to savepoint b;
   savepoint c;
-  -- Get another random listing of products/regions
   select product_id into temp table products_bar from products order by random() limit 5;
   select region_code into temp table regions_bar from regions order by random() limit 5;
   savepoint d;
-\!sh -c 'sleep2'
-  -- Now, do a purchase
+\!sh -c 'sleep 2'
   select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from products_bar, regions_bar order by random() limit 5;
-  -- psyche!!!
   rollback to savepoint d;
   savepoint e;
   select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from products_bar, regions_bar order by random() limit 10;
-\!sh -c 'sleep2'
+\!sh -c 'sleep 2'
   commit;
-EOF
+"
+
+echo $SUBTRANSACTIONQUERY
 
   status "run a series of transactions that use subtransactions"
   for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16; do
       status "subtransaction set ${i}"
-      (sleep 2; $pgbindir/psql -h $host -p $port -d $db -U $user -c "${QUERY}"; status "done subtransaction set ${i}") &
+      (sleep 2; echo "${SUBTRANSACTIONQUERY}" | $pgbindir/psql -h $host -p $port -d $db -U $user; status "done subtransaction set ${i}") &
       sleep 1
   done
   sleep 20
