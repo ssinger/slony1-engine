@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.20 2006-09-21 16:17:58 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.20.2.1 2007-10-22 20:50:55 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <indexterm><primary>reshaping replication</primary></indexterm>
@@ -36,7 +36,7 @@ linkend="stmtsubscribeset"> change the paths as a side-effect.  See
 version 1.1 and later, generation of <xref linkend="table.sl-listen">
 entries is entirely automated, so that they are regenerated when
 changes are made to <xref linkend="table.sl-path"> or <xref
-linkend="table.sl-path">, thereby making it unnecessary to even think
+linkend="table.sl-subscribe">, thereby making it unnecessary to even think
 about <xref linkend="stmtstorelisten">.</para></listitem>
 
 </itemizedlist>
