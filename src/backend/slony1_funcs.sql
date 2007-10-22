@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.24 2007-09-25 18:33:38 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.25 2007-10-22 15:19:50 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5138,6 +5138,7 @@ returns int
 as '
 declare
 	v_row	record;
+	skip    boolean;
 begin
 	-- First remove the entire configuration
 	delete from @NAMESPACE@.sl_listen;
@@ -5172,6 +5173,7 @@ begin
 			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
 			where N1.no_id <> N2.no_id
 	loop
+		skip := ''f'';
 		-- 1st choice:
 		-- If we use the event origin as a data provider for any
 		-- set that originates on that very node, we are a direct
@@ -5188,31 +5190,34 @@ begin
 				  and li_receiver = v_row.receiver;
 			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
 				values (v_row.origin, v_row.origin, v_row.receiver);
-			continue;
+			skip := ''t'';
 		end if;
 
+		if skip then
+			skip := ''f'';
+		else
 		-- 2nd choice:
 		-- If we are subscribed to any set originating on this
 		-- event origin, we want to listen on all data providers
 		-- we use for this origin. We are a cascaded subscriber
 		-- for sets from this node.
-		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+			if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active)
-		then
-			delete from @NAMESPACE@.sl_listen
+			then
+				delete from @NAMESPACE@.sl_listen
 					where li_origin = v_row.origin
 					  and li_receiver = v_row.receiver;
-			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
+				insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
 					select distinct set_origin, sub_provider, v_row.receiver
 						from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active;
-			continue;
+			end if;
 		end if;
 
 	end loop ;
