@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.28 2007-10-19 18:37:03 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.29 2007-10-22 20:44:24 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5562,11 +5562,23 @@ archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 	res = PQexec(dbconn, dstring_data(&query));
 	if ((rc = PQresultStatus(res)) != PGRES_TUPLES_OK)
 	{
-		slon_log(SLON_ERROR,
-				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+		/* see what kind of error it is... */
+#define CONCUPDATEMSG "ERROR:  could not serialize access due to concurrent update"
+		if (strncmp(CONCUPDATEMSG, PQresultErrorMessage(res), strlen(CONCUPDATEMSG)) == 0) {
+			slon_log(SLON_WARN, "serialization problem updating sl_archive_counter: restarting slon\n");
+			slon_mkquery(&query,
+				     "notify \"_%s_Restart\"; ",
+				     rtcfg_cluster_name);
+			PQexec(dbconn, dstring_data(&query));
+		} else {
+
+			slon_log(SLON_WARN, "error message was [%s]\n", PQresultErrorMessage(res));
+			slon_log(SLON_ERROR,
+					 "remoteWorkerThread_%d: \"%s\" %s %s\n",
 				 node->no_id, dstring_data(&query),
 				 PQresStatus(rc),
-				 PQresultErrorMessage(res));
+					 PQresultErrorMessage(res));
+		}
 		PQclear(res);
 		dstring_free(&query);
 		return -1;
