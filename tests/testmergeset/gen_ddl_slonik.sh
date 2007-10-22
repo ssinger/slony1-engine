@@ -14,18 +14,14 @@ echo "
   set add table (set id=999, origin=1, id=${tableid}, fully qualified name='public.sales_txns_${year}_${month}');
   subscribe set (id=999, provider=1, receiver=2, forward = yes);
   sync (id=1);
-  wait for event (origin=1, confirmed=all, wait on=2);
+  wait for event (origin=1, confirmed=2, wait on=1);
   subscribe set (id=999, provider=1, receiver=3, forward = no);
   sync (id=1);
-  wait for event (origin=1, confirmed=all, wait on=3);
+  wait for event (origin=1, confirmed=3, wait on=1);
   subscribe set (id=999, provider=2, receiver=4, forward = no);
-  sync (id=1);
-  wait for event (origin=1, confirmed=all, wait on=4);
-  sync (id=1);
-  sleep (seconds = 5);
-  wait for event (origin=1, confirmed=all, wait on=4);
-  sync (id=1);
-  wait for event (origin=1, confirmed=all, wait on=4);
+  sync (id=2);
+  wait for event (origin=2, confirmed=4, wait on=2);
+  sleep(seconds=5);
   merge set (ID = 1, ADD ID = 999, ORIGIN = 1 );
 
 " 
