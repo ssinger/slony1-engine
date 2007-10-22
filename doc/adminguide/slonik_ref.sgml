@@ -1259,11 +1259,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
      # Assuming that set 1 has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
-     WAIT FOR EVENT (ORIGIN = 2, CONFIRMED = 1);
      SYNC (ID=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT FOR=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
-     WAIT FOR EVENT (ORIGIN = 3, CONFIRMED = 1);
      SYNC (ID=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT FOR=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
@@ -2794,11 +2794,27 @@ WAIT FOR EVENT (
    new set.  Be aware (and beware!) that a <xref
    linkend="stmtsubscribeset"> request will return the event
    confirmation almost immediately, even though there might be several
-   hours of work to do before the subscription is ready. </para>
+   hours of work to do before the subscription is ready.  The trouble
+   with <xref linkend="stmtsubscribeset"> is that it is processed as
+   <emphasis>two</emphasis> events, one on the origin node, with a
+   second event, to enable the subscription, on the subscriber.
+   </para>
 
-   <para> There is no reliable way, at present, to monitor from within
-   a <xref linkend="slonik"> script that <xref
-   linkend="stmtsubscribeset"> is complete.</para>
+   <para> In order to more reliably monitor from within a <xref
+   linkend="slonik"> script that <xref linkend="stmtsubscribeset"> is
+   complete, you may submit a <xref linkend="stmtsync"> event after
+   the subscription, and have the WAIT request wait on that
+   <command>SYNC</command> event, as follows. </para>
+    <programlisting>
+     # Assuming that set 1 has direct subscribers 2 and 3
+     SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
+     SYNC (ID=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT FOR=1);
+     SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
+     SYNC (ID=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT FOR=1);
+     MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
+    </programlisting>
    </refsect1>
    
   </refentry>
