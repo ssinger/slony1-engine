@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.10 2007-06-27 17:56:11 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.11 2007-10-22 20:49:26 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -228,6 +228,16 @@ COPY SET archive file %s - %s</command></para>
 <listitem><para><command>ERROR: remoteWorkerThread_%d: Could not generate COPY SET archive header %s - %s</command></para> 
 
 <para> Probably means that we just filled up a filesystem... </para></listitem>
+
+<listitem><para> <command>ERROR  remoteWorkerThread_%d: "update "_slony_regress1".sl_archive_counter     set ac_num = ac_num + 1,         ac_timestamp = CURRENT_TIMESTAMP; select ac_num, ac_timestamp from "_slony_regress1".sl_archive_counter; " PGRES_FATAL_ERROR ERROR:  could not serialize access due to concurrent update</command> </para>
+
+<para> This may occasionally occur when using logshipping; this will
+typically happen if there are 3 or more nodes, and there is an attempt
+to concurrently process events sourced from different nodes.  This
+does not represent any serious problem; &slony1; will retry the event
+which failed without the need for administrative intervention. </para>
+</listitem>
+
 </itemizedlist>
 </sect3>
 
