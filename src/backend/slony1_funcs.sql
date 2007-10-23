@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.121 2007-09-13 14:19:58 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.122 2007-10-23 16:52:56 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1200,6 +1200,7 @@ begin
 
 				for v_row2 in select * from @NAMESPACE@.sl_table
 						where tab_set = v_row.set_id
+						order by tab_id
 				loop
 					perform @NAMESPACE@.alterTableConfigureTriggers(v_row2.tab_id);
 				end loop;
@@ -1358,6 +1359,7 @@ begin
 
 		for v_row in select * from @NAMESPACE@.sl_table
 				where tab_set = p_set_id
+				order by tab_id
 		loop
 			perform @NAMESPACE@.alterTableConfigureTriggers(v_row.tab_id);
 		end loop;
@@ -5281,7 +5283,7 @@ begin
 		-- ---- 
 		-- Upgrading from a pre-2.0 ... repair the system catalog
 		-- ----
-		for v_tab_row in select * from @NAMESPACE@.sl_table loop
+		for v_tab_row in select * from @NAMESPACE@.sl_table order by tab_id loop
 			perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
 		end loop;
 
@@ -5294,7 +5296,7 @@ begin
 		-- ----
 		-- and create the new versions of the log and deny access triggers.
 		-- ----
-		for v_tab_row in select * from @NAMESPACE@.sl_table loop
+		for v_tab_row in select * from @NAMESPACE@.sl_table order by tab_id loop
 			perform @NAMESPACE@.alterTableAddTriggers(v_tab_row.tab_id);
 			perform @NAMESPACE@.alterTableConfigureTriggers(v_tab_row.tab_id);
 		end loop;
