@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.122 2007-10-23 16:52:56 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.123 2007-10-23 17:00:27 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5279,7 +5279,7 @@ begin
 		raise exception ''Upgrading to Slony-I 2.x requires running 1.2.x'';
 	end if;
 
-	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'') then
+	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'', ''1.2.11'', ''1.2.12'') then
 		-- ---- 
 		-- Upgrading from a pre-2.0 ... repair the system catalog
 		-- ----
