@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.29.2.2 2007-10-24 17:03:40 devrim Exp $
+# $Id: GNUmakefile.in,v 1.29.2.3 2007-10-24 17:08:23 devrim Exp $
 # ----------
 
 top_builddir = .
@@ -65,7 +65,7 @@ distclean: clean
 	rm -f GNUmakefile
 	rm -f config.log config.status config.h
 	rm -f @PACKAGE_NAME@.spec
-	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.bz2
 	rm -f postgres.imp
 	rm -rf autom4te.cache
 	rm -f $(CVSIGNORES)
@@ -80,7 +80,7 @@ distdir := @PACKAGE_NAME@-@PACKAGE_VERSION@
 dummy	:= =install=
 garbage := =*  "#"*  ."#"*  *~*  *.orig  *.rej  core  @PACKAGE_NAME@-*
 
-dist 	:= $(distdir).tar.gz
+dist 	:= $(distdir).tar.bz2
 
 distdir:
 	-rm -rf $(distdir)* $(dummy)
@@ -101,6 +101,6 @@ dist:	distdir
 
 rpm: dist
 
-	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.bz2
 
 .PHONY: install

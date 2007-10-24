@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.16.2.3 2007-09-10 22:23:32 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.16.2.4 2007-10-24 17:08:23 devrim Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -380,7 +380,7 @@ run with three sorts of parameters:</para>
 <listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
 <listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
 <listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> 
-
+</itemizedlist>
 <para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
 
 <para> Pre- and post-processing commands have two further special variables defined: </para>
