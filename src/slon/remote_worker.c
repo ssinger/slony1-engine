@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.158 2007-10-23 16:55:49 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.159 2007-10-25 18:32:00 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -263,6 +263,7 @@ static int	archive_append_data(SlonNode *node, const char *s, int len);
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
 
+static int check_set_subscriber(int set_id, int node_id,PGconn * local_dbconn);
 
 /* ----------
  * slon_remoteWorkerThread
@@ -1250,6 +1251,7 @@ remoteWorkerThread_main(void *cdata)
 				int			ddl_only_on_node = (int)strtol(event->ev_data3, NULL, 10);
 				int num_statements = -1, stmtno;
 				int  node_in_set;
+				int localNodeId;
 
 				PGresult *res;
 				ExecStatusType rstat;
@@ -5559,4 +5561,36 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 
 	}
 	slon_log(SLON_DEBUG4, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
+}
+
+/**
+ * Checks to see if the node specified is a member of the set.
+ *
+ */
+static int check_set_subscriber(int set_id, int node_id,PGconn * local_dbconn) 
+{
+  
+  
+  SlonDString query1;
+  PGresult* res;
+  dstring_init(&query1);
+
+  slon_appendquery(&query1,"select 1 from %s.sl_subscribe WHERE sub_set=%d AND sub_receiver=%d for update"
+	       ,rtcfg_namespace,set_id,node_id);
+  res = PQexec(local_dbconn,dstring_data(&query1));
+  if(PQresultStatus(res)!=PGRES_TUPLES_OK) {
+    slon_log(SLON_ERROR,"remoteWorkerThread_%d: DDL preparation can not check set membership"
+	     ,node_id);
+	dstring_free(&query1);
+    slon_retry();
+  }
+  dstring_free(&query1);
+  if(PQntuples(res)==0) {
+    PQclear(res);
+    return 0;
+  }
+  PQclear(res);
+  return 1;
+
+
 }
