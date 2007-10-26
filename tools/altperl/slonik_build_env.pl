@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_build_env.pl,v 1.2 2006-12-13 22:19:55 cbbrowne Exp $
+# $Id: slonik_build_env.pl,v 1.3 2007-10-26 18:23:04 cbbrowne Exp $
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net
@@ -24,7 +24,7 @@ my $usage = "$0 -node host:database:user[:password:port] [-node ...] [-schema my
 First node is assumed to be the master.
 Default schema is \"public\"\n";
 
-&usage if(!GetOptions('node=s@'=>\@nodes));
+&usage if(!GetOptions('node=s@'=>\@nodes, 'schema=s' => \$schema));
 
 die "At least one node is required" if ( scalar(@nodes) < 1 );
 
@@ -68,6 +68,7 @@ AND pg_namespace.nspname = '$schema' AND pg_namespace.oid = pg_class.relnamespac
 
 die "prepare(tableQuery): $DBI::errstr" if ( !defined($tableQuery) || $DBI::err );
 die "execute(tableQuery): $DBI::errstr" if ( !$tableQuery->execute() );
+die "No objects to replicate found in schema \"$schema\"\n" if ($tableQuery->rows <= 0);
 
 my @tablesWithIndexes;
 my @tablesWithoutIndexes;
@@ -83,21 +84,21 @@ while ( my $row = $tableQuery->fetchrow_arrayref() ) {
 $tableQuery->finish();
 $dbh->disconnect();
 
-if ( scalar(@tablesWithIndexes) > 1 ) {
+if ( scalar(@tablesWithIndexes) >= 1 ) {
   print '@KEYEDTABLES=(' . "\n";
   foreach my $table (sort @tablesWithIndexes) {
     print "\t\"$table\",\n";
   }
   print ");\n";
 }
-if ( scalar(@tablesWithoutIndexes) > 1 ) {
+if ( scalar(@tablesWithoutIndexes) >= 1 ) {
   print '@SERIALTABLES=(' . "\n";
   foreach my $table (sort @tablesWithoutIndexes) {
     print "\t\"$table\",\n";
   }
   print ");\n";
 }
-if ( scalar(@sequences) > 1 ) {
+if ( scalar(@sequences) >= 1 ) {
   print '@SEQUENCES=(' . "\n";
   foreach my $table (sort @sequences) {
     print "\t\"$table\",\n";
