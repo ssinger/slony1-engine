@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.13.2.1 2007-09-08 14:21:40 wieck Exp $
+#	$Id: Makefile,v 1.13.2.2 2007-10-26 18:35:22 cbbrowne Exp $
 # ----------
 
 slony_subdir = src
@@ -12,9 +12,11 @@ slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
 DISTFILES = Makefile
-SUBDIRS = xxid parsestatements slon slonik slony_logshipper backend ducttape
+SUBDIRS = xxid parsestatements slon slonik backend ducttape
 ifeq ($(PORTNAME),win32)
 SUBDIRS += slevent
+else
+SUBDIRS += slony_logshipper
 endif
 
 all install installdirs clean distclean maintainer-clean:
