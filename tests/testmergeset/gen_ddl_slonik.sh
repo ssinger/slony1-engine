@@ -19,9 +19,8 @@ echo "
   sync (id=1);
   wait for event (origin=1, confirmed=3, wait on=1);
   subscribe set (id=999, provider=2, receiver=4, forward = no);
-  sync (id=2);
-  wait for event (origin=2, confirmed=4, wait on=2);
-  sleep(seconds=5);
+  sync (id=1);
+  wait for event (origin=1, confirmed=ALL, wait on=1);
   merge set (ID = 1, ADD ID = 999, ORIGIN = 1 );
 
 " 

@@ -58,6 +58,7 @@ more_data ()
 	 $pgbindir/psql -h $host -p $port -d $db -U $user < ${GENDATA} 1>> $mktmp/loaddata_${year}_${month}.log 2>> $mktmp/loaddata_${year}_${month}.log
       done
   done
+  wait_for_catchup
   status "done"
 }
 
