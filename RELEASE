@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.19 2007-10-22 20:44:24 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.20 2007-10-26 18:29:07 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
@@ -43,6 +43,10 @@ RELEASE 1.2.12
   this counter, and at least one has just failed.
 
   Rather than waiting, we ask to restart the node immediately.
+
+- Fixes to slonik_build_env script - it wasn't properly handling
+  cases where there was just 1 table or 1 sequence, and had a
+  problem with the -schema option - thanks, Bernd Helmle
 
 RELEASE 1.2.11
 
