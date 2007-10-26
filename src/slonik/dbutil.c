@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.12.2.1 2007-04-18 19:28:27 cbbrowne Exp $
+ *	$Id: dbutil.c,v 1.12.2.2 2007-10-26 20:57:47 darcyb Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -138,10 +138,21 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	PQsetNoticeProcessor(dbconn, db_notice_recv, NULL);
 #endif   /* !HAVE_PQSETNOTICERECEIVER */
 
+	adminfo->dbconn = dbconn;
+
+	dstring_init(&query);
+	slon_mkquery(&query,"SELECT 1 FROM pg_catalog.pg_shadow WHERE usename = user "
+				"AND usesuper");
+	if (PQntuples(db_exec_select(stmt, adminfo, &query)) != 1)
+	{
+		printf("Error: You are not a superuser on node %d\n",adminfo->no_id);
+		dstring_free(&query);
+		return -1;
+	}
+		 
 	dstring_init(&query);
 	slon_mkquery(&query,"SET datestyle to 'ISO'");
 
-	adminfo->dbconn = dbconn;
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		printf("Unable to set datestyle\n");
