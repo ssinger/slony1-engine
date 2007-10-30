@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.20 2007-10-26 18:29:07 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.21 2007-10-30 19:30:05 cbbrowne Exp $
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
@@ -47,6 +47,12 @@ RELEASE 1.2.12
 - Fixes to slonik_build_env script - it wasn't properly handling
   cases where there was just 1 table or 1 sequence, and had a
   problem with the -schema option - thanks, Bernd Helmle
+
+- Don't bother building slony_logshipper on Win32 as it doesn't work
+  there at this point.
+
+- If slonik connects as other than a superuser, then generate error
+  message indicating this to the user.
 
 RELEASE 1.2.11
 
