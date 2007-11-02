@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.2 2007-01-02 20:19:05 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.3 2007-11-02 15:31:43 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
@@ -55,7 +55,8 @@ echo "include <${PREAMBLE}>;" > $mktmp/store_paths.slonik
           eval buser=\$USER${j}
           eval bport=\$PORT${j}
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
-            echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik          else
+            echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik
+          else
             echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik
           fi
         fi
@@ -147,7 +148,8 @@ done
 
 snum=1
 for seq in `echo $SEQUENCES`; do
-    echo "set add sequence (id=${snum}, set id=1, origin=1, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET    snum=`expr ${snum} + 1`
+    echo "set add sequence (id=${snum}, set id=1, origin=1, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET
+    snum=`expr ${snum} + 1`
 done
 
 NODEINIT=$mktmp/create_nodes.slonik
