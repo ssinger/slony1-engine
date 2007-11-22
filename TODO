@@ -1,23 +1,10 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.13 2007-11-22 22:56:21 cbbrowne Exp $
-
-Documentation Improvements
---------------------------------------------
-
-- Removed all support for STORE/DROP TRIGGER commands. Users are
-  supposed to use the ALTER TABLE [ENABLE|DISABLE] TRIGGER
-  functionality in Postgres from now on.
-
-  There is now mention of this in docs/adminguide/slonyupgrade.sgml;
-  need to enhance it further after discussion with Jan Wieck.
+$Id: TODO,v 1.14 2007-11-22 22:58:42 cbbrowne Exp $
 
 Short Term Items
 ---------------------------
-
-CANCEL SUBSCRIPTION
-   <http://lists.slony.info/pipermail/slony1-hackers/2007-May/000011.html>
 
 Improve script that tries to run UPDATE FUNCTIONS across versions to
 verify that upgrades work properly.
