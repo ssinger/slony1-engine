@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.14 2007-11-22 22:58:42 cbbrowne Exp $
+$Id: TODO,v 1.15 2007-11-22 23:02:06 cbbrowne Exp $
 
 Short Term Items
 ---------------------------
@@ -23,19 +23,6 @@ verify that upgrades work properly.
   version-specific SQL into a function that is called by both STORE
   NODE and UPDATE FUNCTIONS.
 
-- Script to "duplicate node"; create a new node that looks just like
-  an existing node, that is, with the same replication sets.
-
-  Overview:
-   - Run slony1_extract_schema.sh against the origin node for the sets
-     subscribed to; this gives an SQL script.
-
-   - Generate slonik script to do:
-     * STORE NODE for new node
-     * STORE PATH to get the new node to communicate with the node it's
-       duplicating
-     * SUBSCRIBE SET for all the relevant sets
-
 - Need to draw some "ducttape" tests into NG tests
 
    - Need to add a MERGE SET test; should do a pretty mean torture of
@@ -52,27 +39,6 @@ verify that upgrades work properly.
 
 Longer Term Items
 ---------------------------
-
-- Add more tests (what???) to test_slony_state script(s).
-
-  e.g. - add a warning if there exist tables with generated PK.
-
-  Arguably, that isn't really a good thing to do; if there is a table
-  with column generated via TABLE ADD KEY, then we have the
-  undesirable result that there will be an error/warning reported
-  every time test_slony_state is run.
-
-  Perhaps there should be a second script that looks for "static"
-  problems, so we can leave test_slony_state to look for "dynamic"
-  problems.
-
-- Partitioning Support
-
-  Add stored procedures to support adding in subscriptions to empty
-  tables; verify emptiness on origin, TRUNCATE on subscribers.  The
-  stored proc(s) would be run as part of EXECUTE SCRIPT...
-
-- Use PGXS
 
 - Windows-compatible version of tools/slony1_dump.sh
 
