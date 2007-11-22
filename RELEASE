@@ -1,4 +1,9 @@
-$Id: RELEASE,v 1.1.2.21 2007-10-30 19:30:05 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.22 2007-11-22 22:51:04 cbbrowne Exp $
+
+RELEASE 1.2.13
+- Fixed problem with compatibility with PostgreSQL 8.3; function
+  typenameTypeId() has 3 arguments as of 8.3.
+
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
