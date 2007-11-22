@@ -1,7 +1,7 @@
 ToDo List for Slony-I
 -----------------------------------------
 
-$Id: TODO,v 1.12 2007-09-21 22:11:14 cbbrowne Exp $
+$Id: TODO,v 1.13 2007-11-22 22:56:21 cbbrowne Exp $
 
 Documentation Improvements
 --------------------------------------------
@@ -60,6 +60,8 @@ verify that upgrades work properly.
           - #5 and #6 subscribe to #4
 
    - Have a test that does a bunch of subtransactions
+
+- Need upgrade path
 
 Longer Term Items
 ---------------------------
