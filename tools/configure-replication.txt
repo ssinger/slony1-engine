@@ -1,6 +1,6 @@
 README
 ------------
-$Id: configure-replication.txt,v 1.1 2006-10-20 16:01:01 cbbrowne Exp $
+$Id: configure-replication.txt,v 1.2 2007-11-22 17:47:03 cbbrowne Exp $
 Christopher Browne
 cbbrowne@ca.afilias.info
 2006-10-20
@@ -32,6 +32,10 @@ Global:
   SEQUENCES - a list of fully qualified sequence names (e.g. - complete with
            namespace, such as public.my_sequence)
 
+  SLONIKCONFDIR - a directory in which to place the config files.  If
+     not set, a unique directory under /tmp will be created for this
+     purpose.
+
 Defaults are provided for ALL of these values, so that if you run
 configure-replication.sh without setting any environment variables,
 you will get a set of slonik scripts.  They may not correspond, of
@@ -51,8 +55,9 @@ In contrast, HOST* values should be set explicitly for HOST1, HOST2,
 ..., as you don't get much benefit from the redundancy replication
 provides if all your databases are on the same server!
 
-slonik config files are generated in a temp directory under /tmp.  The
-usage is thus:
+slonik config files are generated in a temp directory under /tmp.
+(Or, if you set SLONIKCONFDIR, the directory you specify in that
+environment variable.)  The usage is thus:
 
 1.  preamble.slonik is a "preamble" containing connection info used by
     the other scripts.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.3 2007-11-02 15:31:43 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.4 2007-11-22 17:47:03 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
@@ -34,6 +34,14 @@ DB5=${DB5:-${PGDATABASE:-"slonytest"}}
 HOST5=${HOST5:-"backup5.example.info"}
 USER5=${USER5:-${PGUSER:-"slony"}}
 PORT5=${PORT5:-${PGPORT:-"5432"}}
+
+
+tmpdir=`mktemp -d -t slonytest-temp.XXXXXX`
+if [ $MY_MKTEMP_IS_DECREPIT ] ; then
+       tmpdir=`mktemp -d /tmp/slonytest-temp.XXXXXX`
+fi
+mktmp=${SLONIKCONFDIR:-${tmpdir}}
+mkdir -p ${mktmp}
 
 store_path()
 {
@@ -76,11 +84,6 @@ echo "include <${PREAMBLE}>;" > $mktmp/store_paths.slonik
     fi
   done
 }
-
-mktmp=`mktemp -d -t slonytest-temp.XXXXXX`
-if [ $MY_MKTEMP_IS_DECREPIT ] ; then
-       mktmp=`mktemp -d /tmp/slonytest-temp.XXXXXX`
-fi
 
 PREAMBLE=${mktmp}/preamble.slonik
 
