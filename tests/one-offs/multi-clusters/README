@@ -1,0 +1,77 @@
+build-inheriting-clusters
+--------------------------------------
+
+$Id: README,v 1.1 2007-11-27 21:43:46 cbbrowne Exp $
+
+This is an example that validates interactions across multiple
+replication clusters.
+
+- It creates three clusters:
+
+ - Two "OLTP" clusters that (very) vaguely resemble primitive domain
+   name registries
+
+ - An "Aggregation" cluster where the origin node aggregates data from
+   the two "registries"
+
+The script "tools/configure-replication.sh" is used to automate
+generation of the slonik scripts required to set up replication.
+
+The script "tools/mkslonconf.sh" is used to generate .conf files for
+each of the slon processes.
+
+[Implicit result: This test provides some assurance that those two
+tools work as expected for some not entirely trivial configurations.]
+
+- On the "OLTP" cluster origins, stored functions are set up to ease creation
+  of sorta-random data.
+
+- On the "aggregation" cluster" origin, there are two sorts of stored
+  functions set up:
+
+  1.  A trigger function is put on the OLTP transaction table to
+      detect every time a new transaction comes in, and to add the
+      transaction to a "work queue."
+
+  2.  A function is also set up to "work the queue," copying data from
+      the registries' individual transaction tables into a single 
+      central transaction table.
+
+Processing takes place thus:
+
+- Set up all databases and schemas
+
+- Create all tables that are required
+
+- Create all stored procedures 
+
+- Generate Slonik scripts for the three clusters
+
+- Run the slonik scripts
+
+- Generate further "STORE TRIGGER" slonik scripts to allow the trigger
+  functions to be visible on a subscriber node.
+
+- We briefly run a "slon" process against each node in order to get
+  node creation and STORE PATH requests to propagate across the
+  clusters.
+
+  Without this, the use of "tools/mkslonconf.sh" picks up dodgy
+  configuration; this is a script that needs to be run against a
+  "live" cluster that can already be consider to be functioning.
+
+- Then, we use tools/mkslonconf.sh to generate a .conf file for each
+  slon.
+
+- All 6 slon processes are launched to manage the 3 clusters.
+
+- Queries are run on the "TLD origins" to inject transactions to that
+  cluster.
+
+  The trigger functions on the "centralized billing" subscriber node
+  collects a queue of transactions to be copied into the "data
+  warehouse" schema.
+
+  Periodically, a process works on that queue.
+
+ 
