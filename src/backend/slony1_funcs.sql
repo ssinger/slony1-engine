@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.123 2007-10-23 17:00:27 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.124 2007-11-29 21:29:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -696,6 +696,12 @@ begin
 	-- ----
 	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
 	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment, false);
+
+	if (pg_catalog.current_setting(''max_identifier_length'')::integer - pg_catalog.length(''@NAMESPACE@'')) < 5 then
+		raise notice ''Slony-I: Cluster name length [%] versus system max_identifier_length [%] '', pg_catalog.length(''@NAMESPACE@''), pg_catalog.current_setting(''max_identifier_length'');
+		raise notice ''leaves narrow/no room for some Slony-I-generated objects (such as indexes).'';
+		raise notice ''You may run into problems later!'';
+	end if;
 	
 	return p_local_node_id;
 end;
@@ -5171,6 +5177,8 @@ DECLARE
 	idef 		text;
 	v_count		int4;
         v_iname         text;
+	v_ilen int4;
+	v_maxlen int4;
 BEGIN
 	v_count := 0;
 	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
@@ -5194,7 +5202,14 @@ BEGIN
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
             if not found then
 		-- raise notice ''index was not found - add it!'';
-		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin ||
+                v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
+		v_ilen := pg_catalog.length(v_iname);
+		v_maxlen := pg_catalog.current_setting(''max_identifier_length''::text)::int4;
+                if v_ilen > v_maxlen then
+		   raise exception ''Length of proposed index name [%] > max_identifier_length [%] - cluster name probably too long'', v_ilen, v_maxlen;
+		end if;
+
+		idef := ''create index "'' || v_iname || 
                         ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
 		execute idef;
 		v_count := v_count + 1;

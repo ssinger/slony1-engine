@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.7 2007-11-22 17:50:07 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.8 2007-11-29 21:29:03 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -84,3 +84,14 @@ often.
   generate Slonik scripts for tests in the "test bed," which has
   the further merit of making tools/configure-replication.sh a
   regularly-regression-tested tool.
+
+- Fix to bug #15 - where long cluster name (>40 chars) leads to
+  things breaking when an index name is created that contains
+  the cluster name.
+
+  -> Warn upon creating a long cluster name.
+  -> Give a useful exception that explains the cause rather
+     than merely watching index creation fail.
+
+   http://www.slony.info/bugzilla/show_bug.cgi?id=15
+
