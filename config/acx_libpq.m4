@@ -142,28 +142,29 @@ if test -n "$PG_CONFIG_LOCATION"; then
     PG_VERSION_MAJOR=`echo $PG_VERSION | cut -d. -f1`
     PG_VERSION_MINOR=`echo $PG_VERSION | cut -d. -f2`
     if test "$PG_VERSION_MAJOR" = "7"; then
-	if test $PG_VERSION_MINOR -gt 3; then
+	    AC_MSG_RESULT("error")
+	    AC_MSG_ERROR(Your version of PostgreSQL ($PG_VERSION) is lower 
+	    than the required 8.3.  Slony-I needs functionality included in
+	    a newer version.)
+    fi
+    if test "$PG_VERSION_MAJOR" = "8"; then
+	if test $PG_VERSION_MINOR -gt 2; then
 	    AC_MSG_RESULT($PG_VERSION)
-	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.4 or later])
+	    AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 8.3 or later])
 	else
 	    AC_MSG_RESULT("error")
 	    AC_MSG_ERROR(Your version of PostgreSQL ($PG_VERSION) is lower 
-	    than the required 7.4.  Slony-I needs functions included in
+	    than the required 8.3.  Slony-I needs functionality included in
 	    a newer version.)
 	fi
-    fi
-    if test "$PG_VERSION_MAJOR" = "8"; then
       AC_MSG_RESULT($PG_VERSION)
-      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 7.4 or later])
+      AC_DEFINE(PG_VERSION_OK,1,[PostgreSQL 8.3 or later])
     fi
 
-    if test "$PG_VERSION_MAJOR" = "8"; then
-	if test $PG_VERSION_MINOR -gt 0; then
-            if test "$PG_SHAREDIR" = ""; then
-                PG_SHAREDIR=`$PG_CONFIG_LOCATION --sharedir`/ 2>/dev/null
-                echo "pg_config says pg_sharedir is $PG_SHAREDIR"
-            fi
-	fi
+    
+    if test "$PG_SHAREDIR" = ""; then
+       PG_SHAREDIR=`$PG_CONFIG_LOCATION --sharedir`/ 2>/dev/null
+       echo "pg_config says pg_sharedir is $PG_SHAREDIR"
     fi
 
     case ${host_os} in
@@ -230,8 +231,9 @@ if test -n "$HAVE_PQUNESCAPEBYTEA"; then
     AC_DEFINE(PG_VERSION_VERIFIED,1,[PostgreSQL 7.3 or later check])
 else
     AC_MSG_ERROR(Your version of libpq doesn't have PQunescapeBytea
-     this means that your version of PostgreSQL is lower than 7.3 
-     and thus not supported by Slony-I.)
+     which means that your version of PostgreSQL is lower than 7.3
+     and thus not even remotely supported by Slony-I version 2, 
+     which requires 8.3+)
 fi
 
 TEMP_CPPFLAGS=$CPPFLAGS
