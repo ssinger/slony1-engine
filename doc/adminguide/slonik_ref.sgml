@@ -462,8 +462,15 @@ INIT CLUSTER (
    linkend="stmtstorenode">, the difference being that <command>INIT
    CLUSTER </command> does not need to draw configuration from other
    existing nodes.
-
    </para> </note>
+
+   <note> <para> Be aware that some objects are created that contain
+   the cluster name as part of their name.  (Notably, partial indexes
+   on <envar>sl_log_1</envar> and <envar>sl_log_2</envar>.)  As a
+   result, <emphasis>really long</emphasis> cluster names are a bad
+   idea, as they can make object names <quote>blow up</quote> past the
+   typical maximum name length of 63 characters. </para> </note>
+
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
