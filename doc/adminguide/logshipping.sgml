@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.17 2007-09-10 22:23:57 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.18 2007-12-03 16:26:09 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -341,6 +341,28 @@ done
 
 <listitem><para> </para> </listitem>
 </itemizedlist>
+
+</sect2>
+
+<sect2><title> <application> find-triggers-to-deactivate.sh
+</application> </title>
+
+<indexterm><primary> trigger deactivation </primary> </indexterm>
+
+<para> It was once pointed out (<ulink> Bugzilla bug
+#19</ulink>) that the dump of a schema may include triggers and rules
+that you may not wish to have running on the log shipped node.
+
+<para> The tool <filename> tools/find-triggers-to-deactivate.sh
+</filename> was created to assist with this task.  It may be run
+against the node that is to be used as a schema source, and it will
+list the rules and triggers present on that node that may, in turn
+need to be deactivated.
+
+<para> It includes <function>logtrigger</function> and <function>denyaccess</function>
+triggers which will may be left out of the extracted schema, but it is
+still worth the Gentle Administrator verifying that such triggers are
+kept out of the log shipped replica.</para></para></para>
 
 </sect2>
 <sect2> <title> <application>slony_logshipper </application> Tool </title>
