@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.37 2007-10-19 18:38:35 wieck Exp $
+ *	$Id: remote_listen.c,v 1.38 2007-12-03 23:53:42 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -677,8 +677,8 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	(void) slon_mkquery(&query,
 				 "select ev_origin, ev_seqno, ev_timestamp, "
 				 "       ev_snapshot, "
-				 "       \"public\".txid_snapshot_xmin(ev_snapshot), "
-				 "       \"public\".txid_snapshot_xmax(ev_snapshot), "
+				 "       \"pg_catalog\".txid_snapshot_xmin(ev_snapshot), "
+				 "       \"pg_catalog\".txid_snapshot_xmax(ev_snapshot), "
 				 "       ev_type, "
 				 "       ev_data1, ev_data2, "
 				 "       ev_data3, ev_data4, "

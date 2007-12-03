@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.159 2007-10-25 18:32:00 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.160 2007-12-03 23:53:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2439,7 +2439,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		(void) slon_mkquery(&query1,
 					 "start transaction; "
 					 "set transaction isolation level serializable; "
-					 "select \"public\".txid_snapshot_xmin(\"public\".txid_current_snapshot()) <= '%s'; ",
+					 "select \"pg_catalog\".txid_snapshot_xmin(\"pg_catalog\".txid_current_snapshot()) <= '%s'; ",
 					 event->ev_maxtxid_c);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
@@ -3257,10 +3257,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			ssy_snapshot = PQgetvalue(res1, 0, 1);
 
 			(void) slon_mkquery(&query2,
-						 "log_txid >= \"public\".txid_snapshot_xmax('%s') "
-						 "or (log_txid >= \"public\".txid_snapshot_xmin('%s')",
+						 "log_txid >= \"pg_catalog\".txid_snapshot_xmax('%s') "
+						 "or (log_txid >= \"pg_catalog\".txid_snapshot_xmin('%s')",
 						 ssy_snapshot, ssy_snapshot);
-			slon_appendquery(&query2, " and log_txid in (select * from \"public\".txid_snapshot_xip('%s')))", ssy_snapshot);
+			slon_appendquery(&query2, " and log_txid in (select * from \"pg_catalog\".txid_snapshot_xip('%s')))", ssy_snapshot);
 
 			slon_log(SLON_INFO, "remoteWorkerThread_%d: "
 					 "copy_set SYNC found, use event seqno %s.\n",
@@ -3606,7 +3606,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 	(void) slon_mkquery(&new_qual,
 				 "(log_txid < '%s' and "
-				 "\"public\".txid_visible_in_snapshot(log_txid, '%s'))",
+				 "\"pg_catalog\".txid_visible_in_snapshot(log_txid, '%s'))",
 				 event->ev_maxtxid_c, event->ev_snapshot_c);
 
 	min_ssy_seqno = -1;
@@ -3632,7 +3632,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 */
 		(void) slon_mkquery(&query,
 					 "select SSY.ssy_setid, SSY.ssy_seqno, "
-					 "    \"public\".txid_snapshot_xmax(SSY.ssy_snapshot), "
+					 "    \"pg_catalog\".txid_snapshot_xmax(SSY.ssy_snapshot), "
 					 "    SSY.ssy_snapshot, "
 					 "    SSY.ssy_action_list "
 					 "from %s.sl_setsync SSY "
@@ -3806,7 +3806,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			/* add the <snapshot_qual_of_setsync> */
 			slon_appendquery(provider_qual,
 							 "(log_txid >= '%s' or "
-							 "log_txid IN (select * from \"public\".txid_snapshot_xip('%s')))",
+							 "log_txid IN (select * from \"pg_catalog\".txid_snapshot_xip('%s')))",
 							 ssy_maxxid, ssy_snapshot);
 			actionlist_len = strlen(ssy_action_list);
 			slon_log(SLON_DEBUG4, " ssy_action_list value: %s\n",
