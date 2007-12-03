@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.8 2007-11-29 21:29:03 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.9 2007-12-03 16:29:10 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -95,3 +95,10 @@ often.
 
    http://www.slony.info/bugzilla/show_bug.cgi?id=15
 
+- Fix for bug #19 - added a script to help the administrator
+  search for any triggers on the database that is the source for
+  a schema that is to be used to initialize a log shipping node.
+
+  The problem is that some/most/sometimes all triggers and rules
+  are likely to need to be dropped from the log shipping node lest
+  they interfere with replication.
