@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.71 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.72 2007-12-11 21:27:31 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -231,6 +231,54 @@ what &lslonik; does <quote>by hand</quote>: </para>
 </answer>
 </qandaentry>
 
+<qandaentry>
+<question> <para> Problem building on Fedora/x86-64 </para>
+
+<para> When trying to configure &slony1; on a Fedora x86-64 system,
+where <application>yum</application> was used to install the package
+<filename>postgresql-libs.x86_64</filename>, the following complaint
+comes up:
+
+<screen>
+configure: error: Your version of libpq doesn't have PQunescapeBytea
+ this means that your version of PostgreSQL is lower than 7.3
+ and thus not supported by Slony-I.
+</screen></para>
+
+<para> This happened with &postgres; 8.2.5, which is certainly rather
+newer than 7.3. </para>
+</question>
+
+<answer> <para> <application>configure</application> is looking for
+that symbol by compiling a little program that calls for it, and
+checking if the compile succeeds.  On the <command>gcc</command>
+command line it uses <command>-lpq</command> to search for the
+library. </para>
+
+<para> Unfortunately, that package is missing a symlink, from
+<filename>/usr/lib64/libpq.so</filename> to
+<filename>libpq.so.5.0</filename>; that is why it fails to link to
+libpq.  The <emphasis>true</emphasis> problem is that the compiler failed to
+find a library to link to, not that libpq lacked the function call.
+</para>
+
+<para> Eventually, this should be addressed by those that manage the
+<filename>postgresql-libs.x86_64</filename> package. </para>
+</answer>
+
+<answer> <para> Note that this same symptom can be the indication of
+similar classes of system configuration problems.  Bad symlinks, bad
+permissions, bad behaviour on the part of your C compiler, all may
+potentially lead to this same error message. </para> 
+
+<para> Thus, if you see this error, you need to look in the log file
+that is generated, <filename>config.log</filename>.  Search down to
+near the end, and see what the <emphasis>actual</emphasis> complaint
+was.  That will be helpful in tracking down the true root cause of the
+problem.</para>
+</answer>
+
+</qandaentry>
 </qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
