@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.82 2007-07-20 20:20:13 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.83 2007-12-11 19:30:30 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1162,16 +1162,17 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_init_cluster *) hdr;
 
 					if (slonik_init_cluster(stmt) < 0)
-			case STMT_REPAIR_CONFIG:
-					{
-						SlonikStmt_repair_config *stmt =
-						(SlonikStmt_repair_config *) hdr;
-
-						if (slonik_repair_config(stmt) < 0)
-							errors++;
-					}
-					break;
 					errors++;
+				}
+				break;
+
+			case STMT_REPAIR_CONFIG:
+				{
+					SlonikStmt_repair_config *stmt =
+					(SlonikStmt_repair_config *) hdr;
+
+					if (slonik_repair_config(stmt) < 0)
+						errors++;
 				}
 				break;
 
@@ -1768,8 +1769,6 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-					"%s/xxid.v%d%d.sql", share_path, use_major, use_minor) < 0
-		|| load_sql_script(stmt, adminfo,
 						   "%s/slony1_base.sql", share_path) < 0
 		|| load_sql_script(stmt, adminfo,
 			 "%s/slony1_base.v%d%d.sql", share_path, use_major, use_minor) < 0

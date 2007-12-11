@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.62 2007-06-07 13:01:10 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.63 2007-12-11 19:30:29 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -126,15 +126,12 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 {
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
-	text	   *ev_xip;
 	char	   *ev_type_c;
-	Datum		argv[12];
-	char		nulls[13];
+	Datum		argv[9];
+	char		nulls[10];
 	char	   *buf;
 	size_t		buf_size;
 	int			rc;
-	uint32			xcnt;
-	char	   *cp;
 	int			i;
 	int64		retval;
 	bool		isnull;
@@ -172,55 +169,22 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	}
 
 	/*
-	 * Build the comma separated list of transactions in progress as Text
-	 * datum.
-	 */
-	*(cp = buf) = '\0';
-	/*@-nullderef@*/
-	/*@-mustfreeonly@*/
-	for (xcnt = 0; xcnt < SerializableSnapshot->xcnt; xcnt++)
-	{
-		if ((cp + 30) >= (buf + buf_size))
-		{
-			buf_size *= 2;
-			buf = repalloc(buf, buf_size);
-			cp = buf + strlen(buf);
-		}
-/*@-bufferoverflowhigh@*/
-		sprintf(cp, "%s'%u'", (xcnt > 0) ? "," : "",
-				SerializableSnapshot->xip[xcnt]);
-/*@+bufferoverflowhigh@*/
-		cp += strlen(cp);
-	}
-	/*@+nullderef@*/
-        /*@+mustfreeonly@*/
-	ev_xip = DatumGetTextP(DirectFunctionCall1(textin, PointerGetDatum(buf)));
-
-	/*
 	 * Call the saved INSERT plan
 	 */
-	/*@-nullderef@*/
-	argv[0] = TransactionIdGetDatum(SerializableSnapshot->xmin);
-	argv[1] = TransactionIdGetDatum(SerializableSnapshot->xmax);
-	/*@+nullderef@*/
-	argv[2] = PointerGetDatum(ev_xip);
-	nulls[0] = ' ';
-	nulls[1] = ' ';
-	nulls[2] = ' ';
 	for (i = 1; i < 10; i++)
 	{
 		if (i >= PG_NARGS() || PG_ARGISNULL(i))
 		{
-			argv[i + 2] = (Datum)0;
-			nulls[i + 2] = 'n';
+			argv[i - 1] = (Datum)0;
+			nulls[i - 1] = 'n';
 		}
 		else
 		{
-			argv[i + 2] = PG_GETARG_DATUM(i);
-			nulls[i + 2] = ' ';
+			argv[i - 1] = PG_GETARG_DATUM(i);
+			nulls[i - 1] = ' ';
 		}
 	}
-	nulls[12] = '\0';
+	nulls[9] = '\0';
 
 	if ((rc = SPI_execp(cs->plan_insert_event, argv, nulls, 0)) < 0)
 		elog(ERROR, "Slony-I: SPI_execp() failed for \"INSERT INTO sl_event ...\"");
@@ -839,10 +803,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	/*
 	 * Construct the parameter array and insert the log row.
 	 */
-	argv[0] = TransactionIdGetDatum(cs->currentXid);
-	argv[1] = Int32GetDatum(tab_id);
-	argv[2] = PointerGetDatum(cmdtype);
-	argv[3] = PointerGetDatum(cs->cmddata_buf);
+	argv[0] = Int32GetDatum(tab_id);
+	argv[1] = PointerGetDatum(cmdtype);
+	argv[2] = PointerGetDatum(cs->cmddata_buf);
 	SPI_execp(cs->plan_active_log, argv, NULL, 0);
 
 	SPI_finish();
@@ -1190,9 +1153,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	int			rc;
 	char		query[1024];
 	bool		isnull;
-	Oid			plan_types[12];
-	Oid			xxid_typid;
-	TypeName   *xxid_typename;
+	Oid			plan_types[9];
+	Oid			txid_snapshot_typid;
+	TypeName   *txid_snapshot_typname;
 
 	/*
 	 * Find an existing cs row for this cluster
@@ -1283,19 +1246,14 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		(cs->have_plan & PLAN_INSERT_EVENT) == 0)
 	{
 		/*
-		 * Lookup the oid of our special xxid type
+		 * Lookup the oid of the txid_snapshot type
 		 */
-		xxid_typename = makeNode(TypeName);
-		xxid_typename->names =
-			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
-					makeString("xxid"));
+		txid_snapshot_typname = makeNode(TypeName);
+		txid_snapshot_typname->names =
+			lappend(lappend(NIL, makeString("pg_catalog")),
+					makeString("txid_snapshot"));
 
-#ifdef HAVE_TYPENAMETYPEID_2
-		xxid_typid = typenameTypeId(NULL,xxid_typename);
-#else
-		xxid_typid = typenameTypeId(xxid_typename);
-#endif
-		plan_types[0] = INT4OID;
+		txid_snapshot_typid = typenameTypeId(NULL,txid_snapshot_typname, NULL);
 
 		/*
 		 * Create the saved plan. We lock the sl_event table in exclusive mode
@@ -1306,18 +1264,18 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 				"LOCK TABLE %s.sl_event IN EXCLUSIVE MODE; "
 				"INSERT INTO %s.sl_event "
 				"(ev_origin, ev_seqno, "
-				"ev_timestamp, ev_minxid, ev_maxxid, ev_xip, "
+				"ev_timestamp, ev_snapshot, "
 				"ev_type, ev_data1, ev_data2, ev_data3, ev_data4, "
 				"ev_data5, ev_data6, ev_data7, ev_data8) "
 				"VALUES ('%d', nextval('%s.sl_event_seq'), "
-				"now(), $1, $2, $3, "
-				"$4, $5, $6, $7, $8, $9, $10, $11, $12); "
+				"now(), \"pg_catalog\".txid_current_snapshot(), $1, $2, "
+				"$3, $4, $5, $6, $7, $8, $9); "
 				"SELECT currval('%s.sl_event_seq');",
 				cs->clusterident,
 				cs->clusterident, cs->localNodeId, cs->clusterident,
 				cs->clusterident);
-		plan_types[0] = xxid_typid;
-		plan_types[1] = xxid_typid;
+		plan_types[0] = TEXTOID;
+		plan_types[1] = TEXTOID;
 		plan_types[2] = TEXTOID;
 		plan_types[3] = TEXTOID;
 		plan_types[4] = TEXTOID;
@@ -1325,11 +1283,8 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		plan_types[6] = TEXTOID;
 		plan_types[7] = TEXTOID;
 		plan_types[8] = TEXTOID;
-		plan_types[9] = TEXTOID;
-		plan_types[10] = TEXTOID;
-		plan_types[11] = TEXTOID;
 
-		cs->plan_insert_event = SPI_saveplan(SPI_prepare(query, 12, plan_types));
+		cs->plan_insert_event = SPI_saveplan(SPI_prepare(query, 9, plan_types));
 		if (cs->plan_insert_event == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
@@ -1364,48 +1319,33 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		(cs->have_plan & PLAN_INSERT_LOG) == 0)
 	{
 		/*
-		 * Lookup the oid of our special xxid type
-		 */
-		xxid_typename = makeNode(TypeName);
-		xxid_typename->names =
-			lappend(lappend(NIL, makeString(NameStr(cs->clustername))),
-					makeString("xxid"));
-#ifdef HAVE_TYPENAMETYPEID_2
-		xxid_typid = typenameTypeId(NULL, xxid_typename);
-#else
-		xxid_typid = typenameTypeId(xxid_typename);
-#endif
-
-		/*
 		 * Create the saved plan's
 		 */
 		sprintf(query, "INSERT INTO %s.sl_log_1 "
-				"(log_origin, log_xid, log_tableid, log_actionseq,"
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
 				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
-				" $3, $4);",
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
 				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = xxid_typid;
-		plan_types[1] = INT4OID;
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
 		plan_types[2] = TEXTOID;
-		plan_types[3] = TEXTOID;
 
-		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 4, plan_types));
+		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
 		if (cs->plan_insert_log_1 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
 		sprintf(query, "INSERT INTO %s.sl_log_2 "
-				"(log_origin, log_xid, log_tableid, log_actionseq,"
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
 				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, $1, $2, nextval('%s.sl_action_seq'),"
-				" $3, $4);",
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
 				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = xxid_typid;
-		plan_types[1] = INT4OID;
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
 		plan_types[2] = TEXTOID;
-		plan_types[3] = TEXTOID;
 
-		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 4, plan_types));
+		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
 		if (cs->plan_insert_log_2 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 

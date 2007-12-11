@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.37 2007-08-21 22:15:44 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.38 2007-12-11 19:30:29 wieck Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -57,7 +57,7 @@ comment on column @NAMESPACE@.sl_nodelock.nl_backendpid is 'PID of database back
 create table @NAMESPACE@.sl_set (
 	set_id				int4,
 	set_origin			int4,
-	set_locked			@NAMESPACE@.xxid,
+	set_locked			bigint,
 	set_comment			text,
 
 	CONSTRAINT "sl_set-pkey"
@@ -81,9 +81,7 @@ create table @NAMESPACE@.sl_setsync (
 	ssy_setid			int4,
 	ssy_origin			int4,
 	ssy_seqno			int8,
-	ssy_minxid			@NAMESPACE@.xxid,
-	ssy_maxxid			@NAMESPACE@.xxid,
-	ssy_xip				text,
+	ssy_snapshot		"pg_catalog".txid_snapshot,
 	ssy_action_list		text,
 
 	CONSTRAINT "sl_setsync-pkey"
@@ -99,10 +97,8 @@ comment on table  @NAMESPACE@.sl_setsync is 'SYNC information';
 comment on column @NAMESPACE@.sl_setsync.ssy_setid is 'ID number of the replication set';
 comment on column @NAMESPACE@.sl_setsync.ssy_origin is 'ID number of the node';
 comment on column @NAMESPACE@.sl_setsync.ssy_seqno is 'Slony-I sequence number';
-comment on column @NAMESPACE@.sl_setsync.ssy_minxid is 'Earliest XID in provider system affected by SYNC';
-comment on column @NAMESPACE@.sl_setsync.ssy_maxxid is 'Latest XID in provider system affected by SYNC';
-comment on column @NAMESPACE@.sl_setsync.ssy_xip is 'Contains the list of XIDs in progress at SYNC time';
-comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'action list used during the subscription process. At the time a subscriber copies over data from the origin, it sees all tables in a state somewhere between two SYNC events. Therefore this list must contains all XIDs that are visible at that time, whose operations have therefore already been included in the data copied at the time the initial data copy is done.  Those actions may therefore be filtered out of the first SYNC done after subscribing.';
+comment on column @NAMESPACE@.sl_setsync.ssy_snapshot is 'TXID in provider system seen by the event';
+comment on column @NAMESPACE@.sl_setsync.ssy_action_list is 'action list used during the subscription process. At the time a subscriber copies over data from the origin, it sees all tables in a state somewhere between two SYNC events. Therefore this list must contains all log_actionseqs that are visible at that time, whose operations have therefore already been included in the data copied at the time the initial data copy is done.  Those actions may therefore be filtered out of the first SYNC done after subscribing.';
 
 
 -- ----------------------------------------------------------------------
@@ -243,9 +239,7 @@ create table @NAMESPACE@.sl_event (
 	ev_origin			int4,
 	ev_seqno			int8,
 	ev_timestamp		timestamp,
-	ev_minxid			@NAMESPACE@.xxid,
-	ev_maxxid			@NAMESPACE@.xxid,
-	ev_xip				text,
+	ev_snapshot			"pg_catalog".txid_snapshot,
 	ev_type				text,
 	ev_data1			text,
 	ev_data2			text,
@@ -263,10 +257,8 @@ comment on table @NAMESPACE@.sl_event is 'Holds information about replication ev
 comment on column @NAMESPACE@.sl_event.ev_origin is 'The ID # (from sl_node.no_id) of the source node for this event';
 comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
 comment on column @NAMESPACE@.sl_event.ev_timestamp is 'When this event record was created';
-comment on column @NAMESPACE@.sl_event.ev_minxid is 'Earliest XID on provider node for this event';
-comment on column @NAMESPACE@.sl_event.ev_maxxid is 'Latest XID on provider node for this event';
+comment on column @NAMESPACE@.sl_event.ev_snapshot is 'TXID snapshot on provider node for this event';
 comment on column @NAMESPACE@.sl_event.ev_seqno is 'The ID # for the event';
-comment on column @NAMESPACE@.sl_event.ev_xip is 'List of XIDs, in order, that are part of this event';
 comment on column @NAMESPACE@.sl_event.ev_type is 'The type of event this record is for.  
 				SYNC				= Synchronise
 				STORE_NODE			=
@@ -378,22 +370,22 @@ last value from the requested sequence.';
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_log_1 (
 	log_origin			int4,
-	log_xid				@NAMESPACE@.xxid,
+	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
 	log_cmdtype			char,
 	log_cmddata			text
 ) WITHOUT OIDS;
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
-	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
+	(log_origin, log_txid, log_actionseq);
 
 -- Add in an additional index as sometimes log_origin isn't a useful discriminant
 -- create index sl_log_1_idx2 on @NAMESPACE@.sl_log_1
---	(log_xid @NAMESPACE@.xxid_ops);
+--	(log_txid);
 
 comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes';
 comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
-comment on column @NAMESPACE@.sl_log_1.log_xid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_1.log_txid is 'Transaction ID on the origin node';
 comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
 comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
 comment on column @NAMESPACE@.sl_log_1.log_cmddata is 'The data needed to perform the log action';
@@ -403,7 +395,7 @@ comment on column @NAMESPACE@.sl_log_1.log_cmddata is 'The data needed to perfor
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_log_2 (
 	log_origin			int4,
-	log_xid				@NAMESPACE@.xxid,
+	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
 	log_cmdtype			char,
@@ -411,16 +403,16 @@ create table @NAMESPACE@.sl_log_2 (
 ) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
 comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
-comment on column @NAMESPACE@.sl_log_2.log_xid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
 comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
 comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
 comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perform the log action';
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
-	(log_origin, log_xid @NAMESPACE@.xxid_ops, log_actionseq);
+	(log_origin, log_txid, log_actionseq);
 
 -- Add in an additional index as sometimes log_origin isn't a useful discriminant
 -- create index sl_log_2_idx2 on @NAMESPACE@.sl_log_2
--- 	(log_xid @NAMESPACE@.xxid_ops);
+-- 	(log_txid);
 
 
 -- ----------------------------------------------------------------------

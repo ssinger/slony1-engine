@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.124 2007-11-29 21:29:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.125 2007-12-11 19:30:29 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1298,11 +1298,11 @@ begin
 
 	insert into @NAMESPACE@.sl_event
 			(ev_origin, ev_seqno, ev_timestamp,
-			ev_minxid, ev_maxxid, ev_xip,
+			ev_snapshot, 
 			ev_type, ev_data1, ev_data2, ev_data3)
 			values 
 			(p_failed_node, p_ev_seqfake, CURRENT_TIMESTAMP,
-			v_row.ev_minxid, v_row.ev_maxxid, v_row.ev_xip,
+			v_row.ev_snapshot, 
 			''FAILOVER_SET'', p_failed_node::text, p_backup_node::text,
 			p_set_id::text);
 	insert into @NAMESPACE@.sl_confirm
@@ -1371,11 +1371,11 @@ begin
 		end loop;
 		insert into @NAMESPACE@.sl_event
 				(ev_origin, ev_seqno, ev_timestamp,
-				ev_minxid, ev_maxxid, ev_xip,
+				ev_snapshot, 
 				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
 				values
 				(p_backup_node, "pg_catalog".nextval(''@NAMESPACE@.sl_event_seq''), CURRENT_TIMESTAMP,
-				''0'', ''0'', '''',
+				''0'', ''0'', ''0:0:'',
 				''ACCEPT_SET'', p_set_id::text,
 				p_failed_node::text, p_backup_node::text,
 				p_wait_seqno::text);
@@ -1410,18 +1410,18 @@ begin
 		if v_last_sync > 0 then
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					ssy_snapshot, ssy_action_list)
 					select p_set_id, p_backup_node, v_last_sync,
-					ev_minxid, ev_maxxid, ev_xip, NULL
+					ev_snapshot, NULL
 					from @NAMESPACE@.sl_event
 					where ev_origin = p_backup_node
 						and ev_seqno = v_last_sync;
 		else
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					ssy_snapshot, ssy_action_list)
 					values (p_set_id, p_backup_node, ''0'',
-					''0'', ''0'', '''', NULL);
+					''0'', ''0'', ''0:0:'', NULL);
 		end if;
 				
 	end if;
@@ -1958,7 +1958,7 @@ begin
 	-- Remember our snapshots xmax as for the set locking
 	-- ----
 	update @NAMESPACE@.sl_set
-			set set_locked = @NAMESPACE@.getMaxXid()
+			set set_locked = "pg_catalog".txid_snapshot_xmax("public".txid_current_snapshot())
 			where set_id = p_set_id;
 
 	return p_set_id;
@@ -2080,7 +2080,7 @@ begin
 	if v_set_row.set_locked isnull then
 		raise exception ''Slony-I: set % is not locked'', p_set_id;
 	end if;
-	if v_set_row.set_locked > @NAMESPACE@.getMinXid() then
+	if v_set_row.set_locked > "pg_catalog".txid_snapshot_xmin("public".txid_current_snapshot()) then
 		raise exception ''Slony-I: cannot move set % yet, transactions < % are still in progress'',
 				p_set_id, v_set_row.set_locked;
 	end if;
@@ -2234,18 +2234,18 @@ begin
 		if v_last_sync > 0 then
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					ssy_snapshot, ssy_action_list)
 					select p_set_id, p_new_origin, v_last_sync,
-					ev_minxid, ev_maxxid, ev_xip, NULL
+					ev_snapshot, NULL
 					from @NAMESPACE@.sl_event
 					where ev_origin = p_new_origin
 						and ev_seqno = v_last_sync;
 		else
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+					ssy_snapshot, ssy_action_list)
 					values (p_set_id, p_new_origin, ''0'',
-					''0'', ''0'', '''', NULL);
+					''0'', ''0'', ''0:0:'', NULL);
 		end if;
 	end if;
 
@@ -2278,18 +2278,18 @@ begin
 			if v_last_sync > 0 then
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
-						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+						ssy_snapshot, ssy_action_list)
 						select p_set_id, p_new_origin, v_last_sync,
-						ev_minxid, ev_maxxid, ev_xip, NULL
+						ev_snapshot, NULL
 						from @NAMESPACE@.sl_event
 						where ev_origin = p_new_origin
 							and ev_seqno = v_last_sync;
 			else
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
-						ssy_minxid, ssy_maxxid, ssy_xip, ssy_action_list)
+						ssy_snapshot, ssy_action_list)
 						values (p_set_id, p_new_origin, ''0'',
-						''0'', ''0'', '''', NULL);
+						''0'', ''0'', ''0:0:'', NULL);
 			end if;
 		end if;
 	end if;
@@ -5202,7 +5202,7 @@ BEGIN
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
             if not found then
 		-- raise notice ''index was not found - add it!'';
-                v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
+        v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
 		v_ilen := pg_catalog.length(v_iname);
 		v_maxlen := pg_catalog.current_setting(''max_identifier_length''::text)::int4;
                 if v_ilen > v_maxlen then
@@ -5210,7 +5210,7 @@ BEGIN
 		end if;
 
 		idef := ''create index "'' || v_iname || 
-                        ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
+                        ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_txid) where (log_origin = '' || v_dummy.set_origin || '');'';
 		execute idef;
 		v_count := v_count + 1;
             else
@@ -5339,8 +5339,6 @@ begin
 
 	end if;
 
-	-- In any version, make sure that the xxidin() functions are defined as STRICT
-	perform @NAMESPACE@.make_function_strict (''xxidin'', ''(cstring)'');
 	return p_old;
 end;
 ' language plpgsql;
