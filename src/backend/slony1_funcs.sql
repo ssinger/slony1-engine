@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.125 2007-12-11 19:30:29 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.126 2007-12-11 20:39:41 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5510,28 +5510,6 @@ end;
 
 comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 'Reenable index maintenance and reindex the table';
-
--- ----------------------------------------------------------------------
--- FUNCTION make_function_strict(function, parms)
---
---	Make function be STRICT
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.make_function_strict (text, text) returns void as
-'
-declare
-   fun alias for $1;
-   parms alias for $2;
-   stmt text;
-begin
-   stmt := ''ALTER FUNCTION "_@CLUSTERNAME@".'' || fun || '' '' || parms || '' STRICT;'';
-   execute stmt;
-   return;
-end
-' language plpgsql;
-
-comment on function @NAMESPACE@.make_function_strict (text, text) is
-'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
-
 
 
 -- ----------------------------------------------------------------------
