@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.160 2007-12-03 23:53:42 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.161 2007-12-11 20:30:58 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2425,8 +2425,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	}
 
 	/*
-	 * Begin a serialized transaction and check if our xmin in the snapshot is
-	 * > than ev_maxxid. This ensures that all transactions that have been in
+	 * Begin a serialized transaction and verify that the event's snapshot xxid
+	 * is less than the present snapshot. This ensures that all transactions that have been in
 	 * progress when the subscription got enabled (which is after the triggers
 	 * on the tables have been defined), have finished. Otherwise a long
 	 * running open transaction would not have the trigger definitions yet,
