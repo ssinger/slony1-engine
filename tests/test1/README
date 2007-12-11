@@ -1,4 +1,4 @@
-$Id: README,v 1.10 2007-09-07 19:50:10 cbbrowne Exp $
+$Id: README,v 1.11 2007-12-11 20:37:39 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -24,11 +24,8 @@ replicate properly.
 6.  It does a test of the function generate_sync_event() to make sure
 that it works as expected
 
-7.  It does a test of make_function_strict(), a function used in
-'UPDATE FUNCTIONS' to change the xxidin() function to be STRICT.
-
-8.  It does a run of UPDATE FUNCTIONS against node 1.  This verifies
+7.  It does a run of UPDATE FUNCTIONS against node 1.  This verifies
 that there are at least no syntax errors in the stored function.
 
-9.  It uses a slon.conf file for node #2 to make sure that the logic
+8.  It uses a slon.conf file for node #2 to make sure that the logic
 of the config file parser gets exercised.

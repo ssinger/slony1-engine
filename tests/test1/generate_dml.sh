@@ -83,11 +83,5 @@ do_initdata()
       warn 3 "generate_sync_event() failed - rc=${rc} see $mktmp/gensync.log* for details"
   fi
   status "completed generate_sync_event() test"
-  $pgbindir/psql -h $host -p $port -d $db -U $user -c "select \"_${CLUSTER1}\".make_function_strict('xxidin', '(cstring)');" 1> $mktmp/mkfunstrict.log.1 2> $mktmp/mkfunstrict.log
-  rc=$?
-  if [ $rc -ne 0 ]; then
-      warn 3 "make_function_strict('xxidin', '(cstring)') failed - rc=${rc} see $mktmp/mkfunstrict.log for details"
-  fi
-  status "completed make_function_strict() test"
   status "done"
 }
