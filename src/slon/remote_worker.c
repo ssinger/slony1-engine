@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.29 2007-10-22 20:44:24 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.30 2007-12-13 17:19:17 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -563,7 +563,10 @@ remoteWorkerThread_main(void *cdata)
 						next_sync_group_size = max_sync;
 					if (next_sync_group_size < 1)
 						next_sync_group_size = 1;
-					slon_log(SLON_DEBUG3, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
+					/* Limit group size to the value from the slon parameter, sync_group_maxsize */
+					if (next_sync_group_size > sync_group_maxsize)
+						next_sync_group_size = sync_group_maxsize;
+					slon_log(SLON_DEBUG2, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
 							 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
 				}
 
