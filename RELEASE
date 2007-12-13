@@ -1,9 +1,11 @@
-$Id: RELEASE,v 1.1.2.22 2007-11-22 22:51:04 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.23 2007-12-13 17:22:48 cbbrowne Exp $
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
   typenameTypeId() has 3 arguments as of 8.3.
 
+- Added in logic to ensure that max # of SYNCs grouped together is
+  actually constrained by config parameter sync_group_maxsize.
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
