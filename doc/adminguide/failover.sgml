@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.23 2006-10-04 16:09:30 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.24 2007-12-17 20:18:31 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -45,10 +45,53 @@ linkend="stmtmoveset">.
 <itemizedlist>
 
 <listitem><para> At the time of this writing switchover to another
-server requires the application to reconnect to the database.  So in
-order to avoid any complications, we simply shut down the web server.
-Users who use <application>pg_pool</application> for the applications database
-connections merely have to shut down the pool.</para></listitem>
+server requires the application to reconnect to the new database.  So
+in order to avoid any complications, we simply shut down the web
+server.  Users who use <application>pg_pool</application> for the
+applications database connections merely have to shut down the
+pool.</para>
+
+<para> What needs to be done, here, is highly dependent on the way
+that the application(s) that use the database are configured.  The
+general point is thus: Applications that were connected to the old
+database must drop those connections and establish new connections to
+the database that has been promoted to the <quote/master/ role.  There
+are a number of ways that this may be configured, and therefore, a
+number of possible methods for accomplishing the change:
+
+<itemizedlist>
+
+<listitem><para> The application may store the name of the database in
+a file.</para>
+
+<para> In that case, the reconfiguration may require changing the
+value in the file, and stopping and restarting the application to get
+it to point to the new location.
+</para> </listitem>
+
+<listitem><para> A clever usage of DNS might involve creating a CNAME
+<ulink url="http://www.iana.org/assignments/dns-parameters"> DNS
+record </ulink> that establishes a name for the application to use to
+reference the node that is in the <quote>master</quote> role.</para>
+
+<para> In that case, reconfiguration would require changing the CNAME
+to point to the new server, and possibly restarting the application to
+refresh database connections.
+</para> </listitem>
+
+<listitem><para> If you are using <application>pg_pool</application> or some
+similar <quote>connection pool manager,</quote> then the reconfiguration
+involves reconfiguring this management tool, but is otherwise similar
+to the DNS/CNAME example above.  </para> </listitem>
+
+</itemizedlist>
+
+<para> Whether or not the application that accesses the database needs
+to be restarted depends on how it is coded to cope with failed
+database connections; if, after encountering an error it tries
+re-opening them, then there may be no need to restart it. </para>
+
+</listitem>
 
 <listitem><para> A small <xref linkend="slonik"> script executes the
 following commands:
@@ -142,11 +185,9 @@ will receive anything from node1 any more.</para>
 
 </listitem>
 
-<listitem>
-<para> Reconfigure and restart the application (or
+<listitem> <para> Reconfigure and restart the application (or
 <application>pgpool</application>) to cause it to reconnect to
-node2.</para>
-</listitem>
+node2.</para> </listitem>
 
 <listitem> <para> Purge out the abandoned node </para>
 
