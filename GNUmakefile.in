@@ -4,12 +4,12 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: GNUmakefile.in,v 1.29 2006-08-02 15:32:01 xfade Exp $
+# $Id: GNUmakefile.in,v 1.30 2007-12-18 20:54:11 devrim Exp $
 # ----------
 
 top_builddir = .
 include $(top_builddir)/Makefile.global
-GZIP = gzip --best
+BZIP = bzip2 --best
 
 DEFAULTBUILDS=src tools
 
@@ -61,7 +61,7 @@ distclean: clean
 	rm -f GNUmakefile
 	rm -f config.log config.status config.h
 	rm -f @PACKAGE_NAME@.spec
-	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+	rm -f @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.bz2
 	rm -f postgres.imp
 	rm -rf autom4te.cache
 
@@ -74,7 +74,7 @@ distdir := @PACKAGE_NAME@-@PACKAGE_VERSION@
 dummy	:= =install=
 garbage := =*  "#"*  ."#"*  *~*  *.orig  *.rej  core  @PACKAGE_NAME@-*
 
-dist 	:= $(distdir).tar.gz
+dist 	:= $(distdir).tar.bz2
 
 distdir:
 	-rm -rf $(distdir)* $(dummy)
@@ -90,11 +90,11 @@ distdir:
 
 dist:	distdir
 	$(TAR) cf @PACKAGE_NAME@-@PACKAGE_VERSION@.tar $(distdir)
-	$(GZIP) @PACKAGE_NAME@-@PACKAGE_VERSION@.tar
+	$(BZIP) @PACKAGE_NAME@-@PACKAGE_VERSION@.tar
 	-rm -rf $(distdir)
 
 rpm: dist
 
-	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.bz2
 
 .PHONY: install
