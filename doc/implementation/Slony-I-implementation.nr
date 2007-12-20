@@ -3,10 +3,10 @@
 .\"
 .\"		Technical details of the actual Slony-I implementation.
 .\"
-.\"	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+.\"	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 .\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-implementation.nr,v 1.6 2006-04-11 14:42:23 cbbrowne Exp $
+.\"	$Id: Slony-I-implementation.nr,v 1.7 2007-12-20 00:56:46 dfetter Exp $
 .\" ----------
 .\" format this document with
 .\"

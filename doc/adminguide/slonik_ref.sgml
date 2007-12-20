@@ -2641,7 +2641,7 @@ FAILOVER (
     <programlisting>
 EXECUTE SCRIPT (
    SET ID = 1,
-   FILENAME = '/tmp/changes_2004-05-01.sql',
+   FILENAME = '/tmp/changes_2008-04-01.sql',
    EVENT NODE = 1
 );
     </programlisting>

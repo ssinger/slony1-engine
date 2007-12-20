@@ -1,10 +1,10 @@
 # ----------
 # Makefile for the Slony-I concept paper
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.13 2006-08-02 15:32:01 xfade Exp $
+# $Id: Makefile,v 1.14 2007-12-20 00:56:46 dfetter Exp $
 # ----------
 
 slony_subdir = doc/concept

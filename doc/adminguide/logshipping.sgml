@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.19 2007-12-11 21:27:05 cbbrowne Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.20 2007-12-20 00:56:46 dfetter Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -269,7 +269,7 @@ dashes at the end of the <quote>header</quote> material:
 -- Node 11, Event 656
 start transaction;
 
-select "_T1".setsyncTracking_offline(1, '655', '656', '2005-09-23 18:37:40.206342');
+select "_T1".setsyncTracking_offline(1, '655', '656', '2007-09-23 18:37:40.206342');
 -- end of log archiving header
 </programlisting></para></listitem>
 
@@ -281,7 +281,7 @@ SYNC time.
 -- Node 11, Event 109
 start transaction;
 
-select "_T1".setsyncTracking_offline(1, '96', '109', '2005-09-23 19:01:31.267403');
+select "_T1".setsyncTracking_offline(1, '96', '109', '2007-09-23 19:01:31.267403');
 -- end of log archiving header
 </programlisting></para>
 

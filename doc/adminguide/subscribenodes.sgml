@@ -1,4 +1,4 @@
-<!-- $Id: subscribenodes.sgml,v 1.16 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: subscribenodes.sgml,v 1.17 2007-12-20 00:56:46 dfetter Exp $ -->
 <sect1 id="subscribenodes"> <title>Subscribing Nodes</title>
 
 <indexterm><primary>subscribing nodes</primary></indexterm>
@@ -93,7 +93,7 @@ event data will not be constructed correctly, and you will see error
 messages similar to the following:</para>
 
 <screen>
-2005-04-13 07:11:28 PDT ERROR remoteWorkerThread_11: "declare LOG
+2007-04-13 07:11:28 PDT ERROR remoteWorkerThread_11: "declare LOG
 cursor for select log_origin, log_xid, log_tableid, log_actionseq,
 log_cmdtype, log_cmddata from "_T1".sl_log_1 where log_origin = 11 and
 ( order by log_actionseq; " PGRES_FATAL_ERROR ERROR: syntax error at
