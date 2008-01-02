@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.27 2007-04-18 15:28:16 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.28 2008-01-02 19:12:42 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -11,7 +11,7 @@ itself, in a <quote>cleanup</quote> thread:
 <listitem><para> Deletes old data from various tables in the
 <productname>Slony-I</productname> cluster's namespace, notably
 entries in <xref linkend="table.sl-log-1">, <xref
-linkend="table.sl-log-2"> (not yet used), and <xref
+linkend="table.sl-log-2">, and <xref
 linkend="table.sl-seqlog">.</para></listitem>
 
 <listitem><para> Vacuum certain tables used by &slony1;.  As of 1.0.5,
@@ -25,7 +25,7 @@ option of not bothering to vacuum any of these tables if you are using
 something like <application>pg_autovacuum</application> to handle
 vacuuming of these tables.  Unfortunately, it has been quite possible
 for <application>pg_autovacuum</application> to not vacuum quite
-frequently enough, so you probably want to use the internal vacuums.
+frequently enough, so you may prefer to use the internal vacuums.
 Vacuuming &pglistener; <quote>too often</quote> isn't nearly as
 hazardous as not vacuuming it frequently enough.</para>
 
@@ -58,15 +58,17 @@ incapable of shrinking back down </para> </listitem>
 </itemizedlist>
 </para>
 
-<sect2 id="maintenance-autovac"> <title> Interaction with &postgres; autovacuum </title>
+<sect2 id="maintenance-autovac"> <title> Interaction with &postgres;
+autovacuum </title>
 
 <indexterm><primary>autovacuum interaction</primary></indexterm>
 
-<para> Recent versions of &postgres; support an <quote/autovacuum/
-process which notices when tables are modified, thereby creating dead
-tuples, and vacuums those tables, <quote/on demand./ It has been
-observed that this can interact somewhat negatively with &slony1;'s
-own  vacuuming policies on its own tables. </para>
+<para> Recent versions of &postgres; support an
+<quote>autovacuum</quote> process which notices when tables are
+modified, thereby creating dead tuples, and vacuums those tables,
+<quote>on demand.</quote> It has been observed that this can interact
+somewhat negatively with &slony1;'s own vacuuming policies on its own
+tables. </para>
 
 <para> &slony1; requests vacuums on its tables immediately after
 completing transactions that are expected to clean out old data, which

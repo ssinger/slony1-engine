@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.28 2007-04-18 15:28:16 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.29 2008-01-02 19:12:42 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -613,9 +613,9 @@ careful selection of &lslon; parameters:</para>
 before version 1.1.1, see <filename> slony1_base.sql </filename> for
 the exact form that the index setup should take. </para> 
 
-<para> In 1.2, there is a process that runs automatically to add
-partial indexes by origin node number, which should be the optimal
-form for such an index to take.  </para>
+<para> In 1.2 and later versions, there is a process that runs
+automatically to add partial indexes by origin node number, which
+should be the optimal form for such an index to take.  </para>
 </listitem>
 
 <listitem><para> On the subscriber's &lslon;, increase
