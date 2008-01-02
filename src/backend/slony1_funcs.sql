@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.126 2007-12-11 20:39:41 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.127 2008-01-02 19:00:27 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1958,7 +1958,7 @@ begin
 	-- Remember our snapshots xmax as for the set locking
 	-- ----
 	update @NAMESPACE@.sl_set
-			set set_locked = "pg_catalog".txid_snapshot_xmax("public".txid_current_snapshot())
+			set set_locked = "pg_catalog".txid_snapshot_xmax("pg_catalog".txid_current_snapshot())
 			where set_id = p_set_id;
 
 	return p_set_id;
@@ -2080,7 +2080,7 @@ begin
 	if v_set_row.set_locked isnull then
 		raise exception ''Slony-I: set % is not locked'', p_set_id;
 	end if;
-	if v_set_row.set_locked > "pg_catalog".txid_snapshot_xmin("public".txid_current_snapshot()) then
+	if v_set_row.set_locked > "pg_catalog".txid_snapshot_xmin("pg_catalog".txid_current_snapshot()) then
 		raise exception ''Slony-I: cannot move set % yet, transactions < % are still in progress'',
 				p_set_id, v_set_row.set_locked;
 	end if;
@@ -4382,16 +4382,22 @@ p_con_seqno have been received by node p_con_received as of
 p_con_timestamp, and raises an event to forward this confirmation.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION cleanupEvent ()
+-- FUNCTION cleanupEvent (interval, deletelogs)
 --
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupEvent ()
+create or replace function @NAMESPACE@.cleanupEvent (interval, boolean)
 returns int4
 as '
 declare
+	p_interval alias for $1;
+	p_deletelogs alias for $2;
 	v_max_row	record;
 	v_min_row	record;
 	v_max_sync	int8;
+	v_origin	int8;
+	v_seqno		int8;
+	v_xmin		bigint;
+	v_rc            int8;
 begin
 	-- ----
 	-- First remove all but the oldest confirm row per origin,receiver pair
@@ -4466,14 +4472,33 @@ begin
 	-- ----
 	perform @NAMESPACE@.cleanupNodelock();
 
+	-- ----
+	-- Find the eldest event left, for each origin
+	-- ----
+        for v_origin, v_seqno, v_xmin in
+	  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
+          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+	loop
+		if p_deletelogs then
+			delete from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin;		
+			delete from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin;		
+		end if;
+		delete from @NAMESPACE@.sl_seqlog where seql_origin = v_origin and seql_ev_seqno < v_seqno;
+        end loop;
+	
+	v_rc := @NAMESPACE@.logswitch_finish();
+	if v_rc = 0 then   -- no switch in progress
+		perform @NAMESPACE@.logswitch_start();
+	end if;
+
 	return 0;
 end;
 ' language plpgsql;
-comment on function @NAMESPACE@.cleanupEvent () is
+comment on function @NAMESPACE@.cleanupEvent (interval, boolean) is
 'cleaning old data out of sl_confirm, sl_event.  Removes all but the
 last sl_confirm row per (origin,receiver), and then removes all events
 that are confirmed by all nodes in the whole cluster up to the last
-SYNC.  ';
+SYNC.  Deletes now-orphaned entries from sl_log_* if delete_logs parameter is set';
 
 
 -- ----------------------------------------------------------------------
@@ -5080,6 +5105,10 @@ returns int4 as '
 DECLARE
 	v_current_status	int4;
 	v_dummy				record;
+	v_origin	int8;
+	v_seqno		int8;
+	v_xmin		bigint;
+	v_purgeable boolean;
 BEGIN
 	-- ----
 	-- Grab the central configuration lock to prevent race conditions
@@ -5103,18 +5132,29 @@ BEGIN
 	-- status = 2: sl_log_1 active, cleanup sl_log_2
 	-- ----
 	if v_current_status = 2 then
+		v_purgeable := ''true'';
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
 		-- can truncate it and the log switch is done.
 		-- ----
-		for v_dummy in select 1 from @NAMESPACE@.sl_log_2 loop
+		
+	        for v_origin, v_seqno, v_xmin in
+		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
+	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+		loop
+			select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin limit 1;		
+			if exists then
+				v_purgeable := ''false'';
+			end if;
+	        end loop;
+		if not v_purgeable then
 			-- ----
 			-- Found a row ... log switch is still in progress.
 			-- ----
 			raise notice ''Slony-I: log switch to sl_log_1 still in progress - sl_log_2 not truncated'';
 			return -1;
-		end loop;
+		end if;
 
 		raise notice ''Slony-I: log switch to sl_log_1 complete - truncate sl_log_2'';
 		truncate @NAMESPACE@.sl_log_2;
@@ -5132,18 +5172,28 @@ BEGIN
 	-- status = 3: sl_log_2 active, cleanup sl_log_1
 	-- ----
 	if v_current_status = 3 then
+		v_purgeable := ''true'';
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
 		-- can truncate it and the log switch is done.
 		-- ----
-		for v_dummy in select 1 from @NAMESPACE@.sl_log_1 loop
+	        for v_origin, v_seqno, v_xmin in
+		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
+	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+		loop
+			select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin limit 1;		
+			if exists then
+				v_purgeable := ''false'';
+			end if;
+	        end loop;
+		if not v_purgeable then
 			-- ----
 			-- Found a row ... log switch is still in progress.
 			-- ----
 			raise notice ''Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated'';
 			return -1;
-		end loop;
+		end if;
 
 		raise notice ''Slony-I: log switch to sl_log_2 complete - truncate sl_log_1'';
 		truncate @NAMESPACE@.sl_log_1;
@@ -5160,7 +5210,13 @@ END;
 comment on function @NAMESPACE@.logswitch_finish() is
 'logswitch_finish()
 
-Attempt to finalize a log table switch in progress';
+Attempt to finalize a log table switch in progress
+return values:
+  -1 if switch in progress, but not complete
+   0 if no switch in progress
+   1 if performed truncate on sl_log_2
+   2 if performed truncate on sl_log_1
+';
 
 
 -- ----------------------------------------------------------------------

@@ -720,6 +720,17 @@ static struct config_bool ConfigureNamesBool[] =
 		true
 	},
 
+	{
+		{
+			(const char *)"cleanup_deletelogs",
+			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
+			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
+			SLON_C_BOOL
+		},
+		&cleanup_deletelogs,
+		false
+	},
+
 	{{0}}
 };
 
@@ -859,6 +870,18 @@ static struct config_string ConfigureNamesString[] =
 		"slon"
 	},
 #endif
+	{
+		{
+			(const char *)"cleanup_interval",
+			gettext_noop("A PostgreSQL value compatible with ::interval "
+						 "which indicates what aging interval should be used "
+						 "for deleting old events, and hence for purging sl_log_* tables."),
+			NULL,
+			SLON_C_STRING
+		},
+		&cleanup_interval,
+		"10 minutes"
+	},
 	{{0}}
 };
 

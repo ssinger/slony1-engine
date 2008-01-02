@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.10 2007-12-11 20:27:11 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.11 2008-01-02 19:00:27 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -111,3 +111,49 @@ often.
 
   Note that this affects the structure of sl_event, and leads to some
   changes in the coding of the regression tests.
+
+- All of the interesting cleanup work is now done in the stored
+  function, cleanupEvent(interval, boolean).
+
+  Interesting side-effect: You can now induce a cleanup manually,
+  which will be useful for testing.
+
+- cleanupEvent now has two parameters, passed in from slon config
+  parameters:
+
+  interval - cleanup_interval (default '10 minutes')
+
+   This controls how quickly old events are trimmed out.  It used to
+   be a hard-coded value.
+
+   Old events are trimmed out once the confirmations are aged by
+   (cleanup_interval).
+
+   This then controls when the data in sl_log_1/sl_log_2 can be
+   dropped.
+
+   Data in *those* tables is deleted when it is older than the
+   earliest XID still captured in sl_event.
+
+  boolean - cleanup_deletelogs (default 'false')
+
+   This controls whether or not we DELETE data from sl_log_1/sl_log_2
+
+   By default, we now NEVER delete data from the log tables; we
+   instead use TRUNCATE.
+
+- We now consider initiating a log switch every time cleanupEvent()
+  runs.
+
+  If the call to logswitch_finish() indicates that there was no log
+  switch in progress, we initiate one.
+
+  This means that log switches will be initiated almost as often as
+  possible.  That's a policy well worth debating :-).
+
+- logswitch_finish() changes a fair bit...
+
+  It uses the same logic as in cleanupEvent() to determine if there
+  are any *relevant* tuples left in sl_log_[whatever], rather than
+  (potentially) scanning the table to see if there are any undeleted
+  tuples left.

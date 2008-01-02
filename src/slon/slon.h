@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.65 2007-10-19 18:38:35 wieck Exp $
+ *	$Id: slon.h,v 1.66 2008-01-02 19:00:27 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -472,6 +472,8 @@ extern void *slon_localEventThread(void *dummy);
  */
 
 extern int	vac_frequency;
+extern char *cleanup_interval;
+extern bool cleanup_deletelogs;
 
 /* ----------
  * Functions in cleanup_thread.c

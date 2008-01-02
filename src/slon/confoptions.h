@@ -1,4 +1,4 @@
-/* $Id: confoptions.h,v 1.35 2007-04-20 20:53:18 cbbrowne Exp $ */
+/* $Id: confoptions.h,v 1.36 2008-01-02 19:00:27 cbbrowne Exp $ */
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 
@@ -13,7 +13,6 @@ extern char *rtcfg_conninfo;
 extern char *pid_file;
 extern char *archive_dir;
 
-extern int	vac_frequency;
 extern int	slon_log_level;
 extern int	sync_interval;
 extern int	sync_interval_timeout;
@@ -26,6 +25,16 @@ extern int	desired_sync_time;
 
 extern int	quit_sync_provider;
 extern int	quit_sync_finalsync;
+
+/*
+ * ----------
+ * Global variables in cleanup_thread.c
+ * ----------
+ */
+
+extern int	vac_frequency;
+extern char *cleanup_interval;
+extern bool cleanup_deletelogs;
 
 char	   *Syslog_ident;
 char	   *Syslog_facility;
