@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.76 2007-07-20 19:59:54 cbbrowne Exp $
+ *	$Id: slon.c,v 1.77 2008-01-03 15:47:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -391,6 +391,11 @@ SlonMain(void)
 		slon_abort();
 	}
 
+
+	/* 
+	 * Dump out current configuration - all elements of the various arrays...
+	 */
+	dump_configuration();
 	/*
 	 * Connect to the local database to read the initial configuration
 	 */

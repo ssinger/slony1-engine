@@ -21,6 +21,30 @@ static bool		bool_placeholder;
 static double		real_placeholder;
 static char	   *string_placeholder;
 
+void dump_configuration(void);
+
+void dump_configuration(void)
+{
+	int i;
+	for (i = 0; ConfigureNamesInt[i].gen.name; i++) {
+		slon_log(SLON_CONFIG, "main: Integer option %s = %d\n",
+			 ConfigureNamesInt[i].gen.name, *(ConfigureNamesInt[i].variable));
+	}
+	for (i = 0; ConfigureNamesBool[i].gen.name; i++) {
+		slon_log(SLON_CONFIG, "main: Boolean option %s = %d\n",
+			 ConfigureNamesBool[i].gen.name, *(ConfigureNamesBool[i].variable));
+	}
+	for (i = 0; ConfigureNamesReal[i].gen.name; i++) {
+		slon_log(SLON_CONFIG, "main: Real option %s = %f\n",
+			 ConfigureNamesReal[i].gen.name, *(ConfigureNamesReal[i].variable));
+	}
+	for (i = 0; ConfigureNamesString[i].gen.name; i++) {
+		slon_log(SLON_CONFIG, "main: String option %s = %s\n",
+			 ConfigureNamesString[i].gen.name, *(ConfigureNamesString[i].variable));
+	}
+	
+
+}
 
 
 void

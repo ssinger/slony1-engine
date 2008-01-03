@@ -1,4 +1,4 @@
-/* $Id: confoptions.h,v 1.36 2008-01-02 19:00:27 cbbrowne Exp $ */
+/* $Id: confoptions.h,v 1.37 2008-01-03 15:47:21 cbbrowne Exp $ */
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 
@@ -6,6 +6,8 @@ void		InitializeConfOptions(void);
 
 bool		set_config_option(const char *name, const char *value);
 void	   *get_config_option(const char *name);
+
+void dump_configuration(void);
 
 extern char *rtcfg_cluster_name;
 extern char *rtcfg_conninfo;
