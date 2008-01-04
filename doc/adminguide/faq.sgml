@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.72 2007-12-11 21:27:31 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.73 2008-01-04 23:05:50 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1372,6 +1372,25 @@ where c.oid = l.relation ; </command> A
 operations that need their own exclusive locks, which are likely
 queued up, marked as not being granted. </para>
 </answer> </qandaentry>
+
+<qandaentry>
+
+<question><para> I'm noticing in the logs that a &lslon; is frequently
+switching in and out of <quote>polling</quote> mode as it is
+frequently reporting <quote>LISTEN - switch from polling mode to use
+LISTEN</quote> and <quote>UNLISTEN - switch into polling
+mode</quote>. </para> </question>
+
+<answer><para> The thresholds for switching between these modes are
+controlled by the configuration parameters <xref
+linkend="slon-config-sync-interval"> and <xref
+linkend="slon-config-sync-interval-timeout">; if the timeout value
+(which defaults to 10000, implying 10s) is kept low, that makes it
+easy for the &lslon; to decide to return to <quote>listening</quote>
+mode.  You may want to increase the value of the timeout
+parameter. </para>
+</answer>
+</qandaentry>
 
 </qandadiv>
 <qandadiv id="faqbugs"> <title> &slony1; FAQ: &slony1; Bugs in Elder Versions </title>
