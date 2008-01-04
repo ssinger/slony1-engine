@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slony_show_configuration.pl,v 1.1 2005-05-31 16:11:05 cbbrowne Exp $
+# $Id: slony_show_configuration.pl,v 1.1.4.1 2008-01-04 19:55:18 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -40,7 +40,7 @@ if ($ENV{"SLONYSET"}) {
 print qq{
 Slony-I Cluster: $CLUSTER_NAME
 Logs stored under $LOGDIR
-Slony Binaries in: @@PGBINDIR@@
+Slony Binaries in: @@SLONBINDIR@@
 };
 if ($APACHE_ROTATOR) {
   print "Rotating logs using Apache Rotator: $APACHE_ROTATOR\n";
