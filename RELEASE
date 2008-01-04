@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.23 2007-12-13 17:22:48 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.24 2008-01-04 19:56:19 cbbrowne Exp $
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
@@ -6,6 +6,9 @@ RELEASE 1.2.13
 
 - Added in logic to ensure that max # of SYNCs grouped together is
   actually constrained by config parameter sync_group_maxsize.
+
+- Fix to show_slony_configuration - point to proper directory where
+  slon/slonik are actually installed.
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
