@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.12 2007-07-20 19:55:57 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.13 2008-01-08 20:42:41 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -42,9 +42,7 @@ SlonikScript *parser_script = NULL;
 int			parser_errors = 0;
 int			current_try_level;
 
-#ifdef WIN32
 static char myfull_path[MAXPGPATH];
-#endif
 static char share_path[MAXPGPATH];
 
 /*
@@ -104,22 +102,19 @@ main(int argc, const char *argv[])
 
 	if (parser_errors)
 		usage();
-#ifndef WIN32
-        strcpy(share_path, PGSHARE);
-#else
+
 	/*
 	 * We need to find a share directory like PostgreSQL. 
 	 */
 	if (find_my_exec(argv[0],myfull_path) < 0)
 	{
-		printf("full path was unacquirable. '%s'\n", argv[0]);
-		return -1;
+		strcpy(share_path, PGSHARE);
 	}
 	else
 	{
 		get_share_path(myfull_path, share_path);
 	}
-#endif
+
 	if (optind < argc)
 	{
 		while (optind < argc)
