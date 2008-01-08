@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.25 2007-01-02 23:34:35 cbbrowne Exp $
+#	$Id: Makefile,v 1.26 2008-01-08 20:43:24 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/slonik
@@ -17,16 +17,15 @@ ifeq ($(PORTNAME), aix)
 endif
 
 CFLAGS += -I$(slony_top_builddir) -DPGSHARE="\"$(pgsharedir)\"" 
+LDFLAGS += -lpgport
 
 PROG		= slonik
 
 ifeq ($(PORTNAME), win)
 PROG            = slonik.exe
-LDFLAG		= $(LDFLAG) -lpgport
 endif
 ifeq ($(PORTNAME), win32)
 PROG            = slonik.exe
-LDFLAG		= $(LDFLAG) -lpgport
 endif
 
 OBJS		= 			\
