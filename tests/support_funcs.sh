@@ -89,7 +89,7 @@ random_number()
   _lowerbound=$1
   _upperbound=$2
 
-  if [ -e ./random_number ] ; then
+  if [ -x ./random_number ] ; then
     rannum=`./random_number ${_lowerbound} ${_upperbound}`
   else
   case `uname` in
@@ -128,8 +128,8 @@ random_string()
   fi
 
   _length=$1
-  if [ -e ./random_string ] ; then
-    rannum=`./random_string ${_length}`
+  if [ -x ./random_string ] ; then
+    ranstring=`./random_string ${_length}`
   else
   case `uname` in
   *BSD|Darwin)
