@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.19 2007-10-19 15:21:46 cbbrowne Exp $
+# $Id: run_test.sh,v 1.20 2008-01-09 20:47:48 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -651,7 +651,7 @@ poll_cluster()
 wait_for_catchup()
 {
   node=1
-  status "waiting for nodes to catchup"
+  status "waiting for nodes to catch up"
 
   poll_cluster
 
@@ -724,7 +724,7 @@ case `uname` in
       fi
     done
     if [ -z $tmpdir ]; then
-       err 3 "unable to create tmp dir"
+       err 3 "unable to create temp dir"
        exit
     fi
 
