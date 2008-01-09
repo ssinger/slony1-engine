@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.14 2007-09-07 19:51:28 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.15 2008-01-09 20:55:47 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -204,6 +204,18 @@ sort of buildfarm-like registry. </para> </glossdef>
 <glossdef><para> File in which to store summary results from tests.
 Eventually, this may be used to construct a buildfarm-like repository of
 aggregated test results. </para> </glossdef>
+</glossentry>
+
+
+<glossterm><envar><filename>random_number</filename> and <filename>random_string</filename> </envar></glossterm>
+
+<glossdef><para> If you run <command>make</command> in the
+<filename>test</filename> directory, C programs
+<application>random_number</application> and
+<application>random_string</application> will be built which will then
+be used when generating random data in lieu of using shell/SQL
+capabilities that are much slower than the C programs.  </para>
+</glossdef>
 </glossentry>
 
 </glosslist>
