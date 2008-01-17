@@ -35,7 +35,7 @@ are available
 %package docs
 Summary:	Documentation for Slony-I
 Group:		Applications/Databases
-Requires:	@PACKAGE_NAME@-@PACKAGE_VERSION@-%{release}
+Requires:	@PACKAGE_NAME@
 BuildRequires:	libjpeg, netpbm-progs, groff, docbook-style-dsssl, ghostscript
 
 %description docs
@@ -48,7 +48,7 @@ documentation for Slony-I.
 
 %build
 
-# Temporary measure for 1.2.10
+# Temporary measure for 1.2.X
 %if %docs
 find doc/ -type f -exec chmod 600 {} \;
 %endif
@@ -86,7 +86,7 @@ install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 install -d %{buildroot}%{_initrddir}
 install -m 755 redhat/postgresql-slony1.init %{buildroot}%{_initrddir}/postgresql-slony1
 
-# Temporary measure for 1.2.10
+# Temporary measure for 1.2.X
 %if %docs
 	rm -f doc/implementation/.cvsignore
 	rm -f doc/concept/.cvsignore
