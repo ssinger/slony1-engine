@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.12 2008-01-03 15:48:49 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.13 2008-01-21 19:27:37 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -162,3 +162,7 @@ often.
   parameter values.  Per Bugzilla entry #21.
 
   http://www.slony.info/bugzilla/show_bug.cgi?id=21
+
+- New slonik "CLONE PREPARE" and "CLONE FINISH" command to assist in
+  creating duplicate nodes based on taking a copy of some existing
+  subscriber node.

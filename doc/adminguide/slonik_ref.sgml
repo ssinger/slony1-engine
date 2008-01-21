@@ -2648,15 +2648,23 @@ EXECUTE SCRIPT (
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
-    <para> Each replicated table receives an exclusive lock, on the
-    origin node, in order to remove the replication triggers; after
-    the DDL script completes, those locks will be cleared. </para>
+    <para> Up until the 2.0 branch, each replicated table received an
+    exclusive lock, on the origin node, in order to remove the
+    replication triggers; after the DDL script completes, those locks
+    will be cleared. </para>
 
     <para> After the DDL script has run on the origin node, it will
     then run on subscriber nodes, where replicated tables will be
     similarly altered to remove replication triggers, therefore
     requiring that exclusive locks be taken out on each node, in
     turn. </para>
+
+    <para> As of the 2.0 branch, &slony1; uses a GUC that controls
+    trigger behaviour, which allows deactivating the &slony1;-created
+    triggers during this operation <emphasis>without</emphasis> the
+    need to take out exclusive locks on all tables.  Now, the only
+    tables requiring exclusive locks are those tables that are
+    actually altered as a part of the DDL script. </para>
 
    </refsect1>
    <refsect1> <title> Version Information </title>
@@ -2992,6 +3000,83 @@ REPAIR CONFIG (
     <para> This command was introduced in &slony1; 1.1.6 / 1.2.1. </para>
    </refsect1>
   </Refentry>
+
+
+  <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>CLONE PREPARE</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+   
+   <refnamediv><refname>CLONE PREPARE</refname>
+    
+    <refpurpose> Prepare for cloning a node. </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>clone prepare </command>
+     <arg><replaceable class="parameter"> id</replaceable></arg>
+     <arg><replaceable class="parameter"> provider</replaceable></arg>
+     <arg><replaceable class="parameter"> comment</replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+     Prepares for cloning a specified node.
+    </para>
+
+    <para>
+     This duplicates the <quote>provider</quote> node's configuration
+     under a new node ID in preparation for the node to be copied via
+     standard database tools.
+    </para>
+   </Refsect1>
+   <Refsect1><Title>Example</Title>
+    <Programlisting>
+     clone prepare (id = 33, provider = 22, comment='Clone 33');
+    </Programlisting>
+   </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.2.0. </para>
+   </refsect1>
+  </Refentry>
+
+
+  <refentry id ="stmtclonefinish"><refmeta><refentrytitle>CLONE FINISH</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+   
+   <refnamediv><refname>CLONE FINISH</refname>
+    
+    <refpurpose> Complete cloning a node. </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>clone prepare </command>
+     <arg><replaceable class="parameter"> id</replaceable></arg>
+     <arg><replaceable class="parameter"> provider</replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+     Finishes cloning a specified node.
+    </para>
+
+    <para>
+     This completes the work done by <xref
+     linkend="stmtcloneprepare">, establishing confirmation data for
+     the new <quote>clone</quote> based on the status found for the
+     <quote>provider</quote> node.
+    </para>
+   </Refsect1>
+   <Refsect1><Title>Example</Title>
+    <Programlisting>
+     clone finish (id = 33, provider = 22);
+    </Programlisting>
+   </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.2.0. </para>
+   </refsect1>
+  </Refentry>
+
 
  </reference>
 <!-- Keep this comment at the end of the file
