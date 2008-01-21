@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.32 2007-07-05 18:19:04 wieck Exp $
+ *	$Id: slonik.h,v 1.33 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -24,6 +24,8 @@ typedef struct SlonikStmt_store_node_s SlonikStmt_store_node;
 typedef struct SlonikStmt_drop_node_s SlonikStmt_drop_node;
 typedef struct SlonikStmt_failed_node_s SlonikStmt_failed_node;
 typedef struct SlonikStmt_uninstall_node_s SlonikStmt_uninstall_node;
+typedef struct SlonikStmt_clone_prepare_s SlonikStmt_clone_prepare;
+typedef struct SlonikStmt_clone_finish_s SlonikStmt_clone_finish;
 typedef struct SlonikStmt_store_path_s SlonikStmt_store_path;
 typedef struct SlonikStmt_drop_path_s SlonikStmt_drop_path;
 typedef struct SlonikStmt_store_listen_s SlonikStmt_store_listen;
@@ -52,6 +54,8 @@ typedef struct SlonikStmt_sleep_s SlonikStmt_sleep;
 typedef enum
 {
 	STMT_TRY = 1,
+	STMT_CLONE_FINISH,
+	STMT_CLONE_PREPARE,
 	STMT_CREATE_SET,
 	STMT_DDL_SCRIPT,
 	STMT_DROP_LISTEN,
@@ -59,33 +63,33 @@ typedef enum
 	STMT_DROP_PATH,
 	STMT_DROP_SET,
 	STMT_ECHO,
+	STMT_ERROR,
 	STMT_EXIT,
 	STMT_FAILED_NODE,
 	STMT_INIT_CLUSTER,
 	STMT_LOCK_SET,
 	STMT_MERGE_SET,
 	STMT_MOVE_SET,
-	STMT_RESTART_NODE,
 	STMT_REPAIR_CONFIG,
+	STMT_RESTART_NODE,
 	STMT_SET_ADD_SEQUENCE,
 	STMT_SET_ADD_TABLE,
 	STMT_SET_DROP_SEQUENCE,
 	STMT_SET_DROP_TABLE,
 	STMT_SET_MOVE_SEQUENCE,
 	STMT_SET_MOVE_TABLE,
+	STMT_SLEEP,
 	STMT_STORE_LISTEN,
 	STMT_STORE_NODE,
 	STMT_STORE_PATH,
 	STMT_SUBSCRIBE_SET,
+	STMT_SWITCH_LOG,
+	STMT_SYNC,
 	STMT_UNINSTALL_NODE,
 	STMT_UNLOCK_SET,
 	STMT_UNSUBSCRIBE_SET,
 	STMT_UPDATE_FUNCTIONS,
-	STMT_WAIT_EVENT,
-	STMT_SWITCH_LOG,
-	STMT_ERROR,
-	STMT_SYNC,
-	STMT_SLEEP
+	STMT_WAIT_EVENT
 }	Slonik_stmttype;
 
 struct SlonikScript_s
@@ -201,6 +205,23 @@ struct SlonikStmt_uninstall_node_s
 {
 	SlonikStmt	hdr;
 	int			no_id;
+};
+
+
+struct SlonikStmt_clone_prepare_s
+{
+	SlonikStmt	hdr;
+	int			no_id;
+	int			no_provider;
+	char	   *no_comment;
+};
+
+
+struct SlonikStmt_clone_finish_s
+{
+	SlonikStmt	hdr;
+	int			no_id;
+	int			no_provider;
 };
 
 
@@ -512,6 +533,8 @@ extern int	slonik_store_node(SlonikStmt_store_node * stmt);
 extern int	slonik_drop_node(SlonikStmt_drop_node * stmt);
 extern int	slonik_failed_node(SlonikStmt_failed_node * stmt);
 extern int	slonik_uninstall_node(SlonikStmt_uninstall_node * stmt);
+extern int	slonik_clone_prepare(SlonikStmt_clone_prepare * stmt);
+extern int	slonik_clone_finish(SlonikStmt_clone_finish * stmt);
 extern int	slonik_store_path(SlonikStmt_store_path * stmt);
 extern int	slonik_drop_path(SlonikStmt_drop_path * stmt);
 extern int	slonik_store_listen(SlonikStmt_store_listen * stmt);

@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.29 2007-07-05 18:19:04 wieck Exp $
+ *	$Id: parser.y,v 1.30 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,7 +45,6 @@ typedef enum {
 	O_SPOOLNODE,
 	O_TAB_ID,
 	O_TIMEOUT,
-	O_TRIG_NAME,
 	O_USE_KEY,
 	O_WAIT_CONFIRMED,
 	O_WAIT_ON,
@@ -134,6 +133,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_drop_node
 %type <statement>	stmt_failed_node
 %type <statement>	stmt_uninstall_node
+%type <statement>	stmt_clone_prepare
+%type <statement>	stmt_clone_finish
 %type <statement>	stmt_store_path
 %type <statement>	stmt_drop_path
 %type <statement>	stmt_store_listen
@@ -175,6 +176,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_ALL
 %token	K_BACKUP
 %token	K_CLIENT
+%token	K_CLONE
 %token	K_CLUSTER
 %token	K_CLUSTERNAME
 %token	K_COMMENT
@@ -192,6 +194,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_FAILOVER
 %token	K_FALSE
 %token	K_FILENAME
+%token	K_FINISH
 %token	K_FOR
 %token	K_FORWARD
 %token	K_FULL
@@ -214,6 +217,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_ONLY
 %token	K_ORIGIN
 %token	K_PATH
+%token	K_PREPARE
 %token	K_PROVIDER
 %token	K_QUALIFIED
 %token	K_RECEIVER
@@ -427,6 +431,10 @@ try_stmt			: stmt_echo
 					| stmt_failed_node
 						{ $$ = $1; }
 					| stmt_uninstall_node
+						{ $$ = $1; }
+					| stmt_clone_prepare
+						{ $$ = $1; }
+					| stmt_clone_finish
 						{ $$ = $1; }
 					| stmt_store_path
 						{ $$ = $1; }
@@ -689,6 +697,64 @@ stmt_uninstall_node	: lno K_UNINSTALL K_NODE option_list
 						if (assign_options(opt, $4) == 0)
 						{
 							new->no_id			= opt[0].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_clone_prepare	: lno K_CLONE K_PREPARE option_list
+					{
+						SlonikStmt_clone_prepare *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_PROVIDER, -1 ),
+							STMT_OPTION_STR( O_COMMENT, NULL ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_clone_prepare *)
+								malloc(sizeof(SlonikStmt_clone_prepare));
+						memset(new, 0, sizeof(SlonikStmt_clone_prepare));
+						new->hdr.stmt_type		= STMT_CLONE_PREPARE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->no_provider	= opt[1].ival;
+							new->no_comment		= opt[2].str;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_clone_finish	: lno K_CLONE K_FINISH option_list
+					{
+						SlonikStmt_clone_finish *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_PROVIDER, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_clone_finish *)
+								malloc(sizeof(SlonikStmt_clone_finish));
+						memset(new, 0, sizeof(SlonikStmt_clone_finish));
+						new->hdr.stmt_type		= STMT_CLONE_FINISH;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->no_provider	= opt[1].ival;
 						}
 						else
 							parser_errors++;

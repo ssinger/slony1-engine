@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.162 2007-12-13 17:19:28 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.163 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -785,6 +785,19 @@ remoteWorkerThread_main(void *cdata)
 								 rtcfg_cluster_name);
 
 				need_reloadListen = true;
+			}
+			if (strcmp(event->ev_type, "CLONE_NODE") == 0)
+			{
+				int			no_id = (int)strtol(event->ev_data1, NULL, 10);
+				int			no_provider = (int)strtol(event->ev_data2, NULL, 10);
+				char	   *no_comment = event->ev_data3;
+
+				rtcfg_storeNode(no_id, no_comment);
+
+				slon_appendquery(&query1,
+								 "select %s.cloneNodePrepare_int(%d, %d, '%q'); ",
+								 rtcfg_namespace,
+								 no_id, no_provider, no_comment);
 			}
 			else if (strcmp(event->ev_type, "STORE_PATH") == 0)
 			{

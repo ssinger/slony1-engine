@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.84 2008-01-08 20:43:24 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.85 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -373,6 +373,34 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				{
 					SlonikStmt_uninstall_node *stmt =
 					(SlonikStmt_uninstall_node *) hdr;
+
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_CLONE_PREPARE:
+				{
+					SlonikStmt_clone_prepare *stmt =
+					(SlonikStmt_clone_prepare *) hdr;
+
+					if (stmt->no_id < 0)
+					{
+						printf("%s:%d: Error: "
+							   "new node ID must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+
+					if (script_check_adminfo(hdr, stmt->no_provider) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_CLONE_FINISH:
+				{
+					SlonikStmt_clone_finish *stmt =
+					(SlonikStmt_clone_finish *) hdr;
 
 					if (script_check_adminfo(hdr, stmt->no_id) < 0)
 						errors++;
@@ -1211,6 +1239,26 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 				}
 				break;
 
+			case STMT_CLONE_PREPARE:
+				{
+					SlonikStmt_clone_prepare *stmt =
+					(SlonikStmt_clone_prepare *) hdr;
+
+					if (slonik_clone_prepare(stmt) < 0)
+						errors++;
+				}
+				break;
+
+			case STMT_CLONE_FINISH:
+				{
+					SlonikStmt_clone_finish *stmt =
+					(SlonikStmt_clone_finish *) hdr;
+
+					if (slonik_clone_finish(stmt) < 0)
+						errors++;
+				}
+				break;
+
 			case STMT_STORE_PATH:
 				{
 					SlonikStmt_store_path *stmt =
@@ -1869,6 +1917,7 @@ slonik_restart_node(SlonikStmt_restart_node * stmt)
 	dstring_free(&query);
 	return 0;
 }
+
 
 static int
 slonik_repair_config(SlonikStmt_repair_config * stmt)
@@ -2865,6 +2914,68 @@ slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 	}
 
 	db_disconnect((SlonikStmt *) stmt, adminfo1);
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
+{
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_provider);
+	if (adminfo1 == NULL)
+		return -1;
+
+	dstring_init(&query);
+
+	if (stmt->no_comment == NULL)
+		slon_mkquery(&query,
+				 "select \"_%s\".cloneNodePrepare(%d, %d, 'Node %d'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id, stmt->no_provider,
+				 stmt->no_id);
+	else
+		slon_mkquery(&query,
+				 "select \"_%s\".cloneNodePrepare(%d, %d, '%q'); ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id, stmt->no_provider,
+				 stmt->no_comment);
+	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+	dstring_free(&query);
+	return 0;
+}
+
+
+int
+slonik_clone_finish(SlonikStmt_clone_finish * stmt)
+{
+	SlonikAdmInfo *adminfo1;
+	SlonDString query;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+
+	dstring_init(&query);
+
+	slon_mkquery(&query,
+				 "select \"_%s\".cloneNodeFinish(%d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->no_id, stmt->no_provider);
+	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
 
 	dstring_free(&query);
 	return 0;

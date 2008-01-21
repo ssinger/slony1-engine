@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.44 2007-10-19 18:38:35 wieck Exp $
+ *	$Id: local_listen.c,v 1.45 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -283,6 +283,21 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				PQclear(notify_res);
 
 				rtcfg_reloadListen(dbconn);
+			}
+			else if (strcmp(ev_type, "CLONE_NODE") == 0)
+			{
+				/*
+				 * CLONE_NODE
+				 */
+				int			no_id;
+				int			no_provider;
+				char	   *no_comment;
+
+				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				no_comment = PQgetvalue(res, tupno, 8);
+
+				rtcfg_storeNode(no_id, no_comment);
 			}
 			else if (strcmp(ev_type, "STORE_PATH") == 0)
 			{

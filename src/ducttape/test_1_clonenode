@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# **********
+# test_1_clonenode
+#
+#	Script to clone node 2 into node 3
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+DB3=slony_test3
+
+######################################################################
+# Move set 1 to node 2
+######################################################################
+
+echo "**** Prepare to clone node 22"
+slonik <<_EOF_
+	cluster name = T1;
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
+	node 33 admin conninfo = 'dbname=$DB3';
+
+	clone prepare (id = 33, provider = 22, comment = 'Clone 33');
+	wait for event (origin = 22, confirmed = all, wait on = 22);
+	sync (id = 11);
+	wait for event (origin = 11, confirmed = 22, wait on = 22);
+_EOF_
+
+echo "**** Create database $DB3"
+createdb $DB3 || exit
+echo "**** Copy $DB2 to $DB3"
+pg_dump $DB2 | psql -q $DB3
+
+echo "**** Finish clone 33"
+slonik <<_EOF_
+	cluster name = T1;
+	node 11 admin conninfo = 'dbname=$DB1';
+	node 22 admin conninfo = 'dbname=$DB2';
+	node 33 admin conninfo = 'dbname=$DB3';
+
+	clone finish (id = 33, provider = 22);
+	store path (server = 11, client = 33, conninfo = 'dbname=$DB1');
+	store path (server = 33, client = 11, conninfo = 'dbname=$DB3');
+_EOF_
+

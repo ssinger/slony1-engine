@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.28 2007-07-05 18:19:04 wieck Exp $
+ *	$Id: scan.l,v 1.29 2008-01-21 18:54:11 wieck Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer
@@ -71,6 +71,7 @@ admin			{ return K_ADMIN;			}
 all				{ return K_ALL;				}
 backup			{ return K_BACKUP;			}
 client			{ return K_CLIENT;			}
+clone			{ return K_CLONE;			}
 cluster			{ return K_CLUSTER;			}
 comment			{ return K_COMMENT;			}
 config			{ return K_CONFIG;			}
@@ -87,6 +88,7 @@ exit			{ return K_EXIT;			}
 failover		{ return K_FAILOVER;		}
 false			{ return K_FALSE;			}
 filename		{ return K_FILENAME;		}
+finish			{ return K_FINISH;			}
 for				{ return K_FOR;				}
 forward			{ return K_FORWARD;			}
 full			{ return K_FULL;			}
@@ -110,6 +112,7 @@ on				{ return K_ON;				}
 only			{ return K_ONLY;			}
 origin			{ return K_ORIGIN;			}
 path			{ return K_PATH;			}
+prepare			{ return K_PREPARE;			}
 provider		{ return K_PROVIDER;		}
 qualified		{ return K_QUALIFIED;		}
 receiver		{ return K_RECEIVER;		}

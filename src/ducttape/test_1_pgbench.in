@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.5 2007-07-05 18:19:04 wieck Exp $
+# $Id: test_1_pgbench.in,v 1.6 2008-01-21 18:54:11 wieck Exp $
 # **********
 # test_1_pgbench
 #
@@ -22,6 +22,7 @@ export PATH
 TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
+DB3=slony_test3
 DEBUG_LEVEL=2
 
 PGBENCH_SCALE=1
@@ -79,6 +80,8 @@ echo "**** remove old test databases"
 dropdb $DB1 || echo "**** ignored"
 sleep 1
 dropdb $DB2 || echo "**** ignored"
+sleep 1
+dropdb $DB3 || echo "**** ignored"
 sleep 1
 
 #####

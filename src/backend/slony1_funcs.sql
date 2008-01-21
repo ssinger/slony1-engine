@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.127 2008-01-02 19:00:27 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.128 2008-01-21 18:54:11 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1459,6 +1459,129 @@ end;
 comment on function @NAMESPACE@.uninstallNode() is
 'Reset the whole database to standalone by removing the whole
 replication system.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cloneNodePrepare ()
+--
+--	Duplicate a nodes configuration under a different no_id in
+--	preparation for the node to be copied with standard DB tools.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
+returns int4
+as '
+declare
+	p_no_id			alias for $1;
+	p_no_provider	alias for $2;
+	p_no_comment	alias for $3;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	perform @NAMESPACE@.cloneNodePrepare_int (p_no_id, p_no_provider, p_no_comment);
+	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''CLONE_NODE'',
+									p_no_id::text, p_no_provider::text,
+									p_no_comment::text);
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.cloneNodePrepare(int4, int4, text) is
+'Prepare for cloning a node.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cloneNodePrepare_int ()
+--
+--	Internal part of cloneNodePrepare()
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cloneNodePrepare_int (int4, int4, text)
+returns int4
+as '
+declare
+	p_no_id			alias for $1;
+	p_no_provider	alias for $2;
+	p_no_comment	alias for $3;
+begin
+	insert into @NAMESPACE@.sl_node
+		(no_id, no_active, no_comment, no_spool)
+		select p_no_id, no_active, p_no_comment, no_spool
+		from @NAMESPACE@.sl_node
+		where no_id = p_no_provider;
+
+	insert into @NAMESPACE@.sl_path
+		(pa_server, pa_client, pa_conninfo, pa_connretry)
+		select pa_server, p_no_id, ''Event pending'', pa_connretry
+		from @NAMESPACE@.sl_path
+		where pa_client = p_no_provider;
+	insert into @NAMESPACE@.sl_path
+		(pa_server, pa_client, pa_conninfo, pa_connretry)
+		select p_no_id, pa_client, ''Event pending'', pa_connretry
+		from @NAMESPACE@.sl_path
+		where pa_server = p_no_provider;
+
+	insert into @NAMESPACE@.sl_subscribe
+		(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
+		select sub_set, sub_provider, p_no_id, sub_forward, sub_active
+		from @NAMESPACE@.sl_subscribe
+		where sub_receiver = p_no_provider;
+
+	insert into @NAMESPACE@.sl_confirm
+		(con_origin, con_received, con_seqno, con_timestamp)
+		select con_origin, p_no_id, con_seqno, con_timestamp
+		from @NAMESPACE@.sl_confirm
+		where con_received = p_no_provider;
+
+	perform @NAMESPACE@.RebuildListenEntries();
+
+	return 0;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.cloneNodePrepare_int(int4, int4, text) is
+'Internal part of cloneNodePrepare().';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION cloneNodeFinish ()
+--
+--	Finish the cloning process on the new node.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.cloneNodeFinish (int4, int4)
+returns int4
+as '
+declare
+	p_no_id			alias for $1;
+	p_no_provider	alias for $2;
+	v_row			record;
+begin
+	perform "pg_catalog".setval(''@NAMESPACE@.sl_local_node_id'', p_no_id);
+
+	for v_row in select sub_set from @NAMESPACE@.sl_subscribe
+			where sub_receiver = p_no_id
+	loop
+		perform @NAMESPACE@.updateReloid(v_row.sub_set, p_no_id);
+	end loop;
+
+	perform @NAMESPACE@.RebuildListenEntries();
+
+	delete from @NAMESPACE@.sl_confirm
+		where con_received = p_no_id;
+	insert into @NAMESPACE@.sl_confirm
+		(con_origin, con_received, con_seqno, con_timestamp)
+		select con_origin, p_no_id, con_seqno, con_timestamp
+		from @NAMESPACE@.sl_confirm
+		where con_received = p_no_provider;
+	insert into @NAMESPACE@.sl_confirm
+		(con_origin, con_received, con_seqno, con_timestamp)
+		select p_no_provider, p_no_id, 
+				(select max(ev_seqno) from @NAMESPACE@.sl_event
+					where ev_origin = p_no_provider), current_timestamp;
+
+	return 0;
+end;
+' language plpgsql;
+
+comment on function @NAMESPACE@.cloneNodeFinish(int4, int4) is
+'Internal part of cloneNodePrepare().';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
