@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.4 2007-07-29 20:15:41 wieck Exp $
+# $Id: test_2_pgbench.in,v 1.5 2008-01-23 17:12:34 wieck Exp $
 # **********
 # test_2_pgbench
 #
@@ -29,6 +29,7 @@ TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
 DB3=slony_test3
+DB4=slony_test4
 DEBUG_LEVEL=2
 
 PGBENCH_SCALE=1
@@ -92,6 +93,8 @@ sleep 1
 dropdb $DB2 || echo "**** ignored"
 sleep 1
 dropdb $DB3 || echo "**** ignored"
+sleep 1
+dropdb $DB4 || echo "**** ignored"
 sleep 1
 
 #####

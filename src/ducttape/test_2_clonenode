@@ -1,0 +1,57 @@
+#!/bin/sh
+
+# **********
+# test_2_clonenode
+#
+#	Script to clone node 2 into node 4
+# **********
+
+export PATH
+TMPOUT=/tmp/output.$$
+DB1=slony_test1
+DB2=slony_test2
+DB3=slony_test3
+DB4=slony_test4
+
+######################################################################
+# Move set 1 to node 2
+######################################################################
+
+echo "**** Prepare to clone node 2"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
+
+	clone prepare (id = 4, provider = 2, comment = 'Clone 4');
+	wait for event (origin = 2, confirmed = all, wait on = 2);
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = 2, wait on = 2);
+	sync (id = 3);
+	wait for event (origin = 3, confirmed = 2, wait on = 2);
+_EOF_
+
+echo "**** Create database $DB4"
+createdb $DB4 || exit
+echo "**** Copy $DB2 to $DB4"
+pg_dump $DB2 | psql -q $DB4
+
+echo "**** Finish clone 4"
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
+
+	clone finish (id = 4, provider = 2);
+	store path (server = 1, client = 4, conninfo = 'dbname=$DB1');
+	store path (server = 4, client = 1, conninfo = 'dbname=$DB4');
+	store path (server = 2, client = 4, conninfo = 'dbname=$DB2');
+	store path (server = 4, client = 2, conninfo = 'dbname=$DB4');
+	store path (server = 3, client = 4, conninfo = 'dbname=$DB3');
+	store path (server = 4, client = 3, conninfo = 'dbname=$DB4');
+_EOF_
+
