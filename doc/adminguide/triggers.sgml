@@ -1,0 +1,190 @@
+<!-- $Id: triggers.sgml,v 1.1 2008-01-28 19:35:21 cbbrowne Exp $ --> 
+<sect1 id="triggers"><title>&slony1; Trigger Handling</title>
+
+<indexterm><primary>trigger handling</primary></indexterm>
+
+<para> &slony1; has had two <quote>flavours</quote> of trigger
+handling:
+<itemizedlist>
+
+<listitem><para> In versions up to 1.2, &postgres; had no awareness of
+replication, with the result that &slony1; needed to
+<quote>hack</quote> on the system catalog in order to deactivate, on
+subscribers, triggers that ought not to run.</para>
+
+<para> This has had a number of somewhat painful side-effects including:</para> 
+<itemizedlist>
+
+<listitem><para> Corruption of the system catalog on subscribers, as
+existing triggers, that generally need to be hidden, are
+<quote>hacked</quote>, via <envar>pg_catalog.pg_trigger</envar>, to
+point to the index being used by &slony1; as its <quote>primary
+key</quote>.</para>
+
+<para> The very same thing was true for rules. </para>
+
+<para> This had the side-effect that
+<application>pg_dump</application> could not be used to pull proper
+schemas from subscriber nodes.</para></listitem>
+
+<listitem><para> It introduced the need to take out exclusive locks on
+<emphasis>all replicated tables</emphasis> when processing
+&rddlchanges; as triggers on each replicated table would need to be
+dropped and re-added during the course of
+processing.</para></listitem>
+
+</itemizedlist>
+
+<listitem><para> In &postgres; version 8.3, there is new functionality
+where triggers and rules can have their behaviour altered via
+<command>ALTER TABLE</command>, and specify any of the following
+further trigger-related options:</para>
+
+<itemizedlist>
+
+<listitem><para> <command> DISABLE TRIGGER trigger_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE TRIGGER trigger_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE REPLICA TRIGGER trigger_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE ALWAYS TRIGGER trigger_name</command>  </para></listitem>
+<listitem><para> <command> DISABLE RULE rewrite_rule_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE RULE rewrite_rule_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE REPLICA RULE rewrite_rule_name</command>  </para></listitem>
+<listitem><para> <command> ENABLE ALWAYS RULE rewrite_rule_name</command>  </para></listitem>
+
+</itemizedlist>
+
+<para> A new GUC variable, <envar>session_replication_role</envar>
+controls whether the session is in origin, replica, or local mode,
+which then, in combination with the above enabling/disabling options,
+controls whether or not the trigger function actually runs. </para>
+
+<para> We may characterize when triggers fire, under &slony1;
+replication, based on the following table; the same rules apply to
+&postgres; rules.
+
+<table id="triggerbehaviour"> <title> Trigger Behaviour </title>
+<tgroup cols="7">
+<thead>
+ <row> <entry>Trigger Form</entry> <entry>When Established</entry>  <entry>Log Trigger</entry> <entry>denyaccess Trigger</entry>  <entry>Action - origin</entry> <entry>Action - replica</entry>  <entry> Action - local</entry> </row>
+</thead>
+<tbody>
+<row> <entry>DISABLE TRIGGER</entry> <entry>User request</entry> <entry>disabled on subscriber</entry> <entry>enabled on subscriber</entry> <entry>does not fire</entry>  <entry>does not fire</entry>  <entry>does not fire</entry> </row>
+<row> <entry>ENABLE TRIGGER</entry> <entry>Default</entry> <entry>enabled on subscriber</entry> <entry>disabled on subscriber</entry> <entry>fires</entry>  <entry>does not fire</entry>  <entry>fires</entry> </row>
+<row> <entry>ENABLE REPLICA TRIGGER</entry> <entry>User request</entry> <entry>inappropriate</entry> <entry>inappropriate</entry> <entry>does not fire</entry>  <entry>fires</entry>  <entry>does not fire</entry> </row>
+<row> <entry>ENABLE ALWAYS TRIGGER</entry> <entry>User request</entry> <entry>inappropriate</entry> <entry>inappropriate</entry> <entry>fires</entry>  <entry>fires</entry>  <entry>fires</entry> </row>
+</tbody>
+
+<para> There are, correspondingly, now, several ways in which &slony1;
+interacts with this.  Let us outline those times that are interesting:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Before replication is set up,
+<emphasis>every</emphasis> database starts out in
+<quote>origin</quote> status, and, by default, all triggers are of the
+<command>ENABLE TRIGGER</command> form, so they all run, as is normal
+in a system uninvolved in replication. </para> </listitem>
+
+<listitem><para> When a &slony1; subscription is set up, on the origin
+node, both the <function>logtrigger</function> and
+<function>denyaccess</function> triggers are added, the former being
+enabled, and running, the latter being disabled, so it does not
+run. </para>
+
+<para> From a locking perspective, each <xref
+linkend="stmtsetaddtable"> request will need to briefly take out an
+exclusive lock on each table as it attaches these triggers, which is
+much the same as has always been the case with &slony1;. </para>
+</listitem>
+
+<listitem><para> On the subscriber, the subscription process will add
+the same triggers, but with the polarities <quote>reversed</quote>, to
+protect data from accidental corruption on subscribers.  </para>
+
+<para> From a locking perspective, again, there is not much difference
+from earlier &slony1; behaviour, as the subscription process, due to
+running <command>TRUNCATE</command>, copying data, and altering table
+schemas, requires <emphasis>extensive</emphasis> exclusive table
+locks, and the changes in trigger behaviour do not change those
+requirements.  </para>
+
+<para> However, note that the ability to enable and disable triggers
+in a &postgres;-supported fashion means that we have had no need to
+<quote>corrupt</quote> the system catalog, so we have the considerable
+advantage that <application>pg_dump</application> may be used to draw
+a completely consistent backup against any node in a &slony1;
+cluster.</para>
+
+</listitem>
+
+<listitem><para> If you take a <application>pg_dump</application> of a
+&slony1; node, and drop out the &slony1; namespace, this now cleanly
+removes <emphasis>all</emphasis> &slony1; components, leaving the
+database, <emphasis>including its schema,</emphasis> in a
+<quote>pristine</quote>, consistent fashion, ready for whatever use
+may be desired. </para> </listitem>
+
+<listitem><para> &rddlchanges; is now performed in quite a different
+way: rather than altering each replicated table to <quote>take it out
+of replicated mode</quote>, &slony1; instead simply shifts into the
+<command>local</command> status for the duration of this event.  </para>
+
+<para> On the origin, this deactivates the
+<function>logtrigger</function> trigger. </para>
+
+<para> On each subscriber, this deactivates the
+<function>denyaccess</function> trigger. </para>
+
+<para> This may be expected to allow DDL changes to become
+<emphasis>enormously</emphasis> less expensive, since, rather than needing to
+take out exclusive locks on <emphasis>all</emphasis> replicated tables (as used
+to be mandated by the action of dropping and adding back the
+&slony1;-created triggers), the only tables that are locked are those
+ones that the DDL script was specifically acting on.  </para>
+
+</listitem>
+
+<listitem><para> At the time of invoking <xref linkend="stmtmoveset">
+against the former origin, &slony1; must transform that node into a
+subscriber, which requires dropping the <function>lockset</function>
+triggers, disabling the <function>logtrigger</function> triggers, and
+enabling the <function>denyaccess</function> triggers. </para>
+
+<para> At about the same time, when processing <xref
+linkend="stmtmoveset"> against the new origin, &slony1; must transform
+that node into an origin, which requires disabling the formerly active
+<function>denyaccess</function> triggers, and enabling the
+<function>logtrigger</function> triggers. </para>
+
+<para> From a locking perspective, this will not behave differently
+from older versions of &slony1;; the locking that takes place here is
+quite necessary. </para>
+
+</listitem>
+
+<listitem><para> Similarly to <xref linkend="stmtmoveset">, <xref
+linkend="stmtfailover"> transforms a subscriber node into an origin,
+which requires disabling the formerly active
+<function>denyaccess</function> triggers, and enabling the
+<function>logtrigger</function> triggers.  The locking implications
+are again, much the same.  </para> </listitem>
+
+</itemizedlist>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"slony.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->
