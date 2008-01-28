@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.15 2008-01-09 20:55:47 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.16 2008-01-28 19:33:10 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -206,8 +206,8 @@ Eventually, this may be used to construct a buildfarm-like repository of
 aggregated test results. </para> </glossdef>
 </glossentry>
 
-
-<glossterm><envar><filename>random_number</filename> and <filename>random_string</filename> </envar></glossterm>
+<glossentry>
+<glossterm><filename>random_number</filename> and <filename>random_string</filename> </glossterm>
 
 <glossdef><para> If you run <command>make</command> in the
 <filename>test</filename> directory, C programs
