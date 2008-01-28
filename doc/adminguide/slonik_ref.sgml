@@ -3028,11 +3028,21 @@ REPAIR CONFIG (
      under a new node ID in preparation for the node to be copied via
      standard database tools.
     </para>
+
+    <para> Note that in order that we be certain that this new node be
+    consistent with all nodes, it is important to issue a SYNC event
+    against every node aside from the provider and wait to start
+    copying the provider database at least until all those SYNC events
+    have been confirmed by the provider.  Otherwise, it is possible
+    for the clone to miss some events. </para>
+
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
      clone prepare (id = 33, provider = 22, comment='Clone 33');
-    </Programlisting>
+     sync (id=11);
+     sync (id=22);
+     </Programlisting>
    </Refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.2.0. </para>
