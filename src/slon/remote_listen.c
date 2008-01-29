@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.38 2007-12-03 23:53:42 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.39 2008-01-29 15:56:15 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -340,7 +340,7 @@ remoteListenThread_main(void *cdata)
 			switch (poll_state) {
 			case SLON_POLLSTATE_POLL:
 				slon_log(SLON_DEBUG2, 
-					 "remoteListenThread_%d: UNLISTEN\n",
+					 "remoteListenThread_%d: UNLISTEN - switch into polling mode\n",
 					 node->no_id);
 
 				(void) slon_mkquery(&query1,
@@ -349,7 +349,7 @@ remoteListenThread_main(void *cdata)
 				break;
 			case SLON_POLLSTATE_LISTEN:
 				slon_log(SLON_DEBUG2, 
-					 "remoteListenThread_%d: LISTEN\n",
+					 "remoteListenThread_%d: LISTEN - switch from polling mode to use LISTEN\n",
 					 node->no_id);
 				(void) slon_mkquery(&query1,
 					     "listen \"_%s_Event\"; ",
