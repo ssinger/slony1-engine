@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.128 2008-01-21 18:54:11 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.129 2008-01-29 15:57:17 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5077,8 +5077,7 @@ begin
                 	and PGC.relnamespace = PGN.oid
 			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_nspname);
 
-        return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''RESET_CONFIG'',
-                        p_set_id::text, p_only_on_node::text);
+	return 1;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.updateReloid(int4, int4) is
