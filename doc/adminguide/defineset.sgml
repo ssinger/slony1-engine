@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.28 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.29 2008-02-04 20:56:22 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -119,6 +119,16 @@ running transactions that will injure system performance.</para>
 <para> If you can split such a large set into several smaller pieces,
 that will shorten the length of each of the transactions, lessening
 the degree of the <quote>injury</quote> to performance.</para>
+
+<para> Another issue comes up particularly frequently when replicating
+across a WAN; sometimes the network connection is a little bit
+unstable, such that there is a risk that a connection held open for
+several hours will lead to <command>CONNECTION TIMEOUT.</command> If
+that happens when 95% done copying a 50-table replication set
+consisting of 250GB of data, that could ruin your whole day.  If the
+tables were, instead, associated with separate replication sets, that
+failure at the 95% point might only interrupt, temporarily, the
+copying of <emphasis>one</emphasis> of those tables.  </para>
 
 <para> These <quote>negative effects</quote> tend to emerge when the
 database being subscribed to is many gigabytes in size and where it
