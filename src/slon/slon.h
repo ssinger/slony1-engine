@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.66 2008-01-02 19:00:27 cbbrowne Exp $
+ *	$Id: slon.h,v 1.67 2008-02-06 18:04:02 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -38,7 +38,7 @@
 #define SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 4)
 #else
 #define SLON_COMMANDS_PER_LINE		10
-#define SLON_DATA_FETCH_SIZE		10
+#define SLON_DATA_FETCH_SIZE		50
 #define SLON_WORKLINES_PER_HELPER	(SLON_DATA_FETCH_SIZE * 5)
 #endif
 
