@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.163 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: remote_worker.c,v 1.164 2008-02-06 20:20:50 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2130,13 +2130,12 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 	slon_appendquery(dsp,
-					 "notify \"_%s_Event\"; "
-					 "notify \"_%s_Confirm\"; "
-					 "insert into %s.sl_event "
-					 "    (ev_origin, ev_seqno, ev_timestamp, "
-					 "     ev_snapshot, ev_type ",
-					 rtcfg_cluster_name, rtcfg_cluster_name,
-					 rtcfg_namespace);
+			 "notify \"_%s_Event\"; "
+			 "insert into %s.sl_event "
+			 "    (ev_origin, ev_seqno, ev_timestamp, "
+			 "     ev_snapshot, ev_type ",
+			 rtcfg_cluster_name,
+			 rtcfg_namespace);
 	if (event->ev_data1 != NULL)
 		dstring_append(dsp, ", ev_data1");
 	if (event->ev_data2 != NULL)
@@ -2154,10 +2153,10 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	if (event->ev_data8 != NULL)
 		dstring_append(dsp, ", ev_data8");
 	slon_appendquery(dsp,
-					 "    ) values ('%d', '%s', '%s', '%s', '%s'",
-					 event->ev_origin, seqbuf, event->ev_timestamp_c,
-					 event->ev_snapshot_c, 
-					 event->ev_type);
+			 "    ) values ('%d', '%s', '%s', '%s', '%s'",
+			 event->ev_origin, seqbuf, event->ev_timestamp_c,
+			 event->ev_snapshot_c, 
+			 event->ev_type);
 	if (event->ev_data1 != NULL)
 		slon_appendquery(dsp, ", '%q'", event->ev_data1);
 	if (event->ev_data2 != NULL)
@@ -2175,12 +2174,12 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	if (event->ev_data8 != NULL)
 		slon_appendquery(dsp, ", '%q'", event->ev_data8);
 	slon_appendquery(dsp,
-					 "); "
-					 "insert into %s.sl_confirm "
-					 "	(con_origin, con_received, con_seqno, con_timestamp) "
-					 "   values (%d, %d, '%s', now()); ",
-					 rtcfg_namespace,
-					 event->ev_origin, rtcfg_nodeid, seqbuf);
+			 "); "
+			 "insert into %s.sl_confirm "
+			 "	(con_origin, con_received, con_seqno, con_timestamp) "
+			 "   values (%d, %d, '%s', now()); ",
+			 rtcfg_namespace,
+			 event->ev_origin, rtcfg_nodeid, seqbuf);
 }
 
 

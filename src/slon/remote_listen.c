@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.39 2008-01-29 15:56:15 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.40 2008-02-06 20:20:50 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -83,11 +83,6 @@ remoteListenThread_main(void *cdata)
 	SlonDString query1;
 	PGconn	   *dbconn = NULL;
 	PGresult   *res;
-	/* Don't bother doing anything about CONFIRM notifications
-	PGnotify   *notification;
-	int			forward_confirm = true;
-	*/
-	char		notify_confirm[256];
 	
 	struct listat *listat_head;
 	struct listat *listat_tail;
@@ -111,7 +106,6 @@ remoteListenThread_main(void *cdata)
 	poll_state = SLON_POLLSTATE_POLL;	/* Initially, start in Polling mode */
 
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
-	sprintf(notify_confirm, "_%s_Confirm", rtcfg_cluster_name);
 
 	/*
 	 * Work until doomsday
@@ -395,9 +389,6 @@ remoteListenThread_main(void *cdata)
 			
 				continue;
 		}
-		/* forward_confirm = false; */
-		/* } */
-
 		/*
 		 * Wait for notification.
 		 */
@@ -407,19 +398,6 @@ remoteListenThread_main(void *cdata)
 		if (rc != SCHED_STATUS_OK)
 			break;
 
-		/*
-		 * Set the forward_confirm flag if there was any Confirm notification
-		 * sent.
-		 */
-/* Don't bother doing anything about CONFIRM notifications 
-		PQconsumeInput(dbconn);
-		while ((notification = PQnotifies(dbconn)) != NULL)
-		{
-			if (strcmp(notification->relname, notify_confirm) == 0)
-				forward_confirm = true;
-			PQfreemem(notification);
-		}
-*/
 	}
 
 	/*
