@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.164 2008-02-06 20:20:50 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.165 2008-02-06 20:51:56 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -241,7 +241,7 @@ static void adjust_provider_info(SlonNode * node,
 static int query_execute(SlonNode * node, PGconn *dbconn,
 			  SlonDString * dsp);
 static void query_append_event(SlonDString * dsp,
-				   SlonWorkMsg_event * event);
+			       SlonWorkMsg_event * event, bool suppress_notify);
 static void store_confirm_forward(SlonNode * node, SlonConn * conn,
 					  SlonWorkMsg_confirm * confirm);
 static int64 get_last_forwarded_confirm(int origin, int receiver);
@@ -289,7 +289,7 @@ remoteWorkerThread_main(void *cdata)
 	char		seqbuf[64];
 	bool			event_ok;
 	bool			need_reloadListen = false;
-
+	bool suppress_notify;
 	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread starts\n",
 			 node->no_id);
@@ -657,12 +657,14 @@ remoteWorkerThread_main(void *cdata)
 			 */
 			dstring_reset(&query1);
 			last_sync_group_size = 0;
+			suppress_notify = FALSE;
 			for (i = 0; i < sync_group_size; i++)
 			{
-				query_append_event(&query1, sync_group[i]);
+				query_append_event(&query1, sync_group[i], suppress_notify);
 				if (i < (sync_group_size - 1))
 					free(sync_group[i]);
 				last_sync_group_size++;
+				suppress_notify = TRUE;
 			}
 			slon_appendquery(&query1, "commit transaction;");
 
@@ -1034,7 +1036,7 @@ remoteWorkerThread_main(void *cdata)
 					slon_appendquery(&query1,
 									 "notify \"_%s_Restart\"; ",
 									 rtcfg_cluster_name);
-					query_append_event(&query1, event);
+					query_append_event(&query1, event, FALSE);
 					slon_appendquery(&query1, "commit transaction;");
 					query_execute(node, local_dbconn, &query1);
 					slon_log(SLON_DEBUG1, "ACCEPT_SET - done\n");
@@ -1400,7 +1402,7 @@ remoteWorkerThread_main(void *cdata)
 			 */
 			if (event_ok)
 			{
-				query_append_event(&query1, event);
+				query_append_event(&query1, event, FALSE);
 				slon_appendquery(&query1, "commit transaction;");
 				if (archive_close(node) < 0)
 					slon_retry();
@@ -2120,21 +2122,25 @@ query_execute(SlonNode * node, PGconn *dbconn, SlonDString * dsp)
  *
  * Add queries to a dstring that notify for Event and Confirm and that insert a
  * duplicate of an event record as well as the confirmation for it.
+ * "suppress_notify" parm permits omitting the notify request if running this many times
  * ----------
  */
 static void
-query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
+query_append_event(SlonDString * dsp, SlonWorkMsg_event * event, bool suppress_notify)
 {
 	char		seqbuf[64];
 
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
-
+	if (!suppress_notify) {
+		slon_appendquery(dsp,
+				 "notify \"_%s_Event\"; ",
+				 rtcfg_cluster_name);
+		
+	}
 	slon_appendquery(dsp,
-			 "notify \"_%s_Event\"; "
 			 "insert into %s.sl_event "
 			 "    (ev_origin, ev_seqno, ev_timestamp, "
 			 "     ev_snapshot, ev_type ",
-			 rtcfg_cluster_name,
 			 rtcfg_namespace);
 	if (event->ev_data1 != NULL)
 		dstring_append(dsp, ", ev_data1");
