@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.25 2008-01-08 20:46:30 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.26 2008-02-06 20:28:34 cbbrowne Exp $
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
@@ -12,6 +12,10 @@ RELEASE 1.2.13
 
 - Fix to slonik Makefile + slonik.c - Change slonik build to query
   Postgres for the share directory at runtime - per Dave Page
+
+- Removed spurious NOTIFY on "_%s_Confirm"; this is no longer needed
+  in the 1.2 branch, as there is no LISTEN on this notification.
+  Noted in bug #32 - http://www.slony.info/bugzilla/show_bug.cgi?id=32
 
 RELEASE 1.2.12
 - Fixed problem with DDL SCRIPT parser where C-style comments were
