@@ -5,7 +5,7 @@
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		@PACKAGE_NAME@
 Version:	@PACKAGE_VERSION@
-Release:	2%{?dist}
+Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://main.slony.info/
@@ -140,6 +140,9 @@ fi
 %endif
 
 %changelog
+* Sun Feb 10 2008 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.13-1
+- Update to 1.2.13
+
 * Mon Dec 17 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.12-2
 - Add flex and byacc to buildrequires, per Michael Best
 

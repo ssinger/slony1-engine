@@ -4,14 +4,14 @@
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		postgresql-slony1
-Version:	1.2.11
+Version:	1.2.13
 Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://main.slony.info/
 Source0:	http://main.slony.info/downloads/1.2/source/postgresql-slony1-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	postgresql-devel, postgresql-server, initscripts
+BuildRequires:	postgresql-devel, postgresql-server, initscripts, byacc, flex
 Requires:	postgresql-server 
 
 %if %docs
@@ -140,6 +140,15 @@ fi
 %endif
 
 %changelog
+* Sun Feb 10 2008 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.13-1
+- Update to 1.2.13
+
+* Mon Dec 17 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.12-2
+- Add flex and byacc to buildrequires, per Michael Best
+
+* Tue Nov 13 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.12-1
+- Update to 1.2.12
+
 * Wed Aug 29 2007 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.11-1
 - Update to 1.2.11
 - Remove the word "engine" from init script name.
