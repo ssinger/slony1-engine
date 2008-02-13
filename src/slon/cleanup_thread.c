@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.41 2008-01-02 19:00:27 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.42 2008-02-13 23:02:40 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -269,11 +269,11 @@ get_earliest_xid(PGconn *dbconn)
 	SlonDString query;
 
 	dstring_init(&query);
-	(void) slon_mkquery(&query, "select %s.getMinXid();", rtcfg_namespace);
+	(void) slon_mkquery(&query, "select pg_catalog.txid_snapshot_xmin(pg_catalog.txid_current_snapshot());");
 	res = PQexec(dbconn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		slon_log(SLON_FATAL, "cleanupThread: could not getMinXid()!\n");
+		slon_log(SLON_FATAL, "cleanupThread: could not txid_snapshot_xmin()!\n");
 		PQclear(res);
 		slon_retry();
 		return (unsigned long) -1;

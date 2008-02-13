@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.85 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: slonik.c,v 1.86 2008-02-13 23:02:40 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3506,11 +3506,10 @@ slonik_lock_set(SlonikStmt_lock_set * stmt)
 	 */
 	dstring_init(&query);
 	slon_mkquery(&query,
-				 "select \"_%s\".lockSet(%d); "
-				 "select \"_%s\".getMaxXid(); ",
-				 stmt->hdr.script->clustername,
-				 stmt->set_id,
-				 stmt->hdr.script->clustername);
+		     "select \"_%s\".lockSet(%d); "
+		     "select pg_catalog.txid_snapshot_xmax(pg_catalog.txid_current_snapshot());",
+		     stmt->hdr.script->clustername,
+		     stmt->set_id);
 	res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res1 == NULL)
 	{
@@ -3530,8 +3529,8 @@ slonik_lock_set(SlonikStmt_lock_set * stmt)
 	}
 
 	slon_mkquery(&query,
-				 "select \"_%s\".getMinXid() >= '%s'; ",
-				 stmt->hdr.script->clustername, maxxid_lock);
+		     "select pg_catalog.txid_snapshot_xmin(pg_catalog.txid_current_snapshot()) >= '%s'; ",
+		     maxxid_lock);
 
 	while (true)
 	{
