@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.14 2008-02-14 20:46:08 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.15 2008-02-14 21:51:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -325,15 +325,16 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 					}
 
-					if (!stmt->no_spool)
+					if (stmt->no_spool)
 					{
 						printf("Slonik command STORE NODE does not "
 						       "support the SPOOLNODE argument being set "
 						       "to TRUE.\n  See logshipping.html for "
 						       "documentation on setting up log shipping.\n");
-						if (script_check_adminfo(hdr, stmt->no_id) < 0)
 							errors++;
 					}
+					if (script_check_adminfo(hdr, stmt->no_id) < 0)
+						errors++;
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 				}
