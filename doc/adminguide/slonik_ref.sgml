@@ -222,7 +222,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>CLUSTER NAME = </command>
-     <arg><replaceable class="parameter"> clustername;</replaceable></arg>
+     <arg><replaceable class="parameter">clustername;</replaceable></arg>
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
@@ -703,7 +703,7 @@ INIT CLUSTER (
    
    <refsynopsisdiv>
     <cmdsynopsis>
-     <command>RESTART NODE (options);</command>
+     <command>RESTART NODE options;</command>
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
@@ -1285,10 +1285,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      # Assuming that set 1 has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT FOR=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
      SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT FOR=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
@@ -2863,10 +2863,10 @@ WAIT FOR EVENT (
      # Assuming that set 1 has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT FOR=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
      SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT FOR=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
