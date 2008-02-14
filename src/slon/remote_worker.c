@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.165 2008-02-06 20:51:56 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.166 2008-02-14 22:21:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -713,15 +713,14 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			no_id = (int)strtol(event->ev_data1, NULL, 10);
 				char	   *no_comment = event->ev_data2;
-				char	   *no_spool = event->ev_data3;
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_storeNode(no_id, no_comment);
 
 				slon_appendquery(&query1,
-								 "select %s.storeNode_int(%d, '%q', '%s'); ",
+								 "select %s.storeNode_int(%d, '%q'); ",
 								 rtcfg_namespace,
-								 no_id, no_comment, no_spool);
+								 no_id, no_comment);
 
 				need_reloadListen = true;
 			}

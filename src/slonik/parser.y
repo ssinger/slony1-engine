@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.30 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: parser.y,v 1.31 2008-02-14 22:21:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -42,7 +42,6 @@ typedef enum {
 	O_SECONDS,
 	O_SERVER,
 	O_SET_ID,
-	O_SPOOLNODE,
 	O_TAB_ID,
 	O_TIMEOUT,
 	O_USE_KEY,
@@ -228,7 +227,6 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SEQUENCE
 %token	K_SERVER
 %token	K_SET
-%token	K_SPOOLNODE
 %token	K_STORE
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
@@ -597,7 +595,6 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_STR( O_COMMENT, NULL ),
-							STMT_OPTION_YN( O_SPOOLNODE, 0 ),
 							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
 							STMT_OPTION_END
 						};
@@ -613,8 +610,7 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 						{
 							new->no_id			= opt[0].ival;
 							new->no_comment		= opt[1].str;
-							new->no_spool		= opt[2].ival;
-							new->ev_origin		= opt[3].ival;
+							new->ev_origin		= opt[2].ival;
 						}
 						else
 							parser_errors++;
@@ -1669,11 +1665,6 @@ option_list_item	: K_ID '=' option_item_id
 						$5->opt_code	= O_EXECUTE_ONLY_ON;
 						$$ = $5;
 					}
-					| K_SPOOLNODE '=' option_item_yn
-					{
-						$3->opt_code	= O_SPOOLNODE;
-						$$ = $3;
-					}
 					| K_SECONDS '=' option_item_id
 					{
 						$3->opt_code	= O_SECONDS;
@@ -1815,7 +1806,6 @@ option_str(option_code opt_code)
     	case O_SECONDS:         return "seconds";
 		case O_SERVER:			return "server";
 		case O_SET_ID:			return "set id";
-		case O_SPOOLNODE:		return "spoolnode";
 		case O_TAB_ID:			return "table id";
 		case O_TIMEOUT:			return "timeout";
 		case O_USE_KEY:			return "key";

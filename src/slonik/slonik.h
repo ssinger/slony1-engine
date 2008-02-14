@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.33 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: slonik.h,v 1.34 2008-02-14 22:21:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -180,7 +180,6 @@ struct SlonikStmt_store_node_s
 	SlonikStmt	hdr;
 	int			no_id;
 	char	   *no_comment;
-	int			no_spool;
 	int			ev_origin;
 };
 

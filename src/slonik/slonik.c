@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.86 2008-02-13 23:02:40 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.87 2008-02-14 22:21:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -325,11 +325,6 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 					}
 
-					if (!stmt->no_spool)
-					{
-						if (script_check_adminfo(hdr, stmt->no_id) < 0)
-							errors++;
-					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 				}
@@ -1992,12 +1987,10 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	int			ntuples;
 	int			tupno;
 
-	if (!stmt->no_spool)
-	{
-		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
-		if (adminfo1 == NULL)
-			return -1;
-	}
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	if (adminfo1 == NULL)
+		return -1;
+	
 
 	adminfo2 = get_checked_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo2 == NULL)
@@ -2008,8 +2001,6 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 
 	dstring_init(&query);
 
-        /* Eliminate no_spool evaluation - all nodes are "real nodes" */  /* if (!stmt->no_spool) */
-		
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 	{
 		dstring_free(&query);
@@ -2040,7 +2031,7 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	 * Duplicate the content of sl_node
 	 */
 	slon_mkquery(&query,
-		     "select no_id, no_active, no_comment, no_spool "
+		     "select no_id, no_active, no_comment "
 		     "from \"_%s\".sl_node; ",
 		     stmt->hdr.script->clustername);
 	res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
@@ -2055,11 +2046,10 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 		char	   *no_id = PQgetvalue(res, tupno, 0);
 		char	   *no_active = PQgetvalue(res, tupno, 1);
 		char	   *no_comment = PQgetvalue(res, tupno, 2);
-		char	   *no_spool = PQgetvalue(res, tupno, 3);
 		
 		slon_mkquery(&query,
-			     "select \"_%s\".storeNode_int(%s, '%q', '%s'); ",
-			     stmt->hdr.script->clustername, no_id, no_comment, no_spool);
+			     "select \"_%s\".storeNode_int(%s, '%q'); ",
+			     stmt->hdr.script->clustername, no_id, no_comment);
 		if (*no_active == 't')
 		{
 			slon_appendquery(&query,
@@ -2273,33 +2263,14 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
-				 "select \"_%s\".storeNode(%d, '%q', '%s'); "
+				 "select \"_%s\".storeNode(%d, '%q'); "
 				 "select \"_%s\".enableNode(%d); ",
 				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
-				 (stmt->no_spool != 0) ? "t" : "f",
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo2, &query) < 0)
 	{
 		dstring_free(&query);
 		return -1;
-	}
-
-	/* If the new node is a spool node, produce confirm rows for it */
-	if (stmt->no_spool)
-	{
-		slon_mkquery(&query,
-					 "insert into \"_%s\".sl_confirm select "
-					 "    ev_origin, %d, max(ev_seqno), CURRENT_TIMESTAMP "
-					 "    from \"_%s\".sl_event group by 1, 2, 4; ",
-					 stmt->hdr.script->clustername,
-					 stmt->no_id,
-					 stmt->hdr.script->clustername);
-
-		if (db_exec_command((SlonikStmt *) stmt, adminfo2, &query) < 0)
-		{
-			dstring_free(&query);
-			return -1;
-		}
 	}
 
 	dstring_free(&query);

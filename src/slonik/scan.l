@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.29 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: scan.l,v 1.30 2008-02-14 22:21:42 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer
@@ -124,7 +124,6 @@ sequence		{ return K_SEQUENCE;		}
 server			{ return K_SERVER;			}
 set				{ return K_SET;				}
 sleep			{ return K_SLEEP;			}
-spoolnode		{ return K_SPOOLNODE;		}
 store			{ return K_STORE;			}
 subscribe		{ return K_SUBSCRIBE;		}
 success			{ return K_SUCCESS;			}

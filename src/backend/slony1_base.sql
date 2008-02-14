@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.38 2007-12-11 19:30:29 wieck Exp $
+-- $Id: slony1_base.sql,v 1.39 2008-02-14 22:21:42 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -22,8 +22,6 @@ create table @NAMESPACE@.sl_node (
 	no_id				int4,
 	no_active			bool,
 	no_comment			text,
-	no_spool			boolean,
-
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 ) WITHOUT OIDS;
@@ -31,7 +29,6 @@ comment on table @NAMESPACE@.sl_node is 'Holds the list of nodes associated with
 comment on column @NAMESPACE@.sl_node.no_id is 'The unique ID number for the node';  
 comment on column @NAMESPACE@.sl_node.no_active is 'Is the node active in replication yet?';  
 comment on column @NAMESPACE@.sl_node.no_comment is 'A human-oriented description of the node';
-comment on column @NAMESPACE@.sl_node.no_spool is 'Is the node being used for log shipping?';  
 
 
 -- ----------------------------------------------------------------------

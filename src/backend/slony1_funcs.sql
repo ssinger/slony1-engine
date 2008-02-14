@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.130 2008-02-13 18:40:29 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.131 2008-02-14 22:21:42 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -695,7 +695,7 @@ begin
 	-- own system to sl_node.
 	-- ----
 	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
-	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment, false);
+	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment);
 
 	if (pg_catalog.current_setting(''max_identifier_length'')::integer - pg_catalog.length(''@NAMESPACE@'')) < 5 then
 		raise notice ''Slony-I: Cluster name length [%] versus system max_identifier_length [%] '', pg_catalog.length(''@NAMESPACE@''), pg_catalog.current_setting(''max_identifier_length'');
@@ -714,51 +714,41 @@ no_comment - Human-oriented comment
 Initializes the new node, no_id';
 
 -- ----------------------------------------------------------------------
--- FUNCTION storeNode (no_id, no_comment, no_spool)
+-- FUNCTION storeNode (no_id, no_comment)
 --
 --	Generate the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode (int4, text, boolean)
+create or replace function @NAMESPACE@.storeNode (int4, text)
 returns bigint
 as '
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
-	p_no_spool		alias for $3;
-	v_no_spool_txt	text;
 begin
-	if p_no_spool then
-		v_no_spool_txt = ''t'';
-	else
-		v_no_spool_txt = ''f'';
-	end if;
-	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment, p_no_spool);
+	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment);
 	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
-									p_no_id::text, p_no_comment::text, 
-									v_no_spool_txt::text);
+									p_no_id::text, p_no_comment::text);
 end;
 ' language plpgsql
 	called on null input;
 
-comment on function @NAMESPACE@.storeNode(int4, text, boolean) is
+comment on function @NAMESPACE@.storeNode(int4, text) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
-no_spool - Flag for virtual spool nodes
 
 Generate the STORE_NODE event for node no_id';
 
 -- ----------------------------------------------------------------------
--- FUNCTION storeNode_int (no_id, no_comment, no_spool)
+-- FUNCTION storeNode_int (no_id, no_comment)
 --
 --	Process the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode_int (int4, text, boolean)
+create or replace function @NAMESPACE@.storeNode_int (int4, text)
 returns int4
 as '
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
-	p_no_spool		alias for $3;
 	v_old_row		record;
 begin
 	-- ----
@@ -778,26 +768,24 @@ begin
 		-- Node exists, update the existing row.
 		-- ----
 		update @NAMESPACE@.sl_node
-				set no_comment = p_no_comment,
-				no_spool = p_no_spool
+				set no_comment = p_no_comment
 				where no_id = p_no_id;
 	else
 		-- ----
 		-- New node, insert the sl_node row
 		-- ----
 		insert into @NAMESPACE@.sl_node
-				(no_id, no_active, no_comment, no_spool) values
-				(p_no_id, ''f'', p_no_comment, p_no_spool);
+				(no_id, no_active, no_comment) values
+				(p_no_id, ''f'', p_no_comment);
 	end if;
 
 	return p_no_id;
 end;
 ' language plpgsql;
 
-comment on function @NAMESPACE@.storeNode_int(int4, text, boolean) is
+comment on function @NAMESPACE@.storeNode_int(int4, text) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
-no_spool - Flag for virtual spool nodes
 
 Internal function to process the STORE_NODE event for node no_id';
 
@@ -1503,8 +1491,8 @@ declare
 	p_no_comment	alias for $3;
 begin
 	insert into @NAMESPACE@.sl_node
-		(no_id, no_active, no_comment, no_spool)
-		select p_no_id, no_active, p_no_comment, no_spool
+		(no_id, no_active, no_comment)
+		select p_no_id, no_active, p_no_comment
 		from @NAMESPACE@.sl_node
 		where no_id = p_no_provider;
 
@@ -5304,7 +5292,7 @@ BEGIN
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
 	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
 		loop
-			if exists select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin limit 1 then
+			if (exists (select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin limit 1)) then
 				v_purgeable := ''false'';
 			end if;
 	        end loop;
@@ -5492,6 +5480,11 @@ begin
 			perform @NAMESPACE@.alterTableAddTriggers(v_tab_row.tab_id);
 			perform @NAMESPACE@.alterTableConfigureTriggers(v_tab_row.tab_id);
 		end loop;
+
+		-- ----
+		-- Drop no_spool from sl_node
+		-- ----
+		execute ''alter table @NAMESPACE@.sl_node drop column no_spool;'';
 
 		-- ----
 		-- create new type - vactables - used by TablesToVacuum()
