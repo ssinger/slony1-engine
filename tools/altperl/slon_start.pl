@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_start.pl,v 1.14 2005-02-22 17:11:18 smsimms Exp $
+# $Id: slon_start.pl,v 1.15 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -37,7 +37,7 @@ if ($SHOW_USAGE or scalar(@ARGV) != 1) {
   die $USAGE;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 $node = $ARGV[0];

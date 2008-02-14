@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_store_node.pl,v 1.4 2006-11-28 21:41:37 cbbrowne Exp $
+# $Id: slonik_store_node.pl,v 1.5 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Steve Simms
 # Copyright 2005 PostgreSQL Global Development Group
 
@@ -27,7 +27,7 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 $node = $ARGV[0];

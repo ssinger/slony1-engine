@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_move_set.pl,v 1.2 2006-10-27 17:52:10 cbbrowne Exp $
+# $Id: slonik_move_set.pl,v 1.3 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -25,7 +25,7 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($set, $node1, $node2) = @ARGV;

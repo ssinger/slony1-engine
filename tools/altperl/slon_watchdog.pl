@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.13 2006-12-06 18:37:58 cbbrowne Exp $
+# $Id: slon_watchdog.pl,v 1.14 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -27,7 +27,7 @@ if ($SHOW_USAGE or scalar(@ARGV) != 2) {
   die $USAGE;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 $node = $ARGV[0];

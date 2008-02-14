@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.6 2006-11-28 21:41:37 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.7 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -27,7 +27,7 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 # INIT CLUSTER

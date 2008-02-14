@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slony_show_configuration.pl,v 1.2 2008-01-04 19:52:35 cbbrowne Exp $
+# $Id: slony_show_configuration.pl,v 1.3 2008-02-14 16:41:35 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -26,7 +26,7 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 print "Slony Configuration\n-------------------------------------\n";

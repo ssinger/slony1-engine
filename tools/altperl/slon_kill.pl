@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.12 2005-03-16 20:37:54 smsimms Exp $
+# $Id: slon_kill.pl,v 1.13 2008-02-14 16:41:35 cbbrowne Exp $
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
@@ -34,7 +34,7 @@ if ($SHOW_USAGE) {
   exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 print "slon_kill.pl...   Killing all slon and slon_watchdog instances for the cluster $CLUSTER_NAME\n";
