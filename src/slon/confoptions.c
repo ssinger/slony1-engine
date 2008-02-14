@@ -726,8 +726,8 @@ static struct config_bool ConfigureNamesBool[] =
 	{
 		{
 			(const char *)"log_pid",	/* conf name */
-			gettext_noop("place holder"),		/* short desc */
-			gettext_noop("place holder"),		/* long desc */
+			gettext_noop("Should logs include PID?"),		/* short desc */
+			gettext_noop("Should logs include PID?"),		/* long desc */
 			SLON_C_BOOL			/* config type */
 		},
 		&logpid,				/* var_name */
@@ -736,8 +736,8 @@ static struct config_bool ConfigureNamesBool[] =
 	{
 		{
 			(const char *)"log_timestamp",
-			gettext_noop("place holder"),
-			gettext_noop("place holder"),
+			gettext_noop("Should logs include timestamp?"),
+			gettext_noop("Should logs include timestamp?"),
 			SLON_C_BOOL
 		},
 		&logtimestamp,
