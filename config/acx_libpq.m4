@@ -353,7 +353,14 @@ if test $have_pqfreemem = yes; then
 	AC_DEFINE(HAVE_PQFREEMEM,1,[Postgresql PQfreemem()])
 fi
 
-
+AC_MSG_CHECKING(for typenameTypeId)
+if test -z "$ac_cv_typenameTypeId_args"; then
+  AC_TRY_COMPILE(
+    [#include "postgres.h"
+     #include "parser/parse_type.h"],
+    [typenameTypeId(NULL, NULL, NULL); ],
+    ac_cv_typenameTypeId_args=3)
+fi
 AC_MSG_CHECKING(for typenameTypeId)
 if test -z "$ac_cv_typenameTypeId_args"; then
   AC_TRY_COMPILE(
@@ -372,7 +379,9 @@ fi
 if test -z "$ac_cv_typenameTypeId_args"; then
   AC_MSG_RESULT(no)
 else
-  if test "$ac_cv_typenameTypeId_args" = 2; then
+  if test "$ac_cv_typenameTypeId_args" = 3; then
+    AC_DEFINE(HAVE_TYPENAMETYPEID_3)
+  elif test "$ac_cv_typenameTypeId_args" = 2; then
     AC_DEFINE(HAVE_TYPENAMETYPEID_2)
   elif test "$ac_cv_typenameTypeId_args" = 1; then
     AC_DEFINE(HAVE_TYPENAMETYPEID_1)
