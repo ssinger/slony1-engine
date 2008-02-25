@@ -271,6 +271,13 @@
         <para>Check for updates at least this often in milliseconds. 
           Range: [10-60000], default 100
         </para>
+
+        <para> This parameter is primarily of concern on nodes that
+          originate replication sets.  On a non-origin node, there
+          will never be update activity that would induce a SYNC;
+          instead, the timeout value described below will induce a
+          SYNC every so often <emphasis>despite absence of changes to
+          replicate.</emphasis> </para>
       </listitem>
     </varlistentry>
 
@@ -297,6 +304,41 @@
           <envar>sync_interval_timeout</envar>. Range: [0-120000],
           default 1000
         </para>
+
+        <para> This parameter is likely to be primarily of concern on
+          nodes that originate replication sets, though it does affect
+          how often events are generated on other nodes.</para>
+
+	<para>
+          On a non-origin node, there never is activity to cause a
+          SYNC to get generated; as a result, there will be a SYNC
+          generated every <envar>sync_interval_timeout</envar>
+          milliseconds.  There are no subscribers looking for those
+          SYNCs, so these events do not lead to any replication
+          activity.  They will, however, clutter sl_event up a little,
+          so it would be undesirable for this timeout value to be set
+          too terribly low.  120000ms represents 2 minutes, which is
+          not a terrible value.
+        </para>
+
+	<para> The two values function together in varying ways: </para>
+
+	<para> On an origin node, <envar>sync_interval</envar> is
+	the <emphasis>minimum</emphasis> time period that will be
+	covered by a SYNC, and during periods of heavy application
+	activity, it may be that a SYNC is being generated
+	every <envar>sync_interval</envar> milliseconds. </para>
+
+	<para> On that same origin node, there may be quiet intervals,
+	when no replicatable changes are being submitted.  A SYNC will
+	be induced, anyways,
+	every <envar>sync_interval_timeout</envar>
+	milliseconds. </para>
+
+	<para> On a subscriber node that does not originate any sets,
+	only the <quote>timeout-induced</quote> SYNCs will
+	occur.  </para>
+
       </listitem>
     </varlistentry>
 
@@ -306,18 +348,23 @@
         <primary><varname>sync_group_maxsize</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
+
         <para>
-          Maximum number of <command>SYNC</command> events to group
-          together when/if a subscriber falls behind.
-          <command>SYNC</command>s are batched only if there are that
-          many available and if they are contiguous. Every other event
-          type in between leads to a smaller batch.  And if there is
-          only one <command>SYNC</command> available, even
-          <option>-g60</option> will apply just that one. As soon as a
-          subscriber catches up, it will apply every single
-          <command>SYNC</command> by itself.  Range: [0,10000], default:
-          20
+          Maximum number of <command>SYNC</command> events that a
+          subscriber node will group together when/if a subscriber
+          falls behind.  <command>SYNC</command>s are batched only if
+          there are that many available and if they are
+          contiguous.  Every other event type in between leads to a
+          smaller batch.  And if there is only
+          one <command>SYNC</command> available, even though you used
+          <option>-g600</option>, the &lslon; will apply just the one
+          that is available.  As soon as a subscriber catches up, it
+          will tend to apply each
+          <command>SYNC</command> by itself, as a singleton, unless
+          processing should fall behind for some reason.  Range:
+          [0,10000], default: 20
         </para>
+
       </listitem>
     </varlistentry>
     
