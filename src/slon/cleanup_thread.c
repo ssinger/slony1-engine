@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.42 2008-02-13 23:02:40 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.43 2008-02-25 15:43:38 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -131,17 +131,6 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 				 "cleanupThread: %8.3f seconds for cleanupEvent()\n",
 				 TIMEVAL_DIFF(&tv_start, &tv_end));
 
-		slon_mkquery(&query2,
-			     "select %s.logswitch_weekly(); ",
-			     rtcfg_namespace);
-		res2 = PQexec(dbconn, dstring_data(&query2));
-		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-		{
-			slon_log(SLON_WARN,
-				 "cleanupThread: \"%s\" - %s",
-				 dstring_data(&query2), PQresultErrorMessage(res2));
-		}
-		PQclear(res2);
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
 		 */
