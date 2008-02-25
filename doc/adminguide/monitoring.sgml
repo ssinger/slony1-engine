@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.40 2007-08-22 22:05:00 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.41 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -173,9 +173,8 @@ suggests a problem.</para></listitem>
 linkend="table.sl-confirm"> </para>
 
 <para> If one or another of the nodes in the cluster hasn't reported
-back recently, that tends to lead to cleanups of tables like <xref
-linkend="table.sl-log-1"> and <xref linkend="table.sl-seqlog"> not
-taking place.</para></listitem>
+back recently, that tends to lead to cleanups of tables like &sllog1;,
+&sllog2; and &slseqlog; not taking place.</para></listitem>
 
 <listitem><para> Summarizes what transactions have been running for a
 long time</para>

@@ -1,4 +1,4 @@
-<!-- $Id: cluster.sgml,v 1.13 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: cluster.sgml,v 1.14 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="cluster">
 <title>Defining &slony1; Clusters</title>
 <indexterm>  <primary>cluster definition</primary> </indexterm>
@@ -12,10 +12,9 @@ initialization time for each node, a schema called
 <command>_cbcluster</command>, in which it then creates numerous
 tables that store &slony1; configuration and replication state
 information.  See <xref linkend="schema"> for more documentation about
-what is stored in that schema.  More specifically, the tables <xref
-linkend="table.sl-log-1"> and <xref linkend="table.sl-log-2"> log
-changes collected on the origin node as they are replicated to
-subscribers.  </para>
+what is stored in that schema.  More specifically, the tables &sllog1;
+and &sllog2; log changes collected on the origin node as they are
+replicated to subscribers.  </para>
 
 <para>Each database instance in which replication is to take place is
 identified by a node number.</para>

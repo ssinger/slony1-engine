@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.28 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: intro.sgml,v 1.29 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 
@@ -296,13 +296,13 @@ but it still means that there needs to be n(n-1) paths.
 
 <listitem><para> Each SYNC applied needs to be reported back to all of
 the other nodes participating in the set so that the nodes all know
-that it is safe to purge <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-log-2"> data, as any <quote>forwarding</quote> node
-could potentially take over as <quote>master</quote> at any time.  One
-might expect SYNC messages to need to travel through n/2 nodes to get
-propagated to their destinations; this means that each SYNC is
-expected to get transmitted n(n/2) times.  Again, this points to a
-quadratic growth in communications costs as the number of nodes
+that it is safe to purge &sllog1; and &sllog2; data, as
+any <quote>forwarding</quote> node could potentially take over
+as <quote>master</quote> at any time.  One might expect SYNC messages
+to need to travel through n/2 nodes to get propagated to their
+destinations; this means that each SYNC is expected to get transmitted
+n(n/2) times.  Again, this points to a quadratic growth in
+communications costs as the number of nodes
 increases.</para></listitem>
 
 </itemizedlist></para>

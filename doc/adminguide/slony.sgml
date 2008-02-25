@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.39 2008-01-28 19:35:21 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.40 2008-02-25 15:37:58 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -44,6 +44,7 @@
 <!ENTITY slnode "<xref linkend=table.sl-node>">
 <!ENTITY sllog1 "<xref linkend=table.sl-log-1>">
 <!ENTITY sllog2 "<xref linkend=table.sl-log-2>">
+<!ENTITY slseqlog "<xref linkend=table.sl-seqlog>">
 <!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
 <!ENTITY rplainpaths "<xref linkend=plainpaths>">
 <!ENTITY rlistenpaths "<xref linkend=listenpaths>">

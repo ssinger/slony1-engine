@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.29 2008-01-02 19:12:42 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.30 2008-02-25 15:37:58 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -103,9 +103,8 @@ busy systems won't generate many dead tuples in that table
 
 <listitem><para> The system will periodically rotate (using
 <command>TRUNCATE</command> to clean out the old table) between the
-two log tables, <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-log-2">, preventing unbounded growth of dead space
-there.  </para></listitem>
+two log tables, &sllog1; and &sllog2;, preventing unbounded growth of
+dead space there.  </para></listitem>
 </itemizedlist>
 
 </listitem>
@@ -589,8 +588,7 @@ around 90,000 <command>SYNC</command>s per day, possibly for several
 days.  </para>
 
 <para> There will correspondingly be an <emphasis>enormous</emphasis>
-growth of <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog">.  Unfortunately, once the
+growth of &sllog1;, &sllog2;, and &slseqlog;.  Unfortunately, once the
 <command>COPY_SET</command> completes, users have found that the
 queries against these tables wind up reverting to <command>Seq
 Scans</command> so that even though a particular

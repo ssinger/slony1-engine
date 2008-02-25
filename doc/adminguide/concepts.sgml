@@ -1,4 +1,4 @@
-<!-- $Id: concepts.sgml,v 1.20 2006-08-02 18:34:57 cbbrowne Exp $ -->
+<!-- $Id: concepts.sgml,v 1.21 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="concepts">
 <title>&slony1; Concepts</title>
 
@@ -40,7 +40,7 @@ databases.</para>
 
 <para>The cluster name is specified in each and every Slonik script via the directive:</para>
 <programlisting>
-cluster name = 'something';
+cluster name = something;
 </programlisting>
 
 <para>If the Cluster name is <envar>something</envar>, then &slony1;

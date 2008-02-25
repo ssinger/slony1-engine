@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.73 2008-01-04 23:05:50 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.74 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -758,19 +758,18 @@ set add table (set id = 1, origin = 1, id = 27,
 </answer></qandaentry>
 
 <qandaentry>
-<question> <para> Replication has fallen behind, and it appears that the
-queries to draw data from <xref linkend="table.sl-log-1">/<xref
-linkend="table.sl-log-2"> are taking a long time to pull just a few
+<question> <para> Replication has fallen behind, and it appears that
+the queries to draw data from &sllog1;/&sllog2; are taking a long time
+to pull just a few
 <command>SYNC</command>s. </para>
 </question>
 
-<answer> <para> Until version 1.1.1, there was only one index on <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
-there were multiple replication sets, some of the columns on the index
-would not provide meaningful selectivity.  If there is no index on
-column <function> log_xid</function>, consider adding it.  See
-<filename>slony1_base.sql</filename> for an example of how to create
-the index.
+<answer> <para> Until version 1.1.1, there was only one index on
+&sllog1;/&sllog2;, and if there were multiple replication sets, some
+of the columns on the index would not provide meaningful selectivity.
+If there is no index on column <function> log_xid</function>, consider
+adding it.  See <filename>slony1_base.sql</filename> for an example of
+how to create the index.
 </para>
 </answer>
 </qandaentry>
@@ -1154,8 +1153,8 @@ it catch up across a week's worth of updates...  </para> </answer>
 
 <question><para> Replication has been slowing down, I'm seeing
 <command> FETCH 100 FROM LOG </command> queries running for a long
-time, <xref linkend="table.sl-log-1"> is growing, and performance is,
-well, generally getting steadily worse. </para>
+time, &sllog1;/&sllog2; is growing, and performance is, well,
+generally getting steadily worse. </para>
 </question>
 
 <answer> <para> There are actually a number of possible causes for
@@ -1178,9 +1177,9 @@ not clear out dead tuples from before the start of the idle
 transaction. </para> </listitem>
 
 <listitem><para> The cleanup thread will be unable to clean out
-entries in <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog">, with the result that these tables will
-grow, ceaselessly, until the transaction is closed. </para>
+entries in &sllog1;, &sllog2;, and &slseqlog;, with the result that
+these tables will grow, ceaselessly, until the transaction is
+closed. </para>
 </listitem>
 </itemizedlist>
 </answer>
@@ -1219,8 +1218,8 @@ numerous of them are left idle in transaction for hours at a time.
 </qandaentry> 
 
 <qandaentry id="faq17">
-<question><para>After dropping a node, <xref linkend="table.sl-log-1">
-isn't getting purged out anymore.</para></question>
+<question><para>After dropping a node, &sllog1;/&sllog2;
+aren't getting purged out anymore.</para></question>
 
 <answer><para> This is a common scenario in versions before 1.0.5, as
 the <quote>clean up</quote> that takes place when purging the node
@@ -1284,8 +1283,8 @@ places:
 
 <listitem><para> At the start of each
 <function>cleanupEvent</function> run, which is the event in which old
-data is purged from <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
+data is purged from &sllog1;, &sllog2;, and
+&slseqlog;</para></listitem> </itemizedlist></para>
 </answer>
 </qandaentry>
 
@@ -1295,12 +1294,15 @@ linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
 commission [for some reason], and it's taking a long time to get a
 sync through.</para></question>
 
-<answer><para> You might want to take a look at the <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
-do a summary to see if there are any really enormous &slony1;
-transactions in there.  Up until at least 1.0.2, there needs to be a
-&lslon; connected to the origin in order for
+<answer><para> You might want to take a look at the tables &sllog1;
+and &sllog2; and do a summary to see if there are any really enormous
+&slony1; transactions in there.  Up until at least 1.0.2, there needs
+to be a &lslon; connected to the origin in order for
 <command>SYNC</command> events to be generated.</para>
+
+<note><para> As of 1.0.2,
+function <function>generate_sync_event()</function> provides an
+alternative as backup...</para> </note>
 
 <para>If none are being generated, then all of the updates until the
 next one is generated will collect into one rather enormous &slony1;
@@ -1522,9 +1524,9 @@ discussion on postgresql-hackers mailing list. </ulink>.  </para>
 where there are two subscription sets, 1 and 2, that do not share any
 nodes.  I am discovering that confirmations for set 1 never get to the
 nodes subscribing to set 2, and that confirmations for set 2 never get
-to nodes subscribing to set 1.  As a result, <xref
-linkend="table.sl-log-1"> grows and grows and is never purged.  This
-was reported as &slony1; <ulink
+to nodes subscribing to set 1.  As a result, &sllog1;/&sllog2; grow
+and grow, and are never purged.  This was reported as
+&slony1; <ulink
 url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1485">
 bug 1485 </ulink>.
 </para>
@@ -1576,8 +1578,8 @@ best practice.</link> </para>
 a case where the only subscriptions that are active for a particular
 subscriber to a particular provider are for
 <quote>sequence-only</quote> sets.  If a node gets into that state,
-replication will fail, as the query that looks for data from <xref
-linkend="table.sl-log-1"> has no tables to find, and the query will be
+replication will fail, as the query that looks for data from
+&sllog1;/&sllog2; has no tables to find, and the query will be
 malformed, and fail.  If a replication set <emphasis>with</emphasis>
 tables is added back to the mix, everything will work out fine; it
 just <emphasis>seems</emphasis> scary.
@@ -1879,22 +1881,20 @@ to diminish the number of network round trips.</para></question>
 difficult to arrive at.</para>
 
 <para>By the time we notice that there is a problem, the seemingly
-missed delete transaction has been cleaned out of <xref
-linkend="table.sl-log-1">, so there appears to be no recovery
-possible.  What has seemed necessary, at this point, is to drop the
-replication set (or even the node), and restart replication from
-scratch on that node.</para>
+missed delete transaction has been cleaned out of &sllog1;, so there
+appears to be no recovery possible.  What has seemed necessary, at
+this point, is to drop the replication set (or even the node), and
+restart replication from scratch on that node.</para>
 
-<para>In &slony1; 1.0.5, the handling of purges of <xref
-linkend="table.sl-log-1"> became more conservative, refusing to purge
-entries that haven't been successfully synced for at least 10 minutes
-on all nodes.  It was not certain that that would prevent the
-<quote>glitch</quote> from taking place, but it seemed plausible that
-it might leave enough <xref linkend="table.sl-log-1"> data to be able
-to do something about recovering from the condition or at least
-diagnosing it more exactly.  And perhaps the problem was that <xref
-linkend="table.sl-log-1"> was being purged too aggressively, and this
-would resolve the issue completely.</para>
+<para>In &slony1; 1.0.5, the handling of purges of &sllog1; became
+more conservative, refusing to purge entries that haven't been
+successfully synced for at least 10 minutes on all nodes.  It was not
+certain that that would prevent the <quote>glitch</quote> from taking
+place, but it seemed plausible that it might leave enough &sllog1;
+data to be able to do something about recovering from the condition or
+at least diagnosing it more exactly.  And perhaps the problem was that
+&sllog1; was being purged too aggressively, and this would resolve the
+issue completely.</para>
 
 <para> It is a shame to have to reconstruct a large replication node
 for this; if you discover that this problem recurs, it may be an idea
@@ -1905,9 +1905,8 @@ you may only need to unsubscribe/drop and resubscribe the one set.
 
 <para> In one case we found two lines in the SQL error message in the
 log file that contained <emphasis> identical </emphasis> insertions
-into <xref linkend="table.sl-log-1">.  This <emphasis> ought
-</emphasis> to be impossible as is a primary key on <xref
-linkend="table.sl-log-1">.  The latest (somewhat) punctured theory
+into &sllog1;.  This <emphasis> ought </emphasis> to be impossible as
+is a primary key on &sllog1;.  The latest (somewhat) punctured theory
 that comes from <emphasis>that</emphasis> was that perhaps this PK
 index has been corrupted (representing a &postgres; bug), and that
 perhaps the problem might be alleviated by running the query:</para>
@@ -2012,8 +2011,7 @@ that uses the <xref linkend="function.logtrigger"> function to the
 table.</para>
 
 <para> That trigger initiates the action of logging all updates to the
-table to &slony1; <xref linkend="table.sl-log-1">
-tables.</para></listitem>
+table to &slony1; &sllog1;/&sllog2; tables.</para></listitem>
 
 <listitem><para> On a subscriber node, this involves disabling
 triggers and rules, then adding in the trigger that denies write
@@ -2129,7 +2127,7 @@ table</command> statements directly on the databases instead of using
 the slonik <xref linkend="stmtddlscript"> command.</para>
 
 <para>The solution is to rebuild the trigger on the affected table and
-fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
+fix the entries in &sllog1;/&sllog2; by hand.</para>
 
 <itemizedlist>
 
@@ -2148,12 +2146,10 @@ SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_ta
 COMMIT;
 </screen>
 
-<para>You then need to find the rows in <xref
-linkend="table.sl-log-1"> that have bad 
-entries and fix them.  You may
-want to take down the slon daemons for all nodes except the master;
-that way, if you make a mistake, it won't immediately propagate
-through to the subscribers.</para>
+<para>You then need to find the rows in &sllog1;/&sllog2; that have
+bad entries and fix them.  You may want to take down the slon daemons
+for all nodes except the master; that way, if you make a mistake, it
+won't immediately propagate through to the subscribers.</para>
 
 <para> Here is an example:</para>
 

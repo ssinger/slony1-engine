@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.24 2007-12-17 20:18:31 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.25 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -194,11 +194,11 @@ node2.</para> </listitem>
 <para> You will find, after the failover, that there are still a full
 set of references to node 1 in <xref linkend="table.sl-node">, as well
 as in referring tables such as <xref linkend="table.sl-confirm">;
-since data in <xref linkend="table.sl-log-1"> is still present,
-&slony1; cannot immediately purge out the node. </para>
+since data in &sllog1;/&sllog2; is still present, &slony1; cannot
+immediately purge out the node. </para>
 
-<para> After the failover is complete and node2 accepts
-write operations against the tables, remove all remnants of node1's
+<para> After the failover is complete and node2 accepts write
+operations against the tables, remove all remnants of node1's
 configuration information with the <xref linkend="stmtdropnode">
 command:
 

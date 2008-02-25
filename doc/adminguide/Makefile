@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.19 2006-08-02 15:32:01 xfade Exp $
+# $Id: Makefile,v 1.20 2008-02-25 15:37:58 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -251,6 +251,7 @@ XIDSQL=localxid.sql
 TEMPDB=schemadoc
 TEMPSCHEMA=schemadoc
 CREATELANG=$(pgbindir)/createlang   # That's how it is for me...
+PGAUTODOC=/usr/bin/postgresql_autodoc
 
 schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	@$(pgbindir)/createdb $(TEMPDB) && ( \
@@ -258,8 +259,7 @@ schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	echo "drop schema $(TEMPSCHEMA);create schema $(TEMPSCHEMA);" | $(pgbindir)/psql $(TEMPDB) && \
 	cat $(XIDSQL) $(BASEFUNS) $(BASESQL) |  sed -e "s/@NAMESPACE@/$(TEMPSCHEMA)/g"  -e "s/@CLUSTERNAME@/$(TEMPSCHEMA)/g" | $(pgbindir)/psql $(TEMPDB) && \
 	$(PGAUTODOC) -d $(TEMPDB) -s $(TEMPSCHEMA) -t xml -f schemadoc ;\
-	sed -i.bak -e "s/$(TEMPSCHEMA)\.//g" \
-	  -e "s@<book.*>@@g" -e "s@</book.*>@@g" schemadoc.xml ;\
+	sed -i.bak -e "s/$(TEMPSCHEMA)\.//g" -e "s@<book.*>@@g" -e "s@</book.*>@@g" schemadoc.xml ;\
 	rm  schemadoc.xml.bak ;\
 	$(pgbindir)/dropdb $(TEMPDB) >/dev/null 2>&1 \
 	) || echo "unable to createdb $(TEMPDB)"

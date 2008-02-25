@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.29 2008-02-04 20:56:22 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.30 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -172,8 +172,8 @@ intrude on your applications.</para>
 
 <para> Each time a SYNC is processed, values are recorded for
 <emphasis>all</emphasis> of the sequences in the set.  If there are a
-lot of sequences, this can cause <xref linkend="table.sl-seqlog"> to
-grow rather large.</para>
+lot of sequences, this can cause &slseqlog; to grow rather
+large.</para>
 
 <para> This points to an important difference between tables and
 sequences: if you add additional tables that do not see much/any
@@ -188,18 +188,19 @@ the effects:
 introduce much work to the system.</para>
 
 <para> If it is not updated, the trigger on the table on the origin
-never fires, and no entries are added to <xref
-       linkend="table.sl-log-1">.  The table never appears in any of the
+never fires, and no entries are added to &sllog1;/&sllog2;.  The table never appears in any of the
 further replication queries (<emphasis>e.g.</emphasis> in the
 <command>FETCH 100 FROM LOG</command> queries used to find
 replicatable data) as they only look for tables for which there are
-entries in <xref linkend="table.sl-log-1">.</para></listitem>
+entries in &sllog1;/&sllog2;.</para></listitem>
 
 <listitem><para> In contrast, a fixed amount of work is introduced to
 each SYNC by each sequence that is replicated.</para>
 
-<para> Replicate 300 sequence and 300 rows need to be added to <xref
-       linkend="table.sl-seqlog"> on a regular basis.</para>
+<para> Replicate 300 sequence and 300 rows need to be added to
+&slseqlog; on a regular basis, at least, thru until the 2.0 branch,
+where updates are only applied when the value of a given sequence is
+seen to change.</para>
 
 <para> It is more than likely that if the value of a particular
 sequence hasn't changed since it was last checked, perhaps the same

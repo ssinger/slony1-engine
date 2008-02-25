@@ -1,4 +1,4 @@
-<!-- $Id: listenpaths.sgml,v 1.20 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: listenpaths.sgml,v 1.21 2008-02-25 15:37:58 cbbrowne Exp $ -->
 <sect1 id="listenpaths"><title>&slony1; listen paths</title>
 
 <indexterm><primary>listen paths</primary></indexterm>
@@ -25,9 +25,9 @@ other nodes.  You might think that nodes only need to listen to the
 reality, they need to be able to receive messages from
 <emphasis>all</emphasis> nodes in order to be able to conclude that
 <command>sync</command>s have been received everywhere, and that,
-therefore, entries in <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-log-2"> have been applied everywhere, and can
-therefore be purged.  this extra communication is needful so
+therefore, entries in &sllog1; and &sllog2; have been applied
+everywhere, and can therefore be purged.  this extra communication is
+needful so
 <productname>Slony-I</productname> is able to shift origins to other
 locations.</para>
 
