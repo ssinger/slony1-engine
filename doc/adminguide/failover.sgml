@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.25 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.26 2008-02-27 19:37:03 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -182,6 +182,14 @@ write access to the tables.</para>
 now use node2 as data provider for the set.  This means that after the
 failover command succeeded, no node in the entire replication setup
 will receive anything from node1 any more.</para>
+
+<note><para> Note that in order for node 2 to be considered as a
+candidate for failover, it must have been set up with the <xref
+linkend="stmtsubscribeset"> option <command>forwarding =
+yes</command>, which has the effect that replication log data is
+collected in &sllog1;/&sllog2; on node 2.  If replication log data is
+<emphasis>not</emphasis> being collected, then failover to that node
+is not possible. </para></note>
 
 </listitem>
 

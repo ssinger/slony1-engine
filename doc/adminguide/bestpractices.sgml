@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.30 2008-02-25 15:37:58 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.31 2008-02-27 19:37:03 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -112,6 +112,11 @@ dead space there.  </para></listitem>
 <listitem>
 <para> <link linkend="Failover"> Failover </link> policies
 should be planned for ahead of time.  </para>
+
+<para> Most pointedly, any node that is expected to be a failover
+target must have its subscription(s) set up with the option
+<command>FORWARD = YES</command>.  Otherwise, that node is not a
+candidate for being promoted to origin node. </para>
 
 <para> This may simply involve thinking about what the priority lists
 should be of what should fail to what, as opposed to trying to

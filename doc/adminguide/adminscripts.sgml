@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.49 2007-09-24 21:07:45 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.50 2008-02-27 19:37:03 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -134,15 +134,30 @@ anything.</para>
 consisting of a set of tables and sequences that are to be
 replicated.</para>
 </sect3>
-<sect3><title>slonik_drop_node</title>
+<sect3 id="slonik-drop-node"><title>slonik_drop_node</title>
 
-<para>Generates Slonik script to drop a node from a &slony1; cluster.</para>
+<para>Generates Slonik script to drop a node from a &slony1;
+cluster.</para>
+
 </sect3>
-<sect3><title>slonik_drop_set</title>
+<sect3 id="slonik-drop-set"><title>slonik_drop_set</title>
 
 <para>Generates Slonik script to drop a replication set
 (<emphasis>e.g.</emphasis> - set of tables and sequences) from a
 &slony1; cluster.</para>
+
+<para> This represents a pretty big potential <quote>foot gun</quote>
+as this eliminates a replication set all at once.  A typo that points
+it to the wrong set could be rather damaging.  Compare to <xref
+linkend="slonik-unsubscribe-set"> and <xref
+linkend="slonik-drop-node">; with both of those, attempting to drop a
+subscription or a node that is vital to your operations will be
+blocked (via a foreign key constraint violation) if there exists a
+downstream subscriber that would be adversely affected.  In contrast,
+there will be no warnings or errors if you drop a set; the set will
+simply disappear from replication.
+</para>
+
 </sect3>
 
 <sect3 id="slonik-drop-table"><title>slonik_drop_table</title>
@@ -231,10 +246,13 @@ the slon sometimes stops working without becoming aware of it.</para>
 </sect3><sect3><title>slonik_uninstall_nodes</title>
 
 <para>This goes through and drops the &slony1; schema from each node;
-use this if you want to destroy replication throughout a cluster.
-This is a <emphasis>VERY</emphasis> unsafe script!</para>
+use this if you want to destroy replication throughout a cluster.  As
+its effects are necessarily rather destructive, this has the potential
+to be pretty unsafe.</para>
 
-</sect3><sect3><title>slonik_unsubscribe_set</title>
+</sect3>
+
+<sect3 id="slonik-unsubscribe-set"><title>slonik_unsubscribe_set</title>
 
 <para>Generates Slonik script to unsubscribe a node from a replication set.</para>
 

@@ -717,12 +717,13 @@ INIT CLUSTER (
    <refsect1>
     <title>Description</title>
     
-    <para> Causes an eventually running replication daemon on the
-    specified node to shutdown and restart itself.  Theoretically,
-    this command should be obsolete. In practice, TCP timeouts can
-    delay critical configuration changes to actually happen in the
-    case where a former forwarding node failed and needs to be
-    bypassed by subscribers.
+    <para> Causes an eventually running replication daemon
+    (<application>slon</application> process) on the specified node to
+    shutdown and restart itself.  Theoretically, this command should
+    be obsolete. In practice, TCP timeouts can delay critical
+    configuration changes to actually happen in the case where a
+    former forwarding node failed and needs to be bypassed by
+    subscribers.
      
      <variablelist>
       <varlistentry><term><literal> ID  = ival </literal></term>
@@ -741,8 +742,11 @@ INIT CLUSTER (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
-   <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.0; its use should be unnecessary as of version 1.0.5. </para>
+   <refsect1> <title> Version Information </title> <para> This command
+   was introduced in &slony1; 1.0; frequent use became unnecessary as
+   of version 1.0.5.  There are, however, occasional cases where it is
+   necessary to interrupt a <application>slon</application> process,
+   and this allows this to be scripted via slonik. </para>
    </refsect1>
   </refentry>
   
@@ -2074,9 +2078,11 @@ DROP TRIGGER (
       <varlistentry><term><literal> FORWARD = boolean </literal></term>
        
        <listitem><para> Flag whether or not the new subscriber should
-	 store the log information during replication to make it
-	 possible candidate for the provider role for future
-	 nodes.</para></listitem>
+       store the log information during replication to make it
+       possible candidate for the provider role for future nodes.  Any
+       node that is intended to be a candidate for FAILOVER
+       <emphasis>must</emphasis> have <command>FORWARD =
+       yes</command>.</para></listitem>
 
       </varlistentry>
      </variablelist>
