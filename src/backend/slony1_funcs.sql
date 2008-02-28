@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.132 2008-02-25 15:42:32 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.133 2008-02-28 19:23:01 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4053,6 +4053,13 @@ end;
 comment on function @NAMESPACE@.alterTableRestore (int4) is
 'alterTableRestore (tab_id)
 
+Note: This function only functions properly when used on pre-2.0
+systems being converted into 2.0 form.  In Slony-I 2.0, the trigger
+handling has changed substantially, such that:
+
+- There are *two* triggers on each table, created at "creation time", and
+- There is no need to run "restore" as part of the DDL/EXECUTE SCRIPT process.
+
 Restores table tab_id from being replicated.
 
 On the origin, this simply involves dropping the "logtrigger" trigger.
@@ -5781,8 +5788,7 @@ begin
    else
 	v_idxname := p_idxname;
    end if;
-   perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, v_fqname, v_idxname, p_comment);
-   return @NAMESPACE@.alterTableRestore(p_tab_id);
+   return @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, v_fqname, v_idxname, p_comment);
 end
 ' language plpgsql;
 
