@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.28.2.3 2007-08-29 05:44:58 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.28.2.4 2008-03-01 02:47:47 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -225,7 +225,7 @@ Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been much progress since then.  The second URL below
 indicates that there is intent to address the issue by bumping up the
 value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that won't likely help you in 2005.  Fedora Core 4 should have the
+but that won't likely help you in 2005.  Fedora 4 should have the
 issue addressed somewhat sooner. </para>
 
 <para>
@@ -253,12 +253,12 @@ Fedora...</para>
 <para> Even though &slony1; can be compiled and run on most Linux
 distributions, it is also possible to install &slony1; using binary
 packages. Slony Global Development Team provides official RPMs and
-SRPMs for many versions or Red Hat ana Fedora Core.</para>
+SRPMs for many versions or Red Hat and Fedora .</para>
 
 <para>The RPMs are available at <ulink
-url="http://pgfoundry.org/projects/slony1/"> &slony1; at pgFoundry.org
-</ulink>. Please read <command> CURRENT_MAINTAINER</command> file for
-the details of the RPMs. Please note that the RPMs will look for RPM
+url="http://yum.pgsqlrpms.org"> &postgres RPM Repository 
+</ulink>. Please read the howto provided in the website for configuring
+yum to use that repository. Please note that the RPMs will look for RPM
 installation of &postgres;, so if you install &postgres; from source,
 you should manually ignore the RPM dependencies related to
 &postgres;.</para>
@@ -266,18 +266,17 @@ you should manually ignore the RPM dependencies related to
 <para>Installing &slony1; using these RPMs is as easy as 
 installing any RPM.</para>
 
-<screen>rpm -ivh postgresql-slony1-....rpm</screen>
+<screen>yum install slony1</screen>
 
-<para>If you want to upgrade the previous version, just use 
-<command>rpm -Uvh</command> to upgrade it. But please remember to follow 
-the usual upgrade procedure, too.</para>
+<para>yum will pick up dependencies. This repository provides Slony-I binaries
+built against every supported &postgres version.</para>
 
 <para>The RPM installs the files into their usual places. The
 configuration files are installed under <filename>/etc</filename>, the
 binary files are installed in <filename>/usr/bin</filename>, libraries
 are installed in <filename>/usr/lib/pgsql</filename>, and finally the
 docs are installed in
-<filename>/usr/share/doc/postgresql-slony1</filename>.</para>
+<filename>/usr/share/doc/slony1</filename>.</para>
 
 </sect2>
 
