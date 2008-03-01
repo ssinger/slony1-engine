@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.28.2.4 2008-03-01 02:47:47 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.28.2.5 2008-03-01 02:53:47 devrim Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -225,8 +225,8 @@ Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been much progress since then.  The second URL below
 indicates that there is intent to address the issue by bumping up the
 value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that won't likely help you in 2005.  Fedora 4 should have the
-issue addressed somewhat sooner. </para>
+but that won't likely help you in 2005. Current Fedora releases have already
+addressed this issue. </para>
 
 <para>
 <ulink url=
