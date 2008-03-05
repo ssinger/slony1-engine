@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.1.2.2 2006-12-14 22:31:19 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.1.2.3 2008-03-05 16:14:43 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
@@ -147,7 +147,8 @@ done
 
 snum=1
 for seq in `echo $SEQUENCES`; do
-    echo "set add sequence (id=${snum}, set id=1, origin=1, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET    snum=`expr ${snum} + 1`
+    echo "set add sequence (id=${snum}, set id=1, origin=1, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET    
+    snum=`expr ${snum} + 1`
 done
 
 NODEINIT=$mktmp/create_nodes.slonik
