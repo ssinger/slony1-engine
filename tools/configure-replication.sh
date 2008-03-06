@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.1.2.3 2008-03-05 16:14:43 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.1.2.4 2008-03-06 18:49:03 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
@@ -55,7 +55,8 @@ echo "include <${PREAMBLE}>;" > $mktmp/store_paths.slonik
           eval buser=\$USER${j}
           eval bport=\$PORT${j}
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
-            echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik          else
+            echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik
+          else
             echo "STORE PATH (SERVER=${i}, CLIENT=${j}, CONNINFO='dbname=${db} host=${host} user=${user} port=${port}');" >> $mktmp/store_paths.slonik
           fi
         fi
