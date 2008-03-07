@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.31 2008-02-06 20:23:52 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.32 2008-03-07 21:47:04 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -681,6 +681,14 @@ remoteWorkerThread_main(void *cdata)
 				slon_retry();
 			dstring_reset(&query1);
 
+			/* start by trying to apply the lock to sl_config_lock */
+			if (strcmp(event->ev_type, "ACCEPT_SET") != 0)
+			{
+				if (query_execute(node, local_dbconn, &query1) < 0)
+					slon_retry();
+				dstring_reset(&query1);
+			}
+
 			/*
 			 * For all non-SYNC events, we write at least a standard
 			 * event tracking log file and adjust the ssy_seqno in our
@@ -1017,6 +1025,10 @@ remoteWorkerThread_main(void *cdata)
 					PQclear(res);
 					slon_log(SLON_DEBUG2, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
 
+					if (query_execute(node, local_dbconn, &query1) < 0)
+						slon_retry();
+					dstring_reset(&query1);
+
 					/*
 					 * Finalize the setsync status to mave the ACCEPT_SET's
 					 * seqno and snapshot info.
@@ -1056,6 +1068,10 @@ remoteWorkerThread_main(void *cdata)
 				else
 				{
 					slon_log(SLON_DEBUG2, "ACCEPT_SET - on origin node...\n");
+
+					if (query_execute(node, local_dbconn, &query1) < 0)
+						slon_retry();
+					dstring_reset(&query1);
 				}
 
 			}
