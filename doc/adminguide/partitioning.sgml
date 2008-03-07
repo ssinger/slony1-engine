@@ -1,4 +1,4 @@
-<!-- $Id: partitioning.sgml,v 1.1.2.2 2007-10-24 17:31:17 devrim Exp $ -->
+<!-- $Id: partitioning.sgml,v 1.1.2.3 2008-03-07 19:05:11 cbbrowne Exp $ -->
 <sect1 id="partitioning">
 <title>Partitioning Support </title>
 <indexterm><primary>partitioning</primary></indexterm>
@@ -73,9 +73,10 @@ has been violated. </para>
 </listitem>
 </itemizedlist>
 
-<para> There are several stored functions provided to support this;
-the Gentle User may use whichever seems preferable.  The <quote>base
-function</quote> is <function>add_empty_table_to_replication()</function>; the others
+<para> There are several stored functions provided to support this,
+for &postgres; 8.1 and newer; the Gentle User may use whichever seems
+preferable.  The <quote>base function</quote> is
+<function>add_empty_table_to_replication()</function>; the others
 provide additional structure and validation of the arguments </para>
 
 <itemizedlist>
