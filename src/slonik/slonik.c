@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.15 2008-02-14 21:51:07 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.16 2008-03-07 19:01:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -79,6 +79,7 @@ main(int argc, const char *argv[])
 {
 	extern int	optind;
 	int			opt;
+	char 		script[MAXPGPATH];
 
 	while ((opt = getopt(argc, (char **)argv, "hv")) != EOF)
 	{
@@ -103,17 +104,34 @@ main(int argc, const char *argv[])
 	if (parser_errors)
 		usage();
 
-	/*
-	 * We need to find a share directory like PostgreSQL. 
-	 */
-	if (find_my_exec(argv[0],myfull_path) < 0)
+	/* Check PGSHARE for scripts first */
+	strcpy(share_path, PGSHARE);
+
+/* There's no libpgport on 7.x, but on later versions we have other options */
+#if (PG_VERSION_MAJOR > 7)
+
+	/* If we can't find the scripts, try the PostgreSQL share directory */
+#ifndef WIN32
+	snprintf(script, sizeof(script), "%s/slony1_funcs.sql", share_path);
+	if (access(script, R_OK) != 0)
+#else
+	_snprintf(script, sizeof(script), "%s/slony1_funcs.sql", share_path);
+	if (_access(script, 04) != 0)
+
+#endif
 	{
-		strcpy(share_path, PGSHARE);
+		if (find_my_exec(argv[0],myfull_path) >= 0)
+		{
+			get_share_path(myfull_path, share_path);
+		}
+		else
+		{
+			printf("full path was unacquirable. '%s'\n", argv[0]);
+			return -1;
+		}
 	}
-	else
-	{
-		get_share_path(myfull_path, share_path);
-	}
+
+#endif
 
 	if (optind < argc)
 	{
