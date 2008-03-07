@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.11.2.2 2007-04-20 21:40:02 cbbrowne Exp $
+# $Id: run_test.sh,v 1.11.2.3 2008-03-07 19:00:14 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -662,7 +662,7 @@ case `uname` in
   ;;
 esac
 
-
+echo ${testname} > ${mktmp}/TestName
 
 . $testname/generate_dml.sh
 
