@@ -1,4 +1,15 @@
-$Id: RELEASE,v 1.1.2.26 2008-02-06 20:28:34 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.27 2008-03-07 19:06:49 cbbrowne Exp $
+RELEASE 1.2.14
+- Fix typo in configure-replication.sh (missing CR)
+
+- Per bug #35, search the Slony share dir for scripts
+  before falling back to the PG share dir on 8.0+
+  http://www.slony.info/bugzilla/show_bug.cgi?id=35
+
+- Change test framework to write out the test name into
+  $TEMPDIR/TestName
+
+- 
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
