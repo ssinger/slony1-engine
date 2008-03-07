@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.27 2008-03-07 19:06:49 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.28 2008-03-07 21:49:32 cbbrowne Exp $
 RELEASE 1.2.14
 - Fix typo in configure-replication.sh (missing CR)
 
@@ -9,7 +9,10 @@ RELEASE 1.2.14
 - Change test framework to write out the test name into
   $TEMPDIR/TestName
 
-- 
+- Patch that seems to resolve a race condition with
+  ACCEPT_SET
+
+  http://lists.slony.info/pipermail/slony1-general/2008-March/007655.html
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
