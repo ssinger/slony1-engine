@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.31 2008-02-27 19:37:03 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.32 2008-03-11 15:56:00 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -460,6 +460,12 @@ conditions that tend to indicate problems, including:
 
 <para> If replication mysteriously <quote>isn't working</quote>, this
 tool can run through many of the possible problems for you. </para>
+
+<para> It will also notice a number of sorts of situations where
+something has broken.  Not only should it be run when problems have
+been noticed - it should be run frequently (<emphasis>e.g.</emphasis>
+- hourly, or thereabouts) as a general purpose <quote>health
+check</quote> for each &slony1; cluster. </para>
 
 </listitem>
 
