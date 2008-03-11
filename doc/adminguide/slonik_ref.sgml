@@ -77,8 +77,8 @@
        try {
        commands;
        } 
-       [on error { commands; }
-       [on success { commands; }
+       [on error { commands; }]
+       [on success { commands; }]
       </programlisting></para>
 
      <para> Those commands are grouped together into one transaction
