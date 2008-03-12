@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.14 2008-02-14 16:41:35 cbbrowne Exp $
+# $Id: slon_watchdog.pl,v 1.15 2008-03-12 15:43:55 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -43,12 +43,17 @@ while (1) {
   $pid = get_pid($node);
   if (!($pid)) {
     my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
-    open (SLONLOG, ">>$LOGDIR/slon-$dbname-$node.err");
+    my ($logfile) = "$LOGDIR/slon-$dbname-$node.err"
+    open (SLONLOG, ">>$logfile");
     print SLONLOG "WATCHDOG: No Slon is running for node $node!\n";
     print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
     print SLONLOG "WATCHDOG: I'm going to restart slon for $node...\n";
     # First, restart the node using slonik
-    system "@@TOOLSBIN@@/slonik_restart_node $node | @@SLONBINDIR@@/slonik";
+    if ($CONFIG_FILE ne "") {
+      system "(@@TOOLSBIN@@/slonik_restart_node --config=${CONFIG_FILE} $node | @@SLONBINDIR@@/slonik) >> $logfile 2>> $logfile";
+    } else {
+      system "(@@TOOLSBIN@@/slonik_restart_node $node | @@SLONBINDIR@@/slonik) >> $logfile 2>> $logfile";
+    }
     # Next, restart the slon process to service the node
     start_slon($nodenum);
     $pid = get_pid($node);
