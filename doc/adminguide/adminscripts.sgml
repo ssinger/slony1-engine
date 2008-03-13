@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.40.2.8 2007-03-16 19:01:26 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.40.2.9 2008-03-13 16:51:26 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -418,6 +418,16 @@ where the database resides. </para></listitem>
 <listitem><para>  A slonik script is run to perform <xref linkend="stmtuninstallnode"> on the temporary database.   This eliminates all the special &slony1; tables, schema, and removes &slony1; triggers from replicated tables. </para> </listitem>
 <listitem><para> Finally, <application>pg_dump</application> is run against the temporary database, delivering a copy of the cleaned up schema to standard output. </para> </listitem>
 </itemizedlist>
+
+<note> <para> This script only works properly when run against an <emphasis>origin</emphasis> node. </para> </note>
+
+<warning> <para> If this script is against a
+<emphasis>subscriber</emphasis> node, the <command>pg_dump</command>
+used to draw the schema from the <quote>source</quote> node will
+attempt to pull the <emphasis>broken</emphasis> schema found on the
+subscriber, and thus, the result will <emphasis>not</emphasis> be a
+faithful representation of the schema as would be found on the origin
+node. </para> </warning>
 
 </sect2>
 <sect2><title> slony-cluster-analysis </title>
