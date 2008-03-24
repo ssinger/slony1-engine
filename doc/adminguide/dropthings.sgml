@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.17 2007-01-05 19:11:28 cbbrowne Exp $ -->
+<!-- $Id: dropthings.sgml,v 1.18 2008-03-24 15:57:34 cbbrowne Exp $ -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>
@@ -157,6 +157,16 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 linkend="stmtddlscript">, thus eliminating the sequence everywhere
 <quote>at once.</quote> Or they may be applied by hand to each of the
 nodes.</para>
+</sect2>
+
+<sect2> <title> Verifying Cluster Health </title>
+
+<para> After performing any of these procedures, it is an excellent
+idea to run the <filename>tools</filename> script &lteststate;, which
+rummages through the state of the entire cluster, pointing out any
+anomalies that it finds.  This includes a variety of sorts of
+communications problems.</para>
+
 </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file

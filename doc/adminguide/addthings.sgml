@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.29 2007-06-11 16:02:50 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.30 2008-03-24 15:57:34 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -295,11 +295,10 @@ earlier versions, you will need to
 use <xref linkend="stmtstorelisten"> to generate them manually.
 </para></listitem>
 
-<listitem><para> At this point, it is an excellent idea to run
-the <filename>tools</filename>
-script <command>test_slony_state-dbi.pl</command>, which rummages
-through the state of the entire cluster, pointing out any anomalies
-that it finds.  This includes a variety of sorts of communications
+<listitem><para> At this point, it is an excellent idea to run the
+<filename>tools</filename> script &lteststate;, which rummages through
+the state of the entire cluster, pointing out any anomalies that it
+finds.  This includes a variety of sorts of communications
 problems.</para> </listitem>
 
 <listitem><para> Issue the slonik
@@ -352,11 +351,10 @@ nodes are in processing events from the node where you run the query.
 It will only be <emphasis>very</emphasis> informative on a node that
 originates a replication set.</para> </listitem>
 
-<listitem><para> Run the <filename>tools</filename>
-script <command>test_slony_state-dbi.pl</command>, which rummages
-through the state of the entire cluster, pointing out any anomalies
-that it notices, as well as some information on the status of each
-node. </para> </listitem>
+<listitem><para> Run the <filename>tools</filename> script
+&lteststate;, which rummages through the state of the entire cluster,
+pointing out any anomalies that it notices, as well as some
+information on the status of each node. </para> </listitem>
 
 </itemizedlist>
 

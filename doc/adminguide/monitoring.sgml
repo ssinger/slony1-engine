@@ -1,8 +1,78 @@
-<!-- $Id: monitoring.sgml,v 1.41 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.42 2008-03-24 15:57:34 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
 <indexterm><primary>monitoring &slony1;</primary></indexterm>
+
+<sect2 id="testslonystate"> <title> test_slony_state</title>
+
+<indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
+
+<para> This invaluable script does various sorts of analysis of the
+state of a &slony1; cluster.  &slony1; <xref linkend="bestpractices">
+recommend running these scripts frequently (hourly seems suitable) to
+find problems as early as possible.  </para>
+
+<para> You specify arguments including <option>database</option>,
+<option>host</option>, <option>user</option>,
+<option>cluster</option>, <option>password</option>, and
+<option>port</option> to connect to any of the nodes on a cluster.
+You also specify a <option>mailprog</option> command (which should be
+a program equivalent to <productname>Unix</productname>
+<application>mailx</application>) and a recipient of email. </para>
+
+<para> You may alternatively specify database connection parameters
+via the environment variables used by
+<application>libpq</application>, <emphasis>e.g.</emphasis> - using
+<envar>PGPORT</envar>, <envar>PGDATABASE</envar>,
+<envar>PGUSER</envar>, <envar>PGSERVICE</envar>, and such.</para>
+
+<para> The script then rummages through <xref linkend="table.sl-path">
+to find all of the nodes in the cluster, and the DSNs to allow it to,
+in turn, connect to each of them.</para>
+
+<para> For each node, the script examines the state of things,
+including such things as:
+
+<itemizedlist>
+<listitem><para> Checking <xref linkend="table.sl-listen"> for some
+<quote>analytically determinable</quote> problems.  It lists paths
+that are not covered.</para></listitem>
+
+<listitem><para> Providing a summary of events by origin node</para>
+
+<para> If a node hasn't submitted any events in a while, that likely
+suggests a problem.</para></listitem>
+
+<listitem><para> Summarizes the <quote>aging</quote> of table <xref
+linkend="table.sl-confirm"> </para>
+
+<para> If one or another of the nodes in the cluster hasn't reported
+back recently, that tends to lead to cleanups of tables like &sllog1;,
+&sllog2; and &slseqlog; not taking place.</para></listitem>
+
+<listitem><para> Summarizes what transactions have been running for a
+long time</para>
+
+<para> This only works properly if the statistics collector is
+configured to collect command strings, as controlled by the option
+<option> stats_command_string = true </option> in <filename>
+postgresql.conf </filename>.</para>
+
+<para> If you have broken applications that hold connections open,
+this will find them.</para>
+
+<para> If you have broken applications that hold connections open,
+that has several unsalutory effects as <link
+linkend="longtxnsareevil"> described in the
+FAQ</link>.</para></listitem>
+
+</itemizedlist></para>
+
+<para> The script does some diagnosis work based on parameters in the
+script; if you don't like the values, pick your favorites!</para>
+
+</sect2>
 
 <sect2> <title> &nagios; Replication Checks </title>
 
@@ -128,74 +198,6 @@ echo
 <note><para> MRTG expects four lines from the script, and since there
 are only two lines provided, the output must be padded to four
 lines. </para> </note>
-
-</sect2>
-
-<sect2 id="testslonystate"> <title> test_slony_state</title>
-
-<indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
-
-<para> This script does various sorts of analysis of the state of a
-&slony1; cluster.</para>
-
-<para> You specify arguments including <option>database</option>,
-<option>host</option>, <option>user</option>,
-<option>cluster</option>, <option>password</option>, and
-<option>port</option> to connect to any of the nodes on a cluster.
-You also specify a <option>mailprog</option> command (which should be
-a program equivalent to <productname>Unix</productname>
-<application>mailx</application>) and a recipient of email. </para>
-
-<para> You may alternatively specify database connection parameters
-via the environment variables used by
-<application>libpq</application>, <emphasis>e.g.</emphasis> - using
-<envar>PGPORT</envar>, <envar>PGDATABASE</envar>,
-<envar>PGUSER</envar>, <envar>PGSERVICE</envar>, and such.</para>
-
-<para> The script then rummages through <xref linkend="table.sl-path">
-to find all of the nodes in the cluster, and the DSNs to allow it to,
-in turn, connect to each of them.</para>
-
-<para> For each node, the script examines the state of things,
-including such things as:
-
-<itemizedlist>
-<listitem><para> Checking <xref linkend="table.sl-listen"> for some
-<quote>analytically determinable</quote> problems.  It lists paths
-that are not covered.</para></listitem>
-
-<listitem><para> Providing a summary of events by origin node</para>
-
-<para> If a node hasn't submitted any events in a while, that likely
-suggests a problem.</para></listitem>
-
-<listitem><para> Summarizes the <quote>aging</quote> of table <xref
-linkend="table.sl-confirm"> </para>
-
-<para> If one or another of the nodes in the cluster hasn't reported
-back recently, that tends to lead to cleanups of tables like &sllog1;,
-&sllog2; and &slseqlog; not taking place.</para></listitem>
-
-<listitem><para> Summarizes what transactions have been running for a
-long time</para>
-
-<para> This only works properly if the statistics collector is
-configured to collect command strings, as controlled by the option
-<option> stats_command_string = true </option> in <filename>
-postgresql.conf </filename>.</para>
-
-<para> If you have broken applications that hold connections open,
-this will find them.</para>
-
-<para> If you have broken applications that hold connections open,
-that has several unsalutory effects as <link
-linkend="longtxnsareevil"> described in the
-FAQ</link>.</para></listitem>
-
-</itemizedlist></para>
-
-<para> The script does some diagnosis work based on parameters in the
-script; if you don't like the values, pick your favorites!</para>
 
 </sect2>
 

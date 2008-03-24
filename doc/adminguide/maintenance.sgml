@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.29 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.30 2008-03-24 15:57:34 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -179,18 +179,18 @@ regularly, this script won't bother doing anything.</para>
 
 <indexterm><primary>testing cluster status</primary></indexterm>
 
-<para> In the <filename>tools</filename> directory, you may find
-scripts called <filename>test_slony_state.pl</filename> and
-<filename>test_slony_state-dbi.pl</filename>.  One uses the Perl/DBI
-interface; the other uses the Pg interface.
+<para> In the <filename>tools</filename> directory, you will find
+&lteststate; scripts called <filename>test_slony_state.pl</filename>
+and <filename>test_slony_state-dbi.pl</filename>.  One uses the
+Perl/DBI interface; the other uses the Pg interface.
 </para>
 
 <para> Both do essentially the same thing, namely to connect to a
 &slony1; node (you can pick any one), and from that, determine all the
 nodes in the cluster.  They then run a series of queries (read only,
-so this should be quite safe to run) which look at the various
-&slony1; tables, looking for a variety of sorts of conditions
-suggestive of problems, including:
+so this should be quite safe to run) which examine various &slony1;
+tables, looking for a variety of sorts of conditions suggestive of
+problems, including:
 </para>
 
 <itemizedlist>

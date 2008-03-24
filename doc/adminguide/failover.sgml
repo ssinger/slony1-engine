@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.26 2008-02-27 19:37:03 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.27 2008-03-24 15:57:34 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -132,6 +132,11 @@ configuration.</para>
 under control of the administrators, and there is no need for there to
 be any loss of data.</para>
 
+<para> After performing the configuration change, you should, as <xref
+linkend="bestpractices">, run the &lteststate; scripts in order to
+validate that the cluster state remains in good order after this
+change. </para>
+
 </sect2>
 <sect2><title> Failover</title>
 
@@ -225,6 +230,12 @@ failure.  See <xref linkend="rebuildnode1"> for more details on the
 implications.</para>
 
 </listitem>
+
+<listitem> <para> After performing the configuration change, you
+should, as <xref linkend="bestpractices">, run the &lteststate;
+scripts in order to validate that the cluster state remains in good
+order after this change. </para> </listitem>
+
 </itemizedlist>
 
 </sect2>

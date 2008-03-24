@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.32 2008-03-11 15:56:00 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.33 2008-03-24 15:57:34 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -446,8 +446,8 @@ technically could, were a result of incorrect listen path
 configuration. </para>
 </listitem>
 
-<listitem><para> Use <filename>test_slony_state.pl</filename> to look
-for configuration problems.</para>
+<listitem><para> Run &lteststate; frequently to discover configuration
+problems as early as possible.</para>
 
 <para>This is a Perl script which connects to a &slony1; node and then
 rummages through &slony1; configuration looking for quite a variety of
