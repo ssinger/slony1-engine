@@ -2627,21 +2627,24 @@ FAILOVER (
     
     <para> See also the warnings in &rddlchanges;.</para>
 
-    <para> Note that this is a &rlocking; operation, which means that
-    it can get stuck behind other database activity.</para>
+    <para> Note that this is a potentially heavily-&rlocking;
+    operation, which means that it can get stuck behind other database
+    activity.</para>
      
-    <para> At the start of this event, all replicated tables are
-    unlocked via the function
-    <function>alterTableRestore(tab_id)</function>.  After the SQL
-    script has run, they are returned to <quote>replicating
+    <para> In versions up to (and including) the 1.2 branch, at the
+    start of this event, all replicated tables are unlocked via the
+    function <function>alterTableRestore(tab_id)</function>.  After
+    the SQL script has run, they are returned to <quote>replicating
     state</quote> using
     <function>alterTableForReplication(tab_id)</function>.  This means
     that all of these tables are locked by this &lslon process for the
     duration of the SQL script execution.</para>
 
-    <para> If a table's columns are modified, it is very important
-    that the triggers be regenerated, otherwise they may be
-    inappropriate for the new form of the table schema.</para>
+    <para> If a table's columns are modified, it is essential that the
+    triggers be regenerated (<emphasis>e.g.</emphasis> - by
+    <function>alterTableForReplication(tab_id)</function>), otherwise
+    the attributes in the <function>logtrigger()</function> trigger
+    may be inappropriate for the new form of the table schema.</para>
 
     <para> Note that if you need to make reference to the cluster
     name, you can use the token <command>@CLUSTERNAME@</command>; if
