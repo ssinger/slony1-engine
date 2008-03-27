@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.63 2007-12-11 19:30:29 wieck Exp $
+ *	$Id: slony1_funcs.c,v 1.64 2008-03-27 15:01:54 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -442,7 +442,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		 */
 		need_comma = false;
 		OldDateStyle=GetConfigOptionByName("DateStyle", NULL);
-		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
+		if (!strstr(OldDateStyle,"ISO"))
+			set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
@@ -482,7 +483,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			cp += len_value;
 		}
 
-		set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
+		if (!strstr(OldDateStyle,"ISO"))
+			set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
 
 		/*
 		 * Terminate and done
@@ -606,9 +608,11 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			else
 			{
 				OldDateStyle=GetConfigOptionByName("DateStyle", NULL);
-				set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
+				if (!strstr(OldDateStyle,"ISO"))
+					set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
 				col_value = slon_quote_literal(SPI_getvalue(new_row, tupdesc, i + 1));
-				set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
+				if (!strstr(OldDateStyle,"ISO"))
+					set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
 			}
 			cmddata_need = (cp - (char *)(cs->cmddata_buf)) + 16 +
 				(len_ident = strlen(col_ident)) +
