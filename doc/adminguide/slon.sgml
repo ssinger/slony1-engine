@@ -1,4 +1,4 @@
-<!-- $Id: slon.sgml,v 1.29.2.3 2007-08-28 19:27:29 cbbrowne Exp $ -->
+<!-- $Id: slon.sgml,v 1.29.2.4 2008-03-27 21:01:30 cbbrowne Exp $ -->
 <refentry id="slon">
  <refmeta>
   <refentrytitle id="app-slon-title"><application>slon</application></refentrytitle>
@@ -218,7 +218,7 @@
       <option>-g</option> value to break this <quote>deadlock.</quote>
      </para> 
      <para>
-      In &slony1; version 1.0, the <application>slon</application>
+      In &slony1; version 1.1 and later versions the <application>slon</application>
       instead adaptively <quote>ramps up</quote> from doing 1
       <command>SYNC</command> at a time towards the maximum group
       size.  As a result, if there are a couple of
