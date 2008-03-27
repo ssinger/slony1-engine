@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.74 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.75 2008-03-27 18:21:58 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -280,6 +280,67 @@ problem.</para>
 
 </qandaentry>
 </qandadiv>
+
+<qandadiv id="faqhowto"> <title> &slony1; FAQ: How Do I? </title>
+
+<qandaentry>
+
+<question> <para> I need to dump a database
+<emphasis>without</emphasis> getting &slony1; configuration
+(<emphasis>e.g.</emphasis> - triggers, functions, and such). </para>
+</question>
+
+<answer> <para> Up to version 1.2, this is fairly nontrivial,
+requiring careful choice of nodes, and some moderately heavy
+<quote>procedure</quote>.   One methodology is as follows:</para>
+
+<itemizedlist>
+
+<listitem><para> First, dump the schema from the node that has the
+<quote>master</quote> role.  That is the only place, pre-2.0, where
+you can readily dump the schema using
+<application>pg_dump</application> and have a consistent schema.  You
+may use the &slony1; tool <xref linkend="extractschema"> to do
+this. </para> </listitem>
+
+<listitem><para> Take the resulting schema, which will <emphasis>not</emphasis>
+include the &slony1;-specific bits, and split it into two pieces:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Firstly, the portion comprising all of the creations
+of tables in the schema. </para> </listitem>
+
+<listitem><para> Secondly, the portion consisting of creations of indices, constraints, and triggers. </para> </listitem>
+
+</itemizedlist>
+
+</listitem>
+
+<listitem><para> Pull a data dump, using <command>pg_dump --data-only</command>, of some node of your choice.  It doesn't need to be for the <quote>master</quote> node.  This dump will include the contents of the &slony1;-specific tables; you can discard that, or ignore it.  Since the schema dump didn't contain table definitions for the &slony1; tables, they won't be loaded. </para> </listitem>
+
+<listitem><para> Finally, load the three components in proper order: </para> 
+<itemizedlist>
+<listitem><para> Schema (tables) </para> </listitem>
+<listitem><para> Data dump </para> </listitem>
+<listitem><para> Remainder of the schema </para> </listitem>
+</itemizedlist>
+</listitem>
+
+</itemizedlist>
+
+</answer>
+
+<answer> <para> In &slony1; 2.0, the answer becomes simpler: Just take
+a <command>pg_dump --exclude-schema=_Cluster</command> against
+<emphasis>any</emphasis> node.  In 2.0, the schemas are no longer
+<quote>clobbered</quote> on subscribers, so a straight
+<application>pg_dump</application> will do what you want.</para>
+</answer>
+
+</qandaentry>
+<qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
 <qandaentry>
