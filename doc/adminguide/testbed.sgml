@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.16 2008-01-28 19:33:10 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.17 2008-04-07 20:47:48 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -143,6 +143,15 @@ that tests can create UTF8 tables and test the multibyte capabilities.
 <application>mktemp</application> that does not generate a full path
 to the location of the desired temporary file/directory, then set this
 value.  </para></glossdef>
+
+</glossentry>
+
+<glossterm><envar>TMPDIR</envar></glossterm>
+
+<glossdef><para> By default, the tests will generate their output in
+<filename>/tmp</filename>, <filename>/usr/tmp</filename>, or
+<filename>/var/tmp</filename>, unless you set your own value for this
+environment variable.  </para></glossdef>
 
 </glossentry>
 

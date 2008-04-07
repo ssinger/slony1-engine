@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.20 2008-01-09 20:47:48 cbbrowne Exp $
+# $Id: run_test.sh,v 1.21 2008-04-07 20:47:48 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -255,7 +255,7 @@ init_origin_rdbms()
 	  status "creating origin DB: $user -h $host -U $user -p $port $db"
   	  $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
 	  if [ $? -ne 0 ]; then	   
-	    err 3 "An error occured trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db, ${mktmp}/createdb.${originnode} for details"
+	    err 3 "An error occurred trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db, ${mktmp}/createdb.${originnode} for details"
 	  fi
 	else
 	  err 3 "No db '${db}' or host '${host}' or user '${user}' or port '${port}' specified"
@@ -715,15 +715,21 @@ diff_db()
   done
 }
 
+TMPDIR=${TMPDIR:-"/tmp"}    # Consider either a default value, or /tmp
+if [ -d ${TMPDIR} ]; then
+    T_TMPDIR=${TMPDIR}
+else
+    for i in /tmp /usr/tmp /var/tmp; do
+	if [ -d ${i} ]; then
+	    TMPDIR=$i
+	    break
+	fi
+    done
+fi
+
 case `uname` in
   SunOS|AIX|MINGW32*)
-        for i in /tmp /usr/tmp /var/tmp; do
-      if [ -d $i ]; then
-        tmpdir=$i
-        break
-      fi
-    done
-    if [ -z $tmpdir ]; then
+    if [ -z $TMPDIR ]; then
        err 3 "unable to create temp dir"
        exit
     fi
@@ -732,18 +738,18 @@ case `uname` in
     rstring=$(random_az 8)
     rstring=slony-regress.$rstring
     
-    mkdir $tmpdir/$rstring
+    mkdir ${TMPDIR}/$rstring
     retcode=$?
     if [ $retcode -ne 0 ]; then
       err $retcode "unable to create temp dir"
     else
-      mktmp=$tmpdir/$rstring
+      mktmp=${TMPDIR}/$rstring
     fi
   ;;
   Linux)
     mktmp=`mktemp -d -t slony-regress.XXXXXX`
     if [ $MY_MKTEMP_IS_DECREPIT ] ; then
-        mktmp=`mktemp -d /tmp/slony-regress.XXXXXX`
+        mktmp=`mktemp -d ${TMPDIR}/slony-regress.XXXXXX`
     fi
     if [ ! -d $mktmp ]; then
       err 3 "mktemp failed"
@@ -757,7 +763,7 @@ case `uname` in
   ;;
 esac
 
-
+echo ${testname} > ${mktmp}/TestName
 
 . $testname/generate_dml.sh
 
@@ -812,4 +818,3 @@ status "done"
 gen_testinfo
 drop_databases
 cleanup
-
