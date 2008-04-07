@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.30 2008-03-24 15:57:34 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.31 2008-04-07 19:24:02 cbbrowne Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -111,10 +111,8 @@ mycluster=# select oid, relname from pg_class where relnamespace = (select oid f
 
 <para> The following query will populate
 <envar>pg_catalog.pg_autovacuum</envar> with suitable configuration
-information: <command> insert into pg_catalog.pg_autovacuum (vacrelid,
-enabled) select oid, 'f' from pg_catalog.pg_class where relnamespace =
-(select oid from pg_namespace where nspname = '_' || 'MyCluster') and
-relhasindex; </command> </para>
+information: <command> INSERT INTO pg_catalog.pg_autovacuum (vacrelid, enabled, vac_base_thresh, vac_scale_factor, anl_base_thresh, anl_scale_factor, vac_cost_delay, vac_cost_limit, freeze_min_age, freeze_max_age) SELECT oid, 'f', -1, -1, -1, -1, -1, -1, -1, -1 FROM pg_catalog.pg_class WHERE relnamespace = (SELECT OID FROM pg_namespace WHERE nspname = '_' || 'MyCluster') AND relhasindex; </command>
+</para>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
