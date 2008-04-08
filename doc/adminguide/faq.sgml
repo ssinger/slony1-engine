@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.75 2008-03-27 18:21:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.76 2008-04-08 22:12:27 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -340,6 +340,32 @@ a <command>pg_dump --exclude-schema=_Cluster</command> against
 </answer>
 
 </qandaentry>
+
+<qandaentry id="cannotrenumbernodes">
+<question> <para> I'd like to renumber the node numbers in my cluster.
+How can I renumber nodes? </para> </question>
+
+<answer> <para> The first answer is <quote>you can't do that</quote> -
+&slony1; node numbers are not particularly amenable to being
+<quote>changed.</quote> Node numbers are deeply woven into the fibres
+of the schema, by virtue of being written into virtually every table
+in the system, and by virtue of being used as the basis for event
+propagation.  The only time that it might be <quote>OK</quote> to
+modify a node number is at some time where we know that it is not in
+use, and we would need to do updates against each node in the cluster
+in an organized fashion.</para>
+
+<para> To do this in an automated fashion seems like a
+<emphasis>huge</emphasis> challenge, as it spontaneously changes the
+structure of the very event propagation system that is required for
+such a change to propagate.</para> </answer>
+
+<answer> <para> If it is <emphasis>enormously necessary</emphasis> to
+renumber nodes, this might be accomplished by dropping and re-adding
+nodes to get rid of the node formerly using the node ID that needs to
+be held by another node.</para> </answer>
+</qandaentry>
+
 <qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>

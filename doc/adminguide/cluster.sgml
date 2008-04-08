@@ -1,4 +1,4 @@
-<!-- $Id: cluster.sgml,v 1.14 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- $Id: cluster.sgml,v 1.15 2008-04-08 22:12:27 cbbrowne Exp $ -->
 <sect1 id="cluster">
 <title>Defining &slony1; Clusters</title>
 <indexterm>  <primary>cluster definition</primary> </indexterm>
@@ -21,6 +21,11 @@ identified by a node number.</para>
 
 <para>For a simple install, it may be reasonable for the origin to be
 node #1, and for the subscriber to be node #2.</para>
+
+<para> Note that, as recorded in the <xref linkend="faq"> under <link
+linkend="cannotrenumbernodes"> How can I renumber nodes?</link>, it is
+not particularly possible to change a node's node number after it has
+been set up.</para>
 
 <para>Some planning should be done, in more complex cases, to ensure
 that the numbering system is kept sane, lest the administrators be

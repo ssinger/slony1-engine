@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.17 2008-04-07 20:47:48 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.18 2008-04-08 22:12:27 cbbrowne Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -146,6 +146,7 @@ value.  </para></glossdef>
 
 </glossentry>
 
+<glossentry>
 <glossterm><envar>TMPDIR</envar></glossterm>
 
 <glossdef><para> By default, the tests will generate their output in
