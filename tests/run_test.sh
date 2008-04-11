@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.21 2008-04-07 20:47:48 cbbrowne Exp $
+# $Id: run_test.sh,v 1.22 2008-04-11 15:39:31 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -185,7 +185,7 @@ store_node()
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         if [ ${node} -ne ${originnode} ]; then
-            echo "STORE NODE (id=@node${node}, comment='node ${node}');" >> $mktmp/slonik.script
+            echo "STORE NODE (id=@node${node}, comment='node ${node}', event node=${originnode});" >> $mktmp/slonik.script
         fi
         if [ ${node} -ge ${NUMNODES} ]; then
           break;

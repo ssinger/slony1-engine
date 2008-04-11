@@ -94,7 +94,9 @@ do_initdata()
       sh ${testname}/individual_ddl.sh ${testname} ${tnode} >> ${SCRIPT}
       status "execute DDL script on node ${tnode}"
       do_ik
+      status "DDL script completed on node ${tnode}"
   done
+  wait_for_catchup
 
   status "Generate still more data"
   generate_initdata

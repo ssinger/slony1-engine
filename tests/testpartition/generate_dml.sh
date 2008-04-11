@@ -80,4 +80,6 @@ do_initdata()
   status "done"
 
   more_data
+  wait_for_catchup
+  status "done"
 }

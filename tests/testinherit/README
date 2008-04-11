@@ -1,4 +1,4 @@
-$Id: README,v 1.4 2007-09-25 21:36:29 cbbrowne Exp $
+$Id: README,v 1.5 2008-04-11 15:39:32 cbbrowne Exp $
   
 testinherit does a somewhat nontrivial handling of inheritance...
 
@@ -35,3 +35,7 @@ more-or-less concurrent psql sessions that:
  - create lists of products/regions (randomly, in temp tables local to each session)
  - performs purchases on elements of those lists
  - some of those purchases get rolled back, others don't
+
+This test sets up its slonik scripts using
+tools/configure-replication.sh, thereby drawing the blanket of
+"replication regression tests" over this tool.
