@@ -510,8 +510,12 @@ INIT CLUSTER (
      
      <variablelist>
       <varlistentry><term><literal>ID = ival</literal></term>
-      <listitem><para> The unique, numeric ID number of the new
-      node.</para></listitem>
+      <listitem><para> The unique, immutable numeric ID number of the new
+      node.</para>
+
+      <para> Note that the ID is <emphasis>immutable</emphasis>
+      because it is used as the basis for inter-node event
+      communications. </para> </listitem>
       </varlistentry>
       
       <varlistentry><term><literal> COMMENT = 'description' </literal></term>
@@ -3062,7 +3066,7 @@ REPAIR CONFIG (
      </Programlisting>
    </Refsect1>
    <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.2.0. </para>
+    <para> This command was introduced in &slony1; 2.0. </para>
    </refsect1>
   </Refentry>
 
@@ -3100,7 +3104,7 @@ REPAIR CONFIG (
     </Programlisting>
    </Refsect1>
    <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.2.0. </para>
+    <para> This command was introduced in &slony1; 2.0. </para>
    </refsect1>
   </Refentry>
 

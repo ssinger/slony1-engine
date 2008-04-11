@@ -1,4 +1,4 @@
-<!-- $Id: cluster.sgml,v 1.15 2008-04-08 22:12:27 cbbrowne Exp $ -->
+<!-- $Id: cluster.sgml,v 1.16 2008-04-11 14:55:14 cbbrowne Exp $ -->
 <sect1 id="cluster">
 <title>Defining &slony1; Clusters</title>
 <indexterm>  <primary>cluster definition</primary> </indexterm>
@@ -23,9 +23,9 @@ identified by a node number.</para>
 node #1, and for the subscriber to be node #2.</para>
 
 <para> Note that, as recorded in the <xref linkend="faq"> under <link
-linkend="cannotrenumbernodes"> How can I renumber nodes?</link>, it is
-not particularly possible to change a node's node number after it has
-been set up.</para>
+linkend="cannotrenumbernodes"> How can I renumber nodes?</link>, the
+node number is immutable, so it is not possible to change a node's
+node number after it has been set up.</para>
 
 <para>Some planning should be done, in more complex cases, to ensure
 that the numbering system is kept sane, lest the administrators be
