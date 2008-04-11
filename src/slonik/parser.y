@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.31 2008-02-14 22:21:42 cbbrowne Exp $
+ *	$Id: parser.y,v 1.32 2008-04-11 15:44:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -565,8 +565,8 @@ stmt_init_cluster	: lno K_INIT K_CLUSTER option_list
 					{
 						SlonikStmt_init_cluster *new;
 						statement_option opt[] = {
-							STMT_OPTION_INT( O_ID, 1 ),
-							STMT_OPTION_STR( O_COMMENT, "Primary Node 1" ),
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_STR( O_COMMENT, "Initial Node" ),
 							STMT_OPTION_END
 						};
 
@@ -595,7 +595,7 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_STR( O_COMMENT, NULL ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_END
 						};
 
@@ -624,7 +624,7 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						SlonikStmt_drop_node *new;
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_END
 						};
 
@@ -652,7 +652,7 @@ stmt_failed_node	: lno K_FAILOVER option_list
 						SlonikStmt_failed_node *new;
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
-							STMT_OPTION_INT( O_BACKUP_NODE, 1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
 							STMT_OPTION_END
 						};
 
@@ -1183,7 +1183,6 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
-
 stmt_unsubscribe_set	: lno K_UNSUBSCRIBE K_SET option_list
 					{
 						SlonikStmt_unsubscribe_set *new;
@@ -1304,7 +1303,7 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_SET_ID, -1 ),
 							STMT_OPTION_STR( O_FILENAME, NULL ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
 							STMT_OPTION_END
 						};
@@ -1335,7 +1334,7 @@ stmt_update_functions	: lno K_UPDATE K_FUNCTIONS option_list
 					{
 						SlonikStmt_update_functions *new;
 						statement_option opt[] = {
-							STMT_OPTION_INT( O_ID, 1 ),
+							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_END
 						};
 
@@ -1361,7 +1360,7 @@ stmt_repair_config		: lno K_REPAIR K_CONFIG option_list
 						SlonikStmt_repair_config *new;
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_SET_ID, -1 ),
-							STMT_OPTION_INT( O_EVENT_NODE, 1 ),
+							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
 							STMT_OPTION_END
 						};
@@ -1393,7 +1392,7 @@ stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ORIGIN, -1 ),
 							STMT_OPTION_INT( O_WAIT_CONFIRMED, -1 ),
-							STMT_OPTION_INT( O_WAIT_ON, 1 ),
+							STMT_OPTION_INT( O_WAIT_ON, -1 ),
 							STMT_OPTION_INT( O_TIMEOUT, 600 ),
 							STMT_OPTION_END
 						};

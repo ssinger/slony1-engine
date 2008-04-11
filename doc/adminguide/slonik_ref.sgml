@@ -48,9 +48,9 @@
      <para>
       The slonik command language is format free. Commands begin with
       keywords and are terminated with a semicolon. Most commands have
-      a list of parameters, some of which have default values and are
-      therefore optional. The parameters of commands are enclosed in
-      parentheses. Each option consists of one or more keywords,
+      a list of parameters, some of which have default values and that
+      are therefore optional. The parameters of commands are enclosed
+      in parentheses. Each option consists of one or more keywords,
       followed by an equal sign, followed by a value. Multiple options
       inside the parentheses are separated by commas. All keywords are
       case insensitive.  The language should remind the reader of SQL.
@@ -540,8 +540,8 @@ INIT CLUSTER (
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
        
        <listitem><para> The ID of the node used to create the configuration
-	 event that tells all existing nodes about the new node. Default
-	 value is 1.</para></listitem>
+	 event that tells all existing nodes about the new node.
+	 </para></listitem>
       </varlistentry>
      </variablelist>
     </para>
@@ -567,6 +567,7 @@ INIT CLUSTER (
    arrived in version 1.2, but <envar>SPOOLNODE</envar> was not used
    for this purpose.  In later versions, hopefully
    <envar>SPOOLNODE</envar> will be unavailable. </para>
+   <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
    </refsect1>
   </Refentry>
   
@@ -597,7 +598,7 @@ INIT CLUSTER (
        <listitem><para> Node ID of the node to remove.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       <listitem><para> Node ID of the node to generate the event; default is 1.
+       <listitem><para> Node ID of the node to generate the event.
        </para></listitem>
       </varlistentry>
      </variablelist>
@@ -638,6 +639,7 @@ INIT CLUSTER (
 
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+   <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
    </refsect1>
   </refentry>
 
@@ -2563,6 +2565,7 @@ FAILOVER (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+    <para> In version 2.0, the default <envar>BACKUP NODE</envar> value of 1 was removed, so it is mandatory to provide a value for this parameter.</para>
    </refsect1>
   </refentry>
 
@@ -2616,7 +2619,7 @@ FAILOVER (
       
      </varlistentry>
      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-      <listitem><para> (Optional) The ID of the current origin of the set.  Default value is 1.</para></listitem>
+      <listitem><para> (Mandatory) The ID of the current origin of the set.</para></listitem>
       
      </varlistentry>
      <varlistentry><term><literal> EXECUTE ONLY ON = ival
@@ -2715,6 +2718,10 @@ EXECUTE SCRIPT (
     - triggers are removed at the start, and restored at the end).
     This deals with the risk that one might request DDL changes on
     tables in multiple replication sets.</para>
+
+   <para> In version 2.0, the default value for <envar>EVENT
+   NODE</envar> was removed, so a node must be specified.</para>
+
    </refsect1>
   </refentry>
 
@@ -2833,7 +2840,7 @@ UPDATE FUNCTIONS (
       </varlistentry>
       <varlistentry><term><literal> WAIT ON = ival </literal></term>
        <listitem><para> The ID of the node where the &slconfirm; table
-	 is to be checked.  The default value is 1.</para></listitem>
+	 is to be checked.</para></listitem>
        
       </varlistentry>
       <varlistentry><term><literal> TIMEOUT = ival </literal></term>
@@ -2861,6 +2868,10 @@ WAIT FOR EVENT (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+
+   <para> In version 2.0, the default value for <envar>WAIT ON</envar>
+   was removed, so a node must be specified.</para>
+
    </refsect1>
    
    <refsect1> <title> Oddities </title> <para> Not all events return

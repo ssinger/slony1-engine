@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.87 2008-02-14 22:21:42 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.88 2008-04-11 15:44:23 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -29,6 +29,7 @@
 
 #include "postgres.h"
 #include "libpq-fe.h"
+#include "port.h"
 
 #include "slonik.h"
 #include "config.h"
@@ -315,7 +316,9 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 
 					if (stmt->ev_origin < 0)
 					{
-						stmt->ev_origin = 1;
+						printf("%s:%d: Error: require EVENT NODE\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
 					}
 					if (stmt->no_id == stmt->ev_origin)
 					{
@@ -335,6 +338,12 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					SlonikStmt_drop_node *stmt =
 					(SlonikStmt_drop_node *) hdr;
 
+					if (stmt->ev_origin < 0)
+					{
+						printf("%s:%d: Error: require EVENT NODE\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 					if (stmt->ev_origin == stmt->no_id)
 					{
 						printf("%s:%d: Error: "
@@ -352,6 +361,12 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					SlonikStmt_failed_node *stmt =
 					(SlonikStmt_failed_node *) hdr;
 
+					if (stmt->backup_node < 0)
+					{
+						printf("%s:%d: Error: require BACKUP NODE\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 					if (stmt->backup_node == stmt->no_id)
 					{
 						printf("%s:%d: Error: "
@@ -828,7 +843,6 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 						errors++;
 				}
 				break;
-
 			case STMT_LOCK_SET:
 				{
 					SlonikStmt_lock_set *stmt =
@@ -925,7 +939,9 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 
 					if (stmt->ev_origin < 0)
 					{
-						stmt->ev_origin = 1;
+						printf("%s:%d: Error: require EVENT NODE\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
 					}
 					if (stmt->ddl_setid < 0)
 					{
