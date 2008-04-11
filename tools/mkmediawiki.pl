@@ -1,5 +1,5 @@
-#!/usr/bin/perl   # -*- perl -*-
-# $Id: mkmediawiki.pl,v 1.2 2007-07-05 20:52:06 cbbrowne Exp $
+#!/usr/bin/perl
+# $Id: mkmediawiki.pl,v 1.3 2008-04-11 15:40:25 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2007
 # PostgreSQL Global Development Group
