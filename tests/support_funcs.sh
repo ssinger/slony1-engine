@@ -222,12 +222,14 @@ gen_testinfo ()
 	OK="false"
     fi
 
-    BASEOUTPUT="select ${CLNAME}.getModuleversion() || '|' || ${CLNAME}.slonyVersionMajor() || '|' || ${CLNAME}.slonyVersionMinor() || '|' || ${CLNAME}.slonyVersionPatchlevel() || '|' || version() || '|';"
+    QUERY="select ${CLNAME}.getModuleversion() || '|' || ${CLNAME}.slonyVersionMajor() || '|' || ${CLNAME}.slonyVersionMinor() || '|' || ${CLNAME}.slonyVersionPatchlevel() || '|' || version() || '|';"
 
-    BASEOUTPUT=`${pgbindir}/psql -d ${DB1} -h ${HOST1} -p ${PORT1} -U ${USER1} -c "${QUERY}" -qAt`
-    BASEOUTPUT="${BASEOUTPUT}|${UNAMEM}|${UNAMER}|${UNAMES}|${UNAMEV}|"
-    BASEOUTPUT="${BASEOUTPUT}|${HOST}|${SLONYTESTER}|${testname}|${TESTSTARTTIME}|${TESTENDTIME}|${OK}|${DESC}"
+    BASEOUTPUT1=`${pgbindir}/psql -d ${DB1} -h ${HOST1} -p ${PORT1} -U ${USER1} -c "${QUERY}" -qAt`
+    BASEOUTPUT2="${UNAMEM}|${UNAMER}|${UNAMES}|${UNAMEV}|"
+    BASEOUTPUT3="${BASEOUTPUT1}|${BASEOUTPUT2}|${HOST}|${SLONYTESTER}|${testname}|${TESTSTARTTIME}|${TESTENDTIME}|${OK}|${DESC}"
 
+    TWITTEROUTPUT="Slony-I test - Success=${OK} - ${testname}"
+    #/usr/bin/tweet "${TWITTEROUTPUT}"
 
     echo "${BASEOUTPUT}" >> ${SLONYTESTFILE}
     echo "${BASEOUTPUT}"
