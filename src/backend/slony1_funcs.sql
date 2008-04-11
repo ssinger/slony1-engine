@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.134 2008-02-28 19:38:58 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.135 2008-04-11 15:08:19 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4533,7 +4533,7 @@ begin
 	-- ----
 	for v_max_row in select con_origin, con_received, max(con_seqno) as con_seqno
 				from @NAMESPACE@.sl_confirm
-				where con_timestamp < (CURRENT_TIMESTAMP - ''10 min''::interval)
+				where con_timestamp < (CURRENT_TIMESTAMP - p_interval)
 				group by con_origin, con_received
 	loop
 		delete from @NAMESPACE@.sl_confirm
