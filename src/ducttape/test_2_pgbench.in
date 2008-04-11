@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.5 2008-01-23 17:12:34 wieck Exp $
+# $Id: test_2_pgbench.in,v 1.6 2008-04-11 18:00:36 cbbrowne Exp $
 # **********
 # test_2_pgbench
 #
@@ -223,7 +223,7 @@ slonik <<_EOF_
 	node 3 admin conninfo = 'dbname=$DB3';
 
 	try {
-		store node (id = 2, comment = 'Node 2');
+		store node (id = 2, comment = 'Node 2', event node=1);
 		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
 		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
 	}
@@ -296,7 +296,7 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 	node 3 admin conninfo = 'dbname=$DB3';
 
-	store node (id = 3, comment = 'Node 3');
+	store node (id = 3, comment = 'Node 3', event node=1);
 
 	store path (server = 1, client = 3, conninfo = 'dbname=$DB1');
 	store path (server = 2, client = 3, conninfo = 'dbname=$DB2');

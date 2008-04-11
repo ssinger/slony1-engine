@@ -75,7 +75,7 @@ function slonik_init () {
     slonik <<_EOF_
 $PREAMBLE
 	try {
-		store node (id = $NODE, comment = 'Node $NODE');
+		store node (id = $NODE, comment = 'Node $NODE', event node=${PARENT});
 		store path (server = $PARENT, client = $NODE, conninfo = 'dbname=slony_test$PARENT');
 		store path (server = $NODE, client = $PARENT, conninfo = 'dbname=slony_test$NODE');
 		store listen (origin = $PARENT, receiver = $NODE, provider=$PARENT );
@@ -295,7 +295,7 @@ echo "**** initializing slony_test4 as Node 4 of Slony-I cluster T1"
 slonik <<_EOF_
 $PREAMBLE
 	try {
-		store node (id = 4, comment = 'Node $node');
+		store node (id = 4, comment = 'Node $node', event node=1);
 		store path (server = 3, client = 4, conninfo = 'dbname=slony_test3');
 		store path (server = 4, client = 3, conninfo = 'dbname=slony_test4');
 		store listen (origin = 1, receiver = 4, provider=3);
@@ -331,7 +331,7 @@ for node in 5 6; do
   slonik <<_EOF_
 $PREAMBLE
 	try {
-		store node (id = $node, comment = 'Node $node');
+		store node (id = $node, comment = 'Node $node', event node=1);
 		store path (server = 4, client = $node, conninfo = 'dbname=slony_test4');
 		store path (server = $node, client = 4, conninfo = 'dbname=slony_test$node');
 	}

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_4_pgbench.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_4_pgbench.in,v 1.2 2008-04-11 18:00:36 cbbrowne Exp $
 # **********
 # test_4_pgbench
 #
@@ -194,7 +194,7 @@ slonik <<_EOF_
 	node 1 admin conninfo = 'dbname=$DB1';
 	node 2 admin conninfo = 'dbname=$DB2';
 	try {
-		store node (id = 2, comment = 'Node 2');
+		store node (id = 2, comment = 'Node 2', event node=1);
 		store path (server = 1, client = 2, conninfo = 'dbname=$DB1');
 		store path (server = 2, client = 1, conninfo = 'dbname=$DB2');
 		store listen (origin = 1, receiver = 2);

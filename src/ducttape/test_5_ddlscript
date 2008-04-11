@@ -90,7 +90,7 @@ slonik <<_EOF_
 	}
 
 	echo '  wait for execute script';
-	wait for event (origin = 1, confirmed = 2);
+	wait for event (origin = 1, confirmed = 2, wait on=1);
 
 	try {
 		echo '  create temporary set 999';
