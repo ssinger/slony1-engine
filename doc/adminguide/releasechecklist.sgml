@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.10 2007-06-22 16:15:57 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.11 2008-04-14 10:35:01 devrim Exp $ -->
 <article id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -69,7 +69,7 @@ consistent values.</para>
 
 <listitem><para>PACKAGE_VERSION=REL_1_1_2</para></listitem>
 
-<listitem><para>PACKAGE_STRING=postgresql-slony1-engine REL_1_1_2</para></listitem>
+<listitem><para>PACKAGE_STRING=slony1 REL_1_1_2</para></listitem>
 
 </itemizedlist>
 <itemizedlist>

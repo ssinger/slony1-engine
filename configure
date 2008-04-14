@@ -10667,7 +10667,7 @@ perlsharedir=$with_perlsharedir
 ac_config_files="$ac_config_files Makefile.global GNUmakefile"
 
 
-ac_config_files="$ac_config_files postgresql-slony1-engine.spec Makefile.port:makefiles/Makefile.${template}"
+ac_config_files="$ac_config_files slony1.spec Makefile.port:makefiles/Makefile.${template}"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11224,7 +11224,7 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile.global") CONFIG_FILES="$CONFIG_FILES Makefile.global" ;;
     "GNUmakefile") CONFIG_FILES="$CONFIG_FILES GNUmakefile" ;;
-    "postgresql-slony1-engine.spec") CONFIG_FILES="$CONFIG_FILES postgresql-slony1-engine.spec" ;;
+    "slony1.spec") CONFIG_FILES="$CONFIG_FILES slony1.spec" ;;
     "Makefile.port") CONFIG_FILES="$CONFIG_FILES Makefile.port:makefiles/Makefile.${template}" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

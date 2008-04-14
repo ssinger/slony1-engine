@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.61 2007-05-02 21:36:17 cbbrowne Exp $
+# $Id: configure.ac,v 1.62 2008-04-14 10:35:01 devrim Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -243,6 +243,6 @@ AC_CONFIG_FILES([
 ])
 
 AC_OUTPUT([
-    postgresql-slony1-engine.spec
+    slony1.spec
     Makefile.port:makefiles/Makefile.${template}
 ])
