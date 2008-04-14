@@ -4,7 +4,7 @@
 
 Summary:	A "master to multiple slaves" replication system with cascading and failover
 Name:		postgresql-slony1
-Version:	1.2.13
+Version:	1.2.14
 Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
@@ -35,7 +35,7 @@ are available
 %package docs
 Summary:	Documentation for Slony-I
 Group:		Applications/Databases
-Requires:	postgresql-slony1-1.2.11-%{release}
+Requires:	postgresql-slony1-1.2.14-%{release}
 BuildRequires:	libjpeg, netpbm-progs, groff, docbook-style-dsssl, ghostscript
 
 %description docs
@@ -140,6 +140,9 @@ fi
 %endif
 
 %changelog
+* Mon Apr 14 2008 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.14-1
+- Update to 1.2.14
+
 * Sun Feb 10 2008 Devrim Gunduz <devrim@CommandPrompt.com> 1.2.13-1
 - Update to 1.2.13
 
