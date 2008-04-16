@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.135 2008-04-11 15:08:19 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.136 2008-04-16 21:23:54 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3597,6 +3597,13 @@ begin
 		-- Create a SYNC event
 		-- ----
 		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	else
+		-- If running "ONLY ON NODE", there are two possibilities:
+		-- 1.  Running on origin, where denyaccess() triggers are already shut off
+		-- 2.  Running on replica, where we need the LOCAL role to suppress denyaccess() triggers
+		if (v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+			set session_replication_role to local;
+		end if
 	end if;
 	return 1;
 end;

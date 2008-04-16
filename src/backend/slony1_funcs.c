@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group 
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.64 2008-03-27 15:01:54 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.65 2008-04-16 21:23:54 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -845,10 +845,17 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 	if (SPI_connect() < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in denyAccess()");
 
-	elog(ERROR,
-		 "Slony-I: Table %s is replicated and cannot be "
-		 "modified on a subscriber node",
-		 NameStr(tg->tg_relation->rd_rel->relname));
+	/*
+	 * If the replication role is:
+	 *  ORIGIN - default role --> FAIL
+	 *  REPLICA - this trigger will not fire in --> N/A
+     *  LOCAL - role when running "local updates" --> PERMIT UPDATE
+     */
+	if (SessionReplicationRole == SESSION_REPLICATION_ROLE_ORIGIN)
+			elog(ERROR,
+				 "Slony-I: Table %s is replicated and cannot be "
+				 "modified on a subscriber node - role=%d",
+				 NameStr(tg->tg_relation->rd_rel->relname), SessionReplicationRole);
 
 	SPI_finish();
 	if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))
