@@ -1,4 +1,4 @@
-<!-- $Id: triggers.sgml,v 1.1 2008-01-28 19:35:21 cbbrowne Exp $ --> 
+<!-- $Id: triggers.sgml,v 1.2 2008-04-18 16:53:11 cbbrowne Exp $ --> 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>
@@ -137,11 +137,12 @@ of replicated mode</quote>, &slony1; instead simply shifts into the
 <function>denyaccess</function> trigger. </para>
 
 <para> This may be expected to allow DDL changes to become
-<emphasis>enormously</emphasis> less expensive, since, rather than needing to
-take out exclusive locks on <emphasis>all</emphasis> replicated tables (as used
-to be mandated by the action of dropping and adding back the
-&slony1;-created triggers), the only tables that are locked are those
-ones that the DDL script was specifically acting on.  </para>
+<emphasis>enormously</emphasis> less expensive, since, rather than
+needing to take out exclusive locks on <emphasis>all</emphasis>
+replicated tables (as used to be mandated by the action of dropping
+and adding back the &slony1;-created triggers), the only tables that
+are locked are those ones that the DDL script was specifically acting
+on.  </para>
 
 </listitem>
 
@@ -158,8 +159,9 @@ that node into an origin, which requires disabling the formerly active
 <function>logtrigger</function> triggers. </para>
 
 <para> From a locking perspective, this will not behave differently
-from older versions of &slony1;; the locking that takes place here is
-quite necessary. </para>
+from older versions of &slony1;; to disable and enable the respective
+triggers requires taking out exclusive locks on all replicated
+tables. </para>
 
 </listitem>
 
@@ -168,7 +170,8 @@ linkend="stmtfailover"> transforms a subscriber node into an origin,
 which requires disabling the formerly active
 <function>denyaccess</function> triggers, and enabling the
 <function>logtrigger</function> triggers.  The locking implications
-are again, much the same.  </para> </listitem>
+are again, much the same, requiring an exclusive lock on each such
+table.  </para> </listitem>
 
 </itemizedlist>
 
