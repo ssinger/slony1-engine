@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.33 2008-03-24 15:57:34 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.34 2008-04-21 21:31:23 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -299,8 +299,11 @@ stream on all servers.  </link> </para>
 database objects.  Altering tables requires taking out an exclusive
 lock on them; doing so via <command>execute script</command> requires
 that &slony1; take out an exclusive lock on <emphasis>all</emphasis>
-replicated tables.  This can prove quite inconvenient when
-applications are running; you run into deadlocks and such. </para>
+replicated tables.  This can prove quite inconvenient if applications
+are running when running DDL; &slony1; is asking for those exclusive
+table locks, whilst, simultaneously, some application connections are
+gradually relinquishing locks, whilst others are backing up behind the
+&slony1; locks.  </para>
 
 <para> One particularly dogmatic position that some hold is that
 <emphasis>all</emphasis> schema changes should
@@ -515,6 +518,15 @@ which takes several hours to subscribe) it has been found to be
 desirable to lock all users other than the <command>slony</command>
 user out of the new subscriber because:
 </para>
+
+<para> It is also a very good idea to change &lslon; configuration for
+<xref linkend="slon-config-sync-interval"> on the origin node to
+reduce how many <command>SYNC</command> events are generated.  If the
+subscription takes 8 hours, there is little sense in there being 28800
+<command>SYNC</command>s waiting to be applied.  Running a
+<command>SYNC</command> every minute or so is likely to make catching
+up easier.</para>
+
 </listitem>
 </itemizedlist>
 <itemizedlist>
