@@ -70,9 +70,7 @@ install -d $RPM_BUILD_ROOT%{_datadir}/postgresql/
 install -d $RPM_BUILD_ROOT%{_libdir}/postgresql/
 make DESTDIR=$RPM_BUILD_ROOT install
 install -m 0755 src/backend/slony1_funcs.so $RPM_BUILD_ROOT%{_libdir}/postgresql/slony1_funcs.so
-install -m 0755 src/xxid/xxid.so $RPM_BUILD_ROOT%{_libdir}/postgresql/xxid.so
 install -m 0755 src/backend/*.sql $RPM_BUILD_ROOT%{_datadir}/postgresql/
-install -m 0755 src/xxid/*.sql $RPM_BUILD_ROOT%{_datadir}/postgresql/
 install -m 0755 tools/*.sh  $RPM_BUILD_ROOT%{_bindir}/
 install -m 0755 share/slon.conf-sample $RPM_BUILD_ROOT%{_sysconfdir}/slon.conf
 
@@ -95,11 +93,10 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %if %docs
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%doc COPYRIGHT UPGRADING RELEASE-2.0 INSTALL SAMPLE doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
 %endif
 %{_bindir}/*
 %{_libdir}/postgresql/slony1_funcs.so
-%{_libdir}/postgresql/xxid.so
 %{_datadir}/postgresql/*.sql
 %{_sysconfdir}/slon.conf
 %if %perltools

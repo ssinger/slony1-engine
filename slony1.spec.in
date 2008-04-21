@@ -83,9 +83,7 @@ install -d %{buildroot}%{_datadir}/pgsql/
 install -d %{buildroot}%{_libdir}/pgsql/
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
 install -m 0755 src/backend/slony1_funcs.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.so
-install -m 0755 src/xxid/xxid.so %{buildroot}%{_libdir}/pgsql/xxid.so
 install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
-install -m 0644 src/xxid/*.sql %{buildroot}%{_datadir}/pgsql/
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 install -m 0755 redhat/slon.init %{buildroot}%{_sysconfdir}/init.d/slon
@@ -110,10 +108,9 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-1.2.1 RELEASE-1.2.2 
+%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-2.0
 %{_bindir}/*
 %{_libdir}/pgsql/slony1_funcs.so
-%{_libdir}/pgsql/xxid.so
 %{_datadir}/pgsql/*.sql
 %config(noreplace) %{_sysconfdir}/slon.conf
 %{_sysconfdir}/init.d/slon
