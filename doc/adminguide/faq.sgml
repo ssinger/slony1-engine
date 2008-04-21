@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.77 2008-04-11 14:55:14 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.78 2008-04-21 21:32:56 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -366,7 +366,68 @@ nodes to get rid of the node formerly using the node ID that needs to
 be held by another node.</para> </answer>
 </qandaentry>
 
-<qandadiv>
+</qandadiv>
+
+<qandadiv id="faqimpossibilities"> <title> &slony1; FAQ: Impossible Things People Try </title>
+
+<qandaentry>
+<question><para> Can I use &slony1; to replicate changes back and forth on my database between my two offices? </para> </question>
+
+<answer><para> At one level, it is <emphasis>theoretically
+possible</emphasis> to do something like that, if you design your
+application so that each office has its own distinct set of tables,
+and you then have some system for consolidating the data to give them
+some common view.  However, this requires a great deal of design work
+to create an application that performs this consolidation. </para>
+</answer>
+
+<answer><para> In practice, the term for that is <quote>multimaster
+replication,</quote> and &slony1; does not support <quote>multimaster
+replication.</quote> </para> </answer>
+
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to replicate all of the databases for a shared-database system I am managing.  There are multiple databases, being used by my customers.  </para> </question>
+
+<answer><para> For this purpose, something like &postgres; PITR (Point
+In Time Recovery) is likely to be much more suitable.  &slony1;
+requires a slon process (and multiple connections) for each
+identifiable database, and if you have a &postgres; cluster hosting 50
+or 100 databases, this will require hundreds of database connections.
+Typically, in <quote>shared hosting</quote> situations, DML is being
+managed by customers, who can change anything they like whenever
+<emphasis>they</emphasis> want.  &slony1; does not work out well when
+not used in a disciplined manner.  </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to be able to make DDL changes, and have them replicated automatically. </para> </question>
+
+<answer><para> &slony1; requires that <xref linkend="ddlchanges"> be planned for explicitly and carefully.  &slony1; captures changes using triggers, and &postgres; does not provide a way to use triggers to capture DDL changes.</para>
+
+<note><para> There has been quite a bit of discussion, off and on, about how
+&postgres; might capture DDL changes in a way that would make triggers
+useful; nothing concrete has emerged after several years of
+discussion. </para> </note> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to split my cluster into disjoint partitions that are not aware of one another.  &slony1; keeps generating <xref linkend="listenpaths"> that link those partitions together. </para> </question>
+
+<answer><para> The notion that all nodes are aware of one another is
+deeply imbedded in the design of &slony1;.  For instance, its handling
+of cleanup of obsolete data depends on being aware of whether any of
+the nodes are behind, and thus might still depend on older data.
+</para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to change some of my node numbers.  How do I <quote>rename</quote> a node to have a different node number? </para> </question>
+<answer><para> You don't.  The node number is used to coordinate inter-node communications, and changing the node ID number <quote>on the fly</quote> would make it essentially impossible to keep node configuration coordinated.   </para> </answer>
+</qandaentry>
+
+</qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
 <qandaentry>
