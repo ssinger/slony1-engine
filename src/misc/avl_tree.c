@@ -3,10 +3,10 @@
  *
  *	AVL style self balancing tree support.
  *
- *  Copyright (c) 2007, PostgreSQL Global Development Group
- *  Author: Jan Wieck, Afilias USA INC.
+ *	Copyright (c) 2007, PostgreSQL Global Development Group
+ *	Author: Jan Wieck, Afilias USA INC.
  *
- *  $Id: avl_tree.c,v 1.1 2007-06-07 13:01:10 wieck Exp $
+ *	$Id: avl_tree.c,v 1.2 2008-04-23 20:35:43 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -16,12 +16,12 @@
  * local function declarations
  * ----
  */
-static AVLnode	   *avl_makenode(void);
-static void			avl_reset_node(AVLnode *node, AVLfreefunc *freefunc);
-static int			avl_insertinto(AVLtree *tree, AVLnode **node,
-									void *cdata, AVLnode **result);
-static void			avl_rotate_left(AVLnode **node);
-static void			avl_rotate_right(AVLnode **node);
+static AVLnode *avl_makenode(void);
+static void avl_reset_node(AVLnode *node, AVLfreefunc *freefunc);
+static int avl_insertinto(AVLtree *tree, AVLnode **node,
+			   void *cdata, AVLnode **result);
+static void avl_rotate_left(AVLnode **node);
+static void avl_rotate_right(AVLnode **node);
 
 
 /* ----
@@ -63,7 +63,7 @@ avl_reset(AVLtree *tree)
 
 
 /* ----
- * avl_reset_node() - 
+ * avl_reset_node() -
  *
  *	avl_reset()'s workhorse.
  * ----
@@ -73,7 +73,7 @@ avl_reset_node(AVLnode *node, AVLfreefunc *freefunc)
 {
 	if (node == NULL)
 		return;
-	
+
 	avl_reset_node(node->lnode, freefunc);
 	avl_reset_node(node->rnode, freefunc);
 
@@ -95,7 +95,7 @@ avl_reset_node(AVLnode *node, AVLfreefunc *freefunc)
 AVLnode *
 avl_insert(AVLtree *tree, void *cdata)
 {
-	AVLnode	   *result;
+	AVLnode    *result;
 	int			depth;
 
 	/*
@@ -122,7 +122,7 @@ avl_insert(AVLtree *tree, void *cdata)
 AVLnode *
 avl_lookup(AVLtree *tree, void *cdata)
 {
-	AVLnode	   *node;
+	AVLnode    *node;
 	int			cmp;
 
 	node = tree->root;
@@ -132,8 +132,8 @@ avl_lookup(AVLtree *tree, void *cdata)
 		if (cmp == 0)
 		{
 			/*
-			 * Found the node. If it is marked deleted, return NULL
-			 * anyway. Otherwise return this node.
+			 * Found the node. If it is marked deleted, return NULL anyway.
+			 * Otherwise return this node.
 			 */
 			if (node->deleted)
 				return NULL;
@@ -169,7 +169,7 @@ avl_lookup(AVLtree *tree, void *cdata)
 int
 avl_delete(AVLtree *tree, void *cdata)
 {
-	AVLnode	   *node;
+	AVLnode    *node;
 
 	if ((node = avl_lookup(tree, cdata)) == NULL)
 		return 0;
@@ -185,16 +185,16 @@ avl_delete(AVLtree *tree, void *cdata)
  *	The heart of avl_insert().
  * ----
  */
-static	int
+static int
 avl_insertinto(AVLtree *tree, AVLnode **node,
-				void *cdata, AVLnode **result)
+			   void *cdata, AVLnode **result)
 {
-	int		cmp;
+	int			cmp;
 
 	/*
 	 * Compare the node at hand with the new elements key.
 	 */
-	cmp = (tree->compfunc)(cdata, (*node)->cdata);
+	cmp = (tree->compfunc) (cdata, (*node)->cdata);
 
 	if (cmp > 0)
 	{
@@ -203,11 +203,10 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 		 */
 		if ((*node)->rnode == NULL)
 		{
-			/* 
-			 * Right side of current node is empty. Create a new node
-			 * there and return new maximum depth. Note that this can
-			 * only be 1 because otherwise this node would have been
-			 * unbalanced before.
+			/*
+			 * Right side of current node is empty. Create a new node there
+			 * and return new maximum depth. Note that this can only be 1
+			 * because otherwise this node would have been unbalanced before.
 			 */
 			(*node)->rnode = *result = avl_makenode();
 			(*node)->rdepth = 1;
@@ -215,32 +214,30 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 		}
 
 		/*
-		 * Right hand node exists. Recurse into that and remember the
-		 * new right hand side depth.
+		 * Right hand node exists. Recurse into that and remember the new
+		 * right hand side depth.
 		 */
-		(*node)->rdepth = avl_insertinto(tree, &((*node)->rnode), 
-						cdata, result) + 1;
+		(*node)->rdepth = avl_insertinto(tree, &((*node)->rnode),
+										 cdata, result) + 1;
 
 		/*
-		 * A right hand side insert can unbalance this node only to the
-		 * right. 
+		 * A right hand side insert can unbalance this node only to the right.
 		 */
 		if (AVL_BALANCE(*node) > 1)
 		{
 			if (AVL_BALANCE((*node)->rnode) > 0)
 			{
 				/*
-				 * RR situation, rebalance the tree by left rotating
-				 * this node.
+				 * RR situation, rebalance the tree by left rotating this
+				 * node.
 				 */
 				avl_rotate_left(node);
 			}
 			else
 			{
 				/*
-				 * RL situation, rebalance the tree by first right
-				 * rotating the right hand side, then left rotating
-				 * this node.
+				 * RL situation, rebalance the tree by first right rotating
+				 * the right hand side, then left rotating this node.
 				 */
 				avl_rotate_right(&((*node)->rnode));
 				avl_rotate_left(node);
@@ -256,11 +253,10 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 		 */
 		if ((*node)->lnode == NULL)
 		{
-			/* 
-			 * Left side of current node is empty. Create a new node
-			 * there and return new maximum depth. Note that this can
-			 * only be 1 because otherwise this node would have been
-			 * unbalanced before.
+			/*
+			 * Left side of current node is empty. Create a new node there and
+			 * return new maximum depth. Note that this can only be 1 because
+			 * otherwise this node would have been unbalanced before.
 			 */
 			(*node)->lnode = *result = avl_makenode();
 			(*node)->ldepth = 1;
@@ -268,31 +264,30 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 		}
 
 		/*
-		 * Left hand node exists. Recurse into that and remember the
-		 * new left hand side depth.
+		 * Left hand node exists. Recurse into that and remember the new left
+		 * hand side depth.
 		 */
-		(*node)->ldepth = avl_insertinto(tree, &((*node)->lnode), 
-						cdata, result) + 1;
+		(*node)->ldepth = avl_insertinto(tree, &((*node)->lnode),
+										 cdata, result) + 1;
 
 		/*
-		 * A left hand side insert can unbalance this node only to the
-		 * left. 
+		 * A left hand side insert can unbalance this node only to the left.
 		 */
 		if (AVL_BALANCE(*node) < -1)
 		{
 			if (AVL_BALANCE((*node)->lnode) < 0)
 			{
 				/*
-				 * LL situation, rebalance the tree by right rotating
-				 * this node.
+				 * LL situation, rebalance the tree by right rotating this
+				 * node.
 				 */
 				avl_rotate_right(node);
 			}
 			else
 			{
 				/*
-				 * LR situation, rebalance the tree by first left rotating
-				 * the left node, then right rotating this node.
+				 * LR situation, rebalance the tree by first left rotating the
+				 * left node, then right rotating this node.
 				 */
 				avl_rotate_left(&((*node)->lnode));
 				avl_rotate_right(node);
@@ -301,16 +296,16 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 
 		return AVL_MAXDEPTH(*node);
 	}
-	else {
+	else
+	{
 		/*
-		 * The new element is equal to this node. If it is marked
-		 * for deletion, free the user element data now. The caller
-		 * is supposed to replace it with a new element having the
-		 * the key.
+		 * The new element is equal to this node. If it is marked for
+		 * deletion, free the user element data now. The caller is supposed to
+		 * replace it with a new element having the the key.
 		 */
 		if ((*node)->deleted && tree->freefunc != NULL)
 		{
-			(tree->freefunc)((*node)->cdata);
+			(tree->freefunc) ((*node)->cdata);
 			(*node)->cdata = NULL;
 			(*node)->deleted = 0;
 		}
@@ -326,12 +321,12 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
  *	Create a new empty node.
  * ----
  */
-static	AVLnode *
+static AVLnode *
 avl_makenode(void)
 {
-	AVLnode	   *new;
+	AVLnode    *new;
 
-	new = (AVLnode *)malloc(sizeof(AVLnode));
+	new = (AVLnode *) malloc(sizeof(AVLnode));
 	memset(new, 0, sizeof(AVLnode));
 
 	return new;
@@ -347,7 +342,7 @@ avl_makenode(void)
 static void
 avl_rotate_left(AVLnode **node)
 {
-	AVLnode	   *rtmp;
+	AVLnode    *rtmp;
 
 	/*
 	 * save right node
@@ -385,7 +380,7 @@ avl_rotate_left(AVLnode **node)
 static void
 avl_rotate_right(AVLnode **node)
 {
-	AVLnode	   *ltmp;
+	AVLnode    *ltmp;
 
 	/*
 	 * save left node
@@ -412,5 +407,3 @@ avl_rotate_right(AVLnode **node)
 	 */
 	*node = ltmp;
 }
-
-

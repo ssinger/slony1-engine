@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.28 2007-06-27 16:20:24 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.29 2008-04-23 20:35:43 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -26,7 +26,7 @@
 #include "slon.h"
 
 
-static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
+static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
 static int	db_get_version(PGconn *conn);
 
 #if (PG_VERSION_MAJOR < 8)
@@ -44,7 +44,7 @@ static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* ----------
- * slon_connectdb 
+ * slon_connectdb
  * ----------
  */
 SlonConn *
@@ -106,7 +106,7 @@ slon_connectdb(char *conninfo, char *symname)
 		slon_log(SLON_ERROR, "Unable to set the datestyle to ISO\n");
 	}
 	PQclear(res);
-	
+
 	/*
 	 * Embed it into a SlonConn structure used to exchange it with the
 	 * scheduler. On return this new connection object is locked.
@@ -114,28 +114,28 @@ slon_connectdb(char *conninfo, char *symname)
 	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
 	conn->pg_version = db_get_version(dbconn);
-        if (conn->pg_version < 80300)
-        {
-                slon_log(SLON_ERROR,
-                        "slon_connectdb: PQconnectdb(\"%s\") PostgreSQL version not supported\n",
-                        conninfo);
-                PQfinish(dbconn);
-                return NULL;
-        }
-	
-        slon_log(SLON_CONFIG,
-                "version for \"%s\" is %d\n", conninfo, conn->pg_version);
+	if (conn->pg_version < 80300)
+	{
+		slon_log(SLON_ERROR,
+				 "slon_connectdb: PQconnectdb(\"%s\") PostgreSQL version not supported\n",
+				 conninfo);
+		PQfinish(dbconn);
+		return NULL;
+	}
+
+	slon_log(SLON_CONFIG,
+			 "version for \"%s\" is %d\n", conninfo, conn->pg_version);
 
 	if (conn->pg_version >= 80100)
-        {
-                slon_mkquery(&query, "set escape_string_warning to 'off'");
-                res = PQexec(dbconn, dstring_data(&query));
-                if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
-                {
-                        slon_log(SLON_ERROR, "Unable to set escape_string_warning to off\n");
-                }
-                PQclear(res);
-        }
+	{
+		slon_mkquery(&query, "set escape_string_warning to 'off'");
+		res = PQexec(dbconn, dstring_data(&query));
+		if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
+		{
+			slon_log(SLON_ERROR, "Unable to set escape_string_warning to off\n");
+		}
+		PQclear(res);
+	}
 	if (conn->pg_version >= 80200)
 	{
 		slon_mkquery(&query, "set standard_conforming_strings to 'off'");
@@ -143,7 +143,7 @@ slon_connectdb(char *conninfo, char *symname)
 		if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
 		{
 			slon_log(SLON_ERROR, "Unable to set the standard_conforming_strings to off\n");
-        	}
+		}
 		PQclear(res);
 	}
 	dstring_free(&query);
@@ -152,11 +152,11 @@ slon_connectdb(char *conninfo, char *symname)
 
 
 /* ----------
- * slon_disconnectdb 
+ * slon_disconnectdb
  * ----------
  */
 void
-slon_disconnectdb(SlonConn * conn)
+slon_disconnectdb(SlonConn *conn)
 {
 	/*
 	 * Disconnect the native database connection
@@ -174,7 +174,7 @@ slon_disconnectdb(SlonConn * conn)
 
 
 /* ----------
- * slon_make_dummyconn 
+ * slon_make_dummyconn
  * ----------
  */
 SlonConn *
@@ -206,11 +206,11 @@ slon_make_dummyconn(char *symname)
 
 
 /* ----------
- * slon_free_dummyconn 
+ * slon_free_dummyconn
  * ----------
  */
 void
-slon_free_dummyconn(SlonConn * conn)
+slon_free_dummyconn(SlonConn *conn)
 {
 	/*
 	 * Destroy and unlock the condition and mutex variables
@@ -233,7 +233,7 @@ slon_free_dummyconn(SlonConn * conn)
 /* ----------
  * db_getLocalNodeId
  *
- * Query a connection for the value of sequence sl_local_node_id 
+ * Query a connection for the value of sequence sl_local_node_id
  * ----------
  */
 int
@@ -379,14 +379,14 @@ db_checkSchemaVersion(PGconn *conn)
  * slon_mkquery
  *
  * A simple query formatting and quoting function using dynamic string buffer
- * allocation. Similar to sprintf() it uses formatting symbols: 
- *     %s	String argument
- *     %q	Quoted literal (\ and ' will be escaped)
- *     %d	Integer argument 
+ * allocation. Similar to sprintf() it uses formatting symbols:
+ *	   %s	String argument
+ *	   %q	Quoted literal (\ and ' will be escaped)
+ *	   %d	Integer argument
  * ----------
  */
 int
-slon_mkquery(SlonDString * dsp, char *fmt,...)
+slon_mkquery(SlonDString *dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -409,7 +409,7 @@ slon_mkquery(SlonDString * dsp, char *fmt,...)
  * ----------
  */
 int
-slon_appendquery(SlonDString * dsp, char *fmt,...)
+slon_appendquery(SlonDString *dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -426,11 +426,11 @@ slon_appendquery(SlonDString * dsp, char *fmt,...)
 /* ----------
  * slon_appendquery_int
  *
- * Implementation of slon_mkquery() and slon_appendquery(). 
+ * Implementation of slon_mkquery() and slon_appendquery().
  * ----------
  */
 static int
-slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
+slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
 {
 	char	   *s;
 	char		buf[64];
@@ -502,22 +502,23 @@ slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 	return 0;
 }
 
-static int db_get_version(PGconn *conn)
+static int
+db_get_version(PGconn *conn)
 {
-	PGresult    *res;
+	PGresult   *res;
 	SlonDString query;
-	char	    versionstr[7];
-	int	    version=0;
-	int	    major=0;
-	int	    minor=0;
-	int	    patch=0;
+	char		versionstr[7];
+	int			version = 0;
+	int			major = 0;
+	int			minor = 0;
+	int			patch = 0;
 
 	dstring_init(&query);
 	slon_mkquery(&query, "SELECT version();");
 	res = PQexec(conn, dstring_data(&query));
 
-	if ( !res || PQresultStatus(res) != PGRES_TUPLES_OK )
-        {
+	if (!res || PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
 		PQclear(res);
 		return -1;
 	}
@@ -528,11 +529,11 @@ static int db_get_version(PGconn *conn)
 	}
 	PQclear(res);
 	snprintf(versionstr, 7, "%.2d%.2d%.2d", major, minor, patch);
-	version=atoi(versionstr);
+	version = atoi(versionstr);
 	dstring_free(&query);
 	return version;
 }
-	
+
 /*
  * Local Variables:
  *	tab-width: 4

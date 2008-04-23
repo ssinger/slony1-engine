@@ -3,8 +3,8 @@
 #include <errno.h>
 #include "slon.h"
 
-#ifdef qsort 
-#undef qsort 
+#ifdef qsort
+#undef qsort
 #endif
 
 static struct config_generic **conf_variables;
@@ -17,32 +17,38 @@ static int	conf_name_compare(const char *namea, const char *nameb);
 bool		set_config_option(const char *name, const char *value);
 void	   *get_config_option(const char *name);
 
-static bool		bool_placeholder;
-static double		real_placeholder;
-static char	   *string_placeholder;
+static bool bool_placeholder;
+static double real_placeholder;
+static char *string_placeholder;
 
-void dump_configuration(void);
+void		dump_configuration(void);
 
-void dump_configuration(void)
+void
+dump_configuration(void)
 {
-	int i;
-	for (i = 0; ConfigureNamesInt[i].gen.name; i++) {
+	int			i;
+
+	for (i = 0; ConfigureNamesInt[i].gen.name; i++)
+	{
 		slon_log(SLON_CONFIG, "main: Integer option %s = %d\n",
-			 ConfigureNamesInt[i].gen.name, *(ConfigureNamesInt[i].variable));
+			ConfigureNamesInt[i].gen.name, *(ConfigureNamesInt[i].variable));
 	}
-	for (i = 0; ConfigureNamesBool[i].gen.name; i++) {
+	for (i = 0; ConfigureNamesBool[i].gen.name; i++)
+	{
 		slon_log(SLON_CONFIG, "main: Boolean option %s = %d\n",
-			 ConfigureNamesBool[i].gen.name, *(ConfigureNamesBool[i].variable));
+		  ConfigureNamesBool[i].gen.name, *(ConfigureNamesBool[i].variable));
 	}
-	for (i = 0; ConfigureNamesReal[i].gen.name; i++) {
+	for (i = 0; ConfigureNamesReal[i].gen.name; i++)
+	{
 		slon_log(SLON_CONFIG, "main: Real option %s = %f\n",
-			 ConfigureNamesReal[i].gen.name, *(ConfigureNamesReal[i].variable));
+		  ConfigureNamesReal[i].gen.name, *(ConfigureNamesReal[i].variable));
 	}
-	for (i = 0; ConfigureNamesString[i].gen.name; i++) {
+	for (i = 0; ConfigureNamesString[i].gen.name; i++)
+	{
 		slon_log(SLON_CONFIG, "main: String option %s = %s\n",
-			 ConfigureNamesString[i].gen.name, *(ConfigureNamesString[i].variable));
+				 ConfigureNamesString[i].gen.name, *(ConfigureNamesString[i].variable));
 	}
-	
+
 
 }
 
@@ -124,13 +130,13 @@ build_conf_variables(void)
 	conf_variables = conf_vars;
 	num_conf_variables = num_vars;
 	size_conf_variables = size_vars;
-	qsort((void *)conf_variables, (size_t) num_conf_variables, sizeof(struct config_generic *), conf_var_compare);
+	qsort((void *) conf_variables, (size_t) num_conf_variables, sizeof(struct config_generic *), conf_var_compare);
 }
 
 
 #ifdef NEED_ADD_CONF_VARIABLE
 static bool
-add_conf_variable(struct config_generic * var, int elevel)
+add_conf_variable(struct config_generic *var, int elevel)
 {
 	if (num_conf_variables + 1 >= size_conf_variables)
 	{
@@ -161,7 +167,7 @@ add_conf_variable(struct config_generic * var, int elevel)
 		size_conf_variables = size_vars;
 	}
 	conf_variables[num_conf_variables++] = var;
-	qsort((void *)conf_variables, num_conf_variables,
+	qsort((void *) conf_variables, num_conf_variables,
 		  sizeof(struct config_generic *), conf_var_compare);
 	return true;
 }
@@ -226,9 +232,9 @@ InitializeConfOptions(void)
 }
 
 static bool
-parse_bool(const char *value, bool * result)
+parse_bool(const char *value, bool *result)
 {
-	int		len = (int)  strlen(value);
+	int			len = (int) strlen(value);
 
 	if (strncasecmp(value, "true", len) == 0)
 	{
@@ -310,12 +316,12 @@ parse_int(const char *value, int *result)
 	if (endptr == value || *endptr != '\0' || errno == ERANGE
 #ifdef HAVE_LONG_INT_64
 	/* if long > 32 bits, check for overflow of int4 */
-		|| val != (long)((int32) val)
+		|| val != (long) ((int32) val)
 #endif
 		)
 		return false;
 	if (result)
-		*result = (int)val;
+		*result = (int) val;
 	return true;
 }
 
@@ -347,8 +353,8 @@ find_option(const char *name, int elevel)
 	struct config_generic **res;
 
 	res = (struct config_generic **)
-		bsearch((void *)&key,
-				(void *)conf_variables,
+		bsearch((void *) &key,
+				(void *) conf_variables,
 				(size_t) num_conf_variables,
 				sizeof(struct config_generic *),
 				conf_var_compare);
@@ -416,28 +422,28 @@ get_config_option(const char *name)
 			{
 				struct config_bool *conf = (struct config_bool *) record;
 
-				return (void *)conf->variable;
+				return (void *) conf->variable;
 				/* break; */
 			}
 		case SLON_C_INT:
 			{
 				struct config_int *conf = (struct config_int *) record;
 
-				return (void *)conf->variable;
+				return (void *) conf->variable;
 				/* break; */
 			}
 		case SLON_C_REAL:
 			{
 				struct config_real *conf = (struct config_real *) record;
 
-				return (void *)conf->variable;
+				return (void *) conf->variable;
 				/* break; */
 			}
 		case SLON_C_STRING:
 			{
 				struct config_string *conf = (struct config_string *) record;
 
-				return (void *)*conf->variable;
+				return (void *) *conf->variable;
 				/* break; */
 			}
 	}
@@ -484,7 +490,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_INT:
 			{
 				struct config_int *conf = (struct config_int *) record;
-				int			newval=0;
+				int			newval = 0;
 
 				if (value)
 				{
@@ -564,7 +570,7 @@ static struct config_int ConfigureNamesInt[] =
 {
 	{
 		{
-			(const char *)"vac_frequency",		/* conf name */
+			(const char *) "vac_frequency",		/* conf name */
 			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* short desc */
 			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* long desc */
 			SLON_C_INT			/* config type */
@@ -576,7 +582,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"log_level",
+			(const char *) "log_level",
 			gettext_noop("debug log level"),
 			gettext_noop("debug log level"),
 			SLON_C_INT
@@ -588,7 +594,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"sync_interval",
+			(const char *) "sync_interval",
 			gettext_noop("sync event interval"),
 			gettext_noop("sync event interval in ms"),
 			SLON_C_INT
@@ -600,7 +606,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"sync_interval_timeout",
+			(const char *) "sync_interval_timeout",
 			gettext_noop("sync interval time out"),
 			gettext_noop("sync interval time out"),
 			SLON_C_INT
@@ -612,7 +618,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"sync_group_maxsize",
+			(const char *) "sync_group_maxsize",
 			gettext_noop("sync group"),
 			gettext_noop("sync group"),
 			SLON_C_INT
@@ -624,7 +630,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"desired_sync_time",
+			(const char *) "desired_sync_time",
 			gettext_noop("maximum time planned for grouped SYNCs"),
 			gettext_noop("If replication is behind, slon will try to increase numbers of "
 			  "syncs done targetting that they should take this quantity of "
@@ -639,7 +645,7 @@ static struct config_int ConfigureNamesInt[] =
 #ifdef HAVE_SYSLOG
 	{
 		{
-			(const char *)"syslog",
+			(const char *) "syslog",
 			gettext_noop("Uses syslog for logging."),
 			gettext_noop("If this parameter is 1, messages go both to syslog "
 						 "and the standard output. A value of 2 sends output only to syslog. "
@@ -655,7 +661,7 @@ static struct config_int ConfigureNamesInt[] =
 #endif
 	{
 		{
-			(const char *)"quit_sync_provider",
+			(const char *) "quit_sync_provider",
 			gettext_noop("Node to watch for a final SYNC"),
 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
 					"against a certain provider.  This is the provider... "),
@@ -668,7 +674,7 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"quit_sync_finalsync",
+			(const char *) "quit_sync_finalsync",
 			gettext_noop("SYNC number at which slon should abort"),
 			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
 				 "against a certain provider.  This is the SYNC number... "),
@@ -681,39 +687,39 @@ static struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{
-			(const char *)"sync_max_rowsize",		/* conf name */
-			gettext_noop("sl_log_? rows larger than that are read separately"),		/* short desc */
-			gettext_noop("sl_log_? rows larger than that are read separately"),		/* long desc */
+			(const char *) "sync_max_rowsize",	/* conf name */
+			gettext_noop("sl_log_? rows larger than that are read separately"), /* short desc */
+			gettext_noop("sl_log_? rows larger than that are read separately"), /* long desc */
 			SLON_C_INT			/* config type */
 		},
-		&sync_max_rowsize,			/* var name */
-		8192,						/* default val */
-		1024,						/* min val */
-		32768						/* max val */
+		&sync_max_rowsize,		/* var name */
+		8192,					/* default val */
+		1024,					/* min val */
+		32768					/* max val */
 	},
 	{
 		{
-			(const char *)"sync_max_largemem",		/* conf name */
+			(const char *) "sync_max_largemem", /* conf name */
 			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* short desc */
 			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* long desc */
 			SLON_C_INT			/* config type */
 		},
-		&sync_max_largemem,			/* var name */
-		5242880,					/* default val */
-		1048576,					/* min val */
-		1073741824					/* max val */
+		&sync_max_largemem,		/* var name */
+		5242880,				/* default val */
+		1048576,				/* min val */
+		1073741824				/* max val */
 	},
 
 	{
 		{
-			(const char *)"remote_listen_timeout",		/* conf name */
+			(const char *) "remote_listen_timeout",		/* conf name */
 			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* short desc */
 			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* long desc */
 			SLON_C_INT			/* config type */
 		},
-		&remote_listen_timeout,			/* var name */
+		&remote_listen_timeout, /* var name */
 		300,					/* default val */
-		30,					/* min val */
+		30,						/* min val */
 		30000					/* max val */
 	},
 
@@ -725,9 +731,9 @@ static struct config_bool ConfigureNamesBool[] =
 {
 	{
 		{
-			(const char *)"log_pid",	/* conf name */
-			gettext_noop("Should logs include PID?"),		/* short desc */
-			gettext_noop("Should logs include PID?"),		/* long desc */
+			(const char *) "log_pid",	/* conf name */
+			gettext_noop("Should logs include PID?"),	/* short desc */
+			gettext_noop("Should logs include PID?"),	/* long desc */
 			SLON_C_BOOL			/* config type */
 		},
 		&logpid,				/* var_name */
@@ -735,7 +741,7 @@ static struct config_bool ConfigureNamesBool[] =
 	},
 	{
 		{
-			(const char *)"log_timestamp",
+			(const char *) "log_timestamp",
 			gettext_noop("Should logs include timestamp?"),
 			gettext_noop("Should logs include timestamp?"),
 			SLON_C_BOOL
@@ -746,7 +752,7 @@ static struct config_bool ConfigureNamesBool[] =
 
 	{
 		{
-			(const char *)"cleanup_deletelogs",
+			(const char *) "cleanup_deletelogs",
 			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
 			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
 			SLON_C_BOOL
@@ -762,7 +768,7 @@ static struct config_real ConfigureNamesReal[] =
 {
 	{
 		{
-			(const char *)"real_placeholder",	/* conf name */
+			(const char *) "real_placeholder",	/* conf name */
 			gettext_noop("place holder"),		/* short desc */
 			gettext_noop("place holder"),		/* long desc */
 			SLON_C_REAL			/* config type */
@@ -779,7 +785,7 @@ static struct config_string ConfigureNamesString[] =
 {
 	{
 		{
-			(const char *)"cluster_name",		/* conf name */
+			(const char *) "cluster_name",		/* conf name */
 			gettext_noop("Name of the replication cluster"),	/* short desc */
 			NULL,				/* long desc */
 			SLON_C_STRING		/* config type */
@@ -789,7 +795,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"conn_info",
+			(const char *) "conn_info",
 			gettext_noop("connection info string"),
 			NULL,
 			SLON_C_STRING
@@ -799,7 +805,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"pid_file",
+			(const char *) "pid_file",
 			gettext_noop("Where to write the pid file"),
 			NULL,
 			SLON_C_STRING
@@ -809,7 +815,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"log_timestamp_format",
+			(const char *) "log_timestamp_format",
 			gettext_noop("A strftime()-style log timestamp format string."),
 			NULL,
 			SLON_C_STRING
@@ -819,7 +825,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"archive_dir",
+			(const char *) "archive_dir",
 			gettext_noop("Where to drop the sync archive files"),
 			NULL,
 			SLON_C_STRING
@@ -829,7 +835,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"sql_on_connection",
+			(const char *) "sql_on_connection",
 			gettext_noop("SQL to send to each connected node upon "
 						 "connection establishment, useful to enable "
 						 "duration logging, or to adjust any other "
@@ -844,7 +850,7 @@ static struct config_string ConfigureNamesString[] =
 
 	{
 		{
-			(const char *)"lag_interval",
+			(const char *) "lag_interval",
 			gettext_noop("A PostgreSQL value compatible with ::interval "
 						 "which indicates how far behind this node should "
 						 "lag its providers."),
@@ -857,12 +863,12 @@ static struct config_string ConfigureNamesString[] =
 
 	{
 		{
-			(const char *)"command_on_logarchive",
+			(const char *) "command_on_logarchive",
 			gettext_noop("Command to run (probably a shell script) "
-				     "every time a log archive is committed. "
-				     "This command will be passed one parameter: "
-				     "The full pathname of the archive file"
-				),
+						 "every time a log archive is committed. "
+						 "This command will be passed one parameter: "
+						 "The full pathname of the archive file"
+			),
 			NULL,
 			SLON_C_STRING
 		},
@@ -874,7 +880,7 @@ static struct config_string ConfigureNamesString[] =
 #ifdef HAVE_SYSLOG
 	{
 		{
-			(const char *)"syslog_facility",
+			(const char *) "syslog_facility",
 			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
 			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
 						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
@@ -885,7 +891,7 @@ static struct config_string ConfigureNamesString[] =
 	},
 	{
 		{
-			(const char *)"syslog_ident",
+			(const char *) "syslog_ident",
 			gettext_noop("Sets the program name used to identify slon messages in syslog."),
 			NULL,
 			SLON_C_STRING
@@ -896,7 +902,7 @@ static struct config_string ConfigureNamesString[] =
 #endif
 	{
 		{
-			(const char *)"cleanup_interval",
+			(const char *) "cleanup_interval",
 			gettext_noop("A PostgreSQL value compatible with ::interval "
 						 "which indicates what aging interval should be used "
 						 "for deleting old events, and hence for purging sl_log_* tables."),
@@ -911,9 +917,8 @@ static struct config_string ConfigureNamesString[] =
 
 /*
  * Local Variables:
- *      tab-width: 4
- *      c-indent-level: 4
- *      c-basic-offset: 4
+ *		tab-width: 4
+ *		c-indent-level: 4
+ *		c-basic-offset: 4
  * End:
  */
-

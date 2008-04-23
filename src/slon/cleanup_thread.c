@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.43 2008-02-25 15:43:38 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.44 2008-04-23 20:35:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -26,12 +26,12 @@
 
 
 /* ----------
- * Global data 
+ * Global data
  * ----------
  */
 int			vac_frequency = SLON_VACUUM_FREQUENCY;
-char *cleanup_interval;
-bool cleanup_deletelogs;
+char	   *cleanup_interval;
+bool		cleanup_deletelogs;
 
 static int	vac_bias = 0;
 static unsigned long earliest_xid = 0;
@@ -41,11 +41,11 @@ static unsigned long get_earliest_xid(PGconn *dbconn);
  * cleanupThread_main
  *
  * Periodically calls the stored procedure to remove old events and log data and
- * vacuums those tables. 
+ * vacuums those tables.
  * ----------
  */
 void *
-cleanupThread_main(/*@unused@*/ void *dummy)
+cleanupThread_main( /* @unused@ */ void *dummy)
 {
 	SlonConn   *conn;
 	SlonDString query_baseclean;
@@ -61,7 +61,7 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 	int			vac_count = 0;
 	int			vac_enable = SLON_VACUUM_FREQUENCY;
 	char	   *vacuum_action;
-	int ntuples;
+	int			ntuples;
 
 	slon_log(SLON_CONFIG, "cleanupThread: thread starts\n");
 
@@ -81,23 +81,24 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 	if ((conn = slon_connectdb(rtcfg_conninfo, "local_cleanup")) == NULL)
 	{
 #ifndef WIN32
-		(void)	kill(getpid(), SIGTERM);
+		(void) kill(getpid(), SIGTERM);
 		pthread_exit(NULL);
 #else
 		exit(0);
 #endif
 		/* slon_retry(); */
 	}
-	
+
 	dbconn = conn->dbconn;
+
 	/*
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */
 	dstring_init(&query_baseclean);
-	slon_mkquery(&query_baseclean, "select %s.cleanupEvent('%s'::interval, '%s'::boolean); ", 
-		     rtcfg_namespace, 
-		     cleanup_interval,
-		     cleanup_deletelogs ? "true" : "false"
+	slon_mkquery(&query_baseclean, "select %s.cleanupEvent('%s'::interval, '%s'::boolean); ",
+				 rtcfg_namespace,
+				 cleanup_interval,
+				 cleanup_deletelogs ? "true" : "false"
 		);
 	dstring_init(&query2);
 
@@ -120,7 +121,7 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 		{
 			slon_log(SLON_FATAL,
 					 "cleanupThread: \"%s\" - %s",
-					 dstring_data(&query_baseclean), PQresultErrorMessage(res));
+				  dstring_data(&query_baseclean), PQresultErrorMessage(res));
 			PQclear(res);
 			slon_retry();
 			break;
@@ -134,7 +135,7 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 		/*
 		 * Detain the usual suspects (vacuum event and log data)
 		 */
-		if (vac_frequency !=0)
+		if (vac_frequency != 0)
 		{
 			vac_enable = vac_frequency;
 		}
@@ -146,10 +147,10 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 			vacuum_action = "";
 			if (earliest_xid == latest_xid)
 			{
-				
+
 				slon_log(SLON_INFO,
 					"cleanupThread: xid %d still active - analyze instead\n",
-					earliest_xid);
+						 earliest_xid);
 			}
 			else
 			{
@@ -169,41 +170,42 @@ cleanupThread_main(/*@unused@*/ void *dummy)
 			slon_mkquery(&query2, "select nspname, relname from %s.TablesToVacuum();", rtcfg_namespace);
 			res = PQexec(dbconn, dstring_data(&query2));
 
-			/* for each table...  and we should set up the
-			 * query to return not only the table name,
-			 * but also a boolean to support what's in the
-			 * SELECT below; that'll nicely simplify this
-			 * process... */
-			
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)  /* query error */
+			/*
+			 * for each table...  and we should set up the query to return not
+			 * only the table name, but also a boolean to support what's in
+			 * the SELECT below; that'll nicely simplify this process...
+			 */
+
+			if (PQresultStatus(res) != PGRES_TUPLES_OK) /* query error */
 			{
 				slon_log(SLON_ERROR,
-					 "cleanupThread: \"%s\" - %s",
-					 dstring_data(&query2), PQresultErrorMessage(res));
+						 "cleanupThread: \"%s\" - %s",
+						 dstring_data(&query2), PQresultErrorMessage(res));
 			}
 			ntuples = PQntuples(res);
 			slon_log(SLON_DEBUG1, "cleanupThread: number of tables to clean: %d\n", ntuples);
 
-			for (t = 0; t < ntuples ; t++)
+			for (t = 0; t < ntuples; t++)
 			{
-				char *tab_nspname = PQgetvalue(res, t, 0);
-				char *tab_relname = PQgetvalue(res, t, 1);
+				char	   *tab_nspname = PQgetvalue(res, t, 0);
+				char	   *tab_relname = PQgetvalue(res, t, 1);
 
-				slon_log (SLON_DEBUG1, "cleanupThread: %s analyze \"%s\".%s;\n",
-					      vacuum_action, tab_nspname, tab_relname);
+				slon_log(SLON_DEBUG1, "cleanupThread: %s analyze \"%s\".%s;\n",
+						 vacuum_action, tab_nspname, tab_relname);
 				dstring_init(&query_pertbl);
-				slon_mkquery (&query_pertbl, "%s analyze \"%s\".%s;",
-					      vacuum_action, tab_nspname, tab_relname);
+				slon_mkquery(&query_pertbl, "%s analyze \"%s\".%s;",
+							 vacuum_action, tab_nspname, tab_relname);
 				res2 = PQexec(dbconn, dstring_data(&query_pertbl));
-				if (PQresultStatus(res) != PGRES_COMMAND_OK)  /* query error */
-                                {
-                 	                slon_log(SLON_ERROR,
-	                                        "cleanupThread: \"%s\" - %s",
-                                                dstring_data(&query_pertbl), PQresultErrorMessage(res2));
-                                                /*
-                                                 * slon_retry(); break;
-                                                 */                  
-                                }
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)	/* query error */
+				{
+					slon_log(SLON_ERROR,
+							 "cleanupThread: \"%s\" - %s",
+					dstring_data(&query_pertbl), PQresultErrorMessage(res2));
+
+					/*
+					 * slon_retry(); break;
+					 */
+				}
 				PQclear(res2);
 				dstring_reset(&query_pertbl);
 			}
@@ -271,7 +273,5 @@ get_earliest_xid(PGconn *dbconn)
 	slon_log(SLON_DEBUG1, "cleanupThread: minxid: %d\n", xid);
 	PQclear(res);
 	dstring_free(&query);
-	return (unsigned long)xid;
+	return (unsigned long) xid;
 }
-
-
