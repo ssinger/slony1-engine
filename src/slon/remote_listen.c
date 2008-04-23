@@ -1,4 +1,4 @@
-* ----------------------------------------------------------------------
+/* ----------------------------------------------------------------------
  * remote_listen.c
  *
  *	Implementation of the thread listening for events on
@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.42 2008-04-23 20:37:06 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.43 2008-04-23 22:29:12 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
