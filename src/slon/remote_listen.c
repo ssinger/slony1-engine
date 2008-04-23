@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.41 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.42 2008-04-23 20:37:06 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -697,7 +697,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	{
 		slon_appendquery(&query, ")");
 	}
-	slon_appendquery(&query, " order by e.ev_origin, e.ev_seqno limit 2000");
+	slon_appendquery(&query, " order by e.ev_origin, e.ev_seqno");
 
 	rtcfg_unlock();
 
