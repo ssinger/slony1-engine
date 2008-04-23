@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.14 2007-06-05 22:22:07 wieck Exp $
+ *	$Id: dbutil.c,v 1.15 2008-04-23 20:34:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -570,20 +570,6 @@ db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustern
 	{
 		printf("%s:%d: Error: language PL/pgSQL is not installed "
 			   "in database '%s'\n",
-			   stmt->stmt_filename, stmt->stmt_lno,
-			   adminfo->conninfo);
-		dstring_free(&query);
-		return -1;
-	}
-
-	/*
-	 * Check loading of xxid module
-	 */
-	slon_mkquery(&query, "load '$libdir/xxid'; ");
-	if (db_exec_command(stmt, adminfo, &query) < 0)
-	{
-		printf("%s:%d: Error: the extension for the xxid data type "
-			   "cannot be loaded in database '%s'\n",
 			   stmt->stmt_filename, stmt->stmt_lno,
 			   adminfo->conninfo);
 		dstring_free(&query);
