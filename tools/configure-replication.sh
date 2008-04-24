@@ -1,11 +1,12 @@
 #!/bin/bash
-# $Id: configure-replication.sh,v 1.4 2007-11-22 17:47:03 cbbrowne Exp $
+# $Id: configure-replication.sh,v 1.5 2008-04-24 15:11:14 cbbrowne Exp $
 
 # Global defaults
 CLUSTER=${CLUSTER:-"slonytest"}
 NUMNODES=${NUMNODES:-"2"}
 
 # Defaults - origin node
+ORIGIN=1
 DB1=${DB1:-${PGDATABASE:-"slonytest"}}
 HOST1=${HOST1:-`hostname`}
 USER1=${USER1:-${PGUSER:-"slony"}}
@@ -145,13 +146,13 @@ echo "create set (id=1, origin=1, comment='${CLUSTER} Tables and Sequences');" >
 tnum=1
 
 for table in `echo $TABLES`; do
-    echo "set add table (id=${tnum}, set id=1, origin=1, fully qualified name='${table}', comment='${CLUSTER} table ${table}');" >> $SETUPSET
+    echo "set add table (id=${tnum}, set id=1, origin=${ORIGIN}, fully qualified name='${table}', comment='${CLUSTER} table ${table}');" >> $SETUPSET
     tnum=`expr ${tnum} + 1`
 done
 
 snum=1
 for seq in `echo $SEQUENCES`; do
-    echo "set add sequence (id=${snum}, set id=1, origin=1, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET
+    echo "set add sequence (id=${snum}, set id=1, origin=${ORIGIN}, fully qualified name='${seq}', comment='${CLUSTER} sequence ${seq}');" >> $SETUPSET
     snum=`expr ${snum} + 1`
 done
 
@@ -163,7 +164,7 @@ node=2
 while : ; do
     SUBFILE=$mktmp/subscribe_set_${node}.slonik
     echo "include <${PREAMBLE}>;" > $SUBFILE
-    echo "store node (id=${node}, comment='${CLUSTER} subscriber node ${node}');" >> $NODEINIT
+    echo "store node (id=${node}, comment='${CLUSTER} subscriber node ${node}', event node=${ORIGIN});" >> $NODEINIT
     echo "subscribe set (id=1, provider=1, receiver=${node}, forward=yes);" >> $SUBFILE
     if [ ${node} -ge ${NUMNODES} ]; then
       break;
