@@ -1,6 +1,6 @@
 README
 ------------
-$Id: configure-replication.txt,v 1.2 2007-11-22 17:47:03 cbbrowne Exp $
+$Id: configure-replication.txt,v 1.3 2008-04-24 15:10:26 cbbrowne Exp $
 Christopher Browne
 cbbrowne@ca.afilias.info
 2006-10-20
@@ -66,7 +66,7 @@ environment variable.)  The usage is thus:
    permanently to use with other maintenance you may want to do on the
    cluster.
 
-2.  create_set.slonik
+2.  create_nodes.slonik
 
     This is the first script to run; it sets up the requested nodes as
     being Slony-I nodes, adding in some Slony-I-specific config tables
