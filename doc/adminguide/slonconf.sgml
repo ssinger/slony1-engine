@@ -442,8 +442,8 @@
         <primary><varname>remote_listen_timeout</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>How long should the remote listener wait before treating the event selection criteria as having timed out?
-          Range: [30-30000], default 300
+        <para>How long, in milliseconds should the remote listener wait before treating the event selection criteria as having timed out?
+          Range: [30-30000], default 300ms
         </para>
       </listitem>
     </varlistentry>
