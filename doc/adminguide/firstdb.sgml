@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.27 2008-04-18 16:14:42 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.28 2008-05-12 15:10:28 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -388,7 +388,7 @@ $ slon_start 2
 $ slonik_create_set 1 | slonik             
 
 # subscribe set to second node (1= set ID, 2= node ID)
-$ slonik_subscribe_set  2 | slonik
+$ slonik_subscribe_set 1 2 | slonik
 </programlisting>
 
 <para> You have now replicated your first database.  You can skip the
