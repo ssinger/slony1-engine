@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.2 2007-09-09 02:37:05 wieck Exp $
+ *	$Id: parser.y,v 1.3 2008-05-13 21:45:15 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -340,12 +340,12 @@ arch_tracking		: K_SELECT ident '.' arch_tracking_func '(' literal ',' literal '
 						dstring_init(&ds);
 						slon_mkquery(&ds, "select %s.%s('%s', '%s');",
 								$2, $4, $6, $8);
+						rc = process_check_at_counter($6);
 						free($2);
 						free($4);
 						free($6);
 						free($8);
 
-						rc = process_check_at_counter($6);
 						if (rc < 0)
 						{
 							dstring_free(&ds);
