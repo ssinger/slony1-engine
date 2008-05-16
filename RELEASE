@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.28 2008-03-07 21:49:32 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.29 2008-05-16 17:31:47 cbbrowne Exp $
 RELEASE 1.2.14
 - Fix typo in configure-replication.sh (missing CR)
 
@@ -13,6 +13,12 @@ RELEASE 1.2.14
   ACCEPT_SET
 
   http://lists.slony.info/pipermail/slony1-general/2008-March/007655.html
+
+- Fix bug #49 - mishandling by slony_logshipper of quotes &
+  backslashes.
+
+- Fix bug #50 - slony_logshipper had a variable access *after*
+  memory was freed
 
 RELEASE 1.2.13
 - Fixed problem with compatibility with PostgreSQL 8.3; function
