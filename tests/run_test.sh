@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.22 2008-04-11 15:39:31 cbbrowne Exp $
+# $Id: run_test.sh,v 1.23 2008-05-26 20:50:34 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -323,7 +323,7 @@ generate_weak_slony_grants ()
   sl_event_seq sl_listen sl_local_node_id sl_log_1 sl_log_2
   sl_log_status sl_node  sl_path sl_registry
   sl_seqlastvalue sl_seqlog sl_sequence sl_set sl_setsync
-  sl_status sl_subscribe sl_table sl_trigger"
+  sl_status sl_subscribe sl_table"
 
   RWTBLS="sl_nodelock sl_nodelock_nl_conncnt_seq"
 
