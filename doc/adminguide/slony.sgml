@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.41 2008-03-24 15:57:34 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.42 2008-05-26 18:46:21 cbbrowne Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -46,6 +46,17 @@
 <!ENTITY sllog2 "<xref linkend=table.sl-log-2>">
 <!ENTITY slseqlog "<xref linkend=table.sl-seqlog>">
 <!ENTITY slconfirm "<xref linkend=table.sl-confirm>">
+
+<!ENTITY slevent "<xref linkend=table.sl-event>">
+<!ENTITY slnode "<xref linkend=table.sl-node>">
+<!ENTITY slpath "<xref linkend=table.sl-path>">
+<!ENTITY sllisten "<xref linkend=table.sl-listen>">
+<!ENTITY slregistry "<xref linkend=table.sl-registry>">
+<!ENTITY slsetsync "<xref linkend=table.sl-setsync>">
+<!ENTITY slsubscribe "<xref linkend=table.sl-subscribe>">
+<!ENTITY sltable "<xref linkend=table.sl-table>">
+<!ENTITY slset "<xref linkend=table.sl-set>">
+
 <!ENTITY rplainpaths "<xref linkend=plainpaths>">
 <!ENTITY rlistenpaths "<xref linkend=listenpaths>">
 <!ENTITY pglistener "<envar>pg_listener</envar>">

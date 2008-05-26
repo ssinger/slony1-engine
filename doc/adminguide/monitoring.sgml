@@ -1,8 +1,91 @@
-<!-- $Id: monitoring.sgml,v 1.42 2008-03-24 15:57:34 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.43 2008-05-26 18:46:21 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
 <indexterm><primary>monitoring &slony1;</primary></indexterm>
+
+<para> As a prelude to the discussion, it is worth pointing out that
+since the bulk of &slony1; functionality is implemented via running
+database functions and SQL queries against tables within a &slony1;
+schema, most of the things that one might want to monitor about
+replication may be found by querying tables in the schema created for
+the cluster in each database in the cluster. </para>
+
+<para> Here are some of the tables that contain information likely to
+be particularly interesting from a monitoring and diagnostic
+perspective.</para>
+
+<glosslist>
+<glossentry><glossterm><envar>sl_status</envar></glossterm>
+
+<glossdef><para>This view is the first, most obviously useful thing to
+look at from a monitoring perspective.  It looks at the local node's
+events, and checks to see how quickly they are being confirmed on
+other nodes.</para>
+
+<para> The view is primarily useful to run against an origin
+(<quote>master</quote>) node, as it is only there where the events
+generated are generally expected to require interesting work to be
+done.  The events generated on non-origin nodes tend to
+be <command>SYNC</command> events that require no replication work be
+done, and that are nearly no-ops, as a
+result. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slconfirm;</glossterm>
+
+<glossdef><para>Contains confirmations of replication events; this may be used to infer which events have, and <emphasis>have not</emphasis> been processed.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slevent;</glossterm>
+<glossdef><para>Contains information about the replication events processed on the local node.  </para></glossdef></glossentry>
+
+<glossentry><glossterm>
+&sllog1;
+and
+&sllog2;
+</glossterm>
+
+<glossdef><para>These tables contain replicable data.  On an origin node, this is the <quote>queue</quote> of data that has not necessarily been replicated everywhere.  By examining the table, you may examine the details of what data is replicable. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slnode;</glossterm>
+<glossdef><para>The list of nodes in the cluster.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slpath;</glossterm>
+<glossdef><para>This table holds connection information indicating how &lslon; processes are to connect to remote nodes, whether to access events, or to request replication data. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&sllisten;</glossterm>
+
+<glossdef><para>This configuration table indicates how nodes listen
+for events coming from other nodes.  Usually this is automatically
+populated; generally you can detect configuration problems by this
+table being <quote>underpopulated.</quote> </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slregistry;</glossterm>
+
+<glossdef><para>A configuration table that may be used to store
+miscellaneous runtime data.  Presently used only to manage switching
+between the two log tables.  </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slseqlog;</glossterm>
+
+<glossdef><para>Contains the <quote>last value</quote> of replicated
+sequences.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slset;</glossterm>
+
+<glossdef><para>Contains definition information for replication sets,
+which is the mechanism used to group together related replicable
+tables and sequences.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slsetsync;</glossterm>
+<glossdef><para>Contains information about the state of synchronization of each replication set, including transaction snapshot data.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slsubscribe;</glossterm>
+<glossdef><para>Indicates what subscriptions are in effect for each replication set.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&sltable;</glossterm>
+<glossdef><para>Contains the list of tables being replicated.</para></glossdef></glossentry>
+
+</glosslist>
 
 <sect2 id="testslonystate"> <title> test_slony_state</title>
 
