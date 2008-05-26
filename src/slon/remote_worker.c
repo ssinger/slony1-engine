@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.167 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.168 2008-05-26 20:09:54 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -497,7 +497,7 @@ remoteWorkerThread_main(void *cdata)
 		sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-				 "Received event %d,%s %s\n",
+				 "Received event #%d from %s type:%s\n",
 				 node->no_id, event->ev_origin, seqbuf,
 				 event->ev_type);
 
@@ -564,7 +564,7 @@ remoteWorkerThread_main(void *cdata)
 					{
 						ideal_sync = sync_group_maxsize;
 					}
-					max_sync = ((last_sync_group_size * 200) / 100) + 1;
+					max_sync = last_sync_group_size * 2 + 1;
 					next_sync_group_size = ideal_sync;
 					if (next_sync_group_size > max_sync)
 						next_sync_group_size = max_sync;
@@ -1303,7 +1303,7 @@ remoteWorkerThread_main(void *cdata)
 
 					slon_appendquery(&query1,
 									 "set session_replication_role to local; "
-								 "select %s.ddlScript_prepare_int(%d, %d); ",
+									 "select %s.ddlScript_prepare_int(%d, %d); ",
 									 rtcfg_namespace,
 									 ddl_setid, ddl_only_on_node);
 
