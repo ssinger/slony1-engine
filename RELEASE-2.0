@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.17 2008-05-26 20:17:07 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.18 2008-05-26 21:46:04 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -169,9 +169,9 @@ often.
   creating duplicate nodes based on taking a copy of some existing
   subscriber node.
 
-- remote_worker suppresses generating "NOTIFY _%s_Event;" for other
-  than the first SYNC in a SYNC group, as the extra notifications are
-  redundant.
+- We no longer use LISTEN/NOTIFY for events and confirmations, which
+  eliminates the usage that has caused pg_listener bloat.  We instead
+  poll against the event table.
 
 - Various instances where slonik would use a default node ID of 1 have
   been changed to remove this.
