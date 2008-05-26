@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.88 2008-04-11 15:44:23 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.89 2008-05-26 18:48:51 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1877,9 +1877,9 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
                 use_major = 8;
                 use_minor = 3;
                 printf("%s:%d: Possible unsupported PostgreSQL "
-                        "version %d.%d, defaulting to 8.3 support\n",
-                        stmt->stmt_filename, stmt->stmt_lno,
-                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+                       "version (%d) %d.%d, defaulting to 8.3 support\n",
+		       stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
+		       (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
         }
 
 	/* Load schema, DB version specific */
