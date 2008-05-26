@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.44 2008-05-26 20:14:27 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.45 2008-05-26 21:09:48 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -55,11 +55,6 @@ static int remoteListen_forward_confirm(SlonNode * node,
 static int remoteListen_receive_events(SlonNode * node,
 					SlonConn * conn, struct listat * listat);
 
-typedef enum {
-	SLON_POLLSTATE_POLL=1, 
-	SLON_POLLSTATE_LISTEN
-} PollState;
-static PollState	poll_state;
 static int			poll_sleep;
 
 extern char *lag_interval;
@@ -91,8 +86,6 @@ remoteListenThread_main(void *cdata)
 	int64		last_config_seq = 0;
 	int64		new_config_seq = 0;
 
-	PollState	oldpstate;
-
 	slon_log(SLON_INFO,
 			 "remoteListenThread_%d: thread starts\n",
 			 node->no_id);
@@ -105,7 +98,6 @@ remoteListenThread_main(void *cdata)
 	dstring_init(&query1);
 
 	poll_sleep = 0;
-	poll_state = SLON_POLLSTATE_POLL;	/* Initially, start in Polling mode */
 
 	sprintf(conn_symname, "node_%d_listen", node->no_id);
 
@@ -237,28 +229,16 @@ remoteListenThread_main(void *cdata)
 			 * register the node connection.
 			 */
 			(void) slon_mkquery(&query1,
-				     /* "listen \"_%s_Event\"; " */
-				     /*	 skip confirms "listen \"_%s_Confirm\"; " */
 				     "select %s.registerNodeConnection(%d); ",
-				     /* rtcfg_cluster_name,  */
 				     rtcfg_namespace, rtcfg_nodeid);
 
-			if (poll_state == SLON_POLLSTATE_LISTEN) {
-				slon_appendquery(&query1, 
-						 "listen \"_%s_Event\"; ",
-						 rtcfg_cluster_name);
-			} else {
-				slon_appendquery(&query1, 
-						 "unlisten \"_%s_Event\"; ",
-						 rtcfg_cluster_name);
-			}
 			res = PQexec(dbconn, dstring_data(&query1));
-			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR,
 					 "remoteListenThread_%d: \"%s\" - %s",
 					 node->no_id,
-					 dstring_data(&query1), PQresultErrorMessage(res));
+						 dstring_data(&query1), PQresultErrorMessage(res));
 				PQclear(res);
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -317,7 +297,6 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Receive events from the provider node
 		 */
-		oldpstate = poll_state;
 		rc = remoteListen_receive_events(node, conn, listat_head);
 		if (rc < 0)
 		{
@@ -332,41 +311,6 @@ remoteListenThread_main(void *cdata)
 
 			continue;
 		}
-		if (oldpstate != poll_state) { /* Switched states... */
-			switch (poll_state) {
-			case SLON_POLLSTATE_POLL:
-				slon_log(SLON_DEBUG2, 
-					 "remoteListenThread_%d: UNLISTEN - switch into polling mode\n",
-					 node->no_id);
-
-				(void) slon_mkquery(&query1,
-					     "unlisten \"_%s_Event\"; ",
-					     rtcfg_cluster_name);
-				break;
-			case SLON_POLLSTATE_LISTEN:
-				slon_log(SLON_DEBUG2, 
-					 "remoteListenThread_%d: LISTEN - switch from polling mode to use LISTEN\n",
-					 node->no_id);
-				(void) slon_mkquery(&query1,
-					     "listen \"_%s_Event\"; ",
-					     rtcfg_cluster_name);
-				break;
-			}			
-			res = PQexec(dbconn, dstring_data(&query1));
-			if (PQresultStatus(res) != PGRES_COMMAND_OK)
-			{
-				slon_log(SLON_ERROR,
-					 "remoteListenThread_%d: \"%s\" - %s",
-					 node->no_id,
-					 dstring_data(&query1), PQresultErrorMessage(res));
-				PQclear(res);
-				slon_disconnectdb(conn);
-				free(conn_conninfo);
-				conn = NULL;
-				conn_conninfo = NULL;
-				continue;
-			}
-		}
 
 		/*
 		 * If the remote node notified for new confirmations, read them and
@@ -374,9 +318,6 @@ remoteListenThread_main(void *cdata)
 		 * database.
 		 */
 		
-		/* Initially: Let's just blindly check... */
-		/* if (forward_confirm)
-		   { */
 		rc = remoteListen_forward_confirm(node, conn);
 		if (rc < 0)
 		{
@@ -799,7 +740,6 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 
 	if (ntuples > 0) {
 			if ((sel_max_events > 2) && (sync_group_maxsize > 100)) {
-					poll_state = SLON_POLLSTATE_LISTEN;
 					slon_log(SLON_INFO, "remoteListenThread_%d: drew maximum # of events for %d iterations\n",
 							 node->no_id, sel_max_events);
 					slon_log(SLON_INFO, "remoteListenThread_%d: sleep %ds, return to LISTEN mode\n",
@@ -807,16 +747,13 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 					sched_msleep(node, 10000 + (1000 * sel_max_events));
 			} else {
 					poll_sleep = 0;
-					poll_state = SLON_POLLSTATE_POLL;
 			}
 	} else {
 			poll_sleep = poll_sleep * 2 + sync_interval;
 			if (poll_sleep > sync_interval_timeout) {
 					poll_sleep = sync_interval_timeout;
-					poll_state = SLON_POLLSTATE_LISTEN;
 			}
 	}
 	PQclear(res);
-	last_event_sel = ntuples;
 	return 0;
 }

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.66 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.67 2008-05-26 21:09:48 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -75,7 +75,6 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 #endif
 
 #define PLAN_NONE			0
-#define PLAN_NOTIFY_EVENT	(1 << 0)
 #define PLAN_INSERT_EVENT	(1 << 1)
 #define PLAN_INSERT_LOG		(1 << 2)
 
@@ -95,7 +94,6 @@ typedef struct slony_I_cluster_status
 	void	   *plan_active_log;
 
 	int			have_plan;
-	void	   *plan_notify_event;
 	void	   *plan_insert_event;
 	void	   *plan_insert_log_1;
 	void	   *plan_insert_log_2;
@@ -147,7 +145,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	 * SPI plans that we need here.
 	 */
 	cs = getClusterStatus(PG_GETARG_NAME(0),
-						  PLAN_NOTIFY_EVENT | PLAN_INSERT_EVENT);
+						  PLAN_INSERT_EVENT);
 
 	buf_size = 8192;
 	buf = palloc(buf_size);
@@ -157,14 +155,6 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	 */
 	if (!TransactionIdEquals(cs->currentXid, newXid))
 	{
-		/*
-		 * Once per transaction notify on the sl_event relation
-		 */
-/*@-nullpass@*/
-		if ((rc = SPI_execp(cs->plan_notify_event, NULL, NULL, 0)) < 0)
-			elog(ERROR, "Slony-I: SPI_execp() failed for \"NOTIFY event\"");
-
-/*@+nullpass@*/
 		cs->currentXid = newXid;
 	}
 
@@ -1238,20 +1228,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 */
 		cs->next = clusterStatusList;
 		clusterStatusList = cs;
-	}
-
-	/*
-	 * Prepare and save the PLAN_NOTIFY_EVENT
-	 */
-	if ((need_plan_mask & PLAN_NOTIFY_EVENT) != 0 &&
-		(cs->have_plan & PLAN_NOTIFY_EVENT) == 0)
-	{
-		sprintf(query, "NOTIFY \"%s_Event\";", NameStr(cs->clustername));
-		cs->plan_notify_event = SPI_saveplan(SPI_prepare(query, 0, NULL));
-		if (cs->plan_notify_event == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed");
-
-		cs->have_plan |= PLAN_NOTIFY_EVENT;
 	}
 
 	/*

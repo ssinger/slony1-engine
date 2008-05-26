@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.168 2008-05-26 20:09:54 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.169 2008-05-26 21:09:48 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -242,7 +242,7 @@ static void adjust_provider_info(SlonNode *node,
 static int query_execute(SlonNode *node, PGconn *dbconn,
 			  SlonDString *dsp);
 static void query_append_event(SlonDString *dsp,
-				   SlonWorkMsg_event *event, bool suppress_notify);
+							   SlonWorkMsg_event *event);
 static void store_confirm_forward(SlonNode *node, SlonConn *conn,
 					  SlonWorkMsg_confirm *confirm);
 static int64 get_last_forwarded_confirm(int origin, int receiver);
@@ -290,7 +290,6 @@ remoteWorkerThread_main(void *cdata)
 	char		seqbuf[64];
 	bool		event_ok;
 	bool		need_reloadListen = false;
-	bool		suppress_notify;
 
 	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread starts\n",
@@ -502,8 +501,8 @@ remoteWorkerThread_main(void *cdata)
 				 event->ev_type);
 
 		/*
-		 * Construct the queries to begin a transaction, notify on the event
-		 * and confirm relations, insert the event into our local sl_event
+		 * Construct the queries to begin a transaction, insert the event 
+		 * into our local sl_event
 		 * table and confirm it in our local sl_confirm table. When this
 		 * transaction commits, every other remote node listening for events
 		 * with us as a provider will pick up the news.
@@ -623,7 +622,7 @@ remoteWorkerThread_main(void *cdata)
 			while (true)
 			{
 				/*
-				 * Execute the forwarding and notify stuff, but do not commit
+				 * Execute the forwarding stuff, but do not commit
 				 * the transaction yet.
 				 */
 				if (query_execute(node, local_dbconn, &query1) < 0)
@@ -662,14 +661,12 @@ remoteWorkerThread_main(void *cdata)
 			 */
 			dstring_reset(&query1);
 			last_sync_group_size = 0;
-			suppress_notify = FALSE;
 			for (i = 0; i < sync_group_size; i++)
 			{
-				query_append_event(&query1, sync_group[i], suppress_notify);
-				if (i < (sync_group_size - 1))
-					free(sync_group[i]);
-				last_sync_group_size++;
-				suppress_notify = TRUE;
+					query_append_event(&query1, sync_group[i]);
+					if (i < (sync_group_size - 1))
+							free(sync_group[i]);
+					last_sync_group_size++;
 			}
 			slon_appendquery(&query1, "commit transaction;");
 
@@ -1040,7 +1037,7 @@ remoteWorkerThread_main(void *cdata)
 					slon_appendquery(&query1,
 									 "notify \"_%s_Restart\"; ",
 									 rtcfg_cluster_name);
-					query_append_event(&query1, event, FALSE);
+					query_append_event(&query1, event);
 					slon_appendquery(&query1, "commit transaction;");
 					query_execute(node, local_dbconn, &query1);
 					slon_log(SLON_DEBUG1, "ACCEPT_SET - done\n");
@@ -1422,10 +1419,10 @@ remoteWorkerThread_main(void *cdata)
 			 */
 			if (event_ok)
 			{
-				query_append_event(&query1, event, FALSE);
-				slon_appendquery(&query1, "commit transaction;");
-				if (archive_close(node) < 0)
-					slon_retry();
+					query_append_event(&query1, event);
+					slon_appendquery(&query1, "commit transaction;");
+					if (archive_close(node) < 0)
+							slon_retry();
 			}
 			else
 			{
@@ -2140,24 +2137,16 @@ query_execute(SlonNode *node, PGconn *dbconn, SlonDString *dsp)
 /* ----------
  * query_append_event
  *
- * Add queries to a dstring that notify for Event and Confirm and that insert a
- * duplicate of an event record as well as the confirmation for it.
- * "suppress_notify" parm permits omitting the notify request if running this many times
+ * Add queries to a dstring that insert a duplicate of an event record
+ * as well as the confirmation for it.  
  * ----------
  */
 static void
-query_append_event(SlonDString *dsp, SlonWorkMsg_event *event, bool suppress_notify)
+query_append_event(SlonDString *dsp, SlonWorkMsg_event *event)
 {
 	char		seqbuf[64];
 
 	sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
-	if (!suppress_notify)
-	{
-		slon_appendquery(dsp,
-						 "notify \"_%s_Event\"; ",
-						 rtcfg_cluster_name);
-
-	}
 	slon_appendquery(dsp,
 					 "insert into %s.sl_event "
 					 "    (ev_origin, ev_seqno, ev_timestamp, "

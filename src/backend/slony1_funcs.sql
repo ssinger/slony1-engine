@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.137 2008-04-23 20:35:43 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.138 2008-05-26 21:09:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1298,8 +1298,6 @@ begin
 			values
 			(p_failed_node, @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''),
 			p_ev_seqfake, CURRENT_TIMESTAMP);
-	notify "_@CLUSTERNAME@_Event";
-	notify "_@CLUSTERNAME@_Confirm";
 	notify "_@CLUSTERNAME@_Restart";
 
 	perform @NAMESPACE@.failoverSet_int(p_failed_node,
@@ -4492,7 +4490,6 @@ begin
 				(con_origin, con_received, con_seqno, con_timestamp)
 				values (p_con_origin, p_con_received, p_con_seqno,
 					p_con_timestamp);
-		notify "_@CLUSTERNAME@_Confirm";
 		v_max_seqno = p_con_seqno;
 	end if;
 

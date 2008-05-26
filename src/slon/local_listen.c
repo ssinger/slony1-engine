@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.45 2008-01-21 18:54:11 wieck Exp $
+ *	$Id: local_listen.c,v 1.46 2008-05-26 21:09:48 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -67,9 +67,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	 * Listen for local events
 	 */
 	(void) slon_mkquery(&query1,
-		     /* "listen \"_%s_Event\"; " */
 		     "listen \"_%s_Restart\"; ",
-		     /*	 rtcfg_cluster_name,  */
 		     rtcfg_cluster_name);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
