@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.170 2008-05-28 19:09:37 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.171 2008-05-28 19:46:46 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -285,7 +285,7 @@ remoteWorkerThread_main(void *cdata)
 	PGconn	   *local_dbconn;
 	SlonDString query1;
 	SlonDString query2;
-	SlonDString lsquery;
+	SlonDString query3;
 	SlonWorkMsg *msg;
 	SlonWorkMsg_event *event;
 	bool		check_config = true;
@@ -293,6 +293,7 @@ remoteWorkerThread_main(void *cdata)
 	char		seqbuf[64];
 	bool		event_ok;
 	bool		need_reloadListen = false;
+	char		conn_symname[32];
 
 	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread starts\n",
@@ -304,7 +305,8 @@ remoteWorkerThread_main(void *cdata)
 	wd = (WorkerGroupData *) malloc(sizeof(WorkerGroupData));
 	if (wd == 0)
 	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: could not malloc() space for WorkerGroupData\n");
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: could not malloc() space for WorkerGroupData\n",
+				node->no_id);
 		slon_retry();
 	}
 	else
@@ -328,12 +330,13 @@ remoteWorkerThread_main(void *cdata)
 
 	dstring_init(&query1);
 	dstring_init(&query2);
-	dstring_init(&lsquery);
+	dstring_init(&query3);
 
 	/*
 	 * Connect to the local database
 	 */
-	if ((local_conn = slon_connectdb(rtcfg_conninfo, "remote_worker")) == NULL)
+	sprintf(conn_symname, "remoteWorkerThread_%d", node->no_id);
+	if ((local_conn = slon_connectdb(rtcfg_conninfo, conn_symname)) == NULL)
 		slon_retry();
 	local_dbconn = local_conn->dbconn;
 
@@ -1008,10 +1011,30 @@ remoteWorkerThread_main(void *cdata)
 					res = PQexec(local_dbconn, dstring_data(&query2));
 					while (PQntuples(res) == 0)
 					{
+						PQclear(res);
+
 						slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+
+						/* Rollback the transaction for now */
+						(void) slon_mkquery(&query3, "rollback transaction");
+						if (query_execute(node, local_dbconn, &query3) < 0)
+							slon_retry();
+
+						/* Sleep */
 						if (sched_msleep(node, 10000) != SCHED_STATUS_OK)
 							slon_retry();
-						PQclear(res);
+
+						/* Start the transaction again */
+						(void) slon_mkquery(&query3,
+							"begin transaction; "
+							"set transaction isolation level serializable; ");
+						slon_appendquery(&query1,
+							 "lock table %s.sl_config_lock; ",
+							 rtcfg_namespace);
+						if (query_execute(node, local_dbconn, &query3) < 0)
+							slon_retry();
+
+						/* See if we have the missing event now */
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
 					PQclear(res);

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.29 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.30 2008-05-28 19:46:46 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -146,6 +146,24 @@ slon_connectdb(char *conninfo, char *symname)
 		}
 		PQclear(res);
 	}
+
+	if (slon_log_level >= SLON_DEBUG1)
+	{
+		slon_mkquery(&query, "select pg_backend_pid()");
+		res = PQexec(dbconn, dstring_data(&query));
+		if (!res || PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "%s: Unable to get backend pid - %s\n",
+				symname, PQresultErrorMessage(res));
+		}
+		else
+		{
+			slon_log(SLON_DEBUG1, "%s \"%s\": backend pid = %s\n",
+				symname, conninfo, PQgetvalue(res, 0, 0));
+		}
+		PQclear(res);
+	}
+
 	dstring_free(&query);
 	return conn;
 }
