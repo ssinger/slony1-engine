@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.89 2008-05-26 18:48:51 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.90 2008-05-28 18:13:05 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2464,8 +2464,12 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_config_lock; "
-					 "select listenerpid from \"pg_catalog\".pg_listener "
-					 "    where relname = '_%s_Restart'; ",
+					 "select nl_backendpid from \"_%s\".sl_nodelock "
+					 "    where nl_nodeid = \"_%s\".getLocalNodeId('_%s') and "
+					 "       exists (select 1 from pg_catalog.pg_stat_activity "
+					 "                 where procpid = nl_backendpid);"
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername);
 		res3 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
@@ -2591,7 +2595,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 
 	/*
-	 * Wait until all slon replication engines that where running have
+	 * Wait until all slon replication engines that were running have
 	 * restarted.
 	 */
 	n = 0;
@@ -2608,9 +2612,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			}
 
 			slon_mkquery(&query,
-						 "select listenerpid from \"pg_catalog\".pg_listener "
-						 "    where relname = '_%s_Restart' "
-						 "    and listenerpid <> %d; ",
+						 "select nl_backendpid from \"_%s\".sl_nodelock "
+						 "    where nl_backendpid <> %d; ",
 						 stmt->hdr.script->clustername,
 						 nodeinfo[i].slon_pid);
 			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
