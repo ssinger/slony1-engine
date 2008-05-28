@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.90 2008-05-28 18:13:05 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.91 2008-05-28 18:23:13 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2467,7 +2467,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "select nl_backendpid from \"_%s\".sl_nodelock "
 					 "    where nl_nodeid = \"_%s\".getLocalNodeId('_%s') and "
 					 "       exists (select 1 from pg_catalog.pg_stat_activity "
-					 "                 where procpid = nl_backendpid);"
+					 "                 where procpid = nl_backendpid);",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
