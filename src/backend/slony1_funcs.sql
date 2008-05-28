@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.138 2008-05-26 21:09:48 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.139 2008-05-28 18:09:47 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5619,12 +5619,13 @@ comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION AutoVacExcludesTable (nspname, tabname)
+-- FUNCTION ShouldSlonyVacuumTable (nspname, tabname)
 --
 --	Returns 't' if the table needs to be vacuumed by Slony-I
 --      Returns 'f' if autovac handles the table, so Slony-I should not
+--                  or if the table is not needful altogether
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.AutoVacExcludesTable (name, name) returns boolean as
+create or replace function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) returns boolean as
 $$
 declare
 	i_nspname alias for $1;
@@ -5645,7 +5646,8 @@ begin
 	end if;
 	select into c_table oid from "pg_catalog".pg_class where relname = i_tblname and relnamespace = c_namespace;
 	if not found then
-		raise exception 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
+		raise warning 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
+		return 'f'::boolean;
 	end if;
 	
 	-- So, the table is legit; try to look it up for autovacuum policy
@@ -5662,8 +5664,8 @@ begin
 	return 't'::boolean;
 end;$$ language plpgsql;
 
-comment on function @NAMESPACE@.AutoVacExcludesTable (name, name) is 
-'returns false if autovacuum handles vacuuming of the table; returns true if Slony-I should manage it';
+comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
+'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
 
 -- ----------------------------------------------------------------------
@@ -5678,47 +5680,47 @@ declare
 begin
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_event'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_confirm'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_setsync'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_log_1'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_log_2'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_seqlog'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''_@CLUSTERNAME@'';
 	prec.relname := ''sl_archive_counter'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''pg_catalog'';
 	prec.relname := ''pg_listener'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 	prec.nspname := ''pg_catalog'';
 	prec.relname := ''pg_statistic'';
-	if @NAMESPACE@.AutoVacExcludesTable(prec.nspname, prec.relname) then
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 
@@ -5727,8 +5729,8 @@ end
 ' language plpgsql;
 
 comment on function @NAMESPACE@.TablesToVacuum () is 
-'Return a list of tables that require frequent vacuuming.  We use this
-function so that we do not hardcode this into C code.';
+'Return a list of tables that require frequent vacuuming.  The
+function is used so that the list is not hardcoded into C code.';
 
 -- -------------------------------------------------------------------------
 -- FUNCTION add_empty_table_to_replication (set_id, tab_id, tab_nspname,
