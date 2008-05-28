@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.45 2008-05-26 21:09:48 cbbrowne Exp $
+ *	$Id: remote_listen.c,v 1.46 2008-05-28 19:09:37 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -76,7 +76,7 @@ remoteListenThread_main(void *cdata)
 	SlonConn   *conn = NULL;
 	char	   *conn_conninfo = NULL;
 	char		conn_symname[64];
-	int			rc;
+	ScheduleStatus			rc;
 	SlonDString query1;
 	PGconn	   *dbconn = NULL;
 	PGresult   *res;
@@ -742,8 +742,6 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 			if ((sel_max_events > 2) && (sync_group_maxsize > 100)) {
 					slon_log(SLON_INFO, "remoteListenThread_%d: drew maximum # of events for %d iterations\n",
 							 node->no_id, sel_max_events);
-					slon_log(SLON_INFO, "remoteListenThread_%d: sleep %ds, return to LISTEN mode\n",
-							 node->no_id, 10+sel_max_events);
 					sched_msleep(node, 10000 + (1000 * sel_max_events));
 			} else {
 					poll_sleep = 0;

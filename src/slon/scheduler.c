@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.25 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: scheduler.c,v 1.26 2008-05-28 19:09:37 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -37,7 +37,7 @@
  * Static data 
  * ----------
  */
-static int	sched_status = SCHED_STATUS_OK;
+static ScheduleStatus	sched_status = SCHED_STATUS_OK;
 
 static int	sched_numfd = 0;
 static fd_set sched_fdset_read;
@@ -190,7 +190,7 @@ sched_wait_mainloop(void)
 int
 sched_wait_conn(SlonConn * conn, int condition)
 {
-	int			rc;
+	ScheduleStatus			rc;
 
 	/*
 	 * Grab the master lock and check that we're in normal runmode
@@ -313,7 +313,7 @@ sched_msleep(SlonNode * node, int msec)
 int
 sched_get_status(void)
 {
-	int			status;
+	ScheduleStatus			status;
 
 	pthread_mutex_lock(&sched_master_lock);
 	status = sched_status;

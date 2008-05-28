@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.44 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.45 2008-05-28 19:09:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -105,10 +105,10 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	/*
 	 * Loop until shutdown time arrived
 	 *
-	 * Note the introduction of vac_bias and an up-to-100s random "fuzz"; this
-	 * reduces the likelihood that having multiple slons hitting the same
-	 * cluster will run into conflicts due to trying to vacuum pg_listener
-	 * concurrently
+	 * Note the introduction of vac_bias and an up-to-100s random
+	 * "fuzz"; this reduces the likelihood that having multiple slons
+	 * hitting the same cluster will run into conflicts due to trying
+	 * to vacuum common tables * such as pg_listener concurrently
 	 */
 	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
 	{

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.169 2008-05-26 21:09:48 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.170 2008-05-28 19:09:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -37,9 +37,12 @@ extern int	STMTS[MAXSTATEMENTS];
 /*
  * Internal message types
  */
-#define WMSG_EVENT		0
-#define WMSG_WAKEUP		1
-#define WMSG_CONFIRM	2
+typedef enum
+{
+		WMSG_EVENT,
+		WMSG_WAKEUP,
+		WMSG_CONFIRM
+} MessageType;
 
 
 /*
@@ -48,7 +51,7 @@ extern int	STMTS[MAXSTATEMENTS];
 typedef struct SlonWorkMsg_event_s SlonWorkMsg_event;
 struct SlonWorkMsg_event_s
 {
-	int			msg_type;
+	MessageType			msg_type;
 	SlonWorkMsg_event *prev;
 	SlonWorkMsg_event *next;
 
@@ -79,7 +82,7 @@ struct SlonWorkMsg_event_s
 typedef struct SlonWorkMsg_confirm_s SlonWorkMsg_confirm;
 struct SlonWorkMsg_confirm_s
 {
-	int			msg_type;
+	MessageType			msg_type;
 	SlonWorkMsg_confirm *prev;
 	SlonWorkMsg_confirm *next;
 
@@ -95,7 +98,7 @@ struct SlonWorkMsg_confirm_s
  */
 struct SlonWorkMsg_s
 {
-	int			msg_type;
+	MessageType			msg_type;
 	SlonWorkMsg *prev;
 	SlonWorkMsg *next;
 };
@@ -520,7 +523,7 @@ remoteWorkerThread_main(void *cdata)
 			int			sync_group_size;
 
 			int			seconds;
-			int			rc;
+			ScheduleStatus			rc;
 			int			i;
 
 			/*
@@ -1148,7 +1151,7 @@ remoteWorkerThread_main(void *cdata)
 				if (sub_receiver == rtcfg_nodeid &&
 					event->ev_origin == node->no_id)
 				{
-					int			sched_rc;
+					ScheduleStatus			sched_rc;
 					int			sleeptime = 15;
 
 					(void) slon_mkquery(&query2, "rollback transaction");
@@ -5334,10 +5337,13 @@ archive_append_data(SlonNode *node, const char *s, int len)
  * ----------
  */
 
-#define START_STATE 1
-#define COLLECTING_DIGITS 2
-#define BETWEEN_NUMBERS 3
-#define DONE 4
+typedef enum
+{
+		START_STATE,
+		COLLECTING_DIGITS,
+		BETWEEN_NUMBERS,
+		DONE
+} CompressState;
 
 #define MINMAXINITIAL -1
 
@@ -5348,7 +5354,7 @@ archive_append_data(SlonNode *node, const char *s, int len)
 void
 compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 {
-	int			state;
+	CompressState			state;
 	int			curr_number,
 				curr_min,
 				curr_max;

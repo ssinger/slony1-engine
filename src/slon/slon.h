@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.67 2008-02-06 18:04:02 cbbrowne Exp $
+ *	$Id: slon.h,v 1.68 2008-05-28 19:09:37 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -312,11 +312,14 @@ do { \
  * Scheduler runmodes
  * ----------
  */
-#define SCHED_STATUS_OK			0
-#define SCHED_STATUS_SHUTDOWN	1
-#define SCHED_STATUS_DONE		2
-#define SCHED_STATUS_CANCEL		3
-#define SCHED_STATUS_ERROR		4
+typedef enum
+{
+		SCHED_STATUS_OK,
+		SCHED_STATUS_SHUTDOWN,
+		SCHED_STATUS_DONE,
+		SCHED_STATUS_CANCEL,
+		SCHED_STATUS_ERROR
+} ScheduleStatus;
 
 /* ----------
  * Scheduler wait conditions
