@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.16 2008-03-07 19:01:37 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.67.2.17 2008-06-03 18:54:42 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1281,16 +1281,17 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					(SlonikStmt_init_cluster *) hdr;
 
 					if (slonik_init_cluster(stmt) < 0)
-			case STMT_REPAIR_CONFIG:
-					{
-						SlonikStmt_repair_config *stmt =
-						(SlonikStmt_repair_config *) hdr;
+						errors++;
+				}
+				break;
 
-						if (slonik_repair_config(stmt) < 0)
-							errors++;
-					}
-					break;
-					errors++;
+			case STMT_REPAIR_CONFIG:
+				{
+					SlonikStmt_repair_config *stmt =
+					(SlonikStmt_repair_config *) hdr;
+
+					if (slonik_repair_config(stmt) < 0)
+						errors++;
 				}
 				break;
 
