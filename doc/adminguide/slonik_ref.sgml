@@ -1475,8 +1475,11 @@ SET ADD TABLE (
 
         <listitem><para> &slony1; does not support adding tables to
         sets that are already participating in subscriptions.
-        Probably you need to define a new set to associate additional
-        tables to. </para> </listitem> </varlistentry>
+        Instead, you need to define a new replication set, and add any
+        new tables to <emphasis>that</emphasis> set.  You might then
+        use <xref linkend="stmtmergeset"> to merge the new set into an
+        existing one, if that seems appropriate. </para> </listitem>
+        </varlistentry>
 
    </variablelist>    
 
