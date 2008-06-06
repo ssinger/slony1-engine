@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.139 2008-05-28 18:09:47 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.140 2008-06-06 20:56:44 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -2700,7 +2700,7 @@ begin
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_set = p_set_id)
 	then
-		raise exception ''Slony-I: cannot add table to currently subscribed set %'',
+		raise exception ''Slony-I: cannot add table to currently subscribed set % - must attach to an unsubscribed set'',
 				p_set_id;
 	end if;
 
