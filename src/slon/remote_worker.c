@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.171 2008-05-28 19:46:46 wieck Exp $
+ *	$Id: remote_worker.c,v 1.172 2008-06-17 17:48:15 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2098,6 +2098,17 @@ remoteWorker_confirm(int no_id,
 				{
 					oldmsg->con_seqno = con_seqno;
 					strcpy(oldmsg->con_timestamp_c, con_timestamp_c);
+
+					/*
+					 * Move the message to the head of the queue
+					 */
+					if (oldmsg != node->message_head)
+					{
+						DLLIST_REMOVE(node->message_head,
+								node->message_tail, oldmsg);
+						DLLIST_ADD_HEAD(node->message_head,
+								node->message_tail, oldmsg);
+					}
 				}
 				pthread_mutex_unlock(&(node->message_lock));
 				return;
@@ -2106,7 +2117,7 @@ remoteWorker_confirm(int no_id,
 	}
 
 	/*
-	 * No message found. Create a new one and add it to the queue.
+	 * No message found. Create a new one and stick it in front of the queue.
 	 */
 	msg = (SlonWorkMsg_confirm *)
 		malloc(sizeof(SlonWorkMsg_confirm));
@@ -2117,7 +2128,7 @@ remoteWorker_confirm(int no_id,
 	msg->con_seqno = con_seqno;
 	strcpy(msg->con_timestamp_c, con_timestamp_c);
 
-	DLLIST_ADD_TAIL(node->message_head, node->message_tail,
+	DLLIST_ADD_HEAD(node->message_head, node->message_tail,
 					(SlonWorkMsg *) msg);
 
 	/*

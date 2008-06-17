@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.7 2008-05-28 19:46:46 wieck Exp $
+# $Id: test_2_pgbench.in,v 1.8 2008-06-17 17:48:15 wieck Exp $
 # **********
 # test_2_pgbench
 #
@@ -32,8 +32,8 @@ DB3=slony_test3
 DB4=slony_test4
 DEBUG_LEVEL=2
 
-PGBENCH_SCALE=1
-PGBENCH_CLIENTS=5
+PGBENCH_SCALE=3
+PGBENCH_CLIENTS=6
 PGBENCH_TRANS=`expr 50000 / $PGBENCH_CLIENTS`
 
 trap '
@@ -269,21 +269,15 @@ slonik <<_EOF_
 	node 3 admin conninfo = 'dbname=$DB3';
 
 	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
+
+	echo '**** Waiting for SUBSCRIBE_SET to reach Origin';
+	wait for event (origin = 1, confirmed = 1, wait on = 1, timeout = 0);
+	echo '**** Waiting for node 2 to process ENABLE_SUBSCRIPTION';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = 2, wait on = 2, timeout = 0);
+	echo '**** Subscription of node 2 complete';
 _EOF_
 
-echo ""
-echo "**********************************************************************"
-echo "**** $DB2 should now be copying data and attempting to catch up."
-echo "**********************************************************************"
-echo ""
-
-######################################################################
-# Setup DB2 as a subscriber node and let it subscribe the replication
-# set of the running pgbench
-######################################################################
-# echo -n "**** Hit enter when node 2 is done with copy set"
-# read line
-sleep `expr 60 \* $PGBENCH_SCALE`
 echo "**** creating database for Node 3"
 if ! createdb $DB3 ; then
 	kill $pgbench_pid 2>/dev/null
@@ -344,15 +338,20 @@ slonik <<_EOF_
 	node 3 admin conninfo = 'dbname=$DB3';
 
 	subscribe set ( id = 1, provider = 2, receiver = 3, forward = no );
+
+	echo '**** Waiting for SUBSCRIBE_SET to reach Origin';
+	wait for event (origin = 2, confirmed = 1, wait on = 1, timeout = 0);
+	echo '**** Waiting for node 3 to process ENABLE_SUBSCRIPTION';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = 3, wait on = 3, timeout = 0);
+	echo '**** Subscription of node 3 complete';
 _EOF_
 
 echo ""
 echo "**********************************************************************"
-echo "**** $DB3 should now be copying data and attempting to catch up."
+echo "**** $DB3 should now be catching up."
 echo "**********************************************************************"
 echo ""
-
-
 
 echo -n "**** waiting for pgbench to finish "
 while kill -0 $pgbench_pid 2>/dev/null ; do
@@ -360,15 +359,24 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when caught up."
-wait $slon1_pid
-wait $slon2_pid
-wait $slon3_pid
 
-kill $pgbench_pid 2>/dev/null
-kill $slon1_pid 2>/dev/null
-kill $slon2_pid 2>/dev/null
-kill $slon3_pid 2>/dev/null
+######################################################################
+# Wait for nodes 2 and 3 to catch up.
+######################################################################
+sleep 10
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+
+	echo '**** Waiting for nodes 2 and 3 to catch up';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = all, wait on = 1, timeout = 0);
+	echo '**** All nodes done catching up';
+_EOF_
+
+echo "You may terminate the replication engines now."
 
 ./compare_pgbench_dumps $DB1 $DB2
 ./compare_pgbench_dumps $DB1 $DB3
