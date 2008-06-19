@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.43 2008-05-26 18:46:21 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.44 2008-06-19 20:35:39 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -154,6 +154,13 @@ FAQ</link>.</para></listitem>
 
 <para> The script does some diagnosis work based on parameters in the
 script; if you don't like the values, pick your favorites!</para>
+
+<note><para> Note that there are two versions, one using the
+<quote>classic</quote> <filename>Pg.pm</filename> Perl module for
+accessing &postgres; databases, and one, with <filename>dbi</filename>
+in its name, that uses the newer Perl <function> DBI</function>
+interface.  It is likely going to be easier to find packaging for
+<function>DBI</function>. </para> </note>
 
 </sect2>
 
