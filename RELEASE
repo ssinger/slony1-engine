@@ -1,4 +1,10 @@
-$Id: RELEASE,v 1.1.2.29 2008-05-16 17:31:47 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.30 2008-06-20 22:23:49 cbbrowne Exp $
+
+Release 1.2.15
+
+- Fix memory leak
+  http://bugs.slony.info/bugzilla/show_bug.cgi?id=52
+
 RELEASE 1.2.14
 - Fix typo in configure-replication.sh (missing CR)
 
