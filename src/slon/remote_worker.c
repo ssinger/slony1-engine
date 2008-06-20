@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.33 2008-03-17 15:12:56 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.34 2008-06-20 22:19:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3051,6 +3051,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 
 		/* Are we running on < PG 7.4???  result =	*/
 		nodeon73 = atoi(PQgetvalue(res4, 0, 0));
+		PQclear(res4);
 
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 				 " nodeon73 is %d\n",
@@ -3089,6 +3090,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			rc = archive_append_ds(node, &query1);
 			if (rc < 0)
 			{
+				PQclear(res2);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
 				dstring_free(&query2);
@@ -3131,6 +3133,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			archive_terminate(node);
 			return -1;
 		}
+		PQclear(res3);
 
 		/*
 		 * Copy the data over
@@ -3151,7 +3154,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 #endif
 				PQfreemem(copydata);
 				PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
-				PQclear(res3);
 				PQclear(res2);
 				PQclear(res1);
 				slon_disconnectdb(pro_conn);
@@ -3173,7 +3175,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 #endif
 					PQfreemem(copydata);
 					PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation");
-					PQclear(res3);
 					PQclear(res2);
 					PQclear(res1);
 					slon_disconnectdb(pro_conn);
@@ -3198,7 +3199,6 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 "PGgetCopyData() %s",
 					 node->no_id, PQerrorMessage(pro_dbconn));
 			PQputCopyEnd(loc_dbconn, "Slony-I: copy set operation failed");
-			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
@@ -3256,6 +3256,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			archive_terminate(node);
 			return -1;
 		}
+		PQclear(res2);
 		res2 = PQgetResult(loc_dbconn);
 		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
 		{
