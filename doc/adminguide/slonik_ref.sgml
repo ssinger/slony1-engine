@@ -1370,14 +1370,24 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	 replication system. The numeric value of this ID also
 	 determines the order in which the tables are locked in a <xref
 	  linkend="stmtlockset"> command for example. So
-	 these numbers should represent any applicable table hierarchy
+	 these numbers might represent any applicable table hierarchy
 	 to make sure the <application>slonik</application> command
 	 scripts do not deadlock at any critical
 	 moment.</para>
 
          <para> This ID must be unique across all sets; you cannot
          have two tables in the same cluster with the same
-         ID. </para></listitem>
+         ID. </para>
+
+	 <para> Note that &slony1; generates an in-memory array
+	 indicating all of the fully qualified table node; if you use
+	 large table ID numbers, this leads to wastage of memory.
+	 Each potential table ID consumes a pointer to a char,
+	 commonly costing 4 bytes per table ID on 32 bit
+	 architectures, and 8 bytes per table ID on 64 bit
+	 architectures. </para>
+
+         </listitem>
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full table name as described in
