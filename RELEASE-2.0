@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.18 2008-05-26 21:46:04 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.19 2008-06-25 16:03:37 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -186,3 +186,8 @@ often.
   - WAIT FOR EVENT - WAIT ON
   - FAILOVER - BACKUP NODE
   - EXECUTE SCRIPT - EVENT NODE
+
+- Fixed a problem where ACCEPT_SET would wait for the corresponding
+  MOVE_SET or FAILOVER_SET to arrive while holding an exclusive lock
+  on sl_config_lock, preventing the other remote worker to process
+  that event.
