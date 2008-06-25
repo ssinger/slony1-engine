@@ -1,5 +1,5 @@
 #!/usr/bin/perl   # -*- perl -*-
-# $Id: test_slony_state.pl,v 1.7 2007-01-02 19:34:11 cbbrowne Exp $
+# $Id: test_slony_state.pl,v 1.8 2008-06-25 16:02:39 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -7,6 +7,9 @@
 # This script, given DSN parameters to access a Slony-I cluster,
 # submits a number of queries to test the state of the nodes in the
 # cluster.
+
+# Note: This uses the legacy "Pg" module; it is likely that the other
+# version of this script that uses DBI is preferable to use.
 
 use Pg;
 use Getopt::Long;
