@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.172 2008-06-17 17:48:15 wieck Exp $
+ *	$Id: remote_worker.c,v 1.173 2008-06-27 20:16:04 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2866,6 +2866,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			rc = archive_append_ds(node, &query1);
 			if (rc < 0)
 			{
+					PQclear(res3);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
 				dstring_free(&query2);
