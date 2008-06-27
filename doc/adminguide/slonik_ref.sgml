@@ -278,7 +278,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <title>Description</title>
     <para>
      Describes how the <application>slonik</application> utility can
-     reach a nodes database in the cluster from where it is run
+     reach a node's database in the cluster from where it is run
      (likely the DBA's workstation). The conninfo string is the string
      agrument given to the <function>PQconnectdb()</function> libpq
      function. The user used to connect must be the special
@@ -1380,12 +1380,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
          ID. </para>
 
 	 <para> Note that &slony1; generates an in-memory array
-	 indicating all of the fully qualified table node; if you use
-	 large table ID numbers, this leads to wastage of memory.
-	 Each potential table ID consumes a pointer to a char,
-	 commonly costing 4 bytes per table ID on 32 bit
-	 architectures, and 8 bytes per table ID on 64 bit
-	 architectures. </para>
+	 indicating all of the fully qualified table names; if you use
+	 large table ID numbers, the sparsely-utilized array can lead
+	 to substantial wastage of memory.  Each potential table ID
+	 consumes a pointer to a char, commonly costing 4 bytes per
+	 table ID on 32 bit architectures, and 8 bytes per table ID on
+	 64 bit architectures. </para>
 
          </listitem>
       </varlistentry>
@@ -2827,14 +2827,15 @@ UPDATE FUNCTIONS (
     <para> Waits for event Confirmation.</para>
     
     <para> <application>Slonik</application> remembers the last event
-     generated on every node during script execution (events generated
-     by earlier calls are currently not checked). In certain situations
-     it is necessary that events generated on one node (such as
-     <command>CREATE SET</command>) are processed on another node
-     before issuing more commands (for instance, <xref
-      linkend="stmtsubscribeset">).  <command>WAIT FOR EVENT</command> may be
-     used to cause the <application>slonik</application> script to wait
-     until the subscriber node is ready for the next action.
+    generated on every node during script execution (events generated
+    by earlier calls are currently not checked). In certain situations
+    it is necessary that events generated on one node (such as
+    <command>CREATE SET</command>) are processed on another node
+    before issuing more commands (for instance, <xref
+    linkend="stmtsubscribeset">).  <command>WAIT FOR EVENT</command>
+    may be used to cause the <application>slonik</application> script
+    to wait for confirmation of an event, which hopefully means that
+    the subscriber node is ready for the next action.
     </para>
     
     <para> <command>WAIT FOR EVENT</command> must be called outside of
@@ -2902,7 +2903,7 @@ WAIT FOR EVENT (
    <para> In order to more reliably monitor from within a <xref
    linkend="slonik"> script that <xref linkend="stmtsubscribeset"> is
    complete, you may submit a <xref linkend="stmtsync"> event after
-   the subscription, and have the WAIT request wait on that
+   the subscription, and have the WAIT request wait on the
    <command>SYNC</command> event, as follows. </para>
     <programlisting>
      # Assuming that set 1 has direct subscribers 2 and 3
