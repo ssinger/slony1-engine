@@ -1,6 +1,8 @@
-$Id: RELEASE,v 1.1.2.30 2008-06-20 22:23:49 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.31 2008-07-07 20:00:09 cbbrowne Exp $
 
 Release 1.2.15
+
+- Fix to switch statement in slonik.c; unknown how it broke
 
 - Fix memory leak
   http://bugs.slony.info/bugzilla/show_bug.cgi?id=52
