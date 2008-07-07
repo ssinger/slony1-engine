@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slon.sh,v 1.3 2006-06-21 17:41:19 cbbrowne Exp $
+# $Id: check_slon.sh,v 1.4 2008-07-07 21:16:03 cbbrowne Exp $
 
 # nagios plugin that checks whether the slon daemon is running
 # if the 3rd parameter (LOGFILE) is specified then the log file is
@@ -20,7 +20,7 @@
 # Copyright 2005
 
 # check parameters are valid
-if [[ $# -lt 2 || $# -gt 3 ]]
+if [ $# -lt 2 ] || [ $# -gt 3 ]
 then
    echo "Invalid parameters need CLUSTERNAME DBNAME DBHOST [LOGFILE]"
    exit 2

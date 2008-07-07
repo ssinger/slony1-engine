@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slony_cluster.sh,v 1.4 2007-08-22 17:50:23 cbbrowne Exp $
+# $Id: check_slony_cluster.sh,v 1.5 2008-07-07 21:16:03 cbbrowne Exp $
 
 # nagios plugin that checks whether the slave nodes in a slony cluster
 # are being updated from the master
@@ -70,7 +70,7 @@ echo $CHECK
 # and check the return status
 STATUS=`echo $CHECK | awk '{print $1}'`
 NODESOK=`echo $CHECK | awk '{print $3}'`
-if [[ $STATUS = "OK"  && $NODESOK != "0" ]]
+if [ $STATUS = "OK" ] && [ $NODESOK != "0" ]
 then
    exit 0
 else

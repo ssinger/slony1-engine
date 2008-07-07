@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: release_checklist.sh,v 1.3 2007-01-08 17:42:17 cbbrowne Exp $
+# $Id: release_checklist.sh,v 1.4 2008-07-07 21:16:03 cbbrowne Exp $
 
 # This script runs through what it can of the release checklist
 # run via:  "sh tools/release_checklist.sh"
@@ -17,7 +17,7 @@ echo "Slony-I version: ${VERDOTTED} - Major=${MAJOR} Minor=${MINOR} Patchlevel=$
 
 VERCOMMA="${MAJOR},${MINOR},${PATCHLEVEL}"
 VERUNDERSCORE="${MAJOR}_${MINOR}_${PATCHLEVEL}"
-if [[ `egrep "#define SLONY_I_VERSION_STRING_DEC ${VERCOMMA}\$" config.h.in` ]]; then
+if egrep "#define SLONY_I_VERSION_STRING_DEC ${VERCOMMA}\$" config.h.in >/dev/null 2>&1; then
    echo "SLONY_I_VERSION_STRING_DEC matches"
 else
    echo "ERROR: SLONY_I_VERSION_STRING_DEC does not match ${VERCOMMA}"
@@ -25,14 +25,14 @@ else
 fi
 
 echo "Verifying configure..."
-if [[ `egrep "^PACKAGE_VERSION='${VERDOTTED}'\$" configure` ]]; then
+if egrep "^PACKAGE_VERSION='${VERDOTTED}'\$" configure >/dev/null 2>&1; then
    echo "configure PACKAGE_VERSION matches ${VERDOTTED}"
 else
    echo "ERROR: PACKAGE_VERSION in configure does not match ${VERDOTTED}"
    egrep "PACKAGE_VERSION\=" configure
 fi
 
-if [[ `egrep "^PACKAGE_STRING='postgresql-slony1-engine ${VERDOTTED}'\$" configure` ]]; then
+if egrep "^PACKAGE_STRING='postgresql-slony1-engine ${VERDOTTED}'\$" configure >/dev/null 2>&1; then
    echo "PACKAGE_STRING in configure matches ${VERDOTTED}"
 else
    echo "ERROR: configure PACKAGE_STRING does not match ${VERDOTTED}"
@@ -43,7 +43,7 @@ FLIST=""
 for file in `find config -name "*.m4" -newer configure | sort`; do
     FLIST="${FLIST} $file"
 done
-if [[ x = x"$FLIST" ]]; then
+if [ x = x"$FLIST" ]; then
     echo "autoconf has probably been run lately..."
 else
     echo "WARNING:: The following ./configure constituents are newer than ./configure - you probably should run autoconf!"
@@ -52,7 +52,7 @@ fi
 
 STOREDPROCVERS=`awk  -f tools/awk-for-stored-proc-vers.awk  src/backend/slony1_funcs.sql`
 
-if [[ x"$STOREDPROCVERS" = x"$VERDOTTED" ]]; then
+if [ x"$STOREDPROCVERS" = x"$VERDOTTED" ]; then
    OK=1
    echo "Stored proc version numbers match ${VERDOTTED}"
 else

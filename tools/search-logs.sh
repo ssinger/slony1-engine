@@ -1,5 +1,5 @@
 #!/bin/sh 
-# $Id: search-logs.sh,v 1.2 2006-11-16 20:01:01 cbbrowne Exp $ 
+# $Id: search-logs.sh,v 1.3 2008-07-07 21:16:03 cbbrowne Exp $ 
  
 # Search logs for errors from the last hour 
 LOGHOME=${LOGHOME:-"/opt/logs"}    # Directory to search
@@ -10,7 +10,7 @@ LOGTIMESTAMP=${LOGTIMESTAMP:-""}   # Override time - format should be "YYYY-MM-D
 # EXCLUSIONS='duplicate key violates unique constraint "sl_nodelock-pkey"'
 EXCLUSIONS="No Exclusions Known"
 
-if [[ -z $LOGTIMESTAMP ]] ; then
+if [ -z $LOGTIMESTAMP ] ; then
     HRRE=`date -d "1 hour ago" +"%Y-%m-%d %H:[0-9][0-9]:[0-9][0-9] ${TZ}"`
 else
     HRRE="${LOGTIMESTAMP}:[0-9][0-9]:[0-9][0-9] ${TZ}"
@@ -19,7 +19,7 @@ fi
 for log in `find ${LOGHOME} -name "*.log*" -mmin -60 | egrep "/node[0-9]+/[^/]+.log"` ; do 
     egrep "${HRRE} (ERROR|FATAL)" $log | egrep -v "${EXCLUSIONS}" > /tmp/slony-errors.$$ 
 
-    if [[ -s /tmp/slony-errors.$$ ]] ; then 
+    if [ -s /tmp/slony-errors.$$ ] ; then 
         echo "
 Errors in log ${log} 
 ===============================================================" >> /tmp/slony-summary.$$ 
@@ -27,8 +27,8 @@ Errors in log ${log}
     fi 
 done 
  
-if [[ -s /tmp/slony-summary.$$ ]] ; then 
-    if [[ -z $LOGRECIPIENT ]] ; then
+if [ -s /tmp/slony-summary.$$ ] ; then 
+    if [ -z $LOGRECIPIENT ] ; then
 	echo "Errors found!"
 	cat /tmp/slony-summary.$$  
     else

@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.19 2008-06-25 16:03:37 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.20 2008-07-07 21:16:03 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -191,3 +191,6 @@ often.
   MOVE_SET or FAILOVER_SET to arrive while holding an exclusive lock
   on sl_config_lock, preventing the other remote worker to process
   that event.
+
+- Bug #54 - quite a few Bash-isms in various scripts have been
+  addressed so as to make the shell scripts more portable.

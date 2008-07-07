@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.23 2008-05-26 20:50:34 cbbrowne Exp $
+# $Id: run_test.sh,v 1.24 2008-07-07 21:16:03 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -265,7 +265,7 @@ init_origin_rdbms()
 	status "loading origin DB with $testname/init_schema.sql"
 	$pgbindir/psql -h $host -p $port $db $user < $testname/init_schema.sql 1> ${mktmp}/init_schema.sql.${originnode} 2>${mktmp}/init_schema.sql.${originnode}
 	status "setting up user ${weakuser} to have weak access to data"
-	. ${testname}/gen_weak_user.sh ${weakuser} > ${mktmp}/grant_weak_access.sql
+	$SHELL ${testname}/gen_weak_user.sh ${weakuser} > ${mktmp}/grant_weak_access.sql
                  $pgbindir/psql -h $host -p $port -d $db -U $user < ${mktmp}/grant_weak_access.sql > ${mktmp}/genweakuser.sql.${originnode} 2> ${mktmp}/genweakuser.sql.${originnode}
 	status "done"
 }
@@ -509,7 +509,7 @@ build_slonconf()
     echo "desired_sync_time=60000" >> ${CONFFILE}
     echo "sql_on_connection=\"SET log_min_duration_statement to '1000';\"" >> ${CONFFILE}
     echo "lag_interval=\"0 minutes\"" >> ${CONFFILE}
-    if [ "x${archive}" == "xtrue" ]; then
+    if [ "x${archive}" = "xtrue" ]; then
 	status "slonconf configures archive logging for node ${node}"
 	echo "archive_dir='${mktmp}/archive_logs_${node}'" >> ${CONFFILE}
 	eval pgbindir=\$PGBINDIR${node}
@@ -529,7 +529,7 @@ launch_slon()
   eval cluster=\$CLUSTER1
 
   conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
-  if [ "x${slonconf}" == "xtrue" ]; then
+  if [ "x${slonconf}" = "xtrue" ]; then
       build_slonconf ${originnode} "${conninfo}"
       slonparms=" -f ${mktmp}/slon-conf.${originnode} "
       status "launching originnode : $opgbindir/slon ${slonparms}"
@@ -554,7 +554,7 @@ launch_slon()
   node=1
   while : ; do
       eval archive=\$ARCHIVE${node}
-      if [ "x${archive}" == "xtrue" ]; then
+      if [ "x${archive}" = "xtrue" ]; then
 	  ARCHIVENODE=${node}
       fi
       if [ ${node} -ge ${NUMNODES} ]; then
@@ -585,7 +585,7 @@ launch_slon()
         eval slon${node}_pid=
 	status "Considering node ${node}"
 
-        if [ "x${archive}" == "xtrue" ]; then
+        if [ "x${archive}" = "xtrue" ]; then
           status "Creating log shipping directory - $mktmp/archive_logs_${node}"
           mkdir -p $mktmp/archive_logs_${node}
           archiveparm="-a ${mktmp}/archive_logs_${node}"
@@ -594,7 +594,7 @@ launch_slon()
         fi
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
-	if [ "x${slonconf}" == "xtrue" ]; then
+	if [ "x${slonconf}" = "xtrue" ]; then
 	    build_slonconf ${node} "${conninfo}"
 	    status "launching: $pgbindir/slon -f ${CONFFILE}"
 	    $pgbindir/slon -f ${CONFFILE} 1>> $mktmp/slon_log.${node} 2>&1 &

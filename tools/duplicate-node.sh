@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: duplicate-node.sh,v 1.1 2007-09-24 21:07:45 cbbrowne Exp $
+# $Id: duplicate-node.sh,v 1.2 2008-07-07 21:16:03 cbbrowne Exp $
 
 # Parameters:
 #  - need cluster name
@@ -197,7 +197,7 @@ echo "Provider parms: ${PROVIDERPARMS}"
 #  - verify that origin node is legitimately an origin
 QUERY="select count(1)=sum(case when set_origin = \"_${SCLUSTER}\".getlocalnodeid('_${SCLUSTER}') then 1 else 0 end) from \"_${SCLUSTER}\".sl_set;"
 ORIGINP=`psql -At ${ORIGINPARMS} -c "${QUERY}"`
-if [[ x${ORIGINP} == "xt" ]] ; then
+if [ x${ORIGINP} = "xt" ] ; then
     echo "Node: ${HOSTORIGIN}/${PORTORIGIN}/${DATABASEORIGIN} is an origin node - OK"
 else
     echo "Node: ${HOSTORIGIN}/${PORTORIGIN}/${DATABASEORIGIN} is not an origin node"
@@ -209,7 +209,7 @@ fi
 QUERY="select count(1)=sum(case when set_origin = \"_${SCLUSTER}\".getlocalnodeid('_${SCLUSTER}') then 1 when exists (select 1 from \"_${SCLUSTER}\".sl_subscribe where sub_receiver= \"_${SCLUSTER}\".getlocalnodeid('_${SCLUSTER}') and sub_forward) then 1 else 0 end) from \"_${SCLUSTER}\".sl_set;"
 
 PROVIDERP=`psql -At ${PROVIDERPARMS} -c "${QUERY}"`
-if [[ x${PROVIDERP} == "xt" ]] ; then
+if [ x${PROVIDERP} = "xt" ] ; then
     echo "Node: ${HOSTDUP}/${PORTDUP}/${DATABASEDUP} seems like a suitable provider - OK"
 else
     echo "Node: ${HOSTDUP}/${PORTDUP}/${DATABASEDUP} is not a suitable provider"

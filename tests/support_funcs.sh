@@ -216,7 +216,7 @@ gen_testinfo ()
 
     CLNAME="\"_${CLUSTER1}\""
 
-    if [[ x$DESC = x'' ]]; then
+    if [ x$DESC = x'' ]; then
 	OK="true"
     else
 	OK="false"
