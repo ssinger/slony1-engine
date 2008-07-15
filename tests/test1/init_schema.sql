@@ -29,3 +29,21 @@ create table table4 (
   maccol macaddr,   -- "04:05:06:07:08:09"
   bitcol bit varying(20)  -- X'123' 
 );
+
+create table table5 (
+  id serial,
+  d1 text,
+  d2 text,
+  id2 serial,
+  d3 text,
+  d4 text,
+  d5 text,
+  d6 text,
+  id3 serial,
+  d7 text,
+  d8 text,
+  d9 text,
+  d10 text,
+  d11 text,
+  primary key(id, id2, id3)
+);

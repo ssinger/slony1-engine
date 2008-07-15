@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.140 2008-06-06 20:56:44 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.141 2008-07-15 22:25:44 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4803,6 +4803,9 @@ begin
 			v_attkind := v_attkind || ''v'';
 		end if;
 	end loop;
+
+	-- Strip off trailing v characters as they are not needed by the logtrigger
+	v_attkind := pg_catalog.rtrim(v_attkind, ''v'');
 
 	--
 	-- Return the resulting attkind

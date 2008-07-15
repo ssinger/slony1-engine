@@ -11,3 +11,5 @@ try {
 }
 
 set add table (id=4, set id=1, origin=1, fully qualified name = 'public.table4', comment='a table of many types');
+
+set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5', comment='a table with composite PK strewn across the table');
