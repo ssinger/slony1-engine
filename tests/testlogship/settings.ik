@@ -5,4 +5,3 @@ NUMNODES=3    # These are the "regular" Slony-I nodes
 ORIGINNODE=1  # at least initially - origin is later moved to node #3
 WORKERS=1
 ARCHIVE2=true   # Node #2 needs to run log archiving
-SLONCONF2=true

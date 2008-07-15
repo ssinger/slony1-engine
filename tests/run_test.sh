@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.24 2008-07-07 21:16:03 cbbrowne Exp $
+# $Id: run_test.sh,v 1.25 2008-07-15 22:28:22 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -112,11 +112,7 @@ stop_slons()
 {
 	node=1
         while : ; do
-          eval slonpid=\$slon${node}_pid
-	  if [ ! -z $slonpid ]; then
-            echo "**** killing slon node $node"
-            kill -15 $slonpid
-	  fi
+	  SLON_BIN_PATH=$PGBINDIR1 SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh stop
           if [ ${node} -ge ${NUMNODES} ]; then
             break;
           else
@@ -525,27 +521,18 @@ launch_slon()
   eval ouser=\$USER${originnode}
   eval opgbindir=\$PGBINDIR${originnode}
   eval oport=\$PORT${originnode}
-  eval oslonconf=\$SLONCONF${originnode}
   eval cluster=\$CLUSTER1
 
   conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
-  if [ "x${slonconf}" = "xtrue" ]; then
-      build_slonconf ${originnode} "${conninfo}"
-      slonparms=" -f ${mktmp}/slon-conf.${originnode} "
-      status "launching originnode : $opgbindir/slon ${slonparms}"
-      $opgbindir/slon -f ${mktmp}/slon-conf.${originnode} 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
-  else
-      slonparms=" -s500 -g10 -d2 $cluster \"$conninfo\""
-      status "launching originnode : $opgbindir/slon ${slonparms}"
-      $opgbindir/slon -s500 -g10 -d2 $cluster "$conninfo" 1> $mktmp/slon_log.${originnode} 2> $mktmp/slon_log.${originnode} &
-  fi
-  tmppid=$!
-  tmpppid=$$
+  build_slonconf ${originnode} "${conninfo}"
+  slonparms=" -f ${mktmp}/slon-conf.${originnode} "
+  status "launching originnode"
+  SLON_BIN_PATH=${opgbindir} SLON_CONF=${mktmp}/slon-conf.${originnode}  SLON_LOG=$mktmp/slon_log.${originnode} $SLTOOLDIR/start_slon.sh start
+
   sleep 1
-  foo=$(_check_pid slon ${tmppid} ${tmpppid})
-          
-  eval slon${originnode}_pid=${foo}
-  if [ -z "${foo}" -o "${tmppid}" != "${foo}" ]; then
+  SLPID=`SLON_BIN_PATH=${opgbindir} SLON_CONF=${mktmp}/slon-conf.${originnode} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
+  if [ -z "${SLPID}" ]; then
+      echo "SLPID: ${SLPID}"
     warn 3 "Failed to launch slon on node ${originnode} check $mktmp/slon_log.${originnode} for details"
   fi
 
@@ -576,7 +563,6 @@ launch_slon()
       eval port=\$PORT${node}
       eval cluster=\$CLUSTER1
       eval archive=\$ARCHIVE${node}
-      eval slonconf=\$SLONCONF${node}
 
       if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
         unset conninfo
@@ -594,23 +580,15 @@ launch_slon()
         fi
         conninfo="dbname=${db} host=${host} user=${user} port=${port}"
 
-	if [ "x${slonconf}" = "xtrue" ]; then
-	    build_slonconf ${node} "${conninfo}"
-	    status "launching: $pgbindir/slon -f ${CONFFILE}"
-	    $pgbindir/slon -f ${CONFFILE} 1>> $mktmp/slon_log.${node} 2>&1 &
-	else
-	    status "launching: $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster \"$conninfo\""
-	    $pgbindir/slon -s500 -g10 -d2 ${archiveparm} $cluster "$conninfo" 1>> $mktmp/slon_log.${node} 2>&1 &
-	fi
-	tmppid=$!
-	tmpppid=$$
+	build_slonconf ${node} "${conninfo}"
+	status "launching slon"
+	SLON_BIN_PATH=$pgbindir SLON_CONF=${CONFFILE} SLON_LOG=$mktmp/slon_log.${node} $SLTOOLDIR/start_slon.sh start
 	sleep 1
 	
-	foo=$(_check_pid slon ${tmppid} ${tmpppid})
-	
-	eval slon${node}_pid=${foo}
-	if [ -z "${foo}" -o "${tmppid}" != "${foo}" ]; then
-            warn 3 "Failed to launch slon on node ${node} check $mktmp/slon_log.${node} for details"
+	SLPID=`SLON_BIN_PATH=${pgbindir} SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
+	if [ -z "${SLPID}" ]; then
+	    echo "SLPID: ${SLPID}"
+	    warn 3 "Failed to launch slon on node ${node} check $mktmp/slon_log.${node} for details"
 	fi
       fi
     fi
