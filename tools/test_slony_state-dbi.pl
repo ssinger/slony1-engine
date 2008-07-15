@@ -1,5 +1,5 @@
 #!/usr/bin/perl   # -*- perl -*-
-# $Id: test_slony_state-dbi.pl,v 1.5 2007-01-02 19:34:11 cbbrowne Exp $
+# $Id: test_slony_state-dbi.pl,v 1.6 2008-07-15 22:41:59 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005
 # PostgreSQL Global Development Group
@@ -72,8 +72,11 @@ report_on_problems ();
 
 sub test_node {
   my ($node, $dsn) = @_;
+  $dsn="dbi:Pg:$dsn";
 
   print "\nTests for node $node - DSN = $dsn\n========================================\n";
+  $dbh = DBI->connect($dsn) or add_problem($node, "Could not connect.",
+					   qq(Could not connect to node $node using DSN: $dsn)) and return;
 
   my $listener_query = "select relpages, reltuples from pg_catalog.pg_class where relname = 'pg_listener';";
   my $res = $dbh->prepare($listener_query);
