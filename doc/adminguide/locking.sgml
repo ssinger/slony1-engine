@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.10 2006-08-02 18:34:59 cbbrowne Exp $ --> 
+<!-- $Id: locking.sgml,v 1.11 2008-08-01 19:25:41 cbbrowne Exp $ --> 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -13,7 +13,10 @@ read locks can impede writes; with <acronym>MVCC</acronym>, &postgres;
 eliminates that whole class of locks in that <quote>old reads</quote>
 can access <quote>old tuples.</quote> Most of the time, this allows
 the gentle user of &postgres; to not need to worry very much about
-locks. </para>
+locks.  &slony1; configuration events normally grab locks on an
+internal table, <envar>sl_config_lock</envar>, which should not be
+visible to applications unless they are performing actions on &slony1;
+components.  </para>
 
 <para> Unfortunately, there are several sorts of &slony1; events that
 do require exclusive locks on &postgres; tables, with the result that

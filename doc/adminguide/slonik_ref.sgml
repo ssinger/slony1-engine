@@ -1286,10 +1286,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
-      <listitem><para> Unique ID of the set to contain the union of the two separate sets.</para></listitem>
+      <listitem><para> Unique ID of the set to contain the union of the two formerly separate sets.</para></listitem>
      </varlistentry>
      <varlistentry><term><literal> ADD ID = ival </literal></term>
-      <listitem><para> Unique ID of the set whose objects should be transferred.  </para></listitem>
+      <listitem><para> Unique ID of the set whose objects should be transferred into the above set.  </para></listitem>
      </varlistentry>
      <varlistentry><term><literal> ORIGIN = ival </literal></term>
       <listitem><para> Current origin node for both sets.  </para></listitem>
