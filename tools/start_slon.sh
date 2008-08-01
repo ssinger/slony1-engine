@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: start_slon.sh,v 1.1 2008-07-15 22:28:23 cbbrowne Exp $
+# $Id: start_slon.sh,v 1.2 2008-08-01 19:33:24 cbbrowne Exp $
 
 # The following lines are ones you may wish to customize;
 # alternatively, you may set SLON_BUILD and SLON_CONF in your
@@ -7,7 +7,7 @@
 
 SLON_BIN_PATH=${SLON_BUILD:-"/home/chris/dbs/postgresql-8.3.3/bin"}
 SLON_CONF=${SLON_CONF:-"${HOME}/test/slon-conf.1"}
-SLON_LOG=${SLON_LOG:-"${HOME}/test/slon.1.log"}
+SLON_LOG=${SLON_LOG:-"${HOME}/test/slon.1.log"}    # If you use syslog, then this may use /dev/null
 
 # shouldn't need to edit anything below this
 
@@ -29,9 +29,11 @@ fi
 case "$1" in
   start)
         if [ ! -z "$FINDPID" ]; then
-	    echo "**** slon still running - PID $PID ****"
+	    echo "**** slon already running - PID $PID ****"
 	    exit 1
 	fi
+	touch $SLON_LOG
+	test -w "$SLON_LOG" || (echo "**** SLON_LOG not writable - $SLON_LOG ****"; exit 1)
         echo "Starting slon: $SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>>1" &
 	$SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>>1 &
         ;;
@@ -39,8 +41,9 @@ case "$1" in
         echo "Stopping slon"
 	if [ ! -z "$FINDPID" ]; then
 	    kill -15 ${PID}
+	    echo "Killed slon at PID ${PID}"
 	else
-	    echo "slon with PID ${PID} not found"
+	    echo "**** slon with PID ${PID} not found ****"
         fi
         ;;
   status)
@@ -48,12 +51,12 @@ case "$1" in
 	echo "SLON_BIN_PATH:${SLON_BIN_PATH}"
 	if [ -f $PID_FILE ]; then
 	    if [ ! -z "$FINDPID" ]; then
-		echo "Slon running as PID:$PID"
+		echo "**** Slon running as PID:$PID ****"
 	    else
-		echo "Slon not running - PID:$PID - ${FINDPID}"
+		echo "**** Slon not running - PID:$PID - ${FINDPID} ****"
 	    fi
 	else
-	    echo "Slon not running - no PID file ${PID_FILE}"
+	    echo "**** Slon not running - no PID file ${PID_FILE} ****"
 	fi
 	;;
   *)
