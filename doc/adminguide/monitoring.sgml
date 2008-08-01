@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.44 2008-06-19 20:35:39 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.45 2008-08-01 22:45:18 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -342,6 +342,82 @@ on <ulink url="http://www.debian.org/"> Debian GNU/Linux</ulink>, the
 relevant package is called
 <application>libwww-mediawiki-client-perl</application>; other systems
 may have a packaged version of this under some similar name. </para>
+
+</sect2>
+
+<sect2> <title> Analysis of a SYNC </title>
+
+<para> The following is (as of 2.0) an extract from the &lslon; log for node
+#2 in a run of <quote>test1</test> from the <xref linkend="testbed">. </para>
+
+<screen>
+DEBUG2 remoteWorkerThread_1: SYNC 19 processing
+INFO   about to monitor_subscriber_query - pulling big actionid list 134885072
+INFO   remoteWorkerThread_1: syncing set 1 with 4 table(s) from provider 1
+DEBUG2  ssy_action_list length: 0
+DEBUG2 remoteWorkerThread_1: current local log_status is 0
+DEBUG2 remoteWorkerThread_1_1: current remote log_status = 0
+DEBUG1 remoteHelperThread_1_1: 0.028 seconds delay for first row
+DEBUG1 remoteHelperThread_1_1: 0.978 seconds until close cursor
+INFO   remoteHelperThread_1_1: inserts=144 updates=1084 deletes=0
+INFO   remoteWorkerThread_1: sync_helper timing:  pqexec (s/count)- provider 0.063/6 - subscriber 0.000/6
+INFO   remoteWorkerThread_1: sync_helper timing:  large tuples 0.315/288
+DEBUG2 remoteWorkerThread_1: cleanup
+INFO   remoteWorkerThread_1: SYNC 19 done in 1.272 seconds
+INFO   remoteWorkerThread_1: SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/1 - IUD 0.972/248
+</screen>
+
+<para> Here are some notes to interpret this output: </para>
+
+<itemizedlist>
+<listitem><para> Note the line that indicates <screen>inserts=144 updates=1084 deletes=0</screen> </para> 
+<para> This indicates how many tuples were affected by this particular SYNC. </para></listitem>
+<listitem><para> Note the line indicating <screen>0.028 seconds delay for first row</screen></para> 
+
+<para> This indicates the time it took for the <screen>LOG
+cursor</screen> to get to the point of processing the first row of
+data.  Normally, this takes a long time if the SYNC is a large one,
+and one requiring sorting of a sizable result set.</para></listitem>
+
+<listitem><para> Note the line indicating <screen>0.978 seconds until
+close cursor</screen></para> 
+
+<para> This indicates how long processing took against the
+provider.</para></listitem>
+
+<listitem><para> sync_helper timing:  large tuples 0.315/288 </para> 
+
+<para> This breaks off, as a separate item, the number of large tuples
+(<emphasis>e.g.</emphasis> - where size exceeded the configuration
+parameter <xref linkend="slon-config-max-rowsize">) and where the
+tuples had to be processed individually. </para></listitem>
+
+<listitem><para> <screen>SYNC 19 done in 1.272 seconds</screen></para> 
+
+<para> This indicates that it took 0.108 seconds, in total, to process
+this set of SYNCs. </para>
+</listitem>
+
+<listitem><para> <screen>SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/0 - IUD 0.972/248</screen></para> 
+
+<para> This records information about how many queries were issued
+against providers and subscribers in function
+<function>sync_event()</function>, and how long they took. </para>
+
+<para> Note that 248 does not match against the numbers of inserts,
+updates, and deletes, described earlier, as I/U/D requests are
+clustered into groups of queries that are submitted via a single
+<function>pqexec()</function> call on the
+subscriber. </para></listitem>
+
+<listitem><para> <screen>sync_helper timing:  pqexec (s/count)- provider 0.063/6 - subscriber 0.000/6</screen></para>
+
+<para> This records information about how many queries were issued
+against providers and subscribers in function
+<function>sync_helper()</function>, and how long they took.
+</para></listitem>
+
+</itemizedlist>
 
 </sect2>
 </sect1>

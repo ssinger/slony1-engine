@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.174 2008-08-01 20:18:17 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.175 2008-08-01 22:45:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3776,8 +3776,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 		start_monitored_event(&pm);
 		res1 = PQexec(local_dbconn, dstring_data(&query));
-		slon_log(SLON_INFO, "about to monitor_subscriber_query - pulling big actionid list %d\n", provider);
 		monitor_subscriber_query(&pm);
+
+		slon_log(SLON_INFO, "about to monitor_subscriber_query - pulling big actionid list %d\n", provider);
 
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -3833,9 +3834,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 								rtcfg_namespace,
 								rtcfg_namespace,
 								sub_set);
+
 			start_monitored_event(&pm);
 			res2 = PQexec(local_dbconn, dstring_data(&query));
 			monitor_subscriber_query(&pm);
+
 			if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
@@ -4007,7 +4010,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	 */
 	(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
 						rtcfg_namespace);
+	start_monitored_event(&pm);
 	res1 = PQexec(local_dbconn, dstring_data(&query));
+	monitor_subscriber_query(&pm);
 
 	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 	{
@@ -4094,10 +4099,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 					if (wgline->log.n_used > 0)
 					{
-					  start_monitored_event(&pm);
+						start_monitored_event(&pm);
 						res1 = PQexec(local_dbconn, dstring_data(&(wgline->log)));
+						monitor_subscriber_iud(&pm);
 
-					  monitor_subscriber_iud(&pm);
 						if (PQresultStatus(res1) == PGRES_EMPTY_QUERY)
 						{
 							PQclear(res1);
@@ -4118,6 +4123,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 					start_monitored_event(&pm);
 					res1 = PQexec(local_dbconn, dstring_data(&(wgline->data)));
 					monitor_subscriber_iud(&pm);
+
 					if (PQresultStatus(res1) == PGRES_EMPTY_QUERY)
 					{
 						PQclear(res1);
@@ -4298,7 +4304,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 		start_monitored_event(&pm);
 		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
-		monitor_subscriber_iud(&pm);
+		monitor_provider_query(&pm);
+
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
@@ -4378,7 +4385,11 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * ... if there could be any, that is.
 		 */
 		slon_appendquery(&query, ") and ssy_seqno < '%s'; ", seqbuf);
+		
+		start_monitored_event(&pm);
 		res1 = PQexec(local_dbconn, dstring_data(&query));
+		monitor_subscriber_query (&pm);
+
 		if (PQresultStatus(res1) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
@@ -4418,7 +4429,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
 
  	slon_log(SLON_INFO, 
-			 "remoteWorkerThread_%d: SYNC " INT64_FORMAT " Timing: " 
+			 "remoteWorkerThread_%d: SYNC " INT64_FORMAT " sync_event timing: " 
 			 " pqexec (s/count)" 
 			 "- provider %.3f/%d " 
 			 "- subscriber %.3f/%d " 
@@ -4469,8 +4480,6 @@ sync_helper(void *cdata)
 
 	PerfMon pm;
 
-	init_perfmon(&pm);
-
 	dstring_init(&query);
 	dstring_init(&query2);
 
@@ -4512,24 +4521,34 @@ sync_helper(void *cdata)
 		errors = 0;
 		do
 		{
+			init_perfmon(&pm);
 			/*
 			 * Start a transaction
 			 */
+
 			(void) slon_mkquery(&query, "start transaction; "
 								"set enable_seqscan = off; "
 								"set enable_indexscan = on; ");
+
+			start_monitored_event(&pm);
+
 			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
 				break;
 			}
+			monitor_subscriber_query (&pm);
 
 			/*
 			 * Get the current sl_log_status value
 			 */
 			(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
 								rtcfg_namespace);
+
+			start_monitored_event(&pm);
 			res3 = PQexec(dbconn, dstring_data(&query));
+			monitor_provider_query(&pm);
+
 			rc = PQresultStatus(res3);
 			if (rc != PGRES_TUPLES_OK)
 			{
@@ -4638,11 +4657,13 @@ sync_helper(void *cdata)
 			first_fetch = true;
 			res = NULL;
 
+			start_monitored_event(&pm);
 			if (query_execute(node, dbconn, &query) < 0)
 			{
 				errors++;
 				break;
 			}
+			monitor_provider_query(&pm);
 
 			(void) slon_mkquery(&query, "fetch %d from LOG; ",
 							  SLON_DATA_FETCH_SIZE * SLON_COMMANDS_PER_LINE);
@@ -4774,7 +4795,10 @@ sync_helper(void *cdata)
 					if (res != NULL)
 						PQclear(res);
 
+					start_monitored_event(&pm);
 					res = PQexec(dbconn, dstring_data(&query));
+					monitor_provider_query(&pm);
+
 					if (PQresultStatus(res) != PGRES_TUPLES_OK)
 					{
 						slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: \"%s\" %s",
@@ -4839,7 +4863,6 @@ sync_helper(void *cdata)
 
 					if (log_cmdsize >= sync_max_rowsize)
 					{
-						start_monitored_event(&pm);
 						(void) slon_mkquery(&query2,
 											"select log_cmddata "
 											"from %s.sl_log_1 "
@@ -4856,8 +4879,10 @@ sync_helper(void *cdata)
 										 log_origin, log_txid, log_actionseq,
 											rtcfg_namespace,
 										log_origin, log_txid, log_actionseq);
+						start_monitored_event(&pm);
 						res2 = PQexec(dbconn, dstring_data(&query2));
 						monitor_largetuples(&pm);
+
 						if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 						{
 							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: \"%s\" %s",
@@ -5043,11 +5068,20 @@ sync_helper(void *cdata)
 		slon_log(SLON_INFO, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
 				 node->no_id, provider->no_id, pm.num_inserts, pm.num_updates, pm.num_deletes);
 
- 	slon_log(SLON_INFO, 
-			 "remoteWorkerThread_%d: sync_helper timing: " 
-			 " large tuples %.3f/%d\n", 
-			 node->no_id, 
-			 pm.large_tuples_t, pm.large_tuples_c);
+		slon_log(SLON_INFO, 
+				 "remoteWorkerThread_%d: sync_helper timing: " 
+				 " pqexec (s/count)" 
+				 "- provider %.3f/%d " 
+				 "- subscriber %.3f/%d\n",
+				 node->no_id, 
+				 pm.prov_query_t, pm.prov_query_c, 
+				 pm.subscr_query_t, pm.prov_query_c);
+
+		slon_log(SLON_INFO, 
+				 "remoteWorkerThread_%d: sync_helper timing: " 
+				 " large tuples %.3f/%d\n", 
+				 node->no_id, 
+				 pm.large_tuples_t, pm.large_tuples_c);
 
 		/*
 		 * Change our helper status to DONE and tell the worker thread about
