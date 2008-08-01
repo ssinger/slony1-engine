@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.77 2008-01-03 15:47:21 cbbrowne Exp $
+ *	$Id: slon.c,v 1.78 2008-08-01 19:49:39 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -75,7 +75,7 @@ static void SlonMain(void);
 #ifndef WIN32
 static void SlonWatchdog(void);
 static void sighandler(int signo);
-static void slon_terminate_worker(void);
+void slon_terminate_worker(void);
 #endif
 
 int			slon_log_level;
@@ -657,7 +657,7 @@ SlonMain(void)
 		strcpy(rtcfg_lastevent, PQgetvalue(res, 0, 0));
 	PQclear(res);
 	dstring_free(&query);
-	slon_log(SLON_DEBUG2,
+	slon_log(SLON_CONFIG,
 			 "main: last local event sequence = %s\n",
 			 rtcfg_lastevent);
 
@@ -736,20 +736,20 @@ SlonMain(void)
 	/*
 	 * Wait until the scheduler has shut down all remote connections
 	 */
-	slon_log(SLON_DEBUG1, "main: running scheduler mainloop\n");
+	slon_log(SLON_INFO, "main: running scheduler mainloop\n");
 	if (sched_wait_mainloop() < 0)
 	{
 		slon_log(SLON_FATAL, "main: scheduler returned with error\n");
 		slon_retry();
 	}
-	slon_log(SLON_DEBUG1, "main: scheduler mainloop returned\n");
+	slon_log(SLON_INFO, "main: scheduler mainloop returned\n");
 
 	/*
 	 * Wait for all remote threads to finish
 	 */
 	main_thread = pthread_self();
 
-	slon_log(SLON_DEBUG2, "main: wait for remote threads\n");
+	slon_log(SLON_CONFIG, "main: wait for remote threads\n");
 	rtcfg_joinAllRemoteThreads();
 
 	/*
@@ -773,7 +773,7 @@ SlonMain(void)
 				 strerror(errno));
 #endif
 
-	slon_log(SLON_DEBUG1, "main: done\n");
+	slon_log(SLON_CONFIG, "main: done\n");
 
 	exit(0);
 }
@@ -857,9 +857,9 @@ SlonWatchdog(void)
 		if (pid < 0 && errno == EINTR)
 			continue;
 
-		slon_log(SLON_DEBUG2, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
+		slon_log(SLON_CONFIG, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
 	}
-	slon_log(SLON_DEBUG2, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
+	slon_log(SLON_CONFIG, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
 
 	(void) alarm(0);
 
@@ -877,12 +877,12 @@ SlonWatchdog(void)
 			watchdog_status = SLON_WATCHDOG_RETRY;
 			if (child_status != 0)
 			{
-				slon_log(SLON_DEBUG1, "slon: restart of worker in 10 seconds\n");
+				slon_log(SLON_CONFIG, "slon: restart of worker in 10 seconds\n");
 				(void) sleep(10);
 			}
 			else
 			{
-				slon_log(SLON_DEBUG1, "slon: restart of worker\n");
+				slon_log(SLON_CONFIG, "slon: restart of worker\n");
 			}
 			if (watchdog_status == SLON_WATCHDOG_RETRY)
 			{
@@ -897,7 +897,7 @@ SlonWatchdog(void)
 			break;
 	}
 
-	slon_log(SLON_DEBUG1, "slon: done\n");
+	slon_log(SLON_INFO, "slon: done\n");
 
 	/*
 	 * That's it.
@@ -916,7 +916,7 @@ sighandler(int signo)
 	switch (signo)
 	{
 		case SIGALRM:
-			slon_log(SLON_DEBUG1, "slon: child termination timeout - kill child\n");
+			slon_log(SLON_INFO, "slon: child termination timeout - kill child\n");
 			kill(slon_worker_pid, SIGKILL);
 			break;
 
@@ -924,26 +924,26 @@ sighandler(int signo)
 			break;
 
 		case SIGHUP:
-			slon_log(SLON_DEBUG1, "slon: restart requested\n");
+			slon_log(SLON_INFO, "slon: restart requested\n");
 			watchdog_status = SLON_WATCHDOG_RESTART;
 			slon_terminate_worker();
 			break;
 
 		case SIGUSR1:
-			slon_log(SLON_DEBUG1, "slon: retry requested\n");
+			slon_log(SLON_INFO, "slon: retry requested\n");
 			watchdog_status = SLON_WATCHDOG_RETRY;
 			slon_terminate_worker();
 			break;
 
 		case SIGINT:
 		case SIGTERM:
-			slon_log(SLON_DEBUG1, "slon: shutdown requested\n");
+			slon_log(SLON_INFO, "slon: shutdown requested\n");
 			watchdog_status = SLON_WATCHDOG_SHUTDOWN;
 			slon_terminate_worker();
 			break;
 
 		case SIGQUIT:
-			slon_log(SLON_DEBUG1, "slon: shutdown now requested\n");
+			slon_log(SLON_INFO, "slon: shutdown now requested\n");
 			kill(slon_worker_pid, SIGKILL);
 			slon_exit(-1);
 			break;
@@ -957,7 +957,7 @@ sighandler(int signo)
 void
 slon_terminate_worker()
 {
-	slon_log(SLON_DEBUG2, "slon: notify worker process to shutdown\n");
+	slon_log(SLON_INFO, "slon: notify worker process to shutdown\n");
 
 	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
 	{
