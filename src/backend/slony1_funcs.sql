@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.141 2008-07-15 22:25:44 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.142 2008-08-06 22:05:45 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -179,17 +179,17 @@ grant execute on function @NAMESPACE@.getModuleVersion () to public;
 comment on function @NAMESPACE@.getModuleVersion () is
   'Returns the compiled-in version number of the Slony-I shared object';
 
-create or replace function @NAMESPACE@.checkmoduleversion () returns text as '
+create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
 declare
   moduleversion	text;
 begin
   select into moduleversion @NAMESPACE@.getModuleVersion();
-  if moduleversion <> ''@MODULEVERSION@'' then
-      raise exception ''Slonik version: @MODULEVERSION@ != Slony-I version in PG build %'',
+  if moduleversion <> '@MODULEVERSION@' then
+      raise exception 'Slonik version: @MODULEVERSION@ != Slony-I version in PG build %',
              moduleversion;
   end if;
   return null;
-end;' language plpgsql;
+end;$$ language plpgsql;
 
 comment on function @NAMESPACE@.checkmoduleversion () is 
 'Inline test function that verifies that slonik request for STORE
@@ -220,7 +220,7 @@ grant execute on function @NAMESPACE@.logTrigger () to public;
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.terminateNodeConnections (int4) returns int4
-as '
+as $$
 declare
 	p_failed_node	alias for $1;
 	v_row			record;
@@ -229,7 +229,7 @@ begin
 			nl_backendpid from @NAMESPACE@.sl_nodelock
 			where nl_nodeid = p_failed_node for update
 	loop
-		perform @NAMESPACE@.killBackend(v_row.nl_backendpid, ''TERM'');
+		perform @NAMESPACE@.killBackend(v_row.nl_backendpid, 'TERM');
 		delete from @NAMESPACE@.sl_nodelock
 			where nl_nodeid = v_row.nl_nodeid
 			and nl_conncnt = v_row.nl_conncnt;
@@ -237,7 +237,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.terminateNodeConnections (int4) is 
   'terminates all backends that have registered to be from the given node';
@@ -276,15 +276,15 @@ comment on function @NAMESPACE@.seqtrack(int4, int8) is
 -- ----------------------------------------------------------------------
 
 create or replace function @NAMESPACE@.slon_quote_brute(text) returns text
-as '
+as $$
 declare	
     p_tab_fqname alias for $1;
-    v_fqname text default '''';
+    v_fqname text default '';
 begin
-    v_fqname := ''"'' || replace(p_tab_fqname,''"'',''""'') || ''"'';
+    v_fqname := '"' || replace(p_tab_fqname,'"','""') || '"';
     return v_fqname;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.slon_quote_brute(text) is
   'Brutally quote the given text';
@@ -298,7 +298,7 @@ comment on function @NAMESPACE@.slon_quote_brute(text) is
 --
 --	This function will be used to quote user input.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.slon_quote_input(text) returns text as '
+create or replace function @NAMESPACE@.slon_quote_input(text) returns text as $$
   declare
      p_tab_fqname alias for $1;
      v_nsp_name text;
@@ -310,16 +310,16 @@ begin
 	v_l := length(p_tab_fqname);
 
 	-- Let us search for the dot
-	if p_tab_fqname like ''"%'' then
+	if p_tab_fqname like '"%' then
 		-- if the first part of the ident starts with a double quote, search
 		-- for the closing double quote, skipping over double double quotes.
 		v_i := 2;
 		while v_i <= v_l loop
-			if substr(p_tab_fqname, v_i, 1) != ''"'' then
+			if substr(p_tab_fqname, v_i, 1) != '"' then
 				v_i := v_i + 1;
 			else
 				v_i := v_i + 1;
-				if substr(p_tab_fqname, v_i, 1) != ''"'' then
+				if substr(p_tab_fqname, v_i, 1) != '"' then
 					exit;
 				end if;
 				v_i := v_i + 1;
@@ -329,7 +329,7 @@ begin
 		-- first part of ident is not quoted, search for the dot directly
 		v_i := 1;
 		while v_i <= v_l loop
-			if substr(p_tab_fqname, v_i, 1) = ''.'' then
+			if substr(p_tab_fqname, v_i, 1) = '.' then
 				exit;
 			end if;
 			v_i := v_i + 1;
@@ -338,31 +338,31 @@ begin
 
 	-- v_i now points at the dot or behind the string.
 
-	if substr(p_tab_fqname, v_i, 1) = ''.'' then
+	if substr(p_tab_fqname, v_i, 1) = '.' then
 		-- There is a dot now, so split the ident into its namespace
 		-- and objname parts and make sure each is quoted
 		v_nsp_name := substr(p_tab_fqname, 1, v_i - 1);
 		v_tab_name := substr(p_tab_fqname, v_i + 1);
-		if v_nsp_name not like ''"%'' then
-			v_nsp_name := ''"'' || replace(v_nsp_name, ''"'', ''""'') ||
-						  ''"'';
+		if v_nsp_name not like '"%' then
+			v_nsp_name := '"' || replace(v_nsp_name, '"', '""') ||
+						  '"';
 		end if;
-		if v_tab_name not like ''"%'' then
-			v_tab_name := ''"'' || replace(v_tab_name, ''"'', ''""'') ||
-						  ''"'';
+		if v_tab_name not like '"%' then
+			v_tab_name := '"' || replace(v_tab_name, '"', '""') ||
+						  '"';
 		end if;
 
-		return v_nsp_name || ''.'' || v_tab_name;
+		return v_nsp_name || '.' || v_tab_name;
 	else
 		-- No dot ... must be just an ident without schema
-		if p_tab_fqname like ''"%'' then
+		if p_tab_fqname like '"%' then
 			return p_tab_fqname;
 		else
-			return ''"'' || replace(p_tab_fqname, ''"'', ''""'') || ''"'';
+			return '"' || replace(p_tab_fqname, '"', '""') || '"';
 		end if;
 	end if;
 
-end;' language plpgsql;
+end;$$ language plpgsql;
 
 comment on function @NAMESPACE@.slon_quote_input(text) is
   'quote all words that aren''t quoted yet';
@@ -377,11 +377,11 @@ comment on function @NAMESPACE@.slon_quote_input(text) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.slonyVersionMajor()
 returns int4
-as '
+as $$
 begin
 	return 2;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.slonyVersionMajor () is 
   'Returns the major version number of the slony schema';
@@ -391,11 +391,11 @@ comment on function @NAMESPACE@.slonyVersionMajor () is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
-as '
+as $$
 begin
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
   'Returns the minor version number of the slony schema';
 
@@ -405,11 +405,11 @@ comment on function @NAMESPACE@.slonyVersionMinor () is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
-as '
+as $$
 begin
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
   'Returns the version patch level of the slony schema';
 
@@ -419,13 +419,13 @@ comment on function @NAMESPACE@.slonyVersionPatchlevel () is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.slonyVersion()
 returns text
-as '
+as $$
 begin
-	return ''''	|| @NAMESPACE@.slonyVersionMajor() || ''.''
-				|| @NAMESPACE@.slonyVersionMinor() || ''.''
-				|| @NAMESPACE@.slonyVersionPatchlevel();
+	return @NAMESPACE@.slonyVersionMajor() || '.' || 
+	       @NAMESPACE@.slonyVersionMinor() || '.' || 
+	       @NAMESPACE@.slonyVersionPatchlevel();
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
   'Returns the version number of the slony schema';
 
@@ -441,7 +441,7 @@ comment on function @NAMESPACE@.slonyVersion() is
 --	Functions for accessing sl_registry
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.registry_set_int4(text, int4)
-returns int4 as '
+returns int4 as $$
 DECLARE
 	p_key		alias for $1;
 	p_value		alias for $2;
@@ -461,14 +461,14 @@ BEGIN
 	end if;
 	return p_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_set_int4(text, int4) is
 'registry_set_int4(key, value)
 
 Set or delete a registry value';
 
 create or replace function @NAMESPACE@.registry_get_int4(text, int4)
-returns int4 as '
+returns int4 as $$
 DECLARE
 	p_key		alias for $1;
 	p_default	alias for $2;
@@ -483,20 +483,20 @@ BEGIN
 		end if;
 	else
 		if v_value is null then
-			raise exception ''Slony-I: registry key % is not an int4 value'',
+			raise exception 'Slony-I: registry key % is not an int4 value',
 					p_key;
 		end if;
 	end if;
 	return v_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_get_int4(text, int4) is
 'registry_get_int4(key, value)
 
 Get a registry value. If not present, set and return the default.';
 
 create or replace function @NAMESPACE@.registry_set_text(text, text)
-returns text as '
+returns text as $$
 DECLARE
 	p_key		alias for $1;
 	p_value		alias for $2;
@@ -516,14 +516,14 @@ BEGIN
 	end if;
 	return p_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_set_text(text, text) is
 'registry_set_text(key, value)
 
 Set or delete a registry value';
 
 create or replace function @NAMESPACE@.registry_get_text(text, text)
-returns text as '
+returns text as $$
 DECLARE
 	p_key		alias for $1;
 	p_default	alias for $2;
@@ -538,20 +538,20 @@ BEGIN
 		end if;
 	else
 		if v_value is null then
-			raise exception ''Slony-I: registry key % is not a text value'',
+			raise exception 'Slony-I: registry key % is not a text value',
 					p_key;
 		end if;
 	end if;
 	return v_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_get_text(text, text) is
 'registry_get_text(key, value)
 
 Get a registry value. If not present, set and return the default.';
 
 create or replace function @NAMESPACE@.registry_set_timestamp(text, timestamp)
-returns timestamp as '
+returns timestamp as $$
 DECLARE
 	p_key		alias for $1;
 	p_value		alias for $2;
@@ -571,14 +571,14 @@ BEGIN
 	end if;
 	return p_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_set_timestamp(text, timestamp) is
 'registry_set_timestamp(key, value)
 
 Set or delete a registry value';
 
 create or replace function @NAMESPACE@.registry_get_timestamp(text, timestamp)
-returns timestamp as '
+returns timestamp as $$
 DECLARE
 	p_key		alias for $1;
 	p_default	alias for $2;
@@ -593,13 +593,13 @@ BEGIN
 		end if;
 	else
 		if v_value is null then
-			raise exception ''Slony-I: registry key % is not an timestamp value'',
+			raise exception 'Slony-I: registry key % is not an timestamp value',
 					p_key;
 		end if;
 	end if;
 	return v_value;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.registry_get_timestamp(text, timestamp) is
 'registry_get_timestamp(key, value)
 
@@ -613,7 +613,7 @@ Get a registry value. If not present, set and return the default.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cleanupNodelock ()
 returns int4
-as '
+as $$
 declare
 	v_row		record;
 begin
@@ -621,8 +621,8 @@ begin
 			from @NAMESPACE@.sl_nodelock
 			for update
 	loop
-		if @NAMESPACE@.killBackend(v_row.nl_backendpid, ''NULL'') < 0 then
-			raise notice ''Slony-I: cleanup stale sl_nodelock entry for pid=%'',
+		if @NAMESPACE@.killBackend(v_row.nl_backendpid, 'NULL') < 0 then
+			raise notice 'Slony-I: cleanup stale sl_nodelock entry for pid=%',
 					v_row.nl_backendpid;
 			delete from @NAMESPACE@.sl_nodelock where
 					nl_nodeid = v_row.nl_nodeid and
@@ -632,7 +632,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.cleanupNodelock() is
 'Clean up stale entries when restarting slon';
@@ -645,7 +645,7 @@ comment on function @NAMESPACE@.cleanupNodelock() is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.registerNodeConnection (int4)
 returns int4
-as '
+as $$
 declare
 	p_nodeid	alias for $1;
 begin
@@ -656,7 +656,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.registerNodeConnection (int4) is
 'Register (uniquely) the node connection so that only one slon can service the node';
@@ -669,7 +669,7 @@ comment on function @NAMESPACE@.registerNodeConnection (int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.initializeLocalNode (int4, text)
 returns int4
-as '
+as $$
 declare
 	p_local_node_id		alias for $1;
 	p_comment			alias for $2;
@@ -687,25 +687,25 @@ begin
 	-- ----
 	select last_value::int4 into v_old_node_id from @NAMESPACE@.sl_local_node_id;
 	if v_old_node_id != -1 then
-		raise exception ''Slony-I: This node is already initialized'';
+		raise exception 'Slony-I: This node is already initialized';
 	end if;
 
 	-- ----
 	-- Set sl_local_node_id to the requested value and add our
 	-- own system to sl_node.
 	-- ----
-	perform setval(''@NAMESPACE@.sl_local_node_id'', p_local_node_id);
+	perform setval('@NAMESPACE@.sl_local_node_id', p_local_node_id);
 	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment);
 
-	if (pg_catalog.current_setting(''max_identifier_length'')::integer - pg_catalog.length(''@NAMESPACE@'')) < 5 then
-		raise notice ''Slony-I: Cluster name length [%] versus system max_identifier_length [%] '', pg_catalog.length(''@NAMESPACE@''), pg_catalog.current_setting(''max_identifier_length'');
-		raise notice ''leaves narrow/no room for some Slony-I-generated objects (such as indexes).'';
-		raise notice ''You may run into problems later!'';
+	if (pg_catalog.current_setting('max_identifier_length')::integer - pg_catalog.length('@NAMESPACE@')) < 5 then
+		raise notice 'Slony-I: Cluster name length [%] versus system max_identifier_length [%] ', pg_catalog.length('@NAMESPACE@'), pg_catalog.current_setting('max_identifier_length');
+		raise notice 'leaves narrow/no room for some Slony-I-generated objects (such as indexes).';
+		raise notice 'You may run into problems later!';
 	end if;
 	
 	return p_local_node_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.initializeLocalNode (int4, text) is 
   'no_id - Node ID #
@@ -720,16 +720,16 @@ Initializes the new node, no_id';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeNode (int4, text)
 returns bigint
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
 begin
 	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_NODE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'STORE_NODE',
 									p_no_id::text, p_no_comment::text);
 end;
-' language plpgsql
+$$ language plpgsql
 	called on null input;
 
 comment on function @NAMESPACE@.storeNode(int4, text) is
@@ -745,7 +745,7 @@ Generate the STORE_NODE event for node no_id';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeNode_int (int4, text)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	p_no_comment	alias for $2;
@@ -776,12 +776,12 @@ begin
 		-- ----
 		insert into @NAMESPACE@.sl_node
 				(no_id, no_active, no_comment) values
-				(p_no_id, ''f'', p_no_comment);
+				(p_no_id, 'f', p_no_comment);
 	end if;
 
 	return p_no_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.storeNode_int(int4, text) is
 'no_id - Node ID #
@@ -797,7 +797,7 @@ Internal function to process the STORE_NODE event for node no_id';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableNode (int4)
 returns bigint
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	v_local_node_id	int4;
@@ -812,26 +812,26 @@ begin
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select * into v_node_row
 			from @NAMESPACE@.sl_node
 			where no_id = p_no_id
 			for update;
 	if not found then 
-		raise exception ''Slony-I: node % not found'', p_no_id;
+		raise exception 'Slony-I: node % not found', p_no_id;
 	end if;
 	if v_node_row.no_active then
-		raise exception ''Slony-I: node % is already active'', p_no_id;
+		raise exception 'Slony-I: node % is already active', p_no_id;
 	end if;
 
 	-- ----
 	-- Activate this node and generate the ENABLE_NODE event
 	-- ----
 	perform @NAMESPACE@.enableNode_int (p_no_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_NODE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_NODE',
 									p_no_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.enableNode(int4) is
 'no_id - Node ID #
@@ -845,7 +845,7 @@ Generate the ENABLE_NODE event for node no_id';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableNode_int (int4)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	v_local_node_id	int4;
@@ -865,7 +865,7 @@ begin
 			where no_id = p_no_id
 			for update;
 	if not found then 
-		raise exception ''Slony-I: node % not found'', p_no_id;
+		raise exception 'Slony-I: node % not found', p_no_id;
 	end if;
 	if v_node_row.no_active then
 		return p_no_id;
@@ -875,7 +875,7 @@ begin
 	-- Activate the node and generate sl_confirm status rows for it.
 	-- ----
 	update @NAMESPACE@.sl_node
-			set no_active = ''t''
+			set no_active = 't'
 			where no_id = p_no_id;
 	insert into @NAMESPACE@.sl_confirm
 			(con_origin, con_received, con_seqno)
@@ -892,7 +892,7 @@ begin
 	-- Generate ENABLE_SUBSCRIPTION events for all sets that
 	-- origin here and are subscribed by the just enabled node.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	for v_sub_row in select SUB.sub_set, SUB.sub_provider from
 			@NAMESPACE@.sl_set S,
 			@NAMESPACE@.sl_subscribe SUB
@@ -907,7 +907,7 @@ begin
 
 	return p_no_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.enableNode_int(int4) is
 'no_id - Node ID #
@@ -921,14 +921,14 @@ Internal function to process the ENABLE_NODE event for node no_id';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.disableNode (int4)
 returns bigint
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 begin
 	-- **** TODO ****
-	raise exception ''Slony-I: disableNode() not implemented'';
+	raise exception 'Slony-I: disableNode() not implemented';
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.disableNode(int4) is
 'generate DISABLE_NODE event for node no_id';
 
@@ -939,14 +939,14 @@ comment on function @NAMESPACE@.disableNode(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.disableNode_int (int4)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 begin
 	-- **** TODO ****
-	raise exception ''Slony-I: disableNode_int() not implemented'';
+	raise exception 'Slony-I: disableNode_int() not implemented';
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.disableNode(int4) is
 'process DISABLE_NODE event for node no_id
@@ -960,7 +960,7 @@ NOTE: This is not yet implemented!';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropNode (int4)
 returns bigint
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	v_node_row		record;
@@ -973,15 +973,15 @@ begin
 	-- ----
 	-- Check that this got called on a different node
 	-- ----
-	if p_no_id = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: DROP_NODE cannot initiate on the dropped node'';
+	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: DROP_NODE cannot initiate on the dropped node';
 	end if;
 
 	select * into v_node_row from @NAMESPACE@.sl_node
 			where no_id = p_no_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: unknown node ID %'', p_no_id;
+		raise exception 'Slony-I: unknown node ID %', p_no_id;
 	end if;
 
 	-- ----
@@ -990,7 +990,7 @@ begin
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_provider = p_no_id)
 	then
-		raise exception ''Slony-I: Node % is still configured as a data provider'',
+		raise exception 'Slony-I: Node % is still configured as a data provider',
 				p_no_id;
 	end if;
 
@@ -1000,7 +1000,7 @@ begin
 	if exists (select true from @NAMESPACE@.sl_set
 			where set_origin = p_no_id)
 	then
-		raise exception ''Slony-I: Node % is still origin of one or more sets'',
+		raise exception 'Slony-I: Node % is still origin of one or more sets',
 				p_no_id;
 	end if;
 
@@ -1008,10 +1008,10 @@ begin
 	-- Call the internal drop functionality and generate the event
 	-- ----
 	perform @NAMESPACE@.dropNode_int(p_no_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_NODE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DROP_NODE',
 									p_no_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.dropNode(int4) is
 'generate DROP_NODE event to drop node node_id from replication';
 
@@ -1022,7 +1022,7 @@ comment on function @NAMESPACE@.dropNode(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropNode_int (int4)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	v_tab_row		record;
@@ -1036,7 +1036,7 @@ begin
 	-- If the dropped node is a remote node, clean the configuration
 	-- from all traces for it.
 	-- ----
-	if p_no_id <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+	if p_no_id <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		delete from @NAMESPACE@.sl_subscribe
 				where sub_receiver = p_no_id;
 		delete from @NAMESPACE@.sl_listen
@@ -1070,7 +1070,7 @@ begin
 
 	return p_no_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.dropNode_int(int4) is
 'internal function to process DROP_NODE event to drop node node_id from replication';
 
@@ -1083,7 +1083,7 @@ comment on function @NAMESPACE@.dropNode_int(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.failedNode(int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_failed_node		alias for $1;
 	p_backup_node		alias for $2;
@@ -1109,7 +1109,7 @@ begin
 							where PP.pa_server = p_backup_node
 								and PP.pa_client = P.pa_client)
 	loop
-		raise exception ''Slony-I: cannot failover - node % has no path to the backup node'',
+		raise exception 'Slony-I: cannot failover - node % has no path to the backup node',
 				v_row.pa_client;
 	end loop;
 
@@ -1129,7 +1129,7 @@ begin
 				where sub_set = v_row.set_id
 					and sub_receiver = p_backup_node;
 		if not found then
-			raise exception ''Slony-I: cannot failover - node % is not subscribed to set %'',
+			raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
 					p_backup_node, v_row.set_id;
 		end if;
 
@@ -1137,7 +1137,7 @@ begin
 		-- Check that the subscription is active
 		-- ----
 		if not v_row2.sub_active then
-			raise exception ''Slony-I: cannot failover - subscription for set % is not active'',
+			raise exception 'Slony-I: cannot failover - subscription for set % is not active',
 					v_row.set_id;
 		end if;
 
@@ -1150,7 +1150,7 @@ begin
 				where sub_set = v_row.set_id
 					and sub_receiver <> p_backup_node;
 		if v_n > 0 and not v_row2.sub_forward then
-			raise exception ''Slony-I: cannot failover - node % is not a forwarder of set %'',
+			raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
 					p_backup_node, v_row.set_id;
 		end if;
 	end loop;
@@ -1177,7 +1177,7 @@ begin
 		-- If the backup node is the only direct subscriber ...
 		-- ----
 		if v_row.num_direct_receivers = 0 then
-		        raise notice ''failedNode: set % has no other direct receivers - move now'', v_row.set_id;
+		        raise notice 'failedNode: set % has no other direct receivers - move now', v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
 			-- right now. On the backup node itself that includes restoring
@@ -1185,7 +1185,7 @@ begin
 			-- adding the log trigger, removing the subscription and the
 			-- obsolete setsync status.
 			-- ----
-			if p_backup_node = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+			if p_backup_node = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 				update @NAMESPACE@.sl_set set set_origin = p_backup_node
 						where set_id = v_row.set_id;
 
@@ -1204,7 +1204,7 @@ begin
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
-			raise notice ''failedNode: set % has other direct receivers - change providers only'', v_row.set_id;
+			raise notice 'failedNode: set % has other direct receivers - change providers only', v_row.set_id;
 			-- ----
 			-- Backup node is not the only direct subscriber. This
 			-- means that at this moment, we redirect all direct
@@ -1248,7 +1248,7 @@ begin
 	-- ----
 	return p_failed_node;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.failedNode(int4,int4) is
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
@@ -1261,7 +1261,7 @@ and then waited for the restart of all node daemons.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8)
 returns bigint
-as '
+as $$
 declare
 	p_failed_node		alias for $1;
 	p_backup_node		alias for $2;
@@ -1280,7 +1280,7 @@ begin
 			where ev_origin = p_failed_node
 			and ev_seqno = p_ev_seqno;
 	if not found then
-		raise exception ''Slony-I: event %,% not found'',
+		raise exception 'Slony-I: event %,% not found',
 				p_failed_node, p_ev_seqno;
 	end if;
 
@@ -1291,12 +1291,12 @@ begin
 			values 
 			(p_failed_node, p_ev_seqfake, CURRENT_TIMESTAMP,
 			v_row.ev_snapshot, 
-			''FAILOVER_SET'', p_failed_node::text, p_backup_node::text,
+			'FAILOVER_SET', p_failed_node::text, p_backup_node::text,
 			p_set_id::text);
 	insert into @NAMESPACE@.sl_confirm
 			(con_origin, con_received, con_seqno, con_timestamp)
 			values
-			(p_failed_node, @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@''),
+			(p_failed_node, @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),
 			p_ev_seqfake, CURRENT_TIMESTAMP);
 	notify "_@CLUSTERNAME@_Restart";
 
@@ -1305,7 +1305,7 @@ begin
 
 	return p_ev_seqfake;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.failedNode2 (int4, int4, int4, int8, int8) is
 'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
@@ -1320,7 +1320,7 @@ fake the FAILOVER_SET event.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.failoverSet_int (int4, int4, int4, int8)
 returns int4
-as '
+as $$
 declare
 	p_failed_node		alias for $1;
 	p_backup_node		alias for $2;
@@ -1339,7 +1339,7 @@ begin
 	-- On the backup node this includes changing all the
 	-- trigger and protection stuff
 	-- ----
-	if p_backup_node = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+	if p_backup_node = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		delete from @NAMESPACE@.sl_setsync
 				where ssy_setid = p_set_id;
 		delete from @NAMESPACE@.sl_subscribe
@@ -1360,9 +1360,9 @@ begin
 				ev_snapshot, 
 				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
 				values
-				(p_backup_node, "pg_catalog".nextval(''@NAMESPACE@.sl_event_seq''), CURRENT_TIMESTAMP,
-				''0'', ''0'', ''0:0:'',
-				''ACCEPT_SET'', p_set_id::text,
+				(p_backup_node, "pg_catalog".nextval('@NAMESPACE@.sl_event_seq'), CURRENT_TIMESTAMP,
+				'0', '0', '0:0:',
+				'ACCEPT_SET', p_set_id::text,
 				p_failed_node::text, p_backup_node::text,
 				p_wait_seqno::text);
 	else
@@ -1384,7 +1384,7 @@ begin
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_set = p_set_id
 				and sub_receiver = @NAMESPACE@.getLocalNodeId(
-						''_@CLUSTERNAME@''))
+						'_@CLUSTERNAME@'))
 	then
 		delete from @NAMESPACE@.sl_setsync
 				where ssy_setid = p_set_id;
@@ -1392,7 +1392,7 @@ begin
 		select coalesce(max(ev_seqno), 0) into v_last_sync
 				from @NAMESPACE@.sl_event
 				where ev_origin = p_backup_node
-					and ev_type = ''SYNC'';
+					and ev_type = 'SYNC';
 		if v_last_sync > 0 then
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
@@ -1406,15 +1406,15 @@ begin
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_snapshot, ssy_action_list)
-					values (p_set_id, p_backup_node, ''0'',
-					''0'', ''0'', ''0:0:'', NULL);
+					values (p_set_id, p_backup_node, '0',
+					'0', '0', '0:0:', NULL);
 		end if;
 				
 	end if;
 
 	return p_failed_node;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.failoverSet_int (int4, int4, int4, int8) is
 'FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 
@@ -1428,7 +1428,7 @@ Finish failover for one set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.uninstallNode ()
 returns int4
-as '
+as $$
 declare
 	v_tab_row		record;
 begin
@@ -1437,10 +1437,10 @@ begin
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
 
-	raise notice ''Slony-I: Please drop schema "_@CLUSTERNAME@"'';
+	raise notice 'Slony-I: Please drop schema "_@CLUSTERNAME@"';
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.uninstallNode() is
 'Reset the whole database to standalone by removing the whole
@@ -1454,7 +1454,7 @@ replication system.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	p_no_provider	alias for $2;
@@ -1466,11 +1466,11 @@ begin
 	lock table @NAMESPACE@.sl_config_lock;
 
 	perform @NAMESPACE@.cloneNodePrepare_int (p_no_id, p_no_provider, p_no_comment);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''CLONE_NODE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'CLONE_NODE',
 									p_no_id::text, p_no_provider::text,
 									p_no_comment::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.cloneNodePrepare(int4, int4, text) is
 'Prepare for cloning a node.';
@@ -1482,7 +1482,7 @@ comment on function @NAMESPACE@.cloneNodePrepare(int4, int4, text) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cloneNodePrepare_int (int4, int4, text)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	p_no_provider	alias for $2;
@@ -1496,12 +1496,12 @@ begin
 
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select pa_server, p_no_id, ''Event pending'', pa_connretry
+		select pa_server, p_no_id, 'Event pending', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_client = p_no_provider;
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select p_no_id, pa_client, ''Event pending'', pa_connretry
+		select p_no_id, pa_client, 'Event pending', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_server = p_no_provider;
 
@@ -1521,7 +1521,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.cloneNodePrepare_int(int4, int4, text) is
 'Internal part of cloneNodePrepare().';
@@ -1533,13 +1533,13 @@ comment on function @NAMESPACE@.cloneNodePrepare_int(int4, int4, text) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cloneNodeFinish (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_no_id			alias for $1;
 	p_no_provider	alias for $2;
 	v_row			record;
 begin
-	perform "pg_catalog".setval(''@NAMESPACE@.sl_local_node_id'', p_no_id);
+	perform "pg_catalog".setval('@NAMESPACE@.sl_local_node_id', p_no_id);
 
 	for v_row in select sub_set from @NAMESPACE@.sl_subscribe
 			where sub_receiver = p_no_id
@@ -1564,7 +1564,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.cloneNodeFinish(int4, int4) is
 'Internal part of cloneNodePrepare().';
@@ -1576,7 +1576,7 @@ comment on function @NAMESPACE@.cloneNodeFinish(int4, int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storePath (int4, int4, text, int4)
 returns bigint
-as '
+as $$
 declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
@@ -1585,11 +1585,11 @@ declare
 begin
 	perform @NAMESPACE@.storePath_int(p_pa_server, p_pa_client,
 			p_pa_conninfo, p_pa_connretry);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_PATH'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'STORE_PATH', 
 			p_pa_server::text, p_pa_client::text, 
 			p_pa_conninfo::text, p_pa_connretry::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.storePath (int4, int4, text, int4) is
 'FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
@@ -1605,7 +1605,7 @@ access node pa_server using DSN pa_conninfo';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storePath_int (int4, int4, text, int4)
 returns int4
-as '
+as $$
 declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
@@ -1645,11 +1645,11 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_server) then
-			perform @NAMESPACE@.storeNode_int (p_pa_server, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_pa_server, '<event pending>');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_client) then
-			perform @NAMESPACE@.storeNode_int (p_pa_client, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_pa_client, '<event pending>');
 		end if;
 		insert into @NAMESPACE@.sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry) values
@@ -1661,7 +1661,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.storePath_int (int4, int4, text, int4) is
 'FUNCTION storePath (pa_server, pa_client, pa_conninfo, pa_connretry)
 
@@ -1675,7 +1675,7 @@ access node pa_server using DSN pa_conninfo';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropPath (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
@@ -1696,7 +1696,7 @@ begin
 			and sub_receiver = p_pa_client
 	loop
 		raise exception 
-			''Slony-I: Path cannot be dropped, subscription of set % needs it'',
+			'Slony-I: Path cannot be dropped, subscription of set % needs it',
 			v_row.sub_set;
 	end loop;
 
@@ -1720,10 +1720,10 @@ begin
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 
-	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_PATH'',
+	return  @NAMESPACE@.createEvent ('_@CLUSTERNAME@', 'DROP_PATH',
 			p_pa_server::text, p_pa_client::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.dropPath (int4, int4) is
   'Generate DROP_PATH event to drop path from pa_server to pa_client';
@@ -1735,7 +1735,7 @@ comment on function @NAMESPACE@.dropPath (int4, int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropPath_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_pa_server		alias for $1;
 	p_pa_client		alias for $2;
@@ -1770,7 +1770,7 @@ begin
 		return 0;
 	end if;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.dropPath_int (int4, int4) is
 'Process DROP_PATH event to drop path from pa_server to pa_client';
@@ -1782,17 +1782,17 @@ comment on function @NAMESPACE@.dropPath_int (int4, int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeListen (int4, int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_origin		alias for $1;
 	p_provider	alias for $2;
 	p_receiver	alias for $3;
 begin
 	perform @NAMESPACE@.storeListen_int (p_origin, p_provider, p_receiver);
-	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''STORE_LISTEN'',
+	return  @NAMESPACE@.createEvent ('_@CLUSTERNAME@', 'STORE_LISTEN',
 			p_origin::text, p_provider::text, p_receiver::text);
 end;
-' language plpgsql
+$$ language plpgsql
 	called on null input;
 
 comment on function @NAMESPACE@.storeListen(int4,int4,int4) is
@@ -1809,7 +1809,7 @@ li_origin.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeListen_int (int4, int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_li_origin		alias for $1;
 	p_li_provider	alias for $2;
@@ -1834,15 +1834,15 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_origin) then
-			perform @NAMESPACE@.storeNode_int (p_li_origin, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_origin, '<event pending>');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_provider) then
-			perform @NAMESPACE@.storeNode_int (p_li_provider, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_provider, '<event pending>');
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_receiver) then
-			perform @NAMESPACE@.storeNode_int (p_li_receiver, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_li_receiver, '<event pending>');
 		end if;
 
 		insert into @NAMESPACE@.sl_listen
@@ -1852,7 +1852,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.storeListen_int(int4,int4,int4) is
 'FUNCTION storeListen_int (li_origin, li_provider, li_receiver)
@@ -1869,7 +1869,7 @@ li_origin.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropListen (int4, int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_li_origin		alias for $1;
 	p_li_provider	alias for $2;
@@ -1878,10 +1878,10 @@ begin
 	perform @NAMESPACE@.dropListen_int(p_li_origin, 
 			p_li_provider, p_li_receiver);
 	
-	return  @NAMESPACE@.createEvent (''_@CLUSTERNAME@'', ''DROP_LISTEN'',
+	return  @NAMESPACE@.createEvent ('_@CLUSTERNAME@', 'DROP_LISTEN',
 			p_li_origin::text, p_li_provider::text, p_li_receiver::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.dropListen(int4, int4, int4) is
 'dropListen (li_origin, li_provider, li_receiver)
@@ -1895,7 +1895,7 @@ Generate the DROP_LISTEN event.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropListen_int (int4, int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_li_origin		alias for $1;
 	p_li_provider	alias for $2;
@@ -1916,7 +1916,7 @@ begin
 		return 0;
 	end if;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.dropListen_int(int4, int4, int4) is
 'dropListen (li_origin, li_provider, li_receiver)
 
@@ -1931,7 +1931,7 @@ the indicated (origin,provider,receiver) combination.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeSet (int4, text)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_set_comment		alias for $2;
@@ -1942,16 +1942,16 @@ begin
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
 
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	insert into @NAMESPACE@.sl_set
 			(set_id, set_origin, set_comment) values
 			(p_set_id, v_local_node_id, p_set_comment);
 
-	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''STORE_SET'', 
+	return @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'STORE_SET', 
 			p_set_id::text, v_local_node_id::text, p_set_comment::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.storeSet(int4, text) is
 'Generate STORE_SET event for set set_id with human readable comment set_comment';
 
@@ -1962,7 +1962,7 @@ comment on function @NAMESPACE@.storeSet(int4, text) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.storeSet_int (int4, int4, text)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_set_origin		alias for $2;
@@ -1985,7 +1985,7 @@ begin
 	else
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_set_origin) then
-			perform @NAMESPACE@.storeNode_int (p_set_origin, ''<event pending>'');
+			perform @NAMESPACE@.storeNode_int (p_set_origin, '<event pending>');
 		end if;
 		insert into @NAMESPACE@.sl_set
 				(set_id, set_origin, set_comment) values
@@ -1997,7 +1997,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.storeSet_int(int4, int4, text) is
 'storeSet_int (set_id, set_origin, set_comment)
 
@@ -2013,7 +2013,7 @@ origin node, and human readable comment.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.lockSet (int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	v_local_node_id		int4;
@@ -2029,26 +2029,26 @@ begin
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select * into v_set_row from @NAMESPACE@.sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
 	if v_set_row.set_origin <> v_local_node_id then
-		raise exception ''Slony-I: set % does not originate on local node'',
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 	end if;
 	if v_set_row.set_locked notnull then
-		raise exception ''Slony-I: set % is already locked'', p_set_id;
+		raise exception 'Slony-I: set % is already locked', p_set_id;
 	end if;
 
 	-- ----
 	-- Place the lockedSet trigger on all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
@@ -2057,10 +2057,10 @@ begin
 				and PGC.relnamespace = PGN.oid
 			order by tab_id
 	loop
-		execute ''create trigger "_@CLUSTERNAME@_lockedset" '' || 
-				''before insert or update or delete on '' ||
-				v_tab_row.tab_fqname || '' for each row execute procedure
-				@NAMESPACE@.lockedSet (''''_@CLUSTERNAME@'''');'';
+		execute 'create trigger "_@CLUSTERNAME@_lockedset" ' || 
+				'before insert or update or delete on ' ||
+				v_tab_row.tab_fqname || ' for each row execute procedure
+				@NAMESPACE@.lockedSet (''_@CLUSTERNAME@'');';
 	end loop;
 
 	-- ----
@@ -2072,7 +2072,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.lockSet(int4) is 
 'lockSet(set_id)
 
@@ -2088,7 +2088,7 @@ it.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.unlockSet (int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	v_local_node_id		int4;
@@ -2104,26 +2104,26 @@ begin
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select * into v_set_row from @NAMESPACE@.sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
 	if v_set_row.set_origin <> v_local_node_id then
-		raise exception ''Slony-I: set % does not originate on local node'',
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 	end if;
 	if v_set_row.set_locked isnull then
-		raise exception ''Slony-I: set % is not locked'', p_set_id;
+		raise exception 'Slony-I: set % is not locked', p_set_id;
 	end if;
 
 	-- ----
 	-- Drop the lockedSet trigger from all tables in the set.
 	-- ----
 	for v_tab_row in select T.tab_id,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
@@ -2132,8 +2132,8 @@ begin
 				and PGC.relnamespace = PGN.oid
 			order by tab_id
 	loop
-		execute ''drop trigger "_@CLUSTERNAME@_lockedset" '' || 
-				''on '' || v_tab_row.tab_fqname;
+		execute 'drop trigger "_@CLUSTERNAME@_lockedset" ' || 
+				'on ' || v_tab_row.tab_fqname;
 	end loop;
 
 	-- ----
@@ -2145,7 +2145,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.unlockSet(int4) is
 'Remove the special trigger from all tables of a set that disables access to it.';
 
@@ -2156,7 +2156,7 @@ comment on function @NAMESPACE@.unlockSet(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.moveSet (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_new_origin		alias for $2;
@@ -2175,22 +2175,22 @@ begin
 	-- Check that the set is locked and that this locking
 	-- happened long enough ago.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select * into v_set_row from @NAMESPACE@.sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
 	if v_set_row.set_origin <> v_local_node_id then
-		raise exception ''Slony-I: set % does not originate on local node'',
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 	end if;
 	if v_set_row.set_locked isnull then
-		raise exception ''Slony-I: set % is not locked'', p_set_id;
+		raise exception 'Slony-I: set % is not locked', p_set_id;
 	end if;
 	if v_set_row.set_locked > "pg_catalog".txid_snapshot_xmin("pg_catalog".txid_current_snapshot()) then
-		raise exception ''Slony-I: cannot move set % yet, transactions < % are still in progress'',
+		raise exception 'Slony-I: cannot move set % yet, transactions < % are still in progress',
 				p_set_id, v_set_row.set_locked;
 	end if;
 
@@ -2206,11 +2206,11 @@ begin
 			where sub_set = p_set_id
 			and sub_receiver = p_new_origin;
 	if not found then
-		raise exception ''Slony-I: set % is not subscribed by node %'',
+		raise exception 'Slony-I: set % is not subscribed by node %',
 				p_set_id, p_new_origin;
 	end if;
 	if not v_sub_row.sub_active then
-		raise exception ''Slony-I: subsctiption of node % for set % is inactive'',
+		raise exception 'Slony-I: subsctiption of node % for set % is inactive',
 				p_new_origin, p_set_id;
 	end if;
 
@@ -2227,7 +2227,7 @@ begin
 	-- in the set. But we did move the set to the new origin, so the
 	-- createEvent() we are doing now will not record the sequences.
 	-- ----
-	v_sync_seqno := @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'');
+	v_sync_seqno := @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC');
 	insert into @NAMESPACE@.sl_seqlog 
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			select seq_id, v_local_node_id, v_sync_seqno, seq_last_value
@@ -2237,10 +2237,10 @@ begin
 	-- ----
 	-- Finally we generate the real event
 	-- ----
-	return @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MOVE_SET'', 
+	return @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'MOVE_SET', 
 			p_set_id::text, v_local_node_id::text, p_new_origin::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.moveSet(int4, int4) is 
 'moveSet(set_id, new_origin)
 
@@ -2253,7 +2253,7 @@ Generate MOVE_SET event to request that the origin for set set_id be moved to no
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.moveSet_int (int4, int4, int4, int8)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_old_origin		alias for $2;
@@ -2275,7 +2275,7 @@ begin
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	-- On the new origin, raise an event - ACCEPT_SET
 	if v_local_node_id = p_new_origin then
@@ -2283,8 +2283,8 @@ begin
 		-- the same snapshot as the last SYNC generated by the new
 		-- origin. This snapshot will be used by other nodes to
 		-- finalize the setsync status.
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ACCEPT_SET'', 
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ACCEPT_SET', 
 			p_set_id::text, p_old_origin::text, 
 			p_new_origin::text, p_wait_seqno::text);
 	end if;
@@ -2298,7 +2298,7 @@ begin
 			where sub_set = p_set_id
 			and sub_receiver = p_new_origin;
 	if not found then
-		raise exception ''Slony-I: subscription path broken in moveSet_int'';
+		raise exception 'Slony-I: subscription path broken in moveSet_int';
 	end if;
 	while v_sub_node <> p_old_origin loop
 		-- ----
@@ -2317,7 +2317,7 @@ begin
 					and sub_receiver = v_sub_node
 				for update;
 		if not found then
-			raise exception ''Slony-I: subscription path broken in moveSet_int'';
+			raise exception 'Slony-I: subscription path broken in moveSet_int';
 		end if;
 		update @NAMESPACE@.sl_subscribe
 				set sub_provider = v_sub_last
@@ -2339,7 +2339,7 @@ begin
 		select coalesce(max(ev_seqno), 0) into v_last_sync 
 				from @NAMESPACE@.sl_event
 				where ev_origin = p_new_origin
-					and ev_type = ''SYNC'';
+					and ev_type = 'SYNC';
 		if v_last_sync > 0 then
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
@@ -2353,8 +2353,8 @@ begin
 			insert into @NAMESPACE@.sl_setsync
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_snapshot, ssy_action_list)
-					values (p_set_id, p_new_origin, ''0'',
-					''0'', ''0'', ''0:0:'', NULL);
+					values (p_set_id, p_new_origin, '0',
+					'0', '0', '0:0:', NULL);
 		end if;
 	end if;
 
@@ -2383,7 +2383,7 @@ begin
 			select coalesce(max(ev_seqno), 0) into v_last_sync
 					from @NAMESPACE@.sl_event
 					where ev_origin = p_new_origin
-						and ev_type = ''SYNC'';
+						and ev_type = 'SYNC';
 			if v_last_sync > 0 then
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
@@ -2397,8 +2397,8 @@ begin
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_snapshot, ssy_action_list)
-						values (p_set_id, p_new_origin, ''0'',
-						''0'', ''0'', ''0:0:'', NULL);
+						values (p_set_id, p_new_origin, '0',
+						'0', '0', '0:0:', NULL);
 			end if;
 		end if;
 	end if;
@@ -2427,7 +2427,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.moveSet_int(int4, int4, int4, int8) is 
 'moveSet(set_id, old_origin, new_origin, wait_seqno)
 
@@ -2441,7 +2441,7 @@ moved from old_origin to node new_origin';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropSet (int4)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	v_origin			int4;
@@ -2457,10 +2457,10 @@ begin
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 	end if;
 
@@ -2468,10 +2468,10 @@ begin
 	-- Call the internal drop set functionality and generate the event
 	-- ----
 	perform @NAMESPACE@.dropSet_int(p_set_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DROP_SET'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DROP_SET', 
 			p_set_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.dropSet(int4) is 
 'Generate DROP_SET event to drop replication of set set_id';
 
@@ -2482,7 +2482,7 @@ comment on function @NAMESPACE@.dropSet(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.dropSet_int (int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	v_tab_row			record;
@@ -2525,7 +2525,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.dropSet(int4) is 
 'Process DROP_SET event to drop replication of set set_id.  This involves:
 - Removing log and deny access triggers
@@ -2538,7 +2538,7 @@ comment on function @NAMESPACE@.dropSet(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.mergeSet (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_add_id			alias for $2;
@@ -2553,25 +2553,25 @@ begin
 	-- Check that both sets exist and originate here
 	-- ----
 	if p_set_id = p_add_id then
-		raise exception ''Slony-I: merged set ids cannot be identical'';
+		raise exception 'Slony-I: merged set ids cannot be identical';
 	end if;
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 	end if;
 
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_add_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_add_id;
+		raise exception 'Slony-I: set % not found', p_add_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_add_id;
 	end if;
 
@@ -2584,7 +2584,7 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = p_add_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				p_set_id, p_add_id;
 	end if;
 
@@ -2594,7 +2594,7 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = p_set_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				p_add_id, p_set_id;
 	end if;
 
@@ -2602,25 +2602,25 @@ begin
 	-- Check that all ENABLE_SUBSCRIPTION events for the set are confirmed
 	-- ----
 	if exists (select true from @NAMESPACE@.sl_event
-			where ev_type = ''ENABLE_SUBSCRIPTION''
+			where ev_type = 'ENABLE_SUBSCRIPTION'
 			and ev_data1 = p_add_id::text
 			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
 					where con_origin = ev_origin
 					and con_received::text = ev_data3))
 	then
-		raise exception ''Slony-I: set % has subscriptions in progress - cannot merge'',
+		raise exception 'Slony-I: set % has subscriptions in progress - cannot merge',
 				p_add_id;
 	end if;
 
 	-- ----
 	-- Create a SYNC event, merge the sets, create a MERGE_SET event
 	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
 	perform @NAMESPACE@.mergeSet_int(p_set_id, p_add_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''MERGE_SET'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'MERGE_SET', 
 			p_set_id::text, p_add_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.mergeSet(int4, int4) is 
 'Generate MERGE_SET event to request that sets be merged together.
 
@@ -2634,7 +2634,7 @@ subscribed by the same set of nodes.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.mergeSet_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_add_id			alias for $2;
@@ -2659,7 +2659,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.mergeSet_int(int4,int4) is
 'mergeSet_int(set_id, add_id) - Perform MERGE_SET event, merging all objects from 
 set add_id into set set_id.';
@@ -2670,7 +2670,7 @@ set add_id into set set_id.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setAddTable(int4, int4, text, name, text)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_tab_id			alias for $2;
@@ -2691,16 +2691,16 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: setAddTable(): set % not found'', p_set_id;
+		raise exception 'Slony-I: setAddTable(): set % not found', p_set_id;
 	end if;
-	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setAddTable(): set % has remote origin'', p_set_id;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: setAddTable(): set % has remote origin', p_set_id;
 	end if;
 
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_set = p_set_id)
 	then
-		raise exception ''Slony-I: cannot add table to currently subscribed set % - must attach to an unsubscribed set'',
+		raise exception 'Slony-I: cannot add table to currently subscribed set % - must attach to an unsubscribed set',
 				p_set_id;
 	end if;
 
@@ -2709,11 +2709,11 @@ begin
 	-- ----
 	perform @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, p_fqname,
 			p_tab_idxname, p_tab_comment);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_TABLE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_ADD_TABLE',
 			p_set_id::text, p_tab_id::text, p_fqname::text,
 			p_tab_idxname::text, p_tab_comment::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setAddTable(int4, int4, text, name, text) is
 'setAddTable (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
 
@@ -2728,7 +2728,7 @@ Note that the table id, tab_id, must be unique ACROSS ALL SETS.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text)
 returns int4
-as '
+as $$
 declare
 
 	p_set_id		alias for $1;
@@ -2756,19 +2756,19 @@ begin
 	-- to that set. Otherwise we ignore the table because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: setAddTable_int(): set % not found'',
+		raise exception 'Slony-I: setAddTable_int(): set % not found',
 				p_set_id;
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+				and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if not found then
 			return 0;
 		end if;
@@ -2781,13 +2781,13 @@ begin
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
 			and @NAMESPACE@.slon_quote_input(p_fqname) = @NAMESPACE@.slon_quote_brute(PGN.nspname) ||
-					''.'' || @NAMESPACE@.slon_quote_brute(PGC.relname);
+					'.' || @NAMESPACE@.slon_quote_brute(PGC.relname);
 	if not found then
-		raise exception ''Slony-I: setAddTable_int(): table % not found'', 
+		raise exception 'Slony-I: setAddTable_int(): table % not found', 
 				p_fqname;
 	end if;
-	if v_relkind != ''r'' then
-		raise exception ''Slony-I: setAddTable_int(): % is not a regular table'',
+	if v_relkind != 'r' then
+		raise exception 'Slony-I: setAddTable_int(): % is not a regular table',
 				p_fqname;
 	end if;
 
@@ -2797,7 +2797,7 @@ begin
 				and PGX.indexrelid = PGC.oid
 				and PGC.relname = p_tab_idxname)
 	then
-		raise exception ''Slony-I: setAddTable_int(): table % has no index %'',
+		raise exception 'Slony-I: setAddTable_int(): table % has no index %',
 				p_fqname, p_tab_idxname;
 	end if;
 
@@ -2805,27 +2805,27 @@ begin
 	-- Verify that the columns in the PK (or candidate) are not NULLABLE
 	-- ----
 
-	v_pkcand_nn := ''f'';
+	v_pkcand_nn := 'f';
 	for v_prec in select attname from "pg_catalog".pg_attribute where attrelid = 
                         (select oid from "pg_catalog".pg_class where oid = v_tab_reloid) 
                     and attname in (select attname from "pg_catalog".pg_attribute where 
                                     attrelid = (select oid from "pg_catalog".pg_class PGC, 
                                     "pg_catalog".pg_index PGX where 
                                     PGC.relname = p_tab_idxname and PGX.indexrelid=PGC.oid and
-                                    PGX.indrelid = v_tab_reloid)) and attnotnull <> ''t''
+                                    PGX.indrelid = v_tab_reloid)) and attnotnull <> 't'
 	loop
-		raise notice ''Slony-I: setAddTable_int: table % PK column % nullable'', p_fqname, v_prec.attname;
-		v_pkcand_nn := ''t'';
+		raise notice 'Slony-I: setAddTable_int: table % PK column % nullable', p_fqname, v_prec.attname;
+		v_pkcand_nn := 't';
 	end loop;
 	if v_pkcand_nn then
-		raise exception ''Slony-I: setAddTable_int: table % not replicable!'', p_fqname;
+		raise exception 'Slony-I: setAddTable_int: table % not replicable!', p_fqname;
 	end if;
 
 	select * into v_prec from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 	if not found then
-		v_pkcand_nn := ''t'';  -- No-op -- All is well
+		v_pkcand_nn := 't';  -- No-op -- All is well
 	else
-		raise exception ''Slony-I: setAddTable_int: table id % has already been assigned!'', p_tab_id;
+		raise exception 'Slony-I: setAddTable_int: table id % has already been assigned!', p_tab_id;
 	end if;
 
 	-- ----
@@ -2841,7 +2841,7 @@ begin
 
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setAddTable_int(int4, int4, text, name, text) is
 'setAddTable_int (set_id, tab_id, tab_fqname, tab_idxname, tab_comment)
 
@@ -2854,7 +2854,7 @@ replication set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setDropTable(int4)
 returns bigint
-as '
+as $$
 declare
 	p_tab_id		alias for $1;
 	v_set_id		int4;
@@ -2874,7 +2874,7 @@ begin
 	-- Ensure table exists
 	-- ----
 	if not found then
-		raise exception ''Slony-I: setDropTable_int(): table % not found'',
+		raise exception 'Slony-I: setDropTable_int(): table % not found',
 			p_tab_id;
 	end if;
 
@@ -2885,20 +2885,20 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = v_set_id;
 	if not found then
-		raise exception ''Slony-I: setDropTable(): set % not found'', v_set_id;
+		raise exception 'Slony-I: setDropTable(): set % not found', v_set_id;
 	end if;
-	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setDropTable(): set % has remote origin'', v_set_id;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: setDropTable(): set % has remote origin', v_set_id;
 	end if;
 
 	-- ----
 	-- Drop the table from the set and generate the SET_ADD_TABLE event
 	-- ----
 	perform @NAMESPACE@.setDropTable_int(p_tab_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_TABLE'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_DROP_TABLE', 
 				p_tab_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setDropTable(int4) is
 'setDropTable (tab_id)
 
@@ -2910,7 +2910,7 @@ event to allow this to propagate to other nodes.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setDropTable_int(int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id		alias for $1;
 	v_set_id		int4;
@@ -2941,19 +2941,19 @@ begin
 	-- to that set. Otherwise we ignore the table because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = v_set_id;
 	if not found then
-		raise exception ''Slony-I: setDropTable_int(): set % not found'',
+		raise exception 'Slony-I: setDropTable_int(): set % not found',
 				v_set_id;
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = v_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+				and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if not found then
 			return 0;
 		end if;
@@ -2966,7 +2966,7 @@ begin
 	delete from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setDropTable_int(int4) is
 'setDropTable_int (tab_id)
 
@@ -2979,7 +2979,7 @@ its replication set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setAddSequence (int4, int4, text, text)
 returns bigint
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_seq_id			alias for $2;
@@ -2999,16 +2999,16 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: setAddSequence(): set % not found'', p_set_id;
+		raise exception 'Slony-I: setAddSequence(): set % not found', p_set_id;
 	end if;
-	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setAddSequence(): set % has remote origin - submit to origin node'', p_set_id;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: setAddSequence(): set % has remote origin - submit to origin node', p_set_id;
 	end if;
 
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_set = p_set_id)
 	then
-		raise exception ''Slony-I: cannot add sequence to currently subscribed set %'',
+		raise exception 'Slony-I: cannot add sequence to currently subscribed set %',
 				p_set_id;
 	end if;
 
@@ -3017,11 +3017,11 @@ begin
 	-- ----
 	perform @NAMESPACE@.setAddSequence_int(p_set_id, p_seq_id, p_fqname,
 			p_seq_comment);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_ADD_SEQUENCE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_ADD_SEQUENCE',
 						p_set_id::text, p_seq_id::text, 
 						p_fqname::text, p_seq_comment::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setAddSequence (int4, int4, text, text) is
 'setAddSequence (set_id, seq_id, seq_fqname, seq_comment)
 
@@ -3034,7 +3034,7 @@ to subscriber nodes.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setAddSequence_int(int4, int4, text, text)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_seq_id			alias for $2;
@@ -3059,19 +3059,19 @@ begin
 	-- to that set. Otherwise we ignore the sequence because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id;
 	if not found then
-		raise exception ''Slony-I: setAddSequence_int(): set % not found'',
+		raise exception 'Slony-I: setAddSequence_int(): set % not found',
 				p_set_id;
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+				and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if not found then
 			return 0;
 		end if;
@@ -3085,21 +3085,21 @@ begin
 			from "pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 			where PGC.relnamespace = PGN.oid
 			and @NAMESPACE@.slon_quote_input(p_fqname) = @NAMESPACE@.slon_quote_brute(PGN.nspname) ||
-					''.'' || @NAMESPACE@.slon_quote_brute(PGC.relname);
+					'.' || @NAMESPACE@.slon_quote_brute(PGC.relname);
 	if not found then
-		raise exception ''Slony-I: setAddSequence_int(): sequence % not found'', 
+		raise exception 'Slony-I: setAddSequence_int(): sequence % not found', 
 				p_fqname;
 	end if;
-	if v_relkind != ''S'' then
-		raise exception ''Slony-I: setAddSequence_int(): % is not a sequence'',
+	if v_relkind != 'S' then
+		raise exception 'Slony-I: setAddSequence_int(): % is not a sequence',
 				p_fqname;
 	end if;
 
         select 1 into v_sync_row from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
 	if not found then
-               v_relkind := ''o'';   -- all is OK
+               v_relkind := 'o';   -- all is OK
         else
-                raise exception ''Slony-I: setAddSequence_int(): sequence ID % has already been assigned'', p_seq_id;
+                raise exception 'Slony-I: setAddSequence_int(): sequence ID % has already been assigned', p_seq_id;
         end if;
 
 	-- ----
@@ -3117,7 +3117,7 @@ begin
 		for v_sync_row in select coalesce (max(ev_seqno), 0) as ev_seqno
 				from @NAMESPACE@.sl_event
 				where ev_origin = v_local_node_id
-					and ev_type = ''SYNC''
+					and ev_type = 'SYNC'
 		loop
 			insert into @NAMESPACE@.sl_seqlog
 					(seql_seqid, seql_origin, seql_ev_seqno, 
@@ -3129,7 +3129,7 @@ begin
 
 	return p_seq_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setAddSequence_int(int4, int4, text, text) is
 'setAddSequence_int (set_id, seq_id, seq_fqname, seq_comment)
 
@@ -3141,7 +3141,7 @@ subscribe to set_id, add the sequence to the replication set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setDropSequence (int4)
 returns bigint
-as '
+as $$
 declare
 	p_seq_id		alias for $1;
 	v_set_id		int4;
@@ -3161,7 +3161,7 @@ begin
 	-- Ensure sequence exists
 	-- ----
 	if not found then
-		raise exception ''Slony-I: setDropSequence_int(): sequence % not found'',
+		raise exception 'Slony-I: setDropSequence_int(): sequence % not found',
 			p_seq_id;
 	end if;
 
@@ -3172,20 +3172,20 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = v_set_id;
 	if not found then
-		raise exception ''Slony-I: setDropSequence(): set % not found'', v_set_id;
+		raise exception 'Slony-I: setDropSequence(): set % not found', v_set_id;
 	end if;
-	if v_set_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setDropSequence(): set % has origin at another node - submit this to that node'', v_set_id;
+	if v_set_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: setDropSequence(): set % has origin at another node - submit this to that node', v_set_id;
 	end if;
 
 	-- ----
 	-- Add the sequence to the set and generate the SET_ADD_SEQUENCE event
 	-- ----
 	perform @NAMESPACE@.setDropSequence_int(p_seq_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_DROP_SEQUENCE'',
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_DROP_SEQUENCE',
 					p_seq_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setDropSequence (int4) is
 'setDropSequence (seq_id)
 
@@ -3198,7 +3198,7 @@ subscriber nodes.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setDropSequence_int(int4)
 returns int4
-as '
+as $$
 declare
 	p_seq_id		alias for $1;
 	v_set_id		int4;
@@ -3230,19 +3230,19 @@ begin
 	-- to that set. Otherwise we ignore the sequence because it might 
 	-- not even exist in our database.
 	-- ----
-	v_local_node_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = v_set_id;
 	if not found then
-		raise exception ''Slony-I: setDropSequence_int(): set % not found'',
+		raise exception 'Slony-I: setDropSequence_int(): set % not found',
 				v_set_id;
 	end if;
 	if v_set_origin != v_local_node_id then
 		select sub_provider into v_sub_provider
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = v_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+				and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if not found then
 			return 0;
 		end if;
@@ -3256,7 +3256,7 @@ begin
 
 	return p_seq_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setDropSequence_int(int4) is
 'setDropSequence_int (seq_id)
 
@@ -3272,7 +3272,7 @@ from the replication set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setMoveTable (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	p_new_set_id		alias for $2;
@@ -3290,32 +3290,32 @@ begin
 	select tab_set into v_old_set_id from @NAMESPACE@.sl_table
 			where tab_id = p_tab_id;
 	if not found then
-		raise exception ''Slony-I: table %d not found'', p_tab_id;
+		raise exception 'Slony-I: table %d not found', p_tab_id;
 	end if;
 	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
 	if p_new_set_id = v_old_set_id then
-		raise exception ''Slony-I: set ids cannot be identical'';
+		raise exception 'Slony-I: set ids cannot be identical';
 	end if;
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_new_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_new_set_id;
+		raise exception 'Slony-I: set % not found', p_new_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				p_new_set_id;
 	end if;
 
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = v_old_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', v_old_set_id;
+		raise exception 'Slony-I: set % not found', v_old_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				v_old_set_id;
 	end if;
 
@@ -3328,7 +3328,7 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = v_old_set_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				p_new_set_id, v_old_set_id;
 	end if;
 
@@ -3338,19 +3338,19 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = p_new_set_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				v_old_set_id, p_new_set_id;
 	end if;
 
 	-- ----
 	-- Change the set the table belongs to
 	-- ----
-	perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+	perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
 	perform @NAMESPACE@.setMoveTable_int(p_tab_id, p_new_set_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_TABLE'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_MOVE_TABLE', 
 			p_tab_id::text, p_new_set_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.setMoveTable(int4,int4) is
 'This generates the SET_MOVE_TABLE event.  If the set that the table is
@@ -3365,7 +3365,7 @@ into, then the SET_MOVE_TABLE event is raised.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setMoveTable_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	p_new_set_id		alias for $2;
@@ -3384,7 +3384,7 @@ begin
 
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.setMoveTable(int4,int4) is
 'This processes the SET_MOVE_TABLE event.  The table is moved 
 to the destination set.';
@@ -3396,7 +3396,7 @@ to the destination set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setMoveSequence (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_seq_id			alias for $1;
 	p_new_set_id		alias for $2;
@@ -3414,32 +3414,32 @@ begin
 	select seq_set into v_old_set_id from @NAMESPACE@.sl_sequence
 			where seq_id = p_seq_id;
 	if not found then
-		raise exception ''Slony-I: setMoveSequence(): sequence %d not found'', p_seq_id;
+		raise exception 'Slony-I: setMoveSequence(): sequence %d not found', p_seq_id;
 	end if;
 	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
 	if p_new_set_id = v_old_set_id then
-		raise exception ''Slony-I: setMoveSequence(): set ids cannot be identical'';
+		raise exception 'Slony-I: setMoveSequence(): set ids cannot be identical';
 	end if;
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = p_new_set_id;
 	if not found then
-		raise exception ''Slony-I: setMoveSequence(): set % not found'', p_new_set_id;
+		raise exception 'Slony-I: setMoveSequence(): set % not found', p_new_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: setMoveSequence(): set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: setMoveSequence(): set % does not originate on local node',
 				p_new_set_id;
 	end if;
 
 	select set_origin into v_origin from @NAMESPACE@.sl_set
 			where set_id = v_old_set_id;
 	if not found then
-		raise exception ''Slony-I: set % not found'', v_old_set_id;
+		raise exception 'Slony-I: set % not found', v_old_set_id;
 	end if;
-	if v_origin != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: set % does not originate on local node'',
+	if v_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: set % does not originate on local node',
 				v_old_set_id;
 	end if;
 
@@ -3452,7 +3452,7 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = v_old_set_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				p_new_set_id, v_old_set_id;
 	end if;
 
@@ -3462,7 +3462,7 @@ begin
 						from @NAMESPACE@.sl_subscribe SUB2
 						where SUB2.sub_set = p_new_set_id))
 	then
-		raise exception ''Slony-I: subscriber lists of set % and % are different'',
+		raise exception 'Slony-I: subscriber lists of set % and % are different',
 				v_old_set_id, p_new_set_id;
 	end if;
 
@@ -3470,10 +3470,10 @@ begin
 	-- Change the set the sequence belongs to
 	-- ----
 	perform @NAMESPACE@.setMoveSequence_int(p_seq_id, p_new_set_id);
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SET_MOVE_SEQUENCE'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SET_MOVE_SEQUENCE', 
 			p_seq_id::text, p_new_set_id::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.setMoveSequence (int4, int4) is
 'setMoveSequence(p_seq_id, p_new_set_id) - This generates the
@@ -3488,7 +3488,7 @@ exist, are distinct, and have exactly the same subscription lists';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.setMoveSequence_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_seq_id			alias for $1;
 	p_new_set_id		alias for $2;
@@ -3507,7 +3507,7 @@ begin
 
 	return p_seq_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.setMoveSequence_int (int4, int4) is
 'setMoveSequence_int(p_seq_id, p_new_set_id) - processes the
@@ -3518,7 +3518,7 @@ set.';
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) returns int4
-as '
+as $$
 declare
 	p_seq_id			alias for $1;
 	p_seq_origin		alias for $2;
@@ -3529,7 +3529,7 @@ begin
 	-- ----
 	-- Get the sequences fully qualified name
 	-- ----
-	select @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+	select @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) into v_fqname
 		from @NAMESPACE@.sl_sequence SQ,
 			"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
@@ -3537,14 +3537,14 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception ''Slony-I: sequenceSetValue(): sequence % not found'', p_seq_id;
+		raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
 	end if;
 
 	-- ----
 	-- Update it to the new value
 	-- ----
-	execute ''select setval('''''' || v_fqname ||
-			'''''', '''''' || p_last_value || '''''')'';
+	execute 'select setval('' || v_fqname ||
+			'', '' || p_last_value || '')';
 
 	insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
@@ -3552,7 +3552,7 @@ begin
 
 	return p_seq_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.sequenceSetValue(int4, int4, int8, int8) is
 'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
 Set sequence seq_id to have new value last_value.
@@ -3565,7 +3565,7 @@ Set sequence seq_id to have new value last_value.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlScript_prepare (int4, int4)
 returns integer
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_only_on_node		alias for $2;
@@ -3584,28 +3584,28 @@ begin
 			where set_id = p_set_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
 	if p_only_on_node = -1 then
-		if v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-			raise exception ''Slony-I: set % does not originate on local node'',
+		if v_set_origin <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+			raise exception 'Slony-I: set % does not originate on local node',
 				p_set_id;
 		end if;
 		-- ----
 		-- Create a SYNC event
 		-- ----
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL);
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
 	else
 		-- If running "ONLY ON NODE", there are two possibilities:
 		-- 1.  Running on origin, where denyaccess() triggers are already shut off
 		-- 2.  Running on replica, where we need the LOCAL role to suppress denyaccess() triggers
-		if (v_set_origin <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')) then
-			execute ''set session_replication_role to local;'';
+		if (v_set_origin <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')) then
+			execute 'set session_replication_role to local;';
 		end if;
 	end if;
 	return 1;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is 
 'Prepare for DDL script execution on origin';
@@ -3619,7 +3619,7 @@ comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlScript_complete (int4, text, int4)
 returns integer
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_script			alias for $2;
@@ -3628,12 +3628,12 @@ declare
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	if p_only_on_node = -1 then
-		return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''DDL_SCRIPT'', 
+		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
 	end if;
 	return NULL;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.ddlScript_complete(int4, text, int4) is
 'ddlScript_complete(set_id, script, only_on_node)
@@ -3649,7 +3649,7 @@ replicated slaves.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlScript_prepare_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_only_on_node		alias for $2;
@@ -3666,13 +3666,13 @@ begin
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
 	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 	select set_origin into v_set_origin
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id
 			for update;
 	if not found then
-		raise exception ''Slony-I: set % not found'', p_set_id;
+		raise exception 'Slony-I: set % not found', p_set_id;
 	end if;
 	if v_set_origin <> v_no_id
 			and not exists (select 1 from @NAMESPACE@.sl_subscribe
@@ -3692,7 +3692,7 @@ begin
 
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.ddlScript_prepare_int (int4, int4) is
 'ddlScript_prepare_int (set_id, only_on_node)
@@ -3708,7 +3708,7 @@ triggers/rules to original state.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlScript_complete_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_set_id			alias for $1;
 	p_only_on_node		alias for $2;
@@ -3716,7 +3716,7 @@ declare
 begin
 	return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.ddlScript_complete_int(int4, int4) is
 'ddlScript_complete_int(set_id, script, only_on_node)
 
@@ -3728,7 +3728,7 @@ replicated mode.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.alterTableAddTriggers (int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	v_no_id				int4;
@@ -3747,14 +3747,14 @@ begin
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	-- ----
 	-- Get the sl_table row and the current origin of the table. 
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_idxname, 
 			S.set_origin, PGX.indexrelid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
@@ -3769,34 +3769,34 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: alterTableAddTriggers(): Table with id % not found'', p_tab_id;
+		raise exception 'Slony-I: alterTableAddTriggers(): Table with id % not found', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 
 	v_tab_attkind := @NAMESPACE@.determineAttKindUnique(v_tab_row.tab_fqname, 
 						v_tab_row.tab_idxname);
 
-	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
+	execute 'lock table ' || v_tab_fqname || ' in access exclusive mode';
 
 	-- ----
 	-- Create the log and the deny access triggers
 	-- ----
-	execute ''create trigger "_@CLUSTERNAME@_logtrigger" '' || 
-			''after insert or update or delete on '' ||
-			v_tab_fqname || '' for each row execute procedure
-			@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || 
-				p_tab_id || '''''', '''''' || 
-				v_tab_attkind || '''''');'';
+	execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
+			' after insert or update or delete on ' ||
+			v_tab_fqname || ' for each row execute procedure @NAMESPACE@.logTrigger (' ||
+                               pg_catalog.quote_literal('_@CLUSTERNAME@') || ',' || 
+				pg_catalog.quote_literal(p_tab_id) || ',' || 
+				pg_catalog.quote_literal(v_tab_attkind) || ');';
 
-	execute ''create trigger "_@CLUSTERNAME@_denyaccess" '' || 
-			''before insert or update or delete on '' ||
-			v_tab_fqname || '' for each row execute procedure
-			@NAMESPACE@.denyAccess (''''_@CLUSTERNAME@'''');'';
+	execute 'create trigger "_@CLUSTERNAME@_denyaccess" ' || 
+			'before insert or update or delete on ' ||
+			v_tab_fqname || ' for each row execute procedure ' ||
+			'@NAMESPACE@.denyAccess (' || pg_catalog.quote_literal('_@CLUSTERNAME@') || ');';
 
 	perform @NAMESPACE@.alterTableConfigureTriggers (p_tab_id);
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.alterTableAddTriggers(int4) is
 'alterTableAddTriggers(tab_id)
 
@@ -3807,7 +3807,7 @@ Adds the log and deny access triggers to a replicated table.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.alterTableDropTriggers (int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	v_no_id				int4;
@@ -3823,14 +3823,14 @@ begin
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	-- ----
 	-- Get the sl_table row and the current tables origin.
 	-- ----
 	select T.tab_reloid, T.tab_set,
 			S.set_origin, PGX.indexrelid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
@@ -3845,24 +3845,24 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: alterTableDropTriggers(): Table with id % not found'', p_tab_id;
+		raise exception 'Slony-I: alterTableDropTriggers(): Table with id % not found', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 
-	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
+	execute 'lock table ' || v_tab_fqname || ' in access exclusive mode';
 
 	-- ----
 	-- Drop both triggers
 	-- ----
-	execute ''drop trigger "_@CLUSTERNAME@_logtrigger" on '' || 
+	execute 'drop trigger "_@CLUSTERNAME@_logtrigger" on ' || 
 			v_tab_fqname;
 
-	execute ''drop trigger "_@CLUSTERNAME@_denyaccess" on '' || 
+	execute 'drop trigger "_@CLUSTERNAME@_denyaccess" on ' || 
 			v_tab_fqname;
 				
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.alterTableDropTriggers (int4) is
 'alterTableDropTriggers (tab_id)
 
@@ -3873,7 +3873,7 @@ Remove the log and deny access triggers from a table.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.alterTableConfigureTriggers (int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	v_no_id				int4;
@@ -3889,14 +3889,14 @@ begin
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	-- ----
 	-- Get the sl_table row and the current tables origin.
 	-- ----
 	select T.tab_reloid, T.tab_set,
 			S.set_origin, PGX.indexrelid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
@@ -3911,7 +3911,7 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: alterTableConfigureTriggers(): Table with id % not found'', p_tab_id;
+		raise exception 'Slony-I: alterTableConfigureTriggers(): Table with id % not found', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 
@@ -3923,25 +3923,25 @@ begin
 		-- On the origin the log trigger is configured like a default
 		-- user trigger and the deny access trigger is disabled.
 		-- ----
-		execute ''alter table '' || v_tab_fqname ||
-				'' enable trigger "_@CLUSTERNAME@_logtrigger"'';
-		execute ''alter table '' || v_tab_fqname ||
-				'' disable trigger "_@CLUSTERNAME@_denyaccess"'';
+		execute 'alter table ' || v_tab_fqname ||
+				' enable trigger "_@CLUSTERNAME@_logtrigger"';
+		execute 'alter table ' || v_tab_fqname ||
+				' disable trigger "_@CLUSTERNAME@_denyaccess"';
 	else
 		-- ----
 		-- On a replica the log trigger is disabled and the
 		-- deny access trigger fires in origin session role.
 		-- ----
-		execute ''alter table '' || v_tab_fqname ||
-				'' disable trigger "_@CLUSTERNAME@_logtrigger"'';
-		execute ''alter table '' || v_tab_fqname ||
-				'' enable trigger "_@CLUSTERNAME@_denyaccess"'';
+		execute 'alter table ' || v_tab_fqname ||
+				' disable trigger "_@CLUSTERNAME@_logtrigger"';
+		execute 'alter table ' || v_tab_fqname ||
+				' enable trigger "_@CLUSTERNAME@_denyaccess"';
 
 	end if;
 
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.alterTableConfigureTriggers (int4) is
 'alterTableConfigureTriggers (tab_id)
 
@@ -3953,7 +3953,7 @@ according to the origin of the set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.alterTableRestore (int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id			alias for $1;
 	v_no_id				int4;
@@ -3969,7 +3969,7 @@ begin
 	-- ----
 	-- Get our local node ID
 	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	-- ----
 	-- Get the sl_table row and the current tables origin. Check
@@ -3977,7 +3977,7 @@ begin
 	-- ----
 	select T.tab_reloid, T.tab_set, T.tab_altered,
 			S.set_origin, PGX.indexrelid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 			into v_tab_row
 			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
@@ -3992,15 +3992,15 @@ begin
 				and PGXC.relname = T.tab_idxname
 				for update;
 	if not found then
-		raise exception ''Slony-I: alterTableRestore(): Table with id % not found'', p_tab_id;
+		raise exception 'Slony-I: alterTableRestore(): Table with id % not found', p_tab_id;
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 	if not v_tab_row.tab_altered then
-		raise exception ''Slony-I: alterTableRestore(): Table % is not in altered state'',
+		raise exception 'Slony-I: alterTableRestore(): Table % is not in altered state',
 				v_tab_fqname;
 	end if;
 
-	execute ''lock table '' || v_tab_fqname || '' in access exclusive mode'';
+	execute 'lock table ' || v_tab_fqname || ' in access exclusive mode';
 
 	-- ----
 	-- Procedures are different on origin and subscriber
@@ -4009,14 +4009,14 @@ begin
 		-- ----
 		-- On the Origin we just drop the trigger we originally added
 		-- ----
-		execute ''drop trigger "_@CLUSTERNAME@_logtrigger_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname;
+		execute 'drop trigger "_@CLUSTERNAME@_logtrigger_' || 
+				p_tab_id || '" on ' || v_tab_fqname;
 	else
 		-- ----
 		-- On the subscriber drop the denyAccess trigger
 		-- ----
-		execute ''drop trigger "_@CLUSTERNAME@_denyaccess_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname;
+		execute 'drop trigger "_@CLUSTERNAME@_denyaccess_' || 
+				p_tab_id || '" on ' || v_tab_fqname;
 				
 		-- ----
 		-- Restore all original triggers
@@ -4054,7 +4054,7 @@ begin
 
 	return p_tab_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.alterTableRestore (int4) is
 'alterTableRestore (tab_id)
 
@@ -4077,7 +4077,7 @@ and restoring user triggers and rules.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
 returns bigint
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_provider		alias for $2;
@@ -4095,8 +4095,8 @@ begin
 	-- ----
 	-- Check that this is called on the provider node
 	-- ----
-	if p_sub_provider != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: subscribeSet() must be called on provider'';
+	if p_sub_provider != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: subscribeSet() must be called on provider';
 	end if;
 
 	-- ----
@@ -4106,15 +4106,15 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception ''Slony-I: subscribeSet(): set % not found'', p_sub_set;
+		raise exception 'Slony-I: subscribeSet(): set % not found', p_sub_set;
 	end if;
 	if v_set_origin = p_sub_receiver then
 		raise exception 
-				''Slony-I: subscribeSet(): set origin and receiver cannot be identical'';
+				'Slony-I: subscribeSet(): set origin and receiver cannot be identical';
 	end if;
 	if p_sub_receiver = p_sub_provider then
 		raise exception 
-				''Slony-I: subscribeSet(): set provider and receiver cannot be identical'';
+				'Slony-I: subscribeSet(): set provider and receiver cannot be identical';
 	end if;
 
 	-- ---
@@ -4126,16 +4126,16 @@ begin
 			where sub_set = p_sub_set and 
                               sub_receiver = p_sub_provider and
 			      sub_forward and sub_active) then
-			raise exception ''Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %'', p_sub_provider, p_sub_set;
+			raise exception 'Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %', p_sub_provider, p_sub_set;
 		end if;
 	end if;
 
 	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
-	v_ev_seqno :=  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SUBSCRIBE_SET'', 
+	v_ev_seqno :=  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SUBSCRIBE_SET', 
 			p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
-			case p_sub_forward when true then ''t'' else ''f'' end);
+			case p_sub_forward when true then 't' else 'f' end);
 
 	-- ----
 	-- Call the internal procedure to store the subscription
@@ -4145,7 +4145,7 @@ begin
 
 	return v_ev_seqno;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.subscribeSet (int4, int4, int4, bool) is
 'subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
 
@@ -4157,7 +4157,7 @@ subscription, and publishes the SUBSCRIBE_SET event to other nodes.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool)
 returns int4
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_provider		alias for $2;
@@ -4174,13 +4174,13 @@ begin
 	-- ----
 	-- Provider change is only allowed for active sets
 	-- ----
-	if p_sub_receiver = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
+	if p_sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		select sub_active into v_sub_row from @NAMESPACE@.sl_subscribe
 				where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
 		if found then
 			if not v_sub_row.sub_active then
-				raise exception ''Slony-I: subscribeSet_int(): set % is not active, cannot change provider'',
+				raise exception 'Slony-I: subscribeSet_int(): set % is not active, cannot change provider',
 						p_sub_set;
 			end if;
 		end if;
@@ -4214,7 +4214,7 @@ begin
 				(pa_server, pa_client, pa_conninfo, pa_connretry)
 				values 
 				(p_sub_provider, p_sub_receiver, 
-				''<event pending>'', 10);
+				'<event pending>', 10);
 	end if;
 	insert into @NAMESPACE@.sl_subscribe
 			(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
@@ -4228,13 +4228,13 @@ begin
 			from @NAMESPACE@.sl_set
 			where set_id = p_sub_set;
 	if not found then
-		raise exception ''Slony-I: subscribeSet_int(): set % not found'', p_sub_set;
+		raise exception 'Slony-I: subscribeSet_int(): set % not found', p_sub_set;
 	end if;
 
-	if v_set_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''ENABLE_SUBSCRIPTION'', 
+	if v_set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
 				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
-				case p_sub_forward when true then ''t'' else ''f'' end);
+				case p_sub_forward when true then 't' else 'f' end);
 		perform @NAMESPACE@.enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
 	end if;
@@ -4246,7 +4246,7 @@ begin
 
 	return p_sub_set;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool) is
 'subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
@@ -4259,7 +4259,7 @@ set sub_set.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.unsubscribeSet (int4, int4)
 returns bigint
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_receiver		alias for $2;
@@ -4273,8 +4273,8 @@ begin
 	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
-	if p_sub_receiver != @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') then
-		raise exception ''Slony-I: unsubscribeSet() must be called on receiver'';
+	if p_sub_receiver != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: unsubscribeSet() must be called on receiver';
 	end if;
 
 	-- ----
@@ -4284,7 +4284,7 @@ begin
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
-		raise exception ''Slony-I: Cannot unsubscribe set % while being provider'',
+		raise exception 'Slony-I: Cannot unsubscribe set % while being provider',
 				p_sub_set;
 	end if;
 
@@ -4327,10 +4327,10 @@ begin
 	-- ----
 	-- Create the UNSUBSCRIBE_SET event
 	-- ----
-	return  @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''UNSUBSCRIBE_SET'', 
+	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'UNSUBSCRIBE_SET', 
 			p_sub_set::text, p_sub_receiver::text);
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.unsubscribeSet (int4, int4) is
 'unsubscribeSet (sub_set, sub_receiver) 
 
@@ -4346,7 +4346,7 @@ node to publish that the node is being dropped.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.unsubscribeSet_int (int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_receiver		alias for $2;
@@ -4369,7 +4369,7 @@ begin
 
 	return p_sub_set;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.unsubscribeSet_int (int4, int4) is
 'unsubscribeSet_int (sub_set, sub_receiver)
 
@@ -4382,7 +4382,7 @@ subscription in sl_subscribe.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableSubscription (int4, int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_provider		alias for $2;
@@ -4391,7 +4391,7 @@ begin
 	return  @NAMESPACE@.enableSubscription_int (p_sub_set, 
 			p_sub_provider, p_sub_receiver);
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.enableSubscription (int4, int4, int4) is 
 'enableSubscription (sub_set, sub_provider, sub_receiver)
@@ -4405,7 +4405,7 @@ enableSubscription_int (sub_set, sub_provider, sub_receiver).';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableSubscription_int (int4, int4, int4)
 returns int4
-as '
+as $$
 declare
 	p_sub_set			alias for $1;
 	p_sub_provider		alias for $2;
@@ -4433,11 +4433,11 @@ begin
 				(pa_server, pa_client, pa_conninfo, pa_connretry)
 				values 
 				(p_sub_provider, p_sub_receiver, 
-				''<event pending>'', 10);
+				'<event pending>', 10);
 	end if;
 
 	update @NAMESPACE@.sl_subscribe
-			set sub_active = ''t''
+			set sub_active = 't'
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	get diagnostics v_n = row_count;
@@ -4455,7 +4455,7 @@ begin
 
 	return p_sub_set;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.enableSubscription_int (int4, int4, int4) is
 'enableSubscription_int (sub_set, sub_provider, sub_receiver)
@@ -4473,7 +4473,7 @@ subscription has become active.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp)
 returns bigint
-as '
+as $$
 declare
 	p_con_origin	alias for $1;
 	p_con_received	alias for $2;
@@ -4495,7 +4495,7 @@ begin
 
 	return v_max_seqno;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.forwardConfirm (int4, int4, int8, timestamp) is
 'forwardConfirm (p_con_origin, p_con_received, p_con_seqno, p_con_timestamp)
 
@@ -4509,7 +4509,7 @@ p_con_timestamp, and raises an event to forward this confirmation.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cleanupEvent (interval, boolean)
 returns int4
-as '
+as $$
 declare
 	p_interval alias for $1;
 	p_deletelogs alias for $2;
@@ -4558,7 +4558,7 @@ begin
 				from @NAMESPACE@.sl_event
 				where ev_origin = v_min_row.con_origin
 				and ev_seqno <= v_min_row.con_seqno
-				and ev_type = ''SYNC'';
+				and ev_type = 'SYNC';
 		if v_max_sync > 0 then
 			delete from @NAMESPACE@.sl_event
 					where ev_origin = v_min_row.con_origin
@@ -4573,12 +4573,12 @@ begin
 	-- ----
 
 	select * into v_min_row from @NAMESPACE@.sl_node where
-			no_id <> @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') limit 1;
+			no_id <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') limit 1;
 	if not found then
 		select ev_origin, ev_seqno into v_min_row from @NAMESPACE@.sl_event
-		where ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
+		where ev_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
 		order by ev_origin desc, ev_seqno desc limit 1;
-		raise notice ''Slony-I: cleanupEvent(): Single node - deleting events < %'', v_min_row.ev_seqno;
+		raise notice 'Slony-I: cleanupEvent(): Single node - deleting events < %', v_min_row.ev_seqno;
 			delete from @NAMESPACE@.sl_event
 			where
 				ev_origin = v_min_row.ev_origin and
@@ -4586,8 +4586,8 @@ begin
 
         end if;
 
-	if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_seqlog'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
-                execute ''alter table @NAMESPACE@.sl_seqlog set without oids;'';
+	if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = 'sl_seqlog' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = 'oid') then
+                execute 'alter table @NAMESPACE@.sl_seqlog set without oids;';
 	end if;		
 	-- ----
 	-- Also remove stale entries from the nodelock table.
@@ -4599,7 +4599,7 @@ begin
 	-- ----
         for v_origin, v_seqno, v_xmin in
 	  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
-          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 	loop
 		if p_deletelogs then
 			delete from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin;		
@@ -4615,7 +4615,7 @@ begin
 
 	return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.cleanupEvent (interval, boolean) is
 'cleaning old data out of sl_confirm, sl_event.  Removes all but the
 last sl_confirm row per (origin,receiver), and then removes all events
@@ -4630,10 +4630,10 @@ SYNC.  Deletes now-orphaned entries from sl_log_* if delete_logs parameter is se
 --	the tables primary key index name.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.determineIdxnameUnique(text, name) returns name
-as '
+as $$
 declare
 	p_tab_fqname	alias for $1;
-	v_tab_fqname_quoted	text default '''';
+	v_tab_fqname_quoted	text default '';
 	p_idx_name		alias for $2;
 	v_idxrow		record;
 begin
@@ -4644,10 +4644,10 @@ begin
 	if (select PGC.relname
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN
-				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception ''Slony-I: determineIdxnameUnique(): table % not found'', v_tab_fqname_quoted;
+		raise exception 'Slony-I: determineIdxnameUnique(): table % not found', v_tab_fqname_quoted;
 	end if;
 
 	--
@@ -4660,14 +4660,14 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
 					and PGX.indexrelid = PGXC.oid
 					and PGX.indisprimary;
 		if not found then
-			raise exception ''Slony-I: table % has no primary key'',
+			raise exception 'Slony-I: table % has no primary key',
 					v_tab_fqname_quoted;
 		end if;
 	else
@@ -4677,7 +4677,7 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
@@ -4685,7 +4685,7 @@ begin
 					and PGX.indisunique
 					and @NAMESPACE@.slon_quote_brute(PGXC.relname) = @NAMESPACE@.slon_quote_input(p_idx_name);
 		if not found then
-			raise exception ''Slony-I: table % has no unique index %'',
+			raise exception 'Slony-I: table % has no unique index %',
 					v_tab_fqname_quoted, p_idx_name;
 		end if;
 	end if;
@@ -4695,7 +4695,7 @@ begin
 	--
 	return v_idxrow.relname;
 end;
-' language plpgsql called on null input;
+$$ language plpgsql called on null input;
 comment on function @NAMESPACE@.determineIdxnameUnique(text, name) is
 'FUNCTION determineIdxnameUnique (tab_fqname, indexname)
 
@@ -4712,17 +4712,17 @@ is no unique index, it raises an exception.';
 --	the primary key (if indexname is NULL).
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.determineAttkindUnique(text, name) returns text
-as '
+as $$
 declare
 	p_tab_fqname	alias for $1;
-	v_tab_fqname_quoted	text default '''';
+	v_tab_fqname_quoted	text default '';
 	p_idx_name		alias for $2;
 	v_idx_name_quoted	text;
 	v_idxrow		record;
 	v_attrow		record;
 	v_i				integer;
 	v_attno			int2;
-	v_attkind		text default '''';
+	v_attkind		text default '';
 	v_attfound		bool;
 begin
 	v_tab_fqname_quoted := @NAMESPACE@.slon_quote_input(p_tab_fqname);
@@ -4733,17 +4733,17 @@ begin
 	if (select PGC.relname
 				from "pg_catalog".pg_class PGC,
 					"pg_catalog".pg_namespace PGN
-				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace) is null then
-		raise exception ''Slony-I: table % not found'', v_tab_fqname_quoted;
+		raise exception 'Slony-I: table % not found', v_tab_fqname_quoted;
 	end if;
 
 	--
 	-- Lookup the tables primary key or the specified unique index
 	--
 	if p_idx_name isnull then
-		raise exception ''Slony-I: index name must be specified'';
+		raise exception 'Slony-I: index name must be specified';
 	else
 		select PGXC.relname, PGX.indexrelid, PGX.indkey
 				into v_idxrow
@@ -4751,7 +4751,7 @@ begin
 					"pg_catalog".pg_namespace PGN,
 					"pg_catalog".pg_index PGX,
 					"pg_catalog".pg_class PGXC
-				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+				where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 					@NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 					and PGN.oid = PGC.relnamespace
 					and PGX.indrelid = PGC.oid
@@ -4759,7 +4759,7 @@ begin
 					and PGX.indisunique
 					and @NAMESPACE@.slon_quote_brute(PGXC.relname) = v_idx_name_quoted;
 		if not found then
-			raise exception ''Slony-I: table % has no unique index %'',
+			raise exception 'Slony-I: table % has no unique index %',
 					v_tab_fqname_quoted, v_idx_name_quoted;
 		end if;
 	end if;
@@ -4773,7 +4773,7 @@ begin
 			from "pg_catalog".pg_class PGC,
 			    "pg_catalog".pg_namespace PGN,
 				"pg_catalog".pg_attribute PGA
-			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			where @NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			    @NAMESPACE@.slon_quote_brute(PGC.relname) = v_tab_fqname_quoted
 				and PGN.oid = PGC.relnamespace
 				and PGA.attrelid = PGC.oid
@@ -4781,7 +4781,7 @@ begin
 				and PGA.attnum > 0
 			order by attnum
 	loop
-		v_attfound = ''f'';
+		v_attfound = 'f';
 
 		v_i := 0;
 		loop
@@ -4791,28 +4791,28 @@ begin
 				exit;
 			end if;
 			if v_attrow.attnum = v_attno then
-				v_attfound = ''t'';
+				v_attfound = 't';
 				exit;
 			end if;
 			v_i := v_i + 1;
 		end loop;
 
 		if v_attfound then
-			v_attkind := v_attkind || ''k'';
+			v_attkind := v_attkind || 'k';
 		else
-			v_attkind := v_attkind || ''v'';
+			v_attkind := v_attkind || 'v';
 		end if;
 	end loop;
 
 	-- Strip off trailing v characters as they are not needed by the logtrigger
-	v_attkind := pg_catalog.rtrim(v_attkind, ''v'');
+	v_attkind := pg_catalog.rtrim(v_attkind, 'v');
 
 	--
 	-- Return the resulting attkind
 	--
 	return v_attkind;
 end;
-' language plpgsql called on null input;
+$$ language plpgsql called on null input;
 
 comment on function @NAMESPACE@.determineAttkindUnique(text, name) is
 'determineAttKindUnique (tab_fqname, indexname)
@@ -4830,7 +4830,7 @@ primary key (if indexname is NULL).';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.RebuildListenEntries()
 returns int
-as '
+as $$
 declare
 	v_row	record;
 begin
@@ -4914,7 +4914,7 @@ begin
 
 	return null ;
 end ;
-' language 'plpgsql';
+$$ language 'plpgsql';
 
 comment on function @NAMESPACE@.RebuildListenEntries() is
 'RebuildListenEntries()
@@ -4932,26 +4932,26 @@ allow communications between nodes in the Slony-I cluster.';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.generate_sync_event(interval)
 returns int4
-as '
+as $$
 declare
 	p_interval     alias for $1;
 	v_node_row     record;
 
 BEGIN
 	select 1 into v_node_row from @NAMESPACE@.sl_event 
-       	  where ev_type = ''SYNC'' and ev_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'')
+       	  where ev_type = 'SYNC' and ev_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent(''_@CLUSTERNAME@'', ''SYNC'', NULL) 
-                                         from @NAMESPACE@.sl_node n where no_id = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') 
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL) 
+                                         from @NAMESPACE@.sl_node n where no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') 
 			and exists (select 1 from @NAMESPACE@.sl_set where set_origin = no_id);
 		return 1;
 	else
 		return 0;
 	end if;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.generate_sync_event(interval) is
   'Generate a sync event if there has not been one in the requested interval, and this is a provider node.';
@@ -4963,7 +4963,7 @@ comment on function @NAMESPACE@.generate_sync_event(interval) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.updateRelname (int4, int4)
 returns int4
-as '
+as $$
 declare
         p_set_id                alias for $1;
         p_only_on_node          alias for $2;
@@ -4979,13 +4979,13 @@ begin
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
-        v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+        v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
         select set_origin into v_set_origin
                         from @NAMESPACE@.sl_set
                         where set_id = p_set_id
                         for update;
         if not found then
-                raise exception ''Slony-I: set % not found'', p_set_id;
+                raise exception 'Slony-I: set % not found', p_set_id;
         end if;
         if v_set_origin <> v_no_id
                 and not exists (select 1 from @NAMESPACE@.sl_subscribe
@@ -5014,7 +5014,7 @@ begin
                 and PGC.relnamespace = PGN.oid;
         return p_set_id;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.updateRelname(int4, int4) is
 'updateRelname(set_id, only_on_node)';
@@ -5026,7 +5026,7 @@ comment on function @NAMESPACE@.updateRelname(int4, int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.updateReloid (int4, int4)
 returns int4
-as '
+as $$
 declare
         p_set_id                alias for $1;
         p_only_on_node          alias for $2;
@@ -5042,13 +5042,13 @@ begin
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
-        v_no_id := @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'');
+        v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
         select set_origin into v_set_origin
                         from @NAMESPACE@.sl_set
                         where set_id = p_set_id
                         for update;
         if not found then
-                raise exception ''Slony-I: set % not found'', p_set_id;
+                raise exception 'Slony-I: set % not found', p_set_id;
         end if;
         if v_set_origin <> v_no_id
                 and not exists (select 1 from @NAMESPACE@.sl_subscribe
@@ -5081,7 +5081,7 @@ begin
 
 	return 1;
 end;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.updateReloid(int4, int4) is
 'updateReloid(set_id, only_on_node)
 
@@ -5096,7 +5096,7 @@ their respective FQN';
 --  visa versa.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logswitch_start()
-returns int4 as '
+returns int4 as $$
 DECLARE
 	v_current_status	int4;
 BEGIN
@@ -5116,10 +5116,10 @@ BEGIN
 	-- Initiate a switch to sl_log_2.
 	-- ----
 	if v_current_status = 0 then
-		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 3);
+		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 3);
 		perform @NAMESPACE@.registry_set_timestamp(
-				''logswitch.laststart'', now()::timestamp);
-		raise notice ''Slony-I: Logswitch to sl_log_2 initiated'';
+				'logswitch.laststart', now()::timestamp);
+		raise notice 'Slony-I: Logswitch to sl_log_2 initiated';
 		return 2;
 	end if;
 
@@ -5128,16 +5128,16 @@ BEGIN
 	-- Initiate a switch to sl_log_1.
 	-- ----
 	if v_current_status = 1 then
-		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 2);
+		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 2);
 		perform @NAMESPACE@.registry_set_timestamp(
-				''logswitch.laststart'', now()::timestamp);
-		raise notice ''Slony-I: Logswitch to sl_log_1 initiated'';
+				'logswitch.laststart', now()::timestamp);
+		raise notice 'Slony-I: Logswitch to sl_log_1 initiated';
 		return 1;
 	end if;
 
-	raise exception ''Previous logswitch still in progress'';
+	raise exception 'Previous logswitch still in progress';
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.logswitch_start() is
 'logswitch_start()
 
@@ -5150,7 +5150,7 @@ Initiate a log table switch if none is in progress';
 --  that is in progress.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logswitch_finish()
-returns int4 as '
+returns int4 as $$
 DECLARE
 	v_current_status	int4;
 	v_dummy				record;
@@ -5181,7 +5181,7 @@ BEGIN
 	-- status = 2: sl_log_1 active, cleanup sl_log_2
 	-- ----
 	if v_current_status = 2 then
-		v_purgeable := ''true'';
+		v_purgeable := 'true';
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
@@ -5190,27 +5190,27 @@ BEGIN
 		
 	        for v_origin, v_seqno, v_xmin in
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
-	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 		loop
 			select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin limit 1;		
 			if exists then
-				v_purgeable := ''false'';
+				v_purgeable := 'false';
 			end if;
 	        end loop;
 		if not v_purgeable then
 			-- ----
 			-- Found a row ... log switch is still in progress.
 			-- ----
-			raise notice ''Slony-I: log switch to sl_log_1 still in progress - sl_log_2 not truncated'';
+			raise notice 'Slony-I: log switch to sl_log_1 still in progress - sl_log_2 not truncated';
 			return -1;
 		end if;
 
-		raise notice ''Slony-I: log switch to sl_log_1 complete - truncate sl_log_2'';
+		raise notice 'Slony-I: log switch to sl_log_1 complete - truncate sl_log_2';
 		truncate @NAMESPACE@.sl_log_2;
-		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_log_2'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
-	                execute ''alter table @NAMESPACE@.sl_log_2 set without oids;'';
+		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = 'sl_log_2' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = 'oid') then
+	                execute 'alter table @NAMESPACE@.sl_log_2 set without oids;';
 		end if;		
-		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 0);
+		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 0);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform @NAMESPACE@.addPartialLogIndices();
 
@@ -5221,7 +5221,7 @@ BEGIN
 	-- status = 3: sl_log_2 active, cleanup sl_log_1
 	-- ----
 	if v_current_status = 3 then
-		v_purgeable := ''true'';
+		v_purgeable := 'true';
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
@@ -5229,32 +5229,32 @@ BEGIN
 		-- ----
 	        for v_origin, v_seqno, v_xmin in
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
-	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = ''SYNC'' group by ev_origin)
+	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 		loop
 			if (exists (select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin limit 1)) then
-				v_purgeable := ''false'';
+				v_purgeable := 'false';
 			end if;
 	        end loop;
 		if not v_purgeable then
 			-- ----
 			-- Found a row ... log switch is still in progress.
 			-- ----
-			raise notice ''Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated'';
+			raise notice 'Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated';
 			return -1;
 		end if;
 
-		raise notice ''Slony-I: log switch to sl_log_2 complete - truncate sl_log_1'';
+		raise notice 'Slony-I: log switch to sl_log_2 complete - truncate sl_log_1';
 		truncate @NAMESPACE@.sl_log_1;
-		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = ''sl_log_1'' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = ''oid'') then
-	                execute ''alter table @NAMESPACE@.sl_log_1 set without oids;'';
+		if exists (select * from "pg_catalog".pg_class c, "pg_catalog".pg_namespace n, "pg_catalog".pg_attribute a where c.relname = 'sl_log_1' and n.oid = c.relnamespace and a.attrelid = c.oid and a.attname = 'oid') then
+	                execute 'alter table @NAMESPACE@.sl_log_1 set without oids;';
 		end if;		
-		perform "pg_catalog".setval(''@NAMESPACE@.sl_log_status'', 1);
+		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 1);
 		-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 		perform @NAMESPACE@.addPartialLogIndices();
 		return 2;
 	end if;
 END;
-' language plpgsql;
+$$ language plpgsql;
 comment on function @NAMESPACE@.logswitch_finish() is
 'logswitch_finish()
 
@@ -5272,7 +5272,7 @@ return values:
 -- Add partial indices to sl_log_? tables that aren't currently in use
 -- ----------------------------------------------------------------------
 
-create or replace function @NAMESPACE@.addPartialLogIndices () returns integer as '
+create or replace function @NAMESPACE@.addPartialLogIndices () returns integer as $$
 DECLARE
 	v_current_status	int4;
 	v_log			int4;
@@ -5300,42 +5300,42 @@ BEGIN
 --                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
-            v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
-	   -- raise notice ''Consider adding partial index % on sl_log_%'', v_iname, v_log;
-	   -- raise notice ''schema: [_@CLUSTERNAME@] tablename:[sl_log_%]'', v_log;
-            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
+            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log || '-node-' || v_dummy.set_origin;
+	   -- raise notice 'Consider adding partial index % on sl_log_%', v_iname, v_log;
+	   -- raise notice 'schema: [_@CLUSTERNAME@] tablename:[sl_log_%]', v_log;
+            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = 'sl_log_' || v_log and  indexname = v_iname;
             if not found then
-		-- raise notice ''index was not found - add it!'';
-        v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
+		-- raise notice 'index was not found - add it!';
+        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log || '-node-' || v_dummy.set_origin;
 		v_ilen := pg_catalog.length(v_iname);
-		v_maxlen := pg_catalog.current_setting(''max_identifier_length''::text)::int4;
+		v_maxlen := pg_catalog.current_setting('max_identifier_length'::text)::int4;
                 if v_ilen > v_maxlen then
-		   raise exception ''Length of proposed index name [%] > max_identifier_length [%] - cluster name probably too long'', v_ilen, v_maxlen;
+		   raise exception 'Length of proposed index name [%] > max_identifier_length [%] - cluster name probably too long', v_ilen, v_maxlen;
 		end if;
 
-		idef := ''create index "'' || v_iname || 
-                        ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_txid) where (log_origin = '' || v_dummy.set_origin || '');'';
+		idef := 'create index "' || v_iname || 
+                        '" on @NAMESPACE@.sl_log_' || v_log || ' USING btree(log_txid) where (log_origin = ' || v_dummy.set_origin || ');';
 		execute idef;
 		v_count := v_count + 1;
             else
-                -- raise notice ''Index % already present - skipping'', v_iname;
+                -- raise notice 'Index % already present - skipping', v_iname;
             end if;
 	end loop;
 
 	-- Remove unneeded indices...
-	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = ''sl_log_'' || v_log and
-                       i.indexname like (''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-%'') and
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = 'sl_log_' || v_log and
+                       i.indexname like ('PartInd_@CLUSTERNAME@_sl_log_' || v_log || '-node-%') and
                        not exists (select 1 from @NAMESPACE@.sl_set where
-				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin)
+				i.indexname = 'PartInd_@CLUSTERNAME@_sl_log_' || v_log || '-node-' || set_origin)
 	loop
-		-- raise notice ''Dropping obsolete index %d'', v_dummy.indexname;
-		idef := ''drop index @NAMESPACE@."'' || v_dummy.indexname || ''";'';
+		-- raise notice 'Dropping obsolete index %d', v_dummy.indexname;
+		idef := 'drop index @NAMESPACE@."' || v_dummy.indexname || '";';
 		execute idef;
 		v_count := v_count - 1;
 	end loop;
 	return v_count;
 END
-' language plpgsql;
+$$ language plpgsql;
 
 
 comment on function @NAMESPACE@.addPartialLogIndices () is 
@@ -5354,7 +5354,7 @@ system switches between sl_log_1 and sl_log_2.';
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
-returns bool as '
+returns bool as $$
 DECLARE
   p_namespace alias for $1;
   p_table     alias for $2;
@@ -5370,21 +5370,21 @@ BEGIN
          a.attrelid = c.oid and
          @NAMESPACE@.slon_quote_brute(a.attname) = p_field;
   if not found then
-    raise notice ''Upgrade table %.% - add field %'', p_namespace, p_table, p_field;
-    v_query := ''alter table '' || p_namespace || ''.'' || p_table || '' add column '';
-    v_query := v_query || p_field || '' '' || p_type || '';'';
+    raise notice 'Upgrade table %.% - add field %', p_namespace, p_table, p_field;
+    v_query := 'alter table ' || p_namespace || '.' || p_table || ' add column ';
+    v_query := v_query || p_field || ' ' || p_type || ';';
     execute v_query;
-    return ''t'';
+    return 't';
   else
-    return ''f'';
+    return 'f';
   end if;
-END;' language plpgsql;
+END;$$ language plpgsql;
 
 comment on function @NAMESPACE@.add_missing_table_field (text, text, text, text) 
 is 'Add a column of a given type to a table if it is missing';
 
 create or replace function @NAMESPACE@.upgradeSchema(text)
-returns text as '
+returns text as $$
 
 declare
         p_old   	alias for $1;
@@ -5393,12 +5393,12 @@ begin
 	-- ----
 	-- Changes for 2.0
 	-- ----
-	if p_old IN (''1.0.2'', ''1.0.5'', ''1.0.6'',
-			''1.1.0'', ''1.1.1'', ''1.1.2'', ''1.1.3'', ''1.1.5'', ''1.1.6'', ''1.1.7'', ''1.1.8'', ''1.1.9'') then
-		raise exception ''Upgrading to Slony-I 2.x requires running 1.2.x'';
+	if p_old IN ('1.0.2', '1.0.5', '1.0.6',
+			'1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9') then
+		raise exception 'Upgrading to Slony-I 2.x requires running 1.2.x';
 	end if;
 
-	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'', ''1.2.11'', ''1.2.12'') then
+	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12') then
 		-- ---- 
 		-- Upgrading from a pre-2.0 ... repair the system catalog
 		-- ----
@@ -5409,8 +5409,8 @@ begin
 		-- ----
 		-- drop obsolete functions
 		-- ----
-		execute ''drop function @NAMESPACE@.alterTableForReplication(int4)'';
-		execute ''drop function @NAMESPACE@.pre74()'';
+		execute 'drop function @NAMESPACE@.alterTableForReplication(int4)';
+		execute 'drop function @NAMESPACE@.pre74()';
 
 		-- ----
 		-- and create the new versions of the log and deny access triggers.
@@ -5423,34 +5423,34 @@ begin
 		-- ----
 		-- Drop no_spool from sl_node
 		-- ----
-		execute ''alter table @NAMESPACE@.sl_node drop column no_spool;'';
+		execute 'alter table @NAMESPACE@.sl_node drop column no_spool;';
 
 		-- ----
 		-- create new type - vactables - used by TablesToVacuum()
 		-- ----
-		execute ''create type @NAMESPACE@.vactables as (nspname name, relname name);'';
+		execute 'create type @NAMESPACE@.vactables as (nspname name, relname name);';
 	end if;
 
 	-- ----
 	-- The following is already in 1.2.11, do not add any future
 	-- 1.2 version numbers.
 	-- ----
-	if p_old IN (''1.2.0'', ''1.2.1'', ''1.2.2'', ''1.2.3'', ''1.2.4'', ''1.2.5'', ''1.2.6'', ''1.2.7'', ''1.2.8'', ''1.2.9'', ''1.2.10'') then
+	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10') then
 		-- ----
 		-- Add new table sl_archive_counter
 		-- ----
-		execute ''create table @NAMESPACE@.sl_archive_counter (
+		execute 'create table @NAMESPACE@.sl_archive_counter (
 					ac_num			bigint,
 					ac_timestamp	timestamp
-				) without oids'';
-		execute ''insert into @NAMESPACE@.sl_archive_counter
-				(ac_num, ac_timestamp) values (0, ''''epoch''''::timestamp)'';
+				) without oids';
+		execute 'insert into @NAMESPACE@.sl_archive_counter
+				(ac_num, ac_timestamp) values (0, ' || pg_catalog.quote_literal('epoch') || '::timestamp)';
 
 	end if;
 
 	return p_old;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.upgradeSchema(text) is
     'Called during "update functions" by slonik to perform schema changes';
@@ -5497,24 +5497,24 @@ comment on view @NAMESPACE@.sl_status is 'View showing how far behind remote nod
 
 create or replace function @NAMESPACE@.copyFields(integer) 
 returns text
-as '
+as $$
 declare
 	result text;
 	prefix text;
 	prec record;
 begin
-	result := '''';
-	prefix := ''('';   -- Initially, prefix is the opening paren
+	result := '';
+	prefix := '(';   -- Initially, prefix is the opening paren
 
 	for prec in select @NAMESPACE@.slon_quote_input(a.attname) as column from @NAMESPACE@.sl_table t, pg_catalog.pg_attribute a where t.tab_id = $1 and t.tab_reloid = a.attrelid and a.attnum > 0 and a.attisdropped = false order by attnum
 	loop
 		result := result || prefix || prec.column;
-		prefix := '','';   -- Subsequently, prepend columns with commas
+		prefix := ',';   -- Subsequently, prepend columns with commas
 	end loop;
-	result := result || '')'';
+	result := result || ')';
 	return result;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.copyFields(integer) is
 'Return a string consisting of what should be appended to a COPY statement
@@ -5530,7 +5530,7 @@ In PG versions > 7.3, this looks like (field1,field2,...fieldn)';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.prepareTableForCopy(int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id		alias for $1;
 	v_tab_oid		oid;
@@ -5540,7 +5540,7 @@ begin
 	-- Get the OID and fully qualified name for the table
 	-- ---
 	select	PGC.oid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 		into v_tab_oid, v_tab_fqname
 			from @NAMESPACE@.sl_table T,   
@@ -5549,31 +5549,31 @@ begin
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception ''Table with ID % not found in sl_table'', p_tab_id;
+		raise exception 'Table with ID % not found in sl_table', p_tab_id;
 	end if;
 
 	-- ----
 	-- Try using truncate to empty the table and fallback to
 	-- delete on error.
 	-- ----
-	execute ''truncate '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
-	raise notice ''truncate of % succeeded'', v_tab_fqname;
+	execute 'truncate ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+	raise notice 'truncate of % succeeded', v_tab_fqname;
 	-- ----
 	-- Setting pg_class.relhasindex to false will cause copy not to
 	-- maintain any indexes. At the end of the copy we will reenable
 	-- them and reindex the table. This bulk creating of indexes is
 	-- faster.
 	-- ----
-	update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
+	update pg_class set relhasindex = 'f' where oid = v_tab_oid;
 
 	return 1;
 	exception when others then
-		raise notice ''truncate of % failed - doing delete'', v_tab_fqname;
-		update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
-		execute ''delete from only '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+		raise notice 'truncate of % failed - doing delete', v_tab_fqname;
+		update pg_class set relhasindex = 'f' where oid = v_tab_oid;
+		execute 'delete from only ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 		return 0;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.prepareTableForCopy(int4) is
 'Delete all data and suppress index maintenance';
@@ -5585,7 +5585,7 @@ comment on function @NAMESPACE@.prepareTableForCopy(int4) is
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.finishTableAfterCopy(int4)
 returns int4
-as '
+as $$
 declare
 	p_tab_id		alias for $1;
 	v_tab_oid		oid;
@@ -5595,7 +5595,7 @@ begin
 	-- Get the tables OID and fully qualified name
 	-- ---
 	select	PGC.oid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
+			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 		into v_tab_oid, v_tab_fqname
 			from @NAMESPACE@.sl_table T,   
@@ -5604,18 +5604,18 @@ begin
 				and T.tab_reloid = PGC.oid
 				and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception ''Table with ID % not found in sl_table'', p_tab_id;
+		raise exception 'Table with ID % not found in sl_table', p_tab_id;
 	end if;
 
 	-- ----
 	-- Reenable indexes and reindex the table.
 	-- ----
-	update pg_class set relhasindex = ''t'' where oid = v_tab_oid;
-	execute ''reindex table '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+	update pg_class set relhasindex = 't' where oid = v_tab_oid;
+	execute 'reindex table ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 
 	return 1;
 end;
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 'Reenable index maintenance and reindex the table';
@@ -5676,60 +5676,59 @@ comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is
 --
 --	Make function be STRICT
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.TablesToVacuum () returns setof @NAMESPACE@.vactables as 
-'
+create or replace function @NAMESPACE@.TablesToVacuum () returns setof @NAMESPACE@.vactables as $$
 declare
 	prec @NAMESPACE@.vactables%rowtype;
 begin
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_event'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_event';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_confirm'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_confirm';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_setsync'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_setsync';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_log_1'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_log_1';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_log_2'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_log_2';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_seqlog'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_seqlog';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''_@CLUSTERNAME@'';
-	prec.relname := ''sl_archive_counter'';
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_archive_counter';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''pg_catalog'';
-	prec.relname := ''pg_listener'';
+	prec.nspname := 'pg_catalog';
+	prec.relname := 'pg_listener';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
-	prec.nspname := ''pg_catalog'';
-	prec.relname := ''pg_statistic'';
+	prec.nspname := 'pg_catalog';
+	prec.relname := 'pg_statistic';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
 
    return;
 end
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.TablesToVacuum () is 
 'Return a list of tables that require frequent vacuuming.  The
@@ -5739,7 +5738,7 @@ function is used so that the list is not hardcoded into C code.';
 -- FUNCTION add_empty_table_to_replication (set_id, tab_id, tab_nspname,
 --         tab_tabname, tab_idxname, tab_comment)
 -- -------------------------------------------------------------------------
-create or replace function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) returns bigint as '
+create or replace function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) returns bigint as $$
 declare
   p_set_id alias for $1;
   p_tab_id alias for $2;
@@ -5760,37 +5759,37 @@ begin
 -- Need to validate that the set exists; the set will tell us if this is the origin
   select set_origin into v_origin from @NAMESPACE@.sl_set where set_id = p_set_id;
   if not found then
-	raise exception ''add_empty_table_to_replication: set % not found!'', p_set_id;
+	raise exception 'add_empty_table_to_replication: set % not found!', p_set_id;
   end if;
 
 -- Need to be aware of whether or not this node is origin for the set
-   v_isorigin := ( v_origin = @NAMESPACE@.getLocalNodeId(''_@CLUSTERNAME@'') );
+   v_isorigin := ( v_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') );
 
-   v_fqname := ''"'' || p_nspname || ''"."'' || p_tabname || ''"'';
+   v_fqname := '"' || p_nspname || '"."' || p_tabname || '"';
 -- Take out a lock on the table
-   v_query := ''lock '' || v_fqname || '';'';
+   v_query := 'lock ' || v_fqname || ';';
    execute v_query;
 
    if v_isorigin then
 	-- On the origin, verify that the table is empty, failing if it has any tuples
-        v_query := ''select 1 as tuple from '' || v_fqname || '' limit 1;'';
+        v_query := 'select 1 as tuple from ' || v_fqname || ' limit 1;';
 	execute v_query into prec;
         GET DIAGNOSTICS v_rows = ROW_COUNT;
 	if v_rows = 0 then
-		raise notice ''add_empty_table_to_replication: table % empty on origin - OK'', v_fqname;
+		raise notice 'add_empty_table_to_replication: table % empty on origin - OK', v_fqname;
 	else
-		raise exception ''add_empty_table_to_replication: table % contained tuples on origin node %'', v_fqname, v_origin;
+		raise exception 'add_empty_table_to_replication: table % contained tuples on origin node %', v_fqname, v_origin;
 	end if;
    else
 	-- On other nodes, TRUNCATE the table
-        v_query := ''truncate '' || v_fqname || '';'';
+        v_query := 'truncate ' || v_fqname || ';';
 	execute v_query;
    end if;
 -- If p_idxname is NULL, then look up the PK index, and RAISE EXCEPTION if one does not exist
    if p_idxname is NULL then
 	select c2.relname into prec from pg_catalog.pg_index i, pg_catalog.pg_class c1, pg_catalog.pg_class c2, pg_catalog.pg_namespace n where i.indrelid = c1.oid and i.indexrelid = c2.oid and c1.relname = p_tabname and i.indisprimary and n.nspname = p_nspname and n.oid = c1.relnamespace;
 	if not found then
-		raise exception ''add_empty_table_to_replication: table % has no primary key and no candidate specified!'', v_fqname;
+		raise exception 'add_empty_table_to_replication: table % has no primary key and no candidate specified!', v_fqname;
 	else
 		v_idxname := prec.relname;
 	end if;
@@ -5799,7 +5798,7 @@ begin
    end if;
    return @NAMESPACE@.setAddTable_int(p_set_id, p_tab_id, v_fqname, v_idxname, p_comment);
 end
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) is
 'Verify that a table is empty, and add it to replication.  
@@ -5809,7 +5808,7 @@ tab_idxname is optional - if NULL, then we use the primary key.';
 -- FUNCTION replicate_partition (tab_id, tab_nspname, tab_tabname,
 --         tab_idxname, tab_comment)
 -- -------------------------------------------------------------------------
-create or replace function @NAMESPACE@.replicate_partition(int4, text, text, text, text) returns bigint as '
+create or replace function @NAMESPACE@.replicate_partition(int4, text, text, text, text) returns bigint as $$
 declare
   p_tab_id alias for $1;
   p_nspname alias for $2;
@@ -5825,13 +5824,13 @@ begin
 -- Look up the parent table; fail if it does not exist
    select c1.oid into prec from pg_catalog.pg_class c1, pg_catalog.pg_class c2, pg_catalog.pg_inherits i, pg_catalog.pg_namespace n where c1.oid = i.inhparent  and c2.oid = i.inhrelid and n.oid = c2.relnamespace and n.nspname = p_nspname and c2.relname = p_tabname;
    if not found then
-	raise exception ''replicate_partition: No parent table found for %.%!'', p_nspname, p_tabname;
+	raise exception 'replicate_partition: No parent table found for %.%!', p_nspname, p_tabname;
    end if;
 
 -- The parent table tells us what replication set to use
    select tab_set into prec2 from @NAMESPACE@.sl_table where tab_reloid = prec.oid;
    if not found then
-	raise exception ''replicate_partition: Parent table % for new partition %.% is not replicated!'', prec.oid, p_nspname, p_tabname;
+	raise exception 'replicate_partition: Parent table % for new partition %.% is not replicated!', prec.oid, p_nspname, p_tabname;
    end if;
 
    v_set_id := prec2.tab_set;
@@ -5839,10 +5838,9 @@ begin
 -- Now, we have all the parameters necessary to run add_empty_table_to_replication...
    return @NAMESPACE@.add_empty_table_to_replication(v_set_id, p_tab_id, p_nspname, p_tabname, p_idxname, p_comment);
 end
-' language plpgsql;
+$$ language plpgsql;
 
 comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text) is
 'Add a partition table to replication.
 tab_idxname is optional - if NULL, then we use the primary key.
 This function looks up replication configuration via the parent table.';
-
