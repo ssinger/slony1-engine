@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.142 2008-08-06 22:05:45 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.143 2008-08-08 17:52:48 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3543,8 +3543,8 @@ begin
 	-- ----
 	-- Update it to the new value
 	-- ----
-	execute 'select setval('' || v_fqname ||
-			'', '' || p_last_value || '')';
+	execute 'select setval(''' || v_fqname ||
+			''', ' || p_last_value || ')';
 
 	insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
