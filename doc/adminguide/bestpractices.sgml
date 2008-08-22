@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.34 2008-04-21 21:31:23 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.35 2008-08-22 22:38:19 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -176,13 +176,15 @@ across a dozen servers turns out to be inconvenient to manage.</para>
 <quote>network context</quote> as the node that each is responsible
 for managing so that the connection to that node is a
 <quote>local</quote> one.  Do <emphasis>not</emphasis> run such links
-across a WAN. </para>
+across a WAN.  Thus, if you have nodes in London and nodes in New
+York, the &lslon;s managing London nodes should run in London, and the
+&lslon;s managing New York nodes should run in New York.</para>
 
-<para> A WAN outage can leave database connections
-<quote>zombied</quote>, and typical TCP/IP behaviour <link
-linkend="multipleslonconnections"> will allow those connections to
-persist, preventing a slon restart for around two hours. </link>
-</para>
+<para> A WAN outage (or flakiness of the WAN in general) can leave
+database connections <quote>zombied</quote>, and typical TCP/IP
+behaviour <link linkend="multipleslonconnections"> will allow those
+connections to persist, preventing a slon restart for around two
+hours. </link> </para>
 
 <para> It is not difficult to remedy this; you need only <command>kill
 SIGINT</command> the offending backend connection.  But by running the
@@ -205,10 +207,10 @@ half-processed, there's no problem: the transaction will roll back,
 and when the &lslon; restarts, it will restart that event from
 scratch.</para>
 
-<para> The exception, where it is undesirable to restart a &lslon;, is
-where a <command>COPY_SET</command> is running on a large replication
-set, such that stopping the &lslon; may discard several hours worth of
-load work. </para>
+<para> The exception scenario where it is undesirable to restart a
+&lslon; is where a <command>COPY_SET</command> is running on a large
+replication set, such that stopping the &lslon; may discard several
+hours worth of load work. </para>
 
 <para> In early versions of &slony1;, it was frequently the case that
 connections could get a bit <quote>deranged</quote> which restarting
