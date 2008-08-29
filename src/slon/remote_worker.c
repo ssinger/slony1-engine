@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.175 2008-08-01 22:45:18 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.176 2008-08-29 21:06:45 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2451,18 +2451,22 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	}
 	if (sub_provider < 0) {
 		rtcfg_unlock();
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: provider node for set %"
-				 "not found in runtime configuration\n",
-				 set_id);
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: provider node %d for set %d"
+			 "not found in runtime configuration\n",
+			 node->no_id,
+			 sub_provider,
+			 set_id);
 		slon_terminate_worker();
 		return -1;
 		
 	}
 	if (set_origin < 0) {
 		rtcfg_unlock();
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: origin node for set %"
-				 "not found in runtime configuration\n",
-				 set_id);
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: origin node %d for set %d "
+			 "not found in runtime configuration\n",
+			 node->no_id, 
+			 set_origin,
+			 set_id);
 		slon_terminate_worker();
 		return -1;
 	}
