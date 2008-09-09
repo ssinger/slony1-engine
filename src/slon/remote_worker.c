@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.86.2.17 2007-03-06 18:47:24 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.86.2.18 2008-09-09 21:29:55 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2751,7 +2751,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
 		{
 			slon_mkquery(&query1,
-				     "select %s.storeTrigger(%d, '%q'); ",
+				     "select %s.storeTrigger_int(%d, '%q'); ",
 				     rtcfg_namespace, tab_id, PQgetvalue(res2, tupno2, 0));
 			if (query_execute(node, loc_dbconn, &query1) < 0)
 			{
