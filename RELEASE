@@ -1,4 +1,12 @@
-$Id: RELEASE,v 1.1.2.31 2008-07-07 20:00:09 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.32 2008-09-12 16:12:54 cbbrowne Exp $
+Release 1.2.16
+- Fix to STORE TRIGGER - store trigger was running against all nodes
+  upon subscription
+
+  http://www.slony.info/bugzilla/show_bug.cgi?id=56
+
+- Portability changes to some tools/ scripts, fixing some
+  "bash-isms"
 
 Release 1.2.15
 
