@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.29 2008-09-12 16:04:39 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.30 2008-09-12 16:11:25 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3540,6 +3540,16 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
+	-- Do nothing if the sl_trigger entry already exists.
+	-- ----
+	if exists (select 1 from @NAMESPACE@.sl_trigger
+				where trig_tabid = p_trig_tabid
+				  and trig_tgname = p_trig_tgname)
+		then
+		return 0;
+	end if;
 
 	-- ----
 	-- Get the current table status (altered or not)
