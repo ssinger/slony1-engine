@@ -1,5 +1,5 @@
-$Id: RELEASE,v 1.1.2.32 2008-09-12 16:12:54 cbbrowne Exp $
-Release 1.2.16
+$Id: RELEASE,v 1.1.2.33 2008-09-12 17:37:48 cbbrowne Exp $
+Release 1.2.15
 - Fix to STORE TRIGGER - store trigger was running against all nodes
   upon subscription
 
@@ -7,8 +7,6 @@ Release 1.2.16
 
 - Portability changes to some tools/ scripts, fixing some
   "bash-isms"
-
-Release 1.2.15
 
 - Fix to switch statement in slonik.c; unknown how it broke
 
