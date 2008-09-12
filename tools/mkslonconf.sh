@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkslonconf.sh,v 1.2 2006-05-31 21:11:29 cbbrowne Exp $
+# $Id: mkslonconf.sh,v 1.2.2.1 2008-09-12 16:09:23 cbbrowne Exp $
 # mkslonconf.sh
 # Build a set of slon.conf files compatible with launch_clusters.sh
 
@@ -156,7 +156,7 @@ while read line <&3; do
     conffile="${MKDESTINATION}/${SLONYCLUSTER}/conf/node${node}.conf"
     echo "Generating slon conf file $conffile"
 
-    if [[ -e $conffile ]] ; then
+    if [ -e $conffile ] ; then
 	echo "config file $conffile already exists."
 	echo "Do you want to (Overwrite) it or (Skip) it (Anything else aborts) [Overwrite|Skip]?"
 	read nl

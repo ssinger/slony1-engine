@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pull-gborg-mail.sh,v 1.1 2006-09-07 16:27:28 cbbrowne Exp $
+# $Id: pull-gborg-mail.sh,v 1.1.2.1 2008-09-12 16:09:23 cbbrowne Exp $
 # This script downloads email archives from gBorg
 # Parameters:
 #  1.  If need be, change ARCHHOME to be some more suitable location for mailing list archives
@@ -16,7 +16,7 @@ ARCHHOME=$HOME/Slony-I/MailingListArchives
 
 ARG=$1
 
-if [[ x$ARG == "xINIT" ]] ; then
+if [ x$ARG = "xINIT" ] ; then
    for year in 2004 2005 2006; do
      for month in January February March April May June July August September October November December; do
        for arch in commit general; do

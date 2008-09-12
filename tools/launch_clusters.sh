@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.2.2.3 2007-10-04 15:17:38 cbbrowne Exp $
+# $Id: launch_clusters.sh,v 1.2.2.4 2008-09-12 16:09:23 cbbrowne Exp $
 # Cluster starter
 
 # This script should be run periodically to search for slon
@@ -60,7 +60,7 @@ start_slon_if_needed () {
     NODENUM=$2
     LOGHOME=$3
 
-    if [[ -e $CONFIGPATH/conf/node${NODENUM}.conf ]] ; then
+    if [ -e $CONFIGPATH/conf/node${NODENUM}.conf ]; then
 	SLONCONF="$CONFIGPATH/conf/node${NODENUM}.conf"
 	SLONPIDFILE=`grep "^ *pid_file=" $SLONCONF | cut -d "=" -f 2 | cut -d "#" -f 1 | cut -d " " -f 1 | cut -d "'" -f 2`
 	CLUSTER=`grep "^ *cluster_name=" $SLONCONF | cut -d "=" -f 2 | cut -d "'" -f 2`
@@ -84,11 +84,11 @@ start_slon_if_needed () {
 	      BPS="ps"
 	      ;;
     esac
-    if [[ -e $SLONPIDFILE ]] ; then
+    if [ -e $SLONPIDFILE ] ; then
 	SLONPID=`cat $SLONPIDFILE`
 
 	FINDIT=`ps -p ${SLONPID} -o ${PSCOMM}= | grep slon`
-	if [[ -z $FINDIT ]]; then
+	if [ -z $FINDIT ]; then
         # Need to restart slon
 	    log_action "slon died for config $CONFIGPATH/conf/node${NODENUM}.conf"
 	    invoke_slon $LOGHOME $NODENUM $CLUSTER $SLONCONF
@@ -97,7 +97,7 @@ start_slon_if_needed () {
 	fi
     else
         ${BPS} auxww | egrep "[s]lon -f $CONFIGPATH/conf/node${NODENUM}.conf" > /dev/null
-	if [[ $? -eq 0 ]] ; then 	
+	if [ $? -eq 0 ] ; then 	
             echo "Slon already running - but PID marked dead"
 	else
 	    invoke_slon $LOGHOME $NODENUM $CLUSTER $SLONCONF
