@@ -1897,7 +1897,7 @@ STORE TRIGGER (
 
     <para> This operation will need to acquire an exclusive lock on
     the specified table on each node to which it applies in order to
-    alter table schemas to add back the trigger, but only briefly. </para>
+    alter table schemas to add back the trigger, but (hopefully!) only briefly. </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
