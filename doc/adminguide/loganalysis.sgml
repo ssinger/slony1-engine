@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.12 2007-12-20 00:56:46 dfetter Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.13 2008-09-18 21:29:36 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -1059,6 +1059,15 @@ comes in concurrently from two sources... </para> </listitem>
 <para> Happens if the &lslon; is unaware of this node; probably a sign
 of <command>STORE_NODE</command> requests not
 propagating... </para> </listitem>
+
+<listitem><para><command>insert or update on table "sl_path" violates
+foreign key constraint "pa_client-no_id-ref".  DETAIL: Key
+(pa_client)=(2) is not present on table "s1_node</command></para>
+
+<para> This happens if you try to do <xref linkend="stmtsubscribeset">
+when the node unaware of a would-be new node; probably a sign of
+<command>STORE_NODE</command> and <command>STORE_PATH</command>
+requests not propagating... </para> </listitem>
 </itemizedlist>
 </sect3>
 </sect2>
