@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.143 2008-08-08 17:52:48 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.144 2008-09-18 21:26:29 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4522,7 +4522,7 @@ declare
 	v_rc            int8;
 begin
 	-- ----
-	-- First remove all but the oldest confirm row per origin,receiver pair
+	-- First remove all confirmations where origin/receiver no longer exist
 	-- ----
 	delete from @NAMESPACE@.sl_confirm
 				where con_origin not in (select no_id from @NAMESPACE@.sl_node);
