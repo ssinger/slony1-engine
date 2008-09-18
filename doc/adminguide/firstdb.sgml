@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.28 2008-05-12 15:10:28 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.29 2008-09-18 21:30:08 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -30,7 +30,7 @@ configuration:
 <itemizedlist>
 
 <listitem><para> You have <option>tcpip_socket=true</option> in your
-<filename>postgresql.conf</filename> and</para></listitem>
+<filename>postgresql.conf</filename>;</para> <note> <para> This is no longer needed for &postgres; 8.0 and later versions.</para></note> </listitem>
 
 <listitem><para> You have enabled access in your cluster(s) via
 <filename>pg_hba.conf</filename></para></listitem>
@@ -158,6 +158,24 @@ database running on localhost as the pgbench user.
 and configuration is all done through the <xref linkend="slonik">
 tool. It is a specialized scripting aid that mostly calls stored
 procedures in the master/slave (node) databases. </para>
+
+<para> The example that follows uses <xref linkend="slonik"> directly
+(or embedded directly into scripts).  This is not necessarily the most
+pleasant way to get started; there exist tools for building <xref
+linkend="slonik"> scripts under the <filename>tools</filename>
+directory, including:</para>
+<itemizedlist>
+<listitem><para> <xref linkend="altperl"> - a set of Perl scripts that
+build <xref linkend="slonik"> scripts based on a single
+<filename>slon_tools.conf</filename> file. </para> </listitem>
+
+<listitem><para> <xref linkend="mkslonconf"> - a shell script
+(<emphasis>e.g.</emphasis> - works with Bash) which, based either on
+self-contained configuration or on shell environment variables,
+generates a set of <xref linkend="slonik"> scripts to configure a
+whole cluster. </para> </listitem>
+
+</itemizedlist>
 
 <sect3><title>Using slonik command directly</title>
 
