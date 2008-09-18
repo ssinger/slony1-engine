@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.45 2008-08-01 22:45:18 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.46 2008-09-18 21:28:45 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -348,7 +348,7 @@ may have a packaged version of this under some similar name. </para>
 <sect2> <title> Analysis of a SYNC </title>
 
 <para> The following is (as of 2.0) an extract from the &lslon; log for node
-#2 in a run of <quote>test1</test> from the <xref linkend="testbed">. </para>
+#2 in a run of <quote>test1</quote> from the <xref linkend="testbed">. </para>
 
 <screen>
 DEBUG2 remoteWorkerThread_1: SYNC 19 processing
