@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.25 2008-07-15 22:28:22 cbbrowne Exp $
+# $Id: run_test.sh,v 1.26 2008-09-23 20:31:09 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -504,7 +504,7 @@ build_slonconf()
     echo "conn_info='${conninfo}'" >> ${CONFFILE}
     echo "desired_sync_time=60000" >> ${CONFFILE}
     echo "sql_on_connection=\"SET log_min_duration_statement to '1000';\"" >> ${CONFFILE}
-    echo "lag_interval=\"0 minutes\"" >> ${CONFFILE}
+    echo "lag_interval=\"2 seconds\"" >> ${CONFFILE}
     if [ "x${archive}" = "xtrue" ]; then
 	status "slonconf configures archive logging for node ${node}"
 	echo "archive_dir='${mktmp}/archive_logs_${node}'" >> ${CONFFILE}
