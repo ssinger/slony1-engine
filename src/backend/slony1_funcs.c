@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.67 2008-05-26 21:09:48 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.68 2008-09-24 19:54:09 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -28,6 +28,9 @@
 #include "utils/builtins.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
+#ifdef HAVE_GETACTIVESNAPSHOT
+#include "utils/snapmgr.h"
+#endif
 #ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
 #else
@@ -134,8 +137,13 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	int64		retval;
 	bool		isnull;
 
+#ifdef HAVE_GETACTIVESNAPSHOT
+	if (GetActiveSnapshot() == NULL)
+		elog(ERROR, "Slony-I: ActiveSnapshot is NULL in createEvent()");
+#else
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in createEvent()");
+#endif
 
 	if ((rc = SPI_connect()) < 0)
 		elog(ERROR, "Slony-I: SPI_connect() failed in createEvent()");
