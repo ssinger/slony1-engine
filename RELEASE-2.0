@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.22 2008-07-15 22:28:22 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.23 2008-09-25 14:45:40 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -206,3 +206,10 @@ often.
   Integrated this into the regression tests, replacing previous
   logic for starting/stopping slons, so that this script can be
   considered carefully tested
+
+- Bug #46 - incompatibility with PostgreSQL 8.4 addressed
+
+- Use dollar quoting in stored functions
+
+- Additional logging of the time spent running queries, broken out on
+  a by-database basis
