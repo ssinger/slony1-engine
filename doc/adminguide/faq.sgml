@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.78 2008-04-21 21:32:56 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.79 2008-10-03 16:41:23 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -426,6 +426,29 @@ the nodes are behind, and thus might still depend on older data.
 <question><para> I want to change some of my node numbers.  How do I <quote>rename</quote> a node to have a different node number? </para> </question>
 <answer><para> You don't.  The node number is used to coordinate inter-node communications, and changing the node ID number <quote>on the fly</quote> would make it essentially impossible to keep node configuration coordinated.   </para> </answer>
 </qandaentry>
+
+<qandaentry>
+<question> <para> My application uses OID attributes; is it possible to replicate tables like this? </para>
+</question>
+
+<answer><para> It is worth noting that oids, as a regular table
+attribute, have been deprecated since &postgres; version 8.1, back in
+2005.  &slony1; has <emphasis>never</emphasis> collected oids to
+replicate them, and, with that functionality being deprecated, the
+developers do not intend to add this functionality. </para>
+
+<para> &postgres; implemented oids as a way to link its internal
+system tables together; to use them with application tables is
+considered <emphasis>poor practice</emphasis>, and it is recommended
+that you use sequences to populate your own ID column on application
+tables.  </para> </answer>
+
+<answer><para> Of course, nothing prevents you from creating a table
+<emphasis>without</emphasis> oids, and then add in your own
+application column called <envar>oid</envar>, preferably with type
+information <command>SERIAL NOT NULL UNIQUE</command>, which
+<emphasis>can</emphasis> be replicated, and which is likely to be
+suitable as a candidate primary key for the table. </para> </answer>
 
 </qandadiv>
 
