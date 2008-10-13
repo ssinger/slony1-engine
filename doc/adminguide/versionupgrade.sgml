@@ -1,4 +1,4 @@
-<!-- $Id: versionupgrade.sgml,v 1.10 2008-09-18 21:27:41 cbbrowne Exp $ -->
+<!-- $Id: versionupgrade.sgml,v 1.11 2008-10-13 20:12:55 devrim Exp $ -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
 
 <indexterm><primary>version upgrades for &postgres; using
@@ -171,7 +171,7 @@ in detail what is going on</para>
     <para>
      How to install &slony1; is covered quite well in other parts of
      the documentation (<xref linkend="installation">); we will just
-     provide a quick guide here.
+     provide a quick guide here.</para>
 
       <programlisting>
        wget http://main.slony.info/downloads/1.2/source/slony1-1.2.14.tar.bz2
@@ -220,14 +220,14 @@ in detail what is going on</para>
        <para> How the tables and sequences are arranged in sets</para>
       </listitem>
      </orderedlist>
-
+     </para>
      <para> Make a copy of
       <filename>/data/pgsql-8.2.3/etc/slon_tools.conf-sample</filename>
       to <filename>slon_tools.conf</filename> and open it. The comments
       in this file are fairly self explanatory. Since this is a one time
       replication you will generally not need to split into multiple
       sets. On a production machine running with 500 tables and 100
-      sequences, putting them all in a single set has worked fine.
+      sequences, putting them all in a single set has worked fine.</para>
       
       <orderedlist>
        <para>A few modifications to do:</para>
@@ -258,7 +258,6 @@ in detail what is going on</para>
 	<para>Remove the whole set2 entry (as we are only using set1)</para>
        </listitem>
       </orderedlist>
-     </para>
      <para>
       This is what it look like with all comments stripped out:
       <programlisting>
@@ -310,6 +309,7 @@ $SLONY_SETS = {
 
 1;
       </programlisting>
+      </para>
       <para> As can be seen this database is pretty small with only 8
       tables and 6 sequences. Now copy your
       <filename>slon_tools.conf</filename> into
