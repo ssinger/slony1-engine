@@ -1,4 +1,4 @@
-<!-- $Id: maintenance.sgml,v 1.31 2008-04-07 19:24:02 cbbrowne Exp $ -->
+<!-- $Id: maintenance.sgml,v 1.32 2008-10-13 19:16:27 devrim Exp $ -->
 <sect1 id="maintenance"> <title>&slony1; Maintenance</title>
 
 <indexterm><primary>maintaining &slony1;</primary></indexterm>
@@ -113,6 +113,7 @@ mycluster=# select oid, relname from pg_class where relnamespace = (select oid f
 <envar>pg_catalog.pg_autovacuum</envar> with suitable configuration
 information: <command> INSERT INTO pg_catalog.pg_autovacuum (vacrelid, enabled, vac_base_thresh, vac_scale_factor, anl_base_thresh, anl_scale_factor, vac_cost_delay, vac_cost_limit, freeze_min_age, freeze_max_age) SELECT oid, 'f', -1, -1, -1, -1, -1, -1, -1, -1 FROM pg_catalog.pg_class WHERE relnamespace = (SELECT OID FROM pg_namespace WHERE nspname = '_' || 'MyCluster') AND relhasindex; </command>
 </para>
+</sect2>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
@@ -384,6 +385,7 @@ to be created. This should <emphasis>not</emphasis> be the <filename>/var/servic
 <listitem><para>
 <envar>SLON_BINARY</envar> the full path name of the slon binary (default <command>which slon</command>)</para></listitem>
 </itemizedlist>
+</sect3>
 
 <sect3><title>logrep-mkservice.sh</title>
 
