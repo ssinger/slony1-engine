@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.20 2007-12-20 00:56:46 dfetter Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.21 2008-10-13 20:18:54 devrim Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -402,7 +402,8 @@ run with three sorts of parameters:</para>
 <listitem><para> <command>ignore namespace "public";</command></para> <para> One may filter out entire namespaces  from log shipped replication </para> </listitem>
 <listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
 <listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
-<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> 
+<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> </listitem>
+</itemizedlist>
 
 <para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
 
@@ -421,7 +422,6 @@ run with three sorts of parameters:</para>
 
 <para> In the example shown, this sends an email to the DBAs upon
 encountering an error.</para> </listitem>
-</itemizedlist>
 
 <listitem><para> Archive File Names</para>
 
