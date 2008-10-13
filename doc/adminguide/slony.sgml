@@ -1,4 +1,4 @@
-<!-- $Id: slony.sgml,v 1.42 2008-05-26 18:46:21 cbbrowne Exp $ -->
+<!-- $Id: slony.sgml,v 1.43 2008-10-13 19:48:06 devrim Exp $ -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -123,7 +123,7 @@
  &help;
  &supportedplatforms;
  &releasechecklist;
-
+</article>
 <article id="faq">
 
 <title>Slony-I FAQ</title>

@@ -1,4 +1,4 @@
-<!-- $Id: partitioning.sgml,v 1.1 2007-09-05 21:35:25 cbbrowne Exp $ -->
+<!-- $Id: partitioning.sgml,v 1.2 2008-10-13 19:48:06 devrim Exp $ -->
 <sect1 id="partitioning">
 <title>Partitioning Support </title>
 <indexterm><primary>partitioning</primary></indexterm>
@@ -106,6 +106,7 @@ tables are partitioned.  Therefore, this approach may also be used
 with confidence to add any table to replication that is known to be
 empty. </para> </note>
 
+</sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file
