@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.51 2008-08-01 19:32:24 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.52 2008-10-13 21:27:10 devrim Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -367,8 +367,8 @@ section... </para>
 &slony1; version 2.0; it provides automatable ways of:</para>
 
 <itemizedlist>
-<listitem><para>Starting the &lslon;, via <command> start_slon.sh start </command> </para> 
-
+<listitem><para>Starting the &lslon;, via <command> start_slon.sh start </command> </para> </listitem>
+</itemizedlist>
 <para> Attempts to start the &lslon;, checking first to verify that it
 is not already running, that configuration exists, and that the log
 file location is writable.  Failure cases include:</para>
@@ -377,7 +377,6 @@ file location is writable.  Failure cases include:</para>
 <listitem><para> No <link linkend="runtime-config"> slon runtime configuration file </link> exists, </para></listitem>
 <listitem><para> A &lslon; is found with the PID indicated via the runtime configuration, </para></listitem>
 <listitem><para> The specified <envar>SLON_LOG</envar> location is not writable. </para></listitem>
-</listitem>
 <listitem><para>Stopping the &lslon;, via <command> start_slon.sh stop </command> </para> 
 <para> This fails (doing nothing) if the PID (indicated via the runtime configuration file) does not exist; </para> </listitem>
 <listitem><para>Monitoring the status of the &lslon;, via <command> start_slon.sh status </command> </para> 
@@ -738,7 +737,7 @@ new node. </para>
 
 <itemizedlist>
 <listitem><para> <filename> schema.sql </filename> </para> 
-<para> This is drawn from the origin node, and contains the <quote>pristine</quote> database schema that must be applied first.</listitem>
+<para> This is drawn from the origin node, and contains the <quote>pristine</quote> database schema that must be applied first.</para></listitem>
 <listitem><para> <filename> slonik.preamble </filename> </para> 
 
 <para> This <quote>preamble</quote> is used by the subsequent set of slonik scripts. </para> </listitem>
