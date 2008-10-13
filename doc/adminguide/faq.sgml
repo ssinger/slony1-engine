@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.79 2008-10-03 16:41:23 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.80 2008-10-13 20:07:27 devrim Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -449,7 +449,7 @@ application column called <envar>oid</envar>, preferably with type
 information <command>SERIAL NOT NULL UNIQUE</command>, which
 <emphasis>can</emphasis> be replicated, and which is likely to be
 suitable as a candidate primary key for the table. </para> </answer>
-
+</qandaentry>
 </qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
