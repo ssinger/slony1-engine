@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.8 2007-08-22 22:05:48 cbbrowne Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.9 2008-10-13 21:32:22 devrim Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -145,7 +145,8 @@ primary key, some set of NOT NULL, UNIQUE columns.  </para>
 
 <para> The possible variations to this are the reason that the
 developers have made no effort to try to assist automation of
-this.</para>
+this.</para></listitem>
+</itemizedlist>
 
 <itemizedlist>
 
@@ -174,7 +175,8 @@ complete. </para>
 </listitem>
 
 </itemizedlist>
-</listitem>
+
+<itemizedlist>
 
 <listitem><para> Create a new replication set (<xref
 linkend="stmtcreateset">) and re-add the table to that set (<xref
@@ -250,6 +252,7 @@ syntax for <command>ALTER TABLE</command>, as that is how they can
 accomplish what was formerly accomplished via <xref
 linkend="stmtstoretrigger"> and <xref linkend="stmtdroptrigger">. </para>
 
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

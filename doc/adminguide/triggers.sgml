@@ -1,16 +1,17 @@
-<!-- $Id: triggers.sgml,v 1.2 2008-04-18 16:53:11 cbbrowne Exp $ --> 
+<!-- $Id: triggers.sgml,v 1.3 2008-10-13 21:36:45 devrim Exp $ --> 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>
 
 <para> &slony1; has had two <quote>flavours</quote> of trigger
-handling:
+handling:</para>
 <itemizedlist>
 
 <listitem><para> In versions up to 1.2, &postgres; had no awareness of
 replication, with the result that &slony1; needed to
 <quote>hack</quote> on the system catalog in order to deactivate, on
-subscribers, triggers that ought not to run.</para>
+subscribers, triggers that ought not to run.</para></listitem>
+</itemizedlist>
 
 <para> This has had a number of somewhat painful side-effects including:</para> 
 <itemizedlist>
@@ -35,10 +36,14 @@ processing.</para></listitem>
 
 </itemizedlist>
 
+<itemizedlist>
+
 <listitem><para> In &postgres; version 8.3, there is new functionality
 where triggers and rules can have their behaviour altered via
 <command>ALTER TABLE</command>, and specify any of the following
-further trigger-related options:</para>
+further trigger-related options:</para></listitem>
+
+</itemizedlist>
 
 <itemizedlist>
 
@@ -60,7 +65,7 @@ controls whether or not the trigger function actually runs. </para>
 
 <para> We may characterize when triggers fire, under &slony1;
 replication, based on the following table; the same rules apply to
-&postgres; rules.
+&postgres; rules.</para>
 
 <table id="triggerbehaviour"> <title> Trigger Behaviour </title>
 <tgroup cols="7">
@@ -73,6 +78,8 @@ replication, based on the following table; the same rules apply to
 <row> <entry>ENABLE REPLICA TRIGGER</entry> <entry>User request</entry> <entry>inappropriate</entry> <entry>inappropriate</entry> <entry>does not fire</entry>  <entry>fires</entry>  <entry>does not fire</entry> </row>
 <row> <entry>ENABLE ALWAYS TRIGGER</entry> <entry>User request</entry> <entry>inappropriate</entry> <entry>inappropriate</entry> <entry>fires</entry>  <entry>fires</entry>  <entry>fires</entry> </row>
 </tbody>
+</tgroup>
+</table>
 
 <para> There are, correspondingly, now, several ways in which &slony1;
 interacts with this.  Let us outline those times that are interesting:

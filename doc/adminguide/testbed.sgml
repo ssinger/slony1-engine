@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.18 2008-04-08 22:12:27 cbbrowne Exp $ -->
+<!-- $Id: testbed.sgml,v 1.19 2008-10-13 21:39:40 devrim Exp $ -->
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
@@ -196,7 +196,7 @@ linkend="logshipping">, and a &lslon; is not required for this node.
 typically handled in <filename>settings.ik</filename> for a given
 test, then configuration will be set up in a <link
 linkend="runtime-config"> per-node <filename>slon.conf</filename>
-runtime config file. </link> </para> 
+runtime config file. </link> </para> </glossdef>
 </glossentry>
 
 <glossentry>
