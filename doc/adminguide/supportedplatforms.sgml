@@ -1,4 +1,4 @@
-<article id="supportedplatforms">
+<sect1 id="supportedplatforms">
 <title>&slony1; Supported Platforms</title>
 
 <indexterm><primary>platforms supported</primary></indexterm>
@@ -176,7 +176,7 @@ Mailing List</ulink> and ask your questions.</para>
  </tbody>
    </tgroup>
   </table>
-</article>
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

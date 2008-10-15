@@ -1,5 +1,5 @@
-<!-- $Id: releasechecklist.sgml,v 1.11 2008-04-14 10:35:01 devrim Exp $ -->
-<article id="releasechecklist"> <title> Release Checklist </title>
+<!-- $Id: releasechecklist.sgml,v 1.12 2008-10-15 21:51:54 cbbrowne Exp $ -->
+<sect1 id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
 
@@ -147,7 +147,7 @@ everyone that they should test them out ASAP based on the Standard
 Test Plan. </para></listitem>
 
 </itemizedlist>
-</article>
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

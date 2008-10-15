@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.9 2008-10-13 21:32:22 devrim Exp $ -->
+<!-- $Id: slonyupgrade.sgml,v 1.10 2008-10-15 21:51:54 cbbrowne Exp $ -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
@@ -100,7 +100,7 @@ perform.  </para>
 <para> One may identify the tables affected via the following SQL
 query: <command> select n.nspname, c.relname from pg_class c,
 pg_namespace n where c.oid in (select attrelid from pg_attribute where
-attname like '_Slony-I_%rowID' and not attisdropped) and reltype <> 0
+attname like '_Slony-I_%rowID' and not attisdropped) and reltype &lt;&gt; 0
 and n.oid = c.relnamespace order by n.nspname, c.relname; </command>
 </para>
 
