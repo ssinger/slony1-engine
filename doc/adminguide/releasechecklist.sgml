@@ -1,4 +1,4 @@
-<!-- $Id: releasechecklist.sgml,v 1.12 2008-10-15 21:51:54 cbbrowne Exp $ -->
+<!-- $Id: releasechecklist.sgml,v 1.13 2008-10-21 13:58:16 devrim Exp $ -->
 <sect1 id="releasechecklist"> <title> Release Checklist </title>
 
 <indexterm><primary>release checklist</primary></indexterm>
@@ -97,11 +97,10 @@ automatically, somehow.</para>
 created, for example <filename>slony/conf-file.[ch]</filename> </para>
 
 <para> Currently this is best done by issuing <command> ./configure &&
-make all && make clean</command> but that is a somewhat ugly approach.
+make all && make clean</command> but that is a somewhat ugly approach.</para>
 
 <para> Slightly better may be <command> ./configure && make
 src/slon/conf-file.c src/slonik/parser.c src/slonik/scan.c </command>
-
 </para></listitem> 
 
 <listitem><para> Make sure that generated Makefiles and such from the
