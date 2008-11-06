@@ -1350,7 +1350,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <refsect1>
     <title>Description</title>
     
-    <para> Add an existing usep table to a replication set. The set
+    <para> Add an existing user table to a replication set. The set
     cannot currently be subscribed by any other node - that
     functionality is supported by the <xref linkend="stmtmergeset">
     command.
