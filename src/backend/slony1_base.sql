@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.39 2008-02-14 22:21:42 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.40 2008-11-17 22:40:27 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -148,7 +148,7 @@ create table @NAMESPACE@.sl_sequence (
 comment on table @NAMESPACE@.sl_sequence is 'Similar to sl_table, each entry identifies a sequence being replicated.';
 comment on column @NAMESPACE@.sl_sequence.seq_id is 'An internally-used ID for Slony-I to use in its sequencing of updates';
 comment on column @NAMESPACE@.sl_sequence.seq_reloid is 'The OID of the sequence object';
-comment on column @NAMESPACE@.sl_sequence.seq_relname is 'The name of the sdequence in pg_catalog.pg_class.relname used to recover from a dump/restore cycle'; 
+comment on column @NAMESPACE@.sl_sequence.seq_relname is 'The name of the sequence in pg_catalog.pg_class.relname used to recover from a dump/restore cycle'; 
 comment on column @NAMESPACE@.sl_sequence.seq_nspname is 'The name of the schema in pg_catalog.pg_namespace.nspname used to recover from a dump/restore cycle'; 
 comment on column @NAMESPACE@.sl_sequence.seq_set is 'Indicates which replication set the object is in';
 comment on column @NAMESPACE@.sl_sequence.seq_comment is 'A human-oriented comment';
