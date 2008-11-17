@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: ipcutil.c,v 1.3 2007-09-27 18:02:52 wieck Exp $
+ *	$Id: ipcutil.c,v 1.4 2008-11-17 22:35:16 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -448,9 +448,11 @@ ipc_recv_path(char *buf)
 		/*
 		 * Receive one single message blocking for it.
 		 */
-		rc = msgrcv(msgid, &msg, sizeof(msg), 0, 0);
+		rc = msgrcv(msgid, &msg, sizeof(msg), 0, IPC_NOWAIT);
 		if (rc < 0)
 		{
+			if (errno == ENOMSG)
+				return -1;
 			if (errno == EINTR)
 				continue;
 
