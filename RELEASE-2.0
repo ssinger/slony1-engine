@@ -1,4 +1,4 @@
-$Id: RELEASE-2.0,v 1.23 2008-09-25 14:45:40 cbbrowne Exp $
+$Id: RELEASE-2.0,v 1.24 2008-11-17 22:47:45 cbbrowne Exp $
 
 Differences from 1.2 stream
 
@@ -213,3 +213,11 @@ often.
 
 - Additional logging of the time spent running queries, broken out on
   a by-database basis
+
+- Fixes to documentation of WAIT FOR EVENT
+
+- Fix to bug #63 - cleanup thread had an imperative SELECT that needed
+  to become part of an IF statement
+
+- Enhancement - bug #61 - logshipper process should rescan the queue
+  when it empties
