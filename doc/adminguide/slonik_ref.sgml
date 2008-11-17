@@ -1360,8 +1360,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
        <listitem><para> ID of the set to which the table is to be added. </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
-       <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+       <listitem><para> Origin node for the set.  We might imagine a future version of <application>slonik</application>
+	 figuring out this information by itself, but there do lie race conditions, there.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
 
@@ -2908,11 +2908,11 @@ WAIT FOR EVENT (
     <programlisting>
      # Assuming that set 1 has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
-     SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT ON=1);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
