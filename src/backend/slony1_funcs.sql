@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.144 2008-09-18 21:26:29 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145 2008-11-17 22:39:47 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5192,8 +5192,7 @@ BEGIN
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
 	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 		loop
-			select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin limit 1;		
-			if exists then
+			if exists (select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin limit 1) then
 				v_purgeable := 'false';
 			end if;
 	        end loop;
