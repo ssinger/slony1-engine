@@ -92,6 +92,6 @@ do_initdata()
   if [ $rc -ne 0 ]; then
       warn 3 "cleanupEvent() failed - rc=${rc} see $mktmp/cleanupevent.log* for details"
   fi
-  status "completed cleanupEevent(${pint},${dellogs}) test"
+  status "completed cleanupEvent(${pint},${dellogs}) test"
   status "done"
 }
