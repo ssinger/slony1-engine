@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.c,v 1.78 2008-08-01 19:49:39 cbbrowne Exp $
+ *	$Id: slon.c,v 1.79 2008-11-24 15:06:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -949,6 +949,7 @@ sighandler(int signo)
 			break;
 	}
 }
+#endif
 
 /* ---------- 
  * slon_terminate_worker 
@@ -957,6 +958,7 @@ sighandler(int signo)
 void
 slon_terminate_worker()
 {
+#ifndef WIN32 /* does not support in windows. */
 	slon_log(SLON_INFO, "slon: notify worker process to shutdown\n");
 
 	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
@@ -968,8 +970,8 @@ slon_terminate_worker()
         (void) close(sched_wakeuppipe[0]);
 	(void) close(sched_wakeuppipe[1]);
 	(void) alarm(20);
-}
 #endif
+}
 
 /* ---------- 
  * slon_exit 
