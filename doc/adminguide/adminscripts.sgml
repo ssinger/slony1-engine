@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.52 2008-10-13 21:27:10 devrim Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.53 2008-12-15 23:30:17 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -619,7 +619,7 @@ scripts.</para>
 permanently to use with future maintenance you may want to do on the
 cluster.</para></listitem>
 
-<listitem><para> <filename>create_set.slonik</filename></para>
+<listitem><para> <filename>create_nodes.slonik</filename></para>
 
 <para>This is the first script to run; it sets up the requested nodes
 as being &slony1; nodes, adding in some &slony1;-specific config
