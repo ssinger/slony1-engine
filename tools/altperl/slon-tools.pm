@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.32 2008-03-06 19:21:31 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.32.2.1 2008-12-18 17:54:20 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -117,7 +117,7 @@ sub get_pid {
   my $tpid;
   my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME\" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
+  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
   #print "Command:\n$command\n";
   open(PSOUT, "$command|");
   while ($tpid = <PSOUT>) {
