@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.1 2008-12-18 21:27:49 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.2 2008-12-18 21:35:03 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -407,7 +407,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 0;
+	return 1;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
