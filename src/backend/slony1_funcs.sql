@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.2 2008-12-18 21:35:03 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.3 2008-12-18 21:56:20 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1361,7 +1361,7 @@ begin
 				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
 				values
 				(p_backup_node, "pg_catalog".nextval('@NAMESPACE@.sl_event_seq'), CURRENT_TIMESTAMP,
-				'0', '0', '0:0:',
+				pg_catalog.txid_current_snapshot(),
 				'ACCEPT_SET', p_set_id::text,
 				p_failed_node::text, p_backup_node::text,
 				p_wait_seqno::text);
