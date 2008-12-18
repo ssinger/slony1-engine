@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145 2008-11-17 22:39:47 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.1 2008-12-18 21:27:49 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5424,10 +5424,6 @@ begin
 		-- ----
 		execute 'alter table @NAMESPACE@.sl_node drop column no_spool;';
 
-		-- ----
-		-- create new type - vactables - used by TablesToVacuum()
-		-- ----
-		execute 'create type @NAMESPACE@.vactables as (nspname name, relname name);';
 	end if;
 
 	-- ----
@@ -5669,6 +5665,23 @@ end;$$ language plpgsql;
 comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
 'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
+create or replace function @NAMESPACE@.setup_vactables_type () returns integer as $$
+begin
+	if not exists (select 1 from pg_catalog.pg_type t, pg_catalog.pg_namespace n
+			where n.nspname = '_@CLUSTERNAME@' and t.typnamespace = n.oid and
+			t.typname = 'vactables') then
+		execute 'create type @NAMESPACE@.vactables as (nspname name, relname name);';
+	end if;
+	return 1;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.setup_vactables_type () is 
+'Function to be run as part of loading slony1_funcs.sql that creates the vactables type if it is missing';
+
+select @NAMESPACE@.setup_vactables_type();
+
+drop function @NAMESPACE@.setup_vactables_type ();
 
 -- ----------------------------------------------------------------------
 -- FUNCTION TablesToVacuum()
