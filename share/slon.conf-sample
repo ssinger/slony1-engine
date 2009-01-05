@@ -1,8 +1,12 @@
-# $Id: slon.conf-sample,v 1.7 2007-08-08 15:24:22 cbbrowne Exp $
+# $Id: slon.conf-sample,v 1.8 2009-01-05 22:05:09 cbbrowne Exp $
 #
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3
 #vac_frequency=3
+
+# Aging interval to use for deleting old events and for trimming
+# data from sl_log_1/sl_log_2
+#cleanup_interval="10 minutes"
 
 # Debug log level (higher value ==> more output).  Range: [0,4], default 4
 #log_level=4

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.15 2008-03-12 15:43:55 cbbrowne Exp $
+# $Id: slon_watchdog.pl,v 1.16 2009-01-05 22:05:09 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -43,7 +43,7 @@ while (1) {
   $pid = get_pid($node);
   if (!($pid)) {
     my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
-    my ($logfile) = "$LOGDIR/slon-$dbname-$node.err"
+    my ($logfile) = "$LOGDIR/slon-$dbname-$node.err";
     open (SLONLOG, ">>$logfile");
     print SLONLOG "WATCHDOG: No Slon is running for node $node!\n";
     print SLONLOG "WATCHDOG: You ought to check the postmaster and slon for evidence of a crash!\n";
