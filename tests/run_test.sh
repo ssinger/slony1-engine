@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.26 2008-09-23 20:31:09 cbbrowne Exp $
+# $Id: run_test.sh,v 1.26.2.1 2009-01-05 22:04:08 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -489,6 +489,7 @@ build_slonconf()
     CONFFILE=$mktmp/slon-conf.${node}
     echo "log_level=2" > ${CONFFILE}
     echo "vac_frequency=2" >> ${CONFFILE}
+    echo "cleanup_interval=\"30 seconds\"" >> ${CONFFILE}
     echo "sync_interval=2010" >> ${CONFFILE}
     echo "sync_interval_timeout=15000" >> ${CONFFILE}
     echo "sync_group_maxsize=8" >> ${CONFFILE}
