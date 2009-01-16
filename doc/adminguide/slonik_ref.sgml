@@ -2575,6 +2575,15 @@ FAILOVER (
     linkend="stmtmoveset"> instead, as that does
     <emphasis>not</emphasis> abandon the failed node.
     </para>
+
+    <para> If there are many nodes in a cluster, and failover includes
+    dropping out additional nodes (<emphasis>e.g.</emphasis> when it
+    is necessary to treat <emphasis>all</emphasis> nodes at a site
+    including an origin as well as subscribers as failed), it is
+    necessary to carefully sequence the actions, as described in <xref
+    linkend="complexfailover">.
+    </para>
+
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>

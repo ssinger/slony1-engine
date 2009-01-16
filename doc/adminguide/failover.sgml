@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.28 2008-10-13 19:29:12 devrim Exp $ -->
+<!-- $Id: failover.sgml,v 1.29 2009-01-16 17:16:52 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -239,6 +239,81 @@ order after this change. </para> </listitem>
 </itemizedlist>
 
 </sect2>
+
+<sect2 id="complexfailover"> <title> Failover With Complex Node Set </title>
+
+<para> Failover is relatively <quote/simple/ if there are only two
+nodes; if a &slony1; cluster comprises many nodes, achieving a clean
+failover requires careful planning and execution. </para>
+
+<para> Consider the following diagram describing a set of six nodes at two sites.
+
+<inlinemediaobject> <imageobject> <imagedata fileref="complexenv.png">
+</imageobject> <textobject> <phrase> Symmetric Multisites </phrase>
+</textobject> </inlinemediaobject></para>
+
+<para> Let us assume that nodes 1, 2, and 3 reside at one data
+centre, and that we find ourselves needing to perform failover due to
+failure of that entire site.  Causes could range from a persistent
+loss of communications to the physical destruction of the site; the
+cause is not actually important, as what we are concerned about is how
+to get &slony1; to properly fail over to the new site.</para>
+
+<para> We will further assume that node 5 is to be the new origin,
+after failover. </para>
+
+<para> The sequence of &slony1; reconfiguration required to properly
+failover this sort of node configuration is as follows:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Resubscribe (using <xref linkend="stmtsubscribeset">
+ech node that is to be kept in the reformation of the cluster that is
+not already subscribed to the intended data provider.  </para>
+
+<para> In the example cluster, this means we would likely wish to
+resubscribe nodes 4 and 6 to both point to node 5.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   subscribe set (id = 1, provider = 5, receiver = 4);
+   subscribe set (id = 1, provider = 5, receiver = 4);
+</programlisting>
+
+</listitem>
+<listitem><para> Drop all unimportant nodes, starting with leaf nodes.</para>
+
+<para> Since nodes 1, 2, and 3 are unaccessible, we must indicate the
+<envar>EVENT NODE</envar> so that the event reaches the still-live
+portions of the cluster. </para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   drop node (id=2, event node = 4);
+   drop node (id=3, event node = 4);
+</programlisting>
+
+</listitem>
+
+<listitem><para> Now, run <command>FAILOVER</command>.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   failover (id = 1, backup node = 5);
+</programlisting>
+
+</listitem>
+
+<listitem><para> Finally, drop the former origin from the cluster.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   drop node (id=1, event node = 4);
+</programlisting>
+</listitem>
+
+</itemizedlist>
 
 <sect2><title> Automating <command> FAIL OVER </command> </title>
 
