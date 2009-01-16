@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.3 2008-12-18 21:56:20 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.4 2009-01-16 22:59:20 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -407,7 +407,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 1;
+	return 0;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -5192,7 +5192,7 @@ BEGIN
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
 	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 		loop
-			if exists (select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin limit 1) then
+			if exists (select 1 from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid >= v_xmin limit 1) then
 				v_purgeable := 'false';
 			end if;
 	        end loop;
@@ -5230,7 +5230,7 @@ BEGIN
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
 	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 		loop
-			if (exists (select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin limit 1)) then
+			if (exists (select 1 from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid >= v_xmin limit 1)) then
 				v_purgeable := 'false';
 			end if;
 	        end loop;
@@ -5397,7 +5397,7 @@ begin
 		raise exception 'Upgrading to Slony-I 2.x requires running 1.2.x';
 	end if;
 
-	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12') then
+	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16') then
 		-- ---- 
 		-- Upgrading from a pre-2.0 ... repair the system catalog
 		-- ----
@@ -5424,6 +5424,13 @@ begin
 		-- ----
 		execute 'alter table @NAMESPACE@.sl_node drop column no_spool;';
 
+		-- ----
+		-- Drop sl_trigger
+		-- ----
+		execute 'drop table @NAMESPACE@.sl_trigger;';
+
+		execute 'alter table @NAMESPACE@.sl_event add column ev_snapshot "pg_catalog".txid_snapshot;';
+		execute 'alter table @NAMESPACE@.sl_set_sync add column ev_snapshot "pg_catalog".txid_snapshot;';
 	end if;
 
 	-- ----
