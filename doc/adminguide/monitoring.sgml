@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.46 2008-09-18 21:28:45 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.47 2009-01-28 22:06:34 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -394,7 +394,7 @@ tuples had to be processed individually. </para></listitem>
 
 <listitem><para> <screen>SYNC 19 done in 1.272 seconds</screen></para> 
 
-<para> This indicates that it took 0.108 seconds, in total, to process
+<para> This indicates that it took 1.272 seconds, in total, to process
 this set of SYNCs. </para>
 </listitem>
 
