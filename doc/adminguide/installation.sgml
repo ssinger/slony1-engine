@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.35 2008-03-01 02:53:40 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.36 2009-01-28 22:08:22 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -174,7 +174,8 @@ Make sure you have appropriate permissions to write into that area.
 Commonly you need to do this either as root or as the postgres user.
 </para>
 
-<para>The main list of files installed within the PostgreSQL instance is:</para>
+<para>The main list of files installed within the &postgres; instance
+is, for versions of &slony1; up to 1.2.x:</para>
 <itemizedlist>
 <listitem><para><filename> $bindir/slon</filename></para></listitem>
 <listitem><para><filename> $bindir/slonik</filename></para></listitem>
@@ -190,8 +191,8 @@ Commonly you need to do this either as root or as the postgres user.
 <listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
 </itemizedlist>
 
-<para> (Note that as things change, the list of version-specific files
-may grow...) </para>
+<para> (Note that as things have change, the list of version-specific
+files has tended to grow...) </para>
 
 <para>The <filename>.sql</filename> files are not fully substituted
 yet.  And yes, both the 7.3, 7.4 and the 8.0 files get installed on every
@@ -206,6 +207,25 @@ different version of &postgres; than that of the local host.</para>
 computer that is supposed to become a &slony1; node. (Other components
 may be able to be loaded remotely from other hosts.) </para>
 
+<para> In &slony1; version 2.0, this changes:</para>
+<itemizedlist>
+<listitem><para><filename> $bindir/slon</filename></para></listitem>
+<listitem><para><filename> $bindir/slonik</filename></para></listitem>
+<listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
+</itemizedlist>
+
+<note> <para> Note the loss of <filename>xxid.so</filename> - the txid
+data type introduced in &postgres; 8.3 makes it
+obsolete. </para></note>
+
+<note> <para> &slony1; 2.0 gives up compatibility with versions of
+&postgres; prior to 8.3, and hence <quote>resets</quote> the
+version-specific base function handling.  There may be function files
+for version 8.3, 8.4, and such, as replication-relevant divergences of
+&postgres; functionality take place.  </para></note>
+
 </sect2>
 
 <sect2> <title> Building Documentation: Admin Guide </title>
@@ -218,15 +238,16 @@ discovered and written down about the care and feeding of &slony1;.</para>
 
 <para> This is only built if you specify <command>--with-docs</command></para>
 
-<para> Note that you may have difficulty building the documentation on Red
-Hat-based systems due to NAMELEN being set way too low.  Havoc
+<para> Note that you may have difficulty building the documentation on
+Red Hat-based systems due to NAMELEN being set way too low.  Havoc
 Pennington opened a bug on this back in mid-2001, back in the days of
 Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been much progress since then.  The second URL below
 indicates that there is intent to address the issue by bumping up the
 value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that won't likely help you in 2008. Current Fedora releases have already 
-addressed this issue. </para>
+but that may not help you if you are using an elder version where this
+will never be rectified.  Current Fedora releases have already
+addressed this issue.  </para>
 
 <para>
 <ulink url=
