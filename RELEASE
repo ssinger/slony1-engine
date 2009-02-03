@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.2 2009-01-05 22:04:09 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.3 2009-02-03 18:40:29 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -26,3 +26,13 @@ RELEASE 2.0.1
 - Add cleanup_interval example to sample slon.conf file
 
 - Add cleanup_interval configuration configuration to regression tests
+
+- Add documentation for complex failover scenario
+
+- Revise installation notes to indicate that xxid.so no longer exists in Slony-I 2.0+
+
+- Fix documentation typos
+
+- Fixed error with cleanup code which was not purging old data in sl_log_1/sl_log_2
+
+- Fix altperl/slontools errors
