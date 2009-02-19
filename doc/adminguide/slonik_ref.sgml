@@ -368,7 +368,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   
   <!-- **************************************** -->
   
-  <refentry id ="stmtexit"><refmeta><refentrytitle>EXIT</refentrytitle>
+  <refentry id ="stmtexit"><refmeta><refentrytitle>SLONIK EXIT</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>EXIT</refname>
@@ -403,7 +403,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   <!-- **************************************** -->
   <refentry id="stmtinitcluster">
    <refmeta>
-    <refentrytitle>INIT CLUSTER</refentrytitle>
+    <refentrytitle>SLONIK INIT CLUSTER</refentrytitle>
      <manvolnum>7</manvolnum>
    </refmeta>
    <refnamediv>
@@ -485,7 +485,7 @@ INIT CLUSTER (
 
 <!-- **************************************** -->
 
-  <refentry id ="stmtstorenode"><refmeta><refentrytitle>STORE NODE</refentrytitle>
+  <refentry id ="stmtstorenode"><refmeta><refentrytitle>SLONIK STORE NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>STORE NODE</refname>
@@ -572,7 +572,7 @@ INIT CLUSTER (
   </Refentry>
   
 <!-- **************************************** -->
-  <refentry id="stmtdropnode"><refmeta><refentrytitle>DROP NODE</refentrytitle>
+  <refentry id="stmtdropnode"><refmeta><refentrytitle>SLONIK DROP NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DROP NODE</refname>
@@ -644,7 +644,7 @@ INIT CLUSTER (
   </refentry>
 
 <!-- **************************************** -->
-  <refentry id="stmtuninstallnode"><refmeta><refentrytitle>UNINSTALL NODE</refentrytitle>
+  <refentry id="stmtuninstallnode"><refmeta><refentrytitle>SLONIK UNINSTALL NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>UNINSTALL NODE</refname>
@@ -708,7 +708,7 @@ INIT CLUSTER (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtrestartnode"><refmeta><refentrytitle>RESTART NODE</refentrytitle>
+  <refentry id="stmtrestartnode"><refmeta><refentrytitle>SLONIK RESTART NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>RESTART NODE</refname>
@@ -759,7 +759,7 @@ INIT CLUSTER (
 
   <!-- **************************************** -->
 
-  <refentry id="stmtstorepath"><refmeta><refentrytitle>STORE
+  <refentry id="stmtstorepath"><refmeta><refentrytitle>SLONIK STORE
      PATH</refentrytitle><manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>STORE PATH</refname>
@@ -834,7 +834,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtdroppath"><refmeta><refentrytitle>DROP PATH</refentrytitle>
+  <refentry id="stmtdroppath"><refmeta><refentrytitle>SLONIK DROP PATH</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DROP PATH</refname>
@@ -885,7 +885,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtstorelisten"><refmeta><refentrytitle>STORE LISTEN</refentrytitle>
+  <refentry id="stmtstorelisten"><refmeta><refentrytitle>SLONIK STORE LISTEN</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>STORE LISTEN</refname>
@@ -955,7 +955,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtdroplisten"><refmeta><refentrytitle>DROP LISTEN</refentrytitle>
+  <refentry id="stmtdroplisten"><refmeta><refentrytitle>SLONIK DROP LISTEN</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DROP LISTEN</refname>
@@ -1009,7 +1009,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-<refentry id="stmttableaddkey"><refmeta><refentrytitle>TABLE ADD KEY</refentrytitle>
+<refentry id="stmttableaddkey"><refmeta><refentrytitle>SLONIK TABLE ADD KEY</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>TABLE ADD KEY</refname>
@@ -1130,7 +1130,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtcreateset"><refmeta><refentrytitle>CREATE SET</refentrytitle>
+  <refentry id="stmtcreateset"><refmeta><refentrytitle>SLONIK CREATE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CREATE SET</refname>
@@ -1201,7 +1201,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtdropset"><refmeta><refentrytitle>DROP SET</refentrytitle>
+  <refentry id="stmtdropset"><refmeta><refentrytitle>SLONIK DROP SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>DROP SET</refname>
@@ -1254,7 +1254,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
  
 <!-- **************************************** -->
 
-  <refentry id="stmtmergeset"><refmeta><refentrytitle>MERGE
+  <refentry id="stmtmergeset"><refmeta><refentrytitle>SLONIK MERGE
      SET</refentrytitle><manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>MERGE SET</refname>
@@ -1334,7 +1334,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-  <refentry id="stmtsetaddtable"><refmeta><refentrytitle>SET ADD TABLE</refentrytitle>
+  <refentry id="stmtsetaddtable"><refmeta><refentrytitle>SLONIK SET ADD TABLE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET ADD TABLE</refname>
@@ -1509,7 +1509,7 @@ SET ADD TABLE (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtsetaddsequence"><refmeta><refentrytitle>SET ADD SEQUENCE</refentrytitle>
+  <refentry id="stmtsetaddsequence"><refmeta><refentrytitle>SLONIK SET ADD SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET ADD SEQUENCE</refname>
@@ -1584,7 +1584,7 @@ SET ADD TABLE (
   
 <!-- **************************************** -->
 
-  <refentry id="stmtsetdroptable"><refmeta><refentrytitle>SET DROP TABLE</refentrytitle>
+  <refentry id="stmtsetdroptable"><refmeta><refentrytitle>SLONIK SET DROP TABLE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET DROP TABLE</refname>
@@ -1643,7 +1643,7 @@ SET ADD TABLE (
   
 <!-- **************************************** -->
 
-  <refentry id="stmtsetdropsequence"><refmeta><refentrytitle>SET DROP SEQUENCE</refentrytitle>
+  <refentry id="stmtsetdropsequence"><refmeta><refentrytitle>SLONIK SET DROP SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET DROP SEQUENCE</refname>
@@ -1695,7 +1695,7 @@ SET ADD TABLE (
   
 <!-- **************************************** -->
   
-  <refentry id="stmtsetmovetable"><refmeta><refentrytitle>SET MOVE
+  <refentry id="stmtsetmovetable"><refmeta><refentrytitle>SLONIK SET MOVE
      TABLE</refentrytitle><manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET MOVE TABLE</refname>
@@ -1759,7 +1759,7 @@ SET MOVE TABLE (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtsetmovesequence"><refmeta><refentrytitle>SET MOVE SEQUENCE</refentrytitle>
+  <refentry id="stmtsetmovesequence"><refmeta><refentrytitle>SLONIK SET MOVE SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SET MOVE SEQUENCE</refname>
@@ -1828,7 +1828,7 @@ SET MOVE SEQUENCE (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtstoretrigger"><refmeta><refentrytitle>STORE TRIGGER</refentrytitle>
+  <refentry id="stmtstoretrigger"><refmeta><refentrytitle>SLONIK STORE TRIGGER</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>STORE TRIGGER</refname>
@@ -1911,7 +1911,7 @@ STORE TRIGGER (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtdroptrigger"><refmeta><refentrytitle>DROP TRIGGER</refentrytitle>
+  <refentry id="stmtdroptrigger"><refmeta><refentrytitle>SLONIK DROP TRIGGER</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DROP TRIGGER</refname>
@@ -1977,7 +1977,7 @@ DROP TRIGGER (
   </refentry>
   
 <!-- **************************************** -->
-  <refentry id="stmtsubscribeset"><refmeta><refentrytitle>SUBSCRIBE SET</refentrytitle>
+  <refentry id="stmtsubscribeset"><refmeta><refentrytitle>SLONIK SUBSCRIBE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>SUBSCRIBE SET</refname>
@@ -2216,7 +2216,7 @@ SUBSCRIBE SET (
   
 <!-- **************************************** -->
 
-  <refentry id="stmtunsubscribeset"><refmeta><refentrytitle>UNSUBSCRIBE SET</refentrytitle>
+  <refentry id="stmtunsubscribeset"><refmeta><refentrytitle>SLONIK UNSUBSCRIBE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>UNSUBSCRIBE SET</refname>
@@ -2282,7 +2282,7 @@ UNSUBSCRIBE SET (
   
 <!-- **************************************** -->
 
-  <refentry id ="stmtlockset"><refmeta><refentrytitle>LOCK SET</refentrytitle>
+  <refentry id ="stmtlockset"><refmeta><refentrytitle>SLONIK LOCK SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>LOCK SET</refname>
@@ -2357,7 +2357,7 @@ LOCK SET (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtunlockset"><refmeta><refentrytitle>UNLOCK SET</refentrytitle>
+  <refentry id="stmtunlockset"><refmeta><refentrytitle>SLONIK UNLOCK SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>UNLOCK SET</refname>
@@ -2410,7 +2410,7 @@ UNLOCK SET (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtmoveset"><refmeta><refentrytitle>MOVE SET</refentrytitle>
+  <refentry id="stmtmoveset"><refmeta><refentrytitle>SLONIK MOVE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>MOVE SET</refname>
@@ -2501,7 +2501,7 @@ MOVE SET (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtfailover"><refmeta><refentrytitle>FAILOVER</refentrytitle>
+  <refentry id="stmtfailover"><refmeta><refentrytitle>SLONIK FAILOVER</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>FAILOVER</refname>
@@ -2593,7 +2593,7 @@ FAILOVER (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtddlscript"><refmeta><refentrytitle>EXECUTE SCRIPT</refentrytitle>
+  <refentry id="stmtddlscript"><refmeta><refentrytitle>SLONIK EXECUTE SCRIPT</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>EXECUTE SCRIPT</refname>
@@ -2749,7 +2749,7 @@ EXECUTE SCRIPT (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtupdatefunctions"><refmeta><refentrytitle>UPDATE FUNCTIONS</refentrytitle>
+  <refentry id="stmtupdatefunctions"><refmeta><refentrytitle>SLONIK UPDATE FUNCTIONS</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>UPDATE FUNCTIONS</refname>
@@ -2818,7 +2818,7 @@ UPDATE FUNCTIONS (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtwaitevent"><refmeta><refentrytitle>WAIT FOR EVENT</refentrytitle>
+  <refentry id="stmtwaitevent"><refmeta><refentrytitle>SLONIK WAIT FOR EVENT</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>WAIT FOR EVENT</refname>
@@ -2930,7 +2930,7 @@ WAIT FOR EVENT (
 
 <!-- **************************************** -->
 
-  <refentry id="stmtrepairconfig"><refmeta><refentrytitle>REPAIR CONFIG</refentrytitle>
+  <refentry id="stmtrepairconfig"><refmeta><refentrytitle>SLONIK REPAIR CONFIG</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>REPAIR CONFIG</refname>
@@ -2984,7 +2984,7 @@ REPAIR CONFIG (
   </refentry>
 <!-- **************************************** -->
 
-  <refentry id="stmtsync"><refmeta><refentrytitle>SYNC</refentrytitle>
+  <refentry id="stmtsync"><refmeta><refentrytitle>SLONIK SYNC</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>SYNC</refname>
@@ -3027,7 +3027,7 @@ REPAIR CONFIG (
 
 <!-- **************************************** -->
   
-  <refentry id ="stmtsleep"><refmeta><refentrytitle>SLEEP</refentrytitle>
+  <refentry id ="stmtsleep"><refmeta><refentrytitle>SLONIK SLEEP</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>SLEEP</refname>
