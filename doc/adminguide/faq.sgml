@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66.2.6 2007-06-11 16:00:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66.2.7 2009-02-19 16:47:05 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -2199,6 +2199,43 @@ starts up, it will no longer find the <quote>offensive</quote>
 referring to no-longer-existant configuration...) </para></answer>
 
 </qandaentry>
+
+<qandaentry>
+
+<question> <para> I have a database where we have been encountering
+the following error message in our application: </para>
+
+<screen> permission denied for sequence sl_action_seq </screen>
+
+<para> When we traced it back, it was due to the application calling
+<function> lastval() </function> to capture the most recent sequence
+update, which happened to catch the last update to a &slony1; internal
+sequence. </para>
+
+</question> 
+
+<para> &slony1; uses sequences to provide primary key values for log
+entries, and therefore this kind of behaviour may (perhaps
+regrettably!) be expected.  </para>
+
+<answer> <para> Calling <function>lastval()</function>, to
+<quote>anonymously</quote> get <quote>the most recently updated
+sequence value</quote>, rather than using
+<function>currval('sequence_name')</function> is an unsafe thing to do
+in general, as anything you might add in that uses DBMS features for
+logging, archiving, or replication can throw in an extra sequence
+update that you weren't expecting.  </para>
+
+<para> In general, use of <function>lastval()</function> doesn't seem
+terribly safe; using it when &slony1; (or any similar trigger-based
+replication system such as <application>Londiste</application> or
+<application>Bucardo</application>) can lead to capturing unexpected
+sequence updates. </para>
+
+</answer> 
+
+</qandaentry>
+
 </qandadiv>
 
 </qandaset>
