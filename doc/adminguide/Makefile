@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.20 2008-02-25 15:37:58 cbbrowne Exp $
+# $Id: Makefile,v 1.20.2.1 2009-02-20 15:47:06 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -74,14 +74,12 @@ endif
 
 install: installdirs
 ifdef docdir
-	for file in $(wildcard $(srcdir)/*.sgml) ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/sgml || exit; \
+	for file in man1/*.1; do \
+	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1/$$file || exit;\
 	done
-	for file in $(wildcard man1/*) ; do \
-	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1 || exit;\
-	done
-	for file in $(wildcard man7/*) ; do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man7 || exit;\
+	for file in man7/*.7; do \
+	   echo $$file \
+	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man7/$$file || exit;\
 	done
 	for file in $(wildcard *.html) stylesheet.css ; do \
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/html || exit;\
