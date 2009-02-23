@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.5 2009-02-23 17:47:33 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.6 2009-02-23 17:58:53 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5389,65 +5389,9 @@ declare
         p_old   	alias for $1;
 		v_tab_row	record;
 begin
-	-- ----
-	-- Changes for 2.0
-	-- ----
-	if p_old IN ('1.0.2', '1.0.5', '1.0.6',
-			'1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9') then
-		raise exception 'Upgrading to Slony-I 2.x requires running 1.2.x';
-	end if;
-
-	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16') then
-		-- ---- 
-		-- Upgrading from a pre-2.0 ... repair the system catalog
-		-- ----
-		for v_tab_row in select * from @NAMESPACE@.sl_table order by tab_id loop
-			perform @NAMESPACE@.alterTableRestore(v_tab_row.tab_id);
-		end loop;
-
-		-- ----
-		-- drop obsolete functions
-		-- ----
-		execute 'drop function @NAMESPACE@.alterTableForReplication(int4)';
-		execute 'drop function @NAMESPACE@.pre74()';
-
-		-- ----
-		-- and create the new versions of the log and deny access triggers.
-		-- ----
-		for v_tab_row in select * from @NAMESPACE@.sl_table order by tab_id loop
-			perform @NAMESPACE@.alterTableAddTriggers(v_tab_row.tab_id);
-			perform @NAMESPACE@.alterTableConfigureTriggers(v_tab_row.tab_id);
-		end loop;
-
-		-- ----
-		-- Drop no_spool from sl_node
-		-- ----
-		execute 'alter table @NAMESPACE@.sl_node drop column no_spool;';
-
-		-- ----
-		-- Drop sl_trigger
-		-- ----
-		execute 'drop table @NAMESPACE@.sl_trigger;';
-
-		execute 'alter table @NAMESPACE@.sl_event add column ev_snapshot "pg_catalog".txid_snapshot;';
-		execute 'alter table @NAMESPACE@.sl_set_sync add column ev_snapshot "pg_catalog".txid_snapshot;';
-	end if;
-
-	-- ----
-	-- The following is already in 1.2.11, do not add any future
-	-- 1.2 version numbers.
-	-- ----
-	if p_old IN ('1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10') then
-		-- ----
-		-- Add new table sl_archive_counter
-		-- ----
-		execute 'create table @NAMESPACE@.sl_archive_counter (
-					ac_num			bigint,
-					ac_timestamp	timestamp
-				) without oids';
-		execute 'insert into @NAMESPACE@.sl_archive_counter
-				(ac_num, ac_timestamp) values (0, ' || pg_catalog.quote_literal('epoch') || '::timestamp)';
-
+	-- If old version is pre-2.0, then we require a special upgrade process
+	if p_old like '1.%' then
+		raise exception 'Upgrading to Slony-I 2.x requires running slony_upgrade_20';
 	end if;
 
 	return p_old;
