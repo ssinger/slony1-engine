@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.68 2008-09-24 19:54:09 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.69 2009-02-23 19:08:24 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -651,6 +651,9 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 					continue;
 
 				attkind_idx++;
+				if (!attkind[attkind_idx])
+					elog(ERROR, "Slony-I: no key columns found in logTrigger() attkind parameter");
+
 				if (attkind[attkind_idx] == 'k')
 					break;
 			}
@@ -694,6 +697,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 
 			attkind_idx++;
+			if (!attkind[attkind_idx])
+				break;
 			if (attkind[attkind_idx] != 'k')
 				continue;
 			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
@@ -761,6 +766,8 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				continue;
 
 			attkind_idx++;
+			if (!attkind[attkind_idx])
+				break;
 			if (attkind[attkind_idx] != 'k')
 				continue;
 			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
