@@ -1,0 +1,83 @@
+The set of scripts do the following:
+
+ 1.  Locks all replication sets (akin to how MOVE SET works), so we
+     can make certain that replication stops for a bit.
+
+ 2.  Waits for that to propagate everywhere, therefore establishing
+     that all nodes are up to date.
+
+ 3.  Tells the administrator, "go ahead, install upgraded Slony-I."
+
+ 4.  Then, we go to each node, in turn, and, within a transaction, do
+     the following:
+
+     - First, load a function that does the work that follows,
+       transforming from 1.2.16-ish to a "pre-2.0" state, *for the
+       tables.* It does *not* load new functions; that's a subsequent
+       step, #6.
+
+     - It redoes the triggers and rules on the tables, replacing
+       old Slony-I-generated logtrigger/denyaccess triggers with new
+       ones, cleaning up FK triggers, and such.  (There's more detail
+       to fill in here - nothing frightening, I don't think, just more
+       detail!)
+
+     - It should drop old Slony-I stored functions that are no longer
+       needed in v2.0
+
+     - It runs TRUNCATE against the 4 tables mentioned earlier
+
+     - We run CreateEvent() against each node to capture at what point
+       it is at, and store the event number and transaction ID in a
+       file.
+
+       ===> Note that this must happen on EACH node; we'll be reading
+            these values in the next step. <===
+
+     - We inserts an sl_setsync entry, just as happens in copy_set()
+       in src/slon/remote_worker.c, to indicate, for each replication
+       set, that it is freshly copied on each subscriber node.
+
+     - There will probably be a custom UPGRADE function; it can be
+       dropped out at this point as it is never needed again.
+
+     - Finally, we set this up to be a prepared truncation...
+        PREPARE TRANSACTION "Slony-I 1.2 to 2.0 upgrade - @CLUSTER@";
+
+     Note that at this point, that node is Pretty Locked Down.  This
+     transaction has acquired locks on ALL tables involved in
+     replication, including the application tables.
+
+ 5. If step #4 works successfully on all nodes, then we know we have a
+    successful upgrade, and can safely go to each node and run COMMIT
+    PREPARED on that transaction on each node.
+
+    If any of them fail, then we should prefer to roll back all of the
+    prepared transactions, undoing all of the work of step #4, go fix
+    whatever was broken, and retry.
+
+ 6. Now, we need to update the functions.
+
+    A slonik script runs UPDATE FUNCTIONS against all nodes.
+
+At the "grand steps" level, that seems like it covers what needs to be
+done.
+
+Note the ===> CREATE EVENT <=== step; this needs to be run against
+each node *during* the upgrade process, and note that the output of
+that is used to "seed" sl_setsync on the other nodes.  
+
+As a result, it is NOT as simple as throwing the queries at each node,
+in turn; we need to have the big transaction partway done on every
+node.  The upgrade is *not* implementable as a simple shell script -
+it needs to be implemented in a language that supports having all of
+the transactions open at once, which effectively points us to one of:
+
+  a) C
+  b) Perl with DBI
+  c) Some other language that supports opening multiple DB connections
+     at once
+
+C and Perl both seem like reasonable choices, since Slony-I already
+uses and has dependancies on these languages.  It seems like a poor
+idea to introduce any other languages to the mix.
