@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.80.2.1 2009-02-19 16:46:38 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.80.2.2 2009-02-26 16:24:58 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -2443,11 +2443,12 @@ sequence. </para>
 
 </question> 
 
+<answer>
 <para> &slony1; uses sequences to provide primary key values for log
 entries, and therefore this kind of behaviour may (perhaps
 regrettably!) be expected.  </para>
 
-<answer> <para> Calling <function>lastval()</function>, to
+<para> Calling <function>lastval()</function>, to
 <quote>anonymously</quote> get <quote>the most recently updated
 sequence value</quote>, rather than using
 <function>currval('sequence_name')</function> is an unsafe thing to do
