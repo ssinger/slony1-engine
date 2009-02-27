@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2007, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.69 2009-02-23 19:08:24 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.70 2009-02-27 16:44:53 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -23,6 +23,7 @@
 #include "commands/trigger.h"
 #include "commands/async.h"
 #include "catalog/pg_operator.h"
+#include "catalog/pg_type.h"
 #include "access/xact.h"
 #include "access/transam.h"
 #include "utils/builtins.h"
