@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.17 2008-06-03 18:54:42 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.18 2009-03-05 22:37:23 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2641,6 +2641,16 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	for (i = 0; i < num_nodes; i++)
 	{
 		nodeinfo[i].no_id = (int)strtol(PQgetvalue(res1, i, 0), NULL, 10);
+
+		if (get_adminfo((SlonikStmt *) stmt, nodeinfo[i].no_id) == NULL)
+		{
+			printf("WARNING: no admin conninfo for node %d - node will not be considered\n",
+				nodeinfo[i].no_id);
+			nodeinfo[i].adminfo = NULL;
+			nodeinfo[i].has_slon = false;
+			continue;
+		}
+
 		nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
 												 nodeinfo[i].no_id);
 		if (nodeinfo[i].adminfo == NULL)
@@ -2758,6 +2768,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		if (nodeinfo[i].no_id == stmt->backup_node)
 			continue;
 
+		if (nodeinfo[i].adminfo == NULL)
+			continue;
+
 		if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 		{
 			free(configbuf);
@@ -2771,6 +2784,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
+		if (nodeinfo[i].adminfo == NULL)
+			continue;
+
 		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 		{
 			free(configbuf);
@@ -2837,6 +2853,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 stmt->no_id);
 	for (i = 0; i < num_nodes; i++)
 	{
+		if (nodeinfo[i].adminfo == NULL)
+			continue;
+
 		res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 		if (res1 != NULL)
 		{
@@ -2904,6 +2923,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		for (j = 0; j < setinfo[i].num_subscribers; j++)
 		{
 			int64		ssy_seqno;
+
+			if (setinfo[i].subscribers[j]->adminfo == NULL)
+				continue;
 
 			res1 = db_exec_select((SlonikStmt *) stmt,
 								  setinfo[i].subscribers[j]->adminfo, &query);
@@ -3032,6 +3054,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
+		if (nodeinfo[i].adminfo == NULL)
+			continue;
+
 		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 			rc = -1;
 	}

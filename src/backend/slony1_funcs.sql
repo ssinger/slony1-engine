@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.31 2008-09-12 17:37:48 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.32 2009-03-05 22:37:23 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1140,7 +1140,7 @@ begin
 							where PP.pa_server = p_backup_node
 								and PP.pa_client = P.pa_client)
 	loop
-		raise exception ''Slony-I: cannot failover - node % has no path to the backup node'',
+		raise notice ''Slony-I: Warning: node % has no path to the backup node'',
 				v_row.pa_client;
 	end loop;
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_2_pgbench.in,v 1.2 2006-06-01 12:35:52 dpage Exp $
+# $Id: test_2_pgbench.in,v 1.2.2.1 2009-03-05 22:37:23 wieck Exp $
 # **********
 # test_2_pgbench
 #
@@ -12,9 +12,10 @@
 #	- adds database slony_test2 to the system
 #	- starts the second replication daemon
 #	- creates the pgbench tables (schema only)
-#	- subscribes the replication set from the primary node
-#	- creates a 3rd database node similar that replicates
+#	- creates a 3rd database node similar that will replicate
 #	  cascaded from the second node.
+#	- subscribes the replication set to node 2
+#	- subscribes the replication set to node 3
 #	- waits until the pgbench is terminated and the user
 #	  stopped all 3 replication engines.
 #	- compares the 3 database.
@@ -29,9 +30,10 @@ TMPOUT=/tmp/output.$$
 DB1=slony_test1
 DB2=slony_test2
 DB3=slony_test3
+DB4=slony_test4
 DEBUG_LEVEL=2
 
-PGBENCH_SCALE=10
+PGBENCH_SCALE=2
 PGBENCH_CLIENTS=5
 PGBENCH_TRANS=`expr 50000 / $PGBENCH_CLIENTS`
 
@@ -53,6 +55,10 @@ trap '
 	if [ ! -z $slon3_pid ] ; then
 		echo "**** killing node daemon 3"
 		kill -15 $slon3_pid
+	fi
+	if [ ! -z $slon4_pid ] ; then
+		echo "**** killing node daemon 4"
+		kill -15 $slon4_pid
 	fi
 	exit -1
 ' 2 15
@@ -93,6 +99,8 @@ dropdb $DB2 || echo "**** ignored"
 sleep 1
 dropdb $DB3 || echo "**** ignored"
 sleep 1
+dropdb $DB4 || echo "**** ignored"
+sleep 1
 
 #####
 # Create the "Primary Node"
@@ -128,8 +136,10 @@ echo "**** initializing $DB1 as Primary Node for Slony-I cluster T1"
 slonik <<_EOF_
 	cluster name = T1;
 	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB1';
-	node 3 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
+
 	init cluster (id = 1, comment = 'Node 1');
 	echo 'Database $DB1 initialized as Node 1';
 _EOF_
@@ -149,6 +159,7 @@ slonik <<_EOF_
 	node 1 admin conninfo = 'dbname=$DB1';
 	node 2 admin conninfo = 'dbname=$DB2';
 	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
 
 	try {
 		table add key (node id = 1, fully qualified name = 'public.history');
@@ -218,6 +229,7 @@ slonik <<_EOF_
 	node 1 admin conninfo = 'dbname=$DB1';
 	node 2 admin conninfo = 'dbname=$DB2';
 	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
 
 	try {
 		store node (id = 2, comment = 'Node 2');
@@ -256,28 +268,11 @@ echo "**** creating pgbench tables and subscribing Node 2 to set 1"
 (
 	cat pgbench_schema.sql
 ) | psql -q $DB2
-slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
-	node 3 admin conninfo = 'dbname=$DB3';
-
-	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
-_EOF_
-
-echo ""
-echo "**********************************************************************"
-echo "**** $DB2 should now be copying data and attempting to catch up."
-echo "**********************************************************************"
-echo ""
 
 ######################################################################
-# Setup DB2 as a subscriber node and let it subscribe the replication
+# Setup DB3 as a subscriber node and let it subscribe the replication
 # set of the running pgbench
 ######################################################################
-# echo -n "**** Hit enter when node 2 is done with copy set"
-# read line
-sleep `expr 60 \* $PGBENCH_SCALE`
 echo "**** creating database for Node 3"
 if ! createdb $DB3 ; then
 	kill $pgbench_pid 2>/dev/null
@@ -300,7 +295,7 @@ slonik <<_EOF_
 	store path (server = 3, client = 1, conninfo = 'dbname=$DB3');
 	store path (server = 3, client = 2, conninfo = 'dbname=$DB3');
 
-	echo 'Database $DB2 added as Node 2';
+	echo 'Database $DB3 added as Node 3';
 _EOF_
 
 if [ $? -ne 0 ] ; then
@@ -327,25 +322,115 @@ fi
 ######################################################################
 # Create the pgbench tables and subscribe to set 1
 ######################################################################
-echo "**** creating pgbench tables and subscribing Node 2 to set 1"
+echo "**** creating pgbench tables and subscribing Node 3 to set 1"
 (
 	cat pgbench_schema.sql
 ) | psql -q $DB3
+
+
+######################################################################
+# Setup DB4 as a subscriber node and let it subscribe the replication
+# set of the running pgbench
+######################################################################
+echo "**** creating database for Node 4"
+if ! createdb $DB4 ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	exit -1
+fi
+
+echo "**** initializing $DB4 as Node 4 of Slony-I cluster T1"
 slonik <<_EOF_
 	cluster name = T1;
 	node 1 admin conninfo = 'dbname=$DB1';
 	node 2 admin conninfo = 'dbname=$DB2';
 	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
 
-	subscribe set ( id = 1, provider = 2, receiver = 3, forward = no );
+	store node (id = 4, comment = 'Node 4');
+
+	store path (server = 1, client = 4, conninfo = 'dbname=$DB1');
+	store path (server = 3, client = 4, conninfo = 'dbname=$DB3');
+	store path (server = 4, client = 1, conninfo = 'dbname=$DB4');
+	store path (server = 4, client = 3, conninfo = 'dbname=$DB4');
+
+	echo 'Database $DB4 added as Node 4';
+_EOF_
+
+if [ $? -ne 0 ] ; then
+	kill $pgbench_pid 2>/dev/null
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	kill $slon3_pid 2>/dev/null
+	exit -1
+fi
+
+echo "**** starting the Slony-I node daemon for $DB4"
+$TERMPROG -title "Slon node 4" -e sh -c "slon -d$DEBUG_LEVEL T1 dbname=$DB4; echo -n 'Enter>'; read line" &
+slon4_pid=$!
+echo "slon[$slon4_pid] on dbname=$DB4"
+
+#####
+# Check that pgbench is still running
+#####
+if ! kill -0 $pgbench_pid 2>/dev/null ; then
+	echo "**** pgbench terminated ???"
+	kill $slon1_pid 2>/dev/null
+	kill $slon2_pid 2>/dev/null
+	kill $slon3_pid 2>/dev/null
+	kill $slon4_pid 2>/dev/null
+	exit -1
+fi
+
+######################################################################
+# Create the pgbench tables and subscribe to set 1
+######################################################################
+echo "**** creating pgbench tables and subscribing Node 4 to set 1"
+(
+	cat pgbench_schema.sql
+) | psql -q $DB4
+
+
+######################################################################
+# Now subscribe both nodes and use WAIT properly
+######################################################################
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
+
+	echo 'Subscribing node 2';
+	subscribe set ( id = 1, provider = 1, receiver = 2, forward = yes );
+	echo 'Generating SYNC on Origin and waiting for that';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = all, wait on = 2, timeout = 0);
+	echo 'Subscription of node 2 complete';
+
+	echo 'Subscribing node 3';
+	subscribe set ( id = 1, provider = 2, receiver = 3, forward = yes );
+	echo 'Waiting for SUBSCRIBE_SET to arrive at 1';
+	wait for event (origin = 2, confirmed = all, wait on = 1, timeout = 0);
+	echo 'Generating SYNC on Origin and waiting for that';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = all, wait on = 3, timeout = 0);
+
+	echo 'Subscribing node 4';
+	subscribe set ( id = 1, provider = 3, receiver = 4, forward = no );
+	echo 'Waiting for SUBSCRIBE_SET to arrive at 1';
+	wait for event (origin = 3, confirmed = all, wait on = 1, timeout = 0);
+	echo 'Generating SYNC on Origin and waiting for that';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = all, wait on = 4, timeout = 0);
 _EOF_
 
 echo ""
 echo "**********************************************************************"
-echo "**** $DB3 should now be copying data and attempting to catch up."
+echo "**** $DB3 should now be done copying data and attempting to catch up."
 echo "**********************************************************************"
 echo ""
-
 
 
 echo -n "**** waiting for pgbench to finish "
@@ -354,15 +439,29 @@ while kill -0 $pgbench_pid 2>/dev/null ; do
 	sleep 10
 done
 echo "**** pgbench finished"
-echo "**** please terminate the replication engines when caught up."
+sleep 5
+slonik <<_EOF_
+	cluster name = T1;
+	node 1 admin conninfo = 'dbname=$DB1';
+	node 2 admin conninfo = 'dbname=$DB2';
+	node 3 admin conninfo = 'dbname=$DB3';
+	node 4 admin conninfo = 'dbname=$DB4';
+
+	echo 'Generating final SYNC on Origin and waiting for that';
+	sync (id = 1);
+	wait for event (origin = 1, confirmed = all, wait on = 1, timeout = 0);
+_EOF_
+echo "**** please terminate the replication engines."
 wait $slon1_pid
 wait $slon2_pid
 wait $slon3_pid
+wait $slon4_pid
 
 kill $pgbench_pid 2>/dev/null
 kill $slon1_pid 2>/dev/null
 kill $slon2_pid 2>/dev/null
 kill $slon3_pid 2>/dev/null
+kill $slon4_pid 2>/dev/null
 
 echo -n "**** comparing databases ... "
 psql $DB1 -o dump.tmp.1.$$ <<_EOF_
@@ -395,6 +494,16 @@ psql $DB3 -o dump.tmp.3.$$ <<_EOF_
 	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
 			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
 _EOF_
+psql $DB4 -o dump.tmp.4.$$ <<_EOF_
+	select 'accounts:'::text, aid, bid, abalance, filler
+			from accounts order by aid;
+	select 'branches:'::text, bid, bbalance, filler
+			from branches order by bid;
+	select 'tellers:'::text, tid, bid, tbalance, filler
+			from tellers order by tid;
+	select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+			"_Slony-I_T1_rowID" from history order by "_Slony-I_T1_rowID";
+_EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >test_2.1-2.diff ; then
 	echo "success - databases 1 and 2 are equal."
@@ -407,8 +516,16 @@ echo -n "**** comparing databases ... "
 if diff dump.tmp.1.$$ dump.tmp.3.$$ >test_2.1-3.diff ; then
 	echo "success - databases 1 and 3 are equal."
 	rm dump.tmp.3.$$
-	rm dump.tmp.1.$$
 	rm test_2.1-3.diff
 else
 	echo "FAILED - see test_2.1-3.diff for database differences"
+fi
+echo -n "**** comparing databases ... "
+if diff dump.tmp.1.$$ dump.tmp.4.$$ >test_2.1-4.diff ; then
+	echo "success - databases 1 and 4 are equal."
+	rm dump.tmp.4.$$
+	rm dump.tmp.1.$$
+	rm test_2.1-4.diff
+else
+	echo "FAILED - see test_2.1-4.diff for database differences"
 fi
