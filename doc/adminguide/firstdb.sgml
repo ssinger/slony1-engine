@@ -1,4 +1,4 @@
-<!-- $Id: firstdb.sgml,v 1.29 2008-09-18 21:30:08 cbbrowne Exp $ -->
+<!-- $Id: firstdb.sgml,v 1.29.2.1 2009-03-06 18:54:09 cbbrowne Exp $ -->
 <sect1 id="firstdb"><title>Replicating Your First Database</title>
 
 <indexterm><primary>replicating your first database</primary></indexterm>
@@ -106,7 +106,7 @@ primary key. </para>
 <para> The following SQL requests will establish a proper primary key on this table: </para>
 
 <programlisting>
-psql -U $PGBENCH_USER -h $HOST1 -d $DBNAME1 -c "begin; alter table
+psql -U $PGBENCHUSER -h $HOST1 -d $MASTERDBNAME -c "begin; alter table
 history add column id serial; update history set id =
 nextval('history_id_seq'); alter table history add primary key(id);
 commit"
@@ -213,17 +213,6 @@ slonik <<_EOF_
 	init cluster ( id=1, comment = 'Master Node');
  
 	#--
-	# Because the history table does not have a primary key or other unique
-	# constraint that could be used to identify a row, we need to add one.
-	# The following command adds a bigint column named
-	# _Slony-I_$CLUSTERNAME_rowID to the table.  It will have a default value
-	# of nextval('_$CLUSTERNAME.s1_rowid_seq'), and have UNIQUE and NOT NULL
-	# constraints applied.  All existing rows will be initialized with a
-	# number
-	#--
-	table add key (node id = 1, fully qualified name = 'public.history');
-
-	#--
 	# Slony-I organizes tables into sets.  The smallest unit a node can
 	# subscribe is a set.  The following commands create one set containing
 	# all 4 pgbench tables.  The master or origin of the set is node 1.
@@ -239,7 +228,7 @@ slonik <<_EOF_
 	# each other and how they should listen for events.
 	#--
 
-	store node (id=2, comment = 'Slave node');
+	store node (id=2, comment = 'Slave node', event node=1);
 	store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER');
 	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
 _EOF_
