@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.32 2009-03-05 22:37:23 wieck Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.33 2009-03-23 15:30:18 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1242,9 +1242,10 @@ begin
 		else
 			raise notice ''failedNode: set % has other direct receivers - change providers only'', v_row.set_id;
 			-- ----
-			-- Backup node is not the only direct subscriber. This
-			-- means that at this moment, we redirect all direct
-			-- subscribers to receive from the backup node, and the
+			-- Backup node is not the only direct subscriber or not
+			-- a direct subscriber at all. 
+			-- This means that at this moment, we redirect all possible
+			-- direct subscribers to receive from the backup node, and the
 			-- backup node itself to receive from another one.
 			-- The admin utility will wait for the slon engine to
 			-- restart and then call failedNode2() on the node with
@@ -1255,16 +1256,37 @@ begin
 					set sub_provider = (select min(SS.sub_receiver)
 							from @NAMESPACE@.sl_subscribe SS
 							where SS.sub_set = v_row.set_id
-								and SS.sub_provider = p_failed_node
 								and SS.sub_receiver <> p_backup_node
-								and SS.sub_forward)
+								and SS.sub_forward
+								and exists (
+									select 1 from @NAMESPACE@.sl_path
+										where pa_server = SS.sub_receiver
+										  and pa_client = p_backup_node
+								))
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 			update @NAMESPACE@.sl_subscribe
+					set sub_provider = (select min(SS.sub_receiver)
+							from @NAMESPACE@.sl_subscribe SS
+							where SS.sub_set = v_row.set_id
+								and SS.sub_receiver <> p_failed_node
+								and SS.sub_forward
+								and exists (
+									select 1 from @NAMESPACE@.sl_path
+										where pa_server = SS.sub_receiver
+										  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
+								))
+					where sub_set = v_row.set_id
+						and sub_receiver <> p_backup_node;
+			update @NAMESPACE@.sl_subscribe
 					set sub_provider = p_backup_node
 					where sub_set = v_row.set_id
-						and sub_provider = p_failed_node
-						and sub_receiver <> p_backup_node;
+						and sub_receiver <> p_backup_node
+						and exists (
+							select 1 from @NAMESPACE@.sl_path
+								where pa_server = p_backup_node
+								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
+						);
 		end if;
 	end loop;
 
