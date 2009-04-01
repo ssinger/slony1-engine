@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.5 2009-02-23 19:09:40 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.6 2009-04-01 17:13:05 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -41,3 +41,11 @@ RELEASE 2.0.1
   needs to do
 
 - Bug #63 - Array overrun in logtrigger()
+
+RELEASE 2.0.2
+
+- PostgreSQL 8.4 compatibility - src/backend/slony1_funcs.c needed to
+  #include "catalog/pg_type.h"; that is no longer implicitly included by
+  the SPI #include
+
+- Fix bug #71 - config dump was failing on string entries that were NULL
