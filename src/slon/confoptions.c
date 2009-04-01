@@ -689,7 +689,7 @@ static struct config_int ConfigureNamesInt[] =
 		{
 			(const char *) "sync_max_rowsize",	/* conf name */
 			gettext_noop("sl_log_? rows larger than that are read separately"), /* short desc */
-			gettext_noop("sl_log_? rows larger than that are read separately"), /* long desc */
+			gettext_noop("sl_log_? rows with octet_length(log_cmddata) larger than this are read separately"), /* long desc */
 			SLON_C_INT			/* config type */
 		},
 		&sync_max_rowsize,		/* var name */
