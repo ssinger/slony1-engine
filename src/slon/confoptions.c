@@ -754,7 +754,7 @@ static struct config_bool ConfigureNamesBool[] =
 		{
 			(const char *) "cleanup_deletelogs",
 			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
-			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
+			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or leave trimming to the TRUNCATE"),
 			SLON_C_BOOL
 		},
 		&cleanup_deletelogs,
