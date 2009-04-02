@@ -83,6 +83,23 @@
 
      <para> Those commands are grouped together into one transaction
       per participating node. </para>
+
+     <para> Note that this does not enforce grouping of the actions as
+     a single transaction on all nodes.  For instance, consider the
+     following slonik code:</para>
+     <programlisting>
+     try {
+         execute script (set id = 1, filename = '/tmp/script1.sql', event node=1);
+         execute script (set id = 1, filename = '/tmp/script2.sql', event node=1);
+     }
+     </programlisting>
+
+     <para> This <emphasis>would</emphasis> be processed within a
+     single BEGIN/COMMIT on node 1.  However, the requests are
+     separated into two <command>DDL_SCRIPT</command> events so that
+     each will be run individually, in separate transactions, on other
+     nodes in the cluster. </para>
+
 <!-- ************************************************************ --></sect3></sect2></sect1></article>
 
  <reference id="metacmds">
