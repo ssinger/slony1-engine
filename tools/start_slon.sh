@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: start_slon.sh,v 1.2 2008-08-01 19:33:24 cbbrowne Exp $
+# $Id: start_slon.sh,v 1.2.2.1 2009-04-02 20:35:19 cbbrowne Exp $
 
 # The following lines are ones you may wish to customize;
 # alternatively, you may set SLON_BUILD and SLON_CONF in your
@@ -34,8 +34,8 @@ case "$1" in
 	fi
 	touch $SLON_LOG
 	test -w "$SLON_LOG" || (echo "**** SLON_LOG not writable - $SLON_LOG ****"; exit 1)
-        echo "Starting slon: $SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>>1" &
-	$SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>>1 &
+        echo "Starting slon: $SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>&1 &"
+	$SLON_BIN_PATH/slon -f ${SLON_CONF} 1>> ${SLON_LOG} 2>&1 &
         ;;
   stop)
         echo "Stopping slon"
