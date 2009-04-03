@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.29 2009-01-16 17:16:52 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.30 2009-04-03 20:55:12 devrim Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -47,7 +47,7 @@ linkend="stmtmoveset">.</para>
 <listitem><para> At the time of this writing switchover to another
 server requires the application to reconnect to the new database.  So
 in order to avoid any complications, we simply shut down the web
-server.  Users who use <application>pg_pool</application> for the
+server.  Users who use <application>pgpool</application> for the
 applications database connections merely have to shut down the
 pool.</para>
 
@@ -79,7 +79,7 @@ to point to the new server, and possibly restarting the application to
 refresh database connections.
 </para> </listitem>
 
-<listitem><para> If you are using <application>pg_pool</application> or some
+<listitem><para> If you are using <application>pgpool</application> or some
 similar <quote>connection pool manager,</quote> then the reconfiguration
 involves reconfiguring this management tool, but is otherwise similar
 to the DNS/CNAME example above.  </para> </listitem>
