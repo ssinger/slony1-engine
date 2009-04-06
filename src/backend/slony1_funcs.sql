@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.7 2009-04-01 17:13:38 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.8 2009-04-06 22:33:04 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5032,6 +5032,7 @@ declare
         p_only_on_node          alias for $2;
         v_no_id                 int4;
         v_set_origin            int4;
+	prec			record;
 begin
         -- ----
         -- Grab the central configuration lock
@@ -5065,12 +5066,25 @@ begin
         if p_only_on_node > 0 and p_only_on_node <> v_no_id then
                 return 0;
         end if;
+
+	-- Update OIDs for tables to values pulled from non-table objects in pg_class
+	-- This ensures that we won't have collisions when repairing the oids
+	for prec in select tab_id from @NAMESPACE@.sl_table loop
+		update @NAMESPACE@.sl_table set tab_reloid = (select oid from pg_class pc where relkind <> 'r' and not exists (select 1 from @NAMESPACE@.sl_table t2 where t2.tab_reloid = pc.oid) limit 1)
+		where tab_id = prec.tab_id;
+	end loop;
+
         update @NAMESPACE@.sl_table set
                 tab_reloid = PGC.oid
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
                 where @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_relname) = @NAMESPACE@.slon_quote_brute(PGC.relname)
                         and PGC.relnamespace = PGN.oid
 			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_nspname);
+
+	for prec in select seq_id from @NAMESPACE@.sl_sequence loop
+		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.tab_reloid = pc.oid) limit 1)
+		where tab_id = prec.seq_id;
+	end loop;
 
         update @NAMESPACE@.sl_sequence set
                 seq_reloid = PGC.oid

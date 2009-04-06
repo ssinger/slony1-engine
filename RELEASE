@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.6 2009-04-01 17:13:05 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.7 2009-04-06 22:33:05 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -49,3 +49,14 @@ RELEASE 2.0.2
   the SPI #include
 
 - Fix bug #71 - config dump was failing on string entries that were NULL
+
+- Fix bug #76 - REPAIR CONFIG could have collisions where, when we 
+  load a schema, one entry in sl_table already has an OID value
+  that incorrectly matches a value that another update is trying to
+  fix.
+
+  This would cause REPAIR CONFIG to fail.
+
+  Put in a query that updates the oids in sl_table and sl_sequence to
+  randomly selected values from pg_class that couldn't match (since
+  the values selected are from non-table/non-sequence objects)
