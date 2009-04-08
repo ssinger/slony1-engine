@@ -39,9 +39,9 @@ generate_initdata()
     txtblen=$(random_number 1 100)
     txtb=$(random_string ${txtblen})
     txtb=`echo ${txtb} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
-    echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
-    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
+    echo "INSERT INTO foo.table1(data) VALUES ('${txta}');" >> $GENDATA
+    echo "INSERT INTO foo.table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
+    echo "INSERT INTO foo.table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
     echo "INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values ('${txta}', '${txtb}');" >> $GENDATA
     echo "INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values ('${txtb}', $txtblen);" >> $GENDATA
     echo "select nextval('\"Schema.name\".\"a.periodic.sequence\"');" >> $GENDATA

@@ -1,8 +1,9 @@
 weakuser=$1;
+echo "grant usage on schema \"foo\" to ${weakuser};"
 
 for i in 1 2 3; do
-   echo "grant select on table public.table${i} to ${weakuser};"
-   echo "grant select on table public.table${i}_id_seq to ${weakuser};"
+   echo "grant select on table foo.table${i} to ${weakuser};"
+   echo "grant select on table foo.table${i}_id_seq to ${weakuser};"
 done
 
 echo "grant usage on schema \"Schema.name\" to ${weakuser};"

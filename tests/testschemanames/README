@@ -1,4 +1,8 @@
-$Id: README,v 1.1 2005-11-15 21:25:34 cbbrowne Exp $
+$Id: README,v 1.1.6.1 2009-04-08 15:59:46 cbbrowne Exp $
 
 This test involves creating tables and sequences in namespaces with
 some wacky names, with StudlyCaps, spaces, and ".".
+
+It drops the "public" schema, using schema "foo" instead.  This
+validates that we can operate without there being a "public"
+schema.
