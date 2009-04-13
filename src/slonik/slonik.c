@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.18 2009-03-05 22:37:23 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.19 2009-04-13 17:41:33 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2691,7 +2691,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	PQclear(res1);
 
 	/*
-	 * For every set we're interested in lookup the direct subscriber nodes.
+	 * For every set we're interested in lookup the subscriber nodes.
 	 */
 	for (i = 0; i < num_sets; i++)
 	{
@@ -2705,11 +2705,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "select sub_receiver "
 					 "    from \"_%s\".sl_subscribe "
 					 "    where sub_set = %d "
-					 "    and sub_provider = %d "
 					 "    and sub_active and sub_forward; ",
 					 stmt->hdr.script->clustername,
-					 setinfo[i].set_id,
-					 stmt->no_id);
+					 setinfo[i].set_id);
 
 		res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res3 == NULL)
@@ -2753,6 +2751,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 * Execute the failedNode() procedure, first on the backup node, then on
 	 * all other nodes.
 	 */
+	printf("INFO: calling failedNode(%d,%d) on node %d\n",
+			stmt->no_id, stmt->backup_node, stmt->no_id);
 	slon_mkquery(&query,
 				 "select \"_%s\".failedNode(%d, %d); ",
 				 stmt->hdr.script->clustername,
@@ -2771,6 +2771,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		if (nodeinfo[i].adminfo == NULL)
 			continue;
 
+		printf("INFO: calling failedNode(%d,%d) on node %d\n",
+				stmt->no_id, stmt->backup_node, nodeinfo[i].no_id);
 		if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 		{
 			free(configbuf);
@@ -2799,6 +2801,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 * Wait until all slon replication engines that where running have
 	 * restarted.
 	 */
+	printf("INFO: Waiting for slon engines to restart\n");
 	n = 0;
 	while (n < num_nodes)
 	{
@@ -2877,7 +2880,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 
 	/*
-	 * For every set determine the direct subscriber with the highest applied
+	 * For every set determine the subscriber with the highest applied
 	 * sync, preferring the backup node.
 	 */
 	for (i = 0; i < num_sets; i++)
@@ -3004,8 +3007,13 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			setinfo[i].max_node->num_sets++;
 		}
 
+		printf("INFO: Node with highest sync for set %d is %d\n",
+				setinfo[i].set_id, use_node);
+
 		if (use_node != stmt->backup_node)
 		{
+			printf("INFO: switching node %d to temporarily receive set %d from node %d\n",
+					stmt->backup_node, setinfo[i].set_id, use_node);
 			slon_mkquery(&query,
 						 "select \"_%s\".storeListen(%d,%d,%d); "
 						 "select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
@@ -3025,7 +3033,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		rc = -1;
 
 	/*
-	 * Now execute all FAILED_NODE events on the node that had the highest of
+	 * Now execute all FAILED_NODE2 events on the node that had the highest of
 	 * all events alltogether.
 	 */
 	if (max_node_total != NULL)
