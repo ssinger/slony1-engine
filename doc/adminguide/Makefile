@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.20.2.1 2009-02-20 15:47:06 cbbrowne Exp $
+# $Id: Makefile,v 1.20.2.2 2009-04-16 16:11:35 cbbrowne Exp $
 #
 #----------------------------------------------------------------------------
 
@@ -73,6 +73,7 @@ ifdef docdir
 endif
 
 install: installdirs
+ifdef D2MSCRIPT
 ifdef docdir
 	for file in man1/*.1; do \
 	   $(INSTALL_DATA) $$file $(DESTDIR)$(mandir)/man1/$$file || exit;\
@@ -84,6 +85,7 @@ ifdef docdir
 	for file in $(wildcard *.html) stylesheet.css ; do \
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(docdir)/html || exit;\
 	done
+endif
 endif
 
 .PHONY: html
