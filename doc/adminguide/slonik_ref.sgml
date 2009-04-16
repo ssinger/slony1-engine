@@ -114,7 +114,7 @@
    </para>
   </partintro>
   <!-- **************************************** -->
-  <refentry id ="stmtinclude"><refmeta><refentrytitle>INCLUDE</refentrytitle>
+  <refentry id ="stmtinclude"><refmeta><refentrytitle>SLONIK INCLUDE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
   
    <refnamediv><refname>INCLUDE</refname>
@@ -151,7 +151,7 @@
    </refsect1>
   </refentry>
   <!-- **************************************** -->
-  <refentry id ="stmtdefine"><refmeta><refentrytitle>DEFINE</refentrytitle>
+  <refentry id ="stmtdefine"><refmeta><refentrytitle>SLONIK DEFINE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DEFINE</refname>
@@ -229,7 +229,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   </partintro>
   <!-- **************************************** -->
   
-  <refentry id ="clustername"><refmeta><refentrytitle>CLUSTER NAME</refentrytitle>
+  <refentry id ="clustername"><refmeta><refentrytitle>SLONIK CLUSTER NAME</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLUSTER NAME</refname>
@@ -278,7 +278,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   
 <!-- **************************************** -->
 
-  <refentry id ="admconninfo"><refmeta><refentrytitle>ADMIN CONNINFO</refentrytitle>
+  <refentry id ="admconninfo"><refmeta><refentrytitle>SLONIK ADMIN CONNINFO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>ADMIN CONNINFO</refname>
@@ -354,7 +354,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   <title>Configuration and Action commmands</title>
 <!-- **************************************** -->
   
-  <refentry id ="stmtecho"><refmeta><refentrytitle>ECHO</refentrytitle>
+  <refentry id ="stmtecho"><refmeta><refentrytitle>SLONIK ECHO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>ECHO</refname>
@@ -3074,7 +3074,7 @@ REPAIR CONFIG (
   </Refentry>
 
 
-  <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>CLONE PREPARE</refentrytitle>
+  <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>SLONIK CLONE PREPARE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLONE PREPARE</refname>
@@ -3122,7 +3122,7 @@ REPAIR CONFIG (
   </Refentry>
 
 
-  <refentry id ="stmtclonefinish"><refmeta><refentrytitle>CLONE FINISH</refentrytitle>
+  <refentry id ="stmtclonefinish"><refmeta><refentrytitle>SLONIK CLONE FINISH</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLONE FINISH</refname>
