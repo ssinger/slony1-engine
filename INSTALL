@@ -1,18 +1,20 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.15 2008-04-14 10:35:01 devrim Exp $
+$Id: INSTALL,v 1.15.2.1 2009-04-16 15:47:25 cbbrowne Exp $
 
-Slony-I currently supports PostgreSQL 7.4.0 (and higher), 8.0.x, and
-8.1.x.  There have also been changes made to support features expected
-in 8.2.
+Slony-I 2.0 currently supports PostgreSQL 8.3.x, and it has been
+getting built against CVS HEAD so that major regressions are not
+expected when 8.4 is released.
 
-Note that earlier versions supported versions in the 7.3.x series; as
-of Slony-I 1.2.0, 7.3 support has been dropped.
+Note that earlier major versions supported earlier PostgreSQL
+versions:
 
-If you require 7.3 support, please avail yourself of an earlier
-Slony-I release; seeing as how 7.3 is very old, dating back to 2002,
-you really should consider upgrading to a newer version of PostgreSQL.
+- 1.0 and 1.1 supported versions back to the 7.3.x series
+- 1.2 supported versions 7.4, 8.0, 8.1, 8.2, and 8.3
+
+If you require support for earlier versions of PostgreSQL, please
+avail yourself of an earlier Slony-I release.
 
 Important Configuration parameters
 ====================================
@@ -45,12 +47,6 @@ specified individually, such as:
 locations, namely --with-pgconfigdir=/path/to/pg_config/bin; the
 others should be able to be inferred based on the output of pg_config.
 
-PostgreSQL version 8 installs the server header #include files by
-default; with version 7.4 and earlier, you need to make sure that the
-build installation included doing "make install-all-headers",
-otherwise the server headers will not be installed, and Slony-I will
-be unable to compile.
-
 After running configure, you may wish to review the file
 "Makefile.global" to ensure it is looking in the right places for all of
 the components. If you failed to specify some of those locations, you
@@ -64,25 +60,20 @@ The main list of files installed within the PostgreSQL instance is:
     * $bindir/slon
     * $bindir/slonik
     * $libdir/slony1_funcs$(DLSUFFIX)
-    * $libdir/xxid($DLSUFFIX)
     * $datadir/slony1_base.sql
-    * $datadir/slony1_base.v73.sql
-    * $datadir/slony1_base.v74.sql
-    * $datadir/slony1_base.v80.sql
+    * $datadir/slony1_base.v83.sql
     * $datadir/slony1_funcs.sql
-    * $datadir/slony1_funcs.v73.sql
-    * $datadir/slony1_funcs.v74.sql
-    * $datadir/slony1_funcs.v80.sql
+    * $datadir/slony1_funcs.v83.sql
 
-The .sql files are not fully substituted yet.  And yes, both the 7.3
-,7.4 and the 8.0 files get installed on a system, irrespective of its
-version.  The slonik admin utility does namespace/cluster
-substitutions within the files, and loads those files when creating
-replication nodes.  At that point in time, the database being
-initialized may be remote and may run a different version of
-PostgreSQL than that of the local host.
+The .sql files are not fully substituted yet.  And note that all of
+the "v??.sql" .0 files get installed as part of every Slony-I
+installation, irrespective of its version.  The slonik admin utility
+does namespace/cluster substitutions within the files, and loads those
+files when creating replication nodes.  At that point in time, the
+database being initialized may be remote and may run a different
+version of PostgreSQL than that of the local host.
 
-At the very least, the two shared objects installed in the $libdir
+At the very least, the shared objects installed in the $libdir
 directory must be installed onto every computer that is supposed to
 become a Slony node. (Other components may be able to be loaded
 remotely from other hosts.)
@@ -100,28 +91,9 @@ There is an extensive "Administrator's Guide" containing what wisdom
 has been discovered and written down about the care and feeding of
 Slony-I.
 
-This is only built if you specify "--with-docs"
-
-Note that you may have difficulty building the documentation on Red
-Hat-based systems due to NAMELEN being set way too low.  Havoc
-Pennington opened a bug on this back in mid-2001, back in the days of
-Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
-appear to have been much progress since then.  The second URL below
-indicates that there is intent to address the issue by bumping up the
-value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that won't likely help you in 2005.  Fedora Core 4 should have the
-issue addressed somewhat sooner.
-
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382 (For RHEL)
-
 A pre-built copy of the "admin guide" should be readily available,
 either in the form of a separate tarball nearby, or in the directory
 doc/adminguide/prebuilt
-
-Until Red Hat Software fixes this bug, as root, you may work around the
-issue by changing NAMELEN as follows:
-cd /usr/share/sgml && perl -pi.bak -e 's/(NAMELEN\s+)44/${1}256/' `find . -type f |xargs grep 'NAMELEN.*44'|sed -e 's/:.*//'`
 
 Building Slony-I for use with Packaged PostgreSQL Binaries
 ============================================================
@@ -130,11 +102,6 @@ If you are building Slony-I against a prepackaged binary install of
 PostgreSQL as provided in RPM or .deb packages, you very likely need
 to install an additional "postgresql-dev" package which contains the
 PostgreSQL #include files.
-
-If you are running a pre-8.0 version of PostgreSQL, and the packagers
-did not use "make install-all-headers" to install server headers, you
-may find yourself forced to throw the prepackaged version overboard and
-build PostgreSQL yourself.
 
 If you are looking for what software dependancies there are, it may be
 useful to look at the file redhat/slony-I.spec to see what
