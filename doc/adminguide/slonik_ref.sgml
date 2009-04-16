@@ -568,7 +568,7 @@ INIT CLUSTER (
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
-     STORE NODE ( ID = 2, COMMENT = 'Node 2');
+     STORE NODE ( ID = 2, COMMENT = 'Node 2', EVENT NODE = 1 );
     </Programlisting>
    </Refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -629,7 +629,7 @@ INIT CLUSTER (
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     DROP NODE ( ID = 2 );
+     DROP NODE ( ID = 2, EVENT NODE = 1 );
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
