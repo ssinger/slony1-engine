@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_sequence.pl,v 1.1 2008-03-12 16:33:29 cbbrowne Exp $
+# $Id: slonik_drop_sequence.pl,v 1.1.2.1 2009-04-16 15:55:01 cbbrowne Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2008 Summerault, LLC
@@ -33,7 +33,7 @@ if ($SHOW_USAGE) {
     exit 0;
 }
 
-require '@@PGLIBDIR@@/slon-tools.pm';
+require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($SEQ_ID,$set) = @ARGV;
