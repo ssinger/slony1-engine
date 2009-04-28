@@ -68,7 +68,6 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
   status "loading data"
   $pgbindir/psql -h $host -p $port -U $user -d $db < $mktmp/generate.data 1> $LOG 2> $LOG
   if [ $? -ne 0 ]; then

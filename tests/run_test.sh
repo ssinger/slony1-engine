@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.26.2.1 2009-01-05 22:04:08 cbbrowne Exp $
+# $Id: run_test.sh,v 1.26.2.2 2009-04-28 21:48:19 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -627,19 +627,29 @@ poll_cluster()
   done
 }      
 
-wait_for_catchup()
+# wait_for_catchup()
+# {
+#   node=1
+#   status "waiting for nodes to catch up"
+
+#   poll_cluster
+
+#   sleep 20
+
+#   poll_cluster
+#   status "done"
+# }
+
+wait_for_catchup ()
 {
-  node=1
-  status "waiting for nodes to catch up"
-
-  poll_cluster
-
-  sleep 20
-
-  poll_cluster
-  status "done"
+    eval onode=${ORIGINNODE:-"1"}
+    status "submit SYNC to node ${onode}, wait for event to propagate to all nodes..."
+    echo "include <${mktmp}/slonik.preamble>;" > $mktmp/wait-for-propagation.slonik
+    echo "sync (ID=${onode});" >> $mktmp/wait-for-propagation.slonik
+    echo "wait for event (origin=${onode},confirmed=ALL,wait on=${onode});" >> $mktmp/wait-for-propagation.slonik
+    $pgbindir/slonik < $mktmp/wait-for-propagation.slonik > $mktmp/wait-for-propagation.log 2>&1
+    status "...event propagated to all nodes"
 }
-
 diff_db()
 {
   originnode=${ORIGINNODE:-"1"}

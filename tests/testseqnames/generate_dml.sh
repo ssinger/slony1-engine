@@ -61,17 +61,17 @@ generate_initdata()
 
 do_initdata()
 {
-   originnode=${ORIGINNODE:-"1"}
+  originnode=${ORIGINNODE:-"1"}
   eval db=\$DB${originnode}
-   eval host=\$HOST${originnode}
+  eval host=\$HOST${originnode}
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
+  wait_for_catchup
   status "done"
 }

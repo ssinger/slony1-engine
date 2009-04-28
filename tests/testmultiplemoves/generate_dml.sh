@@ -66,19 +66,18 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
 
+  wait_for_catchup
   status "Move sets to node 3"
   init_preamble
   cat ${testname}/move_sets.ik >> $mktmp/slonik.script
   do_ik
   status "Completed moving sets"
-  stop_poll
 
   ORIGINNODE=3
   originnode=3
@@ -93,5 +92,6 @@ do_initdata()
   launch_poll
 
   $pgbindir/psql -h $host -U $user -d $db < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
+  wait_for_catchup
   status "done"
 }
