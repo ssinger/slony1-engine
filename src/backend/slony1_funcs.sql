@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.9 2009-04-28 14:36:21 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.10 2009-04-28 19:25:36 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -212,7 +212,7 @@ declare
 	c_cluster text;
 begin
 	c_cluster := '@CLUSTERNAME@';
-	if c_cluster !~ E'^[[:alpha:]_\$][[:alnum:]_\$]{0,62}$' then
+	if c_cluster !~ E'^[[:alpha:]_][[:alnum:]_\$]{0,62}$' then
 		raise exception 'Cluster name % is not a valid SQL symbol!', c_cluster;
 	else
 		raise notice 'checked validity of cluster % namespace - OK!', c_cluster;
