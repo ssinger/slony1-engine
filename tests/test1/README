@@ -1,4 +1,4 @@
-$Id: README,v 1.13.2.1 2009-04-06 22:33:05 cbbrowne Exp $
+$Id: README,v 1.13.2.2 2009-04-28 21:08:59 cbbrowne Exp $
   
 test1 is a basic test that replication generally functions.  
   
@@ -38,3 +38,4 @@ of the config file parser gets exercised.
 9.  It runs the cleanupEvent() function by hand
 
 10.  It runs updateReloid(), which repairs the OIDs on sl_table/sl_sequence
+
