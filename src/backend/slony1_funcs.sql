@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.8 2009-04-06 22:33:04 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.9 2009-04-28 14:36:21 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -197,6 +197,32 @@ NODE/INIT CLUSTER is being run against a conformant set of
 schema/functions.';
 
 select @NAMESPACE@.checkmoduleversion();
+
+-----------------------------------------------------------------------
+-- This function checks to see if the namespace name is valid.  
+--
+-- Apparently pgAdminIII does different validation than Slonik, and so
+-- users that set up cluster names using pgAdminIII can get in trouble in
+-- that they do not get around to needing Slonik until it is too
+-- late...
+-----------------------------------------------------------------------
+
+create or replace function @NAMESPACE@.check_namespace_validity () returns boolean as $$
+declare
+	c_cluster text;
+begin
+	c_cluster := '@CLUSTERNAME@';
+	if c_cluster !~ E'^[[:alpha:]_\$][[:alnum:]_\$]{0,62}$' then
+		raise exception 'Cluster name % is not a valid SQL symbol!', c_cluster;
+	else
+		raise notice 'checked validity of cluster % namespace - OK!', c_cluster;
+	end if;
+	return 't';
+end
+$$ language plpgsql;
+
+select @NAMESPACE@.check_namespace_validity();
+drop function @NAMESPACE@.check_namespace_validity();
 
 -- ----------------------------------------------------------------------
 -- FUNCTION logTrigger ()
@@ -5821,3 +5847,4 @@ comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text
 'Add a partition table to replication.
 tab_idxname is optional - if NULL, then we use the primary key.
 This function looks up replication configuration via the parent table.';
+

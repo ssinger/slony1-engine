@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.80.2.2 2009-02-26 16:24:58 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.80.2.3 2009-04-28 14:36:21 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -1844,6 +1844,44 @@ nodes.</para>
 <para>Similarly to <xref linkend="stmtsetdroptable">, this is
 implemented &slony1; version 1.0.5 as <xref
 linkend="stmtsetdropsequence">.</para></answer></qandaentry>
+
+<qandaentry>
+<question><para> I set up my cluster using pgAdminIII, with cluster
+name <quote>MY-CLUSTER</quote>.  Time has passed, and I tried using
+Slonik to make a configuration change, and this is failing with the
+following error message:</para>
+
+<programlisting>
+ERROR: syntax error at or near -
+</programlisting>
+</question>
+
+<answer><para> The problem here is that &slony1; expects cluster names
+to be valid <ulink url=
+"http://www.postgresql.org/docs/8.3/static/sql-syntax-lexical.html">
+SQL Identifiers</ulink>, and &lslonik; enforces this.  Unfortunately,
+<application>pgAdminIII</application> did not do so, and allowed using
+a cluster name that now causes <emphasis>a problem.</emphasis> </para> </answer>
+
+<answer> <para> If you have gotten into this spot, it's a problem that
+we mayn't be help resolve, terribly much.  </para>
+
+<para> It's <emphasis>conceivably possible</emphasis> that running the
+SQL command <command>alter namespace "_My-Bad-Clustername" rename to
+"_BetterClusterName";</command> against each database may work.  That
+shouldn't particularly <emphasis>damage</emphasis> things!</para>
+
+<para> On the other hand, when the problem has been experienced, users
+have found they needed to drop replication and rebuild the
+cluster.</para> </answer>
+
+<answer><para> A change in version 2.0.2 is that a function runs as
+part of loading functions into the database which checks the validity
+of the cluster name.  If you try to use an invalid cluster name,
+loading the functions will fail, with a suitable error message, which
+should prevent things from going wrong even if you're using tools
+other than &lslonik; to manage setting up the cluster. </para></answer>
+</qandaentry>
 
 </qandadiv>
 
