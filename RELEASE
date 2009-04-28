@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.9 2009-04-28 14:36:21 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.10 2009-04-28 21:49:29 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -81,3 +81,7 @@ RELEASE 2.0.2
 - Add a test which validates that the cluster schema name is valid; 
   pgAdminIII allowed setting up cluster names that slonik would refuse
   to connect to.
+
+- Revised regression tests to use SYNC/WAIT FOR EVENT instead of
+  queries that try to coordinate sl_status information with rather
+  less determinacy...
