@@ -122,11 +122,14 @@
         <para>Determines if you would like the timestamp of the event being logged to 
           appear in each log line entry.
         </para>
+
+        <para> Note that if <envar>syslog</envar> usage is configured,
+        then this is ignored; it is assumed that
+        <application>syslog</application> will be supplying
+        timestamps, and timestamps are therefore suppressed.
+        </para>
       </listitem>
     </varlistentry>
-
-
-
 
     <varlistentry id="slon-config-logging-log-timestamp-format" xreflabel="slon_conf_log_timestamp_format">
       <term><varname>log_timestamp_format</varname> (<type>string</type>)</term>
