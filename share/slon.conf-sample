@@ -1,4 +1,4 @@
-# $Id: slon.conf-sample,v 1.7.2.1 2009-01-05 22:04:09 cbbrowne Exp $
+# $Id: slon.conf-sample,v 1.7.2.2 2009-04-30 15:24:21 cbbrowne Exp $
 #
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3
@@ -50,6 +50,10 @@
 # stall replication.
 # Range:  [1048576,1073741824], default: 5242880
 #sync_max_largemem=5242880
+
+# How long to wait (in seconds) before timeout when querying for remote events
+# Range: [30,30000], default: 300
+# remote_listen_timeout=300
 
 # If this parameter is 1, messages go both to syslog and the standard 
 # output. A value of 2 sends output only to syslog (some messages will 
@@ -109,3 +113,12 @@
 
 # Directory in which to stow sync archive files
 # archive_dir="/tmp/somewhere"
+
+# These are used to cause a node to watch for a final SYNC, and then
+# terminate.  You must supply the provider and the SYNC number
+# quit_sync_provider=1
+# quit_sync_finalsync=21341
+
+# Should the cleanup thread DELETE data from sl_log_1/2, or
+# should it leave the trimming to the TRUNCATE?
+# cleanup_deletelogs=false
