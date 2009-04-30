@@ -1,4 +1,4 @@
-<!-- $Id: versionupgrade.sgml,v 1.9 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!-- $Id: versionupgrade.sgml,v 1.9.2.1 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
 
 <indexterm><primary>version upgrades for &postgres; using
@@ -27,20 +27,23 @@ required involves:
 <listitem><para> Point <quote>write</quote> applications to the new database</para></listitem>
 </itemizedlist></para>
 
-<para> And note that this led to a 40 hour outage.</para>
+<para> And note that this approach led to a 40 hour outage.</para>
 
 <para> &slony1; offers an opportunity to replace that long outage with
-one a few minutes or even a few seconds long.  The approach taken is
-to create a &slony1; replica in the new version.  It is possible that
-it might take much longer than 40h to create that replica, but once
-it's there, it can be kept very nearly up to date.</para>
+one as little as a few seconds long.  The approach required is to
+create a &slony1; replica in the new version.  It is possible that it
+may take considerably longer than 40h to create that replica, however,
+establishing that replica requires no outage, and once it's there, it
+can be kept very nearly up to date.</para>
 
-<para> When it is time to switch over to the new database, the
-procedure is rather less time consuming:
+<para> When it comes time to switch over to the new database, the
+portion of the procedure that requires an application
+<quote>outage</quote> is a lot less time consuming:
 
 <itemizedlist>
 
-<listitem><para> Stop all applications that might modify the data</para></listitem>
+<listitem><para> Stop all applications that might modify the data
+</para></listitem>
 
 <listitem><para> Lock the set against client application updates using
 <xref linkend="stmtlockset"></para></listitem>
@@ -49,21 +52,22 @@ procedure is rather less time consuming:
 linkend="stmtmoveset"> to shift the origin from the old database to
 the new one</para></listitem>
 
-<listitem><para> Point the applications at the new database</para></listitem>
-</itemizedlist></para>
+<listitem><para> Point the applications to the new database
+</para></listitem> </itemizedlist></para>
 
 <para> This procedure should only need to take a very short time,
-likely bound more by how quickly you can reconfigure your applications
-than anything else.  If you can automate all the steps, it might take
-less than a second.  If not, somewhere between a few seconds and a few
-minutes is likely.</para>
+likely based more on how much time is required to reconfigure your
+applications than anything else.  If you can automate all of these
+steps, the outage may conceivably be a second or less.  If manual
+handling is necessary, then it is likely to take somewhere between a
+few seconds and a few minutes.</para>
 
-<para> Note that after the origin has been shifted, updates now flow
-into the <emphasis>old</emphasis> database.  If you discover that due
-to some unforeseen, untested condition, your application is somehow
-unhappy connecting to the new database, you could easily use <xref
-linkend="stmtmoveset"> again to shift the origin back to the old
-database.</para>
+<para> Note that after the origin has been shifted, updates are
+replicated back into the <emphasis>old</emphasis> database.  If you
+discover that due to some unforeseen, untested condition, your
+application is somehow unhappy connecting to the new database, you may
+readily use <xref linkend="stmtmoveset"> again to reverse the process
+to shift the origin back to the old database.</para>
 
 <para> If you consider it particularly vital to be able to shift back
 to the old database in its state at the time of the changeover, so as
@@ -81,7 +85,15 @@ of the database:
 </itemizedlist></para>
 
 <para> Thus, you have <emphasis>three</emphasis> nodes, one running
-the new version of &postgres;, and the other two the old version.</para></listitem>
+the new version of &postgres;, and the other two the old
+version.</para>
+
+<para> Note that this imposes a need to have &slony1; built against
+<emphasis>both</emphasis> databases (<emphasis>e.g.</emphasis> - at
+the very least, the binaries for the stored procedures need to have
+been compiled against both versions of &postgres;). </para>
+
+</listitem>
 
 <listitem><para> Once they are roughly <quote>in sync</quote>, stop
 all applications that might modify the data</para></listitem>
@@ -119,11 +131,426 @@ the global schema.  He found it pretty fiddly, and that some queries
 weren't very efficient (the &postgres; query optimizer has improved
 <emphasis>considerably</emphasis> since 7.2), but that this was more
 workable for him than other replication systems such as
-<productname>eRServer</productname>.  If you desperately need that,
-look for him on the &postgres; Hackers mailing list.  It is not
-anticipated that 7.2 will be supported by any official &slony1;
+<productname>eRServer</productname>.  &postgres; 7.2 will
+<emphasis>never</emphasis> be supported by any official &slony1;
 release.</para></note></para>
 
+<sect2> <title>Example: Upgrading a single database with no existing replication </title>
+
+<para>This example shows names, IP addresses, ports, etc to describe
+in detail what is going on</para>
+
+   <sect3>
+    <title>The Environment</title>
+    <programlisting>
+		Database machine:
+			name = rome 
+			ip = 192.168.1.23
+			OS: Ubuntu 6.06 LTS
+			postgres user = postgres, group postgres
+			
+		Current PostgreSQL 
+			Version = 8.2.3 
+			Port 5432
+			Installed at: /data/pgsql-8.2.3
+			Data directory: /data/pgsql-8.2.3/data
+			Database to be moved: mydb
+			
+		New PostgreSQL installation
+			Version = 8.3.3
+			Port 5433
+			Installed at: /data/pgsql-8.3.3
+			Data directory: /data/pgsql-8.3.3/data
+			
+		Slony Version to be used = 1.2.14
+    </programlisting>
+   </sect3>
+   <sect3>
+    <title>Installing &slony1;</title>
+
+    <para>
+     How to install &slony1; is covered quite well in other parts of
+     the documentation (<xref linkend="installation">); we will just
+     provide a quick guide here.</para>
+
+      <programlisting>
+       wget http://main.slony.info/downloads/1.2/source/slony1-1.2.14.tar.bz2
+      </programlisting>
+
+      <para> Unpack and build as root with</para>
+      <programlisting>
+		tar xjf slony1-1.2.14.tar.bz2
+		cd slony1-1.2.14
+		./configure --prefix=/data/pgsql-8.2.3 --with-perltools=/data/pgsql-8.2.3/slony --with-pgconfigdir=/data/pgsql-8.2.3/bin
+		make clean
+		make
+		make install
+		chown -R postgres:postgres /data/pgsq-8.2.3 
+		mkdir /var/log/slony
+		chown -R postgres:postgres /var/log/slony
+      </programlisting>
+
+      <para> Then repeat this for the 8.3.3 build.  A very important
+      step is the <command>make clean</command>; it is not so
+      important the first time, but when building the second time, it
+      is essential to clean out the old binaries, otherwise the
+      binaries will not match the &postgres; 8.3.3 build with the
+      result that &slony1; will not work there.  </para>
+
+   </sect3>
+   <sect3>
+    <title>Creating the slon_tools.conf</title>
+
+    <para>
+     The slon_tools.conf is <emphasis>the</emphasis> configuration
+     file. It contain all all the configuration information such as:
+
+     <orderedlist>
+      <listitem>
+       <para>All the nodes and their details (IPs, ports, db, user,
+	password)</para>
+      </listitem>
+      <listitem>
+       <para>All the tables to be replicated</para>
+      </listitem>
+      <listitem>
+       <para>All the sequences to be replicated</para>
+      </listitem>
+      <listitem>
+       <para> How the tables and sequences are arranged in sets</para>
+      </listitem>
+     </orderedlist>
+     </para>
+     <para> Make a copy of
+      <filename>/data/pgsql-8.2.3/etc/slon_tools.conf-sample</filename>
+      to <filename>slon_tools.conf</filename> and open it. The comments
+      in this file are fairly self explanatory. Since this is a one time
+      replication you will generally not need to split into multiple
+      sets. On a production machine running with 500 tables and 100
+      sequences, putting them all in a single set has worked fine.</para>
+      
+      <orderedlist>
+       <para>A few modifications to do:</para>
+       <listitem>
+	<para> In our case we only need 2 nodes so delete the <command>add_node</command>
+	 for 3 and 4.</para>
+       </listitem>
+       <listitem>
+	<para> <envar>pkeyedtables</envar> entry need to be updated with your tables that
+	 have a primary key. If your tables are spread across multiple
+	 schemas, then you need to qualify the table name with the schema
+	 (schema.tablename)</para>
+       </listitem>
+       <listitem>
+	<para> <envar>keyedtables</envar> entries need to be updated
+	with any tables that match the comment (with good schema
+	design, there should not be any).
+	</para>
+       </listitem>
+       <listitem>
+	<para> <envar>serialtables</envar> (if you have any; as it says, it is wise to avoid this).</para>
+       </listitem>
+       <listitem>
+	<para> <envar>sequences</envar>  needs to be updated with your sequences.
+	</para>
+       </listitem>
+       <listitem>
+	<para>Remove the whole set2 entry (as we are only using set1)</para>
+       </listitem>
+      </orderedlist>
+     <para>
+      This is what it look like with all comments stripped out:
+      <programlisting>
+$CLUSTER_NAME = 'replication';
+$LOGDIR = '/var/log/slony';
+$MASTERNODE = 1;
+
+    add_node(node     => 1,
+	     host     => 'rome',
+	     dbname   => 'mydb',
+	     port     => 5432,
+	     user     => 'postgres',
+         password => '');
+
+    add_node(node     => 2,
+	     host     => 'rome',
+	     dbname   => 'mydb',
+	     port     => 5433,
+	     user     => 'postgres',
+         password => '');
+
+$SLONY_SETS = {
+    "set1" => {
+	"set_id" => 1,
+	"table_id"    => 1,
+	"sequence_id" => 1,
+        "pkeyedtables" => [
+			   'mytable1',
+			   'mytable2',
+			   'otherschema.mytable3',
+			   'otherschema.mytable4',
+			   'otherschema.mytable5',
+			   'mytable6',
+			   'mytable7',
+			   'mytable8',
+			   ],
+
+		"sequences" => [
+			   'mytable1_sequence1',
+   			   'mytable1_sequence2',
+			   'otherschema.mytable3_sequence1',
+   			   'mytable6_sequence1',
+   			   'mytable7_sequence1',
+   			   'mytable7_sequence2',
+			],
+    },
+
+};
+
+1;
+      </programlisting>
+      </para>
+      <para> As can be seen this database is pretty small with only 8
+      tables and 6 sequences. Now copy your
+      <filename>slon_tools.conf</filename> into
+      <filename>/data/pgsql-8.2.3/etc/</filename> and
+      <filename>/data/pgsql-8.3.3/etc/</filename>
+      </para>
+   </sect3>
+   <sect3>
+    <title>Preparing the new &postgres; instance</title>
+    <para> You now have a fresh second instance of &postgres; running on
+     port 5433 on the same machine.  Now is time to prepare to 
+     receive &slony1; replication data.</para>
+    <orderedlist>
+     <listitem>
+      <para>Slony does not replicate roles, so first create all the
+       users on the new instance so it is identical in terms of
+       roles/groups</para>
+     </listitem>
+     <listitem>
+      <para>
+       Create your db in the same encoding as original db, in my case
+       UTF8
+       <command>/data/pgsql-8.3.3/bin/createdb
+	-E UNICODE -p5433 mydb</command>
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       &slony1; replicates data, not schemas, so take a dump of your schema
+       <command>/data/pgsql-8.2.3/bin/pg_dump
+	-s mydb > /tmp/mydb.schema</command>
+       and then import it on the new instance.
+       <command>cat /tmp/mydb.schema | /data/pgsql-8.3.3/bin/psql -p5433
+	mydb</command>
+      </para>
+     </listitem>
+    </orderedlist>
+
+    <para>The new database is now ready to start receiving replication
+    data</para>
+
+   </sect3>
+   <sect3>
+    <title>Initiating &slony1; Replication</title>
+    <para>This is the point where we start changing your current
+     production database by adding a new schema to it that  contains
+     all the &slony1; replication information</para>
+    <para>The first thing to do is to initialize the &slony1;
+     schema.  Do the following as, in the example, the  postgres user.</para>
+    <note>
+     <para> All commands starting with <command>slonik</command> does not do anything
+      themself they only generate command output that can be interpreted
+      by the slonik binary. So issuing any of the scripts starting with
+      slonik_ will not do anything to your database. Also by default the
+      slonik_ scripts will look for your slon_tools.conf in your etc
+      directory of the postgresSQL directory. In my case
+      <filename>/data/pgsql-8.x.x/etc</filename> depending on which you are working on.</para>
+    </note>
+    <para>
+     <command>/data/pgsql-8.2.3/slony/slonik_init_cluster
+      > /tmp/init.txt</command>
+    </para>
+    <para>open /tmp/init.txt and it should look like something like
+     this</para>
+    <programlisting>
+# INIT CLUSTER
+cluster name = replication;
+ node 1 admin conninfo='host=rome dbname=mydb user=postgres port=5432';
+ node 2 admin conninfo='host=rome dbname=mydb user=postgres port=5433';
+  init cluster (id = 1, comment = 'Node 1 - mydb@rome');
+
+# STORE NODE
+  store node (id = 2, event node = 1, comment = 'Node 2 - mydb@rome');
+  echo 'Set up replication nodes';
+
+# STORE PATH
+  echo 'Next: configure paths for each node/origin';
+  store path (server = 1, client = 2, conninfo = 'host=rome dbname=mydb user=postgres port=5432');
+  store path (server = 2, client = 1, conninfo = 'host=rome dbname=mydb user=postgres port=5433');
+  echo 'Replication nodes prepared';
+  echo 'Please start a slon replication daemon for each node';
+     
+    </programlisting>
+    <para>The first section indicates node information and the
+    initialization of the cluster, then it adds the second node to the
+    cluster and finally stores communications paths for both nodes in
+    the slony schema.</para>
+    <para>
+     Now is time to execute the command:
+     <command>cat /tmp/init.txt | /data/pgsql-8.2.3/bin/slonik</command>
+    </para>
+    <para>This will run pretty quickly and give you some output to
+    indicate success.</para>
+    <para>
+     If things do fail, the most likely reasons would be database
+     permissions, <filename>pg_hba.conf</filename> settings, or typos
+     in <filename>slon_tools.conf</filename>. Look over your problem
+     and solve it.  If slony schemas were created but it still failed
+     you can issue the script <command>slonik_uninstall_nodes</command> to
+     clean things up.  In the worst case you may connect to each
+     database and issue <command>drop schema _replication cascade;</command>
+     to clean up.
+    </para>
+   </sect3>
+   <sect3>
+    <title>The slon daemon</title>
+
+    <para>As the result from the last command told us, we should now
+    be starting a slon replication daemon for each node! The slon
+    daemon is what makes the replication work. All transfers and all
+    work is done by the slon daemon. One is needed for each node. So
+    in our case we need one for the 8.2.3 installation and one for the
+    8.3.3.</para>
+
+    <para> to start one for 8.2.3 you would do:
+    <command>/data/pgsql-8.2.3/slony/slon_start 1 --nowatchdog</command>
+    This would start the daemon for node 1, the --nowatchdog since we
+    are running a very small replication we do not need any watchdogs
+    that keep an eye on the slon process if it stays up etc.  </para>
+
+    <para>if it says started successfully have a look in the log file
+     at /var/log/slony/slony1/node1/ It will show that the process was
+     started ok</para>
+
+    <para> We need to start one for 8.3.3 as well.  <command>
+    <command>/data/pgsql-8.3.3/slony/slon_start 2 --nowatchdog</command>
+    </command> </para>
+
+    <para>If it says it started successfully have a look in the log
+    file at /var/log/slony/slony1/node2/ It will show that the process
+    was started ok</para>
+   </sect3>
+   <sect3>
+    <title>Adding the replication set</title>
+    <para>We now need to let the slon replication know which tables and
+     sequences it is to replicate. We need to create the set.</para>
+    <para>
+     Issue the following:
+     <command>/data/pgsql-8.2.3/slony/slonik_create_set
+      set1 > /tmp/createset.txt</command>
+    </para>
+
+    <para> <filename> /tmp/createset.txt</filename> may be quite lengthy depending on how
+     many tables; in any case, take a quick look and it should make sense as it
+     defines all the tables and sequences to be replicated</para>
+
+    <para>
+     If you are happy with the result send the file to the slonik for
+     execution
+     <command>cat /tmp/createset.txt | /data/pgsql-8.2.3/bin/slonik
+     </command>
+     You will see quite a lot rolling by, one entry for each table.
+    </para>
+    <para>You now have defined what is to be replicated</para>
+   </sect3>
+   <sect3>
+    <title>Subscribing all the data</title>
+    <para>
+     The final step is to get all the data onto the new database. It is
+     simply done using the subscribe script.
+     <command>data/pgsql-8.2.3/slony/slonik_subscribe_set
+      1 2 > /tmp/subscribe.txt</command>
+     the first is the ID of the set, second is which node that is to
+     subscribe.
+    </para>
+    <para>
+     will look something like this:
+     <programlisting>
+ cluster name = replication;
+ node 1 admin conninfo='host=rome dbname=mydb user=postgres port=5432';
+ node 2 admin conninfo='host=rome dbname=mydb user=postgres port=5433';
+  try {
+    subscribe set (id = 1, provider = 1, receiver = 2, forward = yes);
+  }
+  on error {
+    exit 1;
+  }
+  echo 'Subscribed nodes to set 1';
+     </programlisting>
+     send it to the slonik
+     <command>cat /tmp/subscribe.txt | /data/pgsql-8.2.3/bin/slonik
+     </command>
+    </para>
+    <para>The replication will now start. It will copy everything in
+     tables/sequneces that were in the set. understandable this can take
+     quite some time, all depending on the size of db and power of the
+     machine.</para>
+    <para>
+     One way to keep track of the progress would be to do the following:
+     <command>tail -f /var/log/slony/slony1/node2/log | grep -i copy
+     </command>
+     The slony logging is pretty verbose and doing it this way will let
+     you know how the copying is going. At some point it will say "copy
+     completed sucessfully in xxx seconds" when you do get this it is
+     done!
+    </para>
+    <para>Once this is done it will start trying to catch up with all
+     data that has come in since the replication was started. You can
+     easily view the progress of this in the database. Go to the master
+     database, in the replication schema there is a view called
+     sl_status. It is pretty self explanatory. The field of most interest
+     is the "st_lag_num_events" this declare how many slony events behind
+     the node is. 0 is best. but it all depends how active your db is.
+     The field next to it st_lag_time is an estimation how much in time
+     it is lagging behind. Take this with a grain of salt. The actual
+     events is a more accurate messure of lag.</para>
+    <para>You now have a fully replicated database</para>
+   </sect3>
+   <sect3>
+    <title>Switching over</title>
+    <para>Our database is fully replicated and its keeping up. There
+     are few different options for doing the actual switch over it all
+     depends on how much time you got to work with, down time vs. data
+     loss ratio. the most brute force fast way of doing it would be
+    </para>
+    <orderedlist>
+     <listitem>
+      <para>First modify the postgresql.conf file for the 8.3.3 to
+       use port 5432 so that it is ready for the restart</para>
+     </listitem>
+     <listitem>
+      <para>From this point you will have down time. shutdown the
+       8.2.3 postgreSQL installation</para>
+     </listitem>
+     <listitem>
+      <para>restart the 8.3.3 postgreSQL installation. It should
+       come up ok.</para>
+     </listitem>
+     <listitem>
+      <para>
+       drop all the slony stuff from the 8.3.3 installation login psql to
+       the 8.3.3 and issue
+       <command>drop schema _replication cascade;</command>
+      </para>
+     </listitem>
+    </orderedlist>
+    <para>You have now upgraded to 8.3.3 with, hopefully, minimal down
+    time. This procedure represents roughly the simplest way to do
+    this.</para>
+   </sect3>
+  </sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

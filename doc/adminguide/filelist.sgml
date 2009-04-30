@@ -1,4 +1,4 @@
-<!-- $Id: filelist.sgml,v 1.18.2.1 2007-09-05 21:36:31 cbbrowne Exp $ -->
+<!-- $Id: filelist.sgml,v 1.18.2.2 2009-04-30 16:06:10 cbbrowne Exp $ -->
 
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
@@ -44,7 +44,9 @@
 <!entity loganalysis        SYSTEM "loganalysis.sgml">
 <!entity slonyupgrade       SYSTEM "slonyupgrade.sgml">
 <!entity releasechecklist   SYSTEM "releasechecklist.sgml">
+<!entity raceconditions     SYSTEM "raceconditions.sgml">
 <!entity partitioning       SYSTEM "partitioning.sgml">
+<!entity triggers           SYSTEM "triggers.sgml">
 
 <!-- back matter -->
 <!entity biblio     SYSTEM "biblio.sgml">

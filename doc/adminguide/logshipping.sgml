@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.16.2.5 2007-10-24 17:49:35 devrim Exp $ -->
+<!-- $Id: logshipping.sgml,v 1.16.2.6 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
@@ -269,7 +269,7 @@ dashes at the end of the <quote>header</quote> material:
 -- Node 11, Event 656
 start transaction;
 
-select "_T1".setsyncTracking_offline(1, '655', '656', '2005-09-23 18:37:40.206342');
+select "_T1".setsyncTracking_offline(1, '655', '656', '2007-09-23 18:37:40.206342');
 -- end of log archiving header
 </programlisting></para></listitem>
 
@@ -281,7 +281,7 @@ SYNC time.
 -- Node 11, Event 109
 start transaction;
 
-select "_T1".setsyncTracking_offline(1, '96', '109', '2005-09-23 19:01:31.267403');
+select "_T1".setsyncTracking_offline(1, '96', '109', '2007-09-23 19:01:31.267403');
 -- end of log archiving header
 </programlisting></para>
 
@@ -343,6 +343,29 @@ done
 </itemizedlist>
 
 </sect2>
+
+<sect2><title> <application> find-triggers-to-deactivate.sh
+</application> </title>
+
+<indexterm><primary> trigger deactivation </primary> </indexterm>
+
+<para> It was once pointed out (<ulink
+url="http://www.slony.info/bugzilla/show_bug.cgi?id=19"> Bugzilla bug
+#19</ulink>) that the dump of a schema may include triggers and rules
+that you may not wish to have running on the log shipped node.</para>
+
+<para> The tool <filename> tools/find-triggers-to-deactivate.sh
+</filename> was created to assist with this task.  It may be run
+against the node that is to be used as a schema source, and it will
+list the rules and triggers present on that node that may, in turn
+need to be deactivated.</para>
+
+<para> It includes <function>logtrigger</function> and <function>denyaccess</function>
+triggers which will may be left out of the extracted schema, but it is
+still worth the Gentle Administrator verifying that such triggers are
+kept out of the log shipped replica.</para>
+
+</sect2>
 <sect2> <title> <application>slony_logshipper </application> Tool </title>
 
 
@@ -381,6 +404,7 @@ run with three sorts of parameters:</para>
 <listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
 <listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> </listitem>
 </itemizedlist>
+
 <para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
 
 <para> Pre- and post-processing commands have two further special variables defined: </para>
@@ -398,9 +422,7 @@ run with three sorts of parameters:</para>
 
 <para> In the example shown, this sends an email to the DBAs upon
 encountering an error.</para> </listitem>
-</itemizedlist>
 
-<itemizedlist>
 <listitem><para> Archive File Names</para>
 
 <para> Each filename is added to the SystemV Message queue for

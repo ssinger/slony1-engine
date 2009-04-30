@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.20.2.1 2007-10-22 20:50:55 cbbrowne Exp $ -->
+<!-- $Id: reshape.sgml,v 1.20.2.2 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <indexterm><primary>reshaping replication</primary></indexterm>
@@ -38,6 +38,11 @@ entries is entirely automated, so that they are regenerated when
 changes are made to <xref linkend="table.sl-path"> or <xref
 linkend="table.sl-subscribe">, thereby making it unnecessary to even think
 about <xref linkend="stmtstorelisten">.</para></listitem>
+
+<listitem><para> After performing the configuration change, you
+should, as <xref linkend="bestpractices">, run the &lteststate;
+scripts in order to validate that the cluster state remains in good
+order after this change. </para> </listitem>
 
 </itemizedlist>
 </para>

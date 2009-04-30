@@ -1,4 +1,4 @@
-<!-- $Id: bestpractices.sgml,v 1.24.2.1 2007-03-16 19:01:26 cbbrowne Exp $ --> 
+<!-- $Id: bestpractices.sgml,v 1.24.2.2 2009-04-30 16:06:10 cbbrowne Exp $ --> 
 <sect1 id="bestpractices">
 <title> &slony1; <quote>Best Practices</quote> </title>
 <indexterm><primary>best practices for &slony1; usage</primary></indexterm>
@@ -103,9 +103,8 @@ busy systems won't generate many dead tuples in that table
 
 <listitem><para> The system will periodically rotate (using
 <command>TRUNCATE</command> to clean out the old table) between the
-two log tables, <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-log-2">, preventing unbounded growth of dead space
-there.  </para></listitem>
+two log tables, &sllog1; and &sllog2;, preventing unbounded growth of
+dead space there.  </para></listitem>
 </itemizedlist>
 
 </listitem>
@@ -113,6 +112,11 @@ there.  </para></listitem>
 <listitem>
 <para> <link linkend="Failover"> Failover </link> policies
 should be planned for ahead of time.  </para>
+
+<para> Most pointedly, any node that is expected to be a failover
+target must have its subscription(s) set up with the option
+<command>FORWARD = YES</command>.  Otherwise, that node is not a
+candidate for being promoted to origin node. </para>
 
 <para> This may simply involve thinking about what the priority lists
 should be of what should fail to what, as opposed to trying to
@@ -143,6 +147,15 @@ Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
 transaction with all the known ill effects.</para>
 </listitem>
 
+<listitem><para> If you are using the autovacuum process in recent
+versions of &postgres;, you may wish to leave &slony1; tables out, as
+&slony1; is a bit more intelligent about vacuuming when it is expected
+to be conspicuously useful (<emphasis>e.g.</emphasis> - immediately
+after purging old data) to do so than autovacuum can be. </para>
+
+<para> See <xref linkend="maintenance-autovac"> for more
+details. </para> </listitem>
+
 <listitem> <para> Running all of the &lslon; daemons on a central
 server for each network has proven preferable. </para>
 
@@ -163,13 +176,15 @@ across a dozen servers turns out to be inconvenient to manage.</para>
 <quote>network context</quote> as the node that each is responsible
 for managing so that the connection to that node is a
 <quote>local</quote> one.  Do <emphasis>not</emphasis> run such links
-across a WAN. </para>
+across a WAN.  Thus, if you have nodes in London and nodes in New
+York, the &lslon;s managing London nodes should run in London, and the
+&lslon;s managing New York nodes should run in New York.</para>
 
-<para> A WAN outage can leave database connections
-<quote>zombied</quote>, and typical TCP/IP behaviour <link
-linkend="multipleslonconnections"> will allow those connections to
-persist, preventing a slon restart for around two hours. </link>
-</para>
+<para> A WAN outage (or flakiness of the WAN in general) can leave
+database connections <quote>zombied</quote>, and typical TCP/IP
+behaviour <link linkend="multipleslonconnections"> will allow those
+connections to persist, preventing a slon restart for around two
+hours. </link> </para>
 
 <para> It is not difficult to remedy this; you need only <command>kill
 SIGINT</command> the offending backend connection.  But by running the
@@ -192,10 +207,10 @@ half-processed, there's no problem: the transaction will roll back,
 and when the &lslon; restarts, it will restart that event from
 scratch.</para>
 
-<para> The exception, where it is undesirable to restart a &lslon;, is
-where a <command>COPY_SET</command> is running on a large replication
-set, such that stopping the &lslon; may discard several hours worth of
-load work. </para>
+<para> The exception scenario where it is undesirable to restart a
+&lslon; is where a <command>COPY_SET</command> is running on a large
+replication set, such that stopping the &lslon; may discard several
+hours worth of load work. </para>
 
 <para> In early versions of &slony1;, it was frequently the case that
 connections could get a bit <quote>deranged</quote> which restarting
@@ -223,7 +238,13 @@ key.</quote></para>
 used to introduce a candidate primary key, as this introduces the
 possibility that updates to this table can fail due to the introduced
 unique index, which means that &slony1; has introduced a new failure
-mode for your application.</para>
+mode for your application.  
+</para>
+
+<warning><para> In version 2 of &slony1;, <xref
+linkend="stmttableaddkey"> is no longer supported.  You
+<emphasis>must</emphasis> have either a true primary key or a
+candidate primary key.  </para></warning>
 </listitem>
 
 <listitem>
@@ -280,8 +301,11 @@ stream on all servers.  </link> </para>
 database objects.  Altering tables requires taking out an exclusive
 lock on them; doing so via <command>execute script</command> requires
 that &slony1; take out an exclusive lock on <emphasis>all</emphasis>
-replicated tables.  This can prove quite inconvenient when
-applications are running; you run into deadlocks and such. </para>
+replicated tables.  This can prove quite inconvenient if applications
+are running when running DDL; &slony1; is asking for those exclusive
+table locks, whilst, simultaneously, some application connections are
+gradually relinquishing locks, whilst others are backing up behind the
+&slony1; locks.  </para>
 
 <para> One particularly dogmatic position that some hold is that
 <emphasis>all</emphasis> schema changes should
@@ -427,8 +451,8 @@ technically could, were a result of incorrect listen path
 configuration. </para>
 </listitem>
 
-<listitem><para> Use <filename>test_slony_state.pl</filename> to look
-for configuration problems.</para>
+<listitem><para> Run &lteststate; frequently to discover configuration
+problems as early as possible.</para>
 
 <para>This is a Perl script which connects to a &slony1; node and then
 rummages through &slony1; configuration looking for quite a variety of
@@ -441,6 +465,12 @@ conditions that tend to indicate problems, including:
 
 <para> If replication mysteriously <quote>isn't working</quote>, this
 tool can run through many of the possible problems for you. </para>
+
+<para> It will also notice a number of sorts of situations where
+something has broken.  Not only should it be run when problems have
+been noticed - it should be run frequently (<emphasis>e.g.</emphasis>
+- hourly, or thereabouts) as a general purpose <quote>health
+check</quote> for each &slony1; cluster. </para>
 
 </listitem>
 
@@ -490,6 +520,15 @@ which takes several hours to subscribe) it has been found to be
 desirable to lock all users other than the <command>slony</command>
 user out of the new subscriber because:
 </para>
+
+<para> It is also a very good idea to change &lslon; configuration for
+<xref linkend="slon-config-sync-interval"> on the origin node to
+reduce how many <command>SYNC</command> events are generated.  If the
+subscription takes 8 hours, there is little sense in there being 28800
+<command>SYNC</command>s waiting to be applied.  Running a
+<command>SYNC</command> every minute or so is likely to make catching
+up easier.</para>
+
 </listitem>
 </itemizedlist>
 <itemizedlist>
@@ -574,8 +613,7 @@ around 90,000 <command>SYNC</command>s per day, possibly for several
 days.  </para>
 
 <para> There will correspondingly be an <emphasis>enormous</emphasis>
-growth of <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog">.  Unfortunately, once the
+growth of &sllog1;, &sllog2;, and &slseqlog;.  Unfortunately, once the
 <command>COPY_SET</command> completes, users have found that the
 queries against these tables wind up reverting to <command>Seq
 Scans</command> so that even though a particular
@@ -598,9 +636,9 @@ careful selection of &lslon; parameters:</para>
 before version 1.1.1, see <filename> slony1_base.sql </filename> for
 the exact form that the index setup should take. </para> 
 
-<para> In 1.2, there is a process that runs automatically to add
-partial indexes by origin node number, which should be the optimal
-form for such an index to take.  </para>
+<para> In 1.2 and later versions, there is a process that runs
+automatically to add partial indexes by origin node number, which
+should be the optimal form for such an index to take.  </para>
 </listitem>
 
 <listitem><para> On the subscriber's &lslon;, increase

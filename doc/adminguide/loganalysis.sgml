@@ -1,4 +1,4 @@
-<!-- $Id: loganalysis.sgml,v 1.4.2.5 2007-10-22 20:47:48 cbbrowne Exp $ -->
+<!-- $Id: loganalysis.sgml,v 1.4.2.6 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="loganalysis">
 <title>Log Analysis</title>
 
@@ -25,10 +25,25 @@ CONFIG storeSet: set_id=1 set_origin=1 set_comment='Set 1'
 CONFIG main: configuration complete - starting threads
 </screen></para></sect2>
 
+<sect2><title>INFO notices</title>
+
+<para> Events that take place that seem like they will generally be of
+interest are recorded at the INFO level, and, just as with CONFIG
+notices, are always listed. </para>
+
+</sect2>
+
 <sect2><title>DEBUG Notices</title>
 
-<para>Debug notices are always prefaced by the name of the thread that
-the notice originates from. You will see messages from the following
+<para>Debug notices are of less interest, and will quite likely only
+need to be shown if you are running into some problem with &slony1;.</para>
+
+</sect2>
+
+<sect2><title>Thread name </title>
+
+<para> Notices are always prefaced by the name of the thread from
+which the notice originates. You will see messages from the following
 threads:
 
 <variablelist>
@@ -59,11 +74,11 @@ events.</para></listitem></varlistentry>
 </variablelist>
 </para>
 
-<para> How much information they display is controlled by
-the <envar>log_level</envar> &lslon; parameter;
-ERROR/WARN/CONFIG/INFO messages will always be displayed, while
-choosing increasing values from 1 to 4 will lead to additional DEBUG
-level messages being displayed. </para>
+<para> How much information they display is controlled by the
+<envar>log_level</envar> &lslon; parameter; ERROR/WARN/CONFIG/INFO
+messages will always be displayed, while choosing increasing values
+from 1 to 4 will lead to additional DEBUG level messages being
+displayed. </para>
 </sect2>
 
 <sect2> <title> How to read &slony1; logs </title>
@@ -176,11 +191,12 @@ happen frequently when the origin sees heavy updates. </para>
 
 <para> This section lists numerous of the error messages found in
 &slony1;, along with a brief explanation of implications.  It is a
-fairly well comprehensive list, leaving out mostly some of
-the <command>DEBUG4</command> messages that are generally
+fairly comprehensive list, only leaving out some of the
+<command>DEBUG4</command> messages that are almost always
 uninteresting.</para>
 
-<sect3 id="logshiplog"><title> Log Messages Associated with Log Shipping </title>
+<sect3 id="logshiplog"><title> Log Messages Associated with Log
+Shipping </title>
 
 <para> Most of these represent errors that come up if
 the <xref linkend="logshipping"> functionality breaks.  You may expect
@@ -1029,7 +1045,7 @@ now exists... </para></listitem>
 
 <listitem><para><command>WARN: remoteWorkerThread_%d: event %d ignored - origin inactive</command></para> 
 
-<para> This shouldn't occur now (2006) as we don't support the notion
+<para> This shouldn't occur now (2007) as we don't support the notion
 of deactivating a node... </para>
 </listitem>
 
@@ -1043,6 +1059,15 @@ comes in concurrently from two sources... </para> </listitem>
 <para> Happens if the &lslon; is unaware of this node; probably a sign
 of <command>STORE_NODE</command> requests not
 propagating... </para> </listitem>
+
+<listitem><para><command>insert or update on table "sl_path" violates
+foreign key constraint "pa_client-no_id-ref".  DETAIL: Key
+(pa_client)=(2) is not present on table "s1_node</command></para>
+
+<para> This happens if you try to do <xref linkend="stmtsubscribeset">
+when the node unaware of a would-be new node; probably a sign of
+<command>STORE_NODE</command> and <command>STORE_PATH</command>
+requests not propagating... </para> </listitem>
 </itemizedlist>
 </sect3>
 </sect2>

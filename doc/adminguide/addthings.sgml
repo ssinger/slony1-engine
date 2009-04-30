@@ -1,4 +1,4 @@
-<!-- $Id: addthings.sgml,v 1.23.2.5 2007-06-11 16:01:33 cbbrowne Exp $ -->
+<!-- $Id: addthings.sgml,v 1.23.2.6 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="addthings">
 <title>A Task-Oriented View of &slony1;</title>
 
@@ -236,7 +236,13 @@ and triggers alike.  That is generally less suitable
 than <xref linkend="stmtuninstallnode">, because that command not only
 drops the schema and its contents, but also removes any columns
 previously added in using <xref linkend= "stmttableaddkey">.
-</para></listitem>
+</para>
+
+<note><para> In &slony1; version 2.0, <xref linkend=
+"stmttableaddkey"> is <emphasis>no longer supported</emphasis>, and
+thus <xref linkend="stmtuninstallnode"> consists very simply of
+<command>DROP SCHEMA "_ClusterName" CASCADE;</command>.  </para>
+</note></listitem>
 </itemizedlist>
 </sect2>
 
@@ -289,11 +295,10 @@ earlier versions, you will need to
 use <xref linkend="stmtstorelisten"> to generate them manually.
 </para></listitem>
 
-<listitem><para> At this point, it is an excellent idea to run
-the <filename>tools</filename>
-script <command>test_slony_state-dbi.pl</command>, which rummages
-through the state of the entire cluster, pointing out any anomalies
-that it finds.  This includes a variety of sorts of communications
+<listitem><para> At this point, it is an excellent idea to run the
+<filename>tools</filename> script &lteststate;, which rummages through
+the state of the entire cluster, pointing out any anomalies that it
+finds.  This includes a variety of sorts of communications
 problems.</para> </listitem>
 
 <listitem><para> Issue the slonik
@@ -346,11 +351,10 @@ nodes are in processing events from the node where you run the query.
 It will only be <emphasis>very</emphasis> informative on a node that
 originates a replication set.</para> </listitem>
 
-<listitem><para> Run the <filename>tools</filename>
-script <command>test_slony_state-dbi.pl</command>, which rummages
-through the state of the entire cluster, pointing out any anomalies
-that it notices, as well as some information on the status of each
-node. </para> </listitem>
+<listitem><para> Run the <filename>tools</filename> script
+&lteststate;, which rummages through the state of the entire cluster,
+pointing out any anomalies that it notices, as well as some
+information on the status of each node. </para> </listitem>
 
 </itemizedlist>
 

@@ -1,8 +1,168 @@
-<!-- $Id: monitoring.sgml,v 1.29.2.8 2007-06-11 16:01:33 cbbrowne Exp $ -->
+<!-- $Id: monitoring.sgml,v 1.29.2.9 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
 <indexterm><primary>monitoring &slony1;</primary></indexterm>
+
+<para> As a prelude to the discussion, it is worth pointing out that
+since the bulk of &slony1; functionality is implemented via running
+database functions and SQL queries against tables within a &slony1;
+schema, most of the things that one might want to monitor about
+replication may be found by querying tables in the schema created for
+the cluster in each database in the cluster. </para>
+
+<para> Here are some of the tables that contain information likely to
+be particularly interesting from a monitoring and diagnostic
+perspective.</para>
+
+<glosslist>
+<glossentry><glossterm><envar>sl_status</envar></glossterm>
+
+<glossdef><para>This view is the first, most obviously useful thing to
+look at from a monitoring perspective.  It looks at the local node's
+events, and checks to see how quickly they are being confirmed on
+other nodes.</para>
+
+<para> The view is primarily useful to run against an origin
+(<quote>master</quote>) node, as it is only there where the events
+generated are generally expected to require interesting work to be
+done.  The events generated on non-origin nodes tend to
+be <command>SYNC</command> events that require no replication work be
+done, and that are nearly no-ops, as a
+result. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slconfirm;</glossterm>
+
+<glossdef><para>Contains confirmations of replication events; this may be used to infer which events have, and <emphasis>have not</emphasis> been processed.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slevent;</glossterm>
+<glossdef><para>Contains information about the replication events processed on the local node.  </para></glossdef></glossentry>
+
+<glossentry><glossterm>
+&sllog1;
+and
+&sllog2;
+</glossterm>
+
+<glossdef><para>These tables contain replicable data.  On an origin node, this is the <quote>queue</quote> of data that has not necessarily been replicated everywhere.  By examining the table, you may examine the details of what data is replicable. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slnode;</glossterm>
+<glossdef><para>The list of nodes in the cluster.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slpath;</glossterm>
+<glossdef><para>This table holds connection information indicating how &lslon; processes are to connect to remote nodes, whether to access events, or to request replication data. </para></glossdef></glossentry>
+
+<glossentry><glossterm>&sllisten;</glossterm>
+
+<glossdef><para>This configuration table indicates how nodes listen
+for events coming from other nodes.  Usually this is automatically
+populated; generally you can detect configuration problems by this
+table being <quote>underpopulated.</quote> </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slregistry;</glossterm>
+
+<glossdef><para>A configuration table that may be used to store
+miscellaneous runtime data.  Presently used only to manage switching
+between the two log tables.  </para></glossdef></glossentry>
+
+<glossentry><glossterm>&slseqlog;</glossterm>
+
+<glossdef><para>Contains the <quote>last value</quote> of replicated
+sequences.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slset;</glossterm>
+
+<glossdef><para>Contains definition information for replication sets,
+which is the mechanism used to group together related replicable
+tables and sequences.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slsetsync;</glossterm>
+<glossdef><para>Contains information about the state of synchronization of each replication set, including transaction snapshot data.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&slsubscribe;</glossterm>
+<glossdef><para>Indicates what subscriptions are in effect for each replication set.</para></glossdef></glossentry>
+
+<glossentry><glossterm>&sltable;</glossterm>
+<glossdef><para>Contains the list of tables being replicated.</para></glossdef></glossentry>
+
+</glosslist>
+
+<sect2 id="testslonystate"> <title> test_slony_state</title>
+
+<indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
+
+<para> This invaluable script does various sorts of analysis of the
+state of a &slony1; cluster.  &slony1; <xref linkend="bestpractices">
+recommend running these scripts frequently (hourly seems suitable) to
+find problems as early as possible.  </para>
+
+<para> You specify arguments including <option>database</option>,
+<option>host</option>, <option>user</option>,
+<option>cluster</option>, <option>password</option>, and
+<option>port</option> to connect to any of the nodes on a cluster.
+You also specify a <option>mailprog</option> command (which should be
+a program equivalent to <productname>Unix</productname>
+<application>mailx</application>) and a recipient of email. </para>
+
+<para> You may alternatively specify database connection parameters
+via the environment variables used by
+<application>libpq</application>, <emphasis>e.g.</emphasis> - using
+<envar>PGPORT</envar>, <envar>PGDATABASE</envar>,
+<envar>PGUSER</envar>, <envar>PGSERVICE</envar>, and such.</para>
+
+<para> The script then rummages through <xref linkend="table.sl-path">
+to find all of the nodes in the cluster, and the DSNs to allow it to,
+in turn, connect to each of them.</para>
+
+<para> For each node, the script examines the state of things,
+including such things as:
+
+<itemizedlist>
+<listitem><para> Checking <xref linkend="table.sl-listen"> for some
+<quote>analytically determinable</quote> problems.  It lists paths
+that are not covered.</para></listitem>
+
+<listitem><para> Providing a summary of events by origin node</para>
+
+<para> If a node hasn't submitted any events in a while, that likely
+suggests a problem.</para></listitem>
+
+<listitem><para> Summarizes the <quote>aging</quote> of table <xref
+linkend="table.sl-confirm"> </para>
+
+<para> If one or another of the nodes in the cluster hasn't reported
+back recently, that tends to lead to cleanups of tables like &sllog1;,
+&sllog2; and &slseqlog; not taking place.</para></listitem>
+
+<listitem><para> Summarizes what transactions have been running for a
+long time</para>
+
+<para> This only works properly if the statistics collector is
+configured to collect command strings, as controlled by the option
+<option> stats_command_string = true </option> in <filename>
+postgresql.conf </filename>.</para>
+
+<para> If you have broken applications that hold connections open,
+this will find them.</para>
+
+<para> If you have broken applications that hold connections open,
+that has several unsalutory effects as <link
+linkend="longtxnsareevil"> described in the
+FAQ</link>.</para></listitem>
+
+</itemizedlist></para>
+
+<para> The script does some diagnosis work based on parameters in the
+script; if you don't like the values, pick your favorites!</para>
+
+<note><para> Note that there are two versions, one using the
+<quote>classic</quote> <filename>Pg.pm</filename> Perl module for
+accessing &postgres; databases, and one, with <filename>dbi</filename>
+in its name, that uses the newer Perl <function> DBI</function>
+interface.  It is likely going to be easier to find packaging for
+<function>DBI</function>. </para> </note>
+
+</sect2>
 
 <sect2> <title> &nagios; Replication Checks </title>
 
@@ -94,74 +254,40 @@ Title[db_replication_lagtime]: db: replication lag time
 PageTop[db_replication_lagtime]: &lt;H1&gt;db: replication lag time&lt;/H1&gt;
 Options[db_replication_lagtime]: gauge,nopercent,growright
 </programlisting>
-</sect2>
 
-<sect2 id="testslonystate"> <title> test_slony_state</title>
+<para> Alternatively, Ismail Yenigul points out how he managed to
+monitor slony using <application>MRTG</application> without installing
+<application>SNMPD</application>.</para>
 
-<indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
+<para> Here is the mrtg configuration</para>
 
-<para> This script does various sorts of analysis of the state of a
-&slony1; cluster.</para>
+<programlisting>
+Target[db_replication_lagtime]:`/bin/snmpReplicationLagTime.sh 2`
+MaxBytes[db_replication_lagtime]: 400000000
+Title[db_replication_lagtime]: db: replication lag time
+PageTop[db_replication_lagtime]: &lt;H1&gt;db: replication lag time&lt;/H1&gt;
+Options[db_replication_lagtime]: gauge,nopercent,growright
+</programlisting>
 
-<para> You specify arguments including <option>database</option>,
-<option>host</option>, <option>user</option>,
-<option>cluster</option>, <option>password</option>, and
-<option>port</option> to connect to any of the nodes on a cluster.
-You also specify a <option>mailprog</option> command (which should be
-a program equivalent to <productname>Unix</productname>
-<application>mailx</application>) and a recipient of email. </para>
+<para> and here is the modified version of the script</para>
 
-<para> You may alternatively specify database connection parameters
-via the environment variables used by
-<application>libpq</application>, <emphasis>e.g.</emphasis> - using
-<envar>PGPORT</envar>, <envar>PGDATABASE</envar>,
-<envar>PGUSER</envar>, <envar>PGSERVICE</envar>, and such.</para>
+<programlisting>
+# cat /bin/snmpReplicationLagTime.sh
+#!/bin/bash
 
-<para> The script then rummages through <xref linkend="table.sl-path">
-to find all of the nodes in the cluster, and the DSNs to allow it to,
-in turn, connect to each of them.</para>
+output=`/usr/bin/psql -U slony -h 192.168.1.1 -d endersysecm -qAt -c
+"select cast(extract(epoch from st_lag_time) as int8) FROM _mycluster.sl_status WHERE st_received = $1"`
+echo $output
+echo $output
+echo 
+echo
+# end of script#
+</programlisting>
 
-<para> For each node, the script examines the state of things,
-including such things as:
 
-<itemizedlist>
-<listitem><para> Checking <xref linkend="table.sl-listen"> for some
-<quote>analytically determinable</quote> problems.  It lists paths
-that are not covered.</para></listitem>
-
-<listitem><para> Providing a summary of events by origin node</para>
-
-<para> If a node hasn't submitted any events in a while, that likely
-suggests a problem.</para></listitem>
-
-<listitem><para> Summarizes the <quote>aging</quote> of table <xref
-linkend="table.sl-confirm"> </para>
-
-<para> If one or another of the nodes in the cluster hasn't reported
-back recently, that tends to lead to cleanups of tables like <xref
-linkend="table.sl-log-1"> and <xref linkend="table.sl-seqlog"> not
-taking place.</para></listitem>
-
-<listitem><para> Summarizes what transactions have been running for a
-long time</para>
-
-<para> This only works properly if the statistics collector is
-configured to collect command strings, as controlled by the option
-<option> stats_command_string = true </option> in <filename>
-postgresql.conf </filename>.</para>
-
-<para> If you have broken applications that hold connections open,
-this will find them.</para>
-
-<para> If you have broken applications that hold connections open,
-that has several unsalutory effects as <link
-linkend="longtxnsareevil"> described in the
-FAQ</link>.</para></listitem>
-
-</itemizedlist></para>
-
-<para> The script does some diagnosis work based on parameters in the
-script; if you don't like the values, pick your favorites!</para>
+<note><para> MRTG expects four lines from the script, and since there
+are only two lines provided, the output must be padded to four
+lines. </para> </note>
 
 </sect2>
 
@@ -193,14 +319,20 @@ for replication problems. </para>
 <para> The script <filename>mkmediawiki.pl </filename>, in
 <filename>tools</filename>, may be used to generate a cluster summary
 compatible with the popular <ulink url="http://www.mediawiki.org/">
-MediaWiki </ulink> software. </para>
+MediaWiki </ulink> software.  Note that the
+<option>--categories</option> permits the user to specify a set of
+(comma-delimited) categories with which to associate the output.  If
+you have a series of &slony1; clusters, passing in the option
+<option>--categories=slony1</option> leads to the MediaWiki instance
+generating a category page listing all &slony1; clusters so
+categorized on the wiki.  </para>
 
 <para> The gentle user might use the script as follows: </para>
 
 <screen>
 ~/logtail.en>         mvs login -d mywiki.example.info -u "Chris Browne" -p `cat ~/.wikipass` -w wiki/index.php                     
 Doing login with host: logtail and lang: en
-~/logtail.en> perl $SLONYHOME/tools/mkmediawiki.pl --host localhost --database slonyregress1 --cluster slony_regress1  > Slony_replication.wiki
+~/logtail.en> perl $SLONYHOME/tools/mkmediawiki.pl --host localhost --database slonyregress1 --cluster slony_regress1 --categories=Slony-I  > Slony_replication.wiki
 ~/logtail.en> mvs commit -m "More sophisticated generated Slony-I cluster docs" Slony_replication.wiki
 Doing commit Slony_replication.wiki with host: logtail and lang: en
 </screen>
@@ -210,6 +342,82 @@ on <ulink url="http://www.debian.org/"> Debian GNU/Linux</ulink>, the
 relevant package is called
 <application>libwww-mediawiki-client-perl</application>; other systems
 may have a packaged version of this under some similar name. </para>
+
+</sect2>
+
+<sect2> <title> Analysis of a SYNC </title>
+
+<para> The following is (as of 2.0) an extract from the &lslon; log for node
+#2 in a run of <quote>test1</quote> from the <xref linkend="testbed">. </para>
+
+<screen>
+DEBUG2 remoteWorkerThread_1: SYNC 19 processing
+INFO   about to monitor_subscriber_query - pulling big actionid list 134885072
+INFO   remoteWorkerThread_1: syncing set 1 with 4 table(s) from provider 1
+DEBUG2  ssy_action_list length: 0
+DEBUG2 remoteWorkerThread_1: current local log_status is 0
+DEBUG2 remoteWorkerThread_1_1: current remote log_status = 0
+DEBUG1 remoteHelperThread_1_1: 0.028 seconds delay for first row
+DEBUG1 remoteHelperThread_1_1: 0.978 seconds until close cursor
+INFO   remoteHelperThread_1_1: inserts=144 updates=1084 deletes=0
+INFO   remoteWorkerThread_1: sync_helper timing:  pqexec (s/count)- provider 0.063/6 - subscriber 0.000/6
+INFO   remoteWorkerThread_1: sync_helper timing:  large tuples 0.315/288
+DEBUG2 remoteWorkerThread_1: cleanup
+INFO   remoteWorkerThread_1: SYNC 19 done in 1.272 seconds
+INFO   remoteWorkerThread_1: SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/1 - IUD 0.972/248
+</screen>
+
+<para> Here are some notes to interpret this output: </para>
+
+<itemizedlist>
+<listitem><para> Note the line that indicates <screen>inserts=144 updates=1084 deletes=0</screen> </para> 
+<para> This indicates how many tuples were affected by this particular SYNC. </para></listitem>
+<listitem><para> Note the line indicating <screen>0.028 seconds delay for first row</screen></para> 
+
+<para> This indicates the time it took for the <screen>LOG
+cursor</screen> to get to the point of processing the first row of
+data.  Normally, this takes a long time if the SYNC is a large one,
+and one requiring sorting of a sizable result set.</para></listitem>
+
+<listitem><para> Note the line indicating <screen>0.978 seconds until
+close cursor</screen></para> 
+
+<para> This indicates how long processing took against the
+provider.</para></listitem>
+
+<listitem><para> sync_helper timing:  large tuples 0.315/288 </para> 
+
+<para> This breaks off, as a separate item, the number of large tuples
+(<emphasis>e.g.</emphasis> - where size exceeded the configuration
+parameter <xref linkend="slon-config-max-rowsize">) and where the
+tuples had to be processed individually. </para></listitem>
+
+<listitem><para> <screen>SYNC 19 done in 1.272 seconds</screen></para> 
+
+<para> This indicates that it took 1.272 seconds, in total, to process
+this set of SYNCs. </para>
+</listitem>
+
+<listitem><para> <screen>SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/0 - IUD 0.972/248</screen></para> 
+
+<para> This records information about how many queries were issued
+against providers and subscribers in function
+<function>sync_event()</function>, and how long they took. </para>
+
+<para> Note that 248 does not match against the numbers of inserts,
+updates, and deletes, described earlier, as I/U/D requests are
+clustered into groups of queries that are submitted via a single
+<function>pqexec()</function> call on the
+subscriber. </para></listitem>
+
+<listitem><para> <screen>sync_helper timing:  pqexec (s/count)- provider 0.063/6 - subscriber 0.000/6</screen></para>
+
+<para> This records information about how many queries were issued
+against providers and subscribers in function
+<function>sync_helper()</function>, and how long they took.
+</para></listitem>
+
+</itemizedlist>
 
 </sect2>
 </sect1>

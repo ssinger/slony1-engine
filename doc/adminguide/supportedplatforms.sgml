@@ -1,4 +1,4 @@
-<article id="supportedplatforms">
+<sect1 id="supportedplatforms">
 <title>&slony1; Supported Platforms</title>
 
 <indexterm><primary>platforms supported</primary></indexterm>
@@ -9,7 +9,7 @@ below. Slony-I can be successfully built, installed and run on these
 platforms.
 </para>
 
-<para> Last updated: Nov 17, 2006</para>
+<para> Last updated: Jun 23, 2005</para>
 
 <para>If you experience problems in these platforms, please subscribe to 
 <ulink url="http://gborg.PostgreSQL.org/mailman/listinfo/slony1-general">Slony-I 
@@ -131,33 +131,6 @@ Mailing List</ulink> and ask your questions.</para>
      </row>
 
      <row>
-      <entry>Fedora Core</entry>
-      <entry>5</entry>
-      <entry>x86</entry>
-      <entry>Nov 17, 2006</entry>
-      <entry>devrim at CommandPrompt.com</entry>
-      <entry>&postgres; Version: 8.1.5</entry>
-     </row>
-
-     <row>
-      <entry>Fedora Core</entry>
-      <entry>6</entry>
-      <entry>x86</entry>
-      <entry>Nov 17, 2006</entry>
-      <entry>devrim at CommandPrompt.com</entry>
-      <entry>&postgres; Version: 8.1.5</entry>
-     </row>
-
-     <row>
-      <entry>Fedora Core</entry>
-      <entry>6</entry>
-      <entry>x86_64</entry>
-      <entry>Nov 17, 2006</entry>
-      <entry>devrim at CommandPrompt.com</entry>
-      <entry>&postgres; Version: 8.1.5</entry>
-     </row>
-
-     <row>
       <entry>Red Hat Linux</entry>
       <entry>9</entry>
       <entry>x86</entry>
@@ -203,7 +176,7 @@ Mailing List</ulink> and ask your questions.</para>
  </tbody>
    </tgroup>
   </table>
-</article>
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

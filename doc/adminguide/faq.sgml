@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.66.2.7 2009-02-19 16:47:05 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.66.2.8 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -13,7 +13,6 @@ Package Manager) package management system.  It comes with
 I am using for my databases, but they don't include &slony1; in the
 packaging.  How do I add &slony1; to this?  </para>
 </question>
-
 
 <answer><para> <productname>Frotznik Freenix</productname> is new to
 me, so it's a bit dangerous to give really hard-and-fast definitive
@@ -232,6 +231,225 @@ what &lslonik; does <quote>by hand</quote>: </para>
 </answer>
 </qandaentry>
 
+<qandaentry>
+<question> <para> Problem building on Fedora/x86-64 </para>
+
+<para> When trying to configure &slony1; on a Fedora x86-64 system,
+where <application>yum</application> was used to install the package
+<filename>postgresql-libs.x86_64</filename>, the following complaint
+comes up:
+
+<screen>
+configure: error: Your version of libpq doesn't have PQunescapeBytea
+ this means that your version of PostgreSQL is lower than 7.3
+ and thus not supported by Slony-I.
+</screen></para>
+
+<para> This happened with &postgres; 8.2.5, which is certainly rather
+newer than 7.3. </para>
+</question>
+
+<answer> <para> <application>configure</application> is looking for
+that symbol by compiling a little program that calls for it, and
+checking if the compile succeeds.  On the <command>gcc</command>
+command line it uses <command>-lpq</command> to search for the
+library. </para>
+
+<para> Unfortunately, that package is missing a symlink, from
+<filename>/usr/lib64/libpq.so</filename> to
+<filename>libpq.so.5.0</filename>; that is why it fails to link to
+libpq.  The <emphasis>true</emphasis> problem is that the compiler failed to
+find a library to link to, not that libpq lacked the function call.
+</para>
+
+<para> Eventually, this should be addressed by those that manage the
+<filename>postgresql-libs.x86_64</filename> package. </para>
+</answer>
+
+<answer> <para> Note that this same symptom can be the indication of
+similar classes of system configuration problems.  Bad symlinks, bad
+permissions, bad behaviour on the part of your C compiler, all may
+potentially lead to this same error message. </para> 
+
+<para> Thus, if you see this error, you need to look in the log file
+that is generated, <filename>config.log</filename>.  Search down to
+near the end, and see what the <emphasis>actual</emphasis> complaint
+was.  That will be helpful in tracking down the true root cause of the
+problem.</para>
+</answer>
+
+</qandaentry>
+</qandadiv>
+
+<qandadiv id="faqhowto"> <title> &slony1; FAQ: How Do I? </title>
+
+<qandaentry>
+
+<question> <para> I need to dump a database
+<emphasis>without</emphasis> getting &slony1; configuration
+(<emphasis>e.g.</emphasis> - triggers, functions, and such). </para>
+</question>
+
+<answer> <para> Up to version 1.2, this is fairly nontrivial,
+requiring careful choice of nodes, and some moderately heavy
+<quote>procedure</quote>.   One methodology is as follows:</para>
+
+<itemizedlist>
+
+<listitem><para> First, dump the schema from the node that has the
+<quote>master</quote> role.  That is the only place, pre-2.0, where
+you can readily dump the schema using
+<application>pg_dump</application> and have a consistent schema.  You
+may use the &slony1; tool <xref linkend="extractschema"> to do
+this. </para> </listitem>
+
+<listitem><para> Take the resulting schema, which will <emphasis>not</emphasis>
+include the &slony1;-specific bits, and split it into two pieces:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Firstly, the portion comprising all of the creations
+of tables in the schema. </para> </listitem>
+
+<listitem><para> Secondly, the portion consisting of creations of indices, constraints, and triggers. </para> </listitem>
+
+</itemizedlist>
+
+</listitem>
+
+<listitem><para> Pull a data dump, using <command>pg_dump --data-only</command>, of some node of your choice.  It doesn't need to be for the <quote>master</quote> node.  This dump will include the contents of the &slony1;-specific tables; you can discard that, or ignore it.  Since the schema dump didn't contain table definitions for the &slony1; tables, they won't be loaded. </para> </listitem>
+
+<listitem><para> Finally, load the three components in proper order: </para> 
+<itemizedlist>
+<listitem><para> Schema (tables) </para> </listitem>
+<listitem><para> Data dump </para> </listitem>
+<listitem><para> Remainder of the schema </para> </listitem>
+</itemizedlist>
+</listitem>
+
+</itemizedlist>
+
+</answer>
+
+<answer> <para> In &slony1; 2.0, the answer becomes simpler: Just take
+a <command>pg_dump --exclude-schema=_Cluster</command> against
+<emphasis>any</emphasis> node.  In 2.0, the schemas are no longer
+<quote>clobbered</quote> on subscribers, so a straight
+<application>pg_dump</application> will do what you want.</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry id="cannotrenumbernodes">
+<question> <para> I'd like to renumber the node numbers in my cluster.
+How can I renumber nodes? </para> </question>
+
+<answer> <para> The first answer is <quote>you can't do that</quote> -
+&slony1; node numbers are quite <quote>immutable.</quote> Node numbers
+are deeply woven into the fibres of the schema, by virtue of being
+written into virtually every table in the system, but much more
+importantly by virtue of being used as the basis for event
+propagation.  The only time that it might be <quote>OK</quote> to
+modify a node number is at some time where we know that it is not in
+use, and we would need to do updates against each node in the cluster
+in an organized fashion.</para>
+
+<para> To do this in an automated fashion seems like a
+<emphasis>huge</emphasis> challenge, as it changes the structure of
+the very event propagation system that already needs to be working in
+order for such a change to propagate.</para> </answer>
+
+<answer> <para> If it is <emphasis>enormously necessary</emphasis> to
+renumber nodes, this might be accomplished by dropping and re-adding
+nodes to get rid of the node formerly using the node ID that needs to
+be held by another node.</para> </answer>
+</qandaentry>
+
+</qandadiv>
+
+<qandadiv id="faqimpossibilities"> <title> &slony1; FAQ: Impossible Things People Try </title>
+
+<qandaentry>
+<question><para> Can I use &slony1; to replicate changes back and forth on my database between my two offices? </para> </question>
+
+<answer><para> At one level, it is <emphasis>theoretically
+possible</emphasis> to do something like that, if you design your
+application so that each office has its own distinct set of tables,
+and you then have some system for consolidating the data to give them
+some common view.  However, this requires a great deal of design work
+to create an application that performs this consolidation. </para>
+</answer>
+
+<answer><para> In practice, the term for that is <quote>multimaster
+replication,</quote> and &slony1; does not support <quote>multimaster
+replication.</quote> </para> </answer>
+
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to replicate all of the databases for a shared-database system I am managing.  There are multiple databases, being used by my customers.  </para> </question>
+
+<answer><para> For this purpose, something like &postgres; PITR (Point
+In Time Recovery) is likely to be much more suitable.  &slony1;
+requires a slon process (and multiple connections) for each
+identifiable database, and if you have a &postgres; cluster hosting 50
+or 100 databases, this will require hundreds of database connections.
+Typically, in <quote>shared hosting</quote> situations, DML is being
+managed by customers, who can change anything they like whenever
+<emphasis>they</emphasis> want.  &slony1; does not work out well when
+not used in a disciplined manner.  </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to be able to make DDL changes, and have them replicated automatically. </para> </question>
+
+<answer><para> &slony1; requires that <xref linkend="ddlchanges"> be planned for explicitly and carefully.  &slony1; captures changes using triggers, and &postgres; does not provide a way to use triggers to capture DDL changes.</para>
+
+<note><para> There has been quite a bit of discussion, off and on, about how
+&postgres; might capture DDL changes in a way that would make triggers
+useful; nothing concrete has emerged after several years of
+discussion. </para> </note> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to split my cluster into disjoint partitions that are not aware of one another.  &slony1; keeps generating <xref linkend="listenpaths"> that link those partitions together. </para> </question>
+
+<answer><para> The notion that all nodes are aware of one another is
+deeply imbedded in the design of &slony1;.  For instance, its handling
+of cleanup of obsolete data depends on being aware of whether any of
+the nodes are behind, and thus might still depend on older data.
+</para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I want to change some of my node numbers.  How do I <quote>rename</quote> a node to have a different node number? </para> </question>
+<answer><para> You don't.  The node number is used to coordinate inter-node communications, and changing the node ID number <quote>on the fly</quote> would make it essentially impossible to keep node configuration coordinated.   </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question> <para> My application uses OID attributes; is it possible to replicate tables like this? </para>
+</question>
+
+<answer><para> It is worth noting that oids, as a regular table
+attribute, have been deprecated since &postgres; version 8.1, back in
+2005.  &slony1; has <emphasis>never</emphasis> collected oids to
+replicate them, and, with that functionality being deprecated, the
+developers do not intend to add this functionality. </para>
+
+<para> &postgres; implemented oids as a way to link its internal
+system tables together; to use them with application tables is
+considered <emphasis>poor practice</emphasis>, and it is recommended
+that you use sequences to populate your own ID column on application
+tables.  </para> </answer>
+
+<answer><para> Of course, nothing prevents you from creating a table
+<emphasis>without</emphasis> oids, and then add in your own
+application column called <envar>oid</envar>, preferably with type
+information <command>SERIAL NOT NULL UNIQUE</command>, which
+<emphasis>can</emphasis> be replicated, and which is likely to be
+suitable as a candidate primary key for the table. </para> </answer>
+</qandaentry>
 </qandadiv>
 
 <qandadiv id="faqconnections"> <title> &slony1; FAQ: Connection Issues </title>
@@ -414,10 +632,6 @@ which is a recognized condition, this won't help either, and if the
 problem is persistent, the connections will keep recycling which will
 drop the effect of the pooling, in the latter case the pooling code
 could also announce an admin to take a look...  </para> </answer>
-
-<answer><para> As of &postgres; 8.3, this should no longer be an
-issue, as this version has code which invalidates query plans when
-tables are altered. </para> </answer>
 
 </qandaentry>
 
@@ -715,19 +929,18 @@ set add table (set id = 1, origin = 1, id = 27,
 </answer></qandaentry>
 
 <qandaentry>
-<question> <para> Replication has fallen behind, and it appears that the
-queries to draw data from <xref linkend="table.sl-log-1">/<xref
-linkend="table.sl-log-2"> are taking a long time to pull just a few
+<question> <para> Replication has fallen behind, and it appears that
+the queries to draw data from &sllog1;/&sllog2; are taking a long time
+to pull just a few
 <command>SYNC</command>s. </para>
 </question>
 
-<answer> <para> Until version 1.1.1, there was only one index on <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2">, and if
-there were multiple replication sets, some of the columns on the index
-would not provide meaningful selectivity.  If there is no index on
-column <function> log_xid</function>, consider adding it.  See
-<filename>slony1_base.sql</filename> for an example of how to create
-the index.
+<answer> <para> Until version 1.1.1, there was only one index on
+&sllog1;/&sllog2;, and if there were multiple replication sets, some
+of the columns on the index would not provide meaningful selectivity.
+If there is no index on column <function> log_xid</function>, consider
+adding it.  See <filename>slony1_base.sql</filename> for an example of
+how to create the index.
 </para>
 </answer>
 </qandaentry>
@@ -1111,8 +1324,8 @@ it catch up across a week's worth of updates...  </para> </answer>
 
 <question><para> Replication has been slowing down, I'm seeing
 <command> FETCH 100 FROM LOG </command> queries running for a long
-time, <xref linkend="table.sl-log-1"> is growing, and performance is,
-well, generally getting steadily worse. </para>
+time, &sllog1;/&sllog2; is growing, and performance is, well,
+generally getting steadily worse. </para>
 </question>
 
 <answer> <para> There are actually a number of possible causes for
@@ -1135,9 +1348,9 @@ not clear out dead tuples from before the start of the idle
 transaction. </para> </listitem>
 
 <listitem><para> The cleanup thread will be unable to clean out
-entries in <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog">, with the result that these tables will
-grow, ceaselessly, until the transaction is closed. </para>
+entries in &sllog1;, &sllog2;, and &slseqlog;, with the result that
+these tables will grow, ceaselessly, until the transaction is
+closed. </para>
 </listitem>
 </itemizedlist>
 </answer>
@@ -1176,8 +1389,8 @@ numerous of them are left idle in transaction for hours at a time.
 </qandaentry> 
 
 <qandaentry id="faq17">
-<question><para>After dropping a node, <xref linkend="table.sl-log-1">
-isn't getting purged out anymore.</para></question>
+<question><para>After dropping a node, &sllog1;/&sllog2;
+aren't getting purged out anymore.</para></question>
 
 <answer><para> This is a common scenario in versions before 1.0.5, as
 the <quote>clean up</quote> that takes place when purging the node
@@ -1241,8 +1454,8 @@ places:
 
 <listitem><para> At the start of each
 <function>cleanupEvent</function> run, which is the event in which old
-data is purged from <xref linkend="table.sl-log-1"> and <xref
-linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
+data is purged from &sllog1;, &sllog2;, and
+&slseqlog;</para></listitem> </itemizedlist></para>
 </answer>
 </qandaentry>
 
@@ -1252,12 +1465,15 @@ linkend="table.sl-seqlog"></para></listitem> </itemizedlist></para>
 commission [for some reason], and it's taking a long time to get a
 sync through.</para></question>
 
-<answer><para> You might want to take a look at the <xref
-linkend="table.sl-log-1">/<xref linkend="table.sl-log-2"> tables, and
-do a summary to see if there are any really enormous &slony1;
-transactions in there.  Up until at least 1.0.2, there needs to be a
-&lslon; connected to the origin in order for
+<answer><para> You might want to take a look at the tables &sllog1;
+and &sllog2; and do a summary to see if there are any really enormous
+&slony1; transactions in there.  Up until at least 1.0.2, there needs
+to be a &lslon; connected to the origin in order for
 <command>SYNC</command> events to be generated.</para>
+
+<note><para> As of 1.0.2,
+function <function>generate_sync_event()</function> provides an
+alternative as backup...</para> </note>
 
 <para>If none are being generated, then all of the updates until the
 next one is generated will collect into one rather enormous &slony1;
@@ -1329,6 +1545,25 @@ where c.oid = l.relation ; </command> A
 operations that need their own exclusive locks, which are likely
 queued up, marked as not being granted. </para>
 </answer> </qandaentry>
+
+<qandaentry>
+
+<question><para> I'm noticing in the logs that a &lslon; is frequently
+switching in and out of <quote>polling</quote> mode as it is
+frequently reporting <quote>LISTEN - switch from polling mode to use
+LISTEN</quote> and <quote>UNLISTEN - switch into polling
+mode</quote>. </para> </question>
+
+<answer><para> The thresholds for switching between these modes are
+controlled by the configuration parameters <xref
+linkend="slon-config-sync-interval"> and <xref
+linkend="slon-config-sync-interval-timeout">; if the timeout value
+(which defaults to 10000, implying 10s) is kept low, that makes it
+easy for the &lslon; to decide to return to <quote>listening</quote>
+mode.  You may want to increase the value of the timeout
+parameter. </para>
+</answer>
+</qandaentry>
 
 </qandadiv>
 <qandadiv id="faqbugs"> <title> &slony1; FAQ: &slony1; Bugs in Elder Versions </title>
@@ -1460,9 +1695,9 @@ discussion on postgresql-hackers mailing list. </ulink>.  </para>
 where there are two subscription sets, 1 and 2, that do not share any
 nodes.  I am discovering that confirmations for set 1 never get to the
 nodes subscribing to set 2, and that confirmations for set 2 never get
-to nodes subscribing to set 1.  As a result, <xref
-linkend="table.sl-log-1"> grows and grows and is never purged.  This
-was reported as &slony1; <ulink
+to nodes subscribing to set 1.  As a result, &sllog1;/&sllog2; grow
+and grow, and are never purged.  This was reported as
+&slony1; <ulink
 url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1485">
 bug 1485 </ulink>.
 </para>
@@ -1514,8 +1749,8 @@ best practice.</link> </para>
 a case where the only subscriptions that are active for a particular
 subscriber to a particular provider are for
 <quote>sequence-only</quote> sets.  If a node gets into that state,
-replication will fail, as the query that looks for data from <xref
-linkend="table.sl-log-1"> has no tables to find, and the query will be
+replication will fail, as the query that looks for data from
+&sllog1;/&sllog2; has no tables to find, and the query will be
 malformed, and fail.  If a replication set <emphasis>with</emphasis>
 tables is added back to the mix, everything will work out fine; it
 just <emphasis>seems</emphasis> scary.
@@ -1609,6 +1844,44 @@ nodes.</para>
 <para>Similarly to <xref linkend="stmtsetdroptable">, this is
 implemented &slony1; version 1.0.5 as <xref
 linkend="stmtsetdropsequence">.</para></answer></qandaentry>
+
+<qandaentry>
+<question><para> I set up my cluster using pgAdminIII, with cluster
+name <quote>MY-CLUSTER</quote>.  Time has passed, and I tried using
+Slonik to make a configuration change, and this is failing with the
+following error message:</para>
+
+<programlisting>
+ERROR: syntax error at or near -
+</programlisting>
+</question>
+
+<answer><para> The problem here is that &slony1; expects cluster names
+to be valid <ulink url=
+"http://www.postgresql.org/docs/8.3/static/sql-syntax-lexical.html">
+SQL Identifiers</ulink>, and &lslonik; enforces this.  Unfortunately,
+<application>pgAdminIII</application> did not do so, and allowed using
+a cluster name that now causes <emphasis>a problem.</emphasis> </para> </answer>
+
+<answer> <para> If you have gotten into this spot, it's a problem that
+we mayn't be help resolve, terribly much.  </para>
+
+<para> It's <emphasis>conceivably possible</emphasis> that running the
+SQL command <command>alter namespace "_My-Bad-Clustername" rename to
+"_BetterClusterName";</command> against each database may work.  That
+shouldn't particularly <emphasis>damage</emphasis> things!</para>
+
+<para> On the other hand, when the problem has been experienced, users
+have found they needed to drop replication and rebuild the
+cluster.</para> </answer>
+
+<answer><para> A change in version 2.0.2 is that a function runs as
+part of loading functions into the database which checks the validity
+of the cluster name.  If you try to use an invalid cluster name,
+loading the functions will fail, with a suitable error message, which
+should prevent things from going wrong even if you're using tools
+other than &lslonik; to manage setting up the cluster. </para></answer>
+</qandaentry>
 
 </qandadiv>
 
@@ -1817,22 +2090,20 @@ to diminish the number of network round trips.</para></question>
 difficult to arrive at.</para>
 
 <para>By the time we notice that there is a problem, the seemingly
-missed delete transaction has been cleaned out of <xref
-linkend="table.sl-log-1">, so there appears to be no recovery
-possible.  What has seemed necessary, at this point, is to drop the
-replication set (or even the node), and restart replication from
-scratch on that node.</para>
+missed delete transaction has been cleaned out of &sllog1;, so there
+appears to be no recovery possible.  What has seemed necessary, at
+this point, is to drop the replication set (or even the node), and
+restart replication from scratch on that node.</para>
 
-<para>In &slony1; 1.0.5, the handling of purges of <xref
-linkend="table.sl-log-1"> became more conservative, refusing to purge
-entries that haven't been successfully synced for at least 10 minutes
-on all nodes.  It was not certain that that would prevent the
-<quote>glitch</quote> from taking place, but it seemed plausible that
-it might leave enough <xref linkend="table.sl-log-1"> data to be able
-to do something about recovering from the condition or at least
-diagnosing it more exactly.  And perhaps the problem was that <xref
-linkend="table.sl-log-1"> was being purged too aggressively, and this
-would resolve the issue completely.</para>
+<para>In &slony1; 1.0.5, the handling of purges of &sllog1; became
+more conservative, refusing to purge entries that haven't been
+successfully synced for at least 10 minutes on all nodes.  It was not
+certain that that would prevent the <quote>glitch</quote> from taking
+place, but it seemed plausible that it might leave enough &sllog1;
+data to be able to do something about recovering from the condition or
+at least diagnosing it more exactly.  And perhaps the problem was that
+&sllog1; was being purged too aggressively, and this would resolve the
+issue completely.</para>
 
 <para> It is a shame to have to reconstruct a large replication node
 for this; if you discover that this problem recurs, it may be an idea
@@ -1843,9 +2114,8 @@ you may only need to unsubscribe/drop and resubscribe the one set.
 
 <para> In one case we found two lines in the SQL error message in the
 log file that contained <emphasis> identical </emphasis> insertions
-into <xref linkend="table.sl-log-1">.  This <emphasis> ought
-</emphasis> to be impossible as is a primary key on <xref
-linkend="table.sl-log-1">.  The latest (somewhat) punctured theory
+into &sllog1;.  This <emphasis> ought </emphasis> to be impossible as
+is a primary key on &sllog1;.  The latest (somewhat) punctured theory
 that comes from <emphasis>that</emphasis> was that perhaps this PK
 index has been corrupted (representing a &postgres; bug), and that
 perhaps the problem might be alleviated by running the query:</para>
@@ -1950,8 +2220,7 @@ that uses the <xref linkend="function.logtrigger"> function to the
 table.</para>
 
 <para> That trigger initiates the action of logging all updates to the
-table to &slony1; <xref linkend="table.sl-log-1">
-tables.</para></listitem>
+table to &slony1; &sllog1;/&sllog2; tables.</para></listitem>
 
 <listitem><para> On a subscriber node, this involves disabling
 triggers and rules, then adding in the trigger that denies write
@@ -2067,7 +2336,7 @@ table</command> statements directly on the databases instead of using
 the slonik <xref linkend="stmtddlscript"> command.</para>
 
 <para>The solution is to rebuild the trigger on the affected table and
-fix the entries in <xref linkend="table.sl-log-1"> by hand.</para>
+fix the entries in &sllog1;/&sllog2; by hand.</para>
 
 <itemizedlist>
 
@@ -2086,12 +2355,10 @@ SELECT _oxrsorg.altertableforreplication(tab_id);--tab_id is _slony_schema.sl_ta
 COMMIT;
 </screen>
 
-<para>You then need to find the rows in <xref
-linkend="table.sl-log-1"> that have bad 
-entries and fix them.  You may
-want to take down the slon daemons for all nodes except the master;
-that way, if you make a mistake, it won't immediately propagate
-through to the subscribers.</para>
+<para>You then need to find the rows in &sllog1;/&sllog2; that have
+bad entries and fix them.  You may want to take down the slon daemons
+for all nodes except the master; that way, if you make a mistake, it
+won't immediately propagate through to the subscribers.</para>
 
 <para> Here is an example:</para>
 
@@ -2214,11 +2481,12 @@ sequence. </para>
 
 </question> 
 
+<answer>
 <para> &slony1; uses sequences to provide primary key values for log
 entries, and therefore this kind of behaviour may (perhaps
 regrettably!) be expected.  </para>
 
-<answer> <para> Calling <function>lastval()</function>, to
+<para> Calling <function>lastval()</function>, to
 <quote>anonymously</quote> get <quote>the most recently updated
 sequence value</quote>, rather than using
 <function>currval('sequence_name')</function> is an unsafe thing to do

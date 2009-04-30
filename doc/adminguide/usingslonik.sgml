@@ -1,4 +1,4 @@
-<!-- $Id: usingslonik.sgml,v 1.18.2.1 2007-06-11 16:01:33 cbbrowne Exp $ -->
+<!-- $Id: usingslonik.sgml,v 1.18.2.2 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
 <indexterm><primary>using slonik</primary></indexterm>
@@ -111,14 +111,6 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$DB2';
 
 	try {
-		table add key (node id = 1, fully qualified name = 
-                               'public.history');
-	}
-	on error {
-		exit 1;
-	}
-
-	try {
 		create set (id = 1, origin = 1, comment = 
                             'Set 1 - pgbench tables');
 		set add table (set id = 1, origin = 1,
@@ -132,7 +124,7 @@ slonik <<_EOF_
 			comment = 'Table tellers');
 		set add table (set id = 1, origin = 1,
 			id = 4, fully qualified name = 'public.history',
-			key = serial, comment = 'Table accounts');
+			comment = 'Table accounts');
 	}
 	on error {
 		exit 1;
@@ -172,12 +164,6 @@ mainset=1
 slonik <<_EOF_
 $PREAMBLE
 try {
-    table add key (node id = $origin, fully qualified name = 
-                   'public.history');
-} on error {
-    exit 1;
-}
-try {
 	create set (id = $mainset, origin = $origin, 
                     comment = 'Set $mainset - pgbench tables');
 	set add table (set id = $mainset, origin = $origin,
@@ -191,7 +177,7 @@ try {
 		comment = 'Table tellers');
 	set add table (set id = $mainset, origin = $origin,
 		id = 4, fully qualified name = 'public.history',
-		key = serial, comment = 'Table accounts');
+		comment = 'Table accounts');
 } on error {
 	exit 1;
 }
@@ -220,12 +206,6 @@ for table in `echo $TABLES`; do
 done
 slonik <<_EOF_
 $PREAMBLE
-try {
-    table add key (node id = $origin, fully qualified name = 
-                   'public.history');
-} on error {
-    exit 1;
-}
 try {
 	create set (id = $mainset, origin = $origin, 
                     comment = 'Set $mainset - pgbench tables');

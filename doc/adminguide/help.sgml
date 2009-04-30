@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.18.2.2 2007-03-16 19:01:26 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.18.2.3 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="help">
 <title>More &slony1; Help</title>
 <indexterm><primary>help - how to get more assistance</primary></indexterm>
@@ -10,9 +10,10 @@ options for help:
 
 <listitem><para> Before submitting questions to any public forum as to
 why <quote>something mysterious</quote> has happened to your
-replication cluster, please run the <xref linkend="testslonystate">
-tool.  It may give some clues as to what is wrong, and the results are
-likely to be of some assistance in analyzing the problem. </para>
+replication cluster, be sure to run the &lteststate; tool and be
+prepared to provide its output.  It may give some clues as to what is
+wrong, and the results are likely to be of some assistance in
+analyzing the problem. </para>
 </listitem>
 
 <listitem><para> <ulink url="http://slony.info/">http://slony.info/</ulink> - the official

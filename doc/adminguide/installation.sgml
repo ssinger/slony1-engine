@@ -1,4 +1,4 @@
-<!-- $Id: installation.sgml,v 1.28.2.5 2008-03-01 02:53:47 devrim Exp $ -->
+<!-- $Id: installation.sgml,v 1.28.2.6 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="installation">
 <title>&slony1; Installation</title>
 
@@ -43,7 +43,7 @@ the installation procedure.</para>
 
 <para>
 <screen>
-PGMAIN=/usr/local/pgsql746-freebsd-2005-04-01 \
+PGMAIN=/usr/local/pgsql839-freebsd-2008-09-03 \
 ./configure \
     --with-pgconfigdir=$PGMAIN/bin
 gmake all; gmake install
@@ -68,8 +68,8 @@ source tree for your system.  This is done by running the
 <application>configure</application> script.  In early versions,
 <application>configure</application> needed to know where your
 &postgres; source tree is, which was done with the
-<option>--with-pgsourcetree=</option> option.  As of version 1.1, this
-is no longer necessary, as &slony1; has included within its own code
+<option>--with-pgsourcetree=</option> option.  Since version 1.1, this
+has not been necessary, as &slony1; has included within its own code
 base certain parts needed for platform portability.  It now only needs
 to make reference to parts of &postgres; that are actually part of the
 installation.  Therefore, &slony1; is configured by pointing it to the
@@ -92,9 +92,9 @@ Linux does not), the compile of &postgres; must be expressly
 configured with the option <command>--enable-thread-safety</command>
 to provide correct client libraries. </para>
 
-<para> &postgres; version 8 installs the server header
+<para> &postgres; versions from 8.0 onwards install the server header
 <command>#include</command> files by default; with version 7.4 and
-earlier, you need to make sure that the build installation included
+earlier, you needed to make sure that the build installation included
 doing <command>make install-all-headers</command>, otherwise the
 server headers will not be installed, and &slony1; will be unable to
 compile.</para>
@@ -123,7 +123,7 @@ PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 number of tests to guess values for various dependent variables and
 try to detect some quirks of your system.  &slony1; is known to need a
 modified version of <application>libpq</application> on specific
-platforms such as Solaris2.X on SPARC.  The patch for libpq version
+platforms such as Solaris2.X on SPARC.  A patch for libpq version
 7.4.2 can be found at <ulink id="threadpatch" url=
 "http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
 http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz
@@ -174,7 +174,8 @@ Make sure you have appropriate permissions to write into that area.
 Commonly you need to do this either as root or as the postgres user.
 </para>
 
-<para>The main list of files installed within the PostgreSQL instance is:</para>
+<para>The main list of files installed within the &postgres; instance
+is, for versions of &slony1; up to 1.2.x:</para>
 <itemizedlist>
 <listitem><para><filename> $bindir/slon</filename></para></listitem>
 <listitem><para><filename> $bindir/slonik</filename></para></listitem>
@@ -190,21 +191,42 @@ Commonly you need to do this either as root or as the postgres user.
 <listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
 </itemizedlist>
 
-<para> (Note that as things change, the list of version-specific files
-may grow...) </para>
+<para> (Note that as things have change, the list of version-specific
+files has tended to grow...) </para>
 
 <para>The <filename>.sql</filename> files are not fully substituted
-yet.  And yes, both the 7.3, 7.4 and the 8.0 files get installed on every
-system, irrespective of its version.  The <xref linkend="slonik">
-admin utility does namespace/cluster substitutions within these files,
-and loads the files when creating replication nodes.  At that point in
-time, the database being initialized may be remote and may run a
-different version of &postgres; than that of the local host.</para>
+yet.  And yes, versions for all supported versions of &postgres;
+(<emphasis>e.g.</emphasis> - such as 7.3, 7.4 8.0) get installed on
+every system, irrespective of its version.  The <xref
+linkend="slonik"> admin utility does namespace/cluster substitutions
+within these files, and loads the files when creating replication
+nodes.  At that point in time, the database being initialized may be
+remote and may run a different version of &postgres; than that of the
+local host.</para>
 
 <para> At the very least, the two shared objects installed in the
 <filename>$libdir</filename> directory must be installed onto every
 computer that is supposed to become a &slony1; node. (Other components
 may be able to be loaded remotely from other hosts.) </para>
+
+<para> In &slony1; version 2.0, this changes:</para>
+<itemizedlist>
+<listitem><para><filename> $bindir/slon</filename></para></listitem>
+<listitem><para><filename> $bindir/slonik</filename></para></listitem>
+<listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
+</itemizedlist>
+
+<note> <para> Note the loss of <filename>xxid.so</filename> - the txid
+data type introduced in &postgres; 8.3 makes it
+obsolete. </para></note>
+
+<note> <para> &slony1; 2.0 gives up compatibility with versions of
+&postgres; prior to 8.3, and hence <quote>resets</quote> the
+version-specific base function handling.  There may be function files
+for version 8.3, 8.4, and such, as replication-relevant divergences of
+&postgres; functionality take place.  </para></note>
 
 </sect2>
 
@@ -218,15 +240,16 @@ discovered and written down about the care and feeding of &slony1;.</para>
 
 <para> This is only built if you specify <command>--with-docs</command></para>
 
-<para> Note that you may have difficulty building the documentation on Red
-Hat-based systems due to NAMELEN being set way too low.  Havoc
+<para> Note that you may have difficulty building the documentation on
+Red Hat-based systems due to NAMELEN being set way too low.  Havoc
 Pennington opened a bug on this back in mid-2001, back in the days of
 Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
 appear to have been much progress since then.  The second URL below
 indicates that there is intent to address the issue by bumping up the
 value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that won't likely help you in 2005. Current Fedora releases have already
-addressed this issue. </para>
+but that may not help you if you are using an elder version where this
+will never be rectified.  Current Fedora releases have already
+addressed this issue.  </para>
 
 <para>
 <ulink url=
@@ -256,14 +279,14 @@ packages. Slony Global Development Team provides official RPMs and
 SRPMs for many versions or Red Hat and Fedora .</para>
 
 <para>The RPMs are available at <ulink
-url="http://yum.pgsqlrpms.org"> &postgres RPM Repository 
+url="http://yum.pgsqlrpms.org"> &postgres RPM Repository
 </ulink>. Please read the howto provided in the website for configuring
 yum to use that repository. Please note that the RPMs will look for RPM
 installation of &postgres;, so if you install &postgres; from source,
 you should manually ignore the RPM dependencies related to
 &postgres;.</para>
 
-<para>Installing &slony1; using these RPMs is as easy as 
+<para>Installing &slony1; using these RPMs is as easy as
 installing any RPM.</para>
 
 <screen>yum install slony1</screen>

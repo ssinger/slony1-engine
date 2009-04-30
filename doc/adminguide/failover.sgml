@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.23 2006-10-04 16:09:30 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.23.2.1 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -40,15 +40,58 @@ simple 2 node replication system with &slony1;.</para></sect2>
 slave).  A web application on a third server is accessing the database
 on node1.  Both databases are up and running and replication is more
 or less in sync.  We do controlled switchover using <xref
-linkend="stmtmoveset">.
+linkend="stmtmoveset">.</para>
 
 <itemizedlist>
 
 <listitem><para> At the time of this writing switchover to another
-server requires the application to reconnect to the database.  So in
-order to avoid any complications, we simply shut down the web server.
-Users who use <application>pg_pool</application> for the applications database
-connections merely have to shut down the pool.</para></listitem>
+server requires the application to reconnect to the new database.  So
+in order to avoid any complications, we simply shut down the web
+server.  Users who use <application>pg_pool</application> for the
+applications database connections merely have to shut down the
+pool.</para>
+
+<para> What needs to be done, here, is highly dependent on the way
+that the application(s) that use the database are configured.  The
+general point is thus: Applications that were connected to the old
+database must drop those connections and establish new connections to
+the database that has been promoted to the <quote/master/ role.  There
+are a number of ways that this may be configured, and therefore, a
+number of possible methods for accomplishing the change:</para>
+
+<itemizedlist>
+
+<listitem><para> The application may store the name of the database in
+a file.</para>
+
+<para> In that case, the reconfiguration may require changing the
+value in the file, and stopping and restarting the application to get
+it to point to the new location.
+</para> </listitem>
+
+<listitem><para> A clever usage of DNS might involve creating a CNAME
+<ulink url="http://www.iana.org/assignments/dns-parameters"> DNS
+record </ulink> that establishes a name for the application to use to
+reference the node that is in the <quote>master</quote> role.</para>
+
+<para> In that case, reconfiguration would require changing the CNAME
+to point to the new server, and possibly restarting the application to
+refresh database connections.
+</para> </listitem>
+
+<listitem><para> If you are using <application>pg_pool</application> or some
+similar <quote>connection pool manager,</quote> then the reconfiguration
+involves reconfiguring this management tool, but is otherwise similar
+to the DNS/CNAME example above.  </para> </listitem>
+
+</itemizedlist>
+
+<para> Whether or not the application that accesses the database needs
+to be restarted depends on how it is coded to cope with failed
+database connections; if, after encountering an error it tries
+re-opening them, then there may be no need to restart it. </para>
+
+</listitem>
 
 <listitem><para> A small <xref linkend="slonik"> script executes the
 following commands:
@@ -76,7 +119,7 @@ resumes normal operation.</para>
 together, this entire procedure is likely to take less than 10
 seconds.</para></listitem>
 
-</itemizedlist></para>
+</itemizedlist>
 
 <para> You may now simply shutdown the server hosting node1 and do
 whatever is required to maintain the server.  When <xref
@@ -88,6 +131,11 @@ configuration.</para>
 <para> This is the preferred way to handle things; it runs quickly,
 under control of the administrators, and there is no need for there to
 be any loss of data.</para>
+
+<para> After performing the configuration change, you should, as <xref
+linkend="bestpractices">, run the &lteststate; scripts in order to
+validate that the cluster state remains in good order after this
+change. </para>
 
 </sect2>
 <sect2><title> Failover</title>
@@ -140,24 +188,30 @@ now use node2 as data provider for the set.  This means that after the
 failover command succeeded, no node in the entire replication setup
 will receive anything from node1 any more.</para>
 
+<note><para> Note that in order for node 2 to be considered as a
+candidate for failover, it must have been set up with the <xref
+linkend="stmtsubscribeset"> option <command>forwarding =
+yes</command>, which has the effect that replication log data is
+collected in &sllog1;/&sllog2; on node 2.  If replication log data is
+<emphasis>not</emphasis> being collected, then failover to that node
+is not possible. </para></note>
+
 </listitem>
 
-<listitem>
-<para> Reconfigure and restart the application (or
+<listitem> <para> Reconfigure and restart the application (or
 <application>pgpool</application>) to cause it to reconnect to
-node2.</para>
-</listitem>
+node2.</para> </listitem>
 
 <listitem> <para> Purge out the abandoned node </para>
 
 <para> You will find, after the failover, that there are still a full
 set of references to node 1 in <xref linkend="table.sl-node">, as well
 as in referring tables such as <xref linkend="table.sl-confirm">;
-since data in <xref linkend="table.sl-log-1"> is still present,
-&slony1; cannot immediately purge out the node. </para>
+since data in &sllog1;/&sllog2; is still present, &slony1; cannot
+immediately purge out the node. </para>
 
-<para> After the failover is complete and node2 accepts
-write operations against the tables, remove all remnants of node1's
+<para> After the failover is complete and node2 accepts write
+operations against the tables, remove all remnants of node1's
 configuration information with the <xref linkend="stmtdropnode">
 command:
 
@@ -176,9 +230,90 @@ failure.  See <xref linkend="rebuildnode1"> for more details on the
 implications.</para>
 
 </listitem>
+
+<listitem> <para> After performing the configuration change, you
+should, as <xref linkend="bestpractices">, run the &lteststate;
+scripts in order to validate that the cluster state remains in good
+order after this change. </para> </listitem>
+
 </itemizedlist>
 
 </sect2>
+
+<sect2 id="complexfailover"> <title> Failover With Complex Node Set </title>
+
+<para> Failover is relatively <quote/simple/ if there are only two
+nodes; if a &slony1; cluster comprises many nodes, achieving a clean
+failover requires careful planning and execution. </para>
+
+<para> Consider the following diagram describing a set of six nodes at two sites.
+
+<inlinemediaobject> <imageobject> <imagedata fileref="complexenv.png">
+</imageobject> <textobject> <phrase> Symmetric Multisites </phrase>
+</textobject> </inlinemediaobject></para>
+
+<para> Let us assume that nodes 1, 2, and 3 reside at one data
+centre, and that we find ourselves needing to perform failover due to
+failure of that entire site.  Causes could range from a persistent
+loss of communications to the physical destruction of the site; the
+cause is not actually important, as what we are concerned about is how
+to get &slony1; to properly fail over to the new site.</para>
+
+<para> We will further assume that node 5 is to be the new origin,
+after failover. </para>
+
+<para> The sequence of &slony1; reconfiguration required to properly
+failover this sort of node configuration is as follows:
+</para>
+
+<itemizedlist>
+
+<listitem><para> Resubscribe (using <xref linkend="stmtsubscribeset">
+ech node that is to be kept in the reformation of the cluster that is
+not already subscribed to the intended data provider.  </para>
+
+<para> In the example cluster, this means we would likely wish to
+resubscribe nodes 4 and 6 to both point to node 5.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   subscribe set (id = 1, provider = 5, receiver = 4);
+   subscribe set (id = 1, provider = 5, receiver = 4);
+</programlisting>
+
+</listitem>
+<listitem><para> Drop all unimportant nodes, starting with leaf nodes.</para>
+
+<para> Since nodes 1, 2, and 3 are unaccessible, we must indicate the
+<envar>EVENT NODE</envar> so that the event reaches the still-live
+portions of the cluster. </para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   drop node (id=2, event node = 4);
+   drop node (id=3, event node = 4);
+</programlisting>
+
+</listitem>
+
+<listitem><para> Now, run <command>FAILOVER</command>.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   failover (id = 1, backup node = 5);
+</programlisting>
+
+</listitem>
+
+<listitem><para> Finally, drop the former origin from the cluster.</para>
+
+<programlisting>
+   include &lt;/tmp/failover-preamble.slonik&gt;;
+   drop node (id=1, event node = 4);
+</programlisting>
+</listitem>
+
+</itemizedlist>
 
 <sect2><title> Automating <command> FAIL OVER </command> </title>
 
@@ -206,7 +341,7 @@ systems. </para> </note>
 <para> When failover occurs, there therefore needs to be a mechanism
 to forcibly knock the failed node off the network in order to prevent
 applications from getting confused.  This could take place via having
-an SNMP interface that does some combination of the following:
+an SNMP interface that does some combination of the following:</para>
 
 <itemizedlist>
 
@@ -227,7 +362,6 @@ leave <quote>administrative</quote> addresses open so that the server
 would remain accessible to system administrators.  </para> </listitem>
 
 </itemizedlist>
-</para>
 </sect2>
 
 <sect2 id="rebuildnode1"><title>After Failover, Reconfiguring

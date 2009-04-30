@@ -1,4 +1,4 @@
-<!-- $Id: partitioning.sgml,v 1.1.2.3 2008-03-07 19:05:11 cbbrowne Exp $ -->
+<!-- $Id: partitioning.sgml,v 1.1.2.4 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="partitioning">
 <title>Partitioning Support </title>
 <indexterm><primary>partitioning</primary></indexterm>
@@ -73,10 +73,9 @@ has been violated. </para>
 </listitem>
 </itemizedlist>
 
-<para> There are several stored functions provided to support this,
-for &postgres; 8.1 and newer; the Gentle User may use whichever seems
-preferable.  The <quote>base function</quote> is
-<function>add_empty_table_to_replication()</function>; the others
+<para> There are several stored functions provided to support this;
+the Gentle User may use whichever seems preferable.  The <quote>base
+function</quote> is <function>add_empty_table_to_replication()</function>; the others
 provide additional structure and validation of the arguments </para>
 
 <itemizedlist>
@@ -106,8 +105,8 @@ information from that parent table.  </para>
 tables are partitioned.  Therefore, this approach may also be used
 with confidence to add any table to replication that is known to be
 empty. </para> </note>
-</sect2>
 
+</sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file

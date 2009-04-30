@@ -86,12 +86,17 @@
         <primary><varname>log_level</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 2</para>
+        <para>Debug log level (higher value ==> more output).  Range: [0,4], default 0</para>
 
 	<para> There are <link linkend="nineloglevels">nine log
-	message types</link>; using this option, some or all of
-	the <quote>debugging</quote> levels may be left out of the
-	slon logs. </para>
+	message types</link>; using this option, some or all of the
+	<quote>debugging</quote> levels may be left out of the slon
+	logs.  In &slony1; version 2, a lot of log message levels have
+	been revised in an attempt to ensure the <quote>interesting
+	stuff</quote> comes in at CONFIG/INFO levels, so that you
+	could run at level 0, omitting all of the <quote>DEBUG</quote>
+	messages, and still have meaningful contents in the
+	logs. </para>
 
       </listitem>
     </varlistentry>
@@ -117,11 +122,14 @@
         <para>Determines if you would like the timestamp of the event being logged to 
           appear in each log line entry.
         </para>
+
+        <para> Note that if <envar>syslog</envar> usage is configured,
+        then this is ignored; it is assumed that
+        <application>syslog</application> will be supplying
+        timestamps, and timestamps are therefore suppressed.
+        </para>
       </listitem>
     </varlistentry>
-
-
-
 
     <varlistentry id="slon-config-logging-log-timestamp-format" xreflabel="slon_conf_log_timestamp_format">
       <term><varname>log_timestamp_format</varname> (<type>string</type>)</term>
@@ -266,6 +274,13 @@
         <para>Check for updates at least this often in milliseconds. 
           Range: [10-60000], default 100
         </para>
+
+        <para> This parameter is primarily of concern on nodes that
+          originate replication sets.  On a non-origin node, there
+          will never be update activity that would induce a SYNC;
+          instead, the timeout value described below will induce a
+          SYNC every so often <emphasis>despite absence of changes to
+          replicate.</emphasis> </para>
       </listitem>
     </varlistentry>
 
@@ -292,6 +307,41 @@
           <envar>sync_interval_timeout</envar>. Range: [0-120000],
           default 1000
         </para>
+
+        <para> This parameter is likely to be primarily of concern on
+          nodes that originate replication sets, though it does affect
+          how often events are generated on other nodes.</para>
+
+	<para>
+          On a non-origin node, there never is activity to cause a
+          SYNC to get generated; as a result, there will be a SYNC
+          generated every <envar>sync_interval_timeout</envar>
+          milliseconds.  There are no subscribers looking for those
+          SYNCs, so these events do not lead to any replication
+          activity.  They will, however, clutter sl_event up a little,
+          so it would be undesirable for this timeout value to be set
+          too terribly low.  120000ms represents 2 minutes, which is
+          not a terrible value.
+        </para>
+
+	<para> The two values function together in varying ways: </para>
+
+	<para> On an origin node, <envar>sync_interval</envar> is
+	the <emphasis>minimum</emphasis> time period that will be
+	covered by a SYNC, and during periods of heavy application
+	activity, it may be that a SYNC is being generated
+	every <envar>sync_interval</envar> milliseconds. </para>
+
+	<para> On that same origin node, there may be quiet intervals,
+	when no replicatable changes are being submitted.  A SYNC will
+	be induced, anyways,
+	every <envar>sync_interval_timeout</envar>
+	milliseconds. </para>
+
+	<para> On a subscriber node that does not originate any sets,
+	only the <quote>timeout-induced</quote> SYNCs will
+	occur.  </para>
+
       </listitem>
     </varlistentry>
 
@@ -301,18 +351,23 @@
         <primary><varname>sync_group_maxsize</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
+
         <para>
-          Maximum number of <command>SYNC</command> events to group
-          together when/if a subscriber falls behind.
-          <command>SYNC</command>s are batched only if there are that
-          many available and if they are contiguous. Every other event
-          type in between leads to a smaller batch.  And if there is
-          only one <command>SYNC</command> available, even
-          <option>-g60</option> will apply just that one. As soon as a
-          subscriber catches up, it will apply every single
-          <command>SYNC</command> by itself.  Range: [0,10000], default:
-          20
+          Maximum number of <command>SYNC</command> events that a
+          subscriber node will group together when/if a subscriber
+          falls behind.  <command>SYNC</command>s are batched only if
+          there are that many available and if they are
+          contiguous.  Every other event type in between leads to a
+          smaller batch.  And if there is only
+          one <command>SYNC</command> available, even though you used
+          <option>-g600</option>, the &lslon; will apply just the one
+          that is available.  As soon as a subscriber catches up, it
+          will tend to apply each
+          <command>SYNC</command> by itself, as a singleton, unless
+          processing should fall behind for some reason.  Range:
+          [0,10000], default: 20
         </para>
+
       </listitem>
     </varlistentry>
     
@@ -330,6 +385,37 @@
         </para>
       </listitem>
     </varlistentry>
+
+
+    <varlistentry id="slon-config-cleanup-interval" xreflabel="slon_config_cleanup_interval">
+      <term><varname>cleanup_interval</varname> (<type>interval</type>)</term>
+      <indexterm>
+        <primary><varname>cleanup_interval</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Controls how quickly old events are trimmed out.  That
+          subsequently controls when the data in the log tables,
+          <envar>sl_log_1</envar> and <envar>sl_log_2</envar>, get
+          trimmed out.  Default: '10 minutes'.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-cleanup-deletelogs" xreflabel="slon_conf_cleanup_deletelogs">
+      <term><varname>cleanup_deletelogs</varname> (<type>boolean</type>)</term>
+      <indexterm>
+        <primary><varname>cleanup_deletelogs</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>
+          Controls whether or not we use DELETE to trim old data from the log tables,
+          <envar>sl_log_1</envar> and <envar>sl_log_2</envar>.
+          Default: false
+        </para>
+      </listitem>
+    </varlistentry>
+
     <varlistentry id="slon-config-desired-sync-time" xreflabel="desired_sync_time">
       <term><varname>desired_sync_time</varname>  (<type>integer</type>)</term>
       <indexterm>
@@ -442,7 +528,7 @@
         <primary><varname>remote_listen_timeout</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>How long, in milliseconds should the remote listener wait before treating the event selection criteria as having timed out?
+        <para>How long, in milliseconds, should the remote listener wait before treating the event selection criteria as having timed out?
           Range: [30-30000], default 300ms
         </para>
       </listitem>

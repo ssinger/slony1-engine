@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.25.2.2 2007-06-11 16:01:33 cbbrowne Exp $ -->
+<!-- $Id: defineset.sgml,v 1.25.2.3 2009-04-30 16:06:10 cbbrowne Exp $ -->
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 
@@ -70,24 +70,26 @@ table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
 <listitem><para> If the table hasn't even got a candidate primary key,
-you can ask &slony1; to provide one.  This is done by first using
-<xref linkend="stmttableaddkey"> to add a column populated using a
-&slony1; sequence, and then having the <xref
-linkend="stmtsetaddtable"> include the directive
-<option>key=serial</option>, to indicate that &slony1;'s own column
-should be used.</para></listitem>
+you might ask &slony1; to provide one using 
+<xref linkend="stmttableaddkey">.</para>
+
+<warning><para> <xref linkend="stmttableaddkey"> was always considered
+a <quote>kludge</quote>, at best, and as of version 2.0, it is
+considered such a misfeature that it is being removed.  </para>
+</warning>
+</listitem>
 
 </itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
 key;</quote> it is, however, strongly recommended that you have one of
-those instead of having &slony1; populate the PK column for you. If you
-don't have a suitable primary key, that means that the table hasn't got
-any mechanism, from your application's standpoint, for keeping values
-unique. &slony1; may, therefore, introduce a new failure mode for your
-application, and this also implies that you had a way to enter confusing
-data into the database.</para>
+those instead of having &slony1; populate the PK column for you. If
+you don't have a suitable primary key, that means that the table
+hasn't got any mechanism, from your application's standpoint, for
+keeping values unique.  &slony1; may, therefore, introduce a new
+failure mode for your application, and this also implies that you had
+a way to enter confusing data into the database.</para>
 </sect2>
 
 <sect2 id="definesets"><title>Grouping tables into sets</title>
@@ -117,6 +119,16 @@ running transactions that will injure system performance.</para>
 <para> If you can split such a large set into several smaller pieces,
 that will shorten the length of each of the transactions, lessening
 the degree of the <quote>injury</quote> to performance.</para>
+
+<para> Another issue comes up particularly frequently when replicating
+across a WAN; sometimes the network connection is a little bit
+unstable, such that there is a risk that a connection held open for
+several hours will lead to <command>CONNECTION TIMEOUT.</command> If
+that happens when 95% done copying a 50-table replication set
+consisting of 250GB of data, that could ruin your whole day.  If the
+tables were, instead, associated with separate replication sets, that
+failure at the 95% point might only interrupt, temporarily, the
+copying of <emphasis>one</emphasis> of those tables.  </para>
 
 <para> These <quote>negative effects</quote> tend to emerge when the
 database being subscribed to is many gigabytes in size and where it
@@ -160,8 +172,8 @@ intrude on your applications.</para>
 
 <para> Each time a SYNC is processed, values are recorded for
 <emphasis>all</emphasis> of the sequences in the set.  If there are a
-lot of sequences, this can cause <xref linkend="table.sl-seqlog"> to
-grow rather large.</para>
+lot of sequences, this can cause &slseqlog; to grow rather
+large.</para>
 
 <para> This points to an important difference between tables and
 sequences: if you add additional tables that do not see much/any
@@ -176,18 +188,19 @@ the effects:
 introduce much work to the system.</para>
 
 <para> If it is not updated, the trigger on the table on the origin
-never fires, and no entries are added to <xref
-       linkend="table.sl-log-1">.  The table never appears in any of the
+never fires, and no entries are added to &sllog1;/&sllog2;.  The table never appears in any of the
 further replication queries (<emphasis>e.g.</emphasis> in the
 <command>FETCH 100 FROM LOG</command> queries used to find
 replicatable data) as they only look for tables for which there are
-entries in <xref linkend="table.sl-log-1">.</para></listitem>
+entries in &sllog1;/&sllog2;.</para></listitem>
 
 <listitem><para> In contrast, a fixed amount of work is introduced to
 each SYNC by each sequence that is replicated.</para>
 
-<para> Replicate 300 sequence and 300 rows need to be added to <xref
-       linkend="table.sl-seqlog"> on a regular basis.</para>
+<para> Replicate 300 sequence and 300 rows need to be added to
+&slseqlog; on a regular basis, at least, thru until the 2.0 branch,
+where updates are only applied when the value of a given sequence is
+seen to change.</para>
 
 <para> It is more than likely that if the value of a particular
 sequence hasn't changed since it was last checked, perhaps the same
