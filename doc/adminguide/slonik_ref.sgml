@@ -83,6 +83,23 @@
 
      <para> Those commands are grouped together into one transaction
       per participating node. </para>
+
+     <para> Note that this does not enforce grouping of the actions as
+     a single transaction on all nodes.  For instance, consider the
+     following slonik code:</para>
+     <programlisting>
+     try {
+         execute script (set id = 1, filename = '/tmp/script1.sql', event node=1);
+         execute script (set id = 1, filename = '/tmp/script2.sql', event node=1);
+     }
+     </programlisting>
+
+     <para> This <emphasis>would</emphasis> be processed within a
+     single BEGIN/COMMIT on node 1.  However, the requests are
+     separated into two <command>DDL_SCRIPT</command> events so that
+     each will be run individually, in separate transactions, on other
+     nodes in the cluster. </para>
+
 <!-- ************************************************************ --></sect3></sect2></sect1></article>
 
  <reference id="metacmds">
@@ -97,7 +114,7 @@
    </para>
   </partintro>
   <!-- **************************************** -->
-  <refentry id ="stmtinclude"><refmeta><refentrytitle>INCLUDE</refentrytitle>
+  <refentry id ="stmtinclude"><refmeta><refentrytitle>SLONIK INCLUDE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
   
    <refnamediv><refname>INCLUDE</refname>
@@ -134,7 +151,7 @@
    </refsect1>
   </refentry>
   <!-- **************************************** -->
-  <refentry id ="stmtdefine"><refmeta><refentrytitle>DEFINE</refentrytitle>
+  <refentry id ="stmtdefine"><refmeta><refentrytitle>SLONIK DEFINE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>DEFINE</refname>
@@ -212,7 +229,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   </partintro>
   <!-- **************************************** -->
   
-  <refentry id ="clustername"><refmeta><refentrytitle>CLUSTER NAME</refentrytitle>
+  <refentry id ="clustername"><refmeta><refentrytitle>SLONIK CLUSTER NAME</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLUSTER NAME</refname>
@@ -261,7 +278,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   
 <!-- **************************************** -->
 
-  <refentry id ="admconninfo"><refmeta><refentrytitle>ADMIN CONNINFO</refentrytitle>
+  <refentry id ="admconninfo"><refmeta><refentrytitle>SLONIK ADMIN CONNINFO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>ADMIN CONNINFO</refname>
@@ -337,7 +354,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   <title>Configuration and Action commmands</title>
 <!-- **************************************** -->
   
-  <refentry id ="stmtecho"><refmeta><refentrytitle>ECHO</refentrytitle>
+  <refentry id ="stmtecho"><refmeta><refentrytitle>SLONIK ECHO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>ECHO</refname>
@@ -551,7 +568,7 @@ INIT CLUSTER (
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
-     STORE NODE ( ID = 2, COMMENT = 'Node 2');
+     STORE NODE ( ID = 2, COMMENT = 'Node 2', EVENT NODE = 1 );
     </Programlisting>
    </Refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -612,7 +629,7 @@ INIT CLUSTER (
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     DROP NODE ( ID = 2 );
+     DROP NODE ( ID = 2, EVENT NODE = 1 );
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -3057,7 +3074,7 @@ REPAIR CONFIG (
   </Refentry>
 
 
-  <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>CLONE PREPARE</refentrytitle>
+  <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>SLONIK CLONE PREPARE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLONE PREPARE</refname>
@@ -3105,7 +3122,7 @@ REPAIR CONFIG (
   </Refentry>
 
 
-  <refentry id ="stmtclonefinish"><refmeta><refentrytitle>CLONE FINISH</refentrytitle>
+  <refentry id ="stmtclonefinish"><refmeta><refentrytitle>SLONIK CLONE FINISH</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
    
    <refnamediv><refname>CLONE FINISH</refname>

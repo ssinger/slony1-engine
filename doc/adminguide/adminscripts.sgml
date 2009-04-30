@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.53 2008-12-15 23:30:17 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.54 2009-04-30 16:07:47 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
