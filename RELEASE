@@ -1,4 +1,25 @@
-$Id: RELEASE,v 1.1.2.33 2008-09-12 17:37:48 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.34 2009-04-30 16:39:29 cbbrowne Exp $
+Release 1.2.16
+
+- Fix to configure.ac to make it compatible with latest version (2.63)
+  of autoconf
+
+- Draw in latest documentation updates from 2.0 branch
+
+- Fix problems with failover:
+
+  - Failover would fail (ERROR) where there is no path to backup node
+    change this to a WARNING so that failover can complete; admin will
+    need to fix up paths later
+
+  - Failover apparently never supported failing over to nodes that
+    were not directly subscribing to the failed node
+
+  - Fixed some broken logic in failedNode()
+   
+    Fixed a problem where slonik cannot perform a failover if multiple
+    origins fail at once.
+
 Release 1.2.15
 - Fix to STORE TRIGGER - store trigger was running against all nodes
   upon subscription
