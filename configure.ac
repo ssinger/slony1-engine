@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.57.2.4 2007-08-29 05:44:58 devrim Exp $
+# $Id: configure.ac,v 1.57.2.5 2009-04-30 16:18:41 cbbrowne Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
@@ -86,7 +86,7 @@ AC_SUBST(YACC)
 AC_SUBST(YFLAGS)
 AC_SUBST(LEXFLAGS)
 AC_SUBST(YFLAGS)
-AC_SUBST(SLONREL_VERSION)
+#AC_SUBST(SLONREL_VERSION)
 AC_SUBST(with_gnu_ld)
 AC_SUBST(PERL)
 AC_SUBST(SED)
