@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.45 2008-05-28 19:09:37 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.45.2.1 2009-05-01 15:18:22 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -189,6 +189,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 			{
 				char	   *tab_nspname = PQgetvalue(res, t, 0);
 				char	   *tab_relname = PQgetvalue(res, t, 1);
+				ExecStatusType vrc;
 
 				slon_log(SLON_DEBUG1, "cleanupThread: %s analyze \"%s\".%s;\n",
 						 vacuum_action, tab_nspname, tab_relname);
@@ -196,15 +197,23 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 				slon_mkquery(&query_pertbl, "%s analyze \"%s\".%s;",
 							 vacuum_action, tab_nspname, tab_relname);
 				res2 = PQexec(dbconn, dstring_data(&query_pertbl));
-				if (PQresultStatus(res) != PGRES_COMMAND_OK)	/* query error */
+				vrc = PQresultStatus(res);
+				if (vrc == PGRES_FATAL_ERROR)
 				{
 					slon_log(SLON_ERROR,
-							 "cleanupThread: \"%s\" - %s",
-					dstring_data(&query_pertbl), PQresultErrorMessage(res2));
+							 "cleanupThread: \"%s\" - %s\n",
+							 dstring_data(&query_pertbl), PQresultErrorMessage(res2));
 
 					/*
 					 * slon_retry(); break;
 					 */
+				} else {
+					if (vrc == PGRES_NONFATAL_ERROR) {
+						slon_log(SLON_WARN,
+								 "cleanupThread: \"%s\" - %s\n",
+								 dstring_data(&query_pertbl), PQresultErrorMessage(res2));
+						
+					}
 				}
 				PQclear(res2);
 				dstring_reset(&query_pertbl);
