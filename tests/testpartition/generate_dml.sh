@@ -78,6 +78,9 @@ do_initdata()
   wait_for_catchup
   status "done"
 
+  $pgbindir/psql -h $host -p $port -d $db -U $user -c "insert into pg_catalog.pg_autovacuum (vacrelid, enabled, vac_base_thresh, vac_scale_factor, anl_base_thresh, anl_scale_factor, vac_cost_delay, vac_cost_limit, freeze_min_age, freeze_max_age) (select oid, 'f', 0, 0, 0, 0, 0,0,0,0 from pg_catalog.pg_class where relnamespace = (select oid from pg_namespace where nsp_name = '_${CLUSTER1}') and relname = 'sl_seqlog');" 1> $mktmp/suppressautovac.log 2> $mktmp/suppressautovac.log
+  status "make sure there is at least one table being vacuumed by Slony-I"
+
   more_data
   wait_for_catchup
   status "done"
