@@ -1,4 +1,4 @@
-<!-- $Id: raceconditions.sgml,v 1.1 2007-08-22 22:06:48 cbbrowne Exp $ -->
+<!-- $Id: raceconditions.sgml,v 1.1.4.1 2009-05-08 22:03:28 cbbrowne Exp $ -->
 <sect1 id="raceconditions"><title>Race Conditions and &slony1;</title>
 
 <indexterm><primary>race conditions</primary></indexterm>
