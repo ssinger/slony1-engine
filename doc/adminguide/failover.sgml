@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.31 2009-04-30 16:07:47 cbbrowne Exp $ -->
+<!-- $Id: failover.sgml,v 1.32 2009-05-09 08:56:52 devrim Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
@@ -314,6 +314,7 @@ portions of the cluster. </para>
 </listitem>
 
 </itemizedlist>
+</sect2>
 
 <sect2><title> Automating <command> FAIL OVER </command> </title>
 
