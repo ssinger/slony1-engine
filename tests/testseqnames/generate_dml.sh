@@ -24,7 +24,7 @@ generate_initdata()
 {
   GENDATA="$mktmp/generate.data"
   echo "" > ${GENDATA}
-  numrows=$(random_number 50 1000)
+  numrows=$(random_number 25 35)
   i=0;
   trippoint=`expr $numrows / 20`
   j=0;
@@ -44,6 +44,15 @@ generate_initdata()
     echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
     echo "select nextval('\"Schema.name\".\"a.periodic.sequence\"');" >> $GENDATA
     echo "select nextval('\"Studly Spacey Schema\".\"user\"');" >> $GENDATA
+    for d4 in 8 3 9 0 6 7 1 4 5 2; do
+	for d2 in 0 2 1 3 9 5 6 4 8 7; do
+	    for d1 in 0 1; do
+		for d3 in 5 2 1 6 4 8 3 9 0 7 ; do
+		    echo "select nextval('public.seq40${d1}${d2}${d3}${d4}');" >> $GENDATA
+		done
+	    done
+	done
+    done
     if [ ${i} -ge ${numrows} ]; then
       break;
     else
