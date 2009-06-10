@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.24.2.2 2006-10-27 20:09:56 cbbrowne Exp $
+ *	$Id: scheduler.c,v 1.24.2.3 2009-06-10 15:02:40 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -425,19 +425,6 @@ sched_mainloop(void *dummy)
 		struct timeval timeout;
 
 		/*
-		 * Make copies of the file descriptor sets for select(2)
-		 */
-		FD_ZERO(&rfds);
-		FD_ZERO(&wfds);
-		for (i = 0; i < sched_numfd; i++)
-		{
-			if (FD_ISSET(i, &sched_fdset_read))
-				FD_SET(i, &rfds);
-			if (FD_ISSET(i, &sched_fdset_write))
-				FD_SET(i, &wfds);
-		}
-
-		/*
 		 * Check if any of the connections in the wait queue have reached
 		 * their timeout. While doing so, we also remember the closest timeout
 		 * in the future.
@@ -526,6 +513,19 @@ sched_mainloop(void *dummy)
 				}
 			}
 			conn = next;
+		}
+
+		/*
+		 * Make copies of the file descriptor sets for select(2)
+		 */
+		FD_ZERO(&rfds);
+		FD_ZERO(&wfds);
+		for (i = 0; i < sched_numfd; i++)
+		{
+			if (FD_ISSET(i, &sched_fdset_read))
+				FD_SET(i, &rfds);
+			if (FD_ISSET(i, &sched_fdset_write))
+				FD_SET(i, &wfds);
 		}
 
 		/*
