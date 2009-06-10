@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: slonikconfdump.sh,v 1.1.2.1 2009-06-09 21:38:27 cbbrowne Exp $
+# $Id: slonikconfdump.sh,v 1.1.2.2 2009-06-10 21:11:56 cbbrowne Exp $
 # This tool rummages through a Slony-I cluster, generating a slonik script
 # suitable to recreate the cluster
 
@@ -96,7 +96,7 @@ for sq in `echo ${SEQS}`; do
     echo "set add sequence(id=${seq}, set id=${set}, origin=${origin}, fully qualified name='\"${nsp}\".\"${relname}\"', comment='${comment}');"
 done
 
-Q="select sub_set,sub_provider,sub_receiver,case when sub_forward then 'YES' else 'NO' end from ${SS}.sl_subscribe;"
+Q="select sub_set,sub_provider,sub_receiver,case when sub_forward then 'YES' else 'NO' end from ${SS}.sl_subscribe order by sub_set, sub_provider, sub_receiver;"
 SUBS=`psql -qtA -F ":" -R " " -c "${Q}"`
 for sb in `echo ${SUBS}`; do
     set=`echo ${sb} | cut -d : -f 1`
