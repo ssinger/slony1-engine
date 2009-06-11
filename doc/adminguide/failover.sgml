@@ -1,4 +1,4 @@
-<!-- $Id: failover.sgml,v 1.32 2009-05-09 08:56:52 devrim Exp $ -->
+<!-- $Id: failover.sgml,v 1.33 2009-06-11 19:03:44 cbbrowne Exp $ -->
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>

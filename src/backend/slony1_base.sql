@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.40 2008-11-17 22:40:27 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.41 2009-06-11 19:03:44 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -67,7 +67,7 @@ comment on table @NAMESPACE@.sl_set is 'Holds definitions of replication sets.';
 comment on column @NAMESPACE@.sl_set.set_id is 'A unique ID number for the set.';
 comment on column @NAMESPACE@.sl_set.set_origin is 
 	'The ID number of the source node for the replication set.';
-comment on column @NAMESPACE@.sl_set.set_locked is 'Indicates whether or not the set is locked.';
+comment on column @NAMESPACE@.sl_set.set_locked is 'Transaction ID where the set was locked.';
 comment on column @NAMESPACE@.sl_set.set_comment is 'A human-oriented description of the set.';
 
 

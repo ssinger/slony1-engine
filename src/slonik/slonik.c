@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.91 2008-05-28 18:23:13 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.92 2009-06-11 19:03:45 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -107,7 +107,7 @@ main(int argc, const char *argv[])
 	/*
 	 * We need to find a share directory like PostgreSQL. 
 	 */
-	if (find_my_exec(argv[0],myfull_path) < 0)
+	if (strlen(PGSHARE) > 0)
 	{
 		strcpy(share_path, PGSHARE);
 	}

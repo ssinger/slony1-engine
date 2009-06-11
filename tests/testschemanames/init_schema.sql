@@ -1,16 +1,19 @@
-CREATE TABLE table1(
+create schema foo;
+set search_path to foo;
+drop schema public;
+CREATE TABLE foo.table1(
   id		SERIAL		PRIMARY KEY, 
   data		TEXT
 );
 
-CREATE TABLE table2(
+CREATE TABLE foo.table2(
   id		SERIAL		UNIQUE NOT NULL, 
   table1_id	INT4		REFERENCES table1(id) 
 					ON UPDATE CASCADE ON DELETE CASCADE, 
   data		TEXT
 );
 
-CREATE TABLE table3(
+CREATE TABLE foo.table3(
   id		SERIAL,
   table2_id	INT4		REFERENCES table2(id)
 					ON UPDATE SET NULL ON DELETE SET NULL,

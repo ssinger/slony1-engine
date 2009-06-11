@@ -46,7 +46,7 @@ dump_configuration(void)
 	for (i = 0; ConfigureNamesString[i].gen.name; i++)
 	{
 		slon_log(SLON_CONFIG, "main: String option %s = %s\n",
-				 ConfigureNamesString[i].gen.name, *(ConfigureNamesString[i].variable));
+				 ConfigureNamesString[i].gen.name, ((*ConfigureNamesString[i].variable)==NULL)?"[NULL]":*(ConfigureNamesString[i].variable));
 	}
 
 
@@ -754,7 +754,7 @@ static struct config_bool ConfigureNamesBool[] =
 		{
 			(const char *) "cleanup_deletelogs",
 			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
-			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or not"),
+			gettext_noop("Should the cleanup thread DELETE sl_log_? entries or leave trimming to the TRUNCATE"),
 			SLON_C_BOOL
 		},
 		&cleanup_deletelogs,

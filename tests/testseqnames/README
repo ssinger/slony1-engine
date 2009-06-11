@@ -1,4 +1,8 @@
-$Id: README,v 1.1 2005-11-15 21:25:34 cbbrowne Exp $
+$Id: README,v 1.2 2009-06-11 19:03:45 cbbrowne Exp $
 
 This test involves creating some sequences with wacky names involving
 StudlyCaps, spaces, and ".".
+
+It also creates a Large Number of sequences, to validate that
+we don't break down with either large quantities of them, or
+if the IDs are large numbers
