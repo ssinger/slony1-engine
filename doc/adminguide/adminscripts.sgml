@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.52.2.3 2009-06-10 21:11:56 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.52.2.4 2009-06-12 22:42:13 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -777,10 +777,8 @@ configuration of a functioning &slony1; cluster.</para>
 <listitem><para> Sequences </para> </listitem>
 <listitem><para> Subscriptions </para> 
 
-<para> Note that the subscriptions are ordered by set, then by
-provider, then by receiver.  This ordering does not necessarily
-indicate the order in which subscriptions need to be
-applied. </para></listitem>
+<para> Note that the subscriptions are ordered topologically, using
+<command>tsort</command> </para></listitem>
 </itemizedlist>
 
 <para> It may be run as follows: </para>
@@ -810,9 +808,7 @@ chris@dba2:Slony-I/CMD/slony1-2.0/tools>
 Particular attention should be paid to the <command>ADMIN
 CONNINFO</command>, as it picks the first value that it sees for each
 node; in a complex environment, where visibility of nodes may vary
-from subnet to subnet, it may not pick the right value.  In addition,
-<command>SUBSCRIBE SET</command> statements do not necessarily
-indicate the order in which subscriptions need to be applied.</para>
+from subnet to subnet, it may not pick the right value.  </para>
 
 </sect2>
 </sect1>
