@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.32 2008-04-11 15:44:23 cbbrowne Exp $
+ *	$Id: parser.y,v 1.32.2.1 2009-06-17 21:37:38 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -36,6 +36,7 @@ typedef enum {
 	O_NEW_SET,
 	O_NODE_ID,
 	O_OLD_ORIGIN,
+	O_OMIT_COPY,
 	O_ORIGIN,
 	O_PROVIDER,
 	O_RECEIVER,
@@ -183,6 +184,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_CONFIG
 %token	K_CONNINFO
 %token	K_CONNRETRY
+%token	K_COPY
 %token	K_CREATE
 %token	K_DROP
 %token	K_ECHO
@@ -212,6 +214,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_NODE
 %token	K_OFF
 %token	K_OLD
+%token  K_OMIT
 %token	K_ON
 %token	K_ONLY
 %token	K_ORIGIN
@@ -1160,6 +1163,7 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 							STMT_OPTION_INT( O_PROVIDER, -1 ),
 							STMT_OPTION_INT( O_RECEIVER, -1 ),
 							STMT_OPTION_YN( O_FORWARD, 0 ),
+							STMT_OPTION_YN( O_OMIT_COPY, 0 ),
 							STMT_OPTION_END
 						};
 
@@ -1176,6 +1180,7 @@ stmt_subscribe_set	: lno K_SUBSCRIBE K_SET option_list
 							new->sub_provider	= opt[1].ival;
 							new->sub_receiver	= opt[2].ival;
 							new->sub_forward	= opt[3].ival;
+							new->omit_copy      = opt[4].ival;
 						}
 						else
 							parser_errors++;
@@ -1543,6 +1548,11 @@ option_list_item	: K_ID '=' option_item_id
 						$4->opt_code	= O_OLD_ORIGIN;
 						$$ = $4;
 					}
+					| K_OMIT K_COPY '=' option_item_yn
+					{
+						$4->opt_code	= O_OMIT_COPY;
+						$$ = $4;
+					}
 					| K_NEW K_ORIGIN '=' option_item_id
 					{
 						$4->opt_code	= O_NEW_ORIGIN;
@@ -1799,6 +1809,7 @@ option_str(option_code opt_code)
 		case O_NEW_SET:			return "new set";
 		case O_NODE_ID:			return "node id";
 		case O_OLD_ORIGIN:		return "old origin";
+		case O_OMIT_COPY:       return "omit copy";
 		case O_ORIGIN:			return "origin";
 		case O_PROVIDER:		return "provider";
 		case O_RECEIVER:		return "receiver";

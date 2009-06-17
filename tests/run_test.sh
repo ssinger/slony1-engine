@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.26.2.2 2009-04-28 21:48:19 cbbrowne Exp $
+# $Id: run_test.sh,v 1.26.2.3 2009-06-17 21:37:38 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -293,7 +293,7 @@ create_subscribers()
 		status "add plpgsql to subscriber"
 		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 		status "loading subscriber ${node} DB from $odb"
-	        $opgbindir/pg_dump -s  -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${node} 2> ${mktmp}/init_schema.sql.${node}
+	        $opgbindir/pg_dump -h $ohost -U $ouser -p $oport $odb | $pgbindir/psql -h $host -p $port $db $user 1> ${mktmp}/init_schema.sql.${node} 2> ${mktmp}/init_schema.sql.${node}
 		status "done"
               fi
               if [ ${node} -ge ${NUMNODES} ]; then

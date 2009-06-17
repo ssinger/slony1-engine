@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.34 2008-02-14 22:21:42 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.34.2.1 2009-06-17 21:37:38 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -351,6 +351,7 @@ struct SlonikStmt_subscribe_set_s
 	int			sub_provider;
 	int			sub_receiver;
 	int			sub_forward;
+	int			omit_copy;
 };
 
 

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176 2008-08-29 21:06:45 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.176.2.1 2009-06-17 21:37:38 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1180,14 +1180,15 @@ remoteWorkerThread_main(void *cdata)
 				int			sub_provider = (int) strtol(event->ev_data2, NULL, 10);
 				int			sub_receiver = (int) strtol(event->ev_data3, NULL, 10);
 				char	   *sub_forward = event->ev_data4;
+				char	   *omit_copy = event->ev_data5;
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 
 				slon_appendquery(&query1,
-							"select %s.subscribeSet_int(%d, %d, %d, '%q'); ",
+								 "select %s.subscribeSet_int(%d, %d, %d, '%q', '%q'); ",
 								 rtcfg_namespace,
-						   sub_set, sub_provider, sub_receiver, sub_forward);
+								 sub_set, sub_provider, sub_receiver, sub_forward, omit_copy);
 				need_reloadListen = true;
 			}
 			else if (strcmp(event->ev_type, "ENABLE_SUBSCRIPTION") == 0)
@@ -2429,12 +2430,30 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	SlonDString ssy_action_list;
 	char		seqbuf[64];
 	char	   *copydata = NULL;
+	bool omit_copy = false;
+	char *v_omit_copy = event->ev_data5;
 	struct timeval tv_start;
 	struct timeval tv_start2;
 	struct timeval tv_now;
 
-	slon_log(SLON_INFO, "copy_set %d\n", set_id);
 	gettimeofday(&tv_start, NULL);
+
+	if (strcmp(v_omit_copy, "f") == 0) {
+		omit_copy = false;
+	} else {
+		if (strcmp(v_omit_copy, "t") == 0) {
+			omit_copy = true;
+		} else {
+			slon_log(SLON_ERROR, "copy_set %d - omit_copy not in (t,f)- [%s]\n", set_id, v_omit_copy);
+		}
+	}
+	slon_log(SLON_INFO, "copy_set %d - omit=%s - bool=%d\n", set_id, v_omit_copy, omit_copy);
+
+	if (omit_copy) {
+		slon_log(SLON_INFO, "omit is TRUE\n");
+	} else {
+		slon_log(SLON_INFO, "omit is FALSE\n");
+	}
 
 	/*
 	 * Lookup the provider nodes conninfo
@@ -2858,6 +2877,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		/*
 		 * Begin a COPY from stdin for the table on the local DB
 		 */
+		if (omit_copy) {
+			slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
+					 "COPY of table %s suppressed due to OMIT COPY option\n",
+					 node->no_id, tab_fqname);
+		} else {
 		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "Begin COPY of table %s\n",
 				 node->no_id, tab_fqname);
@@ -3147,7 +3171,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				return -1;
 			}
 		}
-
+		}
 		gettimeofday(&tv_now, NULL);
 		slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 				 "%.3f seconds to copy table %s\n",
