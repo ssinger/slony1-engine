@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.1.2.2 2008-05-13 21:40:28 cbbrowne Exp $
+ *	$Id: scan.l,v 1.1.2.3 2009-07-07 15:00:16 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -173,6 +173,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 								break;
 							}
 							*cp++ = c;
+							*cp++ = c;
 							len+=2;
 							continue;
 						}
@@ -188,6 +189,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 							}
 							if (c == '\'')
 							{
+								*cp++ = c;
 								*cp++ = c;
 								len+=2;
 								continue;
@@ -242,6 +244,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 								break;
 							}
 							*cp++ = c;
+							*cp++ = c;
 							len+=2;
 							continue;
 						}
@@ -257,6 +260,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 							}
 							if (c == '\'')
 							{
+								*cp++ = c;
 								*cp++ = c;
 								len+=2;
 								continue;
