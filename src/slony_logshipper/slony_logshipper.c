@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.c,v 1.1.2.1 2007-09-08 14:21:40 wieck Exp $
+ *	$Id: slony_logshipper.c,v 1.1.2.2 2009-07-08 20:37:39 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -47,6 +47,7 @@ typedef struct archscan_entry_s {
 /*
  * Global data
  */
+int         rescan_interval = 0;
 int			parse_errors = 0;
 int			opt_quiet = 0;
 char	   *destinationfname = NULL;
@@ -134,7 +135,7 @@ main(int argc, const char *argv[])
 	 * Parse commandline options
 	 *
 	 */
-	while ((opt = getopt(argc, (char **)argv, "hvqcflrtTw")) != EOF)
+	while ((opt = getopt(argc, (char **)argv, "hvqcflrtTws:")) != EOF)
 	{
 		switch (opt)
 		{
@@ -178,6 +179,10 @@ main(int argc, const char *argv[])
 			case 'w':
 				opt_nowait = 1;
 				break;
+            
+            case 's':
+                rescan_interval = atoi(optarg);
+                break;
 
 			default:
 				fprintf(stderr, "unknown option '%c'\n", opt);
@@ -311,7 +316,7 @@ main(int argc, const char *argv[])
 						break;
 
 			default:	if (!opt_quiet)
-							printf("logshipper deamon created - pid = %d\n",
+							printf("logshipper daemon created - pid = %d\n",
 									pid);
 						return 0;
 		}
@@ -365,6 +370,19 @@ main(int argc, const char *argv[])
 		if (rc == 0)
 			break;
 
+		if (rc == -2)
+		{
+			archscan_sort = NULL;
+            errlog(LOG_INFO, "Queue is empty.  Going to rescan in %d seconds\n", rescan_interval);
+            sleep(rescan_interval);
+			if (archscan(optind, argc, (char **)argv) < 0)
+			{
+				return -1;
+			}
+            errlog(LOG_INFO, "Archive dir scanned\n");
+			continue;
+               }
+		
 		if (rc < 0)
 		{
 			return -1;
@@ -1172,6 +1190,7 @@ usage(void)
 		"            (use with caution)\n"
 		"      -f    stay in foreground (don't daemonize)\n"
 		"      -w    enter smart shutdown mode immediately\n"
+		"      -s    indicate (integer value) rescan interval\n"
 		"\n");
 	exit(1);
 }
