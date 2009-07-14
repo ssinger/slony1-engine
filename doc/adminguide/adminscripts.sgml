@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.52.2.5 2009-06-17 21:37:38 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.52.2.6 2009-07-14 19:13:33 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -165,6 +165,14 @@ simply disappear from replication.
 <para>Generates Slonik script to drop a table from replication.
 Requires, as input, the ID number of the table (available from table
 <envar>sl_table</envar>) that is to be dropped. </para>
+</sect3>
+
+<sect3 id="slonik-drop-sequence"><title>slonik_drop_sequence</title>
+
+<para>Generates Slonik script to drop a sequence from replication.
+Requires, as input, the ID number of the table (available from table
+<envar>sl_table</envar>) that is to be dropped, and the ID of the set
+to which it is attached. </para>
 </sect3>
 
 <sect3><title>slonik_execute_script</title>
