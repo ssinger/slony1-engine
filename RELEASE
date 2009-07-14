@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.11 2009-05-01 15:29:25 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.12 2009-07-14 19:09:00 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -89,3 +89,24 @@ RELEASE 2.0.2
 - Cleanup thread was generating spurious error messages due to
   misinterpreting PG return codes.  Rectified this, and added a
   test in to make sure we're exercising the logic
+
+
+RELEASE 2.0.3
+
+- PostgreSQL 8.4 has been released; slonik needs to explicitly recognize it
+
+- Add in slonikconfdump.sh tool, which generates a slonik script to duplicate
+  the configuration of a Slony-I cluster
+
+- Significant fixes to documentation to reflect 2.0 changes
+
+- Add "OMIT COPY" option to the Slonik "SUBSCRIBE SET" command
+
+- Document process for Slony-I 2.0 upgrade using OMIT COPY option
+
+- Fix to race condition where file descriptor copies were being made at
+  the wrong time in the scheduler
+
+- Modify "testseqnames" regression test to create a whole bunch of
+  sequences to validate that things don't break down with either lots of
+  them, or where IDs are large numbers
