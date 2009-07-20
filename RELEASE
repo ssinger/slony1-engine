@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.12 2009-07-14 19:09:00 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.13 2009-07-20 16:47:53 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -110,3 +110,8 @@ RELEASE 2.0.3
 - Modify "testseqnames" regression test to create a whole bunch of
   sequences to validate that things don't break down with either lots of
   them, or where IDs are large numbers
+
+- Change minimum debugging level to -1 to allow suppressing logging
+
+- Bug #92 - compression of event numbers had a bug where events >
+  2^31-1 would overflow the "int" value
