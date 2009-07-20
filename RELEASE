@@ -1,8 +1,13 @@
-$Id: RELEASE,v 1.1.2.35 2009-07-08 20:46:02 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.36 2009-07-20 16:47:22 cbbrowne Exp $
 Release 1.2.17
 
 - Apply changes to logshipper that went into the 2.0 branch but not
   1.2
+
+- Change minimum debugging level to -1 to allow suppressing logging
+
+- Bug #92 - compression of event numbers had a bug where events >
+  2^31-1 would overflow the "int" value
 
 Release 1.2.16
 
