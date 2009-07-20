@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176 2008-08-29 21:06:45 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.177 2009-07-20 16:41:55 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3782,7 +3782,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		res1 = PQexec(local_dbconn, dstring_data(&query));
 		monitor_subscriber_query(&pm);
 
-		slon_log(SLON_INFO, "about to monitor_subscriber_query - pulling big actionid list %d\n", provider);
+		slon_log(SLON_INFO, "about to monitor_subscriber_query - pulling big actionid list for %d\n", provider->no_id);
 
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -5513,7 +5513,7 @@ void
 compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 {
 	CompressState			state;
-	int			curr_number,
+	long long			curr_number,
 				curr_min,
 				curr_max;
 	int			curr_digit;
@@ -5661,7 +5661,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 				if (state == COLLECTING_DIGITS)
 				{
 					/* Finished another number... Fold it into the ranges... */
-					slon_log(SLON_DEBUG4, "Finished number: %d\n", curr_number);
+					slon_log(SLON_DEBUG4, "Finished number: %lld\n", curr_number);
 
 					/*
 					 * If we haven't a range, then the range is the current
@@ -5712,16 +5712,16 @@ compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 						}
 						if (curr_max == curr_min)
 						{
-							slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+							slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 							slon_appendquery(action_subquery,
-										" log_actionseq <> '%d' ", curr_max);
+										" log_actionseq <> '%lld' ", curr_max);
 						}
 						else
 						{
-							slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+							slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
-								 " log_actionseq not between '%d' and '%d' ",
+								 " log_actionseq not between '%lld' and '%lld' ",
 											 curr_min, curr_max);
 						}
 						curr_min = curr_number;
@@ -5747,16 +5747,16 @@ compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 		}
 		if (curr_max == curr_min)
 		{
-			slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+			slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq <> '%d' ", curr_max);
+							 " log_actionseq <> '%lld' ", curr_max);
 		}
 		else
 		{
-			slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+			slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq not between '%d' and '%d' ",
+							 " log_actionseq not between '%lld' and '%lld' ",
 							 curr_min, curr_max);
 		}
 
