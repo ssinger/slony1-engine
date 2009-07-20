@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.36 2009-07-20 16:43:13 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.37 2009-07-20 22:30:47 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -6074,14 +6074,14 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 						{
 							slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 							slon_appendquery(action_subquery,
-										" log_actionseq <> '%lld' ", curr_max);
+										" log_actionseq <> '%L' ", curr_max);
 						}
 						else
 						{
 							slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
-								 " log_actionseq not between '%lld' and '%lld' ",
+								 " log_actionseq not between '%L' and '%L' ",
 											 curr_min, curr_max);
 						}
 						curr_min = curr_number;
@@ -6109,14 +6109,14 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 		{
 			slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq <> '%lld' ", curr_max);
+							 " log_actionseq <> '%L' ", curr_max);
 		}
 		else
 		{
 			slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq not between '%lld' and '%lld' ",
+							 " log_actionseq not between '%L' and '%L' ",
 							 curr_min, curr_max);
 		}
 
