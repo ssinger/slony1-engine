@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.35 2008-09-09 21:30:25 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.36 2009-07-20 16:43:13 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5873,7 +5873,7 @@ void
 compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 {
 	int			state;
-	int			curr_number,
+	long long			curr_number,
 				curr_min,
 				curr_max;
 	int			curr_digit;
@@ -6021,7 +6021,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 				if (state == COLLECTING_DIGITS)
 				{
 					/* Finished another number... Fold it into the ranges... */
-					slon_log(SLON_DEBUG4, "Finished number: %d\n", curr_number);
+					slon_log(SLON_DEBUG4, "Finished number: %lld\n", curr_number);
 
 					/*
 					 * If we haven't a range, then the range is the current
@@ -6072,16 +6072,16 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 						}
 						if (curr_max == curr_min)
 						{
-							slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+							slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 							slon_appendquery(action_subquery,
-										" log_actionseq <> '%d' ", curr_max);
+										" log_actionseq <> '%lld' ", curr_max);
 						}
 						else
 						{
-							slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+							slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
-								 " log_actionseq not between '%d' and '%d' ",
+								 " log_actionseq not between '%lld' and '%lld' ",
 											 curr_min, curr_max);
 						}
 						curr_min = curr_number;
@@ -6107,16 +6107,16 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 		}
 		if (curr_max == curr_min)
 		{
-			slon_log(SLON_DEBUG4, "simple entry - %d\n", curr_max);
+			slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq <> '%d' ", curr_max);
+							 " log_actionseq <> '%lld' ", curr_max);
 		}
 		else
 		{
-			slon_log(SLON_DEBUG4, "between entry - %d %d\n",
+			slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
-							 " log_actionseq not between '%d' and '%d' ",
+							 " log_actionseq not between '%lld' and '%lld' ",
 							 curr_min, curr_max);
 		}
 
