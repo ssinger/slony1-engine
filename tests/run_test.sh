@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.26.2.3 2009-06-17 21:37:38 cbbrowne Exp $
+# $Id: run_test.sh,v 1.26.2.4 2009-07-21 21:17:44 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -112,7 +112,7 @@ stop_slons()
 {
 	node=1
         while : ; do
-	  SLON_BIN_PATH=$PGBINDIR1 SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh stop
+	  SLON_BUILD=$PGBINDIR SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh stop
           if [ ${node} -ge ${NUMNODES} ]; then
             break;
           else
@@ -249,9 +249,9 @@ init_origin_rdbms()
 
 	if [ -n "${db}" -a "${host}" -a "${user}" ]; then
 	  status "creating origin DB: $user -h $host -U $user -p $port $db"
-  	  $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
+  	  $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
 	  if [ $? -ne 0 ]; then	   
-	    err 3 "An error occurred trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db, ${mktmp}/createdb.${originnode} for details"
+	    err 3 "An error occurred trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db, ${mktmp}/createdb.${originnode} for details"
 	  fi
 	else
 	  err 3 "No db '${db}' or host '${host}' or user '${user}' or port '${port}' specified"
@@ -289,7 +289,7 @@ create_subscribers()
             if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
               if [ ${node} -ne ${originnode} ]; then
 		status "creating subscriber ${node} DB: $user -h $host -U $user -p $port $db"
-	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${node} 2> ${mktmp}/createdb.${node}
+	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db 1> ${mktmp}/createdb.${node} 2> ${mktmp}/createdb.${node}
 		status "add plpgsql to subscriber"
 		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 		status "loading subscriber ${node} DB from $odb"
@@ -527,11 +527,11 @@ launch_slon()
   conninfo="dbname=${odb} host=${ohost} user=${ouser} port=${oport}"
   build_slonconf ${originnode} "${conninfo}"
   slonparms=" -f ${mktmp}/slon-conf.${originnode} "
-  status "launching originnode"
-  SLON_BIN_PATH=${opgbindir} SLON_CONF=${mktmp}/slon-conf.${originnode}  SLON_LOG=$mktmp/slon_log.${originnode} $SLTOOLDIR/start_slon.sh start
+  status "launching originnode - PGBINDIR=${PGBINDIR}"
+  SLON_BUILD=${PGBINDIR} SLON_CONF=${mktmp}/slon-conf.${originnode} SLON_LOG=$mktmp/slon_log.${originnode} $SLTOOLDIR/start_slon.sh start
 
   sleep 1
-  SLPID=`SLON_BIN_PATH=${opgbindir} SLON_CONF=${mktmp}/slon-conf.${originnode} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
+  SLPID=`SLON_BUILD=$PGBINDIR SLON_CONF=${mktmp}/slon-conf.${originnode} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
   if [ -z "${SLPID}" ]; then
       echo "SLPID: ${SLPID}"
     warn 3 "Failed to launch slon on node ${originnode} check $mktmp/slon_log.${originnode} for details"
@@ -583,10 +583,10 @@ launch_slon()
 
 	build_slonconf ${node} "${conninfo}"
 	status "launching slon"
-	SLON_BIN_PATH=$pgbindir SLON_CONF=${CONFFILE} SLON_LOG=$mktmp/slon_log.${node} $SLTOOLDIR/start_slon.sh start
+	SLON_BUILD=$PGBINDIR SLON_CONF=${CONFFILE} SLON_LOG=$mktmp/slon_log.${node} $SLTOOLDIR/start_slon.sh start
 	sleep 1
 	
-	SLPID=`SLON_BIN_PATH=${pgbindir} SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
+	SLPID=`SLON_BUILD=${PGBINDIR} SLON_CONF=${mktmp}/slon-conf.${node} $SLTOOLDIR/start_slon.sh status | grep "Slon running as PID:"`
 	if [ -z "${SLPID}" ]; then
 	    echo "SLPID: ${SLPID}"
 	    warn 3 "Failed to launch slon on node ${node} check $mktmp/slon_log.${node} for details"
