@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.92 2009-06-11 19:03:45 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.93 2009-07-21 21:18:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1799,12 +1799,17 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 3;
 	}
-	else	/* above 8.3 ??? */
+	else if ((adminfo->pg_version >= 80400) && (adminfo->pg_version < 80500)) /* 8.4 */
 	{
 		use_major = 8;
-		use_minor = 3;
+		use_minor = 4;   /* at this point, there's nothing specifically different in 8.4 from 8.3 */
+	}
+	else	/* above 8.4 ??? */
+	{
+		use_major = 8;
+		use_minor = 4;
 		printf("%s:%d: Possible unsupported PostgreSQL "
-			"version (%d) %d.%d, defaulting to 8.3 support\n",
+			"version (%d) %d.%d, defaulting to 8.4 support\n",
                         stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 			(adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
 	}
@@ -3425,11 +3430,12 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
-				 "select \"_%s\".subscribeSet(%d, %d, %d, '%s'); ",
+				 "select \"_%s\".subscribeSet(%d, %d, %d, '%s', '%s'); ",
 				 stmt->hdr.script->clustername,
 				 stmt->sub_setid, stmt->sub_provider,
 				 stmt->sub_receiver,
-				 (stmt->sub_forward) ? "t" : "f");
+				 (stmt->sub_forward) ? "t" : "f",
+				 (stmt->omit_copy) ? "t" : "f");
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		dstring_free(&query);

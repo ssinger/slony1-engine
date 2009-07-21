@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.149 2009-06-11 19:03:44 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.150 2009-07-21 21:18:43 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -433,7 +433,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 2;
+	return 3;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -4099,9 +4099,9 @@ On subscriber nodes, this involves dropping the "denyaccess" trigger,
 and restoring user triggers and rules.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
+-- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool)
+create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool, bool)
 returns bigint
 as $$
 declare
@@ -4109,6 +4109,7 @@ declare
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
+	p_omit_copy		alias for $5;
 	v_set_origin		int4;
 	v_ev_seqno			int8;
 	v_rec			record;
@@ -4117,6 +4118,8 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
+
+	raise notice 'subscribe set: omit_copy=%', p_omit_copy;
 
 	-- ----
 	-- Check that this is called on the provider node
@@ -4161,27 +4164,32 @@ begin
 	-- ----
 	v_ev_seqno :=  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SUBSCRIBE_SET', 
 			p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
-			case p_sub_forward when true then 't' else 'f' end);
+			case p_sub_forward when true then 't' else 'f' end,
+			case p_omit_copy when true then 't' else 'f' end
+                        );
 
 	-- ----
 	-- Call the internal procedure to store the subscription
 	-- ----
 	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
-			p_sub_receiver, p_sub_forward);
+			p_sub_receiver, p_sub_forward, p_omit_copy);
 
 	return v_ev_seqno;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.subscribeSet (int4, int4, int4, bool) is
-'subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward)
+comment on function @NAMESPACE@.subscribeSet (int4, int4, int4, bool, bool) is
+'subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 
 Makes sure that the receiver is not the provider, then stores the
-subscription, and publishes the SUBSCRIBE_SET event to other nodes.';
+subscription, and publishes the SUBSCRIBE_SET event to other nodes.
 
--- ----------------------------------------------------------------------
--- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool)
+If omit_copy is true, then no data copy will be done.
+';
+
+-- -------------------------------------------------------------------------------------------
+-- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
+-- -------------------------------------------------------------------------------------------
+create or replace function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool, bool)
 returns int4
 as $$
 declare
@@ -4189,6 +4197,7 @@ declare
 	p_sub_provider		alias for $2;
 	p_sub_receiver		alias for $3;
 	p_sub_forward		alias for $4;
+	p_omit_copy		alias for $5;
 	v_set_origin		int4;
 	v_sub_row			record;
 begin
@@ -4196,6 +4205,8 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
+
+	raise notice 'subscribe set: omit_copy=%', p_omit_copy;
 
 	-- ----
 	-- Provider change is only allowed for active sets
@@ -4260,7 +4271,9 @@ begin
 	if v_set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
 				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
-				case p_sub_forward when true then 't' else 'f' end);
+				case p_sub_forward when true then 't' else 'f' end,
+				case p_omit_copy when true then 't' else 'f' end
+				);
 		perform @NAMESPACE@.enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
 	end if;
@@ -4274,8 +4287,8 @@ begin
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool) is
-'subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward)
+comment on function @NAMESPACE@.subscribeSet_int (int4, int4, int4, bool, bool) is
+'subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 
 Internal actions for subscribing receiver sub_receiver to subscription
 set sub_set.';
@@ -4404,7 +4417,7 @@ is generated, so this function just has to drop the references to the
 subscription in sl_subscribe.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver)
+-- FUNCTION enableSubscription (sub_set, sub_provider, sub_receiver, omit_copy)
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableSubscription (int4, int4, int4)
 returns int4
@@ -4426,9 +4439,9 @@ Indicates that sub_receiver intends subscribing to set sub_set from
 sub_provider.  Work is all done by the internal function
 enableSubscription_int (sub_set, sub_provider, sub_receiver).';
 
--- ----------------------------------------------------------------------
+-- -----------------------------------------------------------------------------------
 -- FUNCTION enableSubscription_int (sub_set, sub_provider, sub_receiver)
--- ----------------------------------------------------------------------
+-- -----------------------------------------------------------------------------------
 create or replace function @NAMESPACE@.enableSubscription_int (int4, int4, int4)
 returns int4
 as $$
@@ -5605,56 +5618,6 @@ $$ language plpgsql;
 
 comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 'Reenable index maintenance and reindex the table';
-
-
--- ----------------------------------------------------------------------
--- FUNCTION ShouldSlonyVacuumTable (nspname, tabname)
---
---	Returns 't' if the table needs to be vacuumed by Slony-I
---      Returns 'f' if autovac handles the table, so Slony-I should not
---                  or if the table is not needful altogether
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) returns boolean as
-$$
-declare
-	i_nspname alias for $1;
-	i_tblname alias for $2;
-	c_table oid;
-	c_namespace oid;
-	c_enabled boolean;
-	v_dummy int4;
-begin
-	select 1 into v_dummy from "pg_catalog".pg_settings where name = 'autovacuum' and setting = 'on';
-	if not found then
-		return 't'::boolean;       -- If autovac is turned off, then we gotta vacuum
-	end if;
-	
-	select into c_namespace oid from "pg_catalog".pg_namespace where nspname = i_nspname;
-	if not found then
-		raise exception 'Slony-I: namespace % does not exist', i_nspname;
-	end if;
-	select into c_table oid from "pg_catalog".pg_class where relname = i_tblname and relnamespace = c_namespace;
-	if not found then
-		raise warning 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
-		return 'f'::boolean;
-	end if;
-	
-	-- So, the table is legit; try to look it up for autovacuum policy
-	select enabled into c_enabled from "pg_catalog".pg_autovacuum where vacrelid = c_table;
-
-	if not found then
-		return 'f'::boolean;   -- Autovac is turned on, and this table has no overriding handling
-	end if;
-
-	if c_enabled then
-		return 'f'::boolean;   -- Autovac is expressly turned on for this table
-	end if;
-
-	return 't'::boolean;
-end;$$ language plpgsql;
-
-comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
-'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
 create or replace function @NAMESPACE@.setup_vactables_type () returns integer as $$
 begin
