@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.30.2.1 2009-07-20 22:30:10 cbbrowne Exp $
+ *	$Id: dbutils.c,v 1.30.2.2 2009-07-21 21:15:51 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -126,7 +126,7 @@ slon_connectdb(char *conninfo, char *symname)
 	slon_log(SLON_CONFIG,
 			 "version for \"%s\" is %d\n", conninfo, conn->pg_version);
 
-	if (conn->pg_version >= 80100)
+	if (conn->pg_version >= 80300)
 	{
 		slon_mkquery(&query, "set escape_string_warning to 'off'");
 		res = PQexec(dbconn, dstring_data(&query));
@@ -135,9 +135,7 @@ slon_connectdb(char *conninfo, char *symname)
 			slon_log(SLON_ERROR, "Unable to set escape_string_warning to off\n");
 		}
 		PQclear(res);
-	}
-	if (conn->pg_version >= 80200)
-	{
+
 		slon_mkquery(&query, "set standard_conforming_strings to 'off'");
 		res = PQexec(dbconn, dstring_data(&query));
 		if (!(PQresultStatus(res) == PGRES_COMMAND_OK))

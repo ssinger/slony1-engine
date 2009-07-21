@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.26 2007-06-07 13:01:10 wieck Exp $
+#	$Id: Makefile,v 1.26.2.1 2009-07-21 21:15:51 cbbrowne Exp $
 # ----------
 
 slony_subdir = src/backend
@@ -24,12 +24,16 @@ FUNCS_COMMON	= slony1_funcs.sql
 
 BASE_83			= slony1_base.v83.sql
 FUNCS_83		= slony1_funcs.v83.sql
+BASE_84			= slony1_base.v84.sql
+FUNCS_84		= slony1_funcs.v84.sql
 
 SQL_NAMES =				\
 	$(BASE_COMMON)		\
 	$(FUNCS_COMMON)		\
 	$(BASE_83)			\
-	$(FUNCS_83)
+	$(BASE_84)			\
+	$(FUNCS_83)			\
+	$(FUNCS_84)
 
 DISTFILES = Makefile README README.events $(wildcard *.sql) $(wildcard *.in) $(wildcard *.c)
 

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.40.2.1 2009-02-23 17:23:55 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.40.2.2 2009-07-21 21:15:51 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 
@@ -469,6 +469,7 @@ comment on sequence @NAMESPACE@.sl_local_node_id is 'The local node ID is initia
 -- ----------------------------------------------------------------------
 create sequence @NAMESPACE@.sl_event_seq;
 comment on sequence @NAMESPACE@.sl_event_seq is 'The sequence for numbering events originating from this node.';
+select setval('@NAMESPACE@.sl_event_seq', 5000000000);
 
 -- ----------------------------------------------------------------------
 -- SEQUENCE sl_action_seq
@@ -532,10 +533,6 @@ create table @NAMESPACE@.sl_config_lock (
 comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prevent overlapping execution of configuration change procedures and the resulting possible deadlocks.
 ';
 comment on column @NAMESPACE@.sl_config_lock.dummy is 'No data ever goes in this table so the contents never matter.  Indeed, this column does not really need to exist.';
-
-create type @NAMESPACE@.vactables as (nspname name, relname name);
-
-comment on type @NAMESPACE@.vactables is 'used as return type for SRF function TablesToVacuum';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_archive_counter

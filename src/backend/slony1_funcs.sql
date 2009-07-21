@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.12 2009-07-14 19:09:00 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.13 2009-07-21 21:15:51 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5618,56 +5618,6 @@ $$ language plpgsql;
 
 comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 'Reenable index maintenance and reindex the table';
-
-
--- ----------------------------------------------------------------------
--- FUNCTION ShouldSlonyVacuumTable (nspname, tabname)
---
---	Returns 't' if the table needs to be vacuumed by Slony-I
---      Returns 'f' if autovac handles the table, so Slony-I should not
---                  or if the table is not needful altogether
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) returns boolean as
-$$
-declare
-	i_nspname alias for $1;
-	i_tblname alias for $2;
-	c_table oid;
-	c_namespace oid;
-	c_enabled boolean;
-	v_dummy int4;
-begin
-	select 1 into v_dummy from "pg_catalog".pg_settings where name = 'autovacuum' and setting = 'on';
-	if not found then
-		return 't'::boolean;       -- If autovac is turned off, then we gotta vacuum
-	end if;
-	
-	select into c_namespace oid from "pg_catalog".pg_namespace where nspname = i_nspname;
-	if not found then
-		raise exception 'Slony-I: namespace % does not exist', i_nspname;
-	end if;
-	select into c_table oid from "pg_catalog".pg_class where relname = i_tblname and relnamespace = c_namespace;
-	if not found then
-		raise warning 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
-		return 'f'::boolean;
-	end if;
-	
-	-- So, the table is legit; try to look it up for autovacuum policy
-	select enabled into c_enabled from "pg_catalog".pg_autovacuum where vacrelid = c_table;
-
-	if not found then
-		return 'f'::boolean;   -- Autovac is turned on, and this table has no overriding handling
-	end if;
-
-	if c_enabled then
-		return 'f'::boolean;   -- Autovac is expressly turned on for this table
-	end if;
-
-	return 't'::boolean;
-end;$$ language plpgsql;
-
-comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
-'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
 create or replace function @NAMESPACE@.setup_vactables_type () returns integer as $$
 begin
