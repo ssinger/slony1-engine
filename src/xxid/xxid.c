@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: xxid.c,v 1.12.2.3 2007-05-14 22:04:49 wieck Exp $
+ *	$Id: xxid.c,v 1.12.2.4 2009-07-23 18:30:04 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -18,6 +18,9 @@
 #include "access/xact.h"
 #include "access/transam.h"
 #include "executor/spi.h"
+#ifdef HAVE_GETACTIVESNAPSHOT
+#include "utils/snapmgr.h"
+#endif
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
@@ -233,6 +236,10 @@ _Slony_I_getCurrentXid(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_getMinXid(PG_FUNCTION_ARGS)
 {
+#ifdef HAVE_GETACTIVESNAPSHOT
+	Snapshot	SerializableSnapshot = GetActiveSnapshot();
+#endif
+
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMinXid()");
 
@@ -246,6 +253,9 @@ _Slony_I_getMinXid(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_getMaxXid(PG_FUNCTION_ARGS)
 {
+#ifdef HAVE_GETACTIVESNAPSHOT
+	Snapshot	SerializableSnapshot = GetActiveSnapshot();
+#endif
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in getMaxXid()");
 

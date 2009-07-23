@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2005, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.53.2.3 2007-11-22 22:51:04 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.53.2.4 2009-07-23 18:30:04 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -21,11 +21,15 @@
 #include "commands/trigger.h"
 #include "commands/async.h"
 #include "catalog/pg_operator.h"
+#include "catalog/pg_type.h"
 #include "access/xact.h"
 #include "access/transam.h"
 #include "utils/builtins.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
+#ifdef HAVE_GETACTIVESNAPSHOT
+#include "utils/snapmgr.h"
+#endif
 #ifdef HAVE_TYPCACHE
 #include "utils/typcache.h"
 #else
@@ -147,6 +151,9 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	int			i;
 	int64		retval;
 	bool		isnull;
+#ifdef HAVE_GETACTIVESNAPSHOT
+	Snapshot	SerializableSnapshot = GetActiveSnapshot();
+#endif
 
 	if (SerializableSnapshot == NULL)
 		elog(ERROR, "Slony-I: SerializableSnapshot is NULL in createEvent()");

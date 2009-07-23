@@ -387,6 +387,15 @@ else
   AC_MSG_RESULT([yes, and it takes $ac_cv_typenameTypeId_args arguments])
 fi
 
+AC_MSG_CHECKING(for GetActiveSnapshot)
+AC_EGREP_HEADER(GetActiveSnapshot,
+	utils/snapmgr.h,
+	[AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_GETACTIVESNAPSHOT)],
+	AC_MSG_RESULT(no)
+)
+
+
 AC_MSG_CHECKING(for standard_conforming_strings)
 if test -z "$ac_cv_standard_conforming_strings"; then
   AC_EGREP_HEADER(standard_conforming_strings, 
