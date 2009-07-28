@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.11.2.3 2008-03-07 19:00:14 cbbrowne Exp $
+# $Id: run_test.sh,v 1.11.2.4 2009-07-28 22:20:48 cbbrowne Exp $
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -257,9 +257,9 @@ init_origin_rdbms()
 
 	if [ -n "${db}" -a "${host}" -a "${user}" ]; then
 	  status "creating origin DB: $user -h $host -U $user -p $port $db"
-  	  $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
+  	  $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db 1> ${mktmp}/createdb.${originnode} 2> ${mktmp}/createdb.${originnode}
 	  if [ $? -ne 0 ]; then	   
-	    err 3 "An error occured trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db, ${mktmp}/createdb.${originnode} for details"
+	    err 3 "An error occured trying to $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db, ${mktmp}/createdb.${originnode} for details"
 	  fi
 	else
 	  err 3 "No db '${db}' or host '${host}' or user '${user}' or port '${port}' specified"
@@ -292,7 +292,7 @@ create_subscribers()
             if [ -n "${db}" -a "${host}" -a "${user}" -a "${port}" ]; then
               if [ ${alias} -ne ${originnode} ]; then
 		status "creating subscriber ${alias} DB: $user -h $host -U $user -p $port $db"
-	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
+	        $pgbindir/createdb -O $user -h $host -U $user -p $port --encoding $ENCODING -T template0 $db 1> ${mktmp}/createdb.${alias} 2> ${mktmp}/createdb.${alias}
 		status "add plpgsql to subscriber"
 		$pgbindir/createlang -h $host -U $user -p $port plpgsql $db
 		status "loading subscriber ${alias} DB from $odb"
