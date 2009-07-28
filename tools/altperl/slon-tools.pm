@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.35 2009-06-11 19:03:45 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.36 2009-07-28 15:24:27 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 
@@ -135,12 +135,13 @@ sub start_slon {
   $DEBUGLEVEL ||= 0;
   system("mkdir -p $LOGDIR/slony1/node$nodenum");
   my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $CLUSTER_NAME '$dsn' ";
+  my $logfilesuffix=`date '$LOG_NAME_SUFFIX'`;
+  chomp $logfilesuffix;
+
   if ($APACHE_ROTATOR) {
-    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_%Y-%m-%d_%H:%M:%S.log\" 10M &";
+    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_$logfilesuffix.log\" 10M &";
   } else {
-    my $now=`date '+%Y-%m-%d_%H:%M:%S'`;
-    chomp $now;
-    $cmd .= "> $LOGDIR/slony1/node$nodenum/$dbname-$now.log 2>&1 &";
+    $cmd .= "> $LOGDIR/slony1/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system ($cmd);

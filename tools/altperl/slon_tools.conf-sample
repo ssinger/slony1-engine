@@ -1,4 +1,4 @@
-# $Id: slon_tools.conf-sample,v 1.8 2007-01-02 20:16:58 cbbrowne Exp $
+# $Id: slon_tools.conf-sample,v 1.9 2009-07-28 15:24:27 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
 # Revised extensively by Steve Simms
@@ -30,6 +30,11 @@ if ($ENV{"SLONYNODES"}) {
     # it points to the executable.
     #
     # $APACHE_ROTATOR = '/usr/local/apache/bin/rotatelogs';
+
+    # Log line suffix for Slony-I log. For options, look at date(1) 
+    # man page.
+    #
+    # LOG_NAME_SUFFIX = '%a'
 
     # SYNC check interval (slon -s option)
     # $SYNC_CHECK_INTERVAL = 1000;
