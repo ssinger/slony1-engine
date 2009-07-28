@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.14 2009-07-21 21:27:55 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.15 2009-07-28 16:10:14 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -118,3 +118,12 @@ RELEASE 2.0.3
 
 - Autovacuum handling changes in PostgreSQL 8.4 - we pull metadata
   from pg_class.reloptions, instead of pg_autovacuum
+
+- logswitch fix resolving a potential data loss + statement blocking
+  bug...
+
+  Before attempting to TRUNCATE the sl_log_* tables, we need to
+  successfully request an exclusive lock.  By doing so in an
+  exception block with NOWAIT option, this can "lose" gracefully.
+
+- Add LOG_NAME_SUFFIX to altperl tools
