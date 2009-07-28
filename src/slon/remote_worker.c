@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.179 2009-07-21 21:18:43 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.180 2009-07-28 22:42:57 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -3806,7 +3806,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		res1 = PQexec(local_dbconn, dstring_data(&query));
 		monitor_subscriber_query(&pm);
 
-		slon_log(SLON_INFO, "about to monitor_subscriber_query - pulling big actionid list for %d\n", provider->no_id);
+		slon_log(SLON_DEBUG1, "about to monitor_subscriber_query - pulling big actionid list for %d\n", provider->no_id);
 
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -4456,7 +4456,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			 node->no_id, event->ev_seqno,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
 
- 	slon_log(SLON_INFO, 
+ 	slon_log(SLON_DEBUG1, 
 			 "remoteWorkerThread_%d: SYNC " INT64_FORMAT " sync_event timing: " 
 			 " pqexec (s/count)" 
 			 "- provider %.3f/%d " 
@@ -5093,10 +5093,10 @@ sync_helper(void *cdata)
 				 node->no_id, provider->no_id,
 				 TIMEVAL_DIFF(&tv_start, &tv_now));
 
-		slon_log(SLON_INFO, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
+		slon_log(SLON_DEBUG1, "remoteHelperThread_%d_%d: inserts=%d updates=%d deletes=%d\n",
 				 node->no_id, provider->no_id, pm.num_inserts, pm.num_updates, pm.num_deletes);
 
-		slon_log(SLON_INFO, 
+		slon_log(SLON_DEBUG1, 
 				 "remoteWorkerThread_%d: sync_helper timing: " 
 				 " pqexec (s/count)" 
 				 "- provider %.3f/%d " 
@@ -5105,7 +5105,7 @@ sync_helper(void *cdata)
 				 pm.prov_query_t, pm.prov_query_c, 
 				 pm.subscr_query_t, pm.prov_query_c);
 
-		slon_log(SLON_INFO, 
+		slon_log(SLON_DEBUG1, 
 				 "remoteWorkerThread_%d: sync_helper timing: " 
 				 " large tuples %.3f/%d\n", 
 				 node->no_id, 
