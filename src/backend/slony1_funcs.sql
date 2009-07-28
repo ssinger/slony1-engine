@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2007, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.150 2009-07-21 21:18:43 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.151 2009-07-28 16:05:48 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5235,12 +5235,27 @@ BEGIN
 	-- ----
 	if v_current_status = 2 then
 		v_purgeable := 'true';
+		
+		-- ----
+		-- Attempt to lock sl_log_2 in order to make sure there are no other transactions 
+		-- currently writing to it. Exit if it is still in use. This prevents TRUNCATE from 
+		-- blocking writers to sl_log_2 while it is waiting for a lock. It also prevents it 
+		-- immediately truncating log data generated inside the transaction which was active 
+		-- when logswitch_finish() was called (and was blocking TRUNCATE) as soon as that 
+		-- transaction is committed.
+		-- ----
+		begin
+			lock table @NAMESPACE@.sl_log_2 in exclusive mode nowait;
+		exception when lock_not_available then
+			raise notice 'Slony-I: could not lock sl_log_2 - sl_log_2 not truncated';
+			return -1;
+		end;
+
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
 		-- can truncate it and the log switch is done.
 		-- ----
-		
 	        for v_origin, v_seqno, v_xmin in
 		  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
 	          where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
@@ -5274,6 +5289,22 @@ BEGIN
 	-- ----
 	if v_current_status = 3 then
 		v_purgeable := 'true';
+
+		-- ----
+		-- Attempt to lock sl_log_1 in order to make sure there are no other transactions 
+		-- currently writing to it. Exit if it is still in use. This prevents TRUNCATE from 
+		-- blocking writes to sl_log_1 while it is waiting for a lock. It also prevents it 
+		-- immediately truncating log data generated inside the transaction which was active 
+		-- when logswitch_finish() was called (and was blocking TRUNCATE) as soon as that 
+		-- transaction is committed.
+		-- ----
+		begin
+			lock table @NAMESPACE@.sl_log_1 in exclusive mode nowait;
+		exception when lock_not_available then
+			raise notice 'Slony-I: could not lock sl_log_1 - sl_log_1 not truncated';
+			return -1;
+		end;
+
 		-- ----
 		-- The cleanup thread calls us after it did the delete and
 		-- vacuum of both log tables. If sl_log_2 is empty now, we
