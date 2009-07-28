@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.33.2.4 2007-08-22 21:20:23 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.33.2.5 2009-07-28 22:19:38 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -302,11 +302,22 @@ cleanupThread_main(void *dummy)
 				sprintf(tstring, table_list[t], rtcfg_namespace);
 				if (a_vac==1)
 				{
-					slon_mkquery(&query3,"select (case when pga.enabled ISNULL THEN true ELSE pga.enabled END) "
-						"from \"pg_catalog\".pg_namespace PGN, \"pg_catalog\".pg_class PGC LEFT OUTER JOIN "
-						"\"pg_catalog\".pg_autovacuum pga ON (PGC.oid = pga.vacrelid) where PGC.relnamespace = PGN.oid "
-						"and %s.slon_quote_input('%s')=%s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
-					 	rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
+					if (conn->pg_version < 80400) {
+						slon_mkquery(&query3,"select (case when pga.enabled ISNULL THEN true ELSE pga.enabled END) "
+									 "from \"pg_catalog\".pg_namespace PGN, \"pg_catalog\".pg_class PGC LEFT OUTER JOIN "
+									 "\"pg_catalog\".pg_autovacuum pga ON (PGC.oid = pga.vacrelid) where PGC.relnamespace = PGN.oid "
+									 "and %s.slon_quote_input('%s')=%s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
+									 rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
+
+					} else {
+						/* PostgreSQL 8.4 */
+						slon_mkquery (&query3, 
+									  "select coalesce ('autovacuum_enabled=on' = any(reloptions), 't'::boolean) "
+									  "from \"pg_catalog\".pg_class pgc, \"pg_catalog\".pg_namespace pgn "
+									  "where pgc.relnamespace = pgn.oid and %s.slon_quote_input('%s')= "
+									  " %s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
+									  rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
+					}
 
 					res = PQexec(dbconn, dstring_data(&query3));
 					if (PQresultStatus(res) != PGRES_TUPLES_OK)  /* query error */
