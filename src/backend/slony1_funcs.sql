@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.35 2009-07-08 20:46:02 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.36 2009-07-31 19:16:27 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -4009,7 +4009,7 @@ begin
 								and TRIG.trig_tgname = tgname
 					);
 		get diagnostics v_n = row_count;
-		if v_n > 0 then
+		if (v_n > 0) and exists (select 1 from information_schema.columns where table_name = ''pg_class'' and table_schema = ''pg_catalog'' and column_name = ''reltriggers'') then
 			update "pg_catalog".pg_class
 					set reltriggers = reltriggers - v_n
 					where oid = v_tab_row.tab_reloid;
@@ -4133,7 +4133,7 @@ begin
 				set tgrelid = v_tab_row.tab_reloid
 				where tgrelid = v_tab_row.indexrelid;
 		get diagnostics v_n = row_count;
-		if v_n > 0 then
+		if (v_n > 0) and exists (select 1 from information_schema.columns where table_name = ''pg_class'' and table_schema = ''pg_catalog'' and column_name = ''reltriggers'') then
 			update "pg_catalog".pg_class
 					set reltriggers = reltriggers + v_n
 					where oid = v_tab_row.tab_reloid;

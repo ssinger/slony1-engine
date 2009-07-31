@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.67.2.19 2009-04-13 17:41:33 wieck Exp $
+ *	$Id: slonik.c,v 1.67.2.20 2009-07-31 19:16:28 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1905,12 +1905,12 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 0;
 	}
-	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80400)	/* 8.1, 8.2 and 8.3 */
+	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80500)	/* 8.1, 8.2, 8.3, 8.4 */
 	{
 		use_major = 8;
 		use_minor = 1;
 	}
-	else	/* 8.3+ */
+	else	/* 8.5+ */
 	{
 		use_major = 8;
 		use_minor = 1;
