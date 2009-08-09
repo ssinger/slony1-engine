@@ -32,138 +32,87 @@ Mailing List</ulink> and ask your questions.</para>
 
  <tbody>
      <row>
-      <entry>Fedora Core</entry>
-      <entry>3</entry>
-      <entry>Intel - 32 bit</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>dvdm at truteq.co.za</entry>
-      <entry>&postgres; Version: 7.4.6</entry>
-     </row>
-
-     <row>
-      <entry>Red Hat Linux</entry>
-      <entry>9</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>dvdm at truteq.co.za</entry>
-      <entry>&postgres; Version: 7.4.5</entry>
-     </row>
-
-     <row>
-      <entry>Debian GNU/Linux</entry>
-      <entry>Sid</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>&postgres; Version: 7.4.8</entry>
-     </row>
-
-     <row>
-      <entry>Debian GNU/Linux</entry>
-      <entry>Sid</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>&postgres; Version: 8.0.2</entry>
-     </row>
-
-     <row>
-      <entry>Debian GNU/Linux</entry>
-      <entry>Sid</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>&postgres; Version: 7.3.9</entry>
-     </row>
-
-     <row>
-      <entry>AIX</entry>
-      <entry>5.1</entry>
-      <entry>PPC</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>&postgres; Version: 7.4.8</entry>
-     </row>
-
-     <row>
-      <entry>SunOS (a.k.a. Solaris8)</entry>
-      <entry>5.8</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>cbbrowne at ca.afilias.info</entry>
-      <entry>&postgres; Version: 7.4.8</entry>
-     </row>
-
-     <row>
-      <entry>Red Hat Enterprise Linux Enterprise Server</entry>
-      <entry>3.0</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>devrim at gunduz.org</entry>
-      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
-     </row>
-
-     <row>
-      <entry>Red Hat Enterprise Linux Enterprise Server</entry>
-      <entry>4</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>devrim at gunduz.org</entry>
-      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>Debian</entry>
+      <entry>Lenny</entry>
+      <entry>32 and 64 bit</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>adolfomaltez at gmail dot com</entry>
+      <entry>&postgres; Version: 8.3</entry>
      </row>
 
      <row>
       <entry>Fedora Core</entry>
-      <entry>3</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>devrim at gunduz.org</entry>
-      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>9,10,11</entry>
+      <entry>Intel - 32 bit, 64 bit</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>devrim at gunduz dot org</entry>
+      <entry>&postgres; Version: 8.3.7</entry>
      </row>
 
-     <row>
-      <entry>Fedora Core</entry>
-      <entry>4</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>devrim at gunduz.org</entry>
-      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
-     </row>
 
      <row>
-      <entry>Red Hat Linux</entry>
-      <entry>9</entry>
-      <entry>x86</entry>
-      <entry>Jul 14, 2005</entry>
-      <entry>devrim at gunduz.org</entry>
-      <entry>&postgres; Version: 8.0.3 , docs fail to build, NAMELEN value must be increased from 44 to 100 to build the docs, or use community RPMs</entry>
+      <entry>FreeBSD</entry>
+      <entry>6.X</entry>
+      <entry>AMD64</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>wmoran at potentialtech dot com </entry>
+      <entry>&postgres; Version: 8.1</entry>
      </row>
 
      <row>
       <entry>FreeBSD</entry>
-      <entry>5.X</entry>
+      <entry>6.X</entry>
       <entry>AMD64</entry>
-      <entry>Jul 01, 2005</entry>
-      <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>&postgres; Version: 8.0.3</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>wmoran at potentialtech dot com </entry>
+      <entry>&postgres; Version: 8.2</entry>
      </row>
 
      <row>
-      <entry>OpenBSD</entry>
-      <entry>3.7</entry>
-      <entry>Sparc64</entry>
-      <entry>Jul 01, 2005</entry>
-      <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>&postgres; Version: 8.0.3</entry>
+      <entry>FreeBSD</entry>
+      <entry>6.X</entry>
+      <entry>AMD64</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>wmoran at potentialtech dot com </entry>
+      <entry>&postgres; Version: 8.3</entry>
      </row>
+
      <row>
-      <entry>OpenBSD</entry>
-      <entry>3.7</entry>
-      <entry>x86</entry>
-      <entry>Jul 01, 2005</entry>
-      <entry>stefan at kaltenbrunner.cc </entry>
-      <entry>&postgres; Version: 8.0.3</entry>
+      <entry>FreeBSD</entry>
+      <entry>7.X</entry>
+      <entry>AMD64</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>wmoran at potentialtech dot com </entry>
+      <entry>&postgres; Version: 8.3</entry>
      </row>
+
+     <row>
+      <entry>Gentoo</entry>
+      <entry>2008</entry>
+      <entry>amd64</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>vostorga at gmail dot com </entry>
+      <entry>&postgres; Version: 8.1</entry>
+     </row>
+
+     <row>
+      <entry>Red Hat Enterprise Linux</entry>
+      <entry>5</entry>
+      <entry>x86</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>devrim at gunduz dot org</entry>
+      <entry>&postgres; Version: 8.3.7</entry>
+     </row>
+
+     <row>
+      <entry>Solaris</entry>
+      <entry>9</entry>
+      <entry>sparc</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>devrim at gunduz dot org</entry>
+      <entry>&postgres; Version: 8.2 and 8.3</entry>
+     </row>
+
      <row>
       <entry><trademark>Windows</trademark></entry>
       <entry>2000/XP/2003</entry>
