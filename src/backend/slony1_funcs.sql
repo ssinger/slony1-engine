@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.36 2009-07-31 19:16:27 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.37 2009-08-10 15:34:43 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -444,9 +444,9 @@ create or replace function @NAMESPACE@.slonyVersion()
 returns text
 as '
 begin
-	return ''''	|| @NAMESPACE@.slonyVersionMajor() || ''.''
-				|| @NAMESPACE@.slonyVersionMinor() || ''.''
-				|| @NAMESPACE@.slonyVersionPatchlevel();
+	return ''''	|| @NAMESPACE@.slonyVersionMajor()::text || ''.''
+				|| @NAMESPACE@.slonyVersionMinor()::text || ''.''
+				|| @NAMESPACE@.slonyVersionPatchlevel()::text;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -2085,7 +2085,7 @@ begin
 			order by tab_id
 	loop
 		execute ''drop trigger "_@CLUSTERNAME@_lockedset_'' || 
-				v_tab_row.tab_id || ''" on '' || v_tab_row.tab_fqname;
+				v_tab_row.tab_id::text || ''" on '' || v_tab_row.tab_fqname;
 	end loop;
 
 	-- ----
@@ -3512,7 +3512,7 @@ begin
 	-- Update it to the new value
 	-- ----
 	execute ''select setval('''''' || v_fqname ||
-			'''''', '''''' || p_last_value || '''''')'';
+			'''''', '''''' || p_last_value::text || '''''')'';
 
 	insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
@@ -3957,10 +3957,10 @@ begin
 		-- On the Origin we add the log trigger to the table and done
 		-- ----
 		execute ''create trigger "_@CLUSTERNAME@_logtrigger_'' || 
-				p_tab_id || ''" after insert or update or delete on '' ||
+				p_tab_id::text || ''" after insert or update or delete on '' ||
 				v_tab_fqname || '' for each row execute procedure
 				@NAMESPACE@.logTrigger (''''_@CLUSTERNAME@'''', '''''' || 
-					p_tab_id || '''''', '''''' || 
+					p_tab_id::text || '''''', '''''' || 
 					v_tab_attkind || '''''');'';
 	else
 		-- ----
@@ -4032,7 +4032,7 @@ begin
 		-- Add the trigger that denies write access to replicated tables
 		-- ----
 		execute ''create trigger "_@CLUSTERNAME@_denyaccess_'' || 
-				p_tab_id || ''" before insert or update or delete on '' ||
+				p_tab_id::text || ''" before insert or update or delete on '' ||
 				v_tab_fqname || '' for each row execute procedure
 				@NAMESPACE@.denyAccess (''''_@CLUSTERNAME@'''');'';
 	end if;
@@ -4118,13 +4118,13 @@ begin
 		-- On the Origin we just drop the trigger we originally added
 		-- ----
 		execute ''drop trigger "_@CLUSTERNAME@_logtrigger_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname;
+				p_tab_id::text || ''" on '' || v_tab_fqname;
 	else
 		-- ----
 		-- On the subscriber drop the denyAccess trigger
 		-- ----
 		execute ''drop trigger "_@CLUSTERNAME@_denyaccess_'' || 
-				p_tab_id || ''" on '' || v_tab_fqname;
+				p_tab_id::text || ''" on '' || v_tab_fqname;
 				
 		-- ----
 		-- Restore all original triggers
@@ -5760,14 +5760,14 @@ BEGIN
 --                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
-            v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin;
+            v_iname := ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log::text || ''-node-'' || v_dummy.set_origin::text;
 	    -- raise notice ''Consider adding partial index % on sl_log_%'', v_iname, v_log;
 	    -- raise notice ''schema: [_@CLUSTERNAME@] tablename:[sl_log_%]'', v_log;
-            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log and  indexname = v_iname;
+            select * into v_dummy2 from pg_catalog.pg_indexes where tablename = ''sl_log_'' || v_log::text and  indexname = v_iname;
             if not found then
 		-- raise notice ''index was not found - add it!'';
-		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || v_dummy.set_origin ||
-                        ''" on @NAMESPACE@.sl_log_'' || v_log || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin || '');'';
+		idef := ''create index "PartInd_@CLUSTERNAME@_sl_log_'' || v_log::text || ''-node-'' || v_dummy.set_origin::text ||
+                        ''" on @NAMESPACE@.sl_log_'' || v_log::text || '' USING btree(log_xid @NAMESPACE@.xxid_ops) where (log_origin = '' || v_dummy.set_origin::text || '');'';
 		execute idef;
 		v_count := v_count + 1;
             else
@@ -5776,10 +5776,10 @@ BEGIN
 	end loop;
 
 	-- Remove unneeded indices...
-	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = ''sl_log_'' || v_log and
-                       i.indexname like (''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-%'') and
+	for v_dummy in select indexname from pg_catalog.pg_indexes i where i.tablename = ''sl_log_'' || v_log::text and
+                       i.indexname like (''PartInd_@CLUSTERNAME@_sl_log_'' || v_log::text || ''-node-%'') and
                        not exists (select 1 from @NAMESPACE@.sl_set where
-				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log || ''-node-'' || set_origin)
+				i.indexname = ''PartInd_@CLUSTERNAME@_sl_log_'' || v_log::text || ''-node-'' || set_origin::text)
 	loop
 		-- raise notice ''Dropping obsolete index %d'', v_dummy.indexname;
 		idef := ''drop index @NAMESPACE@."'' || v_dummy.indexname || ''";'';
