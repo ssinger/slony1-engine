@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2004, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.37 2009-08-10 15:34:43 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.38 2009-08-10 22:25:16 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3765,7 +3765,7 @@ comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlScript_complete (int4, text, int4)
-returns integer
+returns bigint
 as '
 declare
 	p_set_id			alias for $1;
@@ -5441,7 +5441,7 @@ comment on function @NAMESPACE@.updateRelname(int4, int4) is
 --      Reset the relnames
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.updateReloid (int4, int4)
-returns int4
+returns bigint
 as '
 declare
         p_set_id                alias for $1;
