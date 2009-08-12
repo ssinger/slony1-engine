@@ -1,7 +1,9 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.32.2.4 2009-07-28 15:23:33 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.32.2.5 2009-08-12 20:52:20 devrim Exp $
 # Author: Christopher Browne
 # Copyright 2004 Afilias Canada
+
+use POSIX;
 
 sub add_node {
   my %PARAMS = (host=> undef,
@@ -133,9 +135,10 @@ sub start_slon {
   my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
+  $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
   system("mkdir -p $LOGDIR/slony1/node$nodenum");
   my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $CLUSTER_NAME '$dsn' ";
-  my $logfilesuffix=`date '$LOG_NAME_SUFFIX'`;
+  my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
   if ($APACHE_ROTATOR) {
