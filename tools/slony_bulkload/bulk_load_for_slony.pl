@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: bulk_load_for_slony.pl,v 1.1 2007-03-14 16:35:08 cbbrowne Exp $
+# $Id: bulk_load_for_slony.pl,v 1.1.2.1 2009-08-17 16:56:09 devrim Exp $
 
 # Bulk loader for slony-managed table.
 # This script takes one argument: the name of a config file.
@@ -236,7 +236,7 @@ when tables have different data.
 
 =head2 COPYRIGHT
 
-Copyright (c) 2007, PostgreSQL Global Development Group
+Copyright (c) 2007-2009, PostgreSQL Global Development Group
 
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose, without fee, and without a written
@@ -372,7 +372,7 @@ print "All nodes processed.\n";
 sub add_node {
 # mostly lifted from the "altperl" tools in the slony source distribution.   
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 # yes, some of this could be removed, but I don't have time to do it now.
 

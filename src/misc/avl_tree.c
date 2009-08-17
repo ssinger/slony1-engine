@@ -3,10 +3,10 @@
  *
  *	AVL style self balancing tree support.
  *
- *	Copyright (c) 2007, PostgreSQL Global Development Group
+ *	Copyright (c) 2007-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: avl_tree.c,v 1.2 2008-04-23 20:35:43 cbbrowne Exp $
+ *	$Id: avl_tree.c,v 1.2.2.1 2009-08-17 16:56:09 devrim Exp $
  * ----------------------------------------------------------------------
  */
 
