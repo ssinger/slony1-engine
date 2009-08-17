@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slonik_init_cluster.pl,v 1.1.4.5 2006-11-28 21:42:42 cbbrowne Exp $
+# $Id: slonik_init_cluster.pl,v 1.1.4.6 2009-08-17 17:39:58 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

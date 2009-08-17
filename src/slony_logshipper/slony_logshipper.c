@@ -3,10 +3,10 @@
  *
  *	A configuration and admin script utility for Slony-I.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.c,v 1.1.2.2 2009-07-08 20:37:39 cbbrowne Exp $
+ *	$Id: slony_logshipper.c,v 1.1.2.3 2009-08-17 17:39:58 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

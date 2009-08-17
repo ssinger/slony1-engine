@@ -3,10 +3,10 @@
  *
  *	Implementation of the thread that generates SYNC events.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: sync_thread.c,v 1.17.2.2 2006-10-27 20:09:56 cbbrowne Exp $
+ *	$Id: sync_thread.c,v 1.17.2.3 2009-08-17 17:39:57 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

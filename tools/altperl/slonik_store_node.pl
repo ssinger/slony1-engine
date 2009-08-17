@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slonik_store_node.pl,v 1.2.2.2 2006-11-28 21:42:43 cbbrowne Exp $
+# $Id: slonik_store_node.pl,v 1.2.2.3 2009-08-17 17:39:58 devrim Exp $
 # Author: Steve Simms
-# Copyright 2005 PostgreSQL Global Development Group
+# Copyright 2005-2009 PostgreSQL Global Development Group
 
 use Getopt::Long;
 

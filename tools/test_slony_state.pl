@@ -1,7 +1,7 @@
 #!/usr/bin/perl   # -*- perl -*-
-# $Id: test_slony_state.pl,v 1.5.2.1 2006-12-05 23:24:27 cbbrowne Exp $
+# $Id: test_slony_state.pl,v 1.5.2.2 2009-08-17 17:39:58 devrim Exp $
 # Christopher Browne
-# Copyright 2005
+# Copyright 2005-2009
 # PostgreSQL Global Development Group
 
 # This script, given DSN parameters to access a Slony-I cluster,

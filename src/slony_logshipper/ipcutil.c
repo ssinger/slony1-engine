@@ -3,10 +3,10 @@
  *
  *	Semaphore and message passing support for the slony_logshipper.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: ipcutil.c,v 1.1.2.2 2007-09-27 18:03:02 wieck Exp $
+ *	$Id: ipcutil.c,v 1.1.2.3 2009-08-17 17:39:58 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

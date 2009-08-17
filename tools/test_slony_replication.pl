@@ -1,7 +1,7 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_replication.pl,v 1.3 2005-03-15 16:45:07 cbbrowne Exp $
+# $Id: test_slony_replication.pl,v 1.3.4.1 2009-08-17 17:39:58 devrim Exp $
 # Christopher Browne
-# Copyright 2004
+# Copyright 2004-2009
 # Afilias Canada
 
 # This script, given DSN parameters to access a Slony-I cluster,

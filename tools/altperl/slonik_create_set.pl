@@ -1,8 +1,8 @@
 #!@@PERL@@
 
-# $Id: slonik_create_set.pl,v 1.3.2.2 2007-01-02 17:16:00 cbbrowne Exp $
+# $Id: slonik_create_set.pl,v 1.3.2.3 2009-08-17 17:39:58 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

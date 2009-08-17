@@ -3,10 +3,10 @@
 --
 --    Declaration of replication support functions.
 --
---	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.38 2009-08-10 22:25:16 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.39 2009-08-17 17:39:57 devrim Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************

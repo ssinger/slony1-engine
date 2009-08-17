@@ -3,10 +3,10 @@
 --
 --	SQL script for loading the transaction ID compatible datatype 
 --
---	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v73.sql,v 1.3 2005-05-11 22:00:07 cbbrowne Exp $
+-- $Id: xxid.v73.sql,v 1.3.4.1 2009-08-17 17:39:58 devrim Exp $
 -- ----------
 
 --

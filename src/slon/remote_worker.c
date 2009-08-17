@@ -3,10 +3,10 @@
  *
  *	Implementation of the thread processing remote events.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.37 2009-07-20 22:30:47 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.38 2009-08-17 17:39:57 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

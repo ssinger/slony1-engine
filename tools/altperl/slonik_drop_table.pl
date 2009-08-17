@@ -1,9 +1,9 @@
 #!@@PERL@@
-# $Id: slonik_drop_table.pl,v 1.1.2.2 2006-10-27 17:54:21 cbbrowne Exp $
+# $Id: slonik_drop_table.pl,v 1.1.2.3 2009-08-17 17:39:58 devrim Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
-# Parts Copyright 2004 Afilias Canada
+# Parts Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

@@ -3,10 +3,10 @@
  *
  *	General database support functions.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.1.2.1 2007-09-08 14:21:40 wieck Exp $
+ *	$Id: dbutil.c,v 1.1.2.2 2009-08-17 17:39:58 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

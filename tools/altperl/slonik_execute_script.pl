@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.1.4.2 2007-03-13 15:35:30 cbbrowne Exp $
+# $Id: slonik_execute_script.pl,v 1.1.4.3 2009-08-17 17:39:58 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 use File::Temp qw(tempfile);

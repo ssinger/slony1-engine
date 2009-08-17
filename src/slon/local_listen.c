@@ -4,10 +4,10 @@
  *	Implementation of the thread listening for events on
  *	the local node database.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.38.2.3 2007-10-04 15:21:14 cbbrowne Exp $
+ *	$Id: local_listen.c,v 1.38.2.4 2009-08-17 17:39:57 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

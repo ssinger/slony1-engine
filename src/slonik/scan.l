@@ -4,10 +4,10 @@
  *
  *	Flex keyword and token scanner for slonik
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.24.2.2 2006-10-31 22:03:40 cbbrowne Exp $
+ *	$Id: scan.l,v 1.24.2.3 2009-08-17 17:39:58 devrim Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer

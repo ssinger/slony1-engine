@@ -3,10 +3,10 @@
 --
 --    Declaration of the basic replication schema.
 --
---	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.32.2.2 2007-08-21 22:13:22 cbbrowne Exp $
+-- $Id: slony1_base.sql,v 1.32.2.3 2009-08-17 17:39:57 devrim Exp $
 -- ----------------------------------------------------------------------
 
 

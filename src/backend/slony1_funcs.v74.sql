@@ -3,10 +3,10 @@
 --
 --    Version 7.4 specific part of the replication support functions.
 --
---	Copyright (c) 2003-2006, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v74.sql,v 1.8.2.1 2007-02-08 22:55:58 cbbrowne Exp $
+-- $Id: slony1_funcs.v74.sql,v 1.8.2.2 2009-08-17 17:39:57 devrim Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------

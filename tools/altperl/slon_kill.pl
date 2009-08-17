@@ -1,8 +1,8 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.12 2005-03-16 20:37:54 smsimms Exp $
+# $Id: slon_kill.pl,v 1.12.4.1 2009-08-17 17:39:58 devrim Exp $
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

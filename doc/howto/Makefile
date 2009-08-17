@@ -1,7 +1,7 @@
 # ----------
 # Makefile for the HOWTOs
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #
 # ----------
 

@@ -1,7 +1,7 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.26.2.5 2008-12-18 17:53:58 cbbrowne Exp $
+# $Id: slon-tools.pm,v 1.26.2.6 2009-08-17 17:39:58 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 sub add_node {
   my %PARAMS = (host=> undef,
