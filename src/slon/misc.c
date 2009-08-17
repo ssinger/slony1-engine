@@ -3,10 +3,10 @@
  *
  *	Miscellaneous support functions
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.26.2.1 2008-12-15 23:26:07 cbbrowne Exp $
+ *	$Id: misc.c,v 1.26.2.2 2009-08-17 17:09:58 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

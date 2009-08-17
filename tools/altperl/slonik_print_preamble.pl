@@ -1,9 +1,9 @@
 #!@@PERL@@
-# $Id: slonik_print_preamble.pl,v 1.4 2008-02-14 16:41:35 cbbrowne Exp $
+# $Id: slonik_print_preamble.pl,v 1.4.2.1 2009-08-17 17:09:59 devrim Exp $
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
-# Parts Copyright 2004 Afilias Canada
+# Parts Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

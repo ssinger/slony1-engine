@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slony_cluster.sh,v 1.5 2008-07-07 21:16:03 cbbrowne Exp $
+# $Id: check_slony_cluster.sh,v 1.5.2.1 2009-08-17 17:09:59 devrim Exp $
 
 # nagios plugin that checks whether the slave nodes in a slony cluster
 # are being updated from the master
@@ -17,7 +17,7 @@
 #
 # Author:  John Sidney-Woollett
 # Created: 26-Feb-2005
-# Copyright 2005
+# Copyright 2005-2009
 
 # check parameters are valid
 if [ $# -ne 3 ]

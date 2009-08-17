@@ -1,10 +1,10 @@
 # ----------
 # Makefile for src/slony_logshipper
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.2 2007-09-09 02:37:05 wieck Exp $
+#	$Id: Makefile,v 1.2.2.1 2009-08-17 17:09:59 devrim Exp $
 # ----------
 
 slony_subdir = src/slony_logshipper

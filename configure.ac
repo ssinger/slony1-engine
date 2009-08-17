@@ -4,10 +4,10 @@
 #
 #	Autoconf configuration file for Slony-I
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.62.2.1 2009-04-09 21:55:27 cbbrowne Exp $
+# $Id: configure.ac,v 1.62.2.2 2009-08-17 17:09:58 devrim Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------

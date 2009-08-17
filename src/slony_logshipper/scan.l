@@ -4,10 +4,10 @@
  *
  *	Flex keyword and token scanner for slony_logshipper
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.3.2.1 2009-07-07 15:00:02 cbbrowne Exp $
+ *	$Id: scan.l,v 1.3.2.2 2009-08-17 17:09:59 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

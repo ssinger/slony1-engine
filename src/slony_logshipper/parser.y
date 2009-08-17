@@ -4,10 +4,10 @@
  *
  *	The slony_logshipper command language grammar
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: parser.y,v 1.3 2008-05-13 21:45:15 cbbrowne Exp $
+ *	$Id: parser.y,v 1.3.2.1 2009-08-17 17:09:59 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

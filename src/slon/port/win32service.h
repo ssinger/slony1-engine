@@ -3,9 +3,9 @@
  *
  *	Windows service definitions
  *
- *	Copyright (c) 2005, PostgreSQL Global Development Group
+ *	Copyright (c) 2005-2009, PostgreSQL Global Development Group
  *
- *	$Id: win32service.h,v 1.5 2008-04-23 20:35:44 cbbrowne Exp $
+ *	$Id: win32service.h,v 1.5.2.1 2009-08-17 17:09:59 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

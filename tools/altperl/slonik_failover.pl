@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slonik_failover.pl,v 1.3 2008-02-14 16:41:35 cbbrowne Exp $
+# $Id: slonik_failover.pl,v 1.3.2.1 2009-08-17 17:09:59 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 
