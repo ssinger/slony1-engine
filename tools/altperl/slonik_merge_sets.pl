@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slonik_merge_sets.pl,v 1.5 2009-06-11 19:03:45 cbbrowne Exp $
+# $Id: slonik_merge_sets.pl,v 1.6 2009-08-17 17:25:50 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
 

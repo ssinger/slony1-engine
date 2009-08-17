@@ -3,10 +3,10 @@
  *
  *	Definitions for slony_logshipper
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.h,v 1.4 2007-09-27 18:02:52 wieck Exp $
+ *	$Id: slony_logshipper.h,v 1.5 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -3,10 +3,10 @@
  *
  *	Periodic cleanup of confirm-, event- and log-data.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.47 2009-07-21 21:18:43 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.48 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -3,10 +3,10 @@
  *
  *	Definitions for slonik
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.35 2009-07-21 21:18:43 cbbrowne Exp $
+ *	$Id: slonik.h,v 1.36 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

@@ -1,10 +1,10 @@
 # ----------
 # Makefile for doc
 #
-#	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.5 2006-08-02 15:32:02 xfade Exp $
+#	$Id: Makefile,v 1.6 2009-08-17 17:25:50 devrim Exp $
 # ----------
 
 slony_subdir = tools

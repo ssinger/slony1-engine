@@ -3,10 +3,10 @@
  *
  *	Functions maintaining the in-memory configuration information
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: runtime_config.c,v 1.28 2006-10-27 20:10:57 cbbrowne Exp $
+ *	$Id: runtime_config.c,v 1.29 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

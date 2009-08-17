@@ -1,7 +1,7 @@
 #!/usr/bin/perl
-# $Id: mkmediawiki.pl,v 1.3 2008-04-11 15:40:25 cbbrowne Exp $
+# $Id: mkmediawiki.pl,v 1.4 2009-08-17 17:25:50 devrim Exp $
 # Christopher Browne
-# Copyright 2007
+# Copyright 2007-2009
 # PostgreSQL Global Development Group
 
 # This script, given DSN parameters to access a Slony-I cluster,

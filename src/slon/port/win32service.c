@@ -3,10 +3,10 @@
  *
  *	Windows service integration and eventlog
  *
- *	Copyright (c) 2005, PostgreSQL Global Development Group
+ *	Copyright (c) 2005-2009, PostgreSQL Global Development Group
  *	Author: Magnus Hagander
  *
- *	$Id: win32service.c,v 1.8 2008-04-23 20:35:44 cbbrowne Exp $
+ *	$Id: win32service.c,v 1.9 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 #define WIN32_LEAN_AND_MEAN

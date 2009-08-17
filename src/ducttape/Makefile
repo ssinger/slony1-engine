@@ -1,10 +1,10 @@
 # ----------
 # Makefile for src/ducttape
 #
-#	Copyright (c) 2003, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.13 2007-05-31 13:29:26 wieck Exp $
+#	$Id: Makefile,v 1.14 2009-08-17 17:25:49 devrim Exp $
 # ----------
 
 slony_subdir = src/ducttape

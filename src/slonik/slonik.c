@@ -3,10 +3,10 @@
  *
  *	A configuration and admin script utility for Slony-I.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.93 2009-07-21 21:18:43 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.94 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

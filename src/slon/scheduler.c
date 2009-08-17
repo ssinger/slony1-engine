@@ -3,10 +3,10 @@
  *
  *	Event scheduling subsystem for slon.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.29 2009-07-21 21:18:43 cbbrowne Exp $
+ *	$Id: scheduler.c,v 1.30 2009-08-17 17:25:50 devrim Exp $
  * ----------------------------------------------------------------------
  */
 

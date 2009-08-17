@@ -2,7 +2,7 @@
 #
 # Makefile for src/slevent
 #
-# Copyright (c) 1996-2005, PostgreSQL Global Development Group
+# Copyright (c) 1996-2009, PostgreSQL Global Development Group
 #
 #-------------------------------------------------------------------------
 

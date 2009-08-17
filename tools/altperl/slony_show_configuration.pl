@@ -1,7 +1,7 @@
 #!@@PERL@@
-# $Id: slony_show_configuration.pl,v 1.3 2008-02-14 16:41:35 cbbrowne Exp $
+# $Id: slony_show_configuration.pl,v 1.4 2009-08-17 17:25:50 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 # This script simply displays an overview of node configuration
 # for a given SLONY node set

@@ -1,7 +1,7 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.37 2009-08-12 20:52:38 devrim Exp $
+# $Id: slon-tools.pm,v 1.38 2009-08-17 17:25:50 devrim Exp $
 # Author: Christopher Browne
-# Copyright 2004 Afilias Canada
+# Copyright 2004-2009 Afilias Canada
 
 use POSIX;
 

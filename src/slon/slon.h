@@ -3,10 +3,10 @@
  *
  *	Global definitions for the main replication engine.
  *
- *	Copyright (c) 2003-2004, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.68 2008-05-28 19:09:37 cbbrowne Exp $
+ *	$Id: slon.h,v 1.69 2009-08-17 17:25:50 devrim Exp $
  *-------------------------------------------------------------------------
  */
 

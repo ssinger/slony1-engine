@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slon.sh,v 1.4 2008-07-07 21:16:03 cbbrowne Exp $
+# $Id: check_slon.sh,v 1.5 2009-08-17 17:25:50 devrim Exp $
 
 # nagios plugin that checks whether the slon daemon is running
 # if the 3rd parameter (LOGFILE) is specified then the log file is
@@ -17,7 +17,7 @@
 #
 # Author:  John Sidney-Woollett
 # Created: 26-Feb-2005
-# Copyright 2005
+# Copyright 2005-2009
 
 # check parameters are valid
 if [ $# -lt 2 ] || [ $# -gt 3 ]
