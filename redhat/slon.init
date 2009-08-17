@@ -48,7 +48,7 @@ SLONENGINE=/usr/bin
 SLONDAEMON=$SLONENGINE/slon
 SLONCONF=/etc/slon.conf
 SLONPID=/var/run/slon.pid
-SLONLOG=/var/log/slony1
+SLONLOG=/var/log/slony
 test -x $SLONDAEMON || exit 5
 
 
