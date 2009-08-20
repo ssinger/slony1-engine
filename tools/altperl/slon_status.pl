@@ -1,4 +1,5 @@
 #!@@PERL@@
+// $Id: slon_status.pl,v 1.2 2009-08-20 09:22:27 devrim Exp $
 # Author: Devrim GÜNDÜZ <devrim@gunduz.org>
 # Copyright 2009 Slony-I Global Development Group
 
