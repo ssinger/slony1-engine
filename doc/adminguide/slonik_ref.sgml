@@ -556,12 +556,11 @@ INIT CLUSTER (
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
        
-       <listitem><para> The ID of the node used to create the configuration
-	 event that tells all existing nodes about the new node.
-	 </para></listitem>
-      </varlistentry>
-     </variablelist>
-    </para>
+       <listitem><para> The ID of the node used to create the
+	 configuration event that tells all existing nodes about the
+	 new node.  It must be the ID of a pre-existing node in the
+	 cluster, not the ID of the new node.  </para></listitem>
+	 </varlistentry> </variablelist> </para>
 
     <para> This uses &funinitializelocalnode; and &funenablenode;. </para>
     
