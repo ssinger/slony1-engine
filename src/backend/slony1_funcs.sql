@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.153 2009-08-17 17:25:49 devrim Exp $
+-- $Id: slony1_funcs.sql,v 1.154 2009-09-23 16:15:02 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1479,7 +1479,7 @@ replication system.';
 --	preparation for the node to be copied with standard DB tools.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
-returns int4
+returns bigint
 as $$
 declare
 	p_no_id			alias for $1;
