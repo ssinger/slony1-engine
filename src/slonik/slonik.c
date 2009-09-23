@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.91.2.5 2009-08-17 17:09:59 devrim Exp $
+ *	$Id: slonik.c,v 1.91.2.6 2009-09-23 16:22:30 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2214,7 +2214,7 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 		char	   *sub_active = PQgetvalue(res, tupno, 4);
 			
 		slon_mkquery(&query,
-			     "select \"_%s\".subscribeSet_int(%s, %s, %s, '%q'); ",
+			     "select \"_%s\".subscribeSet_int(%s, %s, %s, '%q', 'f'); ",
 			     stmt->hdr.script->clustername,
 			     sub_set, sub_provider, sub_receiver, sub_forward);
 		if (*sub_active == 't')
