@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.38 2009-07-31 19:24:05 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.39 2009-10-14 15:50:53 cbbrowne Exp $
 Release 1.2.17
 
 - Apply changes to logshipper that went into the 2.0 branch but not
@@ -11,6 +11,8 @@ Release 1.2.17
 
 - Fix to race condition where file descriptor copies were being made at
   the wrong time in the scheduler
+
+- Fix return types to use bigint when returning event #'s
 
 - Establish compatibility with PostgreSQL 8.4:
 
