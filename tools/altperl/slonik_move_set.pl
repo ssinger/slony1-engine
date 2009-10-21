@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_move_set.pl,v 1.5 2009-08-17 17:25:50 devrim Exp $
+# $Id: slonik_move_set.pl,v 1.6 2009-10-21 13:32:08 cbbrowne Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -57,7 +57,7 @@ $slonik .= genheader();
 $slonik .= "  echo 'Locking down set $set on node $node1';\n";
 $slonik .= "  lock set (id = $set, origin = $node1);\n";
 $slonik .= "  sync (id = $node1);\n";
-$slonik .= "  wait for event (origin = $node1, confirmed = $node2);\n";
+$slonik .= "  wait for event (origin = $node1, confirmed = $node2, wait on = $node2);\n";
 $slonik .= "  echo 'Locked down - moving it';\n";
 $slonik .= "  move set (id = $set, old origin = $node1, new origin = $node2);\n";
 $slonik .= "  echo 'Replication set $set moved from node $node1 to $node2.  Remember to';\n";
