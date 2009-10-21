@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.19 2009-09-23 16:14:32 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.20 2009-10-21 12:53:15 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3643,6 +3643,8 @@ comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is
 --
 --	Generate the DDL_SCRIPT event
 -- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.ddlScript_complete (int4, text, int4);  -- Needed because function signature has changed!
+
 create or replace function @NAMESPACE@.ddlScript_complete (int4, text, int4)
 returns bigint
 as $$
@@ -5063,6 +5065,7 @@ comment on function @NAMESPACE@.updateRelname(int4, int4) is
 --
 --      Reset the relnames
 -- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.updateReloid (int4, int4);
 create or replace function @NAMESPACE@.updateReloid (int4, int4)
 returns bigint
 as $$
