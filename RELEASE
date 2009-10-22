@@ -1,4 +1,11 @@
-$Id: RELEASE,v 1.1.2.39 2009-10-14 15:50:53 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.40 2009-10-22 17:51:07 cbbrowne Exp $
+Release 1.2.18
+
+- Reloading of functions needs to have an emulation of
+  "DROP FUNCTION IF EXISTS" because a couple of functions have had their
+  return value type changed, which doesn't fit happily into
+  CREATE OR REPLACE FUNCTION.
+
 Release 1.2.17
 
 - Apply changes to logshipper that went into the 2.0 branch but not

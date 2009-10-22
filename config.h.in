@@ -6,14 +6,14 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * $Id: config.h.in,v 1.17.2.19 2009-08-17 17:39:57 devrim Exp $
+ * $Id: config.h.in,v 1.17.2.20 2009-10-22 17:51:07 cbbrowne Exp $
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
 #define SLONY_I_CONFIG_H
 
-#define SLONY_I_VERSION_STRING	"1.2.17"
-#define SLONY_I_VERSION_STRING_DEC 1,2,17
+#define SLONY_I_VERSION_STRING	"1.2.18"
+#define SLONY_I_VERSION_STRING_DEC 1,2,18
 
 #ifndef PG_VERSION_MAJOR
 #define PG_VERSION_MAJOR 0

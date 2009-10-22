@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.39 2009-08-17 17:39:57 devrim Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.40 2009-10-22 17:51:08 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -430,7 +430,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as '
 begin
-	return 17;
+	return 18;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -3757,6 +3757,25 @@ end;
 comment on function @NAMESPACE@.ddlScript_prepare (int4, int4) is 
 'Prepare for DDL script execution on origin';
 
+
+create or replace function @NAMESPACE@.drop_if_exists (text, text) returns integer as '
+declare
+  p_function alias for $1;
+  p_args alias for $2;
+  v_drop text;
+begin
+  if exists (select 1 from information_schema.routines where routine_schema = ''@NAMESPACE@'' and routine_name = p_function) then
+	v_drop := ''drop function '' || p_function || ''('' || p_args || '');'';
+	execute v_drop;
+  end if;
+  return 1;
+end
+'  language plpgsql;
+
+comment on function @NAMESPACE@.drop_if_exists (text,text) is 'Emulate DROP FUNCTION IF EXISTS, which does not exist in 7.4, 8.0, 8.1';
+
+select @NAMESPACE@.drop_if_exists ('ddlscript_complete', 'int4, text, int4');
+
 -- 	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
 
 -- ----------------------------------------------------------------------
@@ -5434,6 +5453,8 @@ end;
 
 comment on function @NAMESPACE@.updateRelname(int4, int4) is
 'updateRelname(set_id, only_on_node)';
+
+select @NAMESPACE@.drop_if_exists ('updatereloid', 'int4, int4');
 
 -- ----------------------------------------------------------------------
 -- FUNCTION updateReloid (set_id, only_on_node)
