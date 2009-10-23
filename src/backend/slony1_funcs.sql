@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.21 2009-10-21 13:06:33 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.22 2009-10-23 15:32:55 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -2423,8 +2423,8 @@ begin
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_snapshot, ssy_action_list)
-						values (p_set_id, p_new_origin, '0',
-						'0', '0', '0:0:', NULL);
+						values (p_set_id, p_new_origin,
+						'0', '0:0:', NULL);
 			end if;
 		end if;
 	end if;
