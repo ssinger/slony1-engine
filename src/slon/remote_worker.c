@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.38 2009-08-17 17:39:57 devrim Exp $
+ *	$Id: remote_worker.c,v 1.124.2.39 2009-10-23 21:21:13 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -677,11 +677,13 @@ remoteWorkerThread_main(void *cdata)
 			slon_appendquery(&query1,
 							 "lock table %s.sl_config_lock; ",
 							 rtcfg_namespace);
+
 			/* start by trying to apply the lock to sl_config_lock */
 			if (strcmp(event->ev_type, "ACCEPT_SET") != 0)
 			{
 				if (query_execute(node, local_dbconn, &query1) < 0)
 					slon_retry();
+
 				dstring_reset(&query1);
 			}
 
@@ -1159,6 +1161,7 @@ remoteWorkerThread_main(void *cdata)
 				int			sub_provider = (int)strtol(event->ev_data2, NULL, 10);
 				int			sub_receiver = (int)strtol(event->ev_data3, NULL, 10);
 				char	   *sub_forward = event->ev_data4;
+				int         copy_set_retries = 0;
 
 				/*
 				 * Do the actual enabling of the set only if we are the
@@ -1204,14 +1207,25 @@ remoteWorkerThread_main(void *cdata)
 								continue;
 							}
 						}
+					
 
-						/*
-						 * Execute the config changes so far, but don't commit
-						 * the transaction yet. We have to copy the data now
-						 * ...
+						/* 
+						 * if we have failed more than once we need to restart
+						 * our transaction or we can end up with odd results
+						 * in our subscription tables, and in 8.4+ LOCK
+						 * TABLE requires you to be in a txn.
 						 */
-						if (query_execute(node, local_dbconn, &query1) < 0)
-							slon_retry();
+						if(copy_set_retries != 0)
+						  {
+							slon_mkquery(&query1, "start transaction;"
+										 "set transaction isolation level serializable;");
+							slon_appendquery(&query1,
+											 "lock table %s.sl_config_lock; ",
+											 rtcfg_namespace);
+
+							if (query_execute(node, local_dbconn, &query1) < 0)
+							  slon_retry();
+						  }
 
 						/*
 						 * If the copy succeeds, exit the loop and let the
@@ -1225,17 +1239,22 @@ remoteWorkerThread_main(void *cdata)
 										 rtcfg_namespace,
 										 sub_set, sub_provider, sub_receiver);
 							sched_rc = SCHED_STATUS_OK;
+							copy_set_retries = 0;
 							break;
 						}
+
+						copy_set_retries++;
 
 						/*
 						 * Data copy for new enabled set has failed. Rollback
 						 * the transaction, sleep and try again.
 						 */
 						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-								 "data copy for set %d failed - "
+								 "data copy for set %d failed %d times - "
 								 "sleep %d seconds\n",
-								 node->no_id, sub_set, sleeptime);
+								 node->no_id, sub_set, copy_set_retries,
+								 sleeptime);
+
 						if (query_execute(node, local_dbconn, &query2) < 0)
 							slon_retry();
 						sched_rc = sched_msleep(node, sleeptime * 1000);
