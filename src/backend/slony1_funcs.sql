@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.22 2009-10-23 15:32:55 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.23 2009-11-18 16:48:06 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5124,7 +5124,7 @@ begin
 			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_nspname);
 
 	for prec in select seq_id from @NAMESPACE@.sl_sequence loop
-		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.tab_reloid = pc.oid) limit 1)
+		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.seq_reloid = pc.oid) limit 1)
 		where tab_id = prec.seq_id;
 	end loop;
 
