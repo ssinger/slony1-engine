@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.91.2.7 2009-11-18 16:57:23 cbbrowne Exp $
+ *	$Id: slonik.c,v 1.91.2.8 2009-11-20 19:36:43 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -2809,7 +2809,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			slon_mkquery(&query,
 						 "select \"_%s\".storeListen(%d,%d,%d); "
-						 "select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
+						 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); ",
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, use_node, stmt->backup_node,
 						 stmt->hdr.script->clustername,
