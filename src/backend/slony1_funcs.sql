@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.156 2009-10-21 13:07:07 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.157 2009-11-26 18:09:17 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1433,7 +1433,7 @@ begin
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_snapshot, ssy_action_list)
 					values (p_set_id, p_backup_node, '0',
-					'0:0:', NULL);
+					'1:1:', NULL);
 		end if;
 				
 	end if;
@@ -2380,7 +2380,7 @@ begin
 					(ssy_setid, ssy_origin, ssy_seqno,
 					ssy_snapshot, ssy_action_list)
 					values (p_set_id, p_new_origin, '0',
-					'0:0:', NULL);
+					'1:1:', NULL);
 		end if;
 	end if;
 
@@ -2424,7 +2424,7 @@ begin
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_snapshot, ssy_action_list)
 						values (p_set_id, p_new_origin, '0',
-						'0', '0', '0:0:', NULL);
+						'0', '0', '1:1:', NULL);
 			end if;
 		end if;
 	end if;
