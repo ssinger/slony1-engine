@@ -1,4 +1,10 @@
-$Id: RELEASE,v 1.1.2.40 2009-10-22 17:51:07 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.41 2009-11-27 20:29:46 cbbrowne Exp $
+
+Release 1.2.19
+
+- autoconf change + change to src/backend/slony1_funcs.c to accomodate
+  change in # of arguments for ScanKeywordLookup in PostgreSQL 8.5
+
 Release 1.2.18
 
 - Reloading of functions needs to have an emulation of
