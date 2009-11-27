@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.17 2009-11-26 18:10:58 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.18 2009-11-27 20:32:19 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -162,3 +162,6 @@ Added in rc3:
 Added post rc3:
 
 - Bug #103 - When adding snapshot entries, they should be "1:1:", not "0:0:"
+
+- autoconf/C funcs change to cope with 8.5 change that ScanKeywordLookup has
+  3 arguments rather than 1 (in previous versions)
