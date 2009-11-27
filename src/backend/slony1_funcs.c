@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.53.2.5 2009-08-17 17:39:57 devrim Exp $
+ *	$Id: slony1_funcs.c,v 1.53.2.6 2009-11-27 20:31:00 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -1191,7 +1191,13 @@ slon_quote_identifier(const char *ident)
 		 * Note: ScanKeywordLookup() does case-insensitive comparison, but that's
 		 * fine, since we already know we have all-lower-case.
 		 */
+
+#ifdef SCANKEYWORDLOOKUP_1
 		if (ScanKeywordLookup(ident) != NULL)
+#endif
+#ifdef SCANKEYWORDLOOKUP_3		   
+			if (ScanKeywordLookup(ident,ScanKeywords,NumScanKeywords) != NULL)
+#endif
 			safe = false;
 	}
 

@@ -351,6 +351,23 @@ if test $have_pqfreemem = yes; then
 	AC_DEFINE(HAVE_PQFREEMEM,1,[Postgresql PQfreemem()])
 fi
 
+AC_MSG_CHECKING(for ScanKeywordLookup)
+if test -z "$ac_cv_ScanKeywordLookup_args"; then
+  AC_TRY_COMPILE(
+    [#include "postgres.h"
+     #include "parser/keywords.h"],
+    [ScanKeywordLookup(NULL, NULL, NULL);],
+     ac_cv_ScanKeywordLookup_args=3)
+  AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
+else
+  AC_TRY_COMPILE(
+    [#include "postgres.h"
+     #include "parser/keywords.h"],
+    [ScanKeywordLookup(NULL);],
+     ac_cv_ScanKeywordLookup_args=1)
+  AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
+fi
+
 AC_MSG_CHECKING(for typenameTypeId)
 if test -z "$ac_cv_typenameTypeId_args"; then
   AC_TRY_COMPILE(
@@ -395,6 +412,18 @@ AC_EGREP_HEADER(GetActiveSnapshot,
 	AC_MSG_RESULT(no)
 )
 
+
+AC_MSG_CHECKING(for ScanKeywordLookup)
+if test -z "$ac_cv_ScanKeywordLookup_args"; then
+  AC_MSG_RESULT(no)
+else
+  if test "$ac_cv_ScanKeywordLookup_args" = 1; then
+	AC_DEFINE(SCANKEYWORDLOOKUP_1)
+  elif test "$ac_cv_ScanKeywordLookup_args" = 3; then
+	AC_DEFINE(SCANKEYWORDLOOKUP_3)
+  fi
+  AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
+fi
 
 AC_MSG_CHECKING(for standard_conforming_strings)
 if test -z "$ac_cv_standard_conforming_strings"; then
