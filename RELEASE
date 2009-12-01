@@ -1,16 +1,18 @@
-$Id: RELEASE,v 1.1.2.41 2009-11-27 20:29:46 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.42 2009-12-01 20:40:25 cbbrowne Exp $
 
-Release 1.2.19
+Release 1.2.18
 
 - autoconf change + change to src/backend/slony1_funcs.c to accomodate
   change in # of arguments for ScanKeywordLookup in PostgreSQL 8.5
-
-Release 1.2.18
 
 - Reloading of functions needs to have an emulation of
   "DROP FUNCTION IF EXISTS" because a couple of functions have had their
   return value type changed, which doesn't fit happily into
   CREATE OR REPLACE FUNCTION.
+
+- Revisions to copyright notices to indicate 2009
+
+- Fixing 8.4ism in SUBSCRIBE SET process - see <http://main.slony.info/viewcvs/viewvc.cgi/slony1-engine/src/slon/remote_worker.c?revision=1.124.2.39&view=markup&sortby=date&pathrev=REL_1_2_STABLE>
 
 Release 1.2.17
 
