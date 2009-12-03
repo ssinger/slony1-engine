@@ -1,4 +1,9 @@
-$Id: RELEASE,v 1.1.2.42 2009-12-01 20:40:25 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.43 2009-12-03 22:54:40 cbbrowne Exp $
+
+Release 1.2.19
+
+- fix problem (noticed by Vivek Khera) with drop_if_exists() handling
+  of schemas
 
 Release 1.2.18
 
