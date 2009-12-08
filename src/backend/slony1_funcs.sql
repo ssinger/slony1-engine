@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.98.2.44 2009-12-03 22:54:40 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.98.2.45 2009-12-08 21:00:22 wieck Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -3764,11 +3764,12 @@ declare
   p_args alias for $2;
   v_drop text;
 begin
-  if exists (select 1 from information_schema.routines where routine_schema = ''@NAMESPACE@'' and routine_name = p_function) then
+  if exists (select 1 from information_schema.routines where routine_schema = ''_@CLUSTERNAME@'' and routine_name = p_function) then
 	v_drop := ''drop function @NAMESPACE@.'' || p_function || ''('' || p_args || '');'';
 	execute v_drop;
+	return 1;
   end if;
-  return 1;
+  return 0;
 end
 '  language plpgsql;
 
