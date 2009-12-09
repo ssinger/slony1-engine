@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutils.c,v 1.30.2.3 2009-08-17 17:09:58 devrim Exp $
+ *	$Id: dbutils.c,v 1.30.2.4 2009-12-09 20:58:15 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -493,7 +493,7 @@ slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
 						break;
 
 					case 'L':
-						sprintf(buf, "%lld", va_arg(ap, int));
+						sprintf(buf, INT64_FORMAT, va_arg(ap, int64));
 						dstring_append(dsp, buf);
 						fmt++;
 						break;
