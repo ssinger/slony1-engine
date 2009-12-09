@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.48 2009-08-17 17:25:50 devrim Exp $
+ *	$Id: cleanup_thread.c,v 1.49 2009-12-09 20:50:25 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -264,7 +264,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 static unsigned long
 get_earliest_xid(PGconn *dbconn)
 {
-	long long	xid;
+	int64	xid;
 	PGresult   *res;
 	SlonDString query;
 
