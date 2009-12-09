@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176.2.6 2009-10-23 21:18:52 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.176.2.7 2009-12-09 20:50:07 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5554,7 +5554,7 @@ void
 compress_actionseq(const char *ssy_actionlist, SlonDString *action_subquery)
 {
 	CompressState			state;
-	long long			curr_number,
+	int64			curr_number,
 				curr_min,
 				curr_max;
 	int			curr_digit;
