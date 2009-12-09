@@ -1,4 +1,12 @@
-$Id: RELEASE,v 1.1.2.44 2009-12-09 17:41:28 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.45 2009-12-09 20:51:10 cbbrowne Exp $
+
+Release 1.2.20
+
+- Fix problem with logging where vsnprintf would, with very large
+  output, clobber the byte after malloc()ed output
+
+- Change "long long" to "int64"
+
 
 Release 1.2.19
 
