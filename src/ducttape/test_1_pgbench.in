@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.1 2005-07-04 23:45:21 darcyb Exp $
+# $Id: test_1_pgbench.in,v 1.1.2.1 2009-12-09 00:52:34 wieck Exp $
 # **********
 # test_1_pgbench
 #
@@ -126,6 +126,11 @@ if [ $? -ne 0 ] ; then
 	kill $pgbench_pid;
 	exit 1
 fi
+
+# Bump the sl_action_seq close to 2G
+psql $DB1 <<_EOF_
+	select setval('"_T1".sl_action_seq', 2147483647 - 10000);
+_EOF_
 
 echo "**** starting the Slony-I node daemon for $DB1"
 $TERMPROG -title "Slon node 11" -e sh -c "slon -d$DEBUG_LEVEL -s500 -g10 T1 dbname=$DB1; echo -n 'Enter>'; read line" &
