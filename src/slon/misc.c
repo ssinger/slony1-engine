@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.22.2.3 2009-08-17 17:39:57 devrim Exp $
+ *	$Id: misc.c,v 1.22.2.4 2009-12-09 19:44:38 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -172,7 +172,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 
 	off = strlen(outbuf);
 
-	while (vsnprintf(&outbuf[off], outsize - off, fmt, ap) >= outsize - off)
+	while (vsnprintf(&outbuf[off], outsize - off - 1, fmt, ap) >= outsize - off - 1)
 	{
 		outsize *= 2;
 		outbuf = realloc(outbuf, outsize);
