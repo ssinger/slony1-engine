@@ -1,9 +1,13 @@
-$Id: RELEASE,v 1.1.2.43 2009-12-03 22:54:40 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.44 2009-12-09 17:41:28 cbbrowne Exp $
 
 Release 1.2.19
 
 - fix problem (noticed by Vivek Khera) with drop_if_exists() handling
   of schemas
+
+- Duct tape test altered to bump event serial number to a near-2^31-1
+  level in order that things that might break will break upon that
+  rollover.  Also altered to run "update functions."  
 
 Release 1.2.18
 
