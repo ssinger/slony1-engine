@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.33.2.7 2009-12-09 20:49:20 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.33.2.8 2009-12-22 17:10:10 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -45,7 +45,7 @@ static char *table_list[] = {
 	"%s.sl_log_1",
 	"%s.sl_log_2",
 	"%s.sl_seqlog",
-        "%s.sl_archive_counter",
+	"%s.sl_archive_counter",
 	"pg_catalog.pg_listener",
 	"pg_catalog.pg_statistic",
 	NULL
@@ -253,16 +253,16 @@ cleanupThread_main(void *dummy)
 				dstring_reset(&query3);
 				slon_mkquery(&query3, "show autovacuum");
 				res = PQexec(dbconn, dstring_data(&query3));
-				if (PQresultStatus(res)  != PGRES_TUPLES_OK)
+				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
 					slon_log(SLON_ERROR,
-                                                         "cleanupThread: \"%s\" - %s",
-                                                   dstring_data(&query3), PQresultErrorMessage(res));
+							"cleanupThread: \"%s\" - %s",
+							dstring_data(&query3), PQresultErrorMessage(res));
 
-                                        /*
-                                         * slon_retry(); break;
-                                         */
-                                }
+					/*
+					 * slon_retry(); break;
+					 */
+				}
 				else if (strncmp(PQgetvalue(res, 0, 0), "on", 2) == 0)
 				{
 					/*
@@ -270,7 +270,7 @@ cleanupThread_main(void *dummy)
 					 */
 					a_vac=1;
 				}
-                                PQclear(res);
+				PQclear(res);
 				dstring_reset(&query3);
 			}
 			latest_xid = get_earliest_xid(dbconn);
@@ -298,33 +298,45 @@ cleanupThread_main(void *dummy)
 			gettimeofday(&tv_start, NULL);
 			for (t = 0; table_list[t] != NULL ; t++)
 			{
-
 				sprintf(tstring, table_list[t], rtcfg_namespace);
 				if (a_vac==1)
 				{
 					if (conn->pg_version < 80400) {
-						slon_mkquery(&query3,"select (case when pga.enabled ISNULL THEN true ELSE pga.enabled END) "
-									 "from \"pg_catalog\".pg_namespace PGN, \"pg_catalog\".pg_class PGC LEFT OUTER JOIN "
-									 "\"pg_catalog\".pg_autovacuum pga ON (PGC.oid = pga.vacrelid) where PGC.relnamespace = PGN.oid "
-									 "and %s.slon_quote_input('%s')=%s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
-									 rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
-
+						slon_mkquery(&query3,
+								"select (case when pga.enabled ISNULL "
+								"THEN true ELSE pga.enabled END) "
+								"from \"pg_catalog\".pg_namespace PGN, "
+								"\"pg_catalog\".pg_class PGC LEFT OUTER JOIN "
+								"\"pg_catalog\".pg_autovacuum pga ON "
+								"(PGC.oid = pga.vacrelid) "
+								"where PGC.relnamespace = PGN.oid "
+								"and %s.slon_quote_input('%s')="
+								"%s.slon_quote_brute(PGN.nspname) || '.' "
+								"|| %s.slon_quote_brute(PGC.relname);",
+								rtcfg_namespace, tstring, rtcfg_namespace, 
+								rtcfg_namespace);
 					} else {
 						/* PostgreSQL 8.4 */
 						slon_mkquery (&query3, 
-									  "select coalesce ('autovacuum_enabled=on' = any(reloptions), 't'::boolean) "
-									  "from \"pg_catalog\".pg_class pgc, \"pg_catalog\".pg_namespace pgn "
-									  "where pgc.relnamespace = pgn.oid and %s.slon_quote_input('%s')= "
-									  " %s.slon_quote_brute(PGN.nspname) || '.' || %s.slon_quote_brute(PGC.relname);",
-									  rtcfg_namespace,tstring, rtcfg_namespace, rtcfg_namespace);
+								"select coalesce ('autovacuum_enabled=on' "
+								"= any(reloptions), 't'::boolean) "
+								"from \"pg_catalog\".pg_class pgc, "
+								"\"pg_catalog\".pg_namespace pgn "
+								"where pgc.relnamespace = pgn.oid "
+								"and %s.slon_quote_input('%s')= "
+								" %s.slon_quote_brute(PGN.nspname) || '.' "
+								"|| %s.slon_quote_brute(PGC.relname);",
+								rtcfg_namespace, tstring, rtcfg_namespace, 
+								rtcfg_namespace);
 					}
 
 					res = PQexec(dbconn, dstring_data(&query3));
 					if (PQresultStatus(res) != PGRES_TUPLES_OK)  /* query error */
 					{
 						slon_log(SLON_ERROR,
-							 "cleanupThread: \"%s\" - %s",
-							   dstring_data(&query3), PQresultErrorMessage(res));
+								"cleanupThread: \"%s\" - %s",
+								dstring_data(&query3), 
+								PQresultErrorMessage(res));
 						/*
 						 * slon_retry(); break;
 						 */
@@ -337,7 +349,7 @@ cleanupThread_main(void *dummy)
 							{
 								/* 
 								 * pg_avac is NOT enabled for this table
-								 * so this means we need to handel it internaly
+								 * so this means we need to handle it internaly
 								 */
 								if (vac_enable == vac_frequency)
 								{
@@ -357,27 +369,26 @@ cleanupThread_main(void *dummy)
 				slon_mkquery(&query3,"%s analyze %s;",vacuum_action, tstring);
 				res = PQexec(dbconn, dstring_data(&query3));
 				if (PQresultStatus(res) != PGRES_COMMAND_OK)  /* query error */
-                                {
-                 	                slon_log(SLON_ERROR,
-	                                        "cleanupThread: \"%s\" - %s",
-                                                dstring_data(&query3), PQresultErrorMessage(res));
-                                                /*
-                                                 * slon_retry(); break;
-                                                 */                  
-                                }
+				{
+					slon_log(SLON_ERROR,
+							"cleanupThread: \"%s\" - %s",
+							dstring_data(&query3), PQresultErrorMessage(res));
+					/*
+					 * slon_retry(); break;
+					 */
+				}
 				PQclear(res);
 				dstring_reset(&query3);
 			}
 			gettimeofday(&tv_end, NULL);
 			slon_log(SLON_DEBUG2,
-					 "cleanupThread: %8.3f seconds for vacuuming\n",
-					 TIMEVAL_DIFF(&tv_start, &tv_end));
+					"cleanupThread: %8.3f seconds for vacuuming\n",
+					TIMEVAL_DIFF(&tv_start, &tv_end));
 
 			/*
 			 * Free Resources
 			 */
 			dstring_free(&query3);
-
 		}
 	}
 

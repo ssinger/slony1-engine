@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.31.2.4 2009-08-17 17:39:57 devrim Exp $
+ *	$Id: remote_listen.c,v 1.31.2.5 2009-12-22 17:10:10 wieck Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -278,6 +278,8 @@ remoteListenThread_main(void *cdata)
 
 				continue;
 			}
+			PQclear(res);
+
 			rc = db_getLocalNodeId(dbconn);
 			if (rc != node->no_id)
 			{
@@ -318,7 +320,6 @@ remoteListenThread_main(void *cdata)
 			slon_log(SLON_DEBUG1,
 					 "remoteListenThread_%d: connected to '%s'\n",
 					 node->no_id, conn_conninfo);
-
 		}
 
 		/*
@@ -373,6 +374,7 @@ remoteListenThread_main(void *cdata)
 				conn_conninfo = NULL;
 				continue;
 			}
+			PQclear(res);
 		}
 
 		/*
