@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: test_slony_state.pl,v 1.8.2.2 2010-02-10 22:23:00 cbbrowne Exp $
+# $Id: test_slony_state.pl,v 1.8.2.3 2010-02-10 22:50:51 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005-2009
 # PostgreSQL Global Development Group
@@ -47,14 +47,14 @@ my $dbh = Pg::connectdb($initialDSN);
 print "Rummage for DSNs\n=============================\n";
 # Query to find live DSNs
 my $dsnsquery =
-"
+qq{
    select p.pa_server, p.pa_conninfo
    from "_$cluster".sl_path p
 --   where exists (select * from "_$cluster".sl_subscribe s where
 --                          (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
 --                          sub_active = 't')
    group by pa_server, pa_conninfo;
-";
+};
 
 print "Query:\n$dsnsquery\n";
 $tq = $dbh->exec($dsnsquery);

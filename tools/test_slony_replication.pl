@@ -1,5 +1,5 @@
 #!perl   # -*- perl -*-
-# $Id: test_slony_replication.pl,v 1.3.6.1 2009-08-17 17:09:59 devrim Exp $
+# $Id: test_slony_replication.pl,v 1.3.6.2 2010-02-10 22:50:51 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2004-2009
 # Afilias Canada
@@ -47,7 +47,7 @@ print "DSN: $initialDSN\n";
 my $dbh = Pg::connectdb($initialDSN);
 
 # Query to find the "master" node
-my $masterquery = "
+my $masterquery = qq{
   select sub_provider 
    from "_$cluster".sl_subscribe s1 
    where not exists (select * from "_$cluster".sl_subscribe s2 
@@ -56,7 +56,7 @@ my $masterquery = "
                                            s1.sub_active = 't' and s2.sub_active = 't')
    and s1.sub_set = $set
    group by sub_provider;
-";
+};
 
 my $tq = $dbh->exec($masterquery);
 
@@ -70,7 +70,7 @@ while (my @row = $tq->fetchrow) {
 print "Rummage for DSNs\n";
 # Query to find live DSNs
 my $dsnsquery =
-"
+qq{
    select p.pa_server, p.pa_conninfo
    from "_$cluster".sl_path p
    where exists (select * from "_$cluster".sl_subscribe s where 
@@ -78,7 +78,7 @@ my $dsnsquery =
                           (s.sub_provider = p.pa_server or s.sub_receiver = p.pa_server) and
                           sub_active = 't')
    group by pa_server, pa_conninfo;
-";
+};
 
 print "Query:\n$dsnsquery\n";
 $tq = $dbh->exec($dsnsquery);
