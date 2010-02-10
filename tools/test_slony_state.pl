@@ -1,5 +1,5 @@
-#!/usr/bin/perl   # -*- perl -*-
-# $Id: test_slony_state.pl,v 1.5.2.2 2009-08-17 17:39:58 devrim Exp $
+#!/usr/bin/perl
+# $Id: test_slony_state.pl,v 1.5.2.3 2010-02-10 22:21:27 cbbrowne Exp $
 # Christopher Browne
 # Copyright 2005-2009
 # PostgreSQL Global Development Group
