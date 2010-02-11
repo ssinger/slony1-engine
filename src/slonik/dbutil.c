@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: dbutil.c,v 1.15.2.1 2009-08-17 17:09:59 devrim Exp $
+ *	$Id: dbutil.c,v 1.15.2.2 2010-02-11 23:09:18 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -145,7 +145,7 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	adminfo->dbconn = dbconn;
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
-		printf("Unable to set datestyle\n");
+		printf("Unable to set session configuration parameters\n");
 		dstring_free(&query);
 		return -1;
 	}
