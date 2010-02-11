@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.22.2.5 2010-02-11 21:13:24 cbbrowne Exp $
+ *	$Id: misc.c,v 1.22.2.6 2010-02-11 21:16:35 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -163,13 +163,12 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 		)
 	{
 		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
-		sprintf(outbuf, "%s ", time_buf);
 	} else {
 		time_buf[0] = (char) 0;
 	}
 	if (logpid == true)
 	{
-		sprintf(outbuf, "%s[%d] ", outbuf, slon_pid);
+		sprintf(ps_buf, "[%d] ", slon_pid);
 	} else {
 		ps_buf[0] = (char) 0;
 	}
