@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.18 2009-11-27 20:32:19 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.19 2010-02-11 19:37:48 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -165,3 +165,14 @@ Added post rc3:
 
 - autoconf/C funcs change to cope with 8.5 change that ScanKeywordLookup has
   3 arguments rather than 1 (in previous versions)
+
+- Remove Emacs fodder from tools (bug #108)
+
+- Quoting problems in Perl script (bug #110)
+
+- Add notes about flex/bison conflict (bug #109)
+
+- Memory leak changes per Ulrich Weber
+  http://lists.slony.info/pipermail/slony1-hackers/2010-January/000292.html
+
+- Logic error (if versus "else if") noticed by Richard Yen
