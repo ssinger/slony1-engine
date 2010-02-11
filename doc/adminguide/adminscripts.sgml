@@ -1,4 +1,4 @@
-<!-- $Id: adminscripts.sgml,v 1.55 2009-06-11 19:03:44 cbbrowne Exp $ -->
+<!-- $Id: adminscripts.sgml,v 1.56 2010-02-11 17:57:18 cbbrowne Exp $ -->
 <sect1 id="adminscripts">
 <title>&slony1; Administration Scripts</title>
 
@@ -116,7 +116,11 @@ control what tables will be in a particular replication set.</para>
 
 <listitem><para> a set of <function>add_node()</function> calls to configure the cluster</para></listitem>
 <listitem><para> The arrays <envar>@KEYEDTABLES</envar>,
-<envar>nvar>@SERIALT</envar>nvar>, and <envar>@SEQUENCES</envar></para></listitem>
+<envar>@SERIALTABLES</envar>, and <envar>@SEQUENCES</envar></para>
+
+<para> Note that in &slony1; 2.0 and later, <envar>@SERIALTABLES</envar> is no longer meaningful as <xref linkend="stmtsetaddtable"> no longer supports the <envar>SERIAL</envar> option. </para>
+
+</listitem>
 </itemizedlist>
 </sect3>
 <sect3><title>slonik_print_preamble</title>
