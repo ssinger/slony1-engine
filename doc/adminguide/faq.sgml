@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.83 2009-06-11 19:03:44 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.84 2010-02-11 17:51:16 cbbrowne Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -279,6 +279,29 @@ problem.</para>
 </answer>
 
 </qandaentry>
+
+<qandaentry>
+
+<question> <para> I found conflicting types for <envar>yyleng</envar>
+between <filename>parser.c</filename> and <filename>scan.c</filename>.
+In one case, it used type <type>int</type>, conflicting with
+<type>yy_size_t</type>.  What shall I do?</para> </question>
+
+<answer><para> This has been observed on <application>MacOS</application>,
+where <application>flex</application> (which generates
+<filename>scan.c</filename>) and <application>bison</application>
+(which generates <filename>parser.c</filename>) diverged in their
+handling of this variable. </para> 
+<itemizedlist>
+<listitem><para> You might might <quote>hack</quote> <filename>scan.c</filename> by hand to use the matching type. </para> </listitem>
+<listitem><para> You might select different versions of <application>bison</application> or <application>flex</application> so as to get versions whose data types match. </para> </listitem>
+<listitem><para> Note that you may have multiple versions of <application>bison</application> or <application>flex</application> around, and might need to modify <envar>PATH</envar> in order to select the appropriate one.</para></listitem>
+</answer>
+
+
+
+</qandaentry>
+
 </qandadiv>
 
 <qandadiv id="faqhowto"> <title> &slony1; FAQ: How Do I? </title>
