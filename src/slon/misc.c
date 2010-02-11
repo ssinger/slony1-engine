@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2006, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.18.2.1 2006-01-06 17:07:47 cbbrowne Exp $
+ *	$Id: misc.c,v 1.18.2.2 2010-02-11 21:17:21 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -75,7 +75,8 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	int			off;
 	char	   *level_c = NULL;
 
-	char		time_buf[128];
+	char		time_buf[128];   /* Buffer to hold timestamp */
+	char        ps_buf[20];      /* Buffer to hold PID */
 	time_t		stamp_time = time(NULL);
 
 #ifdef HAVE_SYSLOG
@@ -150,12 +151,18 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	{
 		strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
 		sprintf(outbuf, "%s ", time_buf);
+	} else {
+		time_buf[0] = (char) 0;
 	}
+		
 	if (logpid == true)
 	{
-		sprintf(outbuf, "%s[%d] ", outbuf, slon_pid);
+		sprintf(ps_buf, "[%d] ", slon_pid);
+	} else {
+		ps_buf[0] = (char) 0;
 	}
-	sprintf(outbuf, "%s%-6.6s ", outbuf, level_c);
+
+	sprintf(outbuf, "%s%s%-6.6s ", time_buf, ps_buf, level_c);
 
 	off = strlen(outbuf);
 
