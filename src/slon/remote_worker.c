@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176.2.8 2010-02-11 19:32:42 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.176.2.9 2010-02-11 19:35:10 cbbrowne Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -825,7 +825,7 @@ remoteWorkerThread_main(void *cdata)
 
 				need_reloadListen = true;
 			}
-			if (strcmp(event->ev_type, "CLONE_NODE") == 0)
+			else if (strcmp(event->ev_type, "CLONE_NODE") == 0)
 			{
 				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
 				int			no_provider = (int) strtol(event->ev_data2, NULL, 10);
