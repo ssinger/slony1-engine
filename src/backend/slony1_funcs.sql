@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.157 2009-11-26 18:09:17 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.158 2010-02-12 17:16:05 cbbrowne Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -2423,8 +2423,8 @@ begin
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
 						ssy_snapshot, ssy_action_list)
-						values (p_set_id, p_new_origin, '0',
-						'0', '0', '1:1:', NULL);
+						values (p_set_id, p_new_origin,
+						'0', '1:1:', NULL);
 			end if;
 		end if;
 	end if;
@@ -5116,24 +5116,30 @@ begin
 		where tab_id = prec.tab_id;
 	end loop;
 
-        update @NAMESPACE@.sl_table set
-                tab_reloid = PGC.oid
-                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_relname) = @NAMESPACE@.slon_quote_brute(PGC.relname)
-                        and PGC.relnamespace = PGN.oid
-			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_table.tab_nspname);
+	for prec in select tab_id, tab_relname, tab_nspname from @NAMESPACE@.sl_table loop
+	        update @NAMESPACE@.sl_table set
+        	        tab_reloid = (select PGC.oid
+	                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+	                where @NAMESPACE@.slon_quote_brute(PGC.relname) = @NAMESPACE@.slon_quote_brute(prec.tab_relname)
+	                        and PGC.relnamespace = PGN.oid
+				and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(prec.tab_nspname))
+		where tab_id = prec.tab_id;
+	end loop;
 
 	for prec in select seq_id from @NAMESPACE@.sl_sequence loop
-		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.tab_reloid = pc.oid) limit 1)
+		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.seq_reloid = pc.oid) limit 1)
 		where tab_id = prec.seq_id;
 	end loop;
 
-        update @NAMESPACE@.sl_sequence set
-                seq_reloid = PGC.oid
-                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
-                where @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_relname) = @NAMESPACE@.slon_quote_brute(PGC.relname)
+	for prec in select seq_id, seq_relname, seq_nspname from @NAMESPACE@.sl_sequence loop
+	        update @NAMESPACE@.sl_sequence set
+	                seq_reloid = (select PGC.oid
+	                from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
+	                where @NAMESPACE@.slon_quote_brute(PGC.relname) = @NAMESPACE@.slon_quote_brute(prec.seq_relname)
                 	and PGC.relnamespace = PGN.oid
-			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(@NAMESPACE@.sl_sequence.seq_nspname);
+			and @NAMESPACE@.slon_quote_brute(PGN.nspname) = @NAMESPACE@.slon_quote_brute(prec.seq_nspname))
+		where seq_id = prec.seq_id;
+	end loop;
 
 	return 1;
 end;
