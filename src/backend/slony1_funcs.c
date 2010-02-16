@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.73 2009-11-27 20:21:22 cbbrowne Exp $
+ *	$Id: slony1_funcs.c,v 1.74 2010-02-16 16:58:22 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -335,6 +335,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	if (!TransactionIdEquals(cs->currentXid, newXid))
 	{
 		int32		log_status;
+		bool isnull;
 
 		/*
 		 * Determine the currently active log table
@@ -345,7 +346,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			elog(ERROR, "Slony-I: cannot determine log status");
 
 		log_status = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
-											SPI_tuptable->tupdesc, 1, NULL));
+											SPI_tuptable->tupdesc, 1, &isnull));
 		SPI_freetuptable(SPI_tuptable);
 
 		switch (log_status)
