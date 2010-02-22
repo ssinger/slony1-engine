@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.40 2009-12-09 20:49:20 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.41 2010-02-22 18:45:02 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -6040,7 +6040,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 				if (state == COLLECTING_DIGITS)
 				{
 					/* Finished another number... Fold it into the ranges... */
-					slon_log(SLON_DEBUG4, "Finished number: %lld\n", curr_number);
+					slon_log(SLON_DEBUG4, "Finished number: " INT64_FORMAT "\n", curr_number);
 
 					/*
 					 * If we haven't a range, then the range is the current
@@ -6091,13 +6091,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 						}
 						if (curr_max == curr_min)
 						{
-							slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
+							slon_log(SLON_DEBUG4, "simple entry - " INT64_FORMAT "\n", curr_max);
 							slon_appendquery(action_subquery,
 										" log_actionseq <> '%L' ", curr_max);
 						}
 						else
 						{
-							slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
+							slon_log(SLON_DEBUG4, "between entry - " INT64_FORMAT " " INT64_FORMAT "\n",
 									 curr_min, curr_max);
 							slon_appendquery(action_subquery,
 								 " log_actionseq not between '%L' and '%L' ",
@@ -6126,13 +6126,13 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 		}
 		if (curr_max == curr_min)
 		{
-			slon_log(SLON_DEBUG4, "simple entry - %lld\n", curr_max);
+			slon_log(SLON_DEBUG4, "simple entry - " INT64_FORMAT "\n", curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq <> '%L' ", curr_max);
 		}
 		else
 		{
-			slon_log(SLON_DEBUG4, "between entry - %lld %lld\n",
+			slon_log(SLON_DEBUG4, "between entry - " INT64_FORMAT " " INT64_FORMAT "\n",
 					 curr_min, curr_max);
 			slon_appendquery(action_subquery,
 							 " log_actionseq not between '%L' and '%L' ",
