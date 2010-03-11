@@ -1,4 +1,12 @@
-$Id: RELEASE,v 1.1.2.45 2009-12-09 20:51:10 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.46 2010-03-11 21:38:52 cbbrowne Exp $
+
+Release 1.2.21
+
+- Bug #108 - remove Emacs fodder from test scripts
+
+- Bug #110 - some quoting problems in Perl script
+
+- Free objects to eliminate memory leaks
 
 Release 1.2.20
 
