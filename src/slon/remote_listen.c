@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.31.2.5 2009-12-22 17:10:10 wieck Exp $
+ *	$Id: remote_listen.c,v 1.31.2.6 2010-03-11 21:38:04 cbbrowne Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -266,6 +266,7 @@ remoteListenThread_main(void *cdata)
 					 "remoteListenThread_%d: \"%s\" - %s",
 					 node->no_id,
 					 dstring_data(&query1), PQresultErrorMessage(res));
+				dstring_free(&query1);
 				PQclear(res);
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -341,6 +342,7 @@ remoteListenThread_main(void *cdata)
 			continue;
 		}
 		if (oldpstate != poll_state) { /* Switched states... */
+			dstring_init(&query1);
 			switch (poll_state) {
 			case SLON_POLLSTATE_POLL:
 				slon_log(SLON_DEBUG2, 
@@ -367,6 +369,7 @@ remoteListenThread_main(void *cdata)
 					 "remoteListenThread_%d: \"%s\" - %s",
 					 node->no_id,
 					 dstring_data(&query1), PQresultErrorMessage(res));
+				dstring_free(&query1);
 				PQclear(res);
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -374,6 +377,7 @@ remoteListenThread_main(void *cdata)
 				conn_conninfo = NULL;
 				continue;
 			}
+			dstring_free(&query1);
 			PQclear(res);
 		}
 
