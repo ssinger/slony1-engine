@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.42 2010-03-11 21:38:04 cbbrowne Exp $
+ *	$Id: remote_worker.c,v 1.124.2.43 2010-03-31 13:22:20 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1389,7 +1389,6 @@ remoteWorkerThread_main(void *cdata)
 						}
 						rstat = PQresultStatus(res);
 						slon_log (SLON_CONFIG, "DDL success - %s\n", PQresStatus(rstat));
-						PQclear(res);
 					}
 					slon_log(SLON_INFO, "completed DDL script - run ddlScript_complete_int()\n");
 					slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
@@ -1485,7 +1484,6 @@ remoteWorkerThread_main(void *cdata)
 	slon_disconnectdb(local_conn);
 	dstring_free(&query1);
 	dstring_free(&query2);
-	dstring_free(&lsquery);
 	free(wd->tab_fqname);
 	free(wd->tab_forward);
 #ifdef SLON_MEMDEBUG
@@ -4918,7 +4916,6 @@ sync_helper(void *cdata)
 		if (provider->helper_status == SLON_WG_EXIT)
 		{
 			dstring_free(&query);
-			dstring_free(&query2);
 			pthread_mutex_unlock(&(provider->helper_lock));
 			pthread_exit(NULL);
 		}
@@ -5310,7 +5307,6 @@ sync_helper(void *cdata)
 
 						log_cmddata = PQgetvalue(res2, 0, 0);
 						largemem = log_cmdsize;
-						PQclear(res2);
 					}
 
 					/*
@@ -5396,6 +5392,7 @@ sync_helper(void *cdata)
 					 */
 					if (largemem > 0)
 					{
+						PQclear(res2);
 						pthread_mutex_lock(&(wd->workdata_lock));
 						wd->workdata_largemem += largemem;
 						if (wd->workdata_largemem >= sync_max_largemem)
