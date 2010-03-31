@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.22.2.6 2010-02-11 21:16:35 cbbrowne Exp $
+ *	$Id: misc.c,v 1.22.2.7 2010-03-31 13:38:38 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -176,7 +176,9 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 
 	off = strlen(outbuf);
 
-	while (vsnprintf(&outbuf[off], outsize - off - 1, fmt, ap) >= outsize - off - 1)
+	va_list apcopy;
+	va_copy(apcopy, ap);
+	while (vsnprintf(&outbuf[off], outsize - off - 1, fmt, apcopy) >= outsize - off - 1)
 	{
 		outsize *= 2;
 		outbuf = realloc(outbuf, outsize);
@@ -185,7 +187,12 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 			perror("slon_log: realloc()");
 			slon_retry();
 		}
+		va_end(apcopy);
+		va_copy(apcopy, ap);
 	}
+
+	va_end(apcopy);
+
 #ifdef HAVE_SYSLOG
 	if (Use_syslog >= 1)
 	{
