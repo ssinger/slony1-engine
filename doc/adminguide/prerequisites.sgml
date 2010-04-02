@@ -41,36 +41,8 @@ will suffice; previous versions may not.</para></listitem>
 
 <listitem><para> You also need a recent version of &postgres;
 <emphasis>source</emphasis>.  &slony1; depends on namespace support so
-you must have &postgres; version 7.3.3 or newer to be able to build
+you must have &postgres; version 8.3 or newer to be able to build
 and use &slony1;.  </para>
-
-<para> Earlier versions of &postgres; are <emphasis> not </emphasis>
-supported, but note that one user has <quote>hacked</quote> &slony1;
-to do a 7.2-to-7.4 upgrade; see <link linkend="v72upgrade"> &postgres;
-7.2 notes </link>. </para>
-
-<para> Versions of &postgres; prior to 7.4.8 may run into a
-longstanding race condition that leads to problems of <link
-linkend="dupkey"> <quote>duplicate keys</quote></link>, so you may
-want to consider upgrades if you are running earlier versions.</para>
-
-<para> If you are running a version of &postgres; earlier
-than 8.0, you need to make sure that server header files were
-installed.  If installing from sources, this is done via the command
-<command>make install-all-headers</command>.  Otherwise, you will
-encounter the <link linkend="missingheaders"> missing headers for
-libpqserver</link> problem described in the FAQ.
-</para>
-
-<para> If you are running versions 8.1.0 thru 8.1.3, there is a bug
-(addressed in 8.1.4) which prevents <xref
-linkend="stmtupdatefunctions"> from running properly.  For more
-details see the <xref linkend="FAQ">, <link
-linkend="pg81funs"> on &postgres; 8.1.[0-3] </link>. </para>
-
-<para> There is variation between what versions of &postgres& are
-compatible with what versions of &slony1;.  See <xref
-linkend="installation"> for more details.</para>
 
 </listitem>
 
@@ -97,7 +69,7 @@ OpenJade.</ulink> </para></listitem>
 
 <listitem><para> On &windows; you will also need the same <ulink url=
 "http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys
-Toolset</ulink> used to build &postgres; 8.0 and above.  In addition
+Toolset</ulink> used to build &postgres; 8.3 and above.  In addition
 you will need to install <ulink url=
 "http://sourceware.org/pthreads-win32/">pthreads-win32
 2.x</ulink>. </para></listitem>
@@ -108,7 +80,7 @@ you will need to install <ulink url=
 will need approximately 5MB for the source tree during build and
 installation.</para>
 
-<note><para>From &slony1; version 1.1, it is possible to compile
+<note><para>It is possible to compile
 &slony1; separately from &postgres;, making it practical for the
 makers of distributions of <productname>Linux</productname> and
 <productname>FreeBSD</productname> to include precompiled binary
@@ -146,11 +118,6 @@ subscriber used <envar>SQL_ASCII</envar> and another subscriber used
 <envar>UNICODE</envar>, and your application never challenges the
 boundary conditions between these variant encodings, you may never
 experience any problems.  </para>
-
-<para> In &postgres; 8.1, changes were made to the
-<envar>UNICODE</envar> encoding because earlier versions accepted some
-invalid encodings.  This can lead to <link linkend="faqunicode">
-replication problems.</link> </para>
 
 <para> Note also that if the client encoding (configured assortedly in
 <filename>postgresql.conf</filename>, parameter
