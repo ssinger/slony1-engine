@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.1.2.47 2010-03-31 18:06:49 cbbrowne Exp $
+$Id: RELEASE,v 1.1.2.48 2010-04-06 21:18:35 ssinger Exp $
 
 Release 1.2.21
 
@@ -8,7 +8,23 @@ Release 1.2.21
 
 - Free objects to eliminate memory leaks
 
-- Bug #55 - cannot use va_args multiple times
+- Bug #55 - cannot use va_args multiple times + test case with very large
+  tuple
+
+- SPI_getbinval() fix for PostgreSQL 9.0 support
+
+- Add buffer for pid
+
+- Change "long long" to "int64" to make things consistent with how PostgreSQL
+  expresses XIDs. 
+
+-Similarly "%lld" in printf changed to INT64_FORMAT
+
+- slony1_extract_schema.sh checks Pg version numbers 
+
+- Added tools/slony1_extract_for_upgrade.sh script
+
+
 
 Release 1.2.20
 
