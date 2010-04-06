@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.23 2010-04-06 20:06:27 ssinger Exp $
+$Id: RELEASE,v 1.3.2.24 2010-04-06 20:42:48 cbbrowne Exp $
 
 RELEASE 2.0.0
 
@@ -186,3 +186,26 @@ Added post rc3:
 - Bug # 113 - DROP cloneNodePrepare since the return type changes.
   Patch from Atte Peltomäki
 
+- Improve configure complaint if it can't find PQunescapeBytea - this
+  likely implies that configure couldn't find libpq.
+
+- Copyright date changes
+
+- Added discussion of synchronous commit to documentation
+
+- Removed some discussion of behaviours relating to ancient versions
+  of PostgreSQL that are no longer supported (David Fetter)
+
+- SPI_getbinval() was being passed a NULL, which PostgreSQL 8.5 no
+  longer accepts.  Add isnull variable in the relevant code block so
+  there's a place to stow the bool result.
+
+  Reason for this noted by Alvaro Herrera - thanks!
+
+- Change "long long" to "int64" to make things consistent with how
+  PostgreSQL expresses XIDs.
+
+- Similarly "%lld" in printf changed to INT64_FORMAT
+
+- Fixing up detection by Slonik of PostgreSQL 8.4 (patch per Peter
+  Eisentraut) - bug #116
