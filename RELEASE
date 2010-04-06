@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.22 2010-03-31 18:08:29 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.23 2010-04-06 20:06:27 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -182,3 +182,7 @@ Added post rc3:
 - Improve test harness to report conninfo in case where connection fails
 
 - Bug #55 - va_args cannot be used multiple times
+
+- Bug # 113 - DROP cloneNodePrepare since the return type changes.
+  Patch from Atte Peltomäki
+

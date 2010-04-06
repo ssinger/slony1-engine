@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.25 2010-02-12 17:14:52 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.26 2010-04-06 20:06:27 ssinger Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -1478,6 +1478,7 @@ replication system.';
 --	Duplicate a nodes configuration under a different no_id in
 --	preparation for the node to be copied with standard DB tools.
 -- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.cloneNodePrepare (int4, int4, text); -- Needed because function signature has changed!
 create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
 returns bigint
 as $$
