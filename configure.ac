@@ -7,7 +7,7 @@
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: configure.ac,v 1.62.2.2 2009-08-17 17:09:58 devrim Exp $
+# $Id: configure.ac,v 1.62.2.3 2010-04-09 20:29:09 ssinger Exp $
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
