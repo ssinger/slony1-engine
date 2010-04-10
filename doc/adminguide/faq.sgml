@@ -1,4 +1,4 @@
-<!-- $Id: faq.sgml,v 1.84 2010-02-11 17:51:16 cbbrowne Exp $ -->
+<!-- $Id: faq.sgml,v 1.85 2010-04-10 12:39:42 devrim Exp $ -->
 <qandaset>
 <indexterm><primary>Frequently Asked Questions about &slony1;</primary></indexterm>
 
@@ -296,8 +296,8 @@ handling of this variable. </para>
 <listitem><para> You might might <quote>hack</quote> <filename>scan.c</filename> by hand to use the matching type. </para> </listitem>
 <listitem><para> You might select different versions of <application>bison</application> or <application>flex</application> so as to get versions whose data types match. </para> </listitem>
 <listitem><para> Note that you may have multiple versions of <application>bison</application> or <application>flex</application> around, and might need to modify <envar>PATH</envar> in order to select the appropriate one.</para></listitem>
+</itemizedlist>
 </answer>
-
 
 
 </qandaentry>
