@@ -1,5 +1,5 @@
-#!perl   
-# $Id: test_slony_replication.pl,v 1.5 2010-02-10 22:50:33 cbbrowne Exp $
+#!/usr/bin/perl
+# $Id: test_slony_replication.pl,v 1.6 2010-04-18 09:12:26 devrim Exp $
 # Christopher Browne
 # Copyright 2004-2009
 # Afilias Canada
