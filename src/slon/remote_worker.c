@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.43 2010-03-31 13:22:20 ssinger Exp $
+ *	$Id: remote_worker.c,v 1.124.2.44 2010-04-30 23:20:59 wieck Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -5317,7 +5317,11 @@ sync_helper(void *cdata)
 					 */
 					if (log_tableid >= wd->tab_fqname_size ||
 							wd->tab_fqname[log_tableid] == NULL)
+					{
+						if (largemem > 0)
+							PQclear(res2);
 						continue;
+					}
 
 					/*
 					 * If we are forwarding this set, add the insert
@@ -5372,7 +5376,12 @@ sync_helper(void *cdata)
 					if (line_ncmds >= SLON_COMMANDS_PER_LINE)
 					{
 						if (data_line_last >= data_line_alloc)
+						{
+							if (largemem > 0)
+								PQclear(res2);
 							break;
+						}
+
 						line_no = data_line_last++;
 
 						line = data_line[line_no];
