@@ -32,21 +32,21 @@ Mailing List</ulink> and ask your questions.</para>
 
  <tbody>
      <row>
-      <entry>Fedora Core</entry>
-      <entry>3</entry>
-      <entry>Intel - 32 bit</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>dvdm at truteq.co.za</entry>
-      <entry>&postgres; Version: 7.4.6</entry>
+      <entry>Fedora</entry>
+      <entry>9,10,11,12</entry>
+      <entry>Intel - 32 bit, 64 bit</entry>
+      <entry>Aug 9, 2009</entry>
+      <entry>devrim at gunduz dot org</entry>
+      <entry>&postgres; Version: 8.4.3,8.3.7</entry>
      </row>
 
      <row>
-      <entry>Red Hat Linux</entry>
-      <entry>9</entry>
-      <entry>x86</entry>
-      <entry>Jun 22, 2005</entry>
-      <entry>dvdm at truteq.co.za</entry>
-      <entry>&postgres; Version: 7.4.5</entry>
+      <entry>Red Hat Enterprise Linux</entry>
+      <entry>5</entry>
+      <entry>x86 and x86_64</entry>
+      <entry>Mon May 3, 2010</entry>
+      <entry>devrim at gunduz dot org</entry>
+      <entry>&postgres; Version: 8.4.3, 8.3.10</entry>
      </row>
 
      <row>
