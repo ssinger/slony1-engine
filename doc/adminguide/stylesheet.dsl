@@ -1,4 +1,4 @@
-<!-- $Id: stylesheet.dsl,v 1.2 2004-12-21 17:44:46 darcyb Exp $ --> 
+<!-- $Id: stylesheet.dsl,v 1.3 2010-05-03 05:56:17 devrim Exp $ --> 
 <!DOCTYPE style-sheet PUBLIC "-//James Clark//DTD DSSSL Style Sheet//EN" [
 
 <!-- must turn on one of these with -i on the jade command line -->
@@ -30,7 +30,7 @@
 
 (define draft-mode              #f)
 
-(define slony-list "slony1-general@gborg.postgresql.org")
+(define slony-list "slony1-general@lists.slony.info")
 
 ;; Don't show manpage volume numbers
 (define %refentry-xref-manvolnum% #f)

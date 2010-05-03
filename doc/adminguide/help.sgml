@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.21 2008-03-24 15:57:34 cbbrowne Exp $ -->
+<!-- $Id: help.sgml,v 1.22 2010-05-03 05:56:17 devrim Exp $ -->
 <sect1 id="help">
 <title>More &slony1; Help</title>
 <indexterm><primary>help - how to get more assistance</primary></indexterm>
@@ -21,7 +21,7 @@ analyzing the problem. </para>
 
 <listitem><para> Documentation on the &slony1; Site- Check the
 documentation on the Slony website: <ulink
-      url="http://gborg.postgresql.org/project/slony1/genpage.php?howto_idx">Howto
+      url="http://slony.info/documentation">Howto
 </ulink></para></listitem>
 
 <listitem><para> A copy of this documentation lives at <ulink
@@ -42,7 +42,7 @@ to chat with.</para></listitem>
 in the Slony1-general mailing list archives, or you may choose to ask
 your question on the Slony1-general mailing list. The mailing list
 archives, and instructions for joining the list may be found <ulink
-      url="http://gborg.postgresql.org/mailman/listinfo/slony1">here. </ulink></para></listitem>
+      url="http://lists.slony.info/mailman/listinfo/slony1-general">here. </ulink></para></listitem>
 
 <listitem><para> If your Russian is much better than your English,
 then <ulink url="http://kirov.lug.ru/wiki/Slony">
