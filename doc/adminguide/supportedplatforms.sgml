@@ -9,10 +9,10 @@ below. Slony-I can be successfully built, installed and run on these
 platforms.
 </para>
 
-<para> Last updated: Jun 23, 2005</para>
+<para> Last updated: May 3, 2010</para>
 
 <para>If you experience problems in these platforms, please subscribe to 
-<ulink url="http://gborg.PostgreSQL.org/mailman/listinfo/slony1-general">Slony-I 
+<ulink url="http://lists.slony.info/mailman/listinfo/slony1-general">Slony-I 
 Mailing List</ulink> and ask your questions.</para>
 
  <table id="platform-table">
@@ -47,6 +47,15 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>Mon May 3, 2010</entry>
       <entry>devrim at gunduz dot org</entry>
       <entry>&postgres; Version: 8.4.3, 8.3.10</entry>
+     </row>
+
+     <row>
+      <entry>Debian GNU/Linux</entry>
+      <entry>Lenny</entry>
+      <entry>x86 x86_64</entry>
+      <entry>May 3, 2010</entry>
+      <entry>devrim @ gunduz dot org</entry>
+      <entry>&postgres; Version: 8.4,3, 8.3.7</entry>
      </row>
 
      <row>
