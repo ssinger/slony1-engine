@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.4 2009-06-11 19:03:44 cbbrowne Exp $
+$Id: RELEASE,v 1.5 2010-05-13 19:41:40 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -21,3 +21,19 @@ RELEASE 2.0.1
   resulted from the change of snapshot handling which used to involve 3 columns where in 8.3+, there is
   now a snapshot type.
 
+
+RELEASE 2.0.4
+
+- script syntax error Bug # 108
+
+- Fixed memory corruption issue introduced in 2.0.3 with replicating large rows
+
+- cloneNodeFinish() references the proper column in sl_sequence Bug # 119
+
+RELEASE 2.0.4
+
+- script syntax error Bug # 108
+
+- Fixed memory corruption issue introduced in 2.0.3 with replicating large rows
+
+- cloneNodeFinish() references the proper column in sl_sequence Bug # 119

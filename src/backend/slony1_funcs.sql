@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.158 2010-02-12 17:16:05 cbbrowne Exp $
+-- $Id: slony1_funcs.sql,v 1.159 2010-05-13 19:41:40 ssinger Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5128,7 +5128,7 @@ begin
 
 	for prec in select seq_id from @NAMESPACE@.sl_sequence loop
 		update @NAMESPACE@.sl_sequence set seq_reloid = (select oid from pg_class pc where relkind <> 'S' and not exists (select 1 from @NAMESPACE@.sl_sequence t2 where t2.seq_reloid = pc.oid) limit 1)
-		where tab_id = prec.seq_id;
+		where seq_id = prec.seq_id;
 	end loop;
 
 	for prec in select seq_id, seq_relname, seq_nspname from @NAMESPACE@.sl_sequence loop
