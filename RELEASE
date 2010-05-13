@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.24 2010-04-06 20:42:48 cbbrowne Exp $
+$Id: RELEASE,v 1.3.2.25 2010-05-13 19:34:31 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -209,3 +209,11 @@ Added post rc3:
 
 - Fixing up detection by Slonik of PostgreSQL 8.4 (patch per Peter
   Eisentraut) - bug #116
+
+RELEASE 2.0.4
+
+- script syntax error Bug # 108
+
+- Fixed memory corruption issue introduced in 2.0.3 with replicating large rows
+
+- cloneNodeFinish() references the proper column in sl_sequence Bug # 119
