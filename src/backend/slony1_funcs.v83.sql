@@ -6,7 +6,7 @@
 --	Copyright (c) 2007-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.v83.sql,v 1.1.2.2 2009-08-31 15:15:17 cbbrowne Exp $
+-- $Id: slony1_funcs.v83.sql,v 1.1.2.3 2010-05-17 17:15:19 ssinger Exp $
 -- ----------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------
@@ -37,7 +37,7 @@ begin
 	end if;
 	select into c_table oid from "pg_catalog".pg_class where relname = i_tblname and relnamespace = c_namespace;
 	if not found then
-		raise warning 'Slony-I: table % does not exist in namespace %/%', tblname, c_namespace, i_nspname;
+		raise warning 'Slony-I: table % does not exist in namespace %/%', i_tblname, c_namespace, i_nspname;
 		return 'f'::boolean;
 	end if;
 
