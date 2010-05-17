@@ -1,4 +1,4 @@
-<!-- $Id: triggers.sgml,v 1.3 2008-10-13 21:36:45 devrim Exp $ --> 
+<!-- $Id: triggers.sgml,v 1.4 2010-05-17 18:21:00 ssinger Exp $ --> 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>
@@ -126,9 +126,9 @@ cluster.</para>
 </listitem>
 
 <listitem><para> If you take a <application>pg_dump</application> of a
-&slony1; node, and drop out the &slony1; namespace, this now cleanly
-removes <emphasis>all</emphasis> &slony1; components, leaving the
-database, <emphasis>including its schema,</emphasis> in a
+&slony1; node, and drop out the &slony1; namespace(using the DROP SCHEMA command)
+this now cleanly removes <emphasis>all</emphasis> &slony1; components, leaving 
+the database, <emphasis>including its schema,</emphasis> in a
 <quote>pristine</quote>, consistent fashion, ready for whatever use
 may be desired. </para> </listitem>
 
