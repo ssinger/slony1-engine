@@ -1,4 +1,4 @@
-<!-- $Id: triggers.sgml,v 1.3.2.1 2010-05-17 18:20:05 ssinger Exp $ --> 
+<!-- $Id: triggers.sgml,v 1.3.2.2 2010-05-25 13:25:58 ssinger Exp $ --> 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>
@@ -125,12 +125,12 @@ cluster.</para>
 
 </listitem>
 
-<listitem><para> If you take a <application>pg_dump</application> of a
-&slony1; node, and drop out the &slony1; namespace(using the DROP SCHEMA command)
-this now cleanly removes <emphasis>all</emphasis> &slony1; components, leaving 
-the database, <emphasis>including its schema,</emphasis> in a
-<quote>pristine</quote>, consistent fashion, ready for whatever use
-may be desired. </para> </listitem>
+<listitem><para>If you restore a backup of a Slony-I node (taken by pg_dump or 
+any other method), and drop the Slony-I namespace, this now cleanly removes 
+all Slony-I components, leaving the database, including its schema, 
+in a <quote>pristine</quote>, consistent fashion, ready for whatever use may 
+be desired. 
+</para></listitem>
 
 <listitem><para> &rddlchanges; is now performed in quite a different
 way: rather than altering each replicated table to <quote>take it out
