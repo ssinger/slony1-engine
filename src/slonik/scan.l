@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scan.l,v 1.30.2.2 2009-08-17 17:09:59 devrim Exp $
+ *	$Id: scan.l,v 1.30.2.3 2010-05-27 20:38:32 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 struct __yy_buffer
@@ -34,6 +34,14 @@ static void   pushBuffer( char * context );		/* Push a new lexer buffer on stack
 static void   popBuffer( void );				/* Pop previous lexer buffer		*/
 
 extern char * current_file;
+%}
+
+%{
+
+#include "postgres.h"
+#include "libpq-fe.h"
+#include "slonik.h"
+#include "y.tab.h"
 %}
 
 %option 8bit
