@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: cleanup_thread.c,v 1.45.2.3 2009-12-09 20:50:07 cbbrowne Exp $
+ *	$Id: cleanup_thread.c,v 1.45.2.4 2010-06-01 15:14:05 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -197,7 +197,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 				slon_mkquery(&query_pertbl, "%s analyze \"%s\".%s;",
 							 vacuum_action, tab_nspname, tab_relname);
 				res2 = PQexec(dbconn, dstring_data(&query_pertbl));
-				vrc = PQresultStatus(res);
+				vrc = PQresultStatus(res2);
 				if (vrc == PGRES_FATAL_ERROR)
 				{
 					slon_log(SLON_ERROR,
@@ -227,7 +227,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 			 * Free Resources
 			 */
 			dstring_free(&query_pertbl);
-
+			PQclear(res);
 		}
 	}
 

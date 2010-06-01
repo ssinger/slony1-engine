@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176.2.10 2010-04-30 21:45:47 ssinger Exp $
+ *	$Id: remote_worker.c,v 1.176.2.11 2010-06-01 15:14:05 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1429,6 +1429,7 @@ remoteWorkerThread_main(void *cdata)
 						{
 							rstat = PQresultStatus(res);
 							slon_log(SLON_ERROR, "DDL Statement failed - %s\n", PQresStatus(rstat));
+							PQclear(res);
 							dstring_free(&query1);
 							slon_retry();
 						}
@@ -1534,6 +1535,7 @@ remoteWorkerThread_main(void *cdata)
 	slon_disconnectdb(local_conn);
 	dstring_free(&query1);
 	dstring_free(&query2);
+	dstring_free(&query3);
 	free(wd->tab_fqname);
 	free(wd->tab_forward);
 #ifdef SLON_MEMDEBUG
@@ -2738,6 +2740,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d: Could not lock table %s "
 					 "on subscriber\n", node->no_id, tab_fqname);
 			PQclear(res2);
+			PQclear(res1);
 			slon_disconnectdb(pro_conn);
 			dstring_free(&query1);
 			dstring_free(&query3);
@@ -2940,6 +2943,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 					 node->no_id, dstring_data(&query1),
 					 PQresultErrorMessage(res2),
 					 PQerrorMessage(loc_dbconn));
+			PQclear(res3);
 			PQclear(res2);
 			PQclear(res1);
 			slon_disconnectdb(pro_conn);
@@ -2959,7 +2963,9 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			rc = archive_append_ds(node, &query1);
 			if (rc < 0)
 			{
-					PQclear(res3);
+				PQclear(res3);
+				PQclear(res2);
+				PQclear(res1);
 				slon_disconnectdb(pro_conn);
 				dstring_free(&query1);
 				dstring_free(&query2);
@@ -3080,6 +3086,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 * Check that the COPY to stdout on the provider node finished
 		 * successful.
 		 */
+		PQclear(res3);
 		res3 = PQgetResult(pro_dbconn);
 		if (PQresultStatus(res3) != PGRES_COMMAND_OK)
 		{
@@ -3121,6 +3128,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			archive_terminate(node);
 			return -1;
 		}
+		PQclear(res2);
 		res2 = PQgetResult(loc_dbconn);
 		if (PQresultStatus(res2) != PGRES_COMMAND_OK)
 		{
