@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_listen.c,v 1.31.2.7 2010-03-31 13:22:20 ssinger Exp $
+ *	$Id: remote_listen.c,v 1.31.2.8 2010-06-01 15:19:05 ssinger Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -450,6 +450,7 @@ remoteListenThread_main(void *cdata)
 	slon_log(SLON_DEBUG1,
 			 "remoteListenThread_%d: thread done\n",
 			 node->no_id);
+	dstring_free(&query1);
 	pthread_exit(NULL);
 }
 
@@ -662,6 +663,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 	char	   *where_or_or;
 	char		seqno_buf[64];
 	PGresult   *res;
+	PGnotify   *notification;
 	int			ntuples;
 	int			tupno;
 	time_t		timeout;
@@ -820,6 +822,10 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		}
 	}
 	PQclear(res);
+
+	/* Remove notifications from memory */
+	while ((notification = PQnotifies(conn->dbconn)) != NULL)
+		PQfreemem(notification);
 
 	return 0;
 }

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.124.2.44 2010-04-30 23:20:59 wieck Exp $
+ *	$Id: remote_worker.c,v 1.124.2.45 2010-06-01 15:19:05 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -284,7 +284,6 @@ remoteWorkerThread_main(void *cdata)
 	PGconn	   *local_dbconn;
 	SlonDString query1;
 	SlonDString query2;
-	SlonDString lsquery;
 	SlonWorkMsg *msg;
 	SlonWorkMsg_event *event;
 	int			check_config = true;
@@ -319,7 +318,6 @@ remoteWorkerThread_main(void *cdata)
 
 	dstring_init(&query1);
 	dstring_init(&query2);
-	dstring_init(&lsquery);
 
 	/*
 	 * Connect to the local database
@@ -1384,11 +1382,13 @@ remoteWorkerThread_main(void *cdata)
 						{
 							rstat = PQresultStatus(res);
 							slon_log(SLON_ERROR, "DDL Statement failed - %s\n", PQresStatus(rstat));
+							PQclear(res);
 							dstring_free(&query1);
 							slon_retry();
 						}
 						rstat = PQresultStatus(res);
 						slon_log (SLON_CONFIG, "DDL success - %s\n", PQresStatus(rstat));
+						PQclear(res);
 					}
 					slon_log(SLON_INFO, "completed DDL script - run ddlScript_complete_int()\n");
 					slon_mkquery(&query1, "select %s.ddlScript_complete_int(%d, %d); ", 
@@ -4916,6 +4916,7 @@ sync_helper(void *cdata)
 		if (provider->helper_status == SLON_WG_EXIT)
 		{
 			dstring_free(&query);
+			dstring_free(&query2);
 			pthread_mutex_unlock(&(provider->helper_lock));
 			pthread_exit(NULL);
 		}
