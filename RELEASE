@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.28 2010-06-23 20:03:08 ssinger Exp $
+$Id: RELEASE,v 1.3.2.29 2010-06-24 21:13:57 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -231,12 +231,4 @@ RELEASE 2.0.4
   sl_sequence but the column is named seq_id. Bug # 119
 
 - Fixed mistyped variable name in ShouldSlonyVacuumTable
-
-
-B
-B
-A
-A
-A
-  sl_sequence but the column is named seq_id
 
