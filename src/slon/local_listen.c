@@ -77,6 +77,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 dstring_data(&query1), PQresultErrorMessage(res));
 		PQclear(res);
 		dstring_free(&query1);
+		pthread_mutex_lock(&slon_wait_listen_lock);
+		pthread_cond_signal(&slon_wait_listen_cond);
+		pthread_mutex_unlock(&slon_wait_listen_lock);
 		slon_retry();
 	}
 	PQclear(res);
@@ -107,6 +110,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		    
 		PQclear(res);
 		dstring_free(&query1);
+		pthread_mutex_lock(&slon_wait_listen_lock);
+		pthread_cond_signal(&slon_wait_listen_cond);
+		pthread_mutex_unlock(&slon_wait_listen_lock);
 		slon_abort();
 	}
 	PQclear(res);
