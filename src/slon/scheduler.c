@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.30 2009-08-17 17:25:50 devrim Exp $
+ *	$Id: scheduler.c,v 1.31 2010-06-28 15:46:29 ssinger Exp $
  * ----------------------------------------------------------------------
  */
 
@@ -56,7 +56,7 @@ static pthread_cond_t sched_master_cond;
  * Local functions 
  * ----------
  */
-static void *sched_mainloop(void *);
+static void *sched_mainloop(void* );
 static void sched_add_fdset(int fd, fd_set * fds);
 static void sched_remove_fdset(int fd, fd_set * fds);
 /* static void sched_shutdown(); */
@@ -72,7 +72,7 @@ static void sched_remove_fdset(int fd, fd_set * fds);
  * ----------
  */
 int
-sched_start_mainloop(void)
+sched_start_mainloop(void )
 {
 	sched_status = SCHED_STATUS_OK;
 	sched_waitqueue_head = NULL;
@@ -191,7 +191,7 @@ int
 sched_wait_conn(SlonConn * conn, int condition)
 {
 	ScheduleStatus			rc;
-
+	int                     fds;
 	/*
 	 * Grab the master lock and check that we're in normal runmode
 	 */
@@ -208,9 +208,15 @@ sched_wait_conn(SlonConn * conn, int condition)
 	 */
 	conn->condition = condition;
 	if (condition & SCHED_WAIT_SOCK_READ)
-		sched_add_fdset(PQsocket(conn->dbconn), &sched_fdset_read);
+	{
+		fds = PQsocket(conn->dbconn);
+		sched_add_fdset(fds, &sched_fdset_read);
+	}
 	if (condition & SCHED_WAIT_SOCK_WRITE)
-		sched_add_fdset(PQsocket(conn->dbconn), &sched_fdset_write);
+	{
+		fds = PQsocket(conn->dbconn);
+		sched_add_fdset(fds, &sched_fdset_write);
+	}
 
 	/*
 	 * Add the connection to the wait queue
@@ -382,7 +388,7 @@ sched_wakeup_node(int no_id)
  * ----------
  */
 static void *
-sched_mainloop(void *dummy)
+sched_mainloop(void * dummy)
 {
 	fd_set		rfds;
 	fd_set		wfds;
@@ -678,9 +684,12 @@ sched_mainloop(void *dummy)
 static void
 sched_add_fdset(int fd, fd_set * fds)
 {
-	FD_SET(fd, fds);
-	if (fd >= sched_numfd)
-		sched_numfd = fd + 1;
+	if( fds != NULL )
+	{
+		FD_SET(fd, fds);
+		if (fd >= sched_numfd)
+			sched_numfd = fd + 1;
+	}
 }
 
 
