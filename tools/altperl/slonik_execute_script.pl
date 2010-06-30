@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.5 2009-08-17 17:25:50 devrim Exp $
+# $Id: slonik_execute_script.pl,v 1.6 2010-06-30 14:04:57 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -54,14 +54,8 @@ require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($set, $file) = @ARGV;
-if ($set =~ /^(?:set)?(\d+)$/) {
-  $set = $1;
-} else {
-  print "Invalid set identifier\n\n";
-  die $USAGE;
-}
-
-get_set($set) or die "Non-existent set specified.\n";
+die $USAGE unless $set;
+$set = get_set($set) or die "Non-existent set specified.\n";
 $node = $SET_ORIGIN unless $node;
 
 # We can either have -c SCRIPT or a filename as an argument.  The

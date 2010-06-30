@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_unsubscribe_set.pl,v 1.4 2009-08-17 17:25:50 devrim Exp $
+# $Id: slonik_unsubscribe_set.pl,v 1.5 2010-06-30 14:04:57 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -36,12 +36,8 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-if ($set =~ /^(?:set)?(\d+)$/) {
-  $set = $1;
-} else {
-  print "Need to specify set!\n\n";
-  die $USAGE;
-}
+die $USAGE unless $set;
+$set = get_set($set) or die "Non-existent set specified.\n";
 
 my $slonik = '';
 $slonik .= genheader();

@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_merge_sets.pl,v 1.6 2009-08-17 17:25:50 devrim Exp $
+# $Id: slonik_merge_sets.pl,v 1.7 2010-06-30 14:04:57 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -38,19 +38,10 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-if ($set1 =~ /^(?:set)?(\d+)$/) {
-  $set1 = $1;
-} else {
-  print "Valid set names are set1, set2, ...\n\n";
-  die $USAGE;
-}
-
-if ($set2 =~ /^(?:set)?(\d+)$/) {
-  $set2 = $1;
-} else {
-  print "Valid set names are set1, set2, ...\n\n";
-  die $USAGE;
-}
+die $USAGE unless $set1;
+$set1 = get_set($set1) or die "Non-existent set specified.\n";
+die $USAGE unless $set2;
+$set2 = get_set($set2) or die "Non-existent set specified.\n";
 
 my ($dbname, $dbhost) = ($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
 
