@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.13.2.1 2009-08-17 17:09:59 devrim Exp $
+# $Id: slon_kill.pl,v 1.13.2.2 2010-06-30 14:35:57 ssinger Exp $
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
@@ -41,8 +41,10 @@ print "slon_kill.pl...   Killing all slon and slon_watchdog instances for the cl
 print "1.  Kill slon watchdogs\n";
 
 # kill the watchdog
+my $watchdog_suffix = '_watchdog';
 open(PSOUT, ps_args() . " | egrep '[s]lon_watchdog' | sort -n | awk '{print \$2}'|");
-shut_off_processes();
+shut_off_processes($watchdog_suffix);
+$watchdog_suffix = '';
 close(PSOUT);
 if ($found eq 'n') {
     print "No watchdogs found\n";
@@ -54,23 +56,25 @@ unless ($WATCHDOG_ONLY) {
     # kill the slon daemon
     $found="n";
     open(PSOUT, ps_args() . " | egrep \"[s]lon .*$CLUSTER_NAME\" | sort -n | awk '{print \$2}'|");
-    shut_off_processes();
+    shut_off_processes($watchdog_suffix);
     close(PSOUT);
     if ($found eq 'n') {
 	print "No slon processes found\n";
     }
 }
 
-sub shut_off_processes {
+sub shut_off_processes($) {
+    my $watchdog_suffix=$_;
+
     $found="n";
     while ($pid = <PSOUT>) {
 	chomp $pid;
 	if (!($pid)) {
-	    print "No slon_watchdog is running for the cluster $CLUSTER_NAME!\n";
+	    print "No slon_watchdog $watchdog_suffix  is running for the cluster $CLUSTER_NAME!\n";
 	} else {
 	    $found="y";
 	    kill 9, $pid;
-	    print "slon_watchdog for cluster $CLUSTER_NAME killed - PID [$pid]\n";
+	    print "slon_watchdog $watchdog_suffix for cluster $CLUSTER_NAME killed - PID [$pid]\n";
 	}
     }
 }

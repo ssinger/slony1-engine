@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_node.pl,v 1.4.2.1 2009-08-17 17:09:59 devrim Exp $
+# $Id: slonik_drop_node.pl,v 1.4.2.2 2010-06-30 14:35:57 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -14,10 +14,14 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: drop_node [--config file] node#
+"Usage: drop_node [--config file] node# event_node#
 
     Drops a node.
 
+node# is the id of the node in config file you wish to remove from cluster.
+
+event_node# is the node number of the current origin node; the one capable of
+sending notification to other nodes.
 This will lead to Slony-I dropping the triggers (generally that deny the
 ability to update data), restoring the \"native\" triggers, dropping the
 schema used by Slony-I, and the slon process for that node terminating
@@ -42,10 +46,17 @@ if ($SHOW_USAGE) {
 require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my ($node) = @ARGV;
+my ($node, $event_node) = @ARGV;
 if ($node =~ /^(?:node)?(\d+)$/) {
   $node = $1;
 } else {
+  die $USAGE;
+}
+
+if ($event_node =~ /^(?:node)?(\d+)$/) {
+  $event_node = $1;
+} else {
+  print "Need to specify event node!\n";
   die $USAGE;
 }
 
@@ -53,7 +64,7 @@ my $slonik = '';
 
 $slonik .= genheader();
 $slonik .= "  try {\n";
-$slonik .= "      drop node (id = $node, event node = $MASTERNODE);\n";
+$slonik .= "      drop node (id = $node, event node = $event_node);\n";
 $slonik .= "  } on error {\n";
 $slonik .= "      echo 'Failed to drop node $node from cluster';\n";
 $slonik .= "      exit 1;\n";
