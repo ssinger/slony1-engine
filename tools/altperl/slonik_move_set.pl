@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_move_set.pl,v 1.4.2.2 2009-10-21 13:32:59 cbbrowne Exp $
+# $Id: slonik_move_set.pl,v 1.4.2.3 2010-06-30 14:03:43 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -29,13 +29,9 @@ require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($set, $node1, $node2) = @ARGV;
-if ($set =~ /^(?:set)?(\d+)$/) {
-  # Node name is in proper form
-  $set = $1;
-} else {
-  print "Valid set names are set1, set2, ...\n\n";
-  die $USAGE;
-}
+
+die $USAGE unless $set;
+$set = get_set($set) or die "Non-existent set specified.\n";
 
 if ($node1 =~ /^(?:node)?(\d+)$/) {
   $node1 = $1;

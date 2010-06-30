@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_set.pl,v 1.4.2.1 2009-08-17 17:09:59 devrim Exp $
+# $Id: slonik_drop_set.pl,v 1.4.2.2 2010-06-30 14:03:43 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -41,14 +41,8 @@ require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
 my ($set) = @ARGV;
-if ($set =~ /^(?:set)?(\d+)$/) {
-  $set = $1;
-} else {
-  print "Need set identifier\n";
-  die $USAGE;
-}
-
-get_set($set) or die "Non-existent set specified.\n";
+die $USAGE unless $set;
+$set = get_set($set) or die "Non-existent set specified.\n";
 
 my $slonik = '';
 

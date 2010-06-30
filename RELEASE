@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.30 2010-06-28 15:36:36 ssinger Exp $
+$Id: RELEASE,v 1.3.2.31 2010-06-30 14:03:43 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -235,4 +235,8 @@ RELEASE 2.0.4
 RELEASE 2.0.5
 
 -Fix for bug #104 - check for NULL file descriptors
+
+-Fix for bug # 43 - get_set() not used consistently in the perl
+tools.  Patch by Peter Eisentraut
+
 

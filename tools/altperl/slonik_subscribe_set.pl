@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_subscribe_set.pl,v 1.3.2.1 2009-08-17 17:09:59 devrim Exp $
+# $Id: slonik_subscribe_set.pl,v 1.3.2.2 2010-06-30 14:03:43 ssinger Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -36,14 +36,8 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-if ($set =~ /^(?:set)?(\d+)$/) {
-  $set = $1;
-} else {
-  print "Need to specify set!\n";
-  die $USAGE;
-}
-
-get_set($set) or die "Non-existent set specified.\n";
+die $USAGE unless $set;
+$set = get_set($set) or die "Non-existent set specified.\n";
 
 my $slonik = '';
 
