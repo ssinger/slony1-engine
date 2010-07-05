@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.28 2010-05-28 13:22:51 ssinger Exp $
+-- $Id: slony1_funcs.sql,v 1.145.2.29 2010-07-05 15:04:40 ssinger Exp $
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -5596,7 +5596,7 @@ begin
 	-- Try using truncate to empty the table and fallback to
 	-- delete on error.
 	-- ----
-	execute 'truncate ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+	perform @NAMESPACE@.TruncateOnlyTable(v_tab_fqname);
 	raise notice 'truncate of % succeeded', v_tab_fqname;
 	-- ----
 	-- Setting pg_class.relhasindex to false will cause copy not to
