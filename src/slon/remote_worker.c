@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: remote_worker.c,v 1.176.2.11 2010-06-01 15:14:05 ssinger Exp $
+ *	$Id: remote_worker.c,v 1.176.2.12 2010-07-07 14:41:57 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -1095,6 +1095,7 @@ remoteWorkerThread_main(void *cdata)
 									 rtcfg_cluster_name);
 					query_append_event(&query1, event);
 					slon_appendquery(&query1, "commit transaction;");
+
 					query_execute(node, local_dbconn, &query1);
 					slon_log(SLON_DEBUG1, "ACCEPT_SET - done\n");
 					archive_close(node);
@@ -1234,12 +1235,33 @@ remoteWorkerThread_main(void *cdata)
 										 " - sleep 5 seconds\n",
 										 node->no_id, sub_provider,
 										 prov_seqno);
+
+								/**
+								 * Release the sl_config_lock
+								 * we want other threads to be
+								 * able to continue during the sleep.
+								 */
+								if (query_execute(node, local_dbconn, &query2) < 0)
+									slon_retry();
 								sched_rc = sched_msleep(node, 5000);
 								if (sched_rc != SCHED_STATUS_OK)
 								{
 									event_ok = false;
 									break;
 								}
+								/**
+								 * Obtain the config lock again.
+								 * it was released above.
+								 */
+								slon_mkquery(&query1, "start transaction;"
+											 "set transaction isolation level serializable;");
+								slon_appendquery(&query1,
+												 "lock table %s.sl_config_lock; ",
+												 rtcfg_namespace);
+
+								if (query_execute(node, local_dbconn, &query1) < 0)
+									slon_retry();
+
 								continue;
 							}
 						}
