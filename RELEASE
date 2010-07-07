@@ -1,4 +1,4 @@
-$Id: RELEASE,v 1.3.2.33 2010-07-05 15:07:10 ssinger Exp $
+$Id: RELEASE,v 1.3.2.34 2010-07-07 14:44:53 ssinger Exp $
 
 RELEASE 2.0.0
 
@@ -244,3 +244,11 @@ tools.  Patch by Peter Eisentraut
 
 -Fix for bug # 118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in 
 8.3
+
+-Fix for bug #135, slon sleeps while holding a lock
+
+-Fix various log shipping issues. slony1_dump.sh restores as a replica session
+, it truncates the tables on restore.   The slony_logshipper program now does
+not exit when there are no more files ready to be processed
+
+
