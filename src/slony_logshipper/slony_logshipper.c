@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.c,v 1.5 2010-07-07 14:33:28 ssinger Exp $
+ *	$Id: slony_logshipper.c,v 1.6 2010-07-07 14:39:22 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -370,7 +370,7 @@ main(int argc, const char *argv[])
 		if (rc == 0)
 			break;
 
-		if (rc == -3)
+		if (rc == -2)
 		{
 			archscan_sort = NULL;
             errlog(LOG_INFO, "Queue is empty.  Going to rescan in %d seconds\n", rescan_interval);
