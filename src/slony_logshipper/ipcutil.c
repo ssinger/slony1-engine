@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: ipcutil.c,v 1.4.2.1 2009-08-17 17:09:59 devrim Exp $
+ *	$Id: ipcutil.c,v 1.4.2.2 2010-07-07 14:38:51 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -452,7 +452,7 @@ ipc_recv_path(char *buf)
 		if (rc < 0)
 		{
 			if (errno == ENOMSG)
-				return -1;
+				return -2;
 			if (errno == EINTR)
 				continue;
 
