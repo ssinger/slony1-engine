@@ -2,7 +2,7 @@
 # ----------
 # slony1_dump.sh
 #
-# $Id: slony1_dump.sh,v 1.11 2007-08-20 22:36:24 cbbrowne Exp $
+# $Id: slony1_dump.sh,v 1.12 2010-07-07 14:33:27 ssinger Exp $
 #
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that
@@ -68,6 +68,7 @@ done
 # ----
 cat <<_EOF_
 start transaction;
+
 
 -- ----------------------------------------------------------------------
 -- SCHEMA $clname
@@ -165,8 +166,17 @@ begin
 end;
 ' language plpgsql;
 
+set session_replication_role='replica';
+
 _EOF_
 
+
+
+for tab in $tables
+do
+	eval tabname=\$tabname_$tab
+	echo "truncate $tabname cascade;";
+done
 
 # ----
 # The remainder of this script is written in a way that

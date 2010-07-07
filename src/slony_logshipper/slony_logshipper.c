@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.c,v 1.4 2009-08-17 17:25:50 devrim Exp $
+ *	$Id: slony_logshipper.c,v 1.5 2010-07-07 14:33:28 ssinger Exp $
  *-------------------------------------------------------------------------
  */
 
@@ -370,7 +370,7 @@ main(int argc, const char *argv[])
 		if (rc == 0)
 			break;
 
-		if (rc == -2)
+		if (rc == -3)
 		{
 			archscan_sort = NULL;
             errlog(LOG_INFO, "Queue is empty.  Going to rescan in %d seconds\n", rescan_interval);
@@ -385,6 +385,7 @@ main(int argc, const char *argv[])
 		
 		if (rc < 0)
 		{
+			errlog(LOG_ERROR,"ipc_recv_path returned an error:%d\n",rc);
 			return -1;
 		}
 
