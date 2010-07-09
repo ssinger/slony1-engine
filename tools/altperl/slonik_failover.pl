@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_failover.pl,v 1.1.4.2 2009-08-17 17:39:58 devrim Exp $
+# $Id: slonik_failover.pl,v 1.1.4.3 2010-07-09 07:10:43 devrim Exp $
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -14,7 +14,7 @@ GetOptions("config=s" => \$CONFIG_FILE,
 	   "help"     => \$SHOW_USAGE);
 
 my $USAGE =
-"Usage: failover [--config file] dead_node backup_node
+"Usage: slonik_failover [--config file] dead_node backup_node
 
     Abandons dead_node, making backup_node the origin for all sets on
     dead_node.
