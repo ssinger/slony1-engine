@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.13.2.2 2010-06-30 14:35:57 ssinger Exp $
+# $Id: slon_kill.pl,v 1.13.2.3 2010-07-09 13:31:22 ssinger Exp $
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
@@ -70,11 +70,11 @@ sub shut_off_processes($) {
     while ($pid = <PSOUT>) {
 	chomp $pid;
 	if (!($pid)) {
-	    print "No slon_watchdog $watchdog_suffix  is running for the cluster $CLUSTER_NAME!\n";
+	    print "No slon $watchdog_suffix is running for the cluster $CLUSTER_NAME!\n";
 	} else {
 	    $found="y";
 	    kill 9, $pid;
-	    print "slon_watchdog $watchdog_suffix for cluster $CLUSTER_NAME killed - PID [$pid]\n";
+	    print "slon $watchdog_suffix for cluster $CLUSTER_NAME killed - PID [$pid]\n";
 	}
     }
 }
