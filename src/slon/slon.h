@@ -419,7 +419,7 @@ extern void Usage(char *const argv[]);
 extern int	sched_wakeuppipe[];
 extern pthread_mutex_t slon_wait_listen_lock;
 extern pthread_cond_t slon_wait_listen_cond;
-
+extern int slon_listen_started;
 
 /* ----------
  * Functions in runtime_config.c

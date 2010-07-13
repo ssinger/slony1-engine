@@ -53,6 +53,7 @@ int			sched_wakeuppipe[2];
 
 pthread_mutex_t slon_wait_listen_lock;
 pthread_cond_t slon_wait_listen_cond;
+int            slon_listen_started=0;
 
 /* ---------- 
  * Local data 
@@ -695,6 +696,14 @@ SlonMain(void)
 		slon_retry();
 	}
 	pthread_cond_wait(&slon_wait_listen_cond, &slon_wait_listen_lock);
+	if(!slon_listen_started)
+	{
+		/**
+		 * The local listen thread did not start up properly.
+		 */
+		slon_log(SLON_FATAL,"main: localListenThread did not start\n");
+		slon_abort();
+	}
 	pthread_mutex_unlock(&slon_wait_listen_lock);
 
 	/*
