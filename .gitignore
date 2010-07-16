@@ -7,3 +7,4 @@ postgresql-slony1-engine.spec
 Makefile.port
 GNUmakefile
 configure
+slony1.spec
