@@ -684,7 +684,7 @@ sched_mainloop(void * dummy)
 static void
 sched_add_fdset(int fd, fd_set * fds)
 {
-	if( fds != NULL )
+	if( fd >= 0 && fds != NULL )
 	{
 		FD_SET(fd, fds);
 		if (fd >= sched_numfd)
