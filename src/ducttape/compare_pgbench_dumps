@@ -1,5 +1,5 @@
 #!/bin/sh    
-# $Id: compare_pgbench_dumps,v 1.4 2005-10-27 19:20:40 wieck Exp $
+# 
 # **********
 # compare_pgbench_dumps
 # **********

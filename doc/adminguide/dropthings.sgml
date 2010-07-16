@@ -1,4 +1,4 @@
-<!-- $Id: dropthings.sgml,v 1.16.2.2 2009-04-30 16:06:10 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>

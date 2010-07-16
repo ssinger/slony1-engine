@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slon.h,v 1.59.2.5 2009-08-17 17:39:57 devrim Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 

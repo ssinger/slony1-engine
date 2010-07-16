@@ -1,6 +1,6 @@
 README
 ------------
-$Id: configure-replication.txt,v 1.1.2.2 2008-04-24 15:11:46 cbbrowne Exp $
+
 Christopher Browne
 cbbrowne@ca.afilias.info
 2006-10-20

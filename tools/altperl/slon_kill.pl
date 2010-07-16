@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.12.4.1 2009-08-17 17:39:58 devrim Exp $
+# 
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada

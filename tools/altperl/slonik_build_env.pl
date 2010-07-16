@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_build_env.pl,v 1.1.4.2 2007-10-26 18:22:25 cbbrowne Exp $
+# 
 # Contributed by:
 # Joe Kalash
 # kalash@savicom.net

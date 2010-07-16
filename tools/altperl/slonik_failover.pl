@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_failover.pl,v 1.1.4.3 2010-07-09 07:10:43 devrim Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 

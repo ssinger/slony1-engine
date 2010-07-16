@@ -1,4 +1,4 @@
-<!-- $Id: reshape.sgml,v 1.20.2.2 2009-04-30 16:06:10 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="reshape"> <title>Reshaping a Cluster</title>
 
 <indexterm><primary>reshaping replication</primary></indexterm>

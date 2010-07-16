@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: log.pm,v 1.1 2005-01-07 23:25:51 cbbrowne Exp $
+# 
 
 $LOGDIR="/opt/logs/general";
 `mkdir -p $LOGDIR`;

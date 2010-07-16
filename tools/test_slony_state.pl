@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: test_slony_state.pl,v 1.5.2.4 2010-02-10 22:50:11 cbbrowne Exp $
+# 
 # Christopher Browne
 # Copyright 2005-2009
 # PostgreSQL Global Development Group

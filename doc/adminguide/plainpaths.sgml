@@ -1,4 +1,4 @@
-<!-- $Id: plainpaths.sgml,v 1.14 2006-08-02 18:34:59 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="plainpaths"><title> &slony1; Path Communications</title>
 
 <indexterm><primary>communication paths</primary></indexterm>

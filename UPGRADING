@@ -1,6 +1,6 @@
 Upgrading from an earlier version of Slony-I to 1.2
 -----------------------------------------------------
-$Id: UPGRADING,v 1.1.4.2 2007-02-16 23:36:18 cbbrowne Exp $
+
 
 When upgrading Slony-I, the Slony installation on all nodes in a cluster
 must be upgraded at once, using the slonik command UPDATE FUNCTIONS.

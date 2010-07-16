@@ -1,4 +1,4 @@
-<!-- $Id: stylesheet.dsl,v 1.2.4.1 2010-05-03 06:01:19 devrim Exp $ --> 
+<!--  --> 
 <!DOCTYPE style-sheet PUBLIC "-//James Clark//DTD DSSSL Style Sheet//EN" [
 
 <!-- must turn on one of these with -i on the jade command line -->

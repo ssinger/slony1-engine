@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkslonconf.sh,v 1.2.2.1 2008-09-12 16:09:23 cbbrowne Exp $
+# 
 # mkslonconf.sh
 # Build a set of slon.conf files compatible with launch_clusters.sh
 

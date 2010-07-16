@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_H_lag.in,v 1.1 2005-08-17 15:09:02 cbbrowne Exp $
+# 
 # **********
 # test_1_pgbench
 #

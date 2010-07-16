@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_sequence.pl,v 1.1.4.2 2009-08-17 17:39:58 devrim Exp $
+# 
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2008 Summerault, LLC

@@ -1,4 +1,4 @@
-$Id: README,v 1.2.2.1 2007-06-12 18:14:32 cbbrowne Exp $
+
 
 testmultiplemoves is a test that exercises MOVE SET on a 3 node
 cluster with 2 replication sets.

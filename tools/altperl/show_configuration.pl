@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: show_configuration.pl,v 1.7.4.2 2009-08-17 17:39:58 devrim Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 

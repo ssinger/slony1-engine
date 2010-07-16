@@ -1,4 +1,4 @@
-/* $Id: random_string.c,v 1.1.2.1 2007-06-06 22:18:22 cbbrowne Exp $ */
+/*  */
 
 #include <stdlib.h>
 #include <stdio.h>

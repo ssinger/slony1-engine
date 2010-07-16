@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pull-gborg-mail.sh,v 1.1.2.1 2008-09-12 16:09:23 cbbrowne Exp $
+# 
 # This script downloads email archives from gBorg
 # Parameters:
 #  1.  If need be, change ARCHHOME to be some more suitable location for mailing list archives

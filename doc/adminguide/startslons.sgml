@@ -1,4 +1,4 @@
-<!-- $Id: startslons.sgml,v 1.19.2.1 2007-03-16 19:01:26 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
 <indexterm><primary>running slon</primary></indexterm>

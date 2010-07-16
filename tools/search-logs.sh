@@ -1,5 +1,5 @@
 #!/bin/sh 
-# $Id: search-logs.sh,v 1.1.2.3 2008-09-12 16:09:23 cbbrowne Exp $ 
+#  
  
 # Search logs for errors from the last hour 
 LOGHOME=${LOGHOME:-"/opt/logs"}    # Directory to search

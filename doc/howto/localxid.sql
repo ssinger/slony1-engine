@@ -1,4 +1,4 @@
--- $Id: localxid.sql,v 1.1 2004-07-30 20:44:01 cbbrowne Exp $
+-- 
 
 -- Creates a "placeholder" XXID domain, used just to generate
 -- documentation.

@@ -1,4 +1,4 @@
-<!-- $Id: logshipping.sgml,v 1.16.2.6 2009-04-30 16:06:10 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="logshipping">
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>

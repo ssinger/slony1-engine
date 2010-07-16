@@ -1,4 +1,4 @@
-$Id: README,v 1.2 2006-06-23 21:38:05 cbbrowne Exp $
+
 
 This test involves submitting date and timestamps in various DATESTYLE
 forms, and verifying that all load in properly.

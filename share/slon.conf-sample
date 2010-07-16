@@ -1,4 +1,4 @@
-# $Id: slon.conf-sample,v 1.6.2.2 2007-08-08 15:23:30 cbbrowne Exp $
+# 
 #
 # Sets how many cleanup cycles to run before a vacuum is done.
 # Range: [0,100], default: 3

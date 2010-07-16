@@ -1,6 +1,6 @@
 ToDo List
 ----------------
-$Id: ToDo,v 1.4 2005-05-31 16:11:05 cbbrowne Exp $
+
 
 - Need to write a "repair_cluster.pl" script that 
   modifies configuration to reflect new configuration,

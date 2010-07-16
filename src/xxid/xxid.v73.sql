@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: xxid.v73.sql,v 1.3.4.1 2009-08-17 17:39:58 devrim Exp $
+-- 
 -- ----------
 
 --

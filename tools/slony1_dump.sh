@@ -2,7 +2,7 @@
 # ----------
 # slony1_dump.sh
 #
-# $Id: slony1_dump.sh,v 1.8.2.4 2007-08-20 22:35:59 cbbrowne Exp $
+# 
 #
 #	This script creates a special data only dump from a subscriber
 #	node. The stdout of this script, fed into psql for a database that

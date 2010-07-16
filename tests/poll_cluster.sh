@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: poll_cluster.sh,v 1.3 2006-05-31 20:09:54 cbbrowne Exp $
+# 
 
 mktmp=$1
 cluster=$2

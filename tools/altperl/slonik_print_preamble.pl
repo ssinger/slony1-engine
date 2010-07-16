@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_print_preamble.pl,v 1.1.2.3 2009-08-17 17:39:58 devrim Exp $
+# 
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
