@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_node.pl,v 1.4.2.2 2010-06-30 14:35:57 ssinger Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 

@@ -1,10 +1,10 @@
 # ----------
 # Makefile for the Slony-I implementation paper
 #
-#	Copyright (c) 2003-2009,  PostgreSQL Global Development Group
+#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# $Id: Makefile,v 1.13.2.1 2009-08-17 16:56:09 devrim Exp $
+# 
 # ----------
 
 slony_subdir = doc/implementation

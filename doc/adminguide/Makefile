@@ -2,7 +2,7 @@
 #
 # PostgreSQL documentation makefile
 #
-# $Id: Makefile,v 1.20.2.3 2009-04-28 14:33:11 cbbrowne Exp $
+# 
 #
 #----------------------------------------------------------------------------
 
@@ -16,8 +16,9 @@ include $(slony_top_builddir)/Makefile.global
 
 
 GENERATED_SGML = bookindex.sgml version.sgml
+GENERATED_XML = schemadoc.xml
 
-ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML)
+ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML) $(GENERATED_XML)
 DISTFILES = $(ALLSGML) $(GENERATED_SGML)
 
 ifdef DOCBOOKSTYLE
@@ -243,6 +244,8 @@ clean distclean maintainer-clean:
 	rm -f HTML.index $(GENERATED_SGML)
 # text
 	rm -f INSTALL HISTORY
+# xml
+	rm -f schemadoc.xml
 
 BASEDIR=$(slony_top_builddir)/src/backend
 BASESQL=$(BASEDIR)/slony1_base.sql

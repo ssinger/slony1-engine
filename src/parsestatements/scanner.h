@@ -1,4 +1,4 @@
-/* $Id: scanner.h,v 1.2 2006-08-02 06:59:42 xfade Exp $ */
+/* 
 #define MAXSTATEMENTS 1000
 enum quote_states {
 	Q_NORMAL_STATE,

@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.sql,v 1.40.2.3 2009-08-17 17:09:58 devrim Exp $
+-- 
 -- ----------------------------------------------------------------------
 
 

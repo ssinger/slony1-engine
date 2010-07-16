@@ -1,7 +1,4 @@
-$Id: README,v 1.2.2.1 2009-05-01 15:29:25 cbbrowne Exp $
+
   
 testpartition sets up a partitioning test, periodically adding new
 partitions.
-
-It alters pg_autovac configuration to ensure that some tables are being
-vacuumed by Slony-I.

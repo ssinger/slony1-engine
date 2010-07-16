@@ -1,4 +1,4 @@
-$Id: README,v 1.2 2007-04-18 19:26:54 cbbrowne Exp $
+
 
 testddl performs some DDL changes via the EXECUTE SCRIPT capability.
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build-inheriting-clusters.sh,v 1.1 2007-11-27 21:43:46 cbbrowne Exp $
+# 
 
 # Here is a test which sets up 3 clusters:
 #   TLD1  - tld1 + billing    - origin node receiving data, and "billing" DB doing aggregation

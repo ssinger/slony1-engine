@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: slony-cluster-analysis-mass.sh,v 1.1.4.1 2009-03-03 22:20:44 cbbrowne Exp $
+# 
 # Do cluster analyses
 
 CLSCRHOME=/opt/dbs/scripts

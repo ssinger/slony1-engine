@@ -1,4 +1,4 @@
--- $Id: init_schema.sql,v 1.2 2006-09-07 13:07:27 xfade Exp $
+-- 
 
 create table table1 (id serial primary key, data text);
 create table table2 (id serial primary key, data text);

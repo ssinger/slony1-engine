@@ -1,4 +1,4 @@
-<!-- $Id: help.sgml,v 1.21.2.1 2010-05-03 05:58:34 devrim Exp $ -->
+<!-- 
 <sect1 id="help">
 <title>More &slony1; Help</title>
 <indexterm><primary>help - how to get more assistance</primary></indexterm>
@@ -21,7 +21,7 @@ analyzing the problem. </para>
 
 <listitem><para> Documentation on the &slony1; Site- Check the
 documentation on the Slony website: <ulink
-      url="http://slony1.info/documentation">Howto
+      url="http://slony.info/documentation">Howto
 </ulink></para></listitem>
 
 <listitem><para> A copy of this documentation lives at <ulink

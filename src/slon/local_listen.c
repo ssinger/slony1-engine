@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: local_listen.c,v 1.46.2.1 2009-08-17 17:09:58 devrim Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 

@@ -1,4 +1,4 @@
-$Id: README,v 1.2 2006-10-31 22:09:39 cbbrowne Exp $
+
 
 scanner.c is a scanner which uses a state machine to walk through a
 set of SQL statements and identify where the ends of statements are

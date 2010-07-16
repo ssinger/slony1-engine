@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: slony-cluster-analysis.sh,v 1.1.4.1 2009-03-03 22:20:44 cbbrowne Exp $
+# 
 # Analyze Slony-I Configuration
 
 # This script pulls some overall configuration from a Slony-I cluster

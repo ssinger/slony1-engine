@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.h,v 1.34.2.3 2010-05-27 20:38:32 ssinger Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 
@@ -614,58 +614,6 @@ extern void yyerror(const char *str);
 extern int	yyparse(void);
 extern int	yylex(void);
 
-
-
-/*
- * Common option types
- */
-typedef enum {
-	O_ADD_ID,
-	O_BACKUP_NODE,
-	O_CLIENT,
-	O_COMMENT,
-	O_CONNINFO,
-	O_CONNRETRY,
-	O_EVENT_NODE,
-	O_EXECUTE_ONLY_ON,
-	O_FILENAME,
-	O_FORWARD,
-	O_FQNAME,
-	O_ID,
-	O_NEW_ORIGIN,
-	O_NEW_SET,
-	O_NODE_ID,
-	O_OLD_ORIGIN,
-	O_OMIT_COPY,
-	O_ORIGIN,
-	O_PROVIDER,
-	O_RECEIVER,
-	O_SECONDS,
-	O_SERVER,
-	O_SET_ID,
-	O_TAB_ID,
-	O_TIMEOUT,
-	O_USE_KEY,
-	O_WAIT_CONFIRMED,
-	O_WAIT_ON,
-
-	END_OF_OPTIONS = -1
-} option_code;
-
-
-
-
-/*
- * Common given option list
- */
-typedef struct option_list {
-	option_code	opt_code;
-	int			lineno;
-	int32		ival;
-	char	   *str;
-
-	struct option_list *next;
-} option_list;
 
 /*
  * Local Variables:

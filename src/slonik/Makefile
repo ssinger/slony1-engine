@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	$Id: Makefile,v 1.28.2.2 2010-05-27 20:38:32 ssinger Exp $
+#	
 # ----------
 
 slony_subdir = src/slonik
@@ -32,8 +32,8 @@ OBJS		= 			\
 	slonik.o			\
 	dbutil.o			\
 	parser.o $(WIN32RES)            \
-	../parsestatements/scanner.o    \
-	scan.o
+	../parsestatements/scanner.o
+
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =					\
@@ -57,11 +57,9 @@ else
 	@exit 1
 endif
 
-scan.c: SCANNER_HEADER=scan.h
-
 scan.c:				scan.l slonik.h
 ifdef FLEX 
-	$(FLEX) $(FLEXFLAGS) --header-file=$(SCANNER_HEADER) -o'$@' $<
+	$(FLEX) $(FLEXFLAGS) -o'$@' $<
 else
 	@echo "Missing flex $< $@"
 	@exit

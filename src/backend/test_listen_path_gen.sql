@@ -1,4 +1,4 @@
---- $Id: test_listen_path_gen.sql,v 1.2 2007-07-05 18:19:04 wieck Exp $
+--- 
 
 -- This SQL script is used to test the new listen path generation code
 -- to make sure the resulting sl_listen allows all nodes to be 

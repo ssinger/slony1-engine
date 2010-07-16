@@ -1,4 +1,4 @@
-<!-- $Id: monitoring.sgml,v 1.46.2.1 2009-01-28 22:43:02 cbbrowne Exp $ -->
+<!-- 
 <sect1 id="monitoring">
 <title>Monitoring</title>
 
@@ -289,6 +289,17 @@ echo
 are only two lines provided, the output must be padded to four
 lines. </para> </note>
 
+</sect2>
+
+<sect2 id="bucardo-monitoring"> <title>Bucardo-related Monitoring</title>
+
+<para> The <ulink url="http://bucardo.org/"> Bucardo </ulink>
+replication system includes script,
+<command>check_postgres.pl</command>, which can monitor a variety of
+things about &postgres; status that includes monitoring &slony1;
+replication status; see <ulink
+url="http://bucardo.org/check_postgres/check_postgres.pl.html#slony_status">
+check_postgres.pl - slony_status </ulink></para>
 </sect2>
 
 <sect2 id="search-logs"> <title> <command>search-logs.sh</command> </title>

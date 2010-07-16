@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.26.2.5 2010-03-11 21:40:08 cbbrowne Exp $
+# 
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0
@@ -54,11 +54,8 @@ echo "----------------------------------------------------"
 
 #load settings
 
-echo "Loading default settings"
 . settings.ik
-echo "Loading test-specific settings"
 . $testname/settings.ik
-echo "Loading support functions"
 . support_funcs.sh
 
 echo "Test by ${SLONYTESTER} to be summarized in ${SLONYTESTFILE}"
@@ -220,7 +217,7 @@ store_path()
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
 	    echo "STORE PATH (SERVER=@node${i}, CLIENT=@node${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
           else
-            err 3 "No conninfo - bdb=${bdb} bhost=${bhost} user=${buser} bport=${bport}"
+            err 3 "No conninfo"
           fi
         fi
         if [ ${j} -ge ${NUMNODES} ]; then

@@ -1,4 +1,4 @@
-<!-- $Id: testbed.sgml,v 1.19 2008-10-13 21:39:40 devrim Exp $ -->
+<!-- 
 <sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>

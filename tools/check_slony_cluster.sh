@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slony_cluster.sh,v 1.5.2.1 2009-08-17 17:09:59 devrim Exp $
+# 
 
 # nagios plugin that checks whether the slave nodes in a slony cluster
 # are being updated from the master

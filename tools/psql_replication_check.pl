@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: psql_replication_check.pl,v 1.4 2007-05-09 19:20:03 devrim Exp $#
+# 
 # Documentation listed below.
 # Credits:
 # Afilias Canada

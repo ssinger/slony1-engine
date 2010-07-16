@@ -1,5 +1,5 @@
 # -*- perl -*-
-# $Id: slon-tools.pm,v 1.32.2.6 2009-08-17 17:09:59 devrim Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -128,6 +128,23 @@ sub get_pid {
   }
   close(PSOUT);
   return $pid;
+}
+
+sub get_node_name {
+  my ($node) = @_;
+  $node =~ /node(\d*)$/;
+  my $nodenum = $1;
+  my $nodename;
+  my $tnodename;
+  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
+  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$15}'";
+  open(PSOUT, "$command|");
+  while ($tnodename = <PSOUT>) {
+    chomp $tnodename;
+    $nodename = $tnodename;
+  }
+  close(PSOUT);
+  return $nodename;
 }
 
 sub start_slon {

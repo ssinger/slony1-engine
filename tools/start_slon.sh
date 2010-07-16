@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: start_slon.sh,v 1.2.2.1 2009-04-02 20:35:19 cbbrowne Exp $
+# 
 
 # The following lines are ones you may wish to customize;
 # alternatively, you may set SLON_BUILD and SLON_CONF in your

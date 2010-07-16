@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_add_node.pl,v 1.1.2.1 2010-06-30 14:35:57 ssinger Exp $
+# 
 # Author: Gurjeet Singh
 
 use Getopt::Long;

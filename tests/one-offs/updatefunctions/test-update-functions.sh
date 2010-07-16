@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test-update-functions.sh,v 1.2 2007-05-10 22:17:52 cbbrowne Exp $
+# 
 
 # Where to stow Slony-I checkouts?
 SRCHOME=${SRCHOME:-"/tmp/slony-sources"}

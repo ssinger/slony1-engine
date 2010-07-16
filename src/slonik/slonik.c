@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slonik.c,v 1.91.2.11 2010-05-28 13:22:52 ssinger Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 
@@ -1802,15 +1802,7 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	else if ((adminfo->pg_version >= 80400) && (adminfo->pg_version < 80500)) /* 8.4 */
 	{
 		use_major = 8;
-		use_minor = 4;   
-	}		
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.4 */
-	{
-		/**
-		 * 9.0 is so far just like 8.4
-		 **/
-		use_major=8;
-		use_minor=4;
+		use_minor = 4;   /* at this point, there's nothing specifically different in 8.4 from 8.3 */
 	}
 	else	/* above 8.4 ??? */
 	{
@@ -1885,25 +1877,12 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
                 use_major = 8;
                 use_minor = 3;
         }
-	else if ((adminfo->pg_version >= 80400) && (adminfo->pg_version < 80500)) /* 8.4 */
-	{
-		use_major = 8;
-		use_minor = 4;
-	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.0 */
-	{
-		/**
-		 * 9.0 is so far just like 8.4
-		 */
-		use_major = 8;
-		use_minor = 4;
-	}
-        else    /* above 8.4 */
+        else    /* above 8.3 */
         {
                 use_major = 8;
-                use_minor = 4;
+                use_minor = 3;
                 printf("%s:%d: Possible unsupported PostgreSQL "
-                       "version (%d) %d.%d, defaulting to 8.4 support\n",
+                       "version (%d) %d.%d, defaulting to 8.3 support\n",
 		       stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 		       (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
         }
@@ -2639,13 +2618,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 			slon_mkquery(&query,
 						 "select nl_backendpid from \"_%s\".sl_nodelock "
-						 "    where nl_backendpid <> %d "
-                         "    and nl_nodeid = \"_%s\".getLocalNodeId('_%s');",
+						 "    where nl_backendpid <> %d; ",
 						 stmt->hdr.script->clustername,
-						 nodeinfo[i].slon_pid, 
-						 stmt->hdr.script->clustername,
-						 stmt->hdr.script->clustername
-				);
+						 nodeinfo[i].slon_pid);
 			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res1 == NULL)
 			{
@@ -2830,7 +2805,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			slon_mkquery(&query,
 						 "select \"_%s\".storeListen(%d,%d,%d); "
-						 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); ",
+						 "select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, use_node, stmt->backup_node,
 						 stmt->hdr.script->clustername,

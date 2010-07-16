@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: check_slon.sh,v 1.4.2.1 2009-08-17 17:09:59 devrim Exp $
+# 
 
 # nagios plugin that checks whether the slon daemon is running
 # if the 3rd parameter (LOGFILE) is specified then the log file is

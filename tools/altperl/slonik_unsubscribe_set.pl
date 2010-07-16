@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_unsubscribe_set.pl,v 1.3.2.2 2010-06-30 14:03:43 ssinger Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 

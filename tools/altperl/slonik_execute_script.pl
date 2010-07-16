@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_execute_script.pl,v 1.4.2.2 2010-06-30 14:03:43 ssinger Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 

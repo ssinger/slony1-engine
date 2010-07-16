@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.145.2.29 2010-07-05 15:04:40 ssinger Exp $
+-- 
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************
@@ -433,7 +433,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 4;
+	return 3;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -1478,7 +1478,6 @@ replication system.';
 --	Duplicate a nodes configuration under a different no_id in
 --	preparation for the node to be copied with standard DB tools.
 -- ----------------------------------------------------------------------
-drop function if exists @NAMESPACE@.cloneNodePrepare (int4, int4, text); -- Needed because function signature has changed!
 create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
 returns bigint
 as $$

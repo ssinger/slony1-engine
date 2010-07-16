@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: find-triggers-to-deactivate.sh,v 1.1 2007-12-03 16:26:09 cbbrowne Exp $
+# 
 
 # This script may be used to ask which triggers exist on a cluster
 # that likely need to get deactivated on a log shipping node.  Run

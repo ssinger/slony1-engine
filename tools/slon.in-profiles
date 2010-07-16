@@ -3,7 +3,7 @@
 # $FreeBSD$
 # Modified by Brian A. Seklecki <bseklecki@collaborativefusion.com>
 #                               <lavalamp@spiritual-machines.org>
-# $Id: slon.in-profiles,v 1.1 2007-01-30 19:57:11 cbbrowne Exp $ 
+# 
 #
 
 # sed -e 's/%%PREFIX%%/\/usr\/local/g' < slon.in > slon

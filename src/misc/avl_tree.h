@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: avl_tree.h,v 1.2.2.1 2009-08-17 16:56:09 devrim Exp $
+ *	
  * ----------------------------------------------------------------------
  */
 

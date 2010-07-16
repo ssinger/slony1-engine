@@ -1,4 +1,4 @@
-/* $Id: scanner.c,v 1.5 2007-09-04 20:37:21 cbbrowne Exp $ */
+/* 
 #include <stdio.h>
 #include "scanner.h"
 

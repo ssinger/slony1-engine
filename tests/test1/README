@@ -1,4 +1,4 @@
-$Id: README,v 1.13.2.2 2009-04-28 21:08:59 cbbrowne Exp $
+
   
 test1 is a basic test that replication generally functions.  
   
@@ -36,6 +36,3 @@ that there are at least no syntax errors in the stored function.
 of the config file parser gets exercised.
 
 9.  It runs the cleanupEvent() function by hand
-
-10.  It runs updateReloid(), which repairs the OIDs on sl_table/sl_sequence
-

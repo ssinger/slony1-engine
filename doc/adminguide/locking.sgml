@@ -1,4 +1,4 @@
-<!-- $Id: locking.sgml,v 1.11 2008-08-01 19:25:41 cbbrowne Exp $ --> 
+<!-- 
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>

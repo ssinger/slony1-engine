@@ -1,4 +1,4 @@
-/* $Id: confoptions.h,v 1.38 2008-04-23 20:35:43 cbbrowne Exp $ */
+/* 
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 

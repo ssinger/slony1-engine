@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: test_1_pgbench.in,v 1.6 2008-01-21 18:54:11 wieck Exp $
+# 
 # **********
 # test_1_pgbench
 #

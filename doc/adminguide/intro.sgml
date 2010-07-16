@@ -1,4 +1,4 @@
-<!-- $Id: intro.sgml,v 1.29.2.1 2009-06-17 21:37:38 cbbrowne Exp $ -->
+<!-- 
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 
@@ -157,15 +157,12 @@ linkend="function.denyaccess"> function; this function prevents
 anything other than the <xref linkend="slon"> process from updating
 data in replicated tables.  In addition, any
 <emphasis>other</emphasis> triggers and rules on replicated tables are
-<emphasis>suppressed</emphasis> on the subscribers.  On versions of
-&slony1; prior to 2.0, this is done by pointing them, in the system
-table, to the primary key index instead of to the table itself, which
-represents a <quote>corruption</quote> of the data dictionary, and is
-why you should not directly use <application>pg_dump</application> to
-dump schemas on subscribers.  In version 2.0, this functionality is
-handled via native &postgres; functionality, so that with &slony1;
-2.0+, <application>pg_dump</application> may be expected to work fine.
-</para>
+<emphasis>suppressed</emphasis> on the subscribers: This is done by
+pointing them, in the system table, to the primary key index instead
+of to the table itself.  This represents something of a
+<quote>corruption</quote> of the data dictionary, and is why you
+should not directly use <application>pg_dump</application> to dump
+schemas on subscribers. </para>
 
 <para>There is a capability for &slony1; to propagate other kinds of
 database modifications, notably DDL changes, if you submit them as
@@ -194,10 +191,6 @@ server</quote> which cannot be used without it ceasing to be
 <quote>standby.</quote></para></listitem>
 
 </itemizedlist></para>
-
-<para> &slony1; does not automatically determine what sequences ought
-to be replicated; you need to add them explicitly using <xref
-linkend="stmtsetaddsequence">. </para>
 </sect2>
 
 <sect2><title>Replication Models</title>
@@ -297,8 +290,8 @@ increases.  Note the following relationships:
 
 <listitem><para> It is necessary to have <xref
 linkend="table.sl-listen"> entries allowing connection from each node
-to every other node.  Most will normally not need to be very heavily,
-but it still means that there needs to be n(n-1) paths.
+to every other node.  Most will normally not need to be used terribly
+heavily, but it still means that there needs to be n(n-1) paths.
 </para></listitem>
 
 <listitem><para> Each SYNC applied needs to be reported back to all of
@@ -310,15 +303,58 @@ to need to travel through n/2 nodes to get propagated to their
 destinations; this means that each SYNC is expected to get transmitted
 n(n/2) times.  Again, this points to a quadratic growth in
 communications costs as the number of nodes
-increases.</para></listitem>
+increases.  </para>
+
+<para> Mind you, the work will be divided across n nodes, so while the
+<emphasis>total</emphasis> amount of work goes up, the amount of work
+<emphasis>per node</emphasis> increases in a merely linear
+fashion. </para>
+
+<para> This needs to be tempered further, as people have had the
+habit of pointing at this portion of the documentation and crying
+<quote>quadratic increases in replication costs!!!</quote> (When it
+wouldn't be surprising if, quite frequently, those that are crying out
+this way mightn't necessarily know what O(n^2) truly implies...)
+</para>
+
+<para> This is a set of overhead which is added to the work actually
+done on <emphasis>replication.</emphasis> If there is very little in
+the way of INSERT/UPDATE/DELETE work to replicate, then this overhead
+will quickly become dominant, but, by the same token, there's very
+little <emphasis>real replication work</emphasis> to be done, in which
+case this presents little problem.  On the other hand, if there is a
+<emphasis>lot</emphasis> of replication work to be done, the SYNC
+events will tend to grow, whereas the <quote>confirmation
+bookkeeping</quote> <emphasis>doesn't</emphasis> increase in quantity,
+and should be able to be buried in the noise of the <quote>real
+work.</quote> </para>
+</listitem>
 
 </itemizedlist></para>
 
 <para>This points to it being a bad idea to have the large
 communications network resulting from the number of nodes being large.
-Up to a half dozen nodes seems pretty reasonable; every time the
+Up to a half dozen nodes is known to behave reasonably; every time the
 number of nodes doubles, this can be expected to quadruple
-communications overheads.</para>
+communications overheads.  Of course, the expected benefit from having
+more nodes is likely to fall each time you add an additional subscriber,
+so the value of adding huge numbers of nodes is likely to be pretty
+low.</para>
+
+<itemizedlist>
+
+<listitem><para> Adding the first subscriber provides a failover
+target, which is likely to be mighty valuable. </para></listitem>
+
+<listitem><para> Once you have 5 potential failover targets, the risk
+of losing all of them should be low.  And the added complexity of
+having an extra node which needs to be configured, installed, and
+monitored is eventually likely to outweigh the value of having that
+failover target, when multiplied by the <emphasis>very
+small</emphasis> likelihood of this being <emphasis> The
+Target</emphasis> in case of failover. </para></listitem>
+
+</itemizedlist>
 </sect1>
 
 <!-- Keep this comment at the end of the file

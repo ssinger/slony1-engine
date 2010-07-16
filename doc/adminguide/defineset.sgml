@@ -1,4 +1,4 @@
-<!-- $Id: defineset.sgml,v 1.30 2008-02-25 15:37:58 cbbrowne Exp $ -->
+<!-- 
 <sect1 id="definingsets">
 <title>Defining &slony1; Replication Sets</title>
 

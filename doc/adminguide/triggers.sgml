@@ -1,4 +1,4 @@
-<!-- $Id: triggers.sgml,v 1.3.2.2 2010-05-25 13:25:58 ssinger Exp $ --> 
+<!-- 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>

@@ -1,7 +1,7 @@
 Random Things That Ought To Be Documented Somewhere
 ---------------------------------------------------------------------------------------------
 
-$Id: randomfacts.txt,v 1.3 2004-10-14 22:03:55 cbbrowne Exp $
+
 
 These are things that have been noticed that need to be documented.
 There should probably be a "How To Set Up a Simple Slony-I Replication

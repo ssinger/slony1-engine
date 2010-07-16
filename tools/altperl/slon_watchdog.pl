@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_watchdog.pl,v 1.15.2.2 2009-08-17 17:09:59 devrim Exp $
+# 
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
