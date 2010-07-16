@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slonik_drop_table.pl,v 1.5 2009-08-17 17:25:50 devrim Exp $
+# 
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC

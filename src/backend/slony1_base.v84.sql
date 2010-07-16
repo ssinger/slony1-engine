@@ -6,7 +6,7 @@
 --	Copyright (c) 2007-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_base.v84.sql,v 1.3 2009-08-17 17:25:49 devrim Exp $
+-- 
 -- ----------------------------------------------------------------------
 
 create type @NAMESPACE@.vactables as (nspname name, relname name);

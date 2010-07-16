@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_test.sh,v 1.29 2009-07-21 21:18:43 cbbrowne Exp $
+# 
 
 pgbindir=${PGBINDIR:-"/usr/local/pgsql/bin"}
 numerrors=0

@@ -2,7 +2,7 @@
 # Makefile
 #
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
-#       $Id: Makefile,v 1.18 2009-08-17 17:25:50 devrim Exp $
+#       
 #
 # ----------
 

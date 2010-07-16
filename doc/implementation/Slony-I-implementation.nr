@@ -6,7 +6,7 @@
 .\"	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 .\"	Author: Jan Wieck, Afilias USA INC.
 .\"
-.\"	$Id: Slony-I-implementation.nr,v 1.8 2009-08-17 17:25:49 devrim Exp $
+.\"	
 .\" ----------
 .\" format this document with
 .\"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: launch_clusters.sh,v 1.6 2008-07-07 21:16:03 cbbrowne Exp $
+# 
 # Cluster starter
 
 # This script should be run periodically to search for slon

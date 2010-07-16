@@ -1,4 +1,4 @@
-$Id: README,v 1.2 2007-10-26 14:47:24 cbbrowne Exp $
+
   
 testmergeset sets up a series of replication sets, progressively
 merging them together.

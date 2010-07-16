@@ -1,7 +1,7 @@
 Building and Installing Slony-I
 ------------------------------------
 
-$Id: INSTALL,v 1.16 2009-04-16 15:48:26 cbbrowne Exp $
+
 
 Slony-I 2.0 currently supports PostgreSQL 8.3.x, and it has been
 getting built against CVS HEAD so that major regressions are not

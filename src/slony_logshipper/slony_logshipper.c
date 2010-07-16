@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony_logshipper.c,v 1.6 2010-07-07 14:39:22 ssinger Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 

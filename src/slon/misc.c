@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: misc.c,v 1.32 2010-02-11 21:11:17 cbbrowne Exp $
+ *	
  *-------------------------------------------------------------------------
  */
 

@@ -1,4 +1,4 @@
-<!-- $Id: versionupgrade.sgml,v 1.11 2008-10-13 20:12:55 devrim Exp $ -->
+<!--  -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
 
 <indexterm><primary>version upgrades for &postgres; using

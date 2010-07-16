@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: slony1_funcs.c,v 1.74 2010-02-16 16:58:22 cbbrowne Exp $
+ *	
  * ----------------------------------------------------------------------
  */
 

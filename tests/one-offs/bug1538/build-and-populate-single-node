@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: build-and-populate-single-node,v 1.1 2006-03-28 21:18:04 cbbrowne Exp $
+# 
 export PGPORT=5832
 dropdb test1538
 createdb test1538

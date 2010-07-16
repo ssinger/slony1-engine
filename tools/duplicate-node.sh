@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: duplicate-node.sh,v 1.2 2008-07-07 21:16:03 cbbrowne Exp $
+# 
 
 # Parameters:
 #  - need cluster name

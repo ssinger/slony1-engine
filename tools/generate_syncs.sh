@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: generate_syncs.sh,v 1.1 2004-11-25 21:57:18 cbbrowne Exp $
+# 
 
 # Christopher Browne
 # Afilias Canada

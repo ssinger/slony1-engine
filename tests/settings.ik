@@ -1,4 +1,4 @@
-# $Id: settings.ik,v 1.8 2007-07-11 17:20:18 cbbrowne Exp $
+# 
 # This file contains the various sets of possible DB
 # configuration defaults/overrides
 

@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2006-03-28 21:18:04 cbbrowne Exp $
+
 
 This script expects to have a suitable PostgreSQL installation in $PATH
 

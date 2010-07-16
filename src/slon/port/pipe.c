@@ -9,7 +9,7 @@
  *	returned handles to be used in select(). Note that read/write calls
  *	must be replaced with recv/send.
  *
- * $Id: pipe.c,v 1.3 2009-08-17 17:25:50 devrim Exp $
+ * 
  *
  *-------------------------------------------------------------------------
  */

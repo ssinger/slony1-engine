@@ -6,7 +6,7 @@
 --	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- $Id: slony1_funcs.sql,v 1.160 2010-07-05 15:06:04 ssinger Exp $
+-- 
 -- ----------------------------------------------------------------------
 
 -- **********************************************************************

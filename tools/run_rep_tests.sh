@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: run_rep_tests.sh,v 1.2 2005-05-04 20:33:04 cbbrowne Exp $
+# 
 # Run Slony-I Replication Tests
 
 PASS="some secret"

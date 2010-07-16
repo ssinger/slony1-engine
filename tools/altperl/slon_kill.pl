@@ -1,5 +1,5 @@
 #!@@PERL@@
-# $Id: slon_kill.pl,v 1.16 2010-07-09 13:32:05 ssinger Exp $
+# 
 # Kill all slon instances for the current cluster
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada

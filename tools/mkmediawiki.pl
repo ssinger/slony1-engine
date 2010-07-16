@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: mkmediawiki.pl,v 1.4 2009-08-17 17:25:50 devrim Exp $
+# 
 # Christopher Browne
 # Copyright 2007-2009
 # PostgreSQL Global Development Group

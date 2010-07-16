@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: logrep-mkservice.sh,v 1.2 2007-04-18 14:57:31 cbbrowne Exp $
+# 
 #
 # contributed by Andrew Hammond <andrew.george.hammond@gmail.com>
 #

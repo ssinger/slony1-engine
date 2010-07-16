@@ -1,4 +1,4 @@
-<!-- $Id: slonyupgrade.sgml,v 1.10 2008-10-15 21:51:54 cbbrowne Exp $ -->
+<!--  -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>

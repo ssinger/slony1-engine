@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	$Id: scheduler.c,v 1.31 2010-06-28 15:46:29 ssinger Exp $
+ *	
  * ----------------------------------------------------------------------
  */
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: bulk_load_for_slony.pl,v 1.2 2009-08-17 17:25:50 devrim Exp $
+# 
 
 # Bulk loader for slony-managed table.
 # This script takes one argument: the name of a config file.
