@@ -6,11 +6,7 @@ override LDFLAGS:=-lpgport $(LDFLAGS)
 
 DLLTOOL= dlltool
 DLLWRAP= dllwrap
-ifeq (@NEED_PG_DLLINIT@, 1)
-DLLINIT = ${pglibdir}/pgxs/src/utils/dllinit.o -L${pglibdir} -lpostgres
-else
 DLLINIT = -L${pglibdir} -lpostgres
-endif
 
 AROPT = crs
 DLSUFFIX = .dll
