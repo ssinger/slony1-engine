@@ -1,3 +1,4 @@
+/*  */
 #define MAXSTATEMENTS 1000
 enum quote_states {
 	Q_NORMAL_STATE,

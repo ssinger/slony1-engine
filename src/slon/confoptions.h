@@ -1,3 +1,4 @@
+/*  */
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 

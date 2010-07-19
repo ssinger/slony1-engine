@@ -1,3 +1,4 @@
+<!--  -->
 <!entity intro              SYSTEM "intro.sgml">
 <!entity prerequisites      SYSTEM "prerequisites.sgml">
 <!entity installation       SYSTEM "installation.sgml">

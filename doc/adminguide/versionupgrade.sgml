@@ -1,3 +1,4 @@
+<!--  -->
 <sect1 id="versionupgrade"><title>Using &slony1; for &postgres; Upgrades</title>
 
 <indexterm><primary>version upgrades for &postgres; using

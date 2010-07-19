@@ -1,3 +1,4 @@
+<!--  -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>

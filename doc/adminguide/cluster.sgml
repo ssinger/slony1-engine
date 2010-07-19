@@ -1,3 +1,4 @@
+<!--  -->
 <sect1 id="cluster">
 <title>Defining &slony1; Clusters</title>
 <indexterm>  <primary>cluster definition</primary> </indexterm>
