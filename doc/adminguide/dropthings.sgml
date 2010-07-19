@@ -1,4 +1,3 @@
-<!-- 
 <sect1 id="dropthings"> <title>Dropping things from &slony1; Replication</title>
 
 <indexterm><primary>dropping objects from replication</primary></indexterm>

@@ -1,4 +1,3 @@
-<!-- 
 <sect1 id="failover">
 <title>Doing switchover and failover with &slony1;</title>
 <indexterm><primary>failover</primary>
