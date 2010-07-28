@@ -2120,6 +2120,25 @@ DROP TRIGGER (
        yes</command>.</para></listitem>
 
       </varlistentry>
+      <varlistentry><term><literal> OMIT COPY = boolean </literal></term>
+       
+       <listitem><para> Flag whether or not the subscription process
+       should omit doing the <command>COPY</command> of the existing
+       data in the set.  In effect, use this option indicates
+       <quote>Trust me, the data is already in sync!</quote>
+       </para>
+
+       <para> This is notably useful for the following sorts of cases:
+       </para>
+
+       <itemizedlist>
+	<listitem><para> Major inter-version upgrades (<emphasis>e.g. </emphasis> - as from &slony1; 1.2 to 2.0) may be done quickly. </para> </listitem>
+	<listitem><para> Cloning a <quote>master node</quote>.  <xref linkend="stmtcloneprepare">/<xref linkend="stmtclonefinish">   </para> </listitem>
+	<listitem><para> </para> </listitem>
+       </itemizedlist>
+       </listitem>
+
+      </varlistentry>
      </variablelist>
     <para> This uses &funsubscribeset;. </para>
    </refsect1>
@@ -2209,6 +2228,10 @@ SUBSCRIBE SET (
      case - the former contents are discarded and the node is
      populated <emphasis>from scratch</emphasis>.</para> </listitem>
 
+     <listitem><para> The <command>OMIT COPY</command> option has the
+     potential to be a large <quote>foot gun</quote> in that it allows
+     the administrator to push replication sets out of sync. </para>
+     </listitem>
    </itemizedlist>
 
    </refsect1>
@@ -2227,6 +2250,7 @@ SUBSCRIBE SET (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+    <para> The <command>OMIT COPY</command> option was introduced in &slony1; 2.0.3.</para>
    </refsect1>
   </refentry>
   
@@ -3091,7 +3115,7 @@ REPAIR CONFIG (
    <refsect1>
     <title>Description</title>
     <para>
-     Prepares for cloning a specified node.
+     Prepares for cloning a specified subscriber node.
     </para>
 
     <para>
