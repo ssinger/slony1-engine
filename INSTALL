@@ -3,15 +3,15 @@ Building and Installing Slony-I
 
 
 
-Slony-I 2.0 currently supports PostgreSQL 8.3.x, and it has been
-getting built against CVS HEAD so that major regressions are not
-expected when 8.4 is released.
+Slony-I 2.0 currently supports PostgreSQL 8.3.x, 8.4.x and it has been 
+built and tested against 9.0 beta2.
+
 
 Note that earlier major versions supported earlier PostgreSQL
 versions:
 
 - 1.0 and 1.1 supported versions back to the 7.3.x series
-- 1.2 supported versions 7.4, 8.0, 8.1, 8.2, and 8.3
+- 1.2 supported versions 7.4, 8.0, 8.1, 8.2, 8.3 and 8.4
 
 If you require support for earlier versions of PostgreSQL, please
 avail yourself of an earlier Slony-I release.
