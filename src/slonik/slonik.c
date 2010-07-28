@@ -2805,7 +2805,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			slon_mkquery(&query,
 						 "select \"_%s\".storeListen(%d,%d,%d); "
-						 "select \"_%s\".subscribeSet_int(%d,%d,%d,true); ",
+						 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); ",
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, use_node, stmt->backup_node,
 						 stmt->hdr.script->clustername,
