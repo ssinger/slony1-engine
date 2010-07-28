@@ -67,7 +67,6 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
@@ -80,4 +79,5 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/loadmoredata.log 2> $mktmp/loadmoredata.log
   status "done"
   sleep 20   # Give it a little while for replication to catch up
+  wait_for_catchup
 }

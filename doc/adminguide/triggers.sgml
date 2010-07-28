@@ -1,4 +1,4 @@
-<!--  -->
+<!--  --> 
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>

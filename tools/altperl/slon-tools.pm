@@ -130,23 +130,6 @@ sub get_pid {
   return $pid;
 }
 
-sub get_node_name {
-  my ($node) = @_;
-  $node =~ /node(\d*)$/;
-  my $nodenum = $1;
-  my $nodename;
-  my $tnodename;
-  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
-  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$15}'";
-  open(PSOUT, "$command|");
-  while ($tnodename = <PSOUT>) {
-    chomp $tnodename;
-    $nodename = $tnodename;
-  }
-  close(PSOUT);
-  return $nodename;
-}
-
 sub start_slon {
   my ($nodenum) = @_;
   my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);

@@ -51,6 +51,10 @@
 # Range:  [1048576,1073741824], default: 5242880
 #sync_max_largemem=5242880
 
+# How long to wait (in seconds) before timeout when querying for remote events
+# Range: [30,30000], default: 300
+# remote_listen_timeout=300
+
 # If this parameter is 1, messages go both to syslog and the standard 
 # output. A value of 2 sends output only to syslog (some messages will 
 # still go to the standard output/error).  The default is 0, which means 
@@ -62,6 +66,8 @@
 #log_pid=false
 
 # If true, include the timestamp on each log line.  Default is true.
+#    Note that if syslog is activated, then the timestamp is suppressed,
+#    irrespective of the values of log_timestamp or log_timestamp_format
 #log_timestamp=true
 
 # A strftime()-conformant format string for use with log timestamps.
@@ -109,3 +115,12 @@
 
 # Directory in which to stow sync archive files
 # archive_dir="/tmp/somewhere"
+
+# These are used to cause a node to watch for a final SYNC, and then
+# terminate.  You must supply the provider and the SYNC number
+# quit_sync_provider=1
+# quit_sync_finalsync=21341
+
+# Should the cleanup thread DELETE data from sl_log_1/2, or
+# should it leave the trimming to the TRUNCATE?
+# cleanup_deletelogs=false

@@ -48,6 +48,7 @@ generate_initdata()
     echo "INSERT INTO utf8table (string) values ('\303\241 -- ${txtb}');" >> $GENDATA
     echo "INSERT INTO utf8table (string) values ('t3 -- \303\241 - ${txtb}');" >> $GENDATA
     echo "INSERT INTO utf8table (string) values ('t3 - \303\241 -- ${txtb}');" >> $GENDATA
+    echo "INSERT INTO utf8table (string) values(repeat('test1234',4000)||'bar');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;
     else
@@ -71,11 +72,11 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
   status "loading data from $mktmp/generate.data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
+  wait_for_catchup
   status "done"
 }

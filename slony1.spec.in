@@ -12,7 +12,7 @@ Release:	1_PG%{pg_version}
 License:	BSD
 Group:		Applications/Databases
 URL:		http://main.slony.info/
-Source0:	@PACKAGE_NAME@-%{version}.tar.bz2
+Source0:	@PACKAGE_NAME@-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	postgresql-devel
 Requires:	postgresql-server = %{pg_version}

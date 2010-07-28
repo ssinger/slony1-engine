@@ -2,3 +2,6 @@
   
 testpartition sets up a partitioning test, periodically adding new
 partitions.
+
+It alters pg_autovac configuration to ensure that some tables are being
+vacuumed by Slony-I.

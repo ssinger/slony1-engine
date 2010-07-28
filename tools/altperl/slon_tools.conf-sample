@@ -34,7 +34,7 @@ if ($ENV{"SLONYNODES"}) {
     # Log line suffix for Slony-I log. For options, look at date(1) 
     # man page.
     #
-    # $LOG_NAME_SUFFIX = '%a';
+    # LOG_NAME_SUFFIX = '%a';
 
     # SYNC check interval (slon -s option)
     # $SYNC_CHECK_INTERVAL = 1000;

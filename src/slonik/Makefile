@@ -32,8 +32,8 @@ OBJS		= 			\
 	slonik.o			\
 	dbutil.o			\
 	parser.o $(WIN32RES)            \
-	../parsestatements/scanner.o
-
+	../parsestatements/scanner.o    \
+	scan.o
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =					\
@@ -57,9 +57,11 @@ else
 	@exit 1
 endif
 
+scan.c: SCANNER_HEADER=scan.h
+
 scan.c:				scan.l slonik.h
 ifdef FLEX 
-	$(FLEX) $(FLEXFLAGS) -o'$@' $<
+	$(FLEX) $(FLEXFLAGS) --header-file=$(SCANNER_HEADER) -o'$@' $<
 else
 	@echo "Missing flex $< $@"
 	@exit

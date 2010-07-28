@@ -64,7 +64,6 @@ generate_initdata()
 do_initdata()
 {
   generate_initdata
-  launch_poll
   for org in 1 2; do
       eval db=\$DB${org}
       eval host=\$HOST${org}
@@ -82,5 +81,6 @@ do_initdata()
 	  warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
       fi 
       status "data load complete for node ${org}"
+  wait_for_catchup
   done
 }

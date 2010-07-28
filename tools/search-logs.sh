@@ -1,5 +1,5 @@
 #!/bin/sh 
-# 
+#  
  
 # Search logs for errors from the last hour 
 LOGHOME=${LOGHOME:-"/opt/logs"}    # Directory to search

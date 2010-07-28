@@ -13,8 +13,6 @@ if test $# -ne 3 ; then
 	echo "usage: $0 dbname clustername tempdbname" >&2
 	exit 1
 fi
-
-# ----
 # Remember call arguments and get the nodeId of the DB specified
 # ----
 dbname=$1
@@ -24,6 +22,17 @@ nodeid=`psql -q -At -c "select \"_$cluster\".getLocalNodeId('_$cluster')" $dbnam
 
 TMP=tmp.$$
 
+# ----
+# Check version
+# ----
+PGBINVER=`pg_dump --version|sed -e 's/.*\([0-9]+*\.[0-9]+*\)\.[0-9]*/\1/'`
+PGBACKENDVER=`psql -q -At -c 'select version()' $dbname | sed -e 's/.*PostgreSQL \([0-8]+*\.[0-9]+*\).*/\1/'`
+if [ "x$PGBINVER" != "x$PGBACKENDVER" ];
+then
+  echo "Postgresql backend $PGBACKENDVER does not match pg_dump version $PGBINVER"
+  exit 1
+fi
+# ----
 # ----
 # Print a warning for sets originating remotely that their
 # triggers and constraints will not be included in the dump.

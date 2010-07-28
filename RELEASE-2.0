@@ -221,9 +221,3 @@ often.
 
 - Enhancement - bug #61 - logshipper process should rescan the queue
   when it empties
-
-- Note about "duct tape" tests:  There are many of these tests that
-  reside in src/ducttape that reference features removed in v2.0.
-
-  We will eventually be replacing these with a more proper "test suite"
-  so we're not remedying all the ducttape tests.

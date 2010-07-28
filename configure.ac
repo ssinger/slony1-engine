@@ -15,6 +15,9 @@ m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
     -e 's/\ //g' -e s/\:/`date +HEAD_%Y%m%d`/ | tr -d '\n']))
 
+m4_pattern_allow([^SLON_AC_])
+
+
 AC_INIT(slony1,[SLONREL_VERSION])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(config)
@@ -75,7 +78,77 @@ SLON_AC_COMPILER()
 AC_PROG_LD
 PGAC_PATH_PERL
 AC_PATH_PROG(TAR, tar)
-AC_CHECK_PROGS(LEX, ['flex' , 'lex'])
+
+
+# PGAC_PATH_FLEX
+# --------------
+# Look for Flex, set the output variable FLEX to its path if found.
+# Reject versions before 2.5.31, as we need a reasonably non-buggy reentrant
+# scanner.    We need at least 2.5.31 because we depend on
+# yyget_leng() to be defined since later some versions of flex switched
+# the definition of yyleng from an int to a size_t
+#  Also find Flex if its installed under `lex', but do not
+# accept other Lex programs.
+
+AC_DEFUN([PGAC_PATH_FLEX],
+[AC_CACHE_CHECK([for flex], pgac_cv_path_flex,
+[# Let the user override the test
+if test -n "$FLEX"; then
+  pgac_cv_path_flex=$FLEX
+else
+  pgac_save_IFS=$IFS
+  IFS=$PATH_SEPARATOR
+  for pgac_dir in $PATH; do
+    IFS=$pgac_save_IFS
+    if test -z "$pgac_dir" || test x"$pgac_dir" = x"."; then
+      pgac_dir=`pwd`
+    fi
+    for pgac_prog in flex lex; do
+      pgac_candidate="$pgac_dir/$pgac_prog"
+      if test -f "$pgac_candidate" \
+        && $pgac_candidate --version </dev/null >/dev/null 2>&1
+      then
+        echo '%%'  > conftest.l
+        if $pgac_candidate -t conftest.l 2>/dev/null | grep FLEX_SCANNER >/dev/null 2>&1; then
+          pgac_flex_version=`$pgac_candidate --version 2>/dev/null`
+          if echo "$pgac_flex_version" | sed ['s/[.a-z]/ /g'] | awk '{ if ([$]1 = 2 && [$]2 = 5 && [$]3 >= 31) exit 0; else exit 1;}'
+          then
+            pgac_cv_path_flex=$pgac_candidate
+            break 2
+          else
+            AC_MSG_WARN([
+*** The installed version of Flex, $pgac_candidate, is too old to use with Slony-I.
+*** Flex version 2.5.31 or later is required, but this is $pgac_flex_version.])
+          fi
+        fi
+      fi
+    done
+  done
+  rm -f conftest.l lex.yy.c
+  : ${pgac_cv_path_flex=no}
+fi
+])[]dnl AC_CACHE_CHECK
+
+if test x"$pgac_cv_path_flex" = x"no"; then
+  AC_MSG_WARN([
+*** Without Flex you will not be able to build Slony-I from CVS nor
+*** change any of the scanner definition files.  You can obtain Flex from
+*** a GNU mirror site.  (If you are using the official distribution of
+*** Slony-I then you do not need to worry about this because the Flex
+*** output is pre-generated.)])
+
+  LEX=
+else
+  LEX=$pgac_cv_path_flex
+  pgac_flex_version=`$FLEX --version 2>/dev/null`
+  AC_MSG_NOTICE([using $pgac_flex_version])
+fi
+
+AC_SUBST(LEX)
+AC_SUBST(FLEXFLAGS)
+])# PGAC_PATH_FLEX
+
+
 AC_CHECK_PROGS(YACC, ['bison -y' , 'yacc'])
 AC_CHECK_PROGS(SED, ['sed'])
 
@@ -119,8 +192,9 @@ AC_CHECK_FUNCS([strtoul])
 
 AC_CHECK_TYPES([int32_t, uint32_t, u_int32_t])
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
-AC_CHECK_TYPES([ssize_t])
+AC_CHECK_TYPES([size_t, ssize_t])
 SLON_AC_FUNC_POSIX_SIGNALS()
+
 
 # ----
 # Locate PostgreSQL paths
@@ -149,6 +223,8 @@ AC_SUBST(enable_engine)
 
 #Our current path
 SLONYPATH=`pwd`
+
+PGAC_PATH_FLEX()
 
 # ----
 # PostgreSQL checks

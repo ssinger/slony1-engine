@@ -230,10 +230,10 @@ AC_CHECK_LIB(pq, PQunescapeBytea, HAVE_PQUNESCAPEBYTEA=1)
 if test -n "$HAVE_PQUNESCAPEBYTEA"; then
     AC_DEFINE(PG_VERSION_VERIFIED,1,[PostgreSQL 7.3 or later check])
 else
-    AC_MSG_ERROR(Your version of libpq doesn't have PQunescapeBytea
-     which means that your version of PostgreSQL is lower than 7.3
+    AC_MSG_ERROR(Test of libpq for PQunescapeBytea failed.
+     Either your version of PostgreSQL is lower than 7.3
      and thus not even remotely supported by Slony-I version 2, 
-     which requires 8.3+)
+     which requires 8.3+, or libpq libraries were not found)
 fi
 
 TEMP_CPPFLAGS=$CPPFLAGS

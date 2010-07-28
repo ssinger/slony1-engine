@@ -3,7 +3,7 @@
 # $FreeBSD$
 # Modified by Brian A. Seklecki <bseklecki@collaborativefusion.com>
 #                               <lavalamp@spiritual-machines.org>
-# 
+#  
 #
 
 # sed -e 's/%%PREFIX%%/\/usr\/local/g' < slon.in > slon

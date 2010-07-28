@@ -188,8 +188,9 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	sprintf(outbuf, "%s%s%-6.6s ", time_buf, ps_buf, level_c);
 
 	off = (int) strlen(outbuf);
-
-	while (vsnprintf(&outbuf[off], (size_t) (outsize - off), fmt, ap) >= outsize - off - 1)
+	va_list apcopy;
+	va_copy(apcopy,ap);
+	while (vsnprintf(&outbuf[off], (size_t) (outsize - off), fmt, apcopy) >= outsize - off - 1)
 	{
 		outsize *= 2;
 		outbuf = realloc(outbuf, (size_t) outsize);
@@ -198,7 +199,12 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 			perror("slon_log: realloc()");
 			slon_retry();
 		}
+		va_end(apcopy);
+		va_copy(apcopy, ap);
 	}
+
+	va_end(apcopy);
+
 #ifdef HAVE_SYSLOG
 	if (Use_syslog >= 1)
 	{

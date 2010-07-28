@@ -356,7 +356,7 @@
       each time a SYNC file is successfully generated.
      </para>
 
-     <para> See more details on <xref linkend="slon-config-command-on-logarchive">.</para>
+     <para> See more details on <xref linkend="slon-config-command-on-logarchive"/>.</para>
     </listitem>
    </varlistentry>
 

@@ -12,7 +12,7 @@ slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
 DISTFILES = Makefile
-SUBDIRS = parsestatements slon slonik backend ducttape
+SUBDIRS = parsestatements slon slonik backend ducttape #upgrade_to_20
 ifeq ($(PORTNAME),win32)
 SUBDIRS += slevent
 else

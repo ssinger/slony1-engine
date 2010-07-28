@@ -70,19 +70,20 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
+
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
   fi 
+  wait_for_catchup
   status "data load complete - nodes are seeded reasonably"
   status "pull log shipping dump" 
   PGHOST=${HOST2} PGPORT=${PORT2} PGUSER=${USER2} ${SLTOOLDIR}/slony1_dump.sh ${DB2} ${CLUSTER1} > ${mktmp}/logship_dump.sql
   
   status "generate more data to test log shipping"
   generate_initdata
-  launch_poll
+  wait_for_catchup
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/moredata.log 2> $mktmp/moredata.log
   if [ $? -ne 0 ]; then
@@ -153,5 +154,5 @@ do_initdata()
 
   NUMNODES=4
   status "Changed number of nodes to 4 to reflect the log shipping node"
-
+  wait_for_catchup
 }

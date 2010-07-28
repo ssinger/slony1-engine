@@ -54,8 +54,11 @@ echo "----------------------------------------------------"
 
 #load settings
 
+echo "Loading default settings"
 . settings.ik
+echo "Loading test-specific settings"
 . $testname/settings.ik
+echo "Loading support functions"
 . support_funcs.sh
 
 echo "Test by ${SLONYTESTER} to be summarized in ${SLONYTESTFILE}"
@@ -217,7 +220,7 @@ store_path()
           if [ -n "${bdb}" -a "${bhost}" -a "${buser}" -a "${bport}" ]; then
 	    echo "STORE PATH (SERVER=@node${i}, CLIENT=@node${j}, CONNINFO='dbname=${db} host=${host} user=${buser} port=${port}');" >> $mktmp/slonik.script
           else
-            err 3 "No conninfo"
+            err 3 "No conninfo - bdb=${bdb} bhost=${bhost} user=${buser} bport=${bport}"
           fi
         fi
         if [ ${j} -ge ${NUMNODES} ]; then

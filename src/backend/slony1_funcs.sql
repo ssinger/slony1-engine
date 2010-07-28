@@ -433,7 +433,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 3;
+	return 4;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -1478,6 +1478,7 @@ replication system.';
 --	Duplicate a nodes configuration under a different no_id in
 --	preparation for the node to be copied with standard DB tools.
 -- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.cloneNodePrepare (int4, int4, text); -- Needed because function signature has changed!
 create or replace function @NAMESPACE@.cloneNodePrepare (int4, int4, text)
 returns bigint
 as $$

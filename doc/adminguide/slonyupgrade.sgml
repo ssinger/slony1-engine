@@ -253,6 +253,113 @@ accomplish what was formerly accomplished via <xref
 linkend="stmtstoretrigger"> and <xref linkend="stmtdroptrigger">. </para>
 
 </sect2>
+
+<sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2 </title>
+
+<para> The version 2 branch is <emphasis>substantially</emphasis>
+different from earlier releases, dropping support for versions of
+&postgres; prior to 8.3, as in version 8.3, support for a
+<quote>session replication role</quote> was added, thereby eliminating
+the need for system catalog hacks as well as the
+not-entirely-well-supported <envar>xxid</envar> data type. </para>
+
+<para> As a result of the replacement of the <envar>xxid</envar> type
+with a (native-to-8.3) &postgres; transaction XID type, the &lslonik;
+command <xref linkend="stmtupdatefunctions"> is quite inadequate to
+the process of upgrading earlier versions of &slony1; to version
+2.</para>
+
+<para> In version 2.0.2, we have added a new option to <xref
+linkend="stmtsubscribeset">, <command>OMIT COPY</command>, which
+allows taking an alternative approach to upgrade which amounts to:</para>
+
+<itemizedlist>
+<listitem><para> Uninstall old version of &slony1; </para>
+<para> When &slony1; uninstalls itself, catalog corruptions are fixed back up.</para> </listitem>
+<listitem><para> Install &slony1; version 2 </para></listitem>
+<listitem><para> Resubscribe, with <command>OMIT COPY</command></para></listitem>
+</itemizedlist>
+
+<warning><para> There is a large <quote>foot gun</quote> here: during
+part of the process, &slony1; is not installed in any form, and if an
+application updates one or another of the databases, the
+resubscription, omitting copying data, will be left with data
+<emphasis>out of sync.</emphasis> </para>
+
+<para> The administrator <emphasis>must take care</emphasis>; &slony1;
+has no way to help ensure the integrity of the data during this
+process.</para>
+</warning>
+
+<para> The following process is suggested to help make the upgrade
+process as safe as possible, given the above risks. </para>
+
+<itemizedlist>
+
+<listitem><para> Use <xref linkend="slonikconfdump"> to generate a
+&lslonik; script to recreate the replication cluster.  </para>
+
+<para> Be sure to verify the <xref linkend="admconninfo"> statements,
+as the values are pulled are drawn from the PATH configuration, which
+may not necessarily be suitable for running &lslonik;. </para>
+
+<para> This step may be done before the application outage. </para>
+</listitem>
+
+<listitem><para> Determine what triggers have <xref
+linkend="stmtstoretrigger"> configuration on subscriber nodes.
+</para>
+
+<para> As discussed in <xref linkend="triggers">, the handling has
+fundamentally changed between &slony1; 1.2 and 2.0. </para>
+
+<para> Generally speaking, what needs to happen is to query
+<envar>sl_table</envar> on each node, and, for any triggers found in
+<envar>sl_table</envar>, it is likely to be appropriate to set up a
+script indicating either <command>ENABLE REPLICA TRIGGER</command> or
+<command>ENABLE ALWAYS TRIGGER</command> for these triggers.</para>
+
+<para> This step may be done before the application outage. </para>
+</listitem>
+
+<listitem><para> Begin an application outage during which updates should no longer be applied to the database. </para> </listitem>
+
+<listitem><para> To ensure that applications cease to make changes, it would be appropriate to lock them out via modifications to <filename>pg_hba.conf</filename> </para> </listitem>
+
+<listitem><para> Ensure replication is entirely caught up, via examination of the <envar>sl_status</envar> view, and any application data that may seem appropriate. </para> </listitem>
+
+<listitem><para> Shut down &lslon; processes. </para> </listitem>
+
+<listitem><para> Uninstall the old version of &slony1; from the database. </para> 
+
+<para> This involves running a &lslonik; script that runs <xref
+linkend="stmtuninstallnode"> against each node in the cluster. </para>
+
+</listitem>
+
+<listitem><para> Ensure new &slony1; binaries are in place. </para> 
+
+<para> A convenient way to handle this is to have old and new in different directories alongside two &postgres; builds, stop the <application>postmaster</application>, repoint to the new directory, and restart the <application>postmaster</application>. </para>
+</listitem>
+
+<listitem><para> Run the script that reconfigures replication as generated earlier.  </para> 
+
+<para> This script should probably be split into two portions to be run separately:</para> 
+<itemizedlist>
+<listitem><para> Firstly, set up nodes, paths, sets, and such </para> </listitem>
+<listitem><para> At this point, start up &lslon; processes </para> </listitem>
+<listitem><para> Then, run the portion which runs <xref linkend="stmtsubscribeset"> </para> </listitem>
+</itemizedlist>
+
+<para> Splitting the <xref linkend="slonikconfdump"> script as described above is left as an exercise for the reader.</para>
+</listitem>
+
+<listitem><para> If there were triggers that needed to be activated on subscriber nodes, this is the time to activate them. </para> </listitem>
+<listitem><para> At this point, the cluster should be back up and running, ready to be reconfigured so that applications may access it again.  </para> </listitem>
+
+</itemizedlist>
+
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

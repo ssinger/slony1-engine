@@ -44,7 +44,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>Debian</entry>
       <entry>Lenny</entry>
       <entry>32 and 64 bit</entry>
-      <entry>May 03, 2010</entry>
+      <entry>May 3, 2010</entry>
       <entry>devrim at gunduz dot org</entry>
       <entry>&postgres; Version: 8.4.3</entry>
      </row>
@@ -53,9 +53,9 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>Fedora</entry>
       <entry>9,10,11,12</entry>
       <entry>Intel - 32 bit, 64 bit</entry>
-      <entry>Aug 9, 2009</entry>
+      <entry>May 3, 2010</entry>
       <entry>devrim at gunduz dot org</entry>
-      <entry>&postgres; Version: 8.4.3, 8.3.7</entry>
+      <entry>&postgres; Version: 8.4.3,8.3.10</entry>
      </row>
 
      <row>
@@ -106,10 +106,10 @@ Mailing List</ulink> and ask your questions.</para>
      <row>
       <entry>Red Hat Enterprise Linux</entry>
       <entry>5</entry>
-      <entry>x86, x86_64</entry>
-      <entry>May 03, 2010</entry>
+      <entry>x86,x86_64</entry>
+      <entry>May 3, 2010</entry>
       <entry>devrim at gunduz dot org</entry>
-      <entry>&postgres; Version: 8.4.3, 8.3.10</entry>
+      <entry>&postgres; Version: 8.4.3,8.3.10</entry>
      </row>
 
      <row>

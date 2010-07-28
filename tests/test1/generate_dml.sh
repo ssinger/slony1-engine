@@ -70,7 +70,9 @@ do_initdata()
   eval user=\$USER${originnode}
   eval port=\$PORT${originnode}
   generate_initdata
-  launch_poll
+  status "run updateReloid() - equivalent to REPAIR NODE"
+  $pgbindir/psql -h $host -p $port -d $db -U $user -c "select \"_${CLUSTER1}\".updateReloid(1, 0);" 1> $mktmp/reloidtest.log 2> $mktmp/reloidtest.log
+  
   status "loading data"
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
@@ -93,5 +95,6 @@ do_initdata()
       warn 3 "cleanupEvent() failed - rc=${rc} see $mktmp/cleanupevent.log* for details"
   fi
   status "completed cleanupEvent(${pint},${dellogs}) test"
+  wait_for_catchup
   status "done"
 }
