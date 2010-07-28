@@ -48,6 +48,7 @@ generate_initdata()
     echo "INSERT INTO utf8table (string) values ('\303\241 -- ${txtb}');" >> $GENDATA
     echo "INSERT INTO utf8table (string) values ('t3 -- \303\241 - ${txtb}');" >> $GENDATA
     echo "INSERT INTO utf8table (string) values ('t3 - \303\241 -- ${txtb}');" >> $GENDATA
+    echo "INSERT INTO utf8table (string) values(repeat('test1234',4000)||'bar');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;
     else
