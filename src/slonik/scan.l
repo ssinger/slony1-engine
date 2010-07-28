@@ -36,6 +36,14 @@ static void   popBuffer( void );				/* Pop previous lexer buffer		*/
 extern char * current_file;
 %}
 
+%{
+
+#include "postgres.h"
+#include "libpq-fe.h"
+#include "slonik.h"
+#include "y.tab.h"
+%}
+
 %option 8bit
 %option nounput
 %option noyywrap

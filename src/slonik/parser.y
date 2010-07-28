@@ -14,55 +14,7 @@
 #include "postgres.h"
 #include "libpq-fe.h"
 #include "slonik.h"
-
-
-/*
- * Common option types
- */
-typedef enum {
-	O_ADD_ID,
-	O_BACKUP_NODE,
-	O_CLIENT,
-	O_COMMENT,
-	O_CONNINFO,
-	O_CONNRETRY,
-	O_EVENT_NODE,
-	O_EXECUTE_ONLY_ON,
-	O_FILENAME,
-	O_FORWARD,
-	O_FQNAME,
-	O_ID,
-	O_NEW_ORIGIN,
-	O_NEW_SET,
-	O_NODE_ID,
-	O_OLD_ORIGIN,
-	O_ORIGIN,
-	O_PROVIDER,
-	O_RECEIVER,
-	O_SECONDS,
-	O_SERVER,
-	O_SET_ID,
-	O_TAB_ID,
-	O_TIMEOUT,
-	O_USE_KEY,
-	O_WAIT_CONFIRMED,
-	O_WAIT_ON,
-
-	END_OF_OPTIONS = -1
-} option_code;
-
-
-/*
- * Common given option list
- */
-typedef struct option_list {
-	option_code	opt_code;
-	int			lineno;
-	int32		ival;
-	char	   *str;
-
-	struct option_list *next;
-} option_list;
+#include "scan.h"
 
 
 /*
@@ -84,7 +36,6 @@ typedef struct statement_option {
  * Global data
  */
 char   *current_file = "<stdin>";
-extern int yyleng;
 #ifdef DEBUG
 int yydebug=1;
 #endif
@@ -1744,10 +1695,10 @@ id					: T_NUMBER
 ident				: T_IDENT
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen=yyget_leng();
+						ret = malloc(yyget_leng() + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -1756,10 +1707,10 @@ ident				: T_IDENT
 literal				: T_LITERAL
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen=yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -1873,10 +1824,6 @@ yyerror(const char *msg)
 }
 
 
-/*
- * Include the output of fles for the scanner here.
- */
-#include "scan.c"
 
 
 

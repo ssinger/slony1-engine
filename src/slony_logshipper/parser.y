@@ -1,6 +1,5 @@
 %{
-/*-------------------------------------------------------------------------
- * parser.y
+/*
  *
  *	The slony_logshipper command language grammar
  *
@@ -11,10 +10,14 @@
  *-------------------------------------------------------------------------
  */
 
+#include "config.h"
 #include "postgres.h"
 #include "libpq-fe.h"
 #include "slony_logshipper.h"
 #include "../parsestatements/scanner.h"
+
+#include "scan.h"
+
 extern int STMTS[MAXSTATEMENTS];
 
 
@@ -22,7 +25,6 @@ extern int STMTS[MAXSTATEMENTS];
  * Global data
  */
 char   *current_file = "<stdin>";
-extern int yyleng;
 #ifdef DEBUG
 int yydebug=1;
 #endif
@@ -369,10 +371,10 @@ arch_tracking		: K_SELECT ident '.' arch_tracking_func '(' literal ',' literal '
 arch_tracking_func	: T_TRACKING_FUNCTION
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen=yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -822,10 +824,10 @@ arch_finishtable	: K_SELECT ident '.' arch_finish_func '(' num ')' ';'
 arch_finish_func	: T_FINISH_FUNCTION
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen = yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -852,10 +854,10 @@ arch_seqsetval		: K_SELECT ident '.' arch_seqsetval_func '(' num ',' literal ')'
 arch_seqsetval_func	: T_SEQSETVAL_FUNCTION
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen= yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -883,10 +885,10 @@ arch_pgsetval		: K_SELECT ident '.' arch_pgsetval_func '(' literal ',' literal '
 arch_pgsetval_func	: T_PGSETVAL_FUNCTION
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen = yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -947,10 +949,10 @@ arch_comments		: arch_comment
 arch_comment		: K_ARCHIVE_COMMENT
 					{
 						char   *str;
-
-						str = malloc(yyleng + 1);
-						memcpy(str, yytext, yyleng);
-						str[yyleng] = '\0';
+						size_t toklen = yyget_leng();
+						str = malloc(toklen + 1);
+						memcpy(str, yytext, toklen);
+						str[toklen] = '\0';
 
 						if (process_simple_sql(str) < 0)
 						{
@@ -971,20 +973,20 @@ num					: T_NUMBER
 ident				: T_IDENT
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen = yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
 					| ident_keywords
 					{
 						char   *ret;
-
-						ret = malloc(yyleng + 1);
-						memcpy(ret, yytext, yyleng);
-						ret[yyleng] = '\0';
+						size_t toklen = yyget_leng();
+						ret = malloc(toklen + 1);
+						memcpy(ret, yytext, toklen);
+						ret[toklen] = '\0';
 
 						$$ = ret;
 					}
@@ -1094,11 +1096,6 @@ parse_error(const char *msg)
 	parse_errors++;
 }
 
-
-/*
- * Include the output of fles for the scanner here.
- */
-#include "scan.c"
 
 
 
