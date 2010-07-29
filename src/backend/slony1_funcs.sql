@@ -1422,6 +1422,10 @@ begin
 				where set_id = p_set_id;
 	end if;
 
+	update @NAMESPACE@.sl_node
+		   set no_active=false WHERE 
+		   no_id=p_failed_node;
+
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 
@@ -4834,12 +4838,15 @@ begin
 		-- If we use the event origin as a data provider for any
 		-- set that originates on that very node, we are a direct
 		-- subscriber to that origin and listen there only.
-		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe				, @NAMESPACE@.sl_node p		   		
 				where set_origin = v_row.origin
 				  and sub_set = set_id
 				  and sub_provider = v_row.origin
 				  and sub_receiver = v_row.receiver
-				  and sub_active)
+				  and sub_active
+				  and p.no_active
+				  and p.no_id=sub_provider
+				  )
 		then
 			delete from @NAMESPACE@.sl_listen
 				where li_origin = v_row.origin
