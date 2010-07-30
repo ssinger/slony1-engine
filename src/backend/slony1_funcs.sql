@@ -1277,8 +1277,12 @@ begin
 								where pa_server = p_backup_node
 								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
 						);
+			delete from @NAMESPACE@.sl_subscribe
+					where sub_set = v_row.set_id
+						and sub_receiver = p_backup_node;				
 		end if;
 	end loop;
+	
 
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
