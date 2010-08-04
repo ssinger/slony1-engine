@@ -3,7 +3,7 @@
 --
 --    Declaration of replication support functions.
 --
---	Copyright (c) 2003-2009, PostgreSQL Global Development Group
+--	Copyright (c) 2003-2010, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
 -- 
@@ -419,7 +419,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 0;
+	return 1;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
@@ -433,7 +433,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 4;
+	return 0;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
