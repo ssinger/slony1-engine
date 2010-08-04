@@ -461,9 +461,7 @@ earlier than XID %s are still in progress</command></para>
 <listitem><para><command>DEBUG2: remoteWorkerThread_%d: prepare to copy table %s </command></para> 
 
 <para> This indicates that &lslon; is beginning preparations to set up subscription for a table.</para></listitem>
-<listitem><para><command>DEBUG1: remoteWorkerThread_%d: table %s will require Slony-I serial key</command></para> 
 
-<para> Evidently this is a table defined with <xref linkend="stmttableaddkey"> where &slony1; has to add a surrogate primary key.</para></listitem>
 <listitem><para><command>ERROR: remoteWorkerThread_%d: Could not lock table %s on subscriber</command></para> 
 
 <para> For whatever reason, the table could not be locked, so the
@@ -569,10 +567,6 @@ Perhaps disk filled up...  </para></listitem>
 will disconnect from the provider, clearing out
 connections... </para></listitem>
 
-<listitem><para><command>DEBUG1: remoteWorkerThread_%d: copy_set %d done in %.3f seconds</command></para> 
-
-<para> Indicates the total time required to complete copy_set...  This indicates a successful subscription!</para>
-</listitem>
 
 <listitem><para><command>DEBUG1: remoteWorkerThread_%d: copy_set %d done in %.3f seconds</command></para> 
 
@@ -628,7 +622,7 @@ see most of the time when replication is just plain working.</para>
 
 <listitem><para><command>DEBUG2: remoteWorkerThread_%d: forward confirm %d,%s received by %d</command></para> 
 
-<para> These events should occur frequently and routinely as nodes report confirations of the events they receive. </para></listitem>
+<para> These events should occur frequently and routinely as nodes report confirmations of the events they receive. </para></listitem>
 
 <listitem><para><command>DEBUG1: remoteWorkerThread_%d: SYNC %d processing</command></para> 
 
@@ -1024,7 +1018,7 @@ remains a task for the documentors.</para>
 <para> This will occur when a &lslon; starts up after another has crashed; this is routine cleanup.</para></listitem>
 <listitem><para><command>ERROR: Slony-I: This node is already initialized</command></para> 
 
-<para> This would typically happen if you submit <xref linkend="stmtstorenode"> gainst a node that has already been set up with the &slony1; schema. </para></listitem>
+<para> This would typically happen if you submit <xref linkend="stmtstorenode"> against a node that has already been set up with the &slony1; schema. </para></listitem>
 <listitem><para><command>ERROR: Slony-I: node % not found</command></para> 
 
 <para> An attempt to mark a node not listed locally as enabled should fail...</para></listitem>

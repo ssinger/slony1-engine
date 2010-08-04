@@ -62,7 +62,7 @@ ALTER TABLE my_table_name ADD PRIMARY KEY (col1, col2);
 </programlisting>
 
 <para>If your application is not somehow referencing the index by name,
-the this should not lose you anything, and it gives you the clear design
+then this should not lose you anything, and it gives you the clear design
 benefit that a primary key has been declared for the table. </para>
 
 <para> Notice that while you need to specify the namespace for the

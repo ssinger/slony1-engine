@@ -10,7 +10,7 @@
 in a &slony1; cluster, whether you consider that node a
 <quote>master</quote> or a <quote>slave</quote>. On &windows; when
 running as a service things are slightly different. One slon service
-is installed, and a seperate configuration file registered for each
+is installed, and a separate configuration file registered for each
 node to be serviced by that machine. The main service then manages the
 individual slons itself. Since a <command>MOVE SET</command> or
 <command>FAILOVER</command> can switch the roles of nodes, slon needs
