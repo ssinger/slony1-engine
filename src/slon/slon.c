@@ -861,11 +861,11 @@ SlonWatchdog(void)
 	}
 	slon_log(SLON_CONFIG, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
 
-	(void) alarm(0);
 
 	switch (watchdog_status)
 	{
 		case SLON_WATCHDOG_RESTART:
+			sleep(20);
 			(void) execvp(main_argv[0], main_argv);
 			slon_log(SLON_FATAL, "slon: cannot restart via execvp() - %s\n",
 					 strerror(errno));
@@ -958,19 +958,8 @@ sighandler(int signo)
 void
 slon_terminate_worker()
 {
-#ifndef WIN32 /* does not support in windows. */
-	slon_log(SLON_INFO, "slon: notify worker process to shutdown\n");
+	(void) kill(slon_worker_pid, SIGKILL);
 
-	if (pipewrite(sched_wakeuppipe[1], "p", 1) != 1)
-	{
-		slon_log(SLON_FATAL, "main: write to worker pipe failed -(%d) %s\n", errno, strerror(errno));
-		(void) kill(slon_worker_pid, SIGKILL);
-		slon_exit(-1);
-	}
-        (void) close(sched_wakeuppipe[0]);
-	(void) close(sched_wakeuppipe[1]);
-	(void) alarm(20);
-#endif
 }
 
 /* ---------- 
