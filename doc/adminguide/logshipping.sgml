@@ -149,9 +149,10 @@ contain updates to the set.</para>
 <para> Similarly, <command>SET_DROP_TABLE</command>,
 <command>SET_DROP_SEQUENCE</command>,
 <command>SET_MOVE_TABLE</command>,
-<command>SET_MOVE_SEQUENCE</command> <command>DROP_SET</command>,
+<command>SET_MOVE_SEQUENCE</command>,
+<command>DROP_SET</command>,
 <command>MERGE_SET</command>, will be handled
-<quote>appropriately</quote>.</para></listitem>
+<quote>apropriately</quote>.</para></listitem>
 
 <listitem><para><command> SUBSCRIBE_SET </command></para>
 
@@ -394,7 +395,7 @@ run with three sorts of parameters:</para>
 <listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para> 
 <para> Where the log shipper will leave messages.</para> </listitem>
 <listitem><para> <command>cluster name = 'T1';</command></para> <para> Cluster name </para> </listitem>
-<listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to thisdatabase, and apply logs to it. </para> </listitem>
+<listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to this database, and apply logs to it. </para> </listitem>
 <listitem><para> <command>archive dir = './offline_logs';</command></para> <para>The archive directory is required when running in <quote>database-connected</quote> mode to have a place to scan for missing (unapplied) archives. </para> </listitem>
 <listitem><para> <command>destination dir = './offline_result';</command></para> <para> If specified, the log shipper will write the results of data massaging into result logfiles in this directory.</para> </listitem>
 <listitem><para> <command>max archives = 3600;</command></para> <para> This fights eventual resource leakage; the daemon will enter <quote>smart shutdown</quote> mode automatically after processing this many archives. </para> </listitem>
@@ -402,7 +403,7 @@ run with three sorts of parameters:</para>
 <listitem><para> <command>ignore namespace "public";</command></para> <para> One may filter out entire namespaces  from log shipped replication </para> </listitem>
 <listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
 <listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
-<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processign commands are executed via <function>system(3)</function>. </para> </listitem>
+<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processing commands are executed via <function>system(3)</function>. </para> </listitem>
 </itemizedlist>
 
 <para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>

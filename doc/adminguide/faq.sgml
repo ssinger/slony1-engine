@@ -692,7 +692,7 @@ where we had configuration thus:
 <itemizedlist>
 <listitem><para> Node 1 - provider</para></listitem>
 <listitem><para> Node 2 - subscriber to node 1 - the node we're reinitializing</para></listitem>
-<listitem><para> Node 3 - subscriber to node 3 - node that should keep replicating</para></listitem>
+<listitem><para> Node 3 - subscriber to node 2 - node that should keep replicating</para></listitem>
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as

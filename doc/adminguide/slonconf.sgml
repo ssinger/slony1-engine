@@ -16,7 +16,7 @@
   <para>
     All parameter names are case-insensitive. Every parameter takes a value of 
     one of four types: boolean, integer, floating point, or string.
-    Boolean values may be written as <literal>ON</literal>, <literal>OFF</literal>,
+    Boolean values may be written as <literal>ON</literal>, <literal>OFF</literal>,<literal>TRUE</literal>,
     <literal>FALSE</literal>, <literal>YES</literal>, <literal>NO</literal>, 
     <literal>1</literal>, <literal>0</literal> (all case-insensitive) or any 
     unambiguous prefix of these.

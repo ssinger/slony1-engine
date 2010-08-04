@@ -75,7 +75,7 @@ remote locations.</para></listitem>
 at a secondary/failover site.  Its job, in the present configuration,
 is to <quote>feed</quote> servers in the secure database layers at the
 secondary site.</para></listitem>
-<listitem><para> DB5 and and DB6 are counterparts to DB1 and DB2, but
+<listitem><para> DB5 and DB6 are counterparts to DB1 and DB2, but
 are, at present, configured as subscribers.</para>
 
 <para> Supposing disaster were to strike at the <quote>primary</quote>

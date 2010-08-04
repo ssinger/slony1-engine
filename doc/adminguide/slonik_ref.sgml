@@ -36,7 +36,7 @@
 	procedures makes it rather difficult to do this from the
 	<application>psql</application> prompt, and</para></listitem>
       
-      <listitem><para><application>psql</application>lacks the ability
+      <listitem><para><application>psql</application> lacks the ability
 	to maintain multiple connections with open
 	transactions.</para></listitem>
      </itemizedlist>
@@ -578,7 +578,7 @@ INIT CLUSTER (
    </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  The <envar>SPOOLNODE</envar>
-   parameter was introduced in version 1.1, but was vestigal in that
+   parameter was introduced in version 1.1, but was vestigial in that
    version.  The described functionality for <envar>SPOOLNODE</envar>
    arrived in version 1.2, but <envar>SPOOLNODE</envar> was not used
    for this purpose.  In later versions, hopefully
@@ -1316,7 +1316,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     # Assuming that set 1 has direct subscribers 2 and 3
+     # Assuming that node 1 is the origin of set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      SYNC (ID=1);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
@@ -2955,7 +2955,7 @@ WAIT FOR EVENT (
    the subscription, and have the WAIT request wait on the
    <command>SYNC</command> event, as follows. </para>
     <programlisting>
-     # Assuming that set 1 has direct subscribers 2 and 3
+     # Assuming that node 1 is the origin for set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);

@@ -40,7 +40,7 @@ on the origin node.</para>
 <para>A typical sort of problem that will arise is that a cascaded
 subscriber is looking for a provider that is not ready yet.  In that
 failure case, that subscriber node will <emphasis>never</emphasis>
-pick up the subscriber.  It will get <quote>stuck</quote> waiting for
+pick up the provider.  It will get <quote>stuck</quote> waiting for
 a past event to take place.  The other nodes will be convinced that it
 is successfully subscribed (because no error report ever made it back
 to them); a request to unsubscribe the node will be
