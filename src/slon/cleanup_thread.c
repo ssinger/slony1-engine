@@ -31,7 +31,6 @@
  */
 int			vac_frequency = SLON_VACUUM_FREQUENCY;
 char	   *cleanup_interval;
-bool		cleanup_deletelogs;
 
 static int	vac_bias = 0;
 static unsigned long earliest_xid = 0;
@@ -95,10 +94,9 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */
 	dstring_init(&query_baseclean);
-	slon_mkquery(&query_baseclean, "select %s.cleanupEvent('%s'::interval, '%s'::boolean); ",
+	slon_mkquery(&query_baseclean, "select %s.cleanupEvent('%s'::interval); ",
 				 rtcfg_namespace,
-				 cleanup_interval,
-				 cleanup_deletelogs ? "true" : "false"
+				 cleanup_interval
 		);
 	dstring_init(&query2);
 

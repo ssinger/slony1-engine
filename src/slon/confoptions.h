@@ -36,7 +36,6 @@ extern int	quit_sync_finalsync;
 
 extern int	vac_frequency;
 extern char *cleanup_interval;
-extern bool cleanup_deletelogs;
 
 char	   *Syslog_ident;
 char	   *Syslog_facility;

@@ -419,7 +419,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 0;
+	return 1;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
@@ -433,7 +433,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 3;
+	return 0;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -4545,15 +4545,13 @@ p_con_seqno have been received by node p_con_received as of
 p_con_timestamp, and raises an event to forward this confirmation.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION cleanupEvent (interval, deletelogs)
+-- FUNCTION cleanupEvent (interval)
 --
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.cleanupEvent (interval, boolean)
+create or replace function @NAMESPACE@.cleanupEvent (p_interval interval)
 returns int4
 as $$
 declare
-	p_interval alias for $1;
-	p_deletelogs alias for $2;
 	v_max_row	record;
 	v_min_row	record;
 	v_max_sync	int8;
@@ -4642,10 +4640,6 @@ begin
 	  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
           where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 	loop
-		if p_deletelogs then
-			delete from @NAMESPACE@.sl_log_1 where log_origin = v_origin and log_txid < v_xmin;		
-			delete from @NAMESPACE@.sl_log_2 where log_origin = v_origin and log_txid < v_xmin;		
-		end if;
 		delete from @NAMESPACE@.sl_seqlog where seql_origin = v_origin and seql_ev_seqno < v_seqno;
         end loop;
 	
@@ -4657,11 +4651,11 @@ begin
 	return 0;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.cleanupEvent (interval, boolean) is
+comment on function @NAMESPACE@.cleanupEvent (p_interval interval) is 
 'cleaning old data out of sl_confirm, sl_event.  Removes all but the
 last sl_confirm row per (origin,receiver), and then removes all events
 that are confirmed by all nodes in the whole cluster up to the last
-SYNC.  Deletes now-orphaned entries from sl_log_* if delete_logs parameter is set';
+SYNC.';
 
 
 -- ----------------------------------------------------------------------
