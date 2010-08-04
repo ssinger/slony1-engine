@@ -268,8 +268,8 @@ failover this sort of node configuration is as follows:
 
 <itemizedlist>
 
-<listitem><para> Resubscribe (using <xref linkend="stmtsubscribeset">
-ech node that is to be kept in the reformation of the cluster that is
+<listitem><para> Resubscribe (using <xref linkend="stmtsubscribeset">)
+each node that is to be kept in the reformation of the cluster that is
 not already subscribed to the intended data provider.  </para>
 
 <para> In the example cluster, this means we would likely wish to

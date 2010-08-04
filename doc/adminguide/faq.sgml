@@ -692,7 +692,7 @@ where we had configuration thus:
 <itemizedlist>
 <listitem><para> Node 1 - provider</para></listitem>
 <listitem><para> Node 2 - subscriber to node 1 - the node we're reinitializing</para></listitem>
-<listitem><para> Node 3 - subscriber to node 3 - node that should keep replicating</para></listitem>
+<listitem><para> Node 3 - subscriber to node 2 - node that should keep replicating</para></listitem>
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as
@@ -864,7 +864,38 @@ benefits?</para></question>
 <answer><para> In short, if you don't have something like an 18
 hour <command>COPY_SET</command> under way, it's normally not at all a
 big deal to take a &lslon; down for a little while, or perhaps even
-cycle <emphasis>all</emphasis> the &lslon;s. </para> </answer>
+cycle <emphasis>all</emphasis> the &lslon; processes. </para> </answer>
+</qandaentry>
+
+<qandaentry>
+<question><para> I was trying to subscribe a set involving a multiple GB table, and it failed.</para> 
+<screen>
+Jul 31 22:52:53 dbms TICKER[70295]: [153-1] CONFIG remoteWorkerThread_3: copy table "public"."images"
+Jul 31 22:52:53 dbms TICKER[70295]: [154-1] CONFIG remoteWorkerThread_3: Begin COPY of table "public"."images"
+Jul 31 22:54:24 dbms TICKER[70295]: [155-1] ERROR  remoteWorkerThread_3: PGgetCopyData() server closed the connection unexpectedly
+Jul 31 22:54:24 dbms TICKER[70295]: [155-2]     This probably means the server terminated abnormally
+Jul 31 22:54:24 dbms TICKER[70295]: [155-3]     before or while processing the request.
+Jul 31 22:54:24 dbms TICKER[70295]: [156-1] WARN   remoteWorkerThread_3: data copy for set 1 failed 1 times - sleep 15 seconds
+</screen>
+<para> Oh, by the way, I'm using SSL-based &postgres; conenctions. </para></question>
+<answer><para> A further examination of &postgres; logs indicated errors of the form: </para> 
+<screen>
+Jul 31 23:00:00 tickerforum postgres[27093]: [9593-2] STATEMENT:  copy "public"."images"
+("post_ordinal","ordinal","caption","image","login","file_type","thumb","thumb_width","thumb_height","hidden") to stdout;
+Jul 31 23:00:00 tickerforum postgres[27093]: [9594-1] LOG:  SSL error: internal error
+Jul 31 23:00:00 tickerforum postgres[27093]: [9594-2] STATEMENT:  copy "public"."images" ("post_ordinal","ordinal","caption","image","login","file_type","thumb","thumb_width","thumb_height","hidden") to stdout;
+Jul 31 23:00:01 tickerforum postgres[27093]: [9595-1] LOG:  SSL error: internal error
+</screen>
+<para> This demonstrates a problem with &postgres; handling of
+SSL connections, which is <quote>out of scope</quote> for &slony1;
+proper (<emphasis>e.g.</emphasis> - there's no <quote>there</quote>
+inside &slony1; for us to try to fix).  </para> 
+
+<para> The resolution to the underlying problem will
+presumably be handled upstream in the &postgres; project; the
+workaround is to, at least for the initial <command>SUBSCRIBE
+SET</command> event, switch to a non-SSL &postgres; connection.
+</para> </answer>
 </qandaentry>
 
 </qandadiv>

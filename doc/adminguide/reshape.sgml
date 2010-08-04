@@ -11,7 +11,7 @@ purposes, this will likely lead to the subscribers changing a bit.</para>
 
 <listitem><para> If you want a node that is a subscriber to become the
 origin for a particular replication set, you will have to issue a
-suitable <xref linkend="slonik"> <command>MOVE SET</command>
+suitable <xref linkend="stmtmoveset"> <command>MOVE SET</command>
 operation.</para></listitem>
 
 <listitem><para> You may subsequently, or instead, wish to modify the

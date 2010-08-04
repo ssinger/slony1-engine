@@ -3,7 +3,7 @@
 
 <indexterm><primary>listen paths</primary></indexterm>
 
-<note><para> If you are running version &slony1; 1.2 or later it
+<note><para> If you are running version &slony1; 1.1 or later it
 should be <emphasis>completely unnecessary</emphasis> to read this
 section as it introduces a way to automatically manage this part of
 its configuration.  For earlier versions, however, it is
@@ -84,7 +84,7 @@ node should listen for messages coming from each other node:
 </screen>
 </para>
 <para>Row 2 indicates all of the listen rules for node 2; it gets
-events for nodes 1, 3, and 4 throw node 1, and gets events for nodes 5
+events for nodes 1, 3, and 4 through node 1, and gets events for nodes 5
 and 6 from node 5.</para>
 
 <para>The row of 5's at the bottom, for node 6, indicate that node 6
@@ -143,7 +143,7 @@ of <xref linkend="slonik"> statements.</para>
 <listitem><para> If you change the shape of the node set, so that the
 nodes subscribe differently to things, you need to drop <xref
 linkend="table.sl-listen"> entries and create new ones to indicate the
-new preferred paths between nodes.  Until &slony1;, there is no
+new preferred paths between nodes.  Until &slony1 1.1;, there is no
 automated way at this point to do this
 <quote>reshaping</quote>.</para></listitem>
 

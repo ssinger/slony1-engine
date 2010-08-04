@@ -36,6 +36,14 @@ static void   popBuffer( void );				/* Pop previous lexer buffer		*/
 extern char * current_file;
 %}
 
+%{
+
+#include "postgres.h"
+#include "libpq-fe.h"
+#include "slonik.h"
+#include "y.tab.h"
+%}
+
 %option 8bit
 %option nounput
 %option noyywrap
@@ -71,6 +79,7 @@ admin			{ return K_ADMIN;			}
 all				{ return K_ALL;				}
 backup			{ return K_BACKUP;			}
 client			{ return K_CLIENT;			}
+copy			{ return K_COPY;			}
 clone			{ return K_CLONE;			}
 cluster			{ return K_CLUSTER;			}
 comment			{ return K_COMMENT;			}
@@ -108,6 +117,7 @@ no				{ return K_NO;				}
 node			{ return K_NODE;			}
 off				{ return K_OFF;				}
 old				{ return K_OLD;				}
+omit				{ return K_OMIT;				}
 on				{ return K_ON;				}
 only			{ return K_ONLY;			}
 origin			{ return K_ORIGIN;			}

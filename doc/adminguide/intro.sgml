@@ -157,12 +157,15 @@ linkend="function.denyaccess"> function; this function prevents
 anything other than the <xref linkend="slon"> process from updating
 data in replicated tables.  In addition, any
 <emphasis>other</emphasis> triggers and rules on replicated tables are
-<emphasis>suppressed</emphasis> on the subscribers: This is done by
-pointing them, in the system table, to the primary key index instead
-of to the table itself.  This represents something of a
-<quote>corruption</quote> of the data dictionary, and is why you
-should not directly use <application>pg_dump</application> to dump
-schemas on subscribers. </para>
+<emphasis>suppressed</emphasis> on the subscribers.  On versions of
+&slony1; prior to 2.0, this is done by pointing them, in the system
+table, to the primary key index instead of to the table itself, which
+represents a <quote>corruption</quote> of the data dictionary, and is
+why you should not directly use <application>pg_dump</application> to
+dump schemas on subscribers.  In version 2.0, this functionality is
+handled via native &postgres; functionality, so that with &slony1;
+2.0+, <application>pg_dump</application> may be expected to work fine.
+</para>
 
 <para>There is a capability for &slony1; to propagate other kinds of
 database modifications, notably DDL changes, if you submit them as
@@ -191,6 +194,10 @@ server</quote> which cannot be used without it ceasing to be
 <quote>standby.</quote></para></listitem>
 
 </itemizedlist></para>
+
+<para> &slony1; does not automatically determine what sequences ought
+to be replicated; you need to add them explicitly using <xref
+linkend="stmtsetaddsequence">. </para>
 </sect2>
 
 <sect2><title>Replication Models</title>

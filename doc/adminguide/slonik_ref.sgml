@@ -36,7 +36,7 @@
 	procedures makes it rather difficult to do this from the
 	<application>psql</application> prompt, and</para></listitem>
       
-      <listitem><para><application>psql</application>lacks the ability
+      <listitem><para><application>psql</application> lacks the ability
 	to maintain multiple connections with open
 	transactions.</para></listitem>
      </itemizedlist>
@@ -578,7 +578,7 @@ INIT CLUSTER (
    </refsect1>
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  The <envar>SPOOLNODE</envar>
-   parameter was introduced in version 1.1, but was vestigal in that
+   parameter was introduced in version 1.1, but was vestigial in that
    version.  The described functionality for <envar>SPOOLNODE</envar>
    arrived in version 1.2, but <envar>SPOOLNODE</envar> was not used
    for this purpose.  In later versions, hopefully
@@ -1316,7 +1316,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     # Assuming that set 1 has direct subscribers 2 and 3
+     # Assuming that node 1 is the origin of set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      SYNC (ID=1);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
@@ -2120,6 +2120,25 @@ DROP TRIGGER (
        yes</command>.</para></listitem>
 
       </varlistentry>
+      <varlistentry><term><literal> OMIT COPY = boolean </literal></term>
+       
+       <listitem><para> Flag whether or not the subscription process
+       should omit doing the <command>COPY</command> of the existing
+       data in the set.  In effect, use this option indicates
+       <quote>Trust me, the data is already in sync!</quote>
+       </para>
+
+       <para> This is notably useful for the following sorts of cases:
+       </para>
+
+       <itemizedlist>
+	<listitem><para> Major inter-version upgrades (<emphasis>e.g. </emphasis> - as from &slony1; 1.2 to 2.0) may be done quickly. </para> </listitem>
+	<listitem><para> Cloning a <quote>master node</quote>.  <xref linkend="stmtcloneprepare">/<xref linkend="stmtclonefinish">   </para> </listitem>
+	<listitem><para> </para> </listitem>
+       </itemizedlist>
+       </listitem>
+
+      </varlistentry>
      </variablelist>
     <para> This uses &funsubscribeset;. </para>
    </refsect1>
@@ -2209,6 +2228,10 @@ SUBSCRIBE SET (
      case - the former contents are discarded and the node is
      populated <emphasis>from scratch</emphasis>.</para> </listitem>
 
+     <listitem><para> The <command>OMIT COPY</command> option has the
+     potential to be a large <quote>foot gun</quote> in that it allows
+     the administrator to push replication sets out of sync. </para>
+     </listitem>
    </itemizedlist>
 
    </refsect1>
@@ -2227,6 +2250,7 @@ SUBSCRIBE SET (
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
+    <para> The <command>OMIT COPY</command> option was introduced in &slony1; 2.0.3.</para>
    </refsect1>
   </refentry>
   
@@ -2931,7 +2955,7 @@ WAIT FOR EVENT (
    the subscription, and have the WAIT request wait on the
    <command>SYNC</command> event, as follows. </para>
     <programlisting>
-     # Assuming that set 1 has direct subscribers 2 and 3
+     # Assuming that node 1 is the origin for set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
@@ -3091,7 +3115,7 @@ REPAIR CONFIG (
    <refsect1>
     <title>Description</title>
     <para>
-     Prepares for cloning a specified node.
+     Prepares for cloning a specified subscriber node.
     </para>
 
     <para>

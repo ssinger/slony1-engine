@@ -15,11 +15,11 @@ if test -n "${with_perltools}" ; then
     fi
   fi
   if test -n "$PERL"; then
-    AC_MSG_CHECKING(for DBI::Pg)
+    AC_MSG_CHECKING(for DBD::Pg)
     HAVE_SLONYTOOLS=1
   else
     dnl Specify the commandline options here.
-    AC_MSG_ERROR(Cannot find DBI:Pg. 
+    AC_MSG_ERROR(Cannot find DBD:Pg. 
     You require DBD::Pg to install the slony tools
     )
   fi

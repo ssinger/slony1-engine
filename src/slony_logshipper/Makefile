@@ -35,7 +35,8 @@ OBJS		= 					\
 	dbutil.o					\
 	ipcutil.o					\
 	parser.o $(WIN32RES)		\
-	../parsestatements/scanner.o
+	../parsestatements/scanner.o \
+	scan.o
 
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
@@ -50,7 +51,6 @@ $(PROG):	$(OBJS)
 slony_logshipper.o:			slony_logshipper.c slony_logshipper.h
 dbutil.o:			dbutil.c slony_logshipper.h
 parser.o:			parser.c scan.c
-
 parser.c:			parser.y slony_logshipper.h
 ifdef YACC
 	$(YACC) -d $(YFLAGS) $<
@@ -60,9 +60,10 @@ else
 	@exit 1
 endif
 
+scan.c:	SCANNER_HEADER=scan.h
 scan.c:				scan.l slony_logshipper.h
 ifdef FLEX 
-	$(FLEX) $(FLEXFLAGS) -o'$@' $<
+	$(FLEX) $(FLEXFLAGS) --header-file=$(SCANNER_HEADER)  -o'$@' $<
 else
 	@echo "Missing flex $< $@"
 	@exit
