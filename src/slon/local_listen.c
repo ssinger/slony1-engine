@@ -47,6 +47,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	char		restart_notify[256];
 	int			restart_request;
 	int poll_sleep = 0;
+	int         node_lock_obtained=0;
 
 	slon_log(SLON_INFO, "localListenThread: thread starts\n");
 
@@ -92,24 +93,31 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 "    %d, 0, \"pg_catalog\".pg_backend_pid()); ",
 				 rtcfg_namespace, rtcfg_namespace,
 				 rtcfg_nodeid);
-	res = PQexec(dbconn, dstring_data(&query1));
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	while(!node_lock_obtained)
 	{
-		slon_log(SLON_FATAL,
-				 "localListenThread: \"%s\" - %s\n",
-				 dstring_data(&query1), PQresultErrorMessage(res));
-		if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0) {
+		res = PQexec(dbconn, dstring_data(&query1));
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		{
 			slon_log(SLON_FATAL,
-				 "Do you already have a slon running against this node?\n");
-			slon_log(SLON_FATAL,
-				 "Or perhaps a residual idle backend connection from a dead slon?\n");
-		}
+					 "localListenThread: \"%s\" - %s\n",
+					 dstring_data(&query1), PQresultErrorMessage(res));
+			if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0) {
+				slon_log(SLON_FATAL,
+						 "Do you already have a slon running against this node?\n");
+				slon_log(SLON_FATAL,
+						 "Or perhaps a residual idle backend connection from a dead slon?\n");
+				PQclear(res);
+				sleep(5);
+				continue;
+			}
 		    
+			PQclear(res);
+			dstring_free(&query1);
+			slon_abort();
+		}
 		PQclear(res);
-		dstring_free(&query1);
-		slon_abort();
+		node_lock_obtained=1;
 	}
-	PQclear(res);
 
 	/*
 	 * Flag the main thread that the coast is clear and he can launch all
