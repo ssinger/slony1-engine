@@ -793,7 +793,17 @@ SlonWatchdog(void)
 #endif
 	slon_log(SLON_INFO, "slon: watchdog process started\n");
 
-	/*
+
+
+	slon_log(SLON_CONFIG, "slon: watchdog ready - pid = %d\n", slon_watchdog_pid);
+
+	slon_worker_pid = fork();
+	if (slon_worker_pid == 0)
+	{
+		SlonMain();
+		exit(-1);
+	}
+		/*
 	 * Install signal handlers
 	 */
 #ifndef CYGWIN
@@ -839,15 +849,6 @@ SlonWatchdog(void)
 	{
 		slon_log(SLON_FATAL, "slon: SIGQUIT signal handler setup failed -(%d) %s\n", errno, strerror(errno));
 		slon_exit(-1);
-	}
-
-	slon_log(SLON_CONFIG, "slon: watchdog ready - pid = %d\n", slon_watchdog_pid);
-
-	slon_worker_pid = fork();
-	if (slon_worker_pid == 0)
-	{
-		SlonMain();
-		exit(-1);
 	}
 
 	slon_log(SLON_CONFIG, "slon: worker process created - pid = %d\n",
