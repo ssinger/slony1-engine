@@ -8,3 +8,5 @@ Makefile.port
 GNUmakefile
 configure
 slony1.spec
+src/slonik/scan.h
+src/slony_logshipper/scan.h
