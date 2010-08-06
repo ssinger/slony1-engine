@@ -4028,6 +4028,14 @@ begin
 		raise exception 'Slony-I: subscribeSet() must be called on provider';
 	end if;
 
+	--
+	-- Check that the receiver exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_sub_receiver) then
+		      raise exception 'Slony-I: subscribeSet() the receiver does not exist receiver id:%' , p_sub_receiver;
+	end if;
+
 	-- ----
 	-- Check that the origin and provider of the set are remote
 	-- ----
