@@ -5772,3 +5772,27 @@ comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text
 tab_idxname is optional - if NULL, then we use the primary key.
 This function looks up replication configuration via the parent table.';
 
+create or replace function @NAMESPACE@.reshapeSubscription (int4, int4, int4) returns int4 as $$
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
+		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
+	perform @NAMESPACE@.RebuildListenEntries();
+	notify "_@CLUSTERNAME@_Restart";
+	return 0;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.reshapeSubscription(int4,int4,int4) is
+'Run on a receiver/subscriber node when the provider for that
+subscription is being changed.  Slonik will invoke this method
+before the SUBSCRIBE_SET event propogates to the receiver
+so listen paths can be updated.';

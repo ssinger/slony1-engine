@@ -3453,6 +3453,9 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	PGresult    *res1;
+	SlonikAdmInfo * adminfo2;
+	int reshape=0;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_provider);
 	if (adminfo1 == NULL)
@@ -3462,6 +3465,33 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 		return -1;
 
 	dstring_init(&query);
+
+	/**
+	 * If the receiver is already subscribed to
+	 * the set through a different provider
+	 * slonik will need to tell the receiver
+	 * about this change directy.
+	 *
+	 */
+
+	slon_mkquery(&query,"select * FROM \"_%s\".sl_subscribe " \
+				 "where sub_set=%d AND sub_receiver=%d " \
+				 " and sub_active=true and sub_provider<>%d",
+				 stmt->hdr.script->clustername,
+				 stmt->sub_setid,stmt->sub_receiver,
+				 stmt->sub_provider);
+	
+	res1 = db_exec_select((SlonikStmt*) stmt,adminfo1,&query);
+	if(res1 == NULL) {
+		dstring_free(&query);
+		return -1;
+	}
+	if(PQntuples(res1) > 0) 
+	{
+		reshape=1;
+	}
+	PQclear(res1);
+	dstring_reset(&query);
 
 	slon_mkquery(&query,
 				 "select \"_%s\".subscribeSet(%d, %d, %d, '%s', '%s'); ",
@@ -3475,8 +3505,30 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 		dstring_free(&query);
 		return -1;
 	}
-
-	dstring_free(&query);
+	dstring_reset(&query);
+	if(reshape)
+	{
+		adminfo2 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_receiver);
+		if(adminfo2 == NULL) 
+		{
+			printf("can not find conninfo for receiver node %d\n",
+				   stmt->sub_receiver);
+			return -1;
+		}
+		slon_mkquery(&query,
+					 "select \"_%s\".reshapeSubscription(%d,%d,%d);",
+					 stmt->hdr.script->clustername,
+					 stmt->sub_provider,stmt->sub_setid,
+					 stmt->sub_receiver);	
+		if (db_exec_evcommand((SlonikStmt *) stmt, adminfo2, &query) < 0)
+		{
+			printf("error reshaping subscriber\n");
+			//	dstring_free(&query);
+			//return -1;
+		}
+		
+		dstring_free(&query);
+	}
 	return 0;
 }
 
