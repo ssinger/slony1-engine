@@ -251,4 +251,10 @@ tools.  Patch by Peter Eisentraut
 , it truncates the tables on restore.   The slony_logshipper program now does
 not exit when there are no more files ready to be processed
 
+-Fix for bug #122, better error message in subscribeSet
+
+-Fixed some broken logic in failedNode()
+
+-Fix for bug 141, removing alterTableRestore
+
 
