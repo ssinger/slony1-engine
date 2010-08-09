@@ -20,12 +20,10 @@
   <!ENTITY funstorelisten "<xref linkend= function.storelisten-integer-integer-integer>">
   <!ENTITY funstorepath "<xref linkend=function.storepath-integer-integer-text-integer>">
   <!ENTITY funstoreset "<xref linkend=function.storeset-integer-text>">
-  <!ENTITY funtableaddkey "<xref linkend= function.tableaddkey-text>">
   <!ENTITY funsetaddtable "<xref linkend= function.setaddtable-integer-integer-text-name-text>">
   <!ENTITY funsetaddsequence "<xref linkend= function.setaddsequence-integer-integer-text-text>">
   <!ENTITY funsetdropsequence "<xref linkend= function.setdropsequence-integer>">
   <!ENTITY funsetmovetable "<xref linkend= function.setmovetable-integer-integer>">
-<!ENTITY fundroptrigger "<xref linkend=function.droptrigger-integer-name>">
 <!ENTITY funddlscript "<xref linkend=function.ddlscript-complete-integer-text-integer>">
 <!ENTITY fundropnode "<xref linkend=function.dropnode-integer>">
 <!ENTITY funenablenode "<xref linkend=function.enablenode-integer>">
@@ -34,7 +32,6 @@
 <!ENTITY funlockset "<xref linkend=function.lockset-integer>">
 <!ENTITY funmoveset "<xref linkend=function.moveset-integer-integer>">
 <!ENTITY funsetmovesequence "<xref linkend=function.setmovesequence-integer-integer>">
-<!ENTITY funstoretrigger "<xref linkend=function.storetrigger-integer-name>">
 <!ENTITY funsubscribeset "<xref linkend=function.subscribeset-integer-integer-integer-boolean>">
 <!ENTITY fununinstallnode "<xref linkend=function.uninstallnode>">
 <!ENTITY fununlockset "<xref linkend=function.unlockset-integer>">

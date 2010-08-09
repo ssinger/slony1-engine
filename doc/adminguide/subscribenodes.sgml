@@ -101,9 +101,9 @@ or near "order" at character 162
 </screen>
 
 <para> The function <xref
-linkend="function.subscribeset-integer-integer-integer-boolean"> will
-generate a warning if given a replication set that lacks any tables to
-replicate, as shown in the following example.</para>
+linkend="function.subscribeset-integer-integer-integer-boolean-boolean">
+will generate a warning if given a replication set that lacks any
+tables to replicate, as shown in the following example.</para>
 
 <screen>
 cbbrowne@dba2:/tmp> cat create_empty_set.slonik

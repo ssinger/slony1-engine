@@ -91,8 +91,8 @@ databases. </para>
 
 <para> There are also variables <envar>USER1</envar> thru
 <envar>USER13</envar> which allow specifying a separate user name for
-each database instance.  As always, with &slony1;, this needs
-to be a &postgres; <quote>superuser.</quote> </para>  </glossdef> </glossentry>
+each database instance.  The tests assume this to be a &postgres;
+<quote>superuser.</quote> </para> </glossdef> </glossentry>
 
 <glossentry><glossterm> <envar>WEAKUSER</envar> </glossterm>
 <glossdef><para> By default, the user <filename>postgres</filename> is

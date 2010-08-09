@@ -5503,18 +5503,14 @@ begin
 	-- ----
 	perform @NAMESPACE@.TruncateOnlyTable(v_tab_fqname);
 	raise notice 'truncate of % succeeded', v_tab_fqname;
-	-- ----
-	-- Setting pg_class.relhasindex to false will cause copy not to
-	-- maintain any indexes. At the end of the copy we will reenable
-	-- them and reindex the table. This bulk creating of indexes is
-	-- faster.
-	-- ----
-	update pg_class set relhasindex = 'f' where oid = v_tab_oid;
+
+	-- suppress index activity
+        perform @NAMESPACE@.disable_indexes_on_table(v_tab_oid);
 
 	return 1;
 	exception when others then
 		raise notice 'truncate of % failed - doing delete', v_tab_fqname;
-		update pg_class set relhasindex = 'f' where oid = v_tab_oid;
+		perform @NAMESPACE@.disable_indexes_on_table(v_tab_oid);
 		execute 'delete from only ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 		return 0;
 end;
@@ -5555,7 +5551,7 @@ begin
 	-- ----
 	-- Reenable indexes and reindex the table.
 	-- ----
-	update pg_class set relhasindex = 't' where oid = v_tab_oid;
+	perform @NAMESPACE@.enable_indexes_on_table(v_tab_oid);
 	execute 'reindex table ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 
 	return 1;
@@ -5757,3 +5753,47 @@ comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text
 tab_idxname is optional - if NULL, then we use the primary key.
 This function looks up replication configuration via the parent table.';
 
+
+-- -------------------------------------------------------------------------
+-- FUNCTION disable_indexes (oid)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.disable_indexes_on_table (i_oid oid) 
+returns integer as $$
+begin
+	-- Setting pg_class.relhasindex to false will cause copy not to
+	-- maintain any indexes. At the end of the copy we will reenable
+	-- them and reindex the table. This bulk creating of indexes is
+	-- faster.
+
+	update pg_catalog.pg_class set relhasindex ='f' where oid = i_oid;
+	return 1;
+end $$
+language plpgsql;
+
+comment on function @NAMESPACE@.disable_indexes_on_table(i_oid oid) is
+'disable indexes on the specified table.
+Used during subscription process to suppress indexes, which allows
+COPY to go much faster.
+
+This may be set as a SECURITY DEFINER in order to eliminate the need
+for superuser access by Slony-I.
+';
+
+-- -------------------------------------------------------------------------
+-- FUNCTION enable_indexes_on_table (oid)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.enable_indexes_on_table (i_oid oid) 
+returns integer as $$
+begin
+	update pg_catalog.pg_class set relhasindex ='t' where oid = i_oid;
+	return 1;
+end $$
+language plpgsql
+security definer;
+
+comment on function @NAMESPACE@.enable_indexes_on_table(i_oid oid) is
+'re-enable indexes on the specified table.
+
+This may be set as a SECURITY DEFINER in order to eliminate the need
+for superuser access by Slony-I.
+';
