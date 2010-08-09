@@ -229,3 +229,6 @@ usingslonik.html
 version.sgml
 versionupgrade.html
 view.sl-seqlastvalue.html
+bookindex.html
+function.disable-indexes-on-table-i-oid-oid.html
+function.enable-indexes-on-table-i-oid-oid.html
