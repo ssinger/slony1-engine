@@ -1,3 +1,10 @@
+Release 1.2.22
+
+-Bug #118 -  Use TRUNCATE ONLY when cleaning out tables on subscribers in
+ versions of Postgresql that require it. 
+
+-Explicit support for version 9.0
+
 
 
 Release 1.2.21

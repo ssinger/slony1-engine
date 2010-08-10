@@ -1905,15 +1905,20 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 0;
 	}
-	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80500)	/* 8.1, 8.2, 8.3, 8.4 */
+	else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80400)	/* 8.1, 8.2, 8.3 */
 	{
 		use_major = 8;
 		use_minor = 1;
 	}
-	else	/* 8.5+ */
+	else if((adminfo->pg_version >= 80400) && adminfo->pg_version < 90100)	/* 8.4+ */
 	{
 		use_major = 8;
-		use_minor = 1;
+		use_minor = 4;
+	}
+	else
+	{
+		use_major=8;
+		use_minor=4;
 		printf("%s:%d: Possible unsupported PostgreSQL "
 			"version (%d) %d.%d, defaulting to 8.1 support\n",
                         stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
@@ -2005,20 +2010,25 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
                 use_major = 8;
                 use_minor = 0;
         }
-       else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80300)	/* 8.1 and 8.2 */
+       else if ((adminfo->pg_version >= 80100) && adminfo->pg_version < 80400)	/* 8.1 and 8.2 and 8.3*/
        {
 	       use_major = 8;
 	       use_minor = 1;
        }
-        else    /* 8.3 and above */
-        {
-                use_major = 8;
-                use_minor = 1;
-                printf("%s:%d: Possible unsupported PostgreSQL "
-                        "version %d.%d, defaulting to 8.1 support\n",
-                        stmt->stmt_filename, stmt->stmt_lno,
-                        (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
-        }
+	   else if  ((adminfo->pg_version >= 80400) && adminfo->pg_version < 90100)    /* 8.4 and above */
+	   {
+		   use_major = 8;
+		   use_minor = 4;
+	   }
+	   else
+	   {
+		   use_major=8;
+		   use_minor=4;
+		   printf("%s:%d: Possible unsupported PostgreSQL "
+				  "version %d.%d, defaulting to 8.1 support\n",
+				  stmt->stmt_filename, stmt->stmt_lno,
+				  (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
+	   }
 
 	/* Load schema, DB version specific */
 	db_notice_silent = true;

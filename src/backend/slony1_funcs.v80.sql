@@ -51,7 +51,7 @@ begin
 	-- Try using truncate to empty the table and fallback to
 	-- delete on error.
 	-- ----
-	execute ''truncate '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+	perform @NAMESPACE@.TruncateOnlyTable(v_tab_fqname);
 	raise notice ''truncate of % succeeded'', v_tab_fqname;
 	return 1;
 	exception when others then
@@ -126,3 +126,17 @@ end
 
 comment on function @NAMESPACE@.make_function_strict (text, text) is
 'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
+
+
+
+create or replace function @NAMESPACE@.TruncateOnlyTable ( name) returns void as
+$$
+begin
+	execute 'truncate '|| @NAMESPACE@.slon_quote_input($1);
+end;
+$$
+LANGUAGE plpgsql;
+
+
+comment on function @NAMESPACE@.TruncateOnlyTable(name) is
+'Calls TRUNCATE with out specifying ONLY, syntax supported in versions 8.3 and below';

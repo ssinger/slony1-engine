@@ -1,13 +1,14 @@
 -- ----------------------------------------------------------------------
--- slony1_funcs.v73.sql
+-- slony1_funcs.v83.sql
 --
---    Version 7.3 specific part of the replication support functions.
+--    Version 8.3 specific part of the replication support functions.
 --
---	Copyright (c) 2003-2009, PostgreSQL Global Development Group
+--	Copyright (c) 2007-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
 --
--- 
+-- $Id: slony1_funcs.v84.sql,v 1.1.2.3 2010-05-17 17:15:19 ssinger Exp $
 -- ----------------------------------------------------------------------
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION prepareTableForCopy(tab_id)
@@ -24,13 +25,13 @@ declare
 	v_tab_fqname	text;
 begin
 	-- ----
-	-- Get the tables OID and fully qualified name
+	-- Get the OID and fully qualified name for the table
 	-- ---
 	select	PGC.oid,
 			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 		into v_tab_oid, v_tab_fqname
-			from @NAMESPACE@.sl_table T,   
+			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 				where T.tab_id = p_tab_id
 				and T.tab_reloid = PGC.oid
@@ -40,14 +41,26 @@ begin
 	end if;
 
 	-- ----
+	-- Try using truncate to empty the table and fallback to
+	-- delete on error.
+	-- ----
+	perform @NAMESPACE@.TruncateOnlyTable(v_tab_fqname);
+	raise notice ''truncate of % succeeded'', v_tab_fqname;
+
+	-- ----
 	-- Setting pg_class.relhasindex to false will cause copy not to
 	-- maintain any indexes. At the end of the copy we will reenable
 	-- them and reindex the table. This bulk creating of indexes is
 	-- faster.
 	-- ----
 	update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
-	execute ''delete from only '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+
 	return 1;
+	exception when others then
+		raise notice ''truncate of % failed - doing delete'', v_tab_fqname;
+		update pg_class set relhasindex = ''f'' where oid = v_tab_oid;
+		execute ''delete from only '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+		return 0;
 end;
 ' language plpgsql;
 
@@ -74,7 +87,7 @@ begin
 			@NAMESPACE@.slon_quote_brute(PGN.nspname) || ''.'' ||
 			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
 		into v_tab_oid, v_tab_fqname
-			from @NAMESPACE@.sl_table T,   
+			from @NAMESPACE@.sl_table T,
 				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN
 				where T.tab_id = p_tab_id
 				and T.tab_reloid = PGC.oid
@@ -88,6 +101,7 @@ begin
 	-- ----
 	update pg_class set relhasindex = ''t'' where oid = v_tab_oid;
 	execute ''reindex table '' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
+
 	return 1;
 end;
 ' language plpgsql;
@@ -97,26 +111,35 @@ comment on function @NAMESPACE@.finishTableAfterCopy(int4) is
 
 create or replace function @NAMESPACE@.pre74()
 returns integer
-as 'select 1;' language sql;
+as 'select 0' language sql;
 
-comment on function @NAMESPACE@.pre74() is 
-'Returns 1 or 0 based on whether or not the DB is running a
+comment on function @NAMESPACE@.pre74() is
+'Returns 1/0 based on whether or not the DB is running a
 version earlier than 7.4';
 
 create or replace function @NAMESPACE@.make_function_strict (text, text) returns void as
 '
-   update "pg_catalog"."pg_proc" set proisstrict = ''t'' where 
-           proname = $1 and pronamespace = (select oid from "pg_catalog"."pg_namespace" where nspname = '_@CLUSTERNAME@') and prolang = (select oid from "pg_catalog"."pg_language" where lanname = ''c'');
-' language sql;
+declare
+   fun alias for $1;
+   parms alias for $2;
+   stmt text;
+begin
+   stmt := ''ALTER FUNCTION "_@CLUSTERNAME@".'' || fun || '' '' || parms || '' STRICT;'';
+   execute stmt;
+   return;
+end
+' language plpgsql;
 
 comment on function @NAMESPACE@.make_function_strict (text, text) is
 'Equivalent to 8.1+ ALTER FUNCTION ... STRICT';
 
 
+
+
 create or replace function @NAMESPACE@.TruncateOnlyTable ( name) returns void as
 $$
 begin
-	execute 'truncate '|| @NAMESPACE@.slon_quote_input($1);
+	execute 'truncate only '|| @NAMESPACE@.slon_quote_input($1);
 end;
 $$
 LANGUAGE plpgsql;

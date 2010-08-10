@@ -6092,8 +6092,7 @@ begin
 	end if;
    else
 	-- On other nodes, TRUNCATE the table
-        v_query := ''truncate '' || v_fqname || '';'';
-	execute v_query;
+		perform @NAMESPACE@.TruncateOnlyTable(v_fqname);
    end if;
 -- If p_idxname is NULL, then look up the PK index, and RAISE EXCEPTION if one does not exist
    if p_idxname is NULL then
