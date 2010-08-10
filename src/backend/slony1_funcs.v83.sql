@@ -26,6 +26,10 @@ declare
 	c_enabled boolean;
 	v_dummy int4;
 begin
+	if not exists (select 1 from pg_catalog.pg_class c, pg_catalog.pg_namespace n 
+                   where c.relname = i_tblname and n.nspname = i_nspname and c.relnamespace = n.oid) then
+        return 'f'::boolean;   -- if table does not exist, then don't vacuum
+	end if;				
 	select 1 into v_dummy from "pg_catalog".pg_settings where name = 'autovacuum' and setting = 'on';
 	if not found then
 		return 't'::boolean;       -- If autovac is turned off, then we gotta vacuum
