@@ -29,7 +29,7 @@
 <!entity slonikref          SYSTEM "slonik_ref.sgml">
 <!entity slon               SYSTEM "slon.sgml">
 <!entity slonconf	    SYSTEM "slonconf.sgml">
-<!entity schemadoc          SYSTEM "schemadoc.xml">
+<!entity schemadoc          SYSTEM "schemadoc.sgml">
 
 <!entity history            SYSTEM "history.sgml">
 <!entity legal              SYSTEM "legal.sgml">
