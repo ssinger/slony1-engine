@@ -15,7 +15,8 @@ include $(slony_top_builddir)/Makefile.global
 .NOTPARALLEL:
 
 
-GENERATED_SGML = bookindex.sgml version.sgml
+GENERATED_SGML = bookindex.sgml version.sgml schemadoc.sgml
+GENERATED_XML = schemadoc.xml
 
 ALLSGML = $(wildcard $(srcdir)/*.sgml) $(GENERATED_SGML)
 DISTFILES = $(ALLSGML) $(GENERATED_SGML)
@@ -252,6 +253,9 @@ TEMPDB=schemadoc
 TEMPSCHEMA=schemadoc
 CREATELANG=$(pgbindir)/createlang   # That's how it is for me...
 PGAUTODOC=/usr/bin/postgresql_autodoc
+
+schemadoc.sgml: schemadoc.xml
+	sed 's,/>,>,g' $< >$@
 
 schemadoc.xml: $(BASESQL) $(BASEFUNS) $(XIDDIR)
 	@$(pgbindir)/createdb $(TEMPDB) && ( \
