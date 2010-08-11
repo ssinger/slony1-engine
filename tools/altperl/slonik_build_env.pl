@@ -7,7 +7,7 @@
 # This script, given parameters concerning the database nodes,
 # generates output for "slon_tools.conf" consisting of:
 # - A set of add_node() calls to configure the cluster
-# - The arrays @KEYEDTABLES, @SERIALTABLES, and @SEQUENCES
+# - The arrays @KEYEDTABLES, and @SEQUENCES
 
 use DBI;
 use Getopt::Long;
@@ -92,11 +92,14 @@ if ( scalar(@tablesWithIndexes) >= 1 ) {
   print ");\n";
 }
 if ( scalar(@tablesWithoutIndexes) >= 1 ) {
-  print '@SERIALTABLES=(' . "\n";
+  my $tables = ''; 
   foreach my $table (sort @tablesWithoutIndexes) {
-    print "\t\"$table\",\n";
+	  if($tables ne '') {
+		  $tables.=',';
+	  }
+	  $tables.="\"$table\"";
   }
-  print ");\n";
+  die "The following tables had no unique index:" . $tables."\n";
 }
 if ( scalar(@sequences) >= 1 ) {
   print '@SEQUENCES=(' . "\n";

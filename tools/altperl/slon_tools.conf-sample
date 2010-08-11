@@ -137,12 +137,6 @@ $SLONY_SETS = {
 	    'table4' => 'index_on_table4',
 	},
 
-	# If a table does not have a suitable key or set of keys that
-	# can act as a primary key, Slony can add one.
-	#
-	# Note: The Slony development team does not recomment this
-	# approach -- you should create your own primary keys instead.
-	"serialtables" => ["table5"],
 
 	# Sequences that need to be replicated should be entered here.
 	"sequences" => ['sequence1',
@@ -156,7 +150,6 @@ $SLONY_SETS = {
 	"sequence_id"  => 3,
 	"pkeyedtables" => ["table6"],
 	"keyedtables"  => {},
-	"serialtables" => [],
 	"sequences"    => [],
     },
 
