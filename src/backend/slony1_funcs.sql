@@ -5599,16 +5599,6 @@ begin
 		return next prec;
 	end if;
 	prec.nspname := '_@CLUSTERNAME@';
-	prec.relname := 'sl_log_1';
-	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
-		return next prec;
-	end if;
-	prec.nspname := '_@CLUSTERNAME@';
-	prec.relname := 'sl_log_2';
-	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
-		return next prec;
-	end if;
-	prec.nspname := '_@CLUSTERNAME@';
 	prec.relname := 'sl_seqlog';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
