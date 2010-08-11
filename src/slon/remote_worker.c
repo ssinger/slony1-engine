@@ -830,13 +830,35 @@ remoteWorkerThread_main(void *cdata)
 				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
 				int			no_provider = (int) strtol(event->ev_data2, NULL, 10);
 				char	   *no_comment = event->ev_data3;
+				int64       last_event_id;
+				PGresult   *res;
 
 				rtcfg_storeNode(no_id, no_comment);
-
 				slon_appendquery(&query1,
 							"select %s.cloneNodePrepare_int(%d, %d, '%q'); ",
 								 rtcfg_namespace,
 								 no_id, no_provider, no_comment);
+				slon_appendquery(&query1,"select coalesce(max(con_seqno),0)"
+								 "from %s.sl_confirm "
+								 "  where con_origin = %d  and con_received"
+								 "= %d", rtcfg_namespace, node->no_id, no_id);
+				res = PQexec(local_dbconn, dstring_data(&query1));
+				if (PQresultStatus(res) != PGRES_TUPLES_OK )
+				{
+				  slon_log(SLON_ERROR,"remoteWorkerThread_%d error querying "
+						   "last confirmed id for node %d in CLONE NODE\n",
+						   node->no_id, no_id);
+				  slon_retry();
+				}
+				if( PQntuples(res) 	!= 0)
+				{
+				  last_event_id = strtoll(PQgetvalue(res, 0, 0),NULL,10);
+				  rtcfg_setNodeLastEvent(no_id, last_event_id);
+				}
+				PQclear(res);
+				dstring_reset(&query1);
+				rtcfg_enableNode(no_id);
+
 			}
 			else if (strcmp(event->ev_type, "STORE_PATH") == 0)
 			{

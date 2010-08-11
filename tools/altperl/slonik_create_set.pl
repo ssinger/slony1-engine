@@ -47,15 +47,6 @@ $slonik .= genheader();
 # Tables without primary keys
 $slonik .= "\n";
 $slonik .= "# TABLE ADD KEY\n";
-foreach my $table (@SERIALTABLES) {
-    $table = ensure_namespace($table);
-    $table = lc($table) if $FOLD_CASE;
-    $slonik .= "  echo '  Adding unique key to table $table...';\n";
-    $slonik .= "  table add key (\n";
-    $slonik .= "    node id = $SET_ORIGIN,\n";
-    $slonik .= "    full qualified name='$table'\n";
-    $slonik .= "  );\n";
-}
 
 # CREATE SET
 $slonik .= "\n";
@@ -75,15 +66,7 @@ $slonik .= "  echo 'Adding tables to the subscription set';\n";
 
 $TABLE_ID = 1 if $TABLE_ID < 1;
 
-foreach my $table (@SERIALTABLES) {
-    $table = ensure_namespace($table);
-	$table = lc($table) if $FOLD_CASE;
-    $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
-    $slonik .= "                 full qualified name = '$table', key=serial,\n";
-    $slonik .= "                 comment = 'Table $table without primary key');\n";
-    $slonik .= "  echo 'Add unkeyed table $table';\n";
-    $TABLE_ID++;
-}
+
 
 foreach my $table (@PKEYEDTABLES) {
     $table = ensure_namespace($table);

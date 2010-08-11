@@ -4885,9 +4885,7 @@ BEGIN
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL) 
-                                         from @NAMESPACE@.sl_node n where no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') 
-			and exists (select 1 from @NAMESPACE@.sl_set where set_origin = no_id);
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
 		return 1;
 	else
 		return 0;
