@@ -257,4 +257,6 @@ not exit when there are no more files ready to be processed
 
 -Fix for bug 141, removing alterTableRestore
 
+-Fix bug 147, remove TABLE ADD KEY from altperl scripts
+
 -Fix for bug #78, removing vacuuming of sl_log_1/2
