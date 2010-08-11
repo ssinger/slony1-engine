@@ -476,7 +476,6 @@ extern void *slon_localEventThread(void *dummy);
 
 extern int	vac_frequency;
 extern char *cleanup_interval;
-extern bool cleanup_deletelogs;
 
 /* ----------
  * Functions in cleanup_thread.c
