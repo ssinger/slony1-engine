@@ -37,10 +37,15 @@ configuration:
 
 </itemizedlist></para>
 
-<para> The <envar>REPLICATIONUSER</envar> needs to be a &postgres;
-superuser.  This is typically postgres or pgsql, although in complex
-environments it is quite likely a good idea to define a
-<command>slony</command> user to distinguish between the roles.</para>
+<para> The <envar>REPLICATIONUSER</envar> is commonly set up to be a
+&postgres; superuser, perhaps an existing one such as
+<envar>postgres</envar>, <envar>pgsql</envar>, or one created for this
+purpose such as <envar>slony</envar> or <envar>replication</envar>.
+Traditionally, people have used a database superuser for this, but
+that is not necessary as discussed <xref linkend="superuser">.  If you
+set up a non-superuser user for this, there is more of a configuration
+burden in granting the specifically-required permissions.
+</para>
 
 <para>You should also set the following shell variables:
 

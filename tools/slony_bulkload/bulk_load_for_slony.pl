@@ -184,12 +184,10 @@ parses the configuration file.  It builds a COPY statement to load the
 bulk file into the target table, and then connects to each node in
 turn.  It checks to make sure that there are as many nodes listed in
 sl_node as are configured in its configuration file.  It learns the
-table identifier for Slony by querying the cluster's sl_table table,
-then removes that table from replication by calling the
-altertablerestore() function.  It then runs its COPY query.  It checks
-the return value of the copy query.  If that returns OK, then it
-retores the table to replication using the altertableforreplication()
-function.  
+table identifier for Slony by querying the cluster's sl_table table.
+It then runs its COPY query.  It checks the return value of the copy
+query.  If that returns OK, then it retores the table to replication
+using the altertableforreplication() function.
 
 The script proceeds to perform the same operations for every table
 listed in the configuration file.
@@ -337,15 +335,6 @@ foreach my $connopt (@connstr) {
     print "Your config has $numnodes nodes\n";
     print "Slony thinks it has $slnodes nodes\n";
     die "Mismatch!\n";
-  }
-  # now that we have the table id, disable it in replication
-  $qstring = "SELECT " . $slonyschem;
-  $qstring = $qstring . ".altertablerestore(" . $tab_id . ")";
-  my $replic_change = $conn->exec($qstring);
-  unless (($replic_change->resultStatus)  eq PGRES_TUPLES_OK) {
-    print "PANIC: failed attempting to disable replication\n";
-    printf ("Result is %s\n",($replic_change->resultStatus));
-    die "Could not disable replication on connection $connopt\n";
   }
   # perform the bulk load
   my $bulk_load = $conn->exec($copystmt);

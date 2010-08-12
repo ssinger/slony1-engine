@@ -46,11 +46,9 @@ syncThread_main(void *dummy)
 	char		last_actseq_buf[64];
 	SlonDString query1;
 	SlonDString query2;
-	SlonDString query3;
 	PGconn	   *dbconn;
 	PGresult   *res;
 	int			timeout_count;
-	bool first_time = TRUE;
 
 	slon_log(SLON_INFO,
 			 "syncThread: thread starts\n");
@@ -85,16 +83,8 @@ syncThread_main(void *dummy)
 	 */
 	dstring_init(&query2);
 	slon_mkquery(&query2,
-		     "select %s.createEvent('_%s', 'SYNC', NULL)"
-		     " from %s.sl_node where no_id = %s.getLocalNodeId('_%s') "
-		     " and exists (select 1 from %s.sl_set where set_origin= no_id);",
-		     rtcfg_namespace, rtcfg_cluster_name,
-		     rtcfg_namespace, rtcfg_namespace, rtcfg_cluster_name, rtcfg_namespace);
-
-	dstring_init(&query3);
-	slon_mkquery(&query3,
-		     "select %s.createEvent('_%s', 'SYNC', NULL);",
-		     rtcfg_namespace, rtcfg_cluster_name);
+				 "select %s.createEvent('_%s', 'SYNC', NULL);",
+				 rtcfg_namespace, rtcfg_cluster_name);
 
 	timeout_count = (sync_interval_timeout == 0) ? 0 :
 		sync_interval_timeout - sync_interval;
@@ -132,23 +122,20 @@ syncThread_main(void *dummy)
 			strcpy(last_actseq_buf, PQgetvalue(res, 0, 0));
 
 			PQclear(res);
-			res = PQexec(dbconn, dstring_data(first_time? &query3:&query2));
+			res = PQexec(dbconn, dstring_data(&query2));
 			if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_FATAL,
 						 "syncThread: \"%s\" - %s",
-					 dstring_data(first_time?&query3:&query2), PQresultErrorMessage(res));
+						 dstring_data(&query2), PQresultErrorMessage(res));
 				PQclear(res);
 				slon_retry();
 				break;
 			}
-			if (first_time) {
-				slon_log(SLON_DEBUG2,
+			slon_log(SLON_DEBUG2,
 					 "syncThread: new sl_action_seq %s - SYNC %s\n",
 					 last_actseq_buf, PQgetvalue(res, 0, 0));
-			}
 			PQclear(res);
-			first_time = FALSE;
 
 			/*
 			 * Commit the transaction
@@ -191,7 +178,6 @@ syncThread_main(void *dummy)
 
 	dstring_free(&query1);
 	dstring_free(&query2);
-	dstring_free(&query3);
 	slon_disconnectdb(conn);
 
 	slon_log(SLON_INFO, "syncThread: thread done\n");

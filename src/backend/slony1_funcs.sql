@@ -3999,130 +3999,6 @@ Set the enable/disable configuration for the replication triggers
 according to the origin of the set.';
 
 -- ----------------------------------------------------------------------
--- FUNCTION alterTableRestore (tab_id)
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.alterTableRestore (int4)
-returns int4
-as $$
-declare
-	p_tab_id			alias for $1;
-	v_no_id				int4;
-	v_tab_row			record;
-	v_tab_fqname		text;
-	v_n					int4;
-begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
-	-- Get our local node ID
-	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-
-	-- ----
-	-- Get the sl_table row and the current tables origin. Check
-	-- that the table currently IS in altered state.
-	-- ----
-	select T.tab_reloid, T.tab_set, T.tab_altered,
-			S.set_origin, PGX.indexrelid,
-			@NAMESPACE@.slon_quote_brute(PGN.nspname) || '.' ||
-			@NAMESPACE@.slon_quote_brute(PGC.relname) as tab_fqname
-			into v_tab_row
-			from @NAMESPACE@.sl_table T, @NAMESPACE@.sl_set S,
-				"pg_catalog".pg_class PGC, "pg_catalog".pg_namespace PGN,
-				"pg_catalog".pg_index PGX, "pg_catalog".pg_class PGXC
-			where T.tab_id = p_tab_id
-				and T.tab_set = S.set_id
-				and T.tab_reloid = PGC.oid
-				and PGC.relnamespace = PGN.oid
-				and PGX.indrelid = T.tab_reloid
-				and PGX.indexrelid = PGXC.oid
-				and PGXC.relname = T.tab_idxname
-				for update;
-	if not found then
-		raise exception 'Slony-I: alterTableRestore(): Table with id % not found', p_tab_id;
-	end if;
-	v_tab_fqname = v_tab_row.tab_fqname;
-	if not v_tab_row.tab_altered then
-		raise exception 'Slony-I: alterTableRestore(): Table % is not in altered state',
-				v_tab_fqname;
-	end if;
-
-	execute 'lock table ' || v_tab_fqname || ' in access exclusive mode';
-
-	-- ----
-	-- Procedures are different on origin and subscriber
-	-- ----
-	if v_no_id = v_tab_row.set_origin then
-		-- ----
-		-- On the Origin we just drop the trigger we originally added
-		-- ----
-		execute 'drop trigger "_@CLUSTERNAME@_logtrigger_' || 
-				p_tab_id::text || '" on ' || v_tab_fqname;
-	else
-		-- ----
-		-- On the subscriber drop the denyAccess trigger
-		-- ----
-		execute 'drop trigger "_@CLUSTERNAME@_denyaccess_' || 
-				p_tab_id::text || '" on ' || v_tab_fqname;
-				
-		-- ----
-		-- Restore all original triggers
-		-- ----
-		update "pg_catalog".pg_trigger
-				set tgrelid = v_tab_row.tab_reloid
-				where tgrelid = v_tab_row.indexrelid;
-		get diagnostics v_n = row_count;
-		if (v_n > 0) and exists (select 1 from information_schema.columns where table_name = 'pg_class' and table_schema = 'pg_catalog' and column_name = 'reltriggers') then
-			update "pg_catalog".pg_class
-					set reltriggers = reltriggers + v_n
-					where oid = v_tab_row.tab_reloid;
-		end if;
-
-		-- ----
-		-- Restore all original rewrite rules
-		-- ----
-		update "pg_catalog".pg_rewrite
-				set ev_class = v_tab_row.tab_reloid
-				where ev_class = v_tab_row.indexrelid;
-		get diagnostics v_n = row_count;
-		if v_n > 0 then
-			update "pg_catalog".pg_class
-					set relhasrules = true
-					where oid = v_tab_row.tab_reloid;
-		end if;
-
-	end if;
-
-	-- ----
-	-- Mark the table not altered in our configuration
-	-- ----
-	update @NAMESPACE@.sl_table
-			set tab_altered = false where tab_id = p_tab_id;
-
-	return p_tab_id;
-end;
-$$ language plpgsql;
-comment on function @NAMESPACE@.alterTableRestore (int4) is
-'alterTableRestore (tab_id)
-
-Note: This function only functions properly when used on pre-2.0
-systems being converted into 2.0 form.  In Slony-I 2.0, the trigger
-handling has changed substantially, such that:
-
-- There are *two* triggers on each table, created at "creation time", and
-- There is no need to run "restore" as part of the DDL/EXECUTE SCRIPT process.
-
-Restores table tab_id from being replicated.
-
-On the origin, this simply involves dropping the "logtrigger" trigger.
-
-On subscriber nodes, this involves dropping the "denyaccess" trigger,
-and restoring user triggers and rules.';
-
--- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.subscribeSet (int4, int4, int4, bool, bool)
@@ -4150,6 +4026,14 @@ begin
 	-- ----
 	if p_sub_provider != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		raise exception 'Slony-I: subscribeSet() must be called on provider';
+	end if;
+
+	--
+	-- Check that the receiver exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_sub_receiver) then
+		      raise exception 'Slony-I: subscribeSet() the receiver does not exist receiver id:%' , p_sub_receiver;
 	end if;
 
 	-- ----
@@ -4658,12 +4542,12 @@ begin
 	-- ----
 	-- Find the eldest event left, for each origin
 	-- ----
-        for v_origin, v_seqno, v_xmin in
-	  select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
+    for v_origin, v_seqno, v_xmin in
+	select ev_origin, ev_seqno, "pg_catalog".txid_snapshot_xmin(ev_snapshot) from @NAMESPACE@.sl_event
           where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 	loop
 		delete from @NAMESPACE@.sl_seqlog where seql_origin = v_origin and seql_ev_seqno < v_seqno;
-        end loop;
+    end loop;
 	
 	v_rc := @NAMESPACE@.logswitch_finish();
 	if v_rc = 0 then   -- no switch in progress
@@ -5000,9 +4884,7 @@ BEGIN
           and ev_timestamp > now() - p_interval limit 1;
 	if not found then
 		-- If there has been no SYNC in the last interval, then push one
-		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL) 
-                                         from @NAMESPACE@.sl_node n where no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') 
-			and exists (select 1 from @NAMESPACE@.sl_set where set_origin = no_id);
+		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
 		return 1;
 	else
 		return 0;
@@ -5613,18 +5495,14 @@ begin
 	-- ----
 	perform @NAMESPACE@.TruncateOnlyTable(v_tab_fqname);
 	raise notice 'truncate of % succeeded', v_tab_fqname;
-	-- ----
-	-- Setting pg_class.relhasindex to false will cause copy not to
-	-- maintain any indexes. At the end of the copy we will reenable
-	-- them and reindex the table. This bulk creating of indexes is
-	-- faster.
-	-- ----
-	update pg_class set relhasindex = 'f' where oid = v_tab_oid;
+
+	-- suppress index activity
+        perform @NAMESPACE@.disable_indexes_on_table(v_tab_oid);
 
 	return 1;
 	exception when others then
 		raise notice 'truncate of % failed - doing delete', v_tab_fqname;
-		update pg_class set relhasindex = 'f' where oid = v_tab_oid;
+		perform @NAMESPACE@.disable_indexes_on_table(v_tab_oid);
 		execute 'delete from only ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 		return 0;
 end;
@@ -5665,7 +5543,7 @@ begin
 	-- ----
 	-- Reenable indexes and reindex the table.
 	-- ----
-	update pg_class set relhasindex = 't' where oid = v_tab_oid;
+	perform @NAMESPACE@.enable_indexes_on_table(v_tab_oid);
 	execute 'reindex table ' || @NAMESPACE@.slon_quote_input(v_tab_fqname);
 
 	return 1;
@@ -5714,16 +5592,6 @@ begin
 	end if;
 	prec.nspname := '_@CLUSTERNAME@';
 	prec.relname := 'sl_setsync';
-	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
-		return next prec;
-	end if;
-	prec.nspname := '_@CLUSTERNAME@';
-	prec.relname := 'sl_log_1';
-	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
-		return next prec;
-	end if;
-	prec.nspname := '_@CLUSTERNAME@';
-	prec.relname := 'sl_log_2';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
@@ -5867,3 +5735,47 @@ comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text
 tab_idxname is optional - if NULL, then we use the primary key.
 This function looks up replication configuration via the parent table.';
 
+
+-- -------------------------------------------------------------------------
+-- FUNCTION disable_indexes (oid)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.disable_indexes_on_table (i_oid oid) 
+returns integer as $$
+begin
+	-- Setting pg_class.relhasindex to false will cause copy not to
+	-- maintain any indexes. At the end of the copy we will reenable
+	-- them and reindex the table. This bulk creating of indexes is
+	-- faster.
+
+	update pg_catalog.pg_class set relhasindex ='f' where oid = i_oid;
+	return 1;
+end $$
+language plpgsql;
+
+comment on function @NAMESPACE@.disable_indexes_on_table(i_oid oid) is
+'disable indexes on the specified table.
+Used during subscription process to suppress indexes, which allows
+COPY to go much faster.
+
+This may be set as a SECURITY DEFINER in order to eliminate the need
+for superuser access by Slony-I.
+';
+
+-- -------------------------------------------------------------------------
+-- FUNCTION enable_indexes_on_table (oid)
+-- -------------------------------------------------------------------------
+create or replace function @NAMESPACE@.enable_indexes_on_table (i_oid oid) 
+returns integer as $$
+begin
+	update pg_catalog.pg_class set relhasindex ='t' where oid = i_oid;
+	return 1;
+end $$
+language plpgsql
+security definer;
+
+comment on function @NAMESPACE@.enable_indexes_on_table(i_oid oid) is
+'re-enable indexes on the specified table.
+
+This may be set as a SECURITY DEFINER in order to eliminate the need
+for superuser access by Slony-I.
+';

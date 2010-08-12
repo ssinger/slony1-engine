@@ -298,10 +298,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      reach a node's database in the cluster from where it is run
      (likely the DBA's workstation). The conninfo string is the string
      agrument given to the <function>PQconnectdb()</function> libpq
-     function. The user used to connect must be the special
-     replication superuser, as some of the actions performed later may
-     include operations that are strictly reserved for database
-     superusers by &postgres;.
+     function. 
     </para>
 
     <para>
@@ -1025,126 +1022,6 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
 <!-- **************************************** -->
 
-<refentry id="stmttableaddkey"><refmeta><refentrytitle>SLONIK TABLE ADD KEY</refentrytitle>
-   <manvolnum>7</manvolnum></refmeta>
-   
-   <refnamediv><refname>TABLE ADD KEY</refname>
-    
-    <refpurpose> Add primary key for use by
-    &slony1; for a table with no suitable
-    key </refpurpose></refnamediv>
-   
-   <refsynopsisdiv>
-    <cmdsynopsis>
-     <command>TABLE ADD KEY (options);</command>
-    </cmdsynopsis>
-   </refsynopsisdiv>
-   <refsect1>
-    <title>Description</title>
-    
-    <para>
-     In the &slony1; replication system,
-     every replicated table is required to have at least one
-     <command>UNIQUE</command> constraint whose columns are
-     declared <command>NOT NULL.</command> Any primary key
-     satisfies this requirement.
-    </para>
-    <para>
-     As a last resort, <emphasis>in versions of &slony1; prior to
-     2.0</emphasis>, this command can be used to add such an attribute
-     to a table that does not have a primary key. Since this
-     modification can have unwanted side effects, <emphasis>it is
-     strongly recommended that users add a unique and not null
-     attribute by other means.</emphasis>
-    </para>
-
-   <para> If you intend to use &slony1; version 2.0, you
-   <emphasis>must</emphasis> arrange for a more proper primary key.
-   &slony1; will not provide one for you, and if you have cases of
-   keys created via <command>TABLE ADD KEY</command>, you cannot
-   expect &slony1; to function properly. </para>
-
-    <variablelist>
-     <varlistentry><term><literal> NODE ID = ival </literal></term>
-      <listitem><para> Node ID of the set origin where the table will be
-	added as a set member. (See <xref linkend="stmtsetaddtable">.)</para></listitem>
-     </varlistentry>
-     <varlistentry><term><literal> FULLY QUALIFIED NAME  = 'string' </literal></term>
-      <listitem><para> The full name of the table consisting of the schema
-	and table name as the SQL expression <command>quote_ident(nspname)
-	 || '.' || quote_ident(relname)</command>
-	would return it.</para></listitem>
-     </varlistentry>
-    </variablelist>
-
-    <note><para> There is a limitation at present; you can create a
-    &postgres; table with no columns, as with <command> create table
-    real_short (); </command>.  &slony1; will refuse to handle such a
-    table.  This isn't presently regarded as a serious limitation, as
-    we can't see there being terribly much interest in replicating
-    tables that contain no application data.</para> </note>
-
-    <caution><para> <command>TABLE ADD KEY</command> <emphasis>should
-    not be used</emphasis> if you can possibly avoid it.  It is
-    emphatically <emphasis>not</emphasis> a &bestpracticelink;. </para>
-
-    <para> The absence of a proper primary key should be a big red
-    flag that the database schema is <emphasis>broken.</emphasis> The
-    <emphasis>right</emphasis> way to repair this is to introduce a
-    proper primary key, not to have &slony1; <quote>fake</quote> one
-    up.</para> 
-
-    <para>It is <emphasis>not</emphasis> supported in &logshiplink;,
-    and we do not intend to add support.</para> </caution>
-    
-    <para> This uses &funtableaddkey;. </para>
-   </refsect1>
-   <refsect1><title>Example</title>
-    <programlisting>
-     TABLE ADD KEY ( NODE ID = 1, 
-     FULLY QUALIFIED NAME = 'public.history' );
-    </programlisting>
-   </refsect1>
-   <refsect1> <title> Locking Behaviour </title>
-
-    <para> On the origin node, this will take out an exclusive lock on
-    the table being modified for as long as it takes to:</para>
-    <itemizedlist>
-    <listitem><para> Alter the table, adding the column;</para></listitem>
-    <listitem><para> Alter each row in the table, attaching the sequence value;</para></listitem>
-    <listitem><para> Adding the new unique index to the table.</para></listitem>
-    </itemizedlist>
-
-    <para> On subscriber nodes, these alterations take place on the
-    table when it is empty, and do not add any particular additional
-    burden to subscription time where the table will be locked on the
-    subscriber node.</para> 
-
-    <para> If the table is large and frequently updated, by your
-    applications, this will impose a not-insignificant application
-    outage for the duration of the time it takes to modify the table
-    on the origin node.  That is why it is recommended that this
-    command should not be used if you can possibly avoid it.</para>
-
-   </refsect1>
-   <refsect1> <title> Version Information </title>
-    <para> This command was introduced in &slony1; 1.0 </para>
-
-<warning>    <para> This command is <emphasis> no longer supported </emphasis>
-    as of &slony1; version 2.0.  In version 2, the various
-    <quote>catalogue breakages</quote> done in &postgres; versions
-    prior to 8.3 are being eliminated so that schema dumps may be
-    taken from any node.  That leaves the <quote>kludgy</quote>
-    columns created via <command>TABLE ADD KEY</command> as the only
-    thing that prevents <xref linkend="stmtuninstallnode"> from being
-    comprised of the SQL statement <command>drop schema _ClusterName
-    cascade;</command>.</para> </warning>
-
-   </refsect1>
-  </refentry>
-  
-
-<!-- **************************************** -->
 
   <refentry id="stmtcreateset"><refmeta><refentrytitle>SLONIK CREATE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
@@ -1898,8 +1775,6 @@ SET MOVE SEQUENCE (
     events. </para>
     </note>
 
-   <para> This uses
-    &funstoretrigger;. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -1966,7 +1841,6 @@ STORE TRIGGER (
       </varlistentry>
      </variablelist>
     </para>
-    <para> This uses &fundroptrigger;. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
@@ -2140,7 +2014,6 @@ DROP TRIGGER (
 
       </varlistentry>
      </variablelist>
-    <para> This uses &funsubscribeset;. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>

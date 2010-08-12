@@ -2263,10 +2263,6 @@ exclusive that alleviates this problem.</para></listitem>
 <emphasis>absent</emphasis> of the special handling of the <xref
 linkend="stmtstoretrigger"> Slonik command.  </para>
 
-<para> The function <xref
-linkend="function.altertableforreplication-integer"> prepares each
-table for replication.</para>
-
 <itemizedlist>
 
 <listitem><para> On the origin node, this involves adding a trigger

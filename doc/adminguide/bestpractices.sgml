@@ -22,7 +22,7 @@ servers. </para>
 &slony1; have discovered which can at least help to suggest the sorts
 of policies you might want to consider. </para>
 
-<itemizedlist>
+<orderedlist>
 
 <listitem>
 <para> &slony1; is a complex multi-client, multi-server
@@ -348,8 +348,8 @@ synchronized</quote> manner across nodes. </para></listitem>
 
 <listitem><para> Security management, such as <command> CREATE USER
 </command>, <command> CREATE ROLE </command>, <command>GRANT
-</command>, and such are largely irrelevant to &slony1; as it runs as
-a <quote>superuser</quote>. </para>
+</command>, and such are largely irrelevant to &slony1; - it runs in
+an orthogonal role to that. </para>
 
 <para> Indeed, we have frequently found it useful to have different
 security arrangements on different nodes.  Access to the
@@ -399,44 +399,106 @@ of problems while the subscription is in progress.
 to be in place in order for &slony1; to function.</para>
 </listitem>
 
-<listitem><para> Lowering Authority </para>
+<listitem id="superuser"><para> Lowering Authority Usage </para>
 
 <para> Traditionally, it has been stated that <quote>&slony1; needs to
-use superuser connections.</quote> It turns out that this is not
-entirely true, and and if there are particular concerns about
+use superuser connections.</quote>  It turns out that this is not
+actually true, and and if there are particular concerns about
 excessive use of superuser accounts, it is possible to reduce this
 considerably. </para>
 
-<para> It is true to say that each &lslon; <emphasis>must</emphasis>
-have a superuser connection in order to manage the node that it is
-assigned to.  It needs to be able to alter the system catalogue in
-order to set up subscriptions and to process alterations
-(<emphasis>e.g</emphasis> - to run <xref linkend="stmtddlscript"> and
-other events that may alter the role of replicated tables on the local
-node).  </para>
+<para> It is <emphasis>simplest</emphasis> to have the replication
+management user be a superuser, as, in that case, one need not think
+about what permissions to configure.</para>
 
-<para> However, the connections that &lslon; processes open to other
-nodes to access events and process subcriptions do not need to have
-nearly so much permission.  Indeed, one could set up a <quote>weak
-user</quote> assigned to all <xref linkend="stmtstorepath"> requests.
-The minimal permissions that this user, let's call it
-<command>weakuser</command>, requires are as follows:</para>
+<para> There is only actually one place where &slony1; requires
+superuser access, and that is during the subscription process, as it
+uses a <quote>hack</quote> to substantially improve performance,
+updating the system catalogue directly to shut off indices during the
+<command>COPY</command>.  This functionality is restricted to two
+functions, as of version 2.1, with
+<function>disable_indexes_on_table()</function> and
+<function>enable_indexes_on_table()</function>, which may appropriate
+superuser permissions if configured with <command>SECURITY
+DEFINER</command>.  If these functions are owned by a superuser, then
+that is all the database superuser access that is required. </para>
+
+<para> One could set up a <quote>weak user</quote> assigned to all
+<xref linkend="stmtstorepath"> requests.  The minimal permissions that
+this user, let's call it <command>weakuser</command>, requires are as
+follows:</para>
 
 <itemizedlist>
-<listitem><para> It must have read access to the &slony1;-specific namespace </para> </listitem>
-<listitem><para> It must have read access to all tables and sequences in that namespace</para> </listitem>
-<listitem><para> It must have write access to the &slony1; table <envar>sl_nodelock</envar> and sequence <envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
-<listitem><para> At subscribe time, it must have read access to all of the replicated tables. </para> 
-<para> Outside of subscription time, there is no need for access to access to the replicated tables. </para> </listitem>
-<listitem><para> There is some need for read access to tables in pg_catalog; it has not been verified how little access would be suitable. </para> </listitem>
+
+<listitem><para> It must have read access to the &slony1;-specific
+namespace </para> </listitem>
+
+<listitem><para> It must have read access to all tables and sequences
+in that namespace</para> </listitem>
+
+<listitem><para> It must have write access to the &slony1; table
+<envar>sl_nodelock</envar> and sequence
+<envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
+
+<listitem><para> At subscribe time, it must have read access to all of
+the replicated tables. </para>
+
+<para> Outside of subscription time, there is no need for access to
+access to the replicated tables. </para> </listitem>
+
+<listitem><para> There is some need for read access to tables in
+pg_catalog; it has not been verified how little access would be
+suitable. </para> </listitem>
+
+<listitem><para> As mentioned, the functions for disabling and
+re-enabling indexes during the subscription process must be owned by a
+superuser, and must be accessible to the <quote>weak user.</quote>
+</para></listitem>
+
 </itemizedlist>
 
 <para> In version 1.3, the tests in the <xref linkend="testbed">
 support using a <envar>WEAKUSER</envar> so that testing can regularly
-confirm the minimal set of permissions needed to support
-replication.</para>
+confirm (for the most part) the minimal set of permissions needed to
+support replication.</para>
 
 </listitem>
+
+<listitem><para> <emphasis>Further</emphasis> lowering authority usage.</para>
+
+<para> We may further reclassify required access privileges between
+three roles:
+
+<itemizedlist>
+<listitem><para> Privileges for the user that &lslon; uses to <emphasis>manage its own node</emphasis>.</para>
+
+<para> The &lslon; requires read and write access to the &slony1;
+tables and schema, and write access to the tables and schemas
+containing replicable/replicated data, on the local node that it is
+managing.</para>
+
+<para> At the time that <xref linkend="stmtddlscript"> runs,
+sufficient access to the local node is required to perform whatever
+the script requires.</para></listitem>
+
+<listitem><para> Privileges for the user that &lslon; uses to
+<emphasis>access remote nodes</emphasis>.</para>
+
+<para> This is always exclusively <emphasis>read-only</emphasis> access, and a
+separate &postgres; role (and/or user) could be set up which only
+offers read access to:
+<itemizedlist>
+<listitem><para> &slony1;'s own tables, in the schema created for that purpose.</para></listitem>
+<listitem><para> Replicated tables, which is only used during the <xref linkend="stmtsubscribeset"> event.</para></listitem>
+</itemizedlist></para></listitem>
+
+<listitem> <para> At installation time, &lslonik; requires sufficient access to create the new schema containing replication-specific tables.</para></listitem>
+
+</itemizedlist></para>
+
+<para> Note that despite &slony1;'s agnosticism as to node roles, as
+to whether they are <quote>masters</quote> or <emphasis>slaves</emphasis>, the set of
+privileges needed should not need to vary.</para></listitem>
 
 <listitem><para> The section on <link linkend="listenpaths"> listen
 paths </link> discusses the issues surrounding the table <xref
@@ -482,7 +544,7 @@ drawn either from the command line or from configuration files.
 <quote>Best</quote> practices have yet to emerge from the two
 options:</para>
 </listitem>
-</itemizedlist>
+</orderedlist>
 
 <itemizedlist>
 
