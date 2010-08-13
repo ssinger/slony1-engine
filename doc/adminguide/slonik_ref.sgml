@@ -1283,20 +1283,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
          </listitem>
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
-       <listitem><para> The full table name as described in
-	 <xref linkend="stmttableaddkey">.</para></listitem>
-      </varlistentry>
-      <varlistentry><term><literal> KEY = { 'string' | SERIAL }
-	</literal></term> <listitem><para>
-	 <emphasis>(Optional)</emphasis> The index name that covers the
-	 unique and not null set of columns to be used as the row identifier
-	 for replication purposes. Or the keyword SERIAL to use the
-	 special column added with a previous <xref
-	  linkend="stmttableaddkey"> command. Default
-	 is to use the table's primary key.  The index name is <emphasis>
-	  not </emphasis> fully qualified; you must omit the
-	 namespace.</para></listitem>
-
+       <listitem><para> The full table name including the name of the schema.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the table entry.  </para></listitem>
@@ -1445,8 +1432,7 @@ SET ADD TABLE (
        
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
-       <listitem><para> The full sequence name as described in
-	 < linkend="stmttableaddkey">.</para></listitem>
+       <listitem><para> The full sequence name including schema name.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the sequence entry.  </para></listitem>
@@ -1498,10 +1484,6 @@ SET ADD TABLE (
      Drop a table from a replication set.
     </para>
     <para>
-     Note that this action will <emphasis>not</emphasis> drop a
-     candidate primary key created using <xref
-     linkend="stmttableaddkey">.
-     
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
