@@ -101,14 +101,11 @@ pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 
 <para> One of the tables created by
 <application>pgbench</application>, <envar>history</envar>, does not
-have a primary key.  In earlier versions of &slony1;, a &lslonik;
-command called <xref linkend="stmttableaddkey"> could be used to
-introduce one.  This caused a number of problems, and so this feature
-has been removed in version 2 of &slony1;.  It now
-<emphasis>requires</emphasis> that there is a suitable candidate
-primary key. </para>
+have a primary key.  &slony1; <emphasis>requires</emphasis> that there
+is a suitable candidate primary key. </para>
 
-<para> The following SQL requests will establish a proper primary key on this table: </para>
+<para> The following SQL requests will establish a proper primary key
+on this table: </para>
 
 <programlisting>
 psql -U $PGBENCHUSER -h $HOST1 -d $MASTERDBNAME -c "begin; alter table

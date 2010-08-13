@@ -69,16 +69,6 @@ benefit that a primary key has been declared for the table. </para>
 table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
-<listitem><para> If the table hasn't even got a candidate primary key,
-you might ask &slony1; to provide one using 
-<xref linkend="stmttableaddkey">.</para>
-
-<warning><para> <xref linkend="stmttableaddkey"> was always considered
-a <quote>kludge</quote>, at best, and as of version 2.0, it is
-considered such a misfeature that it is being removed.  </para>
-</warning>
-</listitem>
-
 </itemizedlist>
 
 <para> It is not terribly important whether you pick a

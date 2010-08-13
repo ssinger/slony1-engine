@@ -232,19 +232,6 @@ Replication Sets, </link> it is <emphasis>ideal</emphasis> if each
 replicated table has a true primary key constraint; it is
 <emphasis>acceptable</emphasis> to use a <quote>candidate primary
 key.</quote></para>
-
-<para> It is <emphasis>not recommended</emphasis> that a
-&slony1;-defined key (created via <xref linkend="stmttableaddkey">) be
-used to introduce a candidate primary key, as this introduces the
-possibility that updates to this table can fail due to the introduced
-unique index, which means that &slony1; has introduced a new failure
-mode for your application.  
-</para>
-
-<warning><para> In version 2 of &slony1;, <xref
-linkend="stmttableaddkey"> is no longer supported.  You
-<emphasis>must</emphasis> have either a true primary key or a
-candidate primary key.  </para></warning>
 </listitem>
 
 <listitem>

@@ -671,10 +671,9 @@ invalidated by circumstances:</para>
      keys.</para>
 
      <para> Best practice is to always have and use true primary keys.
-     If you have tables that require choosing a candidate primary key
-     or that require creating a surrogate key using <xref
-     linkend="stmttableaddkey">, you will have to modify this script
-     by hand to accomodate that. </para></listitem>
+     If you have tables that require choosing a candidate primary key,
+     you will have to modify this script by hand to accomodate
+     that. </para></listitem>
 
 </itemizedlist>
 </listitem>

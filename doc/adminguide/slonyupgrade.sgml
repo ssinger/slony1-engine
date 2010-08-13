@@ -86,16 +86,12 @@ you fairly much merely need to stop &lslon;s, put new binaries in
 place, run <xref linkend="stmtupdatefunctions"> against each node, and
 restart &lslon;s.  Schema changes have been internal to the cluster
 schema, and <xref linkend="stmtupdatefunctions"> has been capable to
-make all of the needed alterations.  With version 2, this changes, if
-there are tables that used <xref linkend="stmttableaddkey">.  Version
-2 does not support the <quote>extra</quote> column, and
-<quote>fixing</quote> the schema to have a proper primary key is not
-within the scope of what <xref linkend="stmtupdatefunctions"> can
-perform.  </para>
+make all of the needed alterations. </para>
 
 <para> When upgrading from versions 1.0.x, 1.1.x, or 1.2.x to version
-2, it will be necessary to have already eliminated any such
-&slony1;-managed primary keys. </para>
+2, it will be necessary to have already eliminated any
+&slony1;-managed primary keys that were set up using the (now removed)
+<command>TABLE ADD KEY</command> slonik command. </para>
 
 <para> One may identify the tables affected via the following SQL
 query: <command> select n.nspname, c.relname from pg_class c,

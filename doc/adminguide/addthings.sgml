@@ -232,17 +232,17 @@ drop it from replication due to (say) some persistent network outage.
 <listitem><para> If the above things work out particularly badly, you
 could submit the SQL command <command>DROP SCHEMA "_ClusterName"
 CASCADE;</command>, which will drop out &slony1; functions, tables,
-and triggers alike.  That is generally less suitable
-than <xref linkend="stmtuninstallnode">, because that command not only
-drops the schema and its contents, but also removes any columns
-previously added in using <xref linkend= "stmttableaddkey">.
+and triggers alike.  That has been generally less suitable than <xref
+linkend="stmtuninstallnode">, because that the latter would, in
+addition to dropping the schema and its contents, also remove any
+columns previously added in using the now-obsolete <command>TABLE ADD
+KEY</command>.
 </para>
 
-<note><para> In &slony1; version 2.0, <xref linkend=
-"stmttableaddkey"> is <emphasis>no longer supported</emphasis>, and
-thus <xref linkend="stmtuninstallnode"> consists very simply of
-<command>DROP SCHEMA "_ClusterName" CASCADE;</command>.  </para>
-</note></listitem>
+<note><para> In &slony1; version 2.0, <command>TABLE ADD KEY</command>
+is <emphasis>no longer supported</emphasis>, so thus <xref
+linkend="stmtuninstallnode"> consists very simply of <command>DROP
+SCHEMA "_ClusterName" CASCADE;</command>.  </para> </note></listitem>
 </itemizedlist>
 </sect2>
 
