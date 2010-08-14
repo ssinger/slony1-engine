@@ -23,6 +23,7 @@ all:	$(ALL)
 			sed -e 's/TERMPROG=xterm/TERMPROG=rxvt/' -e 's/WHICHPROG=which/WHICHPROG=\/bin\/which/' $$script.in > $$script; \
 		else \
 			cp $$script.in $$script; \
+			chmod ugo+x $$script; \
 		fi; \
 	done
 
