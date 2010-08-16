@@ -43,9 +43,9 @@ specified individually, such as:
 --with-pgpkglibdir=<dir>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so
 --with-pgsharedir=<dir>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample
 
-*USUALLY*, all you should need to specify is the first of those
-locations, namely --with-pgconfigdir=/path/to/pg_config/bin; the
-others should be able to be inferred based on the output of pg_config.
+All you should need to specify is the first of those locations, namely
+--with-pgconfigdir=/path/to/pg_config/bin; the others may be inferred
+based on the output of pg_config.
 
 After running configure, you may wish to review the file
 "Makefile.global" to ensure it is looking in the right places for all of
