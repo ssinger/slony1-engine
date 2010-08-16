@@ -77,15 +77,56 @@ various &postgres; library, binary, and include directories.  For a
 full list of these options, use the command <command>./configure
 --help</command>.</para>
 
-<para> <emphasis>Normally,</emphasis> it ought to be sufficient to run
-<command>configure
-<option>--with-pgconfigdir=/some/path/somewhere</option></command>,
-where <filename>/some/path/somewhere</filename> is the place where the
-&postgres; program <application>pg_config</application> is located.
-From <application>pg_config</application>, the
-<filename>configure</filename> script can determine the various
-locations where &postgres; components are found, which indicates where
+<para> It is sufficient, for the purposes of building a usable build,
+to run <command>configure
+<option>--with-pgconfigdir=<filename>/some/path/somewhere</filename></option></command>,
+where <filename>/some/path/somewhere</filename> is the directory where
+the &postgres; program <application>pg_config</application> is
+located.  Based on the output of <application>pg_config</application>,
+the <filename>configure</filename> script determines the various
+locations where &postgres; components are found, which indicate where
 the essential components of &slony1; must be installed.</para>
+
+<para> For a full listing of configuration options, run the command
+<command>./configure --help</command>.</para>
+
+<warning> <para> Beware: <application>configure</application> defaults
+to permit indicating values for various paths, including
+<quote>generic</quote> values:
+<itemizedlist>
+<listitem><para> <option>--bindir</option>=DIR </para> <para>           user executables [EPREFIX/bin] </para></listitem>
+<listitem><para> <option>--sbindir</option>=DIR </para> <para>          system admin executables [EPREFIX/sbin] </para></listitem>
+<listitem><para> <option>--libexecdir</option>=DIR </para> <para>       program executables [EPREFIX/libexec] </para></listitem>
+<listitem><para> <option>--sysconfdir</option>=DIR </para> <para>       read-only single-machine data [PREFIX/etc] </para></listitem>
+<listitem><para> <option>--sharedstatedir</option>=DIR </para> <para>   modifiable architecture-independent data [PREFIX/com] </para></listitem>
+<listitem><para> <option>--localstatedir</option>=DIR </para> <para>    modifiable single-machine data [PREFIX/var] </para></listitem>
+<listitem><para> <option>--libdir</option>=DIR </para> <para>           object code libraries [EPREFIX/lib] </para></listitem>
+<listitem><para> <option>--includedir</option>=DIR </para> <para>       C header files [PREFIX/include] </para></listitem>
+<listitem><para> <option>--oldincludedir</option>=DIR </para> <para>    C header files for non-gcc [/usr/include] </para></listitem>
+<listitem><para> <option>--datarootdir</option>=DIR </para> <para>      read-only arch.-independent data root [PREFIX/share] </para></listitem>
+<listitem><para> <option>--datadir</option>=DIR </para> <para>          read-only architecture-independent data [DATAROOTDIR] </para></listitem>
+<listitem><para> <option>--infodir</option>=DIR </para> <para>          info documentation [DATAROOTDIR/info] </para></listitem>
+<listitem><para> <option>--localedir</option>=DIR </para> <para>        locale-dependent data [DATAROOTDIR/locale] </para></listitem>
+<listitem><para> <option>--mandir</option>=DIR </para> <para>           man documentation [DATAROOTDIR/man] </para></listitem>
+<listitem><para> <option>--docdir</option>=DIR </para> <para>           documentation root [DATAROOTDIR/doc/slony1] </para></listitem>
+<listitem><para> <option>--htmldir</option>=DIR </para> <para>          html documentation [DOCDIR] </para></listitem>
+<listitem><para> <option>--dvidir</option>=DIR </para> <para>           dvi documentation [DOCDIR] </para></listitem>
+<listitem><para> <option>--pdfdir</option>=DIR </para> <para>           pdf documentation [DOCDIR] </para></listitem>
+<listitem><para> <option>--psdir</option>=DIR </para> <para>            ps documentation [DOCDIR] </para></listitem>
+</itemizedlist></para>
+
+<para> There are also &postgres;-specific options specified, which <emphasis>should not be expressly set</emphasis>, as <application>pg_config</application> should already provide correct values:
+
+<itemizedlist>
+<listitem><para> <option>--with-pgbindir</option>=DIR</para> <para>           Location of the PostgreSQL postmaster. </para></listitem>
+<listitem><para> <option>--with-pgincludedir</option>=DIR</para> <para>       Location of the PostgreSQL headers. </para></listitem>
+<listitem><para> <option>--with-pgincludeserverdir</option>=DIR</para> <para> Location of the PostgreSQL server headers. </para></listitem>
+<listitem><para> <option>--with-pglibdir</option>=DIR</para> <para>           Location of the PostgreSQL libs. </para></listitem>
+<listitem><para> <option>--with-pgpkglibdir</option>=DIR</para> <para>        Location of the PostgreSQL pkglibs. E.g. plpgsql.so </para></listitem>
+<listitem><para> <option>--with-pgsharedir</option>=DIR</para> <para>         Location of the PostgreSQL share dir. E.g. postgresql.conf.sample </para></listitem>
+</itemizedlist></para>
+
+</warning>
 
 <para>On certain platforms (AIX and Solaris are known to need this;
 Linux does not), the compile of &postgres; must be expressly
@@ -131,8 +172,6 @@ http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff
 versions; see the FAQ entry on <link linkend="threadsafety"> thread
 safety </link>. </para>
 
-<para> For a full listing of configuration options, run the command
-<command>./configure --help</command>.</para>
 </sect2>
 
 <sect2>
