@@ -234,31 +234,39 @@ RELEASE 2.0.4
 
 RELEASE 2.0.5
 
--Fix for bug #104 - check for NULL file descriptors
+-Added slonik_add_node altperl script, slonik_drop_node now takes an
+ event node, changes to the message printed in slon_kill.  Patch by
+ Gurjeet Singh
 
--Fix for bug # 43 - get_set() not used consistently in the perl
-tools.  Patch by Peter Eisentraut
-
--Added slonik_add_node altperl script, slonik_drop_node now takes an event node
-,changes to the message printed in slon_kill.  Patch by Gurjeet Singh
-
--Fix for bug # 118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in 
-8.3
-
--Fix for bug #135, slon sleeps while holding a lock
-
--Fix various log shipping issues. slony1_dump.sh restores as a replica session
-, it truncates the tables on restore.   The slony_logshipper program now does
-not exit when there are no more files ready to be processed
-
--Fix for bug #122, better error message in subscribeSet
+-Fix various log shipping issues. slony1_dump.sh restores as a replica
+ session, it truncates the tables on restore.  The slony_logshipper
+ program now does not exit when there are no more files ready to be
+ processed
 
 -Fixed some broken logic in failedNode()
 
--Fix for bug 141, removing alterTableRestore
+Specific bugs addressed:
 
--Fix bug 147, remove TABLE ADD KEY from altperl scripts
+-Fix for bug #43 - get_set() not used consistently in the perl tools.
+ Patch by Peter Eisentraut
 
 -Fix for bug #78, removing vacuuming of sl_log_1/2
 
+-Fix for bug #79, better docs on "configure" options
+
+-Fix for bug #104 - check for NULL file descriptors
+
+-Fix for bug #118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in
+ 8.3
+
+-Fix for bug #122, better error message in subscribeSet
+
+-Fix for bug #135, slon sleeps while holding a lock
+
+-Fix for bug #141, removing alterTableRestore
+
+-Fix for bug #147, remove TABLE ADD KEY from altperl scripts
+
 -Fix for bug #148, so pg_listener won't be vacuumed on PG 9.0 (where it does not exist)
+
+
