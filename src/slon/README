@@ -39,8 +39,6 @@ Major components:
    - Cleans up event table to remove old entries
    - Removes obsolete entries from sl_log_1, sl_log_2, sl_seqlog
    - Vacuums tables that Slony-I uses
-   - Once in a while, it calls logswitch_weekly(), which tries to
-     rotate between sl_log_1 and sl_log_2 periodically
 
  - conf-file.l
    A lex grammar for slon configuration files
