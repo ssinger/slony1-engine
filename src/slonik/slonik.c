@@ -3454,7 +3454,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
 	PGresult    *res1;
-	SlonikAdmInfo * adminfo2;
+	SlonikAdmInfo *adminfo2;
 	int reshape=0;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_provider);
@@ -3470,11 +3470,10 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * If the receiver is already subscribed to
 	 * the set through a different provider
 	 * slonik will need to tell the receiver
-	 * about this change directy.
-	 *
+	 * about this change directly.
 	 */
 
-	slon_mkquery(&query,"select * FROM \"_%s\".sl_subscribe " \
+	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
 				 " and sub_active=true and sub_provider<>%d",
 				 stmt->hdr.script->clustername,
@@ -3486,7 +3485,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 		dstring_free(&query);
 		return -1;
 	}
-	if(PQntuples(res1) > 0) 
+	if (strtol(PQgetvalue(res1, 0, 0), NULL, 10) > 0)
 	{
 		reshape=1;
 	}
