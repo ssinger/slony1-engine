@@ -168,7 +168,13 @@ if test -n "$PG_CONFIG_LOCATION"; then
     fi
 
     case ${host_os} in
-  	  aix*|*solaris*)
+	  *linux*)
+	     dnl  ------------------------------------------------
+		 dnl   List of operating systems where we know that
+		 dnl   enable-thread-safety is NOT required
+	     dnl  ------------------------------------------------
+		 ;;
+  	  *)
 		AC_MSG_CHECKING(PostgreSQL for enable-thread-safety as required on ${host_os})
 		PG_ETS=`echo $PG_CONFIGURE | grep -c enable-thread-safety`
 		if test $PG_ETS -eq 0; then
@@ -177,8 +183,6 @@ if test -n "$PG_CONFIG_LOCATION"; then
 		else
 			AC_MSG_RESULT(yes)
 		fi
-		;;
-	  *)
 		;;
     esac
 
