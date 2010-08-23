@@ -218,6 +218,7 @@ RELEASE 2.0.4
 
 - cloneNodeFinish() references the proper column in sl_sequence Bug # 119
 
+<<<<<<< HEAD:RELEASE
 - Newer versions of flex have changed yyleng from an int to a size_t
   instead of referencing the extern yyleng directly we use the function
   yyget_leng() and have added a configure check to confirm that the version
@@ -269,4 +270,4 @@ Specific bugs addressed:
 
 -Fix for bug #148, so pg_listener won't be vacuumed on PG 9.0 (where it does not exist)
 
-
+-Fix for bug #138 - autoconf fix to generate docs via groff
