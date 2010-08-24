@@ -115,6 +115,10 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 
 	db_notice_stmt = stmt;
 
+	/* ----
+	 * Create the native PostgreSQL database connection;
+	 * ----
+	 */
 	dbconn = PQconnectdb(adminfo->conninfo);
 	if (dbconn == NULL)
 	{
@@ -132,12 +136,22 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 		return -1;
 	}
 
+	/* ----
+	 * Catch NOTICE messages from the backend.
+	 * ----
+	 */
 #ifdef HAVE_PQSETNOTICERECEIVER
 	PQsetNoticeReceiver(dbconn, db_notice_recv, NULL);
 #else
 	PQsetNoticeProcessor(dbconn, db_notice_recv, NULL);
 #endif   /* !HAVE_PQSETNOTICERECEIVER */
 
+	/* ----
+	 * Switch to ISO datestyle and set the replication role
+	 * to local so that database changes we eventually make don't
+	 * invoke any user or replication triggers by accident.
+	 * ----
+	 */
 	dstring_init(&query);
 	slon_mkquery(&query,"SET datestyle TO 'ISO'; "
 						"SET session_replication_role TO local; ");
@@ -150,7 +164,12 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 		return -1;
 	}
 	dstring_free(&query); 
-	return 0;
+
+	/* ----
+	 * Commit the changes to the session settings.
+	 * ----
+	 */
+	return db_commit_xact(stmt, adminfo);
 }
 
 
