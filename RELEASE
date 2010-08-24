@@ -1,5 +1,3 @@
-
-
 RELEASE 2.0.0
 
 The first release of version 2.0. See RELEASE-2.0 to see changes leading
@@ -218,7 +216,6 @@ RELEASE 2.0.4
 
 - cloneNodeFinish() references the proper column in sl_sequence Bug # 119
 
-<<<<<<< HEAD:RELEASE
 - Newer versions of flex have changed yyleng from an int to a size_t
   instead of referencing the extern yyleng directly we use the function
   yyget_leng() and have added a configure check to confirm that the version
@@ -264,10 +261,10 @@ Specific bugs addressed:
 
 -Fix for bug #135, slon sleeps while holding a lock
 
+-Fix for bug #138 - autoconf fix to generate docs via groff
+
 -Fix for bug #141, removing alterTableRestore
 
 -Fix for bug #147, remove TABLE ADD KEY from altperl scripts
 
 -Fix for bug #148, so pg_listener won't be vacuumed on PG 9.0 (where it does not exist)
-
--Fix for bug #138 - autoconf fix to generate docs via groff
