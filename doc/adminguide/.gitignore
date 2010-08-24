@@ -229,3 +229,9 @@ usingslonik.html
 version.sgml
 versionupgrade.html
 view.sl-seqlastvalue.html
+schemadoc.sgml
+schemadoc.xml
+bookindex.html
+function.cleanupevent-p-interval-interval.html
+function.disable-indexes-on-table-i-oid-oid.html
+function.enable-indexes-on-table-i-oid-oid.html
