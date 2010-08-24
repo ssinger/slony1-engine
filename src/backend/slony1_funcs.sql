@@ -5819,8 +5819,10 @@ begin
 
 	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
 		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
-	perform @NAMESPACE@.RebuildListenEntries();
-	notify "_@CLUSTERNAME@_Restart";
+	if found then
+	   perform @NAMESPACE@.RebuildListenEntries();
+	   notify "_@CLUSTERNAME@_Restart";
+	end if;
 	return 0;
 end
 $$ language plpgsql;
