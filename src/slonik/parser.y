@@ -70,6 +70,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmts
 %type <statement>	stmt
 %type <statement>	stmt_try
+%type <statement>	normal_stmt
 %type <statement>	try_stmts
 %type <statement>	try_stmt
 %type <statement>	try_on_error
@@ -107,6 +108,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_update_functions
 %type <statement>	stmt_repair_config
 %type <statement>	stmt_wait_event
+%type <statement>	stmt_wait_inside_try
 %type <statement>	stmt_switch_log
 %type <statement>	stmt_sync
 %type <statement>	stmt_sleep
@@ -263,7 +265,9 @@ stmts				: stmt
 
 stmt				: stmt_try
 						{ $$ = $1; }
-					| try_stmt
+					| normal_stmt
+						{ $$ = $1; }
+					| stmt_wait_event
 						{ $$ = $1; }
 					;
 
@@ -367,7 +371,7 @@ try_stmts			: try_stmt
 						{ $1->next = $2; $$ = $1; }
 					;
 
-try_stmt			: stmt_echo
+normal_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_exit
 						{ $$ = $1; }
@@ -429,8 +433,6 @@ try_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_repair_config
 						{ $$ = $1; }
-					| stmt_wait_event
-						{ $$ = $1; }
 					| stmt_switch_log
 						{ $$ = $1; }
 					| stmt_error ';' 
@@ -439,6 +441,12 @@ try_stmt			: stmt_echo
 					| stmt_sync
 						{ $$ = $1; }
 					| stmt_sleep
+						{ $$ = $1; }
+					;
+
+try_stmt			: normal_stmt
+						{ $$ = $1; }
+					| stmt_wait_inside_try
 						{ $$ = $1; }
 					;
 
@@ -1368,6 +1376,26 @@ stmt_wait_event		: lno K_WAIT K_FOR K_EVENT option_list
 						}
 						else
 							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_wait_inside_try	: lno K_WAIT K_FOR K_EVENT option_list
+					{
+						SlonikStmt_wait_event *new;
+
+						new = (SlonikStmt_wait_event *)
+								malloc(sizeof(SlonikStmt_wait_event));
+						memset(new, 0, sizeof(SlonikStmt_wait_event));
+						new->hdr.stmt_type		= STMT_WAIT_EVENT;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						fprintf(stderr, "%s:%d: wait for event "
+								"not allowed inside try block\n",
+								current_file, $1);
+						parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
