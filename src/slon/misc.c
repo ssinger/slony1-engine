@@ -215,8 +215,15 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	if (win32_isservice)
 		win32_eventlog(level, outbuf);
 #endif
+#ifdef HAVE_SYSLOG
+	if (Use_syslog != 2) {
+			(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
+			(void) fflush(stdout);
+	}
+#else
 	(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
 	(void) fflush(stdout);
+#endif
 	pthread_mutex_unlock(&log_mutex);
 
 	va_end(ap);
