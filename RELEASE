@@ -254,6 +254,8 @@ Specific bugs addressed:
 
 -Fix for bug #104 - check for NULL file descriptors
 
+-Fix for bug #117, change logging call to omit the write to stdout if we've got and are using only syslog (use_syslog = 2)
+
 -Fix for bug #118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in
  8.3
 
