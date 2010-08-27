@@ -276,3 +276,11 @@ Specific bugs addressed:
 -Fix for bug #147, remove TABLE ADD KEY from altperl scripts
 
 -Fix for bug #148, so pg_listener won't be vacuumed on PG 9.0 (where it does not exist)
+
+-Fix for bug 132/139, The watchdog no longer logs events from a signal handler,
+ the watchdog will now re-fork the worker on a restart/retry, workers in
+ a restart state will loop and try again if they can't obtain the sl_nodelock
+
+-Fix for bug 136, When reshaping cascded nodes slonik will now contact the
+ subscriber directly to update listen paths
+
