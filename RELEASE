@@ -261,6 +261,12 @@ Specific bugs addressed:
 
 -Fix for bug #122, better error message in subscribeSet
 
+-Fix for bug #124, enforce that EVENT NODE is identical to EXECUTE ONLY
+ ON node if the latter is specified.
+
+ Also restore the session_replication_role in case ddlScript_prepare
+ changed it to local.
+
 -Fix for bug #135, slon sleeps while holding a lock
 
 -Fix for bug #138 - autoconf fix to generate docs via groff
