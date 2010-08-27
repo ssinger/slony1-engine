@@ -25,7 +25,7 @@
 
 #include "slon.h"
 
-
+extern int worker_restarted;
 
 /* ----------
  * slon_localListenThread
@@ -107,8 +107,16 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				slon_log(SLON_FATAL,
 						 "Or perhaps a residual idle backend connection from a dead slon?\n");
 				PQclear(res);
-				sleep(5);
-				continue;
+				if(worker_restarted)
+				{
+					sleep(5);
+					continue;
+				}
+				else
+				{
+					dstring_free(&query1);
+					slon_abort();
+				}
 			}
 		    
 			PQclear(res);

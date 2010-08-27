@@ -3519,7 +3519,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 					 stmt->hdr.script->clustername,
 					 stmt->sub_provider,stmt->sub_setid,
 					 stmt->sub_receiver);	
-		if (db_exec_evcommand((SlonikStmt *) stmt, adminfo2, &query) < 0)
+		if (db_exec_command((SlonikStmt *) stmt, adminfo2, &query) < 0)
 		{
 			printf("error reshaping subscriber\n");
 			//	dstring_free(&query);
