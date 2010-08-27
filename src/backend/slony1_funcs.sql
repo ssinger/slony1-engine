@@ -3648,6 +3648,11 @@ begin
 		-- If running "ONLY ON NODE", there are two possibilities:
 		-- 1.  Running on origin, where denyaccess() triggers are already shut off
 		-- 2.  Running on replica, where we need the LOCAL role to suppress denyaccess() triggers
+		execute 'create temp table _slony1_saved_session_replication_role (
+					setting text);';
+		execute 'insert into _slony1_saved_session_replication_role
+					select setting from pg_catalog.pg_settings
+					where name = ''session_replication_role'';';
 		if (v_set_origin <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')) then
 			execute 'set session_replication_role to local;';
 		end if;
@@ -3676,11 +3681,21 @@ declare
 	p_script			alias for $2;
 	p_only_on_node		alias for $3;
 	v_set_origin		int4;
+	v_query				text;
+	v_row				record;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	if p_only_on_node = -1 then
 		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
+	end if;
+	if p_only_on_node <> -1 then
+		for v_row in execute
+			'select setting from _slony1_saved_session_replication_role' loop
+			v_query := 'set session_replication_role to ' || v_row.setting;
+		end loop;
+		execute v_query;
+		execute 'drop table _slony1_saved_session_replication_role';
 	end if;
 	return NULL;
 end;

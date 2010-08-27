@@ -252,7 +252,6 @@ XIDSQL=localxid.sql
 TEMPDB=schemadoc
 TEMPSCHEMA=schemadoc
 CREATELANG=$(pgbindir)/createlang   # That's how it is for me...
-PGAUTODOC=/usr/bin/postgresql_autodoc
 
 schemadoc.sgml: schemadoc.xml
 	sed 's,/>,>,g' $< >$@
