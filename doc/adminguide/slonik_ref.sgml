@@ -2536,7 +2536,10 @@ FAILOVER (
       
      </varlistentry>
      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-      <listitem><para> (Mandatory) The ID of the current origin of the set.</para></listitem>
+      <listitem><para> (Mandatory unless EXECUTE ONLY ON is given) The ID 
+	  of the current origin of the set. If EXECUTE ONLY ON
+	  is given, EVENT NODE must specify the same node or
+	  be omitted.</para></listitem>
       
      </varlistentry>
      <varlistentry><term><literal> EXECUTE ONLY ON = ival

@@ -937,6 +937,15 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					SlonikStmt_ddl_script *stmt =
 					(SlonikStmt_ddl_script *) hdr;
 
+					if ((stmt->only_on_node > -1) && (stmt->ev_origin > -1)
+							&& (stmt->ev_origin != stmt->only_on_node)) {
+						printf ("If ONLY ON NODE is given, "
+								"EVENT ORIGIN must be the same node");
+						errors++;
+					}
+					if (stmt->only_on_node > -1)
+						stmt->ev_origin = stmt->only_on_node;
+
 					if (stmt->ev_origin < 0)
 					{
 						printf("%s:%d: Error: require EVENT NODE\n", 
@@ -3656,9 +3665,9 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 
 #define PARMCOUNT 1  
 
-        const char *params[PARMCOUNT];
-        int paramlens[PARMCOUNT];
-        int paramfmts[PARMCOUNT];
+	const char *params[PARMCOUNT];
+	int paramlens[PARMCOUNT];
+	int paramfmts[PARMCOUNT];
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
