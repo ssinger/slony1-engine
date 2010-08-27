@@ -256,6 +256,9 @@ Specific bugs addressed:
 
 -Fix for bug #117, change logging call to omit the write to stdout if we've got and are using only syslog (use_syslog = 2)
 
+-Fix for bug #115, Cause the parser to generate an ERROR if a WAIT FOR EVENT
+ occurs inside of a TRY block.
+
 -Fix for bug #118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in
  8.3
 
@@ -267,7 +270,14 @@ Specific bugs addressed:
  Also restore the session_replication_role in case ddlScript_prepare
  changed it to local.
 
+-Fix for bug 132/139, The watchdog no longer logs events from a signal handler,
+ the watchdog will now re-fork the worker on a restart/retry, workers in
+ a restart state will loop and try again if they can't obtain the sl_nodelock
+
 -Fix for bug #135, slon sleeps while holding a lock
+
+-Fix for bug 136, When reshaping cascded nodes slonik will now contact the
+ subscriber directly to update listen paths
 
 -Fix for bug #138 - autoconf fix to generate docs via groff
 
@@ -277,11 +287,5 @@ Specific bugs addressed:
 
 -Fix for bug #148, so pg_listener won't be vacuumed on PG 9.0 (where it does not exist)
 
--Fix for bug 132/139, The watchdog no longer logs events from a signal handler,
- the watchdog will now re-fork the worker on a restart/retry, workers in
- a restart state will loop and try again if they can't obtain the sl_nodelock
-
--Fix for bug 136, When reshaping cascded nodes slonik will now contact the
- subscriber directly to update listen paths
-
 -Fix for bug #149, localListener thread failures on startup can deadlock slon
+
