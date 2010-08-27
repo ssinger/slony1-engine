@@ -5805,3 +5805,28 @@ comment on function @NAMESPACE@.enable_indexes_on_table(i_oid oid) is
 This may be set as a SECURITY DEFINER in order to eliminate the need
 for superuser access by Slony-I.
 ';
+
+create or replace function @NAMESPACE@.reshapeSubscription (int4, int4, int4) returns int4 as $$
+declare
+	p_sub_set			alias for $1;
+	p_sub_provider		alias for $2;
+	p_sub_receiver		alias for $3;
+begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
+		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
+	perform @NAMESPACE@.RebuildListenEntries();
+	notify "_@CLUSTERNAME@_Restart";
+	return 0;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.reshapeSubscription(int4,int4,int4) is
+'Run on a receiver/subscriber node when the provider for that
+subscription is being changed.  Slonik will invoke this method
+before the SUBSCRIBE_SET event propogates to the receiver
+so listen paths can be updated.';
