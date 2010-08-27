@@ -284,3 +284,4 @@ Specific bugs addressed:
 -Fix for bug 136, When reshaping cascded nodes slonik will now contact the
  subscriber directly to update listen paths
 
+-Fix for bug #149, localListener thread failures on startup can deadlock slon
