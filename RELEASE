@@ -245,6 +245,8 @@ RELEASE 2.0.5
 
 Specific bugs addressed:
 
+-Fix for bug #40 - check for thread safety enablement consistently in configure script
+
 -Fix for bug #43 - get_set() not used consistently in the perl tools.
  Patch by Peter Eisentraut
 
