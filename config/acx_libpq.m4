@@ -168,26 +168,15 @@ if test -n "$PG_CONFIG_LOCATION"; then
     fi
 
     case ${host_os} in
-	aix*|*solaris*)
-		AC_MSG_CHECKING(PostgreSQL for enable-thread-safety as required on ${host_os})
-		PG_ETS=`echo $PG_CONFIGURE | grep -c enable-thread-safety`
-		if test $PG_ETS -eq 0; then
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(PostgreSQL needs to be compiled with --enable-thread-safety on ${host_os})
-		else
-			AC_MSG_RESULT(yes)
-		fi
-	;;
         *mingw32*)
                 if test $PG_VERSION_MAJOR -ge 8 -a $PG_VERSION_MINOR -ge 2; then
                         AC_SUBST(NEED_PG_DLLINIT, 0)
                 else
                         AC_SUBST(NEED_PG_DLLINIT, 1)
                 fi
-        ;;
-	*)
-	;;
+        		;;
     esac
+
 	dnl ----
 	dnl Define the detected PostgreSQL version
 	dnl ----
@@ -352,6 +341,17 @@ AC_CHECK_LIB(pq, [PQfreemem], [have_pqfreemem=yes])
 if test $have_pqfreemem = yes; then
 	AC_DEFINE(HAVE_PQFREEMEM,1,[Postgresql PQfreemem()])
 fi
+
+
+AC_MSG_CHECKING(PostgreSQL for thread-safety)
+
+LD_LIBS=$LIBS
+LIBS="$OLD_LIBS -lpq"
+AC_RUN_IFELSE(
+	[AC_LANG_PROGRAM([#include "libpq-fe.h"], [if (PQisthreadsafe()) {return 0;} else {return 1;}])], 
+	[echo "PQisthreadsafe() true"], 
+	[AC_MSG_ERROR([PQisthreadsafe test failed - PostgreSQL needs to be compiled with --enable-thread-safety])])
+LIBS=$OLD_LIBS
 
 AC_MSG_CHECKING(for ScanKeywordLookup)
 if test -z "$ac_cv_ScanKeywordLookup_args"; then
