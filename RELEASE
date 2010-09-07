@@ -264,6 +264,11 @@ Specific bugs addressed:
 -Fix for bug #118.  TRUNCATE ONLY in >8.4 behaves like TRUNCATE did in
  8.3
 
+-Fix for bug #121.  SUBSCRIBE SET is now issued against the origin
+ instead of the provider. This means that when subscribing a cascaded
+ subscriber you must issue the WAIT FOR against the origin not the
+ provider.
+
 -Fix for bug #122, better error message in subscribeSet
 
 -Fix for bug #124, enforce that EVENT NODE is identical to EXECUTE ONLY

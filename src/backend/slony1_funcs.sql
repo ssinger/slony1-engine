@@ -4045,12 +4045,7 @@ begin
 
 	raise notice 'subscribe set: omit_copy=%', p_omit_copy;
 
-	-- ----
-	-- Check that this is called on the provider node
-	-- ----
-	if p_sub_provider != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-		raise exception 'Slony-I: subscribeSet() must be called on provider';
-	end if;
+
 
 	--
 	-- Check that the receiver exists
@@ -4076,6 +4071,12 @@ begin
 	if p_sub_receiver = p_sub_provider then
 		raise exception 
 				'Slony-I: subscribeSet(): set provider and receiver cannot be identical';
+	end if;
+	-- ----
+	-- Check that this is called on the origin node
+	-- ----
+	if v_set_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: subscribeSet() must be called on origin';
 	end if;
 
 	-- ---
