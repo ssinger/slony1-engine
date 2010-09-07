@@ -118,7 +118,11 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				}
 				else
 				{
-					dstring_free(&query1);
+					dstring_free(&query1);					
+					pthread_mutex_lock(&slon_wait_listen_lock);
+					slon_listen_started=0;
+					pthread_cond_signal(&slon_wait_listen_cond);
+					pthread_mutex_unlock(&slon_wait_listen_lock);
 					slon_abort();
 				}
 			}
