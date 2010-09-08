@@ -5824,3 +5824,26 @@ comment on function @NAMESPACE@.reshapeSubscription(int4,int4,int4) is
 subscription is being changed.  Slonik will invoke this method
 before the SUBSCRIBE_SET event propogates to the receiver
 so listen paths can be updated.';
+
+create or replace function @NAMESPACE@.slon_node_health_check() returns boolean as $$
+declare
+		prec record;
+		all_ok boolean;
+begin
+		all_ok := 't'::boolean;
+		-- validate that all tables in sl_table have:
+		--      sl_table agreeing with pg_class
+		for prec in select tab_id, tab_relname, tab_nspname from
+		@NAMESPACE@.sl_table t where not exists (select 1 from pg_catalog.pg_class c, pg_catalog.pg_namespace n
+				where c.oid = t.tab_reloid and c.relname = t.tab_relname and c.relnamespace = n.oid and n.nspname = t.tab_nspname) loop
+				all_ok := 'f'::boolean;
+				raise warning 'table [id,nsp,name]=[%,%,%] - sl_table does not match pg_class/pg_namespace', prec.tab_id, prec.tab_relname, prec.tab_nspname;
+		end loop;
+		if not all_ok then
+		   raise warning 'Mismatch found between sl_table and pg_class.  Slonik command REPAIR CONFIG may be useful to rectify this.';
+		end if;
+		return all_ok;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.slon_node_health_check() is 'called when slon starts up to validate that there are not problems with node configuration.  Returns t if all is OK, f if there is a problem.';

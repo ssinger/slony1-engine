@@ -458,6 +458,33 @@ SlonMain(void)
 	}
 	slon_log(SLON_CONFIG, "main: local node id = %d\n", rtcfg_nodeid);
 
+	dstring_init(&query);
+	slon_mkquery(&query, "select %s.slon_node_health_check();", rtcfg_namespace);
+	res = PQexec(startup_conn, dstring_data(&query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        slon_log(SLON_FATAL, "could not call slon_node_health_check() - %", 
+				 PQresultErrorMessage(res));
+		slon_abort();
+	} else {
+		if (PQntuples(res) != 1)
+		{
+				slon_log(SLON_FATAL,
+						 "query '%s' returned %d rows (expected 1)\n",
+						 query, PQntuples(res));
+				slon_abort();
+		} else {
+				if (*(PQgetvalue(res, 0, 0)) == 'f') {
+						slon_log(SLON_FATAL, 
+								 "slon_node_health_check() returned false - fatal health problem!\n%s\nREPAIR CONFIG may be helpful to rectify this problem\n",
+								 PQresultErrorMessage(res));
+						slon_abort();
+				}
+		}
+	}
+	PQclear(res);
+	dstring_free(&query);
+
 #ifndef WIN32
 	if (signal(SIGHUP, SIG_IGN) == SIG_ERR)
 	{
