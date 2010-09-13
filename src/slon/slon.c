@@ -20,7 +20,9 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#ifndef WIN32
 #include <sys/time.h>
+#endif
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -358,6 +360,12 @@ main(int argc, char *const argv[])
 	if (!PQisthreadsafe()) 
 	{
 		slon_log(SLON_FATAL,"slon: libpq was not compiled with thread safety enabled (normally: --enable-thread-safety).  slon is a multithreaded application requiring thread-safe libpq\n");
+		slon_exit(-1);
+	}
+
+	if (!PQisthreadsafe()) 
+	{
+		slon_log(SLON_FATAL,"slon: libpq was not compiled with --enable-thread-safety. Slony-I requires a thread enabled libpq\n");
 		slon_exit(-1);
 	}
 
@@ -1002,7 +1010,7 @@ sighandler(int signo)
 			break;
 	}
 }
-#endif
+
 
 /* ---------- 
  * slon_terminate_worker 
@@ -1014,7 +1022,7 @@ slon_terminate_worker()
 	(void) kill(slon_worker_pid, SIGKILL);
 
 }
-
+#endif
 /* ---------- 
  * slon_exit 
  * ----------
