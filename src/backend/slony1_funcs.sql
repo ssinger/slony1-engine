@@ -3692,7 +3692,6 @@ declare
 	v_query				text;
 	v_row				record;
 begin
-	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	if p_only_on_node = -1 then
 		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
@@ -3735,7 +3734,7 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
-
+	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	-- ----
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
