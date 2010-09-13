@@ -296,3 +296,5 @@ Specific bugs addressed:
 
 -Fix for bug #149, localListener thread failures on startup can deadlock slon
 
+-Fix for bug #154, Updated sl_table on slaves following an EXECUTE SCRIPT
+
