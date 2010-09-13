@@ -369,6 +369,11 @@ case "${host_os}" in
 		libpath=` echo $LIBS |sed -e's/-L/:/g' | sed -e's/ //g'`:/usr/lib:/lib
 		LIBS="$LIBS -L$PG_LIBDIR -Wl,-blibpath:$PG_LIBDIR:$libpath -lpq"
 	;;
+	*mingw32* | *win32*)
+		export PATH=$PG_BINDIR:$PATH
+		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
+
+	;;
 	*)
 		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
 esac
