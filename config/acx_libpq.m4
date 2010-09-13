@@ -344,9 +344,35 @@ fi
 
 
 AC_MSG_CHECKING(PostgreSQL for thread-safety)
+##
+# compile and run a program that links with libpq
+# to test the result of PQisthreadsafe.
+# We need to setup LIBS to have the platform
+# dependent linker options to find libpq at
+# runtime.
+##
+OLD_LIBS=$LIBS
+case "${host_os}" in 
+	*solaris* )
+	if test "$with_gnu_ld" = yes; then
+		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
+	else
+		LIBS="$LIBS -L$PG_LIBDIR  -Wl,-R,$PG_LIBDIR -lpq"
+	fi
+	;;
+	*freebsd* | *netbsd* | *openbsd* )
+		 LIBS="$LIBS -L$PG_LIBDIR  -Wl,-R,$PG_LIBDIR -lpq"
+	;;
+	*aix*) 
+	# -blibpath must contain ALL directories where we should look 
+	# for libraries
+		libpath=` echo $LIBS |sed -e's/-L/:/g' | sed -e's/ //g'`:/usr/lib:/lib
+		LIBS="$LIBS -L$PG_LIBDIR -Wl,-blibpath:$PG_LIBDIR:$libpath -lpq"
+	;;
+	*)
+		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
+esac
 
-LD_LIBS=$LIBS
-LIBS="$OLD_LIBS -lpq"
 AC_RUN_IFELSE(
 	[AC_LANG_PROGRAM([#include "libpq-fe.h"], [if (PQisthreadsafe()) {return 0;} else {return 1;}])], 
 	[echo "PQisthreadsafe() true"], 

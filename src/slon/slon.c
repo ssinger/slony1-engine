@@ -352,6 +352,12 @@ main(int argc, char *const argv[])
 		slon_exit(-1);
 	}
 
+	if (!PQisthreadsafe()) 
+	{
+		slon_log(SLON_FATAL,"slon: libpq was not compiled with thread safety enabled (normally: --enable-thread-safety).  slon is a multithreaded application requiring thread-safe libpq\n");
+		slon_exit(-1);
+	}
+
 	/*
 	 * There is no watchdog process on win32. We delegate restarting and other
 	 * such tasks to the Service Control Manager. And win32 doesn't support
