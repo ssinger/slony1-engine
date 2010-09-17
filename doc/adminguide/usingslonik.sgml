@@ -327,7 +327,7 @@ linkend="function.storelisten-integer-integer-integer">, for instance.
 In other cases, the function needs to be called on some particular
 node because that is the only place where data may be reasonably
 validated.  For instance, <xref
-linkend="function.subscribeset-integer-integer-integer-boolean"> must
+linkend="function.subscribeset-integer-integer-integer-boolean-boolean"> must
 be called on the receivernode.</para></listitem>
 
 <listitem><para> If that <quote>main</quote> function succeeds, then

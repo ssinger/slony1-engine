@@ -33,7 +33,7 @@ driven insane.  The node numbers should be chosen to somehow
 correspond to the shape of the environment, as opposed to (say) the
 order in which nodes were initialized.</para>
 
-<para> In &slony1; version 1.1, the <xref linkend="stmtinclude"> and
+<para> The <xref linkend="stmtinclude"> and
 <xref linkend="stmtdefine"> statements allow you to create a sort of
 <quote>symbol table</quote> behind the scenes so that <xref
 linkend="slonik"> scripts can use names for nodes rather than cryptic

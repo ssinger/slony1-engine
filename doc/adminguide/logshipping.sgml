@@ -3,8 +3,7 @@
 <title>Log Shipping - &slony1; with Files</title>
 <indexterm><primary>log shipping</primary></indexterm>
 
-<para> One of the new features for 1.1, that only really stabilized as
-of 1.2.11, is the ability to serialize the updates to go out into log
+<para> &slony1; has the ability to serialize the updates to go out into log
 files that can be kept in a spool directory.</para>
 
 <para> The spool files could then be transferred via whatever means
@@ -151,30 +150,11 @@ contain updates to the set.</para>
 <command>SET_MOVE_TABLE</command>,
 <command>SET_MOVE_SEQUENCE</command>,
 <command>DROP_SET</command>,
-<command>MERGE_SET</command>, will be handled
+<command>MERGE_SET</command>,
+<command>SUBSCRIBE_SET</command> will be handled
 <quote>apropriately</quote>.</para></listitem>
 
-<listitem><para><command> SUBSCRIBE_SET </command></para>
 
-<para> Unfortunately, there is some <quote>strangeness</quote> in the
-handling of this...  When <command>SUBSCRIBE_SET</command> occurs, it
-leads to an event being raised, and processed, <emphasis>purely on the
-subscriber</emphasis>, called <command>ENABLE_SUBSCRIPTION</command>.</para>
-
-<para> <command> SUBSCRIBE_SET </command> is really quite a simple
-event; it merely <emphasis>declares</emphasis> that a node is
-subscribing to a particular set via a particular provider.  <emphasis>
-It doesn't copy data!</emphasis> </para>
-
-<para> The meat of the subscription work is done by
-<command>ENABLE_SUBSCRIPTION</command>, which is an event that is
-raised on the local node, not in the same sequence as the other events
-coming from other nodes (notably the data provider). </para>
-
-<para> With revisions in sequencing of logs that took place in 1.2.11,
-this now presents no problem for the user.</para>
-
-</listitem> 
 
 <listitem><para> The various events involved in node configuration are
 irrelevant to log shipping:
@@ -195,7 +175,6 @@ to be initially configured are similarly irrelevant:
 <command>SET_ADD_SEQUENCE</command>,
 <command>STORE_TRIGGER</command>,
 <command>DROP_TRIGGER</command>,
-<command>TABLE_ADD_KEY</command>
 </para></listitem>
 
 </itemizedlist>
@@ -209,10 +188,10 @@ construct a cluster of (say) 6 nodes; you could start by creating one
 subscriber, and then use log shipping to populate the other 4 in
 parallel.</para>
 
-<para> This usage is not supported, but presumably one could add the
-&slony1; configuration to the node, and promote it into being a new
-node.  Again, a Simple Matter Of Programming (that might not
-necessarily be all that simple)... </para></answer>
+<para> This usage is not supported, but presumably one could take
+an application outage and promote the log-shipping node to a normal
+slony node with the OMIT COPY option of SUBSCRIBE SET.
+ </para></answer>
 </qandaentry>
 </qandaset>
 
@@ -239,72 +218,6 @@ the file will fail!  It is futile to go through the parsing effort of
 reading the remainder of the file.</para>
 
 <para> Better idea: 
-
-<itemizedlist>
-
-<listitem><para> Read the first few lines of the file, up to and
-including the <function> setsyncTracking_offline() </function>
-call.</para></listitem>
-
-<listitem><para> Try to apply it that far.</para></listitem>
-
-<listitem><para> If that failed, then it is futile to continue;
-<command>ROLLBACK</command> the transaction, and perhaps consider
-trying the next file.</para></listitem>
-
-<listitem><para> If the <function> setsyncTracking_offline()
-</function> call succeeds, then you have the right next
-<command>SYNC</command> file, and should apply it.  You should
-probably <command>ROLLBACK</command> the transaction, and then use
-<application>psql</application> to apply the entire file full of
-updates.</para></listitem>
-
-</itemizedlist></para>
-
-<para> In order to support the approach of grabbing just the first few
-lines of the sync file, the format has been set up to have a line of
-dashes at the end of the <quote>header</quote> material:
-
-<programlisting>
--- Slony-I log shipping archive
--- Node 11, Event 656
-start transaction;
-
-select "_T1".setsyncTracking_offline(1, '655', '656', '2007-09-23 18:37:40.206342');
--- end of log archiving header
-</programlisting></para></listitem>
-
-
-<listitem><para> Note that the header includes a timestamp indicating
-SYNC time. 
-<programlisting>
--- Slony-I log shipping archive
--- Node 11, Event 109
-start transaction;
-
-select "_T1".setsyncTracking_offline(1, '96', '109', '2007-09-23 19:01:31.267403');
--- end of log archiving header
-</programlisting></para>
-
-<para> This timestamp represents the time at which the
-<command>SYNC</command> was issued on the origin node.</para>
-
-<para> The value is stored in the log shipping configuration table
-sl_setsync_offline.</para>
-
-<para> If you are constructing a temporal database, this is likely to
-represent the time you will wish to have apply to all of the data in
-the given log shipping transaction log. </para>
-</listitem>
-
-<listitem><para> You may find information on how relevant activity is
-logged in <xref linkend="logshiplog">. </para></listitem>
-
-</itemizedlist>
-
-<para> As of 1.2.11, there is an <emphasis>even better idea</emphasis>
-for application of logs, as the sequencing of their names becomes more
-predictable.</para>
 
 <itemizedlist>
 

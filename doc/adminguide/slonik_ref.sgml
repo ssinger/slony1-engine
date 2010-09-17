@@ -1023,6 +1023,53 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
   </refentry>
 
 
+
+<!-- **************************************** -->
+
+  <refentry id="stmttableaddkey"><refmeta><refentrytitle>SLONIK TABLE ADD KEY</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+
+   <refnamediv><refname>TABLE ADD KEY</refname>
+    
+    <refpurpose> Add primary key for use by
+    &slony1; for a table with no suitable
+    key 
+    </refpurpose></refnamediv>
+   
+ 
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+
+    <para> In &slony1; version 2.0, this command is removed as
+    obsolete because triggers are no longer <quote>messed around
+    with</quote> in the system catalogue. </para>
+
+   </refsect1>
+  </refentry>
+
+
+<!-- **************************************** -->
+
+  <refentry id="stmttabledropkey"><refmeta><refentrytitle>SLONIK TABLE DROP KEY</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+
+   <refnamediv><refname>TABLE DROP KEY</refname>
+    
+    <refpurpose> Removes a primary key added by TABLE ADD KEY 
+    </refpurpose></refnamediv>
+   
+ 
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 1.0 </para>
+
+    <para> In &slony1; version 2.0, this command is removed as
+    obsolete because triggers are no longer <quote>messed around
+    with</quote> in the system catalogue. </para>
+
+   </refsect1>
+  </refentry>
+
+
 <!-- **************************************** -->
 
 
@@ -1733,68 +1780,7 @@ SET MOVE SEQUENCE (
     &slony1; on a subscriber node
     </refpurpose></refnamediv>
    
-   <refsynopsisdiv>
-    <cmdsynopsis>
-     <command>STORE TRIGGER (options);</command>
-    </cmdsynopsis>
-   </refsynopsisdiv>
-   <refsect1>
-    <title>Description</title>
-    
-    <para> By default, all user defined triggers and constraints are
-     disabled on all subscriber nodes while a table is replicated. This
-     command can be used to explicitly exclude a trigger from being
-     disabled.
-
-     <variablelist>
-      <varlistentry><term><literal> TABLE ID = ival </literal></term>
-       <listitem><para> The unique, numeric ID number of the table the trigger is defined for.</para></listitem>
-       
-      </varlistentry>
-      <varlistentry><term><literal> TRIGGER NAME = 'string' </literal></term>
-       
-       <listitem><para> The name of the trigger as it appears in the
-	 <envar>pg_trigger</envar> system catalog.</para></listitem>
-       
-      </varlistentry>
-      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       
-       <listitem><para> (Optional) The ID of the node used to create
-       the configuration event that tells all existing nodes about the
-	 special trigger. Default value is 1.</para></listitem>
-
-      </varlistentry>
-     </variablelist>
-    </para>
-    <note><para> A nifty trick is that you can run <command>STORE
-    TRIGGER</command> <emphasis>before the trigger is
-    installed;</emphasis> that will not cause any errors.  You could
-    thus add &slony1;'s handling of the trigger
-    <emphasis>before</emphasis> it is installed.  That allows you to
-    be certain that it becomes active on all nodes immediately upon
-    its installation via <xref linkend="stmtddlscript">; there is no
-    risk of events getting through in between the <command>EXECUTE
-    SCRIPT</command> and <command>STORE TRIGGER</command>
-    events. </para>
-    </note>
-
-   <para> This uses
-    &funstoretrigger;. </para>
-   </refsect1>
-   <refsect1><title>Example</title>
-    <programlisting>
-STORE TRIGGER (
-    TABLE ID = 2,
-    TRIGGER NAME = 'cache_invalidation'
-);
-    </programlisting>
-   </refsect1>
-   <refsect1> <title> Locking Behaviour </title>
-
-    <para> This operation will need to acquire an exclusive lock on
-    the specified table on each node to which it applies in order to
-    alter table schemas to add back the trigger, but (hopefully!) only briefly. </para>
-   </refsect1>
+ 
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1814,54 +1800,7 @@ STORE TRIGGER (
     
     <refpurpose> Return a trigger to default behavior, where it will
     not fire on subscriber nodes </refpurpose></refnamediv>
-   
-   <refsynopsisdiv>
-    <cmdsynopsis>
-     <command>DROP TRIGGER (options);</command>
-    </cmdsynopsis>
-   </refsynopsisdiv>
-   <refsect1>
-    <title>Description</title>
-    
-    <para> Remove the special handling for the specified trigger.
-
-     <variablelist>
-      <varlistentry><term><literal> TABLE ID = ival </literal></term>
-      <listitem><para> The unique, numeric ID number of the table the
-      trigger is defined for.</para></listitem>
-       
-      </varlistentry>
-      <varlistentry><term><literal> TRIGGER NAME = 'string' </literal></term>
-       
-       <listitem><para> The name of the trigger as it appears in the
-	 <envar>pg_trigger</envar> system catalog.</para></listitem>
-
-      </varlistentry>
-      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       
-       <listitem><para> (Optional) The ID of the node used to create
-	 the configuration event that tells all existing nodes about the
-	 special trigger. Default value is 1.</para></listitem>
-       
-      </varlistentry>
-     </variablelist>
-    </para>
-    <para> This uses &fundroptrigger;. </para>
-   </refsect1>
-   <refsect1><title>Example</title>
-    <programlisting>
-DROP TRIGGER (
-    TABLE ID = 2,
-    TRIGGER NAME = 'cache_invalidation'
-);
-    </programlisting>
-   </refsect1>
-   <refsect1> <title> Locking Behaviour </title>
-
-    <para> This operation will need to acquire an exclusive lock on
-    the specified table on each node to which it applies in order to
-    alter table schemas to remove the trigger. </para>
-   </refsect1>
+ 
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1945,10 +1884,7 @@ DROP TRIGGER (
      still in progress.  If you need to set up subscriptions for a set
      of cascading nodes, you will need to wait for each subscriber to
      complete subscribing before submitting requests for subscriptions
-     that use that node as a provider.  If you don't, it won't be a
-     big deal: <command>slonik</command> will check the node, discover
-     that it is not yet an active provider for the set, and report
-     back:</para>
+     that use that node as a provider. </para>
 
 <programlisting>
  Slony-I: provider 2 is not an active forwarding node for replication set 1
@@ -2030,6 +1966,12 @@ SUBSCRIBE SET (
    RECEIVER = 3,
    FORWARD = YES
 );
+  WAIT FOR EVENT(
+    ORIGIN=1, 
+    CONFIRMED=ALL,
+    WAIT ON=1
+);
+     
     </programlisting>
    </refsect1>
 
@@ -2085,14 +2027,11 @@ SUBSCRIBE SET (
 
      <para> Processing of the subscription involves
      <emphasis>two</emphasis> events; the
-     <command>SUBSCRIBE_SET</command>, initiated from the provider
-     node, and an <command>ENABLE_SUBSCRIPTION</command>, which is
-     initiated on the subscriber node.  This means that <xref
-     linkend="stmtwaitevent"> cannot directly wait for completion of a
-     subscription.  If you need to wait for completion of a
-     subscription, then what you need to do instead is to submit a
-     <xref linkend="stmtsync"> request, and wait for
-     <emphasis>that</emphasis> event.</para>
+     <command>SUBSCRIBE_SET</command>, initiated on the set origin
+     node, and an <command>ENABLE_SUBSCRIPTION</command>.
+     This means that <xref
+     linkend="stmtwaitevent"> must be used following a SUBSCRIBE SET
+     to wait until the last event on the set origin completes.
      </listitem>
 
      <listitem><para> This command has <emphasis>two</emphasis>
@@ -2121,16 +2060,17 @@ SUBSCRIBE SET (
     acquiring any locks on the provider node.</para>
 
     <para> On the subscriber node, it will have the effect of locking
-    every table in the replication set.  In version 1.2, exclusive
-    locks are acquired at the beginning of the process; in earlier
-    versions, locks were acquired implicitly as activity mandated it,
-    which left some risk of deadlock if other applications could
-    access the subscriber database at this time.
+    every table in the replication set.  In version 1.2 or later, exclusive
+    locks are acquired at the beginning of the process.
     </para>
    </refsect1>
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> The <command>OMIT COPY</command> option was introduced in &slony1; 2.0.3.</para>
+    <para> In &slony1; 2.0.5 the SUBSCRIBE SET command gets submitted
+           directly against the set origin. Prior to this change the 
+           SUBSCRIBE SET was submitted against the provider
+   </para>
    </refsect1>
   </refentry>
   
@@ -2582,21 +2522,7 @@ FAILOVER (
     <para> Note that this is a potentially heavily-&rlocking;
     operation, which means that it can get stuck behind other database
     activity.</para>
-     
-    <para> In versions up to (and including) the 1.2 branch, at the
-    start of this event, all replicated tables are unlocked via the
-    function <function>alterTableRestore(tab_id)</function>.  After
-    the SQL script has run, they are returned to <quote>replicating
-    state</quote> using
-    <function>alterTableForReplication(tab_id)</function>.  This means
-    that all of these tables are locked by this &lslon process for the
-    duration of the SQL script execution.</para>
-
-    <para> If a table's columns are modified, it is essential that the
-    triggers be regenerated (<emphasis>e.g.</emphasis> - by
-    <function>alterTableForReplication(tab_id)</function>), otherwise
-    the attributes in the <function>logtrigger()</function> trigger
-    may be inappropriate for the new form of the table schema.</para>
+  
 
     <para> Note that if you need to make reference to the cluster
     name, you can use the token <command>@CLUSTERNAME@</command>; if
@@ -2620,7 +2546,11 @@ EXECUTE SCRIPT (
     <para> Up until the 2.0 branch, each replicated table received an
     exclusive lock, on the origin node, in order to remove the
     replication triggers; after the DDL script completes, those locks
-    will be cleared. </para>
+    will be cleared. In the 2.0 branch this is no longer the case.
+    EXECUTE SCRIPT won't obtain any locks on your application tables
+    though the script that you executing probably will. Due to bug #137
+    you should avoid concurrent writes to the tables being
+    modified by the script while the script is running.  </para>
 
     <para> After the DDL script has run on the origin node, it will
     then run on subscriber nodes, where replicated tables will be
@@ -2628,12 +2558,7 @@ EXECUTE SCRIPT (
     requiring that exclusive locks be taken out on each node, in
     turn. </para>
 
-    <para> As of the 2.0 branch, &slony1; uses a GUC that controls
-    trigger behaviour, which allows deactivating the &slony1;-created
-    triggers during this operation <emphasis>without</emphasis> the
-    need to take out exclusive locks on all tables.  Now, the only
-    tables requiring exclusive locks are those tables that are
-    actually altered as a part of the DDL script. </para>
+  
 
    </refsect1>
    <refsect1> <title> Version Information </title>
@@ -2658,11 +2583,12 @@ EXECUTE SCRIPT (
     in slon logs on the other nodes.</para>
 
     <para> In &slony1; version 1.0, this would only lock the tables in
-    the specified replication set.  As of 1.1, <emphasis>all
+    the specified replication set.  As of 1.1 (until 2.0), <emphasis>all
     replicated tables</emphasis> are locked (<emphasis>e.g.</emphasis>
     - triggers are removed at the start, and restored at the end).
     This deals with the risk that one might request DDL changes on
-    tables in multiple replication sets.</para>
+    tables in multiple replication sets. With version 2.0 no locks
+    on application tables are obtained by &slony1;</para>
 
    <para> In version 2.0, the default value for <envar>EVENT
    NODE</envar> was removed, so a node must be specified.</para>
@@ -2843,8 +2769,6 @@ WAIT FOR EVENT (
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
-     SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
@@ -2933,10 +2857,8 @@ REPAIR CONFIG (
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     SUBSCRIBE SET (ID = 10, PROVIDER = 1, RECEIVER = 2);
-     WAIT FOR EVENT (ORIGIN = 2, CONFIRMED = 1);
      SYNC (ID = 1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2);
+     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>

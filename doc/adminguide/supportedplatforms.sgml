@@ -58,23 +58,8 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>&postgres; Version: 8.4.3,8.3.10</entry>
      </row>
 
-     <row>
-      <entry>FreeBSD</entry>
-      <entry>6.X</entry>
-      <entry>AMD64</entry>
-      <entry>Aug 9, 2009</entry>
-      <entry>wmoran at potentialtech dot com </entry>
-      <entry>&postgres; Version: 8.1</entry>
-     </row>
+     
 
-     <row>
-      <entry>FreeBSD</entry>
-      <entry>6.X</entry>
-      <entry>AMD64</entry>
-      <entry>Aug 9, 2009</entry>
-      <entry>wmoran at potentialtech dot com </entry>
-      <entry>&postgres; Version: 8.2</entry>
-     </row>
 
      <row>
       <entry>FreeBSD</entry>
@@ -94,14 +79,7 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>&postgres; Version: 8.3</entry>
      </row>
 
-     <row>
-      <entry>Gentoo</entry>
-      <entry>2008</entry>
-      <entry>amd64</entry>
-      <entry>Aug 9, 2009</entry>
-      <entry>vostorga at gmail dot com </entry>
-      <entry>&postgres; Version: 8.1</entry>
-     </row>
+    
 
      <row>
       <entry>Red Hat Enterprise Linux</entry>
@@ -118,17 +96,10 @@ Mailing List</ulink> and ask your questions.</para>
       <entry>sparc</entry>
       <entry>Aug 9, 2009</entry>
       <entry>devrim at gunduz dot org</entry>
-      <entry>&postgres; Version: 8.2 and 8.3</entry>
+      <entry>&postgres;  8.3</entry>
      </row>
 
-     <row>
-      <entry><trademark>Windows</trademark></entry>
-      <entry>2000/XP/2003</entry>
-      <entry>x86</entry>
-      <entry>Sept 21, 2006</entry>
-      <entry>dpage at postgresql.org </entry>
-      <entry>&postgres; Version: 8.1, 8.2</entry>
-     </row>
+    
 
  </tbody>
    </tgroup>

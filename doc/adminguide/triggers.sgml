@@ -3,47 +3,11 @@
 
 <indexterm><primary>trigger handling</primary></indexterm>
 
-<para> &slony1; has had two <quote>flavours</quote> of trigger
-handling:</para>
-<itemizedlist>
-
-<listitem><para> In versions up to 1.2, &postgres; had no awareness of
-replication, with the result that &slony1; needed to
-<quote>hack</quote> on the system catalog in order to deactivate, on
-subscribers, triggers that ought not to run.</para></listitem>
-</itemizedlist>
-
-<para> This has had a number of somewhat painful side-effects including:</para> 
-<itemizedlist>
-
-<listitem><para> Corruption of the system catalog on subscribers, as
-existing triggers, that generally need to be hidden, are
-<quote>hacked</quote>, via <envar>pg_catalog.pg_trigger</envar>, to
-point to the index being used by &slony1; as its <quote>primary
-key</quote>.</para>
-
-<para> The very same thing was true for rules. </para>
-
-<para> This had the side-effect that
-<application>pg_dump</application> could not be used to pull proper
-schemas from subscriber nodes.</para></listitem>
-
-<listitem><para> It introduced the need to take out exclusive locks on
-<emphasis>all replicated tables</emphasis> when processing
-&rddlchanges; as triggers on each replicated table would need to be
-dropped and re-added during the course of
-processing.</para></listitem>
-
-</itemizedlist>
-
-<itemizedlist>
-
-<listitem><para> In &postgres; version 8.3, there is new functionality
+<para> In &postgres; version 8.3, there is new functionality
 where triggers and rules can have their behaviour altered via
 <command>ALTER TABLE</command>, and specify any of the following
 further trigger-related options:</para></listitem>
 
-</itemizedlist>
 
 <itemizedlist>
 
@@ -116,12 +80,6 @@ schemas, requires <emphasis>extensive</emphasis> exclusive table
 locks, and the changes in trigger behaviour do not change those
 requirements.  </para>
 
-<para> However, note that the ability to enable and disable triggers
-in a &postgres;-supported fashion means that we have had no need to
-<quote>corrupt</quote> the system catalog, so we have the considerable
-advantage that <application>pg_dump</application> may be used to draw
-a completely consistent backup against any node in a &slony1;
-cluster.</para>
 
 </listitem>
 
@@ -143,14 +101,6 @@ of replicated mode</quote>, &slony1; instead simply shifts into the
 <para> On each subscriber, this deactivates the
 <function>denyaccess</function> trigger. </para>
 
-<para> This may be expected to allow DDL changes to become
-<emphasis>enormously</emphasis> less expensive, since, rather than
-needing to take out exclusive locks on <emphasis>all</emphasis>
-replicated tables (as used to be mandated by the action of dropping
-and adding back the &slony1;-created triggers), the only tables that
-are locked are those ones that the DDL script was specifically acting
-on.  </para>
-
 </listitem>
 
 <listitem><para> At the time of invoking <xref linkend="stmtmoveset">
@@ -165,10 +115,10 @@ that node into an origin, which requires disabling the formerly active
 <function>denyaccess</function> triggers, and enabling the
 <function>logtrigger</function> triggers. </para>
 
-<para> From a locking perspective, this will not behave differently
-from older versions of &slony1;; to disable and enable the respective
-triggers requires taking out exclusive locks on all replicated
-tables. </para>
+<para> From a locking perspective &slony1; will need to take out exclusive
+locks  to disable and enable the respective
+triggers.
+</para>
 
 </listitem>
 

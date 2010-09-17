@@ -1,7 +1,11 @@
 <!--  -->
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
-<indexterm><primary>upgrading &slony1; to a newer version</primary></indexterm>
+<indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
+
+Minor &slony1; versions can be upgraded using the slonik 
+<xref linkend="stmtupdatefunctions"/>  command.  This includes
+upgrades from 2.0.x to a newer version 2.0.y version.
 
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
@@ -78,169 +82,21 @@ new components. </para></listitem></varlistentry>
 
 </variablelist>
 
-<sect2> <title> TABLE ADD KEY issue in &slony1; 2.0 </title> 
+<sect2>
+<title>Incompatibilities between 1.2 and 2.0</title>
 
-<para> Usually, upgrades between &slony1; versions have required no
-special attention to the condition of the existing replica.  That is,
-you fairly much merely need to stop &lslon;s, put new binaries in
-place, run <xref linkend="stmtupdatefunctions"> against each node, and
-restart &lslon;s.  Schema changes have been internal to the cluster
-schema, and <xref linkend="stmtupdatefunctions"> has been capable to
-make all of the needed alterations.  With version 2, this changes, if
-there are tables that used <xref linkend="stmttableaddkey">.  Version
-2 does not support the <quote>extra</quote> column, and
-<quote>fixing</quote> the schema to have a proper primary key is not
-within the scope of what <xref linkend="stmtupdatefunctions"> can
-perform.  </para>
+<sect3> <title> TABLE ADD KEY issue in &slony1; 2.0 </title> 
+<para> The TABLE ADD KEY slonik command has been removed in version 2.0.
+This means that all tables must have a set of columns that form a 
+unique key for the table.
 
-<para> When upgrading from versions 1.0.x, 1.1.x, or 1.2.x to version
-2, it will be necessary to have already eliminated any such
-&slony1;-managed primary keys. </para>
+If you are upgrading from a previous &slony1; version and are using a 
+&slony1; created primary key then you will need to modify your table
+to have its own primary key before installing &slony1; version 2.0
 
-<para> One may identify the tables affected via the following SQL
-query: <command> select n.nspname, c.relname from pg_class c,
-pg_namespace n where c.oid in (select attrelid from pg_attribute where
-attname like '_Slony-I_%rowID' and not attisdropped) and reltype &lt;&gt; 0
-and n.oid = c.relnamespace order by n.nspname, c.relname; </command>
-</para>
 
-<para> The simplest approach that may be taken to rectify the
-<quote>broken</quote> state of such tables is as follows: </para>
 
-<itemizedlist>
-
-<listitem><para> Drop the table from replication using the &lslonik;
-command <xref linkend="stmtsetdroptable">. </para>
-
-<para> This does <emphasis>not</emphasis> drop out the
-&slony1;-generated column. </para>
-</listitem>
-
-<listitem><para> On each node, run an SQL script to alter the table,
-dropping the extra column.</para> <para> <command> alter table
-whatever drop column "_Slony-I_cluster-rowID";</command> </para>
-
-<para> This needs to be run individually against each node.  Depending
-on your preferences, you might wish to use <xref
-linkend="stmtddlscript"> to do this. </para>
-
-<para> If the table is a heavily updated one, it is worth observing
-that this alteration will require acquiring an exclusive lock on the
-table.  It will not hold this lock for terribly long; dropping the
-column should be quite a rapid operation as all it does internally is
-to mark the column as being dropped; it <emphasis>does not</emphasis>
-require rewriting the entire contents of the table.  Tuples that have
-values in that column will continue to have that value; new tuples
-will leave it NULL, and queries will ignore the column.  Space for
-those columns will get reclaimed as tuples get updated.  </para>
-
-<para> Note that at this point in the process, this table is not being
-replicated.  If a failure takes place, replication is not, at this
-point, providing protection on this table.  This is unfortunate but
-unavoidable. </para>
-</listitem>
-
-<listitem><para> Make sure the table has a legitimate candidate for
-primary key, some set of NOT NULL, UNIQUE columns.  </para>
-
-<para> The possible variations to this are the reason that the
-developers have made no effort to try to assist automation of
-this.</para></listitem>
-</itemizedlist>
-
-<itemizedlist>
-
-<listitem><para> If the table is a small one, it may be perfectly
-reasonable to do alterations (note that they must be applied to
-<emphasis>every node</emphasis>!) to add a new column, assign it via a
-new sequence, and then declare it to be a primary key.  </para>
-
-<para> If there are only a few tuples, this should take a fraction of
-a second, and, with luck, be unnoticeable to a running
-application. </para>
-
-<para> Even if the table is fairly large, if it is not frequently
-accessed by the application, the locking of the table that takes place
-when you run <command>ALTER TABLE</command> may not cause much
-inconvenience. </para></listitem>
-
-<listitem> <para> If the table is a large one, and is vital to and
-heavily accessed by the application, then it may be necessary to take
-an application outage in order to accomplish the alterations, leaving
-you necessarily somewhat vulnerable until the process is
-complete. </para>
-
-<para> If it is troublesome to take outages, then the upgrade to
-&slony1; version 2 may take some planning... </para>
-</listitem>
-
-</itemizedlist>
-
-<itemizedlist>
-
-<listitem><para> Create a new replication set (<xref
-linkend="stmtcreateset">) and re-add the table to that set (<xref
-linkend="stmtsetaddtable">).  </para>
-
-<para> If there are multiple tables, they may be handled via a single
-replication set.</para>
-</listitem>
-
-<listitem><para> Subscribe the set (<xref linkend="stmtsubscribeset">)
-on all the nodes desired. </para> </listitem>
-
-<listitem><para> Once subscriptions are complete, merge the set(s) in,
-if desired (<xref linkend="stmtmergeset">). </para> </listitem>
-
-</itemizedlist>
-
-<para> This approach should be fine for tables that are relatively
-small, or infrequently used.  If, on the other hand, the table is
-large and heavily used, another approach may prove necessary, namely
-to create your own sequence, and <quote>promote</quote> the formerly
-&slony1;-generated column into a <quote>real</quote> column in your
-database schema.  An outline of the steps is as follows: </para>
-
-<itemizedlist>
-
-<listitem><para> Add a sequence that assigns values to the
-column. </para>
-
-<para> Setup steps will include SQL <command>CREATE
-SEQUENCE</command>, SQL <command>SELECT SETVAL()</command> (to set the
-value of the sequence high enough to reflect values used in the
-table), Slonik <xref linkend="stmtcreateset"> (to create a set to
-assign the sequence to), Slonik <xref linkend="stmtsetaddsequence">
-(to assign the sequence to the set), Slonik <xref
-linkend="stmtsubscribeset"> (to set up subscriptions to the new
-set)</para>
-</listitem>
-
-<listitem><para> Attach the sequence to the column on the
-table. </para>
-
-<para> This involves <command>ALTER TABLE ALTER COLUMN</command>,
-which must be submitted via the Slonik command <xref
-linkend="stmtddlscript">. </para>
-</listitem>
-
-<listitem><para> Rename the column
-<envar>_Slony-I_@CLUSTERNAME@_rowID</envar> so that &slony1; won't
-consider it to be under its control.</para>
-
-<para> This involves <command>ALTER TABLE ALTER COLUMN</command>,
-which must be submitted via the Slonik command <xref
-linkend="stmtddlscript">. </para>
-
-<para> Note that these two alterations might be accomplished via the
-same <xref linkend="stmtddlscript"> request. </para>
-</listitem>
-
-</itemizedlist>
-
-</sect2>
-
-<sect2> <title> New Trigger Handling in &slony1; Version 2 </title>
+<sect3> <title> New Trigger Handling in &slony1; Version 2 </title>
 
 <para> One of the major changes to &slony1; is that enabling/disabling
 of triggers and rules now takes place as plain SQL, supported by
@@ -252,7 +108,23 @@ syntax for <command>ALTER TABLE</command>, as that is how they can
 accomplish what was formerly accomplished via <xref
 linkend="stmtstoretrigger"> and <xref linkend="stmtdroptrigger">. </para>
 
-</sect2>
+</sect3>
+
+<sect3><title>SUBSCRIBE SET goes to the origin</title>
+
+<para> New in 2.0.5 (but not older versions of 2.0.x) is that 
+<xref linkend="stmtsubscribeset"> commands are submitted by
+slonik to the set origin not the provider.  This means that you
+only need to issue <xref linkend="stmtwaitevent"> on the set origin
+to wait for the subscription process to complete.
+</para>
+</sect3>
+<sect3><title>WAIT FOR EVENT requires WAIT ON</title>
+<para> With version 2.0 the WAIT FOR EVENT slonik command requires
+that the WAIT ON parameter be specified.  Any slonik scripts that
+were assuming a default value will need to be modified
+</para>
+</sect3>
 
 <sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2 </title>
 

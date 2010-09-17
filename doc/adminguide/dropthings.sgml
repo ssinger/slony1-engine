@@ -29,10 +29,6 @@ cause substantial destruction; make sure you drop the right node!</para>
 the node that you attempt to drop, so there is a bit of a failsafe to
 protect you from errors.</para>
 
-<para><link linkend="faq17"> <envar>sl_log_1</envar> isn't getting
-purged</link> documents some extra maintenance that may need to be
-done on <xref linkend="table.sl-confirm"> if you are running versions
-prior to 1.0.5.</para></sect2>
 
 <sect2><title>Dropping An Entire Set</title>
 
@@ -105,32 +101,6 @@ also remove it from <filename>slon_tools.conf</filename>.
 linkend="stmtsetdroptable"> that allows dropping a single table from
 replication without forcing the user to drop the entire replication
 set.</para>
-
-<para>If you are running an earlier version, there is a <quote>hack</quote>
-to do this:</para>
-
-<para>You can fiddle this by hand by finding the table ID for the
-table you want to get rid of, which you can find in <xref
-linkend="table.sl-table">, and then run the following three queries,
-on each host:
-<programlisting>
-  select _slonyschema.alterTableRestore(40);
-  select _slonyschema.tableDropKey(40);
-  delete from _slonyschema.sl_table where tab_id = 40;
-</programlisting>
-</para>
-
-<para>The schema will obviously depend on how you defined the &slony1;
-cluster.  The table ID, in this case, 40, will need to change to the
-ID of the table you want to have go away.</para>
-
-<para>You'll have to run these three queries on all of the nodes,
-preferably firstly on the origin node, so that the dropping of this
-propagates properly.  Implementing this via a <xref linkend="slonik">
-statement with a new &slony1; event would do that.  Submitting the
-three queries using <xref linkend="stmtddlscript"> could do that; see
-<xref linkend="ddlchanges"> for more details.  Also possible would be
-to connect to each database and submit the queries by hand.</para>
 </sect3>
 </sect2>
 

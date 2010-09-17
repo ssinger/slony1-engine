@@ -147,26 +147,6 @@ to have triggers suitable to inform &slony1; when those sorts of
 changes take place.  As a result, the only database objects where
 &slony1; can replicate updates are tables and sequences.  </para>
 
-<para> Note that with the <emphasis>use</emphasis> of triggers comes
-some additional <emphasis>fiddling around with triggers</emphasis>.
-On the <quote>origin</quote> for each replicated table, an additional
-trigger is added which runs the stored procedure <xref
-linkend="function.logtrigger">.  On each subscriber, tables are
-augmented with a trigger that runs the <xref
-linkend="function.denyaccess"> function; this function prevents
-anything other than the <xref linkend="slon"> process from updating
-data in replicated tables.  In addition, any
-<emphasis>other</emphasis> triggers and rules on replicated tables are
-<emphasis>suppressed</emphasis> on the subscribers.  On versions of
-&slony1; prior to 2.0, this is done by pointing them, in the system
-table, to the primary key index instead of to the table itself, which
-represents a <quote>corruption</quote> of the data dictionary, and is
-why you should not directly use <application>pg_dump</application> to
-dump schemas on subscribers.  In version 2.0, this functionality is
-handled via native &postgres; functionality, so that with &slony1;
-2.0+, <application>pg_dump</application> may be expected to work fine.
-</para>
-
 <para>There is a capability for &slony1; to propagate other kinds of
 database modifications, notably DDL changes, if you submit them as
 scripts via the <application>slonik</application> <xref

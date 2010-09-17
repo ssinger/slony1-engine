@@ -2293,73 +2293,8 @@ exclusive that alleviates this problem.</para></listitem>
 
 </qandadiv>
 
-<qandadiv id="faqoddities"> <title> &slony1; FAQ: Oddities and Heavy Slony-I Hacking </title>
-<qandaentry><question><para> What happens with rules and triggers on
-&slony1;-replicated tables?</para>
-</question>
 
-<answer><para> Firstly, let's look at how it is handled
-<emphasis>absent</emphasis> of the special handling of the <xref
-linkend="stmtstoretrigger"> Slonik command.  </para>
-
-<para> The function <xref
-linkend="function.altertableforreplication-integer"> prepares each
-table for replication.</para>
-
-<itemizedlist>
-
-<listitem><para> On the origin node, this involves adding a trigger
-that uses the <xref linkend="function.logtrigger"> function to the
-table.</para>
-
-<para> That trigger initiates the action of logging all updates to the
-table to &slony1; &sllog1;/&sllog2; tables.</para></listitem>
-
-<listitem><para> On a subscriber node, this involves disabling
-triggers and rules, then adding in the trigger that denies write
-access using the <function>denyAccess()</function> function to
-replicated tables.</para>
-
-<para> Up until 1.1 (and perhaps onwards), the
-<quote>disabling</quote> is done by modifying the
-<envar>pg_trigger</envar> or <envar>pg_rewrite</envar>
-<envar>tgrelid</envar> to point to the OID of the <quote>primary
-key</quote> index on the table rather than to the table
-itself.</para></listitem>
-
-</itemizedlist>
-
-<para> A somewhat unfortunate side-effect is that this handling of the
-rules and triggers somewhat <quote>tramples</quote> on them.  The
-rules and triggers are still there, but are no longer properly tied to
-their tables.  If you do a <command>pg_dump</command> on the
-<quote>subscriber</quote> node, it won't find the rules and triggers
-because it does not expect them to be associated with an index.</para>
-
-</answer>
-
-<answer> <para> Now, consider how <xref linkend="stmtstoretrigger">
-enters into things.</para>
-
-<para> Simply put, this command causes
-&slony1; to restore the trigger using
-<function>alterTableRestore(table id)</function>, which restores the
-table's OID into the <envar>pg_trigger</envar> or
-<envar>pg_rewrite</envar> <envar>tgrelid</envar> column on the
-affected node.</para></answer> 
-
-<answer><para> This implies that if you plan to draw backups from a
-subscriber node, you will need to draw the schema from the origin
-node.  It is straightforward to do this: </para>
-
-<screen>
-% pg_dump -h originnode.example.info -p 5432 --schema-only --schema=public ourdb > schema_backup.sql
-% pg_dump -h subscribernode.example.info -p 5432 --data-only --schema=public ourdb > data_backup.sql
-</screen>
-
-</answer>
-</qandaentry>
-
+<qandadiv>
 <qandaentry> <question> <para> I was trying to request <xref
 linkend="stmtddlscript"> or <xref linkend="stmtmoveset">, and found
 messages as follows on one of the subscribers:</para>

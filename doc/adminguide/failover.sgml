@@ -209,8 +209,8 @@ as in referring tables such as <xref linkend="table.sl-confirm">;
 since data in &sllog1;/&sllog2; is still present, &slony1; cannot
 immediately purge out the node. </para>
 
-<para> After the failover is complete and node2 accepts write
-operations against the tables, remove all remnants of node1's
+<para> After the failover is complete and all nodes have been
+reconfigured you can remove all remnants of node1's
 configuration information with the <xref linkend="stmtdropnode">
 command:
 
@@ -277,7 +277,9 @@ resubscribe nodes 4 and 6 to both point to node 5.</para>
 <programlisting>
    include &lt;/tmp/failover-preamble.slonik&gt;;
    subscribe set (id = 1, provider = 5, receiver = 4);
-   subscribe set (id = 1, provider = 5, receiver = 4);
+   subscribe set (id = 1, provider = 5, receiver = 6);
+   wait for event(origin=1, confirmed=4,wait on=1);
+   wait for event(origin=1, confirmed=6, wait on=1);
 </programlisting>
 
 </listitem>

@@ -52,11 +52,9 @@ given replication set on the origin node.</para>
 <listitem><para><link linkend="stmtddlscript"> <command>execute
 script</command> </link> </para>
 
-<para> This operation runs a set of SQL queries; in order for it to
-work, the &slony1; triggers must be removed, followed by the query
-(which potentially updates the data) running, followed by triggers
-being restored.  The operation therefore must acquire table locks on
-all replicated tables on each node. </para>
+<para>As of version 2.0 execute script does not explicitly lock
+tables (other than the locks required by &postgres; to execute the SQL
+in your script).  This was not true in earlier versions of &slony1; </para>
 </listitem>
 
 <listitem><para> During the <command>SUBSCRIBE_SET</command> event on
@@ -67,9 +65,6 @@ before the replication set has been populated, it is pretty reasonable
 to say that the node is <quote>unusable</quote> and that &slony1;
 could reasonably demand exclusive access to the node. </para>
 
-<para> A change in version 1.2 is that an express <command>LOCK
-TABLE</command> SQL request is submitted in the loop that validates
-that all of the tables are there.  This means that
 <emphasis>all</emphasis> tables in the replication set will be locked
 via an exclusive lock for the entire duration of the process of
 subscription.  By locking the tables early, this means that the
@@ -83,12 +78,6 @@ applied on the provider or on the origin. </para>
 
 </listitem>
 
-<listitem><para> <application>pg_autovacuum</application> may not be
-part of &slony1;, but those that run it find that it wakes up roughly
-once per minute and may, at any time, start vacuuming a table, thereby
-taking out a <envar>ShareUpdateExclusiveLock</envar> lock.  This may
-block the other events for an unpredictable period of time.</para>
-</listitem>
 
 </itemizedlist>
 
