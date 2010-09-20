@@ -6,8 +6,7 @@
 <para> In &postgres; version 8.3, there is new functionality
 where triggers and rules can have their behaviour altered via
 <command>ALTER TABLE</command>, and specify any of the following
-further trigger-related options:</para></listitem>
-
+further trigger-related options:</para>
 
 <itemizedlist>
 

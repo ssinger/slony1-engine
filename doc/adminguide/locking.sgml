@@ -3,7 +3,7 @@
 
 <indexterm><primary>locking issues</primary></indexterm>
 
-<para> One of the usual merits the use, by &postgres;, of
+<para> One of the usual merits of the use, by &postgres;, of
 Multi-Version Concurrency Control (<acronym>MVCC</acronym>) is that
 this eliminates a whole host of reasons to need to lock database
 objects.  On some other database systems, you need to acquire a table
@@ -65,7 +65,7 @@ before the replication set has been populated, it is pretty reasonable
 to say that the node is <quote>unusable</quote> and that &slony1;
 could reasonably demand exclusive access to the node. </para>
 
-<emphasis>all</emphasis> tables in the replication set will be locked
+<para> <emphasis>all</emphasis> tables in the replication set will be locked
 via an exclusive lock for the entire duration of the process of
 subscription.  By locking the tables early, this means that the
 subscription cannot fail after copying some of the data due to some
