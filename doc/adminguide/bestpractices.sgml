@@ -147,14 +147,6 @@ Evil.</quote> <command>VACUUM</command>s are no exception in this.  A
 transaction with all the known ill effects.</para>
 </listitem>
 
-<listitem><para> If you are using the autovacuum process in recent
-versions of &postgres;, you may wish to leave &slony1; tables out, as
-&slony1; is a bit more intelligent about vacuuming when it is expected
-to be conspicuously useful (<emphasis>e.g.</emphasis> - immediately
-after purging old data) to do so than autovacuum can be. </para>
-
-<para> See <xref linkend="maintenance-autovac"> for more
-details. </para> </listitem>
 
 <listitem> <para> Running all of the &lslon; daemons on a central
 server for each network has proven preferable. </para>
@@ -284,72 +276,8 @@ linkend="stmtddlscript"> <command>execute script</command> is provided
 which will apply DDL changes at the same location in the transaction
 stream on all servers.  </link> </para>
 
-<para> Unfortunately, this introduces a great deal of locking of
-database objects.  Altering tables requires taking out an exclusive
-lock on them; doing so via <command>execute script</command> requires
-that &slony1; take out an exclusive lock on <emphasis>all</emphasis>
-replicated tables.  This can prove quite inconvenient if applications
-are running when running DDL; &slony1; is asking for those exclusive
-table locks, whilst, simultaneously, some application connections are
-gradually relinquishing locks, whilst others are backing up behind the
-&slony1; locks.  </para>
-
-<para> One particularly dogmatic position that some hold is that
-<emphasis>all</emphasis> schema changes should
-<emphasis>always</emphasis> be propagated using <command>execute
-script</command>.  This guarantees that nodes will be consistent, but
-the costs of locking and deadlocking may be too high for some
-users.</para>
-
-<para> At Afilias, our approach has been less dogmatic; there
-<emphasis>are</emphasis> sorts of changes that
-<emphasis>must</emphasis> be applied using <command>execute
-script</command>, but we apply others independently.</para>
-
-<itemizedlist>
-<listitem><para> Changes that must be applied using <command>execute script</command> </para>
-<itemizedlist>
-<listitem><para> All instances of <command>ALTER TABLE</command></para></listitem>
-</itemizedlist>
-
 </listitem>
-<listitem><para> Changes that are not normally applied using <command>execute script</command> </para>
-<itemizedlist>
-<listitem><para> <command>CREATE INDEX</command> </para></listitem>
-<listitem><para> <command>CREATE TABLE</command> </para>
-<para> Tables that are not being replicated do not require &slony1; <quote>permission</quote>. </para></listitem>
 
-<listitem><para> <command>CREATE OR REPLACE FUNCTION </command> </para>
-
-<para> Typically, new versions of functions may be done without
-&slony1; being <quote>aware</quote> of them.  The obvious exception is
-when a new function is being deployed to accomodate a table
-alteration; in that case, the new version must be added in in a manner
-synchronized with the <command>execute script</command> for the table
-alteration. </para>
-
-<para> Similarly, <command>CREATE TYPE</command>, <command> CREATE
-AGGREGATE </command>,  and such will
-commonly not need to be forcibly applied in <quote>perfectly
-synchronized</quote> manner across nodes. </para></listitem>
-
-<listitem><para> Security management, such as <command> CREATE USER
-</command>, <command> CREATE ROLE </command>, <command>GRANT
-</command>, and such are largely irrelevant to &slony1; - it runs in
-an orthogonal role to that. </para>
-
-<para> Indeed, we have frequently found it useful to have different
-security arrangements on different nodes.  Access to the
-<quote>master</quote> node should be restricted to applications that
-truly need access to it; <quote>reporting</quote> users commonly are
-restricted much more there than on subscriber nodes.</para>
-
-</listitem>
-</itemizedlist>
-</listitem>
-</itemizedlist>
-
-</listitem>
 
 <listitem id="slonyuser"> <para> &slony1;-specific user names. </para>
 
@@ -443,11 +371,6 @@ superuser, and must be accessible to the <quote>weak user.</quote>
 </para></listitem>
 
 </itemizedlist>
-
-<para> In version 1.3, the tests in the <xref linkend="testbed">
-support using a <envar>WEAKUSER</envar> so that testing can regularly
-confirm (for the most part) the minimal set of permissions needed to
-support replication.</para>
 
 </listitem>
 
@@ -638,19 +561,6 @@ these sorts of situations.</para></listitem>
 
 <itemizedlist>
 
-<listitem><para> Drop all indices other than the primary key index
-while the <command>COPY_SET</command> event is run. </para>
-
-<para> When data is copied into a table that has indices on it,
-&postgres; builds the indices incrementally, on the fly.  This is much
-slower than simply copying the data into the table, and then
-recreating each index <quote>ex nihilo</quote>, as the latter can take
-substantial advantage of sort memory. </para>
-
-<para> In &slony1; version 1.1.5 and later versions, indices are
-dropped and recreated automatically, which effectively invalidates
-this practice.</para>
-</listitem>
 
 <listitem><para> If there are large numbers of updates taking place as
 the large set is being copied, this can lead to the subscriber being
@@ -678,17 +588,6 @@ careful selection of &lslon; parameters:</para>
 </itemizedlist>
 
 <itemizedlist>
-
-<listitem><para> Ensure that there exists, on the
-<quote>master</quote> node, an index on <function> sl_log_1(log_xid)
-</function>.  If it doesn't exist, as the &slony1; instance was set up
-before version 1.1.1, see <filename> slony1_base.sql </filename> for
-the exact form that the index setup should take. </para> 
-
-<para> In 1.2 and later versions, there is a process that runs
-automatically to add partial indexes by origin node number, which
-should be the optimal form for such an index to take.  </para>
-</listitem>
 
 <listitem><para> On the subscriber's &lslon;, increase
 the number of <command>SYNC</command> events processed together, with

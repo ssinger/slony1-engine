@@ -1,4 +1,4 @@
-<!--  -->
+!--  -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
   <!entity % version SYSTEM "version.sgml">
@@ -32,7 +32,8 @@
 <!ENTITY funlockset "<xref linkend=function.lockset-integer>">
 <!ENTITY funmoveset "<xref linkend=function.moveset-integer-integer>">
 <!ENTITY funsetmovesequence "<xref linkend=function.setmovesequence-integer-integer>">
-<!ENTITY funsubscribeset "<xref linkend=function.subscribeset-integer-integer-integer-boolean>">
+<!ENTITY funstoretrigger "<xref linkend=function.storetrigger-integer-name>">
+<!ENTITY funsubscribeset "<xref linkend=function.subscribeset-integer-integer-integer-boolean-boolean>">
 <!ENTITY fununinstallnode "<xref linkend=function.uninstallnode>">
 <!ENTITY fununlockset "<xref linkend=function.unlockset-integer>">
 <!ENTITY fununsubscribeset "<xref linkend=function.unsubscribeset-integer-integer>">

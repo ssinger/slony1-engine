@@ -25,19 +25,6 @@ start copying data from scratch; the <xref linkend="stmtsubscribeset">
 request will reshape the subscription <quote>on the fly</quote> and
 allow data to remain consistent between nodes.  </para></listitem>
 
-<listitem><para> If the directions of data flows have changed, it is
-doubtless appropriate to issue a set of <xref
-linkend="stmtdroplisten"> operations to drop out obsolete paths
-between nodes and <xref linkend="stmtstorelisten"> to add the new
-ones.  Up until version 1.1, this was not changed automatically; as of
-1.1, <xref linkend="stmtmoveset"> and <xref
-linkend="stmtsubscribeset"> change the paths as a side-effect.  See
-<xref linkend="listenpaths"> for more information about this.  In
-version 1.1 and later, generation of <xref linkend="table.sl-listen">
-entries is entirely automated, so that they are regenerated when
-changes are made to <xref linkend="table.sl-path"> or <xref
-linkend="table.sl-subscribe">, thereby making it unnecessary to even think
-about <xref linkend="stmtstorelisten">.</para></listitem>
 
 <listitem><para> After performing the configuration change, you
 should, as <xref linkend="bestpractices">, run the &lteststate;

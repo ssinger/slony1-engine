@@ -22,22 +22,10 @@ subscribers is <emphasis>entirely identical</emphasis> to that for the
 set it is to merge with), the sets may be merged together using <xref
 linkend="stmtmergeset">.</para>
 
-<para>Up to and including 1.0.2, there was a potential problem where
-if <xref linkend="stmtmergeset"> is issued while other
-subscription-related events are pending, it is possible for things to
-get pretty confused on the nodes where other things were pending.
-This problem was resolved in 1.0.5.  Up until 1.2.1, there was still a
-problem where <xref linkend="stmtmergeset"> could be requested before
-all the subscriptions were complete, which would <quote>muss things
-up</quote> on nodes where subscription activity was still under
-way. </para>
 
 <para> Note that if you add nodes, you will need to add both <xref
 linkend="stmtstorepath"> statements to indicate how nodes communicate
-with one another, and <xref linkend="stmtstorelisten"> statements to
-configuration the <quote>communications network</quote> that results
-from that.  See <xref linkend="listenpaths"> for more details on the
-latter.</para>
+with one another.</para>
 
 <para>It is suggested that you be very deliberate when adding such
 things.  For instance, submitting multiple subscription requests for a
@@ -75,18 +63,10 @@ components, so this is not permitted. </para>
 <itemizedlist>
 <listitem><para> Add the new table on each node. </para>
 
-<para> In principle, <xref linkend="stmtddlscript"> could be used for
-this, but the fact that this leads to <link linkend="locking"> Locking
-Issues </link> and requires altering <emphasis>all</emphasis> tables
-in some existing replication set, on <emphasis>all</emphasis> nodes,
-makes <xref linkend="stmtddlscript"> an unattractive approach on a
-busy system.  This breaks the &slony1; feature that you <quote>don't
-have to interrupt normal activity to introduce replication.</quote>
-</para>
 
-<para> Instead, you may add the table via
-<application>psql</application> on each node.
 
+<para> Create the table on each node (using psql, EXECUTE SCRIPT,
+or some other method).
 </para> </listitem>
 
 <listitem><para> Create a new replication set <xref linkend="stmtcreateset">
@@ -106,9 +86,8 @@ of slonik script for each subscription:
 
 <screen>
 SUBSCRIBE SET (ID=1, PROVIDER=1, RECEIVER=2);
-WAIT FOR EVENT (ORIGIN=2, CONFIRMED = 1);
-SYNC(ID = 1);
-WAIT FOR EVENT (ORIGIN=1, CONFIRMED=2);
+#where node 1 is the origin for set 1
+WAIT FOR EVENT (ORIGIN=1, CONFIRMED = 2, wait on=1);
 </screen></para>
 </listitem>
 
@@ -128,12 +107,12 @@ on a replicated table?</quote>, and, more generally, other questions
 to the effect of <quote>How do I modify the definitions of replicated
 tables?</quote></para>
 
-<para>If you change the <quote>shape</quote> of a replicated table,
-this needs to take place at exactly the same point in all of the
+<para>If you change the <quote>shape</quote> of a replicated table you 
+might need the changes to take place at exactly the same point in all of the
 <quote>transaction streams</quote> on all nodes that are subscribed to
 the set containing the table.</para>
 
-<para> Thus, the way to do this is to construct an SQL script
+<para> The t way to do this is to construct an SQL script
 consisting of the DDL changes, and then submit that script to all of
 the nodes via the Slonik command <xref
 linkend="stmtddlscript">.</para>
@@ -159,23 +138,12 @@ wraps DDL scripts with a <command>BEGIN</command>/<command>COMMIT</command>
 pair; adding extra transaction control will mean that parts of the DDL
 will commit outside the control of &slony1; </para></listitem>
 
-<listitem><para> Before version 1.2, it was necessary to be
-exceedingly restrictive about what you tried to process using
-<xref linkend="stmtddlscript">. </para>
 
-<para> You could not have anything <command>'quoted'</command> in the
-script, as this would not be stored and forwarded properly.  As of
-1.2, quoting is now handled properly. </para>
+<listitem><para>Version 2.0 of &slony1; does not explicitly lock
+tables when performing an execute script.  To avoid some race-conditions
+exposed by MVCC it is important that no other transactions are altering
+the tables being used by the ddl script while it is running</para></listitem>
 
-<para> If you submitted a series of DDL statements, the later ones
-could not make reference to objects created in the earlier ones, as
-the entire set of statements was submitted as a single query, where
-the query plan was based on the state of the database at
-the <emphasis>beginning,</emphasis> before any modifications had been
-made.  As of 1.2, if there are 12 SQL statements, they are each
-submitted individually, so that <command> alter table x add column c1
-integer; </command> may now be followed by <command> alter table x
-alter column c1 set not null; </command>.</para></listitem>
 
 </itemizedlist>
 </sect2>
@@ -232,17 +200,13 @@ drop it from replication due to (say) some persistent network outage.
 <listitem><para> If the above things work out particularly badly, you
 could submit the SQL command <command>DROP SCHEMA "_ClusterName"
 CASCADE;</command>, which will drop out &slony1; functions, tables,
-and triggers alike.  That has been generally less suitable than <xref
-linkend="stmtuninstallnode">, because that the latter would, in
-addition to dropping the schema and its contents, also remove any
-columns previously added in using the now-obsolete <command>TABLE ADD
-KEY</command>.
+and triggers alike. 
 </para>
 
-<note><para> In &slony1; version 2.0, <command>TABLE ADD KEY</command>
-is <emphasis>no longer supported</emphasis>, so thus <xref
-linkend="stmtuninstallnode"> consists very simply of <command>DROP
-SCHEMA "_ClusterName" CASCADE;</command>.  </para> </note></listitem>
+<note><para> In &slony1; version 2.0,
+<xref linkend="stmtuninstallnode"> consists very simply of
+<command>DROP SCHEMA "_ClusterName" CASCADE;</command>.  </para>
+</note></listitem>
 </itemizedlist>
 </sect2>
 
@@ -289,10 +253,7 @@ logs for this node may be pretty quiet.
 <listitem><para> Issue the slonik
 command <xref linkend="stmtstorepath"> to indicate
 how <xref linkend="slon"> processes are to communicate with the new
-node.  In &slony1; version 1.1 and later, this will then automatically
-generate <link linkend="listenpaths"> listen path </link> entries; in
-earlier versions, you will need to
-use <xref linkend="stmtstorelisten"> to generate them manually.
+node.
 </para></listitem>
 
 <listitem><para> At this point, it is an excellent idea to run the

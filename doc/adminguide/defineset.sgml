@@ -12,8 +12,6 @@ as <quote>replication sets.</quote></para>
 <para>A replication set consists of the following:</para>
 <itemizedlist>
 
-<listitem><para>Keys on tables that are to be replicated that have no
-suitable primary key</para></listitem>
 
 <listitem><para>Tables that are to be replicated</para></listitem>
 
@@ -29,7 +27,7 @@ candidate thereof on each table that is replicated.  PK values are
 used as the primary identifier for each tuple that is modified in the
 source system.  Note that they can be composite keys composed of
 multiple NOT NULL columns; they don't need to consist of single
-fields.  There are three ways that you can get &slony1; to use a
+fields.  There are two ways that you can get &slony1; to use a
 primary key:</para>
 
 <itemizedlist>
@@ -69,7 +67,6 @@ benefit that a primary key has been declared for the table. </para>
 table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
-</itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary
@@ -128,86 +125,11 @@ a material factor.
 </para>
 </listitem>
 
-<listitem><para> Any time you invoke <xref linkend="stmtddlscript">,
-this requests a lock on <emphasis> every single table in the
-replication set, first, on the origin node, and then, as the event
-propagates to other nodes, to each subscriber node. </emphasis></para>
-
-<para> There have been reports <quote>in the field</quote> of this
-leading to deadlocks such that the <xref linkend="stmtddlscript">
-request had to be submitted many times in order for it to actually
-complete successfully.</para>
-
-<para> The more tables you have in a set, the more tables need to be
-locked, and the greater the chances of deadlocks. </para>
-
-<para> By the same token, if a particular DDL script only needs to
-affect a couple of tables, you might use <xref
-linkend="stmtsetmovetable"> to move them temporarily to a new
-replication set.  By diminishing the number of locks needed, this
-should ease the ability to get the DDL change into place.</para>
-
-<para> There is a further <link linkend="locking"> discussion of
-locking </link> which outlines where &slony1; requires locks likely to
-intrude on your applications.</para>
-</listitem>
-
 </itemizedlist></para>
 
 </sect2>
 
-<sect2> <title> The Pathology of Sequences </title>
 
-<indexterm><primary>sequence pathology</primary></indexterm>
-
-<para> Each time a SYNC is processed, values are recorded for
-<emphasis>all</emphasis> of the sequences in the set.  If there are a
-lot of sequences, this can cause &slseqlog; to grow rather
-large.</para>
-
-<para> This points to an important difference between tables and
-sequences: if you add additional tables that do not see much/any
-activity, this does not add any material load to the work being done
-by replication.  For a replicated sequence, values must
-<emphasis>regularly</emphasis> be propagated to subscribers.  Consider
-the effects:
-
-<itemizedlist>
-
-<listitem><para> A replicated table that is never updated does not
-introduce much work to the system.</para>
-
-<para> If it is not updated, the trigger on the table on the origin
-never fires, and no entries are added to &sllog1;/&sllog2;.  The table never appears in any of the
-further replication queries (<emphasis>e.g.</emphasis> in the
-<command>FETCH 100 FROM LOG</command> queries used to find
-replicatable data) as they only look for tables for which there are
-entries in &sllog1;/&sllog2;.</para></listitem>
-
-<listitem><para> In contrast, a fixed amount of work is introduced to
-each SYNC by each sequence that is replicated.</para>
-
-<para> Replicate 300 sequence and 300 rows need to be added to
-&slseqlog; on a regular basis, at least, thru until the 2.0 branch,
-where updates are only applied when the value of a given sequence is
-seen to change.</para>
-
-<para> It is more than likely that if the value of a particular
-sequence hasn't changed since it was last checked, perhaps the same
-value need not be stored over and over; some thought needs to go into
-how to do that safely.</para></listitem>
-
-<listitem><para> <ulink url=
-"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
-Bug #1226 </ulink> indicates an error condition that can come up if
-you have a replication set that consists solely of sequences. </para>
-
-<para> This is documented more in the <link linkend="sequenceset"> FAQ
-here;</link> the long and short is that having a replication set
-consisting only of sequences is not a particularly good
-idea.</para></listitem>
-
-</itemizedlist></para></sect2>
 
 </sect1>
 <!-- Keep this comment at the end of the file

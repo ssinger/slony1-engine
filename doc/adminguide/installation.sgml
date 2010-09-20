@@ -9,20 +9,14 @@ the &slony1; code, it is highly recommended that you download and
 install a prebuilt binary distribution and jump straight to the
 configuration section below.  There are likely to be links and/or
 binaries at <ulink url="http://pgfoundry.org/projects/slony1/">
-pgFoundry &slony1; site </ulink> for official releases, the first of
-which is expected to be &slony1; version 1.2.0.  </para>
+pgFoundry &slony1; site </ulink>.
 
 <para> There are also RPM binaries available at that site for recent
 versions of &slony1; for recent versions of &postgres;.
 </para>
 </note>
 
-<warning><para> If you need &slony1; to do an upgrade from some
-elderly version of &postgres; to a newer version, or if you need a
-late-breaking CVS version, outside the context of a major release,
-then be prepared to need to build both &postgres; and &slony1; from
-source.  The remainder of this section assumes this...</para>
-</warning>
+This section discusses building &slony1; from source.
 
 <para>You should have obtained the &slony1; source from the previous
 step. Unpack it.</para>
@@ -65,17 +59,11 @@ that need to be in the &slony1; <filename>lib</filename> and
 
 <para>The first step of the installation procedure is to configure the
 source tree for your system.  This is done by running the
-<application>configure</application> script.  In early versions,
-<application>configure</application> needed to know where your
-&postgres; source tree is, which was done with the
-<option>--with-pgsourcetree=</option> option.  Since version 1.1, this
-has not been necessary, as &slony1; has included within its own code
-base certain parts needed for platform portability.  It now only needs
-to make reference to parts of &postgres; that are actually part of the
-installation.  Therefore, &slony1; is configured by pointing it to the
+<application>configure</application> script.&slony1; is configured by 
+pointing it to the
 various &postgres; library, binary, and include directories.  For a
 full list of these options, use the command <command>./configure
---help</command>.</para>
+--help</command>. </para>
 
 <para> It is sufficient, for the purposes of building a usable build,
 to run <command>configure
@@ -128,17 +116,12 @@ to permit indicating values for various paths, including
 
 </warning>
 
-<para>On certain platforms (AIX and Solaris are known to need this;
-Linux does not), the compile of &postgres; must be expressly
+<para>The compile of &postgres; must be expressly
 configured with the option <command>--enable-thread-safety</command>
 to provide correct client libraries. </para>
 
-<para> &postgres; versions from 8.0 onwards install the server header
-<command>#include</command> files by default; with version 7.4 and
-earlier, you needed to make sure that the build installation included
-doing <command>make install-all-headers</command>, otherwise the
-server headers will not be installed, and &slony1; will be unable to
-compile.</para>
+<para> &slony1; requires that the &postgres; server headers be installed. 
+Some binary distributions of &postgres; include this is a a -dev package.</para>
 
 <para>After running configure, you may wish to review the file
 <filename>Makefile.global</filename> to ensure it is looking in the
@@ -214,58 +197,17 @@ Commonly you need to do this either as root or as the postgres user.
 </para>
 
 <para>The main list of files installed within the &postgres; instance
-is, for versions of &slony1; up to 1.2.x:</para>
-<itemizedlist>
-<listitem><para><filename> $bindir/slon</filename></para></listitem>
-<listitem><para><filename> $bindir/slonik</filename></para></listitem>
-<listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
-<listitem><para><filename> $libdir/xxid($DLSUFFIX)</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_base.v73.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_base.v74.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_base.v80.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.v73.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.v74.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.v80.sql</filename></para></listitem>
-</itemizedlist>
+is, for versions of &slony1; </para>
 
-<para> (Note that as things have change, the list of version-specific
-files has tended to grow...) </para>
-
-<para>The <filename>.sql</filename> files are not fully substituted
-yet.  And yes, versions for all supported versions of &postgres;
-(<emphasis>e.g.</emphasis> - such as 7.3, 7.4 8.0) get installed on
-every system, irrespective of its version.  The <xref
-linkend="slonik"> admin utility does namespace/cluster substitutions
-within these files, and loads the files when creating replication
-nodes.  At that point in time, the database being initialized may be
-remote and may run a different version of &postgres; than that of the
-local host.</para>
-
-<para> At the very least, the two shared objects installed in the
-<filename>$libdir</filename> directory must be installed onto every
-computer that is supposed to become a &slony1; node. (Other components
-may be able to be loaded remotely from other hosts.) </para>
-
-<para> In &slony1; version 2.0, this changes:</para>
 <itemizedlist>
 <listitem><para><filename> $bindir/slon</filename></para></listitem>
 <listitem><para><filename> $bindir/slonik</filename></para></listitem>
 <listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
 <listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v83.sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v84.sql</filename></para></listitem>
 </itemizedlist>
-
-<note> <para> Note the loss of <filename>xxid.so</filename> - the txid
-data type introduced in &postgres; 8.3 makes it
-obsolete. </para></note>
-
-<note> <para> &slony1; 2.0 gives up compatibility with versions of
-&postgres; prior to 8.3, and hence <quote>resets</quote> the
-version-specific base function handling.  There may be function files
-for version 8.3, 8.4, and such, as replication-relevant divergences of
-&postgres; functionality take place.  </para></note>
 
 </sect2>
 
@@ -280,32 +222,16 @@ discovered and written down about the care and feeding of &slony1;.</para>
 <para> This is only built if you specify <command>--with-docs</command></para>
 
 <para> Note that you may have difficulty building the documentation on
-Red Hat-based systems due to NAMELEN being set way too low.  Havoc
-Pennington opened a bug on this back in mid-2001, back in the days of
-Red Hat 7.1; Red Hat Software has assigned the bug, but there does not
-appear to have been much progress since then.  The second URL below
-indicates that there is intent to address the issue by bumping up the
-value of NAMELEN in some future release of Red Hat Enterprise Linux,
-but that may not help you if you are using an elder version where this
-will never be rectified.  Current Fedora releases have already
-addressed this issue.  </para>
-
-<para>
-<ulink url=
-"https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=36058"> Bug
-36058 </ulink> </para>
-
-<para>
+older Red Hat systems (RHEL4 and below) See 
 <ulink url=
 "https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382"> Bug
-159382 (For RHEL) </ulink> </para>
+159382 (For RHEL) </ulink>   See the <filename>INSTALL</filename> file for a workaround for
+Fedora...</para>
+
 
 <para>A pre-built copy of the "admin guide" should be readily available,
 either in the form of a separate tarball nearby, or in the directory
 <filename>doc/adminguide/prebuilt</filename> </para>
-
-<para> See the <filename>INSTALL</filename> file for a workaround for
-Fedora...</para>
 
 </sect2>
 
@@ -354,7 +280,7 @@ control panel applet, or from a command prompt using the
 <command>net</command> command.</para>
 
 <screen>
-C:\Program Files\PostgreSQL\8.0\bin> slon -regservice my_slon
+C:\Program Files\PostgreSQL\8.3\bin> slon -regservice my_slon
 Service registered.
 Before you can run Slony, you must also register an engine!
 
@@ -367,7 +293,7 @@ system security.
 by registering slon configuration files with the service.</para>
 
 <screen>
-C:\Program Files\PostgreSQL\8.0\bin> slon -addengine c:\node1.conf
+C:\Program Files\PostgreSQL\8.3\bin> slon -addengine c:\node1.conf
 Engine added.
 </screen>
 

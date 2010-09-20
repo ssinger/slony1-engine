@@ -16,18 +16,15 @@ built.</para>
 <para>If you pass the changes through &slony1; via <xref
 linkend="stmtddlscript"> (slonik) / &funddlscript; (stored function),
 this allows you to be certain that the changes take effect at the same
-point in the transaction streams on all of the nodes.  That may not be
-so important if you can take something of an outage to do schema
-changes, but if you want to do upgrades that take place while
-transactions are still winding their way through your systems, this is
-necessary.  </para>
+point in the transaction streams on all of the nodes. This may not be 
+important to you depending on the nature of your change.  You should still
+make sure that no transactions are changing the tables that your script
+uses while the EXECUTE SCRIPT command is running on the master.</para>
 
 <para>It is essential to use <command>EXECUTE SCRIPT</command> if you
-alter tables so as to change their schemas.  If you do not, then you
-may run into the problems <link linkend="neededexecddl"> described
-here </link> where triggers on modified tables do not take account of
-the schema change.  This has the potential to corrupt data on
-subscriber nodes.</para>
+alter the names of tables or the namespace they reside in.  If you do not
+then &slony1; will be unaware of the new table name.
+</para>
 
 <para>It's worth making a couple of comments on <quote>special
 things</quote> about <xref linkend="stmtddlscript">:</para>
@@ -72,109 +69,6 @@ are queued up, waiting to head to the subscriber.  You don't run the
 risk of there being updates made that depended on the DDL changes in
 order to be correct.</para></listitem>
 
-<listitem><para> When you run <xref linkend="stmtddlscript">, this
-causes the &lslonik; to request, <emphasis>for each table in the
-specified set</emphasis>, an exclusive table lock.</para>
-
-<para> It starts by requesting the lock, altering the table to remove
-&slony1; triggers, and restoring any triggers that had been hidden:
-
-<screen>
-BEGIN;
-LOCK TABLE table_name;
-SELECT _oxrsorg.altertablerestore(tab_id);
---tab_id is _slony_schema.sl_table.tab_id
-</screen></para>
-
-<para> After the script executes, each table is
-<quote>restored</quote> to add back either the trigger that collects
-updates at the origin or that denies updates on subscribers:
-
-<screen>
-SELECT _oxrsorg.altertableforreplication(tab_id);
---tab_id is _slony_schema.sl_table.tab_id
-COMMIT;
-</screen></para>
-
-<para>Note that this is what allows &slony1; to take notice of
-alterations to tables: <emphasis>before</emphasis>
-that <command>SYNC</command>, &slony1; has been replicating tuples
-based on the <emphasis>old</emphasis>
-schema; <emphasis>after</emphasis> the <command>DDL_SCRIPT</command>,
-tuples are being replicated based on the <emphasis>new</emphasis>
-schema. </para>
-
-<para> On a system which is busily taking updates, it may be
-troublesome to <quote>get in edgewise</quote> to actually successfully
-engage all the required locks.  The locks may run into deadlocks.
-This points to two ways to address this:
-</para></listitem>
-
-<listitem><para> You may be able to <link linkend="definesets"> define
-replication sets </link> that consist of smaller sets of tables so
-that fewer locks need to be taken in order for the DDL script to make
-it into place.</para>
-
-<para> If a particular DDL script only affects one table, it should be
-unnecessary to lock <emphasis>all</emphasis> application
-tables.</para>
-
-<note><para> Actually, as of version 1.1.5 and later, this
-is <emphasis>NOT TRUE.</emphasis> The danger of someone making DDL
-changes that crosses replication sets seems sufficiently palpable that
-&lslon; has been changed to lock <emphasis>ALL</emphasis> replicated
-tables, whether they are in the specified replication set or
-not. </para></note></listitem>
-
-<listitem><para> You may need to take a brief application outage in
-order to ensure that your applications are not demanding locks that
-will conflict with the ones you need to take in order to update the
-database schema.</para></listitem>
-
-<listitem><para> In &slony1; versions 1.0 thru 1.1.5, the script is
-processed as a single query request, which can cause problems if you
-are making complex changes.  Starting in version 1.2, the script is
-properly parsed into individual SQL statements, and each statement is
-submitted separately, which is a preferable handling of this.  </para>
-
-<para> The trouble with one query processing a <quote>compound
-statement</quote> is that the SQL parser does its planning for that
-entire set of queries based on the state of the database at the
-<emphasis>beginning</emphasis> of the query.</para>   
-
-<para> This causes no particular trouble if those statements are
-independent of one another, such as if you have two statements to add
-two columns to a table.</para>
-
-<para> <command> alter table t1 add column c1 integer; alter table t1 add
-column c2 integer; </command></para>
-
-<para> Trouble arises if a subsequent query needs to reference an
-earlier one.  Consider the following DDL statements...  </para>
-
-<para><command> alter table t1 add column c1 integer; create sequence s1;
-update t1 set c1=nextval('s1'); alter table t1 alter column c1 set not
-null; alter table t1 add primary key(c1); </command></para>
-
-<para> Up until &slony1; version 1.2, this query would <emphasis> fail
-</emphasis>.  It would specifically fail upon reaching the
-<command>UPDATE</command> statement, complaining that column
-<envar>c1</envar> doesn't exist.  This happens because
-<emphasis>all</emphasis> of those queries are parsed based on the
-state of things immediately before the query.  So, the
-<command>UPDATE</command> is evaluated based on a table definition
-<emphasis>before</emphasis> the new column was added. Oops. </para>
-
-<para>If you are running one of the earlier versions, the workaround
-is that you invoke a separate <xref linkend="stmtddlscript"> request
-with a separate script, cutting off to a new script each time a
-statement refers to something created in previous statements. </para>
-
-<para> In &slony1; version 1.2, there is a state machine that pulls
-apart the DDL script into individual statements.  Each statement is
-submitted as a separate <function>PQexec()</function> request, with
-the result that this is no longer an issue. </para>
-</listitem>
 
 </itemizedlist>
 
@@ -186,79 +80,7 @@ replication is likely to be fraught with trouble and frustration.  See
 the section on <link linkend="locking"> locking issues </link> for
 more discussion of related issues.</para>
 
-<para>There is an article on how to manage &slony1; schema changes
-here: <ulink url="http://www.varlena.com/varlena/GeneralBits/88.php">
-Varlena General Bits</ulink></para>
 
-<sect2><title> Changes that you might <emphasis>not</emphasis> want to
-process using <command>EXECUTE SCRIPT</command></title>
-
-<para> While it is <emphasis> vitally necessary </emphasis> to use
-<command>EXECUTE SCRIPT</command> to propagate DDL modifications to
-tables that are being replicated, there are several sorts of changes
-that you might wish to handle some other way:
-
-<itemizedlist>
-
-<listitem><para> There are various sorts of objects that don't have
-triggers that &slony1; <emphasis>doesn't</emphasis> replicate, such as
-stored functions, and it is quite likely to cause you grief if you
-propagate updates to them associated with a replication set where
-<command>EXECUTE SCRIPT</command> will lock a whole lot of tables that
-didn't really need to be locked.</para>
-
-<para> If you are propagating a stored procedure that
-<emphasis>isn't</emphasis> used all the time (such that you'd care if
-it was briefly out of sync between nodes), then you could simply
-submit it to each node using <application>psql</application>, making
-no special use of &slony1;.</para>
-
-<para> If it <emphasis>does</emphasis> matter that the object be
-propagated at the same location in the transaction stream on all the
-nodes, then you but no tables need to be locked, then you need to use
-<command>EXECUTE SCRIPT</command>, locking challenges or
-no.</para></listitem>
-
-<listitem><para> You may want an extra index on some replicated
-node(s) in order to improve performance there.</para>
-
-<para> For instance, a table consisting of transactions may only need
-indices related to referential integrity on the <quote>origin</quote>
-node, and maximizing performance there dictates adding no more indices
-than are absolutely needed.  But nothing prevents you from adding
-additional indices to improve the performance of reports that run
-against replicated nodes.</para>
-
-<para> It would be unwise to add additional indices that
-<emphasis>constrain</emphasis> things on replicated nodes, as if they
-find problems, this leads to replication breaking down as the
-subscriber(s) will be unable to apply changes coming from the origin
-that violate the constraints.</para>
-
-<para> But it's no big deal to add some performance-enhancing indices.
-You should almost certainly <emphasis>not</emphasis> use
-<command>EXECUTE SCRIPT</command> to add them; that leads to some
-replication set locking and unlocking tables, and possibly failing to
-apply the event due to some locks outstanding on objects and having to
-retry a few times before it gets the change in.  If you instead apply
-the index <quote>directly</quote> such as with
-<application>psql</application>, you can determine the time at which
-the table lock is introduced.  Adding an index to a table will require
-an exclusive lock for the time it takes to build the index; that will
-implicitly stop replication, while the index builds, but shouldn't
-cause any particular problems.  If you add an index on a table that
-takes 20 minutes to build, replication will block for 20 minutes, but
-should catch up quickly enough once the index is
-created.</para></listitem>
-
-<listitem><para> &slony1; stores the <quote>primary index</quote> name
-in <xref linkend="table.sl-table">, and uses that name to control what
-columns are considered the <quote>key columns</quote> when the log
-trigger is attached.  It would be plausible to drop that index and
-replace it with another primary key candidate, but changing the name
-of the primary key candidate would break things. </para> </listitem>
-
-</itemizedlist></para></sect2>
 
 <sect2><title> Testing DDL Changes </title>
 
