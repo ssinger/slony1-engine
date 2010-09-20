@@ -67,7 +67,7 @@ full list of these options, use the command <command>./configure
 
 <para> It is sufficient, for the purposes of building a usable build,
 to run <command>configure
-<option>--with-pgconfigdir=<filename>/some/path/somewhere</filename></option></command>,
+<option>--with-pgconfigdir=/some/path/somewhere</option></command>,
 where <filename>/some/path/somewhere</filename> is the directory where
 the &postgres; program <application>pg_config</application> is
 located.  Based on the output of <application>pg_config</application>,

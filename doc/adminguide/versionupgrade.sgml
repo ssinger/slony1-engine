@@ -229,8 +229,8 @@ in detail what is going on</para>
       sets. On a production machine running with 500 tables and 100
       sequences, putting them all in a single set has worked fine.</para>
       
+      <para>A few modifications to do:</para>
       <orderedlist>
-       <para>A few modifications to do:</para>
        <listitem>
 	<para> In our case we only need 2 nodes so delete the <command>add_node</command>
 	 for 3 and 4.</para>
