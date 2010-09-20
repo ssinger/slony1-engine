@@ -16,7 +16,7 @@ versions of &slony1; for recent versions of &postgres;.
 </para>
 </note>
 
-This section discusses building &slony1; from source.
+<para> This section discusses building &slony1; from source.</para>
 
 <para>You should have obtained the &slony1; source from the previous
 step. Unpack it.</para>

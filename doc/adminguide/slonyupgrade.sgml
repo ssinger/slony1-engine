@@ -3,9 +3,9 @@
 <title> &slony1; Upgrade </title>
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
 
-Minor &slony1; versions can be upgraded using the slonik 
-<xref linkend="stmtupdatefunctions"/>  command.  This includes
-upgrades from 2.0.x to a newer version 2.0.y version.
+<para> Minor &slony1; versions can be upgraded using the slonik <xref
+linkend="stmtupdatefunctions"/> command.  This includes upgrades from
+2.0.x to a newer version 2.0.y version. <para>
 
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;

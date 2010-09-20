@@ -336,7 +336,7 @@ nodes to access events and process subcriptions do not need to have
 nearly so much permission.  Indeed, one could set up a <quote>weak
 user</quote> assigned to all <xref linkend="stmtstorepath"> requests.
 The minimal permissions that this user, let's call it
-<command>weakuser</command>, requires are as follows:</para>
+<command>weakuser</command>, requires are as follows:
 
 <itemizedlist>
 <listitem><para> It must have read access to the &slony1;-specific namespace </para> </listitem>
@@ -344,10 +344,8 @@ The minimal permissions that this user, let's call it
 <listitem><para> It must have write access to the &slony1; table <envar>sl_nodelock</envar> and sequence <envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
 <listitem><para> At subscribe time, it must have read access to all of the replicated tables. </para> 
 <para> Outside of subscription time, there is no need for access to access to the replicated tables. </para> </listitem>
-<listitem><para> There is some need for read access to tables in pg_catalog; it has not been verified how little access would be suitable. </para> </listitem>
-</itemizedlist>
->
-
+<listitem><para> There is some need for read access to tables in pg_catalog; it has not been verified how little access would be suitable. </para> </listitem></itemizedlist>
+></para>
 </listitem>
 
 <listitem><para> The section on <link linkend="listenpaths"> listen
