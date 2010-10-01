@@ -2,303 +2,39 @@
 <sect1 id="introduction">
 <title>Introduction to &slony1;</title>
 
-<indexterm><primary> introduction to &slony1; </primary></indexterm>
+<indexterm><primary>Introduction To &slony1; </primary></indexterm>
 
-<sect2> <title>What &slony1; is</title>
+<sect2> <title>What Is &slony1;</title>
 
 <para>&slony1; is a <quote>master to multiple slaves</quote>
-replication system supporting cascading and slave promotion.  The big
-picture for the development of &slony1; is as a master-slave system
-that includes the sorts of capabilities needed to replicate large
-databases to a reasonably limited number of slave systems.
-<quote>Reasonable,</quote> in this context, is on the order of a dozen
-servers.  If the number of servers grows beyond that, the cost of
-communications increases prohibitively, and the incremental benefits
-of having multiple servers will be falling off at that point.</para>
-
-<para> See also <xref linkend="slonylistenercosts"> for a further
-analysis of costs associated with having many nodes.</para>
-
-<para> &slony1; is a system intended for data centers and backup
-sites, where the normal mode of operation is that all nodes are
-available all the time, and where all nodes can be secured.  If you
-have nodes that are likely to regularly drop onto and off of the
-network, or have nodes that cannot be kept secure, &slony1; is
-probably not the ideal replication solution for you.</para>
-
-<para> Thus, examples of cases where &slony1; probably won't work out
-well would include:
+replication system for &postgres; supporting cascading and slave promotion.
+Key features of &slony1; include:
 
 <itemizedlist>
-<listitem><para> Sites where connectivity is really <quote>flakey</quote>
-</para></listitem>
-<listitem><para> Replication to nodes that are unpredictably connected.</para></listitem>
-
-<listitem><para> Replicating a pricing database from a central server to sales
-staff who connect periodically to grab updates.  </para></listitem>
-
-<listitem><para> Sites where configuration changes are made in a
-haphazard way.</para></listitem>
-
-<listitem><para> A <quote>web hosting</quote> situation where customers can
-independently make arbitrary changes to database schemas is not a good
-candidate for &slony1; usage. </para></listitem>
-
-</itemizedlist></para>
-
-<para> There is also a <link linkend="logshipping">file-based log
-shipping</link> extension where updates would be serialized into
-files.  Given that, log files could be distributed by any means
-desired without any need of feedback between the provider node and
-those nodes subscribing via <quote>log shipping.</quote> <quote>Log
-shipped</quote> nodes do not add to the costs of communicating events
-between &slony1; nodes.</para>
-
-<para> But &slony1;, by only having a single origin for each set, is
-quite unsuitable for <emphasis>really</emphasis> asynchronous multiway
-replication.  For those that could use some sort of
-<quote>asynchronous multimaster replication with conflict
-resolution</quote> akin to what is provided by <productname>Lotus
-<trademark>Notes</trademark></productname> or the
-<quote>syncing</quote> protocols found on PalmOS systems, you will
-really need to look elsewhere.  </para> 
-
-<para> These other sorts of replication models are not without merit,
-but they represent <emphasis>different</emphasis> replication
-scenarios that &slony1; does not attempt to address.</para>
-
-</sect2>
-
-<sect2><title>Why yet another replication system?</title>
-
-<para>&slony1; was born from an idea to create a replication system
-that was not tied to a specific version of &postgres;, which is
-allowed to be started and stopped on an existing database without the
-need for a dump/reload cycle.</para>
-
-</sect2>
-
-<sect2><title> What &slony1; is not</title>
-
-<itemizedlist>
-<listitem><para>&slony1; is not a network management system.</para></listitem>
-
-<listitem><para> &slony1; does not have any functionality within it to detect a
-node failure, nor to automatically promote a node to a master or other
-data origin.</para>
-
-<para> It is quite possible that you may need to do that; that will
-require that you combine some network tools that evaluate <emphasis>
-to your satisfaction </emphasis> which nodes you consider
-<quote>live</quote> and which nodes you consider <quote>dead</quote>
-along with some local policy to determine what to do under those
-circumstances.  &slony1; does not dictate any of that policy to
-you.</para></listitem>
-
-<listitem><para>&slony1; is not a multi-master replication system; it
-is not a connection broker, and it won't make you coffee and toast in
-the morning.</para></listitem>
+<listitem><para>&slony1; can replicate data between different &postgres;
+ major versions</para></listitem>
+<listitem><para>&slony1; can replicate data between different hardware
+or operating systems</para></listitem>
+<listitem><para>&slony1; allows you to only replicate some of the tables
+to slave</para></listitem>
+<listitem><para>&slony1; allows you to replicate some tables to one slave
+and other tables to another slave</para></listitem>
+<listitem><para>&slony1; allows different database servers to be the 
+origin(master) for different tables</para></listitem>
 
 </itemizedlist>
 
-<para>All that being said, there are tools available to help with some
-of these things, and there is a plan under way for a subsequent
-system, <productname>Slony-II</productname>, to provide
-<quote>multimaster</quote> capabilities.  But that represents a
-different, separate project, being implemented in a rather different
-fashion than &slony1;, and expectations for &slony1; should not be
-based on hopes for future projects.</para></sect2>
-
-<sect2><title> Why doesn't &slony1; do automatic fail-over/promotion?
-</title>
-
-<para>Determining whether a node has <quote>failed</quote> is properly
-the responsibility of network management software, not &slony1;.  The
-configuration, fail-over paths, and preferred policies will be
-different for each site.  For example, keep-alive monitoring with
-redundant NIC's and intelligent HA switches that guarantee
-race-condition-free takeover of a network address and disconnecting
-the <quote>failed</quote> node will vary based on network
-configuration, vendor choices, and the combinations of hardware and
-software in use.  This is clearly in the realm of network management
-and not &slony1;.</para>
-
-<para> Furthermore, choosing what to do based on the
-<quote>shape</quote> of the cluster represents local business policy,
-particularly in view of the fact that <link
-linkend="stmtfailover"><command>FAIL OVER</command></link> requires
-discarding the failed node. If &slony1; imposed failover policy on
-you, that might conflict with business requirements, thereby making
-&slony1; an unacceptable choice.</para>
-
-<para>As a result, let &slony1; do what it does best: provide database
-replication services.</para></sect2>
-
-<sect2><title> Current Limitations</title>
-
-<indexterm><primary>limitations to &slony1;</primary></indexterm>
-
-<para>&slony1; does not automatically propagate schema changes, nor
-does it have any ability to replicate large objects.  There is a
-single common reason for these limitations, namely that &slony1;
-collects updates using triggers, and neither schema changes, large
-object operations, nor <command>TRUNCATE</command> requests are able
-to have triggers suitable to inform &slony1; when those sorts of
-changes take place.  As a result, the only database objects where
-&slony1; can replicate updates are tables and sequences.  </para>
-
-<para>There is a capability for &slony1; to propagate other kinds of
-database modifications, notably DDL changes, if you submit them as
-scripts via the <application>slonik</application> <xref
-linkend="stmtddlscript"> operation.  That is not handled
-<quote>automatically;</quote> you, as a database administrator, will
-have to construct an SQL DDL script and submit it, via <xref
-linkend="stmtddlscript"> and there are a number of further <link
-linkend="ddlchanges"> caveats.</link> </para>
-
-<para>If you have those sorts of requirements, it may be worth
-exploring the use of &postgres; 8.X <acronym>PITR</acronym> (Point In
-Time Recovery), where <acronym>WAL</acronym> logs are replicated to
-remote nodes.  Unfortunately, that has two attendant limitations:
-
-<itemizedlist>
-	
-<listitem><para> PITR replicates <emphasis>all</emphasis> changes in
-<emphasis>all</emphasis> databases; you cannot exclude data that isn't
-relevant;</para></listitem>
-
-<listitem><para> A PITR replica remains dormant until you apply logs
-and start up the database.  You cannot use the database and apply
-updates simultaneously.  It is like having a <quote>standby
-server</quote> which cannot be used without it ceasing to be
-<quote>standby.</quote></para></listitem>
-
-</itemizedlist></para>
-
-<para> &slony1; does not automatically determine what sequences ought
-to be replicated; you need to add them explicitly using <xref
-linkend="stmtsetaddsequence">. </para>
+<sect2>
+<title>About This Book</title>
+<para>
+This book is intended as an administration guide and reference for 
+&slony1; version &version;  If you are using a different version of &slony1;
+then you should refer to the administration guide for that version.
+</para>
 </sect2>
 
-<sect2><title>Replication Models</title>
 
-<indexterm><primary>replication models</primary></indexterm>
 
-<para>There are a number of distinct models for database replication;
-it is impossible for one replication system to be all things to all
-people.</para>
-
-<para> &slony1; implements a particular model, namely that of
-asynchronous replication, using triggers to collect table updates,
-where a single <quote>origin</quote> may be replicated to multiple
-<quote>subscribers</quote> including cascaded subscribers.</para>
-
-<para> There are a number of other replication models which are
-<emphasis> different </emphasis>; it is worth pointing out other
-approaches that exist.  &slony1; is certainly not the only approach,
-and for some applications, it is <emphasis> not </emphasis> the
-optimal approach. </para>
-
-<itemizedlist> 
-<listitem><para> Synchronous single-origin multi-subscriber replication</para>
-
-<para> In a synchronous system, updates cannot be committed at the
-origin until they have also been accepted by subscriber nodes.  This
-enhances the security property of nonrepudiation as updates will not
-be committed until they can be confirmed elsewhere.  Unfortunately,
-the requirement that changes be applied in multiple places introduces
-a performance bottleneck.  </para>
-
-<para> This approach is similar to the two phase commit processing
-model of the XA transaction processing protocol.</para>
-</listitem>
-
-<listitem><para> Synchronous multi-origin multi-subscriber replication </para> 
-
-<para> This is the model being used by the possibly-forthcoming
-<productname>Slony-II</productname> system.  Synchronous replication
-systems all <quote>suffer</quote> from the performance bottleneck that
-updates must be accepted on all nodes before they can be
-<command>commit</command>ted anywhere.  </para>
-
-<para> That generally makes it impractical to run synchronous
-replication across wide area networks. </para>
-</listitem>
-
-<listitem><para> Asynchronous multimaster replication with conflict
-avoidance/resolution</para>
-
-<para> Perhaps the most widely used replication system of this sort is
-the <productname>PalmOS HotSync</productname> system.
-<trademark>Lotus Notes</trademark> also provides a replication system
-that functions in much this manner.</para>
-
-<para> The characteristic <quote>troublesome problem</quote> with this
-style of replication is that it is possible for conflicts to arise
-because users update the same record in different ways on different
-nodes. </para>
-
-<para> In the case of <productname>HotSync</productname>, if conflicts
-arise due to records being updated on multiple nodes, the
-<quote>resolution</quote> is to simply create a duplicate record to
-reflect the two changes, and have the user resolve the conflict
-manually. </para>
-
-<para> Some async multimaster systems try to resolve conflicts by
-finding ways to apply partial record updates.  For instance, with an
-address update, one user, on one node, might update the phone number
-for an address, and another user might update the street address, and
-the conflict resolution system might try to apply these updates in a
-non-conflicting order.  This can also be considered a form of
-<quote>table partitioning</quote> where a database table is treated as
-consisting of several <quote>sub-tables.</quote> </para>
-
-<para> Conflict resolution systems almost always require some domain
-knowledge of the application being used, which means that they can
-only deal automatically with those conflicts where you have assigned a
-policy.  If they run into conflicts for which no policy is available,
-replication stops until someone applies some manual
-intervention. </para>
-</listitem>
-
-</itemizedlist>
-
-</sect2>
-</sect1>
-
-<sect1 id="slonylistenercosts"><title> &slony1; Communications
-Costs</title>
-
-<para>The cost of communications grows in a quadratic fashion in
-several directions as the number of replication nodes in a cluster
-increases.  Note the following relationships:
-
-<itemizedlist>
-
-<listitem><para> It is necessary to have <xref
-linkend="table.sl-listen"> entries allowing connection from each node
-to every other node.  Most will normally not need to be very heavily,
-but it still means that there needs to be n(n-1) paths.
-</para></listitem>
-
-<listitem><para> Each SYNC applied needs to be reported back to all of
-the other nodes participating in the set so that the nodes all know
-that it is safe to purge &sllog1; and &sllog2; data, as
-any <quote>forwarding</quote> node could potentially take over
-as <quote>master</quote> at any time.  One might expect SYNC messages
-to need to travel through n/2 nodes to get propagated to their
-destinations; this means that each SYNC is expected to get transmitted
-n(n/2) times.  Again, this points to a quadratic growth in
-communications costs as the number of nodes
-increases.</para></listitem>
-
-</itemizedlist></para>
-
-<para>This points to it being a bad idea to have the large
-communications network resulting from the number of nodes being large.
-Up to a half dozen nodes seems pretty reasonable; every time the
-number of nodes doubles, this can be expected to quadruple
-communications overheads.</para>
 </sect1>
 
 <!-- Keep this comment at the end of the file
