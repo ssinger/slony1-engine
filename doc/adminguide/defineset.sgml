@@ -67,6 +67,7 @@ benefit that a primary key has been declared for the table. </para>
 table, you must <emphasis>not</emphasis> specify the namespace for the
 key, as it infers the namespace from the table.</para></listitem>
 
+</itemizedlist>
 
 <para> It is not terribly important whether you pick a
 <quote>true</quote> primary key or a mere <quote>candidate primary

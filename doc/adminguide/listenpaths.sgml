@@ -1,5 +1,5 @@
 <!--  -->
-<sect1 id="listenpaths"><title>&slony1; listen paths</title>
+<sect1 id="listenpaths"><title>&slony1; Listen Paths</title>
 
 <indexterm><primary>listen paths</primary></indexterm>
 
@@ -31,7 +31,7 @@ needful so
 <productname>Slony-I</productname> is able to shift origins to other
 locations.</para>
 
-<sect2><title>How listening can break</title>
+<sect2><title>How Listening Can Break</title>
 
 <indexterm><primary> listening breakage </primary></indexterm>
 
@@ -39,7 +39,7 @@ locations.</para>
 recreate it.  That node was the data provider for another subscriber
 (#3) that was, in effect, a <quote>cascaded slave.</quote> Dropping
 the subscriber node initially didn't work, as <xref linkend="slonik">
-informed me that there was a dependant node.  I repointed the
+informed me that there was a dependant node.  I re-pointed the
 dependant node to the <quote>master</quote> node for the subscription
 set, which, for a while, replicated without difficulties.</para>
 
@@ -60,7 +60,7 @@ from node #1 (the origin node for the replication set).  At that
 moment, <quote>as if by magic</quote>, node #3 started replicating again, as
 it discovered a place to get <command>sync</command> events.</para>
 </sect2>
-<sect2><title>How the listen configuration should look</title>
+<sect2><title>How the Listen Configuration Should Look</title>
 
 <para>The simple cases tend to be simple to cope with.  We need to
 instead look at a more complex node configuration.</para>

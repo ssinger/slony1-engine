@@ -121,11 +121,6 @@ aware of one another.</para>
 <para> The slon logs should now start to receive events from
 <quote>foreign</quote> nodes.</para>
 
-<para> In version 1.0, <xref linkend="table.sl-listen"> is not set up
-automatically, so things still remain quiet until you explicitly
-submit <command>STORE LISTEN</command> requests. In version 1.1, the
-<quote>listen paths</quote> are set up automatically, which will much
-more quickly get the communications network up and running.  </para>
 
 <para> If you look at the contents of the tables <xref
 linkend="table.sl-node"> and <xref linkend="table.sl-path"> and <xref
@@ -138,14 +133,6 @@ entries than that, well, that should give you some idea of what is
 missing.</para>
 </listitem>
 
-<listitem><para> If needed (<emphasis>e.g.</emphasis> - before version
-1.1), submit <xref linkend="stmtstorelisten"> requests to indicate how
-the nodes will use the communications paths. </para>
-
-<para> Once this has been done, the nodes' logs should show a greater
-level of activity, with events periodically being initiated on one
-node or the other, and propagating to the other. </para>
-</listitem>
 
 <listitem> <para> You'll set up the set
 (<xref linkend="stmtcreateset">), add tables
@@ -438,10 +425,8 @@ source.  </para></listitem>
 
 <listitem><para><command>Slony-I: cleanupEvent(): Single node - deleting events < %</command></para> 
 <para> If there's only one node, the cleanup event will delete old events so that you don't get <quote>build-up of crud.</quote></para></listitem>
-<listitem><para><command>Slony-I: tableAddKey(): table % not found</command></para> 
-<para> Perhaps you didn't copy the schema over properly?</para></listitem>
-<listitem><para><command>Slony-I: tableDropKey(): table with ID% not found</command></para> 
-<para> Seems curious; you were presumably replicating to this table, so for this to be gone seems rather odd...</para></listitem>
+
+
 <listitem><para><command>Slony-I: determineIdxnameUnique(): table % not found</command></para> 
 
 <para>Did you properly copy over the schema to a new node???</para></listitem>

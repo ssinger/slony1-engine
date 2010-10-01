@@ -2,11 +2,9 @@
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
-
 <para> Minor &slony1; versions can be upgraded using the slonik <xref
 linkend="stmtupdatefunctions"/> command.  This includes upgrades from
-2.0.x to a newer version 2.0.y version. <para>
-
+2.0.x to a newer version 2.0.y version. </para>
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
 command <xref linkend="stmtupdatefunctions">.</para>
@@ -50,7 +48,8 @@ nothing prevents one from carefully copying &slony1; components for
 the new version into place to overwrite the old version as
 the <quote>install</quote> step.  That might <emphasis>not</emphasis>
 work on <trademark>Windows</trademark> if it locks library files that
-are in use.</para>
+are in use.</para> It is also important to make sure that any connections
+to the database are restarted after the new binary is installed.
 
 <variablelist>
 

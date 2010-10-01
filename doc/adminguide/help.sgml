@@ -6,48 +6,58 @@
 <para>If you are having problems with &slony1;, you have several
 options for help:
 
-<itemizedlist>
+<sect2>
+<title>&slony1; Website</title>
+<para> <ulink url="http://slony.info/">http://slony.info/</ulink> - the official
+<quote>home</quote> of &slony1; contains links to the documentation,
+mailing lists and source code.  </para>
+</sect2>
 
-<listitem><para> Before submitting questions to any public forum as to
-why <quote>something mysterious</quote> has happened to your
-replication cluster, be sure to run the &lteststate; tool and be
-prepared to provide its output.  It may give some clues as to what is
-wrong, and the results are likely to be of some assistance in
-analyzing the problem. </para>
-</listitem>
-
-<listitem><para> <ulink url="http://slony.info/">http://slony.info/</ulink> - the official
-<quote>home</quote> of &slony1;</para></listitem>
-
-<listitem><para> Documentation on the &slony1; Site- Check the
-documentation on the Slony website: <ulink
-      url="http://slony.info/documentation">Howto
-</ulink></para></listitem>
-
-<listitem><para> A copy of this documentation lives at <ulink
-      url="http://linuxdatabases.info/info/slony.html"> Christopher Browne's
-Web Site </ulink>.</para></listitem>
-
-<listitem><para> Other Documentation - There are several articles here
-<ulink
-      url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
-Varlena GeneralBits </ulink> that may be helpful.</para></listitem>
-
-<listitem><para> IRC - There are usually some people on #slony on
-irc.freenode.net who may be able to answer some of your
-questions. There is also a bot named "rtfm_please" that you may want
-to chat with.</para></listitem>
-
-<listitem><para> Mailing lists - The answer to your problem may exist
+<sect2>
+<title>
+Mailing Lists</title>
+<para>
+The answer to your problem may exist
 in the Slony1-general mailing list archives, or you may choose to ask
 your question on the Slony1-general mailing list. The mailing list
 archives, and instructions for joining the list may be found <ulink
-      url="http://lists.slony.info/mailman/listinfo/slony1-general">here. </ulink></para></listitem>
+      url="http://lists.slony.info/mailman/listinfo/slony1-general">here. </ulink>. </para>
 
-<listitem><para> If your Russian is much better than your English,
-then <ulink url="http://kirov.lug.ru/wiki/Slony">
-KirovOpenSourceCommunity: Slony</ulink> may be the place to
-go.</para></listitem> 
+<para>
+If you are a question to the mailing list then you should try to include
+the following information:
+<itemizedlist>
+<listitem><para> The version of &slony1; you are using</para></listitem>
+<listitem><para> The version of &postgres; you are using</para></listitem>
+<listitem><para> A description of your replication cluster.  This should
+include the number of replication sets, which node is the master for
+each set. </para></listitem>
+<listitem><para>The text of any error messages you are receiving  from
+slony</para></listitem>
+<listitem><para>If you received the error while running a slonik script
+then try to include the script</para></listitem>
+</itemizedlist>
+It is a good idea to run the &lteststate; tool before posting
+a question to the mailing list.  It may give some clues as to what is
+wrong, and the results are likely to be of some assistance in
+analyzing the problem. </para>
+</sect2>
+
+<sect2>
+<title>Other Sources</title>
+<itemizedlist>
+
+<listitem><para>There are several articles here
+<ulink
+      url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
+Varlena GeneralBits </ulink> that may be helpful but was written for an older
+version of &slony1;.</para></listitem>
+
+<listitem><para> IRC - There are usually some people on #slony on
+irc.freenode.net who may be able to answer some of your
+questions. Many people leave themselves logged into IRC and
+only periodically check the channel.  It might take a while
+before someone answers your questions</para></listitem>
 
 <listitem><para> <ulink url="http://pgpool.projects.postgresql.org/"
       id="pgpool"> <application> pgpool </application> </ulink> </para>
@@ -62,19 +72,9 @@ very useful when doing a <xref linkend="stmtmoveset">, as it would
 allow applications to be switched to point to the new origin without
 needing to update their configuration. </para> </listitem>
 
-</itemizedlist></para>
-
-<sect2><title> Other Information Sources</title>
-<itemizedlist>
-
-<listitem><para> <ulink
-url="http://comstar.dotgeek.org/postgres/slony-config/">
-slony-config</ulink> - A Perl tool for configuring Slony nodes using
-config files in an XML-based format that the tool transforms into a
-Slonik script</para></listitem>
-
-<listitem><para><ulink url="http://freshmeat.net/projects/slonyi/">
-Freshmeat on &slony1; </ulink></para></listitem>
+<listitem><para><ulink url="http://pgfoundry.org/projects/slony1-ctl/">
+Slony1-ctl</ulink> - Another set of administration scripts for slony </para>
+</listitem>
 
 </itemizedlist>
 </sect2>
