@@ -47,7 +47,11 @@
 <!entity raceconditions     SYSTEM "raceconditions.sgml">
 <!entity partitioning       SYSTEM "partitioning.sgml">
 <!entity triggers           SYSTEM "triggers.sgml">
-
+<!entity startingstopping   SYSTEM "startingstopping.sgml">
+<!entity limitations        SYSTEM "limitations.sgml">
+<!entity events             SYSTEM "events.sgml" >
+<!entity performance        SYSTEM "performance.sgml">
+<!entity security           SYSTEM "security.sgml">
 <!-- back matter -->
 <!entity biblio     SYSTEM "biblio.sgml">
 <!entity bookindex  SYSTEM "bookindex.sgml">

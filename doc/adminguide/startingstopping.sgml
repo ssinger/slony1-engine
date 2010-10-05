@@ -1,0 +1,167 @@
+<!--  -->
+<sect1 id="startingstopping">
+<title>Starting & Stopping Replication</title>
+<indexterm><primary>starting & stopping slon</primary></indexterm>
+
+
+<para>
+The <xref linkend="slon"> program is a daemon process that
+replicates data from one machine to another.  The slon process
+is responsible for the following tasks
+</para>
+<itemizedlist>
+<listitem><para>Generating 'SYNC' events on the local database</para></listitem>
+<listitem><para>Processing events from remote nodes.
+</para></listitem>
+<listitem><para>Applying the updates pulled from a remote database to user 
+tables to the local database.</para></linkitem>
+<listitem><para>Performing cleanup tasks</para></listitem>
+</itemizedlist>
+
+<sect2>
+<title>Deploying Slon Processes</title>
+
+<para>
+Each database in your cluster needs a slon process which it will act
+as the "node controller" for.
+The slon instance will consider itself "local" to that database
+and establish "remote" connections to any other databases for which 
+a <xref linkend="stmtstorepath"> has been defined.
+</para>
+<para>
+The slon process for a particular database does not need to run on the same
+server as the database. It is recommended (for performance reasons) that the 
+network connection between slon process and "local" database fairly fast
+but this is not required.  One common way of deploying &slony1; is to have
+the slon process running on the same node as the database it is servicing.
+Another common deployment is to centralize the slon processes for
+all of the databases in a particular data-center on a single administrative 
+server.
+
+</para>
+
+<para>
+It is important that the network connection between the slon processes and
+the database servers it talks to be reliable.  If the network connection goes 
+away at the wrong time it can leave the database connection in a "zombied".
+Restarting the slon process will repair this situation.
+</para>
+
+</sect2>
+
+<sect2>
+<title>Starting Slon On Unix Systems</title>
+<para>
+The slon process gets installed in your &postgres; bin directory, this is 
+the same directory that psql and the postgres binary get installed into.
+On a Unix system (including Linux variants) slon can be started either:
+<itemizedlist>
+<listitem><para>Manually through the command line by invoking "slon" directly.
+</para></listitem>
+<listitem><para>By using the rc.d style start_slon.sh script found in the tools
+directory of the &slony1; source distribution. </para></listitem>
+</itemizedlist>
+
+
+<sect3>
+<title>Invoking slon Directly</title>
+<para>
+To invoke slon directly you would execute the command
+<programlisting>
+slon slony_example 'host=localhost dbname=pgbench user=pgbench'
+</programlisting>
+
+See <xref linkend="slon"> for information on command line options.
+
+</para>
+</sect3>
+<sect3>
+<title>start_slon.sh</title>
+<para>
+To start slon via the start_slon.sh script you will first need to create a 
+slon.conf file with the configuration options for slon.  This is
+an example of a simple slon.conf file
+</para>
+<programlisting>
+cluster_name=slony_example
+conn_info=host=localhost dbname=pgbench user=pgbench
+</programlisting>
+
+You would then set the SLON_CONF environment variable to point at this file
+and start slony.
+<programlisting>
+export SLON_BIN=/usr/local/pgsql8.3/bin/slon
+export SLON_CONF=/etc/slon/slon.conf
+export SLON_LOG=/var/log/slon.log
+/usr/local/pgsql8.3/bin/start_slon.sh start
+</sect3>
+
+</sect2>
+
+<sect2>
+<title>Stopping Slon On a Unix System</title>
+<para>
+On a Unix system the slon process (called the watchdog) slon will fork
+creating a child slon process (called the worker) that does all the work.
+The watchdog monitors the worker and restarts the worker when required.
+
+To terminate slon you would send the watchdog slon (the slon process
+that you started) a SIGTERM.
+
+If you started slon through the start_slon.sh script then you can stop
+the slon via the "stop" command.
+<programlisting>
+export SLON_BIN=/usr/local/pgsql8.3/bin/slon
+export SLON_CONF=/etc/slon/slon.conf
+export SLON_LOG=/var/log/slon.log
+/usr/local/pgsql8.3/bin/start_slon.sh stop
+</programlisting>
+
+</para>
+</sect2>
+
+<sect2>
+<title>Starting Slon On a MS-Windows System</title>
+<para>
+On a MS-Windows system slon needs to be started as a service with a 
+configuration file containing the settings for slon.  An example of a
+configuration file is below.
+</para>
+<programlisting>
+cluster_name=slony_example
+conn_info=host=localhost dbname=pgbench user=pgbench
+</programlisting>
+<para>
+
+You then need to add the slon service
+</para>
+<programlisting>
+pgsql\lib>regsvr32 slevent.dll
+
+--
+-- running slon
+--
+pgsql\bin>slon -regservice Slony-I
+pgsql\bin>slon -addengine Slony-I slon.conf
+pgsql\bin>slon -listengines Slony-I
+</programlisting>
+</sect2>
+
+<sect2>
+<title>
+Stopping slon On MS-Windows
+</title>
+
+<para>
+On MS-Windows the service manager starts slon as a service.  This slon
+processs acts as the slon worker.  The service manager will start a new
+slon whenever the slon worker exists.
+
+To stop slon you need to disable the service.  This can be done through the
+service manager GUI or with the following commands
+<programlisting>
+pgsql\bin>slon -delengine Slony-I slon.conf
+</programlisting>
+</sect2>
+
+</sect1>

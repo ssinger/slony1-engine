@@ -64,7 +64,7 @@ these tables. </para>
 </para>
 
 <sect2 id="maintenance-autovac"> <title> Interaction with &postgres;
-autovacuum </title>
+8.1 and 8.2 autovacuum </title>
 
 <indexterm><primary>autovacuum interaction</primary></indexterm>
 
@@ -84,7 +84,7 @@ pretty useless.  It seems preferable to configure autovacuum to avoid
 vacuum &slony1;-managed configuration tables. </para>
 
 <para> The following query (change the cluster name to match your
-local configuration) will identify the tables that autovacuum should
+local configuration) on Postgres 8 versions up to and not including 8.4 will identify the tables that autovacuum should
 be configured not to process: </para>
 
 <programlisting>
@@ -109,7 +109,8 @@ mycluster=# select oid, relname from pg_class where relnamespace = (select oid f
 (15 rows)
 </programlisting>
 
-<para> The following query will populate
+<para> The following query (for Postgres versions up to and not including
+8.4) will populate
 <envar>pg_catalog.pg_autovacuum</envar> with suitable configuration
 information: <command> INSERT INTO pg_catalog.pg_autovacuum (vacrelid, enabled, vac_base_thresh, vac_scale_factor, anl_base_thresh, anl_scale_factor, vac_cost_delay, vac_cost_limit, freeze_min_age, freeze_max_age) SELECT oid, 'f', -1, -1, -1, -1, -1, -1, -1, -1 FROM pg_catalog.pg_class WHERE relnamespace = (SELECT OID FROM pg_namespace WHERE nspname = '_' || 'MyCluster') AND relhasindex; </command>
 </para>

@@ -75,80 +75,59 @@
     &legal;
   </bookinfo>
 
-  <article id="slonyintro">
-    <title>&slony1; Introduction</title>
+  <chapter id="preface">
+    
+    <title>Preface</title>
+	&intro;
+	&prerequisites;
+	&concepts;
+	&limitations;
+   </chapter>
 
-    &intro;
-    &prerequisites;
-    &installation;
-    &concepts;
-    &cluster;
-    &defineset;
-  </article>
+  <chapter id="tutorial">
+    <title>Tutorial</title>
+    &firstdb;
+    &startingstopping;
+  </chapter>
+  <chapter id="administration">
+    <title>Administration Tasks</title>
+    &addthings;
+    &ddlchanges;
+  </chapter>
 
-  &reference;
+<chapter id="advanced">
+<title>Advanced Topics</title>
+    &events;
+    &listenpaths;
+    &monitoring;
+    &logshipfile;
+    &partitioning;
+    &slonyupgrade;
+    &loganalysis;
+    &performance;
+    &security;
+</chapter>
 
-<article id="slonyadmin"> 
-<title> Slony-I Administration </title>
- <articleinfo>
-  <corpauthor>The PostgreSQL Global Development Group</corpauthor>
-  <author> <firstname>Christopher</firstname> <surname>Browne</surname> </author>
- </articleinfo>
- &bestpractices;
- &firstdb;
- &startslons;
- &subscribenodes;
- &monitoring;
- &maintenance;
- &reshape;
- &failover;
- &listenpaths;
- &plainpaths;
- &triggers;
- &locking;
- &raceconditions;
- &addthings;
- &dropthings;
- &logshipfile;
- &ddlchanges;
- &usingslonik;
- &adminscripts;
- &partitioning;
- &slonyupgrade;
- &versionupgrade;
- &testbed;
- &loganalysis;
- &help;
- &supportedplatforms;
- &releasechecklist;
-</article>
-<article id="faq">
-
-<title>Slony-I FAQ</title>
-<articleinfo>
-      <corpauthor>The Slony Global Development Group</corpauthor>
-      <author> 
-	<firstname>Christopher </firstname> 
-	<surname>Browne</surname> 
-      </author> 
-    </articleinfo>
-
-<para> Not all of these are, strictly speaking, <quote>frequently
-asked;</quote> some represent <emphasis>trouble found that seemed
-worth documenting</emphasis>.</para>
-
- &faq;
-</article>
-<part id="commandreference">
-    <title>Core &slony1; Programs</title>
-	&slon;
+<chapter id="reference">
+  <title>Reference</title>
+  	&slon;
         &slonconf;
 	&slonik;
         &slonikref;
-</part>
+</chapter>
 
+ 
+
+<chapter id="appendix">
+<title>Appendix</title>
+&faq;
+&supportedplatforms;
+&releasechecklist;
+&help;
+</chapter>
 &schemadoc;
-&bookindex;
+&bookindex
+
 
 </book>
 
