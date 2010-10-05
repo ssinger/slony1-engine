@@ -150,6 +150,8 @@ the tables being used by the ddl script while it is running</para></listitem>
 
 <sect2><title> How to remove replication for a node</title>
 
+<indexterm><primary>removing replication for a node</primary></indexterm>
+
 <para> You will want to remove the various &slony1; components
 connected to the database(s).</para>
 
@@ -212,6 +214,8 @@ and triggers alike.
 
 <sect2><title> Adding A Node To Replication</title>
 
+<indexterm><primary>adding a node</primary></indexterm>
+
 <para>Things are not fundamentally different whether you are adding a
 brand new, fresh node, or if you had previously dropped a node and are
 recreating it. In either case, you are adding a node to
@@ -272,6 +276,8 @@ some replication set.
 
 <sect2><title> How do I reshape subscriptions?</title>
 
+<indexterm><primary>reshaping subscriptions</primary></indexterm>
+
 <para> For instance, I want subscriber node 3 to draw data from node
 1, when it is presently drawing data from node 2. </para>
 
@@ -284,10 +290,13 @@ the subscriptions.  Subscriptions will not be started from scratch;
 they will merely be reconfigured.  </para></sect2>
 
 <sect2><title> How do I use <link linkend="logshipping">Log Shipping?</link> </title> 
+
 <para> Discussed in the <link linkend="logshipping"> Log Shipping </link> section... </para>
 </sect2>
 
 <sect2><title> How do I know replication is working?</title> 
+
+<indexterm><primary>how to tell if replication is working</primary></indexterm>
 
 <para> The ultimate proof is in looking at whether data added at the
 origin makes it to the subscribers.  That's a <quote>simply matter of
@@ -331,6 +340,8 @@ information on the status of each node. </para> </listitem>
 more of a procedure should be written...</para> </sect2>
 
 <sect2><title> How do I <quote>move master</quote> to a new node? </title> 
+
+<indexterm><primary>moving master</primary></indexterm>
 
 <para> You must first pick a node that is connected to the former
 origin (otherwise it is not straightforward to reverse connections in

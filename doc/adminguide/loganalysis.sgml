@@ -8,6 +8,7 @@
 and explanations of what they mean.</para>
 
 <sect2><title>CONFIG notices</title>
+<indexterm><primary>Logs: CONFIG level</primary></indexterm>
 
 <para>These entries are pretty straightforward. They are informative
 messages about your configuration.</para>
@@ -26,6 +27,7 @@ CONFIG main: configuration complete - starting threads
 </screen></para></sect2>
 
 <sect2><title>INFO notices</title>
+<indexterm><primary>Logs: INFO level</primary></indexterm>
 
 <para> Events that take place that seem like they will generally be of
 interest are recorded at the INFO level, and, just as with CONFIG
@@ -34,6 +36,7 @@ notices, are always listed. </para>
 </sect2>
 
 <sect2><title>DEBUG Notices</title>
+<indexterm><primary>Logs: DEBUG level</primary></indexterm>
 
 <para>Debug notices are of less interest, and will quite likely only
 need to be shown if you are running into some problem with &slony1;.</para>
@@ -41,6 +44,7 @@ need to be shown if you are running into some problem with &slony1;.</para>
 </sect2>
 
 <sect2><title>Thread name </title>
+<indexterm><primary>Logs: thread name</primary></indexterm>
 
 <para> Notices are always prefaced by the name of the thread from
 which the notice originates. You will see messages from the following
@@ -83,7 +87,7 @@ displayed. </para>
 
 <sect2> <title> How to read &slony1; logs </title>
 
-<indexterm><primary>reading and understanding &slony1; logs</primary></indexterm>
+<indexterm><primary>logs: reading and understanding &slony1; logs</primary></indexterm>
 
 <para> Note that as far as slon is concerned, there is no
 <quote>master</quote> or <quote>slave.</quote> They are just
@@ -198,6 +202,8 @@ uninteresting.</para>
 <sect3 id="logshiplog"><title> Log Messages Associated with Log
 Shipping </title>
 
+<indexterm><primary>Logs: log shipping messages</primary></indexterm>
+
 <para> Most of these represent errors that come up if
 the <xref linkend="logshipping"> functionality breaks.  You may expect
 things to break if the filesystem being used for log shipping fills,
@@ -243,6 +249,7 @@ which failed without the need for administrative intervention. </para>
 
 <sect3 id="ddllogs"><title> Log Messages -  DDL scripts </title> 
 
+<indexterm><primary>Logs: DDL messages</primary></indexterm>
 <para> The handling of DDL is somewhat fragile, as described
 in <xref linkend="ddlchanges">; here are both informational and error
 messages that may occur in the progress of
@@ -331,6 +338,8 @@ a <emphasis>second</emphasis> time?  </para> </listitem>
 
 <sect3><title> Threading Issues </title>
 
+<indexterm><primary>Logs: threading messages</primary></indexterm>
+
 <para> There should not be any <quote>user-serviceable</quote> aspects
 to the &slony1; threading model; each &lslon; creates a quite
 well-specified set of helper threads to manage the various database
@@ -373,6 +382,8 @@ should already be one... </para></listitem>
 </sect3>
 
 <sect3 id="logsubtime"><title> Log Entries At Subscription Time </title>
+
+<indexterm><primary>Logs: subscription messages</primary></indexterm>
 
 <para> Subscription time is quite a special time in &slony1;.  If you
 have a large amount of data to be copied to subscribers, this may take
@@ -577,6 +588,9 @@ connections... </para></listitem>
 </sect3>
 <sect3 id="logmergeset"> <title> Log Entries Associated with MERGE SET</title>
 
+<indexterm><primary>Logs: MERGE SET messages</primary></indexterm>
+
+
 <para> These various exceptions cause <xref linkend="stmtmergeset"> to
 be rejected; something ought to be corrected before submitting the request again. </para>
 
@@ -613,6 +627,8 @@ resubmitting the <xref linkend="stmtmergeset"> request.
 </sect3>
 
 <sect3 id="lognormalsync"><title> Log Entries Associated With Normal SYNC activity </title>
+
+<indexterm><primary>Logs: routine SYNC messages</primary></indexterm>
 
 <para> Some of these messages indicate exceptions, but
 the <quote>normal</quote> stuff represents what you should expect to
@@ -757,6 +773,9 @@ application downtime may not be necessary.  </para></listitem>
 
 <sect3 id="logaddobjects"><title> Log Entries - Adding Objects to Sets  </title>
 
+<indexterm><primary>Logs: adding objects' messages</primary></indexterm>
+
+
 <para> These entries will be seen on an origin node's logs at the time
 you are configuring a replication set; some of them will be seen on
 subscribers at subscription time.  </para>
@@ -840,6 +859,9 @@ already in use.
 
 <sect3><title> Logging When Moving Objects Between Sets  </title>
 
+<indexterm><primary>Logs: moving objects' messages</primary></indexterm>
+
+
 <itemizedlist>
 <listitem><para><command>ERROR: Slony-I setMoveTable_int(): table % not found</command></para> 
 
@@ -885,6 +907,8 @@ already in use.
 
 <sect3><title> Issues with Dropping Objects  </title>
 
+<indexterm><primary>Logs: dropping objects' messages</primary></indexterm>
+
 <itemizedlist>
 <listitem><para><command>ERROR: Slony-I setDropTable(): table % not found</command></para> 
 
@@ -910,6 +934,9 @@ already in use.
 </sect3>
 
 <sect3><title> Issues with MOVE SET, FAILOVER, DROP NODE  </title>
+
+<indexterm><primary>Logs: messages for MOVE SET, FAILOVER, DROP NODE</primary></indexterm>
+
 
 <para> Many of these errors will occur if you submit a &lslonik;
 script that describes a reconfiguration incompatible with your
@@ -966,6 +993,7 @@ forwarding turned on. </para></listitem>
 </sect3>
 
 <sect3><title> Log Switching </title>
+<indexterm><primary>Logs: log switching</primary></indexterm>
 
 <para> These messages relate to the new-in-1.2 facility whereby
 &slony1; periodically switches back and forth between storing data
@@ -995,6 +1023,9 @@ to halt...</para> </listitem>
 </itemizedlist>
 </sect3>
 <sect3><title> Miscellanea </title>
+
+<indexterm><primary>Logs: miscellaneous</primary></indexterm>
+
 
 <para> Perhaps these messages should be categorized further; that
 remains a task for the documentors.</para>

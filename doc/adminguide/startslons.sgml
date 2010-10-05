@@ -1,7 +1,7 @@
 <!--  -->
 <sect1 id="slonstart"> <title>Slon daemons</title>
 
-<indexterm><primary>running slon</primary></indexterm>
+<indexterm><primary>slon, running daemon</primary></indexterm>
 
 <para>The programs that actually perform &slony1; replication are the
 <application>slon</application> daemons.</para>

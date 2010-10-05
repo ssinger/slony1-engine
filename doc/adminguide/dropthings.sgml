@@ -81,6 +81,7 @@ fact that the data was recently being replicated isn't good enough;
 <indexterm><primary>dropping a table from replication</primary></indexterm>
 
 <sect3><title> Using the altperl tools </title>
+<indexterm><primary>altperl tools usage</primary></indexterm>
 
 <para>
 If the <link linkend="altperl"> altperl </link> utilities are
@@ -130,6 +131,9 @@ nodes.</para>
 </sect2>
 
 <sect2> <title> Verifying Cluster Health </title>
+<indexterm><primary>verifying cluster health</primary></indexterm>
+<indexterm><primary>teststate - verifying cluster health</primary></indexterm>
+
 
 <para> After performing any of these procedures, it is an excellent
 idea to run the <filename>tools</filename> script &lteststate;, which

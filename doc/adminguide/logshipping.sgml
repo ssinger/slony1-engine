@@ -261,7 +261,7 @@ done
 <sect2><title> <application> find-triggers-to-deactivate.sh
 </application> </title>
 
-<indexterm><primary> trigger deactivation </primary> </indexterm>
+<indexterm><primary> log shipping - trigger deactivation </primary> </indexterm>
 
 <para> It was once pointed out (<ulink
 url="http://www.slony.info/bugzilla/show_bug.cgi?id=19"> Bugzilla bug
@@ -282,6 +282,7 @@ kept out of the log shipped replica.</para>
 </sect2>
 <sect2> <title> <application>slony_logshipper </application> Tool </title>
 
+<indexterm><primary>logshipping: slony_logshipper tool</primary></indexterm>
 
 <para> As of version 1.2.12, &slony1; has a tool designed to help
 apply logs, called <application>slony_logshipper</application>.  It is
