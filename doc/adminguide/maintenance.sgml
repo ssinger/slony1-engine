@@ -212,6 +212,9 @@ degradation. </para>
 
 <sect2><title>Replication Test Scripts </title>
 
+<indexterm><primary>test scripts</primary></indexterm>
+
+
 <para> In the directory <filename>tools</filename> may be found four
 scripts that may be used to do monitoring of &slony1; instances:
 
@@ -389,6 +392,9 @@ to be created. This should <emphasis>not</emphasis> be the <filename>/var/servic
 </sect3>
 
 <sect3><title>logrep-mkservice.sh</title>
+
+<indexterm><primary>logrep - multilog filters</primary></indexterm>
+
 
 <para>This uses <command>tail -F</command> to pull data from log files allowing
 you to use multilog filters (by setting the CRITERIA) to create

@@ -240,10 +240,11 @@ order after this change. </para> </listitem>
 </sect2>
 
 <sect2 id="complexfailover"> <title> Failover With Complex Node Set </title>
+<indexterm><primary>failover with complex node set</primary></indexterm>
 
-<para> Failover is relatively <quote/simple/ if there are only two
-nodes; if a &slony1; cluster comprises many nodes, achieving a clean
-failover requires careful planning and execution. </para>
+<para> Failover is relatively <quote>simple</quote> if there are only
+two nodes; if a &slony1; cluster comprises many nodes, achieving a
+clean failover requires careful planning and execution. </para>
 
 <para> Consider the following diagram describing a set of six nodes at two sites.
 

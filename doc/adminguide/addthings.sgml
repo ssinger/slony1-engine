@@ -92,6 +92,37 @@ will commit outside the control of &slony1; </para></listitem>
 tables when performing an execute script.  To avoid some race-conditions
 exposed by MVCC it is important that no other transactions are altering
 the tables being used by the ddl script while it is running</para></listitem>
+
+</itemizedlist>
+</sect2>
+
+<sect2><title> How to remove replication for a node</title>
+
+<indexterm><primary>removing replication for a node</primary></indexterm>
+
+<para> You will want to remove the various &slony1; components
+connected to the database(s).</para>
+
+<para> We will just consider, for now, doing this to one node. If you
+have multiple nodes, you will have to repeat this as many times as
+necessary.</para>
+
+<para> Components to be Removed: </para>
+<itemizedlist>
+
+<listitem><para> Log Triggers / Update Denial Triggers
+
+</para></listitem>
+<listitem><para> The <quote>cluster</quote> schema containing &slony1;
+tables indicating the state of the node as well as various stored
+functions
+</para></listitem>
+<listitem><para> &lslon; process that manages the node </para></listitem>
+<listitem><para> Optionally, the SQL and pl/pgsql scripts and &slony1;
+binaries that are part of the &postgres; build. (Of course, this would
+make it challenging to restart replication; it is unlikely that you
+truly need to do this...)
+</para></listitem>
 </itemizedlist>
 
 </para>
@@ -219,10 +250,6 @@ nodes 1 and nodes 3 had been defined.
 <para> You will want to remove the various &slony1; components
 connected to the database(s).</para>
 
-<para> We will just discuss doing this to one node. If you
-have multiple nodes, you will have to repeat this as many times as
-necessary.</para>
-
 <para>
 Removing slony from a node involves deleting the slony schema (tables,
 functions and triggers) from the node in question and telling the
@@ -236,11 +263,6 @@ used <xref linkend="stmtfailover"> to switch to another node), you may
 need to use <xref linkend="stmtuninstallnode"> to drop out the
 triggers and schema and functions.</para>
 
-If the above things work out particularly badly, you
-could submit the SQL command <command>DROP SCHEMA "_ClusterName"
-CASCADE;</command>, which will drop out &slony1; functions, tables,
-and triggers alike. 
-</para>
 
 <warning><para>Removing &slony1; from a replica in versions before
 2.0 is more complicated. If this applies to you then you should
@@ -277,6 +299,8 @@ become the master and at the same time turn the former master into
 a slave.  &slony1; supports this with the <xref linkend="stmtmoveset">
 command.
 </para>
+
+<indexterm><primary>moving master</primary></indexterm>
 
 <para> You must first pick a node that is connected to the former
 origin (otherwise it is not straightforward to reverse connections in

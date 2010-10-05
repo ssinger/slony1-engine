@@ -121,8 +121,36 @@ that suggested that it was needful to delete them. </para>
 </listitem>
 
 <listitem><para>Generate HTML tarball, and RTF/PDF, if
-possible... Note that the HTML version should include *.html (duh!),
-*.jpg, *.png, as well as *.css </para></listitem>
+possible... Note that the HTML version should include
+<filename>*.html</filename> (duh!), <filename>*.jpg</filename>,
+<filename>*.png</filename>, and <filename>*.css</filename> </para>
+
+<para> Note that, if starting from a <quote>clean</quote> copy of the
+documentation, in order to properly build the HTML tarball, it is
+necessary to run <command>make html</command>
+<emphasis>twice</emphasis>, in order for the document index to be
+properly constructed.
+
+<itemizedlist>
+
+<listitem><para> The first time <command>make html</command> is run,
+the file <filename>HTML.index</filename> does not yet exist.</para>
+
+<para> When <application>jade</application> is run, against the
+document, a side-effect is to generate
+<filename>HTML.index</filename>, extracting all index tags from the
+&slony1; documentation.</para></listitem>
+
+<listitem><para> The second time <command>make html</command> is run,
+<filename>HTML.index</filename> is transformed into
+<filename>bookindex.sgml</filename>, which
+<application>jade</application> may then use to generate a nice <link
+linkend="bookindex">index page</link> indicating all the index entries
+included in the documentation tree.</para></listitem>
+
+</itemizedlist></para>
+
+</listitem>
 
 <listitem><para>Run <command>make clean</command> in
 <filename>doc/adminguide</filename> before generating the tarball in

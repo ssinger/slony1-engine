@@ -38,6 +38,8 @@ other hand, unlike with many partitioning cases, this one permits the
 
 <sect2><title> Support for Dynamic Partition Addition</title>
 
+<indexterm><primary>partitioning: dynamic addition of partitions</primary></indexterm>
+
 <para> One common <quote>use case</quote> of replication is to
 partition large data sets based on time period, whether weekly,
 monthly, quarterly, or annually, where there is therefore a need to

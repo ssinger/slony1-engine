@@ -1,7 +1,7 @@
 <!--  -->
 <sect1 id="usingslonik"> <title>Using Slonik</title>
 
-<indexterm><primary>using slonik</primary></indexterm>
+<indexterm><primary>slonik, usage</primary></indexterm>
 
 <para> It's a bit of a pain writing <application>Slonik</application>
 scripts by hand, particularly as you start working with &slony1;
@@ -92,7 +92,7 @@ generate a slonik script for that script's purpose.
 
 <sect1 id="slonikshell"><title> Embedding Slonik in Shell Scripts </title>
 
-<indexterm><primary> embedding slonik in shell scripts </primary></indexterm>
+<indexterm><primary> slonik, embedded in shell scripts </primary></indexterm>
 
 <para> As mentioned earlier, there are numerous &slony1; test scripts
 in <filename>src/ducttape</filename> that embed the generation of

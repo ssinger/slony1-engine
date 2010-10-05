@@ -38,6 +38,8 @@
 
 <sect1 id="slon-config-logging">
   <title>Logging</title>
+<indexterm><primary>slon configuration: logging</primary></indexterm>
+
   <variablelist>
     <varlistentry id="slon-config-logging-syslog" xreflabel="slon_conf_syslog">
       <term><varname>syslog</varname> (<type>integer</type>)</term>
@@ -161,6 +163,8 @@
 
 <sect1 id="slon-config-connection">
   <title>Connection settings</title>
+<indexterm><primary>slon configuration: connections</primary></indexterm>
+
   <variablelist>
     <varlistentry id="slon-config-connection-cluster-name" xreflabel="slon_conf_cluster_name">
       <term><varname>cluster_name</varname>  (<type>string</type>) </term>
@@ -208,6 +212,7 @@
 </sect1>
 <sect1 id="slon-archive-logging">
   <title> Archive Logging Options </title>
+<indexterm><primary>slon configuration: log shipping</primary></indexterm>
   <variablelist>
     <varlistentry id="slon-config-archive-dir" xreflabel="slon_conf_archive_dir">
       <term><varname>archive_dir</varname> (<type>text</type>)</term>
@@ -264,6 +269,8 @@
 </sect1>
 <sect1 id="slon-config-interval">
   <title>Event Tuning</title>
+<indexterm><primary>slon configuration: event tuning</primary></indexterm>
+
   <variablelist>
     <varlistentry id="slon-config-sync-interval" xreflabel="slon_conf_sync_interval">
       <term><varname>sync_interval</varname> (<type>integer</type>)</term>

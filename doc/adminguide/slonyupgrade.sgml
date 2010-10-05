@@ -84,6 +84,8 @@ new components. </para></listitem></varlistentry>
 <sect2>
 <title>Incompatibilities between 1.2 and 2.0</title>
 
+<indexterm><primary>incompatibilities between versions</primary></indexterm>
+
 <sect3> <title> TABLE ADD KEY issue in &slony1; 2.0 </title> 
 <para> The TABLE ADD KEY slonik command has been removed in version 2.0.
 This means that all tables must have a set of columns that form a 
@@ -92,8 +94,6 @@ unique key for the table.
 If you are upgrading from a previous &slony1; version and are using a 
 &slony1; created primary key then you will need to modify your table
 to have its own primary key before installing &slony1; version 2.0
-
-
 
 <sect3> <title> New Trigger Handling in &slony1; Version 2 </title>
 
@@ -126,6 +126,8 @@ were assuming a default value will need to be modified
 </sect3>
 
 <sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2 </title>
+
+<indexterm><primary>upgrading to &slony1; version 2</primary></indexterm>
 
 <para> The version 2 branch is <emphasis>substantially</emphasis>
 different from earlier releases, dropping support for versions of

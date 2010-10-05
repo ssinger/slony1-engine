@@ -211,7 +211,7 @@ is, for versions of &slony1; </para>
 
 </sect2>
 
-<sect2> <title> Building Documentation: Admin Guide </title>
+<sect2 id="buildingdocs"> <title> Building Documentation: Admin Guide </title>
 
 <indexterm><primary> building &slony1; documentation </primary></indexterm>
 
@@ -222,21 +222,20 @@ discovered and written down about the care and feeding of &slony1;.</para>
 <para> This is only built if you specify <command>--with-docs</command></para>
 
 <para> Note that you may have difficulty building the documentation on
-older Red Hat systems (RHEL4 and below) See 
-<ulink url=
+older Red Hat systems (RHEL4 and below) See <ulink url=
 "https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382"> Bug
-159382 (For RHEL) </ulink>   See the <filename>INSTALL</filename> file for a workaround for
-Fedora...</para>
+159382 (For RHEL) </ulink> See the <filename>INSTALL</filename> file
+for a workaround for Fedora...</para>
 
-
-<para>A pre-built copy of the "admin guide" should be readily available,
-either in the form of a separate tarball nearby, or in the directory
-<filename>doc/adminguide/prebuilt</filename> </para>
+<para>A pre-built copy of the <quote>admin guide</quote> should be
+readily available, either in the form of a separate tarball nearby, or
+in the directory <filename>doc/adminguide/prebuilt</filename> </para>
 
 </sect2>
 
 <sect2>
 <title> Installing &slony1; from RPMs</title>
+<indexterm><primary>RPMs for &slony1;</primary> </indexterm>
 
 <para> Even though &slony1; can be compiled and run on most Linux
 distributions, it is also possible to install &slony1; using binary

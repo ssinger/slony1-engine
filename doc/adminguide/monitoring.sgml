@@ -291,6 +291,19 @@ lines. </para> </note>
 
 </sect2>
 
+<sect2 id="bucardo-monitoring"> <title>Bucardo-related Monitoring</title>
+
+<indexterm><primary>Bucardo monitoring</primary></indexterm>
+
+<para> The <ulink url="http://bucardo.org/"> Bucardo </ulink>
+replication system includes script,
+<command>check_postgres.pl</command>, which can monitor a variety of
+things about &postgres; status that includes monitoring &slony1;
+replication status; see <ulink
+url="http://bucardo.org/check_postgres/check_postgres.pl.html#slony_status">
+check_postgres.pl - slony_status </ulink></para>
+</sect2>
+
 <sect2 id="search-logs"> <title> <command>search-logs.sh</command> </title>
 
 <indexterm><primary> search &slony1; logs using search-logs.sh </primary></indexterm>
@@ -346,6 +359,8 @@ may have a packaged version of this under some similar name. </para>
 </sect2>
 
 <sect2> <title> Analysis of a SYNC </title>
+
+<indexterm><primary>analysis of a SYNC</primary></indexterm>
 
 <para> The following is (as of 2.0) an extract from the &lslon; log for node
 #2 in a run of <quote>test1</quote> from the <xref linkend="testbed">. </para>

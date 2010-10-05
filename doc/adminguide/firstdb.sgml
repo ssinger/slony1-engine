@@ -80,6 +80,7 @@ ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
 
 
 <sect2><title>Creating the <application>pgbench</application> User</title>
+<indexterm><primary>pgbench setup</primary> </indexterm>
 
 <para><command>
 createuser -A -D $PGBENCHUSER
@@ -367,7 +368,7 @@ processes and the output of &lteststate;. </para></sect3>
 
 <sect3><title>Using the altperl Scripts</title>
 
-<indexterm><primary> altperl script example </primary></indexterm>
+<indexterm><primary> altperl script example</primary></indexterm>
 
 <para>
 Using the <xref linkend="altperl"> scripts is an alternative way to
