@@ -51,9 +51,11 @@ certainly, fail the second time in the same way it did the first time.
 <para> The implication of this is that it is
 <emphasis>vital</emphasis> that modifications not be made in a
 haphazard way on one node or another.  The schemas must always stay in
-sync.</para> </listitem>  If slon; fails due to a failed DDL change then
+sync.</para> </listitem>  
+
+<listitem><para>If slon; fails due to a failed DDL change then
 you should manually (via psql) make the required changes so that the
-DDL change succeeds the next time slon attempts it.
+DDL change succeeds the next time slon attempts it.</para></listitem>
 
 </itemizedlist>
 

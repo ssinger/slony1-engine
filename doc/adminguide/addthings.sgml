@@ -94,9 +94,9 @@ exposed by MVCC it is important that no other transactions are altering
 the tables being used by the ddl script while it is running</para></listitem>
 
 </itemizedlist>
-</sect2>
+</sect1>
 
-<sect2><title> How to remove replication for a node</title>
+<sect1><title> How to remove replication for a node</title>
 
 <indexterm><primary>removing replication for a node</primary></indexterm>
 
@@ -124,8 +124,6 @@ make it challenging to restart replication; it is unlikely that you
 truly need to do this...)
 </para></listitem>
 </itemizedlist>
-
-</para>
 
 <para>
 The second approach involves using psql to alter the table directly on each 
@@ -199,7 +197,7 @@ wait for event(origin=1, confirmed=all, wait on=1);
 </orderedlist>
 
 
-<sect2>
+<sect1>
 <title>Adding a Cascaded Replica</title>
 <para>
 In a standard &slony1; configuration all slaves(replicas) communicate directly 
