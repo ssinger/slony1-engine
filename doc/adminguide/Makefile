@@ -89,6 +89,8 @@ ifdef docdir
 endif
 endif
 
+HTML.index: html
+
 .PHONY: html
 
 ifndef JADE
@@ -108,7 +110,7 @@ COLLATEINDEX := LC_ALL=C $(PERL) $(COLLATEINDEX) -f -g
 ifdef JADE
 ifeq (,$(wildcard HTML.index))
 bookindex.sgml:
-	$(COLLATEINDEX) -o $@ -N
+	$(COLLATEINDEX) -o $@ -N -i 'bookindex'
 else
 bookindex.sgml: HTML.index
 	$(COLLATEINDEX) -i 'bookindex' -o $@ $<
