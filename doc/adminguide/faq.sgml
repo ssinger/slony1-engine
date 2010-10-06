@@ -97,71 +97,6 @@ via the command <command>make install-all-headers</command>.
 
 </para> </answer> </qandaentry>
 
-<qandaentry id="threadsafety">
-
-<question><para> &slony1; seemed to compile fine; now, when I run a
-&lslon;, some events are moving around, but no
-replication is taking place.</para>
-
-<para> Slony logs might look like the following:
-
-<screen>
-DEBUG1 remoteListenThread_1: connected to 'host=host004 dbname=pgbenchrep user=postgres port=5432'
-ERROR  remoteListenThread_1: "select ev_origin, ev_seqno, ev_timestamp,
-		  ev_minxid, ev_maxxid, ev_xip,
-		  ev_type,
-                  ev_data1, ev_data2,
-		  ev_data3, ev_data4,
- 	          ev_data5, ev_data6,
-		  ev_data7, ev_data8 from "_pgbenchtest".sl_event e 
-where (e.ev_origin = '1' and e.ev_seqno > '1') order by e.ev_origin, e.ev_seqno" - could not receive data from server: Operation now in progress
-</screen>
-</para>
-
-<para> Alternatively, it may appear like...
-
-<screen>
-ERROR  remoteListenThread_2: "select ev_origin, ev_seqno, ev_timestamp,
-ev_minxid, ev_maxxid, ev_xip,        ev_type,        ev_data1, ev_data2,
-ev_data3, ev_data4,        ev_data5, ev_data6,        ev_data7, ev_data8
-from "_sl_p2t2".sl_event e where (e.ev_origin = '2' and e.ev_seqno >
-'0') order by e.ev_origin, e.ev_seqno" - could not receive data from
-server: Error 0
-</screen> 
-</para>
-</question>
-
-<answer><para>On AIX and Solaris (and possibly elsewhere), both
-&slony1; <emphasis>and &postgres;</emphasis> must be compiled with the
-<option>--enable-thread-safety</option> option.  The above results
-when &postgres; isn't so compiled.</para>
-
-<para>What breaks here is that the libc (threadsafe) and libpq
-(non-threadsafe) use different memory locations for errno, thereby
-leading to the request failing.</para>
-
-<para>Problems like this crop up with disadmirable regularity on AIX
-and Solaris; it may take something of an <quote>object code audit</quote> to
-make sure that <emphasis>ALL</emphasis> of the necessary components have been
-compiled and linked with <option>--enable-thread-safety</option>.</para>
-
-<para>For instance, I ran into the problem one that
-<envar>LD_LIBRARY_PATH</envar> had been set, on Solaris, to point to
-libraries from an old &postgres; compile.  That meant that even though
-the database <emphasis>had</emphasis> been compiled with
-<option>--enable-thread-safety</option>, and
-<application>slon</application> had been compiled against that,
-<application>slon</application> was being dynamically linked to the
-<quote>bad old thread-unsafe version,</quote> so slon didn't work.  It
-wasn't clear that this was the case until I ran <command>ldd</command>
-against <application>slon</application>.</para> </answer>
-
-<answer><para> Note that with libpq version 7.4.2, on Solaris, a
-further <link linkend="threadpatch"> thread patch </link> was
-required; similar is also required for &postgres; version 8.0.
-</para>
-</answer>
-</qandaentry>
 
 <qandaentry id="pg81funs">
 
@@ -903,8 +838,7 @@ that it's hitting.</para>
 <para>Long and short: This points to a need to <quote>audit</quote>
 what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right.  See also <link linkend="threadsafety">
-thread safety </link> concerning threading issues on Solaris
+not to link up quite right. 
 ...</para> 
 
 <para> Life is simplest if you only have one set of &postgres;
@@ -1630,8 +1564,8 @@ displaying any errors or warnings </para> </question>
 <answer> <para> Is it possible that you are running
 <application>pg_autovacuum</application>, and it has taken out locks
 on some tables in the replication set?  That would somewhat-invisibly
-block &slony1; from performing operations that require <link
-linkend="locking"> acquisition of exclusive locks. </link> </para>
+block &slony1; from performing operations that require locking acquisition 
+of exclusive locks. </para>
 
 <para> You might check for these sorts of locks using the following
 query: <command> select l.*, c.relname from pg_locks l, pg_class c
@@ -1835,8 +1769,8 @@ you have a replication set that consists solely of sequences. </para>
 </question>
 
 <answer> <para> The  short answer is that having a replication set
-consisting only of sequences is not a <link linkend="bestpractices">
-best practice.</link> </para>
+consisting only of sequences is not a 
+best practice. </para>
 </answer>
 
 <answer>

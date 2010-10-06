@@ -6,8 +6,7 @@
 
 <para> A number of tools have grown over the course of the history of
 &slony1; to help users manage their clusters.  This section along with
-the ones on <xref linkend="monitoring"> and <xref
-linkend="maintenance"> discusses them. </para>
+the ones on <xref linkend="monitoring"> discusses them. </para>
 
 <sect2 id="altperl"> <title>altperl Scripts</title>
 
@@ -431,7 +430,7 @@ file location is writable.  Failure cases include:</para>
 <para> Note that these environment variables may either be set, in the
 script, or overridden by values passed in from the environment.  The
 latter usage makes it easy to use this script in conjunction with the
-<xref linkend="testbed"> so that it is regularly tested. </para>
+regression tests so that it is regularly tested. </para>
 
 </sect2>
 
@@ -562,9 +561,7 @@ using <filename>configure-replication.sh</filename> </title>
 
 <para> The <filename>tools</filename> script
 <filename>configure-replication.sh</filename> is intended to automate
-generating slonik scripts to configure replication.  This script is
-based on the configuration approach taken by the <xref
-linkend="testbed">.</para>
+generating slonik scripts to configure replication. </para>
 
 <para> This script uses a number (possibly large, if your
 configuration needs to be particularly complex) of environment
@@ -844,6 +841,39 @@ node; in a complex environment, where visibility of nodes may vary
 from subnet to subnet, it may not pick the right value.  </para>
 
 </sect2>
+
+
+<sect2 id="gensync"><title>Parallel to Watchdog: generate_syncs.sh</title>
+
+<indexterm><primary>generate SYNCs</primary></indexterm>
+<para>A new script for &slony1; 1.1 is
+<application>generate_syncs.sh</application>, which addresses the following kind of
+situation.</para>
+
+<para>Supposing you have some possibly-flakey server where the
+<application>slon</application> daemon that might not run all the time, you might
+return from a weekend away only to discover the following situation.</para>
+
+<para>On Friday night, something went <quote>bump</quote> and while the
+database came back up, none of the <application>slon</application> daemons
+survived.  Your online application then saw nearly three days worth of
+reasonably heavy transaction load.</para>
+
+<para>When you restart <application>slon</application> on Monday, it
+hasn't done a SYNC on the master since Friday, so that the next
+<quote>SYNC set</quote> comprises all of the updates between Friday
+and Monday.  Yuck.</para>
+
+<para>If you run <application>generate_syncs.sh</application> as a cron job every
+20 minutes, it will force in a periodic <command>SYNC</command> on the origin, which
+means that between Friday and Monday, the numerous updates are split
+into more than 100 syncs, which can be applied incrementally, making
+the cleanup a lot less unpleasant.</para>
+
+<para>Note that if <command>SYNC</command>s <emphasis>are</emphasis> running
+regularly, this script won't bother doing anything.</para>
+</sect2>
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

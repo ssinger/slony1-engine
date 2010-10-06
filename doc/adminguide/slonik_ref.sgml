@@ -334,8 +334,6 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     </para>
    </note>
 
-   <para> For more details on the distinction between this and <xref
-   linkend="stmtstorepath">, see &rplainpaths;.</para>
 
    </Refsect1>
    <Refsect1><Title>Example</Title>
@@ -2171,7 +2169,7 @@ UNSUBSCRIBE SET (
     transaction to the same database itself since this would result in
     blocking itself forever.</para>
 
-    <para> Note that this is a &rlocking; operation, which means that
+    <para> Note that this is a locking operation, which means that
     it can get stuck behind other database activity.</para>
 
     <para> The operation waits for transaction IDs to advance in order
@@ -2310,7 +2308,7 @@ UNLOCK SET (
      function a <command>LOCK SET</command> is needed.
 </para>
      
-    <para> Note that this is a &rlocking; operation, which means that
+    <para> Note that this is a locking operation, which means that
     it can get stuck behind other database activity.
      
      <variablelist>
@@ -2520,7 +2518,7 @@ FAILOVER (
     
     <para> See also the warnings in &rddlchanges;.</para>
 
-    <para> Note that this is a potentially heavily-&rlocking;
+    <para> Note that this is a potentially heavily-locking
     operation, which means that it can get stuck behind other database
     activity.</para>
   

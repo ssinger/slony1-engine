@@ -95,6 +95,7 @@
     <title>Administration Tasks</title>
     &addthings;
     &ddlchanges;
+    &failover;
   </chapter>
 
 <chapter id="advanced">
@@ -115,6 +116,7 @@
 
 <chapter id="appendix">
 <title>Appendix</title>
+    &adminscripts;
     &faq;
     &supportedplatforms;
     &releasechecklist;

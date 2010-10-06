@@ -183,7 +183,7 @@ may not necessarily be suitable for running &lslonik;. </para>
 linkend="stmtstoretrigger"> configuration on subscriber nodes.
 </para>
 
-<para> As discussed in <xref linkend="triggers">, the handling has
+<para>Trigger handling has
 fundamentally changed between &slony1; 1.2 and 2.0. </para>
 
 <para> Generally speaking, what needs to happen is to query
