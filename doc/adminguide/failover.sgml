@@ -132,8 +132,8 @@ configuration.</para>
 under control of the administrators, and there is no need for there to
 be any loss of data.</para>
 
-<para> After performing the configuration change, you should, as <xref
-linkend="bestpractices">, run the &lteststate; scripts in order to
+<para> After performing the configuration change, you should, run the 
+&lteststate; scripts in order to
 validate that the cluster state remains in good order after this
 change. </para>
 
@@ -232,7 +232,7 @@ implications.</para>
 </listitem>
 
 <listitem> <para> After performing the configuration change, you
-should, as <xref linkend="bestpractices">, run the &lteststate;
+should, as  run the &lteststate;
 scripts in order to validate that the cluster state remains in good
 order after this change. </para> </listitem>
 
