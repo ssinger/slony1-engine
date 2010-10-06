@@ -234,3 +234,16 @@ function.disable-indexes-on-table-i-oid-oid.html
 function.enable-indexes-on-table-i-oid-oid.html
 function.cleanupevent-p-interval-interval.html
 schemadoc.sgml
+administration.html
+advanced.html
+appendix.html
+function.reshapesubscription-integer-integer-integer.html
+limitations.html
+performance.html
+preface.html
+reference.html
+security.html
+startingstopping.html
+stmttabledropkey.html
+thingsleftout.html
+tutorial.html
