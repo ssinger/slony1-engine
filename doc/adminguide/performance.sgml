@@ -1,11 +1,11 @@
 <!-- -->
-<sect1>
+<sect1 id="performance">
 <title>Performance Considerations</title>
 <para>
 &slony1; is a trigger based replication engine.  For each row of 
 application data you insert, update, or delete in your database 
-&slony1; will insert an additional row into the sl_log_1 or
-sl_log_2 tables.  This means that &slony1; will likely have a 
+&slony1; will insert an additional row into the &sllog1; or
+&sllog2; tables.  This means that &slony1; will likely have a 
 negative impact on your databases performance.  Predicting
 this impact is more difficult because the amount of impact
 is dependent on your database workload and hardware capabilities.
@@ -16,22 +16,22 @@ The following &slony1; operations are likely to impact performance:
 <itemizedlist>
 <listitem>
 <para>Changing data in a replicated table will result in rows being added
-to sl_log_1 or sl_log_2</para></listitem>
-<listitem>When a slon daemon generates a SYNC event on each node
-it will need to add to the &sl_event table.</para>
-<listitem>Each remote slon daemon will need to query the sl_log and
-sl_event tables to pull the data to replicate</para>
+to &sllog1; or &sllog2;</para></listitem>
+<listitem><para>When a slon daemon generates a SYNC event on each node
+it will need to add to the &slevent; table.</para></listitem>
+<listitem><para> Each remote slon daemon will need to query the &sllog1;, &sllog2; and
+&slevent; tables to pull the data to replicate</para>
 </listitem>
 </itemizedlist>
 
 <sect2>
 <title>Vacuum Concerns</title>
 <para>
-The sl_event and sl_confirm tables need to be regularly vacuumed because
+The &slevent; and &slconfirm; tables need to be regularly vacuumed because
 &slony1; will often add and delete rows to these tables.  The autovacuum
 feature of &postgres; included in 8.3 and above is the recommended
 way of handling vacuums.   If autovacuum does is not working well it can
-be configured to not vacuum the sl_event and sl_confirm tables (See
+be configured to not vacuum the &slevent; and &slconfirm; tables (See
 the &postgres; documentation information on how to disable autovacuum
 on a per table basis).  If &slony1; detects that autovacuum has been
 disabled for any of the &slony1; tables then it will try to vacuum
@@ -49,11 +49,11 @@ of &slony1; (prior to 2.0) then you should refer to the documentation for your
 <sect2>
 <title>Log Switching</title>
 <para>
-&slony1; will frequently switch between sl_log_1 and sl_log_2 as the 
+&slony1; will frequently switch between &sllog1; and &sllog2; as the 
 table that the &slony1; triggers log data into.  Once all of the 
 transactions in one of these tables have been replicated &slony1;
 will TRUNCATE the table.  The usage of TRUNCATE in this manner
-eliminates the need to vacuum sl_log_1 and sl_log_2.
+eliminates the need to vacuum &sllog1; and &sllog2;.
 </para>
 
 
@@ -64,9 +64,9 @@ Long Running Transactions
 <para>
 Long running transactions can impact the performance of &slony1; because
 they prevent Log Switching from occurring.  As long as your oldest transaction
-is open it will sl_log_1 or sl_log_2 from being truncated.  This means that
+is open it will &sllog1; or &sllog2; from being truncated.  This means that
 the other sl_log table will continue to grow in size.  Long running
-transactions can also stop sl_event and sl_confirm from being vacuumed.
+transactions can also stop &slevent; and sl_confirm from being vacuumed.
 The table bloat that occurs due to a long running transaction will
 mean that queries to these tables will take longer.  This can lead to
 replication falling behind.   If replication is behind then the data

@@ -48,7 +48,7 @@ nothing prevents one from carefully copying &slony1; components for
 the new version into place to overwrite the old version as
 the <quote>install</quote> step.  That might <emphasis>not</emphasis>
 work on <trademark>Windows</trademark> if it locks library files that
-are in use.</para> It is also important to make sure that any connections
+are in use. It is also important to make sure that any connections
 to the database are restarted after the new binary is installed.
 
 <variablelist>

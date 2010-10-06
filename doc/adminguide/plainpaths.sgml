@@ -23,8 +23,7 @@ control the administration of the cluster.</para>
 
 <para> Since these communications paths are only used briefly, it may
 be quite reasonable to <quote>hack together</quote> temporary
-connections using <link linkend="tunnelling">SSH
-tunnelling</link>.</para></listitem>
+connections using SSH tunnelling.</para></listitem>
 
 <listitem><para> The &lslon; DSN parameter. </para>
 

@@ -447,8 +447,7 @@
         <primary><varname>quit_sync_provider</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para> This must be used in conjunction with <xref
-        linkend="slon-config-quit-sync-finalsync">, and indicates
+        <para> This must be used in conjunction with <xref linkend="slon-config-quit-sync-finalsync">, and indicates
         which provider node's worker thread should be watched to see
         if the slon should terminate due to reaching some desired
         <quote>final</quote> event number.</para>

@@ -106,17 +106,29 @@
     &loganalysis;
     &performance;
     &security;
+    &adminscripts;
 </chapter>
 
-<chapter id="reference">
+<part id="reference">
   <title>Reference</title>
   	&slon;
         &slonconf;
 	&slonik;
         &slonikref;
-</chapter>
 
- 
+<chapter id="thingsleftout">
+  <title/Things Left Out Of Other Parts/
+    &bestpractices;
+    &installation;
+    &failover;
+    &testbed;
+    &triggers;
+    &locking;
+    &defineset;
+    &maintenance;
+    &usingslonik;
+    &dropthings;
+    &plainpaths;
 
 <chapter id="appendix">
 <title>Appendix</title>

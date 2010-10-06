@@ -1,5 +1,5 @@
 <!--  -->
-<sect1>
+<sect1 id="security">
 <title>Security Considerations</title>
 
 <para>
@@ -24,8 +24,7 @@ manipulating pg_class.  This also requires superuser access.
 </para>
 
 </sect3>
-<sect3>
-<title>Slon Local Connection<title>
+<sect3> <title>Slon Local Connection</title>
 <para>
 Each slon instance has a 'local' database connection.  This is the database
 connection that is specified on the either the slon command line or the
@@ -37,7 +36,7 @@ superuser.  In particular slon needs to have sufficient permissions to:
 </para></listitem>
 <listitem><para>Make modifications to any replicated tables.</para>
 </listitem>
-<itemizedlist>
+</itemizedlist>
 
 </para>
 
