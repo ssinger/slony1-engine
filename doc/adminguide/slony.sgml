@@ -108,25 +108,31 @@
     &security;
 </chapter>
 
-<chapter id="reference">
-  <title>Reference</title>
-  	&slon;
-        &slonconf;
-	&slonik;
-        &slonikref;
-</chapter>
 
- 
+
 
 <chapter id="appendix">
 <title>Appendix</title>
-&faq;
-&supportedplatforms;
-&releasechecklist;
-&help;
+    &faq;
+    &supportedplatforms;
+    &releasechecklist;
+    &help;
 </chapter>
+
+
+<part id="reference">
+<title>Reference</title>
+   &slon; 
+   &slonconf;
+   &slonik;
+   &slonikref;
+</part>
+ 
+
+
+
 &schemadoc;
-&bookindex
+&bookindex;
 
 
 </book>
