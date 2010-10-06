@@ -94,9 +94,9 @@ exposed by MVCC it is important that no other transactions are altering
 the tables being used by the ddl script while it is running</para></listitem>
 
 </itemizedlist>
-</sect2>
+</sect1>
 
-<sect2><title> How to remove replication for a node</title>
+<sect1><title> How to remove replication for a node</title>
 
 <indexterm><primary>removing replication for a node</primary></indexterm>
 
@@ -125,7 +125,6 @@ truly need to do this...)
 </para></listitem>
 </itemizedlist>
 
-</para>
 
 <para>
 The second approach involves using psql to alter the table directly on each 
@@ -250,20 +249,12 @@ nodes 1 and nodes 3 had been defined.
 
 </sect1>
 
-<indexterm><primary>reshaping subscriptions</primary></indexterm>
-
-<para> For instance, I want subscriber node 3 to draw data from node
-1, when it is presently drawing data from node 2. </para>
 
 <sect1><title> How To Remove Replication For a Node</title>
 
 <para> You will want to remove the various &slony1; components
 connected to the database(s).</para>
 
-<sect2><title> How do I use <link linkend="logshipping">Log Shipping?</link> </title> 
-
-<para> Discussed in the <link linkend="logshipping"> Log Shipping </link> section... </para>
-</sect2>
 
 <para> We will just discuss doing this to one node. If you
 have multiple nodes, you will have to repeat this as many times as
@@ -293,6 +284,9 @@ are using.
 
 
 <sect1><title>Changing a Nodes Provider</title>
+
+
+<indexterm><primary>reshaping subscriptions</primary></indexterm>
 
 <para> For instance, you might want subscriber node 3 to draw data from node
 1, when it is presently drawing data from node 2. </para>

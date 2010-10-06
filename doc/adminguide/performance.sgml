@@ -17,9 +17,9 @@ The following &slony1; operations are likely to impact performance:
 <listitem>
 <para>Changing data in a replicated table will result in rows being added
 to sl_log_1 or sl_log_2</para></listitem>
-<listitem>When a slon daemon generates a SYNC event on each node
-it will need to add to the &sl_event table.</para>
-<listitem>Each remote slon daemon will need to query the sl_log and
+<listitem<para>>When a slon daemon generates a SYNC event on each node
+it will need to add to the sl_event table.</para></listitem>
+<listitem><para>Each remote slon daemon will need to query the sl_log and
 sl_event tables to pull the data to replicate</para>
 </listitem>
 </itemizedlist>

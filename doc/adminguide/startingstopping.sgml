@@ -14,7 +14,7 @@ is responsible for the following tasks
 <listitem><para>Processing events from remote nodes.
 </para></listitem>
 <listitem><para>Applying the updates pulled from a remote database to user 
-tables to the local database.</para></linkitem>
+tables to the local database.</para></listitem>
 <listitem><para>Performing cleanup tasks</para></listitem>
 </itemizedlist>
 
@@ -86,7 +86,7 @@ an example of a simple slon.conf file
 cluster_name=slony_example
 conn_info=host=localhost dbname=pgbench user=pgbench
 </programlisting>
-
+<para>
 You would then set the SLON_CONF environment variable to point at this file
 and start slony.
 <programlisting>
@@ -94,6 +94,7 @@ export SLON_BIN=/usr/local/pgsql8.3/bin/slon
 export SLON_CONF=/etc/slon/slon.conf
 export SLON_LOG=/var/log/slon.log
 /usr/local/pgsql8.3/bin/start_slon.sh start
+</para>
 </sect3>
 
 </sect2>

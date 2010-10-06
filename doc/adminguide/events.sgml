@@ -57,7 +57,7 @@ Confirmation messages are the transfered back to all other nodes in the cluster.
 <title>Event cleanup</title>
 <para>
 The slon cleanupThread will periodically run the
-<xref linkend="function.cleanupevent-interval-boolean"> database
+<xref linkend="function.cleanupevent-p-interval-interval"> database
 function that will delete all but the most recently confirmed event for 
 each origin/receiver pair (because if an event has been confirmed by a 
 receiver then all older events from that origin have also been confirmed
