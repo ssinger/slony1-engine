@@ -1,5 +1,5 @@
 <!-- -->
-<sect1>
+<sect1 id="performance">
 <title>Performance Considerations</title>
 <para>
 &slony1; is a trigger based replication engine.  For each row of 
