@@ -1,6 +1,6 @@
-<article> id="slonikref">
+   <article id="slonikref">
+<sect1>
 <title>Slonik Command Summary</title>
-   <sect1><title>Introduction</title>
     
     <para>
      <application>Slonik</application> is a command line utility designed
@@ -100,7 +100,9 @@
      each will be run individually, in separate transactions, on other
      nodes in the cluster. </para>
 
-<!-- ************************************************************ --></sect3></sect2></sect1></article>
+<!-- ************************************************************ --></sect3></sect2>
+</sect1>
+</article>
 
  <reference id="metacmds">
   <title>Slonik Meta Commands</title>
@@ -213,7 +215,6 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   </refentry>
 
  </reference>  
-  
 <!-- **************************************** -->
 
  <reference id="hdrcmds"> 
