@@ -92,7 +92,7 @@ tables and sequences.</para></glossdef></glossentry>
 <indexterm><primary>script test_slony_state to test replication state</primary></indexterm>
 
 <para> This invaluable script does various sorts of analysis of the
-state of a &slony1; cluster.  &slony1; <xref linkend="bestpractices">
+state of a &slony1; cluster. Some administrators
 recommend running these scripts frequently (hourly seems suitable) to
 find problems as early as possible.  </para>
 
@@ -363,7 +363,7 @@ may have a packaged version of this under some similar name. </para>
 <indexterm><primary>analysis of a SYNC</primary></indexterm>
 
 <para> The following is (as of 2.0) an extract from the &lslon; log for node
-#2 in a run of <quote>test1</quote> from the <xref linkend="testbed">. </para>
+#2 in a run of  <quote>test1</quote> from the regression tests. </para>
 
 <screen>
 DEBUG2 remoteWorkerThread_1: SYNC 19 processing

@@ -48,8 +48,8 @@ nothing prevents one from carefully copying &slony1; components for
 the new version into place to overwrite the old version as
 the <quote>install</quote> step.  That might <emphasis>not</emphasis>
 work on <trademark>Windows</trademark> if it locks library files that
-are in use. It is also important to make sure that any connections
-to the database are restarted after the new binary is installed.
+are in use. It is also important to make sure that any connections 
+to the database are restarted after the new binary is installed. </para>
 
 <variablelist>
 
@@ -183,7 +183,7 @@ may not necessarily be suitable for running &lslonik;. </para>
 linkend="stmtstoretrigger"> configuration on subscriber nodes.
 </para>
 
-<para> As discussed in <xref linkend="triggers">, the handling has
+<para>Trigger handling has
 fundamentally changed between &slony1; 1.2 and 2.0. </para>
 
 <para> Generally speaking, what needs to happen is to query

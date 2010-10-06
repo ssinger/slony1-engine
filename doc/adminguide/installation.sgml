@@ -152,8 +152,7 @@ platforms such as Solaris2.X on SPARC.  A patch for libpq version
 "http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
 http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz
 </ulink> Similar patches may need to be constructed for other
-versions; see the FAQ entry on <link linkend="threadsafety"> thread
-safety </link>. </para>
+versions. </para>
 
 </sect2>
 

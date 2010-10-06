@@ -1,6 +1,6 @@
 <article id="runtime-config">
   <title>Run-time Configuration</title>
-  <indexterm>
+<indexterm>
     <primary>configuration</primary>
     <secondary>of the slon daemon</secondary>
   </indexterm>
@@ -34,6 +34,7 @@
     Some options may be set through the Command-line, these options
     override any conflicting settings in the configuration file.
   </para>
+
 
 
 <sect1 id="slon-config-logging">
@@ -541,7 +542,10 @@
     </varlistentry>
   </variablelist>
 </sect1>
-</article>
+
+</article  
+
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

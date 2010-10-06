@@ -313,7 +313,7 @@ of problems while the subscription is in progress.
 to be in place in order for &slony1; to function.</para>
 </listitem>
 
-<listitem id="superuser"><para> Lowering Authority Usage </para>
+<listitem><para> Lowering Authority Usage </para>
 
 <para> Traditionally, it has been stated that <quote>&slony1; needs to
 use superuser connections.</quote>  It turns out that this is not

@@ -1,14 +1,14 @@
 <article id="slonikref">
 <title>Slonik Command Summary</title>
-   <sect1><title>Introduction</title>
-    
+<abstract>    
     <para>
      <application>Slonik</application> is a command line utility designed
      specifically to setup and modify configurations of the
      &slony1; replication system.
     </para>
+</abstract>
    
-   <sect2 id="outline">
+   <sect1 id="slonikoutline">
     <title>General outline</title>
     
     <para>
@@ -44,7 +44,7 @@
     <para>
      
     </para>
-    <sect3><title>Commands</title>
+    <sect2><title>Commands</title>
      <para>
       The slonik command language is format free. Commands begin with
       keywords and are terminated with a semicolon. Most commands have
@@ -63,12 +63,12 @@
        <listitem><para>boolean values {TRUE|ON|YES} or {FALSE|OFF|NO}</para></listitem>
        <listitem><para>keywords for special cases</para></listitem>
       </itemizedlist>
-     </para></sect3>
-    <sect3><title>Comments</title>
+     </para></sect2>
+    <sect2><title>Comments</title>
      <para>
       Comments begin at a hash sign (#) and extend to the end of the line.
-     </para></sect3>
-    <sect3><title>Command groups</title>
+     </para>
+    <sect2><title>Command groups</title>
      <para>
       Commands can be combined into groups of commands with optional
       <command>on error</command> and <command>on success</command> conditionals.
@@ -100,7 +100,9 @@
      each will be run individually, in separate transactions, on other
      nodes in the cluster. </para>
 
-<!-- ************************************************************ --></sect3></sect2></sect1></article>
+<!-- ************************************************************ -->
+</sect1>
+</article>
 
  <reference id="metacmds">
   <title>Slonik Meta Commands</title>
@@ -213,7 +215,6 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   </refentry>
 
  </reference>  
-  
 <!-- **************************************** -->
 
  <reference id="hdrcmds"> 
@@ -330,8 +331,6 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     </para>
    </note>
 
-   <para> For more details on the distinction between this and <xref
-   linkend="stmtstorepath">, see &rplainpaths;.</para>
 
    </Refsect1>
    <Refsect1><Title>Example</Title>
@@ -2147,7 +2146,7 @@ UNSUBSCRIBE SET (
     transaction to the same database itself since this would result in
     blocking itself forever.</para>
 
-    <para> Note that this is a &rlocking; operation, which means that
+    <para> Note that this is a locking operation, which means that
     it can get stuck behind other database activity.</para>
 
     <para> The operation waits for transaction IDs to advance in order
@@ -2286,7 +2285,7 @@ UNLOCK SET (
      function a <command>LOCK SET</command> is needed.
 </para>
      
-    <para> Note that this is a &rlocking; operation, which means that
+    <para> Note that this is a locking operation, which means that
     it can get stuck behind other database activity.
      
      <variablelist>
@@ -2496,7 +2495,7 @@ FAILOVER (
     
     <para> See also the warnings in &rddlchanges;.</para>
 
-    <para> Note that this is a potentially heavily-&rlocking;
+    <para> Note that this is a potentially heavily-locking
     operation, which means that it can get stuck behind other database
     activity.</para>
   

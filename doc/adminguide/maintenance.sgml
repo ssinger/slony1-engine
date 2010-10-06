@@ -144,36 +144,6 @@ thereby your whole day.</para>
 
 </sect2>
 
-<sect2 id="gensync"><title>Parallel to Watchdog: generate_syncs.sh</title>
-
-<indexterm><primary>generate SYNCs</primary></indexterm>
-<para>A new script for &slony1; 1.1 is
-<application>generate_syncs.sh</application>, which addresses the following kind of
-situation.</para>
-
-<para>Supposing you have some possibly-flakey server where the
-<application>slon</application> daemon that might not run all the time, you might
-return from a weekend away only to discover the following situation.</para>
-
-<para>On Friday night, something went <quote>bump</quote> and while the
-database came back up, none of the <application>slon</application> daemons
-survived.  Your online application then saw nearly three days worth of
-reasonably heavy transaction load.</para>
-
-<para>When you restart <application>slon</application> on Monday, it
-hasn't done a SYNC on the master since Friday, so that the next
-<quote>SYNC set</quote> comprises all of the updates between Friday
-and Monday.  Yuck.</para>
-
-<para>If you run <application>generate_syncs.sh</application> as a cron job every
-20 minutes, it will force in a periodic <command>SYNC</command> on the origin, which
-means that between Friday and Monday, the numerous updates are split
-into more than 100 syncs, which can be applied incrementally, making
-the cleanup a lot less unpleasant.</para>
-
-<para>Note that if <command>SYNC</command>s <emphasis>are</emphasis> running
-regularly, this script won't bother doing anything.</para>
-</sect2>
 
 <sect2><title>Testing &slony1; State </title>
 

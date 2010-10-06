@@ -9,7 +9,8 @@ same token, prevent the Gentle User from using that sort of
 replication scheme, and then replicating the underlying
 tables. </para>
 
-<para> One of the tests in the <xref linkend="testbed">, called
+
+<para> One of the tests in the regression tests called
 <filename>testinherit</filename>, tests that &slony1; behaves as
 expected to replicate data across partitions.  This test creates a
 master <envar>sales_data</envar> table, from which various children

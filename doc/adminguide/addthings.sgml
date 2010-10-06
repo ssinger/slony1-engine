@@ -95,6 +95,7 @@ exposed by MVCC it is important that no other transactions are altering
 the tables being used by the ddl script while it is running</para></listitem>
 
 </itemizedlist>
+</sect2>
 
 <sect2><title> How to remove replication for a node</title>
 
@@ -146,7 +147,6 @@ make the required changes to the table</para></listitem>
 brand new, fresh node, or if you had previously dropped a node and are
 recreating it. In either case, you are adding a node to
 replication. </para>
-</sect2>
 
 <sect2>
 <title>Adding a Replication Node</title>
@@ -249,7 +249,6 @@ nodes 1 and nodes 3 had been defined.
 <sect2><title> How do I use <link linkend="logshipping">Log Shipping?</link> </title> 
 
 <para> Discussed in the <link linkend="logshipping"> Log Shipping </link> section... </para>
-</sect2>
 
 <sect2><title> How To Remove Replication For a Node</title>
 
@@ -284,6 +283,9 @@ are using.
 
 
 <sect2><title>Changing a Nodes Provider</title>
+
+
+<indexterm><primary>reshaping subscriptions</primary></indexterm>
 
 <para> For instance, you might want subscriber node 3 to draw data from node
 1, when it is presently drawing data from node 2. </para>
@@ -342,7 +344,7 @@ activities on these tables can result in a deadlock.
 </para>
 
 </sect2>
-</sect1>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml
