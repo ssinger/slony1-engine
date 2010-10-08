@@ -1,5 +1,4 @@
 #!@@PERL@@
-// 
 # Author: Devrim GÜNDÜZ <devrim@gunduz.org>
 # Copyright 2009 Slony-I Global Development Group
 
