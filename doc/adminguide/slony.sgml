@@ -106,6 +106,7 @@
     &slonyupgrade;
     &loganalysis;
     &performance;
+    &locking;
     &security;
 </chapter>
 
