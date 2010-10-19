@@ -70,9 +70,9 @@ tables.
 When &slony1; is first enabled it will log the data to replicate to the
 sl_log_1 table.  After a while it will stop logging to sl_log_1 and switch
 to logging on sl_log_2.  When all of rows in  in sl_log_1 have been replicated
-&slony1; will TRUNCATE the sl_log_1 table, stop logging to sl_log_2 and
-switch back to logging to the newly truncated sl_log_1 table.  This process 
-will be periodically repeated as &slony1; runs.
+&slony1; will TRUNCATE the sl_log_1 table (to clear out the dead tuples),
+stop logging to sl_log_2 and switch back to logging to the newly truncated 
+sl_log_1 table.  This process will be periodically repeated as &slony1; runs.
 </para>
 
 </sect2>
