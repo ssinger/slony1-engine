@@ -90,6 +90,20 @@ taking out a <envar>ShareUpdateExclusiveLock</envar> lock.  This may
 block the other events for an unpredictable period of time.</para>
 </listitem>
 
+<listitem>
+<para> Each time an event is generated (including SYNC events) &slony1;
+obtains an exclusive lock on the sl_event table long enough to insert
+the event into sl_event.  This is not normally an issue as &slony1; 
+should be the only program using sl_event.   However this means that
+any non-slony transactions that read from sl_event can cause replication
+to pause.   If you pg_dump your database  avoid dumping 
+your Slony schemas or else pg_dump's locking will compete with Slony's own
+locking which could stop Slony replication for the duration of the
+pg_dump.  Exclude the Slony schemas from pg_dump with
+--exclude-schema=schemaname to specifically exclude your Slony schema.
+
+</para>
+
 </itemizedlist>
 
 <para> Each of these actions requires, at some point, modifying each
