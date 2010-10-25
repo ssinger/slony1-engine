@@ -885,9 +885,21 @@ SlonWatchdog(void)
 		while ((pid = wait(&child_status)) != slon_worker_pid)
 		{
 			if (pid < 0 && errno == EINTR)
-				continue;
+				continue;			
 
-			slon_log(SLON_CONFIG, "slon: child terminated status: %d; pid: %d, current worker pid: %d\n", child_status, pid, slon_worker_pid);
+			slon_log(SLON_CONFIG, "slon: child terminated status: %d; pid: %d, current worker pid: %d errno: %d\n", child_status, pid, slon_worker_pid,errno);
+		
+			if(pid < 0 )
+			{
+				/**
+				 * if errno is not EINTR and pid<0 we have
+				 * a problem.
+				 * looping on wait() isn't a good idea.
+				 */
+				slon_log(SLON_FATAL,"slon: wait returned an error pid:%d errno:%d\n",
+						 pid,errno);
+				exit(-1);
+			}
 		}
 		if( WIFSIGNALED(child_status) ) 
 		{
