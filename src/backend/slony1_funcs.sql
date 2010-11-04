@@ -5702,7 +5702,11 @@ $$ language plpgsql;
 
 comment on function @NAMESPACE@.add_empty_table_to_replication(int4, int4, text, text, text, text) is
 'Verify that a table is empty, and add it to replication.  
-tab_idxname is optional - if NULL, then we use the primary key.';
+tab_idxname is optional - if NULL, then we use the primary key.
+
+Note that this function is to be run within an EXECUTE SCRIPT script,
+so it runs at the right place in the transaction stream on all
+nodes.';
 
 -- -------------------------------------------------------------------------
 -- FUNCTION replicate_partition (tab_id, tab_nspname, tab_tabname,
@@ -5743,7 +5747,11 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.replicate_partition(int4, text, text, text, text) is
 'Add a partition table to replication.
 tab_idxname is optional - if NULL, then we use the primary key.
-This function looks up replication configuration via the parent table.';
+This function looks up replication configuration via the parent table.
+
+Note that this function is to be run within an EXECUTE SCRIPT script,
+so it runs at the right place in the transaction stream on all
+nodes.';
 
 
 -- -------------------------------------------------------------------------
