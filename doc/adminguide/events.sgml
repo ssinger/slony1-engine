@@ -62,12 +62,17 @@ function that will delete all but the most recently confirmed event for
 each origin/receiver pair (because if an event has been confirmed by a 
 receiver then all older events from that origin have also been confirmed
 by the receiver).   Then the function will delete any SYNC events that are
-older than the oldest row left in sl_confirm (for each origin).
-The sl_log_1 or sl_log_2 entries for SYNC events that have been deleted
-also get removed.  &slony1 will then switch between sl_log_1 and sl_log_2
-as the table it inserts new data into.  When all the entries in sl_log_1 
-(or sl_log_2) have been processed then the table gets truncated so
-it can be used again.
+older than the oldest row left in sl_confirm (for each origin). The data 
+for these deleted events will also be removed from the sl_log_1 and sl_log_2
+tables.
+</para>
+<para>
+When &slony1; is first enabled it will log the data to replicate to the
+sl_log_1 table.  After a while it will stop logging to sl_log_1 and switch
+to logging on sl_log_2.  When all of rows in  in sl_log_1 have been replicated
+&slony1; will TRUNCATE the sl_log_1 table (to clear out the dead tuples), 
+stop logging to sl_log_2 and switch back to logging to the newly truncated 
+sl_log_1 table.  This process will be periodically repeated as &slony1; runs.
 </para>
 
 </sect2>

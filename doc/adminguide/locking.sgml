@@ -49,21 +49,9 @@ tables.  </para></listitem>
 given replication set on the origin node.</para>
 </listitem>
 
-<listitem><para><link linkend="stmtddlscript"> <command>execute
-script</command> </link> </para>
-
-<para>As of version 2.0 execute script does not explicitly lock
-tables (other than the locks required by &postgres; to execute the SQL
-in your script).  This was not true in earlier versions of &slony1; </para>
-</listitem>
 
 <listitem><para> During the <command>SUBSCRIBE_SET</command> event on
-a new subscriber </para>
-
-<para> In a sense, this is the least provocative scenario, since,
-before the replication set has been populated, it is pretty reasonable
-to say that the node is <quote>unusable</quote> and that &slony1;
-could reasonably demand exclusive access to the node. </para>
+a new subscriber. </para>
 
 <para> <emphasis>all</emphasis> tables in the replication set will be locked
 via an exclusive lock for the entire duration of the process of
@@ -78,20 +66,31 @@ applied on the provider or on the origin. </para>
 
 </listitem>
 
+<listitem>
+<para> Each time an event is generated (including SYNC events) &slony1;
+obtains an exclusive lock on the sl_event table long enough to insert
+the event into sl_event.  This is not normally an issue as &slony1; 
+should be the only program using sl_event.   However this means that
+any non-slony transactions that read from sl_event can cause replication
+to pause.   If you pg_dump your database  avoid dumping 
+your Slony schemas or else pg_dump's locking will compete with Slony's own
+locking which could stop Slony replication for the duration of the
+pg_dump.  Exclude the Slony schemas from pg_dump with
+--exclude-schema=schemaname to specifically exclude your Slony schema.
+
+</para>
 
 </itemizedlist>
 
-<para> Each of these actions requires, at some point, modifying each
-of the tables in the affected replication set, which requires
-acquiring an exclusive lock on the table.  Some users that have tried
-running these operations on &slony1; nodes that were actively
-servicing applications have experienced difficulties with deadlocks
-and/or with the operations hanging up. </para>
+<para>
+When &slony1; locks a table that a running application later tries
+to access the application will be blocked waiting for the lock.  It is
+also possible for a running application to create a deadlock situation
+with &slony1; when they each have obtained locks that the other is 
+waiting for.
+</para>
 
-<para> The obvious question: <quote>What to do about such
-deadlocks?</quote> </para>
-
-<para> Several possibilities admit themselves: </para>
+<para> Several possible solutions to this are: </para>
 
 <itemizedlist>
 
@@ -128,7 +127,7 @@ period where things were running slowly.  </para></listitem>
 <itemizedlist>
 
 <listitem><para> Modify <filename>pg_hba.conf</filename> so that only
-the <link linkend="slonyuser"> <command>slony</command> user </link>
+the  <command>slony</command> user 
 will have access to the database. </para> </listitem>
 
 <listitem><para> Issue a <command>kill -SIGHUP</command> to the
@@ -161,19 +160,7 @@ it reload the security configuration. </para> </listitem>
 </para>
 </listitem>
 
-<listitem><para> The section  &rddlchanges; suggests some additional
-techniques that may be useful, such as moving tables between
-replication sets in such a way that you minimize the set of tables
-that need to be locked. </para></listitem>
-
 </itemizedlist>
-
-<para> Regrettably, there is no perfect answer to this.  If it is
-<emphasis>necessary</emphasis> to submit a <xref
-linkend="stmtmoveset"> request, then it is presumably
-<emphasis>necessary</emphasis> to accept the brief application outage.
-As &slony1;/<link linkend="pgpool"> pgpool </link> linkages improve,
-that may become a better way to handle this.</para>
 
 </sect1>
 <!-- Keep this comment at the end of the file
