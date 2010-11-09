@@ -16,7 +16,6 @@
 <!entity listenpaths        SYSTEM "listenpaths.sgml">
 <!entity plainpaths         SYSTEM "plainpaths.sgml">
 <!entity addthings          SYSTEM "addthings.sgml">
-<!entity dropthings         SYSTEM "dropthings.sgml">
 <!entity ddlchanges         SYSTEM "ddlchanges.sgml">
 <!entity firstdb            SYSTEM "firstdb.sgml">
 <!entity help               SYSTEM "help.sgml">
