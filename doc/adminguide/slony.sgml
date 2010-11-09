@@ -121,10 +121,8 @@
 <chapter id="thingsleftout">
   <title>Things Left Out Of Other Parts</title>
     &installation;
-    &testbed;
     &defineset;
     &maintenance;
-    &usingslonik;
     &dropthings;
     &plainpaths;
 
@@ -134,6 +132,8 @@
     &faq;
     &supportedplatforms;
     &releasechecklist;
+    &testbed;
+    &usingslonik;
     &help;
 </chapter>
 
