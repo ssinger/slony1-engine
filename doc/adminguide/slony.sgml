@@ -121,7 +121,6 @@
 <chapter id="thingsleftout">
   <title>Things Left Out Of Other Parts</title>
     &installation;
-    &defineset;
     &maintenance;
     &dropthings;
     &plainpaths;
