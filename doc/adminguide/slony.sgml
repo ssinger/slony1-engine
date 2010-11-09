@@ -106,6 +106,7 @@
     &slonyupgrade;
     &loganalysis;
     &performance;
+    &triggers;
     &locking;
     &security;
 </chapter>
@@ -119,10 +120,8 @@
 
 <chapter id="thingsleftout">
   <title>Things Left Out Of Other Parts</title>
-    &bestpractices;
     &installation;
     &testbed;
-    &triggers;
     &defineset;
     &maintenance;
     &usingslonik;
