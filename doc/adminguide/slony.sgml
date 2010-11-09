@@ -118,7 +118,7 @@
         &slonikref;
 
 <chapter id="thingsleftout">
-  <title/Things Left Out Of Other Parts/
+  <title>Things Left Out Of Other Parts</title>
     &bestpractices;
     &installation;
     &testbed;

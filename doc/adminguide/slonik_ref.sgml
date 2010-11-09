@@ -2962,8 +2962,6 @@ REPAIR CONFIG (
     <para> This command was introduced in &slony1; 2.0. </para>
    </refsect1>
   </Refentry>
-
-
  </reference>
 <!-- Keep this comment at the end of the file
 Local variables:
