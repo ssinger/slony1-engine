@@ -138,6 +138,33 @@ superuser, and must be accessible to the <quote>weak user.</quote>
 
 </itemizedlist></sect2>
 
+<sect2>
+<title>Handling Database Authentication (Passwords)</title>
+<para>
+The slon and slonik programs connect to &postgres; as a normal &postgres;
+client connection.  How &postgres authenticates the database connection
+is controlled through the normal libpq authentication options via the
+pg_hba.conf file.  See the &postgres; manual for full details. 
+If you choose to require password authentication for &slony1; connections
+then you have two options on where slon can obtain the passwords from.
+<itemizedlist>
+<listitem><para>You can store the passwords as part of the conninfo string
+passed to the <xref linkend="stmtstorepath" > statement.  This means
+that database passwords are stored inside of the database in cleartext.
+</para></listitem>
+
+<listitem><para>You can setup a .pgpass file on each node you are running
+slon on.  slon will then retreive the passwords from the .pgpass file.
+You must make sure that each node running slon have passwords for all
+paths.
+</para></listitem>
+
+</itemizedlist>
+
+
+</para>
+
+</sect2>
 <sect2> <title> Other Good Security Practices </title>
 
 <para> In order to be able to clearly identify which logical roles are
