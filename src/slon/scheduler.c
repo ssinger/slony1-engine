@@ -576,9 +576,12 @@ sched_mainloop(void * dummy)
 		conn = sched_waitqueue_head;
 		while (rc > 0 && conn)
 		{
+			int fd_check = PQsocket(conn->dbconn);
 			if (conn->condition & SCHED_WAIT_SOCK_READ)
 			{
-				if (FD_ISSET(PQsocket(conn->dbconn), &rfds))
+
+				
+				if (fd_check >= 0 && FD_ISSET(fd_check, &rfds))
 				{
 					next = conn->next;
 
@@ -603,7 +606,7 @@ sched_mainloop(void * dummy)
 			}
 			if (conn->condition & SCHED_WAIT_SOCK_WRITE)
 			{
-				if (FD_ISSET(PQsocket(conn->dbconn), &wfds))
+				if (fd_check >= 0 && FD_ISSET(fd_check, &wfds))
 				{
 					next = conn->next;
 
@@ -703,16 +706,19 @@ sched_add_fdset(int fd, fd_set * fds)
 static void
 sched_remove_fdset(int fd, fd_set * fds)
 {
-	FD_CLR(fd, fds);
-	if (sched_numfd == (fd + 1))
+	if(fd >= 0)
 	{
-		while (sched_numfd > 0)
+		FD_CLR(fd, fds);
+		if (sched_numfd == (fd + 1))
 		{
-			if (FD_ISSET(sched_numfd - 1, &sched_fdset_read))
-				break;
-			if (FD_ISSET(sched_numfd - 1, &sched_fdset_write))
-				break;
-			sched_numfd--;
+			while (sched_numfd > 0)
+			{
+				if (FD_ISSET(sched_numfd - 1, &sched_fdset_read))
+					break;
+				if (FD_ISSET(sched_numfd - 1, &sched_fdset_write))
+					break;
+				sched_numfd--;
+			}
 		}
 	}
 }
