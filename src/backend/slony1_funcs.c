@@ -1267,7 +1267,13 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 			lappend(lappend(NIL, makeString("pg_catalog")),
 					makeString("txid_snapshot"));
 
+#ifdef HAVE_TYPENAMETYPEID_3
 		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname, NULL);
+#elif HAVE_TYPENAMETYPEID_2
+		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname);
+#elif HAVE_TYPENAMETYPEID_1
+		txid_snapshot_typid = typenameTypeId(txid_snapshot_typname);
+#endif
 
 		/*
 		 * Create the saved plan. We lock the sl_event table in exclusive mode

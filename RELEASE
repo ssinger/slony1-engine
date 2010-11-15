@@ -298,3 +298,10 @@ Specific bugs addressed:
 
 -Fix for bug #154, Updated sl_table on slaves following an EXECUTE SCRIPT
 
+RELEASE 2.0.6
+
+-Fix for bug #158, Removing extranous '//' from the perl script.
+
+-Fix for bug #155, slon can segfault while shutting down.
+
+-Fix for bug #162, typenameTypeId() changes signatures in 9.1
