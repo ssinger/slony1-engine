@@ -83,11 +83,12 @@ the applications that use this data.</para>
 
 <para> Managers paying bills are likely to be reluctant to let the
 machines at the secondary site merely be <quote>backups;</quote> they
-would doubtless prefer for them to be useful, and that can certainly
-be the case.  If the primary site is being used for
-<quote>transactional activities,</quote> the replicas at the secondary
-site may be used for running time-oriented reports that do not require
-up-to-the second data.</para></listitem>
+would doubtless prefer for them to be useful, and there surely should
+be an ability to get some utility from them.  For instance, if the
+primary site is being used for <quote>transactional
+activities,</quote> the replicas at the secondary site may be used for
+running timing-oriented reports that do not require up-to-the second
+data.</para></listitem>
 
 <listitem><para> The symmetry of the configuration means that if you
 had <emphasis>two</emphasis> transactional applications needing
@@ -99,10 +100,13 @@ site.</para></listitem>
 
 </itemizedlist>
 
-<para></para> 
-
-<para> There is also room for discussion of SSH tunnelling
-here...</para>
+<para> We will briefly discuss the use of SSH tunnelling:
+<itemizedlist>
+<listitem><para> SSH tunnels may be configured via the <option>w</option> option.</para></listitem>
+<listitem><para> This enables  forwarding &postgres; traffic where a local port is forwarded across a connection, encrypted and compressed, using <application>SSH</application>.</para></listitem>
+<listitem><para> If connecting across a WAN connection, it is likely to be beneficial to ensure compression is enabled, since &slony1; replication traffic may be expected to be quite redundant and highly compressible.</para></listitem>
+</itemizedlist></para>
+<para> See documentation for <application>ssh</application> for details on how to configure and use SSH tunnels.</para>
 
 </sect1>
 <!-- Keep this comment at the end of the file
