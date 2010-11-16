@@ -57,9 +57,6 @@ end;$$ language plpgsql;
 comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
 'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
-
-
-
 create or replace function @NAMESPACE@.TruncateOnlyTable ( name) returns void as
 $$
 begin
@@ -71,3 +68,43 @@ LANGUAGE plpgsql;
 
 comment on function @NAMESPACE@.TruncateOnlyTable(name) is
 'Calls TRUNCATE with out specifying ONLY, syntax supported in version 8.3';
+
+create or replace function @NAMESPACE@.addTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
+begin
+		return 0;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.addtruncatetrigger (i_fqtable text, i_tabid integer) is 
+'function to add TRUNCATE TRIGGER';
+
+create or replace function @NAMESPACE@.replica_truncate_trigger(i_fqname text) returns integer as $$
+begin
+		return 0;
+end $$ language plpgsql;
+
+comment on function @NAMESPACE@.replica_truncate_trigger(i_fqname text) is
+'enable deny access, disable log trigger on origin.  
+
+NOOP on PostgreSQL 8.3 because it does not support triggers ON TRUNCATE';
+
+create or replace function @NAMESPACE@.origin_truncate_trigger(i_fqname text) returns integer as $$
+begin
+		return 0;
+end $$ language plpgsql;
+
+comment on function @NAMESPACE@.origin_truncate_trigger(i_fqname text) is
+'disable deny access, enable log trigger on origin.  
+
+NOOP on PostgreSQL 8.3 because it does not support triggers ON TRUNCATE';
+
+create or replace function @NAMESPACE@.add_truncate_triggers () returns integer as $$
+begin
+		raise warning 'This node is running PostgreSQL 8.3 - cannot apply TRUNCATE triggers';
+		return 0;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.add_truncate_triggers () is 
+'Add ON TRUNCATE triggers to replicated tables.  Not supported on PG 8.3, so a NOOP in this case.';
+

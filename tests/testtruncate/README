@@ -1,0 +1,3 @@
+testtruncate is a test that TRUNCATE triggers function.
+  
+It uses the tests from test1 as its basis, adding a TRUNCATE against table #4.
