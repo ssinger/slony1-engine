@@ -131,6 +131,103 @@ table.  </para> </listitem>
 
 </itemizedlist>
 
+<sect2> <title><command>TRUNCATE</command> in &postgres; 8.4+</title>
+
+<para> In &postgres; 8.4, triggers were augmented to support the
+<command>TRUNCATE</command> event.  Thus, one may create a trigger
+which runs when one requests <command>TRUNCATE</command> on a table, as
+follows:
+
+<screen>
+create trigger "_@CLUSTERNAME@_truncatetrigger" 
+   before truncate on my_table 
+   for each statement 
+     execute procedure @NAMESPACE@.log_truncate(22);
+</screen></para>
+
+<para> &slony1; supports this on nodes running &postgres; 8.4 and
+above, as follows:
+
+<itemizedlist>
+
+<listitem><para> Tables have an additional two triggers attached to them:
+<itemizedlist>
+<listitem><para> <function>log_truncate(tab_id)</function></para> 
+
+<para> Running on the origin, this captures
+<command>TRUNCATE</command> requests, and stores them in &sllog1; and
+&sllog2; so that they are applied at the appropriate point on
+subscriber nodes.</para></listitem>
+
+<listitem><para> <function>truncate_deny()</function></para>
+
+<para> Running on subscriber nodes, this forbids running
+<command>TRUNCATE</command> directly against replicated tables on
+these nodes, in much the same way <function>denyAccess()</function>
+forbids running <command>INSERT/UPDATE/DELETE</command> directly
+against replicated tables.</para></listitem>
+
+</itemizedlist></para></listitem>
+
+<listitem><para> For each table, the command <command>TRUNCATE TABLE
+ONLY my_schema.my_table CASCADE;</command> is submitted.</para>
+
+<para> Various options were considered (see <ulink
+url="http://www.slony.info/bugzilla/show_bug.cgi?id=134"> Bugzilla Bug
+#134 </ulink>), after which <command>CASCADE</command> was concluded
+to be the appropriate answer.
+
+<warning><para> If you have a subscriber node where additional tables
+have gotten attached via foreign keys to a replicated table, then
+running <command>TRUNCATE</command> against that parent table will
+also <command>TRUNCATE</command> <emphasis>all the
+children.</emphasis></para>
+
+<para> Of course, it should be observed that this was a
+<emphasis>terribly dangerous</emphasis> thing to have done because
+deleting data from the parent table would already either:
+
+<itemizedlist>
+
+<listitem><para> Lead to deleting data from the child tables, this meaning the addition of <command>TRUNCATE</command> support is really no change at all;</para></listitem>
+
+<listitem><para> Lead to foreign keys being broken on the subscriber, causing replication to keel over.</para></listitem>
+</itemizedlist></para>
+
+<para> (In effect, we're not really worsening things.)</para></warning></para></listitem>
+
+<listitem><para> Note that if a request truncates several tables
+(<emphasis>e.g.</emphasis> - as where a table has a hierachy of
+children), then a request will be logged in &sllog1;/&sllog2; for each
+table, and the <command>TRUNCATE CASCADE</command> will
+<emphasis>effectively</emphasis> mean that the child tables will be
+truncated, first indirectly, then directly.  If there is a hierarchy
+of 3 tables, <envar>t1</envar>, <envar>t2</envar>, and
+<envar>t3</envar>, then <envar>t3</envar> will get truncated three
+times.  It's empty after the first <command>TRUNCATE</command>, so
+additional iterations will be cheap.</para></listitem>
+
+<listitem><para> If mixing &postgres; 8.3 and higher versions within a
+cluster:
+<itemizedlist>
+
+<listitem><para> &postgres; 8.3 nodes will not capture
+<command>TRUNCATE</command> requests, neither to log the need to
+propagate the TRUNCATE, nor to prevent it, on either origin or
+replica.</para></listitem>
+
+<listitem><para> &postgres; 8.4 nodes <emphasis>do</emphasis> capture
+<command>TRUNCATE</command> requests for both
+purposes.</para></listitem>
+
+<listitem><para> If a &postgres; 8.4+ node captures a
+<command>TRUNCATE</command> request, it will apply fine against a
+subscriber running &postgres; 8.3.</para></listitem>
+
+</itemizedlist></para></listitem>
+
+</itemizedlist></para></sect2>
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

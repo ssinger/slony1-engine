@@ -1423,8 +1423,8 @@ SET ADD TABLE (
    <refsect1> <title> Locking Behaviour </title>
 
     <para> On the origin node, this operation requires a brief
-    exclusive lock on the table in order to alter it to add the
-    replication trigger.  On subscriber nodes, corresponding locking
+    exclusive lock on the table in order to alter it to add 
+    replication triggers.  On subscriber nodes, corresponding locking
     takes place at the time of the <command>SUBSCRIBE_SET</command>
     event.  </para>
    </refsect1>
