@@ -151,6 +151,115 @@ things as adding and removing nodes, modifying communications paths,
 adding or removing subscriptions.
 </para>
 </sect2>
+
+
+<sect2 id="plainpaths"><title> &slony1; Path Communications</title>
+
+<indexterm><primary>communication paths</primary></indexterm>
+
+<para> &slony1; uses &postgres; DSNs in three contexts to establish
+access to databases:
+
+<itemizedlist>
+
+<listitem><para> <xref linkend="admconninfo"> - controlling how a
+<xref linkend="slonik"> script accesses the various nodes.</para>
+
+<para> These connections are the ones that go from your
+<quote>administrative workstation</quote> to all of the nodes in a &slony1;
+cluster.</para>
+
+<para> It is <emphasis>vital</emphasis> that you have connections from the
+central location where you run <xref linkend="slonik"> 
+to each and every node in the network.  These connections are only
+used briefly, to submit the few <acronym>SQL</acronym> requests required to
+control the administration of the cluster.</para>
+
+<para> Since these communications paths are only used briefly, it may
+be quite reasonable to <quote>hack together</quote> temporary
+connections using SSH tunnelling.</para></listitem>
+
+<listitem><para> The &lslon; DSN parameter. </para>
+
+<para> The DSN parameter passed to each &lslon; indicates what network
+path should be used to get from the &lslon; process to the database
+that it manages.</para> </listitem>
+
+<listitem><para> <xref linkend="stmtstorepath"> - controlling how
+&lslon; daemons communicate with remote nodes.  These paths are stored
+in <xref linkend="table.sl-path">.</para>
+
+<para> You forcibly <emphasis>need</emphasis> to have a path between
+each subscriber node and its provider; other paths are optional, and
+will not be used unless a listen path in <xref
+linkend="table.sl-listen">. is needed that uses that particular
+path.</para></listitem>
+
+</itemizedlist></para>
+
+<para> The distinctions and possible complexities of paths are not
+normally an issue for people with simple networks where all the hosts
+can see one another via a comparatively <quote>global</quote> set of
+network addresses.  In contrast, it matters rather a lot for those
+with complex firewall configurations, nodes at multiple locations, and
+the issue where nodes may not be able to all talk to one another via a
+uniform set of network addresses.</para>
+
+<para> Consider the attached diagram, which describes a set of six
+nodes
+
+<inlinemediaobject> <imageobject> <imagedata fileref="complexenv.png">
+</imageobject> <textobject> <phrase> Symmetric Multisites </phrase>
+</textobject> </inlinemediaobject></para>
+
+<itemizedlist>
+
+<listitem><para> DB1 and DB2 are databases residing in a secure
+<quote>database layer,</quote> firewalled against outside access
+except from specifically controlled locations.</para>
+
+<para> Let's suppose that DB1 is the origin node for the replication
+system.</para></listitem>
+
+<listitem><para> DB3 resides in a <quote>DMZ</quote> at the same site;
+it is intended to be used as a &slony1; <quote>provider</quote> for
+remote locations.</para></listitem>
+<listitem><para> DB4 is a counterpart to DB3 in a <quote>DMZ</quote>
+at a secondary/failover site.  Its job, in the present configuration,
+is to <quote>feed</quote> servers in the secure database layers at the
+secondary site.</para></listitem>
+<listitem><para> DB5 and DB6 are counterparts to DB1 and DB2, but
+are, at present, configured as subscribers.</para>
+
+<para> Supposing disaster were to strike at the <quote>primary</quote>
+site, the secondary site would be well-equipped to take over servicing
+the applications that use this data.</para>
+
+<listitem><para> The symmetry of the configuration means that if you
+had <emphasis>two</emphasis> transactional applications needing
+protection from failure, it would be straightforward to have
+additional replication sets so that each site is normally
+<quote>primary</quote> for one application, and where destruction of
+one site could be addressed by consolidating services at the remaining
+site.</para></listitem>
+
+</itemizedlist>
+
+<sect2><title>SSH tunnelling</title>
+<para>
+If a direct connection to &postgres; can not be established because of a 
+firewall then you can establish an ssh tunnel that &slony1; can operate
+over. </para>
+
+<para>
+SSH tunnels can be configured by passing the <option>w</option> to SSH.
+This enables  forwarding &postgres; traffic where a local port is forwarded 
+across a connection, encrypted and compressed, using 
+<application>SSH</application></para>
+
+<para> See the  <application>ssh</application> documentation for details on how to configure and use SSH tunnels.</para>
+</sect2>
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
