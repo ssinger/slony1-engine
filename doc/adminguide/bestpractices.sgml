@@ -61,25 +61,6 @@ subscription didn't work at a first attempt, submitting the request
 again <emphasis>won't</emphasis> help make it happen. </para>
 </listitem>
 
-<listitem>
-<para> Principle: Use an unambiguous, stable time zone such
-as UTC or GMT.</para>
-
-<para> Users have run into problems with &lslon; functioning properly
-when their system uses a time zone that &postgres; was unable to
-recognize such as CUT0 or WST.  It is necessary that you use a
-timezone that &postgres; can recognize correctly.  It is furthermore
-preferable to use a time zone where times do not shift around due to
-Daylight Savings Time. </para>
-
-<para> The <quote>geographically unbiased</quote> choice seems to be
-<command><envar>TZ</envar>=UTC</command> or
-<command><envar>TZ</envar>=GMT</command>, and to make sure that
-systems are <quote>in sync</quote> by using NTP to synchronize clocks
-throughout the environment. </para>
-
-<para> See also <xref linkend="times">.</para>
-</listitem>
 
 <listitem>
 <para> Principle: Long running transactions are Evil </para>
@@ -107,30 +88,6 @@ two log tables, &sllog1; and &sllog2;, preventing unbounded growth of
 dead space there.  </para></listitem>
 </itemizedlist>
 
-</listitem>
-
-<listitem>
-<para> <link linkend="Failover"> Failover </link> policies
-should be planned for ahead of time.  </para>
-
-<para> Most pointedly, any node that is expected to be a failover
-target must have its subscription(s) set up with the option
-<command>FORWARD = YES</command>.  Otherwise, that node is not a
-candidate for being promoted to origin node. </para>
-
-<para> This may simply involve thinking about what the priority lists
-should be of what should fail to what, as opposed to trying to
-automate it.  But knowing what to do ahead of time cuts down on the
-number of mistakes made.</para>
-
-<para> At Afilias, a variety of internal <citation>The 3AM Unhappy
-DBA's Guide to...</citation> guides have been created to provide
-checklists of what to do when certain <quote>unhappy</quote> events
-take place.  This sort of material is highly specific to the
-environment and the set of applications running there, so you would
-need to generate your own such documents.  This is one of the vital
-components of any disaster recovery preparations.
-</para>
 </listitem>
 
 <listitem><para> <xref linkend="stmtmoveset"> should be used to allow
@@ -162,26 +119,6 @@ servicing. </para>
 
 <para> In practice, strewing &lslon; processes and configuration
 across a dozen servers turns out to be inconvenient to manage.</para>
-</listitem>
-
-<listitem><para> &lslon; processes should run in the same
-<quote>network context</quote> as the node that each is responsible
-for managing so that the connection to that node is a
-<quote>local</quote> one.  Do <emphasis>not</emphasis> run such links
-across a WAN.  Thus, if you have nodes in London and nodes in New
-York, the &lslon;s managing London nodes should run in London, and the
-&lslon;s managing New York nodes should run in New York.</para>
-
-<para> A WAN outage (or flakiness of the WAN in general) can leave
-database connections <quote>zombied</quote>, and typical TCP/IP
-behaviour <link linkend="multipleslonconnections"> will allow those
-connections to persist, preventing a slon restart for around two
-hours. </link> </para>
-
-<para> It is not difficult to remedy this; you need only <command>kill
-SIGINT</command> the offending backend connection.  But by running the
-&lslon; locally, you will generally not be vulnerable to this
-condition. </para>
 </listitem>
 
 <listitem><para> Before getting too excited about having fallen into
@@ -277,88 +214,6 @@ linkend="stmtddlscript"> <command>execute script</command> is provided
 which will apply DDL changes at the same location in the transaction
 stream on all servers.  </link> </para>
 
-</listitem>
-
-
-<listitem id="slonyuser"> <para> &slony1;-specific user names. </para>
-
-<para> It has proven useful to define a <command>slony</command> user
-for use by &slony1;, as distinct from a generic
-<command>postgres</command> or <command>pgsql</command> user.  </para>
-
-<para> If all sorts of automatic <quote>maintenance</quote>
-activities, such as <command>vacuum</command>ing and performing
-backups, are performed under the <quote>ownership</quote> of a single
-&postgres; user, it turns out to be pretty easy to run into deadlock
-problems. </para>
-
-<para> For instance, a series of <command>vacuums</command> that
-unexpectedly run against a database that has a large
-<command>SUBSCRIBE_SET</command> event under way may run into a
-deadlock which would roll back several hours worth of data copying
-work.</para>
-
-<para> If, instead, different maintenance roles are performed by
-different users, you may, during vital operations such as
-<command>SUBSCRIBE_SET</command>, lock out other users at the
-<filename>pg_hba.conf</filename> level, only allowing the
-<command>slony</command> user in, which substantially reduces the risk
-of problems while the subscription is in progress.
-</para>
-</listitem>
-
-<listitem>
-<para> Path configuration </para> 
-
-<para> The section on <link linkend="plainpaths"> Path Communications
-</link> discusses the issues surrounding what network connections need
-to be in place in order for &slony1; to function.</para>
-</listitem>
-
-<listitem><para> Lowering Authority </para>
-
-<para> Traditionally, it has been stated that <quote>&slony1; needs to
-use superuser connections.</quote> It turns out that this is not
-entirely true, and and if there are particular concerns about
-excessive use of superuser accounts, it is possible to reduce this
-considerably. </para>
-
-<para> It is true to say that each &lslon; <emphasis>must</emphasis>
-have a superuser connection in order to manage the node that it is
-assigned to.  It needs to be able to alter the system catalogue in
-order to set up subscriptions and to process alterations
-(<emphasis>e.g</emphasis> - to run <xref linkend="stmtddlscript"> and
-other events that may alter the role of replicated tables on the local
-node).  </para>
-
-<para> However, the connections that &lslon; processes open to other
-nodes to access events and process subcriptions do not need to have
-nearly so much permission.  Indeed, one could set up a <quote>weak
-user</quote> assigned to all <xref linkend="stmtstorepath"> requests.
-The minimal permissions that this user, let's call it
-<command>weakuser</command>, requires are as follows:
-
-<itemizedlist>
-<listitem><para> It must have read access to the &slony1;-specific namespace </para> </listitem>
-<listitem><para> It must have read access to all tables and sequences in that namespace</para> </listitem>
-<listitem><para> It must have write access to the &slony1; table <envar>sl_nodelock</envar> and sequence <envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
-<listitem><para> At subscribe time, it must have read access to all of the replicated tables. </para> 
-<para> Outside of subscription time, there is no need for access to access to the replicated tables. </para> </listitem>
-<listitem><para> There is some need for read access to tables in pg_catalog; it has not been verified how little access would be suitable. </para> </listitem></itemizedlist>
-></para>
-</listitem>
-
-<listitem><para> The section on <link linkend="listenpaths"> listen
-paths </link> discusses the issues surrounding the table <xref
-linkend="table.sl-listen">.</para>
-
-<para> As of &slony1; 1.1, its contents are computed automatically
-based on the communications information available to &slony1; which
-should alleviate the problems found in earlier versions where this had
-to be configured by hand.  Many seemingly inexplicable communications
-failures, where nodes failed to talk to one another even though they
-technically could, were a result of incorrect listen path
-configuration. </para>
 </listitem>
 
 <listitem><para> Run &lteststate; frequently to discover configuration

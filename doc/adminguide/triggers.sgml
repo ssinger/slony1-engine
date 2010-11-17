@@ -3,10 +3,9 @@
 
 <indexterm><primary>trigger handling</primary></indexterm>
 
-<para> In &postgres; version 8.3, there is new functionality
-where triggers and rules can have their behaviour altered via
-<command>ALTER TABLE</command>, and specify any of the following
-further trigger-related options:</para>
+<para> In &postgres; version 8.3, new functionality was added where
+triggers and rules may have their behaviour altered via <command>ALTER
+TABLE</command>, to specify  the following alterations:</para>
 
 <itemizedlist>
 
@@ -22,9 +21,10 @@ further trigger-related options:</para>
 </itemizedlist>
 
 <para> A new GUC variable, <envar>session_replication_role</envar>
-controls whether the session is in origin, replica, or local mode,
-which then, in combination with the above enabling/disabling options,
-controls whether or not the trigger function actually runs. </para>
+controls whether the session is in <envar>origin</envar>,
+<envar>replica</envar>, or <envar>local</envar> mode, which then, in
+combination with the above enabling/disabling options, controls
+whether or not the trigger function actually runs. </para>
 
 <para> We may characterize when triggers fire, under &slony1;
 replication, based on the following table; the same rules apply to

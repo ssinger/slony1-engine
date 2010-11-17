@@ -107,10 +107,10 @@
     &slonyupgrade;
     &loganalysis;
     &performance;
+    &triggers;
     &locking;
     &security;
 </chapter>
-
 
 <chapter id="appendix">
 <title>Appendix</title>
