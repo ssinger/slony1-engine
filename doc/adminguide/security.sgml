@@ -55,7 +55,7 @@ places.</para>
 
 </listitem></varlistentry>
 <varlistentry>
-<term>Slon Remote Connections</term>
+<term>&lslon; Remote Connections</term>
 
 <listitem><para> The Remote slon connection information is specified
 in the <xref linkend="stmtstorepath"> command when adding paths.  The
@@ -71,10 +71,88 @@ permissions to:
 <listitem><para> SELECT any replicated tables that originate on the
 remote node.  This is done as part of the initial <command>COPY</command> during the 
 subscription process</para></listitem></itemizedlist>
-</para></listitem>
+</para>
+
+<para> Note that this role does not have any need to modify data; it
+purely involves <command>SELECT</command> access.</para>
+
+</listitem>
 </varlistentry>
 </variablelist></sect2>
 
+<sect2 id="superuser">
+<title> Lowering Authority Usage from Superuser </title>
+
+<para> Traditionally, it has been stated that <quote>&slony1; needs to
+use superuser connections.</quote> It turns out that this is not
+actually true, and and if there are particular concerns about
+excessive use of superuser roles, it is possible to reduce the
+<quote>security demands</quote> of &slony1; considerably. </para>
+
+<para> It is <emphasis>simplest</emphasis> to have the replication
+management user be a superuser, as, in that case, one need not think
+about what permissions to configure, but this is excessive.</para>
+
+<para> There is only actually one place where &slony1; truly requires
+superuser access, and that is during the subscription process, as it
+uses a <quote>hack</quote> to substantially improve performance,
+updating the system catalogue directly to shut off indices during the
+<command>COPY</command>.  This functionality is restricted to two
+functions, as of version 2.1, with
+<function>disable_indexes_on_table()</function> and
+<function>enable_indexes_on_table()</function>, which may appropriate
+superuser permissions if configured with <command>SECURITY
+DEFINER</command>.  If these two functions are owned by a superuser,
+then that is all the database superuser access that is
+required. </para>
+
+<para> One could set up a <quote>weak user</quote> assigned to all
+&lslon; requests.  The minimal permissions that
+this user, let's call it <command>weakuser</command>, requires are as
+follows:</para>
+
+<itemizedlist>
+
+<listitem><para> It must have read access to the &slony1;-specific
+namespace </para> </listitem>
+
+<listitem><para> It must have read access to all tables and sequences
+in that namespace</para> </listitem>
+
+<listitem><para> It must have write access to the &slony1; table
+<envar>sl_nodelock</envar> and sequence
+<envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
+
+<listitem><para> At subscribe time, it must have read access to all of
+the replicated tables. </para>
+
+<para> Outside of subscription time, there is no need for access to
+access to the replicated tables. </para> </listitem>
+
+<listitem><para> There is some need for read access to tables in
+pg_catalog; it has not been verified how little access would be
+suitable. </para> </listitem>
+
+<listitem><para> As mentioned, the functions for disabling and
+re-enabling indexes during the subscription process must be owned by a
+superuser, and must be accessible to the <quote>weak user.</quote>
+</para></listitem>
+
+</itemizedlist></sect2>
+
+<sect2> <title> Other Good Security Practices </title>
+
+<para> In order to be able to clearly identify which logical roles are
+being used, it seems advisable to set up users specifically for use by
+replication, one or more <command>slony</command> users.</para>
+
+<para> As already discussed, these users may have specific permissions
+attached to indicate what capabilities they are intended to
+have.</para>
+
+<para> It is also useful for these users to be present so that system
+monitoring and log monitoring processes are apprised of
+<quote>who</quote> is doing things in the environment.</para></sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

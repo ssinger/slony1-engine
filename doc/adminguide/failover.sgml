@@ -435,7 +435,7 @@ resort.</quote></para>
 </sect2>
 
 <sect2> <title>Planning for Failover</title>
-<para> <link linkend="failover"> Failover </link> policies
+<para> Failover policies
 should be planned for ahead of time.  </para>
 
 <para> Most pointedly, any node that is expected to be a failover
