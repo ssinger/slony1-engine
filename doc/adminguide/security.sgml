@@ -2,19 +2,24 @@
 <sect1 id="security">
 <title>Security Considerations</title>
 
-<para>
-The simplest and most common way of deploying &slony1; is to create a
-son database user account on all nodes in the system and give that
-account database superuser privileges.  This allows &slony1; to do 
-anything it needs.
+<para> The simplest and most common way of deploying &slony1; has been
+to create a &slony1; database user account on all nodes in the system
+and give that account database superuser privileges.  This allows
+&slony1; to do <quote>anything it needs.</quote>
 </para>
 
-<sect2>
-<title>Minimum Privileges</title>
+<para> In some environments, this is too much privilege to give out to
+an automated system, so this section describes how to minimize the
+privileges given out.</para>
 
-<para>
-The minimum privileges for running each component of &slony1; are:
-<sect3><title>Slonik</title>
+<sect2> <title>Minimum Privileges</title>
+
+<para>The minimum privileges for running each component of &slony1;
+may be more specifically described.</para>
+
+<variablelist>
+<varlistentry><term>&lslonik;</term>
+<listitem>
 <para>
 The slonik admin connections need to connect to the database as a database
 superuser.  As part of the installation of &slony1;, the slonik program will
@@ -22,39 +27,67 @@ create C language functions in the database.  This requires superuser
 access.  Some slonik commands will enable and disable indicies which by
 manipulating pg_class.  This also requires superuser access.
 </para>
-
-</sect3>
-<sect3>
-<title>Slon Local Connection</title>
+</listitem></varlistentry>
+<varlistentry><term>&lslon; Local Connection</term>
+<listitem>
 <para>
 Each slon instance has a 'local' database connection.  This is the database
 connection that is specified on the either the slon command line or the
-slon configuration file.  Slon needs to connect to this database as a 
-superuser.  In particular slon needs to have sufficient permissions to:
+slon configuration file.</para>  
+
+
+<para> Slon needs to connect to this database with considerable
+<quote>write</quote> privileges, and requires superuser access in a couple of
+places.</para>
+
+<para> It must be able to 
 <itemizedlist>
-<listitem><para>Alter pg_class when preparing to COPY a table</para></listitem>
-<listitem><para>Made changes to any of the &slony1; created tables
+
+<listitem><para>Alter <envar>pg_class</envar> to deactivate indices when preparing to <command>COPY</command> a table</para></listitem>
+
+<listitem><para>Make alterations to any of the &slony1; created tables
 </para></listitem>
-<listitem><para>Make modifications to any replicated tables.</para>
+<listitem><para>Make modifications (INSERT/UPDATE/DELETE/ALTER) to all replicated tables.</para>
 </listitem>
 </itemizedlist>
 
 </para>
 
-</sect3>
-<sect3>
-<title>Slon Remote Connections</title>
-<para>
-The Remote slon connection information is specified in the 
-<xref linkend="stmtstorepath"> command when adding paths.  The slon
-daemon needs to connect to remote databases with sufficient permissions 
-to:
+</listitem></varlistentry>
+<varlistentry>
+<term>Slon Remote Connections</term>
+
+<listitem><para> The Remote slon connection information is specified
+in the <xref linkend="stmtstorepath"> command when adding paths.  The
+&lslon; daemon needs to connect to remote databases with sufficient
+permissions to:
+
 <itemizedlist>
-<listitem><para>Read (query) the sl_event tables</para>
-<listitem><para> Read (query) the sl_log_1 and sl_log_2 tables</para></listitem>
-<listitem><para> Read (query) any replicated tables that originate on the
-remote  node.  This is done as part of the initial COPY during the 
-subscription process</para></listitem>
-</itemizedlist>
+
+<listitem><para> SELECT from &slevent;</para></listitem>
+
+<listitem><para> SELECT the &sllog1; and &sllog2; tables</para></listitem>
+
+<listitem><para> SELECT any replicated tables that originate on the
+remote node.  This is done as part of the initial <command>COPY</command> during the 
+subscription process</para></listitem></itemizedlist>
+</para></listitem>
+</varlistentry>
+</variablelist></sect2>
 
 </sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode:sgml
+sgml-omittag:nil
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+sgml-parent-document:"slony.sgml"
+sgml-exposed-tags:nil
+sgml-local-catalogs:("/usr/lib/sgml/catalog")
+sgml-local-ecat-files:nil
+End:
+-->

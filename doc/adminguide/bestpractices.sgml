@@ -61,25 +61,6 @@ subscription didn't work at a first attempt, submitting the request
 again <emphasis>won't</emphasis> help make it happen. </para>
 </listitem>
 
-<listitem>
-<para> Principle: Use an unambiguous, stable time zone such
-as UTC or GMT.</para>
-
-<para> Users have run into problems with &lslon; functioning properly
-when their system uses a time zone that &postgres; was unable to
-recognize such as CUT0 or WST.  It is necessary that you use a
-timezone that &postgres; can recognize correctly.  It is furthermore
-preferable to use a time zone where times do not shift around due to
-Daylight Savings Time. </para>
-
-<para> The <quote>geographically unbiased</quote> choice seems to be
-<command><envar>TZ</envar>=UTC</command> or
-<command><envar>TZ</envar>=GMT</command>, and to make sure that
-systems are <quote>in sync</quote> by using NTP to synchronize clocks
-throughout the environment. </para>
-
-<para> See also <xref linkend="times">.</para>
-</listitem>
 
 <listitem>
 <para> Principle: Long running transactions are Evil </para>
@@ -107,30 +88,6 @@ two log tables, &sllog1; and &sllog2;, preventing unbounded growth of
 dead space there.  </para></listitem>
 </itemizedlist>
 
-</listitem>
-
-<listitem>
-<para> <link linkend="Failover"> Failover </link> policies
-should be planned for ahead of time.  </para>
-
-<para> Most pointedly, any node that is expected to be a failover
-target must have its subscription(s) set up with the option
-<command>FORWARD = YES</command>.  Otherwise, that node is not a
-candidate for being promoted to origin node. </para>
-
-<para> This may simply involve thinking about what the priority lists
-should be of what should fail to what, as opposed to trying to
-automate it.  But knowing what to do ahead of time cuts down on the
-number of mistakes made.</para>
-
-<para> At Afilias, a variety of internal <citation>The 3AM Unhappy
-DBA's Guide to...</citation> guides have been created to provide
-checklists of what to do when certain <quote>unhappy</quote> events
-take place.  This sort of material is highly specific to the
-environment and the set of applications running there, so you would
-need to generate your own such documents.  This is one of the vital
-components of any disaster recovery preparations.
-</para>
 </listitem>
 
 <listitem><para> <xref linkend="stmtmoveset"> should be used to allow

@@ -19,8 +19,42 @@ The following are recommended for running &slony1;
 
 <itemizedlist>
 <listitem><para>A method of keeping the clocks on your replicas
-reasonably in sync such as NTP</para></listitem>
-<listitem><para>A reliable network between nodes</para></listitem>
+reasonably in sync such as NTP</para>
+
+<para> Also, it is preferable to use an consistent, stable time zone
+such as UTC or GMT.</para>
+
+<para> Users have run into problems with &lslon; functioning properly
+when their system uses a time zone that &postgres; was unable to
+recognize such as CUT0 or WST.  It is necessary that you use a
+timezone that &postgres; can recognize correctly.  It is furthermore
+preferable to use a time zone where times do not have discontinuities
+due to Daylight Savings Time. </para>
+
+</listitem>
+
+<listitem><para>A reliable network between nodes</para>
+
+<para> &lslon; processes should run in the same
+<quote>network context</quote> as the node that each is responsible
+for managing so that the connection to that node is a
+<quote>local</quote> one.  Do <emphasis>not</emphasis> run such links
+across a WAN.  Thus, if you have nodes in London and nodes in New
+York, the &lslon;s managing London nodes should run in London, and the
+&lslon;s managing New York nodes should run in New York.</para>
+
+<para> A WAN outage (or flakiness of the WAN in general) can leave
+database connections <quote>zombied</quote>, and typical TCP/IP
+behaviour <link linkend="multipleslonconnections"> will allow those
+connections to persist, preventing a slon restart for around two
+hours. </link> </para>
+
+<para> It is not difficult to remedy this; you need only <command>kill
+SIGINT</command> the offending backend connection.  But by running the
+&lslon; locally, you will generally not be vulnerable to this
+condition. </para>
+</listitem>
+
 <listitem><para>All of your databases should be using the same 
 database encoding. (ie LATIN1 or UTF8). Replicating from
 a database in one encoding to a database with a different
