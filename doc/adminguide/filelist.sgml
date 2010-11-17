@@ -6,7 +6,6 @@
 <!entity slonik             SYSTEM "slonik.sgml">
 <!entity concepts           SYSTEM "concepts.sgml">
 <!entity cluster            SYSTEM "cluster.sgml">
-<!entity defineset          SYSTEM "defineset.sgml">
 <!entity adminscripts       SYSTEM "adminscripts.sgml">
 <!entity startslons         SYSTEM "startslons.sgml">
 <!entity subscribenodes     SYSTEM "subscribenodes.sgml">
