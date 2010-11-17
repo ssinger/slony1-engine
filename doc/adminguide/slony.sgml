@@ -54,7 +54,6 @@
 <!ENTITY slsubscribe "<xref linkend=table.sl-subscribe>">
 <!ENTITY sltable "<xref linkend=table.sl-table>">
 <!ENTITY slset "<xref linkend=table.sl-set>">
-
 <!ENTITY rplainpaths "<xref linkend=plainpaths>">
 <!ENTITY rlistenpaths "<xref linkend=listenpaths>">
 <!ENTITY pglistener "<envar>pg_listener</envar>">
@@ -122,7 +121,6 @@
   <title>Things Left Out Of Other Parts</title>
     &installation;
     &maintenance;
-    &plainpaths;
 
 <chapter id="appendix">
 <title>Appendix</title>
