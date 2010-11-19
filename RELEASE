@@ -7,6 +7,8 @@ Release 1.2.22
 
 -Removing obsolete EXTERNALLENGTH for 8.4 and 9.0
 
+-Bug # 138 - Fix syntax in autoconf m4 file to define GROFF
+
 Release 1.2.21
 
 - Bug #108 - remove Emacs fodder from test scripts

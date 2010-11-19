@@ -1,6 +1,6 @@
 
 AC_DEFUN([SLON_AC_PROG_GROFF],
-[AC_CHECK_PROGS([GROFF], [groff])], 
+[AC_CHECK_PROGS([GROFF], [groff])])
 
 if test "x$GROFF" != x; then
   GROFF="$GROFF -U -t -p -ms -mpspic"
