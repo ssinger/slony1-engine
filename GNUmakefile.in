@@ -56,7 +56,10 @@ clean:
     done ;\
       rm -f postgres.imp
 
-distclean: clean
+distclean: 
+	@for subdir in $(DEFAULTBUILDS) ; do \
+	  $(MAKE) -C $$subdir $@ || exit; \
+	done ;\
 	rm -f Makefile.global Makefile.port
 	rm -f GNUmakefile
 	rm -f config.log config.status config.h
@@ -65,8 +68,13 @@ distclean: clean
 	rm -f postgres.imp
 	rm -rf autom4te.cache
 
-maintainer-clean: distclean
+maintainer-clean-internal:
+	@for subdir in $(DEFAULTBUILDS) ; do \
+	  $(MAKE) -C $$subdir maintainer-clean || exit; \
+	done ;\
 	rm -rf configure autom4te.cache
+
+maintainer-clean: maintainer-clean-internal distclean
 
 dist:	distdir
 
