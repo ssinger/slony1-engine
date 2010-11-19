@@ -20,7 +20,7 @@ NAME		= xxid
 SQL_NAME74	= $(NAME).v74.sql
 SQL_NAME80	= $(NAME).v80.sql
 SQL_NAME81	= $(NAME).v81.sql
-SQL_NAME84  = $(NAME).v84.sql
+SQL_NAME84  	= $(NAME).v84.sql
 SQL_NAMES	= $(SQL_NAME74) $(SQL_NAME80) $(SQL_NAME81) $(SQL_NAME84)
 GENSQLNAMES = $(filter-out $(SQL_NAME74), $(SQL_NAMES))
 
@@ -30,7 +30,7 @@ ALL =					\
 	$(SO_NAME)			\
 	$(SQL_NAMES)		\
 
-DISTFILES = Makefile xxid.c xxid.v74.sql
+DISTFILES = Makefile xxid.c xxid.v74.sql xxid.v84.sql
 
 all:	$(ALL)
 
