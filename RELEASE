@@ -305,3 +305,6 @@ RELEASE 2.0.6
 -Fix for bug #155, slon can segfault while shutting down.
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
+
+-Fix for bug #160, if slon gets confused waiting for its child it will exit.
+
