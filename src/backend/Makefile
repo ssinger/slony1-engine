@@ -31,6 +31,9 @@ FUNCS_80		= slony1_funcs.v80.sql
 BASE_81			= slony1_base.v81.sql
 FUNCS_81		= slony1_funcs.v81.sql
 
+BASE_84			= slony1_base.v84.sql
+FUNCS_84		= slony1_funcs.v84.sql
+
 SQL_NAMES =				\
 	$(BASE_COMMON)		\
 	$(FUNCS_COMMON)		\
@@ -39,7 +42,9 @@ SQL_NAMES =				\
 	$(BASE_80)			\
 	$(FUNCS_80)			\
 	$(BASE_81)			\
-	$(FUNCS_81)
+	$(FUNCS_81) \
+	$(BASE_84) \
+	$(FUNCS_84)
 
 DISTFILES = Makefile README README.events $(wildcard *.sql) $(wildcard *.in) $(wildcard *.c)
 
