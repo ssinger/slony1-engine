@@ -9,6 +9,8 @@ Release 1.2.22
 
 -Bug # 138 - Fix syntax in autoconf m4 file to define GROFF
 
+- Fix for bug #159, distclean deletes the slony_logshipper flex/bison generated files.
+
 Release 1.2.21
 
 - Bug #108 - remove Emacs fodder from test scripts
