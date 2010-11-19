@@ -5,7 +5,7 @@ Release 1.2.22
 
 -Explicit support for version 9.0
 
-
+-Removing obsolete EXTERNALLENGTH for 8.4 and 9.0
 
 Release 1.2.21
 
