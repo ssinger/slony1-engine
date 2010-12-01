@@ -18,6 +18,12 @@ AC_DEFUN([SLON_AC_PROG_SGMLSPL],
 # ----------------
 AC_DEFUN([SLON_AC_PROG_D2M],
 [AC_MSG_CHECKING([for docbook2man-spec.pl],[slon_cv_check_d2mdir])
+for slonac_prefix in /usr/local/share/sgml/docbook/utils-0.6.14/helpers /usr/share/perl5/sgmlspl-specs /usr/share/sgml/docbook/utils-0.6.14/helpers $with_d2mdir ; do
+  if test -s "$slonac_prefix/docbook2man-spec.pl" ; then
+     with_d2mdir="$slonac_prefix"
+  fi
+done
+
 if test -s "$with_d2mdir/docbook2man-spec.pl" ; then
     AC_SUBST(d2mdir, $with_d2mdir)
     AC_MSG_RESULT([found])
