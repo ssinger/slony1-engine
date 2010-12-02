@@ -309,3 +309,9 @@ RELEASE 2.0.6
 -Fix for bug #160, if slon gets confused waiting for its child it will exit.
 
 -Fix for bug #159, distclean deletes the slony_logshipper flex/bison generated files.
+
+2.0.6 RC 3
+
+-Fix for bug #154, previous fix did not work
+
+

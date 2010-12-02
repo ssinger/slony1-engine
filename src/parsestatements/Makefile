@@ -28,8 +28,8 @@ test: test-scanner
 
 install:
 
-maintainer-clean:
-distclean:
+maintainer-clean: clean
+distclean: clean
 clean:
 	rm -f scanner.o test-scanner test-scanner.o
 	rm -f *.log
