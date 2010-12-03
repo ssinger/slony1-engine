@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -57,11 +57,11 @@
 
 typedef enum
 {
-	SLON_TSTAT_NONE,
-	SLON_TSTAT_RUNNING,
-	SLON_TSTAT_SHUTDOWN,
-	SLON_TSTAT_RESTART,
-	SLON_TSTAT_DONE
+    SLON_TSTAT_NONE,
+    SLON_TSTAT_RUNNING,
+    SLON_TSTAT_SHUTDOWN,
+    SLON_TSTAT_RESTART,
+    SLON_TSTAT_DONE
 }	SlonThreadStatus;
 
 
@@ -84,38 +84,38 @@ typedef struct SlonWorkMsg_s SlonWorkMsg;
  */
 struct SlonNode_s
 {
-	int			no_id;			/* node ID */
-	int			no_active;		/* it's active state */
-	char	   *no_comment;		/* comment field */
+    int			no_id;			/* node ID */
+    int			no_active;		/* it's active state */
+    char       *no_comment;		/* comment field */
 #if 0
-	pthread_mutex_t node_lock;	/* mutex for node */
+    pthread_mutex_t node_lock;	/* mutex for node */
 #endif
 
-	char	   *pa_conninfo;	/* path to the node */
-	int			pa_connretry;	/* connection retry interval */
+    char       *pa_conninfo;	/* path to the node */
+    int			pa_connretry;	/* connection retry interval */
 
-	int64		last_event;		/* last event we have received */
+    int64		last_event;		/* last event we have received */
 
-	SlonThreadStatus listen_status;		/* status of the listen thread */
-	pthread_t	listen_thread;	/* thread id of listen thread */
-	SlonListen *listen_head;	/* list of origins we listen for */
-	SlonListen *listen_tail;
+    SlonThreadStatus listen_status;		/* status of the listen thread */
+    pthread_t	listen_thread;	/* thread id of listen thread */
+    SlonListen *listen_head;	/* list of origins we listen for */
+    SlonListen *listen_tail;
 
-	SlonThreadStatus worker_status;		/* status of the worker thread */
-	pthread_t	worker_thread;	/* thread id of worker thread */
-	pthread_mutex_t message_lock;		/* mutex for the message queue */
-	pthread_cond_t message_cond;	/* condition variable for queue */
-	SlonWorkMsg *message_head;
-	SlonWorkMsg *message_tail;
+    SlonThreadStatus worker_status;		/* status of the worker thread */
+    pthread_t	worker_thread;	/* thread id of worker thread */
+    pthread_mutex_t message_lock;		/* mutex for the message queue */
+    pthread_cond_t message_cond;	/* condition variable for queue */
+    SlonWorkMsg *message_head;
+    SlonWorkMsg *message_tail;
 
-	char	   *archive_name;
-	char	   *archive_temp;
-	char	   *archive_counter;
-	char	   *archive_timestamp;
-	FILE	   *archive_fp;
+    char       *archive_name;
+    char       *archive_temp;
+    char       *archive_counter;
+    char       *archive_timestamp;
+    FILE       *archive_fp;
 
-	SlonNode   *prev;
-	SlonNode   *next;
+    SlonNode   *prev;
+    SlonNode   *next;
 };
 
 /* ----------
@@ -124,10 +124,10 @@ struct SlonNode_s
  */
 struct SlonListen_s
 {
-	int			li_origin;		/* origin of events */
+    int			li_origin;		/* origin of events */
 
-	SlonListen *prev;
-	SlonListen *next;
+    SlonListen *prev;
+    SlonListen *next;
 };
 
 /* ----------
@@ -136,17 +136,17 @@ struct SlonListen_s
  */
 struct SlonSet_s
 {
-	int			set_id;			/* set ID */
-	int			set_origin;		/* set origin */
-	char	   *set_comment;	/* set comment */
+    int			set_id;			/* set ID */
+    int			set_origin;		/* set origin */
+    char       *set_comment;	/* set comment */
 
-	int			sub_provider;	/* from where this node receives */
-	/* data (if subscribed) */
-	int			sub_forward;	/* if we need to forward data */
-	int			sub_active;		/* if the subscription is active */
+    int			sub_provider;	/* from where this node receives */
+    /* data (if subscribed) */
+    int			sub_forward;	/* if we need to forward data */
+    int			sub_active;		/* if the subscription is active */
 
-	SlonSet    *prev;
-	SlonSet    *next;
+    SlonSet    *prev;
+    SlonSet    *next;
 };
 
 /* ----------
@@ -155,18 +155,18 @@ struct SlonSet_s
  */
 struct SlonConn_s
 {
-	char	   *symname;		/* Symbolic name of connection */
-	struct SlonNode_s *node;	/* remote node this belongs to */
-	PGconn	   *dbconn;			/* database connection */
-	pthread_mutex_t conn_lock;	/* mutex for conn */
-	pthread_cond_t conn_cond;	/* condition variable for conn */
+    char       *symname;		/* Symbolic name of connection */
+    struct SlonNode_s *node;	/* remote node this belongs to */
+    PGconn     *dbconn;			/* database connection */
+    pthread_mutex_t conn_lock;	/* mutex for conn */
+    pthread_cond_t conn_cond;	/* condition variable for conn */
 
-	int			condition;		/* what are we waiting for? */
-	struct timeval timeout;		/* timeofday for timeout */
-	int	pg_version;		/* PostgreSQL version */
+    int			condition;		/* what are we waiting for? */
+    struct timeval timeout;		/* timeofday for timeout */
+    int	pg_version;		/* PostgreSQL version */
 
-	SlonConn   *prev;
-	SlonConn   *next;
+    SlonConn   *prev;
+    SlonConn   *next;
 };
 
 /* ----------
@@ -178,73 +178,73 @@ struct SlonConn_s
 
 typedef struct
 {
-	size_t		n_alloc;
-	size_t		n_used;
-	char	   *data;
+    size_t		n_alloc;
+    size_t		n_used;
+    char       *data;
 }	SlonDString;
 
 #define		dstring_init(__ds) \
 do { \
-	(__ds)->n_alloc = SLON_DSTRING_SIZE_INIT; \
-	(__ds)->n_used = 0; \
-	(__ds)->data = malloc(SLON_DSTRING_SIZE_INIT); \
-	if ((__ds)->data == NULL) { \
-		slon_log(SLON_FATAL, "dstring_init: malloc() - %s", \
-				strerror(errno)); \
-		slon_abort(); \
-	} \
+    (__ds)->n_alloc = SLON_DSTRING_SIZE_INIT; \
+    (__ds)->n_used = 0; \
+    (__ds)->data = malloc(SLON_DSTRING_SIZE_INIT); \
+    if ((__ds)->data == NULL) { \
+        slon_log(SLON_FATAL, "dstring_init: malloc() - %s", \
+                strerror(errno)); \
+        slon_abort(); \
+    } \
 } while (0)
 #define		dstring_reset(__ds) \
 do { \
-	(__ds)->n_used = 0; \
-	(__ds)->data[0] = '\0'; \
+    (__ds)->n_used = 0; \
+    (__ds)->data[0] = '\0'; \
 } while (0)
 #define		dstring_free(__ds) \
 do { \
-	free((__ds)->data); \
-	(__ds)->n_used = 0; \
-	(__ds)->data = NULL; \
+    free((__ds)->data); \
+    (__ds)->n_used = 0; \
+    (__ds)->data = NULL; \
 } while (0)
 #define		dstring_nappend(__ds,__s,__n) \
 do { \
-	if ((__ds)->n_used + (__n) >= (__ds)->n_alloc)	\
-	{ \
-		while ((__ds)->n_used + (__n) >= (__ds)->n_alloc) \
-			(__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
-		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
-		if ((__ds)->data == NULL) \
-		{ \
-			slon_log(SLON_FATAL, "dstring_nappend: realloc() - %s", \
-					strerror(errno)); \
-			slon_abort(); \
-		} \
-	} \
-	memcpy(&((__ds)->data[(__ds)->n_used]), (__s), (__n)); \
-	(__ds)->n_used += (__n); \
+    if ((__ds)->n_used + (__n) >= (__ds)->n_alloc)	\
+    { \
+        while ((__ds)->n_used + (__n) >= (__ds)->n_alloc) \
+            (__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
+        (__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+        if ((__ds)->data == NULL) \
+        { \
+            slon_log(SLON_FATAL, "dstring_nappend: realloc() - %s", \
+                    strerror(errno)); \
+            slon_abort(); \
+        } \
+    } \
+    memcpy(&((__ds)->data[(__ds)->n_used]), (__s), (__n)); \
+    (__ds)->n_used += (__n); \
 } while (0)
 #define		dstring_append(___ds,___s) \
 do { \
-	register int ___n = strlen((___s)); \
-	dstring_nappend((___ds),(___s),___n); \
+    register int ___n = strlen((___s)); \
+    dstring_nappend((___ds),(___s),___n); \
 } while (0)
 #define		dstring_addchar(__ds,__c) \
 do { \
-	if ((__ds)->n_used + 1 >= (__ds)->n_alloc)	\
-	{ \
-		(__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
-		(__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
-		if ((__ds)->data == NULL) \
-		{ \
-			slon_log(SLON_FATAL, "dstring_addchar: realloc() - %s", \
-					strerror(errno)); \
-			slon_abort(); \
-		} \
-	} \
-	(__ds)->data[(__ds)->n_used++] = (__c); \
+    if ((__ds)->n_used + 1 >= (__ds)->n_alloc)	\
+    { \
+        (__ds)->n_alloc *= SLON_DSTRING_SIZE_INC; \
+        (__ds)->data = realloc((__ds)->data, (__ds)->n_alloc); \
+        if ((__ds)->data == NULL) \
+        { \
+            slon_log(SLON_FATAL, "dstring_addchar: realloc() - %s", \
+                    strerror(errno)); \
+            slon_abort(); \
+        } \
+    } \
+    (__ds)->data[(__ds)->n_used++] = (__c); \
 } while (0)
 #define		dstring_terminate(__ds) \
 do { \
-	(__ds)->data[(__ds)->n_used] = '\0'; \
+    (__ds)->data[(__ds)->n_used] = '\0'; \
 } while (0)
 #define		dstring_data(__ds)	((__ds)->data)
 
@@ -255,43 +255,43 @@ do { \
  */
 #define DLLIST_ADD_TAIL(_pf,_pl,_obj) \
 do { \
-	if ((_pl) == NULL) { \
-		(_obj)->prev = (_obj)->next = NULL; \
-		(_pf) = (_pl) = (_obj); \
-	} else { \
-		(_obj)->prev = (_pl); \
-		(_obj)->next = NULL; \
-		(_pl)->next = (_obj); \
-		(_pl) = (_obj); \
-	} \
+    if ((_pl) == NULL) { \
+        (_obj)->prev = (_obj)->next = NULL; \
+        (_pf) = (_pl) = (_obj); \
+    } else { \
+        (_obj)->prev = (_pl); \
+        (_obj)->next = NULL; \
+        (_pl)->next = (_obj); \
+        (_pl) = (_obj); \
+    } \
 } while (0)
 
 #define DLLIST_ADD_HEAD(_pf,_pl,_obj) \
 do { \
-	if ((_pf) == NULL) { \
-		(_obj)->prev = (_obj)->next = NULL; \
-		(_pf) = (_pl) = (_obj); \
-	} else { \
-		(_obj)->prev = NULL; \
-		(_obj)->next = (_pf); \
-		(_pf)->prev = (_obj); \
-		(_pf) = (_obj); \
-	} \
+    if ((_pf) == NULL) { \
+        (_obj)->prev = (_obj)->next = NULL; \
+        (_pf) = (_pl) = (_obj); \
+    } else { \
+        (_obj)->prev = NULL; \
+        (_obj)->next = (_pf); \
+        (_pf)->prev = (_obj); \
+        (_pf) = (_obj); \
+    } \
 } while (0)
 
 #define DLLIST_REMOVE(_pf,_pl,_obj) \
 do { \
-	if ((_obj)->prev == NULL) { \
-		(_pf) = (_obj)->next; \
-	} else { \
-		(_obj)->prev->next = (_obj)->next; \
-	} \
-	if ((_obj)->next == NULL) { \
-		(_pl) = (_obj)->prev; \
-	} else { \
-		(_obj)->next->prev = (_obj)->prev; \
-	} \
-	(_obj)->prev = (_obj)->next = NULL; \
+    if ((_obj)->prev == NULL) { \
+        (_pf) = (_obj)->next; \
+    } else { \
+        (_obj)->prev->next = (_obj)->next; \
+    } \
+    if ((_obj)->next == NULL) { \
+        (_pl) = (_obj)->prev; \
+    } else { \
+        (_obj)->next->prev = (_obj)->prev; \
+    } \
+    (_obj)->prev = (_obj)->next = NULL; \
 } while (0)
 
 
@@ -303,9 +303,9 @@ do { \
  * ----------
  */
 #define TIMEVAL_DIFF(_t1,_t2) \
-	(((_t1)->tv_usec <= (_t2)->tv_usec) ? \
-		(double)((_t2)->tv_sec - (_t1)->tv_sec) + (double)((_t2)->tv_usec - (_t1)->tv_usec) / 1000000.0 : \
-		(double)((_t2)->tv_sec - (_t1)->tv_sec - 1) + (double)((_t2)->tv_usec + 1000000 - (_t1)->tv_usec) / 1000000.0)
+    (((_t1)->tv_usec <= (_t2)->tv_usec) ? \
+        (double)((_t2)->tv_sec - (_t1)->tv_sec) + (double)((_t2)->tv_usec - (_t1)->tv_usec) / 1000000.0 : \
+        (double)((_t2)->tv_sec - (_t1)->tv_sec - 1) + (double)((_t2)->tv_usec + 1000000 - (_t1)->tv_usec) / 1000000.0)
 
 
 /* ----------
@@ -314,11 +314,11 @@ do { \
  */
 typedef enum
 {
-		SCHED_STATUS_OK,
-		SCHED_STATUS_SHUTDOWN,
-		SCHED_STATUS_DONE,
-		SCHED_STATUS_CANCEL,
-		SCHED_STATUS_ERROR
+        SCHED_STATUS_OK,
+        SCHED_STATUS_SHUTDOWN,
+        SCHED_STATUS_DONE,
+        SCHED_STATUS_CANCEL,
+        SCHED_STATUS_ERROR
 } ScheduleStatus;
 
 /* ----------
@@ -363,54 +363,54 @@ extern SlonSet *rtcfg_set_list_tail;
 #ifndef WIN32
 #define slon_abort() \
 do { \
-	pthread_mutex_lock(&slon_watchdog_lock); \
-	if (slon_watchdog_pid >= 0) { \
-		slon_log(SLON_DEBUG2, "slon_abort() from pid=%d\n", slon_pid); \
-		(void) kill(slon_watchdog_pid, SIGTERM);			\
-		slon_watchdog_pid = -1; \
-	} \
-	pthread_mutex_unlock(&slon_watchdog_lock); \
-	pthread_exit(NULL); \
+    pthread_mutex_lock(&slon_watchdog_lock); \
+    if (slon_watchdog_pid >= 0) { \
+        slon_log(SLON_DEBUG2, "slon_abort() from pid=%d\n", slon_pid); \
+        (void) kill(slon_watchdog_pid, SIGTERM);			\
+        slon_watchdog_pid = -1; \
+    } \
+    pthread_mutex_unlock(&slon_watchdog_lock); \
+    pthread_exit(NULL); \
 } while (0)
 #define slon_restart() \
 do { \
-	pthread_mutex_lock(&slon_watchdog_lock); \
-	if (slon_watchdog_pid >= 0) { \
-		slon_log(SLON_DEBUG2, "slon_restart() from pid=%d\n", slon_pid); \
-		(void) kill(slon_watchdog_pid, SIGHUP);			\
-		slon_watchdog_pid = -1; \
-	} \
-	pthread_mutex_unlock(&slon_watchdog_lock); \
-	pthread_exit(NULL); \
+    pthread_mutex_lock(&slon_watchdog_lock); \
+    if (slon_watchdog_pid >= 0) { \
+        slon_log(SLON_DEBUG2, "slon_restart() from pid=%d\n", slon_pid); \
+        (void) kill(slon_watchdog_pid, SIGHUP);			\
+        slon_watchdog_pid = -1; \
+    } \
+    pthread_mutex_unlock(&slon_watchdog_lock); \
+    pthread_exit(NULL); \
 } while (0)
 #define slon_retry() \
 do { \
-	pthread_mutex_lock(&slon_watchdog_lock); \
-	if (slon_watchdog_pid >= 0) { \
-		slon_log(SLON_DEBUG2, "slon_retry() from pid=%d\n", slon_pid); \
-		(void) kill(slon_watchdog_pid, SIGUSR1);			\
-		slon_watchdog_pid = -1; \
-	} \
-	pthread_mutex_unlock(&slon_watchdog_lock); \
-	pthread_exit(NULL); \
+    pthread_mutex_lock(&slon_watchdog_lock); \
+    if (slon_watchdog_pid >= 0) { \
+        slon_log(SLON_DEBUG2, "slon_retry() from pid=%d\n", slon_pid); \
+        (void) kill(slon_watchdog_pid, SIGUSR1);			\
+        slon_watchdog_pid = -1; \
+    } \
+    pthread_mutex_unlock(&slon_watchdog_lock); \
+    pthread_exit(NULL); \
 } while (0)
 #else							/* WIN32 */
 /* On win32, we currently just bail out and let the service control manager
  * deal with possible restarts */
 #define slon_abort() \
 do { \
-	WSACleanup(); \
-	exit(1); \
+    WSACleanup(); \
+    exit(1); \
 } while (0)
 #define slon_restart() \
 do { \
-	WSACleanup(); \
-	exit(1); \
+    WSACleanup(); \
+    exit(1); \
 } while (0)
 #define slon_retry() \
 do { \
-	WSACleanup(); \
-	exit(1); \
+    WSACleanup(); \
+    exit(1); \
 } while (0)
 #endif
 
@@ -436,7 +436,7 @@ extern int64 rtcfg_setNodeLastEvent(int no_id, int64 event_seq);
 extern int64 rtcfg_getNodeLastEvent(int no_id);
 
 extern void rtcfg_storePath(int pa_server, char *pa_conninfo,
-				int pa_connretry);
+                int pa_connretry);
 extern void rtcfg_dropPath(int pa_server);
 
 extern void rtcfg_reloadListen(PGconn *db);
@@ -446,12 +446,12 @@ extern void rtcfg_dropListen(int li_origin, int li_provider);
 extern void rtcfg_storeSet(int set_id, int set_origin, char *set_comment);
 extern void rtcfg_dropSet(int set_id);
 extern void rtcfg_moveSet(int set_id, int old_origin, int new_origin,
-			  int sub_provider);
+              int sub_provider);
 
 extern void rtcfg_storeSubscribe(int sub_set, int sub_provider,
-					 char *sub_forward);
+                     char *sub_forward);
 extern void rtcfg_enableSubscription(int sub_set, int sub_provider,
-						 char *sub_forward);
+                         char *sub_forward);
 extern void rtcfg_unsubscribeSet(int sub_set);
 
 extern void rtcfg_needActivate(int no_id);
@@ -498,13 +498,6 @@ extern int	sync_interval_timeout;
 extern void *syncThread_main(void *dummy);
 
 /* ----------
- * Functions in snmp_thread.c
- * ----------
- */
-extern void *snmpThread_main(void *dummy);
-
-
-/* ----------
  * Functions in local_listen.c
  * ----------
  */
@@ -533,18 +526,18 @@ extern int	sync_max_largemem;
  */
 extern void *remoteWorkerThread_main(void *cdata);
 extern void remoteWorker_event(int event_provider,
-				   int ev_origin, int64 ev_seqno,
-				   char *ev_timestamp,
-				   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
-				   char *ev_type,
-				   char *ev_data1, char *ev_data2,
-				   char *ev_data3, char *ev_data4,
-				   char *ev_data5, char *ev_data6,
-				   char *ev_data7, char *ev_data8);
+                   int ev_origin, int64 ev_seqno,
+                   char *ev_timestamp,
+                   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
+                   char *ev_type,
+                   char *ev_data1, char *ev_data2,
+                   char *ev_data3, char *ev_data4,
+                   char *ev_data5, char *ev_data6,
+                   char *ev_data7, char *ev_data8);
 extern void remoteWorker_wakeup(int no_id);
 extern void remoteWorker_confirm(int no_id,
-					 char *con_origin_c, char *con_received_c,
-					 char *con_seqno_c, char *con_timestamp_c);
+                     char *con_origin_c, char *con_received_c,
+                     char *con_seqno_c, char *con_timestamp_c);
 
 
 /* ----------

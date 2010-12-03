@@ -6,7 +6,7 @@
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-# 
+#
 # ----------
 
 # PostgreSQL Version
@@ -18,7 +18,7 @@ PG_VERSION=             @PG_VERSION@
 
 pgincludedir=		@PGINCLUDEDIR@
 pgincludeserverdir=	@PGINCLUDESERVERDIR@
-pglibdir= 		@PGLIBDIR@
+pglibdir=       @PGLIBDIR@
 pgpkglibdir=		@PGPKGLIBDIR@
 pgsharedir=		@PGSHAREDIR@
 pgbindir=		@PGBINDIR@
@@ -28,10 +28,10 @@ distdir=		@SLONYPATH@/@PACKAGE_NAME@-@PACKAGE_VERSION@
 prefix=			@prefix@
 sysconfdir=		@sysconfdir@
 
-host_os= 		@HOST_OS@
+host_os=        @HOST_OS@
 host_cpu=		@host_cpu@
 
-PORTNAME= 		@PORTNAME@
+PORTNAME=       @PORTNAME@
 PACKAGE_NAME=		@PACKAGE_NAME@
 VERSION=		@PACKAGE_VERSION@
 
@@ -44,7 +44,7 @@ FLEX=			@LEX@
 
 #build tool flags
 CFLAGS=			@CFLAGS@
-PTHREAD_CFLAGS= 	@PTHREAD_CFLAGS@
+PTHREAD_CFLAGS=     @PTHREAD_CFLAGS@
 PTHREAD_LIBS=		@PTHREAD_LIBS@
 YFLAGS=			@YFLAGS@
 FLEXFLAGS=		@LEXFLAGS@ $(LFLAGS)
@@ -52,11 +52,6 @@ enable_rpath=		@enable_rpath@
 
 #libs
 PTHREAD_LIBS=		@PTHREAD_LIBS@
-
-#netsnmp		with_netsnmp
-HAVE_NETSNMP=		@HAVE_NETSNMP@
-NETSNMP_CFLAGS=		@NETSNMP_CFLAGS@
-NETSNMP_AGENTLIBS=	@NETSNMP_AGENTLIBS@
 
 # Documentation
 JADE=			@JADE@
@@ -87,7 +82,7 @@ override CPPFLAGS := -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
 LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq @NLSLIB@
 
 ifeq ($(GCC), yes)
-	CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations
+    CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations
 endif
 
 # Installation.

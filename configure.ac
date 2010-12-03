@@ -1,4 +1,3 @@
-
 # ----------
 # configure.ac
 #
@@ -37,7 +36,7 @@ case $host_os in
  freebsd*) template=freebsd ;;
     hpux*) template=hpux ;;
     irix*) template=irix ;;
-   linux*|gnu*|k*bsd*-gnu) 
+   linux*|gnu*|k*bsd*-gnu)
            template=linux ;;
    mingw*) template=win32 ;;
   netbsd*) template=netbsd ;;
@@ -175,7 +174,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS([limits.h])
 AC_CHECK_HEADERS([stddef.h])
-AC_CHECK_HEADERS([sys/socket.h]) 
+AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([inttypes.h])
 
@@ -206,7 +205,6 @@ AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>  Location of 
 AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of the PostgreSQL libs. ])
 AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
-AC_ARG_WITH(netsnmp,            [  --with-netsnmp=<dir>             Enable snmp support <dir> is the location of net-snmp-config. **EXPERIMENTAL** ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools. Default $PREFIX/bin. ])
 AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm. Default $pglibdir. ])
 AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
@@ -216,7 +214,7 @@ AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the
 
 
 SLON_AC_ARG_BOOL(enable, engine, yes,
-              [  --disable-engine	  Don't build slony1-engine source. (Used when building documentation only)])
+              [  --disable-engine     Don't build slony1-engine source. (Used when building documentation only)])
 
 AC_SUBST(enable_engine)
 
@@ -234,7 +232,6 @@ AC_MSG_RESULT($enable_engine)
 if test "$enable_engine" = "yes"; then
 
 ACX_LIBPQ()
-ACX_LIBSNMP()
 ACX_SLONYTOOLS()
 
 AC_SUBST(PG_VERSION_MAJOR, $PG_VERSION_MAJOR)
@@ -247,9 +244,6 @@ AC_SUBST(PGLIBDIR, $PG_LIBDIR)
 AC_SUBST(PGPKGLIBDIR, $PG_PKGLIBDIR)
 AC_SUBST(PGSHAREDIR, $PG_SHAREDIR)
 AC_SUBST(PGBINDIR, $PG_BINDIR)
-AC_SUBST(HAVE_NETSNMP, $HAVE_NETSNMP)
-AC_SUBST(NETSNMP_CFLAGS, $NETSNMP_CFLAGS)
-AC_SUBST(NETSNMP_AGENTLIBS, $NETSNMP_AGENTLIBS)
 AC_SUBST(TOOLSBIN, $TOOLSBIN)
 
 AC_SUBST(SLONYPATH)
@@ -276,45 +270,45 @@ AC_SUBST(with_docs, $with_docs)
 AC_MSG_CHECKING(if you have requested documentation building)
 if test "$with_docs" = "yes"; then
 
-	AC_MSG_RESULT($with_docs)
+    AC_MSG_RESULT($with_docs)
 
-	# ----
-	# Tools for building docs
-	# ---
+    # ----
+    # Tools for building docs
+    # ---
 
-	SLON_AC_PROG_GROFF
-	SLON_AC_PROG_PS2PDF
-	SLON_AC_PROG_DJPEG
-	SLON_AC_PROG_PNMTOPS
-	SLON_AC_PROG_CONVERT
-	SLON_AC_PROG_PGAUTODOC
+    SLON_AC_PROG_GROFF
+    SLON_AC_PROG_PS2PDF
+    SLON_AC_PROG_DJPEG
+    SLON_AC_PROG_PNMTOPS
+    SLON_AC_PROG_CONVERT
+    SLON_AC_PROG_PGAUTODOC
 
-	#
-	# Check for DocBook and tools
-	#
-	SLON_AC_PROG_NSGMLS
-	SLON_AC_PROG_SGMLSPL
-	SLON_AC_PROG_D2M
+    #
+    # Check for DocBook and tools
+    #
+    SLON_AC_PROG_NSGMLS
+    SLON_AC_PROG_SGMLSPL
+    SLON_AC_PROG_D2M
 
-	SLON_AC_PROG_JADE
-	SLON_AC_CHECK_DOCBOOK(4.2)
-	SLON_AC_PATH_DOCBOOK_STYLESHEETS
-	SLON_AC_PATH_COLLATEINDEX
+    SLON_AC_PROG_JADE
+    SLON_AC_CHECK_DOCBOOK(4.2)
+    SLON_AC_PATH_DOCBOOK_STYLESHEETS
+    SLON_AC_PATH_COLLATEINDEX
 
-	AC_SUBST(docdir, $docdir)
-	AC_SUBST(mandir, $mandir)
+    AC_SUBST(docdir, $docdir)
+    AC_SUBST(mandir, $mandir)
 else
   AC_MSG_RESULT(no)
 fi
 
 if test x"$with_perlsharedir" = x""; then
-	with_perlsharedir="$PG_LIBDIR"
+    with_perlsharedir="$PG_LIBDIR"
 fi
 
 AC_SUBST(perlsharedir, $with_perlsharedir)
 
 AC_CONFIG_FILES([
-	Makefile.global GNUmakefile
+    Makefile.global GNUmakefile
 ])
 
 AC_OUTPUT([

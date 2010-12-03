@@ -4,7 +4,7 @@
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	
+#
 # ----------
 
 slony_subdir = src/slon
@@ -13,7 +13,6 @@ SLFILEDESC="Slony replication engine"
 include $(slony_top_builddir)/Makefile.global
 
 SFILES=$(wildcard *.c)
-SFILES2=$(filter-out snmp_thread.c, $(SFILES))
 CC = $(PTHREAD_CC)
 
 override CFLAGS += $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(slony_top_builddir)/$(slony_subdir)
@@ -29,24 +28,19 @@ PROG            = slon.exe
 endif
 
 OBJS		= \
-	slon.o			\
-	runtime_config.o	\
-	local_listen.o		\
-	remote_listen.o		\
-	remote_worker.o		\
-	sync_thread.o		\
-	cleanup_thread.o	\
-	scheduler.o		\
-	dbutils.o		\
-	conf-file.o		\
-	confoptions.o		\
-	misc.o                  \
-	../parsestatements/scanner.o
-
-ifdef HAVE_NETSNMP
-OBJS+= snmp_thread.o
-override LDFLAGS+= ${NETSNMP_AGENTLIBS}
-endif
+    slon.o			\
+    runtime_config.o	\
+    local_listen.o		\
+    remote_listen.o		\
+    remote_worker.o		\
+    sync_thread.o		\
+    cleanup_thread.o	\
+    scheduler.o		\
+    dbutils.o		\
+    conf-file.o		\
+    confoptions.o		\
+    misc.o                  \
+    ../parsestatements/scanner.o
 
 ifeq ($(PORTNAME), win32)
 OBJS += port/pipe.o port/win32service.o $(WIN32RES)
@@ -57,12 +51,12 @@ endif
 DISTFILES = Makefile README $(wildcard *.c) $(wildcard port/*.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
 
 ALL =				\
-	$(PROG)
+    $(PROG)
 
 
 all:	$(ALL)
 
-$(PROG):	$(OBJS)
+$(PROG): $(OBJS)
 	$(CC) $(CFLAGS) -o $(PROG) $(OBJS) $(PTHREAD_CFLAGS) $(LDFLAGS)
 
 cleanup_thread.o:	cleanup_thread.c slon.h
@@ -78,15 +72,12 @@ sync_thread.o:		sync_thread.c slon.h
 conf-file.o:		conf-file.c slon.h confoptions.h
 confoptions.o:		confoptions.c slon.h confoptions.h
 
-snmp_thread.o:		snmp_thread.c slon.h
-	$(CC) $(PTHREAD_CFLAGS) $(CFLAGS) $(NETSNMP_CFLAGS) -DHAVE_NETSNMP -c $< -o $@
-
 conf-file.c:		conf-file.l
 ifdef FLEX
 	$(FLEX) $(FLEXFLAGS) -o'$@' $<
 else
-	@echo "Missing flex $< $@"
-	@exit
+    @echo "Missing flex $< $@"
+    @exit
 endif
 
 clean distclean:
@@ -103,12 +94,11 @@ installdirs:
 	$(mkinstalldirs) $(DESTDIR)$(slonbindir)
 
 splint:
-	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(SFILES2)
+	splint -I $(pgincludedir) -I $(pgincludeserverdir) +unixlib -preproc +skip-sys-headers $(SFILES)
 
 distdir: $(DISTFILES)
 	mkdir $(distdir)/$(subdir)
 	-chmod 777 $(distdir)/$(subdir)
 	for file in $(DISTFILES) ; do \
-      cp $$file $(distdir)/$(subdir)/$$file || exit; \
-    done
-
+		cp $$file $(distdir)/$(subdir)/$$file || exit; \
+	done

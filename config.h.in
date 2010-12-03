@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2010, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- * 
+ *
  * ----------
  */
 #ifndef	SLONY_I_CONFIG_H
@@ -23,46 +23,6 @@
 #endif
 
 #undef PGSHARE
-
-#undef HAVE_NETSNMP
-#ifdef HAVE_NETSNMP
-
-/* Define to 1 if the system has the type `uint32_t'. */
-#undef HAVE_UINT32_T
-
-/* Define to 1 if the system has the type `uint64_t'. */
-#undef HAVE_UINT64_T
-
-/* Define to 1 if the system has the type `ssize_t'. */
-#undef HAVE_SSIZE_T
-
-/* Define to 1 if the system has the type `int32_t'. */
-#undef HAVE_INT32_T
-
-/* Define to 1 if the system has the type `int64_t'. */
-#undef HAVE_INT64_T
-
-/* Define to 1 if you have the <stdarg.h> header file. */
-#undef HAVE_STDARG_H
-
-/* The size of a `int', as computed by sizeof. */
-#undef SIZEOF_INT
-
-/* The size of a `long', as computed by sizeof. */
-#undef SIZEOF_LONG
-
-/* The size of a `long long', as computed by sizeof. */
-#undef SIZEOF_LONG_LONG
-
-/* The size of a `short', as computed by sizeof. */
-#undef SIZEOF_SHORT
-
-#define NETSNMP_IMPORT extern
-#define NETSNMP_INLINE
-#define RETSIGTYPE void
-#define NET_SNMP_CONFIG_H
-#endif
-
 
 /* Set to 1 if libpq contains PQfreemem() */
 #undef HAVE_PQFREEMEM
