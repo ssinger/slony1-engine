@@ -9,7 +9,7 @@ the &slony1; code, it is highly recommended that you download and
 install a prebuilt binary distribution and jump straight to the
 configuration section below.  There are likely to be links and/or
 binaries at <ulink url="http://pgfoundry.org/projects/slony1/">
-pgFoundry &slony1; site </ulink>.
+pgFoundry &slony1; site </ulink>.</para>
 
 <para> There are also RPM binaries available at that site for recent
 versions of &slony1; for recent versions of &postgres;.
@@ -59,7 +59,7 @@ that need to be in the &slony1; <filename>lib</filename> and
 
 <para>The first step of the installation procedure is to configure the
 source tree for your system.  This is done by running the
-<application>configure</application> script.&slony1; is configured by 
+<application>configure</application> script.&slony1; is configured by
 pointing it to the
 various &postgres; library, binary, and include directories.  For a
 full list of these options, use the command <command>./configure
@@ -120,7 +120,7 @@ to permit indicating values for various paths, including
 configured with the option <command>--enable-thread-safety</command>
 to provide correct client libraries. </para>
 
-<para> &slony1; requires that the &postgres; server headers be installed. 
+<para> &slony1; requires that the &postgres; server headers be installed.
 Some binary distributions of &postgres; include this is a a -dev package.</para>
 
 <para>After running configure, you may wish to review the file
@@ -140,7 +140,7 @@ installed in
 <screen>
 PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 ./configure \
-    --with-pgconfigdir=$PGMAIN/bin 
+    --with-pgconfigdir=$PGMAIN/bin
 </screen>
 
 <para>The <application>configure</application> script will run a
@@ -148,8 +148,7 @@ number of tests to guess values for various dependent variables and
 try to detect some quirks of your system.  &slony1; is known to need a
 modified version of <application>libpq</application> on specific
 platforms such as Solaris2.X on SPARC.  A patch for libpq version
-7.4.2 can be found at <ulink id="threadpatch" url=
-"http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
+7.4.2 can be found at <ulink url="http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz" id="threadpatch">
 http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz
 </ulink> Similar patches may need to be constructed for other
 versions; see the FAQ entry on <link linkend="threadsafety"> thread
@@ -222,8 +221,7 @@ discovered and written down about the care and feeding of &slony1;.</para>
 <para> This is only built if you specify <command>--with-docs</command></para>
 
 <para> Note that you may have difficulty building the documentation on
-older Red Hat systems (RHEL4 and below) See <ulink url=
-"https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382"> Bug
+older Red Hat systems (RHEL4 and below) See <ulink url="https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=159382"> Bug
 159382 (For RHEL) </ulink> See the <filename>INSTALL</filename> file
 for a workaround for Fedora...</para>
 
@@ -242,8 +240,7 @@ distributions, it is also possible to install &slony1; using binary
 packages. Slony Global Development Team provides official RPMs and
 SRPMs for many versions or Red Hat and Fedora .</para>
 
-<para>The RPMs are available at <ulink
-url="http://yum.pgsqlrpms.org"> &postgres RPM Repository
+<para>The RPMs are available at <ulink url="http://yum.pgsqlrpms.org"> &postgres RPM Repository
 </ulink>. Please read the howto provided in the website for configuring
 yum to use that repository. Please note that the RPMs will look for RPM
 installation of &postgres;, so if you install &postgres; from source,
@@ -272,8 +269,7 @@ docs are installed in
 
 <indexterm><primary>installing &slony1; on &windows;</primary></indexterm>
 
-<para> On &windows; systems, instead of running one <xref
-linkend="slon"> daemon per node, a single slon service is installed
+<para> On &windows; systems, instead of running one <xref linkend="slon"> daemon per node, a single slon service is installed
 which can then be controlled through the <command>Services</command>
 control panel applet, or from a command prompt using the
 <command>net</command> command.</para>
@@ -285,7 +281,7 @@ Before you can run Slony, you must also register an engine!
 
 WARNING! Service is registered to run as Local System. You are
 encouraged to change this to a low privilege account to increase
-system security. 
+system security.
 </screen>
 
 <para> Once the service is installed, individual nodes can be setup
@@ -296,22 +292,20 @@ C:\Program Files\PostgreSQL\8.3\bin> slon -addengine c:\node1.conf
 Engine added.
 </screen>
 
-<para>Other, self explanatory commands include <command>slon -unregservice 
-&lt;service name&gt;</command>, <command>slon -listengines 
-&lt;service name&gt;</command> and <command>slon -delengine 
-&lt;service name&gt; &lt;config file&gt;</command>.</para> 
+<para>Other, self explanatory commands include <command>slon -unregservice
+&lt;service name&gt;</command>, <command>slon -listengines
+&lt;service name&gt;</command> and <command>slon -delengine
+&lt;service name&gt; &lt;config file&gt;</command>.</para>
 
 <para> For further information about the &windows; port, you may want
 to see the following URLs: </para>
 
 <itemizedlist>
 
-<listitem><para> <ulink
-url="http://developer.pgadmin.org/~hiroshi/Slony-I/"> Slony-I Windows
+<listitem><para> <ulink url="http://developer.pgadmin.org/~hiroshi/Slony-I/"> Slony-I Windows
 installer sample </ulink> </para> </listitem>
 
-<listitem><para> <ulink url=
-"http://people.planetpostgresql.org/xzilla/index.php?/archives/200-Alpha-testing-Slony-on-win32-Crib-Notes.html">
+<listitem><para> <ulink url="http://people.planetpostgresql.org/xzilla/index.php?/archives/200-Alpha-testing-Slony-on-win32-Crib-Notes.html">
 xzilla's Alpha testing Slony on win32 Crib Notes </ulink> </para> </listitem>
 
 </itemizedlist>

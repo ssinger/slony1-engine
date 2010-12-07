@@ -4,7 +4,7 @@
 <indexterm><primary>help - finding more assistance</primary></indexterm>
 
 <para>If you are having problems with &slony1;, you have several
-options for help:
+options for help:</para>
 
 <sect2>
 <title>&slony1; Website</title>
@@ -20,8 +20,7 @@ Mailing Lists</title>
 The answer to your problem may exist
 in the Slony1-general mailing list archives, or you may choose to ask
 your question on the Slony1-general mailing list. The mailing list
-archives, and instructions for joining the list may be found <ulink
-      url="http://lists.slony.info/mailman/listinfo/slony1-general">here. </ulink>. </para>
+archives, and instructions for joining the list may be found <ulink url="http://lists.slony.info/mailman/listinfo/slony1-general">here. </ulink>. </para>
 
 <para>
 If you are a question to the mailing list then you should try to include
@@ -48,8 +47,7 @@ analyzing the problem. </para>
 <itemizedlist>
 
 <listitem><para>There are several articles here
-<ulink
-      url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
+<ulink url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
 Varlena GeneralBits </ulink> that may be helpful but was written for an older
 version of &slony1;.</para></listitem>
 
@@ -59,8 +57,7 @@ questions. Many people leave themselves logged into IRC and
 only periodically check the channel.  It might take a while
 before someone answers your questions</para></listitem>
 
-<listitem><para> <ulink url="http://pgpool.projects.postgresql.org/"
-      id="pgpool"> <application> pgpool </application> </ulink> </para>
+<listitem><para> <ulink url="http://pgpool.projects.postgresql.org/" id="pgpool"> <application> pgpool </application> </ulink> </para>
 
 <para> <application>pgpool</application> is a connection pool server
 for &postgres;; it allows an application to connect to it as if it

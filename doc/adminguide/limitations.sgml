@@ -9,7 +9,7 @@
 <listitem><para>Changes to large objects (BLOBS)</para></listitem>
 <listitem><para>Changes made by DDL commands</para></listitem>
 <listitem><para>Changes to users and roles</para></listitem>
-<listitem><para>Changes made by the TRUNCATE command, 
+<listitem><para>Changes made by the TRUNCATE command,
 though this might change in a future version of &slony1;</para></listitem>
 </itemizedlist>
 </para>
@@ -19,16 +19,14 @@ collects updates using triggers, and neither schema changes nor large
 object operations are captured by triggers</para>
 
 <para>There is a capability for &slony1; to propagate notably DDL changes
-if you submit them as scripts via the <application>slonik</application> <xref
-linkend="stmtddlscript"> operation.  That is not handled
+if you submit them as scripts via the <application>slonik</application> <xref linkend="stmtddlscript"> operation.  That is not handled
 <quote>automatically;</quote> you, as a database administrator, will
-have to construct an SQL DDL script and submit it, via <xref
-linkend="stmtddlscript">.
+have to construct an SQL DDL script and submit it, via <xref linkend="stmtddlscript">.</para>
 
 <para>If you have these sorts of requirements, it may be worth
 exploring the use of &postgres; 8.X <acronym>PITR</acronym> (Point In
 Time Recovery), where <acronym>WAL</acronym> logs are replicated to
-remote 
+remote</para>
 
 
 </sect1>

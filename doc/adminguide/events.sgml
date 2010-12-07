@@ -3,11 +3,11 @@
 <title>Events & Confirmations</title>
 <para>
 &slony1; transfers configuration changes and application data through
-events.   Events in &slony1; have an origin, a type and some parameters.   
+events.   Events in &slony1; have an origin, a type and some parameters.
 When an event is created it is inserted
-into the event queue (the <xref linkend="table.sl-event"> table) on the node the event
+into the event queue (the &slevent; table) on the node the event
 originates on.  The remoteListener threads of slon processes then pick up
-that event (by quering the sl_event table) and passing the event to the
+that event (by querying the &slevent; table) and passing the event to the
 slons remoteWorker thread for processing.
 </para>
 
@@ -15,7 +15,7 @@ slons remoteWorker thread for processing.
 An event is uniquely identified by taking both the node id of the node the
 event originates on and the event sequence number for that node.
 For example (1,5000001) identifies event 5000001 originating from node 1.
-While (3,5000001) identifies a different event that originated on a 
+While (3,5000001) identifies a different event that originated on a
 different node.
 </para>
 
@@ -24,11 +24,11 @@ different node.
 <para>
 SYNC events are used to transfer application data for one node to the next.
 When data in a replicated table changes a trigger fires that records information
-about the change in the <xref linkend="table.sl-log-1"> or <xref linkend="table.sl-log-2"> tables.  The localListener thread
+about the change in the &sllog1; or &sllog2; tables.  The localListener thread
 in the slon processes will then periodically generate a SYNC event.  When the
 SYNC event is created &slony1; will find the heighest log_seqid assigned so far
 along with a list of log_seqid's that were assigned to transactions that
-have not yet been committed.  This information is stored as part of the SYNC 
+have not yet been committed.  This information is stored as part of the SYNC
 event.
 </para>
 
@@ -58,21 +58,23 @@ Confirmation messages are the transfered back to all other nodes in the cluster.
 <para>
 The slon cleanupThread will periodically run the
 <xref linkend="function.cleanupevent-interval-boolean"> database
-function that will delete all but the most recently confirmed event for 
-each origin/receiver pair (because if an event has been confirmed by a 
+function that will delete all but the most recently confirmed event for
+each origin/receiver pair (because if an event has been confirmed by a
 receiver then all older events from that origin have also been confirmed
 by the receiver).   Then the function will delete any SYNC events that are
-older than the oldest row left in sl_confirm (for each origin). The data 
-for these deleted events will also be removed from the sl_log_1 and sl_log_2
+older than the oldest row left in &slconfirm; (for each origin). The data
+for these deleted events will also be removed from the &sllog1; and &sllog2;
 tables.
 </para>
 <para>
-When &slony1; is first enabled it will log the data to replicate to the
-sl_log_1 table.  After a while it will stop logging to sl_log_1 and switch
-to logging on sl_log_2.  When all of rows in  in sl_log_1 have been replicated
-&slony1; will TRUNCATE the sl_log_1 table (to clear out the dead tuples), 
-stop logging to sl_log_2 and switch back to logging to the newly truncated 
-sl_log_1 table.  This process will be periodically repeated as &slony1; runs.
+When &slony1; is first enabled it will log the data to replicate to
+the &sllog1; table.  After a while it will stop logging to &sllog1;
+and switch to logging on &sllog2;.  When all of rows in in &sllog1;
+have been replicated &slony1; will <command>TRUNCATE</command> the
+&sllog1; table (to clear out the dead tuples), stop logging to
+&sllog2; and switch back to logging to the newly truncated &sllog1;
+table.  This process of rotating between the two log tables is
+periodically repeated as &slony1; runs.
 </para>
 
 </sect2>

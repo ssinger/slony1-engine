@@ -19,15 +19,15 @@ or operating systems</para></listitem>
 to slave</para></listitem>
 <listitem><para>&slony1; allows you to replicate some tables to one slave
 and other tables to another slave</para></listitem>
-<listitem><para>&slony1; allows different database servers to be the 
+<listitem><para>&slony1; allows different database servers to be the
 origin(master) for different tables</para></listitem>
 
-</itemizedlist>
+</itemizedlist></para></sect2>
 
 <sect2>
 <title>About This Book</title>
 <para>
-This book is intended as an administration guide and reference for 
+This book is intended as an administration guide and reference for
 &slony1; version &version;  If you are using a different version of &slony1;
 then you should refer to the administration guide for that version.
 </para>

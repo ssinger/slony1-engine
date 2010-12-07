@@ -25,7 +25,7 @@ inherit: </para>
 <para> The example is somewhat simplistic as it only provides rules to
 handle initial insertion into the respective partitions; it does not
 then support allowing tuples to migrate from partition to partition if
-they are altered via an <COMMAND>UPDATE</COMMAND> statement.  On the
+they are altered via an <command>UPDATE</command> statement.  On the
 other hand, unlike with many partitioning cases, this one permits the
 <quote>parent</quote> table to contain tuples. </para>
 
@@ -61,16 +61,15 @@ following: </para>
 thus-far-unused partition will be empty, we offer an alternative
 mechanism which evades the need to create extra replication sets and
 the need to submit multiple <xref linkend="stmtsubscribeset">
-requests.  The alternative is as follows; we use <xref
-linkend="stmtddlscript">, extending the DDL script thus: </para>
+requests.  The alternative is as follows; we use <xref linkend="stmtddlscript">, extending the DDL script thus: </para>
 
 <itemizedlist>
 <listitem><para> Add the new partition(s) on each node </para> </listitem>
-<listitem><para> Run a &slony1; stored function to mark the new partition as being a replicated table </para> 
+<listitem><para> Run a &slony1; stored function to mark the new partition as being a replicated table </para>
 
 <para> On the origin node, if the table is found to have tuples in it,
 the DDL script will be aborted, as the precondition that it be empty
-has been violated. </para> 
+has been violated. </para>
 
 <para> On subscriber nodes, we may safely <command>TRUNCATE</command> the new table. </para>
 </listitem>
@@ -82,7 +81,7 @@ function</quote> is <function>add_empty_table_to_replication()</function>; the o
 provide additional structure and validation of the arguments </para>
 
 <itemizedlist>
-<listitem><para> <function> add_empty_table_to_replication (set_id, tab_id, nspname, tabname, idxname, comment);</function> </para> 
+<listitem><para> <function> add_empty_table_to_replication (set_id, tab_id, nspname, tabname, idxname, comment);</function> </para>
 
 <para> This is the <quote>base</quote> function; you must specify the
 set ID, table ID, namespace name, table name, index name, and a
@@ -94,7 +93,7 @@ fail if it does not exist. </para>
 
 </listitem>
 
-<listitem><para> <function> replicate_partition(tab_id, nspname, tabname, idxname, comment); </function> </para> 
+<listitem><para> <function> replicate_partition(tab_id, nspname, tabname, idxname, comment); </function> </para>
 
 <para> If it is known that the table to be replicated inherits from a
 replicated parent table, then this function can draw set and origin

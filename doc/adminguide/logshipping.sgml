@@ -16,7 +16,7 @@ of some sort of <quote>avian transport</quote> system.</para>
 in this form, including:
 
 <itemizedlist>
-  
+
   <listitem><para> Replicating to nodes that
   <emphasis>aren't</emphasis> securable</para></listitem>
 
@@ -68,8 +68,7 @@ shipping, you must have at least one subscriber node. </para></note>
 
 </qandaentry>
 
-<qandaentry> <question> <para> What takes place when a <xref
-linkend="stmtfailover">/ <xref linkend="stmtmoveset"> takes
+<qandaentry> <question> <para> What takes place when a <xref linkend="stmtfailover">/ <xref linkend="stmtmoveset"> takes
 place?</para></question>
 
 <answer><para> Nothing special.  So long as the archiving node remains
@@ -138,7 +137,7 @@ handled.</para></listitem>
 
 <listitem><para><command>DDL_SCRIPT</command> is handled.</para></listitem>
 
-<listitem><para><command> UNSUBSCRIBE_SET </command></para> 
+<listitem><para><command> UNSUBSCRIBE_SET </command></para>
 
 <para> This event, much like <command>SUBSCRIBE_SET</command> is not
 handled by the log shipping code.  But its effect is, namely that
@@ -217,7 +216,7 @@ next transaction.</para>
 the file will fail!  It is futile to go through the parsing effort of
 reading the remainder of the file.</para>
 
-<para> Better idea: 
+<para> Better idea:
 
 <itemizedlist>
 
@@ -254,7 +253,7 @@ done
 </listitem>
 
 <listitem><para> </para> </listitem>
-</itemizedlist>
+</itemizedlist></para></listitem></itemizedlist>
 
 </sect2>
 
@@ -263,8 +262,7 @@ done
 
 <indexterm><primary> log shipping - trigger deactivation </primary> </indexterm>
 
-<para> It was once pointed out (<ulink
-url="http://www.slony.info/bugzilla/show_bug.cgi?id=19"> Bugzilla bug
+<para> It was once pointed out (<ulink url="http://www.slony.info/bugzilla/show_bug.cgi?id=19"> Bugzilla bug
 #19</ulink>) that the dump of a schema may include triggers and rules
 that you may not wish to have running on the log shipped node.</para>
 
@@ -289,7 +287,7 @@ apply logs, called <application>slony_logshipper</application>.  It is
 run with three sorts of parameters:</para>
 
 <itemizedlist>
-<listitem><para> Options, chosen from the following: </para> 
+<listitem><para> Options, chosen from the following: </para>
 <itemizedlist>
 <listitem><para><option>h</option> </para> <para>    display this help text and exit </para> </listitem>
 <listitem><para><option>v</option> </para> <para>    display program version and exit </para> </listitem>
@@ -306,7 +304,7 @@ run with three sorts of parameters:</para>
 <listitem><para> A specified log shipper configuration file </para>
 <para> This configuration file consists of the following specifications:</para>
 <itemizedlist>
-<listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para> 
+<listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para>
 <para> Where the log shipper will leave messages.</para> </listitem>
 <listitem><para> <command>cluster name = 'T1';</command></para> <para> Cluster name </para> </listitem>
 <listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to this database, and apply logs to it. </para> </listitem>
@@ -333,7 +331,7 @@ run with three sorts of parameters:</para>
 "archive=$inarchive" echo "error messages:" echo "$errortext" ) | mail
 -s "Slony log shipping failed" postgres@localhost ';</command></para>
 
-<para>  The error command indicates a command to execute upon encountering an error.  All logging since the last successful completion of an archive is available in the <envar>$errortext</envar> variable. </para> 
+<para>  The error command indicates a command to execute upon encountering an error.  All logging since the last successful completion of an archive is available in the <envar>$errortext</envar> variable. </para>
 
 <para> In the example shown, this sends an email to the DBAs upon
 encountering an error.</para> </listitem>

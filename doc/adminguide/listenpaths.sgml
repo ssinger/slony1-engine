@@ -14,8 +14,7 @@ needful.</para>
 usage of cascaded subscribers (<emphasis>e.g.</emphasis> - subscribers
 that are subscribing through a subscriber node), you will have to be
 fairly careful about the configuration of <quote>listen paths</quote>
-via the Slonik <xref linkend="stmtstorelisten"> and <xref
-linkend="stmtdroplisten"> statements that control the contents of the
+via the Slonik <xref linkend="stmtstorelisten"> and <xref linkend="stmtdroplisten"> statements that control the contents of the
 table <xref linkend="table.sl-listen">.</para>
 
 <para>The <quote>listener</quote> entries in this table control where
@@ -65,7 +64,7 @@ it discovered a place to get <command>sync</command> events.</para>
 <para>The simple cases tend to be simple to cope with.  We need to
 instead look at a more complex node configuration.</para>
 
-<para>Consider a set of nodes, 1 thru 6, where 1 is the origin, 
+<para>Consider a set of nodes, 1 thru 6, where 1 is the origin,
 where 2-4 subscribe directly to the origin, and where 5 subscribes to
 2, and 6 subscribes to 5.</para>
 
@@ -75,12 +74,12 @@ node should listen for messages coming from each other node:
 <screen>
        1|   2|   3|   4|   5|   6|
 --------------------------------------------
-   1   0    2    3    4    2    2 
-   2   1    0    1    1    5    5 
-   3   1    1    0    1    1    1 
-   4   1    1    1    0    1    1 
-   5   2    2    2    2    0    6 
-   6   5    5    5    5    5    0 
+   1   0    2    3    4    2    2
+   2   1    0    1    1    5    5
+   3   1    1    0    1    1    1
+   4   1    1    1    0    1    1
+   5   2    2    2    2    0    6
+   6   5    5    5    5    5    0
 </screen>
 </para>
 <para>Row 2 indicates all of the listen rules for node 2; it gets
@@ -141,8 +140,7 @@ of <xref linkend="slonik"> statements.</para>
 <itemizedlist>
 
 <listitem><para> If you change the shape of the node set, so that the
-nodes subscribe differently to things, you need to drop <xref
-linkend="table.sl-listen"> entries and create new ones to indicate the
+nodes subscribe differently to things, you need to drop <xref linkend="table.sl-listen"> entries and create new ones to indicate the
 new preferred paths between nodes.  Until &slony1 1.1;, there is no
 automated way at this point to do this
 <quote>reshaping</quote>.</para></listitem>
@@ -158,11 +156,9 @@ that are listening through it.</para></listitem>
 subscribers.  there won't be a single <quote>best</quote> listener
 configuration in that case.</para></listitem>
 
-<listitem><para> In order for there to be an <xref
-linkend="table.sl-listen"> path, there <emphasis>must</emphasis> be a
+<listitem><para> In order for there to be an <xref linkend="table.sl-listen"> path, there <emphasis>must</emphasis> be a
 series of <xref linkend="table.sl-path"> entries connecting the origin
-to the receiver.  this means that if the contents of <xref
-linkend="table.sl-path"> do not express a <quote>connected</quote>
+to the receiver.  this means that if the contents of <xref linkend="table.sl-path"> do not express a <quote>connected</quote>
 network of nodes, then some nodes will not be reachable.  this would
 typically happen, in practice, when you have two sets of nodes, one in
 one subnet, and another in another subnet, where there are only a
@@ -192,8 +188,7 @@ subscriber node and its provider.</para></listitem>
 <listitem><para> <xref linkend="table.sl-path"> entries are the second
 indicator; if <xref linkend="table.sl-subscribe"> has not already
 indicated <quote>how to listen,</quote> then a node may listen
-directly to the event's origin if there is a suitable <xref
-linkend="table.sl-path"> entry.</para></listitem>
+directly to the event's origin if there is a suitable <xref linkend="table.sl-path"> entry.</para></listitem>
 
 <listitem><para> Lastly, if there has been no guidance thus far based
 on the above data sources, then nodes can listen indirectly via every
@@ -202,8 +197,7 @@ receiver as a provider.</para></listitem>
 
 </itemizedlist></para>
 
-<para> Any time <xref linkend="table.sl-subscribe"> or <xref
-linkend="table.sl-path"> are modified,
+<para> Any time <xref linkend="table.sl-subscribe"> or <xref linkend="table.sl-path"> are modified,
 <function>RebuildListenEntries()</function> will be called to revise
 the listener paths.</para>
 

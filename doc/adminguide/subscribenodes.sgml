@@ -9,8 +9,7 @@ new subscribing node. If you don't have slons running, nothing will
 happen, and you'll beat your head against a wall trying to figure out
 what is going on.</para>
 
-<para>Subscribing a node to a set is done by issuing the <xref
-linkend="slonik"> command <xref linkend="stmtsubscribeset">. It may
+<para>Subscribing a node to a set is done by issuing the <xref linkend="slonik"> command <xref linkend="stmtsubscribeset">. It may
 seem tempting to try to subscribe several nodes to a set within a
 single try block like this:
 

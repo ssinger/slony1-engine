@@ -101,9 +101,7 @@ via the command <command>make install-all-headers</command>.
 <qandaentry id="pg81funs">
 
 <question> <para> I'm trying to upgrade to a newer version of &slony1;
-and am running into a problem with <xref
-linkend="stmtupdatefunctions">.  When I run <xref
-linkend="stmtupdatefunctions">, my
+and am running into a problem with <xref linkend="stmtupdatefunctions">.  When I run <xref linkend="stmtupdatefunctions">, my
 <application>postmaster</application> falls over with a Signal 11.
 There aren't any seeming errors in the log files, aside from the
 &postgres; logs indicating that, yes indeed, the postmaster fell
@@ -153,7 +151,7 @@ the upgrade via a series of transactions, performing the equivalent of
 what &lslonik; does <quote>by hand</quote>: </para>
 
 <itemizedlist>
-<listitem><para> Take <filename>slony1_funcs.sql</filename> and do three replacements within it: </para> 
+<listitem><para> Take <filename>slony1_funcs.sql</filename> and do three replacements within it: </para>
 
 <itemizedlist>
 <listitem><para> Replace <quote>@CLUSTERNAME@</quote> with the name of the cluster </para> </listitem>
@@ -206,7 +204,7 @@ find a library to link to, not that libpq lacked the function call.
 <answer> <para> Note that this same symptom can be the indication of
 similar classes of system configuration problems.  Bad symlinks, bad
 permissions, bad behaviour on the part of your C compiler, all may
-potentially lead to this same error message. </para> 
+potentially lead to this same error message. </para>
 
 <para> Thus, if you see this error, you need to look in the log file
 that is generated, <filename>config.log</filename>.  Search down to
@@ -228,7 +226,7 @@ In one case, it used type <type>int</type>, conflicting with
 where <application>flex</application> (which generates
 <filename>scan.c</filename>) and <application>bison</application>
 (which generates <filename>parser.c</filename>) diverged in their
-handling of this variable. </para> 
+handling of this variable. </para>
 <itemizedlist>
 <listitem><para> You might might <quote>hack</quote> <filename>scan.c</filename> by hand to use the matching type. </para> </listitem>
 <listitem><para> You might select different versions of <application>bison</application> or <application>flex</application> so as to get versions whose data types match. </para> </listitem>
@@ -280,7 +278,7 @@ of tables in the schema. </para> </listitem>
 
 <listitem><para> Pull a data dump, using <command>pg_dump --data-only</command>, of some node of your choice.  It doesn't need to be for the <quote>master</quote> node.  This dump will include the contents of the &slony1;-specific tables; you can discard that, or ignore it.  Since the schema dump didn't contain table definitions for the &slony1; tables, they won't be loaded. </para> </listitem>
 
-<listitem><para> Finally, load the three components in proper order: </para> 
+<listitem><para> Finally, load the three components in proper order: </para>
 <itemizedlist>
 <listitem><para> Schema (tables) </para> </listitem>
 <listitem><para> Data dump </para> </listitem>
@@ -423,8 +421,7 @@ instances can't connect to the nodes.</para>
 
 <para>This will generally lead to nodes remaining entirely untouched.</para>
 
-<para>Recheck the connection configuration.  By the way, since <xref
-linkend="slon"> links to libpq, you could have password information
+<para>Recheck the connection configuration.  By the way, since <xref linkend="slon"> links to libpq, you could have password information
 stored in <filename> $HOME/.pgpass</filename>, partially filling in
 right/wrong authentication information there.</para>
 </answer>
@@ -433,7 +430,7 @@ right/wrong authentication information there.</para>
 <qandaentry id="morethansuper">
 <question> <para> I created a <quote>superuser</quote> account,
 <command>slony</command>, to run replication activities.  As
-suggested, I set it up as a superuser, via the following query: 
+suggested, I set it up as a superuser, via the following query:
 <command>
 update pg_shadow set usesuper = 't' where usename in ('slony',
 'molly', 'dumpy');
@@ -493,7 +490,7 @@ want to take a look at pg_locks to see what's up:</para>
 
 <screen>
 sampledb=# select * from pg_locks where transaction is not null order by transaction;
- relation | database | transaction |  pid    |     mode      | granted 
+ relation | database | transaction |  pid    |     mode      | granted
 ----------+----------+-------------+---------+---------------+---------
           |          |   127314921 | 2605100 | ExclusiveLock | t
           |          |   127326504 | 5660904 | ExclusiveLock | t
@@ -531,7 +528,7 @@ concurrently.</para></question>
 
 <screen>
 $ ps -aef | egrep '[2]605100'
-postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY 
+postgres 2605100  205018	0 18:53:43  pts/3  3:13 postgres: postgres sampledb localhost COPY
 </screen>
 
 <para>This happens to be a <command>COPY</command> transaction
@@ -611,7 +608,7 @@ that are using old query plans that reference the old stored
 functions, resulting in the inserts to <envar>sl_log_1</envar> </para>
 
 <para> Closing those connections and opening new ones will resolve the
-issue. </para> </answer> 
+issue. </para> </answer>
 
 <answer> <para> In the longer term, there is an item on the &postgres;
 TODO list to implement dependancy checking that would flush cached
@@ -633,8 +630,7 @@ where we had configuration thus:
 </itemizedlist></para>
 
 <para>The subscription for node 3 was changed to have node 1 as
-provider, and we did <xref linkend="stmtdropset"> /<xref
-linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
+provider, and we did <xref linkend="stmtdropset"> /<xref linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
 
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
 
@@ -669,8 +665,7 @@ This points out two principles:
 <itemizedlist>
 
 <listitem><para> If you have multiple nodes, and cascaded subscribers,
-you need to be quite careful in populating the <xref
-linkend="stmtstorelisten"> entries, and in modifying them if the
+you need to be quite careful in populating the <xref linkend="stmtstorelisten"> entries, and in modifying them if the
 structure of the replication <quote>tree</quote>
 changes.</para></listitem>
 
@@ -735,7 +730,7 @@ over. </para>
 and issuing <command>kill -2</command> to any of the offending
 connections.  Unfortunately, since the problem took place within the
 networking layer, neither &postgres; nor &slony1; have a direct way of
-detecting this. </para> 
+detecting this. </para>
 
 <para> You can <emphasis>mostly</emphasis> avoid this by making sure
 that &lslon; processes always run somewhere nearby the server that
@@ -838,8 +833,8 @@ that it's hitting.</para>
 <para>Long and short: This points to a need to <quote>audit</quote>
 what installations of &postgres; and &slony1; you have in place on the
 machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right. 
-...</para> 
+not to link up quite right.
+...</para>
 
 <para> Life is simplest if you only have one set of &postgres;
 binaries on a given server; in that case, there isn't a <quote>wrong
@@ -876,9 +871,9 @@ put them into <filename>$(HOME)/.pgpass.</filename></para>
 <question><para>Table indexes with FQ namespace names
 
 <programlisting>
-set add table (set id = 1, origin = 1, id = 27, 
-               full qualified name = 'nspace.some_table', 
-               key = 'key_on_whatever', 
+set add table (set id = 1, origin = 1, id = 27,
+               full qualified name = 'nspace.some_table',
+               key = 'key_on_whatever',
                comment = 'Table some_table in namespace nspace with a candidate primary key');
 </programlisting></para></question>
 
@@ -1023,8 +1018,7 @@ sort of <quote>logical</quote> corruption of the data even if there
 never was a disk failure making it <quote>physical.</quote>
 </para></answer>
 
-<answer><para> As discusssed in <xref linkend="failover">, using <xref
-linkend="stmtfailover"> should be considered a <emphasis>last
+<answer><para> As discusssed in <xref linkend="failover">, using <xref linkend="stmtfailover"> should be considered a <emphasis>last
 resort</emphasis> as it implies that you are abandoning the origin
 node as being corrupted.  </para></answer>
 </qandaentry>
@@ -1039,8 +1033,7 @@ ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level
 DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
 </screen>
 
-<para> This is then followed by a series of failed syncs as the <xref
-linkend="slon"> shuts down:</para>
+<para> This is then followed by a series of failed syncs as the <xref linkend="slon"> shuts down:</para>
 
 <screen>
 DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
@@ -1088,8 +1081,7 @@ alter the subscriptions for those nodes to have them subscribe to a
 provider that <emphasis>will</emphasis> be sticking around during the
 maintenance.</para>
 
-<warning> <para> What you <emphasis>don't</emphasis> do is to <xref
-linkend="stmtunsubscribeset">; that would require reloading all data
+<warning> <para> What you <emphasis>don't</emphasis> do is to <xref linkend="stmtunsubscribeset">; that would require reloading all data
 for the nodes from scratch later.
 
 </para></warning>
@@ -1106,8 +1098,7 @@ ERROR  remoteWorkerThread_1: "begin transaction; set transaction isolation level
 DETAIL:  Key (sub_provider,sub_receiver)=(1,501) is not present in table "sl_path".
 </screen>
 
-<para> This is then followed by a series of failed syncs as the <xref
-linkend="slon"> shuts down:
+<para> This is then followed by a series of failed syncs as the <xref linkend="slon"> shuts down:
 
 <screen>
 DEBUG2 remoteListenThread_1: queue event 1,4897517 SYNC
@@ -1212,7 +1203,7 @@ inside a <quote>try</quote> block.</para></answer>
 <para> I tried to add a table to a set, and got the following message:
 
 <screen>
-	Slony-I: cannot add table to currently subscribed set 1
+    Slony-I: cannot add table to currently subscribed set 1
 </screen></para></question>
 
 <answer><para> You cannot add tables to sets that already have
@@ -1248,7 +1239,7 @@ after where the previous set(s) left off.</para> </answer>
 down) and nobody noticed for several days.  Now, when the &lslon; for
 that node starts up, it runs for about five minutes, then terminates,
 with the error message: <command>ERROR: remoteListenThread_%d: timeout
-for event selection</command> What's wrong, and what do I do? </para> 
+for event selection</command> What's wrong, and what do I do? </para>
 </question>
 
 <answer><para> The problem is that the listener thread (in
@@ -1258,7 +1249,7 @@ the query will run for five minutes; if there were many days worth of
 outstanding events, this might take too long.
  </para> </answer>
 
-<answer><para> On  versions of &slony1; before 1.1.7, 1.2.7, and 1.3, one answer would be to increase the timeout in 
+<answer><para> On  versions of &slony1; before 1.1.7, 1.2.7, and 1.3, one answer would be to increase the timeout in
 <filename>src/slon/remote_listener.c</filename>, recompile &lslon;, and retry.  </para> </answer>
 
 <answer><para> Another would be to treat the node as having failed,
@@ -1268,8 +1259,7 @@ well be cheaper to do this than it is to find a way to let it catch
 up.  </para> </answer>
 
 <answer><para> In newer versions of &slony1;, there is a new
-configuration parameter called <xref
-linkend="slon-config-remote-listen-timeout">; you'd alter the config
+configuration parameter called <xref linkend="slon-config-remote-listen-timeout">; you'd alter the config
 file to increase the timeout, and try again.  Of course, as mentioned
 above, it could be faster to drop the node and recreate it than to let
 it catch up across a week's worth of updates...  </para> </answer>
@@ -1333,7 +1323,7 @@ need to suppress the restart of node 2 for a while, long enough for
 node 1 to run the cleanup thread.</para>
 
 <para>You might evade the problem somewhat by setting the &lslon; parameter
-<xref linkend="slon-config-cleanup-interval"/> to a larger value.</para>
+<xref linkend="slon-config-cleanup-interval">> to a larger value.</para>
 
 <para>Unfortunately, any time the outage of node 2 could exceed that
 interval, the risk of losing log data inexorably emerges.</para>
@@ -1359,7 +1349,7 @@ generally getting steadily worse. </para>
 
 <answer> <para> There are actually a number of possible causes for
 this sort of thing.  There is a question involving similar pathology
-where the problem is that <link linkend="pglistenerfull"> 
+where the problem is that <link linkend="pglistenerfull">
 &pglistener; grows because it is not vacuumed. </link>
 </para>
 
@@ -1415,7 +1405,7 @@ hide from the database the fact that the application imagines that
 numerous of them are left idle in transaction for hours at a time.
 </para> </answer>
 
-</qandaentry> 
+</qandaentry>
 
 <qandaentry id="faq17">
 <question><para>After dropping a node, &sllog1;/&sllog2;
@@ -1434,12 +1424,11 @@ than the final <xref linkend="table.sl-confirm"> entry, which rather
 curtails the ability to purge out old logs.</para>
 
 <para>Diagnosis: Run the following query to see if there are any
-<quote>phantom/obsolete/blocking</quote> <xref
-linkend="table.sl-confirm"> entries:
+<quote>phantom/obsolete/blocking</quote> <xref linkend="table.sl-confirm"> entries:
 
 <screen>
 oxrsbar=# select * from _oxrsbar.sl_confirm where con_origin not in (select no_id from _oxrsbar.sl_node) or con_received not in (select no_id from _oxrsbar.sl_node);
- con_origin | con_received | con_seqno |        con_timestamp                  
+ con_origin | con_received | con_seqno |        con_timestamp
 ------------+--------------+-----------+----------------------------
           4 |          501 |     83999 | 2004-11-09 19:57:08.195969
           1 |            2 |   3345790 | 2004-11-14 10:33:43.850265
@@ -1515,10 +1504,9 @@ node.</para>
 
 <para>&slony1; 1.1 provides a stored procedure that allows
 <command>SYNC</command> counts to be updated on the origin based on a
-<application>cron</application> job even if there is no <xref
-linkend="slon"> daemon running.</para> </answer></qandaentry>
+<application>cron</application> job even if there is no <xref linkend="slon"> daemon running.</para> </answer></qandaentry>
 
-<qandaentry id="PGLISTENERFULL">
+<qandaentry id="pglistenerfull">
 <question><para>Some nodes start consistently falling behind</para>
 
 <para>I have been running &slony1; on a node for a while, and am
@@ -1526,7 +1514,7 @@ seeing system performance suffering.</para>
 
 <para>I'm seeing long running queries of the form:
 <screen>
-	fetch 100 from LOG;
+    fetch 100 from LOG;
 </screen></para></question>
 
 <answer><para> This can be characteristic of &pglistener; (which is
@@ -1556,15 +1544,14 @@ the eldest transaction that is still open.  Long running transactions
 will cause trouble, and should be avoided, even on subscriber
 nodes.</para> </answer></qandaentry>
 
-<qandaentry> <question> <para> I have submitted a <xref
-linkend="stmtmoveset"> / <xref linkend="stmtddlscript"> request, and
+<qandaentry> <question> <para> I have submitted a <xref linkend="stmtmoveset"> / <xref linkend="stmtddlscript"> request, and
 it seems to be stuck on one of my nodes.  &slony1; logs aren't
 displaying any errors or warnings </para> </question>
 
 <answer> <para> Is it possible that you are running
 <application>pg_autovacuum</application>, and it has taken out locks
 on some tables in the replication set?  That would somewhat-invisibly
-block &slony1; from performing operations that require locking acquisition 
+block &slony1; from performing operations that require locking acquisition
 of exclusive locks. </para>
 
 <para> You might check for these sorts of locks using the following
@@ -1584,9 +1571,7 @@ LISTEN</quote> and <quote>UNLISTEN - switch into polling
 mode</quote>. </para> </question>
 
 <answer><para> The thresholds for switching between these modes are
-controlled by the configuration parameters <xref
-linkend="slon-config-sync-interval"> and <xref
-linkend="slon-config-sync-interval-timeout">; if the timeout value
+controlled by the configuration parameters <xref linkend="slon-config-sync-interval"> and <xref linkend="slon-config-sync-interval-timeout">; if the timeout value
 (which defaults to 10000, implying 10s) is kept low, that makes it
 easy for the &lslon; to decide to return to <quote>listening</quote>
 mode.  You may want to increase the value of the timeout
@@ -1600,7 +1585,7 @@ parameter. </para>
 <question><para>The &lslon; processes servicing my
 subscribers are growing to enormous size, challenging system resources
 both in terms of swap space as well as moving towards breaking past
-the 2GB maximum process size on my system. </para> 
+the 2GB maximum process size on my system. </para>
 
 <para> By the way, the data that I am replicating includes some rather
 large records.  We have records that are tens of megabytes in size.
@@ -1621,7 +1606,7 @@ fairly tremendous size. </para>
 value <envar> SLON_DATA_FETCH_SIZE </envar>, which is defined in the
 file <filename>src/slon/slon.h</filename>.  The relevant extract of
 this is shown below. </para>
- 
+
 <programlisting>
 #ifdef	SLON_CHECK_CMDTUPLES
 #define SLON_COMMANDS_PER_LINE		1
@@ -1643,9 +1628,7 @@ SYNC with the provider.  By default, this option is turned off, so the
 default modification to make is to change the second definition of
 <envar> SLON_DATA_FETCH_SIZE </envar> from 10 to 1. </para> </answer>
 
-<answer><para> In version 1.2, configuration values <xref
-linkend="slon-config-max-rowsize"> and <xref
-linkend="slon-config-max-largemem"> are associated with a new
+<answer><para> In version 1.2, configuration values <xref linkend="slon-config-max-rowsize"> and <xref linkend="slon-config-max-largemem"> are associated with a new
 algorithm that changes the logic as follows.  Rather than fetching 100
 rows worth of data at a time:</para>
 
@@ -1658,8 +1641,7 @@ restricts this aspect of memory consumption to about 8MB.  </para>
 </listitem>
 
 <listitem><para> Tuples with larger attributes are loaded until
-aggregate size exceeds the parameter <xref
-linkend="slon-config-max-largemem">.  By default, this restricts
+aggregate size exceeds the parameter <xref linkend="slon-config-max-largemem">.  By default, this restricts
 consumption of this sort to about 5MB.  This value is not a strict
 upper bound; if you have a tuple with attributes 50MB in size, it
 forcibly <emphasis>must</emphasis> be loaded into memory.  There is no
@@ -1713,8 +1695,7 @@ system, and retry. </para>
 something you should not keep running any longer than is necessary to
 migrate to 8.1. </para>
 
-<para> For more details, see the <ulink url=
-"http://archives.postgresql.org/pgsql-hackers/2005-12/msg00181.php">
+<para> For more details, see the <ulink url="http://archives.postgresql.org/pgsql-hackers/2005-12/msg00181.php">
 discussion on postgresql-hackers mailing list. </ulink>.  </para>
 </answer>
 </qandaentry>
@@ -1726,8 +1707,7 @@ nodes.  I am discovering that confirmations for set 1 never get to the
 nodes subscribing to set 2, and that confirmations for set 2 never get
 to nodes subscribing to set 1.  As a result, &sllog1;/&sllog2; grow
 and grow, and are never purged.  This was reported as
-&slony1; <ulink
-url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1485">
+&slony1; <ulink url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1485">
 bug 1485 </ulink>.
 </para>
 </question>
@@ -1739,9 +1719,7 @@ case.</para>
 <para> <function> RebuildListenEntries()</function> will be replaced
 in &slony1; version 1.2 with an algorithm that covers this case. </para>
 
-<para> In the interim, you'll want to manually add some <xref
-linkend="table.sl-listen"> entries using <xref
-linkend="stmtstorelisten"> or <function>storeListen()</function>,
+<para> In the interim, you'll want to manually add some <xref linkend="table.sl-listen"> entries using <xref linkend="stmtstorelisten"> or <function>storeListen()</function>,
 based on the (apparently not as obsolete as we thought) principles
 described in <xref linkend="listenpaths">.
 
@@ -1762,14 +1740,13 @@ your version of <filename>src/backend/slony1_funcs.c</filename> is
 file.  </para> </answer>
 </qandaentry>
 
-<qandaentry id="sequenceset"><question><para> <ulink url=
-"http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
+<qandaentry id="sequenceset"><question><para> <ulink url="http://gborg.postgresql.org/project/slony1/bugs/bugupdate.php?1226">
 Bug #1226 </ulink> indicates an error condition that can come up if
 you have a replication set that consists solely of sequences. </para>
 </question>
 
 <answer> <para> The  short answer is that having a replication set
-consisting only of sequences is not a 
+consisting only of sequences is not a
 best practice. </para>
 </answer>
 
@@ -1809,8 +1786,7 @@ command SET DROP TABLE, which will "do the trick."</para></listitem>
 <emphasis>essential functionality of <xref linkend="stmtsetdroptable">
 involves the functionality in <function>droptable_int()</function>.
 You can fiddle this by hand by finding the table ID for the table you
-want to get rid of, which you can find in <xref
-linkend="table.sl-table">, and then run the following three queries,
+want to get rid of, which you can find in <xref linkend="table.sl-table">, and then run the following three queries,
 on each host:</emphasis>
 
 <programlisting>
@@ -1849,7 +1825,7 @@ to do this, parallelling <xref linkend="stmtsetdroptable">.</para>
 
 <screen>
 oxrsorg=# select * from _oxrsorg.sl_sequence  where seq_id in (93,59);
- seq_id | seq_reloid | seq_set |       seq_comment				 
+ seq_id | seq_reloid | seq_set |       seq_comment
 --------+------------+---------+-------------------------------------
      93 |  107451516 |       1 | Sequence public.whois_cachemgmt_seq
      59 |  107451860 |       1 | Sequence public.epp_whoi_cach_seq_
@@ -1865,14 +1841,12 @@ delete from _oxrsorg.sl_sequence where seq_id in (93,59);
 </programlisting></para>
 
 <para>Those two queries could be submitted to all of the nodes via
-&funddlscript; / <xref
-linkend="stmtddlscript">, thus eliminating the sequence everywhere
+&funddlscript; / <xref linkend="stmtddlscript">, thus eliminating the sequence everywhere
 <quote>at once.</quote> Or they may be applied by hand to each of the
 nodes.</para>
 
 <para>Similarly to <xref linkend="stmtsetdroptable">, this is
-implemented &slony1; version 1.0.5 as <xref
-linkend="stmtsetdropsequence">.</para></answer></qandaentry>
+implemented &slony1; version 1.0.5 as <xref linkend="stmtsetdropsequence">.</para></answer></qandaentry>
 
 <qandaentry>
 <question><para> I set up my cluster using pgAdminIII, with cluster
@@ -1886,8 +1860,7 @@ ERROR: syntax error at or near -
 </question>
 
 <answer><para> The problem here is that &slony1; expects cluster names
-to be valid <ulink url=
-"http://www.postgresql.org/docs/8.3/static/sql-syntax-lexical.html">
+to be valid <ulink url="http://www.postgresql.org/docs/8.3/static/sql-syntax-lexical.html">
 SQL Identifiers</ulink>, and &lslonik; enforces this.  Unfortunately,
 <application>pgAdminIII</application> did not do so, and allowed using
 a cluster name that now causes <emphasis>a problem.</emphasis> </para> </answer>
@@ -1932,8 +1905,7 @@ serving this node already</para></blockquote></para></question>
 
 <answer><para> The problem is that the system table &pglistener;, used
 by &postgres; to manage event notifications, contains some entries
-that are pointing to backends that no longer exist.  The new <xref
-linkend="slon"> instance connects to the database, and is convinced,
+that are pointing to backends that no longer exist.  The new <xref linkend="slon"> instance connects to the database, and is convinced,
 by the presence of these entries, that an old
 <application>slon</application> is still servicing this &slony1;
 node.</para>
@@ -1945,7 +1917,7 @@ away.</para>
 run in such cases:
 
 <programlisting>
-twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik 
+twcsds004[/opt/twcsds004/OXRS/slony-scripts]$ cat restart_org.slonik
 cluster name = oxrsorg ;
 node 1 admin conninfo = 'host=32.85.68.220 dbname=oxrsorg user=postgres port=5532';
 node 2 admin conninfo = 'host=32.85.68.216 dbname=oxrsorg user=postgres port=5532';
@@ -1971,12 +1943,12 @@ issue should be transparently <quote>gone.</quote> </para>
 
 </answer></qandaentry>
 
-<qandaentry><question><para> I tried the following query which did not work:</para> 
+<qandaentry><question><para> I tried the following query which did not work:</para>
 
 <programlisting>
 sdb=# explain select query_start, current_query from pg_locks join
 pg_stat_activity on pid = procpid where granted = true and transaction
-in (select transaction from pg_locks where granted = false); 
+in (select transaction from pg_locks where granted = false);
 
 ERROR: could not find hash function for hash operator 716373
 </programlisting>
@@ -2016,9 +1988,9 @@ that your own queries will not run afoul of this problem, you may do
 so as follows: </para>
 
 <programlisting>
-/* cbbrowne@[local]/dba2 slony_test1=*/ \x     
+/* cbbrowne@[local]/dba2 slony_test1=*/ \x
 Expanded display is on.
-/* cbbrowne@[local]/dba2 slony_test1=*/ select * from pg_operator where oprname = '=' 
+/* cbbrowne@[local]/dba2 slony_test1=*/ select * from pg_operator where oprname = '='
 and oprnamespace = (select oid from pg_namespace where nspname = 'public');
 -[ RECORD 1 ]+-------------
 oprname      | =
@@ -2039,7 +2011,7 @@ oprcode      | "_T1".xxideq
 oprrest      | eqsel
 oprjoin      | eqjoinsel
 
-/* cbbrowne@[local]/dba2 slony_test1=*/ update pg_operator set oprcanhash = 'f' where 
+/* cbbrowne@[local]/dba2 slony_test1=*/ update pg_operator set oprcanhash = 'f' where
 oprname = '=' and oprnamespace = 2200 ;
 UPDATE 1
 </programlisting>
@@ -2092,18 +2064,18 @@ DEBUG2 remoteWorkerThread_1: syncing set 5 with 1 table(s) from provider 1
 DEBUG2 remoteWorkerThread_1: syncing set 3 with 1 table(s) from provider 1
 DEBUG2 remoteHelperThread_1_1: 0.135 seconds delay for first row
 DEBUG2 remoteHelperThread_1_1: 0.343 seconds until close cursor
-ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1          (log_origin, log_xid, log_tableid,                log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
-delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
-delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
-delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
-delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
-delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
-delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
-delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
-insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
-delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1	  (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values	  ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
+ERROR  remoteWorkerThread_1: "insert into "_oxrsapp".sl_log_1          (log_origin, log_xid, log_tableid,                log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '34', '35090538', 'D', '_rserv_ts=''9275244''');
+delete from only public.epp_domain_host where _rserv_ts='9275244';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '34', '35090539', 'D', '_rserv_ts=''9275245''');
+delete from only public.epp_domain_host where _rserv_ts='9275245';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '26', '35090540', 'D', '_rserv_ts=''24240590''');
+delete from only public.epp_domain_contact where _rserv_ts='24240590';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '26', '35090541', 'D', '_rserv_ts=''24240591''');
+delete from only public.epp_domain_contact where _rserv_ts='24240591';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '26', '35090542', 'D', '_rserv_ts=''24240589''');
+delete from only public.epp_domain_contact where _rserv_ts='24240589';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '11', '35090543', 'D', '_rserv_ts=''36968002''');
+delete from only public.epp_domain_status where _rserv_ts='36968002';insert into "_oxrsapp".sl_log_1      (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '11', '35090544', 'D', '_rserv_ts=''36968003''');
+delete from only public.epp_domain_status where _rserv_ts='36968003';insert into "_oxrsapp".sl_log_1      (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '24', '35090549', 'I', '(contact_id,status,reason,_rserv_ts) values (''6972897'',''64'','''',''31044208'')');
+insert into public.contact_status (contact_id,status,reason,_rserv_ts) values ('6972897','64','','31044208');insert into "_oxrsapp".sl_log_1      (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '24', '35090550', 'D', '_rserv_ts=''18139332''');
+delete from only public.contact_status where _rserv_ts='18139332';insert into "_oxrsapp".sl_log_1     (log_origin, log_xid, log_tableid,		log_actionseq, log_cmdtype,		log_cmddata) values   ('1', '919151224', '24', '35090551', 'D', '_rserv_ts=''18139333''');
 delete from only public.contact_status where _rserv_ts='18139333';" ERROR:  duplicate key violates unique constraint "contact_status_pkey"
- - qualification was: 
+ - qualification was:
 ERROR  remoteWorkerThread_1: SYNC aborted
 </screen></para>
 
@@ -2177,13 +2149,12 @@ out an <command>AccessShareLock</command> on all of the tables in the
 database, including the &slony1; ones, and</para></listitem>
 
 <listitem><para> A &slony1; sync event, which wants to grab a
-<command>AccessExclusiveLock</command> on the table <xref
-linkend="table.sl-event">.</para></listitem> </itemizedlist></para>
+<command>AccessExclusiveLock</command> on the table <xref linkend="table.sl-event">.</para></listitem> </itemizedlist></para>
 
 <para>The initial query that will be blocked is thus:
 
 <screen>
-select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);	  
+select "_slonyschema".createEvent('_slonyschema, 'SYNC', NULL);
 </screen></para>
 
 <para>(You can see this in <envar>pg_stat_activity</envar>, if you
@@ -2231,8 +2202,7 @@ exclusive that alleviates this problem.</para></listitem>
 
 
 <qandadiv>
-<qandaentry> <question> <para> I was trying to request <xref
-linkend="stmtddlscript"> or <xref linkend="stmtmoveset">, and found
+<qandaentry> <question> <para> I was trying to request <xref linkend="stmtddlscript"> or <xref linkend="stmtmoveset">, and found
 messages as follows on one of the subscribers:</para>
 
 <screen>
@@ -2365,10 +2335,9 @@ update _app1.sl_log_1 SET log_cmddata = 'balance=''125192.00'' where pkey=''60''
 
 </qandaentry>
 
-<qandaentry> 
+<qandaentry>
 
-<question><para> Node #1 was dropped via <xref
-linkend="stmtdropnode">, and the &lslon; one of the
+<question><para> Node #1 was dropped via <xref linkend="stmtdropnode">, and the &lslon; one of the
 other nodes is repeatedly failing with the error message:</para>
 
 <screen>
@@ -2412,7 +2381,7 @@ You'll connect to node #2's database, and search for the
 <para> There may be several entries, only some of which need to be
 purged. </para>
 
-<screen> 
+<screen>
 -# begin;  -- Don't straight delete them; open a transaction so you can respond to OOPS
 BEGIN;
 -# delete from sl_event where ev_type = 'STORE_LISTEN' and
@@ -2443,7 +2412,7 @@ the following error message in our application: </para>
 update, which happened to catch the last update to a &slony1; internal
 sequence. </para>
 
-</question> 
+</question>
 
 <answer>
 <para> &slony1; uses sequences to provide primary key values for log
@@ -2464,7 +2433,7 @@ replication system such as <application>Londiste</application> or
 <application>Bucardo</application>) can lead to capturing unexpected
 sequence updates. </para>
 
-</answer> 
+</answer>
 
 </qandaentry>
 

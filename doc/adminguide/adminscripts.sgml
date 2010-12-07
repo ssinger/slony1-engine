@@ -29,8 +29,8 @@ some command line help with the "--help" option, making them easier to
 learn and use.
 </para>
 
-<para>Most generate Slonik scripts that are printed to STDOUT. 
-At one time, the commands were passed directly to <xref linkend="slonik"> for execution. 
+<para>Most generate Slonik scripts that are printed to STDOUT.
+At one time, the commands were passed directly to <xref linkend="slonik"> for execution.
 Unfortunately, this turned out to be a pretty large calibre
 <quote>foot gun</quote>, as minor typos on the command line led, on a
 couple of occasions, to pretty calamitous actions. The savvy administrator should review the script
@@ -71,21 +71,21 @@ using a set of calls to <function>add_node()</function>.
 
 <para><command>
   add_node (host => '10.20.30.40', dbname => 'orglogs', port => 5437,
-			  user => 'postgres', node => 4, parent => 1);
+              user => 'postgres', node => 4, parent => 1);
 </command></para>
 
 <para>The set of parameters for <function>add_node()</function> are thus:</para>
 
 <programlisting>
 my %PARAMS =   (host=> undef,		# Host name
-	   	dbname => 'template1',	# database name
-		port => 5432,		# Port number
-		user => 'postgres',	# user to connect as
-		node => undef,		# node number
-		password => undef,	# password for user
-		parent => 1,		# which node is parent to this node
-		noforward => undef	# shall this node be set up to forward results?
-                sslmode => undef        # SSL mode argument - determine 
+        dbname => 'template1',	# database name
+        port => 5432,		# Port number
+        user => 'postgres',	# user to connect as
+        node => undef,		# node number
+        password => undef,	# password for user
+        parent => 1,		# which node is parent to this node
+        noforward => undef	# shall this node be set up to forward results?
+                sslmode => undef        # SSL mode argument - determine
                                         # priority of SSL usage
                                         # = disable,allow,prefer,require
 );
@@ -151,9 +151,7 @@ cluster.</para>
 
 <para> This represents a pretty big potential <quote>foot gun</quote>
 as this eliminates a replication set all at once.  A typo that points
-it to the wrong set could be rather damaging.  Compare to <xref
-linkend="slonik-unsubscribe-set"> and <xref
-linkend="slonik-drop-node">; with both of those, attempting to drop a
+it to the wrong set could be rather damaging.  Compare to <xref linkend="slonik-unsubscribe-set"> and <xref linkend="slonik-drop-node">; with both of those, attempting to drop a
 subscription or a node that is vital to your operations will be
 blocked (via a foreign key constraint violation) if there exists a
 downstream subscriber that would be adversely affected.  In contrast,
@@ -407,9 +405,9 @@ file location is writable.  Failure cases include:</para>
 <listitem><para> No <link linkend="runtime-config"> slon runtime configuration file </link> exists, </para></listitem>
 <listitem><para> A &lslon; is found with the PID indicated via the runtime configuration, </para></listitem>
 <listitem><para> The specified <envar>SLON_LOG</envar> location is not writable. </para></listitem>
-<listitem><para>Stopping the &lslon;, via <command> start_slon.sh stop </command> </para> 
+<listitem><para>Stopping the &lslon;, via <command> start_slon.sh stop </command> </para>
 <para> This fails (doing nothing) if the PID (indicated via the runtime configuration file) does not exist; </para> </listitem>
-<listitem><para>Monitoring the status of the &lslon;, via <command> start_slon.sh status </command> </para> 
+<listitem><para>Monitoring the status of the &lslon;, via <command> start_slon.sh status </command> </para>
 <para> This indicates whether or not the &lslon; is running, and, if so, prints out the process ID. </para> </listitem>
 
 </itemizedlist>
@@ -420,11 +418,11 @@ file location is writable.  Failure cases include:</para>
 <glossentry><glossterm> <envar> SLON_BIN_PATH </envar> </glossterm>
 <glossdef><para> This indicates where the &lslon; binary program is found. </para> </glossdef> </glossentry>
 <glossentry><glossterm> <envar> SLON_CONF </envar> </glossterm>
-<glossdef><para> This indicates the location of the <link linkend="runtime-config"> slon runtime configuration file </link> that controls how the &lslon; behaves. </para> 
+<glossdef><para> This indicates the location of the <link linkend="runtime-config"> slon runtime configuration file </link> that controls how the &lslon; behaves. </para>
 <para> Note that this file is <emphasis>required</emphasis> to contain a value for <link linkend="slon-config-logging-pid-file">log_pid_file</link>; that is necessary to allow this script to detect whether the &lslon; is running or not. </para>
 </glossdef> </glossentry>
 <glossentry><glossterm> <envar> SLON_LOG </envar> </glossterm>
-<glossdef><para> This file is the location where &lslon; log files are to be stored, if need be.  There is an option <xref linkend ="slon-config-logging-syslog"> for &lslon; to use <application>syslog</application> to manage logging; in that case, you may prefer to set <envar>SLON_LOG</envar> to <filename>/dev/null</filename>.  </para> </glossdef> </glossentry>
+<glossdef><para> This file is the location where &lslon; log files are to be stored, if need be.  There is an option <xref linkend="slon-config-logging-syslog"> for &lslon; to use <application>syslog</application> to manage logging; in that case, you may prefer to set <envar>SLON_LOG</envar> to <filename>/dev/null</filename>.  </para> </glossdef> </glossentry>
 </glosslist>
 
 <para> Note that these environment variables may either be set, in the
@@ -690,8 +688,7 @@ invalidated by circumstances:</para>
 
      <para> Best practice is to always have and use true primary keys.
      If you have tables that require choosing a candidate primary key
-     or that require creating a surrogate key using <xref
-     linkend="stmttableaddkey">, you will have to modify this script
+     or that require creating a surrogate key using <xref linkend="stmttableaddkey">, you will have to modify this script
      by hand to accomodate that. </para></listitem>
 
 </itemizedlist>
@@ -764,16 +761,16 @@ that it creates that contain SQL and &lslonik; scripts to set up the
 new node. </para>
 
 <itemizedlist>
-<listitem><para> <filename> schema.sql </filename> </para> 
+<listitem><para> <filename> schema.sql </filename> </para>
 <para> This is drawn from the origin node, and contains the <quote>pristine</quote> database schema that must be applied first.</para></listitem>
-<listitem><para> <filename> slonik.preamble </filename> </para> 
+<listitem><para> <filename> slonik.preamble </filename> </para>
 
 <para> This <quote>preamble</quote> is used by the subsequent set of slonik scripts. </para> </listitem>
-<listitem><para> <filename> step1-storenode.slonik </filename> </para> 
+<listitem><para> <filename> step1-storenode.slonik </filename> </para>
 <para> A &lslonik; script to set up the new node. </para> </listitem>
-<listitem><para> <filename> step2-storepath.slonik </filename> </para> 
+<listitem><para> <filename> step2-storepath.slonik </filename> </para>
 <para> A &lslonik; script to set up path communications between the provider node and the new node. </para> </listitem>
-<listitem><para> <filename> step3-subscribe-sets.slonik </filename> </para> 
+<listitem><para> <filename> step3-subscribe-sets.slonik </filename> </para>
 <para> A &lslonik; script to request subscriptions for all replications sets.</para> </listitem>
 </itemizedlist>
 
@@ -793,8 +790,7 @@ new node. </para>
 <para> The tool <filename>tools/slonikconfdump.sh</filename> was
 created to help dump out a &lslonik; script to duplicate the
 configuration of a functioning &slony1; cluster.  It should be
-particularly useful when upgrading &slony1; to version 2.0; see <xref
-linkend="upgrade20"> for more details.</para>
+particularly useful when upgrading &slony1; to version 2.0; see <xref linkend="upgrade20"> for more details.</para>
 
 <para> It dumps out: </para>
 
@@ -805,7 +801,7 @@ linkend="upgrade20"> for more details.</para>
 <listitem><para> Sets </para> </listitem>
 <listitem><para> Tables </para> </listitem>
 <listitem><para> Sequences </para> </listitem>
-<listitem><para> Subscriptions </para> 
+<listitem><para> Subscriptions </para>
 
 <para> Note that the subscriptions are ordered topologically, using
 <command>tsort</command> </para></listitem>

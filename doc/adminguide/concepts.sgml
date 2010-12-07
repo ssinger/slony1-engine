@@ -8,10 +8,10 @@
 to understand the following major abstractions that it uses:</para>
 
 <itemizedlist>
-	<listitem><para>Cluster</para></listitem>
-	<listitem><para>Node</para></listitem>
-	<listitem><para>Replication Set</para></listitem>
-	<listitem><para>Origin, Providers and Subscribers</para></listitem>
+    <listitem><para>Cluster</para></listitem>
+    <listitem><para>Node</para></listitem>
+    <listitem><para>Replication Set</para></listitem>
+    <listitem><para>Origin, Providers and Subscribers</para></listitem>
         <listitem><para>slon daemons</para></listitem>
         <listitem><para>slonik configuration processor</para></listitem>
 </itemizedlist>
@@ -66,8 +66,8 @@ connection information that will ultimately be passed to the
 
 <para>Thus, a &slony1; cluster consists of:</para>
 <itemizedlist>
-	<listitem><para> A cluster name</para></listitem>
-	<listitem><para> A set of &slony1; nodes, each of which has a namespace based on that cluster name</para></listitem>
+    <listitem><para> A cluster name</para></listitem>
+    <listitem><para> A set of &slony1; nodes, each of which has a namespace based on that cluster name</para></listitem>
 </itemizedlist>
 </sect2>
 <sect2><title> Replication Set</title>
@@ -116,8 +116,7 @@ replication set.</para>
 
 <indexterm><primary>slon daemon</primary></indexterm>
 
-<para>For each node in the cluster, there will be a <xref
-linkend="slon"> process to manage replication activity for that node.
+<para>For each node in the cluster, there will be a <xref linkend="slon"> process to manage replication activity for that node.
 </para>
 
 <para> <xref linkend="slon"> is a program implemented in C that
@@ -170,7 +169,7 @@ access to databases:
 cluster.</para>
 
 <para> It is <emphasis>vital</emphasis> that you have connections from the
-central location where you run <xref linkend="slonik"> 
+central location where you run <xref linkend="slonik">
 to each and every node in the network.  These connections are only
 used briefly, to submit the few <acronym>SQL</acronym> requests required to
 control the administration of the cluster.</para>
@@ -191,8 +190,7 @@ in <xref linkend="table.sl-path">.</para>
 
 <para> You forcibly <emphasis>need</emphasis> to have a path between
 each subscriber node and its provider; other paths are optional, and
-will not be used unless a listen path in <xref
-linkend="table.sl-listen">. is needed that uses that particular
+will not be used unless a listen path in <xref linkend="table.sl-listen">. is needed that uses that particular
 path.</para></listitem>
 
 </itemizedlist></para>
@@ -233,7 +231,7 @@ are, at present, configured as subscribers.</para>
 
 <para> Supposing disaster were to strike at the <quote>primary</quote>
 site, the secondary site would be well-equipped to take over servicing
-the applications that use this data.</para>
+the applications that use this data.</para></listitem>
 
 <listitem><para> The symmetry of the configuration means that if you
 had <emphasis>two</emphasis> transactional applications needing
@@ -243,18 +241,18 @@ additional replication sets so that each site is normally
 one site could be addressed by consolidating services at the remaining
 site.</para></listitem>
 
-</itemizedlist>
+</itemizedlist></sect2>
 
 <sect2><title>SSH tunnelling</title>
 <para>
-If a direct connection to &postgres; can not be established because of a 
+If a direct connection to &postgres; can not be established because of a
 firewall then you can establish an ssh tunnel that &slony1; can operate
 over. </para>
 
 <para>
 SSH tunnels can be configured by passing the <option>w</option> to SSH.
-This enables  forwarding &postgres; traffic where a local port is forwarded 
-across a connection, encrypted and compressed, using 
+This enables  forwarding &postgres; traffic where a local port is forwarded
+across a connection, encrypted and compressed, using
 <application>SSH</application></para>
 
 <para> See the  <application>ssh</application> documentation for details on how to configure and use SSH tunnels.</para>

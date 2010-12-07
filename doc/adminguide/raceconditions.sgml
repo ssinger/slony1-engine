@@ -38,8 +38,7 @@ allowed subscribers to be aware of their need to wait for the
 conditions while changing the sl_log_status sequence value. </para>
 </listitem>
 
-<listitem><para> The &lslon; option <xref
-linkend="slon-config-sync-interval-timeout"> is used to prevent a
+<listitem><para> The &lslon; option <xref linkend="slon-config-sync-interval-timeout"> is used to prevent a
 possible race condition in which the action sequence is bumped by the
 trigger while inserting the log row, which makes this bump is
 immediately visible to the sync thread, but where the resulting log
@@ -54,8 +53,7 @@ determine what data is to be replicated.  </para> </listitem>
 <listitem><para> In the 1.2 branch, up to version 1.2.11, which fixed
 this, <link linkend="logshipping"> log shipping </link> had a race
 condition where any time configuration is reloaded by the &lslon; (as
-takes place with a number of events, notably <xref
-linkend="stmtsubscribeset">), there was a risk of the
+takes place with a number of events, notably <xref linkend="stmtsubscribeset">), there was a risk of the
 <command>SYNC</command> IDs used to ensure proper ordering and
 application of log shipping archive log files being off by one.
 </para>

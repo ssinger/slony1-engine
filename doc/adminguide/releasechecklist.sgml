@@ -10,7 +10,7 @@
 although it is arguably less necessary for a comprehensive list if we
 are releasing a minor upgrade </para></listitem>
 
-<listitem><para>Some kind of Standard Test Plan</para></listitem> 
+<listitem><para>Some kind of Standard Test Plan</para></listitem>
 
 <listitem><para> If the release modified the set of version-specific
 SQL files in <filename>src/backend</filename>
@@ -31,7 +31,7 @@ we add version 1.1.9, in the 1.1 branch, then version 1.1.9 needs to
 be added to the 1.2 branch as well as to later branches
 (<emphasis>e.g.</emphasis> - 1.3, 1.4, HEAD).  Earlier branches will
 normally not need to be made aware of versions added to later
-branches. </para> 
+branches. </para>
 
 <para> This was not true for version 2 - version 2.0 was different
 enough from earlier versions that we rejected having a direct upgrade
@@ -39,13 +39,13 @@ from 1.x to 2.0, so there are <emphasis>no</emphasis> versions in 1.x
 branches in <function>upgradeSchema(text)</function> for &slony1;
 version 2.0. </para></listitem>
 
-<listitem><para>Binary RPM packages</para></listitem> 
+<listitem><para>Binary RPM packages</para></listitem>
 
 <listitem> <para>If the release is a <quote>.0</quote> one, we need to
 open a new STABLE branch</para>
 
-<para> <command> git checkout HEAD</command></para> 
-<para> <command> git checkout -b REL_3_0_STABLE</command></para> 
+<para> <command> git checkout HEAD</command></para>
+<para> <command> git checkout -b REL_3_0_STABLE</command></para>
 </listitem>
 
 <listitem> <para>Tag with the release ID. For version 1.1.2, this
@@ -54,7 +54,7 @@ would be <envar>REL_1_1_2 </envar></para>
 <para> <command> git tag -a REL_1_1_2 </command></para> </listitem>
 
 <listitem><para>Check out an exported copy via:
-<command>git archive REL_1_1_2  -o /tmp/slony1-engine-1.0.2.tar </command> 
+<command>git archive REL_1_1_2  -o /tmp/slony1-engine-1.0.2.tar </command>
 </para></listitem>
 
 <listitem><para>Run <application>autoconf</application> so as to
@@ -63,13 +63,13 @@ regenerate <filename>configure</filename> from
 
 <listitem><para>Purge directory <filename>autom4te.cache</filename> so it is not included in the build  </para>
 <para> Does not need to be done by hand - the later <command> make distclean </command> step does this for you. </para>
-</listitem> 
+</listitem>
 
 <listitem><para> Run <filename>tools/release_checklist.sh</filename> </para>
 
 <para> This does a bunch of consistency checks to make sure that
 various files that are supposed to contain version numbers contain
-consistent values.</para> 
+consistent values.</para>
 </listitem>
 <listitem><para>For instance, configure should contain, for release 1.1.2:</para></listitem>
 
@@ -107,7 +107,7 @@ make all && make clean</command> but that is a somewhat ugly approach.</para>
 
 <para> Slightly better may be <command> ./configure && make
 src/slon/conf-file.c src/slonik/parser.c src/slonik/scan.c </command>
-</para></listitem> 
+</para></listitem>
 
 <listitem><para> Make sure that generated Makefiles and such from the
 previous step(s) are removed.</para>
@@ -144,8 +144,7 @@ document, a side-effect is to generate
 <listitem><para> The second time <command>make html</command> is run,
 <filename>HTML.index</filename> is transformed into
 <filename>bookindex.sgml</filename>, which
-<application>jade</application> may then use to generate a nice <link
-linkend="bookindex">index page</link> indicating all the index entries
+<application>jade</application> may then use to generate a nice <link linkend="bookindex">index page</link> indicating all the index entries
 included in the documentation tree.</para></listitem>
 
 </itemizedlist></para>

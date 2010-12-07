@@ -2,8 +2,7 @@
 <sect1 id="slonyupgrade">
 <title> &slony1; Upgrade </title>
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
-<para> Minor &slony1; versions can be upgraded using the slonik <xref
-linkend="stmtupdatefunctions"/> command.  This includes upgrades from
+<para> Minor &slony1; versions can be upgraded using the slonik <xref linkend="stmtupdatefunctions">> command.  This includes upgrades from
 2.0.x to a newer version 2.0.y version. </para>
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
@@ -22,7 +21,7 @@ nodes.</para></listitem>
 <listitem><para> Execute a &lslonik; script containing the
 command <command>update functions (id = [whatever]);</command> for
 each node in the cluster.</para>
-<note><para>Remember that your slonik upgrade script like all other 
+<note><para>Remember that your slonik upgrade script like all other
 slonik scripts must contain the proper preamble commands to function.
 </para></note></listitem>
 <listitem><para> Start all slons.  </para> </listitem>
@@ -48,7 +47,7 @@ nothing prevents one from carefully copying &slony1; components for
 the new version into place to overwrite the old version as
 the <quote>install</quote> step.  That might <emphasis>not</emphasis>
 work on <trademark>Windows</trademark> if it locks library files that
-are in use. It is also important to make sure that any connections 
+are in use. It is also important to make sure that any connections
 to the database are restarted after the new binary is installed. </para>
 
 <variablelist>
@@ -86,14 +85,14 @@ new components. </para></listitem></varlistentry>
 
 <indexterm><primary>incompatibilities between versions</primary></indexterm>
 
-<sect3> <title> TABLE ADD KEY issue in &slony1; 2.0 </title> 
+<sect3> <title> TABLE ADD KEY issue in &slony1; 2.0 </title>
 <para> The TABLE ADD KEY slonik command has been removed in version 2.0.
-This means that all tables must have a set of columns that form a 
+This means that all tables must have a set of columns that form a
 unique key for the table.
 
-If you are upgrading from a previous &slony1; version and are using a 
+If you are upgrading from a previous &slony1; version and are using a
 &slony1; created primary key then you will need to modify your table
-to have its own primary key before installing &slony1; version 2.0
+to have its own primary key before installing &slony1; version 2.0</para></sect3>
 
 <sect3> <title> New Trigger Handling in &slony1; Version 2 </title>
 
@@ -104,14 +103,13 @@ catalog. </para>
 
 <para> As a result, &slony1; users should be aware of the &postgres;
 syntax for <command>ALTER TABLE</command>, as that is how they can
-accomplish what was formerly accomplished via <xref
-linkend="stmtstoretrigger"> and <xref linkend="stmtdroptrigger">. </para>
+accomplish what was formerly accomplished via <xref linkend="stmtstoretrigger"> and <xref linkend="stmtdroptrigger">. </para>
 
 </sect3>
 
 <sect3><title>SUBSCRIBE SET goes to the origin</title>
 
-<para> New in 2.0.5 (but not older versions of 2.0.x) is that 
+<para> New in 2.0.5 (but not older versions of 2.0.x) is that
 <xref linkend="stmtsubscribeset"> commands are submitted by
 slonik to the set origin not the provider.  This means that you
 only need to issue <xref linkend="stmtwaitevent"> on the set origin
@@ -123,7 +121,7 @@ to wait for the subscription process to complete.
 that the WAIT ON parameter be specified.  Any slonik scripts that
 were assuming a default value will need to be modified
 </para>
-</sect3>
+</sect3></sect2>
 
 <sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2 </title>
 
@@ -142,8 +140,7 @@ command <xref linkend="stmtupdatefunctions"> is quite inadequate to
 the process of upgrading earlier versions of &slony1; to version
 2.</para>
 
-<para> In version 2.0.2, we have added a new option to <xref
-linkend="stmtsubscribeset">, <command>OMIT COPY</command>, which
+<para> In version 2.0.2, we have added a new option to <xref linkend="stmtsubscribeset">, <command>OMIT COPY</command>, which
 allows taking an alternative approach to upgrade which amounts to:</para>
 
 <itemizedlist>
@@ -179,8 +176,7 @@ may not necessarily be suitable for running &lslonik;. </para>
 <para> This step may be done before the application outage. </para>
 </listitem>
 
-<listitem><para> Determine what triggers have <xref
-linkend="stmtstoretrigger"> configuration on subscriber nodes.
+<listitem><para> Determine what triggers have <xref linkend="stmtstoretrigger"> configuration on subscriber nodes.
 </para>
 
 <para>Trigger handling has
@@ -203,21 +199,20 @@ script indicating either <command>ENABLE REPLICA TRIGGER</command> or
 
 <listitem><para> Shut down &lslon; processes. </para> </listitem>
 
-<listitem><para> Uninstall the old version of &slony1; from the database. </para> 
+<listitem><para> Uninstall the old version of &slony1; from the database. </para>
 
-<para> This involves running a &lslonik; script that runs <xref
-linkend="stmtuninstallnode"> against each node in the cluster. </para>
+<para> This involves running a &lslonik; script that runs <xref linkend="stmtuninstallnode"> against each node in the cluster. </para>
 
 </listitem>
 
-<listitem><para> Ensure new &slony1; binaries are in place. </para> 
+<listitem><para> Ensure new &slony1; binaries are in place. </para>
 
 <para> A convenient way to handle this is to have old and new in different directories alongside two &postgres; builds, stop the <application>postmaster</application>, repoint to the new directory, and restart the <application>postmaster</application>. </para>
 </listitem>
 
-<listitem><para> Run the script that reconfigures replication as generated earlier.  </para> 
+<listitem><para> Run the script that reconfigures replication as generated earlier.  </para>
 
-<para> This script should probably be split into two portions to be run separately:</para> 
+<para> This script should probably be split into two portions to be run separately:</para>
 <itemizedlist>
 <listitem><para> Firstly, set up nodes, paths, sets, and such </para> </listitem>
 <listitem><para> At this point, start up &lslon; processes </para> </listitem>

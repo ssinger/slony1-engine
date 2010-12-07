@@ -12,10 +12,10 @@
   <!ENTITY windows "<trademark>Windows</trademark>">
   <!ENTITY logshiplink "<link linkend=logshipping>log shipping</link>">
   <!ENTITY rlocking "<link linkend=locking> locking </link>">
-  <!ENTITY rddlchanges "<xref linkend=ddlchanges>"> 
+  <!ENTITY rddlchanges "<xref linkend=ddlchanges>">
   <!ENTITY fundroplisten "<xref linkend=function.droplisten-integer-integer-integer>">
-  <!ENTITY fundropset "<xref linkend= function.dropset-integer>"> 
-  <!ENTITY funmergeset "<xref linkend= function.mergeset-integer-integer>"> 
+  <!ENTITY fundropset "<xref linkend= function.dropset-integer>">
+  <!ENTITY funmergeset "<xref linkend= function.mergeset-integer-integer>">
   <!ENTITY funsetdroptable "<xref linkend= function.setdroptable-integer>">
   <!ENTITY funstorelisten "<xref linkend= function.storelisten-integer-integer-integer>">
   <!ENTITY funstorepath "<xref linkend=function.storepath-integer-integer-text-integer>">
@@ -77,12 +77,12 @@
   </bookinfo>
 
   <chapter id="preface">
-    
+
     <title>Preface</title>
-	&intro;
-	&prerequisites;
-	&concepts;
-	&limitations;
+    &intro;
+    &prerequisites;
+    &concepts;
+    &limitations;
    </chapter>
 
   <chapter id="tutorial">
@@ -124,12 +124,12 @@
 
 <part id="reference">
 <title>Reference</title>
-   &slon; 
+   &slon;
    &slonconf;
    &slonik;
    &slonikref;
 </part>
- 
+
 
 
 

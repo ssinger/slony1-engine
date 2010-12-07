@@ -28,8 +28,7 @@ grow decreasingly intuitive.</para></listitem>
 
 <listitem><para> People have observed that
 <application>Slonik</application> does not provide any notion of
-iteration.  It is common to want to create a set of similar <xref
-linkend="stmtstorepath"> entries, since, in most cases, hosts will
+iteration.  It is common to want to create a set of similar <xref linkend="stmtstorepath"> entries, since, in most cases, hosts will
 likely access a particular server via the same host name or IP
 address.</para></listitem>
 
@@ -46,8 +45,7 @@ as:
 <itemizedlist>
 <listitem><para> Named nodes, named sets</para>
 
-<para> This is supported in &slony1; 1.1 by the <xref
-linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
+<para> This is supported in &slony1; 1.1 by the <xref linkend="stmtdefine"> and <xref linkend="stmtinclude"> statements.
 </para>
 
 <para> The use of <xref linkend="stmtinclude"> to allow creating
@@ -88,9 +86,7 @@ generate a slonik script for that script's purpose.
 </para></listitem>
 
 </itemizedlist>
-</sect1>
-
-<sect1 id="slonikshell"><title> Embedding Slonik in Shell Scripts </title>
+</sect1></command>>ist>onikshell"><title> Embedding Slonik in Shell Scripts </title>
 
 <indexterm><primary> slonik, embedded in shell scripts </primary></indexterm>
 
@@ -106,29 +102,29 @@ structure:
 DB1=slony_test1
 DB2=slony_test2
 slonik <<_EOF_
-	cluster name = T1;
-	node 1 admin conninfo = 'dbname=$DB1';
-	node 2 admin conninfo = 'dbname=$DB2';
+    cluster name = T1;
+    node 1 admin conninfo = 'dbname=$DB1';
+    node 2 admin conninfo = 'dbname=$DB2';
 
-	try {
-		create set (id = 1, origin = 1, comment = 
+    try {
+        create set (id = 1, origin = 1, comment =
                             'Set 1 - pgbench tables');
-		set add table (set id = 1, origin = 1,
-			id = 1, fully qualified name = 'public.accounts',
-			comment = 'Table accounts');
-		set add table (set id = 1, origin = 1,
-			id = 2, fully qualified name = 'public.branches',
-			comment = 'Table branches');
-		set add table (set id = 1, origin = 1,
-			id = 3, fully qualified name = 'public.tellers',
-			comment = 'Table tellers');
-		set add table (set id = 1, origin = 1,
-			id = 4, fully qualified name = 'public.history',
-			comment = 'Table accounts');
-	}
-	on error {
-		exit 1;
-	}
+        set add table (set id = 1, origin = 1,
+            id = 1, fully qualified name = 'public.accounts',
+            comment = 'Table accounts');
+        set add table (set id = 1, origin = 1,
+            id = 2, fully qualified name = 'public.branches',
+            comment = 'Table branches');
+        set add table (set id = 1, origin = 1,
+            id = 3, fully qualified name = 'public.tellers',
+            comment = 'Table tellers');
+        set add table (set id = 1, origin = 1,
+            id = 4, fully qualified name = 'public.history',
+            comment = 'Table accounts');
+    }
+    on error {
+        exit 1;
+    }
 _EOF_
 </programlisting></para>
 
@@ -164,22 +160,22 @@ mainset=1
 slonik <<_EOF_
 $PREAMBLE
 try {
-	create set (id = $mainset, origin = $origin, 
+    create set (id = $mainset, origin = $origin,
                     comment = 'Set $mainset - pgbench tables');
-	set add table (set id = $mainset, origin = $origin,
-		id = 1, fully qualified name = 'public.accounts',
-		comment = 'Table accounts');
-	set add table (set id = $mainset, origin = $origin,
-		id = 2, fully qualified name = 'public.branches',
-		comment = 'Table branches');
-	set add table (set id = $mainset, origin = $origin,
-		id = 3, fully qualified name = 'public.tellers',
-		comment = 'Table tellers');
-	set add table (set id = $mainset, origin = $origin,
-		id = 4, fully qualified name = 'public.history',
-		comment = 'Table accounts');
+    set add table (set id = $mainset, origin = $origin,
+        id = 1, fully qualified name = 'public.accounts',
+        comment = 'Table accounts');
+    set add table (set id = $mainset, origin = $origin,
+        id = 2, fully qualified name = 'public.branches',
+        comment = 'Table branches');
+    set add table (set id = $mainset, origin = $origin,
+        id = 3, fully qualified name = 'public.tellers',
+        comment = 'Table tellers');
+    set add table (set id = $mainset, origin = $origin,
+        id = 4, fully qualified name = 'public.history',
+        comment = 'Table accounts');
 } on error {
-	exit 1;
+    exit 1;
 }
 _EOF_
 </programlisting></para>
@@ -207,11 +203,11 @@ done
 slonik <<_EOF_
 $PREAMBLE
 try {
-	create set (id = $mainset, origin = $origin, 
+    create set (id = $mainset, origin = $origin,
                     comment = 'Set $mainset - pgbench tables');
 $ADDTABLES
 } on error {
-	exit 1;
+    exit 1;
 }
 _EOF_
 </programlisting></para>
@@ -337,7 +333,7 @@ cause the configuration change to propagate to all of the other nodes
 in the &slony1; cluster.</para></listitem>
 
 <listitem><para> Thirdly, the <command>_int</command> version of the
-function must be run.</para>  
+function must be run.</para>
 
 <para> In some cases, where functions are idempotent, the node where
 the <quote>main</quote> function runs can do this fairly early in

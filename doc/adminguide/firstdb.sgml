@@ -162,8 +162,7 @@ procedures in the master/slave (node) databases. </para>
 
 <para> The example that follows uses <xref linkend="slonik"> directly
 (or embedded directly into scripts).  This is not necessarily the most
-pleasant way to get started; there exist tools for building <xref
-linkend="slonik"> scripts under the <filename>tools</filename>
+pleasant way to get started; there exist tools for building <xref linkend="slonik"> scripts under the <filename>tools</filename>
 directory, including:</para>
 <itemizedlist>
 <listitem><para> <xref linkend="altperl"> - a set of Perl scripts that
@@ -191,47 +190,47 @@ the initial configuration for the simple master-slave setup of our
 #!/bin/sh
 
 slonik <<_EOF_
-	#--
-	# define the namespace the replication system uses in our example it is
-	# slony_example
-	#--
-	cluster name = $CLUSTERNAME;
+    #--
+    # define the namespace the replication system uses in our example it is
+    # slony_example
+    #--
+    cluster name = $CLUSTERNAME;
 
-	#--
-	# admin conninfo's are used by slonik to connect to the nodes one for each
-	# node on each side of the cluster, the syntax is that of PQconnectdb in
-	# the C-API
-	# --
-	node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+    #--
+    # admin conninfo's are used by slonik to connect to the nodes one for each
+    # node on each side of the cluster, the syntax is that of PQconnectdb in
+    # the C-API
+    # --
+    node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
+    node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
-	#--
-	# init the first node.  Its id MUST be 1.  This creates the schema
-	# _$CLUSTERNAME containing all replication system specific database
-	# objects.
+    #--
+    # init the first node.  Its id MUST be 1.  This creates the schema
+    # _$CLUSTERNAME containing all replication system specific database
+    # objects.
 
-	#--
-	init cluster ( id=1, comment = 'Master Node');
- 
-	#--
-	# Slony-I organizes tables into sets.  The smallest unit a node can
-	# subscribe is a set.  The following commands create one set containing
-	# all 4 pgbench tables.  The master or origin of the set is node 1.
-	#--
-	create set (id=1, origin=1, comment='All pgbench tables');
-	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
-	set add table (set id=1, origin=1, id=2, fully qualified name = 'public.branches', comment='branches table');
-	set add table (set id=1, origin=1, id=3, fully qualified name = 'public.tellers', comment='tellers table');
-	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table');
+    #--
+    init cluster ( id=1, comment = 'Master Node');
 
-	#--
-	# Create the second node (the slave) tell the 2 nodes how to connect to
-	# each other and how they should listen for events.
-	#--
+    #--
+    # Slony-I organizes tables into sets.  The smallest unit a node can
+    # subscribe is a set.  The following commands create one set containing
+    # all 4 pgbench tables.  The master or origin of the set is node 1.
+    #--
+    create set (id=1, origin=1, comment='All pgbench tables');
+    set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
+    set add table (set id=1, origin=1, id=2, fully qualified name = 'public.branches', comment='branches table');
+    set add table (set id=1, origin=1, id=3, fully qualified name = 'public.tellers', comment='tellers table');
+    set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table');
 
-	store node (id=2, comment = 'Slave node', event node=1);
-	store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER');
-	store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
+    #--
+    # Create the second node (the slave) tell the 2 nodes how to connect to
+    # each other and how they should listen for events.
+    #--
+
+    store node (id=2, comment = 'Slave node', event node=1);
+    store path (server = 1, client = 2, conninfo='dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER');
+    store path (server = 2, client = 1, conninfo='dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER');
 _EOF_
 </programlisting>
 
@@ -268,24 +267,24 @@ execute the following script.
 <programlisting>
 #!/bin/sh
 slonik <<_EOF_
-	 # ----
-	 # This defines which namespace the replication system uses
-	 # ----
-	 cluster name = $CLUSTERNAME;
+     # ----
+     # This defines which namespace the replication system uses
+     # ----
+     cluster name = $CLUSTERNAME;
 
-	 # ----
-	 # Admin conninfo's are used by the slonik program to connect
-	 # to the node databases.  So these are the PQconnectdb arguments
-	 # that connect from the administrators workstation (where
-	 # slonik is executed).
-	 # ----
-	 node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
-	 node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
+     # ----
+     # Admin conninfo's are used by the slonik program to connect
+     # to the node databases.  So these are the PQconnectdb arguments
+     # that connect from the administrators workstation (where
+     # slonik is executed).
+     # ----
+     node 1 admin conninfo = 'dbname=$MASTERDBNAME host=$MASTERHOST user=$REPLICATIONUSER';
+     node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
-	 # ----
-	 # Node 2 subscribes set 1
-	 # ----
-	 subscribe set ( id = 1, provider = 1, receiver = 2, forward = no);
+     # ----
+     # Node 2 subscribes set 1
+     # ----
+     subscribe set ( id = 1, provider = 1, receiver = 2, forward = no);
 _EOF_
 </programlisting>
 </para>
@@ -325,34 +324,34 @@ caught up.</para>
 #!/bin/sh
 echo -n "**** comparing sample1 ... "
 psql -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
-	 select 'accounts:'::text, aid, bid, abalance, filler
-		  from accounts order by aid;
-	 select 'branches:'::text, bid, bbalance, filler
-		  from branches order by bid;
-	 select 'tellers:'::text, tid, bid, tbalance, filler
-		  from tellers order by tid;
-	 select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-		  "_Slony-I_${CLUSTERNAME}_rowID"
-		  from history order by "_Slony-I_${CLUSTERNAME}_rowID";
+     select 'accounts:'::text, aid, bid, abalance, filler
+          from accounts order by aid;
+     select 'branches:'::text, bid, bbalance, filler
+          from branches order by bid;
+     select 'tellers:'::text, tid, bid, tbalance, filler
+          from tellers order by tid;
+     select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+          "_Slony-I_${CLUSTERNAME}_rowID"
+          from history order by "_Slony-I_${CLUSTERNAME}_rowID";
 _EOF_
 psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME >dump.tmp.2.$$ <<_EOF_
-	 select 'accounts:'::text, aid, bid, abalance, filler
-		  from accounts order by aid;
-	 select 'branches:'::text, bid, bbalance, filler
-		  from branches order by bid;
-	 select 'tellers:'::text, tid, bid, tbalance, filler
-		  from tellers order by tid;
-	 select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-		  "_Slony-I_${CLUSTERNAME}_rowID"
-		  from history order by "_Slony-I_${CLUSTERNAME}_rowID";
+     select 'accounts:'::text, aid, bid, abalance, filler
+          from accounts order by aid;
+     select 'branches:'::text, bid, bbalance, filler
+          from branches order by bid;
+     select 'tellers:'::text, tid, bid, tbalance, filler
+          from tellers order by tid;
+     select 'history:'::text, tid, bid, aid, delta, mtime, filler,
+          "_Slony-I_${CLUSTERNAME}_rowID"
+          from history order by "_Slony-I_${CLUSTERNAME}_rowID";
 _EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >$CLUSTERNAME.diff ; then
-	 echo "success - databases are equal."
-	 rm dump.tmp.?.$$
-	 rm $CLUSTERNAME.diff
+     echo "success - databases are equal."
+     rm dump.tmp.?.$$
+     rm $CLUSTERNAME.diff
 else
-	 echo "FAILED - see $CLUSTERNAME.diff for database differences"
+     echo "FAILED - see $CLUSTERNAME.diff for database differences"
 fi
 </programlisting>
 
@@ -386,14 +385,14 @@ can proceed as follows:
 
 <programlisting>
 # Initialize cluster:
-$ slonik_init_cluster  | slonik 
+$ slonik_init_cluster  | slonik
 
 # Start slon  (here 1 and 2 are node numbers)
-$ slon_start 1    
+$ slon_start 1
 $ slon_start 2
 
 # Create Sets (here 1 is a set number)
-$ slonik_create_set 1 | slonik             
+$ slonik_create_set 1 | slonik
 
 # subscribe set to second node (1= set ID, 2= node ID)
 $ slonik_subscribe_set 1 2 | slonik
@@ -421,4 +420,3 @@ sgml-local-catalogs:("/usr/lib/sgml/catalog")
 sgml-local-ecat-files:nil
 End:
 -->
-
