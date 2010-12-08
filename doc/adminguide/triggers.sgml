@@ -1,4 +1,4 @@
-<!--  --> 
+<!--  -->
 <sect1 id="triggers"><title>&slony1; Trigger Handling</title>
 
 <indexterm><primary>trigger handling</primary></indexterm>
@@ -62,8 +62,7 @@ node, both the <function>logtrigger</function> and
 enabled, and running, the latter being disabled, so it does not
 run. </para>
 
-<para> From a locking perspective, each <xref
-linkend="stmtsetaddtable"> request will need to briefly take out an
+<para> From a locking perspective, each <xref linkend="stmtsetaddtable"> request will need to briefly take out an
 exclusive lock on each table as it attaches these triggers, which is
 much the same as has always been the case with &slony1;. </para>
 </listitem>
@@ -82,11 +81,11 @@ requirements.  </para>
 
 </listitem>
 
-<listitem><para>If you restore a backup of a Slony-I node (taken by pg_dump or 
-any other method), and drop the Slony-I namespace, this now cleanly removes 
-all Slony-I components, leaving the database, including its schema, 
-in a <quote>pristine</quote>, consistent fashion, ready for whatever use may 
-be desired. 
+<listitem><para>If you restore a backup of a Slony-I node (taken by pg_dump or
+any other method), and drop the Slony-I namespace, this now cleanly removes
+all Slony-I components, leaving the database, including its schema,
+in a <quote>pristine</quote>, consistent fashion, ready for whatever use may
+be desired.
 </para></listitem>
 
 <listitem><para> &rddlchanges; is now performed in quite a different
@@ -108,8 +107,7 @@ subscriber, which requires dropping the <function>lockset</function>
 triggers, disabling the <function>logtrigger</function> triggers, and
 enabling the <function>denyaccess</function> triggers. </para>
 
-<para> At about the same time, when processing <xref
-linkend="stmtmoveset"> against the new origin, &slony1; must transform
+<para> At about the same time, when processing <xref linkend="stmtmoveset"> against the new origin, &slony1; must transform
 that node into an origin, which requires disabling the formerly active
 <function>denyaccess</function> triggers, and enabling the
 <function>logtrigger</function> triggers. </para>
@@ -121,8 +119,7 @@ triggers.
 
 </listitem>
 
-<listitem><para> Similarly to <xref linkend="stmtmoveset">, <xref
-linkend="stmtfailover"> transforms a subscriber node into an origin,
+<listitem><para> Similarly to <xref linkend="stmtmoveset">, <xref linkend="stmtfailover"> transforms a subscriber node into an origin,
 which requires disabling the formerly active
 <function>denyaccess</function> triggers, and enabling the
 <function>logtrigger</function> triggers.  The locking implications

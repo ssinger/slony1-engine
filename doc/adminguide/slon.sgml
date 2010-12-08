@@ -11,11 +11,11 @@
    &slony1; daemon
   </refpurpose>
  </refnamediv>
- 
+
  <indexterm zone="slon">
   <primary>slon</primary>
  </indexterm>
- 
+
  <refsynopsisdiv>
   <cmdsynopsis>
    <command>slon</command>
@@ -24,7 +24,7 @@
    <arg><replaceable class="parameter">conninfo</replaceable></arg>
   </cmdsynopsis>
  </refsynopsisdiv>
- 
+
  <refsect1>
   <title>Description</title>
   <para>
@@ -34,10 +34,10 @@
    in a &slony1; cluster.
   </para>
  </refsect1>
- 
+
  <refsect1 id="r1-app-slon-3">
   <title>Options</title>
-  
+
   <variablelist>
    <varlistentry>
     <term><option>-d</option><replaceable class="parameter"> log_level</replaceable></term>
@@ -73,7 +73,7 @@
 
     </listitem>
    </varlistentry>
-   
+
    <varlistentry>
     <term><option>-s</option><replaceable class="parameter"> SYNC check interval</replaceable></term>
     <listitem>
@@ -86,7 +86,7 @@
       <function>sync_Thread_main()</function> sleeps for intervals of
       <envar>sync_interval</envar> milliseconds between iterations.
      </para>
-     
+
      <para>
       Short sync check intervals keep the origin on a <quote>short
       leash</quote>, updating its subscribers more frequently.  If you
@@ -105,7 +105,7 @@
 
     </listitem>
    </varlistentry>
-   
+
    <varlistentry>
     <term><option>-t</option><replaceable class="parameter"> SYNC
     interval timeout</replaceable></term>
@@ -136,7 +136,7 @@
      generating replicable activity; this will have two effects:</para>
       <itemizedlist>
 
-      <listitem><para> The system will do more replication work.</para> 
+      <listitem><para> The system will do more replication work.</para>
 
       <para> (Of course, since there is no application load on the
       database, and no data to replicate, this load will be very easy
@@ -164,7 +164,7 @@
      </para>
     </listitem>
    </varlistentry>
-   
+
    <varlistentry>
     <term><option>-g</option><replaceable class="parameter"> group size</replaceable></term>
     <listitem>
@@ -219,7 +219,7 @@
       <command>SYNC</command>s, and run into the same problem over and
       over until an administrator interrupts this and changes the
       <option>-g</option> value to break this <quote>deadlock.</quote>
-     </para> 
+     </para>
      <para>
       In &slony1; version 1.1 and later versions, the <application>slon</application>
       instead adaptively <quote>ramps up</quote> from doing 1
@@ -268,7 +268,7 @@
       start with one sync at a time, if need be, so that if it is at
       all possible for replication to progress, it will.</para>
     </listitem>
-   </varlistentry>      
+   </varlistentry>
 
    <varlistentry>
     <term><option>-c</option><replaceable class="parameter"> cleanup cycles</replaceable></term>
@@ -299,7 +299,7 @@
      </para>
     </listitem>
    </varlistentry>
-   
+
    <varlistentry>
     <term><option>-p</option><replaceable class="parameter"> PID filename</replaceable></term>
     <listitem>
@@ -315,7 +315,7 @@
      </para>
     </listitem>
    </varlistentry>
-   
+
    <varlistentry>
     <term><option>-f</option><replaceable class="parameter"> config file</replaceable></term>
     <listitem>
@@ -323,8 +323,7 @@
       File from which to read <application>slon</application> configuration.
      </para>
 
-     <para> This configuration is  discussed  further  in <link 
-     linkend="runtime-config">Slon  Run-time Configuration</link>. If there are to be a complex set of
+     <para> This configuration is  discussed  further  in <link linkend="runtime-config">Slon  Run-time Configuration</link>. If there are to be a complex set of
      configuration parameters, or if there are parameters you do not
      wish to be visible in the process environment variables (such as
      passwords), it may be convenient to draw many or all parameters
@@ -352,11 +351,11 @@
     <term><option>-x</option><replaceable class="parameter"> command to run on log archive</replaceable></term>
     <listitem>
      <para>
-      <envar>command_on_logarchive</envar> indicates a command to be run 
+      <envar>command_on_logarchive</envar> indicates a command to be run
       each time a SYNC file is successfully generated.
      </para>
 
-     <para> See more details on <xref linkend="slon-config-command-on-logarchive"/>.</para>
+     <para> See more details on <xref linkend="slon-config-command-on-logarchive">>.</para>
     </listitem>
    </varlistentry>
 
@@ -402,13 +401,11 @@
 
      <warning><para> There is a concommittant downside to this lag;
      events that require all nodes to synchronize, as typically
-     happens with <xref linkend="stmtfailover"> and <xref
-     linkend="stmtmoveset">, will have to wait for this lagging
+     happens with <xref linkend="stmtfailover"> and <xref linkend="stmtmoveset">, will have to wait for this lagging
      node. </para>
 
      <para> That might not be ideal behaviour at failover time, or at
-     the time when you want to run <xref
-     linkend="stmtddlscript">. </para></warning>
+     the time when you want to run <xref linkend="stmtddlscript">. </para></warning>
     </listitem>
    </varlistentry>
 

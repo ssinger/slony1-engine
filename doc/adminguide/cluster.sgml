@@ -22,8 +22,7 @@ identified by a node number.</para>
 <para>For a simple install, it may be reasonable for the origin to be
 node #1, and for the subscriber to be node #2.</para>
 
-<para> Note that, as recorded in the <xref linkend="faq"> under <link
-linkend="cannotrenumbernodes"> How can I renumber nodes?</link>, the
+<para> Note that, as recorded in the <xref linkend="faq"> under <link linkend="cannotrenumbernodes"> How can I renumber nodes?</link>, the
 node number is immutable, so it is not possible to change a node's
 node number after it has been set up.</para>
 
@@ -35,8 +34,7 @@ order in which nodes were initialized.</para>
 
 <para> The <xref linkend="stmtinclude"> and
 <xref linkend="stmtdefine"> statements allow you to create a sort of
-<quote>symbol table</quote> behind the scenes so that <xref
-linkend="slonik"> scripts can use names for nodes rather than cryptic
+<quote>symbol table</quote> behind the scenes so that <xref linkend="slonik"> scripts can use names for nodes rather than cryptic
 numbers. </para>
 
 </sect1>

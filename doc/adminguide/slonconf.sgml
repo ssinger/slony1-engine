@@ -14,16 +14,16 @@
   </para>
 
   <para>
-    All parameter names are case-insensitive. Every parameter takes a value of 
+    All parameter names are case-insensitive. Every parameter takes a value of
     one of four types: boolean, integer, floating point, or string.
     Boolean values may be written as <literal>ON</literal>, <literal>OFF</literal>,<literal>TRUE</literal>,
-    <literal>FALSE</literal>, <literal>YES</literal>, <literal>NO</literal>, 
-    <literal>1</literal>, <literal>0</literal> (all case-insensitive) or any 
+    <literal>FALSE</literal>, <literal>YES</literal>, <literal>NO</literal>,
+    <literal>1</literal>, <literal>0</literal> (all case-insensitive) or any
     unambiguous prefix of these.
   </para>
 
   <para>
-    One parameter is specified per line. The equal sign between name and 
+    One parameter is specified per line. The equal sign between name and
     value is optional. Whitespace is insignificant and blank lines are
     ignored. Hash marks (<literal>#</literal>) introduce comments
     anywhere.  Parameter values that are not simple identifiers or
@@ -48,9 +48,9 @@
         <primary><varname>syslog</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Sets up logging to syslog. If this parameter is 1, messages go both 
-          to syslog and the standard output. A value of 2 sends output only to syslog 
-          (some messages will still go to the standard output/error).  The default 
+        <para>Sets up logging to syslog. If this parameter is 1, messages go both
+          to syslog and the standard output. A value of 2 sends output only to syslog
+          (some messages will still go to the standard output/error).  The default
           is 0, which means syslog is off.
         </para>
       </listitem>
@@ -77,7 +77,7 @@
       </indexterm>
       <listitem>
         <para>
-          Sets the program name used to identify slon messages in syslog. 
+          Sets the program name used to identify slon messages in syslog.
           The default is slon.
         </para>
       </listitem>
@@ -91,15 +91,15 @@
       <listitem>
         <para>Debug log level (higher value ==> more output).  Range: [0,4], default 0</para>
 
-	<para> There are <link linkend="nineloglevels">nine log
-	message types</link>; using this option, some or all of the
-	<quote>debugging</quote> levels may be left out of the slon
-	logs.  In &slony1; version 2, a lot of log message levels have
-	been revised in an attempt to ensure the <quote>interesting
-	stuff</quote> comes in at CONFIG/INFO levels, so that you
-	could run at level 0, omitting all of the <quote>DEBUG</quote>
-	messages, and still have meaningful contents in the
-	logs. </para>
+    <para> There are <link linkend="nineloglevels">nine log
+    message types</link>; using this option, some or all of the
+    <quote>debugging</quote> levels may be left out of the slon
+    logs.  In &slony1; version 2, a lot of log message levels have
+    been revised in an attempt to ensure the <quote>interesting
+    stuff</quote> comes in at CONFIG/INFO levels, so that you
+    could run at level 0, omitting all of the <quote>DEBUG</quote>
+    messages, and still have meaningful contents in the
+    logs. </para>
 
       </listitem>
     </varlistentry>
@@ -118,11 +118,11 @@
 
     <varlistentry id="slon-config-logging-log-timestamp" xreflabel="slon_conf_log_timestamp">
       <term><varname>log_timestamp</varname> (<type>boolean</type>)</term>
-      <indexterm>          
+      <indexterm>
         <primary><varname>log_timestamp</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Determines if you would like the timestamp of the event being logged to 
+        <para>Determines if you would like the timestamp of the event being logged to
           appear in each log line entry.
         </para>
 
@@ -136,7 +136,7 @@
 
     <varlistentry id="slon-config-logging-log-timestamp-format" xreflabel="slon_conf_log_timestamp_format">
       <term><varname>log_timestamp_format</varname> (<type>string</type>)</term>
-      <indexterm>          
+      <indexterm>
         <primary><varname>log_timestamp_format</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
@@ -265,7 +265,7 @@
 
       </listitem>
     </varlistentry>
-    
+
   </variablelist>
 </sect1>
 <sect1 id="slon-config-interval">
@@ -279,7 +279,7 @@
         <primary><varname>sync_interval</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para>Check for updates at least this often in milliseconds. 
+        <para>Check for updates at least this often in milliseconds.
           Range: [10-60000], default 100
         </para>
 
@@ -320,7 +320,7 @@
           nodes that originate replication sets, though it does affect
           how often events are generated on other nodes.</para>
 
-	<para>
+    <para>
           On a non-origin node, there never is activity to cause a
           SYNC to get generated; as a result, there will be a SYNC
           generated every <envar>sync_interval_timeout</envar>
@@ -332,23 +332,23 @@
           not a terrible value.
         </para>
 
-	<para> The two values function together in varying ways: </para>
+    <para> The two values function together in varying ways: </para>
 
-	<para> On an origin node, <envar>sync_interval</envar> is
-	the <emphasis>minimum</emphasis> time period that will be
-	covered by a SYNC, and during periods of heavy application
-	activity, it may be that a SYNC is being generated
-	every <envar>sync_interval</envar> milliseconds. </para>
+    <para> On an origin node, <envar>sync_interval</envar> is
+    the <emphasis>minimum</emphasis> time period that will be
+    covered by a SYNC, and during periods of heavy application
+    activity, it may be that a SYNC is being generated
+    every <envar>sync_interval</envar> milliseconds. </para>
 
-	<para> On that same origin node, there may be quiet intervals,
-	when no replicatable changes are being submitted.  A SYNC will
-	be induced, anyways,
-	every <envar>sync_interval_timeout</envar>
-	milliseconds. </para>
+    <para> On that same origin node, there may be quiet intervals,
+    when no replicatable changes are being submitted.  A SYNC will
+    be induced, anyways,
+    every <envar>sync_interval_timeout</envar>
+    milliseconds. </para>
 
-	<para> On a subscriber node that does not originate any sets,
-	only the <quote>timeout-induced</quote> SYNCs will
-	occur.  </para>
+    <para> On a subscriber node that does not originate any sets,
+    only the <quote>timeout-induced</quote> SYNCs will
+    occur.  </para>
 
       </listitem>
     </varlistentry>
@@ -378,7 +378,7 @@
 
       </listitem>
     </varlistentry>
-    
+
     <varlistentry id="slon-config-vac-frequency" xreflabel="slon_conf_vac_frequency">
       <term><varname>vac_frequency</varname> (<type>integer</type>)</term>
       <indexterm>
@@ -435,9 +435,9 @@
         <application>slon</application> will try to increase numbers
         of syncs done targetting that they should take this quantity
         of time to process.  This is in Range [10000,600000] ms,
-        default 60000. </para> 
+        default 60000. </para>
 
-	<para>If the value is set to 0, this logic will be ignored.
+    <para>If the value is set to 0, this logic will be ignored.
         </para>
       </listitem>
     </varlistentry>
@@ -448,13 +448,12 @@
         <primary><varname>quit_sync_provider</varname> configuration parameter</primary>
       </indexterm>
       <listitem>
-        <para> This must be used in conjunction with <xref
-        linkend="slon-config-quit-sync-finalsync">, and indicates
+        <para> This must be used in conjunction with <xref linkend="slon-config-quit-sync-finalsync">, and indicates
         which provider node's worker thread should be watched to see
         if the slon should terminate due to reaching some desired
         <quote>final</quote> event number.</para>
 
-	<para>If the value is set to 0, this logic will be ignored.</para>
+    <para>If the value is set to 0, this logic will be ignored.</para>
       </listitem>
     </varlistentry>
     <varlistentry id="slon-config-quit-sync-finalsync" xreflabel="quit_sync_finalsync">
@@ -469,7 +468,7 @@
         once it reaches a certain event for the specified
         provider. </para>
 
-	<para>If the value is set to 0, this logic will be ignored.
+    <para>If the value is set to 0, this logic will be ignored.
         </para>
       </listitem>
     </varlistentry>
@@ -486,7 +485,7 @@
         events newer than <command> now() - lag_interval::interval
         </command> are left out, to be processed later.  </para>
 
-	<para>If the value is left empty, this logic will be ignored.
+    <para>If the value is left empty, this logic will be ignored.
         </para>
       </listitem>
     </varlistentry>
@@ -504,8 +503,8 @@
         space allocated and <function>free()</function>'ed on demand.
         </para>
 
-	<para>The default value is 8192, meaning that your expected
-	memory consumption (for the LOG cursor) should not exceed 8MB.
+    <para>The default value is 8192, meaning that your expected
+    memory consumption (for the LOG cursor) should not exceed 8MB.
         </para>
       </listitem>
     </varlistentry>
@@ -520,11 +519,11 @@
         <envar>log_cmddata</envar> are larger than
         <envar>sync_max_rowsize</envar>.  </para>
 
-	<para>Note that the algorithm reads rows until
-	<emphasis>after</emphasis> this value is exceeded.  Otherwise,
-	a tuple larger than this value would stall replication.  As a
-	result, don't assume that memory consumption will remain
-	smaller than this value.
+    <para>Note that the algorithm reads rows until
+    <emphasis>after</emphasis> this value is exceeded.  Otherwise,
+    a tuple larger than this value would stall replication.  As a
+    result, don't assume that memory consumption will remain
+    smaller than this value.
         </para>
 
         <para> The default value is 5242880.</para>
@@ -544,7 +543,7 @@
   </variablelist>
 </sect1>
 
-</article  
+</article>
 
 
 <!-- Keep this comment at the end of the file

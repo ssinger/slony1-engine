@@ -33,14 +33,14 @@ manipulating pg_class.  This also requires superuser access.
 <para>
 Each slon instance has a 'local' database connection.  This is the database
 connection that is specified on the either the slon command line or the
-slon configuration file.</para>  
+slon configuration file.</para>
 
 
 <para> Slon needs to connect to this database with considerable
 <quote>write</quote> privileges, and requires superuser access in a couple of
 places.</para>
 
-<para> It must be able to 
+<para> It must be able to
 <itemizedlist>
 
 <listitem><para>Alter <envar>pg_class</envar> to deactivate indices when preparing to <command>COPY</command> a table</para></listitem>
@@ -69,7 +69,7 @@ permissions to:
 <listitem><para> SELECT the &sllog1; and &sllog2; tables</para></listitem>
 
 <listitem><para> SELECT any replicated tables that originate on the
-remote node.  This is done as part of the initial <command>COPY</command> during the 
+remote node.  This is done as part of the initial <command>COPY</command> during the
 subscription process</para></listitem></itemizedlist>
 </para>
 

@@ -76,7 +76,7 @@ version.</para> </glossdef> </glossentry>
 
 <glossentry><glossterm> <envar>PGPORT</envar> </glossterm>
 <glossdef><para> This indicates what port the backend is on.  By
-default, 5432 is used. </para> 
+default, 5432 is used. </para>
 
 <para> There are also variables <envar>PORT1</envar> thru
 <envar>PORT13</envar> which allow you to specify a separate port
@@ -117,7 +117,7 @@ node locks. </para> </glossdef> </glossentry>
 each database instance.</para></glossdef>
 </glossentry>
 
-<glossentry><glossterm> <envar>DB1</envar> thru <envar>DB13 </envar> </glossterm> 
+<glossentry><glossterm> <envar>DB1</envar> thru <envar>DB13 </envar> </glossterm>
 
 <glossdef><para> By default, <filename>slonyregress1</filename> thru
 <filename>slonyregress13</filename> are used.
@@ -170,8 +170,7 @@ environment variable.  </para></glossdef>
 <glossdef><para> If set to <quote>true</quote>, for a particular node,
 which will normally get configured out of human sight in the
 generic-to-a-particular-test file <filename>settings.ik</filename>,
-then this node will be used as a data source for <xref
-linkend="logshipping">, and this causes the test tools to set up a
+then this node will be used as a data source for <xref linkend="logshipping">, and this causes the test tools to set up a
 directory for the <link linkend="slon-config-archive-dir">
 archive_dir</link> option.  </para></glossdef>
 
@@ -183,8 +182,7 @@ archive_dir</link> option.  </para></glossdef>
 <glossdef><para> If set to <quote>true</quote>, for a particular node,
 which will normally get configured out of human sight in
 <filename>settings.ik</filename> for a particular test, then this
-indicates that this node is being created via <xref
-linkend="logshipping">, and a &lslon; is not required for this node.
+indicates that this node is being created via <xref linkend="logshipping">, and a &lslon; is not required for this node.
 </para></glossdef>
 
 </glossentry>
@@ -194,8 +192,7 @@ linkend="logshipping">, and a &lslon; is not required for this node.
 
 <glossdef><para> If set to <quote>true</quote>, for a particular node,
 typically handled in <filename>settings.ik</filename> for a given
-test, then configuration will be set up in a <link
-linkend="runtime-config"> per-node <filename>slon.conf</filename>
+test, then configuration will be set up in a <link linkend="runtime-config"> per-node <filename>slon.conf</filename>
 runtime config file. </link> </para> </glossdef>
 </glossentry>
 
@@ -233,28 +230,28 @@ capabilities that are much slower than the C programs.  </para>
 <para> Within each test, you will find the following files: </para>
 
 <itemizedlist>
-<listitem><para> <filename>README</filename> </para> 
+<listitem><para> <filename>README</filename> </para>
 
 <para> This file contains a description of the test, and is displayed
 to the reader when the test is invoked. </para> </listitem>
 
-<listitem><para> <filename>generate_dml.sh</filename> </para> 
+<listitem><para> <filename>generate_dml.sh</filename> </para>
 <para> This contains script code that generates SQL to perform updates. </para> </listitem>
-<listitem><para> <filename>init_add_tables.ik</filename> </para> 
+<listitem><para> <filename>init_add_tables.ik</filename> </para>
 <para>  This is a <xref linkend="slonik"> script for adding the tables for the test to repliation. </para> </listitem>
-<listitem><para> <filename>init_cluster.ik</filename> </para> 
+<listitem><para> <filename>init_cluster.ik</filename> </para>
 <para> <xref linkend="slonik"> to initialize the cluster for the test.</para> </listitem>
-<listitem><para> <filename>init_create_set.ik</filename> </para> 
+<listitem><para> <filename>init_create_set.ik</filename> </para>
 <para> <xref linkend="slonik"> to initialize additional nodes to be used in the test. </para> </listitem>
-<listitem><para> <filename>init_schema.sql</filename> </para> 
+<listitem><para> <filename>init_schema.sql</filename> </para>
 <para> An SQL script to create the tables and sequences required at the start of the test.</para> </listitem>
-<listitem><para> <filename>init_data.sql</filename> </para> 
+<listitem><para> <filename>init_data.sql</filename> </para>
 <para> An SQL script to initialize the schema with whatever state is required for the <quote>master</quote> node.  </para> </listitem>
-<listitem><para> <filename>init_subscribe_set.ik</filename> </para> 
+<listitem><para> <filename>init_subscribe_set.ik</filename> </para>
 <para> A <xref linkend="slonik"> script to set up subscriptions.</para> </listitem>
-<listitem><para> <filename>settings.ik</filename> </para> 
+<listitem><para> <filename>settings.ik</filename> </para>
 <para> A shell script that is used to control the size of the cluster, how many nodes are to be created, and where the origin is.</para> </listitem>
-<listitem><para> <filename>schema.diff</filename> </para> 
+<listitem><para> <filename>schema.diff</filename> </para>
 <para> A series of SQL queries, one per line, that are to be used to validate that the data matches across all the nodes.  Note that in order to avoid spurious failures, the queries must use unambiguous <command>ORDER BY</command> clauses.</para> </listitem>
 </itemizedlist>
 

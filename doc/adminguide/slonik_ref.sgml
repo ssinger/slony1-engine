@@ -1,16 +1,16 @@
-   <article id="slonikref">
+<article id="slonikref">
 <sect1>
 <title>Slonik Command Summary</title>
-    
+
     <para>
      <application>Slonik</application> is a command line utility designed
      specifically to setup and modify configurations of the
      &slony1; replication system.
     </para>
-   
+
    <sect2 id="outline">
     <title>General outline</title>
-    
+
     <para>
      The <application>slonik</application> commandline utility is
      supposed to be used embedded into shell scripts and reads
@@ -27,22 +27,22 @@
     <para>
      <application>Slonik</application> was created because:
      <itemizedlist>
-      
+
       <listitem><para>The stored procedures have special requirements
-	as to on which particular node in the replication system they
-	are called,</para></listitem>
-      
+    as to on which particular node in the replication system they
+    are called,</para></listitem>
+
       <listitem><para>The lack of named parameters for stored
-	procedures makes it rather difficult to do this from the
-	<application>psql</application> prompt, and</para></listitem>
-      
+    procedures makes it rather difficult to do this from the
+    <application>psql</application> prompt, and</para></listitem>
+
       <listitem><para><application>psql</application> lacks the ability
-	to maintain multiple connections with open
-	transactions.</para></listitem>
+    to maintain multiple connections with open
+    transactions.</para></listitem>
      </itemizedlist>
     </para>
     <para>
-     
+
     </para>
     <sect3><title>Commands</title>
      <para>
@@ -76,7 +76,7 @@
       <programlisting>
        try {
        commands;
-       } 
+       }
        [on error { commands; }]
        [on success { commands; }]
       </programlisting></para>
@@ -109,18 +109,17 @@
   <partintro>
    <para>
      The following commands may be used to somewhat abstract the
-     definitions of components of Slonik scripts; <xref
-     linkend="stmtinclude"> grouping configuration into central files
+     definitions of components of Slonik scripts; <xref linkend="stmtinclude"> grouping configuration into central files
      that may be reused, and <xref linkend="stmtdefine"> allowing
      mnemonic identifiers to replace cryptic numeric object IDs.
    </para>
   </partintro>
   <!-- **************************************** -->
-  <refentry id ="stmtinclude"><refmeta><refentrytitle>SLONIK INCLUDE</refentrytitle>
+  <refentry id="stmtinclude"><refmeta><refentrytitle>SLONIK INCLUDE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-  
+
    <refnamediv><refname>INCLUDE</refname>
-    
+
     <refpurpose> pulling in slonik code from another file </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -153,11 +152,11 @@
    </refsect1>
   </refentry>
   <!-- **************************************** -->
-  <refentry id ="stmtdefine"><refmeta><refentrytitle>SLONIK DEFINE</refentrytitle>
+  <refentry id="stmtdefine"><refmeta><refentrytitle>SLONIK DEFINE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>DEFINE</refname>
-    
+
     <refpurpose> Defining a named symbol </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -201,9 +200,9 @@ define sakaiMovies  @setMovies, origin = @sakai;
 
 create set ( @sakaiMovies, comment = 'movies' );
 
-set add table( set @sakaiMovies, id = 1, @fqn = 'public.customers', 
+set add table( set @sakaiMovies, id = 1, @fqn = 'public.customers',
                comment = 'sakai customers' );
-set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',     
+set add table( set @sakaiMovies, id = 2, @fqn = 'public.tapes',
                comment = 'sakai tapes' );
 echo 'But @sakaiMovies will display as a string, and is not expanded';
     </programlisting>
@@ -214,10 +213,10 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </refsect1>
   </refentry>
 
- </reference>  
+ </reference>
 <!-- **************************************** -->
 
- <reference id="hdrcmds"> 
+ <reference id="hdrcmds">
   <title>Slonik Preamble Commands</title>
   <partintro>
    <para>
@@ -229,12 +228,12 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </para>
   </partintro>
   <!-- **************************************** -->
-  
+
   <refentry id ="clustername"><refmeta><refentrytitle>SLONIK CLUSTER NAME</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>CLUSTER NAME</refname>
-    
+
     <refpurpose> preamble - identifying &slony1; cluster </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -255,7 +254,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      identical in all databases that participate in the same
      replication group.
     </para>
-    
+
     <para>
      No user objects are supposed to live in this namespace, and the
      namespace is not allowed to exist prior to adding a database to
@@ -275,13 +274,13 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
-  
-  
+
+
 <!-- **************************************** -->
 
   <refentry id ="admconninfo"><refmeta><refentrytitle>SLONIK ADMIN CONNINFO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>ADMIN CONNINFO</refname>
     <refpurpose> preamble - identifying &postgres; database </refpurpose>
    </refnamediv>
@@ -347,17 +346,17 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
   </Refentry>
  </reference>
 <!-- ************************************************************ -->
- 
+
 <!-- **************************************** -->
  <reference id="cmds">
   <title>Configuration and Action commmands</title>
 <!-- **************************************** -->
-  
+
   <refentry id ="stmtecho"><refmeta><refentrytitle>SLONIK ECHO</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>ECHO</refname>
-    
+
     <refpurpose> Generic output tool </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -381,14 +380,14 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </Refentry>
-  
+
   <!-- **************************************** -->
-  
+
   <refentry id ="stmtexit"><refmeta><refentrytitle>SLONIK EXIT</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>EXIT</refname>
-    
+
     <refpurpose> Terminate Slonik script with signal </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -427,34 +426,34 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
     <refpurpose>Initialize &slony1; cluster</refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
-     <command>INIT CLUSTER</command> 
+     <command>INIT CLUSTER</command>
      <arg>ID = <replaceable class="parameter">integer</replaceable></arg>
      <arg>COMMENT = <replaceable class="parameter">'string'</replaceable></arg>
     </cmdsynopsis>
    </refsynopsisdiv>
    <refsect1>
-    <title>Description</title> 
+    <title>Description</title>
 
     <para> Initialize the first node in a new &slony1; replication
     cluster.  The initialization process consists of creating the
     cluster namespace, loading all the base tables, functions,
     procedures and initializing the node, using
     &funinitializelocalnode; and &funenablenode;.
-     
+
      <variablelist>
       <varlistentry><term><literal>ID</literal></term>
        <listitem><para>The unique, numeric ID number of the node.</para></listitem>
       </varlistentry>
-      
+
       <varlistentry><term><literal>COMMENT = 'comment
       text'</literal></term> <listitem><para> A descriptive text added
-      to the node entry in the table &slnode;. 
+      to the node entry in the table &slnode;.
       </para></listitem>
       </varlistentry>
      </variablelist>
-     
+
     </para>
-    
+
     <para> For this process to work, the SQL scripts of the
     &slony1; system must be installed on the
     DBA workstation (the computer currently executing the
@@ -503,7 +502,7 @@ INIT CLUSTER (
 
   <refentry id ="stmtstorenode"><refmeta><refentrytitle>SLONIK STORE NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>STORE NODE</refname>
     <refpurpose> Initialize &slony1; node </refpurpose>
    </refnamediv>
@@ -514,7 +513,7 @@ INIT CLUSTER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Initialize a new node and add it to the configuration of an
     existing cluster.</para>
 
@@ -523,7 +522,7 @@ INIT CLUSTER (
     exist), loading all the base tables, functions, procedures and
     initializing the node.  The existing configuration of the rest of
     the cluster is copied from the <quote>event node</quote>.
-     
+
      <variablelist>
       <varlistentry><term><literal>ID = ival</literal></term>
       <listitem><para> The unique, immutable numeric ID number of the new
@@ -533,13 +532,13 @@ INIT CLUSTER (
       because it is used as the basis for inter-node event
       communications. </para> </listitem>
       </varlistentry>
-      
+
       <varlistentry><term><literal> COMMENT = 'description' </literal></term>
        <listitem><para> A descriptive text added to the node entry in the table &slnode;</para></listitem>
       </varlistentry>
-      
+
       <varlistentry><term><literal> SPOOLNODE = boolean </literal></term>
-       
+
        <listitem><para>Specifies that the new node is a virtual spool
        node for file archiving of replication log.  If true,
        <application>slonik</application> will not attempt to
@@ -551,18 +550,18 @@ INIT CLUSTER (
        in the preceding fashion.  Log shipping, as it finally emerged
        in 1.2.11, does not require initializing <quote>spool
        nodes</quote>.</para> </warning> </listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       
+
        <listitem><para> The ID of the node used to create the
-	 configuration event that tells all existing nodes about the
-	 new node.  It must be the ID of a pre-existing node in the
-	 cluster, not the ID of the new node.  </para></listitem>
-	 </varlistentry> </variablelist> </para>
+     configuration event that tells all existing nodes about the
+     new node.  It must be the ID of a pre-existing node in the
+     cluster, not the ID of the new node.  </para></listitem>
+     </varlistentry> </variablelist> </para>
 
     <para> This uses &funinitializelocalnode; and &funenablenode;. </para>
-    
+
    </Refsect1>
    <Refsect1><Title>Example</Title>
     <Programlisting>
@@ -585,13 +584,13 @@ INIT CLUSTER (
    <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
    </refsect1>
   </Refentry>
-  
+
 <!-- **************************************** -->
   <refentry id="stmtdropnode"><refmeta><refentrytitle>SLONIK DROP NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>DROP NODE</refname>
-    
+
     <refpurpose> Remove the node from participating in the replication </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -600,7 +599,7 @@ INIT CLUSTER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      Drop a node. This command removes the specified node entirely
      from the replication systems configuration. If the replication
@@ -661,9 +660,9 @@ INIT CLUSTER (
 <!-- **************************************** -->
   <refentry id="stmtuninstallnode"><refmeta><refentrytitle>SLONIK UNINSTALL NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>UNINSTALL NODE</refname>
-    
+
     <refpurpose> Decommission &slony1; node </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -672,14 +671,14 @@ INIT CLUSTER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Restores all tables to the unlocked state, with all
      original user triggers, constraints and rules, eventually added
      &slony1; specific serial key columns
      dropped and the &slony1; schema
      dropped. The node becomes a standalone database. The data is left
      untouched.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID  = ival </literal></term>
        <listitem><para> Node ID of the node to uninstall.</para></listitem>
@@ -725,11 +724,11 @@ INIT CLUSTER (
 
   <refentry id="stmtrestartnode"><refmeta><refentrytitle>SLONIK RESTART NODE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>RESTART NODE</refname>
 
     <refpurpose> Restart &slony1; node </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>RESTART NODE options;</command>
@@ -737,7 +736,7 @@ INIT CLUSTER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Causes an eventually running replication daemon
     (<application>slon</application> process) on the specified node to
     shutdown and restart itself.  Theoretically, this command should
@@ -745,7 +744,7 @@ INIT CLUSTER (
     configuration changes to actually happen in the case where a
     former forwarding node failed and needs to be bypassed by
     subscribers.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID  = ival </literal></term>
        <listitem><para> Node ID of the node to restart.</para></listitem>
@@ -770,17 +769,17 @@ INIT CLUSTER (
    and this allows this to be scripted via slonik. </para>
    </refsect1>
   </refentry>
-  
+
 
   <!-- **************************************** -->
 
   <refentry id="stmtstorepath"><refmeta><refentrytitle>SLONIK STORE
      PATH</refentrytitle><manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>STORE PATH</refname>
-    
+
     <refpurpose> Configure &slony1; node connection </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>STORE PATH (options);</command>
@@ -788,13 +787,13 @@ INIT CLUSTER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Configures how the replication daemon of one node connects
      to the database of another node. If the replication system is
      supposed to use a special backbone network segment, this is the
      place to user the special IP addresses or hostnames. An existing
      configuration can be overwritten.</para>
-    
+
     <para> The conninfo string must contain all information to connect
      to the database as the replication superuser. The names
      <quote>server</quote> or <quote>client</quote> have nothing to do
@@ -810,7 +809,7 @@ INIT CLUSTER (
      actually transfer events or confirmations because of
      <emphasis>listen</emphasis> entries or data because of
      <emphasis>subscriptions</emphasis>.
-     
+
      <variablelist>
       <varlistentry><term><literal> SERVER  = ival </literal></term>
        <listitem><para> Node ID of the database to connect to.</para></listitem>
@@ -823,8 +822,8 @@ INIT CLUSTER (
       </varlistentry>
       <varlistentry><term><literal> CONNRETRY  = ival </literal></term>
        <listitem><para> Number of seconds to wait before another attempt to
-	 connect is made in case the server is unavailable. Default is 10.
-	</para></listitem>
+     connect is made in case the server is unavailable. Default is 10.
+    </para></listitem>
       </varlistentry>
      </variablelist>
     </para>
@@ -832,7 +831,7 @@ INIT CLUSTER (
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-STORE PATH ( SERVER = 1, CLIENT = 2, 
+STORE PATH ( SERVER = 1, CLIENT = 2,
              CONNINFO = 'dbname=testdb host=server1 user=slony'
            );
     </programlisting>
@@ -851,11 +850,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
   <refentry id="stmtdroppath"><refmeta><refentrytitle>SLONIK DROP PATH</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>DROP PATH</refname>
-    
+
     <refpurpose> Delete &slony1; connection information </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>DROP PATH (options);</command>
@@ -863,10 +862,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
-    <para> 	Remove the connection information between <quote>server</quote> and
+
+    <para>  Remove the connection information between <quote>server</quote> and
      <quote>client</quote>.</para>
-     
+
      <variablelist>
       <varlistentry><term><literal> SERVER  = ival </literal></term>
        <listitem><para> Node ID of the database to connect to.</para></listitem>
@@ -875,11 +874,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
        <listitem><para> Node ID of the replication daemon connecting.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       
+
        <listitem><para> The ID of the node used to create the configuration
-	 event that tells all existing nodes about dropping the path.
-	 Defaults to the <quote>client</quote>, if omitted.
-	</para></listitem>
+     event that tells all existing nodes about dropping the path.
+     Defaults to the <quote>client</quote>, if omitted.
+    </para></listitem>
       </varlistentry>
       </variablelist>
       </refsect1>
@@ -896,18 +895,18 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
-  
+
 
 <!-- **************************************** -->
 
   <refentry id="stmtstorelisten"><refmeta><refentrytitle>SLONIK STORE LISTEN</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>STORE LISTEN</refname>
-    
+
     <refpurpose> Configure &slony1; node to
     indicate where to listen for events </refpurpose></refnamediv>
-    
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>STORE LISTEN (options);</command>
@@ -915,7 +914,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> A <quote>listen</quote> entry causes a node (receiver) to query an
      event provider for events that originate from a specific node, as
      well as confirmations from every existing node. It requires a
@@ -941,11 +940,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      </varlistentry>
      <varlistentry><term><literal> PROVIDER = ival </literal></term>
      <listitem><para> Node ID of the node from which the receiver gets
-	events that come from the origin.  If not specified, default is
-	the origin.</para></listitem>
+    events that come from the origin.  If not specified, default is
+    the origin.</para></listitem>
      </varlistentry>
      <varlistentry><term><literal> RECEIVER = ival </literal></term>
-      
+
       <listitem><para> The ID of the node receiving the events.</para></listitem>
      </varlistentry>
     </variablelist>
@@ -972,13 +971,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
   <refentry id="stmtdroplisten"><refmeta><refentrytitle>SLONIK DROP LISTEN</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>DROP LISTEN</refname>
-    
+
     <refpurpose> Eliminate configuration indicating how
     &slony1; node listens for events
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>DROP LISTEN (options);</command>
@@ -986,9 +985,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Remove a <quote>listen</quote> configuration entry. </para>
-    
+
     <variablelist>
      <varlistentry><term><literal> ORIGIN  = ival </literal></term>
       <listitem><para> Node ID of the event origin the receiver is listening for.</para></listitem>
@@ -999,11 +998,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      the origin.</para></listitem>
      </varlistentry>
      <varlistentry><term><literal> RECEIVER = ival </literal></term>
-      
+
       <listitem><para> The ID of the node receiving the events.</para></listitem>
      </varlistentry>
     </variablelist>
-    
+
     <para> This uses &fundroplisten;. </para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -1029,13 +1028,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>TABLE ADD KEY</refname>
-    
+
     <refpurpose> Add primary key for use by
     &slony1; for a table with no suitable
-    key 
+    key
     </refpurpose></refnamediv>
-   
- 
+
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1053,11 +1052,11 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>TABLE DROP KEY</refname>
-    
-    <refpurpose> Removes a primary key added by TABLE ADD KEY 
+
+    <refpurpose> Removes a primary key added by TABLE ADD KEY
     </refpurpose></refnamediv>
-   
- 
+
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1074,12 +1073,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
   <refentry id="stmtcreateset"><refmeta><refentrytitle>SLONIK CREATE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>CREATE SET</refname>
-    
+
     <refpurpose> Create &slony1; replication
     set </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>CREATE SET (options);</command>
@@ -1087,7 +1086,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      In the &slony1; replication system,
      replicated tables are organized in sets. As a general rule of
@@ -1105,8 +1104,8 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      misleading and should therefore be replaced with <quote>set
       origin</quote> and <quote>subscriber</quote>.
     </para>
-    
-    
+
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the set to be created.</para></listitem>
@@ -1120,12 +1119,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       </listitem>
      </varlistentry>
     </variablelist>
-    
+
     <para> This uses &funstoreset; . </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-     CREATE SET ( ID = 1, 
+     CREATE SET ( ID = 1,
                ORIGIN = 1,
                COMMENT = 'Tables for ticketing system' );
     </programlisting>
@@ -1147,10 +1146,10 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>DROP SET</refname>
-    
+
     <refpurpose> Discard &slony1;
     replication set </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>DROP SET (options);</command>
@@ -1158,14 +1157,14 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      Drop a set of tables from the &slony1;
      configuration. This automatically unsubscribes all nodes from the
      set and restores the original triggers and rules on all
      subscribers.
     </para>
-    
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the set to be dropped.</para></listitem>
@@ -1174,12 +1173,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       <listitem><para> Current origin node of the set.</para></listitem>
      </varlistentry>
     </variablelist>
-    
+
        <para> This uses &fundropset;. </para>
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
-  DROP SET ( ID = 5, 
+  DROP SET ( ID = 5,
              ORIGIN = 2 );
     </programlisting>
    </refsect1>
@@ -1193,17 +1192,17 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
- 
+
 <!-- **************************************** -->
 
   <refentry id="stmtmergeset"><refmeta><refentrytitle>SLONIK MERGE
      SET</refentrytitle><manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>MERGE SET</refname>
-    
+
     <refpurpose> Merge &slony1; replication
     sets together </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>MERGE SET (options);</command>
@@ -1211,7 +1210,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Merge a set of tables and sequences into another one. This
     function is a workaround for the problem that it is not possible
     to add tables/sequences to already-subscribed sets. One may create
@@ -1225,7 +1224,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
      This operation will refuse to be run if the two sets do not have
      <emphasis>exactly</emphasis> the same set of subscribers.
      </para>
-    
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> Unique ID of the set to contain the union of the two formerly separate sets.</para></listitem>
@@ -1237,7 +1236,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
       <listitem><para> Current origin node for both sets.  </para></listitem>
      </varlistentry>
     </variablelist>
-    
+
        <para> This uses &funmergeset;. </para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -1278,12 +1277,12 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
   <refentry id="stmtsetaddtable"><refmeta><refentrytitle>SLONIK SET ADD TABLE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET ADD TABLE</refname>
-    
+
     <refpurpose> Add a table to a &slony1;
     replication set </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET ADD TABLE (options);</command>
@@ -1291,60 +1290,60 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Add an existing user table to a replication set. The set
     cannot currently be subscribed by any other node - that
     functionality is supported by the <xref linkend="stmtmergeset">
     command.
-     
+
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
        <listitem><para> ID of the set to which the table is to be added. </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  We might imagine a future version of <application>slonik</application>
-	 figuring out this information by itself, but there do lie race conditions, there.</para></listitem>
+     figuring out this information by itself, but there do lie race conditions, there.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
 
        <listitem><para> Unique ID of the table. These ID's are not
-	 only used to uniquely identify the individual table within the
-	 replication system. The numeric value of this ID also
-	 determines the order in which the tables are locked in a <xref
-	  linkend="stmtlockset"> command for example. So
-	 these numbers might represent any applicable table hierarchy
-	 to make sure the <application>slonik</application> command
-	 scripts do not deadlock at any critical
-	 moment.</para>
+     only used to uniquely identify the individual table within the
+     replication system. The numeric value of this ID also
+     determines the order in which the tables are locked in a <xref
+      linkend="stmtlockset"> command for example. So
+     these numbers might represent any applicable table hierarchy
+     to make sure the <application>slonik</application> command
+     scripts do not deadlock at any critical
+     moment.</para>
 
          <para> This ID must be unique across all sets; you cannot
          have two tables in the same cluster with the same
          ID. </para>
 
-	 <para> Note that &slony1; generates an in-memory array
-	 indicating all of the fully qualified table names; if you use
-	 large table ID numbers, the sparsely-utilized array can lead
-	 to substantial wastage of memory.  Each potential table ID
-	 consumes a pointer to a char, commonly costing 4 bytes per
-	 table ID on 32 bit architectures, and 8 bytes per table ID on
-	 64 bit architectures. </para>
+     <para> Note that &slony1; generates an in-memory array
+     indicating all of the fully qualified table names; if you use
+     large table ID numbers, the sparsely-utilized array can lead
+     to substantial wastage of memory.  Each potential table ID
+     consumes a pointer to a char, commonly costing 4 bytes per
+     table ID on 32 bit architectures, and 8 bytes per table ID on
+     64 bit architectures. </para>
 
          </listitem>
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full table name as described in
-	 <xref linkend="stmttableaddkey">.</para></listitem>
+     <xref linkend="stmttableaddkey">.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> KEY = { 'string' | SERIAL }
-	</literal></term> <listitem><para>
-	 <emphasis>(Optional)</emphasis> The index name that covers the
-	 unique and not null set of columns to be used as the row identifier
-	 for replication purposes. Or the keyword SERIAL to use the
-	 special column added with a previous <xref
-	  linkend="stmttableaddkey"> command. Default
-	 is to use the table's primary key.  The index name is <emphasis>
-	  not </emphasis> fully qualified; you must omit the
-	 namespace.</para></listitem>
+    </literal></term> <listitem><para>
+     <emphasis>(Optional)</emphasis> The index name that covers the
+     unique and not null set of columns to be used as the row identifier
+     for replication purposes. Or the keyword SERIAL to use the
+     special column added with a previous <xref
+      linkend="stmttableaddkey"> command. Default
+     is to use the table's primary key.  The index name is <emphasis>
+      not </emphasis> fully qualified; you must omit the
+     namespace.</para></listitem>
 
       </varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
@@ -1370,7 +1369,7 @@ SET ADD TABLE (
     <para> Here are some of the error messages you may encounter if
     adding tables incorrectly: </para>
 
-   <variablelist>    
+   <variablelist>
        <varlistentry><term><literal>Slony-I: setAddTable_int: table public.my_table PK column id nullable </literal></term>
 
         <listitem><para> Primary keys (or candidates thereof) are
@@ -1433,7 +1432,7 @@ SET ADD TABLE (
         existing one, if that seems appropriate. </para> </listitem>
         </varlistentry>
 
-   </variablelist>    
+   </variablelist>
 
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -1453,13 +1452,13 @@ SET ADD TABLE (
 
   <refentry id="stmtsetaddsequence"><refmeta><refentrytitle>SLONIK SET ADD SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET ADD SEQUENCE</refname>
-    
+
     <refpurpose> Add a sequence to a
     &slony1; replication set
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET ADD SEQUENCE (options);</command>
@@ -1467,35 +1466,35 @@ SET ADD TABLE (
    </refsynopsisdiv>
 <refsect1>
     <title>Description</title>
-    
+
     <para>
      Add an existing user sequence to a replication set. The set
      cannot currently be subscribed by any other node - that
      functionality is supported by the <xref linkend="stmtmergeset">
      command.
-     
+
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
        <listitem><para> ID of the set to which the sequence is to be added.
-	</para></listitem>
+    </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+     might figure out this information by itself.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
-       
+
        <listitem><para> Unique ID of the sequence.  <note><para> Note
-	   that this ID needs to be unique <emphasis>across
-	    sequences</emphasis> throughout the cluster; the numbering of
-	   tables is separate, so you might have a table with ID 20 and a
-	   sequence with ID 20, and they would be recognized as
-	   separate.</para> </note></para></listitem>
-       
+       that this ID needs to be unique <emphasis>across
+        sequences</emphasis> throughout the cluster; the numbering of
+       tables is separate, so you might have a table with ID 20 and a
+       sequence with ID 20, and they would be recognized as
+       separate.</para> </note></para></listitem>
+
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
        <listitem><para> The full sequence name as described in
-	 < linkend="stmttableaddkey">.</para></listitem>
+     < linkend="stmttableaddkey">.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the sequence entry.  </para></listitem>
@@ -1523,18 +1522,18 @@ SET ADD TABLE (
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
-  
+
 <!-- **************************************** -->
 
   <refentry id="stmtsetdroptable"><refmeta><refentrytitle>SLONIK SET DROP TABLE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET DROP TABLE</refname>
-    
+
     <refpurpose> Remove a table from a
     &slony1; replication set
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET DROP TABLE (options);</command>
@@ -1542,7 +1541,7 @@ SET ADD TABLE (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      Drop a table from a replication set.
     </para>
@@ -1550,14 +1549,14 @@ SET ADD TABLE (
      Note that this action will <emphasis>not</emphasis> drop a
      candidate primary key created using <xref
      linkend="stmttableaddkey">.
-     
+
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+     might figure out this information by itself.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
-       
+
   <listitem><para> Unique ID of the table.</para></listitem></varlistentry>
      </variablelist>
     </para>
@@ -1582,18 +1581,18 @@ SET ADD TABLE (
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
   </refentry>
-  
+
 <!-- **************************************** -->
 
   <refentry id="stmtsetdropsequence"><refmeta><refentrytitle>SLONIK SET DROP SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET DROP SEQUENCE</refname>
-    
+
     <refpurpose> Remove a sequence from a
     &slony1; replication set
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET DROP SEQUENCE (options);</command>
@@ -1601,18 +1600,18 @@ SET ADD TABLE (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      Drops an existing user sequence from a replication set.
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+     might figure out this information by itself.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
-       
+
        <listitem><para> Unique ID of the sequence.</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
     </para>
@@ -1634,18 +1633,18 @@ SET ADD TABLE (
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
   </refentry>
-  
+
 <!-- **************************************** -->
-  
+
   <refentry id="stmtsetmovetable"><refmeta><refentrytitle>SLONIK SET MOVE
      TABLE</refentrytitle><manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET MOVE TABLE</refname>
 
     <refpurpose> Move a table from one
     &slony1; replication set to another
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET MOVE TABLE (options);</command>
@@ -1653,7 +1652,7 @@ SET ADD TABLE (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      Change the set a table belongs to. The current set and the new
      set must origin on the same node and subscribed by the same
@@ -1664,17 +1663,17 @@ SET ADD TABLE (
        the table already during the subscription process, which fails
        with a duplicate key error and breaks
        replication.</para></caution>
-     
+
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Current origin of the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+     might figure out this information by itself.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
 
        <listitem><para> Unique ID of the table.</para></listitem></varlistentry>
       <varlistentry><term><literal> NEW SET = ival </literal></term>
-       
+
   <listitem><para> Unique ID of the set to which the table should be added.</para></listitem></varlistentry>
      </variablelist>
     </para>
@@ -1697,19 +1696,19 @@ SET MOVE TABLE (
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
 </refentry>
-  
+
 
 <!-- **************************************** -->
 
   <refentry id="stmtsetmovesequence"><refmeta><refentrytitle>SLONIK SET MOVE SEQUENCE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SET MOVE SEQUENCE</refname>
-    
+
     <refpurpose> Move a sequence from one
     &slony1; replication set to another
     </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SET MOVE SEQUENCE (options);</command>
@@ -1729,21 +1728,21 @@ SET MOVE TABLE (
        early to a new set causes the subscriber to try and add the sequence
        already during the subscription process, which fails with a duplicate
        key error and breaks replication.</para></caution>
-     
+
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
        <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+     might figure out this information by itself.</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
-       
+
        <listitem><para> Unique ID of the sequence.</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> NEW SET = ival </literal></term>
-       
+
        <listitem><para> Unique ID of the set to which the sequence should be moved.</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
     </para>
@@ -1774,12 +1773,12 @@ SET MOVE SEQUENCE (
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>STORE TRIGGER</refname>
-    
+
     <refpurpose> Indicate that a trigger should not be disabled by
     &slony1; on a subscriber node
     </refpurpose></refnamediv>
-   
- 
+
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1794,12 +1793,12 @@ SET MOVE SEQUENCE (
 
   <refentry id="stmtdroptrigger"><refmeta><refentrytitle>SLONIK DROP TRIGGER</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>DROP TRIGGER</refname>
-    
+
     <refpurpose> Return a trigger to default behavior, where it will
     not fire on subscriber nodes </refpurpose></refnamediv>
- 
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
 
@@ -1809,15 +1808,15 @@ SET MOVE SEQUENCE (
 
    </refsect1>
   </refentry>
-  
+
 <!-- **************************************** -->
   <refentry id="stmtsubscribeset"><refmeta><refentrytitle>SLONIK SUBSCRIBE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>SUBSCRIBE SET</refname>
-    
+
     <refpurpose> Start replication of &slony1; set </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>SUBSCRIBE SET (options);</command>
@@ -1825,16 +1824,16 @@ SET MOVE SEQUENCE (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> This performs one of two actions: </para>
 
     <itemizedlist>
- 
+
     <listitem><para> Initiates replication for a replication set </para>
     <para> Causes a node (subscriber) to start replicating a set of
     tables either from the origin or from another provider node, which
     must itself already be be an active, forwarding subscriber.</para>
-    
+
     <para> The application tables contained in the set must already
      exist and should ideally be empty. The current version of
      &slony1; will <emphasis>not</emphasis>
@@ -1845,7 +1844,7 @@ SET MOVE SEQUENCE (
      the tables are guarded on the subscriber, using triggers, against
      accidental updates by the application.
     </para>
-    
+
     <para> If the tables on the subscriber are
     <emphasis>not</emphasis> empty, then the <command>COPY
     SET</command> event (which is part of the subscription process)
@@ -1855,7 +1854,7 @@ SET MOVE SEQUENCE (
 
       <listitem><para> It attempts to <command>TRUNCATE</command> the
       table, which will be efficient. </para> </listitem>
-      
+
       <listitem><para> If that fails (a foreign key relationship might
       prevent TRUNCATE from working), it uses
       <command>DELETE</command> to delete all <quote>old</quote>
@@ -1864,7 +1863,7 @@ SET MOVE SEQUENCE (
       <listitem><para> Those old entries clutter up the table until it
       is next <command>VACUUM</command>ed <emphasis>after</emphasis>
       the subscription process is complete</para></listitem>
-      
+
       <listitem><para> The indices for the table will contain entries
       for the old, deleted entries, which will slow the process of
       inserting new entries into the index.</para></listitem>
@@ -1912,21 +1911,21 @@ SET MOVE SEQUENCE (
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to subscribe</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> PROVIDER = ival </literal></term>
-       
+
        <listitem><para> Node ID of the data provider from which this
        node draws data.</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> RECEIVER = ival </literal></term>
-       
+
        <listitem><para> Node ID of the new subscriber</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> FORWARD = boolean </literal></term>
-       
+
        <listitem><para> Flag whether or not the new subscriber should
        store the log information during replication to make it
        possible candidate for the provider role for future nodes.  Any
@@ -1936,7 +1935,7 @@ SET MOVE SEQUENCE (
 
       </varlistentry>
       <varlistentry><term><literal> OMIT COPY = boolean </literal></term>
-       
+
        <listitem><para> Flag whether or not the subscription process
        should omit doing the <command>COPY</command> of the existing
        data in the set.  In effect, use this option indicates
@@ -1947,9 +1946,9 @@ SET MOVE SEQUENCE (
        </para>
 
        <itemizedlist>
-	<listitem><para> Major inter-version upgrades (<emphasis>e.g. </emphasis> - as from &slony1; 1.2 to 2.0) may be done quickly. </para> </listitem>
-	<listitem><para> Cloning a <quote>master node</quote>.  <xref linkend="stmtcloneprepare">/<xref linkend="stmtclonefinish">   </para> </listitem>
-	<listitem><para> </para> </listitem>
+    <listitem><para> Major inter-version upgrades (<emphasis>e.g. </emphasis> - as from &slony1; 1.2 to 2.0) may be done quickly. </para> </listitem>
+    <listitem><para> Cloning a <quote>master node</quote>.  <xref linkend="stmtcloneprepare">/<xref linkend="stmtclonefinish">   </para> </listitem>
+    <listitem><para> </para> </listitem>
        </itemizedlist>
        </listitem>
 
@@ -1966,11 +1965,11 @@ SUBSCRIBE SET (
    FORWARD = YES
 );
   WAIT FOR EVENT(
-    ORIGIN=1, 
+    ORIGIN=1,
     CONFIRMED=ALL,
     WAIT ON=1
 );
-     
+
     </programlisting>
    </refsect1>
 
@@ -2022,7 +2021,7 @@ SUBSCRIBE SET (
 
      <listitem><para> The fact that the request returns immediately
      even though the subscription may take considerable time to
-     complete may be a bit surprising. </para> 
+     complete may be a bit surprising. </para>
 
      <para> Processing of the subscription involves
      <emphasis>two</emphasis> events; the
@@ -2067,21 +2066,21 @@ SUBSCRIBE SET (
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> The <command>OMIT COPY</command> option was introduced in &slony1; 2.0.3.</para>
     <para> In &slony1; 2.0.5 the SUBSCRIBE SET command gets submitted
-           directly against the set origin. Prior to this change the 
+           directly against the set origin. Prior to this change the
            SUBSCRIBE SET was submitted against the provider
    </para>
    </refsect1>
   </refentry>
-  
+
 <!-- **************************************** -->
 
   <refentry id="stmtunsubscribeset"><refmeta><refentrytitle>SLONIK UNSUBSCRIBE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>UNSUBSCRIBE SET</refname>
 
     <refpurpose> End replication of &slony1; set </refpurpose></refnamediv>
-   
+
    <refsynopsisdiv>
     <cmdsynopsis>
      <command>UNSUBSCRIBE SET (options);</command>
@@ -2095,16 +2094,16 @@ SUBSCRIBE SET (
      former subscriber. The tables are not truncated or otherwise
      modified. All original triggers, rules and constraints are
      restored.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to unsubscribe</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> RECEIVER = ival </literal></term>
-       
+
        <listitem><para> Node ID of the (former) subscriber</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
     </para>
@@ -2138,14 +2137,14 @@ UNSUBSCRIBE SET (
    </refsect1>
   </refentry>
 
-  
+
 <!-- **************************************** -->
 
   <refentry id ="stmtlockset"><refmeta><refentrytitle>SLONIK LOCK SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>LOCK SET</refname>
-    
+
     <refpurpose> Guard &slony1; replication
     set to prepare for <command>MOVE SET</command>
     </refpurpose></refnamediv>
@@ -2156,7 +2155,7 @@ UNSUBSCRIBE SET (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Guards a replication set against client application updates
     in preparation for a <xref linkend="stmtmoveset"> command.
     </para>
@@ -2180,16 +2179,16 @@ UNSUBSCRIBE SET (
     as the origin node, long running transactions on that database
     will also be considered even though they are essentially
     independent.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to lock</para></listitem>
-	 
+
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
-       
+
        <listitem><para> Node ID of the current set origin</para></listitem>
-	 
+
       </varlistentry>
      </variablelist>
     </para>
@@ -2218,9 +2217,9 @@ LOCK SET (
 
   <refentry id="stmtunlockset"><refmeta><refentrytitle>SLONIK UNLOCK SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>UNLOCK SET</refname>
-    
+
     <refpurpose> Unlock a &slony1; set that was locked </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -2229,19 +2228,19 @@ LOCK SET (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
-    <para> 
+
+    <para>
      Unlocks a previously locked set.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to unlock</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
-       
+
        <listitem><para> Node ID of the current set origin</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
     </para>
@@ -2265,15 +2264,15 @@ UNLOCK SET (
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
   </refentry>
-  
+
 
 <!-- **************************************** -->
 
   <refentry id="stmtmoveset"><refmeta><refentrytitle>SLONIK MOVE SET</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>MOVE SET</refname>
-    
+
     <refpurpose> Change origin of a &slony1;
     replication set </refpurpose></refnamediv>
    <refsynopsisdiv>
@@ -2283,11 +2282,11 @@ UNLOCK SET (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Changes the origin of a set from one node to another. The
     new origin must be a current subscriber of the set. The set must
     currently be locked on the old origin. </para>
-    
+
     <para> After this command, the set cannot be unlocked on the old
      origin any more. The old origin will continue as a forwarding
      subscriber of the set and the subscription chain from the old
@@ -2307,24 +2306,24 @@ UNLOCK SET (
      node as being corrupted. Before <command>MOVE SET</command> will
      function a <command>LOCK SET</command> is needed.
 </para>
-     
+
     <para> Note that this is a locking operation, which means that
     it can get stuck behind other database activity.
-     
+
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> ID of the set to transfer</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> OLD ORIGIN = ival </literal></term>
-       
+
        <listitem><para> Node ID of the current set origin</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> NEW ORIGIN = ival </literal></term>
-       
+
   <listitem><para> Node ID of the new set origin</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
     </para>
@@ -2362,9 +2361,9 @@ MOVE SET (
 
   <refentry id="stmtfailover"><refmeta><refentrytitle>SLONIK FAILOVER</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>FAILOVER</refname>
-    
+
     <refpurpose> Fail a broken replication set over to a backup node
     </refpurpose></refnamediv>
    <refsynopsisdiv>
@@ -2374,7 +2373,7 @@ MOVE SET (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para>
      The <command>FAILOVER</command> command causes the backup node to take over all sets
      that currently originate on the failed
@@ -2393,20 +2392,20 @@ MOVE SET (
      failed node is abandoned, and can and should be removed from the
      configuration with <xref linkend="stmtdropnode">.
     </para>
-    
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the failed node</para></listitem>
-      
+
      </varlistentry>
      <varlistentry><term><literal> BACKUP NODE = ival </literal></term>
-      
+
       <listitem><para> Node ID of the node that will take over all
       sets originating on the failed node</para></listitem>
 
      </varlistentry>
     </variablelist>
-    
+
     <para> This uses &funfailednode;. </para>
    </refsect1>
    <refsect1><title>Example</title>
@@ -2454,9 +2453,9 @@ FAILOVER (
 
   <refentry id="stmtddlscript"><refmeta><refentrytitle>SLONIK EXECUTE SCRIPT</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>EXECUTE SCRIPT</refname>
-    
+
     <refpurpose> Execute SQL/DDL script  </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -2465,11 +2464,11 @@ FAILOVER (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Executes a script containing arbitrary SQL statements on
      all nodes that are subscribed to a set at a common controlled
      point within the replication transaction stream.</para>
-    
+
     <para> The specified event origin must be the origin of the set.
     The script file must not contain any <command>START</command> or
     <command>COMMIT TRANSACTION</command> calls.  (This changes
@@ -2485,43 +2484,43 @@ FAILOVER (
 
       <listitem><para> The unique numeric ID number of the set
       affected by the script</para></listitem>
-      
+
      </varlistentry>
      <varlistentry><term><literal> FILENAME = '/path/to/file' </literal></term>
-      
+
       <listitem><para> The name of the file containing the SQL script to
-	execute.  This might be a relative path, relative to the location of
-	the <application>slonik</application> instance you are running, or, preferably,
-	an absolute path on the system where <application>slonik</application> is to run.</para>
-       
+    execute.  This might be a relative path, relative to the location of
+    the <application>slonik</application> instance you are running, or, preferably,
+    an absolute path on the system where <application>slonik</application> is to run.</para>
+
        <para> The <emphasis>contents</emphasis> of the file are propagated as part of
-	the event, so the file does not need to be accessible on any of the
-	nodes.</para></listitem>
-      
+    the event, so the file does not need to be accessible on any of the
+    nodes.</para></listitem>
+
      </varlistentry>
      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-      <listitem><para> (Mandatory unless EXECUTE ONLY ON is given) The ID 
-	  of the current origin of the set. If EXECUTE ONLY ON
-	  is given, EVENT NODE must specify the same node or
-	  be omitted.</para></listitem>
-      
+      <listitem><para> (Mandatory unless EXECUTE ONLY ON is given) The ID
+      of the current origin of the set. If EXECUTE ONLY ON
+      is given, EVENT NODE must specify the same node or
+      be omitted.</para></listitem>
+
      </varlistentry>
      <varlistentry><term><literal> EXECUTE ONLY ON = ival
        </literal></term> <listitem><para> (Optional) The ID of the only
-	node to actually execute the script.  This option causes the
-	script to be propagated by all nodes but executed only by one.
-	The default is to execute the script on all nodes that are
-	subscribed to the set.</para></listitem>
-      
+    node to actually execute the script.  This option causes the
+    script to be propagated by all nodes but executed only by one.
+    The default is to execute the script on all nodes that are
+    subscribed to the set.</para></listitem>
+
      </varlistentry>
     </variablelist>
-    
+
     <para> See also the warnings in &rddlchanges;.</para>
 
     <para> Note that this is a potentially heavily-locking
     operation, which means that it can get stuck behind other database
     activity.</para>
-  
+
 
     <para> Note that if you need to make reference to the cluster
     name, you can use the token <command>@CLUSTERNAME@</command>; if
@@ -2557,7 +2556,7 @@ EXECUTE SCRIPT (
     requiring that exclusive locks be taken out on each node, in
     turn. </para>
 
-  
+
 
    </refsect1>
    <refsect1> <title> Version Information </title>
@@ -2601,7 +2600,7 @@ EXECUTE SCRIPT (
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>UPDATE FUNCTIONS</refname>
-    
+
     <refpurpose> Reload stored functions </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -2610,9 +2609,9 @@ EXECUTE SCRIPT (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Reloads stored functions for a node.</para>
-    
+
     <para>Reloads all stored procedure and function definitions in the
     &slony1; schema for the specified node. This command is usually
     part of the &slony1; software upgrade procedure.
@@ -2620,9 +2619,9 @@ EXECUTE SCRIPT (
 
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
-       
+
        <listitem><para> The node to refresh.</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
 
@@ -2670,7 +2669,7 @@ UPDATE FUNCTIONS (
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>WAIT FOR EVENT</refname>
-    
+
     <refpurpose> Have Slonik script wait for previous event to
     complete </refpurpose></refnamediv>
    <refsynopsisdiv>
@@ -2680,9 +2679,9 @@ UPDATE FUNCTIONS (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Waits for event Confirmation.</para>
-    
+
     <para> <application>Slonik</application> remembers the last event
     generated on every node during script execution (events generated
     by earlier calls are currently not checked). In certain situations
@@ -2694,7 +2693,7 @@ UPDATE FUNCTIONS (
     to wait for confirmation of an event, which hopefully means that
     the subscriber node is ready for the next action.
     </para>
-    
+
     <para> <command>WAIT FOR EVENT</command> must be called outside of
     any <command>try</command> block in order to work, since new
     confirm messages don't become visible within a transaction.
@@ -2702,24 +2701,24 @@ UPDATE FUNCTIONS (
      <variablelist>
       <varlistentry><term><literal> ORIGIN = ival | ALL </literal></term>
        <listitem><para> The origin of the event(s) to wait for.</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> CONFIRMED = ival | ALL </literal></term>
-       
+
        <listitem><para> The node ID of the receiver that must confirm the event(s).</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> WAIT ON = ival </literal></term>
        <listitem><para> The ID of the node where the &slconfirm; table
-	 is to be checked.</para></listitem>
-       
+     is to be checked.</para></listitem>
+
       </varlistentry>
       <varlistentry><term><literal> TIMEOUT = ival </literal></term>
-       
+
        <listitem><para> The number of seconds to wait.  Default is 600
        (10 minutes).  <command>TIMEOUT = 0</command> causes the script
-	 to wait indefinitely.</para></listitem>
-       
+     to wait indefinitely.</para></listitem>
+
       </varlistentry>
      </variablelist></para>
 
@@ -2744,7 +2743,7 @@ WAIT FOR EVENT (
    was removed, so a node must be specified.</para>
 
    </refsect1>
-   
+
    <refsect1> <title> Oddities </title> <para> Not all events return
    interesting results.  For instance, many people have run afoul of
    problems with <xref linkend="stmtsubscribeset">, when subscribing a
@@ -2771,7 +2770,7 @@ WAIT FOR EVENT (
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
-   
+
   </refentry>
 
 <!-- **************************************** -->
@@ -2780,7 +2779,7 @@ WAIT FOR EVENT (
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>REPAIR CONFIG</refname>
-    
+
     <refpurpose> Resets the name-to-oid mapping of tables in a replication set, useful for restoring a node after a <application>pg_dump</application>. </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -2789,25 +2788,25 @@ WAIT FOR EVENT (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Resets name-to-oid mapping.</para>
-    
+
      <variablelist>
       <varlistentry><term><literal> SET ID = ival </literal></term>
        <listitem><para> Which set to clean up after.</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
-       
+
        <listitem><para> The node ID where this should be submitted.</para></listitem>
-       
+
       </varlistentry>
       <varlistentry><term><literal> EXECUTE ONLY ON = ival </literal></term>
 
        <listitem><para> The ID of the only node where the mappings are
        to be updated.  If not specified, the default is to execute
        this on all nodes subscribed to the set.</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
 
@@ -2834,7 +2833,7 @@ REPAIR CONFIG (
    <manvolnum>7</manvolnum></refmeta>
 
    <refnamediv><refname>SYNC</refname>
-    
+
     <refpurpose> Generate an ordinary SYNC event </refpurpose></refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
@@ -2843,13 +2842,13 @@ REPAIR CONFIG (
    </refsynopsisdiv>
    <refsect1>
     <title>Description</title>
-    
+
     <para> Generates a SYNC event on a specified node.</para>
-    
+
      <variablelist>
       <varlistentry><term><literal> ID = ival </literal></term>
        <listitem><para> The node on which to generate the SYNC event.</para></listitem>
-       
+
       </varlistentry>
      </variablelist>
 
@@ -2870,12 +2869,12 @@ REPAIR CONFIG (
   </refentry>
 
 <!-- **************************************** -->
-  
+
   <refentry id ="stmtsleep"><refmeta><refentrytitle>SLONIK SLEEP</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>SLEEP</refname>
-    
+
     <refpurpose> Sleep using system <function>sleep()</function> </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -2903,9 +2902,9 @@ REPAIR CONFIG (
 
   <refentry id ="stmtcloneprepare"><refmeta><refentrytitle>SLONIK CLONE PREPARE</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>CLONE PREPARE</refname>
-    
+
     <refpurpose> Prepare for cloning a node. </refpurpose>
    </refnamediv>
    <refsynopsisdiv>
@@ -2951,9 +2950,9 @@ REPAIR CONFIG (
 
   <refentry id ="stmtclonefinish"><refmeta><refentrytitle>SLONIK CLONE FINISH</refentrytitle>
    <manvolnum>7</manvolnum></refmeta>
-   
+
    <refnamediv><refname>CLONE FINISH</refname>
-    
+
     <refpurpose> Complete cloning a node. </refpurpose>
    </refnamediv>
    <refsynopsisdiv>

@@ -39,8 +39,7 @@ simple 2 node replication system with &slony1;.</para></sect2>
 <quote>subscriber</quote> as node2 (<emphasis>e.g.</emphasis> -
 slave).  A web application on a third server is accessing the database
 on node1.  Both databases are up and running and replication is more
-or less in sync.  We do controlled switchover using <xref
-linkend="stmtmoveset">.</para>
+or less in sync.  We do controlled switchover using <xref linkend="stmtmoveset">.</para>
 
 <itemizedlist>
 
@@ -55,7 +54,7 @@ pool.</para>
 that the application(s) that use the database are configured.  The
 general point is thus: Applications that were connected to the old
 database must drop those connections and establish new connections to
-the database that has been promoted to the <quote/master/ role.  There
+the database that has been promoted to the <quote>master</quote> role.  There
 are a number of ways that this may be configured, and therefore, a
 number of possible methods for accomplishing the change:</para>
 
@@ -121,8 +120,7 @@ seconds.</para></listitem>
 </itemizedlist>
 
 <para> You may now simply shutdown the server hosting node1 and do
-whatever is required to maintain the server.  When <xref
-linkend="slon"> node1 is restarted later, it will start replicating
+whatever is required to maintain the server.  When <xref linkend="slon"> node1 is restarted later, it will start replicating
 again, and soon catch up.  At this point the procedure to switch
 origins is executed again to restore the original
 configuration.</para>
@@ -131,7 +129,7 @@ configuration.</para>
 under control of the administrators, and there is no need for there to
 be any loss of data.</para>
 
-<para> After performing the configuration change, you should, run the 
+<para> After performing the configuration change, you should, run the
 &lteststate; scripts in order to
 validate that the cluster state remains in good order after this
 change. </para>
@@ -144,8 +142,7 @@ change. </para>
 </indexterm>
 
 <para> If some more serious problem occurs on the
-<quote>origin</quote> server, it may be necessary to <xref
-linkend="stmtfailover"> to a backup server.  This is a highly
+<quote>origin</quote> server, it may be necessary to <xref linkend="stmtfailover"> to a backup server.  This is a highly
 undesirable circumstance, as transactions <quote>committed</quote> on
 the origin, but not applied to the subscribers, will be lost.  You may
 have reported these transactions as <quote>successful</quote> to
@@ -188,8 +185,7 @@ failover command succeeded, no node in the entire replication setup
 will receive anything from node1 any more.</para>
 
 <note><para> Note that in order for node 2 to be considered as a
-candidate for failover, it must have been set up with the <xref
-linkend="stmtsubscribeset"> option <command>forwarding =
+candidate for failover, it must have been set up with the <xref linkend="stmtsubscribeset"> option <command>forwarding =
 yes</command>, which has the effect that replication log data is
 collected in &sllog1;/&sllog2; on node 2.  If replication log data is
 <emphasis>not</emphasis> being collected, then failover to that node
@@ -348,7 +344,7 @@ an SNMP interface that does some combination of the following:</para>
 
 <itemizedlist>
 
-<listitem><para> Turns off power on the failed server. </para> 
+<listitem><para> Turns off power on the failed server. </para>
 
 <para> If care is not taken, the server may reappear when system
 administrators power it up. </para>
@@ -417,7 +413,7 @@ is on that node.  The other nodes in the cluster are not confused at
 all; they know that this node is <quote>dead,</quote> and that they
 should ignore it.  But there is not a way to know this by looking at
 the <quote>failed</quote> node.
-</para> 
+</para>
 
 <para> This points back to the design point that &slony1; is not a
 network monitoring tool.  You need to have clear methods of

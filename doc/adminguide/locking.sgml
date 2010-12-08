@@ -1,4 +1,4 @@
-<!--  --> 
+<!--  -->
 <sect1 id="locking"> <title>Locking Issues</title>
 
 <indexterm><primary>locking issues</primary></indexterm>
@@ -69,16 +69,16 @@ applied on the provider or on the origin. </para>
 <listitem>
 <para> Each time an event is generated (including SYNC events) &slony1;
 obtains an exclusive lock on the sl_event table long enough to insert
-the event into sl_event.  This is not normally an issue as &slony1; 
+the event into sl_event.  This is not normally an issue as &slony1;
 should be the only program using sl_event.   However this means that
 any non-slony transactions that read from sl_event can cause replication
-to pause.   If you pg_dump your database  avoid dumping 
+to pause.   If you pg_dump your database  avoid dumping
 your Slony schemas or else pg_dump's locking will compete with Slony's own
 locking which could stop Slony replication for the duration of the
 pg_dump.  Exclude the Slony schemas from pg_dump with
 --exclude-schema=schemaname to specifically exclude your Slony schema.
 
-</para>
+</para></listitem>
 
 </itemizedlist>
 
@@ -86,7 +86,7 @@ pg_dump.  Exclude the Slony schemas from pg_dump with
 When &slony1; locks a table that a running application later tries
 to access the application will be blocked waiting for the lock.  It is
 also possible for a running application to create a deadlock situation
-with &slony1; when they each have obtained locks that the other is 
+with &slony1; when they each have obtained locks that the other is
 waiting for.
 </para>
 
@@ -102,7 +102,7 @@ database, that will provide a window of time during which there is
 nothing running against the database other than administrative
 processes under your control. </para> </listitem>
 
-<listitem><para> Try the operation, hoping for things to work </para> 
+<listitem><para> Try the operation, hoping for things to work </para>
 
 <para> Since nothing prevents applications from leaving access locks
 in your way, you may find yourself deadlocked.  But if the number of
@@ -110,7 +110,7 @@ remaining locks are small, you may be able to negotiate with users to
 <quote>get in edgewise.</quote> </para>
 </listitem>
 
-<listitem><para> Use pgpool </para> 
+<listitem><para> Use pgpool </para>
 
 <para> If you can use this or some similar <quote>connection
 broker</quote>, you may be able to tell the connection manager to stop
@@ -120,14 +120,14 @@ would be for the connection manager to hold up user queries for a
 little while so that the brief database outage looks, to them, like a
 period where things were running slowly.  </para></listitem>
 
-<listitem><para> Rapid Outage Management </para> 
+<listitem><para> Rapid Outage Management </para>
 
 <para> The following procedure may minimize the period of the outage:
 
 <itemizedlist>
 
 <listitem><para> Modify <filename>pg_hba.conf</filename> so that only
-the  <command>slony</command> user 
+the  <command>slony</command> user
 will have access to the database. </para> </listitem>
 
 <listitem><para> Issue a <command>kill -SIGHUP</command> to the
@@ -147,7 +147,7 @@ safe to proceed with the &slony1; operation. </para> </listitem>
 to <command>kill -SIGQUIT</command> one of the &postgres; processes.
 This will restart the backend and kill off any lingering queries.  You
 probably need to restart the <xref linkend="slon"> processes that
-attach to the node. </para> 
+attach to the node. </para>
 
 <para> At that point, it will be safe to proceed with the &slony1;
 operation; there will be no competing processes.</para></listitem>

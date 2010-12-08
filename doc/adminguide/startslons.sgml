@@ -50,7 +50,7 @@ responsible to service a particular node across a WAN link if at all
 possible.  Any problems with that connection can kill the connection
 whilst leaving <quote>zombied</quote> database connections on the node
 that (typically) will not die off for around two hours.  This prevents
-starting up another slon, as described in the <link linkend="FAQ"> FAQ
+starting up another slon, as described in the <link linkend="faq"> FAQ
 </link> under <link linkend="multipleslonconnections"> multiple slon
 connections</link>. </para> </warning>
 
@@ -100,8 +100,7 @@ event.  More recently, the script has been changed to detect
 to make it much less fragile.  The main process should only die off if
 you expressly signal it asking it to be killed. </para>
 
-<para> A new approach is available in the <xref
-linkend="launchclusters"> script which uses
+<para> A new approach is available in the <xref linkend="launchclusters"> script which uses
 <application>slon</application> configuration files and which may be
 invoked as part of your system startup process.</para>
 

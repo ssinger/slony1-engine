@@ -66,7 +66,7 @@
   <emphasis>generated</emphasis> by scripts, such as Bash or Perl, and
   these sorts of scripting languages already have perfectly good ways
   of managing variables, doing iteration, and such.</para>
-  
+
   <para>See also <link linkend="slonikref"> Slonik Command Language
   reference </link>. </para>
 
@@ -77,7 +77,7 @@
 
   <para>
    <application>slonik</application> returns 0 to the shell if it
-   finished normally.  Scripts may specify return codes.   
+   finished normally.  Scripts may specify return codes.
   </para>
  </refsect1>
 </refentry>

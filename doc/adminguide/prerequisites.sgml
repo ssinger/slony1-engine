@@ -1,21 +1,21 @@
 <!-- $Id -->
 <sect1 id="requirements">
-<title>System Requirements</title> 
+<title>System Requirements</title>
 <para>
 To run &slony1;  you will need
 
 <itemizedlist>
-<listitem><para>&postgres; 8.3 or above (this version of &slony1; is 
+<listitem><para>&postgres; 8.3 or above (this version of &slony1; is
 known to work with 8.3.x, 8.4.x and 9.0.x). Earlier versions of &postgres;
 require &slony1; 1.2.x </para></listitem>
-<listitem><para>The &slony1; binary files either compiled 
+<listitem><para>The &slony1; binary files either compiled
 from source or from a binary package</para></listitem>
 
 </itemizedlist>
 </para>
 
 <para>
-The following are recommended for running &slony1; 
+The following are recommended for running &slony1;
 
 <itemizedlist>
 <listitem><para>A method of keeping the clocks on your replicas
@@ -55,7 +55,7 @@ SIGINT</command> the offending backend connection.  But by running the
 condition. </para>
 </listitem>
 
-<listitem><para>All of your databases should be using the same 
+<listitem><para>All of your databases should be using the same
 database encoding. (ie LATIN1 or UTF8). Replicating from
 a database in one encoding to a database with a different
 encoding might lead to replication errors.</para></listitem>
@@ -79,34 +79,30 @@ called <command>make</command>) </para> </listitem>
 <application>GCC</application> work.</para></listitem>
 
 <listitem><para> You also need a recent version of &postgres;
-including the server headers. You must have &postgres; version 8.3 
+including the server headers. You must have &postgres; version 8.3
 or newer to be able to build and use &slony1;.  </para>
 
 </listitem>
 
-<listitem><para> This documentation is written in SGML using <ulink
-url="http://docbook.com/"> DocBook </ulink>, and may be processed into
+<listitem><para> This documentation is written in SGML using <ulink url="http://docbook.com/"> DocBook </ulink>, and may be processed into
 numerous formats including HTML, RTF, and PDF using tools in the
 <ulink url="http://docbook.sourceforge.net/"> DocBook Open Repository
 </ulink> along with <ulink url="http://openjade.sourceforge.net/">
 OpenJade.</ulink> </para></listitem>
 
-<listitem><para> On &windows; you will also need the same <ulink url=
-"http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys
+<listitem><para> On &windows; you will also need the same <ulink url="http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys
 Toolset</ulink> used to build &postgres; 8.3 and above.  In addition
-you will need to install <ulink url=
-"http://sourceware.org/pthreads-win32/">pthreads-win32
+you will need to install <ulink url="http://sourceware.org/pthreads-win32/">pthreads-win32
 2.x</ulink>. </para></listitem>
 
-</itemizedlist> </para>
+</itemizedlist> </para></sect2>
 
 <sect2>
 <title> Getting &slony1; Source</title>
 
 <indexterm><primary>downloading &slony1; sources</primary></indexterm>
 
-<para>You can get the &slony1; source from <ulink
-    url="http://main.slony.info/downloads/">
+<para>You can get the &slony1; source from <ulink url="http://main.slony.info/downloads/">
 http://main.slony.info/downloads/</ulink>
 </para>
 

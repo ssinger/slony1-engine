@@ -127,8 +127,7 @@ that are not covered.</para></listitem>
 <para> If a node hasn't submitted any events in a while, that likely
 suggests a problem.</para></listitem>
 
-<listitem><para> Summarizes the <quote>aging</quote> of table <xref
-linkend="table.sl-confirm"> </para>
+<listitem><para> Summarizes the <quote>aging</quote> of table <xref linkend="table.sl-confirm"> </para>
 
 <para> If one or another of the nodes in the cluster hasn't reported
 back recently, that tends to lead to cleanups of tables like &sllog1;,
@@ -146,8 +145,7 @@ postgresql.conf </filename>.</para>
 this will find them.</para>
 
 <para> If you have broken applications that hold connections open,
-that has several unsalutory effects as <link
-linkend="longtxnsareevil"> described in the
+that has several unsalutory effects as <link linkend="longtxnsareevil"> described in the
 FAQ</link>.</para></listitem>
 
 </itemizedlist></para>
@@ -279,7 +277,7 @@ output=`/usr/bin/psql -U slony -h 192.168.1.1 -d endersysecm -qAt -c
 "select cast(extract(epoch from st_lag_time) as int8) FROM _mycluster.sl_status WHERE st_received = $1"`
 echo $output
 echo $output
-echo 
+echo
 echo
 # end of script#
 </programlisting>
@@ -299,8 +297,7 @@ lines. </para> </note>
 replication system includes script,
 <command>check_postgres.pl</command>, which can monitor a variety of
 things about &postgres; status that includes monitoring &slony1;
-replication status; see <ulink
-url="http://bucardo.org/check_postgres/check_postgres.pl.html#slony_status">
+replication status; see <ulink url="http://bucardo.org/check_postgres/check_postgres.pl.html#slony_status">
 check_postgres.pl - slony_status </ulink></para>
 </sect2>
 
@@ -310,15 +307,14 @@ check_postgres.pl - slony_status </ulink></para>
 
 <para> This script is constructed to search for &slony1; log files at
 a given path (<envar>LOGHOME</envar>), based both on the naming
-conventions used by the <xref linkend="launchclusters"> and <xref
-linkend="slonwatchdog"> systems used for launching &lslon; 
+conventions used by the <xref linkend="launchclusters"> and <xref linkend="slonwatchdog"> systems used for launching &lslon;
 processes.</para>
 
 <para> Errors, if found, are listed, by log file, and emailed to the
-specified user (<ENVAR>LOGRECIPIENT</ENVAR>); if no email address is
+specified user (<envar>LOGRECIPIENT</envar>); if no email address is
 specified, output goes to standard output. </para>
 
-<para> <ENVAR>LOGTIMESTAMP</envar> allows overriding what hour to
+<para> <envar>LOGTIMESTAMP</envar> allows overriding what hour to
 evaluate (rather than the last hour). </para>
 
 <para> An administrator might run this script once an hour to monitor
@@ -343,7 +339,7 @@ categorized on the wiki.  </para>
 <para> The gentle user might use the script as follows: </para>
 
 <screen>
-~/logtail.en>         mvs login -d mywiki.example.info -u "Chris Browne" -p `cat ~/.wikipass` -w wiki/index.php                     
+~/logtail.en>         mvs login -d mywiki.example.info -u "Chris Browne" -p `cat ~/.wikipass` -w wiki/index.php
 Doing login with host: logtail and lang: en
 ~/logtail.en> perl $SLONYHOME/tools/mkmediawiki.pl --host localhost --database slonyregress1 --cluster slony_regress1 --categories=Slony-I  > Slony_replication.wiki
 ~/logtail.en> mvs commit -m "More sophisticated generated Slony-I cluster docs" Slony_replication.wiki
@@ -385,9 +381,9 @@ INFO   remoteWorkerThread_1: SYNC 19 sync_event timing:  pqexec (s/count)- provi
 <para> Here are some notes to interpret this output: </para>
 
 <itemizedlist>
-<listitem><para> Note the line that indicates <screen>inserts=144 updates=1084 deletes=0</screen> </para> 
+<listitem><para> Note the line that indicates <screen>inserts=144 updates=1084 deletes=0</screen> </para>
 <para> This indicates how many tuples were affected by this particular SYNC. </para></listitem>
-<listitem><para> Note the line indicating <screen>0.028 seconds delay for first row</screen></para> 
+<listitem><para> Note the line indicating <screen>0.028 seconds delay for first row</screen></para>
 
 <para> This indicates the time it took for the <screen>LOG
 cursor</screen> to get to the point of processing the first row of
@@ -395,25 +391,25 @@ data.  Normally, this takes a long time if the SYNC is a large one,
 and one requiring sorting of a sizable result set.</para></listitem>
 
 <listitem><para> Note the line indicating <screen>0.978 seconds until
-close cursor</screen></para> 
+close cursor</screen></para>
 
 <para> This indicates how long processing took against the
 provider.</para></listitem>
 
-<listitem><para> sync_helper timing:  large tuples 0.315/288 </para> 
+<listitem><para> sync_helper timing:  large tuples 0.315/288 </para>
 
 <para> This breaks off, as a separate item, the number of large tuples
 (<emphasis>e.g.</emphasis> - where size exceeded the configuration
 parameter <xref linkend="slon-config-max-rowsize">) and where the
 tuples had to be processed individually. </para></listitem>
 
-<listitem><para> <screen>SYNC 19 done in 1.272 seconds</screen></para> 
+<listitem><para> <screen>SYNC 19 done in 1.272 seconds</screen></para>
 
 <para> This indicates that it took 1.272 seconds, in total, to process
 this set of SYNCs. </para>
 </listitem>
 
-<listitem><para> <screen>SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/0 - IUD 0.972/248</screen></para> 
+<listitem><para> <screen>SYNC 19 sync_event timing:  pqexec (s/count)- provider 0.001/1 - subscriber 0.004/0 - IUD 0.972/248</screen></para>
 
 <para> This records information about how many queries were issued
 against providers and subscribers in function

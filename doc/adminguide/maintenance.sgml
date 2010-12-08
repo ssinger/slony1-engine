@@ -49,7 +49,7 @@ to <command>TRUNCATE</command> the <quote>elder</quote> data.</para>
 <para> That means that on a regular basis, these tables are completely
 cleared out, so that you will not suffer from them having grown to
 some significant size, due to heavy load, after which they are
-incapable of shrinking back down </para> 
+incapable of shrinking back down </para>
 
 <para> In version 2.0, <command>DELETE</command> is no longer used to
 clear out data in &sllog1; and &sllog2;; instead, the log switch logic
@@ -89,7 +89,7 @@ be configured not to process: </para>
 
 <programlisting>
 mycluster=# select oid, relname from pg_class where relnamespace = (select oid from pg_namespace where nspname = '_' || 'MyCluster') and relhasindex;
-  oid  |   relname    
+  oid  |   relname
 -------+--------------
  17946 | sl_nodelock
  17963 | sl_setsync
@@ -127,9 +127,7 @@ processes should they happen to die for some reason, such as a network
 
 <para>You might want to run them...</para>
 
-<para> The <quote>best new way</quote> of managing <xref
-linkend="slon"> processes is via the combination of <xref
-linkend="mkslonconf">, which creates a configuration file for each
+<para> The <quote>best new way</quote> of managing <xref linkend="slon"> processes is via the combination of <xref linkend="mkslonconf">, which creates a configuration file for each
 node in a cluster, and <xref linkend="launchclusters">, which uses
 those configuration files.</para>
 
@@ -167,7 +165,7 @@ problems, including:
 <listitem><para> Bloating of tables like pg_listener, sl_log_1, sl_log_2, sl_seqlog </para></listitem>
 <listitem><para> Listen paths </para></listitem>
 <listitem><para> Analysis of Event propagation </para></listitem>
-<listitem><para> Analysis of Event confirmation propagation </para> 
+<listitem><para> Analysis of Event confirmation propagation </para>
 
 <para> If communications is a <emphasis>little</emphasis> broken,
 replication may happen, but confirmations may not get back, which
@@ -232,8 +230,7 @@ clusters.</para></listitem>
 <listitem><para><command>nagios_slony_test</command> is a script that
 was constructed to query the log files so that you might run the
 replication tests every so often (we run them every 6 minutes), and
-then a system monitoring tool such as <ulink
-url="http://www.nagios.org/"> <productname>Nagios</productname>
+then a system monitoring tool such as <ulink url="http://www.nagios.org/"> <productname>Nagios</productname>
 </ulink> can be set up to use this script to query the state indicated
 in those logs.</para>
 
@@ -404,17 +401,17 @@ ERROR messages which could be used to trigger a nagios alarm.
 
 <para>If you have a subscription log then it's easy to determine if a given
 slon is in the process of handling copies or other subscription activity.
-If the log isn't empty, and doesn't end with a 
+If the log isn't empty, and doesn't end with a
 <command>"CONFIG enableSubscription: sub_set:1"</command>
 (or whatever set number you've subscribed) then the slon is currently in
 the middle of initial copies.</para>
 
-<para> If you happen to be monitoring the mtime of your primary slony logs to 
+<para> If you happen to be monitoring the mtime of your primary slony logs to
 determine if your slon has gone brain-dead, checking this is a good way
 to avoid mistakenly clobbering it in the middle of a subscribe. As a bonus,
 recall that since the the slons are running under svscan, you only need to
 kill it (via the svc interface) and let svscan start it up again laster.
-I've also found the COPY logs handy for following subscribe activity 
+I've also found the COPY logs handy for following subscribe activity
 interactively.</para>
 </sect3>
 

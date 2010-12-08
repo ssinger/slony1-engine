@@ -48,8 +48,7 @@ portion of the procedure that requires an application
 <listitem><para> Lock the set against client application updates using
 <xref linkend="stmtlockset"></para></listitem>
 
-<listitem><para> Submit the Slonik command <xref
-linkend="stmtmoveset"> to shift the origin from the old database to
+<listitem><para> Submit the Slonik command <xref linkend="stmtmoveset"> to shift the origin from the old database to
 the new one</para></listitem>
 
 <listitem><para> Point the applications to the new database
@@ -143,26 +142,26 @@ in detail what is going on</para>
    <sect3>
     <title>The Environment</title>
     <programlisting>
-		Database machine:
-			name = rome 
-			ip = 192.168.1.23
-			OS: Ubuntu 6.06 LTS
-			postgres user = postgres, group postgres
-			
-		Current PostgreSQL 
-			Version = 8.2.3 
-			Port 5432
-			Installed at: /data/pgsql-8.2.3
-			Data directory: /data/pgsql-8.2.3/data
-			Database to be moved: mydb
-			
-		New PostgreSQL installation
-			Version = 8.3.3
-			Port 5433
-			Installed at: /data/pgsql-8.3.3
-			Data directory: /data/pgsql-8.3.3/data
-			
-		Slony Version to be used = 1.2.14
+        Database machine:
+            name = rome
+            ip = 192.168.1.23
+            OS: Ubuntu 6.06 LTS
+            postgres user = postgres, group postgres
+
+        Current PostgreSQL
+            Version = 8.2.3
+            Port 5432
+            Installed at: /data/pgsql-8.2.3
+            Data directory: /data/pgsql-8.2.3/data
+            Database to be moved: mydb
+
+        New PostgreSQL installation
+            Version = 8.3.3
+            Port 5433
+            Installed at: /data/pgsql-8.3.3
+            Data directory: /data/pgsql-8.3.3/data
+
+        Slony Version to be used = 1.2.14
     </programlisting>
    </sect3>
    <sect3>
@@ -179,15 +178,15 @@ in detail what is going on</para>
 
       <para> Unpack and build as root with</para>
       <programlisting>
-		tar xjf slony1-1.2.14.tar.bz2
-		cd slony1-1.2.14
-		./configure --prefix=/data/pgsql-8.2.3 --with-perltools=/data/pgsql-8.2.3/slony --with-pgconfigdir=/data/pgsql-8.2.3/bin
-		make clean
-		make
-		make install
-		chown -R postgres:postgres /data/pgsq-8.2.3 
-		mkdir /var/log/slony
-		chown -R postgres:postgres /var/log/slony
+        tar xjf slony1-1.2.14.tar.bz2
+        cd slony1-1.2.14
+        ./configure --prefix=/data/pgsql-8.2.3 --with-perltools=/data/pgsql-8.2.3/slony --with-pgconfigdir=/data/pgsql-8.2.3/bin
+        make clean
+        make
+        make install
+        chown -R postgres:postgres /data/pgsq-8.2.3
+        mkdir /var/log/slony
+        chown -R postgres:postgres /var/log/slony
       </programlisting>
 
       <para> Then repeat this for the 8.3.3 build.  A very important
@@ -208,7 +207,7 @@ in detail what is going on</para>
      <orderedlist>
       <listitem>
        <para>All the nodes and their details (IPs, ports, db, user,
-	password)</para>
+    password)</para>
       </listitem>
       <listitem>
        <para>All the tables to be replicated</para>
@@ -228,34 +227,34 @@ in detail what is going on</para>
       replication you will generally not need to split into multiple
       sets. On a production machine running with 500 tables and 100
       sequences, putting them all in a single set has worked fine.</para>
-      
+
       <orderedlist>
        <para>A few modifications to do:</para>
        <listitem>
-	<para> In our case we only need 2 nodes so delete the <command>add_node</command>
-	 for 3 and 4.</para>
+    <para> In our case we only need 2 nodes so delete the <command>add_node</command>
+     for 3 and 4.</para>
        </listitem>
        <listitem>
-	<para> <envar>pkeyedtables</envar> entry need to be updated with your tables that
-	 have a primary key. If your tables are spread across multiple
-	 schemas, then you need to qualify the table name with the schema
-	 (schema.tablename)</para>
+    <para> <envar>pkeyedtables</envar> entry need to be updated with your tables that
+     have a primary key. If your tables are spread across multiple
+     schemas, then you need to qualify the table name with the schema
+     (schema.tablename)</para>
        </listitem>
        <listitem>
-	<para> <envar>keyedtables</envar> entries need to be updated
-	with any tables that match the comment (with good schema
-	design, there should not be any).
-	</para>
+    <para> <envar>keyedtables</envar> entries need to be updated
+    with any tables that match the comment (with good schema
+    design, there should not be any).
+    </para>
        </listitem>
        <listitem>
-	<para> <envar>serialtables</envar> (if you have any; as it says, it is wise to avoid this).</para>
+    <para> <envar>serialtables</envar> (if you have any; as it says, it is wise to avoid this).</para>
        </listitem>
        <listitem>
-	<para> <envar>sequences</envar>  needs to be updated with your sequences.
-	</para>
+    <para> <envar>sequences</envar>  needs to be updated with your sequences.
+    </para>
        </listitem>
        <listitem>
-	<para>Remove the whole set2 entry (as we are only using set1)</para>
+    <para>Remove the whole set2 entry (as we are only using set1)</para>
        </listitem>
       </orderedlist>
      <para>
@@ -266,43 +265,43 @@ $LOGDIR = '/var/log/slony';
 $MASTERNODE = 1;
 
     add_node(node     => 1,
-	     host     => 'rome',
-	     dbname   => 'mydb',
-	     port     => 5432,
-	     user     => 'postgres',
+         host     => 'rome',
+         dbname   => 'mydb',
+         port     => 5432,
+         user     => 'postgres',
          password => '');
 
     add_node(node     => 2,
-	     host     => 'rome',
-	     dbname   => 'mydb',
-	     port     => 5433,
-	     user     => 'postgres',
+         host     => 'rome',
+         dbname   => 'mydb',
+         port     => 5433,
+         user     => 'postgres',
          password => '');
 
 $SLONY_SETS = {
     "set1" => {
-	"set_id" => 1,
-	"table_id"    => 1,
-	"sequence_id" => 1,
+    "set_id" => 1,
+    "table_id"    => 1,
+    "sequence_id" => 1,
         "pkeyedtables" => [
-			   'mytable1',
-			   'mytable2',
-			   'otherschema.mytable3',
-			   'otherschema.mytable4',
-			   'otherschema.mytable5',
-			   'mytable6',
-			   'mytable7',
-			   'mytable8',
-			   ],
+               'mytable1',
+               'mytable2',
+               'otherschema.mytable3',
+               'otherschema.mytable4',
+               'otherschema.mytable5',
+               'mytable6',
+               'mytable7',
+               'mytable8',
+               ],
 
-		"sequences" => [
-			   'mytable1_sequence1',
-   			   'mytable1_sequence2',
-			   'otherschema.mytable3_sequence1',
-   			   'mytable6_sequence1',
-   			   'mytable7_sequence1',
-   			   'mytable7_sequence2',
-			],
+        "sequences" => [
+               'mytable1_sequence1',
+               'mytable1_sequence2',
+               'otherschema.mytable3_sequence1',
+               'mytable6_sequence1',
+               'mytable7_sequence1',
+               'mytable7_sequence2',
+            ],
     },
 
 };
@@ -320,7 +319,7 @@ $SLONY_SETS = {
    <sect3>
     <title>Preparing the new &postgres; instance</title>
     <para> You now have a fresh second instance of &postgres; running on
-     port 5433 on the same machine.  Now is time to prepare to 
+     port 5433 on the same machine.  Now is time to prepare to
      receive &slony1; replication data.</para>
     <orderedlist>
      <listitem>
@@ -333,17 +332,17 @@ $SLONY_SETS = {
        Create your db in the same encoding as original db, in my case
        UTF8
        <command>/data/pgsql-8.3.3/bin/createdb
-	-E UNICODE -p5433 mydb</command>
+    -E UNICODE -p5433 mydb</command>
       </para>
      </listitem>
      <listitem>
       <para>
        &slony1; replicates data, not schemas, so take a dump of your schema
        <command>/data/pgsql-8.2.3/bin/pg_dump
-	-s mydb > /tmp/mydb.schema</command>
+    -s mydb > /tmp/mydb.schema</command>
        and then import it on the new instance.
        <command>cat /tmp/mydb.schema | /data/pgsql-8.3.3/bin/psql -p5433
-	mydb</command>
+    mydb</command>
       </para>
      </listitem>
     </orderedlist>
@@ -391,7 +390,7 @@ cluster name = replication;
   store path (server = 2, client = 1, conninfo = 'host=rome dbname=mydb user=postgres port=5433');
   echo 'Replication nodes prepared';
   echo 'Please start a slon replication daemon for each node';
-     
+
     </programlisting>
     <para>The first section indicates node information and the
     initialization of the cluster, then it adds the second node to the
