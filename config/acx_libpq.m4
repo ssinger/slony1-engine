@@ -180,7 +180,9 @@ if test -n "$PG_CONFIG_LOCATION"; then
         *mingw32*)
                 if test $PG_VERSION_MAJOR -ge 8 -a $PG_VERSION_MINOR -ge 2; then
                         AC_SUBST(NEED_PG_DLLINIT, 0)
-                else
+                elif test $PG_VERSION_MAJOR -gt 8; then
+                        AC_SUBST(NEED_PG_DLLINIT, 0)
+		else
                         AC_SUBST(NEED_PG_DLLINIT, 1)
                 fi
         ;;
