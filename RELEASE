@@ -2,6 +2,8 @@ Version TBD...
 
 - Bug #156 - add health check at slon startup time
 
+- Bug #170 - remove SNMP support
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
