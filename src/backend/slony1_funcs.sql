@@ -5892,3 +5892,17 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.truncate_deny ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';
 
+create or replace function @NAMESPACE@.store_application_name (i_name text) returns text as $$
+declare
+		p_command text;
+begin
+		if exists (select 1 from pg_catalog.pg_settings where name = 'application_name') then
+		   p_command := 'set application_name to '''|| i_name || ''';';
+		   execute p_command;
+		   return i_name;
+		end if;
+		return NULL::text;
+end $$ language plpgsql;
+
+comment on function @NAMESPACE@.store_application_name (i_name text) is
+'Set application_name GUC, if possible.  Returns NULL if it fails to work.';

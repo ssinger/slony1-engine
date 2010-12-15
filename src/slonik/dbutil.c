@@ -112,6 +112,7 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGconn	   *dbconn;
 	SlonDString	query;
+	PGresult   *res;
 
 	db_notice_stmt = stmt;
 
@@ -156,6 +157,7 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	slon_mkquery(&query,"SET datestyle TO 'ISO'; "
 						"SET session_replication_role TO local; ");
 
+
 	adminfo->dbconn = dbconn;
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
@@ -163,8 +165,33 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 		dstring_free(&query);
 		return -1;
 	}
+	dstring_free(&query);
+
+	dstring_init(&query);
+	slon_mkquery(&query,"select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
+	res = db_exec_select (stmt, adminfo, &query);
+
+	if (res == NULL)
+			return -1;
+
 	dstring_free(&query); 
 
+	if (PQntuples(res) == 0)
+	{
+			/* Unable to set application_name on this version of PostgreSQL */
+			PQclear(res);
+	} else {
+			PQclear(res);
+			dstring_init(&query);
+			slon_mkquery(&query,"SET application_name TO 'slon'; ");
+			adminfo->dbconn = dbconn;
+			if (db_exec_command(stmt, adminfo, &query) < 0)
+			{
+					printf("Unable to set application name ?!?\n");
+					return -1;
+			}
+			dstring_free(&query); 
+	}
 	/* ----
 	 * Commit the changes to the session settings.
 	 * ----

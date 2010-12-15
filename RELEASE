@@ -4,6 +4,8 @@ Version TBD...
 
 - Bug #170 - remove SNMP support
 
+- Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1

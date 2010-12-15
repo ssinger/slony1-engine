@@ -145,6 +145,16 @@ slon_connectdb(char *conninfo, char *symname)
 		PQclear(res);
 	}
 
+	slon_mkquery(&query, "select %s.store_application_name('slon.%s');",
+				 rtcfg_namespace, symname);
+	res = PQexec(dbconn, dstring_data(&query));
+	if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
+	{
+			slon_log(SLON_ERROR, "Unable to submit application_name store request\n");
+	}
+	PQclear(res);
+
+
 	if (slon_log_level >= SLON_DEBUG1)
 	{
 		slon_mkquery(&query, "select pg_backend_pid()");
