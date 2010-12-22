@@ -4029,9 +4029,6 @@ begin
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
 
-	raise notice 'subscribe set: omit_copy=%', p_omit_copy;
-
-
 
 	--
 	-- Check that the receiver exists
@@ -4124,8 +4121,6 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
-
-	raise notice 'subscribe set: omit_copy=%', p_omit_copy;
 
 	-- ----
 	-- Provider change is only allowed for active sets
