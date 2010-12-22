@@ -44,7 +44,7 @@ generate_initdata()
     rc=$(random_number 1 9)
     echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
+    echo "INSERT INTO table3(id2) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
     echo "INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('${ra}${rb}.${rc}','${ra}.${rb}${rc}','(${ra},${rb})','((${ra},${ra}),(${rb},${rb}),(${rc},${rc}),(${ra},${rc}))','((${ra},${rb}),(${rc},${ra}),(${rb},${rc}),(${rc},${rb}))','<(${ra},${rb}),${rc}>','192.168.${ra}.${rb}${rc}','08:00:2d:0${ra}:0${rb}:0${rc}',X'${ra}${rb}${rc}');" >> $GENDATA
     echo "INSERT INTO table5(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11) values ('${txta}${ra}','${txta}${rb}','${txta}${rc}','${txtb}${ra}','${txtb}${rb}','${txtb}${rc}','${txtb}${ra}','${txtb}${rb}','${txtb}${rc}','${txtb}${ra}','${txtb}${rb}');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
@@ -53,10 +53,10 @@ generate_initdata()
       i=$((${i} +1))
       working=`expr $i % $trippoint`
       if [ $working -eq 0 ]; then
-        j=`expr $j + 1`
-        percent=`expr $j \* 5`
-        status "$percent %"
-      fi 
+	j=`expr $j + 1`
+	percent=`expr $j \* 5`
+	status "$percent %"
+      fi
     fi
   done
   status "done"
@@ -75,7 +75,7 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
-  fi 
+  fi
   status "data load complete"
 
   $pgbindir/psql -h $host -p $port -d $db -U $user -c "select \"_${CLUSTER1}\".generate_sync_event('1 second'::interval);" 1> $mktmp/gensync.log.1 2> $mktmp/gensync.log
