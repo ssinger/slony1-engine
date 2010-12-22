@@ -622,7 +622,7 @@ process_check_at_counter(char *at_counter)
 {
 	char	buf1[64];
 	char	buf2[64];
-	int		i;
+	size_t		i;
 
 	if (destination_conninfo == NULL)
 		return 0;

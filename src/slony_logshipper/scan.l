@@ -160,7 +160,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 
 '				{
 					char	   *cp = yychunk;
-					int			len = 0;
+					size_t		   len = 0;
 					int			c;
 
 					BEGIN(IN_STRING);
@@ -220,7 +220,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 
 <IN_STRING>{instr_start}	{
 					char	   *cp = yychunk;
-					int			len = 0;
+					size_t 		len = 0;
 					int			c;
 					bool		chunk_start;
 
@@ -302,7 +302,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 				}
 <COPYLS>.|{space} {
 					char	   *cp = yychunk;
-					int			len = 0;
+					size_t	   	len = 0;
 					int			c;
 					bool		chunk_start;
 
@@ -347,7 +347,7 @@ setval 					{ return T_PGSETVAL_FUNCTION;	}
 
 <COPY>.|{space}	{
 					char	   *cp = yychunk;
-					int			len = 0;
+					size_t			len = 0;
 					int			c;
 					bool		chunk_start;
 
