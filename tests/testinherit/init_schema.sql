@@ -62,13 +62,13 @@ alter table canada add constraint region_code foreign key(region_code) reference
 alter table canada add constraint product_code foreign key(product_id) references products(product_id);
 
 create rule sales_data_distribute_us_east as on insert to sales_data where new.region_code between 1000 and 1999
-do instead insert into us_east (id, trans_on, region_code, data) values (new.id, new.trans_on, new.region_code, new.data);
+do instead insert into us_east (id, trans_on, region_code, product_id, quantity, amount) values (new.id, new.trans_on, new.region_code, new.product_id, new.quantity, new.amount);
 
 create rule sales_data_distribute_us_west as on insert to sales_data where new.region_code between 2000 and 2999
-do instead insert into us_west (id, trans_on, region_code, data) values (new.id, new.trans_on, new.region_code, new.data);
+do instead insert into us_west (id, trans_on, region_code, product_id, quantity, amount) values (new.id, new.trans_on, new.region_code, new.product_id, new.quantity, new.amount);
 
 create rule sales_data_distribute_canada as on insert to sales_data where new.region_code between 3000 and 3999
-do instead insert into canada (id, trans_on, region_code, data) values (new.id, new.trans_on, new.region_code, new.data);
+do instead insert into canada (id, trans_on, region_code, product_id, quantity, amount) values (new.id, new.trans_on, new.region_code, new.product_id, new.quantity, new.amount);
 
 -- We will be doing inserts into sales_data inside the following stored proc
 create or replace function purchase_product (integer, integer, integer) returns numeric(12,2) as '
@@ -84,4 +84,3 @@ begin
    insert into sales_data (region_code, product_id, quantity, amount) values (i_region, i_product, i_quantity, c_amount);
    return c_amount;
 end' language plpgsql;
-
