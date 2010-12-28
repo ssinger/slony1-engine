@@ -44,7 +44,7 @@ generate_initdata()
     rc=$(random_number 1 9)
     echo "INSERT INTO table1(data) VALUES ('${txta} - Gross C format string: %d%05d%s%s%f%l%-72.52LG');" >> ${GENDATA}
     echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> ${GENDATA}
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> ${GENDATA}
+    echo "INSERT INTO table3(id2) SELECT id FROM table2 WHERE data ='${txtb}';" >> ${GENDATA}
     echo "INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('${ra}${rb}.${rc}','${ra}.${rb}${rc}','(${ra},${rb})','((${ra},${ra}),(${rb},${rb}),(${rc},${rc}),(${ra},${rc}))','((${ra},${rb}),(${rc},${ra}),(${rb},${rc}),(${rc},${rb}))','<(${ra},${rb}),${rc}>','192.168.${ra}.${rb}${rc}','08:00:2d:0${ra}:0${rb}:0${rc}',X'${ra}${rb}${rc}');" >> ${GENDATA}
     if [ ${i} -ge ${numrows} ]; then
       break;
@@ -52,10 +52,10 @@ generate_initdata()
       i=$((${i} +1))
       working=`expr $i % $trippoint`
       if [ $working -eq 0 ]; then
-        j=`expr $j + 1`
-        percent=`expr $j \* 5`
-        status "$percent %"
-      fi 
+	j=`expr $j + 1`
+	percent=`expr $j \* 5`
+	status "$percent %"
+      fi
     fi
   done
   status "done"
@@ -75,11 +75,11 @@ do_initdata()
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
   if [ $? -ne 0 ]; then
     warn 3 "do_initdata failed, see $mktmp/initdata.log for details"
-  fi 
+  fi
   status "data load complete - nodes are seeded reasonably"
-  status "pull log shipping dump" 
+  status "pull log shipping dump"
   PGHOST=${HOST2} PGPORT=${PORT2} PGUSER=${USER2} ${SLTOOLDIR}/slony1_dump.sh ${DB2} ${CLUSTER1} > ${mktmp}/logship_dump.sql
-  
+
   status "generate more data to test log shipping"
   generate_initdata
   launch_poll
@@ -128,8 +128,8 @@ do_initdata()
   ${PGBINDIR4}/psql -h ${HOST4} -p ${PORT4} -U ${USER4} -d ${DB4} -f ${testname}/init_schema.sql
   status "load log shipping dump into node #4"
   ${PGBINDIR4}/psql -h ${HOST4} -p ${PORT4} -U ${USER4} -d ${DB4} -f ${mktmp}/logship_dump.sql
-  
-  
+
+
   firstseq=`psql -At -d ${DB4} -p ${PORT4} -c 'select at_counter from _slony_regress1.sl_archive_tracking ;'`
   lastseq=`(cd ${mktmp}/archive_logs_2; /usr/bin/find -name "*.sql") | cut -d "_" -f 4 | cut -d "." -f 1 | sort -n | tail -1`
   status "Logs numbered from ${firstseq} to ${lastseq}"
