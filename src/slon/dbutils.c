@@ -148,7 +148,7 @@ slon_connectdb(char *conninfo, char *symname)
 	slon_mkquery(&query, "select %s.store_application_name('slon.%s');",
 				 rtcfg_namespace, symname);
 	res = PQexec(dbconn, dstring_data(&query));
-	if (!(PQresultStatus(res) == PGRES_COMMAND_OK))
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 			slon_log(SLON_ERROR, "Unable to submit application_name store request\n");
 	}

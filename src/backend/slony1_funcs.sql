@@ -3717,7 +3717,7 @@ begin
 	-- Grab the central configuration lock
 	-- ----
 	lock table @NAMESPACE@.sl_config_lock;
-	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+
 	-- ----
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
@@ -3770,6 +3770,7 @@ declare
 	p_only_on_node		alias for $2;
 	v_row				record;
 begin
+	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
 	return p_set_id;
 end;
 $$ language plpgsql;
