@@ -334,7 +334,7 @@ main(int argc, char *const argv[])
         pidfile = fopen(pid_file, "w");
         if (pidfile)
         {
-            fprintf(pidfile, "%d", slon_pid);
+            fprintf(pidfile, "%d\n", slon_pid);
             fclose(pidfile);
         }
         else

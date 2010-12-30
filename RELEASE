@@ -6,6 +6,8 @@ Version TBD...
 
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
 
+- Bug #187 - add newline to slon PID files
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
