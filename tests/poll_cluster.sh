@@ -34,7 +34,7 @@ fi
 if [ -n "${cluster}" ]; then
   sleep 15
   SQL="select count(*) from \"_${cluster}\".sl_log_1 l 
-where not(txid_visible_in_snapshot(l.log_txid, (select ev_snapshot from \"_${cluster}\".sl_event where ev_timestamp = (select max(ev_timestamp) from \"_${cluster}\".sl_event))));"
+where not(txid_visible_in_snapshot(l.log_txid, (select ev_snapshot from \"_${cluster}\".sl_event where ev_timestamp = (select max(ev_timestamp) from \"_${cluster}\".sl_event) limit 1)));"
   SQL2="SELECT max(st_lag_num_events) FROM \"_${cluster}\".sl_status"
   while : ; do
     lag=`${pgbindir}/psql -q -A -t -c "${SQL}" ${conninfo} 2>>$mktmp/poll.log | sed -e '/^$/d'`

@@ -8,6 +8,8 @@ Version TBD...
 
 - Bug #187 - add newline to slon PID files
 
+- Bug #188 - test harness query had subquery returning multiple tuples
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
