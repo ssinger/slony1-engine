@@ -60,10 +60,8 @@ begin
 end;' language plpgsql;
 
 
-create or replace function "_slony_regress1".can_node_hear (int4, int4) returns boolean as '
+create or replace function "_slony_regress1".can_node_hear (v_receiver int4, v_origin int4) returns boolean as '
 declare
-   v_receiver alias for $1;
-   v_origin   alias for $2;
    v_rec    record;
    v_clist int4[];
    v_csize int4;

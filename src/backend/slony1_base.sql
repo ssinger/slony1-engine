@@ -341,22 +341,21 @@ create index sl_seqlog_idx on @NAMESPACE@.sl_seqlog
 --
 --	Support function used in sl_seqlastvalue view
 -- ----------------------------------------------------------------------
-create function @NAMESPACE@.sequenceLastValue(text) returns int8
-as '
+create function @NAMESPACE@.sequenceLastValue(p_seqname text) returns int8
+as $$
 declare
-	p_seqname	alias for $1;
 	v_seq_row	record;
 begin
-	for v_seq_row in execute ''select last_value from '' || @NAMESPACE@.slon_quote_input(p_seqname)
+	for v_seq_row in execute 'select last_value from ' || @NAMESPACE@.slon_quote_input(p_seqname)
 	loop
 		return v_seq_row.last_value;
 	end loop;
 
 	-- not reached
 end;
-' language plpgsql;
+$$ language plpgsql;
 
-comment on function @NAMESPACE@.sequenceLastValue(text) is
+comment on function @NAMESPACE@.sequenceLastValue(p_seqname text) is
 'sequenceLastValue(p_seqname)
 
 Utility function used in sl_seqlastvalue view to compactly get the

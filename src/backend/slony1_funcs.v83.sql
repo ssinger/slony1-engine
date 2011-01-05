@@ -16,11 +16,9 @@
 --      Returns 'f' if autovac handles the table, so Slony-I should not
 --                  or if the table is not needful altogether
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) returns boolean as
+create or replace function @NAMESPACE@.ShouldSlonyVacuumTable (i_nspname name, i_tblname name) returns boolean as
 $$
 declare
-	i_nspname alias for $1;
-	i_tblname alias for $2;
 	c_table oid;
 	c_namespace oid;
 	c_enabled boolean;
@@ -54,10 +52,10 @@ begin
 
 end;$$ language plpgsql;
 
-comment on function @NAMESPACE@.ShouldSlonyVacuumTable (name, name) is 
+comment on function @NAMESPACE@.ShouldSlonyVacuumTable (i_nspname name, i_tblname name) is 
 'returns false if autovacuum handles vacuuming of the table, or if the table does not exist; returns true if Slony-I should manage it';
 
-create or replace function @NAMESPACE@.TruncateOnlyTable ( name) returns void as
+create or replace function @NAMESPACE@.TruncateOnlyTable (name) returns void as
 $$
 begin
 	execute 'truncate '|| @NAMESPACE@.slon_quote_input($1);
