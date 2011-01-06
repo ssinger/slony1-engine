@@ -17,9 +17,7 @@ static int	conf_name_compare(const char *namea, const char *nameb);
 bool		set_config_option(const char *name, const char *value);
 void	   *get_config_option(const char *name);
 
-static bool bool_placeholder;
 static double real_placeholder;
-static char *string_placeholder;
 
 void		dump_configuration(void);
 
@@ -724,6 +722,54 @@ static struct config_int ConfigureNamesInt[] =
 	},
 
 
+	{
+		{
+			(const char*) "tcp_keepalive_idle",
+			gettext_noop("The number of seconds after which a TCP keep alive "
+						 "is sent across an idle connection. tcp_keepalive "
+						 "must be enabled for this to take effect.  Default "
+						 "of 0 means use operating system default"
+						 "use default" ),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_idle,
+		0, /*default val */
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+	{
+		{
+			(const char*) "tcp_keepalive_interval",
+			gettext_noop("The number of seconds in between TCP keep alive "
+						 "requests. tcp_keepalive "
+						 "must be enabled. Default value of 0 means use "
+                         "operating system defaut"),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_interval,
+		0,
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+	{
+		{
+			(const char*) "tcp_keepalive_count",
+			gettext_noop("The number of keep alive requests to the server "
+						 "that can be lost before the connection is declared "
+						 "dead. tcp_keep_alive must be on. Default value "
+						 "of 0 means use operating system default"),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_count,
+		0,
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+			
+
 	{{0}}
 };
 
@@ -747,6 +793,18 @@ static struct config_bool ConfigureNamesBool[] =
 			SLON_C_BOOL
 		},
 		&logtimestamp,
+		true
+	},
+
+	{
+		{
+			(const char*) "tcp_keepalive",
+			gettext_noop("Enables sending of TCP KEEP alive between slon "
+						 "and the PostgreSQL backends. "),
+			NULL,
+			SLON_C_BOOL,
+		},
+		&keep_alive,
 		true
 	},
 
@@ -901,6 +959,8 @@ static struct config_string ConfigureNamesString[] =
 		&cleanup_interval,
 		"10 minutes"
 	},
+	
+
 	{{0}}
 };
 

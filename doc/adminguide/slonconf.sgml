@@ -209,6 +209,57 @@
       </listitem>
     </varlistentry>
 
+	<varlistentry id="slon-config-keepalive" xreflabel="slon_conf_keepalive">
+	  <term><varname>tcp_keepalive</varname> (<type>bool</type>) </term>
+	 <indexterm> <primary><varname>tcp_keepalive</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		  Enables sending of TCP KEEP alive requests between slon and the
+		  PostgreSQL backends. Defaults to true.
+		  </para>
+		</listitem>
+	  </varlistentry>
+		<varlistentry id="slon-config-keepalive-idle" xreflabel="slon_conf_keepalive_idle">
+ <term><varname>tcp_keepalive_idle</varname> (<type>integer</type>) </term>
+	 <indexterm> <primary><varname>tcp_keepalive_idle</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		 The number of seconds of idle activity after which a TCP KEEPALIVE
+		 will be sent across the network.  The tcp_keepalive parameter
+		 must be enabled for this to take effect.  The default value is 0
+		 which means use the operating systems default. Setting this parameter
+		 has no effect on Win32 systems.
+		  </para>
+		</listitem>
+	  </varlistentry>
+
+	<varlistentry id="slon-config-keepalive-count" xreflabel="slon_conf_keepalive_count">
+	  <term><varname>tcp_keepalive_count</varname> (<type> integer</type>) </term>
+	 <indexterm> <primary><varname>tcp_keepalive_count</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		 The number of keep alive requets to the server that need to be lost
+		 before the connection is declared dead. tcp_keep_alive must be turned
+		 on for this parameter to take effect.  The default value is 0
+		 which means use the operating systems default.  Setting this parameter
+		 has no effect on Win32 systems.
+		  </para>
+		</listitem>
+	  </varlistentry>
+
+	<varlistentry id="slon-config-keepalive-interval" xreflabel="slon_conf_keepalive_interval">
+	  <term><varname>tcp_keepalive_interval</varname> (<type>integer</type>)</term>
+	 <indexterm> <primary><varname>tcp_keepalive_interval</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		  The number of seconds between TCP keep alive requests. tcp_keepalive
+		  must be enabled for this parameter to take effect.  The default 
+		  value is 0 which means use the operating systems default. 
+		  Setting this parameter has no effect on Win32 systems.
+		  </para>
+		</listitem>
+	  </varlistentry>
+
   </variablelist>
 </sect1>
 <sect1 id="slon-archive-logging">

@@ -22,9 +22,15 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <netinet/tcp.h>
+#include <netinet/in.h>
 
 #include "slon.h"
 
+bool keep_alive;
+int keep_alive_idle;
+int keep_alive_count;
+int keep_alive_interval;
 
 static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
 static int	db_get_version(PGconn *conn);
@@ -80,6 +86,44 @@ slon_connectdb(char *conninfo, char *symname)
 		PQfinish(dbconn);
 		return NULL;
 	}
+
+	setsockopt(PQsocket(dbconn),SOL_SOCKET,SO_KEEPALIVE,&keep_alive,
+			   sizeof(int));
+#ifndef WIN32
+	if(keep_alive)
+	{
+		
+		if(keep_alive_idle > 0)
+			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPIDLE,
+					   &keep_alive_idle,sizeof(keep_alive_idle));
+		if(keep_alive_interval > 0)
+			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPINTVL,
+					   &keep_alive_interval,sizeof(keep_alive_interval));
+		if(keep_alive_count > 0)
+			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPCNT,
+					   &keep_alive_count,sizeof(keep_alive_count));
+		
+	}
+#else
+	/**
+	 * Win32 does not support the setsockopt calls for setting keep alive
+	 * parameters.  On Win32 this can be adjusted via the registry.
+	 * libpq 9.0 and above provide functions for doing this.
+	 * If we ever require libpq9.0 or above we could start to use them.
+	 * Alternativly someone could re-implement that functionality inside
+	 * of slony.
+	 */
+	if(keep_alive)
+	{
+		if(keep_alive_idle > 0 )
+			slon_log(SLON_WARN,"keep_alive_idle is not supported by Slony on Win32");
+		if(keep_alive_interval > 0) 
+			slon_slog(SLON_WARN,"keep_alive_interval is not supported by Slony on Win32");
+		if(keep_alive_count > 0) 
+			slon_log(SLON_WARN,"keep_alive_count is not supported by Slony Win32");
+
+	}
+#endif
 
 	dstring_init(&query);
 
