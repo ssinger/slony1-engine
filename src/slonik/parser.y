@@ -76,6 +76,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	try_on_error
 %type <statement>	try_on_success
 %type <statement>	stmt_echo
+%type <statement>	stmt_date
 %type <statement>	stmt_exit
 %type <statement>	stmt_restart_node
 %type <statement>	stmt_error
@@ -140,6 +141,8 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_CREATE
 %token	K_DROP
 %token	K_ECHO
+%token	K_DATE
+%token	K_DFORMAT
 %token	K_ERROR
 %token	K_EVENT
 %token	K_EXECUTE
@@ -373,6 +376,8 @@ try_stmts			: try_stmt
 
 normal_stmt			: stmt_echo
 						{ $$ = $1; }
+					| stmt_date
+						{ $$ = $1; }
 					| stmt_exit
 						{ $$ = $1; }
 					| stmt_restart_node
@@ -462,6 +467,32 @@ stmt_echo			: lno K_ECHO literal ';'
 						new->hdr.stmt_lno		= $1;
 
 						new->str = $3;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+stmt_date			: lno K_DATE option_list
+					{
+						SlonikStmt_date *new;
+						statement_option opt[] = {
+							STMT_OPTION_STR( O_DATE_FORMAT, "%F %T"),
+							STMT_OPTION_END
+						};
+
+						new = (SlonikStmt_date *)
+								malloc(sizeof(SlonikStmt_date));
+						memset(new, 0, sizeof(SlonikStmt_date));
+						new->hdr.stmt_type		= STMT_DATE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $3) == 0)
+						{
+							new->fmt = opt[0].str;
+						}
+						else
+							parser_errors++;
 
 						$$ = (SlonikStmt *)new;
 					}
@@ -1566,6 +1597,11 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_CONNINFO;
 						$$ = $3;
 					}
+					| K_DFORMAT '=' option_item_literal
+					{
+						$3->opt_code	= O_DATE_FORMAT;
+						$$ = $3;
+					}
 					| K_SET K_ID '=' option_item_id
 					{
 						$4->opt_code	= O_SET_ID;
@@ -1777,6 +1813,7 @@ option_str(option_code opt_code)
 		case O_COMMENT:			return "comment";
 		case O_CONNINFO:		return "conninfo";
 		case O_CONNRETRY:		return "connretry";
+		case O_DATE_FORMAT:		return "format";
 		case O_EVENT_NODE:		return "event node";
 		case O_EXECUTE_ONLY_ON:	return "execute only on";
 		case O_FILENAME:		return "filename";

@@ -16,6 +16,7 @@ typedef struct SlonikAdmInfo_s SlonikAdmInfo;
 typedef struct SlonikStmt_s SlonikStmt;
 typedef struct SlonikStmt_try_s SlonikStmt_try;
 typedef struct SlonikStmt_echo_s SlonikStmt_echo;
+typedef struct SlonikStmt_date_s SlonikStmt_date;
 typedef struct SlonikStmt_exit_s SlonikStmt_exit;
 typedef struct SlonikStmt_repair_config_s SlonikStmt_repair_config;
 typedef struct SlonikStmt_restart_node_s SlonikStmt_restart_node;
@@ -63,6 +64,7 @@ typedef enum
 	STMT_DROP_PATH,
 	STMT_DROP_SET,
 	STMT_ECHO,
+	STMT_DATE,
 	STMT_ERROR,
 	STMT_EXIT,
 	STMT_FAILED_NODE,
@@ -142,6 +144,12 @@ struct SlonikStmt_echo_s
 {
 	SlonikStmt	hdr;
 	char	   *str;
+};
+
+struct SlonikStmt_date_s
+{
+	SlonikStmt	hdr;
+	char	   *fmt;
 };
 
 
@@ -626,6 +634,7 @@ typedef enum {
 	O_COMMENT,
 	O_CONNINFO,
 	O_CONNRETRY,
+	O_DATE_FORMAT,
 	O_EVENT_NODE,
 	O_EXECUTE_ONLY_ON,
 	O_FILENAME,

@@ -264,6 +264,9 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 			case STMT_ECHO:
 				break;
 
+			case STMT_DATE:
+				break;
+
 			case STMT_EXIT:
 				break;
 
@@ -1171,6 +1174,24 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					printf("%s:%d: %s\n",
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 						   stmt->str);
+				}
+				break;
+
+			case STMT_DATE:
+				{
+					SlonikStmt_date *stmt =
+					(SlonikStmt_date *) hdr;
+                    char outstr[200];
+
+                    struct tm *local;
+                    time_t t;
+
+                    t = time(NULL);
+                    local = localtime(&t);
+                    strftime(outstr, sizeof(outstr), stmt->fmt, local);
+					printf("%s:%d: %s\n",
+						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+                           outstr);
 				}
 				break;
 

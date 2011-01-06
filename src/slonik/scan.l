@@ -88,6 +88,7 @@ confirmed		{ return K_CONFIRMED;		}
 conninfo		{ return K_CONNINFO;		}
 connretry		{ return K_CONNRETRY;		}
 create			{ return K_CREATE;			}
+date			{ return K_DATE;			}
 drop			{ return K_DROP;			}
 echo			{ return K_ECHO;			}
 error			{ return K_ERROR;			}
@@ -98,6 +99,7 @@ failover		{ return K_FAILOVER;		}
 false			{ return K_FALSE;			}
 filename		{ return K_FILENAME;		}
 finish			{ return K_FINISH;			}
+format			{ return K_DFORMAT;			}
 for				{ return K_FOR;				}
 forward			{ return K_FORWARD;			}
 full			{ return K_FULL;			}

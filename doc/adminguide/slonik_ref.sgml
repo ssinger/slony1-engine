@@ -379,6 +379,38 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
    </refsect1>
   </Refentry>
   
+<!-- **************************************** -->
+  
+  <refentry id ="stmtdate"><refmeta><refentrytitle>SLONIK DATE</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+   
+   <refnamediv><refname>DATE</refname>
+    
+    <refpurpose> Display current date </refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>date</command>
+     <arg><replaceable class="parameter"> (format)</replaceable></arg>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+    <para>
+     Prints the current date. Accepts an optional strftime()-conformant format string.
+    </para>
+   </Refsect1>
+   <Refsect1><Title>Example</Title>
+    <Programlisting>
+     DATE;
+     DATE(format='%Y-%m-%d %H:%M:%S %Z');
+    </Programlisting>
+   </Refsect1>
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 2.1 </para>
+   </refsect1>
+  </Refentry>
+  
   <!-- **************************************** -->
   
   <refentry id ="stmtexit"><refmeta><refentrytitle>SLONIK EXIT</refentrytitle>
