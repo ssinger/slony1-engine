@@ -12,6 +12,8 @@ Version TBD...
 
 - Bug #188 - test harness query had subquery returning multiple tuples
 
+- Bug #180 - Created a slonik DATE command
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
