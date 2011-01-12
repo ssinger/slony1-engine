@@ -2669,9 +2669,13 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 			slon_mkquery(&query,
 						 "select nl_backendpid from \"_%s\".sl_nodelock "
-						 "    where nl_backendpid <> %d; ",
+						 "    where nl_backendpid <> %d "
+                         "    and nl_nodeid = \"_%s\".getLocalNodeId('_%s');",
 						 stmt->hdr.script->clustername,
-						 nodeinfo[i].slon_pid);
+						 nodeinfo[i].slon_pid, 
+						 stmt->hdr.script->clustername,
+						 stmt->hdr.script->clustername
+				);
 			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res1 == NULL)
 			{
