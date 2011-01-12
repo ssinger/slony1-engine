@@ -563,7 +563,7 @@ comment on function @NAMESPACE@.registry_get_text(p_key text, p_default text) is
 
 Get a registry value. If not present, set and return the default.';
 
-create or replace function @NAMESPACE@.registry_set_timestamp(p_key text, p_value timestamp)
+create or replace function @NAMESPACE@.registry_set_timestamp(p_key text, p_value timestamptz)
 returns timestamp as $$
 BEGIN
 	if p_value is null then
@@ -583,12 +583,12 @@ BEGIN
 END;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.registry_set_timestamp(p_key text, p_value timestamp) is
+comment on function @NAMESPACE@.registry_set_timestamp(p_key text, p_value timestamptz) is
 'registry_set_timestamp(key, value)
 
 Set or delete a registry value';
 
-create or replace function @NAMESPACE@.registry_get_timestamp(p_key text, p_default timestamp)
+create or replace function @NAMESPACE@.registry_get_timestamp(p_key text, p_default timestamptz)
 returns timestamp as $$
 DECLARE
 	v_value		timestamp;
@@ -610,7 +610,7 @@ BEGIN
 END;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.registry_get_timestamp(p_key text, p_default timestamp) is
+comment on function @NAMESPACE@.registry_get_timestamp(p_key text, p_default timestamptz) is
 'registry_get_timestamp(key, value)
 
 Get a registry value. If not present, set and return the default.';
