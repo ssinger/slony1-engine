@@ -2,6 +2,8 @@ Version TBD...
 
 - Bug #156 - add health check at slon startup time
 
+- Bug #163 - change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
+
 - Bug #170 - remove SNMP support
 
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)

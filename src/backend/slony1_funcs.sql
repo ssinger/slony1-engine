@@ -582,6 +582,7 @@ BEGIN
 	return p_value;
 END;
 $$ language plpgsql;
+
 comment on function @NAMESPACE@.registry_set_timestamp(p_key text, p_value timestamp) is
 'registry_set_timestamp(key, value)
 
@@ -608,6 +609,7 @@ BEGIN
 	return v_value;
 END;
 $$ language plpgsql;
+
 comment on function @NAMESPACE@.registry_get_timestamp(p_key text, p_default timestamp) is
 'registry_get_timestamp(key, value)
 
@@ -4271,6 +4273,7 @@ begin
 	return v_max_seqno;
 end;
 $$ language plpgsql;
+
 comment on function @NAMESPACE@.forwardConfirm (p_con_origin int4, p_con_received int4, p_con_seqno int8, p_con_timestamp timestamp) is
 'forwardConfirm (p_con_origin, p_con_received, p_con_seqno, p_con_timestamp)
 
@@ -4900,7 +4903,7 @@ BEGIN
 	if v_current_status = 0 then
 		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 3);
 		perform @NAMESPACE@.registry_set_timestamp(
-				'logswitch.laststart', now()::timestamp);
+				'logswitch.laststart', now());
 		raise notice 'Slony-I: Logswitch to sl_log_2 initiated';
 		return 2;
 	end if;
@@ -4912,7 +4915,7 @@ BEGIN
 	if v_current_status = 1 then
 		perform "pg_catalog".setval('@NAMESPACE@.sl_log_status', 2);
 		perform @NAMESPACE@.registry_set_timestamp(
-				'logswitch.laststart', now()::timestamp);
+				'logswitch.laststart', now());
 		raise notice 'Slony-I: Logswitch to sl_log_1 initiated';
 		return 1;
 	end if;
@@ -5194,7 +5197,9 @@ is 'Add a column of a given type to a table if it is missing';
 create or replace function @NAMESPACE@.upgradeSchema(p_old text)
 returns text as $$
 declare
-		v_tab_row	record;
+	v_tab_row	record;
+	v_query text;
+	v_keepstatus text;
 begin
 	-- If old version is pre-2.0, then we require a special upgrade process
 	if p_old like '1.%' then
@@ -5203,9 +5208,36 @@ begin
 
 	perform @NAMESPACE@.add_truncate_triggers();
 
+
+	-- Change all Slony-I-defined columns that are "timestamp without time zone" to "timestamp *WITH* time zone"
+	if exists (select 1 from information_schema.columns c
+            where table_schema = '_@CLUSTERNAME@' and data_type = 'timestamp without time zone'
+	    and exists (select 1 from information_schema.tables t where t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE')
+		and (c.table_name, c.column_name) in (('sl_confirm', 'con_timestamp'), ('sl_event', 'ev_timestamp'), ('sl_registry', 'reg_timestamp'),('sl_archive_counter', 'ac_timestamp')))
+	then
+
+	  -- Preserve sl_status
+	  select pg_get_viewdef('@NAMESPACE@.sl_status') into v_keepstatus;
+	  execute 'drop view sl_status';
+	  for v_tab_row in select table_schema, table_name, column_name from information_schema.columns c
+            where table_schema = '_@CLUSTERNAME@' and data_type = 'timestamp without time zone'
+	    and exists (select 1 from information_schema.tables t where t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE')
+		and (table_name, column_name) in (('sl_confirm', 'con_timestamp'), ('sl_event', 'ev_timestamp'), ('sl_registry', 'reg_timestamp'),('sl_archive_counter', 'ac_timestamp'))
+	  loop
+		raise notice 'Changing Slony-I column [%.%] to timestamp WITH time zone', v_tab_row.table_name, v_tab_row.column_name;
+		v_query := 'alter table ' || @NAMESPACE@.slon_quote_brute(v_tab_row.table_schema) ||
+                   '.' || v_tab_row.table_name || ' alter column ' || v_tab_row.column_name ||
+                   ' set data type timestamp with time zone;';
+		execute v_query;
+	  end loop;
+	  -- restore sl_status
+	  execute 'create view sl_status as ' || v_keepstatus;
+        end if;
 	return p_old;
 end;
-$$ language plpgsql;
+$$ language plpgsql
+set search_path to @NAMESPACE@
+;
 
 comment on function @NAMESPACE@.upgradeSchema(p_old text) is
     'Called during "update functions" by slonik to perform schema changes';
