@@ -16,6 +16,9 @@ Version TBD...
 
 - Bug #180 - Created a slonik DATE command
 
+- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+
+             
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
