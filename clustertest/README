@@ -6,12 +6,12 @@ Their are two sets of tests that are included here.
 disorder tests
 ------------------------
 
-The disorder tests is a test suite designed to simulate an 
-retail store style of workload.  There are transactions for
-getting inventory, taking orders and counting inventory.
+The disorder ("DIStributed ORDER") tests is a test suite designed to
+simulate an retail store style of workload.  It includes transactions
+for getting inventory, taking orders and counting inventory.
 
 Some transactions run against the replication master while others
-run against the slave. 
+(read-only) run against slave databases.
 
 
 To run the disorder tests.
@@ -28,12 +28,12 @@ To run the disorder tests.
 
 2.  Run test
 
+Make sure PWD is set to the directory 'clustertest', as the tests make
+reference to relative directory locations.  For instance, disorder
+tests are assumed to be in the subdirectory 'disorder/tests'.
+
 java  -jar $PATH_TO_CLUSTERTEST/clustertest-coordinator.jar conf/databases.properties disorder/tests/disorder_tests.js 
 
 will run the test suite.
 
 results/$TIMESTAMP/testResult.test.txt will contain the results of each test.
-
-
-
-
