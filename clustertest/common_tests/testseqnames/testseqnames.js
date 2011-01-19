@@ -24,7 +24,7 @@ function init_cluster() {
 
 
 function init_tables() {
-	var script=	coordinator.readFile('tests/common_tests/testseqnames/init_add_tables.ik');
+	var script=	coordinator.readFile('common_tests/testseqnames/init_add_tables.ik');
 
 	return script;
 }
@@ -58,11 +58,11 @@ function generate_data_file(coordinator) {
 		var txtblen = random_number(1,100);
 		var txtb = random_string(textlen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
-		fileWriter.write( "INSERT INTO foo.table1(data) VALUES ('"+txta+"');");
-	    fileWriter.write("INSERT INTO foo.table2(table1_id,data) SELECT id, '"+txtb+"' FROM table1 WHERE data='"+txta+"';\n");
-	    fileWriter.write("INSERT INTO foo.table3(table2_id) SELECT id FROM table2 WHERE data ='"+txtb+"';\n");
-	    fileWriter.write("INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values ('"+txta+"', '"+txtb+"');\n");
-	    fileWriter.write("INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values ('"+txtb+"', "+txtblen+");\n");
+		fileWriter.write( "INSERT INTO foo.table1(data) VALUES (E'"+txta+"');");
+	    fileWriter.write("INSERT INTO foo.table2(table1_id,data) SELECT id, '"+txtb+"' FROM table1 WHERE data=E'"+txta+"';\n");
+	    fileWriter.write("INSERT INTO foo.table3(table2_id) SELECT id FROM table2 WHERE data =E'"+txtb+"';\n");
+	    fileWriter.write("INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values (E'"+txta+"', E'"+txtb+"');\n");
+	    fileWriter.write("INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values (E'"+txtb+"', "+txtblen+");\n");
 	    fileWriter.write("select nextval('\"Schema.name\".\"a.periodic.sequence\"');");
 	    fileWriter.write("select nextval('\"Studly Spacey Schema\".\"user\"');\n");
 	    fileWriter.write("select nextval('\"Schema.name\".\"a.periodic.sequence\"');\n");

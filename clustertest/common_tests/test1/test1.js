@@ -68,17 +68,17 @@ function generate_data() {
 		var ra=random_number(1,9);
 		var rb = random_number(1,9);
 		var rc = random_number(1,9);
-		sqlScript += "INSERT INTO table1(data) VALUES ('"+txta+"');\n";
-		sqlScript += "INSERT INTO table1(data) VALUES ('"+txta+"');\n" ;
-		sqlScript += "INSERT INTO table2(table1_id,data) SELECT id, '"+txtb +"' FROM table1 WHERE data='"+txta+"';\n";
-		sqlScript += "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='"+txtb+"';\n";
+		sqlScript += "INSERT INTO table1(data) VALUES (E'"+txta+"');\n";
+		sqlScript += "INSERT INTO table1(data) VALUES (E'"+txta+"');\n" ;
+		sqlScript += "INSERT INTO table2(table1_id,data) SELECT id, E'"+txtb +"' FROM table1 WHERE data=E'"+txta+"';\n";
+		sqlScript += "INSERT INTO table3(id) SELECT id FROM table2 WHERE data =E'"+txtb+"';\n";
 		sqlScript += "INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('"
 			+ra+rb+"."+rc+"','"+ra+"."
 			+rb+rc+"','("+ra+","+rb+")','(("+ra+","+ra+"),("+rb+","+rb+"),("+rc+","+rc+"),("+ra+","+rc+"))','(("+ra+","+rb+"),("
-			+rc+","+ra+"),("+rb+","+rc+"),("+rc+","+rb+"))','<("+ra+","+rb+","+rc+">','192.168."+ra+"."+rb+rc+"','08:00:2d:0"+ra+":0"+rb+":0"+rc+"',X'"
+			+rc+","+ra+"),("+rb+","+rc+"),("+rc+","+rb+"))','<("+ra+","+rb+"),"+rc+">','192.168."+ra+"."+rb+rc+"','08:00:2d:0"+ra+":0"+rb+":0"+rc+"',X'"
 			+ra+rb+rc+"');\n"; 
-		sqlScript+= "INSERT INTO table5(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11) values ('"+txta+ra+"','"+txta+rb+"','"+txta+rc+"','"+txtb+ra+"','"+txtb+rb+"','" 
-				+txtb+rc+"','"+txtb+ra+"','"+txtb+rb+"','"+txtb+rc+"','"+txtb+ra+"','"+txtb+rb+"');\n";
+		sqlScript+= "INSERT INTO table5(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11) values (E'"+txta+ra+"',E'"+txta+rb+"',E'"+txta+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"',E'" 
+				+txtb+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"',E'"+txtb+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"');\n";
 			
 	}	
 	return sqlScript;

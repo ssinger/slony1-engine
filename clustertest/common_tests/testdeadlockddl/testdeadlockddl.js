@@ -59,10 +59,10 @@ function generate_data() {
 		var txtb = random_string(textlen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
 		
-	    sqlScript+= "INSERT INTO table1(data) VALUES ('" + txta + "');\n";
-	    sqlScript+= "INSERT INTO table2(table1_id,data) SELECT id,'"+txtb+"' FROM table1 WHERE data='"+txta+"';\n";
-	    sqlScript+= "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='"+txtb+"}';\n" ;
-	    sqlScript+= "INSERT INTO table4(data) VALUES ('"+txtb+"');\n";
+	    sqlScript+= "INSERT INTO table1(data) VALUES (E'" + txta + "');\n";
+	    sqlScript+= "INSERT INTO table2(table1_id,data) SELECT id,E'"+txtb+"' FROM table1 WHERE data=E'"+txta+"';\n";
+	    sqlScript+= "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data =E'"+txtb+"}';\n" ;
+	    sqlScript+= "INSERT INTO table4(data) VALUES (E'"+txtb+"');\n";
 
 	}
 

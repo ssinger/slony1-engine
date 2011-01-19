@@ -8,7 +8,7 @@ function get_schema() {
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('tests/common_tests/testschemanames/init_data.sql');
+	var sqlScript = coordinator.readFile('common_tests/testschemanames/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -69,11 +69,11 @@ function generate_data(coordinator) {
 		var txtblen = random_number(1,100);
 		var txtb = random_string(textlen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
-		sqlScript += "INSERT INTO foo.table1(data) VALUES ('"+txta+"');";
-	    sqlScript+= "INSERT INTO foo.table2(table1_id,data) SELECT id, '"+txtb+"' FROM table1 WHERE data='"+txta+"';\n";
-	    sqlScript+= "INSERT INTO foo.table3(table2_id) SELECT id FROM table2 WHERE data ='"+txtb+"';\n";
-	    sqlScript+= "INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values ('"+txta+"', '"+txtb+"');\n";
-	    sqlScript+= "INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values ('"+txtb+"', "+txtblen+");\n";
+		sqlScript += "INSERT INTO foo.table1(data) VALUES (E'"+txta+"');";
+	    sqlScript+= "INSERT INTO foo.table2(table1_id,data) SELECT id, E'"+txtb+"' FROM foo.table1 WHERE data=E'"+txta+"';\n";
+	    sqlScript+= "INSERT INTO foo.table3(table2_id) SELECT id FROM foo.table2 WHERE data =E'"+txtb+"';\n";
+	    sqlScript+= "INSERT INTO \"Schema.name\".\"Capital Idea\" (\"user\", description) values (E'"+txta+"', E'"+txtb+"');\n";
+	    sqlScript+= "INSERT INTO \"Schema.name\".\"user\" (\"user\", id) values (E'"+txtb+"', "+txtblen+");\n";
 	    sqlScript+= "select nextval('\"Schema.name\".\"a.periodic.sequence\"');";
 	    sqlScript+= "select nextval('\"Studly Spacey Schema\".\"user\"');";
 		

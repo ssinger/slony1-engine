@@ -63,10 +63,10 @@ function generate_data() {
 		var txtb = random_string(textlen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
 		//txta = txtb.replace("'","''");
-		sqlScript += "INSERT INTO table1(data) VALUES (quote_literal('"+txta+"'));\n";
-		sqlScript += "INSERT INTO table2(table1_id,data) SELECT id,quote_literal('"+txtb+"') FROM table2 WHERE data=quote_literal('" + txta+"');\n";
-		sqlScript += "INSERT INTO table3(table2_id) SELECT id FROM table2 where data=quote_literal('" + txtb + "');\n";
-		sqlScript += "INSERT INTO table4(data) VALUES (quote_literal('" + txtb + "'));\n";
+		sqlScript += "INSERT INTO table1(data) VALUES (quote_literal(E'"+txta+"'));\n";
+		sqlScript += "INSERT INTO table2(table1_id,data) SELECT id,quote_literal(E'"+txtb+"') FROM table2 WHERE data=quote_literal(E'" + txta+"');\n";
+		sqlScript += "INSERT INTO table3(table2_id) SELECT id FROM table2 where data=quote_literal(E'" + txtb + "');\n";
+		sqlScript += "INSERT INTO table4(data) VALUES (quote_literal(E'" + txtb + "'));\n";
 		
 	}
 	//java.lang.System.out.println(sqlScript);

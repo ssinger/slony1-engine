@@ -69,10 +69,10 @@ function generate_data() {
 		var txtdlen = random_number(1,100);
 		var txtd = random_string(txtdlen);
 		txtc = new java.lang.String(txtc).replace("\\","\\\\");
-		sqlScript += "INSERT INTO sub1(data) VALUES ('sub1 "+txta+"');\n";
-		sqlScript+="INSERT INTO sub2(data) VALUES ('sub2 "+txtb+"}');\n";
-		sqlScript+= "INSERT INTO sub3(data) VALUES ('sub3 "+txtc+"');\n";
-		sqlScript+= "INSERT INTO master(data) VALUES ('master "+txtd+"');\n";
+		sqlScript += "INSERT INTO sub1(data) VALUES (E'sub1 "+txta+"');\n";
+		sqlScript+="INSERT INTO sub2(data) VALUES (E'sub2 "+txtb+"}');\n";
+		sqlScript+= "INSERT INTO sub3(data) VALUES (E'sub3 "+txtc+"');\n";
+		sqlScript+= "INSERT INTO master(data) VALUES (E'master "+txtd+"');\n";
 		sqlScript+="select purchase_product( region_code, product_id, (random()*5+random()*8+random()*7)::integer) from regions, products order by random() limit 3;\n";
 	}
 
