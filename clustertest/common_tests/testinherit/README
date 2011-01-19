@@ -1,0 +1,41 @@
+$Id: README,v 1.5 2008-04-11 15:39:32 cbbrowne Exp $
+  
+testinherit does a somewhat nontrivial handling of inheritance...
+
+A "master" sales table is created which has three "sub tables" for
+three regions (US west, US east, Canada) which inherit from it, and all
+four tables are replicated.
+
+Notice that constraints do not automatically propagate to the
+inherited tables; they need to be added explicitly if direct
+manipulations to the inherited tables are to retain referential
+integrity.  (Mind you, inserts to the "master" table are checked at
+creation time, so as long as you don't do modifications to the
+inherited tables, you at least start with referential integrity...)
+
+Rules are added to cause the data for those three regions to be
+automatically directed to the right partition table.
+
+There is also a product table, products...
+
+A stored procedure, purchase_product, is used to generate sales data,
+demonstrating that it's fine to use stored procs with Slony-I;
+replication will pick up updates even if they weren't expressly
+declared.
+
+The queries used to request product purchases use random() to choose
+products and regions, demonstrating that Slony-I copes perfectly well
+with nondeterministic queries.
+
+Note that slon processes are configured purely via command line, not
+via .conf file
+
+This test also performs a subtransaction test; it generates 16
+more-or-less concurrent psql sessions that:
+ - create lists of products/regions (randomly, in temp tables local to each session)
+ - performs purchases on elements of those lists
+ - some of those purchases get rolled back, others don't
+
+This test sets up its slonik scripts using
+tools/configure-replication.sh, thereby drawing the blanket of
+"replication regression tests" over this tool.
