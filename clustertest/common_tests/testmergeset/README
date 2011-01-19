@@ -1,0 +1,16 @@
+
+  
+testmergeset sets up a series of replication sets, progressively
+merging them together.
+
+This was written based on "testpartition", the difference being that
+in this test, tables are added to replication via explicitly creating
+a set (a temporary set #999), and then merging that set back into the
+main set.
+
+This test also takes a fairly aggressive tack on usage of WAIT FOR
+EVENT; when it gets into the "merge phase," it submits a SYNC followed
+by waiting for that SYNC to be confirmed on all relevant nodes before
+submitting a MERGE SET request to eliminate the extra set.  It does
+not use any SLEEP requests; concurrency control is expected to be
+controlled by WAIT FOR EVENT.

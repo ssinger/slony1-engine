@@ -1,0 +1,18 @@
+
+  
+testlargetuples, based on test1, checks that large tuples are replicated
+properly.
+  
+It creates three simple tables as one replication set, and replicates
+them from one database to another.
+  
+Data is replicated in table1; there is a mixture of large and small tuples.
+
+The function logswitch_start() is called shortly after replication
+begins to request a log switch to test that tuples are passed properly
+in both sl_log_1 and sl_log_2.
+
+The origin node's slon is configured via slon.conf file, to verify that
+this functionality works for the origin (because the logic for handling
+this for the origin is separate from that for other nodes, in the test
+harness).
