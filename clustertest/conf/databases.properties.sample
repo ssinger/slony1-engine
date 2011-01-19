@@ -68,6 +68,7 @@ database.db6.password.slony=slon
 slonik.path=/usr/local/pgsql8.3/bin/slonik
 slon.path=/usr/local/pgsql8.3/bin/slon
 clustername=disorder_replica
+slony_dump.path=/usr/local/pgsql8.3/bin/slony1_dump.sh
 
 output.directory=results
 log4j.conf=conf/log4j.properties
