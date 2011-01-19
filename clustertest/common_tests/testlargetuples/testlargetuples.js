@@ -54,19 +54,24 @@ function generate_data_via_file(coordinator) {
 		var textlen = random_number(1,100);
 		var txta=random_string(textlen);
 		txta = new java.lang.String(txta).replace("\\","\\\\");
+		txta = new java.lang.String(txta).replace("'","''");
 		textlen = random_number(1,100);
 		var txtblen = random_number(1,100);
 		var txtb = random_string(txtblen);		
 		var txtclen = random_number(1,100);
 		var txtc = random_string(txtclen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
-		fileWriter.write( "INSERT INTO table1(data) VALUES ('" + txta + "');\n");
-		fileWriter.write( "INSERT INTO table1(data) VALUES ('");
+		txtb = new java.lang.String(txtb).replace("'","''");
+		txtc = new java.lang.String(txtc).replace("\\","\\\\");
+		txtc = new java.lang.String(txtc).replace("'","''");
+
+		fileWriter.write( "INSERT INTO table1(data) VALUES (E'" + txta + "');\n");
+		fileWriter.write( "INSERT INTO table1(data) VALUES (E'");
 		for(var repeatCnt=0; repeatCnt<100; repeatCnt++) {
 			fileWriter.write(txta + ' padding things out to make them bigger ' 
 			+ txtb + " and even bigger" + txtc);			
 		}
-		fileWriter.write(");\n");
+		fileWriter.write("');\n");
 		if(idx % (numrows/5) ==0 ) {
 			coordinator.log("generated " + (idx/numrows)*10 + "%");
 		}

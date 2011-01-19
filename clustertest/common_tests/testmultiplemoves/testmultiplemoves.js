@@ -84,9 +84,9 @@ function generate_data_file(coordinator) {
 			var txtblen = random_number(1,100);
 			var txtb = random_string(txtblen);
 			txtb = new java.lang.String(txtb).replace("\\","\\\\");
-			fileWriter.write("INSERT INTO table" + setid + "(data) VALUES ('" + txta+"');\n");
-			fileWriter.write("INSERT INTO table"+setid+"a (table"+setid+"_id,data) SELECT id,'" + txtb+"' FROM "
-					+" table"+setid+" WHERE data='" + txta + "';\n");
+			fileWriter.write("INSERT INTO table" + setid + "(data) VALUES (E'" + txta+"');\n");
+			fileWriter.write("INSERT INTO table"+setid+"a (table"+setid+"_id,data) SELECT id,E'" + txtb+"' FROM "
+					+" table"+setid+" WHERE data=E'" + txta + "';\n");
 			
 		}
 			

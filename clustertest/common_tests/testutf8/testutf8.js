@@ -61,15 +61,15 @@ function generate_data_file(coordinator) {
 		var txtblen = random_number(1,100);
 		var txtb = random_string(textlen);
 		txtb = new java.lang.String(txtb).replace("\\","\\\\");
-		fileWriter.write( "INSERT INTO table1(data) VALUES ('"+txta+"');");
-		fileWriter.write("INSERT INTO table2(table1_id,data) SELECT id, '"+txtb+"' FROM table1 WHERE data='"+txta+"';");
-		fileWriter.write("INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='"+txtb+"';");
-		fileWriter.write("INSERT INTO utf8table (string) values ('"+txtb+" - \303\241');");
-		fileWriter.write( "INSERT INTO utf8table (string) values ('"+txtb+" -- \303\241');");
-		fileWriter.write("INSERT INTO utf8table (string) values ('\303\241 - "+txtb+"');");
-		fileWriter.write("INSERT INTO utf8table (string) values ('\303\241 -- "+txtb+"');");
-		fileWriter.write("INSERT INTO utf8table (string) values ('t3 -- \303\241 - "+txtb+"');");
-		fileWriter.write("INSERT INTO utf8table (string) values ('t3 - \303\241 -- "+txtb+"');");
+		fileWriter.write( "INSERT INTO table1(data) VALUES (E'"+txta+"');");
+		fileWriter.write("INSERT INTO table2(table1_id,data) SELECT id, E'"+txtb+"' FROM table1 WHERE data=E'"+txta+"';");
+		fileWriter.write("INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data =E'"+txtb+"';");
+		fileWriter.write("INSERT INTO utf8table (string) values (E'"+txtb+" - \303\241');");
+		fileWriter.write( "INSERT INTO utf8table (string) values (E'"+txtb+" -- \303\241');");
+		fileWriter.write("INSERT INTO utf8table (string) values (E'\303\241 - "+txtb+"');");
+		fileWriter.write("INSERT INTO utf8table (string) values (E'\303\241 -- "+txtb+"');");
+		fileWriter.write("INSERT INTO utf8table (string) values (E't3 -- \303\241 - "+txtb+"');");
+		fileWriter.write("INSERT INTO utf8table (string) values (E't3 - \303\241 -- "+txtb+"');");
 		fileWriter.write( "INSERT INTO utf8table (string) values(repeat('test1234',4000)||'bar');");	
 			
 	}

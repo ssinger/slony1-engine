@@ -27,5 +27,5 @@ CREATE TABLE utf8table (
     string text,
     primary key(id)
 );
-INSERT INTO utf8table (string) VALUES ('1b\303\241r') ;
+INSERT INTO utf8table (string) VALUES (E'1b\303\241r') ;
 
