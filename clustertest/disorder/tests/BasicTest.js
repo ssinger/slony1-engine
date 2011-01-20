@@ -117,7 +117,7 @@ BasicTest.prototype.setupReplication = function() {
 	onFinished = {
 		onEvent : function(object, event) {
 			var result = slonik.getReturnCode();
-			thisRef.testResults.assertCheck("slonik exit status", result, 0);
+			thisRef.testResults.assertCheck("slonik - creating nodes+paths+sets", result, 0);
 			if (result != 0) {
 				thisRef.coordinator
 						.abortTest('slonik failure subscribing the set');
@@ -222,7 +222,7 @@ BasicTest.prototype.addTables = function() {
 	onFinished = {
 		onEvent : function(object, event) {
 			var result = slonik.getReturnCode();
-			thisRef.testResults.assertCheck("slonik exit status", result, 0);
+			thisRef.testResults.assertCheck("slonik - adding tables to set", result, 0);
 			if (result != 0) {
 				thisRef.coordinator
 						.abortTest('slonik failure subscribing the set');
@@ -489,7 +489,7 @@ BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 			onEvent : function(object, event) {
 				var result = object.getReturnCode();
 				thisRef.testResults
-						.assertCheck("slonik exit status", result, 0);
+						.assertCheck("slonik - subscribing set", result, 0);
 				thisRef.coordinator
 						.removeObserver(
 								object,
@@ -547,7 +547,7 @@ BasicTest.prototype.teardownSlony = function() {
 	onFinished = {
 		onEvent : function(object, event) {
 			var result = slonik.getReturnCode();
-			thisRef.testResults.assertCheck("slonik exit status", result, 0);
+			thisRef.testResults.assertCheck("slonik - uninstalling nodes", result, 0);
 			if (result != 0) {
 				thisRef.coordinator.abortTest('slonik failure uninstalling ');
 			}
