@@ -89,7 +89,7 @@ FailNodeTest.prototype.runTest = function() {
 	this.failNode(3,true);
 	
 	/**
-	 * Readd all paths, some might have been deleted and not readded
+	 * Readd all paths, some might have been deleted and not re-added
 	 * when we deleted nodes above.
 	 * 
 	 * We also have to restart the slons because of bug # 120
@@ -295,7 +295,7 @@ FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
 	 * but the sync we do below in the store path/node script requires
 	 * the slon to be running again.
 	 */
-	var slonik=this.coordinator.createSlonik('readd node',slonikPreamble,slonikScript);
+	var slonik=this.coordinator.createSlonik('re-add node',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
 	
@@ -318,10 +318,10 @@ FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
 	this.slonArray[node_id-1] = this.coordinator.createSlonLauncher('db' + node_id);
 	this.slonArray[node_id-1].run();
 	
-	slonik=this.coordinator.createSlonik('readd node',slonikPreamble,slonikScript);
+	slonik=this.coordinator.createSlonik('re-add node',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
-	this.testResults.assertCheck('readd node success',slonik.getReturnCode(),0);
+	this.testResults.assertCheck('re-add node success',slonik.getReturnCode(),0);
 	
 	this.slonArray[provider-1].stop();
 	this.coordinator.join(this.slonArray[provider-1]);

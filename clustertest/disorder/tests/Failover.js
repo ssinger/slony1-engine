@@ -228,7 +228,7 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db3','db4');
 	java.lang.Thread.sleep(30*1000);
 	this.dropNode(1,4);
-	this.coordinator.log('PROGRESS: About to readd node 4');
+	this.coordinator.log('PROGRESS: About to re-add node 4');
 	this.reAddNode(1,4,4);
 	
 	
