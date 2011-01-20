@@ -104,7 +104,7 @@ function do_test(coordinator) {
 	var sqlScript='';
 	for(var year=2006; year <=2006; year++) {
 		for(var month=1; month <= 3; month++) {
-			var num_rows = random_number(50,75);
+			var num_rows = random_number(5,7);
 			for(var row=0; row < num_rows; row++) {
 				var quantity = random_number(1,9);
 				var day = random_number(1,25);
