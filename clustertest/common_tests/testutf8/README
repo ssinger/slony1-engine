@@ -1,0 +1,9 @@
+
+
+This test involves creating databases in UNICODE form, and stowing
+UTF-8 values in a relevant table.
+
+Both nodes use slon .conf files
+
+Add in test for bug #55 - very large tuple added
+http://www.slony.info/bugzilla/show_bug.cgi?id=55

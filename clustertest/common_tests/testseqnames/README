@@ -1,0 +1,8 @@
+
+
+This test involves creating some sequences with wacky names involving
+StudlyCaps, spaces, and ".".
+
+It also creates a Large Number of sequences, to validate that
+we don't break down with either large quantities of them, or
+if the IDs are large numbers

@@ -1,0 +1,15 @@
+
+
+This test involves submitting date and timestamps in various DATESTYLE
+forms, and verifying that all load in properly.
+
+Note that it tests several derivations:
+- DATE
+- TIMESTAMP
+- TIMESTAMPTZ
+- A domain that derives from TIMESTAMPTZ
+- An array of TIMESTAMPTZ values
+
+Both master + slave have slon configuration managed via slon.conf to
+verify that the testing framework functions properly for handling this
+with both nodes.
