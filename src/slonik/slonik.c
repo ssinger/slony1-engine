@@ -99,6 +99,9 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonDString * query,
 							  SlonikScript * script,
 							  int supress_wait_for);
+static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
+								SlonikScript * script,
+								SlonikStmt * stmt)
 /* ----------
  * main
  * ----------
@@ -4846,6 +4849,98 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 	return rc;
   
 }
+
+/**
+ *
+ * for this adminconninfo we must find the 
+ * last non SYNC event from every other node
+ * we have conninfo data to.
+ *
+ * We want to make sure that this node is caught up
+ * (with respect to configuration changes) to every other node.
+ * 
+ * we don't want to perform configuration 
+ */
+static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
+								SlonikScript * script,
+								SlonikStmt * stmt)
+{
+	SlonDString query;
+	PGresult * result;
+	char * event_id;
+	SlonDString eventList;
+	int firstEvent=1;
+	int wait_count=0;
+	int confirm_count=0;
+	SlonikAdmInfo * curAdmInfo=NULL;
+	SlonDString is_caughtup_query;
+
+	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
+				 " where ev_origin=\"_%s\".getLocalNodeId() "
+				 " AND ev_type <> 'SYNC'");
+	slon_mkquery(&eventList,"");
+	for( curAdmInfo = script->adminfo_list;
+		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		SlonikAdmInfo * activeAdmInfo = 
+			get_active_adminfo(stmt,curAdmInfo->no_id);
+		if( activeAdmInfo == NULL)
+		{
+			/**
+			 * warning?
+			 */
+			continue;
+		}
+		result = db_exec_select(stmt,curAdmInfo,&query);
+		if(result == NULL || PQntuples(result) != 1 ) 
+		{
+			printf("warning: unable to query event history on node %d\n",
+				   curAdmInfo->no_id);
+			continue;
+		}
+		event_id = PQgetvalue(result,0,0);
+		if(event_id != NULL)
+		{
+			slon_appendquery(&eventList, firstEvent ?
+							  "(con_origin=%d AND con_seqno>=%s) " :
+							  " OR (con_origin=%d AND con_seqno>=%s) "
+							  ,curAdmInfo->no_id,event_id);
+			wait_count++;
+			firstEvent=0;
+		}
+		PQclear(result);
+		
+	}
+	slon_mkquery(&is_caughtup_query,
+				 "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
+				 " where %s GROUP BY con_origin");
+	while(confirm_count != wait_count)
+	{
+		result = db_exec_select(stmt,
+								adminfo1,&is_caughtup_query);
+		if (result == NULL) 
+		{
+			/**
+			 * error
+			 */
+		}
+		confirm_count = PQntuples(result);
+		PQclear(result);			
+		if(confirm_count != wait_count)
+		{
+			/**
+			 * 
+			 */
+			sleep(1);
+		}
+	}/*while*/
+	dstring_terminate(&eventList);
+	dstring_terminate(&is_caughtup_query);
+	dstring_terminate(&query);
+	return 0;
+}
+								
+
 
 /*
  * Local Variables:
