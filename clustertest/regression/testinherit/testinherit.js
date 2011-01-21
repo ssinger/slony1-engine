@@ -1,14 +1,14 @@
 var NUM_NODES=2;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/testinherit/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/testinherit/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/testinherit/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/testinherit/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -107,7 +107,7 @@ function generate_data() {
 
 
 function exec_ddl(coordinator) {
-	var slonikScript = "EXECUTE SCRIPT(SET ID=1, FILENAME='slony_tests/tests/common_tests/testdeadlockddl/ddl_updates',EVENT NODE=1);\n";
+	var slonikScript = "EXECUTE SCRIPT(SET ID=1, FILENAME='regression/testdeadlockddl/ddl_updates',EVENT NODE=1);\n";
 	var preamble = get_slonik_preamble();
 	
 	run_slonik('exec ddl',coordinator,preamble,slonikScript);
