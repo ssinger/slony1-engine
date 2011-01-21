@@ -118,7 +118,7 @@ function do_test(coordinator) {
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
-	
+	coordinator.join(psql);
 	wait_for_sync(coordinator);
 	
 	
