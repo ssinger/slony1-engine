@@ -14,8 +14,8 @@ function init_origin_rdbms(coordinator,testname) {
 	results.assertCheck('createdb worked',createdb.getReturnCode(),0);
 			
 	var sql = 'CREATE LANGUAGE plpgsql;\n';
-	sql += gen_weak_user();
 	sql += get_schema();
+	sql += gen_weak_user();
 	var psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
@@ -24,8 +24,8 @@ function init_origin_rdbms(coordinator,testname) {
 
 function create_subscribers(coordinator) {
 	var sql = 'CREATE LANGUAGE plpgsql;\n';
-	sql += gen_weak_user();
 	sql += get_schema();
+	sql += gen_weak_user();
 	for(var node = 2; node <= NUM_NODES; node++) {
 		var createdb = coordinator.createCreateDb('db' + node);
 		createdb.run();
@@ -114,7 +114,7 @@ function run_slonik(name,coordinator,preamble,script) {
 	//Setup a timer event.
 	var abortTest = {
 		onEvent : function(source,eventType) {
-			results.assertCheck("sync did not finish in the timelimit",true,false);
+			results.assertCheck("slonik did not finish in the timelimit:"+name,true,false);
 			//kill the slonik			
 			slonik.stop();
 			
@@ -123,7 +123,7 @@ function run_slonik(name,coordinator,preamble,script) {
 	
 	};
 	var timeoutObserver = new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(abortTest);
-	var timer = coordinator.addTimerTask('sync failed',60*2 /*2 minutes*/, timeoutObserver );
+	var timer = coordinator.addTimerTask('sync failed',60*4 /*2 minutes*/, timeoutObserver );
 	
 	slonik.run();
 	coordinator.join(slonik);

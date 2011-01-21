@@ -95,7 +95,7 @@ function do_test(coordinator) {
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
-	
+	coordinator.join(psql);
 	wait_for_sync(coordinator);
 	
 	
@@ -108,5 +108,6 @@ function get_compare_queries() {
 	             'SELECT id::text||id2::text||id3::text as id,d1,d2,id2,d3,d4,d5,d6,id3,d7,d8,d9,d10,d11 from table5 order by id,id2,id3'];
 	return queries;
 }
+
 
 run_test(coordinator,'test1');
