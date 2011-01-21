@@ -4805,13 +4805,37 @@ dstring_terminate(&query);
 return rc;
 
 }						   
-=======
 static int slonik_submitEvent(SlonikStmt * stmt,
 						  SlonikAdmInfo * adminfo, 
 						  SlonDString * query,
 						  SlonikScript * script)
 {
-return db_exec_evcommand(stmt,adminfo,query);
+
+	if ( last_event_node >= 0 &&
+		 last_event_node != adminfo->no_id)
+	{
+		/**
+		 * the last event node is not the current event node.
+		 * time to wait.
+		 */
+		
+		/**
+		 * for now we generate a 'fake' Slonik_wait_event structure
+		 * 
+		 */
+		SlonikStmt_wait_event wait_event;
+		int rc;
+		wait_event.hdr=*stmt;
+		wait_event.wait_origin=last_event_node;
+		wait_event.wait_on=last_event_node;
+		wait_event.wait_confirmed=adminfo->no_id;
+		wait_event.wait_timeout=0;
+		rc = slonik_wait_event(&wait_event);
+		if(rc < 0) 
+			return rc;
+
+	}
+	return db_exec_evcommand(stmt,adminfo,query);
 
 }
 
