@@ -58,3 +58,34 @@ The shell script run_all_disorder_tests.sh invokes the cluster test
 framework against the test suite found in disorder/tests
 
 results/$TIMESTAMP/testResult.test.txt will contain the results of each test.
+
+
+Regression Tests
+------------------
+The regressions are a common test bed framework intended to better
+support performing a comprehensive set of tests. The code lives in the source
+tree under the tests directory.
+
+Prior to version 2.1 these tests lived under the tests directory and
+were written in shell.  The tests have been ported to javascript so
+they run under the clustertest framework.
+
+The regression tests are different than the disorder tests in that
+they tend to take less time to run and don't use a common schema.
+Each test creates its own tables (but there are a similarties
+between many of the tests).
+
+To run the regression tests
+
+
+1. Edit conf/slonyregress.properties  you can use the sample in
+   conf/slonyregress.sample.properties as a starting point
+
+   * Edit the db[1-4].host, dbname,port,user and password as required.
+   * Update db[1-4].pgsql.path to point to your postgresql bin directory
+    ($PGBIN)
+   * Edit slonik.path and slon.path to point to your slonik and slon
+     binaries
+   * Run the tests (run_all_regression_tests.sh) from this directory.
+
+    
