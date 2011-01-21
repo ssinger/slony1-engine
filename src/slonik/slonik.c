@@ -44,6 +44,7 @@ int			parser_errors = 0;
 int			current_try_level;
 
 int last_event_node=-1;
+int auto_wait_disabled=0;
 
 static char myfull_path[MAXPGPATH];
 static char share_path[MAXPGPATH];
@@ -96,7 +97,8 @@ static int slonik_is_slony_installed(SlonikStmt * stmt,
 static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonikAdmInfo * adminfo, 
 							  SlonDString * query,
-							  SlonikScript * script);
+							  SlonikScript * script,
+							  int supress_wait_for);
 /* ----------
  * main
  * ----------
@@ -2376,7 +2378,7 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo2, &query,
-						   stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -2407,7 +2409,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->no_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3033,7 +3035,7 @@ slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
 				 stmt->no_id, stmt->no_provider,
 				 stmt->no_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3092,7 +3094,7 @@ slonik_store_path(SlonikStmt_store_path * stmt)
 				 stmt->pa_server, stmt->pa_client,
 				 stmt->pa_conninfo, stmt->pa_connretry);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,1) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3123,7 +3125,7 @@ slonik_drop_path(SlonikStmt_drop_path * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->pa_server, stmt->pa_client);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3155,7 +3157,7 @@ slonik_store_listen(SlonikStmt_store_listen * stmt)
 				 stmt->li_origin, stmt->li_provider,
 				 stmt->li_receiver);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3187,7 +3189,7 @@ slonik_drop_listen(SlonikStmt_drop_listen * stmt)
 				 stmt->li_origin, stmt->li_provider,
 				 stmt->li_receiver);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3225,7 +3227,7 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 		     stmt->hdr.script->clustername,
 		     stmt->set_id, comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3256,7 +3258,7 @@ slonik_drop_set(SlonikStmt_drop_set * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->set_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3287,7 +3289,7 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->set_id, stmt->add_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3427,7 +3429,7 @@ slonik_set_add_single_table(SlonikStmt_set_add_table * stmt,
 				 stmt->set_id, stmt->tab_id,
 				 stmt->tab_fqname, idxname, stmt->tab_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		PQclear(res);
 		dstring_free(&query);
@@ -3550,7 +3552,7 @@ slonik_set_add_single_sequence(SlonikStmt *stmt,
 				 stmt->set_id, stmt->seq_id, stmt->seq_fqname,
 				 stmt->seq_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -3582,7 +3584,7 @@ slonik_set_drop_table(SlonikStmt_set_drop_table * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->tab_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3616,7 +3618,7 @@ slonik_set_drop_sequence(SlonikStmt_set_drop_sequence * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->seq_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -3648,7 +3650,7 @@ slonik_set_move_table(SlonikStmt_set_move_table * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->tab_id, stmt->new_set_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3678,7 +3680,7 @@ slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->seq_id, stmt->new_set_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3763,7 +3765,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 (stmt->sub_forward) ? "t" : "f",
 				 (stmt->omit_copy) ? "t" : "f");
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo2, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3814,7 +3816,7 @@ slonik_unsubscribe_set(SlonikStmt_unsubscribe_set * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->sub_setid, stmt->sub_receiver);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3957,7 +3959,7 @@ slonik_move_set(SlonikStmt_move_set * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->set_id, stmt->new_origin);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-			stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -4019,7 +4021,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		     stmt->only_on_node);
 
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query, 
-						   stmt->hdr.script) < 0)
+						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -4354,7 +4356,7 @@ slonik_sync(SlonikStmt_sync * stmt)
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-						   stmt->hdr.script) < 0)
+						   stmt->hdr.script,1) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -4806,13 +4808,16 @@ return rc;
 
 }						   
 static int slonik_submitEvent(SlonikStmt * stmt,
-						  SlonikAdmInfo * adminfo, 
-						  SlonDString * query,
-						  SlonikScript * script)
+							  SlonikAdmInfo * adminfo, 
+							  SlonDString * query,
+							  SlonikScript * script,
+							  int suppress_wait_for)
+	
 {
-
+	int rc;
 	if ( last_event_node >= 0 &&
-		 last_event_node != adminfo->no_id)
+		 last_event_node != adminfo->no_id
+		&& ! suppress_wait_for )
 	{
 		/**
 		 * the last event node is not the current event node.
@@ -4823,8 +4828,7 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		 * for now we generate a 'fake' Slonik_wait_event structure
 		 * 
 		 */
-		SlonikStmt_wait_event wait_event;
-		int rc;
+		SlonikStmt_wait_event wait_event;		
 		wait_event.hdr=*stmt;
 		wait_event.wait_origin=last_event_node;
 		wait_event.wait_on=last_event_node;
@@ -4833,10 +4837,14 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		rc = slonik_wait_event(&wait_event);
 		if(rc < 0) 
 			return rc;
-
+		
 	}
-	return db_exec_evcommand(stmt,adminfo,query);
-
+	
+	rc= db_exec_evcommand(stmt,adminfo,query);
+	if(! suppress_wait_for)
+		last_event_node=adminfo->no_id;
+	return rc;
+  
 }
 
 /*
