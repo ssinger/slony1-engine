@@ -99,9 +99,9 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonDString * query,
 							  SlonikScript * script,
 							  int supress_wait_for);
+
 static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
-								SlonikScript * script,
-								SlonikStmt * stmt)
+								SlonikStmt * stmt);
 /* ----------
  * main
  * ----------
@@ -3716,6 +3716,13 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * about this change directly.
 	 */
 
+	/**
+	 * TODO: we don't actually want to execute that query until
+	 * the provider node is caught up with all other nodes wrt config data
+	 * 
+	 */ 
+	slonik_wait_caughtup(adminfo1,&stmt->hdr);
+
 	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
 				 " and sub_active=true and sub_provider<>%d",
@@ -4862,7 +4869,6 @@ static int slonik_submitEvent(SlonikStmt * stmt,
  * we don't want to perform configuration 
  */
 static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
-								SlonikScript * script,
 								SlonikStmt * stmt)
 {
 	SlonDString query;
@@ -4877,9 +4883,10 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
 				 " where ev_origin=\"_%s\".getLocalNodeId() "
-				 " AND ev_type <> 'SYNC'");
+				 " AND ev_type <> 'SYNC'",stmt->script->clustername,
+				 stmt->script->clustername);
 	slon_mkquery(&eventList,"");
-	for( curAdmInfo = script->adminfo_list;
+	for( curAdmInfo = stmt->script->adminfo_list;
 		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
 		SlonikAdmInfo * activeAdmInfo = 
@@ -4891,7 +4898,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			 */
 			continue;
 		}
-		result = db_exec_select(stmt,curAdmInfo,&query);
+		result = db_exec_select(stmt,activeAdmInfo,&query);
 		if(result == NULL || PQntuples(result) != 1 ) 
 		{
 			printf("warning: unable to query event history on node %d\n",
@@ -4904,7 +4911,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			slon_appendquery(&eventList, firstEvent ?
 							  "(con_origin=%d AND con_seqno>=%s) " :
 							  " OR (con_origin=%d AND con_seqno>=%s) "
-							  ,curAdmInfo->no_id,event_id);
+							  ,activeAdmInfo->no_id,event_id);
 			wait_count++;
 			firstEvent=0;
 		}
@@ -4913,7 +4920,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	}
 	slon_mkquery(&is_caughtup_query,
 				 "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
-				 " where %s GROUP BY con_origin");
+				 " where %s GROUP BY con_origin",
+				 stmt->script->clustername,dstring_data(&eventList));
 	while(confirm_count != wait_count)
 	{
 		result = db_exec_select(stmt,
