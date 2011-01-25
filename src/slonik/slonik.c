@@ -3730,7 +3730,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 stmt->sub_setid,stmt->sub_receiver,
 				 stmt->sub_provider);
 	
-	res1 = db_exec_select((SlonikStmt*) stmt,adminfo1,&query);
+	res1 = db_exec_select(&stmt->hdr,adminfo1,&query);
 	if(res1 == NULL) {
 		dstring_free(&query);
 		return -1;
@@ -4881,10 +4881,13 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	SlonikAdmInfo * curAdmInfo=NULL;
 	SlonDString is_caughtup_query;
 
+	dstring_init(&query);
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
-				 " where ev_origin=\"_%s\".getLocalNodeId() "
+				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
 				 " AND ev_type <> 'SYNC'",stmt->script->clustername,
-				 stmt->script->clustername);
+				 stmt->script->clustername,stmt->script->clustername);
+	dstring_init(&eventList);
+
 	slon_mkquery(&eventList,"");
 	for( curAdmInfo = stmt->script->adminfo_list;
 		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
@@ -4918,10 +4921,12 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		PQclear(result);
 		
 	}
+	dstring_init(&is_caughtup_query);
 	slon_mkquery(&is_caughtup_query,
 				 "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
-				 " where %s GROUP BY con_origin",
-				 stmt->script->clustername,dstring_data(&eventList));
+				 " where %s AND con_received=%d GROUP BY con_origin",
+				 stmt->script->clustername,dstring_data(&eventList),
+				 adminfo1->no_id);
 	while(confirm_count != wait_count)
 	{
 		result = db_exec_select(stmt,
@@ -4939,6 +4944,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			/**
 			 * 
 			 */
+		  printf("waiting for events %s to be confirmed on %d\n",
+				 dstring_data(&eventList),adminfo1->no_id);
 			sleep(1);
 		}
 	}/*while*/
