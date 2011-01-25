@@ -4845,6 +4845,14 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		 * time to wait.
 		 */
 		
+		if( current_try_level != 0)
+		{
+			printf("%s:%d Error: the event origin can not be changed "
+				   "inside of a try block",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+			return -1;
+		}
+
 		/**
 		 * for now we generate a 'fake' Slonik_wait_event structure
 		 * 
