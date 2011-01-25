@@ -100,6 +100,8 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonikScript * script,
 							  int supress_wait_for);
 
+static int slonik_get_last_event_id(SlonikStmt* stmt,
+									SlonikScript * script);
 static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 								SlonikStmt * stmt);
 /* ----------
@@ -1155,6 +1157,8 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 {
 	int			errors = 0;
 
+	slonik_get_last_event_id(hdr,script);
+	
 	while (hdr && errors == 0)
 	{
 		hdr->script = script;
@@ -3717,9 +3721,16 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 */
 
 	/**
-	 * TODO: we don't actually want to execute that query until
-	 * the provider node is caught up with all other nodes wrt config data
-	 * 
+	 * we don't actually want to execute that query until
+	 * the provider node is caught up with all other nodes wrt config data.
+	 *
+	 * this is because we don't want to pick the origin based on
+	 * stale data. 
+	 *
+	 * @note an alternative might be to contact all adminconninfo
+	 * nodes looking for the set origin and then submit the
+	 * set origin to that.  This avoids the wait for and is probably
+	 * what we should do.
 	 */ 
 	slonik_wait_caughtup(adminfo1,&stmt->hdr);
 
@@ -4859,37 +4870,27 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 
 /**
  *
- * for this adminconninfo we must find the 
- * last non SYNC event from every other node
- * we have conninfo data to.
+ * query all nodes we have admin conninfo data for and
+ * find the last non SYNC event id generated from that node.
  *
- * We want to make sure that this node is caught up
- * (with respect to configuration changes) to every other node.
- * 
- * we don't want to perform configuration 
+ * store this in the SlonikAdmInfo structure so it can later
+ * be used as part of a wait for.
+ *
  */
-static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
-								SlonikStmt * stmt)
+static int slonik_get_last_event_id(SlonikStmt *stmt,
+									SlonikScript * script)
 {
 	SlonDString query;
 	PGresult * result;
 	char * event_id;
-	SlonDString eventList;
-	int firstEvent=1;
-	int wait_count=0;
-	int confirm_count=0;
 	SlonikAdmInfo * curAdmInfo=NULL;
-	SlonDString is_caughtup_query;
 
 	dstring_init(&query);
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
 				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
-				 " AND ev_type <> 'SYNC'",stmt->script->clustername,
-				 stmt->script->clustername,stmt->script->clustername);
-	dstring_init(&eventList);
-
-	slon_mkquery(&eventList,"");
-	for( curAdmInfo = stmt->script->adminfo_list;
+				 " AND ev_type <> 'SYNC'",script->clustername,
+				 script->clustername,script->clustername);
+	for( curAdmInfo = script->adminfo_list;
 		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
 		SlonikAdmInfo * activeAdmInfo = 
@@ -4906,55 +4907,82 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		{
 			printf("warning: unable to query event history on node %d\n",
 				   curAdmInfo->no_id);
+			db_rollback_xact(stmt,activeAdmInfo);
 			continue;
 		}
 		event_id = PQgetvalue(result,0,0);
 		if(event_id != NULL)
 		{
-			slon_appendquery(&eventList, firstEvent ?
-							  "(con_origin=%d AND con_seqno>=%s) " :
-							  " OR (con_origin=%d AND con_seqno>=%s) "
-							  ,activeAdmInfo->no_id,event_id);
-			wait_count++;
-			firstEvent=0;
+			activeAdmInfo->last_event=strtoll(event_id,NULL,10);			
 		}
 		PQclear(result);
 		
 	}
-	dstring_init(&is_caughtup_query);
-	slon_mkquery(&is_caughtup_query,
-				 "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
-				 " where %s AND con_received=%d GROUP BY con_origin",
-				 stmt->script->clustername,dstring_data(&eventList),
-				 adminfo1->no_id);
-	while(confirm_count != wait_count)
-	{
-		result = db_exec_select(stmt,
-								adminfo1,&is_caughtup_query);
-		if (result == NULL) 
-		{
-			/**
-			 * error
-			 */
-		}
-		confirm_count = PQntuples(result);
-		PQclear(result);			
-		if(confirm_count != wait_count)
-		{
-			/**
-			 * 
-			 */
-		  printf("waiting for events %s to be confirmed on %d\n",
-				 dstring_data(&eventList),adminfo1->no_id);
-			sleep(1);
-		}
-	}/*while*/
-	dstring_terminate(&eventList);
-	dstring_terminate(&is_caughtup_query);
 	dstring_terminate(&query);
 	return 0;
 }
 								
+static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
+								SlonikStmt * stmt)
+{
+	SlonDString event_list;
+	PGresult * result;
+	SlonikAdmInfo * curAdmInfo=NULL;
+	int first_event=1;
+	int confirm_count=0;
+	SlonDString is_caughtup_query;
+	int wait_count=0;
+
+	dstring_init(&event_list);
+	
+
+	for( curAdmInfo = stmt->script->adminfo_list;
+		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		if(curAdmInfo->last_event < 0 || 
+		   curAdmInfo->no_id==adminfo1->no_id)
+			continue;
+		slon_appendquery(&event_list, first_event ?
+						 "(con_origin=%d AND con_seqno>=%d) " :
+						 " OR (con_origin=%d AND con_seqno>=%d) "
+						 ,curAdmInfo->no_id
+						 ,curAdmInfo->last_event);		
+		first_event=0;
+		wait_count++;
+	}
+	 dstring_init(&is_caughtup_query);
+	 slon_mkquery(&is_caughtup_query,
+				  "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
+                " where %s AND con_received=%d GROUP BY con_origin",
+				  stmt->script->clustername,dstring_data(&event_list),
+				  adminfo1->no_id);
+	 while(confirm_count != wait_count)
+	 {
+		 result = db_exec_select(stmt,
+								 adminfo1,&is_caughtup_query);
+		 if (result == NULL) 
+		 {
+			 /**
+			  * error
+			  */
+		 }
+		 confirm_count = PQntuples(result);
+		 PQclear(result);            
+		 if(confirm_count != wait_count)
+		 {
+			 /**
+			  * 
+			  */
+			 printf("waiting for events %s to be confirmed on %d\n",
+					dstring_data(&event_list),adminfo1->no_id);
+			 sleep(1);
+		 }
+	 }/*while*/
+	 dstring_terminate(&event_list);
+	 dstring_terminate(&is_caughtup_query);
+	 return 0;
+
+}
 
 
 /*
