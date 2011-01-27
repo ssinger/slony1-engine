@@ -4,6 +4,8 @@ Version TBD...
 
 - Bug #163 - change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
 
+- Bug #167 - change queries against sl_log_* tables to avert slowdown when large backlog
+
 - Bug #170 - remove SNMP support
 
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
