@@ -1,5 +1,7 @@
 Version TBD...
 
+- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+
 - Bug #152 - eliminate debugging statements from DDL processing
 
 - Bug #156 - add health check at slon startup time
@@ -12,15 +14,15 @@ Version TBD...
 
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
 
+- Bug #180 - Created a slonik DATE command
+
 - Bug #185 - change functions to use named parameters
 
 - Bug #187 - add newline to slon PID files
 
 - Bug #188 - test harness query had subquery returning multiple tuples
 
-- Bug #180 - Created a slonik DATE command
-
-- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+- Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
 
 - no bug # - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
              
