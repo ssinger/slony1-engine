@@ -143,6 +143,8 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 		{
 			unsigned long latest_xid;
 
+			vac_count = 0;
+
 			latest_xid = get_earliest_xid(dbconn);
 			vacuum_action = "";
 			if (earliest_xid == latest_xid)
