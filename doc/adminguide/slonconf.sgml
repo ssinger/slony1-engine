@@ -137,6 +137,20 @@
     <varlistentry id="slon-config-logging-log-timestamp-format" xreflabel="slon_conf_log_timestamp_format">
       <term><varname>log_timestamp_format</varname> (<type>string</type>)</term>
       <indexterm>          
+        <primary><varname>explain_interval</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>An interval in seconds at which the remote worker thread will
+		output the query, used to select log rows from the data provider, together
+		with it's EXPLAIN query plan. The default value of 0 turns this feature off.
+		The allowed range is 0 (off) to 86400 (once per day).
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-logging-explain-interval" xreflabel="slon_conf_explain_interval">
+      <term><varname>explain_interval</varname> (<type>integer</type>)</term>
+      <indexterm>          
         <primary><varname>log_timestamp_format</varname> configuration parameter</primary>
       </indexterm>
       <listitem>

@@ -721,6 +721,19 @@ static struct config_int ConfigureNamesInt[] =
 		30000					/* max val */
 	},
 
+	{
+		{
+			(const char *) "explain_interval",		/* conf name */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* short desc */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&explain_interval, /* var name */
+		0,						/* default val (never) */
+		0,						/* min val */
+		86400					/* max val (1 day) */
+	},
+
 
 	{
 		{
