@@ -20,6 +20,7 @@ Version TBD...
 
 - Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
 
+- no bug # - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
              
 RELEASE 2.0.6
 

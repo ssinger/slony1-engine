@@ -268,7 +268,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				break;
 
 			case STMT_EXIT:
-				break;
+			    {
+				   SlonikStmt_exit *stmt = 
+						   (SlonikStmt_exit *) hdr;
+				   if ((stmt->exitcode < 0) || (stmt->exitcode > 255)) 
+				   {
+						   printf("%s:%d: Error: exitcode was %d - must be in range [0-255]\n",
+								  hdr->stmt_filename, hdr->stmt_lno, stmt->exitcode);
+						   errors++;
+				   }
+			    }
+			    break;
 
 			case STMT_RESTART_NODE:
 				{
