@@ -240,7 +240,8 @@ FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 	this.slonArray[nodeId-1].stop();
 	this.coordinator.join(this.slonArray[nodeId-1]);
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'DROP NODE(id=' + nodeId + ',event node=1);\n';
+	var slonikScript = 'echo \'FailNodeTest.prototype.failNode\';\n';
+	slonikScript += 'DROP NODE(id=' + nodeId + ',event node=1);\n';
 	for(var idx=2; idx <= this.getNodeCount(); idx++) {
 		if(idx == nodeId) {
 			continue;
@@ -281,7 +282,8 @@ FailNodeTest.prototype.checkNodeNotExists=function(check_node,nodeid) {
 FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
 	this.coordinator.log('reAddNode(' + node_id + ',' + provider + ')');
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'try {\n'
+	var slonikScript = 'echo \'FailNodeTest.prototype.reAddNode\';\n';
+	slonikScript += 'try {\n'
 		+ 'uninstall node(id=' + node_id+');\n'
 		+ '}\n'
 		+ 'on error {\n'

@@ -110,7 +110,8 @@ InitialCopyFail.prototype.runTest = function() {
 	
 	
 	for(var idx=2; idx <= this.getNodeCount(); idx++) {
-		var slonikScript='subscribe set (id=1, provider=1, receiver=' + idx+ ');\n'
+	        var slonikScript = 'echo \'InitialCopyFail.prototype.runTest\';\n';
+		slonikScript += 'subscribe set (id=1, provider=1, receiver=' + idx+ ');\n'
 		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n'
 		+'sync(id=1);\n'
 		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n';

@@ -36,7 +36,8 @@ LongTransaction.prototype.runTest = function() {
 	 */
 	var txnConnection = this.startTransaction();
 	
-	var slonikScript = this.getAddTableSlonikScript();
+        var slonikScript = 'echo \'LongTransaction.prototype.runTest\';\n';
+	slonikScript += this.getAddTableSlonikScript();
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonik  = this.coordinator.createSlonik('add tables',slonikPreamble,slonikScript);
 	slonik.run();

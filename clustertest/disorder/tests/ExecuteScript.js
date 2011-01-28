@@ -176,7 +176,9 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 	fileWriter
 			.write('ALTER TABLE disorder.do_order ADD COLUMN testcolumn int4 default 7;');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=' + setid + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.testAddDropColumn\';\n';
+    
+	slonikScript += 'EXECUTE SCRIPT( SET ID=' + setid + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=' + eventNode
 			+ ' );\n' + 'SYNC(id=' + eventNode + ');\n'
 			+ 'wait for event(origin=' + eventNode
@@ -265,7 +267,8 @@ ExecuteScript.prototype.createAndReplicateTestTable=function() {
 	fileWriter
 			.write('CREATE TABLE disorder.test_transient(id serial,data text, primary key(id));');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=1' + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.createAndReplicateTestTable\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=1' + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=1 );\n'
 			+ 'SYNC(id=1);\n'
 			+ 'wait for event(origin=1, confirmed=all, wait on=1);\n'
@@ -351,7 +354,8 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	/**
 	 * First execute the script against node 2, it should fail.
 	 */
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=2' + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.testDDLFailure\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=2' + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=2 );\n';
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonik = this.coordinator.createSlonik('slonik, ddlFailure',slonikPreamble,slonikScript);
@@ -405,7 +409,7 @@ ExecuteScript.prototype.dropTestTable=function(node_id,set_id,removeFromReplicat
 	var fileWriter = new java.io.FileWriter(scriptFile_drop);
 	fileWriter.write('DROP TABLE disorder.test_transient;');
 	fileWriter.close();
-	var slonikScript ='';
+	var slonikScript ='echo \'ExecuteScript.prototype.dropTestTable\';\n';
 	if(removeFromReplication) {
 		slonikScript+='set drop table(id=' + (this.tableIdCounter-1) + ',origin=' + node_id + ');\n';
 	}
@@ -423,7 +427,8 @@ ExecuteScript.prototype.dropTestTable=function(node_id,set_id,removeFromReplicat
 }
 ExecuteScript.prototype.dropSet3 = function(set_origin) {
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop set (id=3,origin=' + set_origin + ');'
+	var slonikScript ='echo \'ExecuteScript.prototype.dropSet3\';\n';
+	slonikScript =+ 'drop set (id=3,origin=' + set_origin + ');'
 		+ 'wait for event(origin=' + set_origin + ', wait on=' + set_origin + ', confirmed=all);\n';
 	var slonik=this.coordinator.createSlonik('DROP SET',slonikPreamble,slonikScript);
 	slonik.run();
@@ -445,7 +450,8 @@ ExecuteScript.prototype.performInsert=function(node_id) {
 	var fileWriter = new java.io.FileWriter(scriptFile);
 	fileWriter.write('INSERT INTO disorder.do_customer(c_name) VALUES (disorder.digsyl(' + new java.util.Date().getTime() +',16));');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=1'  +  ', FILENAME=\''
+	var slonikScript = 'echo \'ExecuteScript.prototype.performInsert\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=1'  +  ', FILENAME=\''
 			+ scriptFile + '\' , EVENT NODE=' + node_id +' );\n'
 			+ 'SYNC(id=' + node_id + ');\n'
 			+ 'wait for event(origin=' + node_id + ', confirmed=all, wait on=' + node_id+');\n';

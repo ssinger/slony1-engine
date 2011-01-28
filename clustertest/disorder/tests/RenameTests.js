@@ -116,12 +116,11 @@ RenameTests.prototype.executeScript=function(sql) {
 	var fileWriter = new java.io.FileWriter(scriptFile);
 	fileWriter.write(sql);
 	fileWriter.close();
-		 var slonikScript = "EXECUTE SCRIPT(SET ID=3,FILENAME='" + scriptFile.getAbsolutePath()
+        var slonikScript = 'echo \'RenameTests.prototype.executeScript\';\n';
+	slonikScript += "EXECUTE SCRIPT(SET ID=3,FILENAME='" + scriptFile.getAbsolutePath()
 		+ "',EVENT NODE=1);\n";
 	var slonik = this.coordinator.createSlonik('rename table',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('rename table 1 worked okay',slonik.getReturnCode(),0);
-	
-
 }

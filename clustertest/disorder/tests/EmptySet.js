@@ -38,7 +38,8 @@ EmptySet.prototype.runTest = function() {
 	 * Create a second set
 	 */
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'create set(id=2, origin=1);\n';
+	var slonikScript = 'echo \'EmptySet.prototype.runTest\';\n';
+	slonikScript += 'create set(id=2, origin=1);\n';
 	slonik = this.coordinator.createSlonik('create set 2',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);

@@ -74,7 +74,7 @@ BasicTest.prototype.setupReplication = function() {
 
 	var result = 0;
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.setupReplication\';\n';
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 
 		slonikScript += 'try {\n';
@@ -157,7 +157,7 @@ BasicTest.prototype.setupReplication = function() {
  */
 BasicTest.prototype.addCompletePaths = function() {
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.addCompletePaths\';\n';
 	slonikScript += 'store path(server=1,client=4,conninfo=@CONNINFO1 );\n';
 	//slonikScript += 'wait for event(origin=4,confirmed=all,wait on=4);\n';
 	slonikScript += 'store path(server=4,client=1,conninfo=@CONNINFO4 );\n';
@@ -186,7 +186,7 @@ BasicTest.prototype.addCompletePaths = function() {
 }
 
 BasicTest.prototype.getAddTableSlonikScript=function() {
-	var slonikScript='';
+	var slonikScript = 'echo \'BasicTest.prototype.getAddTableSlonikScript\';\n';
 	slonikScript += ' set add table(id=1, set id=1, fully qualified name=\'disorder.do_customer\',origin=1);\n';
 	slonikScript += ' set add sequence(id=1, set id=1, fully qualified name=\'disorder.do_customer_c_id_seq\',origin=1);\n';
 	
@@ -202,10 +202,7 @@ BasicTest.prototype.getAddTableSlonikScript=function() {
 	
 	slonikScript += ' set add table(id=6, set id=1, fully qualified name=\'disorder.do_order_line\',origin=1);\n';
 	
-	
 	slonikScript += ' set add table(id=7, set id=1, fully qualified name=\'disorder.do_config\',origin=1);\n';
-	
-	
 	this.tableIdCounter=8;
 	this.sequenceIdCounter=7;
 	return slonikScript;
@@ -215,7 +212,7 @@ BasicTest.prototype.addTables = function() {
 
 	var result = 0;
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.addTables\';\n';
 	slonikScript=this.getAddTableSlonikScript();
 	var thisRef = this;
 	var slonik = this.coordinator.createSlonik('init', slonikPre, slonikScript);
@@ -375,7 +372,7 @@ BasicTest.prototype.getSyncWaitTime = function() {
  */
 BasicTest.prototype.slonikSync = function(setid, originid) {
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.slonikSync\';\n';
 	slonikScript += ' sync(id=' + originid + ');\n';
 	slonikScript += ' wait for event(origin=' + originid + ', wait on='
 			+ originid + ',confirmed=all,timeout=' + this.getSyncWaitTime() +');\n';
@@ -435,7 +432,8 @@ BasicTest.prototype.slonikSync = function(setid, originid) {
 BasicTest.prototype.moveSet = function(setid, origin_node, destination_node) {
 
 	var preamble = this.getSlonikPreamble();
-	var slonikScript = 'lock set(id=' + setid + ',origin=' + origin_node
+	var slonikScript = 'echo \'BasicTest.prototype.moveSet\';\n';
+	slonikScript += 'lock set(id=' + setid + ',origin=' + origin_node
 			+ ');\n' + 'move set(id=' + setid + ',old origin=' + origin_node
 			+ ', new origin=' + destination_node + ');\n'
 			+ 'wait for event(wait on=' + origin_node + ', origin='
@@ -464,7 +462,7 @@ BasicTest.prototype.moveSet = function(setid, origin_node, destination_node) {
 BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 		provider_node,
 		subscriber_nodes) {
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.subscribeSetBackground\';\n';
 	var preamble = this.getSlonikPreamble();
 	var slonikList = [];
 
@@ -534,7 +532,7 @@ BasicTest.prototype.subscribeSet = function(set_id, origin_node,provider_node,
  */
 BasicTest.prototype.teardownSlony = function() {
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
+	var slonikScript = 'echo \'BasicTest.prototype.teardownSlony\';\n';
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 
 		slonikScript += 'try {\n';
@@ -641,7 +639,8 @@ BasicTest.prototype.getClusterName = function () {
  */
 BasicTest.prototype.createSecondSet=function(origin) {
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'create set(id=2, origin=' + origin + ',comment=\'second set\');\n'
+	var slonikScript = 'echo \'BasicTest.prototype.createSecondSet\';\n';
+	slonikScript += 'create set(id=2, origin=' + origin + ',comment=\'second set\');\n'
 		+ 'set add table(set id=2,origin='  + origin + ',id=' + this.tableIdCounter 
 		+', fully qualified name=\'disorder.do_item_review\');\n' 
 		+ 'set add sequence(set id=2, origin=' + origin + ', id=' + this.sequenceIdCounter
@@ -740,7 +739,8 @@ BasicTest.prototype.getCurrentOrigin=function() {
  * 
  */
 BasicTest.prototype.generateSlonikWait=function(event_node) {
-	var slonikScript = ' wait for event(origin=' + event_node + ', wait on='
+	var slonikScript = 'echo \'BasicTest.prototype.generateSlonikWait\';\n';
+	slonikScript += ' wait for event(origin=' + event_node + ', wait on='
 		+ event_node + ',confirmed=all);\n';
 	return slonikScript;
 }

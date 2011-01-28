@@ -104,7 +104,8 @@ Unsubscribe.prototype.runTest = function() {
 
 Unsubscribe.prototype.unsubscribe=function(node_id,set_id,expect_success) {
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript='unsubscribe set(id=' + set_id + ',receiver=' + node_id + ');\n'
+        var slonikScript = 'echo \'Unsubscribe.prototype.unsubscribe\';\n';
+        slonikScript +='unsubscribe set(id=' + set_id + ',receiver=' + node_id + ');\n'
 		+ 'wait for event(origin=' + node_id + ',wait on=' + node_id + ',confirmed=all);\n';
 	var slonik = this.coordinator.createSlonik('unsubscribe ' , slonikPreamble,slonikScript);
 	slonik.run();

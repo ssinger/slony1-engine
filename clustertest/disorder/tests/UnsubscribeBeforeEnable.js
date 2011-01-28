@@ -68,7 +68,6 @@ UnsubscribeBeforeEnable.prototype.runTest = function() {
 	slon1 = this.coordinator.createSlonLauncher("db1");
 	slon2 = this.coordinator.createSlonLauncher("db2");
 
-
 	//
 	// This handler will unsubscribe the set. 
 	// It should be invoked after the store subscription has been processed.

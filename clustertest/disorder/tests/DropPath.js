@@ -74,7 +74,8 @@ DropPath.prototype.runTest = function() {
 DropPath.prototype.dropPath=function(server_id, client_id,event_node,expectFailure) {
 	this.coordinator.log('dropPath ' + server_id + ',' + client_id + ',' + event_node);
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop path(server=' + server_id + ',client = ' + client_id 
+	var slonikScript='echo \'DropPath.prototype.dropPath\';\n';
+        slonikScript += 'drop path(server=' + server_id + ',client = ' + client_id 
 		+ ',event node=' + event_node + ');\n'
 		+ 'wait for event(origin=' + event_node  + ',wait on=' + event_node 
 		+ ',confirmed=all);\n';
