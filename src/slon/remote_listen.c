@@ -77,6 +77,7 @@ remoteListenThread_main(void *cdata)
 	char	   *conn_conninfo = NULL;
 	char		conn_symname[64];
 	ScheduleStatus			rc;
+	int         retVal;
 	SlonDString query1;
 	PGconn	   *dbconn = NULL;
 	PGresult   *res;
@@ -252,13 +253,13 @@ remoteListenThread_main(void *cdata)
 				continue;
 			}
 			PQclear(res);
-			rc = db_getLocalNodeId(dbconn);
-			if (rc != node->no_id)
+			retVal = db_getLocalNodeId(dbconn);
+			if (retVal != node->no_id)
 			{
 				slon_log(SLON_ERROR,
 						 "remoteListenThread_%d: db_getLocalNodeId() "
 						 "returned %d - wrong database?\n",
-						 node->no_id, rc);
+						 node->no_id, retVal);
 
 				slon_disconnectdb(conn);
 				free(conn_conninfo);
@@ -298,8 +299,8 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Receive events from the provider node
 		 */
-		rc = remoteListen_receive_events(node, conn, listat_head);
-		if (rc < 0)
+		retVal = remoteListen_receive_events(node, conn, listat_head);
+		if (retVal < 0)
 		{
 			slon_disconnectdb(conn);
 			free(conn_conninfo);
@@ -319,8 +320,8 @@ remoteListenThread_main(void *cdata)
 		 * database.
 		 */
 		
-		rc = remoteListen_forward_confirm(node, conn);
-		if (rc < 0)
+		retVal = remoteListen_forward_confirm(node, conn);
+		if (retVal < 0)
 		{
 			slon_disconnectdb(conn);
 			free(conn_conninfo);
@@ -336,6 +337,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Wait for notification.
 		 */
+
 		rc = sched_wait_time(conn, SCHED_WAIT_SOCK_READ, poll_sleep);
 		if (rc == SCHED_STATUS_CANCEL)
 			continue;

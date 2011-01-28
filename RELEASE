@@ -314,4 +314,10 @@ RELEASE 2.0.6
 
 -Fix for bug #154, previous fix did not work
 
+2.0.7
 
+-Fix for bug where slon was not properly detecting connection failures when
+ receiving events from the remote listener. 
+
+- Bug #193 - vac_count not being reset to 0 (bug between 1.2 and 2.0 in 
+  restructure of cleanup thread), so vacuums were being done every time
