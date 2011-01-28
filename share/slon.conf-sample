@@ -68,6 +68,12 @@
 # Default is '%Y-%m-%d %H:%M:%S %Z'
 #log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'
 
+# An interval in seconds at which the remote worker will output the
+# query used to select log rows together with it's query plan. The
+# default value of 0 turns this feature off.
+# Range: [0-86400], default: 0
+#explain_interval=0
+
 # Where to write the pid file.  Default:  no pid file
 #pid_file='/path/to/your/pidfile'
 

@@ -432,7 +432,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
      Terminates script execution immediately, rolling back every
      open transaction on all database connections. The
      <application>slonik</application> utility
-     will return the given value as its program termination code.
+     will return the given value as its program termination code.  Note that on Unix, exit statuses are restricted to the range 0-255.
     </para>
    </Refsect1>
    <Refsect1><Title>Example</Title>

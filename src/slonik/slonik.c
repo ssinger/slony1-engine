@@ -268,7 +268,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				break;
 
 			case STMT_EXIT:
-				break;
+			    {
+				   SlonikStmt_exit *stmt = 
+						   (SlonikStmt_exit *) hdr;
+				   if ((stmt->exitcode < 0) || (stmt->exitcode > 255)) 
+				   {
+						   printf("%s:%d: Error: exitcode was %d - must be in range [0-255]\n",
+								  hdr->stmt_filename, hdr->stmt_lno, stmt->exitcode);
+						   errors++;
+				   }
+			    }
+			    break;
 
 			case STMT_RESTART_NODE:
 				{
@@ -3806,7 +3816,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	/* Split the script into a series of SQL statements - each needs to
 	   be submitted separately */
 	num_statements = scan_for_statements (dstring_data(&script));
-	printf("DDL script consisting of %d SQL statements\n", num_statements);
 
 	/* OOPS!  Something went wrong !!! */
 	if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS)) {
@@ -3829,7 +3838,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		strncpy(dest, dstring_data(&script) + startpos, endpos-startpos);
 		dest[STMTS[stmtno]-startpos] = 0;
 		slon_mkquery(&query, "%s", dest);
-		printf("DDL Statement %d: (%d,%d) [%s]\n", stmtno, startpos, endpos, dest);
 		free(dest);
 
 		if (db_exec_command((SlonikStmt *)stmt, adminfo1, &query) < 0)
@@ -3839,8 +3847,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		}
 	}
 	
-	printf("Submit DDL Event to subscribers...\n");
-
 	slon_mkquery(&query, "select \"_%s\".ddlScript_complete(%d, $1::text, %d); ", 
 		     stmt->hdr.script->clustername,
 		     stmt->ddl_setid,  
