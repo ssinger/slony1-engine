@@ -1331,8 +1331,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
        <listitem><para> ID of the set to which the table is to be added. </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
-       <listitem><para> Origin node for the set.  We might imagine a future version of <application>slonik</application>
-	 figuring out this information by itself, but there do lie race conditions, there.</para></listitem>
+       <listitem><para> Origin node for the set.  (Optional) </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
 
@@ -1344,7 +1343,9 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 	 these numbers might represent any applicable table hierarchy
 	 to make sure the <application>slonik</application> command
 	 scripts do not deadlock at any critical
-	 moment.</para>
+	 moment. If this parameter is omitted then slonik will
+	 check every node that it can connect to and find the 
+	 highest table id being used across all nodes.</para>
 
          <para> This ID must be unique across all sets; you cannot
          have two tables in the same cluster with the same
@@ -1361,11 +1362,66 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
          </listitem>
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
-       <listitem><para> The full table name including the name of the schema.</para></listitem>
+       <listitem><para> The full table name including the name of the schema. 
+       This can be omitted if <literal>TABLES</literal> is specified instead
+      </para></listitem>
       </varlistentry>
+	  <varlistentry><term><literal>TABLES = 'string' </literal></term>
+	  <listitem><para>A POSIX regular expression that specifies the
+	    list of tables that should be added.  This regular expression
+	    is evaluated by &postgres against the list of fully qualified table
+	    names on the set origin to find the tables that should be added.
+	    If <literal>TABLES</literal> is omitted then <literal>
+	    FULLY QUALIFIED NAME</literal> must be specified.
+        </para> 
+
+	<warning><para> The <literal>TABLES</literal> option requires
+	that all the tables are in <quote>good form</quote> to be replicated
+	en masse.  The request will fail, not configuring any tables
+	for replication, if it encounters any of the following
+	problems:
+	  <itemizedlist>
+
+	   <listitem><para> Each table must have a <literal>PRIMARY
+	   KEY</literal> defined, and a candidate primary key will not
+	   suffice.</para></listitem>
+
+	   <listitem><para> If a table is found that is already
+	   replicated, the request will fail.</para></listitem>
+
+	   <listitem><para> The <literal>TABLES</literal> option needs
+	   to automatically assign table ID values, and looks through
+	   the configuration on every node specified by <xref
+	   linkend="admconninfo">, finding the largest ID in use, and
+	   starting after that for the table IDs that it
+	   assigns.</para>
+
+	    <para> It considers it a <quote>benign</quote> failure to
+	    find a node that does not yet have a &slony1; schema
+	    assigned, as that may be expected to occur if tables are
+	    configured before all the nodes have been configured using
+	    <xref linkend="stmtstorenode">.  If there is no &slony1;
+	    schema, then that node certainly hasn't contributed
+	    anything to an increase in the table IDs in use.</para>
+
+	     <para> On the other hand, if a node specified by <xref
+	     linkend="admconninfo"> is not available to be queried,
+	     the request <emphasis>will
+	     fail.</emphasis></para></listitem>
+
+	  </itemizedlist></para>
+	</warning>
+
+       </listitem>
+
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the table entry.  </para></listitem>
       </varlistentry>
+	  <varlistentry><term><literal>ADD SEQUENCES= boolean</literal></term>
+	  <listitem><para>A boolean value that indicates if any sequences attached
+		to columns in this table should also be automatically
+		 added to the replication set.  This defaults to false</para></listitem>
+	  </varlistentry>
      </variablelist>
     </para>
     <para> This uses &funsetaddtable;. </para>
@@ -1377,8 +1433,17 @@ SET ADD TABLE (
     ORIGIN = 1,
     ID = 20,
     FULLY QUALIFIED NAME = 'public.tracker_ticket',
-    COMMENT = 'Support ticket'
+    COMMENT = 'Support ticket',
+    ADD SEQUENCES=false
 );
+
+or 
+
+SET ADD TABLE (
+    SET ID=1,
+    TABLE='public.tracker*'
+);
+
     </programlisting>
    </refsect1>
    <refsect1> <title> Error Messages </title>
@@ -1496,8 +1561,7 @@ SET ADD TABLE (
 	</para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ORIGIN = ival </literal></term>
-       <listitem><para> Origin node for the set.  A future version of <application>slonik</application>
-	 might figure out this information by itself.</para></listitem>
+       <listitem><para> Origin node for the set. (optional) </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> ID = ival </literal></term>
        
@@ -1506,12 +1570,27 @@ SET ADD TABLE (
 	    sequences</emphasis> throughout the cluster; the numbering of
 	   tables is separate, so you might have a table with ID 20 and a
 	   sequence with ID 20, and they would be recognized as
-	   separate.</para> </note></para></listitem>
+	   separate.</para> </note>  This parameter is optional.  
+	   If this parameter is omitted
+	   then slonik will check every node that it can connect to and find the 
+	   highest table id being used across all nodes. </para></listitem>
        
       </varlistentry>
       <varlistentry><term><literal> FULLY QUALIFIED NAME = 'string' </literal></term>
-       <listitem><para> The full sequence name including schema name.</para></listitem>
+       <listitem><para> The full sequence name including schema name.
+	   If <literal>SEQUENCES</literal> is specified then
+	   <literal>FULLY QUALIFIED NAME</literal> should be omitted.
+	   </para></listitem>
       </varlistentry>
+	  <varlistentry><term><literal>SEQUENCES = 'string' </literal></term>
+		<listitem><para>A POSIX regular expression that matches to the
+		sequences that should be added to the replication set.
+		This regular expression is passed to postgresql for evaluation
+		on the set origin against fully qualified sequence names. This
+		parameter is optional. If <literal>FULLY QUALIFIED NAME</literal>
+		is omitted then
+		<literal>SEQUENCES</literal> must be specified. </para></listitem>
+		</varlistentry>
       <varlistentry><term><literal> COMMENT = 'string' </literal></term>
        <listitem><para> A descriptive text added to the sequence entry.  </para></listitem>
       </varlistentry>
@@ -1528,6 +1607,15 @@ SET ADD TABLE (
      FULLY QUALIFIED NAME = 'public.tracker_ticket_id_seq',
      COMMENT = 'Support ticket ID sequence'
      );
+
+	 or
+
+	 SET ADD SEQUENCE(
+	 SET ID=1,
+	 SEQUENCES='public.tracker_ticket_id_seq'
+	 );
+
+
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>

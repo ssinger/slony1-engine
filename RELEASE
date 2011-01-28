@@ -25,6 +25,9 @@ Version TBD...
 - Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
 
 - Bug #189 - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
+
+- Bug 181 - Support for bulk adding of tables and sequences and automatically finding
+  the next available table or sequence id.
              
 RELEASE 2.0.6
 

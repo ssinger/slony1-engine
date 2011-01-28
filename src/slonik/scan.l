@@ -133,6 +133,7 @@ restart			{ return K_RESTART;			}
 script			{ return K_SCRIPT;			}
 seconds         { return K_SECONDS;         }
 sequence		{ return K_SEQUENCE;		}
+sequences		{ return K_SEQUENCES;		}
 server			{ return K_SERVER;			}
 set				{ return K_SET;				}
 sleep			{ return K_SLEEP;			}
@@ -142,6 +143,7 @@ success			{ return K_SUCCESS;			}
 switch			{ return K_SWITCH;			}
 sync			{ return K_SYNC;			}
 table			{ return K_TABLE;			}
+tables			{ return K_TABLES;			}
 timeout			{ return K_TIMEOUT;			}
 true			{ return K_TRUE;			}
 try				{ return K_TRY;				}

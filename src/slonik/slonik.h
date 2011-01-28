@@ -304,6 +304,8 @@ struct SlonikStmt_set_add_table_s
 	char	   *use_key;
 	char	   *tab_fqname;
 	char	   *tab_comment;
+	char	   *tables;
+	int			add_sequences;
 };
 
 
@@ -314,6 +316,7 @@ struct SlonikStmt_set_add_sequence_s
 	int			set_origin;
 	int			seq_id;
 	char	   *seq_fqname;
+	char	   *sequences;
 	char	   *seq_comment;
 };
 
@@ -629,6 +632,7 @@ extern int	yylex(void);
  */
 typedef enum {
 	O_ADD_ID,
+	O_ADD_SEQUENCES,
 	O_BACKUP_NODE,
 	O_CLIENT,
 	O_COMMENT,
@@ -650,9 +654,11 @@ typedef enum {
 	O_PROVIDER,
 	O_RECEIVER,
 	O_SECONDS,
+	O_SEQUENCES,
 	O_SERVER,
 	O_SET_ID,
 	O_TAB_ID,
+	O_TABLES,
 	O_TIMEOUT,
 	O_USE_KEY,
 	O_WAIT_CONFIRMED,
