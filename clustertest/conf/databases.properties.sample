@@ -1,3 +1,9 @@
+database.db1.slonconf=/var/lib/postgresql/slony1-engine.github/clustertest/conf/slon.1.conf
+database.db2.slonconf=/var/lib/postgresql/slony1-engine.github/clustertest/conf/slon.2.conf
+database.db3.slonconf=/var/lib/postgresql/slony1-engine.github/clustertest/conf/slon.3.conf
+database.db4.slonconf=/var/lib/postgresql/slony1-engine.github/clustertest/conf/slon.4.conf
+database.db5.slonconf=/var/lib/postgresql/slony1-engine.github/clustertest/conf/slon.5.conf
+
 database.db1.host=localhost
 database.db1.dbname=test1
 database.db1.port=5432
@@ -67,7 +73,7 @@ database.db6.password.slony=slon
 
 slonik.path=/usr/local/pgsql8.3/bin/slonik
 slon.path=/usr/local/pgsql8.3/bin/slon
-slon.loglevel=4
+### slon.loglevel=4
 clustername=disorder_replica
 slony_dump.path=/usr/local/pgsql8.3/bin/slony1_dump.sh
 
