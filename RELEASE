@@ -1,12 +1,20 @@
 Version TBD...
 
+- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+
+- Bug #152 - eliminate debugging statements from DDL processing
+
 - Bug #156 - add health check at slon startup time
 
 - Bug #163 - change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
 
+- Bug #167 - change queries against sl_log_* tables to avert slowdown when large backlog
+
 - Bug #170 - remove SNMP support
 
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
+
+- Bug #180 - Created a slonik DATE command
 
 - Bug #185 - change functions to use named parameters
 
@@ -14,10 +22,12 @@ Version TBD...
 
 - Bug #188 - test harness query had subquery returning multiple tuples
 
-- Bug #180 - Created a slonik DATE command
+- Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
 
-- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+- Bug #189 - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
 
+- Bug 181 - Support for bulk adding of tables and sequences and automatically finding
+  the next available table or sequence id.
              
 RELEASE 2.0.6
 

@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
@@ -94,14 +95,26 @@ slon_connectdb(char *conninfo, char *symname)
 	{
 		
 		if(keep_alive_idle > 0)
+#ifdef TCP_KEEPIDLE
 			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPIDLE,
 					   &keep_alive_idle,sizeof(keep_alive_idle));
+#else
+			slon_log(SLON_WARN,"keep_alive_idle is not supported on this platform");
+#endif
 		if(keep_alive_interval > 0)
+#ifdef TCP_KEEPINTVL
 			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPINTVL,
 					   &keep_alive_interval,sizeof(keep_alive_interval));
+#else
+			slon_log(SLON_WARN,"keep_alive_interval is not supported on this platform");
+#endif
 		if(keep_alive_count > 0)
+#ifdef TCP_KEEPCNT
 			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPCNT,
 					   &keep_alive_count,sizeof(keep_alive_count));
+#else
+			slon_log(SLON_WARN,"keep_alive_count is not supported on this platform");
+#endif
 		
 	}
 #else

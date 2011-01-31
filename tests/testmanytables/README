@@ -1,0 +1,4 @@
+testmanytables validates "add multiple tables at once" functionality
+  
+It creates several tables in one replication set, and replicates them
+from one database to another.
