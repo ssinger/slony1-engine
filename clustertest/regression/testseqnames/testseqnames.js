@@ -1,14 +1,14 @@
 var NUM_NODES=2;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/testseqnames/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/testseqnames/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/testseqnames/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/testseqnames/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -24,7 +24,7 @@ function init_cluster() {
 
 
 function init_tables() {
-	var script=	coordinator.readFile('common_tests/testseqnames/init_add_tables.ik');
+	var script=	coordinator.readFile('regression/testseqnames/init_add_tables.ik');
 
 	return script;
 }

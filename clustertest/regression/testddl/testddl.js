@@ -1,16 +1,16 @@
 
 var NUM_NODES=3;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/testddl/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/testddl/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/testddl/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/testddl/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -75,10 +75,10 @@ function generate_data() {
 
 function exec_ddl(coordinator) {
 	preamble = get_slonik_preamble();
-	var slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'slony_scripts/tests/common_tests/testddl/ddl_updates.sql\''
+	var slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'slony_scripts/tests/regression/testddl/ddl_updates.sql\''
 		+',EVENT NODE=1);\n';
 	var slonikScript2='try {\n '
-		+ 'execute script(set id=1, filename=\'slony_scripts/tests/common_tests/testddl/bad_ddl.sql\''
+		+ 'execute script(set id=1, filename=\'slony_scripts/tests/regression/testddl/bad_ddl.sql\''
 		+', event node=1);\n'
 		+ '}\n'
 		+ 'on error{ \n'
@@ -95,7 +95,7 @@ function exec_ddl(coordinator) {
 function individual_ddl(coordinator, nodenum) {
 	
 	premable = get_slonik_preamble();
-	slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'slony_scripts/tests/common_tests/testddl/ddl_update_part2.sql\''
+	slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'regression/testddl/ddl_update_part2.sql\''
 		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
 	

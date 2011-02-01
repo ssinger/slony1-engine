@@ -1,14 +1,14 @@
 var NUM_NODES=4;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/testmergeset/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/testmergeset/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/testmergeset/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/testmergeset/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -104,7 +104,7 @@ function do_test(coordinator) {
 	var sqlScript='';
 	for(var year=2006; year <=2006; year++) {
 		for(var month=1; month <= 3; month++) {
-			var num_rows = random_number(50,75);
+			var num_rows = random_number(5,7);
 			for(var row=0; row < num_rows; row++) {
 				var quantity = random_number(1,9);
 				var day = random_number(1,25);

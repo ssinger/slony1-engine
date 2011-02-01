@@ -91,6 +91,16 @@ create index do_order_line_o_id_item_idx on do_order_line (ol_o_id, ol_i_id);
 GRANT ALL ON TABLE do_order_line TO PUBLIC;
 
 
+create table do_item_review (
+	ir_id bigserial not null,
+	i_id bigint not null,
+	comments text,
+	PRIMARY KEY (ir_id)
+);
+GRANT ALL ON TABLE do_item_review TO PUBLIC;
+GRANT ALL ON SEQUENCE do_item_review_ir_id_seq TO PUBLIC;
+
+
 -- ----
 -- random(x,y)
 --

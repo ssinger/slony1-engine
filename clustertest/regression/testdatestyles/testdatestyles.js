@@ -1,14 +1,14 @@
 var NUM_NODES=2;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/testdatestyles/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/testdatestyles/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/testdatestyles/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/testdatestyles/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -118,7 +118,7 @@ function do_test(coordinator) {
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
-	
+	coordinator.join(psql);
 	wait_for_sync(coordinator);
 	
 	

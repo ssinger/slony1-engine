@@ -83,11 +83,11 @@ OmitCopy.prototype.runTest = function() {
 	                                                                                   ],true);
 	pgdump.run();
 	this.coordinator.join(pgdump);
-	this.subscribeOmitCopy(1,3,outFile);
+	this.subscribeOmitCopy(1,1,3,outFile);
 	
 	
 	
-	this.subscribeOmitCopy(3,4,outFile);
+	this.subscribeOmitCopy(1,3,4,outFile);
 	
 	//todo: test a subscribe from 2,5 where no path exists
 	//This should fail gracefully?

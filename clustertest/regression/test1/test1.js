@@ -1,14 +1,14 @@
 var NUM_NODES=2;
  
-coordinator.includeFile('common_tests/common_tests.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
-	var sqlScript = coordinator.readFile('common_tests/test1/init_schema.sql');
+	var sqlScript = coordinator.readFile('regression/test1/init_schema.sql');
 	return sqlScript;
 	
 }
 function load_data(coordinator) {
-	var sqlScript = coordinator.readFile('common_tests/test1/init_data.sql');
+	var sqlScript = coordinator.readFile('regression/test1/init_data.sql');
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
@@ -95,7 +95,7 @@ function do_test(coordinator) {
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
-	
+	coordinator.join(psql);
 	wait_for_sync(coordinator);
 	
 	
@@ -108,5 +108,6 @@ function get_compare_queries() {
 	             'SELECT id::text||id2::text||id3::text as id,d1,d2,id2,d3,d4,d5,d6,id3,d7,d8,d9,d10,d11 from table5 order by id,id2,id3'];
 	return queries;
 }
+
 
 run_test(coordinator,'test1');
