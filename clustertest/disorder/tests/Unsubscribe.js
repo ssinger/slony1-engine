@@ -15,7 +15,7 @@ Unsubscribe.prototype = new BasicTest();
 Unsubscribe.prototype.constructor = Unsubscribe;
 
 Unsubscribe.prototype.runTest = function() {
-	
+        this.coordinator.log("Unsubscribe.prototype.runTest - begin");	
 	this.testResults.newGroup("Unsubscribe");
 	this.setupReplication();
 	
@@ -99,10 +99,11 @@ Unsubscribe.prototype.runTest = function() {
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);
 	}
-
+        this.coordinator.log("Unsubscribe.prototype.runTest - complete");	
 }
 
 Unsubscribe.prototype.unsubscribe=function(node_id,set_id,expect_success) {
+        this.coordinator.log("Unsubscribe.prototype.unsubscribe - begin");	
 	var slonikPreamble = this.getSlonikPreamble();
         var slonikScript = 'echo \'Unsubscribe.prototype.unsubscribe\';\n';
         slonikScript +='unsubscribe set(id=' + set_id + ',receiver=' + node_id + ');\n'
@@ -111,4 +112,5 @@ Unsubscribe.prototype.unsubscribe=function(node_id,set_id,expect_success) {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck("unsubscribe node " + node_id,slonik.getReturnCode()==0,expect_success);
+        this.coordinator.log("Unsubscribe.prototype.unsubscribe - complete");	
 }

@@ -14,6 +14,7 @@ RenameTests.prototype = new ExecuteScript();
 RenameTests.prototype.constructor = RenameTests;
 
 RenameTests.prototype.runTest = function() {
+        this.coordinator.log("RenameTests.prototype.runTest - begin");
 
 	this.testResults.newGroup("Rename tables");
 	this.setupReplication();
@@ -106,6 +107,7 @@ RenameTests.prototype.runTest = function() {
 		this.coordinator.join(slonArray[idx - 1]);		
 	}
 	
+        this.coordinator.log("RenameTests.prototype.runTest - complete");
 
 }
 

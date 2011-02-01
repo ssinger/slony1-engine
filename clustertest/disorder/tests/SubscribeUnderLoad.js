@@ -16,7 +16,7 @@ SubscribeUnderLoad.prototype = new BasicTest();
 SubscribeUnderLoad.prototype.constructor = SubscribeUnderLoad;
 
 SubscribeUnderLoad.prototype.runTest = function() {
-	
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - begin");	
 	this.testResults.newGroup("Subscribe Under Load");
 	this.setupReplication();
 	
@@ -32,6 +32,7 @@ SubscribeUnderLoad.prototype.runTest = function() {
 	//First generate a baseline transaction rate.
 	
 	
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - impose load");	
 	//Start a background client load.
 	var seeding=this.generateLoad();
 	
@@ -41,6 +42,7 @@ SubscribeUnderLoad.prototype.runTest = function() {
 	 */
 	
 	
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - add tables");	
 	/**
 	 * Add some tables to replication.
 	 * 
@@ -49,6 +51,7 @@ SubscribeUnderLoad.prototype.runTest = function() {
 	
 	
 	
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - subscribe nodes");	
 	/**
 	 * Subscribe the nodes.
 	 */
@@ -63,6 +66,7 @@ SubscribeUnderLoad.prototype.runTest = function() {
 	
 	seeding.stop();
 	this.coordinator.join(seeding);
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - sync");	
 	this.slonikSync(1,1);
 	
 	for(var idx=1; idx <=this.getNodeCount(); idx++) {
@@ -76,6 +80,7 @@ SubscribeUnderLoad.prototype.runTest = function() {
 	 * a subscription anyway, but shouldn't not stop. 
 	 */
 	
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - compare db1,2,3,4,5");	
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -86,6 +91,6 @@ SubscribeUnderLoad.prototype.runTest = function() {
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);
 	}
-
+        this.coordinator.log("SubscribeUnderLoad.prototype.testActions - begin");	
 }
 

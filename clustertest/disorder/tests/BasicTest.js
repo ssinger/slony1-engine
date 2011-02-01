@@ -71,8 +71,8 @@ BasicTest.prototype.getSlonikPreamble = function() {
  * Nothing will be subscribed though.
  */
 BasicTest.prototype.setupReplication = function() {
-
-	var result = 0;
+    this.coordinator.log("setupReplication start");
+        var result = 0;
 	var slonikPre = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.setupReplication\';\n';
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
@@ -143,6 +143,7 @@ BasicTest.prototype.setupReplication = function() {
 					Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_FINISHED,
 					finishedObserver);
 
+    this.coordinator.log("setupReplication end");
 	return slonik.getReturnCode();
 	
 	
@@ -306,6 +307,7 @@ BasicTest.prototype.createDb=function(dbnames) {
 BasicTest.prototype.postSeedSetup=function(dbnamelist) {
 	var schemasql = this.coordinator.readFile("disorder/sql/disorder-2.sql");
 	var psqlArray=[];
+    this.coordinator.log("BasicTest.prototype.postSeedSetup begin");
 	for(var idx=0; idx < dbnamelist.length; idx++) {
 		psql = this.coordinator.createPsqlCommand(dbnamelist[idx], schemasql);
 		psql.run();
@@ -315,6 +317,7 @@ BasicTest.prototype.postSeedSetup=function(dbnamelist) {
 	for(var idx=0; idx < dbnamelist.length; idx++) {
 		this.coordinator.join(psqlArray[idx]);
 	}
+    this.coordinator.log("BasicTest.prototype.postSeedSetup complete");
 	
 }
 
@@ -371,6 +374,7 @@ BasicTest.prototype.getSyncWaitTime = function() {
  * 
  */
 BasicTest.prototype.slonikSync = function(setid, originid) {
+    this.coordinator.log("BasicTest.prototype.slonikSync - Set["+ setid + "] origin["+originid + "] - start");
 	var slonikPre = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.slonikSync\';\n';
 	slonikScript += ' sync(id=' + originid + ');\n';
@@ -424,12 +428,14 @@ BasicTest.prototype.slonikSync = function(setid, originid) {
 					Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_FINISHED,
 					finishedObserver);
 		
+    this.coordinator.log("BasicTest.prototype.slonikSync - Set["+ setid + "] origin["+originid + "] - complete");
 	return slonik.getReturnCode();
 }
 /**
  * Moves a set (setid) from the origin node to the destination node.
  */
 BasicTest.prototype.moveSet = function(setid, origin_node, destination_node) {
+    this.coordinator.log("BasicTest.prototype.moveSet - Set["+ setid + "] origin["+origin_node + "] - destination["+ destination_node+"] - start");
 
 	var preamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.moveSet\';\n';
@@ -443,6 +449,7 @@ BasicTest.prototype.moveSet = function(setid, origin_node, destination_node) {
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('move set succeeded', slonik.getReturnCode(),
 			0);
+    this.coordinator.log("BasicTest.prototype.moveSet - Set["+ setid + "] origin["+origin_node + "] - destination["+ destination_node+"] - complete");
 	return slonik.getReturnCode();
 }
 
@@ -462,6 +469,7 @@ BasicTest.prototype.moveSet = function(setid, origin_node, destination_node) {
 BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 		provider_node,
 		subscriber_nodes) {
+    this.coordinator.log("BasicTest.prototype.subscribeSetBackground - begin");
 	var slonikScript = 'echo \'BasicTest.prototype.subscribeSetBackground\';\n';
 	var preamble = this.getSlonikPreamble();
 	var slonikList = [];
@@ -511,6 +519,7 @@ BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 
 	}
 
+    this.coordinator.log("BasicTest.prototype.subscribeSetBackground - complete");
 	return slonikList;
 }
 
@@ -531,6 +540,7 @@ BasicTest.prototype.subscribeSet = function(set_id, origin_node,provider_node,
  * leave the databases in a clean state for the next test.
  */
 BasicTest.prototype.teardownSlony = function() {
+    this.coordinator.log("BasicTest.prototype.teardownSlony - begin");
 	var slonikPre = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.teardownSlony\';\n';
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
@@ -563,6 +573,7 @@ BasicTest.prototype.teardownSlony = function() {
 					finishedObserver);
 
 	slonik.run();
+    this.coordinator.log("BasicTest.prototype.teardownSlony - complete");
 	this.coordinator.join(slonik);
 
 }
@@ -571,26 +582,27 @@ BasicTest.prototype.teardownSlony = function() {
 
 BasicTest.prototype.generateLoad = function(set_origin) {
 
+    this.coordinator.log("BasicTest.prototype.generateLoad - origin[" + set_origin + "] - start");
 	var disorderClientJs = this.coordinator.readFile('disorder/client/disorder.js');
 	disorderClientJs+= this.coordinator.readFile('disorder/client/run_fixed_load.js');
 	var load = this.coordinator.clientScript(disorderClientJs,this.getCurrentOrigin());
 	load.run();
+    this.coordinator.log("BasicTest.prototype.generateLoad - origin[" + set_origin + "] - complete");
 	return load;
 }
 
 BasicTest.prototype.seedData = function(scaling) {
-
-	this.coordinator.log("Seeding data with scaling " + scaling);
+	this.coordinator.log("Seeding data with scaling " + scaling + " - begin");
 	var populatePsql = this.coordinator.createPsqlCommand('db1',
 			'SET SEARCH_PATH=disorder,public; SELECT disorder.populate(' + scaling + ');');
 	populatePsql.run();
+	this.coordinator.log("Seeding data with scaling " + scaling + " - complete");
 	return populatePsql;
-
 }
 
 BasicTest.prototype.compareDb=function(lhs_db, rhs_db) {
 	//Compare the results.
-	this.coordinator.log('comparing' + lhs_db + 'rhs_db');
+        this.coordinator.log("BasicTest.prototype.compareDb ["+lhs_db + ","+rhs_db + "] - begin");
 	var queryList = [
 	                 ['SELECT c_id,c_name,c_total_orders,c_total_value FROM disorder.do_customer order by c_id','c_id']
 	                 ,['SELECT i_id,i_name,i_price,i_in_production FROM disorder.do_item order by i_id','i_id']
@@ -620,8 +632,7 @@ BasicTest.prototype.compareDb=function(lhs_db, rhs_db) {
 		//At some point all the compare could be done concurrently?
 		this.coordinator.join(compareOp);
 	}
-	
-
+        this.coordinator.log("BasicTest.prototype.compareDb ["+lhs_db + ","+rhs_db + "] - complete");
 }
 
 BasicTest.prototype.getClusterName = function () {
@@ -638,6 +649,7 @@ BasicTest.prototype.getClusterName = function () {
  *  
  */
 BasicTest.prototype.createSecondSet=function(origin) {
+	this.coordinator.log("BasicTest.prototype.createSecondSet [" + origin + "] - begin");
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.createSecondSet\';\n';
 	slonikScript += 'create set(id=2, origin=' + origin + ',comment=\'second set\');\n'
@@ -653,7 +665,7 @@ BasicTest.prototype.createSecondSet=function(origin) {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('create set to succeeded',slonik.getReturnCode(),0);
-	
+	this.coordinator.log("BasicTest.prototype.createSecondSet [" + origin + "] - complete");
 }
 
 /**
@@ -684,6 +696,7 @@ BasicTest.prototype.measureLag = function(event_node, lag_node) {
 }
 
 BasicTest.prototype.startDataChecks=function(node_id) {
+	this.coordinator.log("BasicTest.prototype.startDataChecks node[" + node_id + "] - begin");
 	var disorderClientJs = this.coordinator.readFile('disorder/client/disorder.js');
 	disorderClientJs+= this.coordinator.readFile('disorder/client/run_check_load.js');
 	var load = this.coordinator.clientScript(disorderClientJs,'db' + node_id);
@@ -696,8 +709,8 @@ BasicTest.prototype.startDataChecks=function(node_id) {
 	this.coordinator.registerObserver(load,Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_ERROR,
 			new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(failOnError));
 	load.run();
+	this.coordinator.log("BasicTest.prototype.startDataChecks node[" + node_id + "] - complete");
 	return load;
-
 }
 
 /**
@@ -721,9 +734,7 @@ BasicTest.prototype.verifyReadOnly=function(node_id) {
 		stat.close();
 		connection.close();
 	}
-	
-
-
+	this.coordinator.log('verifying read only status of node ' + node_id + " - complete");
 }
 BasicTest.prototype.getCurrentOrigin=function() {
 	return this.currentOrigin;

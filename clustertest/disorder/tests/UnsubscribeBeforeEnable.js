@@ -28,9 +28,8 @@ UnsubscribeBeforeEnable.prototype.getNodeCount = function() {
 
 
 UnsubscribeBeforeEnable.prototype.runTest = function() {
+        this.coordinator.log("UnsubscribeBeforeEnable.prototype.runTest - begin");	
 	this.testResults.newGroup("unsubscribe before enable");
-	
-
 
 	//First setup slony 
 
@@ -145,4 +144,5 @@ UnsubscribeBeforeEnable.prototype.runTest = function() {
 	slon2.stop();
 	this.coordinator.join(slon1);
 	this.coordinator.join(slon2);
+        this.coordinator.log("UnsubscribeBeforeEnable.prototype.runTest - complete");	
 }

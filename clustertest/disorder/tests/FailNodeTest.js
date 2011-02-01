@@ -27,13 +27,13 @@ FailNodeTest.prototype = new BasicTest();
 FailNodeTest.prototype.constructor=FailNodeTest;
 
 FailNodeTest.prototype.runTest = function() {
-
-
+	this.coordinator.log("FailNodeTest.prototype.runTest - begin");
 	this.testResults.newGroup("Fail Node Test");
 	//this.prepareDb(['db1','db2']);
 
 	
 //First setup slony
+	this.coordinator.log("FailNodeTest.prototype.runTest - configure replication");
 
 	this.setupReplication();
 	this.addCompletePaths();
@@ -42,22 +42,25 @@ FailNodeTest.prototype.runTest = function() {
 	//Start the slons.
 	//These must be started before slonik runs or the subscribe won't happen
 	//thus slonik won't finish.
+	this.coordinator.log("FailNodeTest.prototype.runTest - start slons");
 	this.slonArray=[];
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx-1] = this.coordinator.createSlonLauncher('db' + idx);
 		this.slonArray[idx-1].run();
 	}
 	
-	this.coordinator.log('performing initial subscriptions');
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe sets - begin");
 	this.subscribeSet(1,1,1,[2,3]);
 	
 	this.subscribeSet(1,1,3,[4,5]);
 	
-	this.coordinator.log('subscriptions complete');
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe sets - complete");
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - impose load");
 	var load = this.generateLoad();
 	load.run();
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - failing node 4");
 	this.slonikSync(1, 1);
 	this.coordinator.log('failing node 4');
 	this.failNode(4,false);
@@ -76,6 +79,7 @@ FailNodeTest.prototype.runTest = function() {
 	//this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
 	//this.slonArray[3].run();
 	//Readd the node.
+	this.coordinator.log("FailNodeTest.prototype.runTest - re-add node 4");
 	this.coordinator.log('adding node back');
 	this.reAddNode(4,1,3);
 	
@@ -99,14 +103,16 @@ FailNodeTest.prototype.runTest = function() {
 	 * Sleep a bit.
 	 * Do we need to do this for the paths to propogate????
 	 */
+	this.coordinator.log("FailNodeTest.prototype.runTest - sleeping 60x1000");
 	java.lang.Thread.sleep(60*1000);
-	this.coordinator.log('restarting slons');
+	this.coordinator.log("FailNodeTest.prototype.runTest - restart slons");
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx-1].stop();
 		this.coordinator.join(this.slonArray[idx-1]);
 		this.slonArray[idx-1] = this.coordinator.createSlonLauncher('db' + idx);
 		this.slonArray[idx-1].run();
 	}
+	this.coordinator.log("FailNodeTest.prototype.runTest - sleeping 60x1000");
 	java.lang.Thread.sleep(60*1000);
 	/**
 	 * Replace the generateSlonikWait function with a version that 
@@ -130,6 +136,7 @@ FailNodeTest.prototype.runTest = function() {
 	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
 	 */
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5 via 1");
 	this.subscribeSet(1,1,1,[4,5]);
 	
 	
@@ -137,18 +144,22 @@ FailNodeTest.prototype.runTest = function() {
 	/**
 	 * Now we should be able to drop node 3.
 	 */	
+	this.coordinator.log("FailNodeTest.prototype.runTest - fail node 3");
 	this.failNode(3,false);
 	this.generateSlonikWait=originalGenerateWait;
 		
 	
 	load.stop();
+	this.coordinator.log("FailNodeTest.prototype.runTest - sync");
 	this.slonikSync(1,1);
+	this.coordinator.log("FailNodeTest.prototype.runTest - compare db1,2,4,5");
 	// Run some comparisions
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db4');
 	this.compareDb('db1','db5');
 	
 	//Start the load again.
+	this.coordinator.log("FailNodeTest.prototype.runTest - add load");
 	load = this.generateLoad();
 	load.run();
 	/**
@@ -160,6 +171,7 @@ FailNodeTest.prototype.runTest = function() {
 	/**
 	 * Generate 10 seconds of load.
 	 */
+	this.coordinator.log("FailNodeTest.prototype.runTest - sleep 10x1000");
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
@@ -169,19 +181,24 @@ FailNodeTest.prototype.runTest = function() {
 	this.slonikSync(1,4);
 	this.slonikSync(1,5);
 
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5");
 	this.subscribeSet(1,1,2,[4,5]);
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - sync");
 	this.slonikSync(1,1);
+	this.coordinator.log("FailNodeTest.prototype.runTest - compare DBs");
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db4');
 	this.compareDb('db1','db5');
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - generate load");
 	//More load.
 	load = this.generateLoad();
 	load.run();
 	//Now kill the node 2 slon.
 	this.slonArray[1].stop();
 	this.coordinator.join(this.slonArray[1]);
+	this.coordinator.log("FailNodeTest.prototype.runTest - drop DB2");
 	//Now DROP the database. This lets us simulate a hard failure.
 	this.dropDb(['db2']);
 	/**
@@ -203,29 +220,29 @@ FailNodeTest.prototype.runTest = function() {
 		return script;
 	}
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - reshape cluster");
 	//Now reshape the cluster.
 	this.subscribeSet(1,1,1,[4,5]);
 	
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - drop node 2");
 	//Drop node 2.
 	this.failNode(2, false);
 	
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - sleep 10x1000");
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
 	this.slonikSync(1,1);
 	
-	this.coordinator.log('Stopping slons');
+	this.coordinator.log("FailNodeTest.prototype.runTest - terminate slons");
 	for(var idx=0; idx < this.slonArray.length; idx++) {
 		
 		this.slonArray[idx].stop();
 		this.coordinator.join(this.slonArray[idx]);
 	}
-	
-	
-	
-	
+	this.coordinator.log("FailNodeTest.prototype.runTest - complete");
 }
 
 /**
@@ -237,6 +254,7 @@ FailNodeTest.prototype.runTest = function() {
  * 2. executing DROP NODE.
  */
 FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
+	this.coordinator.log("FailNodeTest.prototype.FailNodeTest - begin");
 	this.slonArray[nodeId-1].stop();
 	this.coordinator.join(this.slonArray[nodeId-1]);
 	var slonikPreamble = this.getSlonikPreamble();
@@ -258,7 +276,7 @@ FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 	else { 
 		this.testResults.assertCheck('drop node okay',slonik.getReturnCode(),0);
 	}
-	
+	this.coordinator.log("FailNodeTest.prototype.FailNodeTest - complete");
 }
 
 FailNodeTest.prototype.checkNodeNotExists=function(check_node,nodeid) {
@@ -280,7 +298,7 @@ FailNodeTest.prototype.checkNodeNotExists=function(check_node,nodeid) {
 }
 
 FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
-	this.coordinator.log('reAddNode(' + node_id + ',' + provider + ')');
+	this.coordinator.log("FailNodeTest.prototype.reAddNode(" + node_id + ',' + provider + ') - begin');
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'FailNodeTest.prototype.reAddNode\';\n';
 	slonikScript += 'try {\n'
@@ -329,10 +347,8 @@ FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
 	this.coordinator.join(this.slonArray[provider-1]);
 	this.slonArray[provider-1] = this.coordinator.createSlonLauncher('db' + provider);
 	this.slonArray[provider-1].run();
-	
-	
 	this.subscribeSet(1, origin,provider,[node_id]);
 	
-	
+	this.coordinator.log("FailNodeTest.prototype.reAddNode(" + node_id + ',' + provider + ') - complete');
 }
 

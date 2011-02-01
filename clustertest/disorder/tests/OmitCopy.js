@@ -25,6 +25,7 @@ OmitCopy.prototype = new BasicTest();
 OmitCopy.prototype.constructor = OmitCopy;
 
 OmitCopy.prototype.runTest = function() {
+        this.coordinator.log("OmitCopy.prototype.runTest - begin");
 	
 	this.testResults.newGroup("Omit Copy");
 	this.setupReplication();
@@ -112,6 +113,7 @@ OmitCopy.prototype.runTest = function() {
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);
 	}
+        this.coordinator.log("OmitCopy.prototype.runTest - complete");
 }
 
 OmitCopy.prototype.subscribeOmitCopy=function(origin,provider,subscriberNodeId,outFile) {
