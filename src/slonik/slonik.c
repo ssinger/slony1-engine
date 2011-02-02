@@ -4892,6 +4892,7 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 	PGresult * result;
 	char * event_id;
 	SlonikAdmInfo * curAdmInfo=NULL;
+	int rc;
 
 	dstring_init(&query);
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
@@ -4910,20 +4911,25 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 			 */
 			continue;
 		}
-		result = db_exec_select(stmt,activeAdmInfo,&query);
-		if(result == NULL || PQntuples(result) != 1 ) 
+		rc = slonik_is_slony_installed(stmt,activeAdmInfo);
+		if(rc == 1)
 		{
-			printf("warning: unable to query event history on node %d\n",
-				   curAdmInfo->no_id);
-			db_rollback_xact(stmt,activeAdmInfo);
-			continue;
+			result = db_exec_select(stmt,activeAdmInfo,&query);
+			if(result == NULL || PQntuples(result) != 1 ) 
+			{
+				printf("error: unable to query event history on node %d\n",
+					   curAdmInfo->no_id);
+				if(result != NULL)
+					PQclear(result);
+				return -1;
+			}
+			event_id = PQgetvalue(result,0,0);
+			if(event_id != NULL)
+			{
+				activeAdmInfo->last_event=strtoll(event_id,NULL,10);			
+			}
+			PQclear(result);
 		}
-		event_id = PQgetvalue(result,0,0);
-		if(event_id != NULL)
-		{
-			activeAdmInfo->last_event=strtoll(event_id,NULL,10);			
-		}
-		PQclear(result);
 		
 	}
 	dstring_terminate(&query);
