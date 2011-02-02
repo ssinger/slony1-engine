@@ -20,6 +20,7 @@ coordinator.includeFile('disorder/tests/MultipleOrigins.js');
 coordinator.includeFile('disorder/tests/BigBacklog.js');
 coordinator.includeFile('disorder/tests/LongTransaction.js');
 coordinator.includeFile('disorder/tests/RenameTests.js');
+coordinator.includeFile('disorder/tests/CleanupTest.js');
 var tests = 
     [new EmptySet(coordinator,results)
      ,new OmitCopy(coordinator,results)

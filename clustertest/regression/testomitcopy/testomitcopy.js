@@ -1,6 +1,6 @@
 var NUM_NODES=2;
  
-coordinator.includeFile('regression/regression/.js');
+coordinator.includeFile('regression/common_tests.js');
 
 function get_schema() {
 	var sqlScript = coordinator.readFile('regression/testomitcopy/init_schema.sql');
