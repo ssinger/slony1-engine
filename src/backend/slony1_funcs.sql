@@ -310,7 +310,7 @@ begin
     v_fqname := '"' || replace(p_tab_fqname,'"','""') || '"';
     return v_fqname;
 end;
-$$ language plpgsql;
+$$ language plpgsql immutable;
 
 comment on function @NAMESPACE@.slon_quote_brute(text) is
   'Brutally quote the given text';
@@ -388,7 +388,7 @@ begin
 		end if;
 	end if;
 
-end;$$ language plpgsql;
+end;$$ language plpgsql immutable;
 
 comment on function @NAMESPACE@.slon_quote_input(text) is
   'quote all words that aren''t quoted yet';

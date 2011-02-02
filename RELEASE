@@ -321,3 +321,5 @@ RELEASE 2.0.6
 
 - Bug #193 - vac_count not being reset to 0 (bug between 1.2 and 2.0 in 
   restructure of cleanup thread), so vacuums were being done every time
+
+- Bug #195 - change slon_quote_* functions to IMMUTABLE
