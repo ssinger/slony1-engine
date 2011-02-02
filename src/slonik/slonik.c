@@ -3523,7 +3523,7 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 		dstring_terminate(&query);
 	}
 	else
-		rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
+	  rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
 										  stmt->seq_fqname,
 										  stmt->set_id,stmt->seq_comment,
 										  stmt->seq_id);
@@ -3547,7 +3547,7 @@ slonik_set_add_single_sequence(SlonikStmt *stmt,
 	
 	if(seq_id < 0)
 	{
-		seq_id = slonik_get_next_sequence_id(stmt);
+	  seq_id = slonik_get_next_sequence_id((SlonikStmt*)stmt);
 		if(seq_id < 0)
 			return -1;
 	}
@@ -3555,11 +3555,11 @@ slonik_set_add_single_sequence(SlonikStmt *stmt,
 	dstring_init(&query);
 	slon_mkquery(&query,
 				 "select \"_%s\".setAddSequence(%d, %d, '%q', '%q'); ",
-				 stmt->hdr.script->clustername,
-				 stmt->set_id, stmt->seq_id, stmt->seq_fqname,
-				 stmt->seq_comment);
+				 stmt->script->clustername,
+				 set_id, seq_id, seq_name,
+				 seq_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-						   stmt->hdr.script,auto_wait_disabled) < 0)
+						   stmt->script,auto_wait_disabled) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -4849,7 +4849,7 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		{
 			printf("%s:%d Error: the event origin can not be changed "
 				   "inside of a try block",
-				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				   stmt->stmt_filename, stmt->stmt_lno);
 			return -1;
 		}
 
