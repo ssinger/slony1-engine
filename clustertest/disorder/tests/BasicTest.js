@@ -744,3 +744,10 @@ BasicTest.prototype.generateSlonikWait=function(event_node) {
 		+ event_node + ',confirmed=all);\n';
 	return slonikScript;
 }
+
+
+BasicTest.prototype.getSlonConfFileMap=function(event_node) {
+    var map = Packages.java.util.HashMap();
+    map.put('cluster_name',this.getClusterName());   
+    return map;
+}
