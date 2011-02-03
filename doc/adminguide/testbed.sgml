@@ -120,6 +120,31 @@ Total time: 2 seconds
 <para> At this time, there is no <quote>regression test</quote> for
 the test framework; to validate that it works requires running tests
 that use it.</para>
+
+<para> It includes classes supporting &postgres;- and &slony1;-specific functionality such as:</para>
+<itemizedlist>
+<listitem><para> <classname> CreateDbScript</classname></para>
+<para> Creates a database </para> </listitem>
+<listitem><para> <classname> DropDbScript</classname></para>
+<para> Drops a database </para> </listitem>
+<listitem><para> <classname> LogShippingDaemon</classname></para>
+<para> Starts up &slony1; logshipping daemon </para> </listitem>
+<listitem><para> <classname> LogShippingDumpScript</classname></para>
+<para> Dumps and loads logshipping-based schema </para> </listitem>
+<listitem><para> <classname> PgCommand</classname></para>
+<para> Run a &postgres; shell command (such as <command>psql</command>, <command>createdb</command>, and such)</para> </listitem>
+<listitem><para> <classname> PgDumpCommand</classname></para>
+<para> Dump a &postgres; database </para> </listitem>
+<listitem><para> <classname> PsqlCommandExec</classname></para>
+<para> Run SQL </para> </listitem>
+<listitem><para> <classname> ShellExecScript</classname></para>
+<para> Run a shell script/command</para> </listitem>
+<listitem><para> <classname> SlonLauncher</classname></para>
+<para> Start up a &lslon; process </para> </listitem>
+<listitem><para> <classname> SlonikScript</classname></para>
+<para> Run a &lslonik; script </para> </listitem>
+</itemizedlist>
+
 </listitem>
 
 <listitem><para> Tests integrated into the &slony1; software
