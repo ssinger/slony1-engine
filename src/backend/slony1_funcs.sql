@@ -5722,3 +5722,18 @@ end $$ language plpgsql;
 
 comment on function @NAMESPACE@.store_application_name (i_name text) is
 'Set application_name GUC, if possible.  Returns NULL if it fails to work.';
+
+create or replace function @NAMESPACE@.is_node_reachable(origin_node_id integer,
+	   receiver_node_id integer) returns boolean as $$
+declare
+		reachable boolean;
+		listen_row RECORD;
+begin
+	reachable:=false;
+	select * into listen_row from @NAMESPACE@.sl_listen where
+		   li_origin=origin_node_id and li_receiver=receiver_node_id;
+	if FOUND then
+	   reachable:=true;
+	end if;
+  return reachable;
+end $$ language plpgsql;
