@@ -9,7 +9,7 @@ else
     exit 1
 fi
 
-DBP=conf/databases.properties
+DBP=conf/disorder.properties
 if [ -f ${DBP} ]; then
     i=1
 else
