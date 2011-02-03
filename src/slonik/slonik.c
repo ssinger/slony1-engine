@@ -3746,9 +3746,12 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 		dstring_free(&query);
 		return -1;
 	}
-	if (strtol(PQgetvalue(res1, 0, 0), NULL, 10) > 0)
+	if(PQntuples(res1) > 0)
 	{
-		reshape=1;
+		if (strtol(PQgetvalue(res1, 0, 0), NULL, 10) > 0)
+		{
+			reshape=1;
+		}
 	}
 	PQclear(res1);
 	dstring_reset(&query);
@@ -3758,9 +3761,12 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 " set_id=%d",stmt->hdr.script->clustername,
 				 stmt->sub_setid);
 	res1 = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
-	if(res1==NULL) 
+	if(res1==NULL || PQntuples(res1) < 0 ) 
 	{
-		PQclear(res1);
+		printf("%s:%d error: can not determine set origin for set %d\n",
+			   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno,stmt->sub_setid);
+		if(res1 != NULL)
+			PQclear(res1);
 		dstring_free(&query);
 		return -1;
 
@@ -4824,6 +4830,7 @@ else
 
 if(res != NULL)
 	PQclear(res);
+db_rollback_xact(stmt, adminfo);
 dstring_terminate(&query);
 return rc;
 
@@ -4924,6 +4931,7 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 				return -1;
 			}
 			event_id = PQgetvalue(result,0,0);
+			db_rollback_xact(stmt, activeAdmInfo);
 			if(event_id != NULL)
 			{
 				activeAdmInfo->last_event=strtoll(event_id,NULL,10);			
@@ -4981,7 +4989,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			  */
 		 }
 		 confirm_count = PQntuples(result);
-		 PQclear(result);            
+		 PQclear(result);    
+		 db_rollback_xact(stmt, adminfo1);        
 		 if(confirm_count != wait_count)
 		 {
 			 /**
