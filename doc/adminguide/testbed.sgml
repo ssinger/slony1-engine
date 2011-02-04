@@ -1,6 +1,7 @@
 <!--  -->
 <sect1 id="testing"> <title> &slony1; Test Suites </title>
 
+<indexterm><primary>test suite overview</primary></indexterm>
 <para> &slony1; has had (thus far) three test suites:
 <itemizedlist>
 
@@ -38,6 +39,7 @@ frameworks.</para></listitem>
 
 <sect1 id="clustertest"> <title>Clustertest Test Framework</title>
 
+<indexterm><primary>cluster test suite </primary></indexterm>
 <sect2><title>Introduction and Overview</title>
 
 <para> The clustertest framework is implemented in Java, where tests
@@ -163,6 +165,8 @@ JavaScript, and SQL scripts. </para>
 
 <sect2 id="disorder"> <title>DISORDER - DIStributed ORDER test</title>
 
+<indexterm><primary>DISORDER test suite </primary></indexterm>
+
 <para> The <emphasis>DISORDER</emphasis> or <emphasis>DIStributed
 ORDER</emphasis> test is intended to provide concurrency tests
 involving a reasonably sophisticated schema to validate various
@@ -243,6 +247,8 @@ not need to be altered. </para></listitem>
 
 <sect2 id="regression"> <title>Regression Tests</title>
 
+<indexterm><primary>regression tests, clustertest framework </primary></indexterm>
+
 <para> These tests represent a re-coding of the tests previously
 implemented as shell scripts using the clustertest framework.</para>
 
@@ -291,7 +297,7 @@ files such as the JDBC driver are located.  </para>
 </sect1>
 <sect1 id="oldtestbed"><title> &slony1; Test Bed Framework </title>
 
-<indexterm><primary>test bed framework</primary></indexterm>
+<indexterm><primary>regression tests, old test framework</primary></indexterm>
 
 <para> Version 1.1.5 of &slony1; introduced a common test bed
 framework intended to better support running a comprehensive set of
