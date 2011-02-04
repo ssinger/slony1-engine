@@ -38,10 +38,13 @@ RecreateSet.prototype.runTest = function() {
 	this.coordinator.join (load);
 	
 	this.subscribeSet(1,1,1,[2]);
-
+	//Create + subscribe a second set to nodes 2 + 3.
+	this.createSecondSet(1);
+	this.subscribeSet(2,1,1,[2,3]);
+	
 	/**
 	 * take a lock out on a table on db3 to prevent the subscribe
-	 * from finishing.
+	 * from finishing (for set 1).
 	 */
 	var conn = this.coordinator.createJdbcConnection('db3');
 	var stat = conn.createStatement();
@@ -54,22 +57,39 @@ RecreateSet.prototype.runTest = function() {
 	 * slon for node 3 sees the list of tables on node 1.
 	 */
 	java.lang.Thread.sleep(10*1000);
-	//drop the set.	
+
+
+	/**
+	 * now we DROP set 2 and recreate it on node 2.
+	 * The idea is that the CREATE SET from node 2
+	 * will reach node 3 before the DROP SET from node 1.
+	 * This is because the node 3 remote worker is busy
+	 * due to the lock on set 1.
+	 */
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop set (id=1, origin=1);\n'
-	+ 'wait for event(origin=1, confirmed=2,wait on=1);\n'
-	+ 'create set(id=1,origin=2);'
-	+ 'set add table(id=1,set id=1, fully qualified name=\'disorder.do_customer\', origin=2);';
+	var slonikScript = 'drop set (id=2, origin=1);\n'
+	+ 'wait for event(origin=1, confirmed=2,wait on=1);\n';
+
 	var slonik=this.coordinator.createSlonik('drop set 1',slonikPreamble,slonikScript);	
 	slonik.run();
+
+
+	
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop set 1 worked',slonik.getReturnCode(),
 								0);
-	java.lang.Thread.sleep(10*1000);
+	this.createSecondSet(2);
+	java.lang.Thread.sleep(60*1000);	
 	conn.rollback();
-	stat.close();
-	conn.close();
-	this.subscribeSet(1,2,2,[3]);	
+
+	this.subscribeSet(2,2,2,[3]);	
+	// The subscribe on node 3 won't finish with that lock
+	// due to internal slon mutexes.  We just need
+	// to make sure the remoteWorkerThread_2 on
+	// node 3 gets ahead of remoteWorkerThread_1 on
+	// node 3.
+	//java.lang.Thread.sleep(60*1000);
+	
 	this.coordinator.join(subscribeArray[0]);
 	
 	//verify things.
@@ -79,7 +99,20 @@ RecreateSet.prototype.runTest = function() {
 		slonArray[idx].stop();
 		this.coordinator.join(slonArray[idx]);
 	}
-
+	var rs = stat.executeQuery("select set_origin from _" + 
+							   this.getClusterName()+ ".sl_set where"
+							   + " set_id=2");
+	if(rs.next()) {
+		this.testResults.assertCheck('set 2 has node 2 as origin',
+									 rs.getInt(1),2);
+	}
+	else {
+		this.testResults.assertCheck('set 2 is missing from node 3',
+									 true,false);
+	}
+	rs.close();
+	stat.close();
+	conn.close();
 
 }
 
