@@ -67,7 +67,8 @@ DropSet.prototype.testDropConcurrentSubscribe=function() {
 	this.subscribeSet(2,1,1,[3]);
 	var subscribeArray = this.subscribeSetBackground(2,1,3,[4] );
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop set (id=2, origin=1);\n'
+	var slonikScript='echo \'DropSet.prototype.testDropConcurrentSubscribe\';\n';
+	slonikScript += 'drop set (id=2, origin=1);\n'
 		+ 'wait for event(origin=1, confirmed=3,wait on=1);\n';
 	var slonik=this.coordinator.createSlonik('drop set 2',slonikPreamble,slonikScript);
 	

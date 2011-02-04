@@ -9,7 +9,7 @@ else
     exit 1
 fi
 
-DBP=conf/databases.properties
+DBP=conf/disorder.properties
 if [ -f ${DBP} ]; then
     i=1
 else
@@ -18,5 +18,17 @@ else
     echo "  to allow for your local configuration"
     exit 1
 fi    
+
+echo "Start test by dropping databases based on config in ${DBP}"
+for db in db1 db2 db3 db4 db5; do
+    PGTESTHOST=`grep "database.${db}.host=" ${DBP} | cut -d = -f 2`
+    PGTESTPORT=`grep "database.${db}.port=" ${DBP} | cut -d = -f 2`
+    PGTESTUSER=`grep "database.${db}.user.slony=" ${DBP} | cut -d = -f 2`
+    PGTESTDATABASE=`grep "database.${db}.dbname=" ${DBP} | cut -d = -f 2`
+    PGTESTPATH=`grep "database.${db}.pgsql.path=" ${DBP} | cut -d = -f 2`
+    #PGTESTPASSWORD=`grep "database.${db}.password=" ${DBP} | cut -d = -f 2`
+    echo "Dropping database: ${PGTESTPATH}/dropdb -h ${PGTESTHOST} -p ${PGTESTPORT} -U ${PGTESTUSER} ${PGTESTDATABASE}"
+    ${PGTESTPATH}/psql -h ${PGTESTHOST} -p ${PGTESTPORT} -U ${PGTESTUSER} -d template1 -c "drop database if exists ${PGTESTDATABASE};"
+done
 
 java -jar ${CLUSTERTESTHOME}/build/jar/clustertest-coordinator.jar ${DBP} disorder/tests/disorder_tests.js

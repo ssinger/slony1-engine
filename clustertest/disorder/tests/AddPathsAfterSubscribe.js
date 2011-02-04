@@ -32,7 +32,7 @@ AddPathsAfterSubscribe.prototype.runTest = function() {
 
 	//Now add the Paths.
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript='';
+	var slonikScript='echo \'AddPathsAfterSubscribe.prototype.runTest\';\n';
 	for(var serverId=1; serverId <= this.getNodeCount(); serverId++) {
 		for(var clientId=1; clientId <= this.getNodeCount(); clientId++) {
 			if(serverId!=clientId) {
@@ -60,7 +60,7 @@ AddPathsAfterSubscribe.prototype.setupReplication = function() {
 	
 	var result = 0;
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';	
+	var slonikScript='echo \'AddPathsAfterSubscribe.prototype.setupReplication\';\n';
 	// slonikScript += 'sleep(seconds=60);'
 	slonikScript += 'init cluster(id=1);\n';
 

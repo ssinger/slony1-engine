@@ -121,4 +121,4 @@ function get_compare_queries() {
 	return queries;
 }
 
-run_test(coordinator,'testinerit');
+run_test(coordinator,'testinherit');

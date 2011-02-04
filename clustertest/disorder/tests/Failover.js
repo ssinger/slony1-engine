@@ -18,7 +18,7 @@ Failover.prototype = new FailNodeTest();
 Failover.prototype.constructor = Failover;
 
 Failover.prototype.runTest = function() {
-
+        this.coordinator.log("Failover.prototype.runTest - begin");
 	this.testResults.newGroup("Fail Over Test");
 	this.setupReplication();
 	this.addCompletePaths();
@@ -216,7 +216,8 @@ Failover.prototype.runTest = function() {
 	 */	
 	this.coordinator.log("PROGRESS:Failing from node 1 to 4");
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop path(server=1,client=4);\n'
+	var slonikScript = 'echo \'Failover.prototype.runTest\';\n';
+	slonikScript += 'drop path(server=1,client=4);\n'
 		+'drop path(server=4,client=1);';
 	var slonik = this.coordinator.createSlonik('drop paths to node 4',slonikPreamble,slonikScript);
 	slonik.run();
@@ -253,7 +254,8 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 	this.coordinator.join(this.slonArray[node_id-1]);
 	
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'FAILOVER(id='  + node_id  + ',backup node=' + backup_id +');\n';
+	var slonikScript = 'echo \'Failover.prototype.failNode\';\n';
+	slonikScript += 'FAILOVER(id='  + node_id  + ',backup node=' + backup_id +');\n';
 	for(var idx=1; idx <= this.getNodeCount();idx++) {
 		if(idx == node_id ) {
 			continue;
@@ -302,9 +304,8 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 
 Failover.prototype.addCompletePaths = function() {
 	var slonikPre = this.getSlonikPreamble();
-	var slonikScript = '';
-	
-	for(var client=1; client <= this.getNodeCount(); client++) {
+	var slonikScript = 'echo \'Failover.prototype.addCompletePaths\';\n';
+        for(var client=1; client <= this.getNodeCount(); client++) {
 		for(var server=1; server <= this.getNodeCount(); server++) {
 			if(server==client) {
 				continue;
@@ -321,12 +322,14 @@ Failover.prototype.addCompletePaths = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('paths added okay', slonik.getReturnCode(), 0);
-	
+        this.coordinator.log("Failover.prototype.runTest - begin");
 }
 
 Failover.prototype.dropNode=function(node_id,event_node) {
+        this.coordinator.log("Failover.prototype.dropNode - begin");
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'DROP NODE(id='  + node_id  + ',event node=' + event_node +');\n';
+	var slonikScript = 'echo \'Failover.prototype.dropNode\';\n';
+	slonikScript += 'DROP NODE(id='  + node_id  + ',event node=' + event_node +');\n';
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {
 		if(idx == node_id) {
 			continue;
@@ -337,7 +340,5 @@ Failover.prototype.dropNode=function(node_id,event_node) {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('slonik drop node status okay',slonik.getReturnCode(),0);
-	
-	
-	
+        this.coordinator.log("Failover.prototype.dropNode - complete");
 }

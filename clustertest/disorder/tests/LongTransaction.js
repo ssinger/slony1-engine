@@ -16,7 +16,7 @@ LongTransaction.prototype.getNodeCount = function() {
 }
 
 LongTransaction.prototype.runTest = function() {
-
+        this.coordinator.log("LongTransaction.prototype.runTest - begin");
 
 	this.testResults.newGroup("Long Transaction");
 	//this.prepareDb(['db1','db2']);
@@ -28,6 +28,7 @@ LongTransaction.prototype.runTest = function() {
 	this.addCompletePaths();
 	
 	
+        this.coordinator.log("LongTransaction.prototype.runTest - start long transaction");
 	/**
 	 * Start a transaction.
 	 * Start the add table process.
@@ -36,7 +37,8 @@ LongTransaction.prototype.runTest = function() {
 	 */
 	var txnConnection = this.startTransaction();
 	
-	var slonikScript = this.getAddTableSlonikScript();
+        var slonikScript = 'echo \'LongTransaction.prototype.runTest\';\n';
+	slonikScript += this.getAddTableSlonikScript();
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonik  = this.coordinator.createSlonik('add tables',slonikPreamble,slonikScript);
 	slonik.run();
@@ -48,6 +50,7 @@ LongTransaction.prototype.runTest = function() {
 	this.testResults.assertCheck('add tables completed after transaction finished',slonik.getReturnCode(),0);
 	
 	
+        this.coordinator.log("LongTransaction.prototype.runTest - start slons");
 	//Start the slons.
 	//These must be started before slonik runs or the subscribe won't happen
 	//thus slonik won't finish.
@@ -58,12 +61,14 @@ LongTransaction.prototype.runTest = function() {
 	}
 
 	
+        this.coordinator.log("LongTransaction.prototype.runTest - subscribe sets in background");
 	var subs=this.subscribeSetBackground(1,1,1,[2,3]);
 	for(var idx=0; idx < subs.length; idx++) {
 		subs[idx].run();
 	}
 	//A transaction should not block the subscription.
 	//make sure this is the case.
+        this.coordinator.log("LongTransaction.prototype.runTest - sleep 3x60x1000");
 	java.lang.Thread.sleep(3*60*1000);
 	for(var idx=0; idx < subs.length; idx++) {
 		this.testResults.assertCheck('subscription blocking on the transaction', subs[idx].isFinished(),true);
@@ -73,8 +78,10 @@ LongTransaction.prototype.runTest = function() {
 	txnConnection.close();
 	
 	
+        this.coordinator.log("LongTransaction.prototype.runTest - subscribe 4,5");
 	this.subscribeSet(1,1,3,[4,5]);
 	
+        this.coordinator.log("LongTransaction.prototype.runTest - subscriptions complete");
 	this.coordinator.log('subscriptions complete');
 
 	
@@ -87,6 +94,7 @@ LongTransaction.prototype.runTest = function() {
 	load.stop();
 	this.slonikSync(1,1);
 	this.coordinator.join(load);
+        this.coordinator.log("LongTransaction.prototype.runTest - compare db1,2,4");
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db4');
 	
@@ -106,6 +114,7 @@ LongTransaction.prototype.startTransaction=function() {
 	rs.close();
 	stat.close();
 	return dbCon;
+        this.coordinator.log("LongTransaction.prototype.runTest - begin");
 }
 
 LongTransaction.prototype.countOrders=function(db) {
