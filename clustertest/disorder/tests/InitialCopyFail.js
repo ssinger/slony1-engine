@@ -23,6 +23,7 @@ InitialCopyFail.prototype.getNodeCount=function() {
 
 InitialCopyFail.prototype.runTest = function() {
 	
+        this.coordinator.log("InitialCopyFail.prototype.runTest - begin");
 	this.testResults.newGroup("Initial Copy Fails");
 	this.setupReplication();
 	this.addTables();
@@ -84,6 +85,7 @@ InitialCopyFail.prototype.runTest = function() {
 	
 	
 	
+        this.coordinator.log("InitialCopyFail.prototype.runTest - start slons");
 	/**
 	 * Start the slons.
 	 */
@@ -108,9 +110,11 @@ InitialCopyFail.prototype.runTest = function() {
 	 */
 	var slonikPreamble = this.getSlonikPreamble();
 	
+        this.coordinator.log("InitialCopyFail.prototype.runTest - subscribe sets");
 	
 	for(var idx=2; idx <= this.getNodeCount(); idx++) {
-		var slonikScript='subscribe set (id=1, provider=1, receiver=' + idx+ ');\n'
+	        var slonikScript = 'echo \'InitialCopyFail.prototype.runTest\';\n';
+		slonikScript += 'subscribe set (id=1, provider=1, receiver=' + idx+ ');\n'
 		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n'
 		+'sync(id=1);\n'
 		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n';
@@ -125,8 +129,10 @@ InitialCopyFail.prototype.runTest = function() {
 	
 	
 	
+        this.coordinator.log("InitialCopyFail.prototype.runTest - sync");
 	//This sync should work. 
 	this.slonikSync(1,1);
+        this.coordinator.log("InitialCopyFail.prototype.runTest - compare db1,2,3");
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db3');
 
@@ -155,5 +161,5 @@ InitialCopyFail.prototype.runTest = function() {
 		}
 					
 	 }
-	
+        this.coordinator.log("InitialCopyFail.prototype.runTest - complete");
 }

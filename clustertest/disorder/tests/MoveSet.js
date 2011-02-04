@@ -22,18 +22,19 @@ MoveSet.prototype.getNodeCount = function() {
 }
 
 MoveSet.prototype.runTest = function() {
-
+        this.coordinator.log("MoveSet.prototype.runTest - begin");
 
 	this.testResults.newGroup("move set1");
 	//this.prepareDb(['db1','db2']);
 
 	
 //First setup slony
-
+        this.coordinator.log("MoveSet.prototype.runTest - set up replication");
 	this.setupReplication();
 	this.addCompletePaths();
 	this.addTables();
 	
+        this.coordinator.log("MoveSet.prototype.runTest - start slons");
 	//Start the slons.
 	//These must be started before slonik runs or the subscribe won't happen
 	//thus slonik won't finish.
@@ -47,13 +48,13 @@ MoveSet.prototype.runTest = function() {
 	this.subscribeSet(1,1,1,[2,3]);
 	this.subscribeSet(1,1,3,[4,5]);
 	
-	this.coordinator.log('subscriptions complete');
+        this.coordinator.log("MoveSet.prototype.runTest - subscriptions complete");
 
 	
 	this.syncWaitTime = 60*5;
 	this.slonikSync("1","1");
 	this.syncWaitTime=60;
-	this.coordinator.log('sets are subscribed and data is synced');
+        this.coordinator.log("MoveSet.prototype.runTest - sets subscribed, data synced");
 	var pairings=[
 	              [1,2]
 	              ,[2,3]
@@ -61,15 +62,15 @@ MoveSet.prototype.runTest = function() {
 	              ,[1,3]
 	              ,[3,4]
 	              ,[4,5]
-	             ,[5,2]
-	             ,[2,4]
+	              ,[5,2]
+	              ,[2,4]
 	              ,[4,1]
 	              ,[1,5]
 	              ];
 	              
 	for(var idx = 0; idx < pairings.length; idx++) {
 		var curMoveNodes=pairings[idx];
-		this.coordinator.log('moving set from ' + curMoveNodes[0] + ' to ' + 
+                this.coordinator.log("MoveSet.prototype.runTest - moving set from " + curMoveNodes[0] + ' to ' + 
 				curMoveNodes[1]);
 		var moveResult=this.moveSet(1,curMoveNodes[0],curMoveNodes[1])
 		
@@ -82,15 +83,14 @@ MoveSet.prototype.runTest = function() {
 		//Make sure that db1 is read only.
 		
 		this.verifyReadOnly(curMoveNodes[0]);
-		this.coordinator.log('verification done');
+                this.coordinator.log("MoveSet.prototype.runTest - verification done");
 		load.stop();
-		this.coordinator.log('joining after load');
+                this.coordinator.log("MoveSet.prototype.runTest - joining after load");
 		this.coordinator.join(load);
-		this.coordinator.log('syncing after load');
+                this.coordinator.log("MoveSet.prototype.runTest - syncing after load");
 		this.slonikSync(1,curMoveNodes[1]);
-		this.coordinator.log('sync done');
-		if(moveResult==0) {
-			
+                this.coordinator.log("MoveSet.prototype.runTest - syncing complete");
+		if(moveResult==0) {			
 			this.compareDb('db' + curMoveNodes[0],'db' + curMoveNodes[1]);
 		}
 	}
@@ -99,6 +99,7 @@ MoveSet.prototype.runTest = function() {
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);	
 	}
+        this.coordinator.log("MoveSet.prototype.runTest - complete");
 }
 
 MoveSet.prototype.getSyncWaitTime = function () {
