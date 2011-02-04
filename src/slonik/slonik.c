@@ -2421,6 +2421,14 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 		dstring_free(&query);
 		return -1;
 	}
+	/**
+	 * if we have a conninfo for the node being dropped
+	 * we want to clear out the last seqid.
+	 */
+	adminfo1 = get_adminfo(&stmt->hdr,stmt->no_id);
+	if(adminfo1 != NULL) {
+	  adminfo1->last_event=-1;
+	}
 
 	dstring_free(&query);
 	return 0;
@@ -4875,7 +4883,6 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 			return rc;
 		
 	}
-	
 	rc= db_exec_evcommand(stmt,adminfo,query);
 	if(! suppress_wait_for)
 		last_event_node=adminfo->no_id;
@@ -4903,8 +4910,11 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 
 	dstring_init(&query);
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
+				 " , \"_%s\".sl_node "
 				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
-				 " AND ev_type <> 'SYNC'",script->clustername,
+				 " AND ev_type <> 'SYNC' AND sl_node.no_id="
+				 " ev_origin AND sl_node.no_active=true"
+				 , script->clustername,script->clustername,
 				 script->clustername,script->clustername);
 	for( curAdmInfo = script->adminfo_list;
 		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
