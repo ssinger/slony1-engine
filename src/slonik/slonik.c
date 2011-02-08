@@ -3769,7 +3769,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 " set_id=%d",stmt->hdr.script->clustername,
 				 stmt->sub_setid);
 	res1 = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
-	if(res1==NULL || PQntuples(res1) < 0 ) 
+	if(res1==NULL || PQntuples(res1) <= 0 ) 
 	{
 		printf("%s:%d error: can not determine set origin for set %d\n",
 			   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno,stmt->sub_setid);
@@ -4913,7 +4913,7 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 				 " , \"_%s\".sl_node "
 				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
 				 " AND ev_type <> 'SYNC' AND sl_node.no_id="
-				 " ev_origin AND sl_node.no_active=true"
+				 " ev_origin"
 				 , script->clustername,script->clustername,
 				 script->clustername,script->clustername);
 	for( curAdmInfo = script->adminfo_list;
@@ -4963,10 +4963,19 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	int first_event=1;
 	int confirm_count=0;
 	SlonDString is_caughtup_query;
+	SlonDString node_list;
 	int wait_count=0;
 
 	dstring_init(&event_list);
-	
+	dstring_init(&node_list);
+
+	if( current_try_level != 0)
+	{
+	  printf("%s:%d Error: waiting operation not allowed inside of "
+			 "inside of a try block",
+			 stmt->stmt_filename, stmt->stmt_lno);
+	  return -1;
+	}
 
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
@@ -4974,20 +4983,37 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		if(curAdmInfo->last_event < 0 || 
 		   curAdmInfo->no_id==adminfo1->no_id)
 			continue;
-		slon_appendquery(&event_list, first_event ?
-						 "(con_origin=%d AND con_seqno>=%d) " :
-						 " OR (con_origin=%d AND con_seqno>=%d) "
+		slon_appendquery(&event_list, 
+						 "%s (node_list.no_id=%d  AND (con_seqno>=%d OR "
+						 " sl_node.no_id is null))"
+						 ,first_event ? " " : " OR "
 						 ,curAdmInfo->no_id
-						 ,curAdmInfo->last_event);		
+						 ,curAdmInfo->last_event
+						 );		
+		slon_appendquery(&node_list,"%s (%d) ",
+						 first_event ? " " : ",",
+						 curAdmInfo->no_id);
 		first_event=0;
 		wait_count++;
 	}
 	 dstring_init(&is_caughtup_query);
+	 /**
+	  * I need a row for the case where a node is not in sl_confirm
+	  * and the node is disabled or deleted.
+	  */
 	 slon_mkquery(&is_caughtup_query,
-				  "select con_origin,max(con_seqno) FROM \"_%s\".sl_confirm "
-                " where %s AND con_received=%d GROUP BY con_origin",
-				  stmt->script->clustername,dstring_data(&event_list),
-				  adminfo1->no_id);
+				  "select node_list.no_id,max(con_seqno) FROM "
+				  " (VALUES %s) as node_list (no_id) LEFT JOIN "
+				  "\"_%s\".sl_confirm ON(sl_confirm.con_origin=node_list.no_id"
+				  " AND sl_confirm.con_received=%d)"
+				  " LEFT JOIN \"_%s\".sl_node ON (con_origin=sl_node.no_id"
+				  " AND sl_node.no_active=true) "
+                " where %s  GROUP BY node_list.no_id"
+				  ,dstring_data(&node_list)
+				  ,stmt->script->clustername
+				  ,adminfo1->no_id
+				  ,stmt->script->clustername
+				  ,dstring_data(&event_list));
 	 while(confirm_count != wait_count)
 	 {
 		 result = db_exec_select(stmt,
