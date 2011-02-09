@@ -1015,17 +1015,17 @@ remoteWorkerThread_main(void *cdata)
 				char	   *wait_seqno;
 				PGresult   *res;
 
-				slon_log(SLON_DEBUG1, "start processing ACCEPT_SET\n");
+				slon_log(SLON_INFO, "start processing ACCEPT_SET\n");
 				set_id = (int) strtol(event->ev_data1, NULL, 10);
-				slon_log(SLON_DEBUG2, "ACCEPT: set=%d\n", set_id);
+				slon_log(SLON_INFO, "ACCEPT: set=%d\n", set_id);
 				old_origin = (int) strtol(event->ev_data2, NULL, 10);
-				slon_log(SLON_DEBUG2, "ACCEPT: old origin=%d\n", old_origin);
+				slon_log(SLON_INFO, "ACCEPT: old origin=%d\n", old_origin);
 				new_origin = (int) strtol(event->ev_data3, NULL, 10);
-				slon_log(SLON_DEBUG2, "ACCEPT: new origin=%d\n", new_origin);
+				slon_log(SLON_INFO, "ACCEPT: new origin=%d\n", new_origin);
 				wait_seqno = event->ev_data4;
-				slon_log(SLON_DEBUG2, "ACCEPT: move set seq=%s\n", wait_seqno);
+				slon_log(SLON_INFO, "ACCEPT: move set seq=%s\n", wait_seqno);
 
-				slon_log(SLON_DEBUG2, "got parms ACCEPT_SET\n");
+				slon_log(SLON_INFO, "got parms ACCEPT_SET\n");
 
 				/*
 				 * If we're a remote node, and haven't yet received the
@@ -1065,7 +1065,7 @@ remoteWorkerThread_main(void *cdata)
 					{
 						PQclear(res);
 
-						slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+						slon_log(SLON_INFO, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
 
 						/* Rollback the transaction for now */
 						(void) slon_mkquery(&query3, "rollback transaction");
