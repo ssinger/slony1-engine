@@ -2673,6 +2673,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "select \"_%s\".failedNode(%d, %d); ",
 				 stmt->hdr.script->clustername,
 				 stmt->no_id, stmt->backup_node);
+	printf("executing failedNode() on %d\n",adminfo1->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
 		free(configbuf);
@@ -2950,7 +2951,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, stmt->backup_node,
 						 setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);
-			if (db_exec_command((SlonikStmt *) stmt,
+			printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
+				   stmt->hdr.script->clustername,
+				   max_node_total->adminfo->no_id);
+			if (db_exec_evcommand((SlonikStmt *) stmt,
 								max_node_total->adminfo, &query) < 0)
 				rc = -1;
 		}
@@ -4229,6 +4233,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	time_t		now;
 	int			all_confirmed = 0;
 	char		seqbuf[64];
+	int loop_count=0;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->wait_on);
 	if (adminfo1 == NULL)
@@ -4333,6 +4338,13 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 			return -1;
 		}
 
+		loop_count++;
+		if(loop_count % 10 == 0 && stmt->wait_confirmed >= 0)
+		{
+			printf("%s:%d: waiting for event (%d,%ld) to be confirmed on node %d\n"
+				   ,stmt->hdr.stmt_filename,stmt->hdr.stmt_lno
+				   ,stmt->wait_origin,adminfo->last_event,stmt->wait_confirmed);
+		}
 		sleep(1);
 	}
 
@@ -4965,6 +4977,19 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	SlonDString is_caughtup_query;
 	SlonDString node_list;
 	int wait_count=0;
+	int node_list_size=0;
+	int sleep_count=0;
+	char * caught_up_nodes=NULL;
+	int idx;
+	int cur_array_idx;
+	
+	/**
+	 * an array that stores a node_id, last_event.
+	 * or the last event seen for each admin conninfo
+	 * node.
+	 */
+	int * last_event_array=NULL;
+	
 
 	dstring_init(&event_list);
 	dstring_init(&node_list);
@@ -4977,6 +5002,14 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	  return -1;
 	}
 
+	for( curAdmInfo = stmt->script->adminfo_list;
+		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		node_list_size++;
+	}
+	last_event_array = malloc(node_list_size * sizeof(int)*2);
+	memset(last_event_array,0,sizeof(wait_count * sizeof(int)*2));
+	
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
@@ -4993,10 +5026,15 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		slon_appendquery(&node_list,"%s (%d) ",
 						 first_event ? " " : ",",
 						 curAdmInfo->no_id);
+		last_event_array[wait_count*2]=curAdmInfo->no_id;
+		last_event_array[wait_count*2+1]=curAdmInfo->last_event;
 		first_event=0;
 		wait_count++;
 	}
-	 dstring_init(&is_caughtup_query);
+
+	
+
+	dstring_init(&is_caughtup_query);
 	 /**
 	  * I need a row for the case where a node is not in sl_confirm
 	  * and the node is disabled or deleted.
@@ -5025,20 +5063,74 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			  */
 		 }
 		 confirm_count = PQntuples(result);
-		 PQclear(result);    
+
 		 db_rollback_xact(stmt, adminfo1);        
 		 if(confirm_count != wait_count)
 		 {
-			 /**
-			  * 
-			  */
-			 printf("waiting for events %s to be confirmed on %d\n",
-					dstring_data(&event_list),adminfo1->no_id);
-			 sleep(1);
-		 }
+		   sleep_count++;
+		   if(sleep_count % 10 == 0)
+		   {
+			   /**
+				* find nodes that are missing.
+				* 
+				*/
+			   caught_up_nodes=malloc(node_list_size);
+			   memset(caught_up_nodes,0,sizeof(node_list_size));
+			   for(idx = 0; idx < PQntuples(result); idx++)
+			   {
+				   char * n_id_c = PQgetvalue(result,idx,0);
+				   int n_id = atoi(n_id_c);
+				   for(cur_array_idx=0;
+					   cur_array_idx < node_list_size; cur_array_idx++)
+				   {
+					   if(last_event_array[cur_array_idx*2+1]==n_id)
+					   {
+						   /*
+							*  found.
+							*/
+						   caught_up_nodes[cur_array_idx]=1;
+					   }
+					   
+				   }
+
+			   }
+			   /**
+				* any elements in caught_up_nodes with a value 0
+				* means that the cooresponding node id in
+				* last_event_array is not showing up in the
+				* query result.
+				*/
+			   SlonDString outstanding;
+			   dstring_init(&outstanding);
+			   first_event=1;
+			   for(cur_array_idx=0; cur_array_idx < node_list_size;
+				   cur_array_idx++)
+			   {				   
+				   if(caught_up_nodes[cur_array_idx] == 0)
+				   {
+					   slon_appendquery(&outstanding,"%s(%d,%d)"
+										, first_event ? "" : ","
+										,last_event_array[cur_array_idx*2]
+										,	last_event_array[cur_array_idx*2+1]);
+					   first_event=0;
+				   }
+
+			   }
+			   free(caught_up_nodes);
+			 printf("waiting for events %s to be confirmed on node %d\n",
+					dstring_data(&outstanding),curAdmInfo->no_id);
+			 dstring_terminate(&outstanding);
+			   
+		   }/* every 10 iterations */		   
+		   sleep(1);
+		 } 
+		 
 	 }/*while*/
+	 if(result != NULL)
+			 PQclear(result);    
 	 dstring_terminate(&event_list);
 	 dstring_terminate(&is_caughtup_query);
+	 free(last_event_array);
 	 return 0;
 
 }
