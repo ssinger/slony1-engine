@@ -1,0 +1,91 @@
+The tests in this directory use the ClusterTest framework available
+at http://github.com/clustertest/clustertest-framework
+
+Their are two sets of tests that are included here.
+
+disorder tests
+------------------------
+
+The disorder ("DIStributed ORDER") tests is a test suite designed to
+simulate an retail store style of workload.  It includes transactions
+for getting inventory, taking orders and counting inventory.
+
+Some transactions run against the replication master while others
+(read-only) run against slave databases.
+
+To run the disorder tests.
+
+1. Edit conf/database.properties
+
+   * Sample found in conf/database.properties.sample, so that you can
+     have your own copy separate from what is provided
+   * Update the pgsql.path files to point to your $PGBIN directory
+   * Update any required connection information to point to the databases
+     you wish to test. 
+   * Update slonik.path and slon.path to point to the slonik and slon
+     binaries you wish to test.
+
+   * Uses multiple users that must be set up:
+
+      - "test" users
+         - value of database.db[1-6].user
+         - used to run the "DISORDER" OLTP activities
+
+      - Superuser
+         - Slony user is assumed to be a superuser
+
+         - Superuser capabilities are not required in general, but
+           having replication run with superuser capabilities
+           simplifies configuration here.
+
+	 - We may later revise the superuser requirements
+
+2.  Edit conf/java.conf
+
+    * Sample found in conf/java.conf.sample
+
+    * This contains the shell command to set CLUSTERTESTHOME,
+      indicating the main directory of the clustertest-framework
+      installation.
+
+3.  Run test
+
+Make sure PWD is set to the directory 'clustertest', as the tests make
+reference to relative directory locations.  For instance, disorder
+tests are assumed to be in the subdirectory 'disorder/tests'.
+
+The shell script run_all_disorder_tests.sh invokes the cluster test
+framework against the test suite found in disorder/tests
+
+results/$TIMESTAMP/testResult.test.txt will contain the results of each test.
+
+
+Regression Tests
+------------------
+The regressions are a common test bed framework intended to better
+support performing a comprehensive set of tests. The code lives in the source
+tree under the tests directory.
+
+Prior to version 2.1 these tests lived under the tests directory and
+were written in shell.  The tests have been ported to javascript so
+they run under the clustertest framework.
+
+The regression tests are different than the disorder tests in that
+they tend to take less time to run and don't use a common schema.
+Each test creates its own tables (but there are a similarties
+between many of the tests).
+
+To run the regression tests
+
+
+1. Edit conf/slonyregress.properties  you can use the sample in
+   conf/slonyregress.sample.properties as a starting point
+
+   * Edit the db[1-4].host, dbname,port,user and password as required.
+   * Update db[1-4].pgsql.path to point to your postgresql bin directory
+    ($PGBIN)
+   * Edit slonik.path and slon.path to point to your slonik and slon
+     binaries
+   * Run the tests (run_all_regression_tests.sh) from this directory.
+
+    

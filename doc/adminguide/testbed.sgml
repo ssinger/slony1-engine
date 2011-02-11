@@ -1,22 +1,307 @@
 <!--  -->
-<sect1 id="testbed"><title> &slony1; Test Bed Framework </title>
+<sect1 id="testing"> <title> &slony1; Test Suites </title>
+
+<para> &slony1; has had (thus far) three test suites:
+<itemizedlist>
+
+<listitem><para> Ducttape tests</para>
+
+<para> These were introduced as part of the original &slony1;
+distribution, and induced load via running
+<application>pgbench</application>.</para>
+
+<para> Unfortunately, the tests required human intervention to control
+invokation and shutdown of tests, so running them could not be readily
+automated.</para></listitem>
+
+<listitem><para> <link linkend="oldtestbed"> Test bed framework
+</link></para>
+
+<para> &slony1; version 1.1.5, introduced a test framework intended to
+better support automation of the tests.  It eliminated the use of
+<application>xterm</application>, and tests were self-contained and
+self-controlled, so that one could run a series of tests.</para>
+
+<para> Unfortunately, the framework did not include any way of
+inducing distributed load, so as to test scenarios involving
+sophisticated concurrent activity.</para></listitem>
+
+<listitem><para> <link linkend="clustertest"> clustertest framework
+</link></para>
+
+<para> Introduced during testing of &slony1; version 2.0 during 2010,
+and released in early 2011, this framework is intended to be a better
+replacement for all of the preceding test
+frameworks.</para></listitem>
+
+</itemizedlist>
+
+<sect1 id="clustertest"> <title>Clustertest Test Framework</title>
+
+<sect2><title>Introduction and Overview</title>
+
+<para> The clustertest framework is implemented in Java, where tests
+are implemented in the interpreted JavaScript language.  The use of
+Java made it much easier to implement tests involving concurrent
+activities, both in terms of inducing test load, and in, concurrently
+changing configuration of the replication cluster.
+
+<para> It consists of two physical portions:
+
+<itemizedlist>
+<listitem><para> A framework, implemented in Java </para> 
+
+<para> This software is available at <ulink
+url="https://github.com/clustertest/clustertest-framework">
+clustertest-framework @ GitHub </ulink>.
+
+<para> This framework makes use of libraries from several other open source projects:</para>
+
+<itemizedlist>
+<listitem><para><filename>js.jar</filename></para>
+
+<para> This is for <envar>org.mozilla.javascript</envar>, the Mozilla JavaScript interpreter</para></listitem>
+
+<listitem><para><filename>junit-4.8.1.jar</filename></para>
+
+<para> JUnit, a unit test framework.</para></listitem>
+
+<listitem><para> <filename>log4j-1.2.15.jar</filename></para>
+
+<para> Log4J is a popular Java-based framework for generating event
+logs.</para></listitem>
+
+<listitem><para><filename>postgresql-8.4-701.jdbc3.jar</filename></para>
+
+<para> This is the &postgres; JDBC driver.</para></listitem>
+</itemizedlist>
+
+<para> To build the framework, it is necessary to have a Java compiler
+and the build tool, <application>Ant</application>, installed.  To
+build all the <filename>.jar</filename> files used by the framework,
+one will run the command, with output similar to the following:
+
+<screen>
+% ant jar
+Buildfile: /var/lib/postgresql/PostgreSQL/clustertest-framework/build.xml
+
+compile-common:
+    [mkdir] Created dir: /var/lib/postgresql/PostgreSQL/clustertest-framework/build/classes
+    [javac] /var/lib/postgresql/PostgreSQL/clustertest-framework/build.xml:23: warning: 'includeantruntime' was not set, defaulting to build.sysclasspath=last; set to false for repeatable builds
+
+compile-testcoordinator:
+    [javac] /var/lib/postgresql/PostgreSQL/clustertest-framework/build.xml:44: warning: 'includeantruntime' was not set, defaulting to build.sysclasspath=last; set to false for repeatable builds
+    [javac] Compiling 25 source files to /var/lib/postgresql/PostgreSQL/clustertest-framework/build/classes
+    [javac] Note: /var/lib/postgresql/PostgreSQL/clustertest-framework/src/info/slony/clustertest/testcoordinator/script/ClientScript.java uses or overrides a deprecated API.
+    [javac] Note: Recompile with -Xlint:deprecation for details.
+     [copy] Copying 1 file to /var/lib/postgresql/PostgreSQL/clustertest-framework/build/classes/info/slony/clustertest/testcoordinator
+
+jar-common:
+    [mkdir] Created dir: /var/lib/postgresql/PostgreSQL/clustertest-framework/build/jar
+      [jar] Building MANIFEST-only jar: /var/lib/postgresql/PostgreSQL/clustertest-framework/build/jar/clustertest-common.jar
+
+compile-client:
+    [javac] /var/lib/postgresql/PostgreSQL/clustertest-framework/build.xml:30: warning: 'includeantruntime' was not set, defaulting to build.sysclasspath=last; set to false for repeatable builds
+    [javac] Compiling 1 source file to /var/lib/postgresql/PostgreSQL/clustertest-framework/build/classes
+     [copy] Copying 2 files to /var/lib/postgresql/PostgreSQL/clustertest-framework/build/classes/info/slony/clustertest/client
+
+jar-client:
+      [jar] Building jar: /var/lib/postgresql/PostgreSQL/clustertest-framework/build/jar/clustertest-client.jar
+
+jar-coordinator:
+      [jar] Building jar: /var/lib/postgresql/PostgreSQL/clustertest-framework/build/jar/clustertest-coordinator.jar
+
+jar:
+
+BUILD SUCCESSFUL
+Total time: 2 seconds
+</screen></para>
+
+<para> At this time, there is no <quote>regression test</quote> for
+the test framework; to validate that it works requires running tests
+that use it.</para>
+
+<para> It includes classes supporting &postgres;- and &slony1;-specific functionality such as:</para>
+<itemizedlist>
+<listitem><para> <classname> CreateDbScript</classname></para>
+<para> Creates a database </para> </listitem>
+<listitem><para> <classname> DropDbScript</classname></para>
+<para> Drops a database </para> </listitem>
+<listitem><para> <classname> LogShippingDaemon</classname></para>
+<para> Starts up &slony1; logshipping daemon </para> </listitem>
+<listitem><para> <classname> LogShippingDumpScript</classname></para>
+<para> Dumps and loads logshipping-based schema </para> </listitem>
+<listitem><para> <classname> PgCommand</classname></para>
+<para> Run a &postgres; shell command (such as <command>psql</command>, <command>createdb</command>, and such)</para> </listitem>
+<listitem><para> <classname> PgDumpCommand</classname></para>
+<para> Dump a &postgres; database </para> </listitem>
+<listitem><para> <classname> PsqlCommandExec</classname></para>
+<para> Run SQL </para> </listitem>
+<listitem><para> <classname> ShellExecScript</classname></para>
+<para> Run a shell script/command</para> </listitem>
+<listitem><para> <classname> SlonLauncher</classname></para>
+<para> Start up a &lslon; process </para> </listitem>
+<listitem><para> <classname> SlonikScript</classname></para>
+<para> Run a &lslonik; script </para> </listitem>
+</itemizedlist>
+
+</listitem>
+
+<listitem><para> Tests integrated into the &slony1; software
+distribution, that consist of a combination of shell scripts,
+JavaScript, and SQL scripts. </para>
+
+<para> See the directory <filename>clustertest</filename> in the
+&slony1; software distribution, which has two sets of tests:</para>
+<itemizedlist>
+<listitem><para> <xref linkend="disorder"> </para></listitem>
+<listitem><para> <xref linkend="regression"> </para></listitem>
+</itemizedlist>
+</listitem>
+
+</itemizedlist>
+
+<sect2 id="disorder"> <title>DISORDER - DIStributed ORDER test</title>
+
+<para> The <emphasis>DISORDER</emphasis> or <emphasis>DIStributed
+ORDER</emphasis> test is intended to provide concurrency tests
+involving a reasonably sophisticated schema to validate various
+aspects of &slony1; behavior under concurrent load.</para>
+
+<para> It consists of:
+<itemizedlist>
+<listitem><para> A schema for an inventory management application.</para>
+<para> Major objects include customers, inventory items, orders, order lines, and shipments. </para>
+
+<para> There are foreign key relationships between the various items,
+as well as triggers that maintain inventory and customer balances.
+Some of these relationships involve <command>ON DELETE CASCADE</command>, and
+so some actions may induce large numbers of cascaded updates.</para>
+
+</listitem>
+
+<listitem><para> Stored procedures to induce creation of the various
+sorts of objects, purchases, shipments, and additions and removals of
+customers and products. </para></listitem>
+
+<listitem><para> Some tests are intended to be run against replicas,
+validating that balances add up.  We believe that &postgres; applies
+changes in a transactional fashion such that they will always
+<command>COMMIT</command> leaving the visible state consistent;
+certain of the tests look for inconsistencies. </para></listitem>
+
+<listitem><para> There are JavaScript test scripts that induce all
+sorts of manipulations of replication clusters to validate that
+replication configuration changes succeed and fail as expected.</para>
+</listitem>
+
+</itemizedlist>
+
+<sect3 id="disorderconfig"> <title>Configuring DISORDER</title>
+
+<para> DISORDER test configuration may be found in the following
+files:</para>
+<itemizedlist>
+<listitem><para><filename>conf/disorder.properties.sample</filename></para>
+
+<para> This file contains Java style properties indicating how to
+connect to the various databases used by the DISORDER tests, including paths to
+tools such as &lslon; and &lslonik;</para>
+
+<para> The sample file is to be copied to
+<filename>conf/disorder.properties</filename>, and customized to
+indicate your local configuration.  By using a
+<filename>.sample</filename> file, a developer may run tests within a
+Git tree, and not need to worry about their customizations interfering
+with the <quote>canonical</quote> sample configuration
+provided.</para>
+
+</listitem>
+
+<listitem><para><filename>conf/java.conf.sample</filename></para>
+
+<para> This is a shell script containing a path indicating where the
+clustertest Java code (<emphasis>e.g.</emphasis> - the
+<filename>clustertest-coordinator.jar</filename> file) may be found.  This is
+also used, indirectly to determine where additional Java .jar files
+such as the JDBC driver are located.  </para>
+
+<para> As with the disorder properties, above, this needs to be copied
+to <filename>conf/java.conf</filename>, and customized to indicate one's own local
+configuration.</para>
+
+</listitem>
+
+<listitem><para><filename>conf/log4j.properties</filename></para>
+
+<para> See documentation for <application>Log4J</application> for more
+details as to how this is configured; the defaults provided likely do
+not need to be altered. </para></listitem>
+</itemizedlist>
+
+</sect3>
+
+<sect2 id="regression"> <title>Regression Tests</title>
+
+<para> These tests represent a re-coding of the tests previously
+implemented as shell scripts using the clustertest framework.</para>
+
+<para> These tests have gradually been enhanced to provide coverage of
+scenarios with which &slony1; has had problems; it is to be expected
+that new bugs may lead to the addition of further tests.</para>
+
+<sect3> <title>Configuring Regression Tests</title>
+
+<para> Similar to the <xref linkend="disorderconfig"> for DISORDER tests, there are three configuration parameters:</para>
+<itemizedlist>
+<listitem><para><filename>conf/slonyregress.properties.sample</filename></para>
+
+<para> This file contains Java style properties indicating how to
+connect to the various databases used by the regression tests,
+including paths to tools such as &lslon; and &lslonik;</para>
+
+<para> The sample file is to be copied to
+<filename>conf/slonyregress.properties</filename>, and customized to
+indicate your local configuration.  By using a
+<filename>.sample</filename> file, a developer may run tests within a
+Git tree, and not need to worry about their customizations interfering
+with the <quote>canonical</quote> sample configuration
+provided.</para>
+
+</listitem>
+
+<listitem><para><filename>conf/java.conf.sample</filename></para>
+
+<para> This is a shell script containing a path indicating where the
+clustertest Java code (<emphasis>e.g.</emphasis> - the
+<filename>clustertest-coordinator.jar</filename> file) may be found.
+This is also used, indirectly to determine where additional Java .jar
+files such as the JDBC driver are located.  </para>
+
+</listitem>
+
+<listitem><para><filename>conf/log4j.properties</filename></para>
+
+<para> Identical to configuration for DISORDER.
+</itemizedlist>
+
+</sect3>
+</sect2>
+
+</sect1>
+<sect1 id="oldtestbed"><title> &slony1; Test Bed Framework </title>
 
 <indexterm><primary>test bed framework</primary></indexterm>
 
-<para> As of version 1.1.5, &slony1; has a common test bed framework
-intended to better support running a comprehensive set of tests at
-least somewhat automatically.  Older tests
-used <application>pgbench</application> (not
-a <emphasis>bad</emphasis> thing) but were troublesome to automate
-because they were set up to spawn each &lslon; in
-an <application>xterm</application> for the user
-to <emphasis>watch</emphasis>.</para>
+<para> Version 1.1.5 of &slony1; introduced a common test bed
+framework intended to better support running a comprehensive set of
+tests at least somewhat automatically.  </para>
 
 <para> The new test framework is mostly written in Bourne shell, and
 is intended to be portable to both Bash (widely used on Linux) and
 Korn shell (widely found on commercial UNIX systems).  The code lives
-in the source tree under the <filename> tests
-</filename> directory.</para>
+in the source tree under the <filename> tests </filename>
+directory.</para>
 
 <para> At present, nearly all of the tests make use of only two
 databases that, by default, are on a single &postgres; postmaster on

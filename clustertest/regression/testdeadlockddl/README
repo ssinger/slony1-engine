@@ -1,0 +1,5 @@
+
+
+testdeadlockddl tries to induce DEADLOCK during application of DDL to
+verify that the attempt to run the DDL on subscribers rolls back
+properly when it fails.
