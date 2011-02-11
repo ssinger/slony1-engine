@@ -2954,20 +2954,123 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
 				   stmt->hdr.script->clustername,
 				   max_node_total->adminfo->no_id);
-			if (db_exec_evcommand((SlonikStmt *) stmt,
+			if (db_exec_command((SlonikStmt *) stmt,
 								max_node_total->adminfo, &query) < 0)
-				rc = -1;
+				rc = -1;			
+			else
+			{
+				SlonikAdmInfo * failed_conn_info=NULL;
+				SlonikAdmInfo * last_conn_info=NULL;
+				bool temp_conn_info=false;
+				/**
+				 * now wait for the FAILOVER to finish.
+				 * To do this we must wait for the FAILOVER_EVENT
+				 * which has ev_origin=stmt->no_id (the failed node)
+				 * but was incjected into the sl_event table on the
+				 * most ahead node (max_node_total->adminfo)
+				 * to be confirmed by the backup node.
+				 * 
+				 * Then we wait for the backup node to send an event
+				 * and be confirmed elsewhere.				 
+				 *
+				 */
+				
+			
+				SlonikStmt_wait_event wait_event;		
+				wait_event.hdr=*(SlonikStmt*)stmt;
+				wait_event.wait_origin=stmt->no_id; /*failed node*/
+				wait_event.wait_on=max_node_total->adminfo->no_id;
+				wait_event.wait_confirmed=-1;
+				wait_event.wait_timeout=0;
+
+				/**
+				 * see if we can find a admconninfo
+				 * for the failed node.
+				 */
+				
+				for(failed_conn_info = stmt->hdr.script->adminfo_list;
+					failed_conn_info != NULL;
+					failed_conn_info=failed_conn_info->next)
+				{
+
+					if(failed_conn_info->no_id==stmt->no_id)
+					{
+						break;
+					}
+					last_conn_info=failed_conn_info;
+				}
+				if(failed_conn_info == NULL)
+				{
+					temp_conn_info=true;
+					last_conn_info->next = malloc(sizeof(SlonikAdmInfo));
+					memset(last_conn_info->next,0,sizeof(SlonikAdmInfo));
+					failed_conn_info=last_conn_info->next;
+					failed_conn_info->no_id=stmt->no_id;
+					failed_conn_info->stmt_filename="slonik generated";
+					failed_conn_info->stmt_lno=-1;
+					failed_conn_info->conninfo="";
+					failed_conn_info->script=last_conn_info->script;
+				}
+				
+				failed_conn_info->last_event=max_seqno_total;
+
+				/*
+				 * commit all open transactions despite of all possible errors
+				 * otherwise the WAIT FOR will not work.
+				 **/
+				for (i = 0; i < num_nodes; i++)
+				{
+					if (db_commit_xact((SlonikStmt *) stmt, 
+									   nodeinfo[i].adminfo) < 0)
+						rc = -1;
+				}
+				
+
+				rc = slonik_wait_event(&wait_event);
+				if(rc < 0)  
+				{
+					/**
+					 * pretty serious? how do we recover?
+					 */
+					printf("%s:%d error waiting for event\n",
+						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				}
+
+				if(temp_conn_info)
+				{
+					last_conn_info->next=failed_conn_info->next;
+					free(failed_conn_info);					
+
+				}
+
+				slon_mkquery(&query,
+							 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
+							 stmt->hdr.script->clustername,
+							 stmt->hdr.script->clustername);
+				if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
+									   stmt->hdr.script,1) < 0)
+				{
+					printf("%s:%d: error submitting SYNC event to backup node"
+						   ,stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				}
+				
+				
+				
+			}/*else*/
+		   			
 		}
 	}
-
+	
 	/*
 	 * commit all open transactions despite of all possible errors
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
-		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
+		if (db_commit_xact((SlonikStmt *) stmt, 
+						   nodeinfo[i].adminfo) < 0)
 			rc = -1;
 	}
+	
 
 	free(configbuf);
 	dstring_free(&query);
