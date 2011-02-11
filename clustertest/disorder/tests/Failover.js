@@ -240,6 +240,7 @@ Failover.prototype.runTest = function() {
 		this.coordinator.join(this.slonArray[idx - 1]);
 	}
 	this.slonikSync(1,1);
+	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
 	this.compareDb('db4','db3');
@@ -340,5 +341,5 @@ Failover.prototype.dropNode=function(node_id,event_node) {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('slonik drop node status okay',slonik.getReturnCode(),0);
-        this.coordinator.log("Failover.prototype.dropNode - complete");
+    this.coordinator.log("Failover.prototype.dropNode - complete");
 }
