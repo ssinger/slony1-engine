@@ -119,7 +119,7 @@ FailNodeTest.prototype.runTest = function() {
 	 * does individual wait for event(..) statements instead of 
 	 * a confirmed=all since we do not want to be waiting on node 3
 	 * since we just destroyed it.
-	 
+
 	var originalGenerateWait = this.generateSlonikWait;
 	this.generateSlonikWait=function(event_node) {
 		var script='';
@@ -206,7 +206,6 @@ FailNodeTest.prototype.runTest = function() {
 	 * does individual wait for event(..) statements instead of 
 	 * a confirmed=all since we do not want to be waiting on node 3
 	 * since we just destroyed it.
-	 
 	var originalGenerateWait = this.generateSlonikWait;
 	this.generateSlonikWait=function(event_node) {
 		var script='';

@@ -16,19 +16,21 @@ Version TBD...
 
 - Bug #180 - Created a slonik DATE command
 
+- Bug #181 - Support for bulk adding of tables and sequences and automatically finding
+  the next available table or sequence id.
+             
 - Bug #185 - change functions to use named parameters
 
 - Bug #187 - add newline to slon PID files
 
 - Bug #188 - test harness query had subquery returning multiple tuples
 
-- Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
-
 - Bug #189 - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
 
-- Bug 181 - Support for bulk adding of tables and sequences and automatically finding
-  the next available table or sequence id.
-             
+- Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
+
+- Bug #195 - change slon_quote_* functions to IMMUTABLE
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
