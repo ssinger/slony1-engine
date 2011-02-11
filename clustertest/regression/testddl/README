@@ -1,0 +1,14 @@
+
+
+testddl performs some DDL changes via the EXECUTE SCRIPT capability.
+
+This includes:
+
+1.  Adding a new column to the primary key
+2.  Dropping a column from the primary key
+3.  Renaming a column that is part of the primary key
+4.  Inserting new data as part of the script
+5.  Updating data as part of the script
+
+2007-03-31 - Add in a third node, and add in a series of "EXECUTE ONLY
+ON" clauses.

@@ -1,0 +1,11 @@
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Launching a set of tests
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Launching a set of tests
+1    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Starting test script tests/disorder_tests.js
+93   [main] ERROR info.slony.clustertest.testcoordinator.TestCoordinator  - unable to find test script:tests/disorder_tests.js
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Launching a set of tests
+1    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Starting test script tests/disorder_tests.js
+77   [main] ERROR info.slony.clustertest.testcoordinator.TestCoordinator  - unable to find test script:tests/disorder_tests.js
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Launching a set of tests
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Starting test script tests/disorder_tests.js
+0    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Launching a set of tests
+1    [main] INFO  info.slony.clustertest.testcoordinator.TestCoordinator  - Starting test script tests/disorder_tests.js

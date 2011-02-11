@@ -1,0 +1,12 @@
+
+
+testmultiplemoves is a test that exercises MOVE SET on a 3 node
+cluster with 10 replication sets.
+  
+The interesting bit is that it requests MOVE SET on all 10 sets...
+
+This may be expected to "stress" things such as...
+
+- Auto generation of partial indexes on sl_log_? tables
+- Locking and unlocking sets
+

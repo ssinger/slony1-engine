@@ -1,0 +1,24 @@
+
+  
+Create 3 nodes, and two replication sets:
+
+For replication set #1, set up the following subscription structure:
+
+                   1
+                  / \
+                 2   3
+
+For replication set #2, set up the following (different) subscription
+structure:
+
+                   1
+                    \
+                     2
+                      \
+                       3
+
+This ought to work; according to recent reports, it doesn't.
+
+See:
+<http://lists.slony.info/pipermail/slony1-general/2007-September/006642.html>
+

@@ -1,0 +1,21 @@
+
+  
+This test validates the OMIT COPY functionality added to SUBSCRIBE SET
+  
+It creates three simple tables as one replication set, and replicates
+them from one database to another.
+  
+The tables are of the several interesting types:
+  
+1.  table1 has a formal primary key
+
+2.  table2 lacks a formal primary key, but has a candidate primary key
+
+3.  table4 which has columns of all sorts of vaguely esoteric types to
+exercise that points, paths, bitmaps, mac addresses, and inet types
+replicate properly.
+
+4.  table5 has a composite primary key (on id1,id2,id3) where
+the primary key attributes are strewn throughout the table.  This is
+to make sure we have a case that exercises the logic that changed with
+bug #18.

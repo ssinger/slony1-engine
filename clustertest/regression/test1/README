@@ -1,0 +1,38 @@
+  
+test1 is a basic test that replication generally functions.  
+  
+It creates three simple tables as one replication set, and replicates
+them from one database to another.
+  
+The tables are of the several interesting types:
+  
+1.  table1 has a formal primary key
+
+2.  table2 lacks a formal primary key, but has a candidate primary key
+
+It tries replicating a third table, which has an invalid candidate
+primary key (columns not defined NOT NULL), which should cause it to
+be rejected.  That is done in a slonik TRY {} block.
+
+It also creates...
+
+5.  table4 which has columns of all sorts of vaguely esoteric types to
+exercise that points, paths, bitmaps, mac addresses, and inet types
+replicate properly.
+
+5.1  table5 has a composite primary key (on id1,id2,id3) where
+the primary key attributes are strewn throughout the table.  This is
+to make sure we have a case that exercises the logic that changed with
+bug #18.
+
+6.  It does a test of the function generate_sync_event() to make sure
+that it works as expected
+
+7.  It does a run of UPDATE FUNCTIONS against node 1.  This verifies
+that there are at least no syntax errors in the stored function.
+
+
+9.  It runs the cleanupEvent() function by hand
+
+10.  It runs updateReloid(), which repairs the OIDs on sl_table/sl_sequence
+

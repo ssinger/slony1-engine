@@ -1,0 +1,5 @@
+# Shell configuration for DISORDER tests
+
+# Where is the clustertest-framework?
+#   Inside this, it references build/jar/clustertest-coordinator.jar
+CLUSTERTESTHOME=/var/lib/postgresql/PostgreSQL/clustertest-framework

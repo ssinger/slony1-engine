@@ -1,0 +1,8 @@
+
+
+This test involves creating tables and sequences in namespaces with
+some wacky names, with StudlyCaps, spaces, and ".".
+
+It drops the "public" schema, using schema "foo" instead.  This
+validates that we can operate without there being a "public"
+schema.
