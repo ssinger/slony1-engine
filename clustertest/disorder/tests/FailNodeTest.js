@@ -119,7 +119,7 @@ FailNodeTest.prototype.runTest = function() {
 	 * does individual wait for event(..) statements instead of 
 	 * a confirmed=all since we do not want to be waiting on node 3
 	 * since we just destroyed it.
-	 */
+	 
 	var originalGenerateWait = this.generateSlonikWait;
 	this.generateSlonikWait=function(event_node) {
 		var script='';
@@ -206,7 +206,7 @@ FailNodeTest.prototype.runTest = function() {
 	 * does individual wait for event(..) statements instead of 
 	 * a confirmed=all since we do not want to be waiting on node 3
 	 * since we just destroyed it.
-	 */
+	 
 	var originalGenerateWait = this.generateSlonikWait;
 	this.generateSlonikWait=function(event_node) {
 		var script='';
@@ -219,7 +219,7 @@ FailNodeTest.prototype.runTest = function() {
 		}
 		return script;
 	}
-	
+	*/
 	this.coordinator.log("FailNodeTest.prototype.runTest - reshape cluster");
 	//Now reshape the cluster.
 	this.subscribeSet(1,1,1,[4,5]);
@@ -264,7 +264,7 @@ FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 		if(idx == nodeId) {
 			continue;
 		}
-		slonikScript +=  'wait for event(origin=1,confirmed=' + idx + ', wait on=1 );\n';
+		//		slonikScript +=  'wait for event(origin=1,confirmed=' + idx + ', wait on=1 );\n';
 	}
 		
 	var slonik=this.coordinator.createSlonik('drop node',slonikPreamble,slonikScript);
