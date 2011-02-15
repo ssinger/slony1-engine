@@ -5091,7 +5091,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	 * or the last event seen for each admin conninfo
 	 * node.
 	 */
-	int * last_event_array=NULL;
+	int64 * last_event_array=NULL;
 	
 
 	dstring_init(&event_list);
@@ -5110,8 +5110,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	{
 		node_list_size++;
 	}
-	last_event_array = malloc(node_list_size * sizeof(int)*2);
-	memset(last_event_array,0,sizeof(wait_count * sizeof(int)*2));
+	last_event_array = malloc(node_list_size * sizeof(int64)*2);
+	memset(last_event_array,0,sizeof(wait_count * sizeof(int64)*2));
 	
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
@@ -5119,12 +5119,14 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		if(curAdmInfo->last_event < 0 || 
 		   curAdmInfo->no_id==adminfo1->no_id)
 			continue;
+		char  seqno[64];
+		sprintf(seqno,INT64_FORMAT,curAdmInfo->last_event);
 		slon_appendquery(&event_list, 
-						 "%s (node_list.no_id=%d  AND (con_seqno>=%d OR "
+						 "%s (node_list.no_id=%d  AND (con_seqno>=%s OR "
 						 " sl_node.no_id is null))"
 						 ,first_event ? " " : " OR "
 						 ,curAdmInfo->no_id
-						 ,curAdmInfo->last_event
+						 ,seqno
 						 );		
 		slon_appendquery(&node_list,"%s (%d) ",
 						 first_event ? " " : ",",
@@ -5211,7 +5213,9 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			   {				   
 				   if(caught_up_nodes[cur_array_idx] == 0)
 				   {
-					   slon_appendquery(&outstanding,"%s(%d,%d)"
+					   slon_appendquery(&outstanding,"%s(" 
+										INT64_FORMAT "," INT64_FORMAT
+										")"
 										, first_event ? "" : ","
 										,last_event_array[cur_array_idx*2]
 										,	last_event_array[cur_array_idx*2+1]);
