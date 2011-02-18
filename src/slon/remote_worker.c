@@ -4204,24 +4204,25 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		dstring_terminate(provider_query);
 
 		/*
-		 * Check that we at select something from the provider.
+		 * Check that we select something from the provider.
 		 */
 		if (!need_union)
 		{
 			/*
-			 * This should never happen.
+			 * This can happen when there are no tables in any of the
+			 * sets that we subscribe from this node.
 			 */
-			slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
-					"Nothing selected from provider.\n", node->no_id);
-			dstring_free(&query);
-			dstring_free(&lsquery);
-			if (archive_dir)
-			{
-				rc = archive_close(node);
-				if (rc < 0)
-					slon_retry();
-			}
-			return 60;
+			slon_mkquery(provider_query,
+				"declare LOG cursor for "
+				"select log_origin, log_txid, log_tableid, "
+						"log_actionseq, log_cmdtype, "
+						"octet_length(log_cmddata), "
+						"case when octet_length(log_cmddata) <= %d "
+							"then log_cmddata "
+							"else null end "
+					"from %s.sl_log_1 "
+					"where false",
+					sync_max_rowsize, rtcfg_namespace);
 		}
 	}
 
