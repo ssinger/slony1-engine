@@ -25,16 +25,15 @@ coordinator.includeFile('disorder/tests/RecreateSet.js');
 var tests = 
     [new EmptySet(coordinator,results)
      ,new OmitCopy(coordinator,results)
-     ,new UnsubscribeBeforeEnable(coordinator,results)
      ,new SubscribeUnderLoad(coordinator,results)
      ,new MoveSet(coordinator,results)
      ,new CloneNode(coordinator,results)
      ,new AddPathsAfterSubscribe(coordinator,results)
      ,new SlonKilling(coordinator,results)
      ,new InitialCopyFail(coordinator,results)
-     ,new FailNodeTest(coordinator,results) //fails, bug #136
+     ,new FailNodeTest(coordinator,results) //fail, bug133
      ,new DropPath(coordinator,results)
-     ,new DropSet(coordinator,results) //fails bug 133
+
      ,new ExecuteScript(coordinator,results) //compare failures
      ,new Failover(coordinator,results) //bug136 related
      ,new LogShipping(coordinator,results)
@@ -45,8 +44,15 @@ var tests =
      ,new BigBacklogTest(coordinator,results)
      ,new LongTransaction(coordinator,results)
      ,new RenameTests(coordinator,results)
+
+	 //Below tests are known to fail.
+	 ,new UnsubscribeBeforeEnable(coordinator,results)
+     ,new DropSet(coordinator,results) //fails bug 133
+     ,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
-//tests=[ new CloneNode(coordinator,results)];
+
+//tests=[new CleanupTest(coordinator,results)	   ];
+
 var basicTest = new BasicTest(coordinator,results);
 
 //Setup the schema.

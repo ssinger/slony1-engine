@@ -448,8 +448,8 @@ ExecuteScript.prototype.dropTestTable=function(node_id,set_id,removeFromReplicat
 ExecuteScript.prototype.dropSet3 = function(set_origin) {
         this.coordinator.log('ExecuteScript.prototype.dropSet3 ' + set_origin + " - begin");
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript ='echo \'ExecuteScript.prototype.dropSet3\';\n';
-	slonikScript =+ 'drop set (id=3,origin=' + set_origin + ');'
+	var slonikScript ='echo \'ExecuteScript.prototype.dropSet3\';\n' 
+		+ 'drop set (id=3,origin=' + set_origin + ');'
 		+ 'wait for event(origin=' + set_origin + ', wait on=' + set_origin + ', confirmed=all);\n';
 	var slonik=this.coordinator.createSlonik('DROP SET',slonikPreamble,slonikScript);
 	slonik.run();
