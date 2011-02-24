@@ -54,9 +54,8 @@ InitialCopyFail.prototype.runTest = function() {
 
 					
 					//
-					// Now validate that the tables are empty on the subscribers.
-					// The TRUNCATE should have happened (this can't be rolled back)
-					// but the COPY should have failed.
+					// Now validate that the tables are empty on the subscribers
+					// we delete everything from the subscribers first.
 					for(var idx=2; idx <=thisRef.getNodeCount();idx++) {
 						var connection = thisRef.coordinator.createJdbcConnection('db' + idx);
 						var stat = connection.createStatement();
@@ -67,17 +66,7 @@ InitialCopyFail.prototype.runTest = function() {
 						stat.close();
 						connection.close();
 					}
-
 					
-					for(var idx=2; idx <= thisRef.getNodeCount(); idx++) {
-						var connection = thisRef.coordinator.createJdbcConnection('db' + idx);
-						var statement = connection.createStatement();
-						var result = statement.execute('ALTER TABLE disorder.do_customer ADD COLUMN testme int4;');
-						thisRef.testResults.assertCheck('alter table okay',result,false);
-						statement.close();
-						connection.close();
-						
-					}
 														
 				}
 			}
@@ -113,11 +102,20 @@ InitialCopyFail.prototype.runTest = function() {
         this.coordinator.log("InitialCopyFail.prototype.runTest - subscribe sets");
 	
 	for(var idx=2; idx <= this.getNodeCount(); idx++) {
+		// truncate the subscribers
+		// this way if the table is non-empty then the subscription must
+		// have worked.
+		var jdbcCon = this.coordinator.createJdbcConnection('db'+idx);
+		var stat = jdbcCon.createStatement();
+		stat.execute("TRUNCATE disorder.do_customer CASCADE");
+		stat.close();
+		jdbcCon.close();
+
 	        var slonikScript = 'echo \'InitialCopyFail.prototype.runTest\';\n';
 		slonikScript += 'subscribe set (id=1, provider=1, receiver=' + idx+ ');\n'
-		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n'
+		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1,timeout=30);\n'
 		+'sync(id=1);\n'
-		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1);\n';
+		+'wait for event(origin=1, confirmed=' + idx + ', wait on=1,timeout=30);\n';
 		slonikArray[idx] = this.coordinator.createSlonik('subscribe',slonikPreamble,slonikScript);
 		slonikArray[idx].run();	
 	}	
@@ -126,7 +124,17 @@ InitialCopyFail.prototype.runTest = function() {
 		var result = slonikArray[idx].getReturnCode();
 		this.testResults.assertCheck('slonik returned failure on a blocked subscription',result,255);
 	}
-	
+		
+
+   for(var idx=2; idx <= thisRef.getNodeCount(); idx++) {
+	   var connection = thisRef.coordinator.createJdbcConnection('db' + idx);
+	   var statement = connection.createStatement();
+	   var result = statement.execute('ALTER TABLE disorder.do_customer ADD COLUMN testme int4;');
+	   thisRef.testResults.assertCheck('alter table okay',result,false);
+	   statement.close();
+	   connection.close();
+	   
+   }
 	
 	
         this.coordinator.log("InitialCopyFail.prototype.runTest - sync");
