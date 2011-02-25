@@ -4337,6 +4337,8 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	int			all_confirmed = 0;
 	char		seqbuf[64];
 	int loop_count=0;
+	SlonDString outstanding_nodes;
+	int tupindex;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->wait_on);
 	if (adminfo1 == NULL)
@@ -4345,7 +4347,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	time(&timeout);
 	timeout += stmt->wait_timeout;
 	dstring_init(&query);
-
+	slon_mkquery(&outstanding_nodes,"");
 	while (!all_confirmed)
 	{
 		all_confirmed = 1;
@@ -4420,6 +4422,18 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 			}
 			if (PQntuples(res) > 0)
 				all_confirmed = 0;
+			else
+			{
+				dstring_reset(&outstanding_nodes);
+				for(tupindex=0; tupindex < PQntuples(res); tupindex++)
+				{
+					char * node = PQgetvalue(res,tupindex,0);
+					slon_appendquery(&outstanding_nodes,"%s%s"
+									 , tupindex==0 ? "" : ","
+									 , node);
+					
+				}
+			}
 			PQclear(res);
 
 			if (!all_confirmed)
@@ -4446,7 +4460,15 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 		{
 			printf("%s:%d: waiting for event (%d,%ld) to be confirmed on node %d\n"
 				   ,stmt->hdr.stmt_filename,stmt->hdr.stmt_lno
-				   ,stmt->wait_origin,adminfo->last_event,stmt->wait_confirmed);
+				   ,stmt->wait_origin,adminfo->last_event,
+				   stmt->wait_confirmed);
+		}
+		else if (loop_count % 10 ==0 )
+		{
+			printf("%s:%d: waiting for nodes %s\n",
+				   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno,
+				   dstring_data(&outstanding_nodes));
+
 		}
 		sleep(1);
 	}
@@ -5213,19 +5235,19 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			   {				   
 				   if(caught_up_nodes[cur_array_idx] == 0)
 				   {
-					   slon_appendquery(&outstanding,"%s(" 
-										INT64_FORMAT "," INT64_FORMAT
-										")"
-										, first_event ? "" : ","
-										,last_event_array[cur_array_idx*2]
-										,	last_event_array[cur_array_idx*2+1]);
+					   char tmpbuf[64];
+					   sprintf(tmpbuf,	INT64_FORMAT "," INT64_FORMAT,
+							   last_event_array[cur_array_idx*2]
+							   ,last_event_array[cur_array_idx*2+1]);
+					   slon_appendquery(&outstanding,"%s(%s)"
+										, first_event ? "" : ",",tmpbuf);
 					   first_event=0;
 				   }
 
 			   }
 			   free(caught_up_nodes);
 			 printf("waiting for events %s to be confirmed on node %d\n",
-					dstring_data(&outstanding),curAdmInfo->no_id);
+					dstring_data(&outstanding),adminfo1->no_id);
 			 dstring_terminate(&outstanding);
 			   
 		   }/* every 10 iterations */		   
