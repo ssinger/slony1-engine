@@ -4347,7 +4347,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	time(&timeout);
 	timeout += stmt->wait_timeout;
 	dstring_init(&query);
-	slon_mkquery(&outstanding_nodes,"");
+	dstring_init(&outstanding_nodes);
 	while (!all_confirmed)
 	{
 		all_confirmed = 1;
@@ -4421,9 +4421,8 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 				return -1;
 			}
 			if (PQntuples(res) > 0)
-				all_confirmed = 0;
-			else
 			{
+				all_confirmed = 0;		
 				dstring_reset(&outstanding_nodes);
 				for(tupindex=0; tupindex < PQntuples(res); tupindex++)
 				{
@@ -4472,7 +4471,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 		}
 		sleep(1);
 	}
-
+	dstring_free(&outstanding_nodes);
 	dstring_free(&query);
 
 	return 0;
