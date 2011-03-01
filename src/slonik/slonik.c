@@ -4427,9 +4427,12 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 				for(tupindex=0; tupindex < PQntuples(res); tupindex++)
 				{
 					char * node = PQgetvalue(res,tupindex,0);
-					slon_appendquery(&outstanding_nodes,"%s%s"
+					char * last_event = PQgetvalue(res,tupindex,1);
+					if( last_event == 0)
+					  last_event="null";
+					slon_appendquery(&outstanding_nodes,"%s%s only on event %s"
 									 , tupindex==0 ? "" : ","
-									 , node);
+									 , node,last_event);
 					
 				}
 			}
