@@ -2064,8 +2064,10 @@ slonik_init_cluster(SlonikStmt_init_cluster * stmt)
 	/* call initializeLocalNode() and enableNode() */
 	dstring_init(&query);
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".initializeLocalNode(%d, '%q'); "
 				 "select \"_%s\".enableNode(%d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo, &query) < 0)
@@ -2119,8 +2121,10 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 
 	/* call initializeLocalNode() and enableNode_int() */
 	slon_mkquery(&query,
+			 "select \"_%s\".pre_event_create();"
 		     "select \"_%s\".initializeLocalNode(%d, '%q'); "
 		     "select \"_%s\".enableNode_int(%d); ",
+				 stmt->hdr.script->clustername,
 		     stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
 		     stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -2396,7 +2400,9 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".dropNode(%d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->no_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -2962,7 +2968,9 @@ slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".uninstallNode(); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
@@ -3078,7 +3086,9 @@ slonik_store_path(SlonikStmt_store_path * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".storePath(%d, %d, '%q', %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->pa_server, stmt->pa_client,
 				 stmt->pa_conninfo, stmt->pa_connretry);
@@ -3109,7 +3119,9 @@ slonik_drop_path(SlonikStmt_drop_path * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".dropPath(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->pa_server, stmt->pa_client);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3139,7 +3151,9 @@ slonik_store_listen(SlonikStmt_store_listen * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".storeListen(%d, %d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->li_origin, stmt->li_provider,
 				 stmt->li_receiver);
@@ -3170,7 +3184,9 @@ slonik_drop_listen(SlonikStmt_drop_listen * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".dropListen(%d, %d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->li_origin, stmt->li_provider,
 				 stmt->li_receiver);
@@ -3208,7 +3224,9 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+			 "select \"_%s\".pre_event_create();"
 		     "select \"_%s\".storeSet(%d, '%q'); ",
+		     stmt->hdr.script->clustername,
 		     stmt->hdr.script->clustername,
 		     stmt->set_id, comment);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3238,7 +3256,9 @@ slonik_drop_set(SlonikStmt_drop_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".dropSet(%d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->set_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3268,7 +3288,9 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".mergeSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->set_id, stmt->add_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3560,7 +3582,9 @@ slonik_set_drop_table(SlonikStmt_set_drop_table * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".setDropTable(%d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->tab_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3624,7 +3648,9 @@ slonik_set_move_table(SlonikStmt_set_move_table * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".setMoveTable(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->tab_id, stmt->new_set_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3653,7 +3679,9 @@ slonik_set_move_sequence(SlonikStmt_set_move_sequence * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".setMoveSequence(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->seq_id, stmt->new_set_id);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3734,7 +3762,9 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo2) < 0)
 		return -1;
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".subscribeSet(%d, %d, %d, '%s', '%s'); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->sub_setid, stmt->sub_provider,
 				 stmt->sub_receiver,
@@ -3787,7 +3817,9 @@ slonik_unsubscribe_set(SlonikStmt_unsubscribe_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".unsubscribeSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->sub_setid, stmt->sub_receiver);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3899,7 +3931,9 @@ slonik_unlock_set(SlonikStmt_unlock_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".unlockSet(%d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->set_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3929,7 +3963,9 @@ slonik_move_set(SlonikStmt_move_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".moveSet(%d, %d); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->set_id, stmt->new_origin);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
@@ -3988,7 +4024,9 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 
 	dstring_init(&query);
 	slon_mkquery(&query,
+			 "select \"_%s\".pre_event_create();"
 		     "select \"_%s\".ddlScript_prepare(%d, %d); ",
+		     stmt->hdr.script->clustername,
 		     stmt->hdr.script->clustername,
 		     stmt->ddl_setid, /* dstring_data(&script),  */ 
 		     stmt->only_on_node);
@@ -4295,7 +4333,9 @@ slonik_switch_log(SlonikStmt_switch_log * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".logswitch_start(); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
@@ -4324,7 +4364,9 @@ slonik_sync(SlonikStmt_sync * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,
+				 "select \"_%s\".pre_event_create();"
 				 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
+				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername);
 	if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)

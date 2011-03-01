@@ -75,8 +75,9 @@ syncThread_main(void *dummy)
 	slon_mkquery(&query1,
 				 "start transaction;"
 				 "set transaction isolation level serializable;"
+				 "select %s.pre_event_create();"
 				 "select last_value from %s.sl_action_seq;",
-				 rtcfg_namespace);
+				 rtcfg_namespace, rtcfg_namespace);
 
 	/*
 	 * Build the query that calls createEvent() for the SYNC

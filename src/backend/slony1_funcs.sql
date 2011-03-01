@@ -5233,6 +5233,11 @@ begin
 	  -- restore sl_status
 	  execute 'create view sl_status as ' || v_keepstatus;
         end if;
+
+	if not exists (select 1 from information_schema.tables t where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_event_lock') then
+	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
+	   execute v_query;
+        end if;
 	return p_old;
 end;
 $$ language plpgsql
@@ -5722,3 +5727,13 @@ end $$ language plpgsql;
 
 comment on function @NAMESPACE@.store_application_name (i_name text) is
 'Set application_name GUC, if possible.  Returns NULL if it fails to work.';
+
+create or replace function @NAMESPACE@.pre_event_create () returns integer as $$
+begin
+	lock table @NAMESPACE@.sl_event_lock;
+	return 1;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.pre_event_create () is 
+'Establish lock on sl_event_lock to ensure events are created in order';
