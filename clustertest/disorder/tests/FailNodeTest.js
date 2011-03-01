@@ -119,8 +119,9 @@ FailNodeTest.prototype.runTest = function() {
 	 * does individual wait for event(..) statements instead of 
 	 * a confirmed=all since we do not want to be waiting on node 3
 	 * since we just destroyed it.
-
+	 **/
 	var originalGenerateWait = this.generateSlonikWait;
+	/**
 	this.generateSlonikWait=function(event_node) {
 		var script='';
 		for(var idx=1; idx <= this.getNodeCount(); idx ++) {
@@ -132,6 +133,7 @@ FailNodeTest.prototype.runTest = function() {
 		}
 		return script;
 	}
+	**/
 	/**
 	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
 	 */
