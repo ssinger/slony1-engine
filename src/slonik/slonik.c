@@ -5106,7 +5106,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	int wait_count=0;
 	int node_list_size=0;
 	int sleep_count=0;
-	char * caught_up_nodes=NULL;
+	int64* behind_nodes=NULL;
 	int idx;
 	int cur_array_idx;
 	
@@ -5135,7 +5135,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		node_list_size++;
 	}
 	last_event_array = malloc(node_list_size * sizeof(int64)*2);
-	memset(last_event_array,0,sizeof(wait_count * sizeof(int64)*2));
+	memset(last_event_array,0,sizeof(node_list_size * sizeof(int64)*2));
 	
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
@@ -5146,8 +5146,7 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		char  seqno[64];
 		sprintf(seqno,INT64_FORMAT,curAdmInfo->last_event);
 		slon_appendquery(&event_list, 
-						 "%s (node_list.no_id=%d  AND (con_seqno>=%s OR "
-						 " sl_node.no_id is null))"
+						 "%s (node_list.no_id=%d)"
 						 ,first_event ? " " : " OR "
 						 ,curAdmInfo->no_id
 						 ,seqno
@@ -5175,12 +5174,12 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 				  " AND sl_confirm.con_received=%d)"
 				  " LEFT JOIN \"_%s\".sl_node ON (con_origin=sl_node.no_id"
 				  " AND sl_node.no_active=true) "
-                " where %s  GROUP BY node_list.no_id"
+                "  GROUP BY node_list.no_id"
 				  ,dstring_data(&node_list)
 				  ,stmt->script->clustername
 				  ,adminfo1->no_id
-				  ,stmt->script->clustername
-				  ,dstring_data(&event_list));
+				  ,stmt->script->clustername);
+	 
 	 while(confirm_count != wait_count)
 	 {
 		 result = db_exec_select(stmt,
@@ -5194,67 +5193,84 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 		 confirm_count = PQntuples(result);
 
 		 db_rollback_xact(stmt, adminfo1);        
-		 if(confirm_count != wait_count)
+		  
+		 /**
+		  * find nodes that are missing.
+		  * 
+		  */
+		 behind_nodes=malloc(node_list_size * sizeof(int64));
+		 memset(behind_nodes,0,node_list_size*sizeof(int64));
+		 confirm_count=0;
+		 for(idx = 0; idx < PQntuples(result); idx++)
 		 {
-		   sleep_count++;
-		   if(sleep_count % 10 == 0)
-		   {
-			   /**
-				* find nodes that are missing.
-				* 
-				*/
-			   caught_up_nodes=malloc(node_list_size);
-			   memset(caught_up_nodes,0,sizeof(node_list_size));
-			   for(idx = 0; idx < PQntuples(result); idx++)
-			   {
-				   char * n_id_c = PQgetvalue(result,idx,0);
-				   int n_id = atoi(n_id_c);
-				   for(cur_array_idx=0;
-					   cur_array_idx < node_list_size; cur_array_idx++)
-				   {
-					   if(last_event_array[cur_array_idx*2+1]==n_id)
-					   {
-						   /*
-							*  found.
+			 char * n_id_c = PQgetvalue(result,idx,0);
+			 int n_id = atoi(n_id_c);
+			 char * seqno_c = PQgetvalue(result,idx,1);
+			 int64 seqno=strtoll(seqno_c,NULL,10);
+			 for(cur_array_idx=0;
+				 cur_array_idx < wait_count; cur_array_idx++)
+			 {
+				 if(last_event_array[cur_array_idx*2]==n_id)
+				 {
+					 /*
+					  *  found.
 							*/
-						   caught_up_nodes[cur_array_idx]=1;
-					   }
-					   
-				   }
-
-			   }
-			   /**
-				* any elements in caught_up_nodes with a value 0
-				* means that the cooresponding node id in
-				* last_event_array is not showing up in the
-				* query result.
-				*/
-			   SlonDString outstanding;
-			   dstring_init(&outstanding);
-			   first_event=1;
-			   for(cur_array_idx=0; cur_array_idx < node_list_size;
-				   cur_array_idx++)
-			   {				   
-				   if(caught_up_nodes[cur_array_idx] == 0)
-				   {
-					   char tmpbuf[64];
-					   sprintf(tmpbuf,	INT64_FORMAT "," INT64_FORMAT,
-							   last_event_array[cur_array_idx*2]
-							   ,last_event_array[cur_array_idx*2+1]);
-					   slon_appendquery(&outstanding,"%s(%s)"
-										, first_event ? "" : ",",tmpbuf);
-					   first_event=0;
-				   }
-
-			   }
-			   free(caught_up_nodes);
-			 printf("waiting for events %s to be confirmed on node %d\n",
-					dstring_data(&outstanding),adminfo1->no_id);
-			 dstring_terminate(&outstanding);
+					 if(last_event_array[cur_array_idx*2+1]>seqno)
+					 {
+						 behind_nodes[cur_array_idx]=seqno;
+					 }
+					 else
+					 {
+						 behind_nodes[cur_array_idx]=-1;
+						 confirm_count++;
+					 }
+					 
+				 }
+				 
+			 }
+		 }/*for .. PQntuples*/
+		 if(confirm_count < wait_count )
+		 {
+			 sleep_count++;
+			 if(sleep_count % 10 == 0)
+			 {
+				 /**
+				  * any elements in caught_up_nodes with a value 0
+				  * means that the cooresponding node id in
+				  * last_event_array is not showing up in the
+				  * query result.
+				  */
+				 SlonDString outstanding;
+				 dstring_init(&outstanding);
+				 first_event=1;
+				 for(cur_array_idx=0; cur_array_idx < wait_count;
+					 cur_array_idx++)
+				 {				   
+					 if(behind_nodes[cur_array_idx] >= 0)
+					 {
+						 char tmpbuf[96];
+						 sprintf(tmpbuf,	"(" INT64_FORMAT "," INT64_FORMAT
+								 ") only at (" INT64_FORMAT "," INT64_FORMAT
+								 ")"
+								 ,
+								 last_event_array[cur_array_idx*2]
+								 ,last_event_array[cur_array_idx*2+1],
+								 last_event_array[cur_array_idx*2],
+								 behind_nodes[cur_array_idx] );
+						 slon_appendquery(&outstanding,"%s %s"
+										  , first_event ? "" : ",",tmpbuf);
+						 first_event=0;
+					 }
+					 
+				 }
+				 printf("waiting for events %s to be confirmed on node %d\n",
+						dstring_data(&outstanding),adminfo1->no_id);
+				 dstring_terminate(&outstanding);
 			   
-		   }/* every 10 iterations */		   
-		   sleep(1);
+			 }/* every 10 iterations */		   		 
+			 sleep(1);
 		 } 
+		 free(behind_nodes);
 		 
 	 }/*while*/
 	 if(result != NULL)
