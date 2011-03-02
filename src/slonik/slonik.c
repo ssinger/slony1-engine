@@ -114,7 +114,7 @@ main(int argc, const char *argv[])
 	extern int	optind;
 	int			opt;
 
-	while ((opt = getopt(argc, (char **)argv, "hv")) != EOF)
+	while ((opt = getopt(argc, (char **)argv, "hvw")) != EOF)
 	{
 		switch (opt)
 		{
@@ -125,6 +125,9 @@ main(int argc, const char *argv[])
 			case 'v':
 				printf("slonik version %s\n", SLONY_I_VERSION_STRING);
 				exit(0);
+				break;
+			case 'w':
+				auto_wait_disabled=1;
 				break;
 
 			default:
@@ -3847,7 +3850,8 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * set origin to that.  This avoids the wait for and is probably
 	 * what we should do.
 	 */ 
-	slonik_wait_caughtup(adminfo1,&stmt->hdr);
+	if(!auto_wait_disabled)
+		slonik_wait_caughtup(adminfo1,&stmt->hdr);
 
 	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
