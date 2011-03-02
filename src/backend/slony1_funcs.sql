@@ -5727,13 +5727,3 @@ end $$ language plpgsql;
 
 comment on function @NAMESPACE@.store_application_name (i_name text) is
 'Set application_name GUC, if possible.  Returns NULL if it fails to work.';
-
-create or replace function @NAMESPACE@.pre_event_create () returns integer as $$
-begin
-	lock table @NAMESPACE@.sl_event_lock;
-	return 1;
-end
-$$ language plpgsql;
-
-comment on function @NAMESPACE@.pre_event_create () is 
-'Establish lock on sl_event_lock to ensure events are created in order';
