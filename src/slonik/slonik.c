@@ -4430,8 +4430,8 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 					char * last_event = PQgetvalue(res,tupindex,1);
 					if( last_event == 0)
 					  last_event="null";
-					slon_appendquery(&outstanding_nodes,"%s%s only on event %s"
-									 , tupindex==0 ? "" : ","
+					slon_appendquery(&outstanding_nodes,"%snode %s only on event %s"
+									 , tupindex==0 ? "" : ", "
 									 , node,last_event);
 					
 				}
@@ -4460,15 +4460,18 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 		loop_count++;
 		if(loop_count % 10 == 0 && stmt->wait_confirmed >= 0)
 		{
-			printf("%s:%d: waiting for event (%d,%ld) to be confirmed on node %d\n"
+			sprintf(seqbuf, INT64_FORMAT, adminfo->last_event);
+			printf("%s:%d: waiting for event (%d,%s) to be confirmed on node %d\n"
 				   ,stmt->hdr.stmt_filename,stmt->hdr.stmt_lno
-				   ,stmt->wait_origin,adminfo->last_event,
+				   ,stmt->wait_origin,seqbuf,
 				   stmt->wait_confirmed);
 		}
 		else if (loop_count % 10 ==0 )
 		{
-			printf("%s:%d: waiting for nodes %s\n",
+			sprintf(seqbuf, INT64_FORMAT, adminfo->last_event);
+			printf("%s:%d: waiting for event (%d,%s).  %s\n",
 				   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno,
+				   stmt->wait_origin,seqbuf,
 				   dstring_data(&outstanding_nodes));
 
 		}
@@ -5168,13 +5171,12 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 	  * and the node is disabled or deleted.
 	  */
 	 slon_mkquery(&is_caughtup_query,
-				  "select node_list.no_id,max(con_seqno) FROM "
+				  "select node_list.no_id,max(con_seqno),no_active FROM "
 				  " (VALUES %s) as node_list (no_id) LEFT JOIN "
 				  "\"_%s\".sl_confirm ON(sl_confirm.con_origin=node_list.no_id"
 				  " AND sl_confirm.con_received=%d)"
-				  " LEFT JOIN \"_%s\".sl_node ON (con_origin=sl_node.no_id"
-				  " AND sl_node.no_active=true) "
-                "  GROUP BY node_list.no_id"
+				  " LEFT JOIN \"_%s\".sl_node ON (con_origin=sl_node.no_id) "
+                " GROUP BY node_list.no_id,no_active"
 				  ,dstring_data(&node_list)
 				  ,stmt->script->clustername
 				  ,adminfo1->no_id
@@ -5206,7 +5208,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 			 char * n_id_c = PQgetvalue(result,idx,0);
 			 int n_id = atoi(n_id_c);
 			 char * seqno_c = PQgetvalue(result,idx,1);
-			 int64 seqno=strtoll(seqno_c,NULL,10);
+			 int64 seqno=strtoll(seqno_c,NULL,10);	
+			 char * node_active = PQgetvalue(result,idx,2);
 			 for(cur_array_idx=0;
 				 cur_array_idx < wait_count; cur_array_idx++)
 			 {
@@ -5214,8 +5217,13 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 				 {
 					 /*
 					  *  found.
-							*/
-					 if(last_event_array[cur_array_idx*2+1]>seqno)
+					  */
+					 if(node_active != NULL && *node_active=='f')
+					 {
+						 behind_nodes[cur_array_idx]=-1;
+						 confirm_count++;
+					 }
+					 else if(last_event_array[cur_array_idx*2+1]>seqno)
 					 {
 						 behind_nodes[cur_array_idx]=seqno;
 					 }
