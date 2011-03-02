@@ -173,7 +173,7 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 	 */
 	var load = this.generateLoad();
 
-	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - add column to orders");
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - add column to orders - expecting failure:" + expectFailure);
 	/**
 	 * Now add a column to orders. We will do this via EXECUTE SCRIPT.
 	 */
