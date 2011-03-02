@@ -2927,7 +2927,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			sprintf(ev_seqfake_c, INT64_FORMAT, ++max_seqno_total);
 
 			slon_mkquery(&query,
+						 "lock table \"_%s\".sl_event_lock; "
 						 "select \"_%s\".failedNode2(%d,%d,%d,'%s','%s'); ",
+						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, stmt->backup_node,
 						 setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);

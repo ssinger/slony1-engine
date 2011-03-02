@@ -1196,7 +1196,8 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_storeSet(set_id, backup_node, NULL);
 
 				slon_appendquery(&query1,
-							   "select %s.failoverSet_int(%d, %d, %d, %s); ",
+								 "lock table %s.sl_event_lock;"
+								 "select %s.failoverSet_int(%d, %d, %d, %s); ",
 								 rtcfg_namespace,
 								 failed_node, backup_node, set_id, seqbuf);
 
