@@ -1215,7 +1215,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_event_lock;"
 								 "select %s.subscribeSet_int(%d, %d, %d, '%q', '%q'); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 sub_set, sub_provider, sub_receiver, sub_forward, omit_copy);
 				need_reloadListen = true;
