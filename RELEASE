@@ -31,6 +31,8 @@ Version TBD...
 
 - Bug #195 - change slon_quote_* functions to IMMUTABLE
 
+- Bug #198 - subscribeset() should verify that provider node exists
+
 RELEASE 2.0.6
 
 -Fix for bug #162, typenameTypeId() changes signatures in 9.1
