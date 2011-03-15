@@ -150,26 +150,7 @@ Failover.prototype.runTest = function() {
 	
 	this.reAddNode(1,3,3);
 	
-	/**
-	 * Now Shutdown the slon for node 4. 
-	 */
-	this.coordinator.log('PROGRESS:Shutting down node 4');
-	this.slonArray[3].stop();
-	this.coordinator.join(this.slonArray[3]);
 	
-	/**
-	 * How does the failure behave when the slon for node 4 is down?
-	 *  
-	 * Well for 1 the 'wait for event' to node 4 won't recover.
-	 * 
-	 */
-	this.failNode(1,3,false);
-	
-	this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
-	this.slonArray[3].run();
-	java.lang.Thread.sleep(10*1000);
-	this.dropNode(1,3);
-	this.reAddNode(1,3,3);
 	this.slonikSync(1,1);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
@@ -185,14 +166,36 @@ Failover.prototype.runTest = function() {
 	this.coordinator.join(this.slonArray[2]);
 	load.stop();
 	this.coordinator.join(load);
-	this.failNode(1,3,false);
-	this.coordinator.log('PROGRESS:starting slon 3 back up');
-	this.slonArray[2] = this.coordinator.createSlonLauncher('db3');
-	this.slonArray[2].run();
+		/**
+		 * create a timer event.
+		 * in 60 seconds we will start up the slon again.
+		 * the failover should not complete with the slon shutdown
+		 * (at least not the 2.1 version of failover).
+		 */
+
+
+		this.coordinator.log('PROGRESS:load has stopped');
+	var thisRef=this;	
 	/**
 	 * The failover needs to propogate before the DROP NODE or things can fail.
 	 */
-	java.lang.Thread.sleep(10*1000);
+	 var onTimeout = {
+		 onEvent : function(object, event) {
+			 	thisRef.coordinator.log('PROGRESS:starting slon 3 back up');
+				thisRef.slonArray[2] = thisRef.coordinator.createSlonLauncher('db3');
+				thisRef.slonArray[2].run();
+
+
+		}
+	};
+	var timeoutObserver = new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(onTimeout);
+	var timer = this.coordinator.addTimerTask('restart slon', 120,
+										 timeoutObserver);
+	this.failNode(1,3,true);
+		this.coordinator.removeObserver(timer,
+										Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_TIMER,
+										timeoutObserver);
+	
 	this.dropNode(1,3);
 	this.reAddNode(1,3,3);	
 	this.slonikSync(1,1);
@@ -234,12 +237,12 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,4,4);
 	
 	
-	
+	this.slonikSync(1,1);	
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
 	}
-	this.slonikSync(1,1);
+
 	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
