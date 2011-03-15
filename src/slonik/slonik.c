@@ -3145,8 +3145,11 @@ slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
 	if (adminfo1 == NULL)
 		return -1;
 
-	dstring_init(&query);
+	if(!auto_wait_disabled)
+		slonik_wait_caughtup(adminfo1,&stmt->hdr);
 
+	dstring_init(&query);
+	
 	if (stmt->no_comment == NULL)
 		slon_mkquery(&query,
 				 "select \"_%s\".cloneNodePrepare(%d, %d, 'Node %d'); ",
@@ -5179,8 +5182,8 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 				  " (VALUES %s) as node_list (no_id) LEFT JOIN "
 				  "\"_%s\".sl_confirm ON(sl_confirm.con_origin=node_list.no_id"
 				  " AND sl_confirm.con_received=%d)"
-				  " LEFT JOIN \"_%s\".sl_node ON (con_origin=sl_node.no_id) "
-                " GROUP BY node_list.no_id,no_active"
+				  " LEFT JOIN \"_%s\".sl_node ON (node_list.no_id=sl_node.no_id) "
+				  "GROUP BY node_list.no_id,no_active"
 				  ,dstring_data(&node_list)
 				  ,stmt->script->clustername
 				  ,adminfo1->no_id
@@ -5222,11 +5225,16 @@ static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
 					 /*
 					  *  found.
 					  */
-					 if(node_active != NULL && *node_active=='f')
+					 if(node_active == NULL ||  *node_active=='f')
 					 {
+						 /**
+						  * if node_active is null we assume the
+						  * node has been deleted since it
+						  * has no entry in sl_node
+						  */
 						 behind_nodes[cur_array_idx]=-1;
 						 confirm_count++;
-					 }
+					 }					
 					 else if(last_event_array[cur_array_idx*2+1]>seqno)
 					 {
 						 behind_nodes[cur_array_idx]=seqno;
