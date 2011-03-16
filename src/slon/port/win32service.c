@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <libpq-fe.h>
+#include<stdarg.h>
 #include "slon.h"
 
 /* Indicates if we are running as a service */
@@ -586,6 +587,7 @@ ListEngines(char *servicename)
  * Verify that a file exists, and also expand the filename to
  * an absolute path.
  */
+#define MAXPGPATH 256
 static char _vfe_buf[MAXPGPATH];
 static char *
 VerifyFileExists(char *filename)
@@ -671,3 +673,4 @@ DelEngine(char *servicename, char *configfile)
 		fprintf(stderr, "Failed to unregister engine: %lu\n", r);
 	exit(1);
 }
+
