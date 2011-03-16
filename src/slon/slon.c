@@ -34,7 +34,6 @@
 #endif
 
 #include "libpq-fe.h"
-#include "c.h"
  
 #include "slon.h"
 #include "confoptions.h"

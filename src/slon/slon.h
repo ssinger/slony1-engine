@@ -12,8 +12,8 @@
 
 #ifndef SLON_H_INCLUDED
 #define SLON_H_INCLUDED
-#include "types.h"
 #include "config.h"
+#include "types.h"
 #include "libpq-fe.h"
 #include "misc.h"
 #include "conf-file.h"

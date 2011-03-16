@@ -1,7 +1,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "slon.h"
+#include "types.h"
 
 #ifdef qsort
 #undef qsort
@@ -22,6 +24,7 @@ static double real_placeholder;
 static char *string_placeholder;
 
 void		dump_configuration(void);
+void build_conf_variables(void);
 
 
 
@@ -819,7 +822,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_BOOL:
 			{
 				struct config_bool *conf = (struct config_bool *) record;
-				bool		newval = FALSE;
+				bool		newval = false;
 
 				if (value)
 				{
