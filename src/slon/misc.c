@@ -16,16 +16,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 #ifndef WIN32
 #include <syslog.h>
+#include <unistd.h>
+#include <sys/time.h>
 #else
 #include "port/win32service.h"
 #endif
@@ -82,7 +82,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	char		time_buf[128];   /* Buffer to hold timestamp */
 	char        ps_buf[20];      /* Buffer to hold PID */
 	time_t		stamp_time = time(NULL);
-
+	va_list apcopy;
 	
 #ifdef HAVE_SYSLOG
 	int			syslog_level = LOG_ERR;
@@ -188,7 +188,6 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	sprintf(outbuf, "%s%s%-6.6s ", time_buf, ps_buf, level_c);
 
 	off = (int) strlen(outbuf);
-	va_list apcopy;
 	va_copy(apcopy,ap);
 	while (vsnprintf(&outbuf[off], (size_t) (outsize - off), fmt, apcopy) >= outsize - off - 1)
 	{

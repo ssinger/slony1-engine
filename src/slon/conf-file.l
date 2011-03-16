@@ -2,7 +2,6 @@
 
 %{
 #include <sys/stat.h>
-#include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
 #include <pthread.h>
@@ -11,6 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 #include "slon.h"
 

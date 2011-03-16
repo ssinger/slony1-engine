@@ -16,11 +16,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifndef WIN32
 #include <unistd.h>
+#include <sys/time.h>
+#endif
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 #include "slon.h"

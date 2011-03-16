@@ -12,13 +12,19 @@
 
 #ifndef SLON_H_INCLUDED
 #define SLON_H_INCLUDED
-
 #include "config.h"
+#include "types.h"
 #include "libpq-fe.h"
-#include "postgres_fe.h"
 #include "misc.h"
 #include "conf-file.h"
 #include "confoptions.h"
+#include <pg_config.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <sys/time.h>
+#endif
+
 
 #define SLON_MEMDEBUG	1
 
@@ -591,6 +597,10 @@ extern int	slon_log_level;
 #define pgpipe(a)			pipe(a)
 #define piperead(a,b,c)		read(a,b,c)
 #define pipewrite(a,b,c)	write(a,b,c)
+#endif
+
+#if defined(WIN32)
+#define snprintf sprintf_s
 #endif
 
 #endif   /* SLON_H_INCLUDED */

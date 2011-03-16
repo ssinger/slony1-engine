@@ -16,12 +16,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
 #ifndef WIN32
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -34,7 +34,6 @@
 #endif
 
 #include "libpq-fe.h"
-#include "c.h"
  
 #include "slon.h"
 #include "confoptions.h"
@@ -1061,7 +1060,7 @@ slon_exit(int code)
 static sighandler_t install_signal_handler(int signo,  sighandler_t handler)
 {
   
-#ifndef CYGWIN
+#ifndef WIN32
 	struct sigaction act;
 	act.sa_handler = handler;
 	(void) sigemptyset(&act.sa_mask);

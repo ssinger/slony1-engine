@@ -24,10 +24,10 @@
 #include <time.h>
 #else
 #define sleep(x) Sleep(x*1000)
-#define vsnprintf _vsnprintf
+
 #endif
 
-#include "postgres.h"
+#include "postgres_fe.h"
 #include "libpq-fe.h"
 #include "port.h"
 
