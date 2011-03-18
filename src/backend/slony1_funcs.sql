@@ -3879,7 +3879,15 @@ begin
 	--
 	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
 	       	      p_sub_receiver) then
-		      raise exception 'Slony-I: subscribeSet() the receiver does not exist receiver id:%' , p_sub_receiver;
+		      raise exception 'Slony-I: subscribeSet() receiver % does not exist' , p_sub_receiver;
+	end if;
+
+	--
+	-- Check that the provider exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_sub_provider) then
+		      raise exception 'Slony-I: subscribeSet() provider % does not exist' , p_sub_provider;
 	end if;
 
 	-- ----
