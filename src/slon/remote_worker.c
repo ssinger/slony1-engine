@@ -375,6 +375,8 @@ remoteWorkerThread_main(void *cdata)
 		slon_retry();
 	local_dbconn = local_conn->dbconn;
 
+	monitor_state(conn_symname, node->no_id, local_conn->conn_pid, "thread main loop", 0, "n/a");
+
 	/*
 	 * Put the connection into replication mode
 	 */
@@ -388,7 +390,7 @@ remoteWorkerThread_main(void *cdata)
 	 * Work until shutdown or node destruction
 	 */
 	while (true)
-	{
+	  {
 		/*
 		 * If we got the special WMSG_WAKEUP, check the current runmode of the
 		 * scheduler and the status of our node.
@@ -551,6 +553,8 @@ remoteWorkerThread_main(void *cdata)
 		(void) slon_mkquery(&query1,
 							"begin transaction; "
 							"set transaction isolation level serializable; ");
+
+		monitor_state(conn_symname, node->no_id, local_conn->conn_pid, event->ev_type, event->ev_seqno, event->ev_type);
 
 		/*
 		 * Event type specific processing
@@ -1554,6 +1558,7 @@ remoteWorkerThread_main(void *cdata)
 				(void) slon_mkquery(&query1, "rollback transaction;");
 				archive_terminate(node);
 			}
+			monitor_state(conn_symname, node->no_id, local_conn->conn_pid, "thread main loop", event->ev_seqno, event->ev_type);
 			if (query_execute(node, local_dbconn, &query1) < 0)
 				slon_retry();
 

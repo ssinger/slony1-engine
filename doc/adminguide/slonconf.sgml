@@ -173,6 +173,31 @@
         </para>
       </listitem>
     </varlistentry>
+
+    <varlistentry id="slon-config-monitor-interval" xreflabel="slon_conf_monitor_interval">
+      <term><varname>monitor_interval</varname> (<type>integer</type>)</term>
+      <indexterm>
+        <primary><varname>monitor_interval</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Indicates the number of milliseconds the monitoring thread waits to queue up status entries before dumping 
+        such updates into the components table.
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry id="slon-config-monitor-threads" xreflabel="slon_conf_monitor_threads">
+      <term><varname>monitor_threads</varname> (<type>bool</type>)</term>
+      <indexterm>
+        <primary><varname>monitor_threads</varname> configuration parameter</primary>
+      </indexterm>
+      <listitem>
+        <para>Indicates whether or not the monitoring thread is to be
+              run.  The default is to do so.
+        </para>
+      </listitem>
+    </varlistentry>
+
   </variablelist>
 </sect1>
 

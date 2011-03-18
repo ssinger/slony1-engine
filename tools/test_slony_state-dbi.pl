@@ -290,6 +290,33 @@ Query: $query
   }
   print "\n";
 
+  my $ELDERLY_COMPONENT = "00:05:00";
+  my $old_comp_query = qq{
+     select co_actor, co_pid, co_node, co_connection_pid, co_activity, co_starttime, now() - co_starttime, co_event, co_eventtype
+     from "_$cluster".sl_components 
+     where  (now() - co_starttime) > '$ELDERLY_COMPONENT'::interval
+     order by co_starttime;
+  };
+  print "\n------------------------------------------------------------------------------\n";
+  printf "\nListing of thread activities for node %d\n", $node;
+  printf "%25s %8s %8s %8s %20s %20s %20s %15s %s\n", "actor", "pid", "node", "cpid", "activity", "start", "age", "event type", "event";
+  print "==================================================================================================================================================\n";
+
+  $res = $dbh->prepare($old_comp_query);
+  $res->execute();
+  while (my @row = $res->fetchrow_array) {
+    my ($actor, $pid, $node, $cpid, $activity, $start,$age, $event, $evtype) = @row;
+    printf "%25s %8d %8d %8d %20s %20s %20s %15s %8d\n", $actor, $pid, $node, $cpid, $activity, $start,$age, $evtype, $event;
+      add_problem($node, "threads seem stuck",
+		  qq{Slony-I components have not reported into sl_components in interval $ELDERLY_COMPONENT
+
+Perhaps slon is not running properly?
+
+Query: $old_comp_query
+});
+  }
+  print "\n";
+
 }
 
 sub show_usage {

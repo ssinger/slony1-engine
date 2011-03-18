@@ -328,12 +328,12 @@ a <emphasis>second</emphasis> time?  </para> </listitem>
 <indexterm><primary>Logs: threading messages</primary></indexterm>
 
 <para> There should not be any <quote>user-serviceable</quote> aspects
-to the &slony1; threading model; each &lslon; creates a quite
-well-specified set of helper threads to manage the various database
-connections that it requires.  The only way that anything should break
-on the threading side is if you have not compiled &postgres; libraries
-to <quote>play well</quote> with threading, in which case you will be
-unable to compile &slony1; in the first place. </para>
+to the &slony1; threading model; each &lslon; creates a well-specified
+set of helper threads to manage the various database connections that
+it requires.  The only way that anything should break on the threading
+side is if you have not compiled &postgres; libraries to <quote>play
+well</quote> with threading, in which case you will be unable to
+compile &slony1; in the first place. </para>
 
 <itemizedlist>
 <listitem><para><command>FATAL: remoteWorkerThread_%d: pthread_create() - %s</command></para> 
@@ -1078,6 +1078,22 @@ foreign key constraint "pa_client-no_id-ref".  DETAIL: Key
 when the node unaware of a would-be new node; probably a sign of
 <command>STORE_NODE</command> and <command>STORE_PATH</command>
 requests not propagating... </para> </listitem>
+
+<listitem><para><command>monitorThread: stack reallocation - size %d > warning threshold of 100.  Stack perhaps isn't getting processed properly by monitoring thread</command></para> 
+
+<para> This is liable to occur if the monitoring thread isn't properly
+consuming updates from the stack, so the stack is growing in memory.
+</para> </listitem>
+
+<listitem><para><command>monitor_state - unable to allocate memory for actor (len %d)</command></para> 
+
+<para> This occurs when the &lslon; function
+<function>monitor_state()</function> is unable to allocate memory,
+which likely indicates that something has grown in memory in an
+unbounded way.  </para>
+<para> Similar log entries may also occur for event types.</para>
+</listitem>
+
 </itemizedlist>
 </sect3>
 </sect2>

@@ -115,3 +115,6 @@
 
 # Directory in which to stow sync archive files
 # archive_dir="/tmp/somewhere"
+
+# Should slon run the monitoring thread?
+# monitor_threads=true

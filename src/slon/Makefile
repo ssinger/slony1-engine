@@ -34,6 +34,7 @@ OBJS		= \
     remote_listen.o		\
     remote_worker.o		\
     sync_thread.o		\
+    monitor_thread.o	\
     cleanup_thread.o	\
     scheduler.o		\
     dbutils.o		\
@@ -69,6 +70,7 @@ runtime_config.o:	runtime_config.c slon.h
 scheduler.o:		scheduler.c slon.h
 slon.o:				slon.c slon.h
 sync_thread.o:		sync_thread.c slon.h
+monitor_thread.o:	monitor_thread.c slon.h
 conf-file.o:		conf-file.c slon.h confoptions.h
 confoptions.o:		confoptions.c slon.h confoptions.h
 
