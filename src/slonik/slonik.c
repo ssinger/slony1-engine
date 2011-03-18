@@ -102,7 +102,7 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 
 static int slonik_get_last_event_id(SlonikStmt* stmt,
 									SlonikScript * script);
-static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
+static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 								SlonikStmt * stmt);
 /* ----------
  * main
@@ -3146,7 +3146,7 @@ slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
 		return -1;
 
 	if(!auto_wait_disabled)
-		slonik_wait_caughtup(adminfo1,&stmt->hdr);
+		slonik_wait_config_caughtup(adminfo1,&stmt->hdr);
 
 	dstring_init(&query);
 	
@@ -3854,7 +3854,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * what we should do.
 	 */ 
 	if(!auto_wait_disabled)
-		slonik_wait_caughtup(adminfo1,&stmt->hdr);
+		slonik_wait_config_caughtup(adminfo1,&stmt->hdr);
 
 	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
@@ -5103,7 +5103,7 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 	return 0;
 }
 								
-static int slonik_wait_caughtup(SlonikAdmInfo * adminfo1,
+static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 								SlonikStmt * stmt)
 {
 	SlonDString event_list;
