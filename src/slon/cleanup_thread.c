@@ -90,6 +90,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 
 	dbconn = conn->dbconn;
 
+	monitor_state("local_cleanup", 0, conn->conn_pid, "thread main loop", 0, "n/a");
 	/*
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */
@@ -113,6 +114,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 		/*
 		 * Call the stored procedure cleanupEvent()
 		 */
+	        monitor_state("local_cleanup", 0, conn->conn_pid, "cleanupEvent", 0, "n/a");
 		gettimeofday(&tv_start, NULL);
 		res = PQexec(dbconn, dstring_data(&query_baseclean));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -185,6 +187,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 			ntuples = PQntuples(res);
 			slon_log(SLON_DEBUG1, "cleanupThread: number of tables to clean: %d\n", ntuples);
 
+			monitor_state("local_cleanup", 0, conn->conn_pid, "vacuumTables", 0, "n/a");
 			for (t = 0; t < ntuples; t++)
 			{
 				char	   *tab_nspname = PQgetvalue(res, t, 0);
@@ -228,6 +231,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 			 */
 			dstring_free(&query_pertbl);
 			PQclear(res);
+			monitor_state("local_cleanup", 0, conn->conn_pid, "thread main loop", 0, "n/a");
 		}
 	}
 

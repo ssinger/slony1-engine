@@ -605,8 +605,8 @@ static struct config_int ConfigureNamesInt[] =
 	{
 		{
 			(const char *) "sync_interval_timeout",
-			gettext_noop("sync interval time out"),
-			gettext_noop("sync interval time out"),
+			gettext_noop("sync interval time out - milliseconds"),
+			gettext_noop("sync interval time out - milliseconds"),
 			SLON_C_INT
 		},
 		&sync_interval_timeout,
@@ -720,6 +720,18 @@ static struct config_int ConfigureNamesInt[] =
 		30,						/* min val */
 		30000					/* max val */
 	},
+	{
+		{
+			(const char *) "monitor_interval",
+			gettext_noop("monitor thread interval for dumping the state queue"),
+			gettext_noop("number of milliseconds monitor thread waits to queue up status entries"),
+			SLON_C_INT
+		},
+		&monitor_interval,
+		500,
+		10,
+		12000
+	},
 
 	{
 		{
@@ -818,6 +830,16 @@ static struct config_bool ConfigureNamesBool[] =
 			SLON_C_BOOL,
 		},
 		&keep_alive,
+		true
+	},
+	{
+		{
+			(const char*) "monitor_threads",
+			gettext_noop("Should the monitoring thread be run?"),
+			NULL,
+			SLON_C_BOOL,
+		},
+		&monitor_threads,
 		true
 	},
 

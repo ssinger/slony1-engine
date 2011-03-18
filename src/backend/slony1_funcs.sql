@@ -3879,7 +3879,15 @@ begin
 	--
 	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
 	       	      p_sub_receiver) then
-		      raise exception 'Slony-I: subscribeSet() the receiver does not exist receiver id:%' , p_sub_receiver;
+		      raise exception 'Slony-I: subscribeSet() receiver % does not exist' , p_sub_receiver;
+	end if;
+
+	--
+	-- Check that the provider exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_sub_provider) then
+		      raise exception 'Slony-I: subscribeSet() provider % does not exist' , p_sub_provider;
 	end if;
 
 	-- ----
@@ -5233,6 +5241,22 @@ begin
 	  -- restore sl_status
 	  execute 'create view sl_status as ' || v_keepstatus;
         end if;
+
+	if not exists (select 1 from information_schema.tables where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_components') then
+	   v_query := '
+create table @NAMESPACE@.sl_components (
+	co_actor	 text not null primary key,
+	co_pid		 integer not null,
+	co_node		 integer not null,
+	co_connection_pid integer not null,
+	co_activity	  text,
+	co_starttime	  timestamptz not null,
+	co_event	  bigint,
+	co_eventtype 	  text
+) without oids;
+';
+  	   execute v_query;
+	end if;
 	return p_old;
 end;
 $$ language plpgsql
@@ -5450,6 +5474,11 @@ begin
 	end if;
 	prec.nspname := '_@CLUSTERNAME@';
 	prec.relname := 'sl_archive_counter';
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_components';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
@@ -5737,3 +5766,27 @@ begin
 	end if;
   return reachable;
 end $$ language plpgsql;
+
+create or replace function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) returns integer as $$
+begin
+	-- Trim out old state for this component
+	if not exists (select 1 from @NAMESPACE@.sl_components where co_actor = i_actor) then
+	   insert into @NAMESPACE@.sl_components 
+             (co_actor, co_pid, co_node, co_connection_pid, co_activity, co_starttime, co_event, co_eventtype)
+	   values 
+              (i_actor, i_pid, i_node, i_conn_pid, i_activity, i_starttime, i_event, i_eventtype);
+	else
+	   update @NAMESPACE@.sl_components 
+              set
+                 co_connection_pid = i_conn_pid, co_activity = i_activity, co_starttime = i_starttime, co_event = i_event,
+                 co_eventtype = i_eventtype
+              where co_actor = i_actor 
+	      	    and co_starttime < i_starttime;
+	end if;
+	return 1;
+end $$
+language plpgsql;
+
+comment on function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) is
+'Store state of a Slony component.  Useful for monitoring';
+

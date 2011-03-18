@@ -551,6 +551,34 @@ insert into @NAMESPACE@.sl_archive_counter (ac_num, ac_timestamp)
 	values (0, 'epoch'::timestamptz);
 
 -- ----------------------------------------------------------------------
+-- TABLE sl_components
+--
+--  This table captures the state of each Slony component to help
+--  with monitoring
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_components (
+	co_actor	 text not null primary key,
+	co_pid		 integer not null,
+	co_node		 integer not null,
+	co_connection_pid integer not null,
+	co_activity	  text,
+	co_starttime	  timestamptz not null,
+	co_event	  bigint,
+	co_eventtype 	  text
+) without oids;
+
+comment on table @NAMESPACE@.sl_components is 'Table used to monitor what various slon/slonik components are doing';
+comment on column @NAMESPACE@.sl_components.co_actor is 'which component am I?';
+comment on column @NAMESPACE@.sl_components.co_pid is 'my process/thread PID on node where slon runs';
+comment on column @NAMESPACE@.sl_components.co_node is 'which node am I servicing?';
+comment on column @NAMESPACE@.sl_components.co_connection_pid is 'PID of database connection being used on database server';
+comment on column @NAMESPACE@.sl_components.co_activity is 'activity that I am up to';
+comment on column @NAMESPACE@.sl_components.co_starttime is 'when did my activity begin?  (timestamp reported as per slon process on server running slon)';
+comment on column @NAMESPACE@.sl_components.co_eventtype is 'what kind of event am I processing?  (commonly n/a for event loop main threads)';
+comment on column @NAMESPACE@.sl_components.co_event is 'which event have I started processing?';
+
+
+-- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.
 -- ----------------------------------------------------------------------
 grant usage on schema @NAMESPACE@ to public;

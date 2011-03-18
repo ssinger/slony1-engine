@@ -75,8 +75,25 @@ typedef struct SlonNode_s SlonNode;
 typedef struct SlonListen_s SlonListen;
 typedef struct SlonSet_s SlonSet;
 typedef struct SlonConn_s SlonConn;
+typedef struct SlonState_s SlonState;
 
 typedef struct SlonWorkMsg_s SlonWorkMsg;
+
+/* ----------
+ * SlonState
+ * ----------
+ */
+struct SlonState_s
+{
+		char *actor;
+		pid_t pid;
+		int node;
+		pid_t conn_pid;
+		char *activity;
+		time_t start_time;
+		int64 event;
+		char *event_type;
+};
 
 /* ----------
  * SlonNode
@@ -164,6 +181,7 @@ struct SlonConn_s
     int			condition;		/* what are we waiting for? */
     struct timeval timeout;		/* timeofday for timeout */
     int	pg_version;		/* PostgreSQL version */
+	int conn_pid;       /* PID of connection */
 
     SlonConn   *prev;
     SlonConn   *next;
@@ -498,6 +516,21 @@ extern int	sync_interval_timeout;
 extern void *syncThread_main(void *dummy);
 
 /* ----------
+ * Functions in monitor_thread.c
+ * ----------
+ */
+extern void *monitorThread_main(void *dummy);
+extern void monitor_state (const char *actor, int node, pid_t conn_pid, const char *activity, int64 event, const char *event_type);
+
+/* ----------
+ * Globals in monitor_thread.c
+ * ----------
+ */
+extern int	monitor_interval;
+extern bool	monitor_threads;
+
+
+/* ----------
  * Functions in local_listen.c
  * ----------
  */
@@ -566,8 +599,8 @@ extern void slon_free_dummyconn(SlonConn * conn);
 extern int	db_getLocalNodeId(PGconn *conn);
 extern int	db_checkSchemaVersion(PGconn *conn);
 
-extern int	slon_mkquery(SlonDString * ds, char *fmt,...);
-extern int	slon_appendquery(SlonDString * ds, char *fmt,...);
+extern void	slon_mkquery(SlonDString * ds, char *fmt,...);
+extern void	slon_appendquery(SlonDString * ds, char *fmt,...);
 extern char *sql_on_connection;
 
 /* ----------

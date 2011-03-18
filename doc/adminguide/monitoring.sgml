@@ -436,6 +436,116 @@ against providers and subscribers in function
 
 </sect2>
 </sect1>
+
+<sect1 id="componentmonitoring"> <title>Component Monitoring</title>
+
+<para> There are several ways available to see what &slony1; processes
+are up to:</para>
+<itemizedlist>
+<listitem><para> <xref linkend="pgstatactivity">
+<listitem><para> <xref linkend="slcomponents"> 
+</itemizedlist>
+
+<sect2 id="pgstatactivity"> <title> Looking at <envar>pg_stat_activity</envar> view </title>
+
+<para> The standard &postgres; view <envar>pg_stat_activity</envar>
+indicates what the various database connections are up to.</para> 
+
+<para> On recent versions of &postgres;, this view includes an
+attribute, <envar>application_name</envar>, which &slony1; components
+populate based on the names of their respective threads.</para>
+
+</sect2>
+<sect2 id="slcomponents"> <title> Looking at &slcomponents; view </title>
+
+<para> &slony1; has a table, &slcomponents;, introduced in &slony1;
+2.1, which captures &slony1; activity for each node. </para>
+
+<para><screen>
+slonyregress1@localhost->  select * from _slony_regress1.sl_components  order by co_actor;
+       co_actor       | co_pid | co_node | co_connection_pid |   co_activity    |      co_starttime      | co_event | co_eventtype
+----------------------+--------+---------+-------------------+------------------+------------------------+----------+--------------
+ local_cleanup        |  24586 |       0 |             24907 | thread main loop | 2011-02-24 17:02:55+00 |          | n/a
+ local_listen         |  24896 |       1 |             24900 | thread main loop | 2011-02-24 17:03:07+00 |          | n/a
+ local_monitor        |  24586 |       0 |             24909 | thread main loop | 2011-02-24 17:02:55+00 |          | n/a
+ local_sync           |  24517 |       0 |             24906 | thread main loop | 2011-02-24 17:03:09+00 |          | n/a
+ remote listener      |  24586 |       2 |             24910 | thread main loop | 2011-02-24 17:03:03+00 |          | n/a
+ remoteWorkerThread_2 |  24586 |       2 |             24908 | thread main loop | 2011-02-24 17:02:55+00 |          | n/a
+(6 rows)
+</screen></para>
+
+<para> This example indicates the various &slony1; threads that are
+typically running as part of a &lslon; process:</para>
+<glosslist>
+<glossentry>
+<glossterm>local_cleanup</glossterm>
+<glossdef><para>This thread periodically wakes up to trim obsolete data and (optionally) vacuum &slony1; tables</para> 
+</glossdef>
+</glossentry>
+<glossentry>
+<glossterm>local_listen</glossterm>
+<glossdef><para>This thread listens for events taking place on the local node, and changes the &lslon;'s configuration as needed.</para> </glossdef>
+</glossentry>
+<glossentry>
+<glossterm>local_monitor</glossterm>
+<glossdef><para>This thread is rather self-referential, here; it manages the queue of events to be published to the &slcomponents; table.</para> </glossdef>
+</glossentry>
+<glossentry>
+<glossterm>local_sync</glossterm>
+<glossdef><para>This thread generates SYNC events on the local database.  If the local database is the origin for a replication set, those SYNC events are used to propagate changes to other nodes in the cluster.</para> </glossdef>
+</glossentry>
+<glossentry>
+<glossterm>remote_listener</glossterm>
+<glossdef><para>This thread listens for events on a remote node database, and queues them into the remote worker thread for that node.</para> </glossdef>
+</glossentry>
+<glossentry>
+<glossterm>remoteWorkerThread_2</glossterm>
+<glossdef><para>This thread waits for events (from the remote listener thread), and takes action.  This is the thread that does most of the visible work of replication. </para> </glossdef>
+</glossentry>
+</glosslist>
+
+</sect2>
+<sect2><title>Notes On Interpreting Component Activity</title>
+
+<itemizedlist>
+<listitem><para> Many of these will typically report, as their activity,
+<command>thread main loop</command>, which indicates that the thread
+exists, and is simply executing its main loop, waiting to have work to
+do.</para>
+
+<para> Most threads will never indicate an event or event type, as
+they do not process &slony1; events.</para></listitem>
+
+<listitem><para> <envar>local_monitor</envar> thread never reports any
+activity.</para>
+
+<para> It would be a nice idea for this thread, which manages
+&slcomponents;, to report in on its work.  Unfortunately, the fact of
+adding in its own events would make it perpetually busy, as the action
+of processing the queue would add a monitoring entry, in effect
+becoming a repetitive recursive activity.</para>
+
+<para> It does report in when it starts up, which means you may expect
+that this entry indicates the time at which the &lslon; process
+began. </para>
+</listitem>
+
+<listitem><para> Timestamps are based on the clock time of the &lslon;
+process.</para>
+
+<para> In order for the timestamps to be accurate, it is important to
+use NTP or similar technology to keep servers' clocks synchronized, as
+recommended in <xref linkend="requirements">.  If the host where a
+&lslon; runs has its time significantly out of sync with the database
+that it manages, queries against &slcomponents; may provide results
+that will confuse the reader.</para>
+</listitem>
+
+<listitem><para> process.</para> </listitem>
+</itemizedlist>
+</sect2>
+</sect1>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

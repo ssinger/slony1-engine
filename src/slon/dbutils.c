@@ -61,6 +61,7 @@ slon_connectdb(char *conninfo, char *symname)
 	SlonConn   *conn;
 	PGresult   *res;
 	SlonDString query;
+	int         connpid = -1;
 
 	/*
 	 * Create the native database connection
@@ -164,6 +165,17 @@ slon_connectdb(char *conninfo, char *symname)
 	}
 	PQclear(res);
 
+	/* Find PID for connection */
+	slon_mkquery(&query, "select pg_catalog.pg_backend_pid();");
+	res = PQexec(dbconn, dstring_data(&query));
+	if (!(PQresultStatus(res) == PGRES_TUPLES_OK))
+	{
+			slon_log(SLON_ERROR, "Unable to check connection PID\n");
+	} else {
+			connpid = strtol(PQgetvalue(res, 0, 0), NULL, 10);
+	}
+	PQclear(res);
+
 	/*
 	 * Embed it into a SlonConn structure used to exchange it with the
 	 * scheduler. On return this new connection object is locked.
@@ -171,6 +183,7 @@ slon_connectdb(char *conninfo, char *symname)
 	conn = slon_make_dummyconn(symname);
 	conn->dbconn = dbconn;
 	conn->pg_version = db_get_version(dbconn);
+	conn->conn_pid = connpid;
 	if (conn->pg_version < 80300)
 	{
 		slon_log(SLON_ERROR,
@@ -468,7 +481,7 @@ db_checkSchemaVersion(PGconn *conn)
  *	   %d	Integer argument
  * ----------
  */
-int
+void
 slon_mkquery(SlonDString *dsp, char *fmt,...)
 {
 	va_list		ap;
@@ -480,8 +493,6 @@ slon_mkquery(SlonDString *dsp, char *fmt,...)
 	va_end(ap);
 
 	dstring_terminate(dsp);
-
-	return 0;
 }
 
 
@@ -491,7 +502,7 @@ slon_mkquery(SlonDString *dsp, char *fmt,...)
  * Append query string material to an existing dynamic string.
  * ----------
  */
-int
+void
 slon_appendquery(SlonDString *dsp, char *fmt,...)
 {
 	va_list		ap;
@@ -501,8 +512,6 @@ slon_appendquery(SlonDString *dsp, char *fmt,...)
 	va_end(ap);
 
 	dstring_terminate(dsp);
-
-	return 0;
 }
 
 

@@ -31,6 +31,26 @@ timezone that &postgres; can recognize correctly.  It is furthermore
 preferable to use a time zone where times do not have discontinuities
 due to Daylight Savings Time. </para>
 
+<para> Most of &slony1; does not directly reference or use times, but
+if clocks are out of sync between servers running &slony1; components,
+confusion may be expected in the following places:</para>
+<itemizedlist>
+
+<listitem><para>The monitoring view <envar>sl_status</envar> uses
+timestamps sourced from multiple servers.</para></listitem>
+
+<listitem><para>Monitoring table &slcomponents; captures timestamps
+based on the clock time on the host running &lslon;.</para></listitem>
+
+<listitem><para> &lslon; logs are likely to contain
+timestamps.</para></listitem>
+
+</itemizedlist>
+
+<para> Figuring out what is going on is likely to be made rather
+confusing if the database servers and servers where &lslon; instances
+run do not agree on what time it its. </para>
+
 </listitem>
 
 <listitem><para>A reliable network between nodes</para>
