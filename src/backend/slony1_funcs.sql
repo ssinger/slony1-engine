@@ -2478,11 +2478,12 @@ comment on function @NAMESPACE@.dropSet(p_set_id int4) is
 --
 --	Generate the MERGE_SET event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.mergeSet (p_set_id int4, p_add_id int4)
+create or replace function @NAMESPACE@.mergeSet (p_set_id int4, p_add_id int4) 
 returns bigint
 as $$
 declare
 	v_origin			int4;
+	in_progress			boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -2541,13 +2542,9 @@ begin
 	-- ----
 	-- Check that all ENABLE_SUBSCRIPTION events for the set are confirmed
 	-- ----
-	if exists (select true from @NAMESPACE@.sl_event
-			where ev_type = 'ENABLE_SUBSCRIPTION'
-			and ev_data1 = p_add_id::text
-			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
-					where con_origin = ev_origin
-					and con_received::text = ev_data3))
-	then
+	select @NAMESPACE@.isSubscriptionInProgress(p_add_id) into in_progress ;
+	
+	if in_progress then
 		raise exception 'Slony-I: set % has subscriptions in progress - cannot merge',
 				p_add_id;
 	end if;
@@ -2566,6 +2563,30 @@ comment on function @NAMESPACE@.mergeSet(p_set_id int4, p_add_id int4) is
 
 Both sets must exist, and originate on the same node.  They must be
 subscribed by the same set of nodes.';
+
+
+create or replace function @NAMESPACE@.isSubscriptionInProgress(p_add_id int4)
+returns boolean
+as $$
+DECLARE
+in_progress boolean;
+begin
+  IF exists (select true from @NAMESPACE@.sl_event
+			where ev_type = 'ENABLE_SUBSCRIPTION'
+			and ev_data1 = p_add_id::text
+			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
+					where con_origin = ev_origin
+					and con_received::text = ev_data3))
+	THEN
+		return true;
+	else
+		return false;
+	end if;
+end;
+$$ language plpgsql;
+comment on function @NAMESPACE@.isSubscriptionInProgress(p_add_id int4) is
+'Checks to see if a subscription for the indicated set is in progress.
+Returns true if a subscription is in progress. Otherwise false';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION mergeSet_int (set_id, add_id)

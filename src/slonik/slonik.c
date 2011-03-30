@@ -3402,16 +3402,61 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	PGresult *res;
+	bool in_progress=1;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
 
-	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
-		return -1;
+
+	/**
+	 * The event node (the origin) should be caught up
+	 * with itself before submitting a merge set.
+	 * this ensures no subscriptions involving the set
+	 * are still in progress.
+	 *
+	 * (we could also check for the event number of any
+	 * unconfirmed subscriptions and wait for that
+	 * but we don't)
+	 */
+
+	
 
 	dstring_init(&query);
 
+	slon_mkquery(&query,"select \"_%s\".isSubscriptionInProgress(%d)"
+		     ,stmt->hdr.script->clustername,
+		     stmt->add_id);
+	while(in_progress)
+	{
+		char *result;
+
+		if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
+			return -1;
+
+		res = db_exec_select((SlonikStmt*) stmt,adminfo1,&query);
+		if (res == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+			
+		}
+		result = PQgetvalue(res,0,0);
+		if(result != NULL && (*result=='t' ||
+							  *result=='T'))
+		{
+			printf("%s:%d subscription in progress before mergeSet. waiting",
+				stmt->hdr.stmt_filename,stmt->hdr.stmt_lno);
+			db_rollback_xact((SlonikStmt *) stmt, adminfo1);
+			sleep(5);
+		}
+		else
+			in_progress=false;
+		if(result != NULL)
+			PQclear(res);
+	}
+	
 	slon_mkquery(&query,
 				 "select \"_%s\".mergeSet(%d, %d); ",
 				 stmt->hdr.script->clustername,
