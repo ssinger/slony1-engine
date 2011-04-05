@@ -103,7 +103,8 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 static int slonik_get_last_event_id(SlonikStmt* stmt,
 									SlonikScript * script);
 static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
-								SlonikStmt * stmt);
+									   SlonikStmt * stmt,
+									   int ignore_node);
 /* ----------
  * main
  * ----------
@@ -2404,6 +2405,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	SlonikAdmInfo * curAdmInfo;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -2412,14 +2414,35 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
+	if( ! auto_wait_disabled)
+	{
+		for(curAdmInfo = stmt->hdr.script->adminfo_list;
+			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
+		{
+			if(curAdmInfo->no_id == stmt->no_id)
+				continue;
+			if(slonik_is_slony_installed((SlonikStmt*)stmt,curAdmInfo) > 0 )
+			{
+				slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
+											stmt->no_id);
+			}
+
+		}
+		
+	}
+
 	dstring_init(&query);
 
 	slon_mkquery(&query,
 				 "select \"_%s\".dropNode(%d); ",
 				 stmt->hdr.script->clustername,
 				 stmt->no_id);
+	/**
+	 * we disable auto wait because we perform a wait
+	 * above ignoring the node being dropped.
+	 */
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-						   stmt->hdr.script,auto_wait_disabled) < 0)
+						   stmt->hdr.script,true) < 0)
 	{
 		dstring_free(&query);
 		return -1;
@@ -3146,7 +3169,7 @@ slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
 		return -1;
 
 	if(!auto_wait_disabled)
-		slonik_wait_config_caughtup(adminfo1,&stmt->hdr);
+		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
 
 	dstring_init(&query);
 	
@@ -3335,10 +3358,31 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
 	const char *comment;
+	SlonikAdmInfo * curAdmInfo;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
 		return -1;
+
+	if( ! auto_wait_disabled)
+	{
+		/**
+		 * loop through each node and make sure there are no
+		 * pending DROP SET commands.
+		 *
+		 * if there is a DROP SET command from the node
+		 * in sl_event then we wait until all other nodes are
+		 * caughtup to that.
+		 *
+		 */
+		for(curAdmInfo = stmt->hdr.script->adminfo_list;
+			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
+		{
+			//slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt);
+
+		}
+		
+	}
 
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
@@ -3899,7 +3943,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * what we should do.
 	 */ 
 	if(!auto_wait_disabled)
-		slonik_wait_config_caughtup(adminfo1,&stmt->hdr);
+		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
 
 	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
@@ -5147,9 +5191,20 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 	dstring_terminate(&query);
 	return 0;
 }
-								
+
+/**
+ * waits until adminfo1 is caught up with config events from
+ * all other nodes.
+ *
+ * adminfo1 - The node that we are waiting to be caught up
+ * stmt - The statement that is currently being executed
+ * ignore_node - allows 1 node to be ignored (don't wait for
+ *               adminfo1 to be caught up with that node)
+ *               -1 means don't ignore any nodes.
+ */								
 static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
-								SlonikStmt * stmt)
+									   SlonikStmt * stmt,
+									   int ignore_node)
 {
 	SlonDString event_list;
 	PGresult * result;
@@ -5196,8 +5251,10 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
 		if(curAdmInfo->last_event < 0 || 
-		   curAdmInfo->no_id==adminfo1->no_id)
+		   curAdmInfo->no_id==adminfo1->no_id ||
+			curAdmInfo->no_id == ignore_node )
 			continue;
+		
 		char  seqno[64];
 		sprintf(seqno,INT64_FORMAT,curAdmInfo->last_event);
 		slon_appendquery(&event_list, 

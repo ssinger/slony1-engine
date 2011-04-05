@@ -88,10 +88,15 @@ FailNodeTest.prototype.runTest = function() {
 	 * DROP 3 node.
 	 * We expect it to fail since node 3 is still a provider
 	 * for nodes 4,5.
+	 * 
+	 * perform the slonikSync to make sure node 4,5 is caught up.
+	 * otherwise slonik will wait before actually submitting the
+	 * dropNode but since the slon will be stopped by this.failNode()
+	 * the event might never get propogated.
 	 */
+	this.slonikSync(1,1);
 	this.coordinator.log('failing node 3');
-	this.failNode(3,true);
-	
+
 	/**
 	 * Readd all paths, some might have been deleted and not re-added
 	 * when we deleted nodes above.
@@ -99,6 +104,15 @@ FailNodeTest.prototype.runTest = function() {
 	 * We also have to restart the slons because of bug # 120
 	 */
 	this.addCompletePaths();
+
+	/**
+	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
+	 */
+	
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5 via 1");
+	this.subscribeSet(1,1,1,[4,5]);
+	this.failNode(3,true);
+	
 	/**
 	 * Sleep a bit.
 	 * Do we need to do this for the paths to propogate????
@@ -134,19 +148,14 @@ FailNodeTest.prototype.runTest = function() {
 		return script;
 	}
 	**/
-	/**
-	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
-	 */
-	
-	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5 via 1");
-	this.subscribeSet(1,1,1,[4,5]);
+
 	
 	
 	
 	/**
 	 * Now we should be able to drop node 3.
 	 */	
-	this.coordinator.log("FailNodeTest.prototype.runTest - fail node 3");
+	this.coordinator.log("FailNodeTest.prototype.runTest - fail node 3");	
 	this.failNode(3,false);
 	this.generateSlonikWait=originalGenerateWait;
 		
@@ -260,7 +269,9 @@ FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 	this.coordinator.join(this.slonArray[nodeId-1]);
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'FailNodeTest.prototype.failNode\';\n';
-	slonikScript += 'DROP NODE(id=' + nodeId + ',event node=1);\n';
+	slonikScript += 'DROP NODE(id=' + nodeId + ',event node=1);\n'
+	+ 'uninstall node(id=' + nodeId + ');\n';
+
 	for(var idx=2; idx <= this.getNodeCount(); idx++) {
 		if(idx == nodeId) {
 			continue;

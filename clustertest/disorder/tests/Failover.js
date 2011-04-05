@@ -93,7 +93,6 @@ Failover.prototype.runTest = function() {
 	this.dropNode(1,3);
 		
 	this.reAddNode(1,3,3);
-	
 	this.addCompletePaths();
 	
 	this.moveSet(1,3,1);
