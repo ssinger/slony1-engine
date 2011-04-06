@@ -100,8 +100,10 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonikScript * script,
 							  int supress_wait_for);
 
-static int slonik_get_last_event_id(SlonikStmt* stmt,
-									SlonikScript * script);
+static size_t slonik_get_last_event_id(SlonikStmt* stmt,
+									SlonikScript * script,
+									const char * event_filter,
+									int64 ** events);
 static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 									   SlonikStmt * stmt,
 									   int ignore_node);
@@ -1160,8 +1162,22 @@ static int
 script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 {
 	int			errors = 0;
+	int64 * events;
+	size_t event_length;
+	int idx=0;
+	SlonikAdmInfo * curAdmInfo;
 
-	slonik_get_last_event_id(hdr,script);
+	event_length=slonik_get_last_event_id(hdr,script,"ev_type <> 'SYNC' ",
+										  &events);
+	for( curAdmInfo = script->adminfo_list;
+		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		curAdmInfo->last_event=events[idx];
+		idx++;
+		if(idx > event_length)
+			break;
+	}	
+	free(events);
 	
 	while (hdr && errors == 0)
 	{
@@ -3359,6 +3375,10 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 	SlonDString query;
 	const char *comment;
 	SlonikAdmInfo * curAdmInfo;
+	int64 * drop_set_events;
+	int64 * cached_events;
+	size_t event_size;
+	int adm_idx;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
@@ -3375,12 +3395,38 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 		 * caughtup to that.
 		 *
 		 */
+		event_size = slonik_get_last_event_id((SlonikStmt*)stmt,
+											  stmt->hdr.script,
+											  "ev_type='DROP_SET'",
+											  &drop_set_events);
+
+		/**
+		 * copy the 'real' last event to storage
+		 * and update the AdmInfo structure with the last 'DROP SET' id.
+		 */
+		cached_events=malloc(sizeof(int64)*event_size);		
+		adm_idx=0;
 		for(curAdmInfo = stmt->hdr.script->adminfo_list;
 			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
 		{
-			//slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt);
-
+			cached_events[adm_idx]=curAdmInfo->last_event;
+			curAdmInfo->last_event=drop_set_events[adm_idx];
+			adm_idx++;
 		}
+		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		/***
+		 * reset the last_event values in the AdmInfo to
+		 * the values we saved above.
+		 */
+		adm_idx=0;
+		for(curAdmInfo = stmt->hdr.script->adminfo_list;
+			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
+		{
+			curAdmInfo->last_event=cached_events[adm_idx];
+			adm_idx++;
+		}
+		free(cached_events);
+		free(drop_set_events);
 		
 	}
 
@@ -5137,25 +5183,38 @@ static int slonik_submitEvent(SlonikStmt * stmt,
  * be used as part of a wait for.
  *
  */
-static int slonik_get_last_event_id(SlonikStmt *stmt,
-									SlonikScript * script)
+static size_t slonik_get_last_event_id(SlonikStmt *stmt,
+									   SlonikScript * script,
+									   const char * event_filter,
+									   int64 ** events)
 {
+	
 	SlonDString query;
 	PGresult * result;
 	char * event_id;
 	SlonikAdmInfo * curAdmInfo=NULL;
+	int node_count=0;
+	int node_idx;
 	int rc;
 
 	dstring_init(&query);
 	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
 				 " , \"_%s\".sl_node "
 				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
-				 " AND ev_type <> 'SYNC' AND sl_node.no_id="
+				 " AND %s AND sl_node.no_id="
 				 " ev_origin"
 				 , script->clustername,script->clustername,
-				 script->clustername,script->clustername);
+				 script->clustername,script->clustername,event_filter);
+	node_count=0;
 	for( curAdmInfo = script->adminfo_list;
 		curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		node_count++;
+	}
+	*events = malloc(sizeof(int64)*(node_count+1));
+	node_idx=0;
+	for( curAdmInfo = script->adminfo_list;
+		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next,node_idx++)
 	{
 		SlonikAdmInfo * activeAdmInfo = 
 			get_active_adminfo(stmt,curAdmInfo->no_id);
@@ -5181,15 +5240,20 @@ static int slonik_get_last_event_id(SlonikStmt *stmt,
 			event_id = PQgetvalue(result,0,0);
 			db_rollback_xact(stmt, activeAdmInfo);
 			if(event_id != NULL)
-			{
-				activeAdmInfo->last_event=strtoll(event_id,NULL,10);			
-			}
+				(*events)[node_idx]=strtoll(event_id,NULL,10);		   
+			else
+				(*events)[node_idx]=-1;
 			PQclear(result);
+		}
+		else {
+			(*events)[node_idx]=-1;
 		}
 		
 	}
+	
+	
 	dstring_terminate(&query);
-	return 0;
+	return node_count;
 }
 
 /**
