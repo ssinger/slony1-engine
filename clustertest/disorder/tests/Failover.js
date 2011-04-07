@@ -156,24 +156,22 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db1', 'db4');
 	this.addCompletePaths();
 	this.moveSet(1,3,1)
-	load = this.generateLoad();
+
 	/**
 	 * Now shutdown the slon for node 3, see how a failover to node 3 behaves.
 	 */
 	this.coordinator.log('PROGRESS:shutting down node 3 for a failover test');
 	this.slonArray[2].stop();
 	this.coordinator.join(this.slonArray[2]);
-	load.stop();
-	this.coordinator.join(load);
-		/**
-		 * create a timer event.
-		 * in 60 seconds we will start up the slon again.
-		 * the failover should not complete with the slon shutdown
-		 * (at least not the 2.1 version of failover).
-		 */
+	/**
+	 * create a timer event.
+	 * in 60 seconds we will start up the slon again.
+	 * the failover should not complete with the slon shutdown
+	 * (at least not the 2.1 version of failover).
+	 */
+		
 
-
-		this.coordinator.log('PROGRESS:load has stopped');
+	this.coordinator.log('PROGRESS:load has stopped');
 	var thisRef=this;	
 	/**
 	 * The failover needs to propogate before the DROP NODE or things can fail.
@@ -191,13 +189,17 @@ Failover.prototype.runTest = function() {
 	var timer = this.coordinator.addTimerTask('restart slon', 120,
 										 timeoutObserver);
 	this.failNode(1,3,true);
-		this.coordinator.removeObserver(timer,
+	this.coordinator.removeObserver(timer,
 										Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_TIMER,
 										timeoutObserver);
-	
+	if(this.slonArray[2].isFinished()) {
+			thisRef.slonArray[2] = thisRef.coordinator.createSlonLauncher('db3');
+			thisRef.slonArray[2].run();
+	}
+
 	this.dropNode(1,3);
 	this.reAddNode(1,3,3);	
-	this.slonikSync(1,1);
+		this.slonikSync(1,1);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -254,7 +256,9 @@ Failover.prototype.runTest = function() {
 Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 	
 	this.slonArray[node_id-1].stop();
-	this.coordinator.join(this.slonArray[node_id-1]);
+	if(!this.slonArray[node_id-1].isFinished()) {
+		this.coordinator.join(this.slonArray[node_id-1]);
+	}
 	
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'Failover.prototype.failNode\';\n';
