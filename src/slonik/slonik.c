@@ -5271,7 +5271,7 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 									   int ignore_node)
 {
 	SlonDString event_list;
-	PGresult * result;
+	PGresult * result=NULL;
 	SlonikAdmInfo * curAdmInfo=NULL;
 	int first_event=1;
 	int confirm_count=0;
