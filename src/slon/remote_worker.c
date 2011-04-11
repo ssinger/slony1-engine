@@ -3943,6 +3943,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		if (ntuples1 == 0)
 		{
 			PQclear(res1);
+			slon_appendquery(provider_query,"select * FROM \"%s\".sl_log_1" 
+							 " where false",rtcfg_namespace);
 			continue;
 		}
 		num_sets += ntuples1;
