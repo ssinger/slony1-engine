@@ -36,7 +36,6 @@ slonik <<_EOF_
 create set (id=2, origin=1, comment='a second replication set');
 set add table (set id=2, origin=1, id=5, fully qualified name = 'public.newtable', comment='some new table');
 subscribe set(id=1, provider=1,receiver=2);
-wait for event(origin=1, confirmed=all, wait on=1);
 merge set(id=1, add id=2,origin=1);
 
 </programlisting>
@@ -171,7 +170,6 @@ node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
 clustername=testcluster;
 
 store node(id=5,comment='some slave node',event node=1);
-wait for event(origin=1, confirmed=all, wait on=1);
 </programlisting>
 
 </para></listitem>
@@ -181,11 +179,12 @@ the <xref linkend="stmtstorepath"> command.
 node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
 clustername=testcluster;
 node 1 admin conninfo='host=masterhost dbname=masterdb user=slony password=slony';
+# also include the admin conninfo lines for any other nodes in your cluster.
+#
+#
 clustername=testcluster;
 store path(server=1,client=5,conninfo='host=masterhost,dbname=masterdb,user=slony,password=slony');
 store path(server=5,client=1,conninfo='host=slavehost,dbname=masterdb,user=slony,password=slony');
-wait for event(origin=1,confirmed=all,wait on=1);
-wait for event(origin=5,confirmed=all,wait on=1);
 </programlisting>
 
 </para></listitem>
@@ -195,9 +194,12 @@ wait for event(origin=5,confirmed=all,wait on=1);
 node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
 clustername=testcluster;
 node 1 admin conninfo='host=masterhost dbname=slavedb user=slony password=slony';
+#
+# also include the admin conninfo lines for any other nodes in the cluster
+#
+#
 clustername=testcluster;
 subscribe set(id=1,provider=1, receiver=5,forward=yes);
-wait for event(origin=1, confirmed=all, wait on=1);
 </programlisting>
 
 </orderedlist>
@@ -232,9 +234,8 @@ store path(server=3,client=2,conninfo='host=slave3host,dbname=slave3db,user=slon
 store path(server=2,client=3,conninfo='host=slave2host,dbname=slave2db,user=slony,password=slony');
 
 subscribe set(set id=1, provider=1, receiver=2,forward=yes);
-wait for event(origin=1, confirmed=all, wait on=1);
 subscribe set (set id=1,provider=2, receiver=3,forward=yes);
-wait for event(origin=1,confirmed=all,wait on=1);
+wait for event(origin=1, confirmed=all, wait on=1);
 </programlisting>
 <para>
 In the above example we define paths from 1==>2 and from 2==>3 but do
