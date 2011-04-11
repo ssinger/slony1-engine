@@ -105,12 +105,6 @@ FailNodeTest.prototype.runTest = function() {
 	 */
 	this.addCompletePaths();
 
-	/**
-	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
-	 */
-	
-	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5 via 1");
-	this.subscribeSet(1,1,1,[4,5]);
 	this.failNode(3,true);
 	
 	/**
@@ -128,28 +122,13 @@ FailNodeTest.prototype.runTest = function() {
 	}
 	this.coordinator.log("FailNodeTest.prototype.runTest - sleeping 60x1000");
 	java.lang.Thread.sleep(60*1000);
-	/**
-	 * Replace the generateSlonikWait function with a version that 
-	 * does individual wait for event(..) statements instead of 
-	 * a confirmed=all since we do not want to be waiting on node 3
-	 * since we just destroyed it.
-	 **/
-	var originalGenerateWait = this.generateSlonikWait;
-	/**
-	this.generateSlonikWait=function(event_node) {
-		var script='';
-		for(var idx=1; idx <= this.getNodeCount(); idx ++) {
-			if(idx==3||idx==event_node) {
-				continue;
-			}
-			script += "echo 'waiting on confirm from " + idx + "';\n";
-			script+='wait for event(origin=' + event_node + ',confirmed='+idx +',wait on=' + event_node+');\n';
-		}
-		return script;
-	}
-	**/
 
+	/**
+	 * SUBSCRIBE nodes 4,5 via node 1 directly. 
+	 */
 	
+	this.coordinator.log("FailNodeTest.prototype.runTest - subscribe 4,5 via 1");
+	this.subscribeSet(1,1,1,[4,5]);	
 	
 	
 	/**
@@ -157,7 +136,6 @@ FailNodeTest.prototype.runTest = function() {
 	 */	
 	this.coordinator.log("FailNodeTest.prototype.runTest - fail node 3");	
 	this.failNode(3,false);
-	this.generateSlonikWait=originalGenerateWait;
 		
 	
 	load.stop();
@@ -186,7 +164,7 @@ FailNodeTest.prototype.runTest = function() {
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
-	this.addCompletePaths();
+	//this.addCompletePaths();
 	this.slonikSync(1,1);
 	this.slonikSync(1,2);	
 	this.slonikSync(1,4);
@@ -212,24 +190,7 @@ FailNodeTest.prototype.runTest = function() {
 	this.coordinator.log("FailNodeTest.prototype.runTest - drop DB2");
 	//Now DROP the database. This lets us simulate a hard failure.
 	this.dropDb(['db2']);
-	/**
-	 * Replace the generateSlonikWait function with a version that 
-	 * does individual wait for event(..) statements instead of 
-	 * a confirmed=all since we do not want to be waiting on node 3
-	 * since we just destroyed it.
-	var originalGenerateWait = this.generateSlonikWait;
-	this.generateSlonikWait=function(event_node) {
-		var script='';
-		for(var idx=1; idx <= this.getNodeCount(); idx ++) {
-			if(idx==2|| idx==3|| idx==event_node) {
-				continue;
-			}
-			script += "echo 'waiting on confirm from " + idx + "';\n";
-			script+='wait for event(origin=' + event_node + ',confirmed='+idx +',wait on=' + event_node+');\n';
-		}
-		return script;
-	}
-	*/
+
 	this.coordinator.log("FailNodeTest.prototype.runTest - reshape cluster");
 	//Now reshape the cluster.
 	this.subscribeSet(1,1,1,[4,5]);
@@ -265,8 +226,7 @@ FailNodeTest.prototype.runTest = function() {
  */
 FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 	this.coordinator.log("FailNodeTest.prototype.FailNodeTest - begin");
-	this.slonArray[nodeId-1].stop();
-	this.coordinator.join(this.slonArray[nodeId-1]);
+
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'FailNodeTest.prototype.failNode\';\n';
 	slonikScript += 'DROP NODE(id=' + nodeId + ',event node=1);\n'
@@ -288,6 +248,8 @@ FailNodeTest.prototype.failNode=function(nodeId, expectFailure) {
 	else { 
 		this.testResults.assertCheck('drop node okay',slonik.getReturnCode(),0);
 	}
+	this.slonArray[nodeId-1].stop();
+	this.coordinator.join(this.slonArray[nodeId-1]);
 	this.coordinator.log("FailNodeTest.prototype.FailNodeTest - complete");
 }
 
