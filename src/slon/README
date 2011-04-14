@@ -1,5 +1,3 @@
-
-
 Directory src/slon
 
 This directory contains the main replication engine.
@@ -13,12 +11,6 @@ STATUS:
 
 	Slon can also subscribe to a set as a cascaded subscriber and
 	change the data provider later on the fly.
-
-TODO:
-
-	All other admin events (especially drop)
-
-	Use forward data for PITR.
 
 Major components:
 
@@ -135,5 +127,20 @@ Work threads:
   - main
   - cleanup thread
   - sync thread
+  - local_listen thread - one of them
   - remote_listen thread - for each node being monitored
   - remote_worker thread - for each node being monitored
+  - monitoring thread - used to poll activities out of a common queue to show
+    what all the threads are doing
+
+Serialization issue...
+
+  Whenever events are to be added to sl_event, the transaction begins with the
+  statement
+
+     lock table sl_event_lock;
+
+  This guards against the race condition that one transaction might begin, and
+  in between the BEGIN and actually establishing the transaction concurrency
+  information, another transaction might slip thru and get an earlier txid but a
+  later event ID.

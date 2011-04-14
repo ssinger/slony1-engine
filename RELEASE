@@ -33,6 +33,8 @@ Version TBD...
 
 - Bug #195 - change slon_quote_* functions to IMMUTABLE
 
+- Bug #196 - add guard lock on sl_event_lock to protect against events with XID going backwards
+
 - Bug #198 - subscribeset() should verify that provider node exists
 
 RELEASE 2.0.6

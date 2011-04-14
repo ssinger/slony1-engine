@@ -534,6 +534,20 @@ comment on table @NAMESPACE@.sl_config_lock is 'This table exists solely to prev
 comment on column @NAMESPACE@.sl_config_lock.dummy is 'No data ever goes in this table so the contents never matter.  Indeed, this column does not really need to exist.';
 
 -- ----------------------------------------------------------------------
+-- TABLE sl_event_lock
+--
+--	This table exists solely to prevent multiple connections from
+--	concurrently creating new events.  We separate this from
+--	sl_event because we really don't need a lock that prevents
+--	*reads* on sl_event.
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_event_lock (
+	dummy				integer
+);
+comment on table @NAMESPACE@.sl_event_lock is 'This table exists solely to prevent multiple connections from concurrently creating new events and perhaps getting them out of order.';
+comment on column @NAMESPACE@.sl_event_lock.dummy is 'No data ever goes in this table so the contents never matter.  Indeed, this column does not really need to exist.';
+
+-- ----------------------------------------------------------------------
 -- TABLE sl_archive_counter
 --
 --	This table is used to generate the archive number for logshipping.
