@@ -77,4 +77,60 @@ sl_log_1 table.  This process will be periodically repeated as &slony1; runs.
 
 </sect2>
 
+<sect2>
+<title>Slonik and Event Confirmations</title>
+<para>
+
+&lslonik; can submit configuraiton commands to different event nodes
+which is controlled by the parameters of the command.  If two commands
+are submitted to different nodes it might be important that they are
+processed by other nodes in a consistent order.  The &lslonik; <xref linkend="stmtwaitevent">
+command can be used to accomplish this but as of &slony1; 2.1 this is
+done automatically by &lslonik; in the following circumstances.
+</para>
+<orderedlist>
+<listitem><para>Before slonik submits an event to a node
+it will wait until that the node has confirmed the last configuration event
+from the previous event node.</para></listitem>
+
+<listitem><para>Before slonik submits a <xref linkend="stmtsubscribeset">
+command it will make sure that the provider node has confirmed all
+configuration events from any other node.</para></listitem>
+
+<listitem><para>Before &lslonik; submits a <xref linkend="stmtdropNode"> event
+it will make sure that all nodes in the cluster (other than the one
+being dropped) have caught up with all other nodes</para></listitem>
+
+<listitem><para>Before slonik submits a <xref linkend="stmtcloneprepare">
+it will make sure that the node being cloned is caught up with all other
+nodes in the cluster.</para></listitem>
+
+<listitem><para>Before slonik submits a <xref linkend="stmtcreateset"> command
+it will make sure that any <xref linkend="stmtdropset"> commands have been confirmed by
+all nodes.</para></listitem>
+
+</orderedlist>
+<para>
+
+When &lslonik starts it will contact all nodes that it has admin conninfo
+information for to find the last non-SYNC event from each node.  Submitting
+commands from multiple &lslonik; instances at the same time will confuse &lslonik;
+and is not recommended.   If &lslonik is waiting for an event confirmation
+it will print a message every 10 seconds saying which events are
+outstanding.   Any commands that might require slonik to wait for event
+confirmations can not be executed inside of a "try" block (since the
+<xref linkend="stmtwaitevent"> command can not be used inside of a "try" block.
+</para>
+
+<para>
+Automatic waiting for confirmations can be disabled in &lslonik; by running
+&lslonik; with the -w option.</para>
+
+<para>
+
+
+</sect2>
+
+
+
 </sect1>
