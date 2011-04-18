@@ -228,6 +228,8 @@ Failover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop path from 1 to 4',slonik.getReturnCode(),0);
+	   
+	this.slonikSync(1,1);
 	this.failNode(1,4,true);
 	
 	this.compareDb('db2','db4');
@@ -254,7 +256,7 @@ Failover.prototype.runTest = function() {
 }
 
 Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
-	
+
 	this.slonArray[node_id-1].stop();
 	if(!this.slonArray[node_id-1].isFinished()) {
 		this.coordinator.join(this.slonArray[node_id-1]);
