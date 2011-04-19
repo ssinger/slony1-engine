@@ -95,7 +95,7 @@ piperead(int s, char *buf, int len)
 int pipewrite(int s, const char * buf, int len)
 {
 
-  int ret = write(s,buf,len,0);
+  int ret = send(s,buf,len,0);
   if( ret < 0 && WSAGetLastError() == WSAECONNRESET)
     ret=0;
   return ret;
