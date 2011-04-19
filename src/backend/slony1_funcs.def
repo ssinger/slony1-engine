@@ -1,0 +1,3 @@
+EXPORTS
+_Slony_I_createEvent
+_Slony_I_getModuleVersion
