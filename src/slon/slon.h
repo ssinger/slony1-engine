@@ -600,7 +600,7 @@ extern int	slon_log_level;
 #endif
 
 #if defined(WIN32)
-#define snprintf sprintf_s
+#define snprintf pg_snprintf
 #endif
 
 #endif   /* SLON_H_INCLUDED */
