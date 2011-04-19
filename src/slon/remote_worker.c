@@ -720,16 +720,7 @@ remoteWorkerThread_main(void *cdata)
 		}
 		else	/* not SYNC */
 		{
-			/*
-			 * Avoid deadlock problems during configuration changes by locking
-			 * the central configuration lock right from the start.
-			 */
-			slon_appendquery(&query1,
-							 "lock table %s.sl_config_lock; ",
-							 rtcfg_namespace);
-			if (query_execute(node, local_dbconn, &query1) < 0)
-				slon_retry();
-			dstring_reset(&query1);
+		
 
 			/*
 			 * For all non-SYNC events, we write at least a standard event
