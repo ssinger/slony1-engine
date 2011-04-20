@@ -1301,6 +1301,7 @@ remoteWorkerThread_main(void *cdata)
 						 */
 						if(copy_set_retries != 0)
 						  {
+							dstring_reset(&query1);
 							slon_mkquery(&query1, "start transaction;"
 										 "set transaction isolation level serializable;");
 							slon_appendquery(&query1,
