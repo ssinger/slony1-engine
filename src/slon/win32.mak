@@ -22,7 +22,7 @@ OBJS = 	slon.obj		\
 	port\pipe.obj \
 
 
-CPP_FLAGS=/c /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /I$(PTHREADS_INC) /MDd /Zi
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /I$(PTHREADS_INC) /MDd /Zi 
 
 slon.obj: slon.c
 	$(CPP) $(CPP_FLAGS)  slon.c

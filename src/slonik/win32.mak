@@ -9,7 +9,7 @@ OBJS = slonik.obj \
 
 
 PGSHARE=\"c:\\postgresql\\9.0\\share\"
-CPP_FLAGS=/c /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /MD
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /MD
 
 slonik.obj: slonik.c
 	$(CPP)$(CPP_FLAGS)  slonik.c
