@@ -4,7 +4,7 @@ LINK32=link.exe
 PGSHARE=\"c:\\postgresql\\9.0\\share\"
 PTHREADS_INC=C:\pthreads-win32\include
 PTHREADS_LIB=c:\pthreads-win32\lib
-LINK32_FLAGS=/libpath:c:\postgresql\9.0\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:c:\gettext\lib intl.lib /NODEFAULTLIB:MSVCRT /DEBUG
+LINK32_FLAGS=/libpath:c:\postgresql\9.0\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:c:\gettext\lib intl.lib /NODEFAULTLIB:MSVCRT 
 OBJS = 	slon.obj		\
 	runtime_config.obj	\
 	local_listen.obj	\
