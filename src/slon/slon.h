@@ -12,7 +12,11 @@
 
 #ifndef SLON_H_INCLUDED
 #define SLON_H_INCLUDED
+#ifdef MSVC 
+#include "config_msvc.h"
+#else
 #include "config.h"
+#endif
 #include "types.h"
 #include "libpq-fe.h"
 #include "misc.h"
@@ -600,7 +604,7 @@ extern int	slon_log_level;
 #endif
 
 #if defined(WIN32)
-#define snprintf sprintf_s
+#define snprintf pg_snprintf
 #endif
 
 #endif   /* SLON_H_INCLUDED */

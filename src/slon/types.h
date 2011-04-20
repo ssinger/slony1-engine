@@ -82,7 +82,7 @@ typedef char bool;
 #define gettext_noop(x) x
 
 #ifdef _MSC_VER
-#define va_copy(aq,ap) *aq=*ap
+#define va_copy(aq,ap) aq=ap
 #endif
 
 #ifdef HAVE_LL_CONSTANTS
