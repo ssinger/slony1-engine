@@ -32,7 +32,11 @@
 #include "port.h"
 
 #include "slonik.h"
+#ifdef MSVC
+#include "config_msvc.h"
+#else
 #include "config.h"
+#endif
 #include "../parsestatements/scanner.h"
 extern int STMTS[MAXSTATEMENTS];
 
