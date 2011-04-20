@@ -2962,9 +2962,22 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		if (use_node != stmt->backup_node)
 		{
+			
+			/**
+			 * commit the transaction so a new transaction
+			 * is ready for the lock table
+			 */
+			if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
+			{
+				free(configbuf);
+				dstring_free(&query);
+				return -1;
+			}
 			slon_mkquery(&query,
+						 "lock table \"_%s\".sl_event_lock; "
 						 "select \"_%s\".storeListen(%d,%d,%d); "
 						 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); ",
+						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
 						 stmt->no_id, use_node, stmt->backup_node,
 						 stmt->hdr.script->clustername,
@@ -2993,7 +3006,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 			sprintf(ev_seqno_c, INT64_FORMAT, setinfo[i].max_seqno);
 			sprintf(ev_seqfake_c, INT64_FORMAT, ++max_seqno_total);
-
+			if (db_commit_xact((SlonikStmt *) stmt, max_node_total->adminfo)
+				< 0)
+			{
+				return -1;
+			}
 			slon_mkquery(&query,
 						 "lock table \"_%s\".sl_event_lock; "
 						 "select \"_%s\".failedNode2(%d,%d,%d,'%s','%s'); ",
@@ -3094,7 +3111,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				}
 
 				slon_mkquery(&query,
+							 "lock table \"_%s\".sl_event_lock; "
 							 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
+							 stmt->hdr.script->clustername,
 							 stmt->hdr.script->clustername,
 							 stmt->hdr.script->clustername);
 				if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
