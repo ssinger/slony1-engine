@@ -1301,7 +1301,6 @@ remoteWorkerThread_main(void *cdata)
 						 */
 						if(copy_set_retries != 0)
 						  {
-							dstring_reset(&query1);
 							slon_mkquery(&query1, "start transaction;"
 										 "set transaction isolation level serializable;");
 							slon_appendquery(&query1,
@@ -1319,6 +1318,7 @@ remoteWorkerThread_main(void *cdata)
 						if (copy_set(node, local_conn, sub_set, event) == 0)
 						{
 							rtcfg_enableSubscription(sub_set, sub_provider, sub_forward);
+							dstring_reset(&query1);
 							(void) slon_mkquery(&query1,
 								"select %s.enableSubscription(%d, %d, %d); ",
 												rtcfg_namespace,
