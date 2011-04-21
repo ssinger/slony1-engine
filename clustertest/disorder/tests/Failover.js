@@ -42,7 +42,7 @@ Failover.prototype.runTest = function() {
 	 */
 	this.subscribeSet(1,1, 1, [ 2, 3 ]);
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
-
+	this.slonikSync(1,1);
 
 	var load = this.generateLoad();
 	
@@ -81,11 +81,10 @@ Failover.prototype.runTest = function() {
 	 * 
 	 * Re resubscribe node 2 to receive from node 3 before the
 	 * FAILOVER this should test the more simple case.
-	 */
-	this.coordinator.log('PROGRESS:failing 1=>3 where 2 is first moved to get from 3');
+	 */	this.coordinator.log('PROGRESS:failing 1=>3 where 2 is first moved to get from 3');
 	this.addCompletePaths();		
 	this.subscribeSet(1,1,3,[2]);
-	
+	this.slonikSync(1,1);
 	this.failNode(1,3,true);	
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
@@ -261,6 +260,7 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 	if(!this.slonArray[node_id-1].isFinished()) {
 		this.coordinator.join(this.slonArray[node_id-1]);
 	}
+	
 	
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'Failover.prototype.failNode\';\n';
