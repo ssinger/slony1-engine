@@ -87,7 +87,9 @@ MultipleOrigins.prototype.runTest = function() {
 	this.compareDb('db1','db3');
 	
 	
-	this.moveSet(1,4,1);	
+	this.moveSet(1,4,1);
+	this.slonikSync(1,1);
+	this.slonikSync(1,4);
 	this.failNode(1,4,true);
 	
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {		
