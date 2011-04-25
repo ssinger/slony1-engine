@@ -2576,13 +2576,13 @@ as $$
 DECLARE
 in_progress boolean;
 begin
-  IF exists (select true from @NAMESPACE@.sl_event
+	if exists (select true from @NAMESPACE@.sl_event
 			where ev_type = 'ENABLE_SUBSCRIPTION'
 			and ev_data1 = p_add_id::text
 			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
 					where con_origin = ev_origin
 					and con_received::text = ev_data3))
-	THEN
+	then
 		return true;
 	else
 		return false;
@@ -5791,7 +5791,7 @@ begin
 	reachable:=false;
 	select * into listen_row from @NAMESPACE@.sl_listen where
 		   li_origin=origin_node_id and li_receiver=receiver_node_id;
-	if FOUND then
+	if found then
 	   reachable:=true;
 	end if;
   return reachable;

@@ -2434,7 +2434,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1) < 0)
 		return -1;
 
-	if( ! auto_wait_disabled)
+	if(!auto_wait_disabled)
 	{
 		for(curAdmInfo = stmt->hdr.script->adminfo_list;
 			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
