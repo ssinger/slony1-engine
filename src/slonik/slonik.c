@@ -4876,38 +4876,38 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
 static int 
 slonik_get_next_tab_id(SlonikStmt * stmt)
 {
-SlonikAdmInfo *adminfo_def;
-SlonDString query;
-int max_tab_id=0;
-int tab_id=0;
-char * tab_id_str;
-PGresult* res;
-
-dstring_init(&query);
-slon_mkquery(&query,
-			 "select max(tab_id) FROM \"_%s\".sl_table",
-			 stmt->script->clustername);
-
-for (adminfo_def = stmt->script->adminfo_list;
-	 adminfo_def; adminfo_def = adminfo_def->next)
-{	
-	SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
-												 adminfo_def->no_id);
-	if( adminfo == NULL)
-	{
-		
-		printf("%s:%d: Error: could not connect to node %d for next table"
-			   " id",
-			   stmt->stmt_filename,stmt->stmt_lno,
-			   adminfo_def->no_id);
-		dstring_terminate(&query);
-		return -1;
-	}
-	if(slonik_is_slony_installed(stmt,adminfo) > 0 )
-	{
-		res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
-		if(res == NULL ) 
+	SlonikAdmInfo *adminfo_def;
+	SlonDString query;
+	int max_tab_id=0;
+	int tab_id=0;
+	char * tab_id_str;
+	PGresult* res;
+	
+	dstring_init(&query);
+	slon_mkquery(&query,
+				 "select max(tab_id) FROM \"_%s\".sl_table",
+				 stmt->script->clustername);
+	
+	for (adminfo_def = stmt->script->adminfo_list;
+		 adminfo_def; adminfo_def = adminfo_def->next)
+	{	
+		SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
+													 adminfo_def->no_id);
+		if( adminfo == NULL)
 		{
+			
+			printf("%s:%d: Error: could not connect to node %d for next table"
+				   " id",
+				   stmt->stmt_filename,stmt->stmt_lno,
+				   adminfo_def->no_id);
+			dstring_terminate(&query);
+			return -1;
+		}
+		if(slonik_is_slony_installed(stmt,adminfo) > 0 )
+		{
+			res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
+			if(res == NULL ) 
+			{
 			printf("%s:%d: Error:could not query node %d for next table id",
 				   stmt->stmt_filename,stmt->stmt_lno,
 				   adminfo->no_id);
@@ -4915,32 +4915,32 @@ for (adminfo_def = stmt->script->adminfo_list;
 				PQclear(res);
 			dstring_terminate(&query);
 			return -1;
+			}
 		}
-	}
-	else
-	{
-		/**
-		 * if slony is not yet installed on the node we can skip it.
-		 */
-		continue;
-	}
-	if(PQntuples(res) > 0)
-	{		
-		tab_id_str = PQgetvalue(res,0,0);
-		if(tab_id_str != NULL)
-		   tab_id=strtol(tab_id_str,NULL,10);
 		else
 		{
-			PQclear(res);
-			continue;				
+			/**
+			 * if slony is not yet installed on the node we can skip it.
+			 */
+			continue;
 		}
-		if(tab_id > max_tab_id)
-			max_tab_id=tab_id;
-	}
-	PQclear(res);
-}/*for*/
-dstring_terminate(&query);
-return max_tab_id+1;
+		if(PQntuples(res) > 0)
+		{		
+			tab_id_str = PQgetvalue(res,0,0);
+			if(tab_id_str != NULL)
+				tab_id=strtol(tab_id_str,NULL,10);
+			else
+			{
+				PQclear(res);
+				continue;				
+			}
+			if(tab_id > max_tab_id)
+				max_tab_id=tab_id;
+		}
+		PQclear(res);
+	}/*for*/
+	dstring_terminate(&query);
+	return max_tab_id+1;
 }
 
 
@@ -4954,74 +4954,74 @@ return max_tab_id+1;
 static int 
 slonik_get_next_sequence_id(SlonikStmt * stmt)
 {
-SlonikAdmInfo *adminfo_def;
-SlonDString query;
-int max_seq_id=0;
-int seq_id=0;
-char * seq_id_str;
-PGresult* res;
-int rc;
-
-dstring_init(&query);
-slon_mkquery(&query,
-			 "select max(seq_id) FROM \"_%s\".sl_sequence",
-			 stmt->script->clustername);
-
-for (adminfo_def = stmt->script->adminfo_list;
-	 adminfo_def; adminfo_def = adminfo_def->next)
-{	
-	SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
-												 adminfo_def->no_id);
-	if( adminfo == NULL)
-	{
-		
-		printf("%s:%d: Error: could not query node %d for next sequence id",
-			   stmt->stmt_filename,stmt->stmt_lno,
-			   adminfo_def->no_id);
-		dstring_terminate(&query);
-		return -1;
-	}
-	if( (rc = slonik_is_slony_installed(stmt,adminfo)) > 0)
-	{
-		res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
-		if(res == NULL ) 
+	SlonikAdmInfo *adminfo_def;
+	SlonDString query;
+	int max_seq_id=0;
+	int seq_id=0;
+	char * seq_id_str;
+	PGresult* res;
+	int rc;
+	
+	dstring_init(&query);
+	slon_mkquery(&query,
+				 "select max(seq_id) FROM \"_%s\".sl_sequence",
+				 stmt->script->clustername);
+	
+	for (adminfo_def = stmt->script->adminfo_list;
+		 adminfo_def; adminfo_def = adminfo_def->next)
+	{	
+		SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
+													 adminfo_def->no_id);
+		if( adminfo == NULL)
 		{
 			
-			printf("%s:%d: Error: could not query node %d for next "
-				   "sequence id",
+			printf("%s:%d: Error: could not query node %d for next sequence id",
 				   stmt->stmt_filename,stmt->stmt_lno,
-				   adminfo->no_id);
-			if( res != NULL)
-				PQclear(res);
+				   adminfo_def->no_id);
 			dstring_terminate(&query);
 			return -1;
 		}
-	}
-	else if (rc < 0)
-	{
-		return rc;
-	}
-	else
-	{
-		continue;
-	}		
-	if(PQntuples(res) > 0)
-	{		
-		seq_id_str = PQgetvalue(res,0,0);
-		if(seq_id_str != NULL)
-		   seq_id=strtol(seq_id_str,NULL,10);
+		if( (rc = slonik_is_slony_installed(stmt,adminfo)) > 0)
+		{
+			res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
+			if(res == NULL ) 
+			{
+				
+				printf("%s:%d: Error: could not query node %d for next "
+					   "sequence id",
+					   stmt->stmt_filename,stmt->stmt_lno,
+					   adminfo->no_id);
+				if( res != NULL)
+					PQclear(res);
+				dstring_terminate(&query);
+				return -1;
+			}
+		}
+		else if (rc < 0)
+		{
+			return rc;
+		}
 		else
 		{
-			PQclear(res);
 			continue;
+		}		
+		if(PQntuples(res) > 0)
+		{		
+			seq_id_str = PQgetvalue(res,0,0);
+			if(seq_id_str != NULL)
+				seq_id=strtol(seq_id_str,NULL,10);
+			else
+			{
+				PQclear(res);
+				continue;
+			}
+			if(seq_id > max_seq_id)
+				max_seq_id=seq_id;
 		}
-		if(seq_id > max_seq_id)
-			max_seq_id=seq_id;
+		PQclear(res);
 	}
-	PQclear(res);
-}
-dstring_terminate(&query);
-return max_seq_id+1;
+	dstring_terminate(&query);
+	return max_seq_id+1;
 }
 
 /**
@@ -5037,54 +5037,54 @@ return max_seq_id+1;
 static int find_origin(SlonikStmt * stmt,int set_id)
 {
 
-SlonikAdmInfo *adminfo_def;
-SlonDString query;
-PGresult * res;
-int origin_id=-1;
-char * origin_id_str;
-dstring_init(&query);
-slon_mkquery(&query,
-			 "select set_origin from \"_%s\".\"sl_set\" where set_id=%d",
-			 stmt->script->clustername,set_id);
-
-for (adminfo_def = stmt->script->adminfo_list;
-	 adminfo_def; adminfo_def = adminfo_def->next)
-{	
-	SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
-												 adminfo_def->no_id);
-	if(adminfo == NULL)
-		continue;
-	res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
-	if(res == NULL ) 
-	{
-		printf("%s:%d: warning: could not query node %d for origin",
-			   stmt->stmt_filename,stmt->stmt_lno,
-			   adminfo->no_id);
-		continue;
-	}
-	if(PQntuples(res) > 0)
-	{		
-		origin_id_str = PQgetvalue(res,0,0);
-		if(origin_id_str != NULL)
-		{
-		   origin_id=strtol(origin_id_str,NULL,10);
-		   PQclear(res);
-		}
-		else
-		{
-			PQclear(res);
+	SlonikAdmInfo *adminfo_def;
+	SlonDString query;
+	PGresult * res;
+	int origin_id=-1;
+	char * origin_id_str;
+	dstring_init(&query);
+	slon_mkquery(&query,
+				 "select set_origin from \"_%s\".\"sl_set\" where set_id=%d",
+				 stmt->script->clustername,set_id);
+	
+	for (adminfo_def = stmt->script->adminfo_list;
+		 adminfo_def; adminfo_def = adminfo_def->next)
+	{	
+		SlonikAdmInfo * adminfo = get_active_adminfo(stmt,
+													 adminfo_def->no_id);
+		if(adminfo == NULL)
 			continue;
-
+		res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
+		if(res == NULL ) 
+		{
+			printf("%s:%d: warning: could not query node %d for origin",
+				   stmt->stmt_filename,stmt->stmt_lno,
+				   adminfo->no_id);
+			continue;
 		}
-	}
-	if(origin_id >= 0) 
-		break;
-}/* for */
-
-dstring_terminate(&query);
-
-
-return origin_id;
+		if(PQntuples(res) > 0)
+		{		
+			origin_id_str = PQgetvalue(res,0,0);
+			if(origin_id_str != NULL)
+			{
+				origin_id=strtol(origin_id_str,NULL,10);
+				PQclear(res);
+			}
+			else
+			{
+				PQclear(res);
+				continue;
+				
+			}
+		}
+		if(origin_id >= 0) 
+			break;
+	}/* for */
+	
+	dstring_terminate(&query);
+	
+	
+	return origin_id;
 }
 
 
@@ -5101,55 +5101,55 @@ slonik_add_dependent_sequences(SlonikStmt_set_add_table *stmt,
 						   const char * table_name)
 {
 
-SlonDString query;
-PGresult * result;
-int idx=0;
-const char * seq_name;
-char * comment;
-int rc;
-
-dstring_init(&query);
-slon_mkquery(&query,
-			 "select pg_get_serial_sequence('%s',column_name) "
-			 "FROM information_schema.columns where table_schema ||"
-			 "'.' || table_name='%s'",
-			 table_name,table_name);
-result = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
-if( result == NULL)
-{
-	dstring_terminate(&query);
-	return -1;
-}
-for(idx=0; idx < PQntuples(result);idx++)
-{
-
-	if(!PQgetisnull(result,idx,0)  )
-	{
-		seq_name=PQgetvalue(result,idx,0);
-		/**
-		 * add the sequence to the replication set
-		 */
-		comment=malloc(strlen(table_name)+strlen("sequence for"+1));
-		sprintf(comment,"sequence for %s",table_name);
-		rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
-									   seq_name,
-									   stmt->set_id,
-									   comment,-1);
-		free(comment);
-		if(rc < 0 )
-		{
-			PQclear(result);
-			dstring_terminate(&query);
-			return rc;
-		}
-			
-	}
+	SlonDString query;
+	PGresult * result;
+	int idx=0;
+	const char * seq_name;
+	char * comment;
+	int rc;
 	
-}/*for*/
-PQclear(result);
-dstring_terminate(&query);
-return 0;
-
+	dstring_init(&query);
+	slon_mkquery(&query,
+				 "select pg_get_serial_sequence('%s',column_name) "
+				 "FROM information_schema.columns where table_schema ||"
+				 "'.' || table_name='%s'",
+				 table_name,table_name);
+	result = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
+	if( result == NULL)
+	{
+		dstring_terminate(&query);
+		return -1;
+	}
+	for(idx=0; idx < PQntuples(result);idx++)
+	{
+		
+		if(!PQgetisnull(result,idx,0)  )
+		{
+			seq_name=PQgetvalue(result,idx,0);
+			/**
+			 * add the sequence to the replication set
+			 */
+			comment=malloc(strlen(table_name)+strlen("sequence for"+1));
+			sprintf(comment,"sequence for %s",table_name);
+			rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
+											  seq_name,
+											  stmt->set_id,
+											  comment,-1);
+			free(comment);
+			if(rc < 0 )
+			{
+				PQclear(result);
+				dstring_terminate(&query);
+				return rc;
+			}
+			
+		}
+		
+	}/*for*/
+	PQclear(result);
+	dstring_terminate(&query);
+	return 0;
+	
 }
 
 
@@ -5168,28 +5168,30 @@ static int
 slonik_is_slony_installed(SlonikStmt * stmt,
 					  SlonikAdmInfo * adminfo)
 {
-SlonDString query;
-PGresult * res;
-dstring_init(&query);
-int rc=-1;
-slon_mkquery(&query,"select count(*) FROM information_schema"
-			 ".tables where table_schema='_%s' AND table_name"
-			 "='sl_table'",stmt->script->clustername);
-res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
-if ( res == NULL ||  PQntuples(res) <= 0 )
-	rc=-1;
-else if( strncmp(PQgetvalue(res,0,0),"1",1)==0)
-	rc=1;
-else 
-	rc=0;
+	SlonDString query;
+	PGresult * res;
+	dstring_init(&query);
+	int rc=-1;
+	slon_mkquery(&query,"select count(*) FROM information_schema"
+				 ".tables where table_schema='_%s' AND table_name"
+				 "='sl_table'",stmt->script->clustername);
+	res = db_exec_select((SlonikStmt*)stmt,adminfo,&query);
+	if ( res == NULL ||  PQntuples(res) <= 0 )
+		rc=-1;
+	else if( strncmp(PQgetvalue(res,0,0),"1",1)==0)
+		rc=1;
+	else 
+		rc=0;
+	
+	if(res != NULL)
+		PQclear(res);
+	db_rollback_xact(stmt, adminfo);
+	dstring_terminate(&query);
+	return rc;
+	
+}	
 
-if(res != NULL)
-	PQclear(res);
-db_rollback_xact(stmt, adminfo);
-dstring_terminate(&query);
-return rc;
-
-}						   
+					   
 static int slonik_submitEvent(SlonikStmt * stmt,
 							  SlonikAdmInfo * adminfo, 
 							  SlonDString * query,
