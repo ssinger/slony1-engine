@@ -604,7 +604,8 @@ int			db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 int			db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 				char *clustername);
 int			db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
-int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
+int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+						  bool supress_locking);
 int			db_commit_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_rollback_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 
