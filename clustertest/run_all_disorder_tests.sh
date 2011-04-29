@@ -31,4 +31,4 @@ for db in db1 db2 db3 db4 db5; do
     ${PGTESTPATH}/psql -h ${PGTESTHOST} -p ${PGTESTPORT} -U ${PGTESTUSER} -d template1 -c "drop database if exists ${PGTESTDATABASE};"
 done
 
-java -jar ${CLUSTERTESTHOME}/build/jar/clustertest-coordinator.jar ${DBP} disorder/tests/disorder_tests.js
+java -jar ${CLUSTERTESTJAR} ${DBP} disorder/tests/disorder_tests.js
