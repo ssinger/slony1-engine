@@ -31,9 +31,9 @@
 #define vsnprintf _vsnprintf
 #endif
 
-#include "postgres.h"
 #include "libpq-fe.h"
 
+#include "../slonik/types.h"
 #include "slony_logshipper.h"
 #include "config.h"
 

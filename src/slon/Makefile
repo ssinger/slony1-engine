@@ -46,8 +46,6 @@ OBJS		= \
 ifeq ($(PORTNAME), win32)
 OBJS += port/pipe.o port/win32service.o $(WIN32RES)
 override LDFLAGS += -lwsock32
-else
-override LDFLAGS += -lsocket
 endif
 
 

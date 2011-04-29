@@ -682,11 +682,6 @@ typedef struct option_list {
 	struct option_list *next;
 } option_list;
 
-#ifndef false
-#define   false 0
-#define   true (~false)
-#endif
-
 /*
  * Local Variables:
  *	tab-width: 4

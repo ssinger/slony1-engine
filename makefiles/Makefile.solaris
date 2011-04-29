@@ -16,7 +16,7 @@ CFLAGS_SL = -fPIC
 else
 CFLAGS_SL = -KPIC
 endif
-
+LDFLAGS:= $(LDFLAGS) -lsocket
 %.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

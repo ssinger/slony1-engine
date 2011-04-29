@@ -93,4 +93,9 @@ typedef char bool;
 #define UINT64CONST(x) ((uint64) x)
 #endif
 
+#ifndef false
+#define   false 0
+#define   true (~false)
+#endif
+
 #endif
