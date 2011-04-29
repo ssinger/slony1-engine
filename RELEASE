@@ -70,6 +70,8 @@
 
 - Bug #198 - subscribeset() should verify that provider node exists
 
+- Bug #201 - Allow command-line options to be configured from slon_tools.conf
+
 * RELEASE 2.0.6
 - Fix for bug #162, typenameTypeId() changes signatures in 9.1
 
