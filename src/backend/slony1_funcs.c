@@ -11,7 +11,12 @@
  */
 
 #include "postgres.h"
+#ifdef MSVC
+#include "config_msvc.h"
+#else
 #include "config.h"
+#endif
+
 
 #include "avl_tree.c"
 

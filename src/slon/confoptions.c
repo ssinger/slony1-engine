@@ -1,7 +1,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "slon.h"
+#include "types.h"
 
 #ifdef qsort
 #undef qsort
@@ -20,6 +22,424 @@ void	   *get_config_option(const char *name);
 static double real_placeholder;
 
 void		dump_configuration(void);
+void build_conf_variables(void);
+
+
+
+static struct config_int ConfigureNamesInt[] =
+{
+
+	{
+		{
+			(const char *) "vac_frequency",		/* conf name */
+			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* short desc */
+			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&vac_frequency,			/* var name */
+		3,						/* default val */
+		0,						/* min val */
+		100						/* max val */
+	},
+	{
+		{
+			(const char *) "log_level",
+			gettext_noop("debug log level"),
+			gettext_noop("debug log level"),
+			SLON_C_INT
+		},
+		&slon_log_level,
+		0,
+		-1,
+		4
+	},
+	{
+		{
+			(const char *) "sync_interval",
+			gettext_noop("sync event interval"),
+			gettext_noop("sync event interval in ms"),
+			SLON_C_INT
+		},
+		&sync_interval,
+		2000,
+		10,
+		60000
+	},
+	{
+		{
+			(const char *) "sync_interval_timeout",
+			gettext_noop("sync interval time out - milliseconds"),
+			gettext_noop("sync interval time out - milliseconds"),
+			SLON_C_INT
+		},
+		&sync_interval_timeout,
+		10000,
+		0,
+		1200000
+	},
+	{
+		{
+			(const char *) "sync_group_maxsize",
+			gettext_noop("sync group"),
+			gettext_noop("sync group"),
+			SLON_C_INT
+		},
+		&sync_group_maxsize,
+		20,
+		0,
+		10000
+	},
+	{
+		{
+			(const char *) "desired_sync_time",
+			gettext_noop("maximum time planned for grouped SYNCs"),
+			gettext_noop("If replication is behind, slon will try to increase numbers of "
+			  "syncs done targetting that they should take this quantity of "
+						 "time to process"),
+			SLON_C_INT
+		},
+		&desired_sync_time,
+		60000,
+		0,
+		6000000
+	},
+#ifdef HAVE_SYSLOG
+	{
+		{
+			(const char *) "syslog",
+			gettext_noop("Uses syslog for logging."),
+			gettext_noop("If this parameter is 1, messages go both to syslog "
+						 "and the standard output. A value of 2 sends output only to syslog. "
+			"(Some messages will still go to the standard output/error.) The "
+						 "default is 0, which means syslog is off."),
+			SLON_C_INT
+		},
+		&Use_syslog,
+		0,
+		0,
+		2
+	},
+#endif
+	{
+		{
+			(const char *) "quit_sync_provider",
+			gettext_noop("Node to watch for a final SYNC"),
+			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
+					"against a certain provider.  This is the provider... "),
+			SLON_C_INT
+		},
+		&quit_sync_provider,
+		0,
+		0,
+		2147483647
+	},
+	{
+		{
+			(const char *) "sync_max_rowsize",	/* conf name */
+			gettext_noop("sl_log_? rows larger than that are read separately"), /* short desc */
+			gettext_noop("sl_log_? rows with octet_length(log_cmddata) larger than this are read separately"), /* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&sync_max_rowsize,		/* var name */
+		8192,					/* default val */
+		1024,					/* min val */
+		32768					/* max val */
+	},
+	{
+		{
+			(const char *) "sync_max_largemem", /* conf name */
+			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* short desc */
+			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&sync_max_largemem,		/* var name */
+		5242880,				/* default val */
+		1048576,				/* min val */
+		1073741824				/* max val */
+	},
+
+	{
+		{
+			(const char *) "remote_listen_timeout",		/* conf name */
+			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* short desc */
+			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* long desc */
+			SLON_C_INT			/* config type */
+		},
+		&remote_listen_timeout, /* var name */
+		300,					/* default val */
+		30,						/* min val */
+		30000					/* max val */
+	},
+	{
+		{
+			(const char *) "monitor_interval",
+			gettext_noop("monitor thread interval for dumping the state queue"),
+			gettext_noop("number of milliseconds monitor thread waits to queue up status entries"),
+			SLON_C_INT
+		},
+		&monitor_interval,
+		500,
+		10,
+		12000
+	},
+	{
+		{	  
+			(const char *) "explain_interval",		/* conf name */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* short desc */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* long desc */
+			SLON_C_INT			/* config type */
+	    },
+		&explain_interval, /* var name */
+		0,						/* default val (never) */
+		0,						/* min val */
+		86400					/* max val (1 day) */
+	},
+		{
+		{
+			(const char*) "tcp_keepalive_idle",
+			gettext_noop("The number of seconds after which a TCP keep alive "
+						 "is sent across an idle connection. tcp_keepalive "
+						 "must be enabled for this to take effect.  Default "
+						 "of 0 means use operating system default"
+						 "use default" ),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_idle,
+		0, /*default val */
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+	{
+		{
+			(const char*) "tcp_keepalive_interval",
+			gettext_noop("The number of seconds in between TCP keep alive "
+						 "requests. tcp_keepalive "
+						 "must be enabled. Default value of 0 means use "
+                         "operating system defaut"),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_interval,
+		0,
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+	{
+		{
+			(const char*) "tcp_keepalive_count",
+			gettext_noop("The number of keep alive requests to the server "
+						 "that can be lost before the connection is declared "
+						 "dead. tcp_keep_alive must be on. Default value "
+						 "of 0 means use operating system default"),
+			NULL,
+			SLON_C_INT,
+		},
+		&keep_alive_count,
+		0,
+		0, /* min val */
+		1073741824	/*max val*/
+	},
+	{{0}}
+};
+
+static struct config_bool ConfigureNamesBool[] =
+{
+	{
+		{
+			(const char *) "log_pid",	/* conf name */
+			gettext_noop("Should logs include PID?"),	/* short desc */
+			gettext_noop("Should logs include PID?"),	/* long desc */
+			SLON_C_BOOL			/* config type */
+		},
+		&logpid,				/* var_name */
+		false					/* default_value */
+	},
+	{
+		{
+			(const char *) "log_timestamp",
+			gettext_noop("Should logs include timestamp?"),
+			gettext_noop("Should logs include timestamp?"),
+			SLON_C_BOOL
+		},
+		&logtimestamp,
+		true
+	},
+
+	{  
+	
+		{
+			(const char*) "tcp_keepalive",
+			gettext_noop("Enables sending of TCP KEEP alive between slon "
+						 "and the PostgreSQL backends. "),
+			NULL,
+			SLON_C_BOOL,
+		},
+		&keep_alive,
+		true
+	},
+	{
+		{
+			(const char*) "monitor_threads",
+			gettext_noop("Should the monitoring thread be run?"),
+			NULL,
+			SLON_C_BOOL,
+		},
+		&monitor_threads,
+		true
+	},
+	{{0}}
+};
+
+static struct config_real ConfigureNamesReal[] =
+{
+	{
+		{
+			(const char *) "real_placeholder",	/* conf name */
+			gettext_noop("place holder"),		/* short desc */
+			gettext_noop("place holder"),		/* long desc */
+			SLON_C_REAL			/* config type */
+		},
+		&real_placeholder,		/* var_name */
+		0.0,					/* default val */
+		0.0,					/* min_value */
+		1.0						/* max value */
+	},
+	{{0}}
+};
+
+static struct config_string ConfigureNamesString[] =
+{
+	{
+		{
+			(const char *) "cluster_name",		/* conf name */
+			gettext_noop("Name of the replication cluster"),	/* short desc */
+			NULL,				/* long desc */
+			SLON_C_STRING		/* config type */
+		},
+		&rtcfg_cluster_name,	/* var_name */
+		NULL					/* default value */
+	},
+	{
+		{
+			(const char *) "conn_info",
+			gettext_noop("connection info string"),
+			NULL,
+			SLON_C_STRING
+		},
+		&rtcfg_conninfo,
+		NULL
+	},
+	{
+		{
+			(const char *) "pid_file",
+			gettext_noop("Where to write the pid file"),
+			NULL,
+			SLON_C_STRING
+		},
+		&pid_file,
+		NULL
+	},
+	{
+		{
+			(const char *) "log_timestamp_format",
+			gettext_noop("A strftime()-style log timestamp format string."),
+			NULL,
+			SLON_C_STRING
+		},
+		&log_timestamp_format,
+		"%Y-%m-%d %H:%M:%S %Z"
+	},
+	{
+		{
+			(const char *) "archive_dir",
+			gettext_noop("Where to drop the sync archive files"),
+			NULL,
+			SLON_C_STRING
+		},
+		&archive_dir,
+		NULL
+	},
+	{
+		{
+			(const char *) "sql_on_connection",
+			gettext_noop("SQL to send to each connected node upon "
+						 "connection establishment, useful to enable "
+						 "duration logging, or to adjust any other "
+						 "connection settable GUC"),
+			NULL,
+			SLON_C_STRING
+		},
+		&sql_on_connection,
+		NULL
+	},
+
+	{
+		{
+			(const char *) "lag_interval",
+			gettext_noop("A PostgreSQL value compatible with ::interval "
+						 "which indicates how far behind this node should "
+						 "lag its providers."),
+			NULL,
+			SLON_C_STRING
+		},
+		&lag_interval,
+		NULL
+	},
+
+	{
+		{
+			(const char *) "command_on_logarchive",
+			gettext_noop("Command to run (probably a shell script) "
+						 "every time a log archive is committed. "
+						 "This command will be passed one parameter: "
+						 "The full pathname of the archive file"
+			),
+			NULL,
+			SLON_C_STRING
+		},
+		&command_on_logarchive,
+		NULL
+	},
+
+
+#ifdef HAVE_SYSLOG
+	{
+		{
+			(const char *) "syslog_facility",
+			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
+			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
+						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
+			SLON_C_STRING
+		},
+		&Syslog_facility,
+		"LOCAL0"
+	},
+	{
+		{
+			(const char *) "syslog_ident",
+			gettext_noop("Sets the program name used to identify slon messages in syslog."),
+			NULL,
+			SLON_C_STRING
+		},
+		&Syslog_ident,
+		"slon"
+	},
+#endif
+	{
+		{
+			(const char *) "cleanup_interval",
+			gettext_noop("A PostgreSQL value compatible with ::interval "
+						 "which indicates what aging interval should be used "
+						 "for deleting old events, and hence for purging sl_log_* tables."),
+			NULL,
+			SLON_C_STRING
+		},
+		&cleanup_interval,
+		"10 minutes"
+	},
+	{{0}}
+};
 
 void
 dump_configuration(void)
@@ -297,6 +717,7 @@ parse_bool(const char *value, bool *result)
 	return true;
 }
 
+
 /*
  * Try to parse value as an integer.  The accepted formats are the usual
  * decimal, octal, or hexadecimal formats.	If the string parses okay, return
@@ -307,6 +728,7 @@ parse_int(const char *value, int *result)
 {
 	long		val;
 	char	   *endptr;
+
 
 	errno = 0;
 	val = strtol(value, &endptr, 0);
@@ -322,6 +744,7 @@ parse_int(const char *value, int *result)
 		*result = (int) val;
 	return true;
 }
+
 
 /*
  * Try to parse value as a floating point constant in the usual format.
@@ -466,7 +889,7 @@ set_config_option(const char *name, const char *value)
 		case SLON_C_BOOL:
 			{
 				struct config_bool *conf = (struct config_bool *) record;
-				bool		newval = FALSE;
+				bool		newval = false;
 
 				if (value)
 				{
@@ -564,440 +987,6 @@ set_config_option(const char *name, const char *value)
 	return true;
 }
 
-static struct config_int ConfigureNamesInt[] =
-{
-	{
-		{
-			(const char *) "vac_frequency",		/* conf name */
-			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* short desc */
-			gettext_noop("Sets how many cleanup cycles to run before a vacuum is done"),		/* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&vac_frequency,			/* var name */
-		3,						/* default val */
-		0,						/* min val */
-		100						/* max val */
-	},
-	{
-		{
-			(const char *) "log_level",
-			gettext_noop("debug log level"),
-			gettext_noop("debug log level"),
-			SLON_C_INT
-		},
-		&slon_log_level,
-		0,
-		-1,
-		4
-	},
-	{
-		{
-			(const char *) "sync_interval",
-			gettext_noop("sync event interval"),
-			gettext_noop("sync event interval in ms"),
-			SLON_C_INT
-		},
-		&sync_interval,
-		2000,
-		10,
-		60000
-	},
-	{
-		{
-			(const char *) "sync_interval_timeout",
-			gettext_noop("sync interval time out - milliseconds"),
-			gettext_noop("sync interval time out - milliseconds"),
-			SLON_C_INT
-		},
-		&sync_interval_timeout,
-		10000,
-		0,
-		1200000
-	},
-	{
-		{
-			(const char *) "sync_group_maxsize",
-			gettext_noop("sync group"),
-			gettext_noop("sync group"),
-			SLON_C_INT
-		},
-		&sync_group_maxsize,
-		20,
-		0,
-		10000
-	},
-	{
-		{
-			(const char *) "desired_sync_time",
-			gettext_noop("maximum time planned for grouped SYNCs"),
-			gettext_noop("If replication is behind, slon will try to increase numbers of "
-			  "syncs done targetting that they should take this quantity of "
-						 "time to process"),
-			SLON_C_INT
-		},
-		&desired_sync_time,
-		60000,
-		0,
-		6000000
-	},
-#ifdef HAVE_SYSLOG
-	{
-		{
-			(const char *) "syslog",
-			gettext_noop("Uses syslog for logging."),
-			gettext_noop("If this parameter is 1, messages go both to syslog "
-						 "and the standard output. A value of 2 sends output only to syslog. "
-			"(Some messages will still go to the standard output/error.) The "
-						 "default is 0, which means syslog is off."),
-			SLON_C_INT
-		},
-		&Use_syslog,
-		0,
-		0,
-		2
-	},
-#endif
-	{
-		{
-			(const char *) "quit_sync_provider",
-			gettext_noop("Node to watch for a final SYNC"),
-			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
-					"against a certain provider.  This is the provider... "),
-			SLON_C_INT
-		},
-		&quit_sync_provider,
-		0,
-		0,
-		2147483647
-	},
-	{
-		{
-			(const char *) "quit_sync_finalsync",
-			gettext_noop("SYNC number at which slon should abort"),
-			gettext_noop("We want to terminate slon when the worker thread reaches a certain SYNC number "
-				 "against a certain provider.  This is the SYNC number... "),
-			SLON_C_INT
-		},
-		&quit_sync_finalsync,
-		0,
-		0,
-		2147483647
-	},
-	{
-		{
-			(const char *) "sync_max_rowsize",	/* conf name */
-			gettext_noop("sl_log_? rows larger than that are read separately"), /* short desc */
-			gettext_noop("sl_log_? rows with octet_length(log_cmddata) larger than this are read separately"), /* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&sync_max_rowsize,		/* var name */
-		8192,					/* default val */
-		1024,					/* min val */
-		32768					/* max val */
-	},
-	{
-		{
-			(const char *) "sync_max_largemem", /* conf name */
-			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* short desc */
-			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&sync_max_largemem,		/* var name */
-		5242880,				/* default val */
-		1048576,				/* min val */
-		1073741824				/* max val */
-	},
-
-	{
-		{
-			(const char *) "remote_listen_timeout",		/* conf name */
-			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* short desc */
-			gettext_noop("How long to wait, in seconds, before timeout when querying for remote events"),		/* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&remote_listen_timeout, /* var name */
-		300,					/* default val */
-		30,						/* min val */
-		30000					/* max val */
-	},
-	{
-		{
-			(const char *) "monitor_interval",
-			gettext_noop("monitor thread interval for dumping the state queue"),
-			gettext_noop("number of milliseconds monitor thread waits to queue up status entries"),
-			SLON_C_INT
-		},
-		&monitor_interval,
-		500,
-		10,
-		12000
-	},
-
-	{
-		{
-			(const char *) "explain_interval",		/* conf name */
-			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* short desc */
-			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&explain_interval, /* var name */
-		0,						/* default val (never) */
-		0,						/* min val */
-		86400					/* max val (1 day) */
-	},
-
-
-	{
-		{
-			(const char*) "tcp_keepalive_idle",
-			gettext_noop("The number of seconds after which a TCP keep alive "
-						 "is sent across an idle connection. tcp_keepalive "
-						 "must be enabled for this to take effect.  Default "
-						 "of 0 means use operating system default"
-						 "use default" ),
-			NULL,
-			SLON_C_INT,
-		},
-		&keep_alive_idle,
-		0, /*default val */
-		0, /* min val */
-		1073741824	/*max val*/
-	},
-	{
-		{
-			(const char*) "tcp_keepalive_interval",
-			gettext_noop("The number of seconds in between TCP keep alive "
-						 "requests. tcp_keepalive "
-						 "must be enabled. Default value of 0 means use "
-                         "operating system defaut"),
-			NULL,
-			SLON_C_INT,
-		},
-		&keep_alive_interval,
-		0,
-		0, /* min val */
-		1073741824	/*max val*/
-	},
-	{
-		{
-			(const char*) "tcp_keepalive_count",
-			gettext_noop("The number of keep alive requests to the server "
-						 "that can be lost before the connection is declared "
-						 "dead. tcp_keep_alive must be on. Default value "
-						 "of 0 means use operating system default"),
-			NULL,
-			SLON_C_INT,
-		},
-		&keep_alive_count,
-		0,
-		0, /* min val */
-		1073741824	/*max val*/
-	},
-			
-
-	{{0}}
-};
-
-static struct config_bool ConfigureNamesBool[] =
-{
-	{
-		{
-			(const char *) "log_pid",	/* conf name */
-			gettext_noop("Should logs include PID?"),	/* short desc */
-			gettext_noop("Should logs include PID?"),	/* long desc */
-			SLON_C_BOOL			/* config type */
-		},
-		&logpid,				/* var_name */
-		false					/* default_value */
-	},
-	{
-		{
-			(const char *) "log_timestamp",
-			gettext_noop("Should logs include timestamp?"),
-			gettext_noop("Should logs include timestamp?"),
-			SLON_C_BOOL
-		},
-		&logtimestamp,
-		true
-	},
-
-	{
-		{
-			(const char*) "tcp_keepalive",
-			gettext_noop("Enables sending of TCP KEEP alive between slon "
-						 "and the PostgreSQL backends. "),
-			NULL,
-			SLON_C_BOOL,
-		},
-		&keep_alive,
-		true
-	},
-	{
-		{
-			(const char*) "monitor_threads",
-			gettext_noop("Should the monitoring thread be run?"),
-			NULL,
-			SLON_C_BOOL,
-		},
-		&monitor_threads,
-		true
-	},
-
-	{{0}}
-};
-
-static struct config_real ConfigureNamesReal[] =
-{
-	{
-		{
-			(const char *) "real_placeholder",	/* conf name */
-			gettext_noop("place holder"),		/* short desc */
-			gettext_noop("place holder"),		/* long desc */
-			SLON_C_REAL			/* config type */
-		},
-		&real_placeholder,		/* var_name */
-		0.0,					/* default val */
-		0.0,					/* min_value */
-		1.0						/* max value */
-	},
-	{{0}}
-};
-
-static struct config_string ConfigureNamesString[] =
-{
-	{
-		{
-			(const char *) "cluster_name",		/* conf name */
-			gettext_noop("Name of the replication cluster"),	/* short desc */
-			NULL,				/* long desc */
-			SLON_C_STRING		/* config type */
-		},
-		&rtcfg_cluster_name,	/* var_name */
-		NULL					/* default value */
-	},
-	{
-		{
-			(const char *) "conn_info",
-			gettext_noop("connection info string"),
-			NULL,
-			SLON_C_STRING
-		},
-		&rtcfg_conninfo,
-		NULL
-	},
-	{
-		{
-			(const char *) "pid_file",
-			gettext_noop("Where to write the pid file"),
-			NULL,
-			SLON_C_STRING
-		},
-		&pid_file,
-		NULL
-	},
-	{
-		{
-			(const char *) "log_timestamp_format",
-			gettext_noop("A strftime()-style log timestamp format string."),
-			NULL,
-			SLON_C_STRING
-		},
-		&log_timestamp_format,
-		"%Y-%m-%d %H:%M:%S %Z"
-	},
-	{
-		{
-			(const char *) "archive_dir",
-			gettext_noop("Where to drop the sync archive files"),
-			NULL,
-			SLON_C_STRING
-		},
-		&archive_dir,
-		NULL
-	},
-	{
-		{
-			(const char *) "sql_on_connection",
-			gettext_noop("SQL to send to each connected node upon "
-						 "connection establishment, useful to enable "
-						 "duration logging, or to adjust any other "
-						 "connection settable GUC"),
-			NULL,
-			SLON_C_STRING
-		},
-		&sql_on_connection,
-		NULL
-	},
-
-
-	{
-		{
-			(const char *) "lag_interval",
-			gettext_noop("A PostgreSQL value compatible with ::interval "
-						 "which indicates how far behind this node should "
-						 "lag its providers."),
-			NULL,
-			SLON_C_STRING
-		},
-		&lag_interval,
-		NULL
-	},
-
-	{
-		{
-			(const char *) "command_on_logarchive",
-			gettext_noop("Command to run (probably a shell script) "
-						 "every time a log archive is committed. "
-						 "This command will be passed one parameter: "
-						 "The full pathname of the archive file"
-			),
-			NULL,
-			SLON_C_STRING
-		},
-		&command_on_logarchive,
-		NULL
-	},
-
-
-#ifdef HAVE_SYSLOG
-	{
-		{
-			(const char *) "syslog_facility",
-			gettext_noop("Sets the syslog \"facility\" to be used when syslog enabled."),
-			gettext_noop("Valid values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, "
-						 "LOCAL4, LOCAL5, LOCAL6, LOCAL7."),
-			SLON_C_STRING
-		},
-		&Syslog_facility,
-		"LOCAL0"
-	},
-	{
-		{
-			(const char *) "syslog_ident",
-			gettext_noop("Sets the program name used to identify slon messages in syslog."),
-			NULL,
-			SLON_C_STRING
-		},
-		&Syslog_ident,
-		"slon"
-	},
-#endif
-	{
-		{
-			(const char *) "cleanup_interval",
-			gettext_noop("A PostgreSQL value compatible with ::interval "
-						 "which indicates what aging interval should be used "
-						 "for deleting old events, and hence for purging sl_log_* tables."),
-			NULL,
-			SLON_C_STRING
-		},
-		&cleanup_interval,
-		"10 minutes"
-	},
-	
-
-	{{0}}
-};
 
 /*
  * Local Variables:

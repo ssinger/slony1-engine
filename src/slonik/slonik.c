@@ -10,29 +10,32 @@
  *-------------------------------------------------------------------------
  */
 
-
-#ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <time.h>
+#include <errno.h>
+#ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <errno.h>
-#include <time.h>
 #else
 #define sleep(x) Sleep(x*1000)
-#define vsnprintf _vsnprintf
+
 #endif
 
-#include "postgres.h"
+#include "postgres_fe.h"
 #include "libpq-fe.h"
 #include "port.h"
 
 #include "slonik.h"
+#ifdef MSVC
+#include "config_msvc.h"
+#else
 #include "config.h"
+#endif
 #include "../parsestatements/scanner.h"
 extern int STMTS[MAXSTATEMENTS];
 
@@ -4803,8 +4806,8 @@ slonik_is_slony_installed(SlonikStmt * stmt,
 {
   	SlonDString query;
 	PGresult * res;
-	dstring_init(&query);
 	int rc=-1;
+	dstring_init(&query);
 	slon_mkquery(&query,"select count(*) FROM information_schema"
 				 ".tables where table_schema='_%s' AND table_name"
 				 "='sl_table'",stmt->script->clustername);
