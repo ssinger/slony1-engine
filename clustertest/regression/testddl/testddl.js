@@ -76,7 +76,7 @@ function generate_data() {
 function exec_ddl(coordinator) {
 	preamble = get_slonik_preamble();
 	var slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'regression/testddl/ddl_updates.sql\''
-		+',EVENT NODE=1, LOCK=\'public.table4,public.billing_discount\');\n';
+		+',EVENT NODE=1);\n';
 	var slonikScript2='try {\n '
 		+ 'execute script(set id=1, FILENAME=\'regression/testddl/bad_ddl.sql\''
 		+', event node=1);\n'
@@ -96,7 +96,7 @@ function individual_ddl(coordinator, nodenum) {
 	
 	premable = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'regression/testddl/ddl_update_part2.sql\''
-		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +' LOCK=\'public.table1\');';
+		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
 	
 }
