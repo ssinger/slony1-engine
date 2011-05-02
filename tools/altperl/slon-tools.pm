@@ -14,7 +14,8 @@ sub add_node {
 		password => undef,
 		parent => undef,
 		noforward => undef,
-		sslmode => undef
+		sslmode => undef,
+		options => undef
 	       );
   my $K;
   while ($K= shift) {
@@ -65,6 +66,10 @@ sub add_node {
   my $noforward = $PARAMS{'noforward'};
   if ($noforward) {
     $NOFORWARD[$node] = $noforward;
+  }
+  my $options = $PARAMS{'options'};
+  if ($options) {
+    $OPTIONS[$node] = $options;
   }
 }
 
@@ -149,12 +154,12 @@ sub get_node_name {
 
 sub start_slon {
   my ($nodenum) = @_;
-  my ($dsn, $dbname) = ($DSN[$nodenum], $DBNAME[$nodenum]);
+  my ($dsn, $dbname, $opts) = ($DSN[$nodenum], $DBNAME[$nodenum], $OPTIONS[$nodenum]);
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
   $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
   system("mkdir -p $LOGDIR/slony1/node$nodenum");
-  my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $CLUSTER_NAME '$dsn' ";
+  my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
   my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
