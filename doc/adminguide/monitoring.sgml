@@ -1,6 +1,6 @@
 <!--  -->
 <sect1 id="monitoring">
-<title>Monitoring</title>
+<title>Cluster Monitoring</title>
 
 <indexterm><primary>monitoring &slony1;</primary></indexterm>
 

@@ -1,120 +1,5 @@
 <!--  -->
-<sect1 id="maintenance"> <title>&slony1; Maintenance</title>
-
-<indexterm><primary>maintaining &slony1;</primary></indexterm>
-
-<para>&slony1; actually does a lot of its necessary maintenance
-itself, in a <quote>cleanup</quote> thread:
-
-<itemizedlist>
-
-<listitem><para> Deletes old data from various tables in the
-<productname>Slony-I</productname> cluster's namespace, notably
-entries in &sllog1;, &sllog2;, and &slseqlog;.</para></listitem>
-
-<listitem><para> Vacuum certain tables used by &slony1;.  As of 1.0.5,
-this includes &pglistener;; in earlier versions, you must vacuum that
-table heavily, otherwise you'll find replication slowing down because
-&slony1; raises plenty of events, which leads to that table having
-plenty of dead tuples.</para>
-
-<para> In some versions (1.1, for sure; possibly 1.0.5) there is the
-option of not bothering to vacuum any of these tables if you are using
-something like <application>pg_autovacuum</application> to handle
-vacuuming of these tables.  Unfortunately, it has been quite possible
-for <application>pg_autovacuum</application> to not vacuum quite
-frequently enough, so you may prefer to use the internal vacuums.
-Vacuuming &pglistener; <quote>too often</quote> isn't nearly as
-hazardous as not vacuuming it frequently enough.</para>
-
-<para>Unfortunately, if you have long-running transactions, vacuums
-cannot clear out dead tuples that are newer than the eldest
-transaction that is still running.  This will most notably lead to
-&pglistener; growing large and will slow
-replication.</para></listitem>
-
-<listitem> <para> The <link linkend="dupkey"> Duplicate Key Violation
-</link> bug has helped track down a number of rather obscure
-&postgres; race conditions, so that in modern versions of &slony1; and &postgres;, there should be little to worry about.
-</para>
-</listitem>
-
-<listitem><para> As of version 1.2, <quote>log switching</quote>
-functionality is in place; every so often (by default, once per week,
-though you may induce it by calling the stored
-function <function>logswitch_start()</function>), it seeks to switch
-between storing data in &sllog1; and &sllog2; so that it may seek
-to <command>TRUNCATE</command> the <quote>elder</quote> data.</para>
-
-<para> That means that on a regular basis, these tables are completely
-cleared out, so that you will not suffer from them having grown to
-some significant size, due to heavy load, after which they are
-incapable of shrinking back down </para> 
-
-<para> In version 2.0, <command>DELETE</command> is no longer used to
-clear out data in &sllog1; and &sllog2;; instead, the log switch logic
-is induced frequently, every time the cleanup loop does not find a
-switch in progress, and these tables are purely cleared out
-via <command>TRUNCATE</command>.  This eliminates the need to vacuum
-these tables. </para>
-
-</listitem>
-
-</itemizedlist>
-</para>
-
-<sect2 id="maintenance-autovac"> <title> Interaction with &postgres;
-8.1 and 8.2 autovacuum </title>
-
-<indexterm><primary>autovacuum interaction</primary></indexterm>
-
-<para> Recent versions of &postgres; support an
-<quote>autovacuum</quote> process which notices when tables are
-modified, thereby creating dead tuples, and vacuums those tables,
-<quote>on demand.</quote> It has been observed that this can interact
-somewhat negatively with &slony1;'s own vacuuming policies on its own
-tables. </para>
-
-<para> &slony1; requests vacuums on its tables immediately after
-completing transactions that are expected to clean out old data, which
-may be expected to be the ideal time to do so.  It appears as though
-autovacuum may notice the changes a bit earlier, and attempts
-vacuuming when transactions are not complete, rendering the work
-pretty useless.  It seems preferable to configure autovacuum to avoid
-vacuum &slony1;-managed configuration tables. </para>
-
-<para> The following query (change the cluster name to match your
-local configuration) on Postgres 8 versions up to and not including 8.4 will identify the tables that autovacuum should
-be configured not to process: </para>
-
-<programlisting>
-mycluster=# select oid, relname from pg_class where relnamespace = (select oid from pg_namespace where nspname = '_' || 'MyCluster') and relhasindex;
-  oid  |   relname    
--------+--------------
- 17946 | sl_nodelock
- 17963 | sl_setsync
- 17994 | sl_trigger
- 17980 | sl_table
- 18003 | sl_sequence
- 17937 | sl_node
- 18034 | sl_listen
- 18017 | sl_path
- 18048 | sl_subscribe
- 17951 | sl_set
- 18062 | sl_event
- 18069 | sl_confirm
- 18074 | sl_seqlog
- 18078 | sl_log_1
- 18085 | sl_log_2
-(15 rows)
-</programlisting>
-
-<para> The following query (for Postgres versions up to and not including
-8.4) will populate
-<envar>pg_catalog.pg_autovacuum</envar> with suitable configuration
-information: <command> INSERT INTO pg_catalog.pg_autovacuum (vacrelid, enabled, vac_base_thresh, vac_scale_factor, anl_base_thresh, anl_scale_factor, vac_cost_delay, vac_cost_limit, freeze_min_age, freeze_max_age) SELECT oid, 'f', -1, -1, -1, -1, -1, -1, -1, -1 FROM pg_catalog.pg_class WHERE relnamespace = (SELECT OID FROM pg_namespace WHERE nspname = '_' || 'MyCluster') AND relhasindex; </command>
-</para>
-</sect2>
+<sect1 id="watchdogs"><title>&slony1; Watchdog</title>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
@@ -143,10 +28,12 @@ the <command>-a</command> option could ruin your log shipped node, and
 thereby your whole day.</para>
 
 </sect2>
+</sect1>
 
 
-<sect2><title>Testing &slony1; State </title>
+<sect1 id="teststate"><title>Testing &slony1; State </title>
 
+<sect2><title>test_slony_state</title>
 <indexterm><primary>testing cluster status</primary></indexterm>
 
 <para> In the <filename>tools</filename> directory, you will find
@@ -299,7 +186,10 @@ discussion. </para></listitem>
 
 </itemizedlist>
 </sect2>
-<sect2><title> Log Files</title>
+</sect1>
+
+<sect1 id="logrotation">
+<title> Log Files</title>
 
 <indexterm><primary>log files</primary></indexterm>
 
@@ -319,11 +209,13 @@ periodically.</para></listitem>
 
 </itemizedlist>
 </para>
-</sect2>
-<sect2><title>mkservice </title>
+</sect1>
+
+
+<sect1><title>mkservice </title>
 <indexterm><primary>mkservice for BSD </primary></indexterm>
 
-<sect3><title>slon-mkservice.sh</title>
+<sect2><title>slon-mkservice.sh</title>
 
 <para> Create a slon service directory for use with svscan from
 daemontools.  This uses multilog in a pretty basic way, which seems to
@@ -359,9 +251,9 @@ to be created. This should <emphasis>not</emphasis> be the <filename>/var/servic
 <listitem><para>
 <envar>SLON_BINARY</envar> the full path name of the slon binary (default <command>which slon</command>)</para></listitem>
 </itemizedlist>
-</sect3>
+</sect2>
 
-<sect3><title>logrep-mkservice.sh</title>
+<sect2><title>logrep-mkservice.sh</title>
 
 <indexterm><primary>logrep - multilog filters</primary></indexterm>
 
@@ -416,9 +308,8 @@ recall that since the the slons are running under svscan, you only need to
 kill it (via the svc interface) and let svscan start it up again laster.
 I've also found the COPY logs handy for following subscribe activity 
 interactively.</para>
-</sect3>
-
 </sect2>
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

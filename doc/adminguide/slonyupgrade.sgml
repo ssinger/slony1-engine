@@ -3,8 +3,8 @@
 <title> &slony1; Upgrade </title>
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
 <para> Minor &slony1; versions can be upgraded using the slonik <xref
-linkend="stmtupdatefunctions"/> command.  This includes upgrades from
-2.0.x to a newer version 2.0.y version. </para>
+linkend="stmtupdatefunctions"> command.  This includes upgrades from
+2.1.x to a newer version 2.1.y version or from 2.0.x to 2.1.y. </para>
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
 command <xref linkend="stmtupdatefunctions">.</para>
@@ -82,6 +82,27 @@ new components. </para></listitem></varlistentry>
 </variablelist>
 
 <sect2>
+<title>Incompatibilties between 2.0 and 2.1</title>
+<indexterm><primary>incompatibilities between versions</primary></indexterm>
+<sect3><title>Automatic Wait For</title>
+<para>
+Slonik will now sometimes wait for previously submitted events
+to be confirmed before submittng additional events.  This is described
+in <xref linkend="events">
+</para>
+</sect3>
+
+<sect3><title>SNMP Support</title>
+<para>
+In version 2.0 &slony1; could be built with SNMP support.  This allowed
+&slony1; to send SNMP messages.  This has been removed in version 2.1
+</para>
+
+
+</sect2>
+
+
+<sect2>
 <title>Incompatibilities between 1.2 and 2.0</title>
 
 <indexterm><primary>incompatibilities between versions</primary></indexterm>
@@ -125,7 +146,37 @@ were assuming a default value will need to be modified
 </para>
 </sect3>
 
-<sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2 </title>
+<sect2 id="upgrade21"> <title> Upgrading to &slony1; version 2.1
+from version 2.0</title>
+
+<para>
+&slony1; version 2.0 can be upgraded to version 2.1 using the 
+ &lslonik; command <xref linkend="stmtupdatefunctions">.</para>
+
+<para> While this requires temporarily stopping replication, it does
+not forcibly require an outage for applications that submit
+updates. </para>
+
+<para>The proper upgrade procedure is thus:</para>
+<itemizedlist>
+<listitem><para> Stop the &lslon; processes on all nodes.
+(<emphasis>e.g.</emphasis> - old version of &lslon;)</para></listitem>
+<listitem><para> Install the new version of &slony1;; software on all
+nodes (including new versions of the shared functions
+and libraries) .</para></listitem>
+<listitem><para> Execute a &lslonik; script containing the
+command <command>update functions (id = [whatever]);</command> for
+each node in the cluster. This will alter the structure of
+some of the &slony1; configuration tables.</para>
+<note><para>Remember that your slonik upgrade script like all other 
+slonik scripts must contain the proper preamble commands to function.
+</para></note></listitem>
+<listitem><para> Start all slons.  </para> </listitem>
+</itemizedlist>
+</sect2>
+
+<sect2 id="upgrade20"> <title> Upgrading to &slony1; version 2.1
+from version 1.2 or earlier </title>
 
 <indexterm><primary>upgrading to &slony1; version 2</primary></indexterm>
 
