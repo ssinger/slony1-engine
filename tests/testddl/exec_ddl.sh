@@ -16,6 +16,6 @@ echo "
      echo 'a bad DDL script gets rolled back on the master';
   } on success {
      echo 'a bad DDL script did not get rolled back - ERROR!';
-     exit -1;
+     exit 255;
   }
 "
