@@ -1,6 +1,39 @@
-Version TBD...
+* Version To Be Determined, probably 2.1.0
+
+#+OPTIONS: ^:{}
+** Some items without bug numbers:
+  - Introduced tests using the clustertest framework, consisting of two
+    sets of tests:
+    - clustertest/regression - port of the old tests in the tests directory
+    - clustertest/disorder - new simulated order entry system with a fair bit of concurrency
+
+  - Configure and Makefile cleanups and improvements, including
+    - Configure looks in common locations for some of the DocBook
+      tooling, so it is less likely to require manual intervention on
+      some common distributions
+    - Pick up Groff automagically
+    - Script to do virtually all the work documented in the [[http://slony.info/documentation/2.0/releasechecklist.html][Release Checklist]]
+  - Documentation updates
+    - Reorganized sections
+    - Trend towards having version-specific documentation, rather than
+      trying to have it document all versions at once
+  - Git changes
+    - Numerous .gitignore files set up to ignore generated files
+
+** Changes from 2.0 branch that were also applied to HEAD: 
+  40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132, 136,
+  138, 139, 141, 144, 147, 148, 149, 154, 162
+
+** Items tracked from Bugzilla
+- Bug #79 - --prefix and --exec-prefix options don't function as expected
 
 - Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+
+- Bug #134 - TRUNCATE trigger usage
+
+- Bug #142 - better document minimal security profile
+
+- Bug #146 - Removed option to use DELETE to trim sl_log_* tables - only support TRUNCATE
 
 - Bug #152 - eliminate debugging statements from DDL processing
 
@@ -33,8 +66,12 @@ Version TBD...
 
 - Bug #195 - change slon_quote_* functions to IMMUTABLE
 
+- Bug #196 - add guard lock on sl_event_lock to protect against events with XID going backwards
+
 - Bug #198 - subscribeset() should verify that provider node exists
 
-RELEASE 2.0.6
+- Bug #201 - Allow command-line options to be configured from slon_tools.conf
 
--Fix for bug #162, typenameTypeId() changes signatures in 9.1
+* RELEASE 2.0.6
+- Fix for bug #162, typenameTypeId() changes signatures in 9.1
+

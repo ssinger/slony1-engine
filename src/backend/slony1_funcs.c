@@ -1281,7 +1281,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * numbers in the order they get committed.
 		 */
 		sprintf(query,
-				"LOCK TABLE %s.sl_event IN EXCLUSIVE MODE; "
 				"INSERT INTO %s.sl_event "
 				"(ev_origin, ev_seqno, "
 				"ev_timestamp, ev_snapshot, "
@@ -1291,7 +1290,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 				"now(), \"pg_catalog\".txid_current_snapshot(), $1, $2, "
 				"$3, $4, $5, $6, $7, $8, $9); "
 				"SELECT currval('%s.sl_event_seq');",
-				cs->clusterident,
 				cs->clusterident, cs->localNodeId, cs->clusterident,
 				cs->clusterident);
 		plan_types[0] = TEXTOID;

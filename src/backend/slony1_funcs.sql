@@ -5257,6 +5257,10 @@ create table @NAMESPACE@.sl_components (
 ';
   	   execute v_query;
 	end if;
+	if not exists (select 1 from information_schema.tables t where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_event_lock') then
+	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
+	   execute v_query;
+        end if;
 	return p_old;
 end;
 $$ language plpgsql

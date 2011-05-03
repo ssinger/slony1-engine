@@ -75,10 +75,10 @@ function generate_data() {
 
 function exec_ddl(coordinator) {
 	preamble = get_slonik_preamble();
-	var slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'slony_scripts/tests/regression/testddl/ddl_updates.sql\''
+	var slonikScript = 'EXECUTE SCRIPT(set id=1, FILENAME=\'regression/testddl/ddl_updates.sql\''
 		+',EVENT NODE=1);\n';
 	var slonikScript2='try {\n '
-		+ 'execute script(set id=1, filename=\'slony_scripts/tests/regression/testddl/bad_ddl.sql\''
+		+ 'execute script(set id=1, FILENAME=\'regression/testddl/bad_ddl.sql\''
 		+', event node=1);\n'
 		+ '}\n'
 		+ 'on error{ \n'

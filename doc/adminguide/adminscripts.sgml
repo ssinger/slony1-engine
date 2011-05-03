@@ -12,7 +12,7 @@ the ones on <xref linkend="monitoring"> discusses them. </para>
 
 <indexterm><primary>altperl scripts for &slony1;</primary></indexterm>
 
-<para>There is a set of scripts to simplify administeration
+<para>There is a set of scripts to simplify administration
 of set of &slony1; instances. The scripts support having arbitrary numbers of
 nodes. They may be installed as part of the installation process:</para>
 
@@ -84,10 +84,12 @@ my %PARAMS =   (host=> undef,		# Host name
 		node => undef,		# node number
 		password => undef,	# password for user
 		parent => 1,		# which node is parent to this node
-		noforward => undef	# shall this node be set up to forward results?
-                sslmode => undef        # SSL mode argument - determine 
-                                        # priority of SSL usage
-                                        # = disable,allow,prefer,require
+		noforward => undef,	# shall this node be set up to forward results?
+		sslmode => undef,	# SSL mode argument - determine
+					# priority of SSL usage
+					# = disable,allow,prefer,require
+		options => undef	# extra command line options to pass to the
+					# slon daemon
 );
 </programlisting>
 </sect3>
