@@ -1,20 +1,5 @@
 <!--  -->
-<sect1 id="maintenance"> <title>&slony1; Maintenance</title>
-
-<indexterm><primary>maintaining &slony1;</primary></indexterm>
-
-<para>&slony1; actually does a lot of its necessary maintenance
-itself, in a <quote>cleanup</quote> thread:
-
-<itemizedlist>
-
-<listitem><para> Deletes old data from various tables in the
-<productname>Slony-I</productname> cluster's namespace, notably
-entries in &sllog1;, &sllog2;, and &slseqlog;.</para></listitem>
-
-<listitem><para> Vacuum certain tables used by &slony1;.
-<para></listitem>
-</itemizedlist>
+<sect1 id="watchdogs"><title>&slony1; Watchdog</title>
 
 <sect2><title> Watchdogs: Keeping Slons Running</title>
 
@@ -43,10 +28,12 @@ the <command>-a</command> option could ruin your log shipped node, and
 thereby your whole day.</para>
 
 </sect2>
+</sect1>
 
 
-<sect2><title>Testing &slony1; State </title>
+<sect1 id="teststate"><title>Testing &slony1; State </title>
 
+<sect2><title>test_slony_state</title>
 <indexterm><primary>testing cluster status</primary></indexterm>
 
 <para> In the <filename>tools</filename> directory, you will find
@@ -199,7 +186,10 @@ discussion. </para></listitem>
 
 </itemizedlist>
 </sect2>
-<sect2><title> Log Files</title>
+</sect1>
+
+<sect1 id="logrotation">
+<title> Log Files</title>
 
 <indexterm><primary>log files</primary></indexterm>
 
@@ -219,11 +209,13 @@ periodically.</para></listitem>
 
 </itemizedlist>
 </para>
-</sect2>
-<sect2><title>mkservice </title>
+</sect1>
+
+
+<sect1><title>mkservice </title>
 <indexterm><primary>mkservice for BSD </primary></indexterm>
 
-<sect3><title>slon-mkservice.sh</title>
+<sect2><title>slon-mkservice.sh</title>
 
 <para> Create a slon service directory for use with svscan from
 daemontools.  This uses multilog in a pretty basic way, which seems to
@@ -259,9 +251,9 @@ to be created. This should <emphasis>not</emphasis> be the <filename>/var/servic
 <listitem><para>
 <envar>SLON_BINARY</envar> the full path name of the slon binary (default <command>which slon</command>)</para></listitem>
 </itemizedlist>
-</sect3>
+</sect2>
 
-<sect3><title>logrep-mkservice.sh</title>
+<sect2><title>logrep-mkservice.sh</title>
 
 <indexterm><primary>logrep - multilog filters</primary></indexterm>
 
@@ -316,9 +308,8 @@ recall that since the the slons are running under svscan, you only need to
 kill it (via the svc interface) and let svscan start it up again laster.
 I've also found the COPY logs handy for following subscribe activity 
 interactively.</para>
-</sect3>
-
 </sect2>
+
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:

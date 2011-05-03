@@ -115,25 +115,25 @@
     &security;
 </chapter>
 
+<chapter id="additionalutils">
+<title>Additional Utilities</title>
+    &adminscripts;
+    &maintenance;
+    &testbed;
+</chapter>
+
 <part id="reference">
   <title>Reference</title>
   	&slon;
         &slonconf;
 	&slonik;
-        &slonikref;
-
-<chapter id="thingsleftout">
-  <title>Things Left Out Of Other Parts</title>
-
-    &maintenance;
-
+        &slonikref;  
+</part>
 <chapter id="appendix">
 <title>Appendix</title>
-    &adminscripts;
     &faq;
     &supportedplatforms;
     &releasechecklist;
-    &testbed;
     &usingslonik;
     &help;
 </chapter>
