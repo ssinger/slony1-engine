@@ -91,23 +91,27 @@
   </chapter>
   <chapter id="administration">
     <title>Administration Tasks</title>
+    &installation;
     &addthings;
     &ddlchanges;
     &failover;
   </chapter>
 
 <chapter id="advanced">
-<title>Advanced Topics</title>
+<title>Advanced Concepts</title>
     &events;
     &listenpaths;
-    &monitoring;
+    &triggers;
+    &locking;
     &logshipfile;
+</chapter>
+<chapter id="deploymentconcerns">
+<title>Deployment Considerations</title>
+    &monitoring;
     &partitioning;
     &slonyupgrade;
     &loganalysis;
     &performance;
-    &triggers;
-    &locking;
     &security;
 </chapter>
 
@@ -120,7 +124,7 @@
 
 <chapter id="thingsleftout">
   <title>Things Left Out Of Other Parts</title>
-    &installation;
+
     &maintenance;
 
 <chapter id="appendix">
