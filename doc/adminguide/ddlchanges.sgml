@@ -13,21 +13,23 @@ for this to be handled rather carefully, otherwise different nodes may
 get rather deranged because they disagree on how particular tables are
 built.</para>
 
-<para>If you pass the changes through &slony1; via <xref
-linkend="stmtddlscript"> (slonik),
-this allows you to be certain that the changes take effect at the same
-point in the transaction streams on all of the nodes. This may not be 
-important to you depending on the nature of your change.  You should still
-make sure that no transactions are changing the tables that your script
-uses while the EXECUTE SCRIPT command is running on the master.</para>
 
-<para>It is essential to use <command>EXECUTE SCRIPT</command> if you
-alter the names of tables or the namespace they reside in.  If you do not
-then &slony1; will be unaware of the new table name.
-</para>
+<para>&slony1; can not automatically detect and replicate database schema
+changes however, &slony1; does provide facilities to assist in making 
+database schema changes.  Schema changes can be done on a replicated
+database either by using the &slony1;  <xref
+linkend="stmtddlscript"> (slonik) command or by manually applying the
+changes to each node.</para>
 
-<para>It's worth making a couple of comments on <quote>special
-things</quote> about <xref linkend="stmtddlscript">:</para>
+<sect2>
+<title>DDL Changes with Execute Script</title>
+<para>
+The <xref linkend="stmtddlscript"> (slonik) command allows you to submit
+a SQL script (that can, but is not required to) contain DDL commands. 
+This script will be executed on the event node and then (optionally) replicated
+to every other node in the cluster.  You should keep the following in mind
+when using <xref linkend="stmtddlscript">
+<para>
 
 <itemizedlist>
 
@@ -39,9 +41,10 @@ within the scope of a single transaction whose <command>BEGIN</command>
 and <command>END</command> you do not control.</para></listitem>
 
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
-the script, or about how it executes on a particular node, this will
-cause the <xref linkend="slon"> daemon for that node to panic and
-crash.  You may see various expected messages (positive and negative)
+the script, or about how it executes on a particular node (other than
+the event node), this will
+cause the <xref linkend="slon"> daemon for that node to panic and crash.  
+You may see various expected messages (positive and negative)
 in <xref linkend="ddllogs">.  If you restart the slon, it will,
 most likely, try to
 <emphasis>repeat</emphasis> the DDL script, which will, almost
@@ -56,11 +59,46 @@ you should manually (via psql) make the required changes so that the
 DDL change succeeds the next time slon attempts it.
 </para></listitem>
 
+<listitem><para>&slony1; 2.0.x and 2.1.x suffer from an issue where
+concurrent transactions involving the same tables as are referenced
+in the script might not be replayed in exactly the same order on the
+replica nodes.  It is advisiable to not be concurrently inserting,deleting
+or updating rows to a table while a script changing that table (adding or
+deleting columns) is also running.</para></listitem>
+
 </itemizedlist>
 
-<para> If slon; fails due to a failed DDL change then
-you should manually (via psql) make the required changes so that the
-DDL change succeeds the next time slon attempts it.</para>
+</sect2>
+
+
+<sect2>
+<title>Applying DDL Changes Directly</title>
+<para>DDL changes can be applied directly on a node through an 
+application such as psql.  The DDL changes will not be replicated by &slony1;
+and therefore must be manually applied to every relevant node.
+The following points should be kept in mind when applying DDL changes
+directly.
+
+<itemizedlist>
+<listitem><para>While DDL changes are not replicated any  
+INSERT,UPDATE,DELETE statements that you execute will be replicated.
+This means that you should put DDL changes inside of the same script
+as DML commands because the script will then not behave properly when
+you execute it on other nodes</para></listitem>
+
+<listitem><para>You are responsible for ensuring that your scripts get
+applied on all other nodes at the correct point during the replication
+stream.  The best way of doing this with respect to adding and deleting
+columns is to make sure that new columns always get added on the
+replica nodes first and that columns being removed get dropped from the
+master before they are dropped from the replicas.</para></listitem>
+
+<listitem><para>DDL changes that rename a replicated table do not
+inform &slony1; of the new table name.  If you change then name of
+a replicated table you must allow &slony1; to find the new table name
+by calling <xref linkend="function.updaterelname-p-only-on-node-integer-p-set-id-integer"/>
+</para>
+</sect2>
 
 </sect1>
 <!-- Keep this comment at the end of the file
