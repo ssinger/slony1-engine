@@ -19,7 +19,8 @@
       trying to have it document all versions at once
   - Git changes
     - Numerous .gitignore files set up to ignore generated files
-
+  - Add a resetSession function that will reset the session state
+    cached in the C stored functions.
 ** Changes from 2.0 branch that were also applied to HEAD: 
   40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132, 136,
   138, 139, 141, 144, 147, 148, 149, 154, 162

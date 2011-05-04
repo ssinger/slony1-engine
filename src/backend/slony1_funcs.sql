@@ -179,6 +179,11 @@ grant execute on function @NAMESPACE@.getModuleVersion () to public;
 comment on function @NAMESPACE@.getModuleVersion () is
   'Returns the compiled-in version number of the Slony-I shared object';
 
+
+create or replace function @NAMESPACE@.resetSession() returns text
+	   as '$libdir/slony1_funcs','_Slony_I_resetSession'
+	   language C;
+
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
 declare
   moduleversion	text;
@@ -1526,7 +1531,7 @@ declare
 	v_row			record;
 begin
 	perform "pg_catalog".setval('@NAMESPACE@.sl_local_node_id', p_no_id);
-
+	perform @NAMESPACE@.resetSession();
 	for v_row in select sub_set from @NAMESPACE@.sl_subscribe
 			where sub_receiver = p_no_id
 	loop
