@@ -26,6 +26,7 @@
 #include <time.h>
 #include <signal.h>
 #include <dirent.h>
+#include <string.h>
 #else
 #define sleep(x) Sleep(x*1000)
 #define vsnprintf _vsnprintf

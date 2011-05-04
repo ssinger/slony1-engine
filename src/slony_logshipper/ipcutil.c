@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #endif
 #include "../slonik/types.h"
 #include "libpq-fe.h"
