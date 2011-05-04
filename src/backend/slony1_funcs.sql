@@ -179,6 +179,11 @@ grant execute on function @NAMESPACE@.getModuleVersion () to public;
 comment on function @NAMESPACE@.getModuleVersion () is
   'Returns the compiled-in version number of the Slony-I shared object';
 
+
+create or replace function @NAMESPACE@.resetSession() returns text
+	   as '$libdir/slony1_funcs','_Slony_I_resetSession'
+	   language C;
+
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
 declare
   moduleversion	text;
@@ -1526,7 +1531,7 @@ declare
 	v_row			record;
 begin
 	perform "pg_catalog".setval('@NAMESPACE@.sl_local_node_id', p_no_id);
-
+	perform @NAMESPACE@.resetSession();
 	for v_row in select sub_set from @NAMESPACE@.sl_subscribe
 			where sub_receiver = p_no_id
 	loop
@@ -2478,11 +2483,12 @@ comment on function @NAMESPACE@.dropSet(p_set_id int4) is
 --
 --	Generate the MERGE_SET event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.mergeSet (p_set_id int4, p_add_id int4)
+create or replace function @NAMESPACE@.mergeSet (p_set_id int4, p_add_id int4) 
 returns bigint
 as $$
 declare
 	v_origin			int4;
+	in_progress			boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -2541,13 +2547,9 @@ begin
 	-- ----
 	-- Check that all ENABLE_SUBSCRIPTION events for the set are confirmed
 	-- ----
-	if exists (select true from @NAMESPACE@.sl_event
-			where ev_type = 'ENABLE_SUBSCRIPTION'
-			and ev_data1 = p_add_id::text
-			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
-					where con_origin = ev_origin
-					and con_received::text = ev_data3))
-	then
+	select @NAMESPACE@.isSubscriptionInProgress(p_add_id) into in_progress ;
+	
+	if in_progress then
 		raise exception 'Slony-I: set % has subscriptions in progress - cannot merge',
 				p_add_id;
 	end if;
@@ -2566,6 +2568,28 @@ comment on function @NAMESPACE@.mergeSet(p_set_id int4, p_add_id int4) is
 
 Both sets must exist, and originate on the same node.  They must be
 subscribed by the same set of nodes.';
+
+
+create or replace function @NAMESPACE@.isSubscriptionInProgress(p_add_id int4)
+returns boolean
+as $$
+begin
+	if exists (select true from @NAMESPACE@.sl_event
+			where ev_type = 'ENABLE_SUBSCRIPTION'
+			and ev_data1 = p_add_id::text
+			and ev_seqno > (select max(con_seqno) from @NAMESPACE@.sl_confirm
+					where con_origin = ev_origin
+					and con_received::text = ev_data3))
+	then
+		return true;
+	else
+		return false;
+	end if;
+end;
+$$ language plpgsql;
+comment on function @NAMESPACE@.isSubscriptionInProgress(p_add_id int4) is
+'Checks to see if a subscription for the indicated set is in progress.
+Returns true if a subscription is in progress. Otherwise false';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION mergeSet_int (set_id, add_id)
@@ -5756,6 +5780,24 @@ end $$ language plpgsql;
 comment on function @NAMESPACE@.store_application_name (i_name text) is
 'Set application_name GUC, if possible.  Returns NULL if it fails to work.';
 
+create or replace function @NAMESPACE@.is_node_reachable(origin_node_id integer,
+	   receiver_node_id integer) returns boolean as $$
+declare
+		listen_row record;
+		reachable boolean;
+begin
+	reachable:=false;
+	select * into listen_row from @NAMESPACE@.sl_listen where
+		   li_origin=origin_node_id and li_receiver=receiver_node_id;
+	if found then
+	   reachable:=true;
+	end if;
+  return reachable;
+end $$ language plpgsql;
+
+comment on function @NAMESPACE@.is_node_reachable(origin_node_id integer, receiver_node_id integer) 
+is 'Is the receiver node reachable from the origin, via any of the listen paths?';
+
 create or replace function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) returns integer as $$
 begin
 	-- Trim out old state for this component
@@ -5778,3 +5820,4 @@ language plpgsql;
 
 comment on function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) is
 'Store state of a Slony component.  Useful for monitoring';
+

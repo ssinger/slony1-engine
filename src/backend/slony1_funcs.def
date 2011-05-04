@@ -1,0 +1,9 @@
+EXPORTS
+_Slony_I_createEvent
+_Slony_I_getModuleVersion
+_Slony_I_denyAccess
+_Slony_I_lockedSet
+_Slony_I_getLocalNodeId
+_Slony_I_killBackend
+_Slony_I_seqtrack
+_Slony_I_logTrigger

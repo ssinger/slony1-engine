@@ -19,11 +19,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#include "postgres.h"
 #include "libpq-fe.h"
 
+#ifdef WIN32
+#include "config_msvc.h"
+#else
+#include "config.h"
+#endif
+#include "types.h"
 #include "slonik.h"
-
 
 /*
  * Global data
@@ -31,6 +35,7 @@
 int			db_notice_silent = false;
 SlonikStmt *db_notice_stmt = NULL;
 
+extern int current_try_level;
 
 /*
  * Local functions
@@ -236,7 +241,7 @@ db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -273,7 +278,7 @@ db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * quer
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -320,7 +325,7 @@ db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	res = PQexecParams(adminfo->dbconn, dstring_data(query),
@@ -364,7 +369,7 @@ db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return NULL;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -395,7 +400,7 @@ db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	SlonDString query;
 	int			no_id;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -432,7 +437,7 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	int         patch=0;
 	int         version=0;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -465,7 +470,7 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
  * ----------
  */
 int
-db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
+db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo, bool suppress_locking)
 {
 	PGresult   *res;
 
@@ -482,6 +487,34 @@ db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 		return -1;
 	}
 	PQclear(res);
+	if(current_try_level > 0 && !suppress_locking)
+	{
+		/**
+		 * inside of a try block we obtain sl_event_lock
+		 * right away.  This is because if sometime later
+		 * in the try block needs sl_event_lock, it will
+		 * be running in the same transaction and will then
+		 * be too late to obtain the lock.
+		 */
+		SlonDString lock_query;
+		dstring_init(&lock_query);
+		slon_mkquery(&lock_query, "lock table \"_%s\".sl_event_lock; "
+					 ,stmt->script->clustername);
+		res = PQexec(adminfo->dbconn,dstring_data(&lock_query));
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		{
+			printf("%s:%d: lock table \"_%s\".sl_event_lock; - %s",
+				   stmt->stmt_filename, stmt->stmt_lno,
+				   stmt->script->clustername,
+				   PQresultErrorMessage(res));
+			PQclear(res);
+			adminfo->have_xact = true;
+			db_rollback_xact(stmt,adminfo);
+			return -1;
+		}
+		PQclear(res);
+		
+	}
 
 	adminfo->have_xact = true;
 
@@ -560,7 +593,7 @@ db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustername
 	SlonDString query;
 	int			ntuples;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -593,7 +626,7 @@ db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustern
 	SlonDString query;
 	int			ntuples;
 
-	if (db_begin_xact(stmt, adminfo) < 0)
+	if (db_begin_xact(stmt, adminfo,true) < 0)
 		return -1;
 
 	dstring_init(&query);

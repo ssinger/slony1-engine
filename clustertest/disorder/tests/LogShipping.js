@@ -60,7 +60,7 @@ LogShipping.prototype.runTest = function() {
 	this.subscribeSet(1,1,1,[3]);
 	java.lang.Thread.sleep(10*1000);
 	this.subscribeSet(1,1,3,[4]);
-	
+	this.slonikSync(1,1);
         this.coordinator.log("LogShipping.prototype.runTest - generate load");
 	//Generate some load.
 	var populate=this.generateLoad();

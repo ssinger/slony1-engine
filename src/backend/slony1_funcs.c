@@ -11,7 +11,12 @@
  */
 
 #include "postgres.h"
+#ifdef MSVC
+#include "config_msvc.h"
+#else
 #include "config.h"
+#endif
+
 
 #include "avl_tree.c"
 
@@ -60,7 +65,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_killBackend);
 PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
 
 PG_FUNCTION_INFO_V1(_slon_quote_ident);
-
+PG_FUNCTION_INFO_V1(_Slony_I_resetSession);
 
 Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -73,6 +78,8 @@ Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
+
+Datum		_Slony_I_resetSession(PG_FUNCTION_ARGS);
 
 #ifdef CYGWIN
 extern DLLIMPORT Node *newNodeMacroHolder;
@@ -1398,6 +1405,52 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 
 	return cs;
 	/* @+nullderef@ */
+}
+
+/* Provide a way to reset the per-session data structure that stores
+   the cluster status in the C functions. 
+
+ * This is used to rectify the case where CLONE NODE updates the node
+ * ID, but calls to getLocalNodeId() could continue to return the old
+ * value.
+ */
+Datum
+_Slony_I_resetSession(PG_FUNCTION_ARGS)
+{
+  Slony_I_ClusterStatus *cs;
+  
+  cs = clusterStatusList; 
+  while(cs != NULL)
+  {
+	  Slony_I_ClusterStatus *previous;
+	  if(cs->cmdtype_I)
+		  free(cs->cmdtype_I);
+	  if(cs->cmdtype_D)
+		  free(cs->cmdtype_D);
+	  if(cs->cmdtype_U)
+		  free(cs->cmdtype_D);
+	  if(cs->cmddata_buf)
+		  free(cs->cmddata_buf);
+	  free(cs->clusterident);
+	  if(cs->plan_insert_event)
+		  SPI_freeplan(cs->plan_insert_event);
+	  if(cs->plan_insert_log_1)
+		  SPI_freeplan(cs->plan_insert_log_1);
+	  if(cs->plan_insert_log_2)
+		  SPI_freeplan(cs->plan_insert_log_2);
+	  if(cs->plan_record_sequences)
+		  SPI_freeplan(cs->plan_record_sequences);
+	  if(cs->plan_get_logstatus)
+		  SPI_freeplan(cs->plan_get_logstatus);
+	  previous=cs;
+	  cs=cs->next;
+	  free(previous);
+
+
+  }
+  clusterStatusList=NULL;
+  PG_RETURN_NULL();
+
 }
 
 

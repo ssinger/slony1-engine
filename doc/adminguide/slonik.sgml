@@ -21,10 +21,29 @@
  <refsynopsisdiv>
   <cmdsynopsis>
    <command>slonik</command>
+   <arg><replaceable class="parameter">options</replaceable></arg>
    <arg><replaceable class="parameter">filename</replaceable></arg>
   </cmdsynopsis>
  </refsynopsisdiv>
-
+<refsect1>
+  <title>Options</title>
+  <variablelist>
+	<varlistentry>
+	  <term><option>-w</option></term>
+	  <listitem>
+		<para>
+		  Suppress slonik's behaviour of automatically waiting
+		  for event confirmations before submitting events to
+		  a different node. If this option is specified, your
+		  slonik script may require explicit <xref
+		  linkend="stmtwaitevent"> commands in order to behave
+		  properly, as was the behaviour of slonik prior to
+		  version 2.1.
+		  </para>
+		</listitem>
+	  </varlistentry>
+	</variablelist>
+  </refsect1>
  <refsect1>
   <title>Description</title>
 

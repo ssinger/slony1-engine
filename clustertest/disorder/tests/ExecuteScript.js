@@ -43,6 +43,7 @@ ExecuteScript.prototype.runTest = function() {
 	 */
 	this.subscribeSet(1, 1,1, [ 2, 3 ]);
 	this.subscribeSet(1, 1,3, [ 4, 5 ]);
+	this.slonikSync(1,1);
 
 	this.testAddDropColumn(1, 1, false);
 
@@ -64,6 +65,8 @@ ExecuteScript.prototype.runTest = function() {
 	this.subscribeSet(2, 2,3, [ 4, 5 ]);
 
 	this.coordinator.log("ExecuteScript.prototype.runTest - move set to node 1");
+
+
 	/**
 	 * Move the set to node 1. We want to do this for the next test.
 	 */
@@ -173,7 +176,7 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 	 */
 	var load = this.generateLoad();
 
-	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - add column to orders");
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - add column to orders - expecting failure:" + expectFailure);
 	/**
 	 * Now add a column to orders. We will do this via EXECUTE SCRIPT.
 	 */
@@ -406,7 +409,7 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	var lag = this.measureLag(1,2);
 	this.coordinator.log('we do not expect lag, we measure it as ' + lag);
 	this.testResults.assertCheck('node is not lagged', lag < 10,true);
-	
+	this.slonikSync(1,1);
 	this.dropTestTable(1,1,false);
 	
 	statement.close();

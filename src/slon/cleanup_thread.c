@@ -15,12 +15,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <sys/types.h>
+#ifndef WIN32
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 
 #include "slon.h"
 

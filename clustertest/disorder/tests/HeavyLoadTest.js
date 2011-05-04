@@ -72,6 +72,8 @@ HeavyLoadTest.prototype.runTest = function() {
 	
 	var dumpFile = java.io.File.createTempFile('slon_HeavyLoadTest','.sql');
 	dumpFile.deleteOnExit();
+	//wait until db4 is subscribed before creating the dump
+	this.slonikSync(1,1);	
 	var dumpProcess = this.coordinator.createLogShippingDump('db4',dumpFile);
 	dumpProcess.run();
 	this.coordinator.join(dumpProcess);

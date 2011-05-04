@@ -13,14 +13,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
+#include <sys/types.h>
+#include "types.h"
 #include "slon.h"
+
+#ifndef WIN32
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 static void stack_init(void);
 static bool stack_pop(SlonState * current);
@@ -403,7 +407,7 @@ stack_pop( /* @out@ */ SlonState * qentry)
 	if (stack_size == EMPTY_STACK)
 	{
 		pthread_mutex_unlock(&stack_lock);
-		return FALSE;
+		return false;
 	}
 	else
 	{
@@ -419,7 +423,7 @@ stack_pop( /* @out@ */ SlonState * qentry)
 		/* entry_dump(stack_size, qentry); */
 		stack_size--;
 		pthread_mutex_unlock(&stack_lock);
-		return (bool) TRUE;
+		return  true;
 	}
 }
 

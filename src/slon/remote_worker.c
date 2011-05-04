@@ -15,12 +15,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <sys/types.h>
+#ifndef WIN32
+#include <unistd.h>
+#include <sys/time.h>
+#endif
+
 
 #include "slon.h"
 #include "../parsestatements/scanner.h"
@@ -30,7 +33,6 @@ extern int	STMTS[MAXSTATEMENTS];
 					 * want to group together??? */
 
 
-void slon_terminate_worker(void);
 /* ----------
  * Local definitions
  * ----------
@@ -1603,6 +1605,7 @@ remoteWorkerThread_main(void *cdata)
 			 "remoteWorkerThread_%d: thread done\n",
 			 node->no_id);
 	pthread_exit(NULL);
+	return 0;
 }
 
 
@@ -1992,6 +1995,7 @@ remoteWorker_event(int event_provider,
 		+ ((ev_data6 == NULL) ? 0 : (len_data6 = strlen(ev_data6) + 1))
 		+ ((ev_data7 == NULL) ? 0 : (len_data7 = strlen(ev_data7) + 1))
 		+ ((ev_data8 == NULL) ? 0 : (len_data8 = strlen(ev_data8) + 1));
+
 	msg = (SlonWorkMsg_event *) malloc(len);
 	if (msg == NULL)
 	{
@@ -2550,7 +2554,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			 node->no_id,
 			 sub_provider,
 			 set_id);
-		slon_terminate_worker();
+		slon_retry();
 		return -1;
 		
 	}
@@ -2561,7 +2565,7 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 			 node->no_id, 
 			 set_origin,
 			 set_id);
-		slon_terminate_worker();
+		slon_retry();
 		return -1;
 	}
 	if (set == NULL)

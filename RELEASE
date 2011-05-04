@@ -19,13 +19,17 @@
       trying to have it document all versions at once
   - Git changes
     - Numerous .gitignore files set up to ignore generated files
-
+  - Add a resetSession function that will reset the session state
+    cached in the C stored functions.
 ** Changes from 2.0 branch that were also applied to HEAD: 
   40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132, 136,
   138, 139, 141, 144, 147, 148, 149, 154, 162
 
 ** Items tracked from Bugzilla
 - Bug #79 - --prefix and --exec-prefix options don't function as expected
+
+- Bug #90 -  Builds On Solaris with Sun C Studio fail. This also addresses
+             issues building with Microsoft Visual Studio.
 
 - Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
 
@@ -48,6 +52,9 @@
 - Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
 
 - Bug #175 - add monitoring thread which stows activity information in sl_components
+
+- Bug #179 - Implicit/Automatic wait for. Slonik will now often perform an automatic
+             'wait for event' when required to avoid race conditions.
 
 - Bug #180 - Created a slonik DATE command
 

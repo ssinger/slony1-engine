@@ -23,8 +23,9 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #endif
-#include "postgres.h"
+#include "../slonik/types.h"
 #include "libpq-fe.h"
 
 #include "slony_logshipper.h"

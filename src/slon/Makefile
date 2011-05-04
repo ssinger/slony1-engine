@@ -16,7 +16,7 @@ SFILES=$(wildcard *.c)
 CC = $(PTHREAD_CC)
 
 override CFLAGS += $(PTHREAD_CFLAGS) -I$(slony_top_builddir) -I$(slony_top_builddir)/$(slony_subdir)
-override LDFLAGS += $(PTHREAD_LIBS)
+override LDFLAGS += $(PTHREAD_LIBS) 
 
 PROG		= slon
 

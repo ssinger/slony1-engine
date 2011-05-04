@@ -55,7 +55,7 @@ extern char * current_file;
 
 %{
 #include "config.h"
-#include "postgres.h"
+#include "../slonik/types.h"
 #include "libpq-fe.h"
 #include "slony_logshipper.h"
 #include "y.tab.h"
