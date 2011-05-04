@@ -1,5 +1,6 @@
 HTML.index
 LEGALNOTICE.html
+additionalutils.html
 addthings.html
 admconninfo.html
 administration.html
@@ -10,11 +11,14 @@ bookindex.html
 bookindex.sgml
 cluster.html
 clustername.html
+clustertest.html
 cmds.html
 commandreference.html
+componentmonitoring.html
 concepts.html
 ddlchanges.html
 definingsets.html
+deploymentconcerns.html
 dropthings.html
 failover.html
 faq.html
@@ -41,6 +45,7 @@ function.clonenodeprepare-int-integer-integer-text.html
 function.clonenodeprepare-int-p-no-comment-integer-p-no-provider-integer-p-no-id-text.html
 function.clonenodeprepare-integer-integer-text.html
 function.clonenodeprepare-p-no-comment-integer-p-no-provider-integer-p-no-id-text.html
+function.component-state-i-eventtype-text-i-event-integer-i-starttime-integer-i-activity-integer-i-conn-pid-text-i-node-timestamp-with-time-zone-i-pid-bigint-i-actor-text.html
 function.copyfields-integer.html
 function.copyfields-p-tab-id-integer.html
 function.createevent-ev-data1-name-p-event-type-text-p-cluster-name-text.html
@@ -121,6 +126,8 @@ function.getlocalnodeid-p-cluster-name.html
 function.getmoduleversion.html
 function.initializelocalnode-integer-text.html
 function.initializelocalnode-p-comment-integer-p-local-node-id-text.html
+function.is-node-reachable-receiver-node-id-integer-origin-node-id-integer.html
+function.issubscriptioninprogress-p-add-id-integer.html
 function.killbackend-integer-text.html
 function.killbackend-p-signame-integer-p-pid-text.html
 function.lockedset.html
@@ -157,6 +164,7 @@ function.registry-set-timestamp-p-value-text-p-key-timestamp-with-time-zone.html
 function.registry-set-timestamp-text-timestamp-without-time-zone.html
 function.replicate-partition-integer-text-text-text-text.html
 function.replicate-partition-p-comment-integer-p-idxname-text-p-tabname-text-p-nspname-text-p-tab-id-text.html
+function.resetsession.html
 function.reshapesubscription-integer-integer-integer.html
 function.reshapesubscription-p-sub-receiver-integer-p-sub-provider-integer-p-sub-set-integer.html
 function.seqtrack-integer-bigint.html
@@ -245,6 +253,7 @@ limitations.html
 listenpaths.html
 locking.html
 loganalysis.html
+logrotation.html
 logshipping.html
 maintenance.html
 man1/
@@ -252,8 +261,11 @@ man7/
 manpage.links
 manpage.refs
 metacmds.html
+mkservice.html
+modifyingthings.html
 monitoring.html
 noslonik.html
+oldtestbed.html
 on.createevent-ev-data7-name-ev-data6-text-ev-data5-text-ev-data4-text-ev-data3-text-ev-data2-text-ev-data1-text-p-event-type-text-p-cluster-name-text.html
 partitioning.html
 performance.html
@@ -325,8 +337,10 @@ stmtupdatefunctions.html
 stmtwaitevent.html
 subscribenodes.html
 supportedplatforms.html
+table.sl-components.html
 table.sl-config-lock.html
 table.sl-confirm.html
+table.sl-event-lock.html
 table.sl-event.html
 table.sl-listen.html
 table.sl-log-1.html
@@ -342,6 +356,8 @@ table.sl-setsync.html
 table.sl-subscribe.html
 table.sl-table.html
 testbed.html
+testing.html
+teststate.html
 thingsleftout.html
 triggers.html
 tutorial.html
@@ -349,3 +365,4 @@ usingslonik.html
 version.sgml
 versionupgrade.html
 view.sl-seqlastvalue.html
+watchdogs.html
