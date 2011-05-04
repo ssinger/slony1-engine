@@ -1,2 +1,11 @@
 databases.properties
+disorder.properties
 java.conf
+java.confdisorder.properties
+log4j.properties.dbms
+slon.1.conf
+slon.2.conf
+slon.3.conf
+slon.4.conf
+slon.5.conf
+slonyregress.properties
