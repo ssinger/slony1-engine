@@ -19,9 +19,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#include "postgres.h"
-#include "libpq-fe.h"
 
+#include "libpq-fe.h"
+#include "../slonik/types.h"
 #include "slony_logshipper.h"
 
 

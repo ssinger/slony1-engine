@@ -19,11 +19,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#include "postgres.h"
 #include "libpq-fe.h"
 
+#ifdef WIN32
+#include "config_msvc.h"
+#else
+#include "config.h"
+#endif
+#include "types.h"
 #include "slonik.h"
-
 
 /*
  * Global data

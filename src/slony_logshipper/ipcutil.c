@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <signal.h>
 #endif
-#include "postgres.h"
+#include "../slonik/types.h"
 #include "libpq-fe.h"
 
 #include "slony_logshipper.h"
