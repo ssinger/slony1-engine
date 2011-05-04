@@ -212,7 +212,7 @@ periodically.</para></listitem>
 </sect1>
 
 
-<sect1><title>mkservice </title>
+<sect1 id="mkservice"><title>mkservice </title>
 <indexterm><primary>mkservice for BSD </primary></indexterm>
 
 <sect2><title>slon-mkservice.sh</title>
