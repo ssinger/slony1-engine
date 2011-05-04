@@ -40,13 +40,12 @@ RenameTests.prototype.runTest = function() {
 	this.subscribeSet(1,1, 1, [ 2, 3 ]);
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
 
-
+	
 	/**
 	  * Create the test_transient table.
 	  */
 	
 	this.createAndReplicateTestTable();
-	
 	
 	
 	/**
@@ -60,7 +59,7 @@ RenameTests.prototype.runTest = function() {
 	 * Ensure that changes to the table still get
 	 * replicated.
 	 */
-			
+	this.slonikSync(1,1);		
 	this.executeScript("ALTER TABLE disorder.test_transient RENAME TO test_transient2;\n");
 	
 	 

@@ -1402,6 +1402,13 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	/* @+nullderef@ */
 }
 
+/* Provide a way to reset the per-session data structure that stores
+   the cluster status in the C functions. 
+
+ * This is used to rectify the case where CLONE NODE updates the node
+ * ID, but calls to getLocalNodeId() could continue to return the old
+ * value.
+ */
 Datum
 _Slony_I_resetSession(PG_FUNCTION_ARGS)
 {

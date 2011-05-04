@@ -137,7 +137,6 @@ OmitCopy.prototype.subscribeOmitCopy=function(origin,provider,subscriberNodeId,o
 	var slonikPreamble = this.getSlonikPreamble();
         var slonikScript = 'echo \'OmitCopy.prototype.subscribeOmitCopy\';\n';
 	slonikScript += "subscribe set(id=1, provider=" + provider+", receiver=" + subscriberNodeId+", omit copy=true, forward=yes);\n";
-	slonikScript += ' wait for event (origin='+origin+', wait on='+provider+',confirmed=all);\n';
 	
 	var slonik=this.coordinator.createSlonik('omit copy subscribe',slonikPreamble,slonikScript);
 	slonik.run();

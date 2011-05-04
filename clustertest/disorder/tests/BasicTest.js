@@ -480,11 +480,11 @@ BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 		slonikScript += ' subscribe set(id=' + setid + ', provider='
 				+ provider_node + ', receiver=' + subscriber_node
 				+ ', forward=yes);\n';
-		slonikScript += this.generateSlonikWait(origin_node);
-		slonikScript += ' echo \'syncing\';\n';
-		slonikScript += ' sync(id=' + provider_node + ');\n';
-		slonikScript += ' echo \'waiting for event\';\n';
-		slonikScript += this.generateSlonikWait(provider_node);
+		//slonikScript += this.generateSlonikWait(origin_node);
+		//slonikScript += ' echo \'syncing\';\n';
+		//slonikScript += ' sync(id=' + provider_node + ');\n';
+		//slonikScript += ' echo \'waiting for event\';\n';
+		//slonikScript += this.generateSlonikWait(provider_node);
 		slonikScript += ' echo \'finished subscribing ' + subscriber_node +'\' ;\n';
 
 		var slonik = this.coordinator.createSlonik('subscribe ', preamble,

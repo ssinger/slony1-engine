@@ -67,8 +67,7 @@ RecreateSet.prototype.runTest = function() {
 	 * due to the lock on set 1.
 	 */
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop set (id=2, origin=1);\n'
-	+ 'wait for event(origin=1, confirmed=2,wait on=1);\n';
+	var slonikScript = 'drop set (id=2, origin=1);\n';
 
 	var slonik=this.coordinator.createSlonik('drop set 1',slonikPreamble,slonikScript);	
 	slonik.run();
