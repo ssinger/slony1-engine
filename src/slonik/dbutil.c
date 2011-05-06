@@ -14,12 +14,13 @@
 #ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#include "libpq-fe.h"
+
+#include <stdarg.h>
+#include <string.h>
 
 #ifdef WIN32
 #include "config_msvc.h"
@@ -27,6 +28,7 @@
 #include "config.h"
 #endif
 #include "types.h"
+#include "libpq-fe.h"
 #include "slonik.h"
 
 /*
