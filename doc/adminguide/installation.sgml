@@ -219,15 +219,16 @@ builds can be done with out involving configure or gmake.
 To build &slony1 you need
 </para>
 <itemizedlist>
-<listitem><para>The &slony1; source for a source distribution tar
+<listitem><para>The &slony1; source from a source distribution tar
 (The distribution tar files contain pre-built copies of the parser and 
-scanner generated files.  The Win32 make files do not currently support
+scanner generated files.  The Win32 makefiles do not currently support
 building these).</para></listitem>
-<listitem><para>&postgres; binaries installed along with include files
-and libraries</para></listitem>
+<listitem><para>&postgres; binaries, headers and libraries. </para></listitem>
 <listitem><para> <ulink url="http://sources.redhat.com/pthreads-win32">pthreads for win32</ulink></para></listitem>
 <listitem><para>The Microsoft SDK 6.1 or Visual Studio 2008 (other versions
 might work)</para></listitem>
+<listitem><para><ulink url="http://sourceforge.net/projects/gettext/">gettext 
+for win32</ulink></para></listitem>
 </itemizedlist>
 
 <para>
