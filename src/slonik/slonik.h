@@ -9,7 +9,9 @@
  *	
  *-------------------------------------------------------------------------
  */
-
+#ifndef SLONIK_H
+#define SLONIK_H
+#include "types.h"
 
 typedef struct SlonikScript_s SlonikScript;
 typedef struct SlonikAdmInfo_s SlonikAdmInfo;
@@ -604,7 +606,8 @@ int			db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 int			db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 				char *clustername);
 int			db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
-int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
+int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+						  bool suppress_locking);
 int			db_commit_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_rollback_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 
@@ -682,6 +685,13 @@ typedef struct option_list {
 	struct option_list *next;
 } option_list;
 
+
+#ifdef WIN32
+#define strtoll _strtoui64
+#define snprintf _snprintf
+#endif
+
+#endif
 /*
  * Local Variables:
  *	tab-width: 4

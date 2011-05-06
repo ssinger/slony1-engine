@@ -91,24 +91,35 @@
   </chapter>
   <chapter id="administration">
     <title>Administration Tasks</title>
+    &installation;
     &addthings;
     &ddlchanges;
     &failover;
   </chapter>
 
 <chapter id="advanced">
-<title>Advanced Topics</title>
+<title>Advanced Concepts</title>
     &events;
     &listenpaths;
-    &monitoring;
+    &triggers;
+    &locking;
     &logshipfile;
+</chapter>
+<chapter id="deploymentconcerns">
+<title>Deployment Considerations</title>
+    &monitoring;
     &partitioning;
     &slonyupgrade;
     &loganalysis;
     &performance;
-    &triggers;
-    &locking;
     &security;
+</chapter>
+
+<chapter id="additionalutils">
+<title>Additional Utilities</title>
+    &adminscripts;
+    &maintenance;
+    &testbed;
 </chapter>
 
 <part id="reference">
@@ -116,20 +127,13 @@
   	&slon;
         &slonconf;
 	&slonik;
-        &slonikref;
-
-<chapter id="thingsleftout">
-  <title>Things Left Out Of Other Parts</title>
-    &installation;
-    &maintenance;
-
+        &slonikref;  
+</part>
 <chapter id="appendix">
 <title>Appendix</title>
-    &adminscripts;
     &faq;
     &supportedplatforms;
     &releasechecklist;
-    &testbed;
     &usingslonik;
     &help;
 </chapter>

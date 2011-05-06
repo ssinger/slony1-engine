@@ -26,14 +26,15 @@
 #include <time.h>
 #include <signal.h>
 #include <dirent.h>
+#include <string.h>
 #else
 #define sleep(x) Sleep(x*1000)
 #define vsnprintf _vsnprintf
 #endif
 
-#include "postgres.h"
 #include "libpq-fe.h"
 
+#include "../slonik/types.h"
 #include "slony_logshipper.h"
 #include "config.h"
 

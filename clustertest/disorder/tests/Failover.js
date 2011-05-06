@@ -42,7 +42,7 @@ Failover.prototype.runTest = function() {
 	 */
 	this.subscribeSet(1,1, 1, [ 2, 3 ]);
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
-
+	this.slonikSync(1,1);
 
 	var load = this.generateLoad();
 	
@@ -81,11 +81,10 @@ Failover.prototype.runTest = function() {
 	 * 
 	 * Re resubscribe node 2 to receive from node 3 before the
 	 * FAILOVER this should test the more simple case.
-	 */
-	this.coordinator.log('PROGRESS:failing 1=>3 where 2 is first moved to get from 3');
+	 */	this.coordinator.log('PROGRESS:failing 1=>3 where 2 is first moved to get from 3');
 	this.addCompletePaths();		
 	this.subscribeSet(1,1,3,[2]);
-	
+	this.slonikSync(1,1);
 	this.failNode(1,3,true);	
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
@@ -93,7 +92,6 @@ Failover.prototype.runTest = function() {
 	this.dropNode(1,3);
 		
 	this.reAddNode(1,3,3);
-	
 	this.addCompletePaths();
 	
 	this.moveSet(1,3,1);
@@ -144,57 +142,63 @@ Failover.prototype.runTest = function() {
 	//this.generateSlonikWait=oldWait;
 	load.stop();
 	this.coordinator.join(load);
-	
 	this.dropNode(1,3);
 	//??this.coordinator.join(subscribeSlonik[0]);
 	
 	
 	this.reAddNode(1,3,3);
 	
-	/**
-	 * Now Shutdown the slon for node 4. 
-	 */
-	this.coordinator.log('PROGRESS:Shutting down node 4');
-	this.slonArray[3].stop();
-	this.coordinator.join(this.slonArray[3]);
 	
-	/**
-	 * How does the failure behave when the slon for node 4 is down?
-	 *  
-	 * Well for 1 the 'wait for event' to node 4 won't recover.
-	 * 
-	 */
-	this.failNode(1,3,false);
-	
-	this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
-	this.slonArray[3].run();
-	java.lang.Thread.sleep(10*1000);
-	this.dropNode(1,3);
-	this.reAddNode(1,3,3);
+	this.slonikSync(1,1);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
 	this.addCompletePaths();
 	this.moveSet(1,3,1)
-	load = this.generateLoad();
+
 	/**
 	 * Now shutdown the slon for node 3, see how a failover to node 3 behaves.
 	 */
 	this.coordinator.log('PROGRESS:shutting down node 3 for a failover test');
 	this.slonArray[2].stop();
 	this.coordinator.join(this.slonArray[2]);
-	load.stop();
-	this.coordinator.join(load);
-	this.failNode(1,3,false);
-	this.coordinator.log('PROGRESS:starting slon 3 back up');
-	this.slonArray[2] = this.coordinator.createSlonLauncher('db3');
-	this.slonArray[2].run();
+	/**
+	 * create a timer event.
+	 * in 60 seconds we will start up the slon again.
+	 * the failover should not complete with the slon shutdown
+	 * (at least not the 2.1 version of failover).
+	 */
+		
+
+	this.coordinator.log('PROGRESS:load has stopped');
+	var thisRef=this;	
 	/**
 	 * The failover needs to propogate before the DROP NODE or things can fail.
 	 */
-	java.lang.Thread.sleep(10*1000);
+	 var onTimeout = {
+		 onEvent : function(object, event) {
+			 	thisRef.coordinator.log('PROGRESS:starting slon 3 back up');
+				thisRef.slonArray[2] = thisRef.coordinator.createSlonLauncher('db3');
+				thisRef.slonArray[2].run();
+
+
+		}
+	};
+	var timeoutObserver = new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(onTimeout);
+	var timer = this.coordinator.addTimerTask('restart slon', 120,
+										 timeoutObserver);
+	this.failNode(1,3,true);
+	this.coordinator.removeObserver(timer,
+										Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_TIMER,
+										timeoutObserver);
+	if(this.slonArray[2].isFinished()) {
+			thisRef.slonArray[2] = thisRef.coordinator.createSlonLauncher('db3');
+			thisRef.slonArray[2].run();
+	}
+
 	this.dropNode(1,3);
 	this.reAddNode(1,3,3);	
+		this.slonikSync(1,1);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -223,6 +227,8 @@ Failover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop path from 1 to 4',slonik.getReturnCode(),0);
+	   
+	this.slonikSync(1,1);
 	this.failNode(1,4,true);
 	
 	this.compareDb('db2','db4');
@@ -233,13 +239,13 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,4,4);
 	
 	
-	
+	this.slonikSync(1,1);	
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
 	}
-	
-	this.compareDb('db1', 'db2');
+
+	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
 	this.compareDb('db4','db3');
@@ -249,9 +255,12 @@ Failover.prototype.runTest = function() {
 }
 
 Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
-	
+
 	this.slonArray[node_id-1].stop();
-	this.coordinator.join(this.slonArray[node_id-1]);
+	if(!this.slonArray[node_id-1].isFinished()) {
+		this.coordinator.join(this.slonArray[node_id-1]);
+	}
+	
 	
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'Failover.prototype.failNode\';\n';
@@ -266,8 +275,8 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 			if(waitIdx==idx || waitIdx==node_id) {
 				continue;
 			}
-			slonikScript += "echo 'waiting on " + idx + " " + waitIdx +"';\n";
-			slonikScript += 'wait for event(origin=' + idx + ',wait on=' + idx + ',timeout=60,confirmed=' + waitIdx + ");\n";
+			//autowaitfor			slonikScript += "echo 'waiting on " + idx + " " + waitIdx +"';\n";
+			//autowaitfor			slonikScript += 'wait for event(origin=' + idx + ',wait on=' + idx + ',timeout=60,confirmed=' + waitIdx + ");\n";
 		}
 	}
 		//+ 'sync(id=' + backup_id + ');\n'
@@ -326,7 +335,7 @@ Failover.prototype.addCompletePaths = function() {
 }
 
 Failover.prototype.dropNode=function(node_id,event_node) {
-        this.coordinator.log("Failover.prototype.dropNode - begin");
+	this.coordinator.log("Failover.prototype.dropNode - begin");
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'Failover.prototype.dropNode\';\n';
 	slonikScript += 'DROP NODE(id='  + node_id  + ',event node=' + event_node +');\n';
@@ -340,5 +349,5 @@ Failover.prototype.dropNode=function(node_id,event_node) {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('slonik drop node status okay',slonik.getReturnCode(),0);
-        this.coordinator.log("Failover.prototype.dropNode - complete");
+    this.coordinator.log("Failover.prototype.dropNode - complete");
 }

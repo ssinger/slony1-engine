@@ -44,6 +44,10 @@ LongTransaction.prototype.runTest = function() {
 	slonik.run();
 	java.lang.Thread.sleep(10*1000);
 	this.testResults.assertCheck('transaction is blocking add table command',slonik.isFinished(),false);
+
+
+
+
 	txnConnection.rollback();
 	txnConnection.close();
 	this.coordinator.join(slonik);
@@ -68,6 +72,7 @@ LongTransaction.prototype.runTest = function() {
 	}
 	//A transaction should not block the subscription.
 	//make sure this is the case.
+	 txnConnection = this.startTransaction();
         this.coordinator.log("LongTransaction.prototype.runTest - sleep 3x60x1000");
 	java.lang.Thread.sleep(3*60*1000);
 	for(var idx=0; idx < subs.length; idx++) {
@@ -109,7 +114,7 @@ LongTransaction.prototype.runTest = function() {
 LongTransaction.prototype.startTransaction=function() {
 	var dbCon = this.coordinator.createJdbcConnection('db1');
 	var stat = dbCon.createStatement();
-	stat.execute('BEGIN;');
+	dbCon.setAutoCommit(false);
 	var  rs= stat.executeQuery('SELECT COUNT(*) FROM disorder.do_customer;');
 	rs.close();
 	stat.close();

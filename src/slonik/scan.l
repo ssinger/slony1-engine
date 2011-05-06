@@ -38,7 +38,6 @@ extern char * current_file;
 
 %{
 
-#include "postgres.h"
 #include "libpq-fe.h"
 #include "slonik.h"
 #include "y.tab.h"

@@ -16,15 +16,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#ifndef WIN32
+#include <sys/time.h>
+#include <unistd.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
+#endif
 
 #include "slon.h"
 
@@ -132,7 +134,7 @@ slon_connectdb(char *conninfo, char *symname)
 		if(keep_alive_idle > 0 )
 			slon_log(SLON_WARN,"keep_alive_idle is not supported by Slony on Win32");
 		if(keep_alive_interval > 0) 
-			slon_slog(SLON_WARN,"keep_alive_interval is not supported by Slony on Win32");
+			slon_log(SLON_WARN,"keep_alive_interval is not supported by Slony on Win32");
 		if(keep_alive_count > 0) 
 			slon_log(SLON_WARN,"keep_alive_count is not supported by Slony Win32");
 

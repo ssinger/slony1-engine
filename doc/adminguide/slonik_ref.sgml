@@ -68,7 +68,7 @@
      <para>
       Comments begin at a hash sign (#) and extend to the end of the line.
      </para>
-    <sect2><title>Command groups</title>
+    <sect2 id="tryblock"><title>Command groups</title>
      <para>
       Commands can be combined into groups of commands with optional
       <command>on error</command> and <command>on success</command> conditionals.
@@ -523,6 +523,12 @@ INIT CLUSTER (
     therein; no public objects should be locked during the duration of
     this.</para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -604,6 +610,13 @@ INIT CLUSTER (
     therein; no public objects should be locked during the duration of
     this.</para>
    </refsect1>
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command. </para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  The <envar>SPOOLNODE</envar>
    parameter was introduced in version 1.1, but was vestigial in that
@@ -681,6 +694,13 @@ INIT CLUSTER (
    cluster. </para>
    </refsect1>
 
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits until nodes (other than the one being dropped)
+            are caught up with non-SYNC events from all other nodes before
+	        submitting the DROP NODE command.
+    </para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
@@ -745,6 +765,12 @@ INIT CLUSTER (
    <para>After dropping a node, you may also need to recycle
    connections in your application.</para>
    </refsect1>
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -792,6 +818,13 @@ INIT CLUSTER (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0; frequent use became unnecessary as
    of version 1.0.5.  There are, however, occasional cases where it is
@@ -870,6 +903,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -921,6 +961,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -991,6 +1038,14 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+
+ <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  As of version 1.1, you <emphasis>should</emphasis> no
    longer need to use this command, as listen paths are generated automatically. </para>
@@ -1044,6 +1099,13 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+      
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.  As of version 1.1, you should not
    need to use it anymore. </para>
@@ -1163,6 +1225,16 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+   
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command. Slonik will also wait until any outstanding
+	   DROP SET commands are confirmed by all nodes before it submits
+	   the CREATE SET command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> Until version 1.2, it would crash if no comment was provided. </para>
@@ -1218,6 +1290,14 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     on each replicated table in order to modify the table schema to
     clean up the triggers and rules.  </para>
    </refsect1>
+
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1273,11 +1353,7 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
     <programlisting>
      # Assuming that node 1 is the origin of set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
-     SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 2, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
-     SYNC (ID=1);
-     WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = 3, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
    </refsect1>
@@ -1295,6 +1371,15 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
    </para>
 
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+   <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.  Slonik will also wait for any 
+       in progress subscriptions involving the ADD ID to be subscribed
+       before submitting the MERGE SET command. </para>
+   </refsect1>  
+
    <refsect1> <title> Version Information </title> <para> This command
    was introduced in &slony1; 1.0.5.  In 1.2.1, a race condition was
    rectified where the merge request would be submitted while
@@ -1525,6 +1610,14 @@ SET ADD TABLE (
     takes place at the time of the <command>SUBSCRIBE_SET</command>
     event.  </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1618,10 +1711,18 @@ SET ADD TABLE (
 
     </programlisting>
    </refsect1>
-   <refsect1> <title> Locking Behaviour </title>
+   <refsect1> <title> Locking Behaviour </title>	
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	   <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+	 </refsect1>
+
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -1677,6 +1778,13 @@ SET ADD TABLE (
     replication trigger.  On subscriber nodes, this also involves
     adding back any rules/triggers that have been hidden. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>   
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
@@ -1729,6 +1837,13 @@ SET ADD TABLE (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
@@ -1792,6 +1907,13 @@ SET MOVE TABLE (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
@@ -1861,6 +1983,13 @@ SET MOVE SEQUENCE (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0.5 </para>
    </refsect1>
@@ -2156,10 +2285,20 @@ SUBSCRIBE SET (
     acquiring any locks on the provider node.</para>
 
     <para> On the subscriber node, it will have the effect of locking
-    every table in the replication set.  In version 1.2 or later, exclusive
+    every table in the replication set.  In version 1.2 and later, exclusive
     locks are acquired at the beginning of the process.
     </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits until the provider has confirmed all
+	 outstanding configuration events from any other node before
+	 contacting the provider to determine the set origin.  Slonik
+	 then waits for the command submitted to the previous event
+	 node to be confirmed on the origin before submitting this
+	 command to the origin.</para>
+</refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> The <command>OMIT COPY</command> option was introduced in &slony1; 2.0.3.</para>
@@ -2221,6 +2360,13 @@ UNSUBSCRIBE SET (
     on the subscriber in order to drop replication triggers from the
     tables and restore other triggers/rules. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
 
    <refsect1><title> Dangerous/Unintuitive Behaviour </title>
 
@@ -2306,6 +2452,12 @@ LOCK SET (
     on the origin node, and triggers are added to each such table that
     reject table updates. </para>
    </refsect1>
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2358,6 +2510,12 @@ UNLOCK SET (
     on the origin node, as the triggers are removed from each table
     that reject table updates. </para>
    </refsect1>
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2450,6 +2608,14 @@ MOVE SET (
     denyaccess trigger is dropped and a logtrigger trigger
     added. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+ 
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2541,6 +2707,13 @@ FAILOVER (
     </para>
 
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik will submit the FAILOVER_EVENT without waiting
+           but wait until the most ahead node has received confirmations
+           of the FAILOVER_EVENT from all nodes before completing.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> In version 2.0, the default <envar>BACKUP NODE</envar> value of 1 was removed, so it is mandatory to provide a value for this parameter.</para>
@@ -2657,6 +2830,13 @@ EXECUTE SCRIPT (
   
 
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0. </para>
 
@@ -2735,6 +2915,12 @@ UPDATE FUNCTIONS (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    </refsect1>
@@ -2921,6 +3107,12 @@ REPAIR CONFIG (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+   
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.1 </para>
    </refsect1>
@@ -2961,6 +3153,12 @@ REPAIR CONFIG (
 
     <para> No application-visible locking should take place. </para>
    </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+   
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.1.6 / 1.2.1 </para>
    </refsect1>
@@ -2992,6 +3190,12 @@ REPAIR CONFIG (
      sleep (seconds = 5);
     </Programlisting>
    </Refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.1.6 / 1.2.1. </para>
    </refsect1>
@@ -3040,6 +3244,14 @@ REPAIR CONFIG (
      sync (id=22);
      </Programlisting>
    </Refsect1>
+
+   
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik will wait until the node being cloned (the provider)
+	   is caught up with all other nodes before submitting the clone prepare
+	   command</para>
+</refsect1>
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 2.0. </para>
    </refsect1>
@@ -3078,6 +3290,13 @@ REPAIR CONFIG (
      clone finish (id = 33, provider = 22);
     </Programlisting>
    </Refsect1>
+
+    <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para>Slonik does not wait for event confirmations before 
+	   performing this command.</para>
+   </refsect1>
+   
+
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 2.0. </para>
    </refsect1>
