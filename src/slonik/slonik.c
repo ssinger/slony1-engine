@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <errno.h>
+#include <string.h>
 #ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
@@ -26,11 +27,11 @@
 
 #endif
 
-#include "postgres_fe.h"
+#include "types.h"
 #include "libpq-fe.h"
-#include "port.h"
-
 #include "slonik.h"
+
+
 #ifdef MSVC
 #include "config_msvc.h"
 #else
@@ -2522,8 +2523,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 	failnode_node *nodeinfo;
 	failnode_set *setinfo;
-	char	   *configbuf;
-
+	char	   *failsetbuf;
+	char	   *failnodebuf;
 	PGresult   *res1;
 	PGresult   *res2;
 	PGresult   *res3;
@@ -2587,24 +2588,21 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	/*
 	 * Allocate and initialize memory to hold some config info
 	 */
-	configbuf = malloc(
-					   MAXALIGN(sizeof(failnode_node) * num_nodes) +
-					   MAXALIGN(sizeof(failnode_set) * num_sets) +
-					   sizeof(failnode_node *) * num_nodes * num_sets);
-	memset(configbuf, 0,
-		   MAXALIGN(sizeof(failnode_node) * num_nodes) +
-		   MAXALIGN(sizeof(failnode_set) * num_sets) +
-		   sizeof(failnode_node *) * num_nodes * num_sets);
+	failsetbuf = malloc( sizeof(failnode_set) * num_sets);
+	failnodebuf = malloc( sizeof(failnode_node) * (num_nodes
+												   +num_sets*num_nodes));
+	memset(failsetbuf,0,sizeof(failnode_set) * num_sets);
+	memset(failnodebuf,0,sizeof(failnode_node) * (num_nodes 
+												  + (num_sets * num_nodes) ));
+	
+	nodeinfo = (failnode_node *) failnodebuf;
+	setinfo = (failnode_set *) failsetbuf;
 
-	nodeinfo = (failnode_node *) configbuf;
-	setinfo = (failnode_set *) (configbuf +
-								MAXALIGN(sizeof(failnode_node) * num_nodes));
 	for (i = 0; i < num_sets; i++)
 	{
 		setinfo[i].subscribers = (failnode_node **)
-			(configbuf + MAXALIGN(sizeof(failnode_node) * num_nodes) +
-			 MAXALIGN(sizeof(failnode_set) * num_sets) +
-			 sizeof(failnode_node *) * num_nodes * i);
+			(failnodebuf+ sizeof(failnode_node) * 
+			 (num_nodes + (i*num_nodes))); 
 	}
 
 	/*
@@ -2619,7 +2617,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		if (nodeinfo[i].adminfo == NULL)
 		{
 			PQclear(res1);
-			free(configbuf);
+			free(failnodebuf);
+			free(failsetbuf);
 			dstring_free(&query);
 			return -1;
 		}
@@ -2639,7 +2638,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			PQclear(res1);
 			PQclear(res2);
-			free(configbuf);
+			free(failnodebuf);
+			free(failsetbuf);
 			dstring_free(&query);
 			return -1;
 		}
@@ -2681,7 +2681,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res3 == NULL)
 		{
-			free(configbuf);
+			free(failnodebuf);
+			free(failsetbuf);
 			dstring_free(&query);
 			return -1;
 		}
@@ -2705,7 +2706,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			{
 				printf("node %d not found - inconsistent configuration\n",
 					   sub_receiver);
-				free(configbuf);
+				free(failnodebuf);
+				free(failsetbuf);
 				PQclear(res3);
 				PQclear(res2);
 				dstring_free(&query);
@@ -2727,7 +2729,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	printf("executing failedNode() on %d\n",adminfo1->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
-		free(configbuf);
+		free(failnodebuf);
+		free(failsetbuf);
 		dstring_free(&query);
 		return -1;
 	}
@@ -2738,7 +2741,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 		{
-			free(configbuf);
+			free(failnodebuf);
+			free(failsetbuf);
 			dstring_free(&query);
 			return -1;
 		}
@@ -2751,7 +2755,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	{
 		if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 		{
-			free(configbuf);
+			free(failnodebuf);
+			free(failsetbuf);
 			dstring_free(&query);
 			return -1;
 		}
@@ -2786,7 +2791,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res1 == NULL)
 			{
-				free(configbuf);
+				free(failnodebuf);
+				free(failsetbuf);
 				dstring_free(&query);
 				return -1;
 			}
@@ -2799,7 +2805,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			PQclear(res1);
 			if (db_rollback_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 			{
-				free(configbuf);
+				free(failnodebuf);
+				free(failsetbuf);
 				dstring_free(&query);
 				return -1;
 			}
@@ -2862,7 +2869,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 								  adminfo1, &query);
 			if (res1 == NULL)
 			{
-				free(configbuf);
+				free(failnodebuf);
+				free(failsetbuf);
 				dstring_free(&query);
 				return -1;
 			}
@@ -2890,7 +2898,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 								  setinfo[i].subscribers[j]->adminfo, &query);
 			if (res1 == NULL)
 			{
-				free(configbuf);
+				free(failsetbuf);
+				free(failnodebuf);
+				
 				dstring_free(&query);
 				return -1;
 			}
@@ -2972,7 +2982,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			 */
 			if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 			{
-				free(configbuf);
+				free(failsetbuf);
+				free(failnodebuf);
 				dstring_free(&query);
 				return -1;
 			}
@@ -3144,7 +3155,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 	
 
-	free(configbuf);
+	free(failsetbuf);
+	free(failnodebuf);
 	dstring_free(&query);
 	return rc;
 }
