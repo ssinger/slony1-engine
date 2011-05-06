@@ -79,6 +79,8 @@
 
 - Bug #201 - Allow command-line options to be configured from slon_tools.conf
 
+- Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
+
 * RELEASE 2.0.6
 - Fix for bug #162, typenameTypeId() changes signatures in 9.1
 
