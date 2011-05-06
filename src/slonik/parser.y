@@ -11,7 +11,7 @@
  *-------------------------------------------------------------------------
  */
 
-#include "postgres_fe.h"
+#include "types.h"
 #include "libpq-fe.h"
 #include "slonik.h"
 #include "scan.h"

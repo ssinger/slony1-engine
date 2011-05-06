@@ -633,6 +633,7 @@ extern int	slon_log_level;
 #define snprintf pg_snprintf
 #endif
 
+
 #endif   /* SLON_H_INCLUDED */
 
 

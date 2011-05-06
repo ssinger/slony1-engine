@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #else
+#include <windows.h>
 #define sleep(x) Sleep(x*1000)
 
 #endif
@@ -39,6 +40,8 @@
 #endif
 #include "../parsestatements/scanner.h"
 extern int STMTS[MAXSTATEMENTS];
+
+#define MAXPGPATH 256
 
 /*
  * Global data
@@ -5235,7 +5238,8 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 	if ( last_event_node >= 0 &&
 		 last_event_node != adminfo->no_id
 		&& ! suppress_wait_for )
-	{
+	{		
+		SlonikStmt_wait_event wait_event;		
 		/**
 		 * the last event node is not the current event node.
 		 * time to wait.
@@ -5253,7 +5257,6 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		 * for now we generate a 'fake' Slonik_wait_event structure
 		 * 
 		 */
-		SlonikStmt_wait_event wait_event;		
 		wait_event.hdr=*stmt;
 		wait_event.wait_origin=last_event_node;
 		wait_event.wait_on=last_event_node;
@@ -5412,12 +5415,12 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
+		char  seqno[64];
 		if(curAdmInfo->last_event < 0 || 
 		   curAdmInfo->no_id==adminfo1->no_id ||
 			curAdmInfo->no_id == ignore_node )
 			continue;
 		
-		char  seqno[64];
 		sprintf(seqno,INT64_FORMAT,curAdmInfo->last_event);
 		slon_appendquery(&event_list, 
 						 "%s (node_list.no_id=%d)"
