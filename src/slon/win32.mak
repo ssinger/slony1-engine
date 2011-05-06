@@ -5,7 +5,7 @@ PGSHARE=$(PGHOME)\share
 PTHREADS_INC=C:\pthreads-win32\include
 PTHREADS_LIB="c:\pthreads-win32\lib"
 GETTEXT_LIB=c:\gettext\lib
-LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:$(GETTEXT_LIB) intl.lib /NODEFAULTLIB:MSVCRT 
+LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:$(GETTEXT_LIB) intl.lib
 OBJS = 	slon.obj		\
 	runtime_config.obj	\
 	local_listen.obj	\

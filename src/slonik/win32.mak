@@ -1,7 +1,7 @@
 CPP=cl.exe
 LINK32=link.exe
 PGHOME=c:\\postgresql\\9.0
-LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib kernel32.lib /NODEFAULTLIB:MSVCRT 
+LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib kernel32.lib
 OBJS = slonik.obj \
 	dbutil.obj \
 	parser.obj \
