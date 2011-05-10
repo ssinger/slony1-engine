@@ -1461,6 +1461,11 @@ comment on function @NAMESPACE@.uninstallNode() is
 'Reset the whole database to standalone by removing the whole
 replication system.';
 
+--
+-- The return type of cloneNodePrepare changed at one point.
+-- drop it to make the script upgrade safe.
+--
+DROP FUNCTION IF EXISTS @NAMESPACE@.cloneNodePrepare(int4,int4,text);
 -- ----------------------------------------------------------------------
 -- FUNCTION cloneNodePrepare ()
 --
@@ -5273,7 +5278,7 @@ begin
 		raise notice 'Changing Slony-I column [%.%] to timestamp WITH time zone', v_tab_row.table_name, v_tab_row.column_name;
 		v_query := 'alter table ' || @NAMESPACE@.slon_quote_brute(v_tab_row.table_schema) ||
                    '.' || v_tab_row.table_name || ' alter column ' || v_tab_row.column_name ||
-                   ' set data type timestamp with time zone;';
+                   ' type timestamp with time zone;';
 		execute v_query;
 	  end loop;
 	  -- restore sl_status
