@@ -3759,7 +3759,7 @@ slonik_set_add_single_table(SlonikStmt_set_add_table * stmt,
 	slon_mkquery(&query,
 				 "select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q'); ",
 				 stmt->hdr.script->clustername,
-				 stmt->set_id, stmt->tab_id,
+				 stmt->set_id, tab_id,
 				 stmt->tab_fqname, idxname, stmt->tab_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
 						   stmt->hdr.script,auto_wait_disabled) < 0)
