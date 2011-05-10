@@ -3603,8 +3603,9 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 		if(result != NULL && (*result=='t' ||
 							  *result=='T'))
 		{
-			printf("%s:%d subscription in progress before mergeSet. waiting",
+			printf("%s:%d subscription in progress before mergeSet. waiting\n",
 				stmt->hdr.stmt_filename,stmt->hdr.stmt_lno);
+			fflush(stdout);
 			db_rollback_xact((SlonikStmt *) stmt, adminfo1);
 			sleep(5);
 		}
@@ -4692,6 +4693,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 				   ,stmt->hdr.stmt_filename,stmt->hdr.stmt_lno
 				   ,stmt->wait_origin,seqbuf,
 				   stmt->wait_confirmed);
+			fflush(stdout);
 		}
 		else if (loop_count % 10 ==0 )
 		{
@@ -4700,6 +4702,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 				   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno,
 				   stmt->wait_origin,seqbuf,
 				   dstring_data(&outstanding_nodes));
+			fflush(stdout);
 
 		}
 		sleep(1);
@@ -5552,6 +5555,7 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 				 }
 				 printf("waiting for events %s to be confirmed on node %d\n",
 						dstring_data(&outstanding),adminfo1->no_id);
+				 fflush(stdout);
 				 dstring_terminate(&outstanding);
 			   
 			 }/* every 10 iterations */		   		 
