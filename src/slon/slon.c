@@ -22,9 +22,10 @@
 #ifndef WIN32
 #include <sys/time.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #endif
 #include <sys/types.h>
-#include <sys/wait.h>
+
 
 
 #ifdef WIN32

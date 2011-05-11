@@ -1,10 +1,11 @@
 CPP=cl.exe
 LINK32=link.exe
-
-PGSHARE=\"c:\\postgresql\\9.0\\share\"
+PGHOME=c:\postgresql\9.0
+PGSHARE=$(PGHOME)\share
 PTHREADS_INC=C:\pthreads-win32\include
-PTHREADS_LIB=c:\pthreads-win32\lib
-LINK32_FLAGS=/libpath:c:\postgresql\9.0\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:c:\gettext\lib intl.lib /NODEFAULTLIB:MSVCRT 
+PTHREADS_LIB="c:\pthreads-win32\lib"
+GETTEXT_LIB=c:\gettext\lib
+LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib /libpath:$(PTHREADS_LIB) pthreadVC2.lib wsock32.lib kernel32.lib user32.lib advapi32.lib /libpath:$(GETTEXT_LIB) intl.lib
 OBJS = 	slon.obj		\
 	runtime_config.obj	\
 	local_listen.obj	\
@@ -21,10 +22,10 @@ OBJS = 	slon.obj		\
 	../parsestatements/scanner.obj \
 	port\win32service.obj \
 	port\pipe.obj \
-	
 
 
-CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /I$(PTHREADS_INC) /MD /Zi 
+
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /I$(PGHOME)\include /I$(PGHOME)\include/server /I$(PGHOME)\include/server/port/win32  /I$(PTHREADS_INC) /MD /Zi 
 
 slon.obj: slon.c
 	$(CPP) $(CPP_FLAGS)  slon.c

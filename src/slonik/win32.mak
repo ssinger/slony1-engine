@@ -1,6 +1,7 @@
 CPP=cl.exe
 LINK32=link.exe
-LINK32_FLAGS=/libpath:c:\postgresql\9.0\lib libpq.lib libpgport.lib /NODEFAULTLIB:MSVCRT 
+PGHOME=c:\\postgresql\\9.0
+LINK32_FLAGS=/libpath:$(PGHOME)\lib libpq.lib libpgport.lib kernel32.lib
 OBJS = slonik.obj \
 	dbutil.obj \
 	parser.obj \
@@ -8,8 +9,8 @@ OBJS = slonik.obj \
 	scan.obj \
 
 
-PGSHARE=\"c:\\postgresql\\9.0\\share\"
-CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /Ic:\Postgresql\9.0\include /Ic:\Postgresql\9.0\include/server /Ic:\Postgresql\9.0\include/server/port/win32 /MD
+
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=\"$(PGHOME)/share\" /D YY_NO_UNISTD_H /I..\..\ /I$(PGHOME)\include  /MD
 
 slonik.obj: slonik.c
 	$(CPP)$(CPP_FLAGS)  slonik.c

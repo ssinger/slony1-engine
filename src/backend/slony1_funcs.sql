@@ -451,7 +451,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b1' ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -1225,6 +1225,20 @@ begin
 								))
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;		
+			  update @NAMESPACE@.sl_subscribe
+                   set sub_provider = (select min(SS.sub_receiver)
+                           from @NAMESPACE@.sl_subscribe SS
+                           where SS.sub_set = v_row.set_id
+                               and SS.sub_receiver <> p_failed_node
+                               and SS.sub_forward
+                               and exists (
+                                   select 1 from @NAMESPACE@.sl_path
+                                       where pa_server = SS.sub_receiver
+                                         and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
+                               ))
+                   where sub_set = v_row.set_id
+                       and sub_receiver <> p_backup_node;
+
 			update @NAMESPACE@.sl_subscribe
 					set sub_provider = p_backup_node
 					where sub_set = v_row.set_id
@@ -1447,6 +1461,11 @@ comment on function @NAMESPACE@.uninstallNode() is
 'Reset the whole database to standalone by removing the whole
 replication system.';
 
+--
+-- The return type of cloneNodePrepare changed at one point.
+-- drop it to make the script upgrade safe.
+--
+DROP FUNCTION IF EXISTS @NAMESPACE@.cloneNodePrepare(int4,int4,text);
 -- ----------------------------------------------------------------------
 -- FUNCTION cloneNodePrepare ()
 --
@@ -5259,7 +5278,7 @@ begin
 		raise notice 'Changing Slony-I column [%.%] to timestamp WITH time zone', v_tab_row.table_name, v_tab_row.column_name;
 		v_query := 'alter table ' || @NAMESPACE@.slon_quote_brute(v_tab_row.table_schema) ||
                    '.' || v_tab_row.table_name || ' alter column ' || v_tab_row.column_name ||
-                   ' set data type timestamp with time zone;';
+                   ' type timestamp with time zone;';
 		execute v_query;
 	  end loop;
 	  -- restore sl_status

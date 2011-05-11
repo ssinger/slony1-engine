@@ -1,4 +1,9 @@
-* Version To Be Determined, probably 2.1.0
+* 2.1.0 (beta 2)
+- Bug #204 -  Upgrade from 2.0.x fails under PostgreSQL 8.3
+
+- Bug 205  - Upgrade fails from 2.0.0, return type from cloneNode changes
+
+* 2.1.0 (beta 1)
 
 #+OPTIONS: ^:{}
 ** Some items without bug numbers:
@@ -78,6 +83,8 @@
 - Bug #198 - subscribeset() should verify that provider node exists
 
 - Bug #201 - Allow command-line options to be configured from slon_tools.conf
+
+- Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
 
 * RELEASE 2.0.6
 - Fix for bug #162, typenameTypeId() changes signatures in 9.1

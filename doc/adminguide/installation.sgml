@@ -7,9 +7,9 @@
 <note> <para>For &windows; users: Unless you are planning on hacking
 the &slony1; code, it is highly recommended that you download and
 install a prebuilt binary distribution and jump straight to the
-configuration section below.  There are likely to be links and/or
-binaries at <ulink url="http://pgfoundry.org/projects/slony1/">
-pgFoundry &slony1; site </ulink>.
+configuration section below.  Prebuilt binaries are available 
+from the StackBuilder application included in the <ulink url="http://www.enterprisedb.com/downloads/postgres-postgresql-downloads"> EnterpriseDB
+PostgreSQL installer</ulink>
 
 <para> There are also RPM binaries available at that site for recent
 versions of &slony1; for recent versions of &postgres;.
@@ -210,6 +210,59 @@ is, for versions of &slony1; </para>
 
 </sect2>
 
+<sect2 id="buildingwin32"><title>Building on Win32</title>
+<para>
+Building &slony1; on Win32 with the Microsoft SDK (Visual Studio) is 
+different than building &slony1; on other platforms.  Visual Studio
+builds can be done with out involving configure or gmake.
+
+To build &slony1 you need
+</para>
+<itemizedlist>
+<listitem><para>The &slony1; source from a source distribution tar
+(The distribution tar files contain pre-built copies of the parser and 
+scanner generated files.  The Win32 makefiles do not currently support
+building these).</para></listitem>
+<listitem><para>&postgres; binaries, headers and libraries. </para></listitem>
+<listitem><para> <ulink url="http://sources.redhat.com/pthreads-win32">pthreads for win32</ulink></para></listitem>
+<listitem><para>The Microsoft SDK 6.1 or Visual Studio 2008 (other versions
+might work)</para></listitem>
+<listitem><para><ulink url="http://sourceforge.net/projects/gettext/">gettext 
+for win32</ulink></para></listitem>
+</itemizedlist>
+
+<para>
+To compile the &slony1; binaries you will need to
+<itemizedlist>
+<listitem><para>Edit  src\slon\win32.mak, src\slonik\win32.mak, 
+src\backend\win32.mak and set
+	<itemizedlist><listitem><para>PGHOME directory to the top level
+directory of your &postgres; installation.</para></listitem>
+	  <listitem><para>PTHREADS_INC, and PTHREADS_LIB to where your 
+		  pthreads-win32 package library and headers were installed to
+		  </para></listitem>
+	  <listitem><para>GETTEXT_LIB to where the gettext library was installed to
+		</para></listitem>
+	  </itemizedlist>
+	</para></listitem>
+</itemizedlist>
+</para>
+<para>
+From the Visual Studio or Microsoft Windows SDK command prompt run
+<programlisting>
+cd src\backend
+nmake /f win32.mak slony1_funcs.dll
+cd ..\slon
+nmake /f win32.mak slon.exe
+cd ..\slonik
+nmake /f win32.mak slonik.exe
+</programlisting>
+
+<para>
+src\backend\slony1_funcs.dll and any of the .sql files in 
+src\backend need to be installed in your postgresql $share directory.
+</sect2>
+
 <sect2 id="buildingdocs"> <title> Building Documentation: Admin Guide </title>
 
 <indexterm><primary> building &slony1; documentation </primary></indexterm>
@@ -308,10 +361,6 @@ to see the following URLs: </para>
 <listitem><para> <ulink
 url="http://developer.pgadmin.org/~hiroshi/Slony-I/"> Slony-I Windows
 installer sample </ulink> </para> </listitem>
-
-<listitem><para> <ulink url=
-"http://people.planetpostgresql.org/xzilla/index.php?/archives/200-Alpha-testing-Slony-on-win32-Crib-Notes.html">
-xzilla's Alpha testing Slony on win32 Crib Notes </ulink> </para> </listitem>
 
 </itemizedlist>
 
