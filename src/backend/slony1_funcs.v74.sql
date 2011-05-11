@@ -117,11 +117,11 @@ comment on function @NAMESPACE@.make_function_strict (text, text) is
 
 
 create or replace function @NAMESPACE@.TruncateOnlyTable ( name) returns void as
-$$
+'
 begin
-	execute 'truncate '|| @NAMESPACE@.slon_quote_input($1);
+	execute ''truncate ''|| @NAMESPACE@.slon_quote_input($1);
 end;
-$$
+'
 LANGUAGE plpgsql;
 
 
