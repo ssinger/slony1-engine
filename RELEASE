@@ -2,6 +2,8 @@ Release 1.2.23
 
 - Bug #195 - make slon_quote_* functions immutable
 
+- Bug #209 - dollar quoting doesn't work on PG 7.4
+
 Release 1.2.22
 
 -Bug #118 -  Use TRUNCATE ONLY when cleaning out tables on subscribers in
