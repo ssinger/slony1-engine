@@ -430,7 +430,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as '
 begin
-	return 22;
+	return 23;
 end;
 ' language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
