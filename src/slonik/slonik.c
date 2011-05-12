@@ -2433,6 +2433,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
 	SlonikAdmInfo * curAdmInfo;
+	int rc;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -2450,8 +2451,10 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 				continue;
 			if(slonik_is_slony_installed((SlonikStmt*)stmt,curAdmInfo) > 0 )
 			{
-				slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
+				rc=slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
 											stmt->no_id);
+				if(rc < 0)
+				  return rc;
 			}
 
 		}
@@ -3018,8 +3021,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	{
 		for (i = 0; i < num_sets; i++)
 		{
-			char		ev_seqno_c[64];
-			char		ev_seqfake_c[64];
+			char		ev_seqno_c[NAMEDATALEN];
+			char		ev_seqfake_c[NAMEDATALEN];
 
 			sprintf(ev_seqno_c, INT64_FORMAT, setinfo[i].max_seqno);
 			sprintf(ev_seqfake_c, INT64_FORMAT, ++max_seqno_total);
@@ -3226,13 +3229,18 @@ slonik_clone_prepare(SlonikStmt_clone_prepare * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	int rc;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_provider);
 	if (adminfo1 == NULL)
 		return -1;
 
 	if(!auto_wait_disabled)
-		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+	{
+		rc=slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		if(rc < 0 )
+		  return rc;
+	}
 
 	dstring_init(&query);
 	
@@ -3434,6 +3442,7 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 	int64 * cached_events;
 	size_t event_size;
 	int adm_idx;
+	int rc;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->set_origin);
 	if (adminfo1 == NULL)
@@ -3468,7 +3477,9 @@ slonik_create_set(SlonikStmt_create_set * stmt)
 			curAdmInfo->last_event=drop_set_events[adm_idx];
 			adm_idx++;
 		}
-		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		rc=slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		if (rc < 0) 
+		  return rc;
 		/***
 		 * reset the last_event values in the AdmInfo to
 		 * the values we saved above.
@@ -4037,6 +4048,7 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	PGresult    *res1;
 	int reshape=0;
 	int origin_id;
+	int rc;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->sub_provider);
 	if (adminfo1 == NULL)
@@ -4064,8 +4076,12 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 	 * set origin to that.  This avoids the wait for and is probably
 	 * what we should do.
 	 */ 
-	if(!auto_wait_disabled)
-		slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+	if (!auto_wait_disabled)
+	{
+		rc=slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		if (rc < 0) 
+			return rc;
+	}
 
 	slon_mkquery(&query,"select count(*) FROM \"_%s\".sl_subscribe " \
 				 "where sub_set=%d AND sub_receiver=%d " \
@@ -4563,7 +4579,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 	time_t		timeout;
 	time_t		now;
 	int			all_confirmed = 0;
-	char		seqbuf[64];
+	char		seqbuf[NAMEDATALEN];
 	int loop_count=0;
 	SlonDString outstanding_nodes;
 	int tupindex;
@@ -5200,6 +5216,7 @@ slonik_is_slony_installed(SlonikStmt * stmt,
 	SlonDString query;
 	PGresult * res;
 	int rc=-1;
+	bool txn_open = adminfo->have_xact;
 
 	if (db_begin_xact(stmt, adminfo,true) < 0)
 		return -1;
@@ -5218,7 +5235,8 @@ slonik_is_slony_installed(SlonikStmt * stmt,
 	
 	if(res != NULL)
 		PQclear(res);
-	db_rollback_xact(stmt, adminfo);
+	if(!txn_open)
+	  db_rollback_xact(stmt, adminfo);
 	dstring_terminate(&query);
 	return rc;
 	
@@ -5369,6 +5387,10 @@ static size_t slonik_get_last_event_id(SlonikStmt *stmt,
  * ignore_node - allows 1 node to be ignored (don't wait for
  *               adminfo1 to be caught up with that node)
  *               -1 means don't ignore any nodes.
+ *
+ * Returns:
+ *  0 - if all went fine
+ * -1 - if a WAIT is attempted inside a slonik TRY block
  */								
 static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 									   SlonikStmt * stmt,
@@ -5401,8 +5423,7 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 
 	if( current_try_level != 0)
 	{
-	  printf("%s:%d Error: waiting operation not allowed inside of "
-			 "inside of a try block",
+	  printf("%s:%d Error: WAIT operation forbidden inside a try block\n",
 			 stmt->stmt_filename, stmt->stmt_lno);
 	  return -1;
 	}
@@ -5418,7 +5439,7 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 	for( curAdmInfo = stmt->script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
 	{
-		char  seqno[64];
+		char  seqno[NAMEDATALEN];
 		if(curAdmInfo->last_event < 0 || 
 		   curAdmInfo->no_id==adminfo1->no_id ||
 			curAdmInfo->no_id == ignore_node )

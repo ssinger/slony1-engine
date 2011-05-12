@@ -86,6 +86,8 @@
 
 - Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
 
+- Bug #206  - Do not perform an accidental rollback in a try block
+
 * RELEASE 2.0.6
 - Fix for bug #162, typenameTypeId() changes signatures in 9.1
 

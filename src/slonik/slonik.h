@@ -671,7 +671,7 @@ typedef enum {
 } option_code;
 
 
-
+#define NAMEDATALEN 64
 
 /*
  * Common given option list
