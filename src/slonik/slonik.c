@@ -3586,8 +3586,11 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 	dstring_init(&query);
 
 	slon_mkquery(&query,"select \"_%s\".isSubscriptionInProgress(%d)"
-		     ,stmt->hdr.script->clustername,
-		     stmt->add_id);
+				 " or \"_%s\".isSubscriptionInProgress(%d)"
+				 ,stmt->hdr.script->clustername,
+				 stmt->add_id, stmt->hdr.script->clustername,
+				 stmt->set_id);
+
 	while(in_progress)
 	{
 		char *result;

@@ -3,6 +3,13 @@
 
 - Bug 205  - Upgrade fails from 2.0.0, return type from cloneNode changes
 
+- Bug 206  - Do not perform an accidental rollback in a try block
+
+- Bug 208  - Fixing issues with bulk adding of tables.
+
+- Bug 210  - merge set should wait for both sets to be subscribed
+             before submitting the merge event.
+
 * 2.1.0 (beta 1)
 
 #+OPTIONS: ^:{}
