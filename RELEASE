@@ -323,3 +323,6 @@ RELEASE 2.0.6
   restructure of cleanup thread), so vacuums were being done every time
 
 - Bug #195 - change slon_quote_* functions to IMMUTABLE
+
+- Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
+

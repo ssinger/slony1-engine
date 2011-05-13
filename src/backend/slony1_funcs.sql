@@ -1255,6 +1255,20 @@ begin
 								))
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;		
+			  update @NAMESPACE@.sl_subscribe
+                   set sub_provider = (select min(SS.sub_receiver)
+                           from @NAMESPACE@.sl_subscribe SS
+                           where SS.sub_set = v_row.set_id
+                               and SS.sub_receiver <> p_failed_node
+                               and SS.sub_forward
+                               and exists (
+                                   select 1 from @NAMESPACE@.sl_path
+                                       where pa_server = SS.sub_receiver
+                                         and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
+                               ))
+                   where sub_set = v_row.set_id
+                       and sub_receiver <> p_backup_node;
+
 			update @NAMESPACE@.sl_subscribe
 					set sub_provider = p_backup_node
 					where sub_set = v_row.set_id
