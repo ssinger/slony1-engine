@@ -63,12 +63,7 @@ if ($event_node =~ /^(?:node)?(\d+)$/) {
 my $slonik = '';
 
 $slonik .= genheader();
-$slonik .= "  try {\n";
-$slonik .= "      drop node (id = $node, event node = $event_node);\n";
-$slonik .= "  } on error {\n";
-$slonik .= "      echo 'Failed to drop node $node from cluster';\n";
-$slonik .= "      exit 1;\n";
-$slonik .= "  }\n";
+$slonik .= "  drop node (id = $node, event node = $event_node);\n";
 $slonik .= "  echo 'dropped node $node cluster';\n";
 
 run_slonik_script($slonik, 'DROP NODE');

@@ -10,6 +10,9 @@
 - Bug 210  - merge set should wait for both sets to be subscribed
              before submitting the merge event.
 
+- Bug 211  - Modify the altperl tools so they don't enclose statements
+             that wait for events inside of a 'try' block.
+
 * 2.1.0 (beta 1)
 
 #+OPTIONS: ^:{}

@@ -48,12 +48,7 @@ my ($dbname, $dbhost) = ($DBNAME[$MASTERNODE], $HOST[$MASTERNODE]);
 my $slonik = '';
 
 $slonik .= genheader();
-$slonik .= "  try {\n";
 $slonik .= "    merge set (id = $set1, add id = $set2, origin = $node);\n";
-$slonik .= "  } on error {\n";
-$slonik .= "    echo 'Failure to merge set $set2 into $set1 with origin $node';\n";
-$slonik .= "    exit 1;\n";
-$slonik .= "  }\n";
 $slonik .= "  echo 'Replication set $set2 merged into $set1 on origin $node. Set $set2 no longer exists.';\n";
 
 run_slonik_script($slonik, 'MERGE SET');

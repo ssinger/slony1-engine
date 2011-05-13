@@ -42,7 +42,7 @@ $set = get_set($set) or die "Non-existent set specified.\n";
 my $slonik = '';
 
 $slonik .= genheader();
-$slonik .= "  try {\n";
+$slonik .= " \n";
 
 if ($DSN[$node]) {
   my $provider = $SET_ORIGIN;
@@ -60,9 +60,5 @@ if ($DSN[$node]) {
   die "Node $node not found\n";
 }
 
-$slonik .= "  }\n";
-$slonik .= "  on error {\n";
-$slonik .= "    exit 1;\n";
-$slonik .= "  }\n";
 $slonik .= "  echo 'Subscribed nodes to set $set';\n";
 run_slonik_script($slonik);
