@@ -4,8 +4,8 @@
 
 #include <server/pg_config.h>
 
-#define SLONY_I_VERSION_STRING	"2.0.6"
-#define SLONY_I_VERSION_STRING_DEC 2,0,6
+#define SLONY_I_VERSION_STRING	"2.0.7"
+#define SLONY_I_VERSION_STRING_DEC 2,0,7
 #if PG_VERSION_NUM >= 90000
 #define HAVE_GETACTIVESNAPSHOT 1
 #define HAVE_TYPCACHE 1

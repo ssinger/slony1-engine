@@ -326,3 +326,7 @@ RELEASE 2.0.6
 
 - Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
 
+- Support for building with Visual Studio on Win32
+
+- Bug # 214 - tools/slonikconfdump.sh was added back in
+
