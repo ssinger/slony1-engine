@@ -13,8 +13,8 @@
  *
  *-------------------------------------------------------------------------
  */
-
-#include "postgres.h"
+#include<pthread.h>
+#include "slon.h"
 #include "misc.h"
 
 #ifdef WIN32
@@ -92,4 +92,14 @@ piperead(int s, char *buf, int len)
 	return ret;
 }
 
+int pipewrite(int s, const char * buf, int len)
+{
+
+  int ret = send(s,buf,len,0);
+  if( ret < 0 && WSAGetLastError() == WSAECONNRESET)
+    ret=0;
+  return ret;
+ 
+
+}
 #endif
