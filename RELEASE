@@ -7,6 +7,8 @@
 
 - Bug 208  - Fixing issues with bulk adding of tables.
 
+- Bug 209  - Default table ID problem
+
 - Bug 210  - merge set should wait for both sets to be subscribed
              before submitting the merge event.
 
