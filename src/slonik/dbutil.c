@@ -12,16 +12,17 @@
 
 
 #ifndef WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#include "postgres.h"
 #include "libpq-fe.h"
-
+#include <stdarg.h>
+#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "types.h"
 #include "slonik.h"
 
 

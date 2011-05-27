@@ -9,7 +9,9 @@
  *	
  *-------------------------------------------------------------------------
  */
-
+#ifndef SLONIK_H
+#define SLONIK_H
+#include "types.h"
 
 typedef struct SlonikScript_s SlonikScript;
 typedef struct SlonikAdmInfo_s SlonikAdmInfo;
@@ -667,6 +669,12 @@ typedef struct option_list {
 	struct option_list *next;
 } option_list;
 
+#ifdef WIN32
+#define strtoll _strtoui64
+#define snprintf _snprintf
+#endif
+
+#endif
 /*
  * Local Variables:
  *	tab-width: 4
