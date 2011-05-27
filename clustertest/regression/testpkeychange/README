@@ -1,0 +1,7 @@
+Test changing the primary key of a replicated table.
+This test uses EXECUTE SCRIPT to change add an extra column
+to the primary key of a replicated table.
+
+It then performs a replicated UPDATE statement to check to see
+if slony picks up on the new primary key column.
+
