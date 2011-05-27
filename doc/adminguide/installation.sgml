@@ -234,19 +234,22 @@ for win32</ulink></para></listitem>
 <para>
 To compile the &slony1; binaries you will need to
 <itemizedlist>
-<listitem><para>Edit  src\slon\win32.mak, src\slonik\win32.mak, 
-src\backend\win32.mak and set
-	<itemizedlist><listitem><para>PGHOME directory to the top level
-directory of your &postgres; installation.</para></listitem>
-	  <listitem><para>PTHREADS_INC, and PTHREADS_LIB to where your 
-		  pthreads-win32 package library and headers were installed to
-		  </para></listitem>
-	  <listitem><para>GETTEXT_LIB to where the gettext library was installed to
-		</para></listitem>
-	  </itemizedlist>
-	</para></listitem>
-</itemizedlist>
-</para>
+<listitem><para>Set the environment variables PGSHARE,PG_INC,PG_LIB,
+PTHREADS_INC,PTHREADS_LIB, GETTEXT_LIB to point to the proper locations
+based on where these applications were installed.  For example</para>
+<programlisting>
+set PG_INC=c:\Postgresql\9.0\include
+set PG_LIB=c:\Postgresql\9.0\lib
+set PGSHARE=c:\\Postgresql\\9.0\\share
+set PTHREADS_INC=c:\pthreads-win32\include
+set PTHREADS_LIB=c:\pthreads-win32\lib
+set GETTEXT_LIB=c:\gettext\lib
+</programlisting>
+<para>
+Note that the backslash characters must be escaped for PGSHARE as in the
+above example</para>
+</listitem>
+
 <para>
 From the Visual Studio or Microsoft Windows SDK command prompt run
 <programlisting>
@@ -257,10 +260,12 @@ nmake /f win32.mak slon.exe
 cd ..\slonik
 nmake /f win32.mak slonik.exe
 </programlisting>
-
+</para>
 <para>
 src\backend\slony1_funcs.dll and any of the .sql files in 
 src\backend need to be installed in your postgresql $share directory.
+</para>
+
 </sect2>
 
 <sect2 id="buildingdocs"> <title> Building Documentation: Admin Guide </title>
