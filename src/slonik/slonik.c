@@ -5383,6 +5383,7 @@ static size_t slonik_get_last_event_id(SlonikStmt *stmt,
 			/**
 			 * warning?
 			 */
+			(*events)[node_idx]=-1;
 			continue;
 		}
 		rc = slonik_is_slony_installed(stmt,activeAdmInfo);

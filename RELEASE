@@ -2,6 +2,9 @@
 
 - Bug 214 - Add slonikconfdump.sh back into tools
 
+- Fixed slonik memory corruption when it tries to get the last known
+  event_id from a node that doesn't yet have slony installed.
+
 * 2.1.0 (beta 2)
 - Bug #204 -  Upgrade from 2.0.x fails under PostgreSQL 8.3
 
