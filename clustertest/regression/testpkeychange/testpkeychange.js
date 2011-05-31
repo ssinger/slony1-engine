@@ -68,11 +68,12 @@ function do_test(coordinator) {
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
-	
+	wait_for_sync(coordinator);
+
 }
 
 function get_compare_queries() {
-	var queries=['SELECT id1,id2,id3,data FROM test1 order by id1,id2,id3'
+	var queries=['SELECT id1::text||id2::text as id, id1,id2,id3,data FROM test1 order by id1,id2,id3'
 		     ];
 	return queries;
 }
