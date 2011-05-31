@@ -7,3 +7,6 @@ INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bit
 
 INSERT INTO table4(numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol,bitcol) values ('93.1','9.31','(9,3)','((9,9),(3,3),(1,1),(9,1))','((9,3),(1,9),(3,1),(1,3))','<(9,3),1>','192.168.9.31','08:00:2d:09:03:01',X'931');
 
+insert into x1 (data) values ('placeholder 1');
+insert into x2 (data) values ('placeholder 2');
+insert into x3 (data) values ('placeholder 3');

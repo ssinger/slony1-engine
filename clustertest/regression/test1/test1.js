@@ -36,7 +36,13 @@ function init_tables() {
 		+"}\n"
 		+"\n"
 		+"set add table (id=4, set id=1, origin=1, fully qualified name = 'public.table4', comment='a table of many types');\n"
-		+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5', comment='a table with composite PK strewn across the table');\n";
+		+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5', comment='a table with composite PK strewn across the table');\n"
+	    +"try {\n"
+	    +"set add table (set id=1, tables='public.x.*', origin=1, add sequences=true);\n"
+	    +"} on error {\n"
+		+"echo 'tried to replicate x.*, did not succeed';\n"
+		+ "exit 1;\n"
+		+"}\n";
 		
 	return script;
 }
@@ -79,7 +85,10 @@ function generate_data() {
 			+ra+rb+rc+"');\n"; 
 		sqlScript+= "INSERT INTO table5(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11) values (E'"+txta+ra+"',E'"+txta+rb+"',E'"+txta+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"',E'" 
 				+txtb+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"',E'"+txtb+rc+"',E'"+txtb+ra+"',E'"+txtb+rb+"');\n";
-			
+
+		sqlScript += "insert into x1 (data) values (E'"+txta+"');\n";
+		sqlScript += "insert into x2 (data) select data from x1 order by random() limit 2;\n";
+		sqlScript += "insert into x3 (data) select data from x2 order by random() limit 2;\n";
 	}	
 	return sqlScript;
 }
@@ -105,7 +114,10 @@ function get_compare_queries() {
 	var queries=['SELECT id,data FROM table1 ORDER BY id',
 	             'SELECT id,table1_id,data FROM table2 ORDER BY id',
 	             'SELECT id,numcol,realcol,ptcol,pathcol,polycol,circcol,ipcol,maccol, bitcol from table4 order by id',
-	             'SELECT id::text||id2::text||id3::text as id,d1,d2,id2,d3,d4,d5,d6,id3,d7,d8,d9,d10,d11 from table5 order by id,id2,id3'];
+	             'SELECT id::text||id2::text||id3::text as id,d1,d2,id2,d3,d4,d5,d6,id3,d7,d8,d9,d10,d11 from table5 order by id,id2,id3',
+				 'SELECT id,data FROM x1 ORDER BY id',
+				 'SELECT id,data FROM x2 ORDER BY id',
+				 'SELECT id,data FROM x3 ORDER BY id'];
 	return queries;
 }
 

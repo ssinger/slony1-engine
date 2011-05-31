@@ -12,8 +12,7 @@
 
 
 #ifndef WIN32
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -21,6 +20,8 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef WIN32
 #include "config_msvc.h"

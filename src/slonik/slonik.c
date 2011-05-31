@@ -3677,13 +3677,29 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 		return -1;
 
+	/**
+	 * obtain a lock on sl_event_lock.  
+	 * it must be obtained before calling setAddTable()
+	 * and it must be obtained before querying the catalog.
+	 */
+	dstring_init(&query);
+	slon_mkquery(&query,"lock table \"_%s\".sl_event_lock;",
+				 stmt->hdr.script->clustername);
+	if( db_exec_command((SlonikStmt*)stmt,adminfo1,&query) < 0)
+	{
+		printf("%s:%d:Error: unable to lock sl_event_lock\n",
+			   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno);
+		dstring_terminate(&query);
+		return -1;
+
+	}
+	dstring_reset(&query);
 	if(stmt->tab_fqname==NULL && 
 	   stmt->tables != NULL)
 	{
 		/**
 		 * query the catalog to get a list of tables.
 		 */
-		dstring_init(&query);
 		slon_mkquery(&query,"select table_schema || '.' || table_name "
 					 "from information_schema.tables where "
 					 "table_schema || '.'||table_name ~ '%s' "
@@ -3714,10 +3730,10 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 			}
 		}
 		PQclear(result);
-		dstring_terminate(&query);
 	}
 	else
 		rc=slonik_set_add_single_table(stmt,adminfo1,stmt->tab_fqname);
+	dstring_terminate(&query);
 	return rc;
 }
 int
@@ -3774,7 +3790,7 @@ slonik_set_add_single_table(SlonikStmt_set_add_table * stmt,
 				 "select \"_%s\".setAddTable(%d, %d, '%q', '%q', '%q'); ",
 				 stmt->hdr.script->clustername,
 				 stmt->set_id, tab_id,
-				 stmt->tab_fqname, idxname, stmt->tab_comment);
+				 fqname, idxname, stmt->tab_comment);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
 						   stmt->hdr.script,auto_wait_disabled) < 0)
 	{
@@ -3820,13 +3836,31 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 		return -1;
+
+	/**
+	 * obtain a lock on sl_event_lock.  
+	 * it must be obtained before calling setAddSequence()
+	 * and it must be obtained before querying the catalog.
+	 */
+	dstring_init(&query);
+	slon_mkquery(&query,"lock table \"_%s\".sl_event_lock;",
+				 stmt->hdr.script->clustername);
+	if( db_exec_command((SlonikStmt*)stmt,adminfo1,&query) < 0)
+	{
+		printf("%s:%d:Error: unable to lock sl_event_lock\n",
+			   stmt->hdr.stmt_filename,stmt->hdr.stmt_lno);
+		dstring_terminate(&query);
+		return -1;
+
+	}
+	dstring_reset(&query);
+
 	if(stmt->seq_fqname==NULL &&
 	   stmt->sequences != NULL)
 	{
 		/**
 		 * query the catalog to get a list of tables.
 		 */
-		dstring_init(&query);
 		slon_mkquery(&query,"select sequence_schema || '.' || sequence_name "
 					 "from information_schema.sequences where "
 					 "sequence_schema || '.'||sequence_name ~ '%s' "
@@ -3860,14 +3894,15 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 			}
 		}
 		PQclear(result);
-		dstring_terminate(&query);
+
 	}
 	else
 	  rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
 										  stmt->seq_fqname,
 										  stmt->set_id,stmt->seq_comment,
 										  stmt->seq_id);
-	
+
+	dstring_terminate(&query);
 	return rc;
 }
 int
@@ -5177,7 +5212,7 @@ slonik_add_dependent_sequences(SlonikStmt_set_add_table *stmt,
 			/**
 			 * add the sequence to the replication set
 			 */
-			comment=malloc(strlen(table_name)+strlen("sequence for"+1));
+			comment=malloc(strlen(table_name)+strlen("sequence for ")+1);
 			sprintf(comment,"sequence for %s",table_name);
 			rc=slonik_set_add_single_sequence((SlonikStmt*)stmt,adminfo1,
 											  seq_name,
@@ -5348,6 +5383,7 @@ static size_t slonik_get_last_event_id(SlonikStmt *stmt,
 			/**
 			 * warning?
 			 */
+			(*events)[node_idx]=-1;
 			continue;
 		}
 		rc = slonik_is_slony_installed(stmt,activeAdmInfo);
