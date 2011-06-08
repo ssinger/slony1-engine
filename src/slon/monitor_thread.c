@@ -64,8 +64,10 @@ monitorThread_main(void *dummy)
 
 	slon_log(SLON_INFO,
 			 "monitorThread: thread starts\n");
-
+	pthread_mutex_lock(&stack_lock);
 	stack_init();
+	pthread_mutex_unlock(&stack_lock);
+
 
 	/*
 	 * Connect to the local database

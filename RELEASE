@@ -1,12 +1,22 @@
 * 2.1.0 (beta 3)
 
+- Bug 204 - Additional fixes for failover to a non-direct subscriber
+            where circular paths in sl_subscribe could happen
+
 - Bug 214 - Add slonikconfdump.sh back into tools
+
+- Bug 218 - obtain a lock on sl_config_lock before calling storePath_int
 
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
 
+- Fix threading issue in monitor_thread where slon_init can be called
+  without the mutex being locked. This function was written to assume
+  the mutex lock exists.  
+
 * 2.1.0 (beta 2)
-- Bug #204 -  Upgrade from 2.0.x fails under PostgreSQL 8.3
+
+- Bug #204 - Fixing issues with failover and non-direct subscribers
 
 - Bug 205  - Upgrade fails from 2.0.0, return type from cloneNode changes
 
