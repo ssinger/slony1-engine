@@ -878,7 +878,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
 
 				slon_appendquery(&query1,
-							   "select %s.storePath_int(%d, %d, '%q', %d); ",
+								 "lock table %s.sl_config_lock;"
+								 "select %s.storePath_int(%d, %d, '%q', %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 							pa_server, pa_client, pa_conninfo, pa_connretry);
 
