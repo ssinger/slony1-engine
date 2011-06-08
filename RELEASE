@@ -5,11 +5,14 @@
 
 - Bug 214 - Add slonikconfdump.sh back into tools
 
+- Bug 218 - obtain a lock on sl_config_lock before calling storePath_int
+
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
 
-- Bug 218 - obtain a lock on sl_config_lock before calling storePath_int
-
+- Fix threading issue in monitor_thread where slon_init can be called
+  without the mutex being locked. This function was written to assume
+  the mutex lock exists.  
 
 * 2.1.0 (beta 2)
 
