@@ -417,7 +417,8 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	if (res == NULL)
 		return -1;
 
-	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2)
+	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2 &&
+		sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch) < 2)
 	{
 		fprintf(stderr, "%s:%d: failed to parse %s for DB version\n",
 				stmt->stmt_filename, stmt->stmt_lno,
