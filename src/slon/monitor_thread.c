@@ -163,8 +163,7 @@ monitorThread_main(void *dummy)
 					{
 						slon_appendquery(&monquery, "NULL::text, ");
 					}
-					(void) strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S%z", localtime(&(state.start_time)));
-					slon_appendquery(&monquery, "'%s', ", timebuf);
+					slon_appendquery(&monquery, "'1970-01-01 0:0:0 UTC'::timestamptz + '%d seconds'::interval, ", time(NULL));
 					if (state.event > 0)
 					{
 						slon_appendquery(&monquery, "%L, ", state.event);
