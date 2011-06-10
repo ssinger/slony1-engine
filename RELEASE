@@ -7,6 +7,9 @@
 
 - Bug 218 - obtain a lock on sl_config_lock before calling storePath_int
 
+- Bug 220 -  Fix issue where changing the provider of an existing subscriber
+             passed parameters in the wrong order to the stored procedure.
+
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
 
