@@ -3560,7 +3560,8 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 		slon_mkquery(&query,
 					 "select \"_%s\".reshapeSubscription(%d,%d,%d);",
 					 stmt->hdr.script->clustername,
-					 stmt->sub_provider,stmt->sub_setid,
+					 stmt->sub_setid,
+					 stmt->sub_provider,
 					 stmt->sub_receiver);	
 		if (db_exec_command((SlonikStmt *) stmt, adminfo2, &query) < 0)
 		{
