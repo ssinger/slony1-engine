@@ -223,6 +223,7 @@ Failover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop path from 1 to 4',slonik.getReturnCode(),0);
+	this.slonikSync(1,1);
 	this.failNode(1,4,true);
 	
 	this.compareDb('db2','db4');
