@@ -22,6 +22,9 @@
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
 
+- Bug 219 Default to PostgreSQL 8.4 support if the version of PG is newer than
+          what slony recognizes.
+
 - Fix threading issue in monitor_thread where slon_init can be called
   without the mutex being locked. This function was written to assume
   the mutex lock exists.  
