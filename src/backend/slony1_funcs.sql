@@ -5181,13 +5181,14 @@ BEGIN
 --                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
-            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' 
+			|| v_dummy.set_origin::text;
 	   -- raise notice 'Consider adding partial index % on sl_log_%', v_iname, v_log;
 	   -- raise notice 'schema: [_@CLUSTERNAME@] tablename:[sl_log_%]', v_log;
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = 'sl_log_' || v_log::text and  indexname = v_iname;
             if not found then
 		-- raise notice 'index was not found - add it!';
-        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin::text;
 		v_ilen := pg_catalog.length(v_iname);
 		v_maxlen := pg_catalog.current_setting('max_identifier_length'::text)::int4;
                 if v_ilen > v_maxlen then
