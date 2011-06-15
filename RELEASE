@@ -335,5 +335,8 @@ Added post rc1
 - Bug #204 - Additional fixes for bug204 relating to circular entries in
              sl_subscribe following a failover to a non-direct subscriber.
 
+- Bug #217 - Execute script (ddlscript_complete_int) will now reconfigure the
+             trigger arguments on the log trigger for any tables that needs it.
+
 - Bug #220 - Fix issue where changing the provider of an existing subscriber
              passed parameters in the wrong order to the stored procedure.

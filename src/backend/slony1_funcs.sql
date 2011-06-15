@@ -198,6 +198,14 @@ schema/functions.';
 
 select @NAMESPACE@.checkmoduleversion();
 
+create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
+'$libdir/slony1_funcs','_slon_decode_tgargs' language C security definer;
+
+comment on function @NAMESPACE@.decode_tgargs(bytea) is 
+'Translates the contents of pg_trigger.tgargs to an array of text arguments';
+
+grant execute on function @NAMESPACE@.decode_tgargs(bytea) to public;
+
 -----------------------------------------------------------------------
 -- This function checks to see if the namespace name is valid.  
 --
@@ -3695,6 +3703,7 @@ declare
 	v_row				record;
 begin
 	if p_only_on_node = -1 then
+	        perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
 	end if;
@@ -3705,6 +3714,7 @@ begin
 		end loop;
 		execute v_query;
 		execute 'drop table _slony1_saved_session_replication_role';
+		perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 	end if;
 	return NULL;
 end;
@@ -3790,6 +3800,7 @@ declare
 	v_row				record;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+	perform @NAMESPACE@.repair_log_triggers(true);
 	return p_set_id;
 end;
 $$ language plpgsql;
@@ -5803,3 +5814,72 @@ comment on function @NAMESPACE@.reshapeSubscription(int4,int4,int4) is
 subscription is being changed.  Slonik will invoke this method
 before the SUBSCRIBE_SET event propogates to the receiver
 so listen paths can be updated.';
+
+create or replace function @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) returns integer as $$
+begin
+	execute 'drop trigger "_@CLUSTERNAME@_logtrigger" on ' ||
+		p_fq_table_name	;
+		-- ----
+	execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
+			' after insert or update or delete on ' ||
+			p_fq_table_name 
+			|| ' for each row execute procedure @NAMESPACE@.logTrigger (' ||
+                               pg_catalog.quote_literal('_@CLUSTERNAME@') || ',' || 
+				pg_catalog.quote_literal(p_tab_id::text) || ',' || 
+				pg_catalog.quote_literal(p_tab_attkind) || ');';
+	return 0;
+end
+$$ language plpgsql;
+
+comment on function  @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) is
+'A function that drops and recreates the log trigger on the specified table.
+It is intended to be used after the primary_key/unique index has changed.';
+
+create or replace function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+returns integer as $$
+declare
+	retval integer;
+	table_row record;
+begin
+	retval=0;
+	for table_row in	
+		select  tab_nspname,tab_relname,
+				tab_idxname, tab_id, mode,
+				@NAMESPACE@.determineAttKindUnique(tab_nspname||
+					'.'||tab_relname,tab_idxname) as attkind
+		from
+				@NAMESPACE@.sl_table
+				left join 
+				pg_locks on (relation=tab_reloid and pid=pg_backend_pid()
+				and mode='AccessExclusiveLock')				
+				,pg_trigger
+		where tab_reloid=tgrelid and 
+		@NAMESPACE@.determineAttKindUnique(tab_nspname||'.'
+						||tab_relname,tab_idxname)
+			!=(@NAMESPACE@.decode_tgargs(tgargs))[2]
+			and tgname =  '_@CLUSTERNAME@'
+			|| '_logtrigger'
+		LOOP
+				if (only_locked=false) or table_row.mode='AccessExclusiveLock' then
+					 perform @NAMESPACE@.recreate_log_trigger
+					 		 (table_row.tab_nspname||'.'||table_row.tab_relname,
+							 table_row.tab_id,table_row.attkind);
+					retval=retval+1;
+				else 
+					 raise notice '%.% has an invalid configuration on the log trigger. This was not corrected because only_lock is true and the table is not locked.',
+					 table_row.tab_nspname,table_row.tab_relname;
+			
+				end if;
+		end loop;
+	return retval;
+end
+$$
+language plpgsql;
+comment on function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+is '
+repair the log triggers as required.  If only_locked is true then only 
+tables that are already exclusivly locked by the current transaction are 
+repaired. Otherwise all replicated tables with outdated trigger arguments
+are recreated.';
