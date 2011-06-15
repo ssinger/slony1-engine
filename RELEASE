@@ -1,31 +1,32 @@
-* 2.1.0 (beta 3)
+#+OPTIONS: ^:{}
+* Slony-I Release Notes
+** 2.1.0 (beta 3)
+- Bug #214 :: Add slonikconfdump.sh back into tools
 
-- Bug 214 - Add slonikconfdump.sh back into tools
-
+*** Some items without bug numbers:
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
+  
+** 2.1.0 (beta 2)
+- Bug #204 ::  Upgrade from 2.0.x fails under PostgreSQL 8.3
 
-* 2.1.0 (beta 2)
-- Bug #204 -  Upgrade from 2.0.x fails under PostgreSQL 8.3
+- Bug #205 :: Upgrade fails from 2.0.0, return type from cloneNode changes
 
-- Bug 205  - Upgrade fails from 2.0.0, return type from cloneNode changes
+- Bug #206 :: Do not perform an accidental rollback in a try block
 
-- Bug 206  - Do not perform an accidental rollback in a try block
+- Bug #208 :: Fixing issues with bulk adding of tables.
 
-- Bug 208  - Fixing issues with bulk adding of tables.
+- Bug #209 :: Default table ID problem
 
-- Bug 209  - Default table ID problem
-
-- Bug 210  - merge set should wait for both sets to be subscribed
+- Bug #210 :: merge set should wait for both sets to be subscribed
              before submitting the merge event.
 
-- Bug 211  - Modify the altperl tools so they don't enclose statements
+- Bug #211 :: Modify the altperl tools so they don't enclose statements
              that wait for events inside of a 'try' block.
 
-* 2.1.0 (beta 1)
+** 2.1.0 (beta 1)
 
-#+OPTIONS: ^:{}
-** Some items without bug numbers:
+*** Some items without bug numbers:
   - Introduced tests using the clustertest framework, consisting of two
     sets of tests:
     - clustertest/regression - port of the old tests in the tests directory
@@ -45,68 +46,68 @@
     - Numerous .gitignore files set up to ignore generated files
   - Add a resetSession function that will reset the session state
     cached in the C stored functions.
-** Changes from 2.0 branch that were also applied to HEAD: 
+*** Changes from 2.0 branch that were also applied to HEAD: 
   40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132, 136,
   138, 139, 141, 144, 147, 148, 149, 154, 162
 
-** Items tracked from Bugzilla
-- Bug #79 - --prefix and --exec-prefix options don't function as expected
+*** Items tracked from Bugzilla
+- Bug #79 :: --prefix and --exec-prefix options don't function as expected
 
-- Bug #90 -  Builds On Solaris with Sun C Studio fail. This also addresses
+- Bug #90 ::  Builds On Solaris with Sun C Studio fail. This also addresses
              issues building with Microsoft Visual Studio.
 
-- Bug #126 - TCP KEEP alives can now be used from slon to postgresql(on by default)
+- Bug #126 :: TCP KEEP alives can now be used from slon to postgresql(on by default)
 
-- Bug #134 - TRUNCATE trigger usage
+- Bug #134 :: TRUNCATE trigger usage
 
-- Bug #142 - better document minimal security profile
+- Bug #142 :: better document minimal security profile
 
-- Bug #146 - Removed option to use DELETE to trim sl_log_* tables - only support TRUNCATE
+- Bug #146 :: Removed option to use DELETE to trim sl_log_* tables - only support TRUNCATE
 
-- Bug #152 - eliminate debugging statements from DDL processing
+- Bug #152 :: eliminate debugging statements from DDL processing
 
-- Bug #156 - add health check at slon startup time
+- Bug #156 :: add health check at slon startup time
 
-- Bug #163 - change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
+- Bug #163 :: change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
 
-- Bug #167 - change queries against sl_log_* tables to avert slowdown when large backlog
+- Bug #167 :: change queries against sl_log_* tables to avert slowdown when large backlog
 
-- Bug #170 - remove SNMP support
+- Bug #170 :: remove SNMP support
 
-- Bug #172 - add support for application_name GUC (in recent PG such as 9.0)
+- Bug #172 :: add support for application_name GUC (in recent PG such as 9.0)
 
-- Bug #175 - add monitoring thread which stows activity information in sl_components
+- Bug #175 :: add monitoring thread which stows activity information in sl_components
 
-- Bug #179 - Implicit/Automatic wait for. Slonik will now often perform an automatic
+- Bug #179 :: Implicit/Automatic wait for. Slonik will now often perform an automatic
              'wait for event' when required to avoid race conditions.
 
-- Bug #180 - Created a slonik DATE command
+- Bug #180 :: Created a slonik DATE command
 
-- Bug #181 - Support for bulk adding of tables and sequences and automatically finding
+- Bug #181 :: Support for bulk adding of tables and sequences and automatically finding
   the next available table or sequence id.
              
-- Bug #185 - change functions to use named parameters
+- Bug #185 :: change functions to use named parameters
 
-- Bug #187 - add newline to slon PID files
+- Bug #187 :: add newline to slon PID files
 
-- Bug #188 - test harness query had subquery returning multiple tuples
+- Bug #188 :: test harness query had subquery returning multiple tuples
 
-- Bug #189 - add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
+- Bug #189 :: add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
 
-- Bug #193 - add back reset of vac_count so vacuums only done every few cleanup thread iterations
+- Bug #193 :: add back reset of vac_count so vacuums only done every few cleanup thread iterations
 
-- Bug #195 - change slon_quote_* functions to IMMUTABLE
+- Bug #195 :: change slon_quote_* functions to IMMUTABLE
 
-- Bug #196 - add guard lock on sl_event_lock to protect against events with XID going backwards
+- Bug #196 :: add guard lock on sl_event_lock to protect against events with XID going backwards
 
-- Bug #198 - subscribeset() should verify that provider node exists
+- Bug #198 :: subscribeset() should verify that provider node exists
 
-- Bug #201 - Allow command-line options to be configured from slon_tools.conf
+- Bug #201 :: Allow command-line options to be configured from slon_tools.conf
 
-- Bug #204 - Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
+- Bug #204 :: Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
 
-- Bug #206  - Do not perform an accidental rollback in a try block
+- Bug #206  :: Do not perform an accidental rollback in a try block
 
-* RELEASE 2.0.6
-- Fix for bug #162, typenameTypeId() changes signatures in 9.1
+** RELEASE 2.0.6
+- Bug #162 :: typenameTypeId() changes signatures in 9.1
 
