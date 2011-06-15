@@ -314,7 +314,7 @@ RELEASE 2.0.6
 
 -Fix for bug #154, previous fix did not work
 
-2.0.7
+2.0.7 
 
 -Fix for bug where slon was not properly detecting connection failures when
  receiving events from the remote listener. 
@@ -330,3 +330,10 @@ RELEASE 2.0.6
 
 - Bug # 214 - tools/slonikconfdump.sh was added back in
 
+Added post rc1
+
+- Bug #204 - Additional fixes for bug204 relating to circular entries in
+             sl_subscribe following a failover to a non-direct subscriber.
+
+- Bug #220 - Fix issue where changing the provider of an existing subscriber
+             passed parameters in the wrong order to the stored procedure.
