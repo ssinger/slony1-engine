@@ -622,7 +622,8 @@ db_get_version(PGconn *conn)
 		PQclear(res);
 		return -1;
 	}
-	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2)
+	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2 &&
+		sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch) < 2)
 	{
 		PQclear(res);
 		return -1;

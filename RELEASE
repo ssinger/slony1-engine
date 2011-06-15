@@ -1,14 +1,32 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 ** 2.1.0 (beta 3)
+
+- Bug #204 :: Additional fixes for failover to a non-direct subscriber
+              where circular paths in sl_subscribe could happen
+
 - Bug #214 :: Add slonikconfdump.sh back into tools
 
+- Bug #218 :: Obtain a lock on sl_config_lock before calling
+              storePath_int
+
+- Bug #220 :: Fix issue where changing the provider of an existing
+              subscriber passed parameters in the wrong order to the
+              stored procedure.
+
 *** Some items without bug numbers:
+
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
   
 ** 2.1.0 (beta 2)
-- Bug #204 ::  Upgrade from 2.0.x fails under PostgreSQL 8.3
+
+- Fix threading issue in monitor_thread where slon_init can be called
+  without the mutex being locked. This function was written to assume
+  the mutex lock exists.  
+
+- Bug #204 :: Upgrade from 2.0.x fails under PostgreSQL 8.3, fixing
+              issues with failover and non-direct subscribers
 
 - Bug #205 :: Upgrade fails from 2.0.0, return type from cloneNode changes
 
@@ -46,9 +64,11 @@
     - Numerous .gitignore files set up to ignore generated files
   - Add a resetSession function that will reset the session state
     cached in the C stored functions.
+
 *** Changes from 2.0 branch that were also applied to HEAD: 
-  40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132, 136,
-  138, 139, 141, 144, 147, 148, 149, 154, 162
+
+  Bugs 40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132,
+  136, 138, 139, 141, 144, 147, 148, 149, 154, 162
 
 *** Items tracked from Bugzilla
 - Bug #79 :: --prefix and --exec-prefix options don't function as expected
