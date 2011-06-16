@@ -2000,15 +2000,15 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-        else    /* above 8.4 */
-        {
-                use_major = 8;
-                use_minor = 3;
-                printf("%s:%d: Possible unsupported PostgreSQL "
-                       "version (%d) %d.%d, defaulting to 8.3 support\n",
+	else    /* above 8.4 */
+	{
+		use_major = 8;
+		use_minor = 4;
+		printf("%s:%d: Possible unsupported PostgreSQL "
+			   "version (%d) %d.%d, defaulting to 8.4 support\n",
 		       stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 		       (adminfo->pg_version/10000), ((adminfo->pg_version%10000)/100));
-        }
+	}
 
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
