@@ -8,3 +8,4 @@ _Slony_I_killBackend
 _Slony_I_seqtrack
 _Slony_I_logTrigger
 _Slony_I_resetSession
+_slon_decode_tgargs

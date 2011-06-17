@@ -203,6 +203,14 @@ schema/functions.';
 
 select @NAMESPACE@.checkmoduleversion();
 
+create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
+'$libdir/slony1_funcs','_slon_decode_tgargs' language C security definer;
+
+comment on function @NAMESPACE@.decode_tgargs(bytea) is 
+'Translates the contents of pg_trigger.tgargs to an array of text arguments';
+
+grant execute on function @NAMESPACE@.decode_tgargs(bytea) to public;
+
 -----------------------------------------------------------------------
 -- This function checks to see if the namespace name is valid.  
 --
@@ -3578,6 +3586,7 @@ declare
 	v_row				record;
 begin
 	if p_only_on_node = -1 then
+	        perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
 	end if;
@@ -3588,6 +3597,7 @@ begin
 		end loop;
 		execute v_query;
 		execute 'drop table _slony1_saved_session_replication_role';
+		perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 	end if;
 	return NULL;
 end;
@@ -3669,6 +3679,7 @@ declare
 	v_row				record;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+	perform @NAMESPACE@.repair_log_triggers(true);
 	return p_set_id;
 end;
 $$ language plpgsql;
@@ -5170,13 +5181,14 @@ BEGIN
 --                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
-            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' 
+			|| v_dummy.set_origin::text;
 	   -- raise notice 'Consider adding partial index % on sl_log_%', v_iname, v_log;
 	   -- raise notice 'schema: [_@CLUSTERNAME@] tablename:[sl_log_%]', v_log;
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = 'sl_log_' || v_log::text and  indexname = v_iname;
             if not found then
 		-- raise notice 'index was not found - add it!';
-        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin::text;
 		v_ilen := pg_catalog.length(v_iname);
 		v_maxlen := pg_catalog.current_setting('max_identifier_length'::text)::int4;
                 if v_ilen > v_maxlen then
@@ -5843,4 +5855,73 @@ language plpgsql;
 
 comment on function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) is
 'Store state of a Slony component.  Useful for monitoring';
+
+create or replace function @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) returns integer as $$
+begin
+	execute 'drop trigger "_@CLUSTERNAME@_logtrigger" on ' ||
+		p_fq_table_name	;
+		-- ----
+	execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
+			' after insert or update or delete on ' ||
+			p_fq_table_name 
+			|| ' for each row execute procedure @NAMESPACE@.logTrigger (' ||
+                               pg_catalog.quote_literal('_@CLUSTERNAME@') || ',' || 
+				pg_catalog.quote_literal(p_tab_id::text) || ',' || 
+				pg_catalog.quote_literal(p_tab_attkind) || ');';
+	return 0;
+end
+$$ language plpgsql;
+
+comment on function  @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) is
+'A function that drops and recreates the log trigger on the specified table.
+It is intended to be used after the primary_key/unique index has changed.';
+
+create or replace function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+returns integer as $$
+declare
+	retval integer;
+	table_row record;
+begin
+	retval=0;
+	for table_row in	
+		select  tab_nspname,tab_relname,
+				tab_idxname, tab_id, mode,
+				@NAMESPACE@.determineAttKindUnique(tab_nspname||
+					'.'||tab_relname,tab_idxname) as attkind
+		from
+				@NAMESPACE@.sl_table
+				left join 
+				pg_locks on (relation=tab_reloid and pid=pg_backend_pid()
+				and mode='AccessExclusiveLock')				
+				,pg_trigger
+		where tab_reloid=tgrelid and 
+		@NAMESPACE@.determineAttKindUnique(tab_nspname||'.'
+						||tab_relname,tab_idxname)
+			!=(@NAMESPACE@.decode_tgargs(tgargs))[2]
+			and tgname =  '_@CLUSTERNAME@'
+			|| '_logtrigger'
+		LOOP
+				if (only_locked=false) or table_row.mode='AccessExclusiveLock' then
+					 perform @NAMESPACE@.recreate_log_trigger
+					 		 (table_row.tab_nspname||'.'||table_row.tab_relname,
+							 table_row.tab_id,table_row.attkind);
+					retval=retval+1;
+				else 
+					 raise notice '%.% has an invalid configuration on the log trigger. This was not corrected because only_lock is true and the table is not locked.',
+					 table_row.tab_nspname,table_row.tab_relname;
+			
+				end if;
+		end loop;
+	return retval;
+end
+$$
+language plpgsql;
+comment on function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+is '
+repair the log triggers as required.  If only_locked is true then only 
+tables that are already exclusivly locked by the current transaction are 
+repaired. Otherwise all replicated tables with outdated trigger arguments
+are recreated.';
 

@@ -73,33 +73,79 @@ deleting columns) is also running.</para></listitem>
 
 <sect2>
 <title>Applying DDL Changes Directly</title>
-<para>DDL changes can be applied directly on a node through an 
-application such as psql.  The DDL changes will not be replicated by &slony1;
-and therefore must be manually applied to every relevant node.
-The following points should be kept in mind when applying DDL changes
-directly.
+
+
+<para>DDL changes can be applied directly on a node through an
+application such as <command>psql</command>.  The DDL changes will not
+be replicated by &slony1; and therefore must be manually applied to
+every relevant node.  The following points should be kept in mind when
+applying DDL changes directly.
 
 <itemizedlist>
-<listitem><para>While DDL changes are not replicated any  
-INSERT,UPDATE,DELETE statements that you execute will be replicated.
-This means that you should put DDL changes inside of the same script
-as DML commands because the script will then not behave properly when
-you execute it on other nodes</para></listitem>
+
+<listitem><para>While DDL changes are not automatically replicated,
+any <command>INSERT,UPDATE,DELETE</command> statements that you
+execute will be captured for replication, when run against the origin
+node.  This means that you should not include DDL changes and DML
+inside the same script when apply DDL directly, because the script
+will not behave properly when you execute it on other nodes.</para>
+
+<para> If you, instead, apply DDL using <command>EXECUTE
+SCRIPT</command>, it is fine to intersperse DDL and DML within the
+script, as &slony1; handles that appropriately.</para>
+
+</listitem>
 
 <listitem><para>You are responsible for ensuring that your scripts get
-applied on all other nodes at the correct point during the replication
-stream.  The best way of doing this with respect to adding and deleting
-columns is to make sure that new columns always get added on the
-replica nodes first and that columns being removed get dropped from the
-master before they are dropped from the replicas.</para></listitem>
+applied on all other nodes at the correct point in the replication
+stream (<emphasis>e.g.</emphasis> - on or before the appropriate SYNC
+event).  The best way of doing this with respect to adding and
+deleting columns is to make sure that new columns always get added on
+the replica nodes first and that columns being removed are dropped
+from the master before they are dropped from the replicas.  That way,
+new columns are always available on the subscriber on or before the
+time they will be needed, and obsolete ones remain on the subscriber
+until after the last possible reference to them has been
+replicated.</para>
+
+<warning><para> If columns being added or dropped are mandatory (NOT
+NULL) or have default values, you will need to go through a longer
+process to ensure constraints are satisfied at each point in time on
+all nodes.</para>
+
+<para> For instance, if dropping a column that has a NOT NULL
+constraint, it may take multiple ALTER TABLE statements on each node
+in order to successfully accomplish this, as the constraint needs to
+be relaxed first.</para>
+
+</warning></listitem>
 
 <listitem><para>DDL changes that rename a replicated table do not
 inform &slony1; of the new table name.  If you change then name of
 a replicated table you must allow &slony1; to find the new table name
-by calling <xref linkend="function.updaterelname-p-only-on-node-integer-p-set-id-integer"/>
+by calling <xref linkend="function.updaterelname-p-only-on-node-integer-p-set-id-integer">
 </para>
-</sect2>
+</listitem>
 
+<listitem>
+<para>DDL changes that alter either a primary key, a unique constraint
+that slony is using, or DDL changes that drop columns that come before
+the key or unique constraint that &slony1; is using will require
+&slony1; too reconfigure the arguments on the logtrigger. The function
+<xref linkend="function.repair-log-triggers-only-locked-boolean"> will
+reconfigure the trigger arguments of any &slony1; log triggers that
+are out of date.  If <option>true</option> is passed to this function
+it will only adjust tables that are already locked by the current
+transaction (if you perform your <command>alter table</command> within
+a transaction and then call <function>repair_log_triggers()</function>
+as part of the same transaction then the altered tables will be
+locked).  If you pass <option>false</option> to this function then the
+function will obtain an exclusive lock on any table that needs the
+trigger to be reconfigured.
+</para>
+</listitem>
+
+</itemizedlist>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
