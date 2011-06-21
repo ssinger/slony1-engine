@@ -71,7 +71,6 @@ endif
 
 clean distclean:
 	rm -f $(ALL) $(OBJS) $(PROG).core
-	rm -f parser.c scan.c y.tab.h
 
 maintainer-clean:	clean
 	rm -f parser.c scan.c y.tab.h

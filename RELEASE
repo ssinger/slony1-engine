@@ -2,6 +2,8 @@
 * Slony-I Release Notes
 ** 2.1.0 (beta 3)
 
+-Fix for bug #159, distclean deletes the slony_logshipper flex/bison generated files.
+
 - Bug #204 :: Additional fixes for failover to a non-direct subscriber
               where circular paths in sl_subscribe could happen
 
@@ -136,4 +138,5 @@
 
 ** RELEASE 2.0.6
 - Bug #162 :: typenameTypeId() changes signatures in 9.1
+
 
