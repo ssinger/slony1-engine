@@ -89,7 +89,7 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 
 #define PLAN_NONE			0
 #define PLAN_INSERT_EVENT	(1 << 1)
-#define PLAN_INSERT_LOG		(1 << 2)
+#define PLAN_INSERT_LOG_STATUS (1 << 2)
 
 
 /* ----
@@ -130,7 +130,8 @@ getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
 static const char *slon_quote_identifier(const char *ident);
 static char *slon_quote_literal(char *str);
-
+static int prepareLogPlan(Slony_I_ClusterStatus * cs,
+					   int log_status);
 
 Datum
 _Slony_I_createEvent(PG_FUNCTION_ARGS)
@@ -334,7 +335,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	 * Get or create the cluster status information and make sure it has the
 	 * SPI plans that we need here.
 	 */
-	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
+	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG_STATUS);
 
 	/*
 	 * Do the following only once per transaction.
@@ -355,7 +356,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		log_status = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
 											SPI_tuptable->tupdesc, 1, &isnull));
 		SPI_freetuptable(SPI_tuptable);
-
+		prepareLogPlan(cs,log_status);
 		switch (log_status)
 		{
 			case 0:
@@ -375,6 +376,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 
 		cs->currentXid = newXid;
 	}
+
 
 	/*
 	 * Determine cmdtype and cmddata depending on the command type
@@ -1329,42 +1331,11 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	}
 
 	/*
-	 * Prepare and save the PLAN_INSERT_LOG
+	 * Prepare and save the PLAN_INSERT_LOG_STATUS
 	 */
-	if ((need_plan_mask & PLAN_INSERT_LOG) != 0 &&
-		(cs->have_plan & PLAN_INSERT_LOG) == 0)
+	if ((need_plan_mask & PLAN_INSERT_LOG_STATUS) != 0 &&
+		(cs->have_plan & PLAN_INSERT_LOG_STATUS) == 0)
 	{
-		/*
-		 * Create the saved plan's
-		 */
-		sprintf(query, "INSERT INTO %s.sl_log_1 "
-				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
-				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = INT4OID;
-		plan_types[1] = TEXTOID;
-		plan_types[2] = TEXTOID;
-
-		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
-		if (cs->plan_insert_log_1 == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed");
-
-		sprintf(query, "INSERT INTO %s.sl_log_2 "
-				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
-				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = INT4OID;
-		plan_types[1] = TEXTOID;
-		plan_types[2] = TEXTOID;
-
-		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
-		if (cs->plan_insert_log_2 == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed");
-
 		/* @-nullderef@ */
 
 		/*
@@ -1391,13 +1362,66 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->cmddata_size = 8192;
 		cs->cmddata_buf = (text *) malloc(8192);
 
-		cs->have_plan |= PLAN_INSERT_LOG;
+		cs->have_plan |= PLAN_INSERT_LOG_STATUS;
 	}
 
 	return cs;
 	/* @+nullderef@ */
 }
 
+/**
+ * prepare the plan for the curren sl_log_x insert query.
+ *
+ */
+int prepareLogPlan(Slony_I_ClusterStatus * cs,
+				int log_status)
+{
+	char		query[1024];
+	Oid			plan_types[9];
+
+	if( (log_status==0 ||
+		 log_status==2) &&
+		cs->plan_insert_log_1==NULL)
+	{
+
+		/*
+		 * Create the saved plan's
+		 */
+		sprintf(query, "INSERT INTO %s.sl_log_1 "
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
+		plan_types[2] = TEXTOID;
+
+		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		if (cs->plan_insert_log_1 == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+	}
+	else if ( (log_status==1 ||
+			   log_status==3) &&
+			  cs->plan_insert_log_2==NULL)
+	{
+		sprintf(query, "INSERT INTO %s.sl_log_2 "
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
+		plan_types[2] = TEXTOID;
+
+		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		if (cs->plan_insert_log_2 == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+	}
+
+	return 0;
+}
 /* Provide a way to reset the per-session data structure that stores
    the cluster status in the C functions. 
 
