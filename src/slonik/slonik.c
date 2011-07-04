@@ -3207,6 +3207,14 @@ slonik_uninstall_node(SlonikStmt_uninstall_node * stmt)
 		dstring_free(&query);
 		return -1;
 	}
+	
+	/**
+	 * if we have a conninfo for the node being uninstalled
+	 * we want to clear out the last seqid.
+	 */
+	if(adminfo1 != NULL) {
+	  adminfo1->last_event=-1;
+	}
 
 	db_disconnect((SlonikStmt *) stmt, adminfo1);
 

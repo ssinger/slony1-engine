@@ -23,7 +23,11 @@
               subscriber passed parameters in the wrong order to the
               stored procedure.
 
-- Bug #220 :: altperl code misspelled "PKEYDTABLES"
+- Bug #223 :: Clear out the last saved event number when uninstalling
+              a node.  This prevents slonik from waiting for a node it just
+              uninstalled.
+
+- Bug #224 :: altperl code misspelled "PKEYDTABLES"
 
 *** Some items without bug numbers:
 
