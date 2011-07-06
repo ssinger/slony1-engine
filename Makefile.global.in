@@ -27,6 +27,7 @@ slonbindir=		@SLONBINDIR@
 distdir=		@SLONYPATH@/@PACKAGE_NAME@-@PACKAGE_VERSION@
 prefix=			@prefix@
 sysconfdir=		@sysconfdir@
+datarootdir=		@datarootdir@
 
 host_os= 		@HOST_OS@
 host_cpu=		@host_cpu@

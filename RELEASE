@@ -341,4 +341,8 @@ Added post rc1
 - Bug #220 - Fix issue where changing the provider of an existing subscriber
              passed parameters in the wrong order to the stored procedure.
 
+Added post rc2
+
+- datarootdir warning from autoconf fixed. 
+
 - Bug #220 - Altperl script needed to reference PKEYEDTABLES
