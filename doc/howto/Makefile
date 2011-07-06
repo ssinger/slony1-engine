@@ -32,4 +32,4 @@ ifdef docdir
 	done
 endif
 
-clean:
+clean distclean:

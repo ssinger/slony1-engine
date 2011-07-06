@@ -1,0 +1,528 @@
+
+
+
+
+
+
+            +----------------------------------------------------------+
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |Slon.eps                                                  |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            +----------------------------------------------------------+
+
+
+
+                                      [1mSlony-I[0m
+                        [1mA replication system for PostgreSQL[0m
+
+                               -[1mI[22m-[1mm[22m-[1mp[22m-[1ml[22m-[1me[22m-[1mm[22m-[1me[22m-[1mn[22m-[1mt[22m-[1ma[22m-[1mt[22m-[1mi[22m-[1mo[22m-[1mn[22m--[1md[22m-[1me[22m-[1mt[22m-[1ma[22m-[1mi[22m-[1ml[22m-[1ms[22m-
+
+
+                                     [4mJan[24m [4mWieck[0m
+                                  Afilias USA INC.
+                             Horsham, Pennsylvania, USA
+
+
+                                      [4mABSTRACT[0m
+
+                      This  document  describes several implementa-
+                 tion details of the Slony-I replication engine and
+                 related components.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Slony-I                      -i-            Working document
+
+
+
+                                 [1mTable of Contents[0m
+
+
+            1. Control data  . . . . . . . . . . . . . . . . . . . .   1
+            1.1. Table sl_node . . . . . . . . . . . . . . . . . . .   1
+            1.2. Table sl_path . . . . . . . . . . . . . . . . . . .   2
+            1.3. Table sl_listen . . . . . . . . . . . . . . . . . .   2
+            1.4. Table sl_set  . . . . . . . . . . . . . . . . . . .   2
+            1.5. Table sl_table  . . . . . . . . . . . . . . . . . .   2
+            1.6. Table sl_subscribe  . . . . . . . . . . . . . . . .   2
+            1.7. Table sl_event  . . . . . . . . . . . . . . . . . .   2
+            1.8. Table sl_confirm  . . . . . . . . . . . . . . . . .   3
+            1.9. Table sl_setsync  . . . . . . . . . . . . . . . . .   3
+            1.10. Table sl_log_1 . . . . . . . . . . . . . . . . . .   3
+            1.11. Table sl_log_2 . . . . . . . . . . . . . . . . . .   3
+            2. Replication Engine Architecture . . . . . . . . . . .   5
+            2.1. Sync Thread . . . . . . . . . . . . . . . . . . . .   5
+            2.2. Cleanup Thread  . . . . . . . . . . . . . . . . . .   5
+            2.3. Local Listen Thread . . . . . . . . . . . . . . . .   5
+            2.4. Remote Listen Threads . . . . . . . . . . . . . . .   6
+            2.5. Remote Worker Threads . . . . . . . . . . . . . . .   6
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Slony-I                      -1-            Working document
+
+
+            [1m1.  Control data[0m
+
+
+            [40m    [0m+---------------------------------------------------+
+                |             [40m+------------+                        [0m|
+                |   [40m+-------+ | +-------+  |+-------+               [0m|
+                | [40m+-+-[1ms[22m-[1ml[22m-[1m_[22m-[1ml[22m-[1mi[22m-[1ms[22m-[1mt[22m+[1men[22m|++-[1ms[22m-[1ml[22m-[1m_[22m-[1mp[22m-[1ma[22m-[1mt[22m-[1mh[22m+-+|+-[1ms[22m-[1ml[22m-[1m_[22m-[1ms[22m-[1mu[22m-[1mb[22m-[1ms[22m+[1mc[22m-[1mr[22m+[1mibe           [22m[0m|
+                | [40m| +-ll-ii-__-oPpP-rKrK-i1o2-gv+ii+nd+e+r+-pp-aa-__-sPcP-eKlK-r1i2-ve+en-rt+++-ss-uu-bb-_P_-sKp-e2r-to+vi|der           [0m|
+                | [40m| +-l-i-_-rP-eK-c3-e+i+v+er+-p-a-_-c-o-n-n+in|f+o+-s-u-b-_P-rK-e1-c+ei|ver           [0m|
+                | [40m+-+-------+-+ +-p-a-_-c-o-n-n+re|tr+y-s-u-b-_-f-o-r+wa|rd            [0m|
+                |             [40m| +-------+ | +-s-u-b-_-a-c-t+iv|e             [0m|
+                |             [40m|           |           |             [0m|
+                |   [40m+-------+ | [0m+-------+ [40m| [0m+-------+ [40m| +-------+   [0m|
+                |   [40m+-[1ms[22me-[1ml[22mv-[1m_[22m_-[1me[22moP-[1mv[22mrK-[1me[22mi1-[1mn[22mg+[1mt[22mi-n++[0m+-[1ms[22mn-[1ml[22mo-[1m_[22m_-[1mn[22mi-[1mo[22mdP-[1md[22mK-[1me[22m+[40m++ [0m+-[1ms[22ms-[1ml[22me-[1m_[22mt-[1ms[22m_-[1me[22miP-[1mt[22mdK-+[40m++ +-[1ms[22mt-[1ml[22ma-[1m_[22mb-[1mt[22m_-[1ma[22miP-[1mb[22mdK-[1ml[22m+[1me   [22m[0m|
+                |   [40m+-e-v-_-sP-eK-q2-n+o   [0m+-n-o-_-a-c-t-i+ve[40m+-[0m+-s-e-t-_-o-r-i+gi[40m|[0mn [40m+-t-a-b-_-r-e-l+oid [0m|
+                |   [40m+-e-v-_-t-i-m-e+stam[0m+[40mp[0m-n-o-_-c-o-m-m+en[40m|[0mt +-s-e-t-_-c-o-m+me[40m+[0mn[40m-[0mt[40m+-t-a-b-_-s-e-t+   [0m|
+                |   [40m+-e-v-_-m-i-n-x+id  [0m+-------+ [40m| [0m+-------+ [40m| +-t-a-b-_-a-t-t+kind[0m|
+                |   [40m+-e-v-_-m-a-x-x+id            |           | +-t-a-b-_-c-o-m+ment[0m|
+                |   [40m+-e-v-_-x-i-p-+   +-------+ | +-------+ |             [0m|
+                |   [40m+-e-v-_-t-y-p-e+   +-[1ms[22mc-[1ml[22mo-[1m_[22mn-[1mc[22m_-[1mo[22mo-[1mn[22mr-[1mf[22mi+[1mi[22mg-[1mr[22mi+[1mm[22mn +-[1ms[22ms-[1ml[22ms-[1m_[22my-[1ms[22m_-[1me[22msP-[1mt[22meK-[1ms[22mt+[1my[22mi-[1mn[22md+[1mc             [22m[0m|
+                |   [40m+-e-v-_-d-a-t-a+1   +-c-o-n-_-r-e-c+e-i+v-e+d-s-s-y-_-o-r-i+gin +-------+   [0m|
+                |   [40m+-e-v-_-d-a-t-a+2   +-c-o-n-_-s-e-q+no  +-s-s-y-_-s-e-q+no  +-[1ms[22m-[1ml[22m-[1m_[22m-[1ml[22m-[1mo[22m-[1mg[22m-[1m_[22m+[1m[1|2[22m[0m|[1m[40m][0m
+                |   [40m+-ee-vv-__-dd-aa-tt-aa+34   +-c-o-n-_-t-i-m+esta+m-sp-s-y-_-m-i-n+xid +-ss-ll-__-ox-ri-id-g+in  [0m|
+                |   [40m+-e-v-_-d-a-t-a+5               +-s-s-y-_-m-a-x+xid +-s-l-_-t-a-b-l+eid [0m|
+                |   [40m+-e-v-_-d-a-t-a+6               +-s-s-y-_-x-i-p+   +-s-l-_-a-c-t-i+onse[0m|[40mq[0m
+                |   [40m+-e-v-_-d-a-t-a+7               +-s-s-y-_-a-c-t+ion_+l-is-sl-t_-c-m-d-t+ype [0m|
+                |   [40m+-e-v-_-d-a-t-a+8                           +-s-l-_-c-m-d-d+ata [0m|
+                |                                                   |
+                +---------------------------------------------------+
+                                      Figure 1
+
+                 [40mFigure  1  shows the Entity Relationship Diagram of the[0m
+            [40mSlony-I configuration and runtime data. Although Slony-I  is[0m
+            [40ma  master slave replication technology, the nodes building a[0m
+            [40mcluster do not have any particular role. All  nodes  contain[0m
+            [40mthe  same configuration data and are running the same repli-[0m
+            [40mcation engine process. At any given time,  a  collection  of[0m
+            [40mtables,  called  set, has one node as its origin. The origin[0m
+            [40mof a table is the only node that permits updates by  regular[0m
+            [40mclient  applications.  The fact that all nodes are function-[0m
+            [40mally identical and share the entire configuration data makes[0m
+            [40mfailover  and  failback  a  lot easier.  All the objects are[0m
+            [40mkept in a separate namespace based on the cluster name.[0m
+
+            [1m[40m1.1.  Table sl_node[0m
+
+                 [40mLists all  nodes  that  belong  to  the  cluster.   The[0m
+            [40mattribute  no_active  is  NOT  intended  for  any short term[0m
+            [40menable/disable games with the node in question. The  transi-[0m
+            [40mtion from disable to enable of a node requires full synchro-[0m
+            [40mnization with the cluster, resulting possibly in a full  set[0m
+            [40mcopy operation.[0m
+
+
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -2-            Working document
+
+
+            [40m[1m1.2.  Table sl_path[0m
+
+                 [40mDefines  the  connection information that the pa_client[0m
+            [40mnode would use to connect to pa_server node, and  the  retry[0m
+            [40minterval in seconds if the connection attempt fails. Not all[0m
+            [40mnodes need to be able to connect to each other.  But  it  is[0m
+            [40mgood practice to define all possible connections so that the[0m
+            [40mconfiguration is in  place  for  an  eventual  failover.  An[0m
+            [40msl_path  entry alone does not actually cause a connection to[0m
+            [40mbe established. This requires sl_listen and/or  sl_subscribe[0m
+            [40mentries as well.[0m
+
+            [1m[40m1.3.  Table sl_listen[0m
+
+                 [40mSpecifies  that  the  li_receiver  node will select and[0m
+            [40mprocess events originating on li_origin  over  the  database[0m
+            [40mconnection to the node li_provider. In a normal master slave[0m
+            [40mscenario with a  classical  hierarchy,  events  will  travel[0m
+            [40malong  the same paths as the replication data. But scenarios[0m
+            [40mwhere multiple sets originate on different nodes can make it[0m
+            [40mnecessary to distribute events more redundant.[0m
+
+            [1m[40m1.4.  Table sl_set[0m
+
+                 [40mA  set  is  a  collection  of tables and sequences that[0m
+            [40moriginate on one node and is the smallest unit that  can  be[0m
+            [40msubscribed to by any other node in the cluster.[0m
+
+            [1m[40m1.5.  Table sl_table[0m
+
+                 [40mLists  the  tables  and their set relationship. It also[0m
+            [40mspecifies the attribute kinds of  the  table,  used  by  the[0m
+            [40mreplication  trigger to construct the update information for[0m
+            [40mthe log data.[0m
+
+            [1m[40m1.6.  Table sl_subscribe[0m
+
+                 [40mSpecifies what nodes are subscribed to what  data  sets[0m
+            [40mand  where  they  actually get the log data from. A node can[0m
+            [40mreceive the data from the set origin or any other node  that[0m
+            [40mis subscribed with forwarding (cascading).[0m
+
+            [1m[40m1.7.  Table sl_event[0m
+
+                 [40mThis is the message passing table. A node generating an[0m
+            [40mevent (configuration change or data sync event) is inserting[0m
+            [40ma  new  row  into this table and does Notify all other nodes[0m
+            [40mlistening for events.  A remote node  listening  for  events[0m
+            [40mwill  then select these records, change the local configura-[0m
+            [40mtion or replicate data, store the sl_event row in  its  own,[0m
+            [40mlocal  sl_event  table and Notify there. This way, the event[0m
+            [40mcascades through the whole cluster.  For  SYNC  events,  the[0m
+            [40mcolumns ev_minxid, ev_maxxid and ev_xip contain the transac-[0m
+            [40mtions serializable snapshot information. This  is  the  same[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -3-            Working document
+
+
+            [40minformation used by MVCC in PostgreSQL, to tell if a partic-[0m
+            [40mular change is already visible to the transaction or consid-[0m
+            [40mered  to be in the future.  Data is replicated in Slony-I as[0m
+            [40msingle operations on the row level,  but  grouped  into  one[0m
+            [40mtransaction containing all the changes that happened between[0m
+            [40mtwo SYNC events. Applying  the  last  and  the  actual  SYNC[0m
+            [40mevents  transaction  information according to the MVCC visi-[0m
+            [40mbility rules is the filter mechanism that does  this  group-[0m
+            [40ming.[0m
+
+            [1m[40m1.8.  Table sl_confirm[0m
+
+                 [40mEvery  event  processed  by a node is confirmed in this[0m
+            [40mtable. The confirmations cascade through the system  similar[0m
+            [40mto  the events.  The local cleanup thread of the replication[0m
+            [40mengine periodically  condenses  this  information  and  then[0m
+            [40mremoves  all entries in sl_event that have been confirmed by[0m
+            [40mall nodes.[0m
+
+            [1m[40m1.9.  Table sl_setsync[0m
+
+                 [40mThis table tells for the actual node only what the cur-[0m
+            [40mrent  local  sync situation of every subscribed data set is.[0m
+            [40mThis status information is not duplicated to other nodes  in[0m
+            [40mthe system.  This information is used for two purposes. Dur-[0m
+            [40ming replication the node uses the  transaction  snapshot  to[0m
+            [40midentify  the log rows that have not been visible during the[0m
+            [40mlast replication cycle. When a node does  the  initial  data[0m
+            [40mcopy  of a newly subscribed to data set, it uses this infor-[0m
+            [40mmation to know and/or remember what sync  points  and  addi-[0m
+            [40mtional  log  data  is  already contained in this actual data[0m
+            [40msnapshot.[0m
+
+            [1m[40m1.10.  Table sl_log_1[0m
+
+                 [40mThe table containing  the  actual  row  level  changes,[0m
+            [40mlogged  by  the  replication trigger. The data is frequently[0m
+            [40mremoved by the cleanup thread after all nodes have confirmed[0m
+            [40mthe corresponding events.[0m
+
+            [1m[40m1.11.  Table sl_log_2[0m
+
+                 [40mThe  system  has  the  ability  to  switch  between the[0m
+            [40msl_log_1 and this table. Under normal  circumstances  it  is[0m
+            [40mbetter to keep the system using the same log table, with the[0m
+            [40mcleanup thread deleting old log information and using vacuum[0m
+            [40mto  add  the  free'd space to the freespace map.  PostgreSQL[0m
+            [40mcan use multiple blocks found in the freespace map to  actu-[0m
+            [40mally  better  parallelize  insert operations in high concur-[0m
+            [40mrency.  In the case nodes have been offline or fallen behind[0m
+            [40mvery far by other means, log data collecting up in the table[0m
+            [40mmight have increased its size  significantly.  There  is  no[0m
+            [40mother way than running a full vacuum to reclaim the space in[0m
+            [40msuch a case, but this would cause an  exclusive  table  lock[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -4-            Working document
+
+
+            [40mand  effectively  stop  the  application. To avoid this, the[0m
+            [40msystem can be switched to the other log table in this  case,[0m
+            [40mand  after  the  old log table is logically empty, it can be[0m
+            [40mtruncated.[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -5-            Working document
+
+
+            [40m[1m2.  Replication Engine Architecture[0m
+
+
+            [47m[40m    +---------------------------------------------------+[0m
+                [40m|                   [47m+-----------+                   [40m|[0m
+                [40m|         -+--S-Y-N-C---[47m+S-y-n-c--T-h-r-e-a-d-+                   [40m|[0m
+                [40m|                                                   |[0m
+                [40m|         -+--------C+l-e-a-n-u-p--T-h-r-e-a+d                   |[0m
+                [40m|          CleanUp  +-----------+                   |[0m
+                [40m| [47m|     [40mNo[47m|[40mtify, Even+t-----------+         [47m|       | [40m|[0m
+                [40m| [47m|       +[40m+C-o-n-f-i-r-m-++L-o-c-a-l--L-i-s-t-e-n+         [47m|       | [40m|[0m
+                [40m| [47m|       |         [40m+-----------+         [47m|       | [40m|[0m
+                [40m| [47m|Local  |        [40mR|emote Listen|         [47m|Remote | [40m|[0m
+                [40m| [47m|  DB   |         [40m|1 thread peNro+t+i-f-y-,--E-v-e-n[47m+[40mt  [47mDB   | [40m|[0m
+                [40m| [47m|       |   [40mEvente+v-e-n-t--p-r-o-v-i-d-e+r         [47m|       | [40m|[0m
+                [40m|                                                   |[0m
+                [40m|                  R+e-m-o-t-e--W-o-r-k-e-r+                   |[0m
+                [40m|         -+-------++1 thread per++--D-a-t-a--+-         |[0m
+                [40m|    Event, Data, Co|rnefmiortme node |Confirm            |[0m
+                [40m|                   +-----------+                   |[0m
+                [40m+----------------------F-i-g-u-r-e--2----------------------+[0m
+
+
+                 [40mFigure 2 illustrates the  thread  architecture  of  the[0m
+            [40mSlony-I  replication engine. It is important to keep in mind[0m
+            [40mthat there is no predefined role for any of the nodes  in  a[0m
+            [40mSlony-I  cluster.   Thus,  this  engine  is running once per[0m
+            [40mdatabase that is a node of any cluster and all  the  engines[0m
+            [40mtogether build "one distributed replication system".[0m
+
+            [1m[40m2.1.  Sync Thread[0m
+
+                 [40mThe  Sync  Thread maintains one connection to the local[0m
+            [40mdatabase.  In a  configurable  interval  it  checks  if  the[0m
+            [40maction  sequence has been modified which indicates that some[0m
+            [40mreplicable database activity has happened. It then generates[0m
+            [40ma  SYNC event by calling CreateEvent().  There are no inter-[0m
+            [40mactions with other threads.[0m
+
+            [1m[40m2.2.  Cleanup Thread[0m
+
+                 [40mThe Cleanup Thread  maintains  one  connection  to  the[0m
+            [40mlocal  database.   In  a  configurable interval it calls the[0m
+            [40mCleanup() stored procedure that  will  remove  old  confirm,[0m
+            [40mevent  and log data. In another interval it vacuums the con-[0m
+            [40mfirm, event and log tables. There are no  interactions  with[0m
+            [40mother threads.[0m
+
+            [1m[40m2.3.  Local Listen Thread[0m
+
+                 [40mThe Local Listen Thread maintains one connection to the[0m
+            [40mlocal database.  It waits for "Event" notification and scans[0m
+            [40mfor  events that originate at the local node. When receiving[0m
+            [40mnew configuration events, caused by administrative  programs[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -6-            Working document
+
+
+            [40mcalling the stored procedures to change the cluster configu-[0m
+            [40mration, it will modify the in-memory  configuration  of  the[0m
+            [40mreplication engine accordingly.[0m
+
+            [1m[40m2.4.  Remote Listen Threads[0m
+
+                 [40mThere  is one Remote Listen Thread per remote node, the[0m
+            [40mlocal node receives events from (event provider). Regardless[0m
+            [40mof  the  number of nodes in the cluster, a typical leaf node[0m
+            [40mwill only have one Remote Listen Thread  since  it  receives[0m
+            [40mevents from all origins through the same provider.  A Remote[0m
+            [40mListen Thread maintains one database connection to its event[0m
+            [40mprovider. Upon receiving notifications for events or confir-[0m
+            [40mmations, it selects the new information from the  respective[0m
+            [40mtables  and  feeds them into the respective internal message[0m
+            [40mqueues for the worker threads.  The engine starts one remote[0m
+            [40mnode  specific  worker  thread  (see below) per remote node.[0m
+            [40mMessages are forwarded on an internal message queue to  this[0m
+            [40mnode specific worker for processing and confirmation.[0m
+
+            [1m[40m2.5.  Remote Worker Threads[0m
+
+                 [40mThere  is  one Remote Worker Thread per remote node.  A[0m
+            [40mremote worker thread maintains one local database connection[0m
+            [40mto  do  the  actual  replication data application, the event[0m
+            [40mstoring and confirmation.   Every  Set  originating  on  the[0m
+            [40mremote  node  the  worker is handling, has one data provider[0m
+            [40m(which can but must not be identical to the event provider).[0m
+            [40mPer  distinct  data  provider  over  these  sets, the worker[0m
+            [40mthread maintains one  database  connection  to  perform  the[0m
+            [40mactual  replication  data selection.  A remote worker thread[0m
+            [40mwaits on its internal message queue for events forwarded  by[0m
+            [40mthe remote listen thread(s). It then processes these events,[0m
+            [40mincluding data selection and application, and  confirmation.[0m
+            [40mThis  also  includes maintaining the engines in- memory con-[0m
+            [40mfiguration information.[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
