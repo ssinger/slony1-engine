@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <stdarg.h>
 
+
 #include "types.h"
 #include "libpq-fe.h"
 #include "slonik.h"
@@ -1551,15 +1552,13 @@ static void
 script_commit_all(SlonikStmt * stmt, SlonikScript * script)
 {
 	SlonikAdmInfo *adminfo;
-	int			error = 0;
 
 	for (adminfo = script->adminfo_list;
 		 adminfo; adminfo = adminfo->next)
 	{
 		if (adminfo->dbconn != NULL && adminfo->have_xact)
 		{
-			if (db_commit_xact(stmt, adminfo) < 0)
-				error = 1;
+		  db_commit_xact(stmt, adminfo);
 		}
 		else
 		{
@@ -1768,17 +1767,14 @@ static int
 load_slony_base(SlonikStmt * stmt, int no_id)
 {
 	SlonikAdmInfo *adminfo;
-	PGconn	   *dbconn;
-	SlonDString query;
 	int			rc;
+	SlonDString query;
 
 	int			use_major = 0;
 	int			use_minor = 0;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
-
-	dbconn = adminfo->dbconn;
 
 	rc = db_check_namespace(stmt, adminfo, stmt->script->clustername);
 	if (rc > 0)
@@ -1878,7 +1874,7 @@ static int
 load_slony_functions(SlonikStmt * stmt, int no_id)
 {
 	SlonikAdmInfo *adminfo;
-	PGconn	   *dbconn;
+	
 
 	int			use_major = 0;
 	int			use_minor = 0;
@@ -1886,7 +1882,6 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
 
-	dbconn = adminfo->dbconn;
 
         /* determine what schema version we should load */
 
@@ -2826,12 +2821,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	for (i = 0; i < num_sets; i++)
 	{
 		int			use_node;
-		SlonikAdmInfo *use_adminfo;
 
 		if (setinfo[i].num_directsub <= 1)
 		{
 			use_node = stmt->backup_node;
-			use_adminfo = adminfo1;
 		}
 		else if (setinfo[i].max_node == NULL)
 		{
@@ -2839,7 +2832,6 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				   setinfo[i].set_id);
 			rc = -1;
 			use_node = stmt->backup_node;
-			use_adminfo = adminfo1;
 		}
 		else
 		{
@@ -2848,7 +2840,6 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				   setinfo[i].set_id,
 				   setinfo[i].max_seqno);
 			use_node = setinfo[i].max_node->no_id;
-			use_adminfo = setinfo[i].max_node->adminfo;
 
 			setinfo[i].max_node->num_sets++;
 		}

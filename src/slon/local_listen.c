@@ -316,11 +316,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 * CLONE_NODE
 				 */
 				int			no_id;
-				int			no_provider;
 				char	   *no_comment;
 
 				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				no_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 				no_comment = PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeNode(no_id, no_comment);
@@ -424,10 +422,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				/*
 				 * MERGE_SET
 				 */
-				int			set_id;
 				int			add_id;
 
-				set_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 				add_id = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 
 				rtcfg_dropSet(add_id);

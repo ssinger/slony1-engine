@@ -138,7 +138,6 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	char	   *ev_type_c;
 	Datum		argv[9];
 	char		nulls[10];
-	char	   *buf;
 	size_t		buf_size;
 	int			rc;
 	int			i;
@@ -164,7 +163,6 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 						  PLAN_INSERT_EVENT);
 
 	buf_size = 8192;
-	buf = palloc(buf_size);
 
 	/*
 	 * Do the following only once per transaction.
@@ -1021,7 +1019,7 @@ slon_quote_literal(char *str)
 	char	   *cp1;
 	char	   *cp2;
 	int			len;
-	int			wl;
+	int wl;
 
 	if (str == NULL)
 		return NULL;
@@ -1034,7 +1032,7 @@ slon_quote_literal(char *str)
 	*cp2++ = '\'';
 	while (len > 0)
 	{
-		if ((wl = pg_mblen((unsigned char *) cp1)) != 1)
+		if ((wl = pg_mblen((const char *) cp1)) != 1)
 		{
 			len -= wl;
 
@@ -1189,7 +1187,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	char		query[1024];
 	bool		isnull;
 	Oid			plan_types[9];
-	Oid			txid_snapshot_typid;
 	TypeName   *txid_snapshot_typname;
 
 	/*
@@ -1273,14 +1270,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		txid_snapshot_typname->names =
 			lappend(lappend(NIL, makeString("pg_catalog")),
 					makeString("txid_snapshot"));
-
-#ifdef HAVE_TYPENAMETYPEID_3
-		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname, NULL);
-#elif HAVE_TYPENAMETYPEID_2
-		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname);
-#elif HAVE_TYPENAMETYPEID_1
-		txid_snapshot_typid = typenameTypeId(txid_snapshot_typname);
-#endif
 
 		/*
 		 * Create the saved plan. We lock the sl_event table in exclusive mode

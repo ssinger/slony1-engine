@@ -4172,7 +4172,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	while (num_providers_active > 0)
 	{
 		WorkerGroupLine *lines_head = NULL;
-		WorkerGroupLine *lines_tail = NULL;
 		WorkerGroupLine *wgnext = NULL;
 
 		/*
@@ -4186,7 +4185,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			pthread_cond_wait(&(wd->repldata_cond), &(wd->workdata_lock));
 		}
 		lines_head = wd->repldata_head;
-		lines_tail = wd->repldata_tail;
 		wd->repldata_head = NULL;
 		wd->repldata_tail = NULL;
 		pthread_mutex_unlock(&(wd->workdata_lock));
@@ -5466,7 +5464,7 @@ archive_close(SlonNode *node)
 	if (command_on_logarchive)
 	{
 		char		command[1024];
-
+		
 		sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
 		slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
 				 node->no_id, command);
