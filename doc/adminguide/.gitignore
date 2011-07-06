@@ -148,6 +148,7 @@ function.moveset-p-new-origin-integer-p-set-id-integer.html
 function.preparetableforcopy-integer.html
 function.preparetableforcopy-p-tab-id-integer.html
 function.rebuildlistenentries.html
+function.recreate-log-trigger-p-tab-attkind-text-p-tab-id-oid-p-fq-table-name-text.html
 function.registernodeconnection-integer.html
 function.registernodeconnection-p-nodeid-integer.html
 function.registry-get-int4-p-default-text-p-key-integer.html
@@ -162,6 +163,7 @@ function.registry-set-text-p-value-text-p-key-text.html
 function.registry-set-text-text-text.html
 function.registry-set-timestamp-p-value-text-p-key-timestamp-with-time-zone.html
 function.registry-set-timestamp-text-timestamp-without-time-zone.html
+function.repair-log-triggers-only-locked-boolean.html
 function.replicate-partition-integer-text-text-text-text.html
 function.replicate-partition-p-comment-integer-p-idxname-text-p-tabname-text-p-nspname-text-p-tab-id-text.html
 function.resetsession.html

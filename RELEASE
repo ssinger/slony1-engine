@@ -1,8 +1,9 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+
 ** 2.1.0 (beta 3)
 
--Fix for bug #159, distclean deletes the slony_logshipper flex/bison generated files.
+- Bug #159 :: distclean deletes the slony_logshipper flex/bison generated files.
 
 - Bug #204 :: Additional fixes for failover to a non-direct subscriber
               where circular paths in sl_subscribe could happen
@@ -12,12 +13,14 @@
 - Bug #218 :: Obtain a lock on sl_config_lock before calling
               storePath_int
 
-- Bug 219 :: Default to PostgreSQL 8.4 support if the version of PG is newer
+- Bug #219 :: Default to PostgreSQL 8.4 support if the version of PG is newer
              than what slony recognizes.
 
 - Bug #220 :: Fix issue where changing the provider of an existing
               subscriber passed parameters in the wrong order to the
               stored procedure.
+
+- Bug #220 :: altperl code misspelled "PKEYDTABLES"
 
 *** Some items without bug numbers:
 
