@@ -18,7 +18,11 @@
 
 - Fixed slonik memory corruption when it tries to get the last known
   event_id from a node that doesn't yet have slony installed.
-  
+
+- Remove rules for building PDFs for the original design docs, in
+  favor of having the built docs stored in a new "historical
+  documentation" directory.
+
 ** 2.1.0 (beta 2)
 
 - Fix threading issue in monitor_thread where slon_init can be called
