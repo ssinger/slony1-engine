@@ -66,6 +66,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
 
 PG_FUNCTION_INFO_V1(_slon_quote_ident);
 PG_FUNCTION_INFO_V1(_Slony_I_resetSession);
+PG_FUNCTION_INFO_V1(_slon_decode_tgargs);
 
 Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -78,6 +79,7 @@ Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
+Datum		_slon_decode_tgargs(PG_FUNCTION_ARGS);
 
 Datum		_Slony_I_resetSession(PG_FUNCTION_ARGS);
 
@@ -1453,7 +1455,59 @@ _Slony_I_resetSession(PG_FUNCTION_ARGS)
 
 }
 
+/**
+ * A function to decode the tgargs column of pg_trigger
+ * and return an array of text objects with each trigger
+ * argument.
+ */
+Datum
+_slon_decode_tgargs(PG_FUNCTION_ARGS)
+{
+	const char * arg;
+	size_t elem_size=0;
+	ArrayType * out_array;
+	int idx;
+	bytea	   *t = PG_GETARG_BYTEA_P(0);
 
+	int arg_size = VARSIZE(t)- VARHDRSZ;
+	const char * in_args = VARDATA(t);
+	int array_size = 0;
+	out_array=construct_empty_array(TEXTOID);
+	arg=in_args;
+
+	for(idx = 0; idx < arg_size; idx++)
+	{
+		
+		if(in_args[idx ]=='\0')
+		{
+			text * one_arg = palloc(elem_size+VARHDRSZ);
+			SET_VARSIZE(one_arg,elem_size + VARHDRSZ);
+			memcpy(VARDATA(one_arg),arg,elem_size);
+			out_array = array_set(out_array,
+								  1, &array_size,
+								  PointerGetDatum(one_arg),
+								  false,
+								  -1,
+								  -1,
+								  false , /*typbyval for TEXT*/
+								  'i' /*typalign for TEXT */
+				);
+			elem_size=0;
+			array_size++;
+			arg=&in_args[idx+1];
+		}
+		else
+		{
+			elem_size++;
+		}
+	}
+
+
+	PG_RETURN_ARRAYTYPE_P(out_array);
+}
+	
+	
+	
 /*
  * Local Variables:
  *	tab-width: 4

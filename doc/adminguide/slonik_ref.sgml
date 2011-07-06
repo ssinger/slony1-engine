@@ -2869,6 +2869,17 @@ EXECUTE SCRIPT (
    <para> In version 2.0, the default value for <envar>EVENT
    NODE</envar> was removed, so a node must be specified.</para>
 
+   <para> As of version 2.0.7, the log triggers on all replicated
+   tables are checked to ensure their parameters match the primary key
+   on the table.  If they <emphasis>do not</emphasis> match, those
+   tables that are exclusively locked as a result of the DDL request
+   will have the triggers recreated to match the primary key.  Tables
+   that do not have an exclusive lock will <emphasis>not</emphasis> be
+   corrected, but a warning message will be generated.  The function
+   <xref linkend="function.repair-log-triggers-only-locked-boolean">
+   may be used manually to correct the triggers on those
+   tables.</para>
+
    </refsect1>
   </refentry>
 
