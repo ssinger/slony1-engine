@@ -10,6 +10,9 @@
 
 - Bug #214 :: Add slonikconfdump.sh back into tools
 
+- Bug #216 :: Use EPOCH for the timestamp in the monitor thread
+              to avoid differences in how Win32 handles timezones.
+
 - Bug #218 :: Obtain a lock on sl_config_lock before calling
               storePath_int
 
