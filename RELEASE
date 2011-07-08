@@ -346,3 +346,10 @@ Added post rc2
 - datarootdir warning from autoconf fixed. 
 
 - Bug #220 - Altperl script needed to reference PKEYEDTABLES
+
+- Bug #36  - (Reapplied) don't link with pgport on non-Win32 platforms
+
+- Misc compiler warnings including no longer calling get_share_dir from
+  Postgres if PGSHARE is not defined. Configure should define it.
+
+- Regenerated complexenv.png diagram
