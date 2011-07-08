@@ -1156,7 +1156,9 @@ remoteWorkerThread_main(void *cdata)
 				 */
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_event_lock;"
 								 "select %s.moveSet_int(%d, %d, %d, %s); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 set_id, old_origin, new_origin, seqbuf);
 				if (query_execute(node, local_dbconn, &query1) < 0)
