@@ -117,14 +117,7 @@ main(int argc, const char *argv[])
 	/*
 	 * We need to find a share directory like PostgreSQL. 
 	 */
-	if (strlen(PGSHARE) > 0)
-	{
-		strcpy(share_path, PGSHARE);
-	}
-	else
-	{
-		get_share_path(myfull_path, share_path);
-	}
+	strcpy(share_path, PGSHARE);
 
 	if (optind < argc)
 	{
