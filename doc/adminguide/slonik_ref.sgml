@@ -2438,8 +2438,7 @@ FAILOVER (
     dropping out additional nodes (<emphasis>e.g.</emphasis> when it
     is necessary to treat <emphasis>all</emphasis> nodes at a site
     including an origin as well as subscribers as failed), it is
-    necessary to carefully sequence the actions, as described in <xref
-    linkend="complexfailover">.
+    necessary to carefully sequence the actions.
     </para>
 
    </refsect1>
@@ -2598,7 +2597,7 @@ EXECUTE SCRIPT (
    will have the triggers recreated to match the primary key.  Tables
    that do not have an exclusive lock will <emphasis>not</emphasis> be
    corrected, but a warning message will be generated.  The function
-   <xref linkend="function.repair-log-triggers-only-locked-boolean">
+     <function>repair_log_triggers(only_locked boolean)</function>
    may be used manually to correct the triggers on those
    tables.</para>
 
