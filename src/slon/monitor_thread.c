@@ -59,7 +59,6 @@ monitorThread_main(void *dummy)
 	PGconn	   *dbconn;
 	PGresult   *res;
 	SlonState	state;
-	char		timebuf[256];
 	ScheduleStatus rc;
 
 	slon_log(SLON_INFO,
