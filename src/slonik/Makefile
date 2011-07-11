@@ -4,7 +4,6 @@
 #	Copyright (c) 2003-2009, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
-#	
 # ----------
 
 slony_subdir = src/slonik
@@ -20,12 +19,13 @@ CFLAGS += -I$(slony_top_builddir) -DPGSHARE="\"$(pgsharedir)\""
 
 PROG		= slonik
 
-LDFLAGS += -lpgport
 ifeq ($(PORTNAME), win)
 PROG            = slonik.exe
+LDFLAGS += -lpgport
 endif
 ifeq ($(PORTNAME), win32)
 PROG            = slonik.exe
+LDFLAGS += -lpgport
 endif
 
 OBJS		= 			\
