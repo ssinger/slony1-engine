@@ -96,7 +96,6 @@ AVLnode *
 avl_insert(AVLtree *tree, void *cdata)
 {
 	AVLnode    *result;
-	int			depth;
 
 	/*
 	 * If this is an empty tree, create the root node.
@@ -108,7 +107,7 @@ avl_insert(AVLtree *tree, void *cdata)
 	 * Traverse the tree to find the insert point.
 	 */
 	result = NULL;
-	depth = avl_insertinto(tree, &(tree->root), cdata, &result);
+	avl_insertinto(tree, &(tree->root), cdata, &result);
 	return result;
 }
 

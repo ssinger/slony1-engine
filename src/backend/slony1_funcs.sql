@@ -697,11 +697,6 @@ declare
 	v_event_seq			int8;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Make sure this node is uninitialized or got reset
 	-- ----
 	select last_value::int4 into v_old_node_id from @NAMESPACE@.sl_local_node_id;
@@ -766,11 +761,6 @@ declare
 	v_old_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check if the node exists
 	-- ----
 	select * into v_old_row
@@ -817,11 +807,6 @@ declare
 	v_node_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
@@ -864,11 +849,6 @@ declare
 	v_node_row		record;
 	v_sub_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the node is inactive
 	-- ----
@@ -973,11 +953,6 @@ declare
 	v_node_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that this got called on a different node
 	-- ----
 	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -1033,11 +1008,6 @@ as $$
 declare
 	v_tab_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- If the dropped node is a remote node, clean the configuration
 	-- from all traces for it.
@@ -1095,11 +1065,6 @@ declare
 	v_row2				record;
 	v_n					int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- All consistency checks first
 	-- Check that every node that has a path to the failed node
@@ -1297,11 +1262,6 @@ as $$
 declare
 	v_row				record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select * into v_row
 			from @NAMESPACE@.sl_event
 			where ev_origin = p_failed_node
@@ -1352,11 +1312,6 @@ declare
 	v_row				record;
 	v_last_sync			int8;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Change the origin of the set now to the backup node.
 	-- On the backup node this includes changing all the
@@ -1459,11 +1414,6 @@ as $$
 declare
 	v_tab_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	raise notice 'Slony-I: Please drop schema "_@CLUSTERNAME@"';
 	return 0;
 end;
@@ -1488,11 +1438,6 @@ create or replace function @NAMESPACE@.cloneNodePrepare (p_no_id int4, p_no_prov
 returns bigint
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	perform @NAMESPACE@.cloneNodePrepare_int (p_no_id, p_no_provider, p_no_comment);
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'CLONE_NODE',
 									p_no_id::text, p_no_provider::text,
@@ -1627,11 +1572,6 @@ declare
 	v_dummy			int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check if the path already exists
 	-- ----
 	select 1 into v_dummy
@@ -1693,11 +1633,6 @@ declare
 	v_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- There should be no existing subscriptions. Auto unsubscribing
 	-- is considered too dangerous. 
 	-- ----
@@ -1748,11 +1683,6 @@ create or replace function @NAMESPACE@.dropPath_int (p_pa_server int4, p_pa_clie
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Remove any dangling sl_listen entries with the server
 	-- as provider and the client as receiver. This must have
@@ -1817,11 +1747,6 @@ as $$
 declare
 	v_exists		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select 1 into v_exists
 			from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
@@ -1894,11 +1819,6 @@ create or replace function @NAMESPACE@.dropListen_int (p_li_origin int4, p_li_pr
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	delete from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
 			and li_provider = p_li_provider
@@ -1928,11 +1848,6 @@ as $$
 declare
 	v_local_node_id		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	insert into @NAMESPACE@.sl_set
@@ -1957,11 +1872,6 @@ as $$
 declare
 	v_dummy				int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select 1 into v_dummy
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id
@@ -2007,11 +1917,6 @@ declare
 	v_set_row			record;
 	v_tab_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
@@ -2082,11 +1987,6 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
@@ -2150,11 +2050,6 @@ declare
 	v_sync_seqno		int8;
 	v_lv_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the set is locked and that this locking
 	-- happened long enough ago.
@@ -2247,11 +2142,6 @@ declare
 	v_sub_next			int4;
 	v_last_sync			int8;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get our local node ID
 	-- ----
@@ -2426,11 +2316,6 @@ declare
 	v_origin			int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Check that the set exists and originates here
 	-- ----
 	select set_origin into v_origin from @NAMESPACE@.sl_set
@@ -2465,11 +2350,6 @@ as $$
 declare
 	v_tab_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	-- ----
 	-- Restore all tables original triggers and rules and remove
 	-- our replication stuff.
@@ -2521,11 +2401,6 @@ declare
 	v_origin			int4;
 	in_progress			boolean;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
@@ -2631,11 +2506,6 @@ create or replace function @NAMESPACE@.mergeSet_int (p_set_id int4, p_add_id int
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	update @NAMESPACE@.sl_sequence
 			set seq_set = p_set_id
 			where seq_set = p_add_id;
@@ -2666,11 +2536,6 @@ as $$
 declare
 	v_set_origin		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that we are the origin of the set
 	-- ----
@@ -2727,11 +2592,6 @@ declare
 	v_pkcand_nn		boolean;
 	v_prec			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the table because it might 
@@ -2840,14 +2700,9 @@ declare
 	v_set_id		int4;
 	v_set_origin		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
+    -- ----
 	-- Determine the set_id
-        -- ----
+    -- ----
 	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 
 	-- ----
@@ -2898,14 +2753,9 @@ declare
 	v_sub_provider		int4;
 	v_tab_reloid		oid;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
+    -- ----
 	-- Determine the set_id
-        -- ----
+    -- ----
 	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 
 	-- ----
@@ -2963,11 +2813,6 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
@@ -3020,11 +2865,6 @@ declare
 	v_seq_nspname		name;
 	v_sync_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the sequence because it might 
@@ -3118,11 +2958,6 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Determine set id for this sequence
 	-- ----
 	select seq_set into v_set_id from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
@@ -3177,11 +3012,6 @@ declare
 	v_relkind			char;
 	v_sync_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Determine set id for this sequence
 	-- ----
@@ -3246,11 +3076,6 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the tables current set
 	-- ----
@@ -3335,11 +3160,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Move the table to the new set
 	-- ----
 	update @NAMESPACE@.sl_table
@@ -3365,11 +3185,6 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the sequences current set
 	-- ----
@@ -3453,11 +3268,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Move the sequence to the new set
 	-- ----
 	update @NAMESPACE@.sl_sequence
@@ -3524,11 +3334,6 @@ as $$
 declare
 	v_set_origin		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the set exists and originates here
 	-- ----
@@ -3623,11 +3428,6 @@ declare
 	v_no_id				int4;
 	v_row				record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
@@ -3926,12 +3726,6 @@ declare
 	v_ev_seqno			int8;
 	v_rec			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-
 	--
 	-- Check that the receiver exists
 	--
@@ -4023,11 +3817,6 @@ declare
 	v_set_origin		int4;
 	v_sub_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Provider change is only allowed for active sets
 	-- ----
@@ -4123,11 +3912,6 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
 	if p_sub_receiver != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -4206,11 +3990,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
@@ -4259,11 +4038,6 @@ as $$
 declare
 	v_n					int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- The real work is done in the replication engine. All
 	-- we have to do here is remembering that it happened.
@@ -4866,11 +4640,6 @@ declare
 	prec			record;
 begin
         -- ----
-        -- Grab the central configuration lock
-        -- ----
-        lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
@@ -4952,12 +4721,6 @@ DECLARE
 	v_current_status	int4;
 BEGIN
 	-- ----
-	-- Grab the central configuration lock to prevent race conditions
-	-- while changing the sl_log_status sequence value.
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Get the current log status.
 	-- ----
 	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
@@ -5010,12 +4773,6 @@ DECLARE
 	v_xmin		bigint;
 	v_purgeable boolean;
 BEGIN
-	-- ----
-	-- Grab the central configuration lock to prevent race conditions
-	-- while changing the sl_log_status sequence value.
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the current log status.
 	-- ----
@@ -5718,11 +5475,6 @@ for superuser access by Slony-I.
 
 create or replace function @NAMESPACE@.reshapeSubscription (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4) returns int4 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
 		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
 	if found then

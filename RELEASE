@@ -10,8 +10,11 @@
 
 - Bug #214 :: Add slonikconfdump.sh back into tools
 
-- Bug #218 :: Obtain a lock on sl_config_lock before calling
-              storePath_int
+- Bug #216 :: Use EPOCH for the timestamp in the monitor thread
+              to avoid differences in how Win32 handles timezones.
+
+- Bug #218 :: Acquire lock on sl_config_lock in much the same fashion as
+            with sl_event_lock (bug #196)
 
 - Bug #219 :: Default to PostgreSQL 8.4 support if the version of PG is newer
              than what slony recognizes.
@@ -20,7 +23,15 @@
               subscriber passed parameters in the wrong order to the
               stored procedure.
 
-- Bug #220 :: altperl code misspelled "PKEYDTABLES"
+- Bug #222 :: Fixing issue where new connections that call the
+              logtrigger for the first time might block until an
+              in progress cleanupEvent finishes.
+
+- Bug #223 :: Clear out the last saved event number when uninstalling
+              a node.  This prevents slonik from waiting for a node it just
+              uninstalled.
+
+- Bug #224 :: altperl code misspelled "PKEYDTABLES"
 
 *** Some items without bug numbers:
 
@@ -32,13 +43,27 @@
   documentation" directory.
 
 ** 2.1.0 (beta 2)
-- Bug 219 Default to PostgreSQL 8.4 support if the version of PG is newer than
+- Bug 219 :: Default to PostgreSQL 8.4 support if the version of PG is newer than
           what slony recognizes.
 
 - Fix threading issue in monitor_thread where slon_init can be called
   without the mutex being locked. This function was written to assume
   the mutex lock exists.  
-  
+
+-  datarootdir warning from autoconf fixed  
+
+- Bug #36  - (Reapplied) don't link with pgport on non-Win32 platforms
+
+- Misc compiler warnings including no longer calling get_share_dir from
+  Postgres if PGSHARE is not defined. Configure should define it.
+
+- Regenerated complexenv.png diagram
+
+- Obtain a lock on sl_event_lock during MOVE_SET
+  processing in remote_worker.
+
+** 2.1.0 (beta 2)
+
 - Bug #204 :: Upgrade from 2.0.x fails under PostgreSQL 8.3, fixing
               issues with failover and non-direct subscribers
 

@@ -791,7 +791,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_disableNode(no_id);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.dropNode_int(%d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 no_id);
 
@@ -842,7 +844,9 @@ remoteWorkerThread_main(void *cdata)
 
 				rtcfg_storeNode(no_id, no_comment);
 				slon_appendquery(&query1,
-							"select %s.cloneNodePrepare_int(%d, %d, '%q'); ",
+								 "lock table %s.sl_config_lock;"
+								 "select %s.cloneNodePrepare_int(%d, %d, '%q'); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 no_id, no_provider, no_comment);
 				slon_appendquery(&query1,"select coalesce(max(con_seqno),0)"
@@ -895,7 +899,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_dropPath(pa_server);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.dropPath_int(%d, %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 pa_server, pa_client);
 
@@ -911,7 +917,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeListen(li_origin, li_provider);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.storeListen_int(%d, %d, %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 li_origin, li_provider, li_receiver);
 			}
@@ -925,7 +933,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_dropListen(li_origin, li_provider);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.dropListen_int(%d, %d, %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 li_origin, li_provider, li_receiver);
 			}
@@ -939,7 +949,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeSet(set_id, set_origin, set_comment);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.storeSet_int(%d, %d, '%q'); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 set_id, set_origin, set_comment);
 			}
@@ -950,8 +962,11 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_dropSet(set_id);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.dropSet_int(%d); ",
-								 rtcfg_namespace, set_id);
+								 rtcfg_namespace, 
+								 rtcfg_namespace, 
+								 set_id);
 			}
 			else if (strcmp(event->ev_type, "MERGE_SET") == 0)
 			{
@@ -959,9 +974,10 @@ remoteWorkerThread_main(void *cdata)
 				int			add_id = (int) strtol(event->ev_data2, NULL, 10);
 
 				rtcfg_dropSet(add_id);
-
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.mergeSet_int(%d, %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 set_id, add_id);
 
@@ -986,7 +1002,10 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			tab_id = (int) strtol(event->ev_data1, NULL, 10);
 
-				slon_appendquery(&query1, "select %s.setDropTable_int(%d);",
+				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
+								 "select %s.setDropTable_int(%d);",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 tab_id);
 			}
@@ -994,7 +1013,10 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			seq_id = (int) strtol(event->ev_data1, NULL, 10);
 
-				slon_appendquery(&query1, "select %s.setDropSequence_int(%d);",
+				slon_appendquery(&query1, 
+								 "lock table %s.sl_config_lock;"
+								 "select %s.setDropSequence_int(%d);",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 seq_id);
 			}
@@ -1003,7 +1025,10 @@ remoteWorkerThread_main(void *cdata)
 				int			tab_id = (int) strtol(event->ev_data1, NULL, 10);
 				int			new_set_id = (int) strtol(event->ev_data2, NULL, 10);
 
-				slon_appendquery(&query1, "select %s.setMoveTable_int(%d, %d);",
+				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
+								 "select %s.setMoveTable_int(%d, %d);",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 tab_id, new_set_id);
 			}
@@ -1012,7 +1037,10 @@ remoteWorkerThread_main(void *cdata)
 				int			seq_id = (int) strtol(event->ev_data1, NULL, 10);
 				int			new_set_id = (int) strtol(event->ev_data2, NULL, 10);
 
-				slon_appendquery(&query1, "select %s.setMoveSequence_int(%d, %d);",
+				slon_appendquery(&query1, 
+								 "lock table %s.sl_config_lock;"
+								 "select %s.setMoveSequence_int(%d, %d);",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 seq_id, new_set_id);
 			}
@@ -1090,8 +1118,9 @@ remoteWorkerThread_main(void *cdata)
 							"begin transaction; "
 							"set transaction isolation level serializable; ");
 						slon_appendquery(&query1,
-							 "lock table %s.sl_config_lock; ",
-							 rtcfg_namespace);
+										 "lock table %s.sl_config_lock, %s.sl_event_lock;",
+										 rtcfg_namespace,
+										 rtcfg_namespace);
 						if (query_execute(node, local_dbconn, &query3) < 0)
 							slon_retry();
 
@@ -1156,7 +1185,9 @@ remoteWorkerThread_main(void *cdata)
 				 */
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.moveSet_int(%d, %d, %d, %s); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 set_id, old_origin, new_origin, seqbuf);
 				if (query_execute(node, local_dbconn, &query1) < 0)
@@ -1200,8 +1231,9 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_storeSet(set_id, backup_node, NULL);
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_event_lock;"
+								 "lock table %s.sl_config_lock, %s.sl_event_lock;"
 								 "select %s.failoverSet_int(%d, %d, %d, %s); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 failed_node, backup_node, set_id, seqbuf);
@@ -1220,8 +1252,9 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_event_lock;"
+								 "lock table %s.sl_config_lock, %s.sl_event_lock;"
 								 "select %s.subscribeSet_int(%d, %d, %d, '%q', '%q'); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 sub_set, sub_provider, sub_receiver, sub_forward, omit_copy);
@@ -1370,7 +1403,9 @@ remoteWorkerThread_main(void *cdata)
 					 * Somebody else got enabled, just remember it
 					 */
 					slon_appendquery(&query1,
-								"select %s.enableSubscription(%d, %d, %d); ",
+									 "lock table %s.sl_config_lock;"
+									 "select %s.enableSubscription(%d, %d, %d); ",
+									 rtcfg_namespace,
 									 rtcfg_namespace,
 									 sub_set, sub_provider, sub_receiver);
 				}
@@ -1391,7 +1426,9 @@ remoteWorkerThread_main(void *cdata)
 				 * unsubscribeSet() itself. Just propagate the event here.
 				 */
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.unsubscribeSet_int(%d, %d); ",
+								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 sub_set, sub_receiver);
 
@@ -1435,7 +1472,9 @@ remoteWorkerThread_main(void *cdata)
 
 					slon_appendquery(&query1,
 									 "set session_replication_role to local; "
+									 "lock table %s.sl_config_lock;"
 									 "select %s.ddlScript_prepare_int(%d, %d); ",
+									 rtcfg_namespace,
 									 rtcfg_namespace,
 									 ddl_setid, ddl_only_on_node);
 
@@ -1540,9 +1579,11 @@ remoteWorkerThread_main(void *cdata)
 				int			reset_configonly_on_node = (int) strtol(event->ev_data2, NULL, 10);
 
 				slon_appendquery(&query1,
+								 "lock table %s.sl_config_lock;"
 								 "select %s.updateReloid(%d, '%q', %d); ",
 								 rtcfg_namespace,
-							   reset_config_setid, reset_configonly_on_node);
+								 rtcfg_namespace,
+								 reset_config_setid, reset_configonly_on_node);
 			}
 			else
 			{
@@ -2865,8 +2906,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 				 node->no_id, seq_fqname);
 
 		(void) slon_mkquery(&query1,
-						  "select %s.setAddSequence_int(%d, %s, '%q', '%q')",
-							rtcfg_namespace, set_id, seq_id,
+							"lock table %s.sl_config_lock;"
+							"select %s.setAddSequence_int(%d, %s, '%q', '%q')",
+							rtcfg_namespace, 
+							rtcfg_namespace, 
+							set_id, seq_id,
 							seq_fqname, seq_comment);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
@@ -2943,9 +2987,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 * suppressed.
 		 */
 		(void) slon_mkquery(&query1,
-					 "select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
+							"lock table %s.sl_config_lock;"
+							"select %s.setAddTable_int(%d, %d, '%q', '%q', '%q'); ",
 							rtcfg_namespace,
-					   set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
+							rtcfg_namespace,
+							set_id, tab_id, tab_fqname, tab_idxname, tab_comment);
 		if (query_execute(node, loc_dbconn, &query1) < 0)
 		{
 			PQclear(res1);
@@ -4345,7 +4391,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	while (num_providers_active > 0)
 	{
 		WorkerGroupLine *lines_head = NULL;
-		WorkerGroupLine *lines_tail = NULL;
 		WorkerGroupLine *wgnext = NULL;
 
 		/*
@@ -4359,7 +4404,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			pthread_cond_wait(&(wd->repldata_cond), &(wd->workdata_lock));
 		}
 		lines_head = wd->repldata_head;
-		lines_tail = wd->repldata_tail;
 		wd->repldata_head = NULL;
 		wd->repldata_tail = NULL;
 		pthread_mutex_unlock(&(wd->workdata_lock));
@@ -5625,7 +5669,7 @@ archive_close(SlonNode *node)
 	if (command_on_logarchive)
 	{
 		char		command[1024];
-
+		
 		sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
 		slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
 				 node->no_id, command);
