@@ -1,6 +1,10 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+** 2.1.0 (post-beta 3)
+
+ - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
+
 ** 2.1.0 (beta 3)
 
 - Bug #159 :: distclean deletes the slony_logshipper flex/bison generated files.

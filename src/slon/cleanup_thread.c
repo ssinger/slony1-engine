@@ -125,7 +125,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 		monitor_state("local_cleanup", 0, conn->conn_pid, "cleanupEvent", 0, "n/a");
 		gettimeofday(&tv_start, NULL);
 		res = PQexec(dbconn, dstring_data(&query_baseclean));
-		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_FATAL,
 					 "cleanupThread: \"%s\" - %s",
