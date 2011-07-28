@@ -3722,8 +3722,8 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 		 */
 		slon_mkquery(&query,"select table_schema || '.' || table_name "
 					 "from information_schema.tables where "
-					 "table_schema || '.'||table_name ~ '%s' "
-					 "order by 1",stmt->tables);
+					 "table_schema || '.'||table_name ~ E'%s' "
+					 " and table_type='BASE TABLE' order by 1",stmt->tables);
 		result = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
 		if(result == NULL) 
 		{
