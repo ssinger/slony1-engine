@@ -1526,7 +1526,7 @@ or
 
 SET ADD TABLE (
     SET ID=1,
-    TABLE='public.tracker*'
+    TABLES='public\\.tracker*'
 );
 
     </programlisting>

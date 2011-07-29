@@ -40,9 +40,9 @@ BulkAddingTest.prototype.runTest = function() {
 	 * create a second set (id=3) on node 2, add some tables there
 	 */
 	var slonikScript = 'create set(id=3, origin=2);\n ' 
-		+ "set add table(set id=3,tables='disorder.do_[iro].*');\n"
-		+ "set add sequence(set id=3,sequences='disorder.do_[iro].*');\n"
-		+ "set add table(set id=3, tables='disorder.do_config*',add sequences=true);\n";
+		+ "set add table(set id=3,tables='disorder\\.do_[iro].*');\n"
+		+ "set add sequence(set id=3,sequences='disorder\\.do_[iro].*');\n"
+		+ "set add table(set id=3, tables='disorder\\.do_config*',add sequences=true);\n";
 	var slonikPreamble = this.getSlonikPreamble();
 	slonik = this.coordinator.createSlonik('add on node 2',slonikPreamble,slonikScript);
 	slonik.run();
