@@ -50,7 +50,7 @@ extern int STMTS[MAXSTATEMENTS];
 SlonikScript *parser_script = NULL;
 int			parser_errors = 0;
 int			current_try_level;
-
+int			block_stmt_no=0;
 int last_event_node=-1;
 int auto_wait_disabled=0;
 
@@ -1179,10 +1179,11 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 			break;
 	}	
 	free(events);
-	
+	block_stmt_no=0;
 	while (hdr && errors == 0)
 	{
 		hdr->script = script;
+		block_stmt_no++;
 
 		switch (hdr->stmt_type)
 		{
@@ -1191,10 +1192,13 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					SlonikStmt_try *stmt =
 					(SlonikStmt_try *) hdr;
 					int			rc;
+					int saved_stmt_no;
 
 					current_try_level++;
+					saved_stmt_no=block_stmt_no;
 					rc = script_exec_stmts(script, stmt->try_block);
 					current_try_level--;
+					block_stmt_no=saved_stmt_no;
 
 					if (rc < 0)
 					{
@@ -1240,6 +1244,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					printf("%s:%d: %s\n",
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 						   stmt->str);
+					block_stmt_no--;
 				}
 				break;
 
@@ -1258,6 +1263,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					printf("%s:%d: %s\n",
 					       stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 					       outstr);
+					block_stmt_no--;
 				}
 				break;
 
@@ -3613,10 +3619,21 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 
 		if(current_try_level > 0)
 		{
-			printf("%s:%d Error: a subscription is in progress. "
-				   "slonik can not wait for it to finish inside of a "
-				   "try block",stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
-			return -1;
+			if(current_try_level == 1 && block_stmt_no==1)
+			{
+				/**
+				 * on the first command of the try block we can 
+				 * still a abort the txn and restart it later, 
+				 * after the wait for has been complete.
+				 */			
+			}
+			else
+			{
+				printf("%s:%d Error: a subscription is in progress. "
+					   "slonik can not wait for it to finish inside of a "
+					   "try block",stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				return -1;
+			}
 		}
 
 		if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
@@ -5337,6 +5354,8 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 							  int suppress_wait_for)
 {
 	int rc;
+	int recreate_txn=0;
+
 	if ( last_event_node >= 0 &&
 		 last_event_node != adminfo->no_id
 		&& ! suppress_wait_for )
@@ -5349,10 +5368,18 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		
 		if( current_try_level != 0)
 		{
-			printf("%s:%d Error: the event origin can not be changed "
-				   "inside of a try block",
-				   stmt->stmt_filename, stmt->stmt_lno);
-			return -1;
+			if( current_try_level==1 && block_stmt_no == 1)
+			{
+				recreate_txn=1;
+				db_rollback_xact(stmt,adminfo);
+			}
+			else 
+			{
+				printf("%s:%d Error: the event origin can not be changed "
+					   "inside of a try block",
+					   stmt->stmt_filename, stmt->stmt_lno);
+				return -1;
+			}
 		}
 
 		/**
@@ -5365,6 +5392,10 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		wait_event.wait_confirmed=adminfo->no_id;
 		wait_event.wait_timeout=0;
 		rc = slonik_wait_event(&wait_event);
+		if (recreate_txn)
+		{
+			db_begin_xact(stmt,adminfo,false);
+		}
 		if(rc < 0) 
 			return rc;
 		
@@ -5491,7 +5522,8 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 	int64* behind_nodes=NULL;
 	int idx;
 	int cur_array_idx;
-	
+	int recreate_txn=0;
+
 	/**
 	 * an array that stores a node_id, last_event.
 	 * or the last event seen for each admin conninfo
@@ -5505,9 +5537,22 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 
 	if( current_try_level != 0)
 	{
-	  printf("%s:%d Error: WAIT operation forbidden inside a try block\n",
-			 stmt->stmt_filename, stmt->stmt_lno);
-	  return -1;
+	  if( current_try_level==1 && block_stmt_no ==1)
+	  {
+		  /**
+		   * The first statement in the try block requires
+		   * a wait for.  the code below will rollback the txn.
+		   * we set a flag so we know to create a new one 
+		   * when we are done.
+		   */
+		  recreate_txn=1;
+	  }
+	  else 
+	  {
+		  printf("%s:%d Error: WAIT operation forbidden inside a try block\n",
+				 stmt->stmt_filename, stmt->stmt_lno);
+		  return -1;
+	  }
 	}
 
 	for( curAdmInfo = stmt->script->adminfo_list;
@@ -5670,8 +5715,14 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 	 if(result != NULL)
 			 PQclear(result);    
 	 dstring_terminate(&event_list);
-	 dstring_terminate(&is_caughtup_query);
+	 dstring_terminate(&is_caughtup_query);	 
 	 free(last_event_array);
+	 
+	 if(recreate_txn)
+	 {
+		 db_begin_xact(stmt,adminfo1,false);
+	 }
+
 	 return 0;
 
 }
