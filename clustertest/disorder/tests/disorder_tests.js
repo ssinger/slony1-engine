@@ -24,6 +24,7 @@ coordinator.includeFile('disorder/tests/CleanupTest.js');
 coordinator.includeFile('disorder/tests/RecreateSet.js');
 coordinator.includeFile('disorder/tests/MergeSet.js');
 coordinator.includeFile('disorder/tests/BulkAddingTest.js');
+coordinator.includeFile('disorder/tests/WaitForTest.js');
 var tests = 
     [new EmptySet(coordinator,results)
      ,new OmitCopy(coordinator,results)
@@ -48,13 +49,14 @@ var tests =
      ,new RenameTests(coordinator,results)
      ,new MergeSet(coordinator,results)
      ,new BulkAddingTest(coordinator,results)
+	 ,new WaitForTest(coordinator,results)
 	 //Below tests are known to fail.
 	 ,new UnsubscribeBeforeEnable(coordinator,results)
      ,new DropSet(coordinator,results) //fails bug 133
      ,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
-//tests=[new BulkAddingTest(coordinator,results)];
+//tests=[new WaitForTest(coordinator,results)];
 
 var basicTest = new BasicTest(coordinator,results);
 
