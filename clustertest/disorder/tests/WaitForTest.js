@@ -37,8 +37,10 @@ WaitForTest.prototype.runTest = function() {
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'BasicTest.prototype.createSecondSet\';\n';
 	slonikScript += 'create set(id=2, origin=2 ,comment=\'second set\');\n'
-	+"create set(id=3, origin=3 ,comment=\'second set\');\n';";
-
+	+"create set(id=3, origin=3 ,comment=\'second set\');\n "
+	+ "set add table(set id=2,origin=2," +
+	"  tables='disorder\.do_item_*');";
+	this.tableIdCounter++;
 	var slonik = this.coordinator.createSlonik('create second set',
 											   slonikPreamble,
 											   slonikScript);
