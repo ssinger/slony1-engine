@@ -3707,6 +3707,42 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 	if (adminfo1 == NULL)
 		return -1;
 
+	/**
+	 * make sure that the origin node is caught up with
+	 * the last event node *before* opening the transaciton
+	 * the 'set add table' will take place in.
+	 *
+	 * Once that transaction is opened and has a lock
+	 * on sl_config_lock the slon for the node  won't be 
+	 * able to process many event types from other nodes.  
+	 * So if the origin is behind it will not be able to catch up
+	 * until the transaction completes.
+	 *
+	 * The slonik_submitEvent(...) that submits the
+	 * setAddTable event might 'wait' until the
+	 * origin is caught up, so we make sure that the
+	 * origin is caught up before opening the
+	 * transaction.
+	 **/
+	if(db_begin_xact((SlonikStmt*)stmt,adminfo1,false) < 0)
+		return -1;
+	dstring_init(&query);	
+	slon_mkquery(&query,"lock table \"_%s\".sl_event_lock;"
+					"select \"_%s\".createEvent('_%s', 'SYNC'); ",
+					stmt->hdr.script->clustername,
+					stmt->hdr.script->clustername,
+					stmt->hdr.script->clustername);
+	slonik_submitEvent((SlonikStmt*)stmt,adminfo1,&query,stmt->hdr.script,0);
+	dstring_terminate(&query);
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+
+
+
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 		return -1;
 
@@ -3871,6 +3907,41 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, origin);
 	if (adminfo1 == NULL)
 		return -1;
+
+	/**
+	 * make sure that the origin node is caught up with
+	 * the last event node *before* opening the transaciton
+	 * the 'set add table' will take place in.
+	 *
+	 * Once that transaction is opened and has a lock
+	 * on sl_config_lock the slon for the node  won't be 
+	 * able to process many event types from other nodes.  
+	 * So if the origin is behind it will not be able to catch up
+	 * until the transaction completes.
+	 *
+	 * The slonik_submitEvent(...) that submits the
+	 * setAddSequence event might 'wait' until the
+	 * origin is caught up, so we make sure that the
+	 * origin is caught up before opening the
+	 * transaction.
+	 **/
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
+		return -1;
+	dstring_init(&query);
+	slon_mkquery(&query,"lock table \"_%s\".sl_event_lock;"
+					"select \"_%s\".createEvent('_%s', 'SYNC'); ",
+					stmt->hdr.script->clustername,
+					stmt->hdr.script->clustername,
+					stmt->hdr.script->clustername);
+	slonik_submitEvent((SlonikStmt*)stmt,adminfo1,&query,stmt->hdr.script,0);
+	dstring_terminate(&query);
+	if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+
+
 
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 		return -1;
