@@ -33,10 +33,10 @@
 #define SLON_MEMDEBUG	1
 
 #ifndef false
-#define   false 0
+#define   false ((bool)0)
 #endif
 #ifndef true
-#define   true (~false)
+#define   true ((bool)~0)
 #endif
 
 
