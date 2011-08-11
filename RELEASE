@@ -3,7 +3,9 @@
 
 ** 2.1.0 (post-beta 3)
 
- - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
+- Bug #226 :: Cleanup thread needed change to expected PQResultStatus
+
+- Bug #231 :: Fix to regex in tools/start_slon.sh
 
 ** 2.1.0 (beta 3)
 

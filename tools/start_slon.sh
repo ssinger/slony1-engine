@@ -14,7 +14,7 @@ SLON_LOG=${SLON_LOG:-"${HOME}/test/slon.1.log"}    # If you use syslog, then thi
 test -x "$SLON_BIN_PATH/slon" || (echo "missing slon - ${SLON_BIN_PATH}/slon"; exit 1)
 test -r "$SLON_CONF" || (echo "No slon conf file - $SLON_CONF"; exit 1)
 
-PID_LINE=`grep pid_file $SLON_CONF | cut -d "#" -f 1 | grep "^[:space:]*pid_file='.*'"`
+PID_LINE=`grep pid_file $SLON_CONF | cut -d "#" -f 1 | grep "^[[:space:]]*pid_file='.*'"`
 PID_FILE=`echo $PID_LINE | cut -d "=" -f 2 | cut -d "'" -f 2`
 if [ "x$PID_FILE" == "x" ]; then
     echo "pid_file not found in slon conf file - $SLON_CONF"
