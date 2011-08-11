@@ -907,16 +907,15 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   "set id must be specified\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
-					}
-					if (stmt->set_origin < 0)
+					}					
+				    if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
 							   "origin must be specified\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-
-					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+					else if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
 				}
 				break;
@@ -3722,8 +3721,8 @@ slonik_set_add_table(SlonikStmt_set_add_table * stmt)
 		 */
 		slon_mkquery(&query,"select table_schema || '.' || table_name "
 					 "from information_schema.tables where "
-					 "table_schema || '.'||table_name ~ '%s' "
-					 "order by 1",stmt->tables);
+					 "table_schema || '.'||table_name ~ E'%s' "
+					 " and table_type='BASE TABLE' order by 1",stmt->tables);
 		result = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
 		if(result == NULL) 
 		{
