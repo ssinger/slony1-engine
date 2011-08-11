@@ -907,16 +907,15 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   "set id must be specified\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
-					}
-					if (stmt->set_origin < 0)
+					}					
+				    if (stmt->set_origin < 0)
 					{
 						printf("%s:%d: Error: "
 							   "origin must be specified\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-
-					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
+					else if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
 				}
 				break;
