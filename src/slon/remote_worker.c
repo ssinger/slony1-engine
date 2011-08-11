@@ -1118,7 +1118,7 @@ remoteWorkerThread_main(void *cdata)
 							"begin transaction; "
 							"set transaction isolation level serializable; ");
 						slon_appendquery(&query1,
-										 "lock table %s.sl_config_lock, %s.sl_event_lock;",
+										 "lock table %s.sl_event_lock,%s.sl_config_lock;",
 										 rtcfg_namespace,
 										 rtcfg_namespace);
 						if (query_execute(node, local_dbconn, &query3) < 0)
@@ -1185,7 +1185,7 @@ remoteWorkerThread_main(void *cdata)
 				 */
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_config_lock, %s.sl_event_lock;"
+								 "lock table %s.sl_event_lock,%s.sl_config_lock;"
 								 "select %s.moveSet_int(%d, %d, %d, %s); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
@@ -1232,7 +1232,7 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_storeSet(set_id, backup_node, NULL);
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_config_lock, %s.sl_event_lock;"
+								 "lock table %s.sl_event_lock, %s.sl_config_lock;"
 								 "select %s.failoverSet_int(%d, %d, %d, %s); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
@@ -1253,7 +1253,7 @@ remoteWorkerThread_main(void *cdata)
 					rtcfg_storeSubscribe(sub_set, sub_provider, sub_forward);
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_config_lock, %s.sl_event_lock;"
+								 "lock table %s.sl_event_lock,%s.sl_config_lock;"
 								 "select %s.subscribeSet_int(%d, %d, %d, '%q', '%q'); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
