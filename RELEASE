@@ -10,7 +10,10 @@
  - Bug #227 :: Do not try to add views to a set with regular expressions in
                set add table.  Also fixes for escape characters in the regex
  
-  - Clearer error message on 'create set' when no origin is specified.
+ - Clearer error message on 'lock set' when no origin is specified.
+ 
+ - Bug #218 :: Additional fixes, obtain sl_event_lock before sl_config_lock
+               to prevent deadlock.
 
 ** 2.1.0 (beta 3)
 
