@@ -95,7 +95,7 @@ typedef char bool;
 
 #ifndef false
 #define   false 0
-#define   true (~false)
+#define   true  1
 #endif
 
 #endif
