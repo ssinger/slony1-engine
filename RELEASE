@@ -353,3 +353,7 @@ Added post rc2
   Postgres if PGSHARE is not defined. Configure should define it.
 
 - Regenerated complexenv.png diagram
+
+2.0.8
+
+- Bug 230 - log_timestamps was always treated as true on some platforms(AIX)
