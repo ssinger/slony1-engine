@@ -34,6 +34,8 @@
 #include "utils/builtins.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
+#include "utils/rel.h"
+#include "utils/relcache.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif

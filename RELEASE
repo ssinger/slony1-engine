@@ -357,3 +357,5 @@ Added post rc2
 2.0.8
 
 - Bug 230 - log_timestamps was always treated as true on some platforms(AIX)
+- Include additional C headers required for Postgresql 9.2(master)
+
