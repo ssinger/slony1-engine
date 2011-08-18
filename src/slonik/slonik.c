@@ -3499,10 +3499,13 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 " set_id=%d",stmt->hdr.script->clustername,
 				 stmt->sub_setid);
 	res1 = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
-	if(res1==NULL) 
+	if(res1==NULL || PQntuples(res1)==0 ) 
 	{
 		PQclear(res1);
 		dstring_free(&query);
+		printf("%s:%d Error: set %d not found. \n",
+			   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+			   stmt->sub_setid);
 		return -1;
 
 	}
