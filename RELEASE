@@ -18,6 +18,7 @@
  
 - Bug #218 :: Additional fixes, obtain sl_event_lock before sl_config_lock
                to prevent deadlock.
+- Include additional C headers required for Postgresql 9.2(master)
 
 ** 2.1.0 (beta 3)
 
