@@ -1,7 +1,7 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
-** 2.1.0 (post-beta 3)
+** 2.1.0 RC 1
 
 - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
 
