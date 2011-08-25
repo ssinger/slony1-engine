@@ -54,7 +54,6 @@ int			block_stmt_no=0;
 int last_event_node=-1;
 int auto_wait_disabled=0;
 
-static char myfull_path[MAXPGPATH];
 static char share_path[MAXPGPATH];
 
 /*
