@@ -5,6 +5,9 @@
 
 - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
 
+- Bug #229 :: Fix to set add table so it won't implicitly wait for an event
+              inside of a transaction block.
+
 - Bug #230 :: log_timestamps was always treated as false
 
 - Bug #231 :: Fix to regex in tools/start_slon.sh
