@@ -459,7 +459,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b3' ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
