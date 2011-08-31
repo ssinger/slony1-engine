@@ -4,6 +4,9 @@ The first release of version 2.0. See RELEASE-2.0 to see changes leading
 from version 1.2 to 2.0.
 
 RELEASE 2.0.1
+=======
+
+- Bug #226 :: Cleanup thread needed change to expected PQResultStatus
 
 - Bug #69 - vactables type was being referenced before UPGRADE FUNCTIONS could actually have created it, when upgrading from an earlier version.
 
@@ -361,3 +364,5 @@ Added post rc2
 - Include additional C headers required for Postgresql 9.2(master)
 
 - Bug 233 - Fix segfault when subscribing to a set that does not exist.
+
+- Bug 236 :: Fix default formatting of timestamp in logs
