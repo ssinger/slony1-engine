@@ -3,6 +3,8 @@
 
 ** 2.1.0 RC 1
 
+- Bug #236 :: Fix default formatting of timestamp in logs
+
 - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
 
 - Bug #229 :: Fix to set add table so it won't implicitly wait for an event
