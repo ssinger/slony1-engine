@@ -6,6 +6,8 @@ Release 1.2.23
 
 - Bug #224 - PKEYEDTABLES misspelled in altperl script
 
+- Bug #236 - fix misformatting of log string for timestamp
+
 Release 1.2.22
 
 -Bug #118 -  Use TRUNCATE ONLY when cleaning out tables on subscribers in

@@ -781,7 +781,7 @@ static struct config_string ConfigureNamesString[] =
 			SLON_C_STRING
 		},
 		&log_timestamp_format,
-		"%Y-%m-%d %H:%M:%S %Z"
+		"%Y-%m-%d %H:%M:%S %Z "
 	},
 	{
 		{
