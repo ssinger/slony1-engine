@@ -366,3 +366,5 @@ Added post rc2
 - Bug 233 - Fix segfault when subscribing to a set that does not exist.
 
 - Bug 236 :: Fix default formatting of timestamp in logs
+
+- Add express support to recognize PostgreSQL 9.1
