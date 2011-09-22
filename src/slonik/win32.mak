@@ -9,7 +9,7 @@ OBJS = slonik.obj \
 
 
 
-CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=\"$(PGSHARE)\" /D YY_NO_UNISTD_H /I..\..\ /I$(PG_INC)  /MD
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=\"$(PGSHARE)\" /D YY_NO_UNISTD_H /I..\..\ /D HAVE_PGPORT /I$(PG_INC)  /MD
 
 slonik.obj: slonik.c
 	$(CPP)$(CPP_FLAGS)  slonik.c

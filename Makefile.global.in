@@ -53,6 +53,9 @@ enable_rpath=		@enable_rpath@
 
 #libs
 PTHREAD_LIBS=		@PTHREAD_LIBS@
+ifeq (@HAVE_PGPORT@,1)
+HAVE_PGPORT=		@HAVE_PGPORT@
+endif
 
 # Documentation
 JADE=			@JADE@

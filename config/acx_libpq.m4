@@ -475,6 +475,12 @@ AC_CHECK_DECLS([GetTopTransactionId],[],[],[
 
 AC_SUBST(NLSLIB)
 
+if test "$with_pgport" != "no"; then
+   AC_MSG_CHECKING(for pgport)
+   LIBS="$LIBS -lpgport"
+   AC_TRY_LINK_FUNC(find_my_exec,HAVE_PGPORT=1, AC_MSG_ERROR("pgport was not found. bulid with --with-pgport=no to disable"))
+fi
+
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ
 

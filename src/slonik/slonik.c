@@ -32,7 +32,9 @@
 #include "types.h"
 #include "libpq-fe.h"
 #include "slonik.h"
-
+#ifdef HAVE_PGPORT
+#include "port.h"
+#endif
 
 #ifdef MSVC
 #include "config_msvc.h"
@@ -55,6 +57,9 @@ int last_event_node=-1;
 int auto_wait_disabled=0;
 
 static char share_path[MAXPGPATH];
+#if HAVE_PGPORT
+static char myfull_path[MAXPGPATH];
+#endif
 
 /*
  * Local functions
@@ -150,10 +155,21 @@ main(int argc, const char *argv[])
 	if (parser_errors)
 		usage();
 
+#ifdef HAVE_PGPORT
 	/*
 	 * We need to find a share directory like PostgreSQL. 
 	 */
+ 	if (find_my_exec(argv[0],myfull_path) < 0)
+	{
+		strcpy(share_path, PGSHARE);
+	}
+	else
+	{
+		get_share_path(myfull_path, share_path);
+	}
+#else
 	strcpy(share_path, PGSHARE);
+#endif
 
 	if (optind < argc)
 	{
