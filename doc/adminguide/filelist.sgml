@@ -39,7 +39,6 @@
 <!entity logshipfile        SYSTEM "logshipping.sgml">
 <!entity bestpractices      SYSTEM "bestpractices.sgml">
 <!entity locking            SYSTEM "locking.sgml">
-<!entity supportedplatforms SYSTEM "supportedplatforms.sgml">
 <!entity testbed            SYSTEM "testbed.sgml">
 <!entity loganalysis        SYSTEM "loganalysis.sgml">
 <!entity slonyupgrade       SYSTEM "slonyupgrade.sgml">
