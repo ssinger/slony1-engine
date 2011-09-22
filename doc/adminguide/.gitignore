@@ -74,6 +74,7 @@ function.ddlscript-prepare-int-integer-integer.html
 function.ddlscript-prepare-int-p-only-on-node-integer-p-set-id-integer.html
 function.ddlscript-prepare-integer-integer.html
 function.ddlscript-prepare-p-only-on-node-integer-p-set-id-integer.html
+function.decode-tgargs-bytea.html
 function.denyaccess.html
 function.determineattkindunique-p-idx-name-text-p-tab-fqname-name.html
 function.determineattkindunique-text-name.html
