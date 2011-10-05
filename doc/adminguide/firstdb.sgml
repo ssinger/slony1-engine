@@ -81,10 +81,19 @@ ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
 
 <sect2><title>Creating the <application>pgbench</application> user</title>
 
-<para><command>
+<para>
+On &postgres; versions older than 8.1 use
+<command>
 createuser -A -D $PGBENCHUSER
 </command>
 </para>
+<para>
+On &postgres; versions 8.1 or newer use
+<command>
+createuser -SRD $PGBENCHUSER
+</command>
+</para>
+
 </sect2>
 <sect2><title>Preparing the databases</title>
 
