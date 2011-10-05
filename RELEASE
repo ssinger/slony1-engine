@@ -8,6 +8,8 @@ Release 1.2.23
 
 - Bug #236 - fix misformatting of log string for timestamp
 
+- Bug #239 - Fix FAILOVER on PG 9.0 by not querying pg_listener
+
 Release 1.2.22
 
 -Bug #118 -  Use TRUNCATE ONLY when cleaning out tables on subscribers in

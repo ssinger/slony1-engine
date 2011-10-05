@@ -2671,12 +2671,17 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			return -1;
 		}
 
+
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_config_lock; "
-					 "select listenerpid from \"pg_catalog\".pg_listener "
-					 "    where relname = '_%s_Restart'; ",
+					 "select nl_backendpid from \"_%s\".sl_nodelock "
+					 "    where nl_nodeid = \"_%s\".getLocalNodeId('_%s') and "
+					 "       exists (select 1 from pg_catalog.pg_stat_activity "
+					 "                 where procpid = nl_backendpid);",
 					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername);
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername);		
 		res3 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 		if (res3 == NULL)
 		{
@@ -2826,11 +2831,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			}
 
 			slon_mkquery(&query,
-						 "select listenerpid from \"pg_catalog\".pg_listener "
-						 "    where relname = '_%s_Restart' "
-						 "    and listenerpid <> %d; ",
+						 "select nl_backendpid from \"_%s\".sl_nodelock "
+						 "    where nl_backendpid <> %d "
+                         "    and nl_nodeid = \"_%s\".getLocalNodeId('_%s');",
 						 stmt->hdr.script->clustername,
-						 nodeinfo[i].slon_pid);
+						 nodeinfo[i].slon_pid, 
+						 stmt->hdr.script->clustername,
+						 stmt->hdr.script->clustername
+				);
 			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res1 == NULL)
 			{
