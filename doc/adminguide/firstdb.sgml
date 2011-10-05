@@ -83,7 +83,7 @@ ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
 <indexterm><primary>pgbench setup</primary> </indexterm>
 
 <para><command>
-createuser -A -D $PGBENCHUSER
+createuser -SRD $PGBENCHUSER
 </command>
 </para>
 </sect2>
