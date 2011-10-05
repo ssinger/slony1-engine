@@ -2774,8 +2774,10 @@ WAIT FOR EVENT (
     <programlisting>
      # Assuming that node 1 is the origin for set 999 that has direct subscribers 2 and 3
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 2);
+     SYNC(id=1);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      SUBSCRIBE SET (ID = 999, PROVIDER = 1, RECEIVER = 3);
+     SYNC(id=1);
      WAIT FOR EVENT (ORIGIN = 1, CONFIRMED = ALL, WAIT ON=1);
      MERGE SET ( ID = 1, ADD ID = 999, ORIGIN = 1 );
     </programlisting>
