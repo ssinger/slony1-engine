@@ -1,6 +1,10 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+** 2.1.0 RC 2
+
+- Add support for PostgreSQL 9.1.  Simply marking it a supported version
+
 ** 2.1.0 RC 1
 
 - Bug #236 :: Fix default formatting of timestamp in logs
