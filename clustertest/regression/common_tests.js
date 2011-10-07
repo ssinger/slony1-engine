@@ -170,7 +170,7 @@ function do_compare(coordinator) {
 			compareOp = coordinator.createCompareOperation('db1','db' + dbidx,queries[idx],'id');
 			compareOp.run();
 			coordinator.join(compareOp);
-			results.assertCheck('database comparision',compareOp.getResultCode(),Packages.info.slony.clustertest.testcoordinator.CompareOperation.COMPARE_EQUALS);
+			results.assertCheck('database comparison',compareOp.getResultCode(),Packages.info.slony.clustertest.testcoordinator.CompareOperation.COMPARE_EQUALS);
 		}
 	}
 }

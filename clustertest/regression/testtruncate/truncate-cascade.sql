@@ -1,0 +1,1 @@
+truncate orders with cascade;

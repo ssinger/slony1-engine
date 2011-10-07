@@ -86,5 +86,17 @@ do_initdata()
   generate_initdata
   $pgbindir/psql -h $host -p $port -d $db -U $user < $mktmp/generate.data 1> $mktmp/initdata.log 2> $mktmp/initdata.log
 
+  SCRIPT=${mktmp}/slonik.script
+  status "ran order processing tests, now drop table_237 from replication"
+  init_preamble
+  echo "set drop table (origin=1, id=237);" >> $SCRIPT
+  do_ik
+
+  wait_for_catchup
+
+  status "Dropped table_237 - now truncate it on both nodes"
+  $pgbindir/psql -h $HOST1 -p $PORT1 -d $DB1 -U $USER1 -c "truncate public.test_237;"
+  $pgbindir/psql -h $HOST2 -p $PORT2 -d $DB2 -U $USER2 -c "truncate public.test_237;"
+
   status "done"
 }

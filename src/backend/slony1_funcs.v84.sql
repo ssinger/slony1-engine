@@ -66,61 +66,61 @@ LANGUAGE plpgsql;
 comment on function @NAMESPACE@.TruncateOnlyTable(name) is
 'Calls TRUNCATE ONLY, syntax supported in version >= 8.4';
 
-
-create or replace function @NAMESPACE@.addTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
+create or replace function @NAMESPACE@.alterTableAddTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
 begin
 		execute 'create trigger "_@CLUSTERNAME@_truncatetrigger" ' ||
 				' before truncate on ' || i_fqtable || ' for each statement execute procedure ' ||
 				'@NAMESPACE@.log_truncate(' || i_tabid || ');';
 		execute 'create trigger "_@CLUSTERNAME@_truncatedeny" ' ||
 				' before truncate on ' || i_fqtable || ' for each statement execute procedure ' ||
-				'@NAMESPACE@.truncate_deny();';
+				'@NAMESPACE@.deny_truncate();';
 		return 1;
 end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.addtruncatetrigger (i_fqtable text, i_tabid integer) is 
+comment on function @NAMESPACE@.alterTableAddTruncateTrigger (i_fqtable text, i_tabid integer) is 
 'function to add TRUNCATE TRIGGER';
 
-create or replace function @NAMESPACE@.replica_truncate_trigger(i_fqname text) returns integer as $$
+create or replace function @NAMESPACE@.alterTableDropTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
 begin
-		execute 'alter table ' || i_fqname || 
-				' disable trigger "_@CLUSTERNAME@_truncatetrigger";';
-		execute 'alter table ' || i_fqname || 
-				' enable trigger "_@CLUSTERNAME@_truncatedeny";';
+		execute 'drop trigger "_@CLUSTERNAME@_truncatetrigger" ' ||
+				' on ' || i_fqtable || ';';
+		execute 'drop trigger "_@CLUSTERNAME@_truncatedeny" ' ||
+				' on ' || i_fqtable || ';';
+		return 1;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.alterTableDropTruncateTrigger (i_fqtable text, i_tabid integer) is 
+'function to drop TRUNCATE TRIGGER';
+
+create or replace function @NAMESPACE@.alterTableConfigureTruncateTrigger(i_fqname text, i_log_stat text, i_deny_stat text) returns integer as $$
+begin
+		execute 'alter table ' || i_fqname || ' ' || i_log_stat ||
+				' trigger "_@CLUSTERNAME@_truncatetrigger";';
+		execute 'alter table ' || i_fqname || ' ' || i_deny_stat ||
+				' trigger "_@CLUSTERNAME@_truncatedeny";';
 		return 1;
 end $$ language plpgsql;
 
-comment on function @NAMESPACE@.replica_truncate_trigger(i_fqname text) is
-'enable deny access, disable log trigger on origin.';
+comment on function @NAMESPACE@.alterTableConfigureTruncateTrigger(i_fqname text, i_log_stat text, i_deny_stat text) is
+'Configure the truncate triggers according to origin status.';
 
-create or replace function @NAMESPACE@.origin_truncate_trigger(i_fqname text) returns integer as $$
-begin
-		execute 'alter table ' || i_fqname || 
-				' enable trigger "_@CLUSTERNAME@_truncatetrigger";';
-		execute 'alter table ' || i_fqname || 
-				' disable trigger "_@CLUSTERNAME@_truncatedeny";';
-		return 1;
-end $$ language plpgsql;
-
-comment on function @NAMESPACE@.origin_truncate_trigger(i_fqname text) is
-'disable deny access, enable log trigger on origin.';
-
-create or replace function @NAMESPACE@.add_truncate_triggers () returns integer as $$
+create or replace function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () returns integer as $$
 begin
 
 		--- Add truncate triggers
 		begin		
-		perform @NAMESPACE@.addtruncatetrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname), tab_id)
+		perform @NAMESPACE@.alterTableAddTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname), tab_id)
 				from @NAMESPACE@.sl_table
                 where 2 <> (select count(*) from information_schema.triggers where 
 					  event_object_schema = tab_nspname and trigger_name in ('_@CLUSTERNAME@_truncatedeny', '_@CLUSTERNAME@_truncatetrigger') and
                       event_object_table = tab_relname);
 
 		exception when unique_violation then
-				  raise warning 'add_truncate_triggers() - uniqueness violation';
+				  raise warning 'upgradeSchemaAddTruncateTriggers() - uniqueness violation';
 				  raise warning 'likely due to truncate triggers existing partially';
-				  raise exception 'add_truncate_triggers() - failure - [%][%]', SQLSTATE, SQLERRM;
+				  raise exception 'upgradeSchemaAddTruncateTriggers() - failure - [%][%]', SQLSTATE, SQLERRM;
 		end;
 
 		-- Activate truncate triggers for replica
@@ -137,6 +137,6 @@ begin
 end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.add_truncate_triggers () is 
+comment on function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () is 
 'Add ON TRUNCATE triggers to replicated tables.';
 

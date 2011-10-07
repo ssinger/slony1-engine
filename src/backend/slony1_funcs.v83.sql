@@ -63,46 +63,44 @@ end;
 $$
 LANGUAGE plpgsql;
 
-
 comment on function @NAMESPACE@.TruncateOnlyTable(name) is
 'Calls TRUNCATE with out specifying ONLY, syntax supported in version 8.3';
 
-create or replace function @NAMESPACE@.addTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
+create or replace function @NAMESPACE@.alterTableAddTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
 begin
 		return 0;
 end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.addtruncatetrigger (i_fqtable text, i_tabid integer) is 
+comment on function @NAMESPACE@.alterTableAddTruncateTrigger (i_fqtable text, i_tabid integer) is 
 'function to add TRUNCATE TRIGGER';
 
-create or replace function @NAMESPACE@.replica_truncate_trigger(i_fqname text) returns integer as $$
+create or replace function @NAMESPACE@.alterTableDropTruncateTrigger (i_fqtable text, i_tabid integer) returns integer as $$
+begin
+		return 0;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.alterTableDropTruncateTrigger (i_fqtable text, i_tabid integer) is 
+'function to drop TRUNCATE TRIGGER';
+
+create or replace function @NAMESPACE@.alterTableConfigureTruncateTrigger(i_fqname text, i_log_stat text, i_deny_stat text) returns integer as $$
 begin
 		return 0;
 end $$ language plpgsql;
 
-comment on function @NAMESPACE@.replica_truncate_trigger(i_fqname text) is
-'enable deny access, disable log trigger on origin.  
-
-NOOP on PostgreSQL 8.3 because it does not support triggers ON TRUNCATE';
-
-create or replace function @NAMESPACE@.origin_truncate_trigger(i_fqname text) returns integer as $$
-begin
-		return 0;
-end $$ language plpgsql;
-
-comment on function @NAMESPACE@.origin_truncate_trigger(i_fqname text) is
+comment on function @NAMESPACE@.alterTableConfigureTruncateTrigger(i_fqname text, i_log_stat text, i_deny_stat text) is
 'disable deny access, enable log trigger on origin.  
 
 NOOP on PostgreSQL 8.3 because it does not support triggers ON TRUNCATE';
 
-create or replace function @NAMESPACE@.add_truncate_triggers () returns integer as $$
+create or replace function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () returns integer as $$
 begin
 		raise warning 'This node is running PostgreSQL 8.3 - cannot apply TRUNCATE triggers';
 		return 0;
 end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.add_truncate_triggers () is 
+comment on function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () is 
 'Add ON TRUNCATE triggers to replicated tables.  Not supported on PG 8.3, so a NOOP in this case.';
 
