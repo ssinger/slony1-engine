@@ -113,9 +113,14 @@ begin
 		begin		
 		perform @NAMESPACE@.alterTableAddTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname), tab_id)
 				from @NAMESPACE@.sl_table
-                where 2 <> (select count(*) from information_schema.triggers where 
-					  event_object_schema = tab_nspname and trigger_name in ('_@CLUSTERNAME@_truncatedeny', '_@CLUSTERNAME@_truncatetrigger') and
-                      event_object_table = tab_relname);
+                where 2 <> (select count(*) from pg_catalog.pg_trigger,
+					  pg_catalog.pg_class, pg_catalog.pg_namespace where 
+					  pg_trigger.tgrelid=pg_class.oid
+					  AND pg_class.relnamespace=pg_namespace.oid
+					  AND
+					  pg_namespace.nspname = tab_nspname and tgname in ('_@CLUSTERNAME@_truncatedeny', '_@CLUSTERNAME@_truncatetrigger') and
+                      pg_class.relname = tab_relname
+					  );
 
 		exception when unique_violation then
 				  raise warning 'upgradeSchemaAddTruncateTriggers() - uniqueness violation';
@@ -124,12 +129,14 @@ begin
 		end;
 
 		-- Activate truncate triggers for replica
-		perform @NAMESPACE@.replica_truncate_trigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname))
+		perform @NAMESPACE@.alterTableConfigureTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname)
+		,'disable','enable') 
 		        from @NAMESPACE@.sl_table
                 where tab_set not in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
 
 		-- Activate truncate triggers for origin
-		perform @NAMESPACE@.origin_truncate_trigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname))
+		perform @NAMESPACE@.alterTableConfigureTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname)
+		,'enable','disable') 
 		        from @NAMESPACE@.sl_table
                 where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
 

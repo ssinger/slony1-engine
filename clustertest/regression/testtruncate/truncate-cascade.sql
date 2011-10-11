@@ -1,1 +1,1 @@
-truncate orders with cascade;
+truncate orders cascade;
