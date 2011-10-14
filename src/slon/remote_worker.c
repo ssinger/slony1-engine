@@ -243,8 +243,6 @@ static struct node_confirm_status *node_confirm_tail = NULL;
 static pthread_mutex_t node_confirm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int			sync_group_maxsize;
-int			sync_max_rowsize;
-int			sync_max_largemem;
 int			explain_interval;
 time_t		explain_lastsec;
 int			explain_thistime;
@@ -275,7 +273,6 @@ static void start_monitored_event(PerfMon *pm);
 static void monitor_provider_query(PerfMon *pm);
 static void monitor_subscriber_query(PerfMon *pm);
 static void monitor_subscriber_iud(PerfMon *pm);
-static void monitor_largetuples(PerfMon *pm);
 
 static void adjust_provider_info(SlonNode *node,
 					 WorkerGroupData *wd, int cleanup);
@@ -4067,7 +4064,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			ntables_total += ntuples2;
 
 			/*
-			 * ... and build up a the provider query
+			 * ... and build up the provider query
 			 */
 			for (sl_log_no = 1; sl_log_no <= 2; sl_log_no++)
 			{
@@ -4101,15 +4098,12 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				 */
 				slon_appendquery(provider_query,
 					"select log_origin, log_txid, log_tableid, "
-							"log_actionseq, log_cmdtype, "
-							"octet_length(log_cmddata), "
-							"case when octet_length(log_cmddata) <= %d "
-								"then log_cmddata "
-								"else null end "
+							"log_actionseq, log_tablenspname, "
+							"log_tablerelname, log_cmdtype, "
+							"log_cmdupdncols, log_cmdargs "
 						"from %s.sl_log_%d "
 						"where log_origin = %d "
 						"and log_tableid in (",
-								sync_max_rowsize,
 								rtcfg_namespace, sl_log_no,
 								node->no_id);
 				for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
@@ -4169,15 +4163,12 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				slon_appendquery(provider_query,
 					"union all "
 					"select log_origin, log_txid, log_tableid, "
-							"log_actionseq, log_cmdtype, "
-							"octet_length(log_cmddata), "
-							"case when octet_length(log_cmddata) <= %d "
-								"then log_cmddata "
-								"else null end "
+							"log_actionseq, log_tablenspname, "
+							"log_tablerelname, log_cmdtype, "
+							"log_cmdupdncols, log_cmdargs "
 						"from %s.sl_log_%d "
 						"where log_origin = %d "
 						"and log_tableid in (",
-								sync_max_rowsize,
 								rtcfg_namespace, sl_log_no,
 								node->no_id);
 				for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
@@ -4279,14 +4270,12 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			slon_mkquery(provider_query,
 				"declare LOG cursor for "
 				"select log_origin, log_txid, log_tableid, "
-						"log_actionseq, log_cmdtype, "
-						"octet_length(log_cmddata), "
-						"case when octet_length(log_cmddata) <= %d "
-							"then log_cmddata "
-							"else null end "
+						"log_actionseq, log_tablenspname, "
+						"log_tablerelname, log_cmdtype, "
+						"log_cmdupdncols, log_cmdargs "
 					"from %s.sl_log_1 "
 					"where false",
-					sync_max_rowsize, rtcfg_namespace);
+					rtcfg_namespace);
 		}
 	}
 
@@ -4794,7 +4783,6 @@ sync_helper(void *cdata)
 
 	PGresult   *res = NULL;
 	PGresult   *res2 = NULL;
-	PGresult   *res3 = NULL;
 	int			ntuples;
 	int			tupno;
 
@@ -4870,33 +4858,33 @@ sync_helper(void *cdata)
 								rtcfg_namespace);
 
 			start_monitored_event(&pm);
-			res3 = PQexec(dbconn, dstring_data(&query));
+			res2 = PQexec(dbconn, dstring_data(&query));
 			monitor_provider_query(&pm);
 
-			rc = PQresultStatus(res3);
+			rc = PQresultStatus(res2);
 			if (rc != PGRES_TUPLES_OK)
 			{
 				slon_log(SLON_ERROR,
 						 "remoteWorkerThread_%d: \"%s\" %s %s\n",
 						 node->no_id, dstring_data(&query),
 						 PQresStatus(rc),
-						 PQresultErrorMessage(res3));
-				PQclear(res3);
+						 PQresultErrorMessage(res2));
+				PQclear(res2);
 				errors++;
 				break;
 			}
-			if (PQntuples(res3) != 1)
+			if (PQntuples(res2) != 1)
 			{
 				slon_log(SLON_ERROR,
 					 "remoteWorkerThread_%d: \"%s\" %s returned %d tuples\n",
 						 node->no_id, dstring_data(&query),
-						 PQresStatus(rc), PQntuples(res3));
-				PQclear(res3);
+						 PQresStatus(rc), PQntuples(res2));
+				PQclear(res2);
 				errors++;
 				break;
 			}
-			log_status = strtol(PQgetvalue(res3, 0, 0), NULL, 10);
-			PQclear(res3);
+			log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
+			PQclear(res2);
 			slon_log(SLON_DEBUG2,
 				"remoteWorkerThread_%d_%d: current remote log_status = %d\n",
 					 node->no_id, provider->no_id, log_status);
@@ -5018,34 +5006,8 @@ sync_helper(void *cdata)
 				 * available line buffers.
 				 */
 				pthread_mutex_lock(&(wd->workdata_lock));
-				if (data_line_alloc == 0 ||
-					wd->workdata_largemem > sync_max_largemem)
+				if (data_line_alloc == 0)
 				{
-					/*
-					 * First make sure that the overall memory usage is inside
-					 * bounds.
-					 */
-					if (wd->workdata_largemem > sync_max_largemem)
-					{
-						slon_log(SLON_DEBUG4,
-								 "remoteHelperThread_%d_%d: wait for oversize memory to free\n",
-								 node->no_id, provider->no_id);
-
-						while (wd->workdata_largemem > sync_max_largemem &&
-							   wd->workgroup_status == SLON_WG_BUSY)
-						{
-							pthread_cond_wait(&(wd->linepool_cond), &(wd->workdata_lock));
-						}
-						if (wd->workgroup_status != SLON_WG_BUSY)
-						{
-							slon_log(SLON_DEBUG4,
-							   "remoteHelperThread_%d_%d: abort operation\n",
-									 node->no_id, provider->no_id);
-							errors++;
-							break;
-						}
-					}
-
 					/*
 					 * Second make sure that we have at least 1 line buffer.
 					 */
@@ -5157,59 +5119,13 @@ sync_helper(void *cdata)
 					int			log_tableid = strtol(PQgetvalue(res, tupno, 2),
 													 NULL, 10);
 					char	   *log_actionseq = PQgetvalue(res, tupno, 3);
-					char	   *log_cmdtype = PQgetvalue(res, tupno, 4);
-					int			log_cmdsize = strtol(PQgetvalue(res, tupno, 5),
-													 NULL, 10);
-					char	   *log_cmddata = PQgetvalue(res, tupno, 6);
-					int			largemem = 0;
+					char	   *log_tablenspname = PQgetvalue(res, tupno, 4);
+					char	   *log_tablerelname = PQgetvalue(res, tupno, 5);
+					char	   *log_cmdtype = PQgetvalue(res, tupno, 6);
+					char	   *log_cmdupdncols = PQgetvalue(res, tupno, 7);
+					char	   *log_cmdargs = PQgetvalue(res, tupno, 8);
 
 					tupno++;
-
-					if (log_cmdsize >= sync_max_rowsize)
-					{
-						(void) slon_mkquery(&query2,
-											"select log_cmddata "
-											"from %s.sl_log_1 "
-											"where log_origin = '%s' "
-											"  and log_txid = '%s' "
-											"  and log_actionseq = '%s' "
-											"UNION ALL "
-											"select log_cmddata "
-											"from %s.sl_log_2 "
-											"where log_origin = '%s' "
-											"  and log_txid = '%s' "
-											"  and log_actionseq = '%s'",
-											rtcfg_namespace,
-										 log_origin, log_txid, log_actionseq,
-											rtcfg_namespace,
-										log_origin, log_txid, log_actionseq);
-						start_monitored_event(&pm);
-						res2 = PQexec(dbconn, dstring_data(&query2));
-						monitor_largetuples(&pm);
-
-						if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-						{
-							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: \"%s\" %s",
-									 node->no_id, provider->no_id,
-									 dstring_data(&query),
-									 PQresultErrorMessage(res2));
-							PQclear(res2);
-							errors++;
-							break;
-						}
-						if (PQntuples(res2) != 1)
-						{
-							slon_log(SLON_ERROR, "remoteHelperThread_%d_%d: large log_cmddata for actionseq %s not found\n",
-									 node->no_id, provider->no_id,
-									 log_actionseq);
-							PQclear(res2);
-							errors++;
-							break;
-						}
-
-						log_cmddata = PQgetvalue(res2, 0, 0);
-						largemem = log_cmdsize;
-					}
 
 					/*
 					 * This can happen if the table belongs to a set that
@@ -5220,8 +5136,6 @@ sync_helper(void *cdata)
 					if (log_tableid >= wd->tab_fqname_size ||
 						wd->tab_fqname[log_tableid] == NULL)
 					{
-						if (largemem > 0)
-							PQclear(res2);
 						continue;
 					}
 
@@ -5234,59 +5148,24 @@ sync_helper(void *cdata)
 						slon_appendquery(&(line->log),
 										 "insert into %s.sl_log_%d "
 								   "    (log_origin, log_txid, log_tableid, "
-										 "     log_actionseq, log_cmdtype, "
-										 "     log_cmddata) values "
-							   "    ('%s', '%s', '%d', '%s', '%q', '%q');\n",
+										 "     log_actionseq, log_tablenspname, "
+										 "     log_tablerelname, log_cmdtype, "
+										 "     log_cmdupdncols, "
+										 "     log_cmdargs) values "
+							   "    ('%s', '%s', '%d', '%s', '%q', '%q', '%q', '%q', '%q');\n",
 									   rtcfg_namespace, wd->active_log_table,
 										 log_origin, log_txid, log_tableid,
-									log_actionseq, log_cmdtype, log_cmddata);
-						largemem *= 2;
+									log_actionseq, log_tablenspname,
+									log_tablerelname, log_cmdtype, 
+									log_cmdupdncols, log_cmdargs);
 					}
 
-					/*
-					 * Add the actual replicating command to the line buffer
-					 */
-					line->line_largemem += largemem;
-					switch (*log_cmdtype)
-					{
-						case 'I':
-							slon_appendquery(&(line->data),
-											 "insert into %s %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
-							pm.num_inserts++;
-							break;
-
-						case 'U':
-							slon_appendquery(&(line->data),
-											 "update only %s set %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
-							pm.num_updates++;
-							break;
-
-						case 'D':
-							slon_appendquery(&(line->data),
-										   "delete from only %s where %s;\n",
-											 wd->tab_fqname[log_tableid],
-											 log_cmddata);
-							pm.num_deletes++;
-							break;
-						case 'T':
-							slon_appendquery(&(line->data),
-											 "%s;\n",
-											 log_cmddata);
-							pm.num_truncates++;
-							break;
-					}
 					line_ncmds++;
 
 					if (line_ncmds >= SLON_COMMANDS_PER_LINE)
 					{
 						if (data_line_last >= data_line_alloc)
 						{
-							if (largemem > 0)
-								PQclear(res2);
 							break;
 						}
 
@@ -5299,29 +5178,6 @@ sync_helper(void *cdata)
 						dstring_reset(&(line->log));
 
 						line_ncmds = 0;
-					}
-
-					/*
-					 * If this was a large log_cmddata entry (>
-					 * sync_max_rowsize), add this to the memory usage of the
-					 * workgroup and check if we are exceeding limits.
-					 */
-					if (largemem > 0)
-					{
-						PQclear(res2);
-						pthread_mutex_lock(&(wd->workdata_lock));
-						wd->workdata_largemem += largemem;
-						if (wd->workdata_largemem >= sync_max_largemem)
-						{
-							/*
-							 * This is it ... we exit the loop here and wait
-							 * for the worker to apply enough of the large
-							 * rows first.
-							 */
-							pthread_mutex_unlock(&(wd->workdata_lock));
-							break;
-						}
-						pthread_mutex_unlock(&(wd->workdata_lock));
 					}
 				}
 
@@ -6151,10 +6007,3 @@ static void monitor_subscriber_iud(PerfMon *perf_info) {
   (perf_info->subscr_iud__c) ++;
 }
 
-static void monitor_largetuples(PerfMon *perf_info) {
-  double diff;
-  gettimeofday(&(perf_info->now_t), NULL);
-  diff = TIMEVAL_DIFF(&(perf_info->prev_t), &(perf_info->now_t)); 
-  (perf_info->large_tuples_t) += diff;
-  (perf_info->large_tuples_c) ++;
-}

@@ -37,20 +37,6 @@
 # Range:  [0,100], default: 6
 #sync_group_maxsize=6
 
-# Size above which an sl_log_? row's log_cmddata is considered large.
-# Up to 500 rows of this size are allowed in memory at once. Rows larger
-# than that count into the sync_max_largemem space allocated and free'd
-# on demand.
-# Range:  [1024,32768], default: 8192
-#sync_max_rowsize=8192
-
-# Maximum amount of memory allowed for large rows. Note that the algorithm
-# will stop fetching rows AFTER this amount is exceeded, not BEFORE. This
-# is done to ensure that a single row exceeding this limit alone does not
-# stall replication.
-# Range:  [1048576,1073741824], default: 5242880
-#sync_max_largemem=5242880
-
 # If this parameter is 1, messages go both to syslog and the standard 
 # output. A value of 2 sends output only to syslog (some messages will 
 # still go to the standard output/error).  The default is 0, which means 

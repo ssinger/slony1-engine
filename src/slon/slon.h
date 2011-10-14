@@ -557,8 +557,6 @@ extern void *remoteListenThread_main(void *cdata);
  * ----------
  */
 extern int	sync_group_maxsize;
-extern int	sync_max_rowsize;
-extern int	sync_max_largemem;
 extern int	explain_interval;
 
 

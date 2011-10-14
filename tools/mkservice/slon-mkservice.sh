@@ -304,20 +304,6 @@ log_timestamp  0    # multilog will insert a tai64n timestamp
 # If the value is left empty, this logic will be ignored. 
 #lag_interval
 
-# Size above which an sl_log_? row's log_cmddata is considered large. Up to
-# 500 rows of this size are allowed in memory at once. Rows larger than that
-# count into the sync_max_largemem space allocated and free()'ed on demand.
-# The default value is 8192, meaning that your expected memory consumption
-# (for the LOG cursor) should not exceed 8MB.
-#sync_max_rowsize 8192
-
-# Maximum memory allocated for large rows, where log_cmddata are larger than
-# sync_max_rowsize. Note that the algorithm reads rows until after this value
-# is exceeded. Otherwise, a tuple larger than this value would stall
-# replication. As a result, don't assume that memory consumption will remain
-# smaller than this value.  The default value is 5242880.
-#sync_max_largemem 5242880
-
 # How long should the remote listener wait before treating the event selection
 # criteria as having timed out?
 # Range: [30-30000], default 300 

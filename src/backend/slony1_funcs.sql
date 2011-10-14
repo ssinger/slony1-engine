@@ -4996,19 +4996,27 @@ system switches between sl_log_1 and sl_log_2.';
 --
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.check_table_field_exists (p_namespace text, p_table text, p_field text)
+returns bool as $$
+BEGIN
+	return exists (
+			select 1 from "information_schema".columns
+				where table_schema = p_namespace
+				and table_name = p_table
+				and column_name = p_field
+		);
+END;$$ language plpgsql;
+
+comment on function @NAMESPACE@.check_table_field_exists (p_namespace text, p_table text, p_field text)
+is 'Check if a table has a specific attribute';
+
 create or replace function @NAMESPACE@.add_missing_table_field (p_namespace text, p_table text, p_field text, p_type text) 
 returns bool as $$
 DECLARE
   v_row       record;
   v_query     text;
 BEGIN
-  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
-     where @NAMESPACE@.slon_quote_brute(n.nspname) = p_namespace and 
-         c.relnamespace = n.oid and
-         @NAMESPACE@.slon_quote_brute(c.relname) = p_table and
-         a.attrelid = c.oid and
-         @NAMESPACE@.slon_quote_brute(a.attname) = p_field;
-  if not found then
+  if not @NAMESPACE@.check_table_field_exists(p_namespace, p_table, p_field) then
     raise notice 'Upgrade table %.% - add field %', p_namespace, p_table, p_field;
     v_query := 'alter table ' || p_namespace || '.' || p_table || ' add column ';
     v_query := v_query || p_field || ' ' || p_type || ';';
@@ -5080,9 +5088,196 @@ create table @NAMESPACE@.sl_components (
 	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
 	   execute v_query;
         end if;
+	
+	--
+	-- On the upgrade to 2.2, we change the layout of sl_log_N by
+	-- adding columns log_tablenspname, log_tablerelname, and
+	-- log_cmdupdncols as well as changing log_cmddata into
+	-- log_cmdargs, which is a text array.
+	--
+	if not @NAMESPACE@.check_table_field_exists('_@CLUSTERNAME@', 'sl_log_1', 'log_cmdargs') then
+		--
+		-- Check that the cluster is completely caught up
+		--
+		if @NAMESPACE@.check_unconfirmed_log() then
+			raise EXCEPTION 'cannot upgrade to new sl_log_N format due to existing unreplicated data';
+		end if;
+
+		--
+		-- Drop tables sl_log_1 and sl_log_2
+		--
+		drop table @NAMESPACE@.sl_log_1;
+		drop table @NAMESPACE@.sl_log_2;
+
+		--
+		-- Create the new sl_log_1
+		--
+		create table @NAMESPACE@.sl_log_1 (
+			log_origin          int4,
+			log_txid            bigint,
+			log_tableid         int4,
+			log_actionseq       int8,
+			log_tablenspname    text,
+			log_tablerelname    text,
+			log_cmdtype         char,
+			log_cmdupdncols     int4,
+			log_cmdargs         text[]
+		) without oids;
+		create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
+			(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
+		comment on column @NAMESPACE@.sl_log_1.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+		comment on column @NAMESPACE@.sl_log_1.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_1.log_tablenspname is 'The schema name of the table affected';
+		comment on column @NAMESPACE@.sl_log_1.log_tablerelname is 'The table name of the table affected';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdargs is 'The data needed to perform the log action on the replica';
+
+		--
+		-- Create the new sl_log_2
+		--
+		create table @NAMESPACE@.sl_log_2 (
+			log_origin          int4,
+			log_txid            bigint,
+			log_tableid         int4,
+			log_actionseq       int8,
+			log_tablenspname    text,
+			log_tablerelname    text,
+			log_cmdtype         char,
+			log_cmdupdncols     int4,
+			log_cmdargs         text[]
+		) without oids;
+		create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
+			(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
+		comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+		comment on column @NAMESPACE@.sl_log_2.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_2.log_tablenspname is 'The schema name of the table affected';
+		comment on column @NAMESPACE@.sl_log_2.log_tablerelname is 'The table name of the table affected';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
+
+		--
+		-- Put the log apply triggers back onto sl_log_1/2
+		--
+		create trigger apply_trigger
+			before INSERT on @NAMESPACE@.sl_log_1
+			for each row execute procedure @NAMESPACE@.log_apply();
+		alter table @NAMESPACE@.sl_log_1
+			enable replica trigger apply_trigger;
+		create trigger apply_trigger
+			before INSERT on @NAMESPACE@.sl_log_2
+			for each row execute procedure @NAMESPACE@.log_apply();
+		alter table @NAMESPACE@.sl_log_2
+			enable replica trigger apply_trigger;
+	end if;
+
 	return p_old;
 end;
-$$ language plpgsql
+$$ language plpgsql;
+
+create or replace function @NAMESPACE@.check_unconfirmed_log ()
+returns bool as $$
+declare
+	v_rc		bool = false;
+	v_error		bool = false;
+	v_origin	integer;
+	v_allconf	bigint;
+	v_allsnap	txid_snapshot;
+	v_count		bigint;
+begin
+	--
+	-- Loop over all nodes that are the origin of at least one set
+	--
+	for v_origin in select distinct set_origin as no_id
+			from @NAMESPACE@.sl_set loop
+		--
+		-- Per origin determine which is the highest event seqno
+		-- that is confirmed by all subscribers to any of the
+		-- origins sets.
+		--
+		select into v_allconf min(max_seqno) from (
+				select con_received, max(con_seqno) as max_seqno
+					from @NAMESPACE@.sl_confirm
+					where con_origin = v_origin
+					and con_received in (
+						select distinct sub_receiver
+							from @NAMESPACE@.sl_set as SET,
+								@NAMESPACE@.sl_subscribe as SUB
+							where SET.set_id = SUB.sub_set
+							and SET.set_origin = v_origin
+						)
+					group by con_received
+			) as maxconfirmed;
+		if not found then
+			raise NOTICE 'check_unconfirmed_log(): cannot determine highest ev_seqno for node % confirmed by all subscribers', v_origin;
+			v_error = true;
+			continue;
+		end if;
+
+		--
+		-- Get the txid snapshot that corresponds with that event
+		--
+		select into v_allsnap ev_snapshot
+			from @NAMESPACE@.sl_event
+			where ev_origin = v_origin
+			and ev_seqno = v_allconf;
+		if not found then
+			raise NOTICE 'check_unconfirmed_log(): cannot find event %,% in sl_event', v_origin, v_allconf;
+			v_error = true;
+			continue;
+		end if;
+
+		--
+		-- Count the number of log rows that appeard after that event.
+		--
+		select into v_count count(*) from (
+			select 1 from @NAMESPACE@.sl_log_1
+				where log_origin = v_origin
+				and log_txid >= "pg_catalog".txid_snapshot_xmax(v_allsnap)
+			union all
+			select 1 from @NAMESPACE@.sl_log_1
+				where log_origin = v_origin
+				and log_txid in (
+					select * from "pg_catalog".txid_snapshot_xip(v_allsnap)
+				)
+			union all
+			select 1 from @NAMESPACE@.sl_log_2
+				where log_origin = v_origin
+				and log_txid >= "pg_catalog".txid_snapshot_xmax(v_allsnap)
+			union all
+			select 1 from @NAMESPACE@.sl_log_2
+				where log_origin = v_origin
+				and log_txid in (
+					select * from "pg_catalog".txid_snapshot_xip(v_allsnap)
+				)
+		) as cnt;
+
+		if v_count > 0 then
+			raise NOTICE 'check_unconfirmed_log(): origin % has % log rows that have not propagated to all subscribers yet', v_origin, v_count;
+			v_rc = true;
+		end if;
+	end loop;
+
+	if v_error then
+		raise EXCEPTION 'check_unconfirmed_log(): aborting due to previous inconsistency';
+	end if;
+
+	return v_rc;
+end;
+$$ language plpgsql;
+
+--
+-- XXX What is this doing here?
+--
 set search_path to @NAMESPACE@
 ;
 
@@ -5520,23 +5715,37 @@ comment on function @NAMESPACE@.slon_node_health_check() is 'called when slon st
 create or replace function @NAMESPACE@.log_truncate () returns trigger as
 $$
 	declare
-		c_command text;
+		c_nspname text;
+		c_relname text;
 		c_log integer;
 		c_node integer;
 		c_tabid integer;
 	begin
         c_tabid := tg_argv[0];
 	    c_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-		c_command := 'TRUNCATE TABLE ONLY "' || tab_nspname || '"."' ||
-				  tab_relname || '" CASCADE;' 
+		select tab_nspname, tab_relname into c_nspname, c_relname
 				  from @NAMESPACE@.sl_table where tab_id = c_tabid;
 		select last_value into c_log from @NAMESPACE@.sl_log_status;
 		if c_log in (0, 2) then
-		   insert into @NAMESPACE@.sl_log_1 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+			insert into @NAMESPACE@.sl_log_1 (
+					log_origin, log_txid, log_tableid, 
+					log_actionseq, log_tablenspname, 
+					log_tablerelname, log_cmdtype, 
+					log_cmdupdncols, log_cmdargs
+				) values (
+					c_node, pg_catalog.txid_current(), c_tabid,
+					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
+					c_relname, 'T', 0, array[]::text[]);
 		else   -- (1, 3) 
-		   insert into @NAMESPACE@.sl_log_2 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current, c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+			insert into @NAMESPACE@.sl_log_2 (
+					log_origin, log_txid, log_tableid, 
+					log_actionseq, log_tablenspname, 
+					log_tablerelname, log_cmdtype, 
+					log_cmdupdncols, log_cmdargs
+				) values (
+					c_node, pg_catalog.txid_current(), c_tabid,
+					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
+					c_relname, 'T', 0, array[]::text[]);
 		end if;
 		return NULL;
     end
@@ -5679,4 +5888,112 @@ repair the log triggers as required.  If only_locked is true then only
 tables that are already exclusivly locked by the current transaction are 
 repaired. Otherwise all replicated tables with outdated trigger arguments
 are recreated.';
+
+
+create or replace function @NAMESPACE@.log_apply() returns trigger
+as $$
+declare
+	v_command	text = 'not implemented yet';
+	v_list1		text = '';
+	v_list2		text = '';
+	v_comma		text = '';
+	v_and		text = '';
+	v_idx		integer = 1;
+	v_nargs		integer;
+	v_i			integer = 0;
+begin
+	v_nargs = array_upper(NEW.log_cmdargs, 1);
+
+	if NEW.log_cmdtype = 'I' then
+		while v_idx < v_nargs loop
+			v_list1 = v_list1 || v_comma ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+			v_list2 = v_list2 || v_comma ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+
+			v_comma = ',';
+		end loop;
+
+		v_command = 'INSERT INTO ' || 
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname) || ' (' ||
+			v_list1 || ') VALUES (' || v_list2 || ')';
+
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'U' then
+		v_command = 'UPDATE ONLY ' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname) || ' SET ';
+		while v_i < NEW.log_cmdupdncols loop
+			v_command = v_command || v_comma ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			v_command = v_command ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+			v_comma = ',';
+			v_i = v_i + 1;
+		end loop;
+		if NEW.log_cmdupdncols = 0 then
+			v_command = v_command ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[1]) || '=' ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[1]);
+		end if;
+		v_command = v_command || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			v_command = v_command ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'D' then
+		v_command = 'DELETE FROM ONLY ' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname) || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			v_command = v_command ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'T' then
+		perform @NAMESPACE@.TruncateOnlyTable(
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname));
+	end if;
+
+	return NEW;
+end;
+$$ language plpgsql;
+
+create trigger apply_trigger
+	before INSERT on @NAMESPACE@.sl_log_1
+	for each row execute procedure @NAMESPACE@.log_apply();
+alter table @NAMESPACE@.sl_log_1
+	enable replica trigger apply_trigger;
+create trigger apply_trigger
+	before INSERT on @NAMESPACE@.sl_log_2
+	for each row execute procedure @NAMESPACE@.log_apply();
+alter table @NAMESPACE@.sl_log_2
+	enable replica trigger apply_trigger;
 

@@ -580,45 +580,6 @@
       </listitem>
     </varlistentry>
 
-    <varlistentry id="slon-config-max-rowsize" xreflabel="sync_max_rowsize">
-      <term><varname>sync_max_rowsize</varname>  (<type>integer</type>)</term>
-      <indexterm>
-        <primary><varname>sync_max_rowsize</varname> configuration parameter</primary>
-      </indexterm>
-      <listitem>
-        <para>Size above which an sl_log_?  row's
-        <envar>log_cmddata</envar> is considered large.  Up to 500
-        rows of this size are allowed in memory at once. Rows larger
-        than that count into the <envar>sync_max_largemem</envar>
-        space allocated and <function>free()</function>'ed on demand.
-        </para>
-
-	<para>The default value is 8192, meaning that your expected
-	memory consumption (for the LOG cursor) should not exceed 8MB.
-        </para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry id="slon-config-max-largemem" xreflabel="sync_max_largemem">
-      <term><varname>sync_max_largemem</varname>  (<type>integer</type>)</term>
-      <indexterm>
-        <primary><varname>sync_max_largemem</varname> configuration parameter</primary>
-      </indexterm>
-      <listitem>
-        <para>Maximum memory allocated for large rows, where
-        <envar>log_cmddata</envar> are larger than
-        <envar>sync_max_rowsize</envar>.  </para>
-
-	<para>Note that the algorithm reads rows until
-	<emphasis>after</emphasis> this value is exceeded.  Otherwise,
-	a tuple larger than this value would stall replication.  As a
-	result, don't assume that memory consumption will remain
-	smaller than this value.
-        </para>
-
-        <para> The default value is 5242880.</para>
-      </listitem>
-    </varlistentry>
     <varlistentry id="slon-config-remote-listen-timeout" xreflabel="slon_conf_remote_listen_timeout">
       <term><varname>remote_listen_timeout</varname> (<type>integer</type>)</term>
       <indexterm>

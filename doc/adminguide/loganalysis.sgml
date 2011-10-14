@@ -736,9 +736,6 @@ application downtime may not be necessary.  </para></listitem>
 
 <para> This indicates how long it took to get the first row from the LOG cursor that pulls in data from the sl_log tables.</para> </listitem>
 
-<listitem><para><command>ERROR: remoteWorkerThread_%d_d: large log_cmddata for actionseq %s not found</command></para> 
-
-<para> &lslon; could not find the data for one of the <quote>very large</quote> sl_log table tuples that are pulled individually.  This shouldn't happen.</para></listitem>
 <listitem><para><command>DEBUG2: remoteWorkerThread_%d_d:%.3f seconds until close cursor </command></para> 
 
 <para> This indicates how long it took to complete reading data from the LOG cursor that pulls in data from the sl_log tables.</para> </listitem>

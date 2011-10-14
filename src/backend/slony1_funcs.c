@@ -36,6 +36,7 @@
 #include "utils/guc.h"
 #include "utils/rel.h"
 #include "utils/relcache.h"
+#include "utils/lsyscache.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -119,9 +120,6 @@ typedef struct slony_I_cluster_status
 	text	   *cmdtype_U;
 	text	   *cmdtype_D;
 
-	text	   *cmddata_buf;
-	int			cmddata_size;
-
 	struct slony_I_cluster_status *next;
 } Slony_I_ClusterStatus;
 
@@ -131,7 +129,6 @@ static Slony_I_ClusterStatus *
 getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
 static const char *slon_quote_identifier(const char *ident);
-static char *slon_quote_literal(char *str);
 static int prepareLogPlan(Slony_I_ClusterStatus * cs,
 					   int log_status);
 
@@ -287,14 +284,22 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	TriggerData *tg;
-	Datum		argv[4];
+	Datum		argv[6];
 	text	   *cmdtype = NULL;
+	int32		cmdupdncols = 0;
 	int			rc;
 	Name		cluster_name;
 	int32		tab_id;
 	char	   *attkind;
 	int			attkind_idx;
-	int			cmddata_need;
+
+	char	   *olddatestyle = NULL;
+	Datum	   *cmdargs = NULL;
+	Datum	   *cmdargselem = NULL;
+	bool	   *cmdnulls = NULL;
+	bool	   *cmdnullselem = NULL;
+	int			cmddims[1];
+	int			cmdlbs[1];
 
 	/*
 	 * Don't do any logging if the current session role isn't Origin.
@@ -379,35 +384,41 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		cs->currentXid = newXid;
 	}
 
+	/*
+	 * Save the current datestyle setting and switch to ISO (if not already)
+	 */
+	olddatestyle = GetConfigOptionByName("DateStyle", NULL);
+	if (!strstr(olddatestyle, "ISO"))
+		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, 
+				true, true);
+
 
 	/*
-	 * Determine cmdtype and cmddata depending on the command type
+	 * Determine cmdtype and cmdargs depending on the command type
 	 */
 	if (TRIGGER_FIRED_BY_INSERT(tg->tg_event))
 	{
 		HeapTuple	new_row = tg->tg_trigtuple;
 		TupleDesc	tupdesc = tg->tg_relation->rd_att;
-		char	   *col_ident;
 		char	   *col_value;
 
-		int			len_ident;
-		int			len_value;
 		int			i;
-		int			need_comma = false;
-		char	   *OldDateStyle;
-		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
 		 * INSERT
 		 *
-		 * cmdtype = 'I' cmddata = ("col" [, ...]) values ('value' [, ...])
+		 * cmdtype = 'I' cmdargs = colname, newval [, ...]
 		 */
 		cmdtype = cs->cmdtype_I;
+
+		cmdargselem = cmdargs = (Datum *)palloc(sizeof(Datum) * 
+				((tg->tg_relation->rd_att->natts * 2) + 2));
+		cmdnullselem = cmdnulls = (bool *)palloc(sizeof(bool) *
+				((tg->tg_relation->rd_att->natts * 2) + 2));
 
 		/*
 		 * Specify all the columns
 		 */
-		*cp++ = '(';
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
@@ -416,98 +427,28 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			if (tupdesc->attrs[i]->attisdropped)
 				continue;
 
-			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_ident = strlen(col_ident));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
-
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			if (need_comma)
-				*cp++ = ',';
-			else
-				need_comma = true;
-
-			memcpy(cp, col_ident, len_ident);
-			cp += len_ident;
-		}
-
-		/*
-		 * Append the string ") values ("
-		 */
-		*cp++ = ')';
-		*cp++ = ' ';
-		*cp++ = 'v';
-		*cp++ = 'a';
-		*cp++ = 'l';
-		*cp++ = 'u';
-		*cp++ = 'e';
-		*cp++ = 's';
-		*cp++ = ' ';
-		*cp++ = '(';
-
-		/*
-		 * Append the values
-		 */
-		need_comma = false;
-		OldDateStyle = GetConfigOptionByName("DateStyle", NULL);
-		if (!strstr(OldDateStyle, "ISO"))
-			set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
-		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
-		{
 			/*
-			 * Skip dropped columns
+			 * Add the column name
 			 */
-			if (tupdesc->attrs[i]->attisdropped)
-				continue;
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(SPI_fname(tupdesc, i + 1)));
+			*cmdnullselem++ = false;
 
-
+			/*
+			 * Add the column value
+			 */
 			if ((col_value = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 			{
-				col_value = "NULL";
+				*cmdnullselem++ = true;
 			}
 			else
 			{
-				col_value = slon_quote_literal(col_value);
+				*cmdargselem++ = DirectFunctionCall1(textin, 
+						CStringGetDatum(col_value));
+				*cmdnullselem++ = false;
 			}
-
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_value = strlen(col_value));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
-
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			if (need_comma)
-				*cp++ = ',';
-			else
-				need_comma = true;
-
-			memcpy(cp, col_value, len_value);
-			cp += len_value;
 		}
 
-		if (!strstr(OldDateStyle, "ISO"))
-			set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
-
-		/*
-		 * Terminate and done
-		 */
-		*cp++ = ')';
-		*cp = '\0';
-		SET_VARSIZE(cs->cmddata_buf,
-					VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
 	}
 	else if (TRIGGER_FIRED_BY_UPDATE(tg->tg_event))
 	{
@@ -521,22 +462,24 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 
 		char	   *col_ident;
 		char	   *col_value;
-		int			len_ident;
-		int			len_value;
 		int			i;
-		int			need_comma = false;
-		int			need_and = false;
-		char	   *OldDateStyle;
-
-		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
 		 * UPDATE
 		 *
-		 * cmdtype = 'U' cmddata = "col_ident"='value' [, ...] where
-		 * "pk_ident" = 'value' [ and ...]
+		 * cmdtype = 'U' cmdargs = pkcolname, oldval [, ...]
+		 *						   colname, newval [, ...]
 		 */
 		cmdtype = cs->cmdtype_U;
+
+		cmdargselem = cmdargs = (Datum *)palloc(sizeof(Datum) * 
+				((tg->tg_relation->rd_att->natts * 4) + 3));
+		cmdnullselem = cmdnulls = (bool *)palloc(sizeof(bool) *
+				((tg->tg_relation->rd_att->natts * 4) + 3));
+
+		/*
+		 * For all changed columns, add name+value pairs and count them.
+		 */
 		for (i = 0; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
@@ -612,95 +555,23 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				}
 			}
 
-			if (need_comma)
-				*cp++ = ',';
-			else
-				need_comma = true;
-
-			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(SPI_fname(tupdesc, i + 1)));
+			*cmdnullselem++ = false;
 			if (new_isnull)
-				col_value = "NULL";
+				*cmdnullselem++ = true;
 			else
 			{
-				OldDateStyle = GetConfigOptionByName("DateStyle", NULL);
-				if (!strstr(OldDateStyle, "ISO"))
-					set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION, true, true);
-				col_value = slon_quote_literal(SPI_getvalue(new_row, tupdesc, i + 1));
-				if (!strstr(OldDateStyle, "ISO"))
-					set_config_option("DateStyle", OldDateStyle, PGC_USERSET, PGC_S_SESSION, true, true);
+				*cmdargselem++ = DirectFunctionCall1(textin,
+						CStringGetDatum(SPI_getvalue(new_row, tupdesc, i + 1)));
+				*cmdnullselem++ = false;
 			}
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_ident = strlen(col_ident)) +
-				(len_value = strlen(col_value));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
-
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			memcpy(cp, col_ident, len_ident);
-			cp += len_ident;
-			*cp++ = '=';
-			memcpy(cp, col_value, len_value);
-			cp += len_value;
+			cmdupdncols++;
 		}
 
 		/*
-		 * It can happen that the only UPDATE an application does is to set a
-		 * column to the same value again. In that case, we'd end up here with
-		 * no columns in the SET clause yet. We add the first key column here
-		 * with it's old value to simulate the same for the replication
-		 * engine.
+		 * Add pairs of PK column names and values
 		 */
-		if (!need_comma)
-		{
-			for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
-			{
-				if (tupdesc->attrs[i]->attisdropped)
-					continue;
-
-				attkind_idx++;
-				if (!attkind[attkind_idx])
-					elog(ERROR, "Slony-I: no key columns found in logTrigger() attkind parameter");
-
-				if (attkind[attkind_idx] == 'k')
-					break;
-			}
-			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
-			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
-
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_ident = strlen(col_ident)) +
-				(len_value = strlen(col_value));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
-
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			memcpy(cp, col_ident, len_ident);
-			cp += len_ident;
-			*cp++ = '=';
-			memcpy(cp, col_value, len_value);
-			cp += len_value;
-		}
-
-		*cp++ = ' ';
-		*cp++ = 'w';
-		*cp++ = 'h';
-		*cp++ = 'e';
-		*cp++ = 'r';
-		*cp++ = 'e';
-		*cp++ = ' ';
-
 		for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			/*
@@ -714,45 +585,21 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				break;
 			if (attkind[attkind_idx] != 'k')
 				continue;
-			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
-			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
+			col_ident = SPI_fname(tupdesc, i + 1);
+			col_value = SPI_getvalue(old_row, tupdesc, i + 1);
 			if (col_value == NULL)
 				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on UPDATE",
 					 NameStr(tg->tg_relation->rd_rel->relname), col_ident);
 
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_ident = strlen(col_ident)) +
-				(len_value = strlen(col_value));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(col_ident));
+			*cmdnullselem++ = false;
 
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			if (need_and)
-			{
-				*cp++ = ' ';
-				*cp++ = 'a';
-				*cp++ = 'n';
-				*cp++ = 'd';
-				*cp++ = ' ';
-			}
-			else
-				need_and = true;
-
-			memcpy(cp, col_ident, len_ident);
-			cp += len_ident;
-			*cp++ = '=';
-			memcpy(cp, col_value, len_value);
-			cp += len_value;
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(col_value));
+			*cmdnullselem++ = false;
 		}
-		*cp = '\0';
-		SET_VARSIZE(cs->cmddata_buf,
-					VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
+
 	}
 	else if (TRIGGER_FIRED_BY_DELETE(tg->tg_event))
 	{
@@ -760,19 +607,23 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		TupleDesc	tupdesc = tg->tg_relation->rd_att;
 		char	   *col_ident;
 		char	   *col_value;
-		int			len_ident;
-		int			len_value;
 		int			i;
-		int			need_and = false;
-		char	   *cp = VARDATA(cs->cmddata_buf);
 
 		/*
 		 * DELETE
 		 *
-		 * cmdtype = 'D' cmddata = "pk_ident"='value' [and ...]
+		 * cmdtype = 'D' cmdargs = pkcolname, oldval [, ...]
 		 */
 		cmdtype = cs->cmdtype_D;
 
+		cmdargselem = cmdargs = (Datum *)palloc(sizeof(Datum) * 
+				((tg->tg_relation->rd_att->natts * 2) + 2));
+		cmdnullselem = cmdnulls = (bool *)palloc(sizeof(bool) *
+				((tg->tg_relation->rd_att->natts * 2) + 2));
+
+		/*
+		 * Add the PK columns
+		 */
 		for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 		{
 			if (tupdesc->attrs[i]->attisdropped)
@@ -783,55 +634,47 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 				break;
 			if (attkind[attkind_idx] != 'k')
 				continue;
-			col_ident = (char *) slon_quote_identifier(SPI_fname(tupdesc, i + 1));
-			col_value = slon_quote_literal(SPI_getvalue(old_row, tupdesc, i + 1));
+
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(col_ident = SPI_fname(tupdesc, i + 1)));
+			*cmdnullselem++ = false;
+
+			col_value = SPI_getvalue(old_row, tupdesc, i + 1);
 			if (col_value == NULL)
 				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on DELETE",
 					 NameStr(tg->tg_relation->rd_rel->relname), col_ident);
-
-			cmddata_need = (cp - (char *) (cs->cmddata_buf)) + 16 +
-				(len_ident = strlen(col_ident)) +
-				(len_value = strlen(col_value));
-			if (cs->cmddata_size < cmddata_need)
-			{
-				int			have = (cp - (char *) (cs->cmddata_buf));
-
-				while (cs->cmddata_size < cmddata_need)
-					cs->cmddata_size *= 2;
-				cs->cmddata_buf = realloc(cs->cmddata_buf, cs->cmddata_size);
-				cp = (char *) (cs->cmddata_buf) + have;
-			}
-
-			if (need_and)
-			{
-				*cp++ = ' ';
-				*cp++ = 'a';
-				*cp++ = 'n';
-				*cp++ = 'd';
-				*cp++ = ' ';
-			}
-			else
-				need_and = true;
-
-			memcpy(cp, col_ident, len_ident);
-			cp += len_ident;
-			*cp++ = '=';
-			memcpy(cp, col_value, len_value);
-			cp += len_value;
+			*cmdargselem++ = DirectFunctionCall1(textin,
+					CStringGetDatum(col_value));
+			*cmdnullselem++ = false;
 		}
-		*cp = '\0';
-		SET_VARSIZE(cs->cmddata_buf,
-					VARHDRSZ + (cp - VARDATA(cs->cmddata_buf)));
 	}
 	else
 		elog(ERROR, "Slony-I: logTrigger() fired for unhandled event");
 
 	/*
+	 * Restore the datestyle
+	 */
+	if (!strstr(olddatestyle, "ISO"))
+		set_config_option("DateStyle", olddatestyle, 
+				PGC_USERSET, PGC_S_SESSION, true, true);
+
+	/*
 	 * Construct the parameter array and insert the log row.
 	 */
+	cmddims[0] = cmdargselem - cmdargs;
+	cmdlbs[0] = 1;
+
 	argv[0] = Int32GetDatum(tab_id);
-	argv[1] = PointerGetDatum(cmdtype);
-	argv[2] = PointerGetDatum(cs->cmddata_buf);
+	argv[1] = DirectFunctionCall1(textin, 
+				CStringGetDatum(get_namespace_name(
+					RelationGetNamespace(tg->tg_relation))));
+	argv[2] = DirectFunctionCall1(textin,
+				CStringGetDatum(RelationGetRelationName(tg->tg_relation)));
+	argv[3] = PointerGetDatum(cmdtype);
+	argv[4] = Int32GetDatum(cmdupdncols);
+	argv[5] = PointerGetDatum(construct_md_array(cmdargs, cmdnulls, 1,
+			cmddims, cmdlbs, TEXTOID, -1, false, 'i'));
+
 	SPI_execp(cs->plan_active_log, argv, NULL, 0);
 
 	SPI_finish();
@@ -1015,50 +858,6 @@ _Slony_I_seqtrack(PG_FUNCTION_ARGS)
 		elem->seqval = seqval;
 
 	PG_RETURN_INT64(seqval);
-}
-
-
-static char *
-slon_quote_literal(char *str)
-{
-	char	   *result;
-	char	   *cp1;
-	char	   *cp2;
-	int			len;
-	int wl;
-
-	if (str == NULL)
-		return NULL;
-
-	len = strlen(str);
-	result = palloc(len * 2 + 3);
-	cp1 = str;
-	cp2 = result;
-
-	*cp2++ = '\'';
-	while (len > 0)
-	{
-		if ((wl = pg_mblen((const char *) cp1)) != 1)
-		{
-			len -= wl;
-
-			while (wl-- > 0)
-				*cp2++ = *cp1++;
-			continue;
-		}
-
-		if (*cp1 == '\'')
-			*cp2++ = '\'';
-		if (*cp1 == '\\')
-			*cp2++ = '\\';
-		*cp2++ = *cp1++;
-		len--;
-	}
-
-	*cp2++ = '\'';
-	*cp2++ = '\0';
-
-	return result;
 }
 
 
@@ -1342,7 +1141,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 
 		/*
 		 * Also create the 3 rather static text values for the log_cmdtype
-		 * parameter and initialize the cmddata_buf.
+		 * parameter.
 		 */
 		cs->cmdtype_I = malloc(VARHDRSZ + 1);
 		SET_VARSIZE(cs->cmdtype_I, VARHDRSZ + 1);
@@ -1360,9 +1159,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		sprintf(query, "SELECT last_value::int4 FROM %s.sl_log_status",
 				cs->clusterident);
 		cs->plan_get_logstatus = SPI_saveplan(SPI_prepare(query, 0, NULL));
-
-		cs->cmddata_size = 8192;
-		cs->cmddata_buf = (text *) malloc(8192);
 
 		cs->have_plan |= PLAN_INSERT_LOG_STATUS;
 	}
@@ -1391,15 +1187,19 @@ int prepareLogPlan(Slony_I_ClusterStatus * cs,
 		 */
 		sprintf(query, "INSERT INTO %s.sl_log_1 "
 				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
+				" log_tablenspname, log_tablerelname, "
+				" log_cmdtype, log_cmdupdncols, log_cmdargs) "
 				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
+				"nextval('%s.sl_action_seq'), $2, $3, $4, $5, $6); ",
 				cs->clusterident, cs->localNodeId, cs->clusterident);
 		plan_types[0] = INT4OID;
 		plan_types[1] = TEXTOID;
 		plan_types[2] = TEXTOID;
+		plan_types[3] = TEXTOID;
+		plan_types[4] = INT4OID;
+		plan_types[5] = TEXTARRAYOID;
 
-		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 6, plan_types));
 		if (cs->plan_insert_log_1 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 	}
@@ -1409,15 +1209,19 @@ int prepareLogPlan(Slony_I_ClusterStatus * cs,
 	{
 		sprintf(query, "INSERT INTO %s.sl_log_2 "
 				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
+				" log_tablenspname, log_tablerelname, "
+				" log_cmdtype, log_cmdupdncols, log_cmdargs) "
 				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
+				"nextval('%s.sl_action_seq'), $2, $3, $4, $5, $6); ",
 				cs->clusterident, cs->localNodeId, cs->clusterident);
 		plan_types[0] = INT4OID;
 		plan_types[1] = TEXTOID;
 		plan_types[2] = TEXTOID;
+		plan_types[3] = TEXTOID;
+		plan_types[4] = INT4OID;
+		plan_types[5] = TEXTARRAYOID;
 
-		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 6, plan_types));
 		if (cs->plan_insert_log_2 == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 	}
@@ -1446,8 +1250,6 @@ _Slony_I_resetSession(PG_FUNCTION_ARGS)
 		  free(cs->cmdtype_D);
 	  if(cs->cmdtype_U)
 		  free(cs->cmdtype_D);
-	  if(cs->cmddata_buf)
-		  free(cs->cmddata_buf);
 	  free(cs->clusterident);
 	  if(cs->plan_insert_event)
 		  SPI_freeplan(cs->plan_insert_event);

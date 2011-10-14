@@ -369,8 +369,11 @@ create table @NAMESPACE@.sl_log_1 (
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
+	log_tablenspname	text,
+	log_tablerelname	text,
 	log_cmdtype			char,
-	log_cmddata			text
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
 ) WITHOUT OIDS;
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
 	(log_origin, log_txid, log_actionseq);
@@ -383,8 +386,12 @@ comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to
 comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
 comment on column @NAMESPACE@.sl_log_1.log_txid is 'Transaction ID on the origin node';
 comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
-comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
-comment on column @NAMESPACE@.sl_log_1.log_cmddata is 'The data needed to perform the log action';
+comment on column @NAMESPACE@.sl_log_1.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+comment on column @NAMESPACE@.sl_log_1.log_tablenspname is 'The schema name of the table affected';
+comment on column @NAMESPACE@.sl_log_1.log_tablerelname is 'The table name of the table affected';
+comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+comment on column @NAMESPACE@.sl_log_1.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+comment on column @NAMESPACE@.sl_log_1.log_cmdargs is 'The data needed to perform the log action on the replica';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_2
@@ -394,21 +401,29 @@ create table @NAMESPACE@.sl_log_2 (
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
+	log_tablenspname	text,
+	log_tablerelname	text,
 	log_cmdtype			char,
-	log_cmddata			text
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
 ) WITHOUT OIDS;
-comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
-comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
-comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
-comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
-comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
-comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perform the log action';
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_txid, log_actionseq);
 
 -- Add in an additional index as sometimes log_origin isn't a useful discriminant
 -- create index sl_log_2_idx2 on @NAMESPACE@.sl_log_2
 -- 	(log_txid);
+
+comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
+comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
+comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+comment on column @NAMESPACE@.sl_log_2.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+comment on column @NAMESPACE@.sl_log_2.log_tablenspname is 'The schema name of the table affected';
+comment on column @NAMESPACE@.sl_log_2.log_tablerelname is 'The table name of the table affected';
+comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
 
 
 -- ----------------------------------------------------------------------

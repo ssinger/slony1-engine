@@ -133,30 +133,6 @@ static struct config_int ConfigureNamesInt[] =
 		0,
 		2147483647
 	},
-	{
-		{
-			(const char *) "sync_max_rowsize",	/* conf name */
-			gettext_noop("sl_log_? rows larger than that are read separately"), /* short desc */
-			gettext_noop("sl_log_? rows with octet_length(log_cmddata) larger than this are read separately"), /* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&sync_max_rowsize,		/* var name */
-		8192,					/* default val */
-		1024,					/* min val */
-		32768					/* max val */
-	},
-	{
-		{
-			(const char *) "sync_max_largemem", /* conf name */
-			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* short desc */
-			gettext_noop("How much memory to allow for sl_log_? rows exceeding sync_max_rowsize"),		/* long desc */
-			SLON_C_INT			/* config type */
-		},
-		&sync_max_largemem,		/* var name */
-		5242880,				/* default val */
-		1048576,				/* min val */
-		1073741824				/* max val */
-	},
 
 	{
 		{
