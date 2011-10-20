@@ -1,6 +1,5 @@
 #!/bin/sh
 ############################################################################
-#
 # Builds a slony release in an automated way.
 #
 # usage: build_release.sh git_branch version pg_configdir
@@ -17,10 +16,18 @@ then
   exit -1
 fi
 
+echo "Building Slony release..."
+echo "New tag to be created: ${GIT_TAG}"
+echo "Release version number: ${REL_VERSION}"
+echo "Location of pg_config: ${PGCONFIG_DIR}"
+
 DIR=`basename $PWD`
-if [ "$DIR" != "slony1-engine" ]
+if [ -d "${PWD}/.git" ]
 then
-    echo "must be in slony1-engine directory"
+    echo "Building from Slony git repository ${DIR}"
+else
+    echo "must be in slony1-engine git repository directory"
+    echo " was in ${DIR} instead"
     exit -1
 fi
 git checkout $GIT_TAG
@@ -31,7 +38,8 @@ then
   echo "/tmp/slony1-engine-$REL_VERSION.tar exists please delete first"
   exit -1
 fi
-git archive -o /tmp/slony1-engine-$REL_VERSION.tar $REL_TAG
+TMPTAR=/tmp/slony1-engine-$REL_VERSION.tar
+git archive -o $TMPTAR $REL_TAG
 if [ $? -ne 0 ]
 then
   echo "git archive failed"
@@ -46,8 +54,10 @@ then
 fi
 
 mkdir slony1-$REL_VERSION
+echo "Built directory for build"
 cd slony1-$REL_VERSION
-tar -xf /tmp/slony1-engine-$REL_VERSION.tar
+echo "Extracting tarball for release"
+tar -xf $TMPTAR
 autoconf
 ./configure --with-pgconfigdir=$PGCONFIG_DIR --with-docs
 make
@@ -76,4 +86,3 @@ cd slony1-$REL_VERSION
 make distclean
 cd ..
 tar -cjf slony1-$REL_VERSION.tar.bz2 slony1-$REL_VERSION
-
