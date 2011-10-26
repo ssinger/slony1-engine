@@ -429,7 +429,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 1;
+	return 2;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
