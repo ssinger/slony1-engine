@@ -1,203 +1,62 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
-
-** 2.1.0 RC 2
-
-- Bug #236 :: Fix default formatting of timestamp in logs
-
-- Add support for PostgreSQL 9.1.  Simply marking it a supported version
-
-- Bug #237 :: Drop set did not remove truncate triggers.
-
-** 2.1.0 RC 1
-
-- Bug #226 :: Cleanup thread needed change to expected PQResultStatus
-
-- Bug #229 :: Fix to set add table so it won't implicitly wait for an event
-              inside of a transaction block.
-
-- Bug #230 :: log_timestamps was always treated as false
-
-- Bug #231 :: Fix to regex in tools/start_slon.sh
-
-- Bug #227 :: Do not try to add views to a set with regular expressions in
-               set add table.  Also fixes for escape characters in the regex
- 
-- Clearer error message on 'create set' when no origin is specified.
-
-- Clearer error message on 'lock set' when no origin is specified.
- 
-- Bug #218 :: Additional fixes, obtain sl_event_lock before sl_config_lock
-               to prevent deadlock.
-- Include additional C headers required for Postgresql 9.2(master)
-
-** 2.1.0 (beta 3)
-
-- Bug #159 :: distclean deletes the slony_logshipper flex/bison generated files.
-
-- Bug #204 :: Additional fixes for failover to a non-direct subscriber
-              where circular paths in sl_subscribe could happen
-
-- Bug #214 :: Add slonikconfdump.sh back into tools
-
-- Bug #216 :: Use EPOCH for the timestamp in the monitor thread
-              to avoid differences in how Win32 handles timezones.
-
-- Bug #218 :: Acquire lock on sl_config_lock in much the same fashion as
-            with sl_event_lock (bug #196)
-
-- Bug #219 :: Default to PostgreSQL 8.4 support if the version of PG is newer
-             than what slony recognizes.
-
-- Bug #220 :: Fix issue where changing the provider of an existing
-              subscriber passed parameters in the wrong order to the
-              stored procedure.
-
-- Bug #222 :: Fixing issue where new connections that call the
-              logtrigger for the first time might block until an
-              in progress cleanupEvent finishes.
-
-- Bug #223 :: Clear out the last saved event number when uninstalling
-              a node.  This prevents slonik from waiting for a node it just
-              uninstalled.
-
-- Bug #224 :: altperl code misspelled "PKEYDTABLES"
-
-*** Some items without bug numbers:
-
-- Fixed slonik memory corruption when it tries to get the last known
-  event_id from a node that doesn't yet have slony installed.
-
-- Remove rules for building PDFs for the original design docs, in
-  favor of having the built docs stored in a new "historical
-  documentation" directory.
-
-** 2.1.0 (beta 2)
-- Bug 219 :: Default to PostgreSQL 8.4 support if the version of PG is newer than
-          what slony recognizes.
-
-- Fix threading issue in monitor_thread where slon_init can be called
-  without the mutex being locked. This function was written to assume
-  the mutex lock exists.  
-
--  datarootdir warning from autoconf fixed  
-
-- Bug #36  - (Reapplied) don't link with pgport on non-Win32 platforms
-
-- Misc compiler warnings including no longer calling get_share_dir from
-  Postgres if PGSHARE is not defined. Configure should define it.
-
-- Regenerated complexenv.png diagram
-
-- Obtain a lock on sl_event_lock during MOVE_SET
-  processing in remote_worker.
-
-** 2.1.0 (beta 2)
-
-- Bug #204 :: Upgrade from 2.0.x fails under PostgreSQL 8.3, fixing
-              issues with failover and non-direct subscribers
-
-- Bug #205 :: Upgrade fails from 2.0.0, return type from cloneNode changes
-
-- Bug #206 :: Do not perform an accidental rollback in a try block
-
-- Bug #208 :: Fixing issues with bulk adding of tables.
-
-- Bug #209 :: Default table ID problem
-
-- Bug #210 :: merge set should wait for both sets to be subscribed
-             before submitting the merge event.
-
-- Bug #211 :: Modify the altperl tools so they don't enclose statements
-             that wait for events inside of a 'try' block.
-
-** 2.1.0 (beta 1)
-
-*** Some items without bug numbers:
-  - Introduced tests using the clustertest framework, consisting of two
-    sets of tests:
-    - clustertest/regression - port of the old tests in the tests directory
-    - clustertest/disorder - new simulated order entry system with a fair bit of concurrency
-
-  - Configure and Makefile cleanups and improvements, including
-    - Configure looks in common locations for some of the DocBook
-      tooling, so it is less likely to require manual intervention on
-      some common distributions
-    - Pick up Groff automagically
-    - Script to do virtually all the work documented in the [[http://slony.info/documentation/2.0/releasechecklist.html][Release Checklist]]
-  - Documentation updates
-    - Reorganized sections
-    - Trend towards having version-specific documentation, rather than
-      trying to have it document all versions at once
-  - Git changes
-    - Numerous .gitignore files set up to ignore generated files
-  - Add a resetSession function that will reset the session state
-    cached in the C stored functions.
-
-*** Changes from 2.0 branch that were also applied to HEAD: 
-
-  Bugs 40, 42, 75, 78, 102, 104, 115, 117, 121, 122, 124, 127, 132,
-  136, 138, 139, 141, 144, 147, 148, 149, 154, 162
-
-*** Items tracked from Bugzilla
-- Bug #79 :: --prefix and --exec-prefix options don't function as expected
-
-- Bug #90 ::  Builds On Solaris with Sun C Studio fail. This also addresses
-             issues building with Microsoft Visual Studio.
-
-- Bug #126 :: TCP KEEP alives can now be used from slon to postgresql(on by default)
-
-- Bug #134 :: TRUNCATE trigger usage
-
-- Bug #142 :: better document minimal security profile
-
-- Bug #146 :: Removed option to use DELETE to trim sl_log_* tables - only support TRUNCATE
-
-- Bug #152 :: eliminate debugging statements from DDL processing
-
-- Bug #156 :: add health check at slon startup time
-
-- Bug #163 :: change Slony-I tables to use TIMESTAMP WITH TIME ZONE rather than WITHOUT TIME ZONE
-
-- Bug #167 :: change queries against sl_log_* tables to avert slowdown when large backlog
-
-- Bug #170 :: remove SNMP support
-
-- Bug #172 :: add support for application_name GUC (in recent PG such as 9.0)
-
-- Bug #175 :: add monitoring thread which stows activity information in sl_components
-
-- Bug #179 :: Implicit/Automatic wait for. Slonik will now often perform an automatic
-             'wait for event' when required to avoid race conditions.
-
-- Bug #180 :: Created a slonik DATE command
-
-- Bug #181 :: Support for bulk adding of tables and sequences and automatically finding
-  the next available table or sequence id.
-             
-- Bug #185 :: change functions to use named parameters
-
-- Bug #187 :: add newline to slon PID files
-
-- Bug #188 :: test harness query had subquery returning multiple tuples
-
-- Bug #189 :: add slonik EXIT check for exit values 0..255, as that's all that Unix accepts
-
-- Bug #193 :: add back reset of vac_count so vacuums only done every few cleanup thread iterations
-
-- Bug #195 :: change slon_quote_* functions to IMMUTABLE
-
-- Bug #196 :: add guard lock on sl_event_lock to protect against events with XID going backwards
-
-- Bug #198 :: subscribeset() should verify that provider node exists
-
-- Bug #201 :: Allow command-line options to be configured from slon_tools.conf
-
-- Bug #204 :: Fix issue with FAILOVER to a non-direct subscriber introduced in 2.0.5
-
-- Bug #206  :: Do not perform an accidental rollback in a try block
-
-** RELEASE 2.0.6
-- Bug #162 :: typenameTypeId() changes signatures in 9.1
-
-
+** 2.2.0 (beta 1)
+*** Significant New Features
+    - Switch to use COPY protocol for handling sl_log_* data
+
+*** Upgrade Procedures
+**** Draining log tables
+
+     Since the schema of tables ~sl_log_1~ and ~sl_log_2~ are changing
+     substantially, capturing somewhat different information, there is
+     no way provided to convert old log data to use the new schema.
+     As a consequence, at the time of upgrade, it is essential that
+     these tables be empty.
+
+	 They need to /already/ be empty, as the ~upgradeSchema()~
+	 function runs locally on each node, and there is no readily
+	 available mechanism to recover from the problem of discovering
+	 that one node still has data that needs to be applied against
+	 another node.  We may make some /best efforts/ to prevent
+	 problems, but there is only limited cross-node coordination that
+	 may readily be done.
+
+     We intend to offer several mechanisms to help this to happen,
+     including:
+
+     - Preventing new log entries via ~LOCK SET~ :: It is recommended
+          that administrators /prevent/ data from being added to the
+          logs accidentally by locking all replication sets using [[http://slony.info/documentation/2.1/stmtlockset.html][LOCK
+          SET]], then unlock them via ~UNLOCK SET~ afterwards. For
+          systems with enormous numbers of replicated tables (/e.g./ -
+          on the order of thousands), this requires taking out
+          exclusive locks on all of them, as ~LOCK SET~ and ~UNLOCK
+          SET~ both need to submit an ~ALTER TABLE~ request against
+          each table in order to add/drop the "lock" trigger, and may
+          prove too expensive.
+
+     - Preventing new log entries via ~pg_hba.conf~ :: If ~LOCK SET~
+          is too expensive, an administrator may prefer to lock out
+          all application users during the upgrade process.
+          ~pg_hba.conf~ is useful for this.  The process would
+          involve:
+	   - Altering ~pg_hba.conf~ to contain entries denying access to
+         all other than the ~slony~ user
+	   - Submitting ~SIGHUP~ signal to the Postgres backend so new
+         connections are rejected
+	   - Verifying, via query to ~pg_stat_activity~, that there are no
+          users other than the ~slony~ user connected
+
+     - Script to drain log tables ~sl_log_1~ and ~sl_log_2~ :: It runs
+       the following logic against each node:
+	   - Calls the function ~cleanupEvent()~ to clean out any log
+         entries that are safe to delete
+	   - Verify that log tables ~sl_log_1~ and ~sl_log_2~ are empty
+	   
+	  Once this script has run against all nodes, reporting that
+          the log tables are empty on each node, it is safe to upgrade
+          the schema for these tables.  If some nodes are not ready,
+          it will be necessary to keep ~slon~ processes running to
+          apply the outstanding log entries, and so that confirmations
+          are passed back to all nodes in order that the cleanup can
+          be finalized.
