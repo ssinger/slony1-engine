@@ -440,6 +440,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 			if ((col_value = SPI_getvalue(new_row, tupdesc, i + 1)) == NULL)
 			{
 				*cmdnullselem++ = true;
+				cmdargselem++;
 			}
 			else
 			{

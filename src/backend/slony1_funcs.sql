@@ -5919,8 +5919,11 @@ begin
 			v_list1 = v_list1 || v_comma ||
 				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]);
 			v_idx = v_idx + 1;
-			v_list2 = v_list2 || v_comma ||
-				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_list2 = v_list2 || v_comma || 'null';
+			else 
+			     v_list2 = v_list2 || v_comma ||
+			     	pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);			end if;
 			v_idx = v_idx + 1;
 
 			v_comma = ',';
@@ -5937,12 +5940,16 @@ begin
 		v_command = 'UPDATE ONLY ' ||
 			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
 			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname) || ' SET ';
-		while v_i < NEW.log_cmdupdncols loop
+		while v_i < NEW.log_cmdupdncols loop		      	
 			v_command = v_command || v_comma ||
 				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
 			v_idx = v_idx + 1;
-			v_command = v_command ||
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else 
+			     v_command = v_command ||
 				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
 			v_idx = v_idx + 1;
 			v_comma = ',';
 			v_i = v_i + 1;
@@ -5957,8 +5964,12 @@ begin
 			v_command = v_command || v_and ||
 				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
 			v_idx = v_idx + 1;
-			v_command = v_command ||
-				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
 			v_idx = v_idx + 1;
 
 			v_and = ' AND ';
@@ -5974,8 +5985,12 @@ begin
 			v_command = v_command || v_and ||
 				@NAMESPACE@.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
 			v_idx = v_idx + 1;
-			v_command = v_command ||
-				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
 			v_idx = v_idx + 1;
 
 			v_and = ' AND ';
