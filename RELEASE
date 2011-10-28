@@ -1,6 +1,11 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+** 2.1.1
+
+- Bug #246 :: Include path order changes
+
+** 2.1.0 
 ** 2.1.0 RC 2
 
 - Bug #236 :: Fix default formatting of timestamp in logs
