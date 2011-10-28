@@ -5985,9 +5985,9 @@ begin
 	end if;
 
 	if NEW.log_cmdtype = 'T' then
-		perform @NAMESPACE@.TruncateOnlyTable(
+		execute 'TRUNCATE TABLE ONLY ' ||
 			@NAMESPACE@.slon_quote_brute(NEW.log_tablenspname) || '.' ||
-			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname));
+			@NAMESPACE@.slon_quote_brute(NEW.log_tablerelname) || ' CASCADE';
 	end if;
 
 	return NEW;
