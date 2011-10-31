@@ -259,7 +259,7 @@ static int copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 		 SlonWorkMsg_event *event);
 static int sync_event(SlonNode *node, SlonConn *local_conn,
 		   WorkerGroupData *wd, SlonWorkMsg_event *event);
-static void *sync_helper(void *cdata,PGconn * local_dbconn);
+static int sync_helper(void *cdata,PGconn * local_dbconn);
 
 
 static int archive_open(SlonNode *node, char *seqbuf,
@@ -1627,7 +1627,6 @@ adjust_provider_info(SlonNode *node, WorkerGroupData *wd, int cleanup)
 	ProviderSet *pset;
 	SlonNode   *rtcfg_node;
 	SlonSet    *rtcfg_set;
-	int			i;
 
 	slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
 			 "update provider configuration\n",
@@ -3626,8 +3625,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	PGresult   *res1;
 	int			ntuples1;
 	int			num_sets = 0;
-	int			num_providers_active = 0;
-	int			num_errors;
+	int			num_errors=0;
+
 	int			i;
 	int			rc;
 	char		seqbuf[64];
@@ -3805,7 +3804,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		provider_query = &(provider->helper_query);
 		dstring_reset(provider_query);
 		(void) slon_mkquery(provider_query,
-							"declare LOG cursor for ");
+							"COPY ( ");
 
 		/*
 		 * Get the current sl_log_status value for this provider
@@ -3894,7 +3893,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		{
 			PQclear(res1);
 			slon_appendquery(provider_query,"select * FROM %s.sl_log_1" 
-							 " where false",rtcfg_namespace);
+							 " where false) TO STDOUT",rtcfg_namespace);
 			continue;
 		}
 		num_sets += ntuples1;
@@ -4151,7 +4150,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		/*
 		 * Finally add the order by clause.
 		 */
-		dstring_append(provider_query, " order by log_actionseq");
+		dstring_append(provider_query, " order by log_actionseq) TO STDOUT");
 		dstring_terminate(provider_query);
 
 		/*
@@ -4164,13 +4163,13 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			 * sets that we subscribe from this node.
 			 */
 			slon_mkquery(provider_query,
-				"declare LOG cursor for "
+				"COPY ( "
 				"select log_origin, log_txid, log_tableid, "
 						"log_actionseq, log_tablenspname, "
 						"log_tablerelname, log_cmdtype, "
 						"log_cmdupdncols, log_cmdargs "
 					"from %s.sl_log_1 "
-					"where false",
+					"where false) TO STDOUT",
 					rtcfg_namespace);
 		}
 	}
@@ -4265,10 +4264,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
 		 */
-		sync_helper((void*)provider,local_dbconn);
+		num_errors=sync_helper((void*)provider,local_dbconn);
 	}
 
-	num_errors = 0;
 
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: cleanup\n",
 			 node->no_id);
@@ -4473,32 +4471,31 @@ sync_event(SlonNode *node, SlonConn *local_conn,
  * sync_helper
  * ----------
  */
-static void *
+static int
 sync_helper(void *cdata,PGconn * local_conn)
 {
 	ProviderInfo *provider = (ProviderInfo *) cdata;
-	WorkerGroupData * wd = provider->wd;
 	SlonNode   *node = provider->wd->node;
+	WorkerGroupData * wd = provider->wd;
 	PGconn	   *dbconn;
 	SlonDString query;
-	SlonDString query2;
+	SlonDString copy_in;
 	int			errors;
 	struct timeval tv_start;
 	struct timeval tv_now;
 	int			first_fetch;
 	int			log_status;
 	int			rc;
-
-
-	PGresult   *res = NULL;
-	PGresult   *res2 = NULL;
+	int			rc2;
 	int			ntuples;
 	int			tupno;
+	PGresult   *res = NULL;
+	PGresult   *res2 = NULL;
+	char		* buffer;
 
 	PerfMon pm;
 
 	dstring_init(&query);
-	dstring_init(&query2);
 
 	
 	/*
@@ -4507,280 +4504,212 @@ sync_helper(void *cdata,PGconn * local_conn)
 	dbconn = provider->conn->dbconn;	
 	
 	errors = 0;
-	do
+	
+	init_perfmon(&pm);
+	/*
+	 * Start a transaction
+	 */
+	
+	(void) slon_mkquery(&query, "start transaction; "
+						"set enable_seqscan = off; "
+						"set enable_indexscan = on; ");
+	
+	start_monitored_event(&pm);
+	
+	if (query_execute(node, dbconn, &query) < 0)
 	{
-		init_perfmon(&pm);
-		/*
-		 * Start a transaction
-		 */
-		
-		(void) slon_mkquery(&query, "start transaction; "
-							"set enable_seqscan = off; "
-							"set enable_indexscan = on; ");
-		
-		start_monitored_event(&pm);
-		
-		if (query_execute(node, dbconn, &query) < 0)
-		{
-			errors++;
-			break;
-		}
-		monitor_subscriber_query (&pm);
-		
-		/*
-		 * Get the current sl_log_status value
-		 */
-		(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
-							rtcfg_namespace);
-		
-		start_monitored_event(&pm);
-		res2 = PQexec(dbconn, dstring_data(&query));
-		monitor_provider_query(&pm);
-		
-		rc = PQresultStatus(res2);
-		if (rc != PGRES_TUPLES_OK)
-		{
-			slon_log(SLON_ERROR,
-					 "remoteWorkerThread_%d: \"%s\" %s %s\n",
-					 node->no_id, dstring_data(&query),
-					 PQresStatus(rc),
-					 PQresultErrorMessage(res2));
-			PQclear(res2);
-			errors++;
-			break;
-		}
-		if (PQntuples(res2) != 1)
-		{
-			slon_log(SLON_ERROR,
-					 "remoteWorkerThread_%d: \"%s\" %s returned %d tuples\n",
-					 node->no_id, dstring_data(&query),
-					 PQresStatus(rc), PQntuples(res2));
-			PQclear(res2);
-			errors++;
-			break;
-		}
-		log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
+		errors++;
+		dstring_terminate(&query);
+		return errors;
+	}
+	monitor_subscriber_query (&pm);
+	
+	/*
+	 * Get the current sl_log_status value
+	 */
+	(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
+						rtcfg_namespace);
+	
+	start_monitored_event(&pm);
+	res2 = PQexec(dbconn, dstring_data(&query));
+	monitor_provider_query(&pm);
+
+	rc = PQresultStatus(res2);
+	if (rc != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+				 node->no_id, dstring_data(&query),
+				 PQresStatus(rc),
+				 PQresultErrorMessage(res2));
 		PQclear(res2);
-		slon_log(SLON_DEBUG2,
-				 "remoteWorkerThread_%d_%d: current remote log_status = %d\n",
-				 node->no_id, provider->no_id, log_status);
+		errors++;
+		dstring_terminate(&query);
+		return errors;
+	}
+	if (PQntuples(res2) != 1)
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: \"%s\" %s returned %d tuples\n",
+				 node->no_id, dstring_data(&query),
+				 PQresStatus(rc), PQntuples(res2));
+		PQclear(res2);
+		errors++;
+		dstring_terminate(&query);
+		return errors;
+	}
+	log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
+	PQclear(res2);
+	slon_log(SLON_DEBUG2,
+			 "remoteWorkerThread_%d_%d: current remote log_status = %d\n",
+			 node->no_id, provider->no_id, log_status);
+	dstring_terminate(&query);
+	/*
+	 * See if we have to run the query through EXPLAIN first
+	 */
+	if (explain_thistime)
+	{
+		SlonDString		explain_query;
 		
 		/*
-		 * See if we have to run the query through EXPLAIN first
+		 * Let Postgres EXPLAIN the query plan for the current
+		 * log selection query
 		 */
-		if (explain_thistime)
+		dstring_init(&explain_query);
+		slon_mkquery(&explain_query, "explain %s",
+					 dstring_data(&(provider->helper_query)));
+		
+		res = PQexec(dbconn, dstring_data(&explain_query));
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
-			SlonDString		explain_query;
-			
-			/*
-			 * Let Postgres EXPLAIN the query plan for the current
-			 * log selection query
-			 */
-			dstring_init(&explain_query);
-			slon_mkquery(&explain_query, "explain %s",
-						 dstring_data(&(provider->helper_query)));
-			
-			res = PQexec(dbconn, dstring_data(&explain_query));
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)
-			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: \"%s\" %s",
-						 node->no_id, provider->no_id,
-						 dstring_data(&explain_query),
-						 PQresultErrorMessage(res));
-				PQclear(res);
-				dstring_free(&explain_query);
-				errors++;
-				break;
-			}
-			
-			slon_log(SLON_INFO, 
-					 "remoteWorkerThread_%d_%d: "
-					 "Log selection query: %s\n",
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: \"%s\" %s",
 					 node->no_id, provider->no_id,
-					 dstring_data(&explain_query));
-			slon_log(SLON_INFO, 
-					 "remoteWorkerThread_%d_%d: Query Plan:\n",
-					 node->no_id, provider->no_id);
-			
-			ntuples = PQntuples(res);
-			for (tupno = 0; tupno < ntuples; tupno++)
-			{
-				slon_log(SLON_INFO, 
-						 "remoteWorkerThread_%d_%d: PLAN %s\n",
-						 node->no_id, provider->no_id,
-						 PQgetvalue(res, tupno, 0));
-			}
-			slon_log(SLON_INFO,
-					 "remoteWorkerThread_%d_%d: PLAN_END\n",
-					 node->no_id, provider->no_id);
-			
+					 dstring_data(&explain_query),
+					 PQresultErrorMessage(res));
 			PQclear(res);
 			dstring_free(&explain_query);
+			errors++;
+			return errors;
 		}
-
-		gettimeofday(&tv_start, NULL);
-		first_fetch = true;
-		res = NULL;
 		
-		/*
-		 * Open a cursor that reads the log data.
-		 */
-		start_monitored_event(&pm);
-		if (query_execute(node, dbconn, &(provider->helper_query)) < 0)
+		slon_log(SLON_INFO, 
+				 "remoteWorkerThread_%d_%d: "
+				 "Log selection query: %s\n",
+				 node->no_id, provider->no_id,
+				 dstring_data(&explain_query));
+		slon_log(SLON_INFO, 
+				 "remoteWorkerThread_%d_%d: Query Plan:\n",
+				 node->no_id, provider->no_id);
+		
+		ntuples = PQntuples(res);
+		for (tupno = 0; tupno < ntuples; tupno++)
 		{
+			slon_log(SLON_INFO, 
+					 "remoteWorkerThread_%d_%d: PLAN %s\n",
+					 node->no_id, provider->no_id,
+					 PQgetvalue(res, tupno, 0));
+		}
+		slon_log(SLON_INFO,
+				 "remoteWorkerThread_%d_%d: PLAN_END\n",
+				 node->no_id, provider->no_id);
+		
+		PQclear(res);
+		dstring_free(&explain_query);
+	}
+	
+	gettimeofday(&tv_start, NULL);
+	first_fetch = true;
+	res = NULL;
+	
+	/*
+	 * execute the COPY to read the log data.
+	 */
+	start_monitored_event(&pm);
+	res = PQexec(dbconn, dstring_data(&provider->helper_query));
+	if( PQresultStatus(res) != PGRES_COPY_OUT)
+	{
+		errors++;
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY OUT: \"%s\" %s",
+				 dstring_data(&provider->helper_query),
+				 PQresultErrorMessage(res));
+		return errors;
+	}
+	monitor_provider_query(&pm);
+
+	/**
+	 * execute the COPY on the local node to write the log data.
+	 *
+	 */
+	dstring_init(&copy_in);
+	slon_mkquery(&copy_in,"COPY %s.\"sl_log_%d\" ( log_origin, "	   	\
+				 "log_txid,log_tableid,log_actionseq,log_tablenspname, "	\
+				 "log_tablerelname, log_cmdtype, log_cmdupdncols,"		\
+				 "log_cmdargs) FROM STDOUT",
+				 rtcfg_namespace, wd->active_log_table);
+	
+	res2 = PQexec(local_conn,dstring_data(&copy_in));	\
+	if ( PQresultStatus(res2) != PGRES_COPY_IN )
+	{
+		
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY IN: \"%s\" %s",
+				 node->no_id, provider->no_id,
+				 dstring_data(&copy_in),
+				 PQresultErrorMessage(res2));
+		/*
+		 * TODO better error handling
+		 */
+		errors++;
+		dstring_free(&copy_in);
+		PQclear(res2);
+		return errors;
+		
+	}
+	dstring_free(&copy_in);
+	while (!errors)
+	{
+		rc = PQgetCopyData(dbconn,&buffer,0);
+		if (rc < 0)  {
+			if ( rc == -2 )	{
+				errors++;
+				slon_log(SLON_ERROR,"remoteWorkerThread_%d_%d: error reading copy data: %s",
+						 node->no_id, provider->no_id,PQerrorMessage(dbconn));
+			}
+			break;
+		}
+		if (first_fetch)
+		{
+			gettimeofday(&tv_now, NULL);
+			slon_log(SLON_DEBUG1,
+					 "remoteWorkerThread_%d_%d: %.3f seconds delay for first row\n",
+					 node->no_id, provider->no_id,
+					 TIMEVAL_DIFF(&tv_start, &tv_now));
+			
+			first_fetch = false;
+		}
+		rc2 = PQputCopyData(local_conn,buffer,rc);
+		if (rc2 < 0 )
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error writing" \
+					 " to sl_log:%s\n", PQerrorMessage(local_conn));
 			errors++;
 			break;
 		}
-		monitor_provider_query(&pm);
 		
-		(void) slon_mkquery(&query, "fetch %d from LOG; ",
-							SLON_DATA_FETCH_SIZE * SLON_COMMANDS_PER_LINE);
-		
-		res = NULL;
-		ntuples = 0;
-		tupno = 0;
-		
-		while (!errors)
-		{
-			if (tupno >= ntuples)
-			{
-				slon_log(SLON_DEBUG4,
-						 "remoteWorkerThread_%d_%d: fetch from cursor\n",
-						 node->no_id, provider->no_id);
-				if (res != NULL)
-					PQclear(res);
-				
-				start_monitored_event(&pm);
-				res = PQexec(dbconn, dstring_data(&query));
-				monitor_provider_query(&pm);
-				
-				if (PQresultStatus(res) != PGRES_TUPLES_OK)
-				{
-					slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: \"%s\" %s result=%d",
-							 node->no_id, provider->no_id,
-							 dstring_data(&query),
-							 PQresultErrorMessage(res),PQresultStatus(res));
-					errors++;
-					break;
-				}
-				if (first_fetch)
-				{
-					gettimeofday(&tv_now, NULL);
-					slon_log(SLON_DEBUG1,
-							 "remoteWorkerThread_%d_%d: %.3f seconds delay for first row\n",
-							 node->no_id, provider->no_id,
-							 TIMEVAL_DIFF(&tv_start, &tv_now));
-					
-					first_fetch = false;
-				}
-				
-				ntuples = PQntuples(res);
-				tupno = 0;
-				
-				slon_log(SLON_DEBUG4,
-						 "remoteWorkerThread_%d_%d: fetched %d log rows\n",
-						 node->no_id, provider->no_id, ntuples);
-			}
-
-			/*
-			 * If there are no more tuples, we're done
-			 */
-			if (ntuples == 0)
-				break;
-		
-			/*
-			 * Now move tuples from the fetch result into the line
-			 * buffers.
-			 */
-			while (tupno < ntuples)
-			{
-				char	   *log_origin = PQgetvalue(res, tupno, 0);
-				char	   *log_txid = PQgetvalue(res, tupno, 1);
-				char	   *log_tableid_c=PQgetvalue(res, tupno, 2);
-				int			log_tableid = strtol(log_tableid_c,
-												 NULL, 10);
-				char	   *log_actionseq = PQgetvalue(res, tupno, 3);
-				char	   *log_tablenspname = PQgetvalue(res, tupno, 4);
-				char	   *log_tablerelname = PQgetvalue(res, tupno, 5);
-				char	   *log_cmdtype = PQgetvalue(res, tupno, 6);
-				char	   *log_cmdupdncols = PQgetvalue(res, tupno, 7);
-				char	   *log_cmdargs = PQgetvalue(res, tupno, 8);
-				SlonDString log_insert;
-				
-				tupno++;
-				
-				/*
-				 * This can happen if the table belongs to a set that
-				 * already has a better sync status than the event we're
-				 * currently processing as a result from another SYNC
-				 * occuring before we had started processing the copy_set.
-				 */
-				if (log_tableid >= wd->tab_fqname_size ||
-					wd->tab_fqname[log_tableid] == NULL)
-				{
-					continue;
-				}
-
-				if(*log_cmdtype=='I') 
-					pm.num_inserts++;
-				else if (*log_cmdtype=='U')
-					pm.num_updates++;
-				else if (*log_cmdtype=='D')
-					pm.num_deletes++;
-				else if (*log_cmdtype=='T')
-					pm.num_truncates++;
-
-				dstring_init(&log_insert);
-				slon_appendquery(&log_insert,
-								 "insert into %s.sl_log_%d "
-								 "    (log_origin, log_txid, log_tableid, "
-								 "     log_actionseq, log_tablenspname, "
-								 "     log_tablerelname, log_cmdtype, "
-								 "     log_cmdupdncols, "
-								 "     log_cmdargs) values "
-								 "    ('%s', '%s', '%d', '%s', '%q', '%q', '%q', '%q', '%q');\n",
-								 rtcfg_namespace, wd->active_log_table,
-								 log_origin, log_txid, log_tableid,
-								 log_actionseq, log_tablenspname,
-								 log_tablerelname, log_cmdtype, 
-								 log_cmdupdncols, log_cmdargs);
-				
-				res2 = PQexec(local_conn, dstring_data(&log_insert));
-				if ( PQresultStatus(res2) != PGRES_COMMAND_OK )
-				{
-					
-					slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: \"%s\" %s",
-							 node->no_id, provider->no_id,
-							 dstring_data(&log_insert),
-							 PQresultErrorMessage(res2));
-					/*
-					 * TODO better error handling
-					 */
-					errors++;
-					dstring_free(&log_insert);
-					PQclear(res2);
-					break;
-					
-				}
-				PQclear(res2);
-				dstring_free(&log_insert);
-			}/*each row in result set*/
-		}/*loop calling FETCH */
-	} while (0);
-	
+	}/*errors*/
+	rc2 = PQputCopyEnd(local_conn, NULL);
 	
 	if (res != NULL)
 	{
 		PQclear(res);
 		res = NULL;
 	}
-	
-	/*
-	 * Close the cursor and rollback the transaction.
-	 */
-	(void) slon_mkquery(&query, "close LOG; ");
-	if (query_execute(node, dbconn, &query) < 0)
-		errors++;
+	if( res2 != NULL)
+	{
+		PQclear(res2);
+		res2 = NULL;
+	}
+
+	dstring_init(&query);
 	(void) slon_mkquery(&query, "rollback transaction; "
 						"set enable_seqscan = default; "
 						"set enable_indexscan = default; ");
@@ -4792,9 +4721,6 @@ sync_helper(void *cdata,PGconn * local_conn)
 			 "remoteWorkerThread_%d_%d: %.3f seconds until close cursor\n",
 			 node->no_id, provider->no_id,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
-	
-	slon_log(SLON_DEBUG1, "remoteWorkerThread_%d_%d: inserts=%d updates=%d deletes=%d truncates=%d\n",
-			 node->no_id, provider->no_id, pm.num_inserts, pm.num_updates, pm.num_deletes, pm.num_truncates);
 	
 	slon_log(SLON_DEBUG1, 
 			 "remoteWorkerThread_%d: sync_helper timing: " 
@@ -4811,18 +4737,10 @@ sync_helper(void *cdata,PGconn * local_conn)
 			 node->no_id, 
 			 pm.large_tuples_t, pm.large_tuples_c);
 	
-	/*
-	 * Change our helper status to DONE and tell the worker thread about
-	 * it.
-	 */
 	slon_log(SLON_DEBUG4,
-			 "remoteWorkerThread_%d_%d: change helper thread status\n",
+			 "remoteWorkerThread_%d_%d: sync_helper done\n",
 			 node->no_id, provider->no_id);
-	
-	slon_log(SLON_DEBUG4,
-			 "remoteWorkerThread_%d_%d: send DONE/ERROR line to worker\n",
-			 node->no_id, provider->no_id);
-	return 0;
+	return errors;
 }
 
 /* ----------
