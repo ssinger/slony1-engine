@@ -55,6 +55,10 @@ cd doc/adminguide
 make html
 make html
 make man
+# build PDF.  This requires dblatex
+#
+make slony.xml
+make slony.pdf
 cd ..
 cd ..
 sh tools/release_checklist.sh
@@ -71,7 +75,7 @@ then
 fi
 
 cd ..
-tar -cjf slony1-$REL_VERSION-docs.tar.bz2 slony1-$REL_VERSION/doc/adminguide/*html slony1-$REL_VERSION/doc/adminguide/*man* slony1-$REL_VERSION/doc/adminguide/*png slony1-$REL_VERSION/doc/adminguide/*css
+tar -cjf slony1-$REL_VERSION-docs.tar.bz2 slony1-$REL_VERSION/doc/adminguide/*html slony1-$REL_VERSION/doc/adminguide/*man* slony1-$REL_VERSION/doc/adminguide/*png slony1-$REL_VERSION/doc/adminguide/*css slony1-$REL_VERSION/doc/adminguide/slony.pdf
 cd slony1-$REL_VERSION
 make distclean
 cd ..
