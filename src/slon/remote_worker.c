@@ -186,10 +186,6 @@ struct WorkerGroupData_s
 
 	int			active_log_table;
 
-	char	   *tab_forward;
-	char	  **tab_fqname;
-	int			tab_fqname_size;
-
 	ProviderInfo *provider_head;
 	ProviderInfo *provider_tail;
 
@@ -323,11 +319,6 @@ remoteWorkerThread_main(void *cdata)
 
 	wd->node = node;
 
-	wd->tab_fqname_size = SLON_MAX_PATH;
-	wd->tab_fqname = (char **) malloc(sizeof(char *) * wd->tab_fqname_size);
-	memset(wd->tab_fqname, 0, sizeof(char *) * wd->tab_fqname_size);
-	wd->tab_forward = malloc(wd->tab_fqname_size);
-	memset(wd->tab_forward, 0, (size_t) (wd->tab_fqname_size));
 
 	dstring_init(&query1);
 	dstring_init(&query2);
@@ -1599,8 +1590,6 @@ remoteWorkerThread_main(void *cdata)
 	dstring_free(&query1);
 	dstring_free(&query2);
 	dstring_free(&query3);
-	free(wd->tab_fqname);
-	free(wd->tab_forward);
 #ifdef SLON_MEMDEBUG
 	local_conn = NULL;
 	memset(wd, 66, sizeof(WorkerGroupData));
@@ -4104,44 +4093,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 				}
 			}
 		
-			/* Remember info about the tables in the set */
-			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
-			{
-				int			tab_id = strtol(PQgetvalue(res2, tupno2, 0), NULL, 10);
-				int			tab_set = strtol(PQgetvalue(res2, tupno2, 1), NULL, 10);
-				SlonSet    *rtcfg_set;
-
-				/*
-				 * Remember the fully qualified table name on the fly. This
-				 * might have to become a hashtable someday.
-				 */
-				while (tab_id >= wd->tab_fqname_size)
-				{
-					wd->tab_fqname = (char **) realloc(wd->tab_fqname,
-								   sizeof(char *) * wd->tab_fqname_size * 2);
-					memset(&(wd->tab_fqname[wd->tab_fqname_size]), 0,
-						   sizeof(char *) * wd->tab_fqname_size);
-					wd->tab_forward = realloc(wd->tab_forward,
-											  wd->tab_fqname_size * 2);
-					memset(&(wd->tab_forward[wd->tab_fqname_size]), 0,
-						   wd->tab_fqname_size);
-					wd->tab_fqname_size *= 2;
-				}
-				wd->tab_fqname[tab_id] = strdup(PQgetvalue(res2, tupno2, 2));
-
-				/*
-				 * Also remember if the tables log data needs to be forwarded.
-				 */
-				for (rtcfg_set = rtcfg_set_list_head; rtcfg_set;
-					 rtcfg_set = rtcfg_set->next)
-				{
-					if (rtcfg_set->set_id == tab_set)
-					{
-						wd->tab_forward[tab_id] = rtcfg_set->sub_forward;
-						break;
-					}
-				}
-			}
+		
 
 			PQclear(res2);
 		}
@@ -4264,25 +4216,13 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
 		 */
-		num_errors=sync_helper((void*)provider,local_dbconn);
+		num_errors+=sync_helper((void*)provider,local_dbconn);
 	}
 
 
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: cleanup\n",
 			 node->no_id);
 
-	/*
-	 * Cleanup
-	 */
-	for (i = 0; i < wd->tab_fqname_size; i++)
-	{
-		if (wd->tab_fqname[i] != NULL)
-		{
-			free(wd->tab_fqname[i]);
-			wd->tab_fqname[i] = NULL;
-		}
-	}
-	memset(wd->tab_forward, 0, wd->tab_fqname_size);
 
 	/*
 	 * If there have been any errors, abort the SYNC
@@ -4630,6 +4570,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 	{
 		errors++;
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY OUT: \"%s\" %s",
+				 node->no_id, provider->no_id,
 				 dstring_data(&provider->helper_query),
 				 PQresultErrorMessage(res));
 		return errors;
@@ -4654,10 +4595,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY IN: \"%s\" %s",
 				 node->no_id, provider->no_id,
 				 dstring_data(&copy_in),
-				 PQresultErrorMessage(res2));
-		/*
-		 * TODO better error handling
-		 */
+				 PQresultErrorMessage(res2));	
 		errors++;
 		dstring_free(&copy_in);
 		PQclear(res2);
@@ -4665,6 +4603,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 		
 	}
 	dstring_free(&copy_in);
+	tupno=0;
 	while (!errors)
 	{
 		rc = PQgetCopyData(dbconn,&buffer,0);
@@ -4676,6 +4615,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 			}
 			break;
 		}
+		tupno++;
 		if (first_fetch)
 		{
 			gettimeofday(&tv_now, NULL);
@@ -4690,7 +4630,9 @@ sync_helper(void *cdata,PGconn * local_conn)
 		if (rc2 < 0 )
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error writing" \
-					 " to sl_log:%s\n", PQerrorMessage(local_conn));
+					 " to sl_log:%s\n", 
+					 node->no_id,provider->no_id,
+					 PQerrorMessage(local_conn));
 			errors++;
 			break;
 		}
@@ -4708,7 +4650,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 		PQclear(res2);
 		res2 = NULL;
 	}
-
+	
 	dstring_init(&query);
 	(void) slon_mkquery(&query, "rollback transaction; "
 						"set enable_seqscan = default; "
@@ -4721,7 +4663,9 @@ sync_helper(void *cdata,PGconn * local_conn)
 			 "remoteWorkerThread_%d_%d: %.3f seconds until close cursor\n",
 			 node->no_id, provider->no_id,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
-	
+	slon_log(SLON_DEBUG1,"remoteWorkerThread_%d_%d: rows=%d\n",
+			 node->no_id,provider->no_id,tupno);
+
 	slon_log(SLON_DEBUG1, 
 			 "remoteWorkerThread_%d: sync_helper timing: " 
 			 " pqexec (s/count)" 
@@ -4729,13 +4673,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 			 "- subscriber %.3f/%d\n",
 			 node->no_id, 
 			 pm.prov_query_t, pm.prov_query_c, 
-			 pm.subscr_query_t, pm.prov_query_c);
-	
-	slon_log(SLON_DEBUG1, 
-			 "remoteWorkerThread_%d: sync_helper timing: " 
-			 " large tuples %.3f/%d\n", 
-			 node->no_id, 
-			 pm.large_tuples_t, pm.large_tuples_c);
+			 pm.subscr_query_t, pm.prov_query_c);	
 	
 	slon_log(SLON_DEBUG4,
 			 "remoteWorkerThread_%d_%d: sync_helper done\n",
