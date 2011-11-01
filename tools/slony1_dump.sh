@@ -165,7 +165,144 @@ begin
 	return p_new_seq;
 end;
 ' language plpgsql;
+create table $clname.sl_log_archive (
+	log_origin			int4,
+	log_txid			bigint,
+	log_tableid			int4,
+	log_actionseq		int8,
+	log_tablenspname	text,
+	log_tablerelname	text,
+	log_cmdtype			char,
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
+) WITHOUT OIDS;
 
+
+
+create or replace function $clname.slon_quote_brute(p_tab_fqname text) returns text
+as \$\$
+declare	
+    v_fqname text default '';
+begin
+    v_fqname := '"' || replace(p_tab_fqname,'"','""') || '"';
+    return v_fqname;
+end;
+\$\$ language plpgsql immutable;
+
+
+create or replace function $clname.log_apply() returns trigger
+as \$\$
+declare
+	v_command	text = 'not implemented yet';
+	v_list1		text = '';
+	v_list2		text = '';
+	v_comma		text = '';
+	v_and		text = '';
+	v_idx		integer = 1;
+	v_nargs		integer;
+	v_i			integer = 0;
+begin
+	v_nargs = array_upper(NEW.log_cmdargs, 1);
+
+	if NEW.log_cmdtype = 'I' then
+		while v_idx < v_nargs loop
+			v_list1 = v_list1 || v_comma ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_list2 = v_list2 || v_comma || 'null';
+			else 
+			     v_list2 = v_list2 || v_comma ||
+			     	pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);			end if;
+			v_idx = v_idx + 1;
+
+			v_comma = ',';
+		end loop;
+
+		v_command = 'INSERT INTO ' || 
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' (' ||
+			v_list1 || ') VALUES (' || v_list2 || ')';
+
+		execute v_command;
+	end if;
+	if NEW.log_cmdtype = 'U' then
+		v_command = 'UPDATE ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' SET ';
+		while v_i < NEW.log_cmdupdncols loop		      	
+			v_command = v_command || v_comma ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else 
+			     v_command = v_command ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+			v_comma = ',';
+			v_i = v_i + 1;
+		end loop;
+		if NEW.log_cmdupdncols = 0 then
+			v_command = v_command ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[1]) || '=' ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[1]);
+		end if;
+		v_command = v_command || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'D' then
+		v_command = 'DELETE FROM ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'T' then
+		execute 'TRUNCATE TABLE ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' CASCADE';
+	end if;
+
+	return NULL;
+end;
+\$\$ language plpgsql;
+create trigger apply_trigger
+		before INSERT on $clname.sl_log_archive
+		for each row execute procedure $clname.log_apply();
+alter table $clname.sl_log_archive
+	  enable replica trigger apply_trigger;
 set session_replication_role='replica';
 
 _EOF_

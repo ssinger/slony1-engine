@@ -262,6 +262,7 @@ static int archive_open(SlonNode *node, char *seqbuf,
 			 PGconn *dbconn);
 static int	archive_close(SlonNode *node);
 static void archive_terminate(SlonNode *node);
+
 static int	archive_append_ds(SlonNode *node, SlonDString *ds);
 static int	archive_append_str(SlonNode *node, const char *s);
 static int	archive_append_data(SlonNode *node, const char *s, int len);
@@ -4602,6 +4603,20 @@ sync_helper(void *cdata,PGconn * local_conn)
 		return errors;
 		
 	}
+	if (archive_dir)
+	{
+		SlonDString log_copy;
+		dstring_init(&log_copy);
+		slon_mkquery(&log_copy,"COPY %s.\"sl_log_archive\" ( log_origin, "	\
+				 "log_txid,log_tableid,log_actionseq,log_tablenspname, "	\
+				 "log_tablerelname, log_cmdtype, log_cmdupdncols,"		\
+				 "log_cmdargs) FROM STDIN;",
+				 rtcfg_namespace);
+		archive_append_ds(node,&log_copy);
+		dstring_terminate(&log_copy);
+		
+
+	}
 	dstring_free(&copy_in);
 	tupno=0;
 	while (!errors)
@@ -4626,20 +4641,29 @@ sync_helper(void *cdata,PGconn * local_conn)
 			
 			first_fetch = false;
 		}
-		rc2 = PQputCopyData(local_conn,buffer,rc);
+		rc2 = PQputCopyData(local_conn,buffer,rc);	
 		if (rc2 < 0 )
 		{
 			slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error writing" \
 					 " to sl_log:%s\n", 
 					 node->no_id,provider->no_id,
 					 PQerrorMessage(local_conn));
-			errors++;
+			errors++;			
+			if(buffer)
+				PQfreemem(buffer);
 			break;
 		}
+		if(archive_dir)
+			archive_append_data(node,buffer,rc);
+		if(buffer)
+			PQfreemem(buffer);
 		
 	}/*errors*/
 	rc2 = PQputCopyEnd(local_conn, NULL);
-	
+	if(archive_dir)
+	{
+		archive_append_str(node,"\\.");
+	}
 	if (res != NULL)
 	{
 		PQclear(res);
@@ -4809,7 +4833,6 @@ archive_open(SlonNode *node, char *seqbuf, PGconn *dbconn)
 				 node->no_id, node->archive_temp, strerror(errno));
 		return -1;
 	}
-
 	rc = fprintf(node->archive_fp,
 	   "------------------------------------------------------------------\n"
 				 "-- Slony-I log shipping archive\n"
