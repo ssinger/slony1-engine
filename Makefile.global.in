@@ -79,7 +79,7 @@ PERL=			@PERL@
 SED=			@SED@
 subdir=$(slony_subdir)
 
-override CPPFLAGS := -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
+override CPPFLAGS := -I${pgincludeserverdir} -I${pgincludedir} $(CPPFLAGS)
 LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq @NLSLIB@
 
 ifeq ($(GCC), yes)

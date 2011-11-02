@@ -1,13 +1,20 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+** 2.1.1
+
+- Bug #246 :: Include path order changes
+
+** 2.1.0 
 ** 2.1.0 RC 2
+
+- Bug #236 :: Fix default formatting of timestamp in logs
 
 - Add support for PostgreSQL 9.1.  Simply marking it a supported version
 
-** 2.1.0 RC 1
+- Bug #237 :: Drop set did not remove truncate triggers.
 
-- Bug #236 :: Fix default formatting of timestamp in logs
+** 2.1.0 RC 1
 
 - Bug #226 :: Cleanup thread needed change to expected PQResultStatus
 
