@@ -1175,6 +1175,11 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
  * prepare the plan for the curren sl_log_x insert query.
  *
  */
+
+#ifndef TEXTARRAYOID
+#define TEXTARRAYOID 1009
+#endif
+
 int prepareLogPlan(Slony_I_ClusterStatus * cs,
 				int log_status)
 {
