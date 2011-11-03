@@ -88,7 +88,7 @@ LogShipping.prototype.runTest = function() {
 	var logShippingDaemon = this.coordinator.createLogShippingDaemon('db6',this.logdirectoryFile);
 	logShippingDaemon.run();
 	
-	java.lang.Thread.sleep(3*1000);
+	java.lang.Thread.sleep(30*1000);
 	populate.stop();
 	this.coordinator.join(populate);	
 	this.slonikSync(1, 1);
