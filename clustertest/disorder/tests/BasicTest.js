@@ -367,7 +367,7 @@ BasicTest.prototype.dropDb = function(dbnames) {
  * 
  */
 BasicTest.prototype.getSyncWaitTime = function() {
-	return 60;
+	return 120;
 }
 
 /**
