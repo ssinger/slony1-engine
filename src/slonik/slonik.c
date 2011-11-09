@@ -1782,10 +1782,10 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	int			rc;
 	char		fnamebuf[1024];
 	char		buf[4096];
-	char		rex1[256];
-	char		rex2[256];
-	char		rex3[256];
-	char		rex4[256];
+	char		rex1[257];
+	char		rex2[257];
+	char		rex3[257];
+	char		rex4[257];
 	FILE	   *stmtp;
 
 
@@ -5076,7 +5076,7 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
 	}
 
 	result_set[o] = '\0';
-	memcpy(resout, result_set, o);
+	memcpy(resout, result_set, o+1);
 }
 
 /**
