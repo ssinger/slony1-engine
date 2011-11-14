@@ -5,6 +5,9 @@
 
 - Bug #246 :: Include path order changes
 
+- Bug #249 :: Add parentheses to txid_current() in function for
+			  TRUNCATE logging
+
 ** 2.1.0 
 ** 2.1.0 RC 2
 
