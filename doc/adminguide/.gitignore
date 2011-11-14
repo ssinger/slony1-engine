@@ -35,6 +35,8 @@ function.altertableconfiguretriggers-p-tab-id-integer.html
 function.altertabledroptriggers-integer.html
 function.altertabledroptriggers-p-tab-id-integer.html
 function.altertablerestore-integer.html
+function.check-table-field-exists-p-field-text-p-table-text-p-namespace-text.html
+function.check-unconfirmed-log.html
 function.checkmoduleversion.html
 function.cleanupevent-interval-boolean.html
 function.cleanupevent-p-interval-interval.html
@@ -75,6 +77,7 @@ function.ddlscript-prepare-int-p-only-on-node-integer-p-set-id-integer.html
 function.ddlscript-prepare-integer-integer.html
 function.ddlscript-prepare-p-only-on-node-integer-p-set-id-integer.html
 function.decode-tgargs-bytea.html
+function.deny-truncate.html
 function.denyaccess.html
 function.determineattkindunique-p-idx-name-text-p-tab-fqname-name.html
 function.determineattkindunique-text-name.html
@@ -134,6 +137,7 @@ function.killbackend-p-signame-integer-p-pid-text.html
 function.lockedset.html
 function.lockset-integer.html
 function.lockset-p-set-id-integer.html
+function.log-apply.html
 function.log-truncate.html
 function.logswitch-finish.html
 function.logswitch-start.html
@@ -292,6 +296,20 @@ slonik.html
 slonikref.html
 slonikshell.html
 slonstart.html
+slony-tmp.tex
+slony.aux
+slony.cb
+slony.cb2
+slony.glo
+slony.idx
+slony.lof
+slony.log
+slony.lot
+slony.out
+slony.pdf
+slony.tex
+slony.toc
+slony.xml
 slonyadmin.html
 slonyintro.html
 slonylistenercosts.html
@@ -348,6 +366,7 @@ table.sl-event.html
 table.sl-listen.html
 table.sl-log-1.html
 table.sl-log-2.html
+table.sl-log-script.html
 table.sl-node.html
 table.sl-nodelock.html
 table.sl-path.html
