@@ -122,6 +122,11 @@ typedef struct DeleteStmt_s {
 	AttElemList		   *qualification;
 } DeleteStmt;
 
+typedef struct TruncateStmt_s {
+  char					*namespace;
+  char					*tablename;
+} TruncateStmt;
+
 typedef struct CopyStmt_s {
 	char			   *namespace;
 	char			   *tablename;
@@ -191,6 +196,7 @@ extern int		process_end_transaction(char *sql);
 extern int		process_insert(InsertStmt *stmt);
 extern int		process_update(UpdateStmt *stmt);
 extern int		process_delete(DeleteStmt *stmt);
+extern int		process_truncate(TruncateStmt *stmt);
 extern int		process_copy(CopyStmt *stmt);
 extern int		process_copydata(char *line);
 extern int		process_copyend(void);
