@@ -5,6 +5,7 @@
 
 - Bug #246 :: Include path order changes
 - Bug #161 :: fix memory overrun in EXECUTE SCRIPT parser
+- Bug #247 :: slony_logshipper to handle TRUNCATE commands
 
 - Bug #249 :: Add parentheses to txid_current() in function for
 			  TRUNCATE logging

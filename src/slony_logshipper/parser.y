@@ -74,6 +74,7 @@ int yydebug=1;
 %token	K_AND
 %token	K_ARCHIVE
 %token	K_ARCHIVE_COMMENT
+%token  K_CASCADE
 %token	K_CLUSTER
 %token	K_COMMAND
 %token	K_COMMIT
@@ -107,6 +108,7 @@ int yydebug=1;
 %token	K_TABLE
 %token	K_TO
 %token	K_TRANSACTION
+%token  K_TRUNCATE
 %token	K_UPDATE
 %token	K_VACUUM
 %token	K_VALUES
@@ -398,6 +400,7 @@ arch_stmt			: arch_comment
 					| arch_exec_ddl
 					| arch_vacuum
 					| arch_analyze
+					| arch_truncate
 					;
 
 arch_commit			: K_COMMIT ';'
@@ -589,6 +592,16 @@ arch_delete_qual	: arch_qualification
 						$$ = NULL;
 					}
 					;
+
+arch_truncate		: K_TRUNCATE K_TABLE K_ONLY ident '.' ident K_CASCADE ';' 
+					{
+						
+						TruncateStmt stmt;
+						stmt.namespace=$4;
+						stmt.tablename=$6;
+						process_truncate(&stmt);
+
+					};
 
 arch_copy			: K_COPY ident '.' ident '(' arch_attr_list ')' K_FROM ident ';'
 					{
@@ -1016,6 +1029,7 @@ ident_keywords		: K_START_CONFIG | K_START_ARCHIVE
 					| K_SET
 					| K_START
 					| K_TRANSACTION
+					| K_TRUNCATE
 					| K_UPDATE
 					| K_VACUUM
 					| K_VALUES
