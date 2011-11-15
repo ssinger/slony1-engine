@@ -4609,6 +4609,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 
 		(void) slon_mkquery(&query,
 							"select SL.seql_seqid, max(SL.seql_last_value) "
+							" , SQ.seq_nspname, SQ.seq_relname "
 							"	from %s.sl_seqlog SL, "
 							"		%s.sl_sequence SQ "
 							"	where SQ.seq_id = SL.seql_seqid "
@@ -4623,7 +4624,7 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 							 (pset->prev == NULL) ? "" : ",",
 							 pset->set_id);
 		slon_appendquery(&query, ") "
-						 "  group by 1; ");
+						 "  group by SL.seql_seqid,SQ.seq_nspname, SQ.seq_relname; ");
 
 		start_monitored_event(&pm);
 		res1 = PQexec(provider->conn->dbconn, dstring_data(&query));
@@ -4647,6 +4648,8 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		{
 			char	   *seql_seqid = PQgetvalue(res1, tupno1, 0);
 			char	   *seql_last_value = PQgetvalue(res1, tupno1, 1);
+			char       *seq_nspname = PQgetvalue(res1,tupno1,2);
+			char       *seq_relname = PQgetvalue(res1,tupno1,3);
 
 			(void) slon_mkquery(&query,
 							 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
@@ -4669,9 +4672,9 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			if (archive_dir)
 			{
 				(void) slon_mkquery(&lsquery,
-							"select %s.sequenceSetValue_offline(%s,'%s');\n",
+							"select %s.sequenceSetValue_offline('%s','%s','%s');\n",
 									rtcfg_namespace,
-									seql_seqid, seql_last_value);
+									seq_nspname,seq_relname, seql_last_value);
 				rc = archive_append_ds(node, &lsquery);
 				if (rc < 0)
 					slon_retry();

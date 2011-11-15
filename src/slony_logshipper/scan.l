@@ -106,6 +106,7 @@ analyze					{ return K_ANALYZE;			}
 and						{ return K_AND;				}
 archive					{ return K_ARCHIVE;			}
 archives				{ return K_ARCHIVES;		}
+cascade					{ return K_CASCADE;			}
 cluster					{ return K_CLUSTER;			}
 command					{ return K_COMMAND;			}
 commit					{ return K_COMMIT;			}
@@ -137,6 +138,7 @@ start					{ return K_START;			}
 table					{ return K_TABLE;			}
 to						{ return K_TO;				}
 transaction				{ return K_TRANSACTION;		}
+truncate				{ return K_TRUNCATE;		}
 update					{ return K_UPDATE;			}
 vacuum					{ return K_VACUUM;			}
 values					{ return K_VALUES;			}

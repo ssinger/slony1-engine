@@ -798,6 +798,29 @@ process_delete(DeleteStmt *stmt)
 
 
 int
+process_truncate(TruncateStmt *stmt)
+{
+	SlonDString		ds;
+	int				rc;
+	char		   *namespace;
+	char		   *tablename;
+
+	if (lookup_rename(stmt->namespace, stmt->tablename, 
+					&namespace, &tablename) == 0)
+		return 0;
+
+	dstring_init(&ds);
+	slon_mkquery(&ds, "truncate only %s.%s cascade;", 
+				  namespace, tablename);
+	dstring_terminate(&ds);
+
+	rc = process_exec_sql(dstring_data(&ds));
+	dstring_free(&ds);
+
+	return rc;
+}
+
+int
 process_copy(CopyStmt *stmt)
 {
 	SlonDString		ds;
