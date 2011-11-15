@@ -724,7 +724,6 @@ BasicTest.prototype.verifyReadOnly=function(node_id) {
 	var stat = connection.createStatement();
 	try {
 		var result = stat.execute("INSERT INTO disorder.do_config(cfg_opt,cfg_val) VALUES ('test1','test2');");
-		this.testResults.assertCheck(node_id + 'is read only',result,false);
 	}
 	catch(error) {
 		this.testResults.assertCheck(node_id + ' is read only',true,true);
@@ -761,4 +760,24 @@ BasicTest.prototype.getSlonConfFileMap=function(event_node) {
     var map = Packages.java.util.HashMap();
     map.put('cluster_name',this.getClusterName());   
     return map;
+}
+
+BasicTest.prototype.populateReviewTable=function(node_id) {
+	this.coordinator.log('populating review table ' + node_id);
+	var connection=this.coordinator.createJdbcConnection('db' + node_id);
+	var stat = connection.createStatement();
+	try {
+		stat.execute("INSERT INTO disorder.do_item_review(i_id,comments) select i_id, 'a good item' from disorder.do_item limit 100;");
+		var count=stat.getUpdateCount();
+		this.testResults.assertCheck('items added',count>0,true);
+	}
+	catch(error) {
+		this.testResults.assertCheck('review populate failed',true,true);
+		
+	}
+	finally {
+		stat.close();
+		connection.close();
+	}
+	this.coordinator.log('populating review table on ' + node_id + " - complete");	
 }
