@@ -23,6 +23,12 @@ LogShipping.prototype.getNodeCount=function() {
 	return 4;
 }
 
+LogShipping.prototype.getSyncWaitTime = function()
+{
+
+	return 3*120;
+}
+
 LogShipping.prototype.runTest = function() {	
         this.coordinator.log("LogShipping.prototype.runTest - begin");
 	this.testResults.newGroup("Log Shipping");

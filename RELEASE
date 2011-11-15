@@ -6,7 +6,9 @@
 - Bug #246 :: Include path order changes
 - Bug #161 :: fix memory overrun in EXECUTE SCRIPT parser
 - Bug #249 :: Add parentheses to txid_current() in function for TRUNCATE logging
-
+- Bug #247 :: slony_logshipper can now handle the TRUNCATE commands
+- Bug #248 :: Log Shipping files will now use the sequence name directly instead of
+              a tracking table.
 ** 2.1.0 
 ** 2.1.0 RC 2
 

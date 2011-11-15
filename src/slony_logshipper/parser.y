@@ -846,12 +846,12 @@ arch_finish_func	: T_FINISH_FUNCTION
 					}
 					;
 
-arch_seqsetval		: K_SELECT ident '.' arch_seqsetval_func '(' num ',' literal ')' ';'
+arch_seqsetval		: K_SELECT ident '.' arch_seqsetval_func '(' literal ',' literal ',' literal ')' ';'
 					{
 						SlonDString	ds;
 						dstring_init(&ds);
-						slon_mkquery(&ds, "select %s.%s(%d, '%s');",
-								$2, $4, $6, $8);
+						slon_mkquery(&ds, "select %s.%s('%s', '%s', '%s');",
+									 $2, $4, $6, $8,$10);
 						free($2);
 						free($4);
 						free($8);
@@ -876,12 +876,12 @@ arch_seqsetval_func	: T_SEQSETVAL_FUNCTION
 					}
 					;
 
-arch_pgsetval		: K_SELECT ident '.' arch_pgsetval_func '(' literal ',' literal ')' ';'
+arch_pgsetval		: K_SELECT ident '.' arch_pgsetval_func '('  literal ',' literal ')' ';'
 					{
 						SlonDString	ds;
 						dstring_init(&ds);
 						slon_mkquery(&ds, "select %s.%s('%s', '%s');",
-								$2, $4, $6, $8);
+									 $2, $4, $6, $8);
 						free($2);
 						free($4);
 						free($6);
