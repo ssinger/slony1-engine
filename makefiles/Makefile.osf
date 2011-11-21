@@ -5,7 +5,7 @@ DLSUFFIX = .so
 CFLAGS_SL =
 rpath = -rpath $(pglibdir)
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(LD) -shared -expect_unresolved '*' -o $@ $<
 
 sqlmansect = 5

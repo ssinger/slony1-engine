@@ -11,7 +11,7 @@ endif
 DLSUFFIX = .so
 CFLAGS_SL = -fpic -DPIC
 
-%.so: %.o
+%.so: $(SO_OBJS)
 ifdef ELF_SYSTEM
 	$(LD) -x -Bshareable -o $@ $<
 else

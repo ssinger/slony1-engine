@@ -8,7 +8,7 @@ LDFLAGS += -LD-Blargedynsym
 DLSUFFIX = .so
 CFLAGS_SL =
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(LD) -G -Bdynamic -o $@ $<
 
 sqlmansect = 5

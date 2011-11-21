@@ -1937,13 +1937,17 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-						   "%s/slony1_base.sql", share_path) < 0
+			    "%s/slony1_base.%s.sql", share_path,SLONY_I_VERSION_STRING) < 0
 		|| load_sql_script(stmt, adminfo,
-			 "%s/slony1_base.v%d%d.sql", share_path, use_major, use_minor) < 0
+				   "%s/slony1_base.v%d%d.%s.sql", share_path, 
+				   use_major, use_minor,
+				   SLONY_I_VERSION_STRING) < 0
 		|| load_sql_script(stmt, adminfo,
-						   "%s/slony1_funcs.sql", share_path) < 0
+				   "%s/slony1_funcs.%s.sql", share_path,
+				   SLONY_I_VERSION_STRING) < 0
 		|| load_sql_script(stmt, adminfo,
-		   "%s/slony1_funcs.v%d%d.sql", share_path, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.%s.sql", share_path, use_major, 
+				   use_minor,SLONY_I_VERSION_STRING) < 0)
 	{
 		db_notice_silent = false;
 		dstring_free(&query);
@@ -2011,9 +2015,11 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	/* Load schema, DB version specific */
 	db_notice_silent = true;
 	if (load_sql_script(stmt, adminfo,
-						"%s/slony1_funcs.sql", share_path) < 0
+						"%s/slony1_funcs.%s.sql", 
+			    share_path,SLONY_I_VERSION_STRING) < 0
 		|| load_sql_script(stmt, adminfo,
-		   "%s/slony1_funcs.v%d%d.sql", share_path, use_major, use_minor) < 0)
+		   "%s/slony1_funcs.v%d%d.%s.sql", share_path, use_major, 
+				   use_minor,SLONY_I_VERSION_STRING) < 0)
 	{
 		db_notice_silent = false;
 		return -1;

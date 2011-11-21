@@ -26,7 +26,7 @@ else
 SO_FLAGS = -G
 endif
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(CC) $(SO_FLAGS) -o $@ $<
 
 sqlmansect = 5sql

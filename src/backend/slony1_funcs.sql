@@ -21,7 +21,7 @@
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -32,7 +32,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text) 
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -43,7 +43,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -54,7 +54,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -65,7 +65,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -76,7 +76,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -87,7 +87,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -98,7 +98,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -109,7 +109,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text, ev_data8 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -126,7 +126,7 @@ Create an sl_event entry';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.denyAccess ()
 	returns trigger
-	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_denyAccess'
 	language C
 	security definer;
 
@@ -144,7 +144,7 @@ grant execute on function @NAMESPACE@.denyAccess () to public;
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.lockedSet ()
 	returns trigger
-	as '$libdir/slony1_funcs', '_Slony_I_lockedSet'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_lockedSet'
 	language C;
 
 comment on function @NAMESPACE@.lockedSet () is 
@@ -156,7 +156,7 @@ comment on function @NAMESPACE@.lockedSet () is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getLocalNodeId (p_cluster name) returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_getLocalNodeId'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getLocalNodeId'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (p_cluster name) to public;
@@ -171,7 +171,7 @@ comment on function @NAMESPACE@.getLocalNodeId (p_cluster name) is
 --	object.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getModuleVersion () returns text
-    as '$libdir/slony1_funcs', '_Slony_I_getModuleVersion'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getModuleVersion'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getModuleVersion () to public;
@@ -181,7 +181,7 @@ comment on function @NAMESPACE@.getModuleVersion () is
 
 
 create or replace function @NAMESPACE@.resetSession() returns text
-	   as '$libdir/slony1_funcs','_Slony_I_resetSession'
+	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_resetSession'
 	   language C;
 
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
@@ -204,7 +204,7 @@ schema/functions.';
 select @NAMESPACE@.checkmoduleversion();
 
 create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
-'$libdir/slony1_funcs','_slon_decode_tgargs' language C security definer;
+'$libdir/slony1_funcs.@MODULEVERSION@','_slon_decode_tgargs' language C security definer;
 
 comment on function @NAMESPACE@.decode_tgargs(bytea) is 
 'Translates the contents of pg_trigger.tgargs to an array of text arguments';
@@ -243,7 +243,7 @@ drop function @NAMESPACE@.check_namespace_validity();
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logTrigger () returns trigger
-    as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logTrigger'
 	language C
 	security definer;
 
@@ -286,7 +286,7 @@ comment on function @NAMESPACE@.terminateNodeConnections (p_failed_node int4) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.killBackend (p_pid int4, p_signame text) returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_killBackend'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_killBackend'
 	language C;
 
 comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
@@ -298,7 +298,7 @@ comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.seqtrack (p_seqid int4, p_seqval int8) returns int8
-    as '$libdir/slony1_funcs', '_Slony_I_seqtrack'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_seqtrack'
 	strict language C;
 
 comment on function @NAMESPACE@.seqtrack(p_seqid int4, p_seqval int8) is
