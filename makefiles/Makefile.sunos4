@@ -7,7 +7,7 @@ else
 CFLAGS_SL = -PIC
 endif
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(LD) -assert pure-text -Bdynamic -o $@ $<
 
 sqlmansect = 7

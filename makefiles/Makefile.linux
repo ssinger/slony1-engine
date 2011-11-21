@@ -11,7 +11,7 @@ else
 CFLAGS_SL = -fpic
 endif
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(CC) -shared -o $@ $<
 
 %.o: %.c

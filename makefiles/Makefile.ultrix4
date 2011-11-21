@@ -6,7 +6,7 @@ DLSUFFIX = .so
 # "-G 0" works for both DEC cc and GNU cc.
 CFLAGS_SL = -G 0
 
-%.so: %.c
+%.so: $(SO_OBJS)
 	$(CC) -c -G 0 $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
 sqlmansect = 7
