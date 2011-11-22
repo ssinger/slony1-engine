@@ -1225,6 +1225,7 @@ static int
 get_current_at_counter(void)
 {
 	SlonDString		ds;
+	SlonDString     query;
 	PGresult	   *res;
 	char		   *s;
 
@@ -1250,6 +1251,25 @@ get_current_at_counter(void)
 			return -1;
 		}
 		PQsetNoticeProcessor(dbconn, notice_processor, NULL);
+	}
+
+	dstring_init(&query);
+	slon_mkquery(&query,"select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
+	res = PQexec (dbconn, dstring_data(&query));
+	dstring_free(&query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+			return -1;
+
+	if (PQntuples(res) == 0)
+	{
+			PQclear(res);
+	} else {
+			PQclear(res);
+			dstring_init(&query);
+			slon_mkquery(&query,"SET application_name TO 'slony_logshipper'; ");
+			res=PQexec(dbconn, dstring_data(&query));
+			dstring_free(&query); 
+			PQclear(res);
 	}
 
 	dstring_init(&ds);

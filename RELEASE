@@ -1,6 +1,9 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+** 2.2.0
+- Bug #250 :: Log shipper does not report application name - add in setting of GUC
+
 ** 2.1.1
 
 - Bug #246 :: Include path order changes
