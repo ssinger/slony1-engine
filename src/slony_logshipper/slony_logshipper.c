@@ -1256,10 +1256,9 @@ get_current_at_counter(void)
 	dstring_init(&query);
 	slon_mkquery(&query,"select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
 	res = PQexec (dbconn, dstring_data(&query));
-	
+	dstring_free(&query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 			return -1;
-	dstring_free(&query); 
 
 	if (PQntuples(res) == 0)
 	{
