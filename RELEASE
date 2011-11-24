@@ -12,6 +12,9 @@
 - Bug #247 :: slony_logshipper can now handle the TRUNCATE commands
 - Bug #248 :: Log Shipping files will now use the sequence name directly instead of
               a tracking table.
+- slonik_drop_table and slonik_drop_sequence no longer attempt to 
+  return -1 on an error (invalid as a slonik exit code in 2.1)
+
 ** 2.1.0 
 ** 2.1.0 RC 2
 
