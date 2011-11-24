@@ -9,6 +9,8 @@
 
 - Bug #249 :: Add parentheses to txid_current() in function for
 			  TRUNCATE logging
+- slonik_drop_table and slonik_drop_sequence no longer attempt to 
+  return -1 on an error (invalid as a slonik exit code in 2.1)
 
 ** 2.1.0 
 ** 2.1.0 RC 2
