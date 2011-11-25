@@ -249,16 +249,13 @@ int			explain_interval;
 time_t		explain_lastsec;
 int			explain_thistime;
 
-static int	last_sync_group_size;
-static int	next_sync_group_size;
+typedef enum
+{
+	SYNC_INITIAL = 1,
+	SYNC_PENDING,
+	SYNC_SUCCESS
+} SlonSyncStatus;
 
-int			desired_sync_time;
-static int	ideal_sync;
-static struct timeval sync_start;
-static struct timeval sync_end;
-static int	last_sync_length;
-static int	max_sync;
-int			min_sync;
 int			quit_sync_provider;
 int			quit_sync_finalsync;
 
@@ -331,6 +328,11 @@ remoteWorkerThread_main(void *cdata)
 	bool		event_ok;
 	bool		need_reloadListen = false;
 	char		conn_symname[32];
+
+	SlonSyncStatus sync_status = SYNC_INITIAL;
+	int sg_proposed = 1;
+	int sg_last_grouping = 0;
+	int sync_group_size = 0;
 
 	slon_log(SLON_INFO,
 			 "remoteWorkerThread_%d: thread starts\n",
@@ -564,8 +566,6 @@ remoteWorkerThread_main(void *cdata)
 		if (strcmp(event->ev_type, "SYNC") == 0)
 		{
 			SlonWorkMsg_event *sync_group[MAXGROUPSIZE + 1];
-			int			sync_group_size;
-
 			int			seconds;
 			ScheduleStatus			rc;
 			int			i;
@@ -575,53 +575,25 @@ remoteWorkerThread_main(void *cdata)
 			 */
 
 			sync_group[0] = event;
-			sync_group_size = 1;
-
 			if (true)
 			{
-				/* Force last_sync_group_size to a reasonable range */
-				if (last_sync_group_size < 1)
-					last_sync_group_size = 1;
-				if (last_sync_group_size > MAXGROUPSIZE)
-					last_sync_group_size = MAXGROUPSIZE;
-
-				gettimeofday(&sync_end, NULL);
-				last_sync_length =
-					(sync_end.tv_sec - sync_start.tv_sec) * 1000 +
-					(sync_end.tv_usec - sync_start.tv_usec) / 1000;
-
-				/* Force last_sync_length to a reasonable range */
-				if ((last_sync_length < 10) || (last_sync_length > 1000000))
-				{
-					/* sync_length seems to be trash - force group size to 1 */
-					next_sync_group_size = 1;
-				}
-				else
-				{
-					/*
-					 * Estimate an "ideal" number of syncs based on how long
-					 * they took last time
-					 */
-					if (desired_sync_time != 0)
-					{
-						ideal_sync = (last_sync_group_size * desired_sync_time) / last_sync_length;
-					}
-					else
-					{
-						ideal_sync = sync_group_maxsize;
-					}
-					max_sync = last_sync_group_size * 2 + 1;
-					next_sync_group_size = ideal_sync;
-					if (next_sync_group_size > max_sync)
-						next_sync_group_size = max_sync;
-					if (next_sync_group_size < 1)
-						next_sync_group_size = 1;
-					if (next_sync_group_size > sync_group_maxsize)
-						next_sync_group_size = sync_group_maxsize;
-					slon_log(SLON_DEBUG1, "calc sync size - last time: %d last length: %d ideal: %d proposed size: %d\n",
-							 last_sync_group_size, last_sync_length, ideal_sync, next_sync_group_size);
-				}
-
+				int initial_proposed = sg_proposed;
+				if (sync_status == SYNC_SUCCESS) 
+					sg_proposed = sg_last_grouping * 2;
+				else 
+					sg_proposed /= 2;   /* This case, at this point, amounts to
+										 * "reset to 1", since when there is a
+										 * failure, the remote worker thread
+										 * restarts, resetting group size to
+										 * 1 */
+				if (sg_proposed < 1)
+					sg_proposed = 1;
+				if (sg_proposed > sync_group_maxsize) 
+					sg_proposed = sync_group_maxsize;
+				slon_log(SLON_DEBUG2, "SYNC Group sizing: prev state: %d initial proposed:%d k:%d maxsize:%d ultimately proposed n:%d\n",
+						 sync_status,
+						 initial_proposed, sg_last_grouping, sync_group_maxsize, sg_proposed);
+				sync_status = SYNC_PENDING;    /* Indicate that we're now working on a group of SYNCs */
 
 				/*
 				 * Quit upon receiving event # quit_sync_number from node #
@@ -631,9 +603,9 @@ remoteWorkerThread_main(void *cdata)
 				{
 					if (quit_sync_provider == node->no_id)
 					{
-						if ((next_sync_group_size + (event->ev_seqno)) > quit_sync_finalsync)
+						if ((sg_proposed + (event->ev_seqno)) > quit_sync_finalsync)
 						{
-							next_sync_group_size = quit_sync_finalsync - event->ev_seqno;
+							sg_proposed = quit_sync_finalsync - event->ev_seqno;
 						}
 						if (event->ev_seqno >= quit_sync_finalsync)
 						{
@@ -647,10 +619,10 @@ remoteWorkerThread_main(void *cdata)
 					}
 				}
 
-				gettimeofday(&sync_start, NULL);
-
 				pthread_mutex_lock(&(node->message_lock));
-				while (sync_group_size < next_sync_group_size && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
+				sg_last_grouping = 1;   /* reset sizes */
+				sync_group_size = 0;
+				while (sync_group_size < sg_proposed && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
 						break;
@@ -662,8 +634,8 @@ remoteWorkerThread_main(void *cdata)
 					event = (SlonWorkMsg_event *) (node->message_head);
 					sync_group[sync_group_size++] = event;
 					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
-					last_sync_group_size++;
 				}
+				sg_last_grouping = sync_group_size;
 				pthread_mutex_unlock(&(node->message_lock));
 			}
 			while (true)
@@ -682,6 +654,7 @@ remoteWorkerThread_main(void *cdata)
 				seconds = sync_event(node, local_conn, wd, event);
 				if (seconds == 0)
 				{
+					sync_status = SYNC_SUCCESS;   /* The group of SYNCs have succeeded!  Hurray! */
 					rc = SCHED_STATUS_OK;
 					break;
 				}
@@ -707,13 +680,13 @@ remoteWorkerThread_main(void *cdata)
 			 * the last one (it's freed further down).
 			 */
 			dstring_reset(&query1);
-			last_sync_group_size = 0;
+			sg_last_grouping = 0;
 			for (i = 0; i < sync_group_size; i++)
 			{
 					query_append_event(&query1, sync_group[i]);
 					if (i < (sync_group_size - 1))
 							free(sync_group[i]);
-					last_sync_group_size++;
+					sg_last_grouping++;
 			}
 			slon_appendquery(&query1, "commit transaction;");
 
