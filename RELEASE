@@ -14,6 +14,7 @@
               a tracking table.
 - slonik_drop_table and slonik_drop_sequence no longer attempt to 
   return -1 on an error (invalid as a slonik exit code in 2.1)
+- Bug #244 :: The CREATE SET command now requires a set id to be specified.
 
 ** 2.1.0 
 ** 2.1.0 RC 2

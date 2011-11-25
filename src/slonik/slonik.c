@@ -541,7 +541,13 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				{
 					SlonikStmt_create_set *stmt =
 					(SlonikStmt_create_set *) hdr;
-
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
 				}
