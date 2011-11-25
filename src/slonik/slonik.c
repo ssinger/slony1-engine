@@ -412,22 +412,37 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				{
 					SlonikStmt_failed_node *stmt =
 					(SlonikStmt_failed_node *) hdr;
+					struct failed_node_entry* node=NULL;
 
-					if (stmt->backup_node < 0)
+					if(stmt->nodes == NULL)
 					{
-						printf("%s:%d: Error: require BACKUP NODE\n", 
-						       hdr->stmt_filename, hdr->stmt_lno);
+						printf("%s:%d: Error: require at least one failed node\n", 
+								   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->backup_node == stmt->no_id)
+					for(node=stmt->nodes; node != NULL;
+						node=node->next)
 					{
-						printf("%s:%d: Error: "
-							 "Node ID and backup node cannot be identical\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
+						if (node->backup_node < 0)
+						{
+							printf("%s:%d: Error: require BACKUP NODE\n", 
+								   hdr->stmt_filename, hdr->stmt_lno);
+							errors++;
+						}
+						if (node->backup_node == node->no_id)
+						{
+							printf("%s:%d: Error: "
+								   "Node ID and backup node cannot be identical\n",
+								   hdr->stmt_filename, hdr->stmt_lno);
+							errors++;
+						}
+						if (script_check_adminfo(hdr, node->backup_node) < 0)
+							errors++;
 					}
-					if (script_check_adminfo(hdr, stmt->backup_node) < 0)
-						errors++;
+					/**
+					 * todo: verify that one backup node isn't also 
+					 * a failing node.
+					 */
 				}
 				break;
 
@@ -2543,10 +2558,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	PGresult   *res3;
 	int64		max_seqno_total = 0;
 	failnode_node *max_node_total = NULL;
+	struct failed_node_entry * node_entry = stmt->nodes;
 
 	int			rc = 0;
 
-	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->backup_node);
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, node_entry->backup_node);
 	if (adminfo1 == NULL)
 		return -1;
 
@@ -2565,7 +2581,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "    and no_active "
 				 "    order by no_id; ",
 				 stmt->hdr.script->clustername,
-				 stmt->no_id);
+				 node_entry->no_id);
 	res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res1 == NULL)
 	{
@@ -2588,7 +2604,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "    group by set_id ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
-				 stmt->no_id, stmt->no_id);
+				 node_entry->no_id, node_entry->no_id);
 	res2 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 	if (res2 == NULL)
 	{
@@ -2689,7 +2705,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "    and sub_active and sub_forward; ",
 					 stmt->hdr.script->clustername,
 					 setinfo[i].set_id,
-					 stmt->no_id);
+					 node_entry->no_id);
 
 		res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res3 == NULL)
@@ -2740,7 +2756,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "select \"_%s\".failedNode(%d, %d); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
-				 stmt->no_id, stmt->backup_node);
+				 node_entry->no_id, node_entry->backup_node);
 	printf("executing failedNode() on %d\n",adminfo1->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
@@ -2751,7 +2767,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 	for (i = 0; i < num_nodes; i++)
 	{
-		if (nodeinfo[i].no_id == stmt->backup_node)
+		if (nodeinfo[i].no_id == node_entry->backup_node)
 			continue;
 
 		if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
@@ -2837,7 +2853,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 "    from \"_%s\".sl_event "
 				 "    where ev_origin = %d; ",
 				 stmt->hdr.script->clustername,
-				 stmt->no_id);
+				 node_entry->no_id);
 	for (i = 0; i < num_nodes; i++)
 	{
 		res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
@@ -2879,7 +2895,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						 "	where ev_origin = %d "
 						 "	and ev_type = 'SYNC'; ",
 						 stmt->hdr.script->clustername,
-						 stmt->no_id);
+						 node_entry->no_id);
 			res1 = db_exec_select((SlonikStmt *) stmt,
 								  adminfo1, &query);
 			if (res1 == NULL)
@@ -2923,7 +2939,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			{
 				slon_scanint64(PQgetvalue(res1, 0, 0), &ssy_seqno);
 
-				if (setinfo[i].subscribers[j]->no_id == stmt->backup_node)
+				if (setinfo[i].subscribers[j]->no_id == node_entry->backup_node)
 				{
 					if (ssy_seqno >= setinfo[i].max_seqno)
 					{
@@ -2964,14 +2980,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		if (setinfo[i].num_directsub <= 1)
 		{
-			use_node = stmt->backup_node;
+			use_node = node_entry->backup_node;
 		}
 		else if (setinfo[i].max_node == NULL)
 		{
 			printf("no setsync status for set %d found at all\n",
 				   setinfo[i].set_id);
 			rc = -1;
-			use_node = stmt->backup_node;
+			use_node = node_entry->backup_node;
 		}
 		else
 		{
@@ -2984,7 +3000,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			setinfo[i].max_node->num_sets++;
 		}
 
-		if (use_node != stmt->backup_node)
+		if (use_node != node_entry->backup_node)
 		{
 			
 			/**
@@ -3005,9 +3021,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
-						 stmt->no_id, use_node, stmt->backup_node,
+						 node_entry->no_id, use_node, node_entry->backup_node,
 						 stmt->hdr.script->clustername,
-						 setinfo[i].set_id, use_node, stmt->backup_node);
+						 setinfo[i].set_id, use_node, node_entry->backup_node);
 			if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 				rc = -1;
 		}
@@ -3043,7 +3059,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
-						 stmt->no_id, stmt->backup_node,
+						 node_entry->no_id, node_entry->backup_node,
 						 setinfo[i].set_id, ev_seqno_c, ev_seqfake_c);
 			printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
 				   stmt->hdr.script->clustername,
@@ -3072,7 +3088,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			
 				SlonikStmt_wait_event wait_event;		
 				wait_event.hdr=*(SlonikStmt*)stmt;
-				wait_event.wait_origin=stmt->no_id; /*failed node*/
+				wait_event.wait_origin=node_entry->no_id; /*failed node*/
 				wait_event.wait_on=max_node_total->adminfo->no_id;
 				wait_event.wait_confirmed=-1;
 				wait_event.wait_timeout=0;
@@ -3087,7 +3103,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					failed_conn_info=failed_conn_info->next)
 				{
 
-					if(failed_conn_info->no_id==stmt->no_id)
+					if(failed_conn_info->no_id==node_entry->no_id)
 					{
 						break;
 					}
@@ -3099,7 +3115,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					last_conn_info->next = malloc(sizeof(SlonikAdmInfo));
 					memset(last_conn_info->next,0,sizeof(SlonikAdmInfo));
 					failed_conn_info=last_conn_info->next;
-					failed_conn_info->no_id=stmt->no_id;
+					failed_conn_info->no_id=node_entry->no_id;
 					failed_conn_info->stmt_filename="slonik generated";
 					failed_conn_info->stmt_lno=-1;
 					failed_conn_info->conninfo="";

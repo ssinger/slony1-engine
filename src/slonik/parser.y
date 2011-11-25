@@ -57,6 +57,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 	option_list	*opt_list;
 	SlonikAdmInfo	*adm_info;
 	SlonikStmt	*statement;
+	struct failed_node_entry * failed_node_entry;
 }
 
 %type <ival>		id
@@ -119,6 +120,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <opt_list>	option_item_id
 %type <opt_list>	option_item_literal
 %type <opt_list>	option_item_yn
+%type <failed_node_entry> fail_node_list
 
 
 /*
@@ -640,8 +642,22 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
+stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')'
+					{
+						SlonikStmt_failed_node *new;
+					
+						new = (SlonikStmt_failed_node *)
+								malloc(sizeof(SlonikStmt_failed_node));
+						memset(new, 0, sizeof(SlonikStmt_failed_node));
+						new->hdr.stmt_type		= STMT_FAILED_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
 
-stmt_failed_node	: lno K_FAILOVER option_list
+						new->nodes=$4;
+
+						$$ = (SlonikStmt *)new;
+					}
+					| lno K_FAILOVER option_list
 					{
 						SlonikStmt_failed_node *new;
 						statement_option opt[] = {
@@ -656,7 +672,34 @@ stmt_failed_node	: lno K_FAILOVER option_list
 						new->hdr.stmt_type		= STMT_FAILED_NODE;
 						new->hdr.stmt_filename	= current_file;
 						new->hdr.stmt_lno		= $1;
+						new->nodes=(struct failed_node_entry*)
+							malloc(sizeof(struct failed_node_entry)*1);
+						memset(new->nodes,0, sizeof(struct failed_node_entry));
 
+						if (assign_options(opt, $3) == 0)
+						{
+							new->nodes->no_id			= opt[0].ival;
+							new->nodes->backup_node	= opt[1].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = (SlonikStmt *)new;
+					}
+					;
+
+fail_node_list      :   K_NODE '=' option_list
+{
+						struct failed_node_entry *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (struct failed_node_entry *)
+								malloc(sizeof(struct failed_node_entry));
+						memset(new, 0, sizeof(struct failed_node_entry));
 						if (assign_options(opt, $3) == 0)
 						{
 							new->no_id			= opt[0].ival;
@@ -665,9 +708,32 @@ stmt_failed_node	: lno K_FAILOVER option_list
 						else
 							parser_errors++;
 
-						$$ = (SlonikStmt *)new;
-					}
-					;
+						$$ = new;
+
+}
+|     K_NODE '=' option_list ',' fail_node_list
+{
+					struct failed_node_entry *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (struct failed_node_entry *)
+								malloc(sizeof(struct failed_node_entry));
+						memset(new, 0, sizeof(struct failed_node_entry));
+						if (assign_options(opt, $3) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->backup_node	= opt[1].ival;
+						}
+						else
+							parser_errors++;
+						new->next=$5;
+						$$ = new;
+
+};
 
 stmt_uninstall_node	: lno K_UNINSTALL K_NODE option_list
 					{
