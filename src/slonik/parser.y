@@ -619,6 +619,7 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 					{
 						SlonikStmt_drop_node *new;
 						statement_option opt[] = {
+							STMT_OPTION_STR( O_ID, NULL ),
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_END
@@ -633,8 +634,33 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 
 						if (assign_options(opt, $4) == 0)
 						{
-							new->no_id			= opt[0].ival;
-							new->ev_origin		= opt[1].ival;
+							if(opt[0].ival > -1 )
+							{
+								new->no_id_list=malloc(sizeof(int)*2);
+								new->no_id_list[0]=opt[1].ival;
+								new->no_id_list[1]=-1;
+							}
+							else 
+							{
+								char * token;
+								char * saveptr=NULL;
+								int cnt;
+								for(cnt=0,token=strtok_r(opt[0].str,",",
+														 &saveptr);
+									token != NULL; cnt++, 
+										token=strtok_r(NULL,",",&saveptr));
+								new->no_id_list=malloc(sizeof(int)*(cnt+1));
+								cnt=0;
+								for(token=strtok_r(opt[0].str,",",&saveptr);
+									token!=NULL;
+									token=strtok_r(NULL,",",&saveptr))
+								{
+									new->no_id_list[cnt++]=atoi(token);
+								}
+								new->no_id_list[cnt]=-1;
+							}
+							new->ev_origin		= opt[2].ival;
+							
 						}
 						else
 							parser_errors++;
@@ -642,7 +668,7 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
-stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')'
+stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')' ';'
 					{
 						SlonikStmt_failed_node *new;
 					
@@ -688,7 +714,7 @@ stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')'
 					}
 					;
 
-fail_node_list      :   K_NODE '=' option_list
+fail_node_list      :   K_NODE '=' '(' option_list_items ')'
 {
 						struct failed_node_entry *new;
 						statement_option opt[] = {
@@ -700,7 +726,7 @@ fail_node_list      :   K_NODE '=' option_list
 						new = (struct failed_node_entry *)
 								malloc(sizeof(struct failed_node_entry));
 						memset(new, 0, sizeof(struct failed_node_entry));
-						if (assign_options(opt, $3) == 0)
+						if (assign_options(opt, $4) == 0)
 						{
 							new->no_id			= opt[0].ival;
 							new->backup_node	= opt[1].ival;
@@ -711,7 +737,7 @@ fail_node_list      :   K_NODE '=' option_list
 						$$ = new;
 
 }
-|     K_NODE '=' option_list ',' fail_node_list
+|    K_NODE '=' '(' option_list_items ')' ',' fail_node_list
 {
 					struct failed_node_entry *new;
 						statement_option opt[] = {
@@ -723,14 +749,14 @@ fail_node_list      :   K_NODE '=' option_list
 						new = (struct failed_node_entry *)
 								malloc(sizeof(struct failed_node_entry));
 						memset(new, 0, sizeof(struct failed_node_entry));
-						if (assign_options(opt, $3) == 0)
+						if (assign_options(opt, $4) == 0)
 						{
 							new->no_id			= opt[0].ival;
 							new->backup_node	= opt[1].ival;
 						}
 						else
 							parser_errors++;
-						new->next=$5;
+						new->next=$7;
 						$$ = new;
 
 };

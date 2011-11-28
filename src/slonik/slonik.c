@@ -390,18 +390,35 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					SlonikStmt_drop_node *stmt =
 					(SlonikStmt_drop_node *) hdr;
 
+
 					if (stmt->ev_origin < 0)
 					{
 						printf("%s:%d: Error: require EVENT NODE\n", 
 						       hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->ev_origin == stmt->no_id)
+					if(stmt->no_id_list == NULL ||
+					   stmt->no_id_list[0] == -1) 
 					{
-						printf("%s:%d: Error: "
-							   "Node ID and event node cannot be identical\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
+						printf("%s:%d: Error: A node id must be provided",
+							    hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
+					}
+					else 
+					{
+						int cnt;
+						for(cnt=0;stmt->no_id_list[cnt]!=-1;cnt++)
+						{
+							if(stmt->no_id_list[cnt]==stmt->ev_origin)
+							{
+								printf("%s:%d: Error: "
+									   "Node ID (%d) and event node cannot be identical\n",
+									   hdr->stmt_filename, hdr->stmt_lno,
+									   stmt->no_id_list[cnt]);
+								errors++;
+							}
+						}
+						
 					}
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
@@ -2455,6 +2472,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	SlonDString query;
 	SlonikAdmInfo * curAdmInfo;
 	int rc;
+	int no_id_idx;
 
 	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->ev_origin);
 	if (adminfo1 == NULL)
@@ -2463,54 +2481,72 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 		return -1;
 
-	if(!auto_wait_disabled)
+	for(no_id_idx=0; stmt->no_id_list[no_id_idx]!=-1;no_id_idx++)
 	{
-		for(curAdmInfo = stmt->hdr.script->adminfo_list;
-			curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
+		if(!auto_wait_disabled)
 		{
-			if(curAdmInfo->no_id == stmt->no_id)
-				continue;
-			if(slonik_is_slony_installed((SlonikStmt*)stmt,curAdmInfo) > 0 )
+			for(curAdmInfo = stmt->hdr.script->adminfo_list;
+				curAdmInfo!=NULL; curAdmInfo=curAdmInfo->next)
 			{
-				rc=slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
-											stmt->no_id);
-				if(rc < 0)
-				  return rc;
+				int skip=0;
+				int list_idx;
+				/**
+				 * If we have admin info for any of the nodes being dropped
+				 * we disable 'wait for' on that node.
+				 */
+				for(list_idx=0; stmt->no_id_list[list_idx] != -1; list_idx++)
+				{
+					
+					if(curAdmInfo->no_id==stmt->no_id_list[list_idx])
+					{
+						skip=1;
+						break;
+					}
+				}
+				if(skip)
+					continue;
+				if(slonik_is_slony_installed((SlonikStmt*)stmt,curAdmInfo) > 0 )
+				{
+					rc=slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
+												   stmt->no_id_list[no_id_idx]);
+					if(rc < 0)
+						return rc;
+				}
+				
 			}
+			
+		}
 
+		dstring_init(&query);
+		
+		slon_mkquery(&query,
+					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+					 "select \"_%s\".dropNode(%d); ",
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 stmt->no_id_list[no_id_idx]);
+		/**
+		 * we disable auto wait because we perform a wait
+		 * above ignoring the node being dropped.
+		 */
+		if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
+							   stmt->hdr.script,true) < 0)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		/**
+		 * if we have a conninfo for the node being dropped
+		 * we want to clear out the last seqid.
+		 */
+		adminfo1 = get_adminfo(&stmt->hdr,stmt->no_id_list[no_id_idx]);
+		if(adminfo1 != NULL) {
+			adminfo1->last_event=-1;
 		}
 		
-	}
-
-	dstring_init(&query);
-
-	slon_mkquery(&query,
-				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".dropNode(%d); ",
-				 stmt->hdr.script->clustername,
-				 stmt->hdr.script->clustername,
-				 stmt->hdr.script->clustername,
-				 stmt->no_id);
-	/**
-	 * we disable auto wait because we perform a wait
-	 * above ignoring the node being dropped.
-	 */
-	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-						   stmt->hdr.script,true) < 0)
-	{
 		dstring_free(&query);
-		return -1;
 	}
-	/**
-	 * if we have a conninfo for the node being dropped
-	 * we want to clear out the last seqid.
-	 */
-	adminfo1 = get_adminfo(&stmt->hdr,stmt->no_id);
-	if(adminfo1 != NULL) {
-	  adminfo1->last_event=-1;
-	}
-
-	dstring_free(&query);
 	return 0;
 }
 
@@ -2543,6 +2579,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 {
 	SlonikAdmInfo *adminfo1;
 	SlonDString query;
+	SlonDString failed_node_list;
 
 	int			n,
 				i,
@@ -2560,10 +2597,15 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	struct failed_node_entry * node_entry = stmt->nodes;
 	
 	int			rc = 0;
-
+	
+	dstring_init(&failed_node_list);
 	for(node_entry=stmt->nodes; node_entry != NULL;
 		node_entry=node_entry->next) 
 	{
+		if ( node_entry==stmt->nodes)
+			slon_appendquery(&failed_node_list,"%d",node_entry->no_id);
+		else
+			slon_appendquery(&failed_node_list,",%d",node_entry->no_id);
 		num_origins++;
 	}
 	
@@ -2599,11 +2641,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 */
 		slon_mkquery(&query,
 					 "select no_id from \"_%s\".sl_node "
-					 "    where no_id<> %d "
+					 "    where no_id not in ( %s ) "
 					 "    and no_active "
 					 "    order by no_id; ",
 					 stmt->hdr.script->clustername,
-					 node_entry->no_id);
+					 failed_node_list);
 		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res1 == NULL)
 		{
@@ -2729,10 +2771,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						 "    from \"_%s\".sl_subscribe "
 						 "    where sub_set = %d "
 						 "    and sub_provider = %d "
+						 "    and sub_receiver not in (%s) "
 						 "    and sub_active and sub_forward; ",
 						 stmt->hdr.script->clustername,
 						 setinfo[i].set_id,
-						 node_entry->no_id);
+						 node_entry->no_id,dstring_data(&failed_node_list));
 			
 			res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 			if (res3 == NULL)
@@ -3149,7 +3192,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					wait_event.hdr=*(SlonikStmt*)stmt;
 					wait_event.wait_origin=node_entry->no_id; /*failed node*/
 					wait_event.wait_on=max_node_total[cur_origin_idx]->adminfo->no_id;
-					wait_event.wait_confirmed=-1;
+					wait_event.wait_confirmed=node_entry->backup_node;
 					wait_event.wait_timeout=0;
 					
 					/**

@@ -197,7 +197,7 @@ struct SlonikStmt_store_node_s
 struct SlonikStmt_drop_node_s
 {
 	SlonikStmt	hdr;
-	int			no_id;
+	int			* no_id_list;
 	int			ev_origin;
 };
 

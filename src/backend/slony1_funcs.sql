@@ -1228,6 +1228,12 @@ begin
 		end if;
 	end loop;
 	
+	--blank the paths for the failed node.
+	--this ensures that *this* node won't be pulling
+	--data from the failed node (if the failed node can be accessed)
+	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
+	pa_server=p_failed_node;
+
 
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
