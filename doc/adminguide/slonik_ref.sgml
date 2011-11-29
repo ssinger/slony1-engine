@@ -652,7 +652,9 @@ INIT CLUSTER (
 
      <variablelist>
       <varlistentry><term><literal> ID  = ival </literal></term>
-       <listitem><para> Node ID of the node to remove.</para></listitem>
+       <listitem><para> Node ID of the node to remove. This can be
+		   either a single node id or a comma seperated list of nodes
+	   </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
        <listitem><para> Node ID of the node to generate the event.
@@ -670,6 +672,7 @@ INIT CLUSTER (
    <refsect1><title>Example</title>
     <programlisting>
      DROP NODE ( ID = 2, EVENT NODE = 1 );
+	 DROP NODE (ID='3,4,5', EVENT NODE=1);
     </programlisting>
    </refsect1>
    <refsect1> <title> Locking Behaviour </title>
@@ -704,6 +707,8 @@ INIT CLUSTER (
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
+   <para> In version 2.2 support for dropping multiple ndoes in a single
+	 command was added</para>
    </refsect1>
   </refentry>
 
@@ -2657,6 +2662,12 @@ MOVE SET (
      configuration with <xref linkend="stmtdropnode">.
     </para>
     
+	<para>
+	  If multiple set origin nodes have failed then you should tell FAILOVER
+	  about all of them at once.  This is done by passing a list of 
+	  <literal>NODE=(ID=val,BACKUP NODE=val), NODE=(ID=val2, BACKUP NODE=val2)</literal> to failover.
+	</para>
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the failed node</para></listitem>
@@ -2678,8 +2689,15 @@ FAILOVER (
    ID = 1,
    BACKUP NODE = 2
 );
-    </programlisting>
-   </refsect1>
+
+#example of multiple nodes   
+FAILOVER(  
+   NODE=(ID=1, BACKUP NODE=2),
+   NODE=(ID=3, BACKUP NODE=4)
+);
+
+	 </programlisting>
+	</refsect1>
    <refsect1> <title> Locking Behaviour </title>
 
     <para> Exclusive locks on each replicated table will be taken out
@@ -2697,13 +2715,11 @@ FAILOVER (
     linkend="stmtmoveset"> instead, as that does
     <emphasis>not</emphasis> abandon the failed node.
     </para>
-
-    <para> If there are many nodes in a cluster, and failover includes
-    dropping out additional nodes (<emphasis>e.g.</emphasis> when it
-    is necessary to treat <emphasis>all</emphasis> nodes at a site
-    including an origin as well as subscribers as failed), it is
-    necessary to carefully sequence the actions.
-    </para>
+	<para>If a second failure occours in the middle of a FAILOVER
+          operation then recovery might be complicated. </para>
+	  
+	  
+   
 
    </refsect1>
 
@@ -2716,6 +2732,8 @@ FAILOVER (
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
     <para> In version 2.0, the default <envar>BACKUP NODE</envar> value of 1 was removed, so it is mandatory to provide a value for this parameter.</para>
+	<para> In version 2.1 support was added for passing multiple nodes to 
+	  a single failover command</para>
    </refsect1>
   </refentry>
 
