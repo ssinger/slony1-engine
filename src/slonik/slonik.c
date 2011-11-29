@@ -2469,6 +2469,7 @@ int
 slonik_drop_node(SlonikStmt_drop_node * stmt)
 {
 	SlonikAdmInfo *adminfo1;
+	SlonikAdmInfo *adminfo2;
 	SlonDString query;
 	SlonikAdmInfo * curAdmInfo;
 	int rc;
@@ -2540,9 +2541,9 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 		 * if we have a conninfo for the node being dropped
 		 * we want to clear out the last seqid.
 		 */
-		adminfo1 = get_adminfo(&stmt->hdr,stmt->no_id_list[no_id_idx]);
-		if(adminfo1 != NULL) {
-			adminfo1->last_event=-1;
+		adminfo2 = get_adminfo(&stmt->hdr,stmt->no_id_list[no_id_idx]);
+		if(adminfo2 != NULL) {
+			adminfo2->last_event=-1;
 		}
 		
 		dstring_free(&query);
