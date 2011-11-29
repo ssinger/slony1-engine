@@ -645,18 +645,22 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 								char * token;
 								char * saveptr=NULL;
 								int cnt;
-								for(cnt=0,token=strtok_r(opt[0].str,",",
+								char * option_copy=strdup(opt[0].str);
+								for(cnt=0,token=strtok_r(option_copy,",",
 														 &saveptr);
 									token != NULL; cnt++, 
 										token=strtok_r(NULL,",",&saveptr));
+								free(option_copy);
 								new->no_id_list=malloc(sizeof(int)*(cnt+1));
 								cnt=0;
-								for(token=strtok_r(opt[0].str,",",&saveptr);
+								option_copy=strdup(opt[0].str);
+								for(token=strtok_r(option_copy,",",&saveptr);
 									token!=NULL;
 									token=strtok_r(NULL,",",&saveptr))
 								{
 									new->no_id_list[cnt++]=atoi(token);
 								}
+								free(option_copy);
 								new->no_id_list[cnt]=-1;
 							}
 							new->ev_origin		= opt[2].ival;
@@ -1626,6 +1630,11 @@ option_list_item	: K_ID '=' option_item_id
 					{
 						$3->opt_code	= O_ID;
 						$$ = $3;
+					}
+					| K_ID '=' option_item_literal
+					{
+						$3->opt_code= O_ID;
+						$$=$3;
 					}
 					| K_BACKUP K_NODE '=' option_item_id
 					{
