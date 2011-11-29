@@ -634,10 +634,10 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 
 						if (assign_options(opt, $4) == 0)
 						{
-							if(opt[1].ival > -1 )
+							if(opt[0].ival > -1 )
 							{
 								new->no_id_list=malloc(sizeof(int)*2);
-								new->no_id_list[0]=opt[1].ival;
+								new->no_id_list[0]=opt[0].ival;
 								new->no_id_list[1]=-1;
 							}
 							else 
