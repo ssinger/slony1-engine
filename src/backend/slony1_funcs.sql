@@ -1137,7 +1137,13 @@ begin
 					where S.set_id = SUB.sub_set
 						and SUB.sub_receiver <> p_backup_node
 						and SUB.sub_provider = p_failed_node)
-					as num_direct_receivers 
+					as num_direct_receivers ,
+					(select count(*) 
+					from @NAMESPACE@.sl_subscribe SUB
+					where S.set_id = SUB.sub_set
+						and SUB.sub_receiver = p_backup_node
+						and SUB.sub_provider = p_failed_node)
+					as is_direct_receivers
 			from @NAMESPACE@.sl_set S
 			where S.set_origin = p_failed_node
 			for update
@@ -1145,7 +1151,7 @@ begin
 		-- ----
 		-- If the backup node is the only direct subscriber ...
 		-- ----
-		if v_row.num_direct_receivers = 0 then
+		if v_row.num_direct_receivers = 0 and v_row.is_direct_receivers =1 then
 		        raise notice 'failedNode: set % has no other direct receivers - move now', v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
@@ -1185,19 +1191,28 @@ begin
 			-- the highest SYNC and redirect this to it on
 			-- backup node later.
 			-- ----
-			update @NAMESPACE@.sl_subscribe
+
+			--update the backup node's sl_subscribe to have
+			--a new provider that the backup node has a path to.
+			update @NAMESPACE@.sl_subscribe				   
 					set sub_provider = (select min(SS.sub_receiver)
 							from @NAMESPACE@.sl_subscribe SS
 							where SS.sub_set = v_row.set_id
 								and SS.sub_receiver <> p_backup_node
 								and SS.sub_forward
 								and exists (
+								--A path exists between the backup node
+								--and what we are selecting
 									select 1 from @NAMESPACE@.sl_path
 										where pa_server = SS.sub_receiver
 										  and pa_client = p_backup_node
 								))
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;		
+
+			--
+			-- update all nodes but the backup to have a provider
+			-- that is the some node other than the failed node.
 			  update @NAMESPACE@.sl_subscribe
                    set sub_provider = (select min(SS.sub_receiver)
                            from @NAMESPACE@.sl_subscribe SS
@@ -1211,7 +1226,10 @@ begin
                                ))
                    where sub_set = v_row.set_id
                        and sub_receiver <> p_backup_node;
-
+			--
+			-- update all nodes to use the backup node
+			-- except the backup node.
+			-- as long as there is a path.
 			update @NAMESPACE@.sl_subscribe
 					set sub_provider = p_backup_node
 					where sub_set = v_row.set_id
@@ -1221,10 +1239,6 @@ begin
 								where pa_server = p_backup_node
 								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
 						);						
-			delete from @NAMESPACE@.sl_subscribe
-                   where sub_set = v_row.set_id
-                       and sub_receiver = p_backup_node;
-
 		end if;
 	end loop;
 	
@@ -3734,6 +3748,7 @@ as $$
 declare
 	v_set_origin		int4;
 	v_ev_seqno			int8;
+	v_ev_seqno2			int8;
 	v_rec			record;
 begin
 	--
@@ -3801,8 +3816,12 @@ begin
 	-- ----
 	-- Call the internal procedure to store the subscription
 	-- ----
-	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
+	v_ev_seqno2:=@NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
 			p_sub_receiver, p_sub_forward, p_omit_copy);
+	
+	if v_ev_seqno2 is not null then
+	   v_ev_seqno:=v_ev_seqno2;
+	 end if;
 
 	return v_ev_seqno;
 end;
@@ -3820,12 +3839,21 @@ If omit_copy is true, then no data copy will be done.
 -- -------------------------------------------------------------------------------------------
 -- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 -- -------------------------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS @NAMESPACE@.subscribeSet_int(int4,int4,int4,bool,bool);
+--
+-- TODO MONDAY.
+--    When this function adds in the subscribe line as a result of a failover
+--   it needs the subscription to be enabled so slon pays attention to it.
+--   add a parameter to this function for this purpose?
+--
+--  Also remember to look at the interview questions
 create or replace function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4, p_sub_forward bool, p_omit_copy bool)
-returns int4
+returns bigint
 as $$
 declare
 	v_set_origin		int4;
 	v_sub_row			record;
+	v_seq_id			bigint;
 begin
 	-- ----
 	-- Provider change is only allowed for active sets
@@ -3851,6 +3879,7 @@ begin
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	if found then
+	  
 		-- ----
 		-- Rewrite sl_listen table
 		-- ----
@@ -3888,21 +3917,21 @@ begin
 	end if;
 
 	if v_set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
+		select @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
 				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 				case p_sub_forward when true then 't' else 'f' end,
 				case p_omit_copy when true then 't' else 'f' end
-				);
+				) into v_seq_id;
 		perform @NAMESPACE@.enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
 	end if;
-
+	
 	-- ----
 	-- Rewrite sl_listen table
 	-- ----
 	perform @NAMESPACE@.RebuildListenEntries();
 
-	return p_sub_set;
+	return v_seq_id;
 end;
 $$ language plpgsql;
 

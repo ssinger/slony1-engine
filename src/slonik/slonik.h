@@ -432,6 +432,7 @@ struct SlonikStmt_wait_event_s
 	int			wait_confirmed;
 	int			wait_on;
 	int			wait_timeout;
+	int			*ignore_nodes;
 };
 
 

@@ -114,6 +114,10 @@ static size_t slonik_get_last_event_id(SlonikStmt* stmt,
 static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 									   SlonikStmt * stmt,
 									   int ignore_node);
+static int64 get_last_escaped_event_id(SlonikStmt * stmt,
+								int node_id,
+								int * skip_node_list);		
+
 /* ----------
  * main
  * ----------
@@ -2484,6 +2488,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 
 	for(no_id_idx=0; stmt->no_id_list[no_id_idx]!=-1;no_id_idx++)
 	{
+		int64 ev_id;
 		if(!auto_wait_disabled)
 		{
 			for(curAdmInfo = stmt->hdr.script->adminfo_list;
@@ -2491,12 +2496,14 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 			{
 				int skip=0;
 				int list_idx;
+				SlonikAdmInfo * fake_admin_info=NULL;
 				/**
 				 * If we have admin info for any of the nodes being dropped
 				 * we disable 'wait for' on that node.
 				 */
 				for(list_idx=0; stmt->no_id_list[list_idx] != -1; list_idx++)
 				{
+
 					
 					if(curAdmInfo->no_id==stmt->no_id_list[list_idx])
 					{
@@ -2506,14 +2513,61 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 				}
 				if(skip)
 					continue;
+				/**
+				 * find the last event (including SYNC events)
+				 * from the node being dropped that is visible on
+				 * any of the remaining nodes.
+				 * we must wait for ALL remaining nodes to get caught up.
+				 *
+				 * we can't ignore SYNC events even though the dropped
+				 * node is not an origin it might have been an old
+				 * origin before a FAILOVER. Some behind node still
+				 * might need to get caught up from its provider.
+				 */
+				ev_id=get_last_escaped_event_id((SlonikStmt*)stmt,
+												stmt->no_id_list[no_id_idx],
+												stmt->no_id_list);
+				if(ev_id > 0)
+				{
+					SlonikStmt_wait_event wait_event;		
+					wait_event.hdr=*(SlonikStmt*)stmt;
+					wait_event.wait_origin=stmt->no_id_list[no_id_idx];
+					wait_event.wait_on=stmt->ev_origin;
+					wait_event.wait_confirmed=stmt->ev_origin;
+					wait_event.wait_timeout=0;
+					wait_event.ignore_nodes=0;
+					
+					adminfo2 = get_adminfo(&stmt->hdr,stmt->no_id_list[no_id_idx]);
+					if(adminfo2 == NULL) 
+					{
+						fake_admin_info=malloc(sizeof(SlonikAdmInfo));
+						memset(fake_admin_info,0,sizeof(SlonikAdmInfo));
+						fake_admin_info->next=stmt->hdr.script->adminfo_list->next;
+						stmt->hdr.script->adminfo_list->next=fake_admin_info;
+						
+					}
+					adminfo2->last_event=ev_id;
+					printf("debug: waiting for %d,%ld on %d\n",
+						   wait_event.wait_origin,ev_id,wait_event.wait_on);
+					rc=slonik_wait_event(&wait_event);
+					if(rc < 0 )
+					{
+						return rc;
+					}
+					if(fake_admin_info != NULL)
+					{
+						stmt->hdr.script->adminfo_list->next=fake_admin_info->next;
+						free(fake_admin_info);					
+					}
+					
+				}
 				if(slonik_is_slony_installed((SlonikStmt*)stmt,curAdmInfo) > 0 )
 				{
 					rc=slonik_wait_config_caughtup(curAdmInfo,(SlonikStmt*)stmt,
-												   stmt->no_id_list[no_id_idx]);
+												   -1);
 					if(rc < 0)
 						return rc;
-				}
-				
+				}							
 			}
 			
 		}
@@ -2565,7 +2619,6 @@ typedef struct
 typedef struct
 {
 	int			set_id;
-	int			num_directsub;
 	int			num_subscribers;
 	failnode_node **subscribers;
 	failnode_node *max_node;
@@ -2596,7 +2649,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	int64		* max_seqno_total = 0;
 	failnode_node **max_node_total = NULL;
 	struct failed_node_entry * node_entry = stmt->nodes;
-	
+	int * fail_node_ids = NULL;
+
 	int			rc = 0;
 	
 	dstring_init(&failed_node_list);
@@ -2618,8 +2672,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	max_seqno_total = (int64*) malloc ( sizeof(int64) * num_origins);
 	max_node_total = (failnode_node **) malloc ( sizeof(failnode_node*) *
 												 num_origins);
+	fail_node_ids = (int*) malloc(sizeof(int) * num_origins+1);
 	memset(max_node_total,0, sizeof(failnode_node*) * num_origins);
 	memset(max_seqno_total,0, sizeof(int64) * num_origins); 
+	memset(fail_node_ids , -1, sizeof(int) * (num_origins+1) );
 
 	/**
 	 * for each failed node 
@@ -2636,6 +2692,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
 			return -1;
+
+		fail_node_ids[cur_origin_idx]=node_entry->no_id;
+
 		/*
 		 * On the backup node select a list of all active nodes except for the
 		 * failed nodes.
@@ -2646,7 +2705,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "    and no_active "
 					 "    order by no_id; ",
 					 stmt->hdr.script->clustername,
-					 failed_node_list);
+					 dstring_data(&failed_node_list));
 		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res1 == NULL)
 		{
@@ -2664,12 +2723,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "    from \"_%s\".sl_set S, \"_%s\".sl_subscribe SUB "
 					 "    where S.set_id = SUB.sub_set "
 					 "    and S.set_origin = %d "
-					 "    and SUB.sub_provider = %d "
 					 "    and SUB.sub_active "
 					 "    group by set_id ",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
-					 node_entry->no_id, node_entry->no_id);
+					 node_entry->no_id);
 		res2 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res2 == NULL)
 		{
@@ -2762,21 +2820,16 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		for (i = 0; i < node_entry->num_sets; i++)
 		{
 			setinfo[i].set_id = (int)strtol(PQgetvalue(res2, i, 0), NULL, 10);
-			setinfo[i].num_directsub = (int)strtol(PQgetvalue(res2, i, 1), NULL, 10);
-			
-			if (setinfo[i].num_directsub <= 1)
-				continue;
 			
 			slon_mkquery(&query,
 						 "select sub_receiver "
 						 "    from \"_%s\".sl_subscribe "
 						 "    where sub_set = %d "
-						 "    and sub_provider = %d "
 						 "    and sub_receiver not in (%s) "
 						 "    and sub_active and sub_forward; ",
 						 stmt->hdr.script->clustername,
 						 setinfo[i].set_id,
-						 node_entry->no_id,dstring_data(&failed_node_list));
+						 dstring_data(&failed_node_list));
 			
 			res3 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 			if (res3 == NULL)
@@ -2977,7 +3030,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 			setinfo[i].max_node = NULL;
 			setinfo[i].max_seqno = 0;
-			
+#if 0 			
 			if (setinfo[i].num_directsub <= 1)
 			{
 				int64		ev_seqno;
@@ -3006,7 +3059,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				
 				continue;
 			}
-
+#endif
 			slon_mkquery(&query,
 						 "select ssy_seqno "
 						 "    from \"_%s\".sl_setsync "
@@ -3071,11 +3124,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			int			use_node;
 			
-			if (setinfo[i].num_directsub <= 1)
-			{
-				use_node = node_entry->backup_node;
-			}
-			else if (setinfo[i].max_node == NULL)
+			if (setinfo[i].max_node == NULL)
 			{
 				printf("no setsync status for set %d found at all\n",
 					   setinfo[i].set_id);
@@ -3095,7 +3144,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			
 			if (use_node != node_entry->backup_node)
 			{
-				
+				SlonikStmt_wait_event wait_event;		
 				/**
 				 * commit the transaction so a new transaction
 				 * is ready for the lock table
@@ -3117,15 +3166,49 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 							 node_entry->no_id, use_node, node_entry->backup_node,
 							 stmt->hdr.script->clustername,
 							 setinfo[i].set_id, use_node, node_entry->backup_node);
-				if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
+				if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 					rc = -1;
+
+				/*
+				 * Commit the transaction on the backup node to activate 
+				 * those changes.
+				 */
+				if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
+					rc = -1;		
+				/**
+				 * wait until all other nodes have confirmed the
+				 * ENABLE_SUBSCRIPTION created by the above 
+				 * subscribeSet_int(...) call.
+				 * It is important that nodes process the ENABLE_SUBSCRIPTION
+				 * before they process the FAILOVER_SET event generated
+				 * below.
+				 */
+				wait_event.hdr=*(SlonikStmt*)stmt;
+				wait_event.wait_origin=node_entry->backup_node;
+				wait_event.wait_on=node_entry->backup_node;
+				wait_event.wait_confirmed=-1;
+				wait_event.wait_timeout=0;
+				wait_event.ignore_nodes=fail_node_ids;
+				rc = slonik_wait_event(&wait_event);
+				if(rc < 0)  
+				{
+					/**
+					 * pretty serious? how do we recover?
+					 */
+					printf("%s:%d error waiting for event\n",
+						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				}
+
 			}
-		}   
+		}
 		/*
-		 * Commit the transaction on the backup node to activate those changes.
+		 * Commit the transaction on the backup node to activate those 
+		 * changes.
 		 */
 		if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
-			rc = -1;
+			rc = -1;		
+		
+
 	}
 	
 	cur_origin_idx=0;
@@ -3166,7 +3249,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
 					   stmt->hdr.script->clustername,
 					   max_node_total[cur_origin_idx]->adminfo->no_id);
-				if (db_exec_command((SlonikStmt *) stmt,
+				if (db_exec_evcommand((SlonikStmt *) stmt,
 									max_node_total[cur_origin_idx]->adminfo, 
 									&query) < 0)
 					rc = -1;			
@@ -3189,12 +3272,13 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 */
 					
 					
-					SlonikStmt_wait_event wait_event;		
+					SlonikStmt_wait_event wait_event; 
 					wait_event.hdr=*(SlonikStmt*)stmt;
 					wait_event.wait_origin=node_entry->no_id; /*failed node*/
 					wait_event.wait_on=max_node_total[cur_origin_idx]->adminfo->no_id;
 					wait_event.wait_confirmed=node_entry->backup_node;
 					wait_event.wait_timeout=0;
+					wait_event.ignore_nodes=0;
 					
 					/**
 					 * see if we can find a admconninfo
@@ -4916,20 +5000,41 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 
 			if (stmt->wait_confirmed < 0)
 			{
+				SlonDString ignore_condition;
+				int * node_ptr;
 				sprintf(seqbuf, INT64_FORMAT, adminfo->last_event);
+				dstring_init(&ignore_condition);
+				
+				for(node_ptr=stmt->ignore_nodes; node_ptr != NULL &&
+						*node_ptr!=-1;node_ptr++)
+				{
+					if(node_ptr!=stmt->ignore_nodes)
+						slon_appendquery(&ignore_condition,
+									   ",%d",*node_ptr);
+					else
+						slon_appendquery(&ignore_condition,
+									   "and N.no_id not in ( %d ",*node_ptr);
+				}
+				if(node_ptr != stmt->ignore_nodes)
+					slon_appendquery(&ignore_condition,")");
+				else
+					slon_appendquery(&ignore_condition,"");
 				slon_mkquery(&query,
 							 "select no_id, max(con_seqno) "
 						   "    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
 							 "    where N.no_id <> %d "
 							 "    and N.no_active "
+							 "    %s              "
 							 "    and N.no_id = C.con_received "
 							 "    and C.con_origin = %d "
 							 "    group by no_id "
 							 "    having max(con_seqno) < '%s'; ",
 							 stmt->hdr.script->clustername,
 							 stmt->hdr.script->clustername,
-							 adminfo->no_id, adminfo->no_id,
+							 adminfo->no_id, dstring_data(&ignore_condition),
+							 adminfo->no_id,
 							 seqbuf);
+				dstring_terminate(&ignore_condition);
 			}
 			else
 			{
@@ -5585,6 +5690,7 @@ static int slonik_submitEvent(SlonikStmt * stmt,
 		wait_event.wait_on=last_event_node;
 		wait_event.wait_confirmed=adminfo->no_id;
 		wait_event.wait_timeout=0;
+		wait_event.ignore_nodes=0;
 		rc = slonik_wait_event(&wait_event);
 		if (recreate_txn)
 		{
@@ -5605,7 +5711,8 @@ static int slonik_submitEvent(SlonikStmt * stmt,
  * slonik_get_last_event_id(stmt, script, event_filter, events)
  *
  * query all nodes we have admin conninfo data for and
- * find the last non SYNC event id generated from that node.
+ * find the last event_id  of event types matching event_filter
+ * generated from that node.
  *
  * store this in the SlonikAdmInfo structure so it can later
  * be used as part of a wait for.
@@ -5921,6 +6028,76 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 
 }
 
+/**
+ * Check all nodes in the cluster except those in skip_node_list
+ * to find the maximum event id from node_id.
+ * Normally skip_node_list would contain node_id as an element
+ * (otherwise you could just get the answer directly from node_id).
+ *
+ * skip_node_list is a -1 terminated list of node_id values for the
+ *           nodes to ignore (not search).
+ */
+static int64 get_last_escaped_event_id(SlonikStmt * stmt,
+						int node_id,
+						int * skip_node_list)
+{
+	SlonDString query;
+	PGresult * result;
+	char * event_id;
+	SlonikAdmInfo * curAdmInfo=NULL;
+	int64 max_event_id=0;
+	int64 cur_event_id;
+	int rc;
+
+	dstring_init(&query);
+	slon_mkquery(&query,"select max(ev_seqno) FROM \"_%s\".sl_event"
+				 " where ev_origin=%d "
+				 , stmt->script->clustername,node_id);
+	for( curAdmInfo = stmt->script->adminfo_list;
+		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
+	{
+		int node_list_idx;
+		int skip=0;
+		for(node_list_idx=0; skip_node_list[node_list_idx]!=-1;node_list_idx++)
+		{
+			if(curAdmInfo->no_id==skip_node_list[node_list_idx])
+			{
+				skip=1;
+				break;
+			}			   
+		}
+		
+		if(skip)
+			continue;
+		
+		SlonikAdmInfo * activeAdmInfo = 
+			get_active_adminfo(stmt,curAdmInfo->no_id);
+		if( activeAdmInfo == NULL)
+		{
+			continue;
+		}
+		rc = slonik_is_slony_installed(stmt,activeAdmInfo);
+		if(rc == 1)
+		{
+			result = db_exec_select(stmt,activeAdmInfo,&query);
+			if(result != NULL || PQntuples(result) >= 1 ) 
+			{
+				event_id = PQgetvalue(result,0,0);
+				if(event_id != NULL)			 
+					cur_event_id=strtoll(event_id,NULL,10);	
+				if(cur_event_id > max_event_id)
+					max_event_id=cur_event_id;
+			}
+			PQclear(result);
+			db_rollback_xact(stmt, activeAdmInfo);			
+		
+		}		
+	}
+	
+	
+	dstring_terminate(&query);
+	return max_event_id;
+}
 
 /*
  * Local Variables:
