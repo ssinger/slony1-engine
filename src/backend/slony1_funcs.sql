@@ -1497,12 +1497,12 @@ begin
 
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select pa_server, p_no_id, 'Event pending', pa_connretry
+		select pa_server, p_no_id, '<even pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_client = p_no_provider;
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select p_no_id, pa_client, 'Event pending', pa_connretry
+		select p_no_id, pa_client, '<even pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_server = p_no_provider;
 
