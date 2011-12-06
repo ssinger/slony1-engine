@@ -485,11 +485,13 @@ BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 		slonikScript += ' subscribe set(id=' + setid + ', provider='
 				+ provider_node + ', receiver=' + subscriber_node
 				+ ', forward=yes);\n';
+		//comment out in 2.1
 		//slonikScript += this.generateSlonikWait(origin_node);
 		//slonikScript += ' echo \'syncing\';\n';
 		//slonikScript += ' sync(id=' + provider_node + ');\n';
 		//slonikScript += ' echo \'waiting for event\';\n';
 		//slonikScript += this.generateSlonikWait(provider_node);
+		//EOF
 		slonikScript += ' echo \'finished subscribing ' + subscriber_node +'\' ;\n';
 
 		var slonik = this.coordinator.createSlonik('subscribe ', preamble,
@@ -788,7 +790,7 @@ BasicTest.prototype.updateReviewTable=function(node_id,text) {
 	var connection=this.coordinator.createJdbcConnection('db' + node_id);
 	var stat = connection.createStatement();
 	try {
-		stat.execute("update disorder.do_item_review set comments=E'" +
+		stat.execute("update disorder.do_item_review set comments='" +
 					 text + "';");
 		var count=stat.getUpdateCount();
 		this.testResults.assertCheck('items updated',count>0,true);
@@ -799,7 +801,7 @@ BasicTest.prototype.updateReviewTable=function(node_id,text) {
 	}
 	catch(error) {
 		this.coordinator.log('error updating the review table:' + 
-							 error.getMessage());
+							 error);
 		this.testResults.assertCheck('review update failed',true,false);
 		
 	}
