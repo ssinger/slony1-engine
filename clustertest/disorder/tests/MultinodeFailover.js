@@ -89,9 +89,11 @@ MultinodeFailover.prototype.runTest = function() {
 	 * failover.  Node 1=>3, node2=>4
 	 */
 	this.failover(1,3,2,4);
-	load.stop();
+	load.stop(); 
 	this.coordinator.join(load);
 	this.dropTwoNodes(1,2,3);
+	this.compareDb('db3','db4');
+		//exit(-1);
 	this.reAddNode(1,3,3);		
 	this.reAddNode(2,3,3);
 	this.addCompletePaths();
