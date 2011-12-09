@@ -91,7 +91,13 @@ MultipleOrigins.prototype.runTest = function() {
 	this.slonikSync(1,1);
 	this.slonikSync(1,4);
 	this.failNode(1,4,true);
-	
+	load = this.generateLoad(4);
+	java.lang.Thread.sleep(10*1000);
+	load.stop();
+	this.coordinator.join(load);
+	this.compareDb('db2','db3');	
+	this.compareDb('db3','db4');
+	this.compareDb('db4','db5');
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {		
 		this.slonArray[idx-1].stop();
 		this.coordinator.join(this.slonArray[idx-1]);
