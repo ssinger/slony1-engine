@@ -779,8 +779,8 @@ begin
 		-- New node, insert the sl_node row
 		-- ----
 		insert into @NAMESPACE@.sl_node
-				(no_id, no_active, no_comment) values
-				(p_no_id, 'f', p_no_comment);
+				(no_id, no_active, no_comment,no_failed) values
+				(p_no_id, 'f', p_no_comment,false);
 	end if;
 
 	return p_no_id;
@@ -1151,7 +1151,8 @@ begin
 		-- ----
 		-- If the backup node is the only direct subscriber ...
 		-- ----
-		if v_row.num_direct_receivers = 0 and v_row.is_direct_receivers =1 then
+--		if v_row.num_direct_receivers = 0 and v_row.is_direct_receivers =1 then
+		if false then
 		        raise notice 'failedNode: set % has no other direct receivers - move now', v_row.set_id;
 			-- ----
 			-- backup_node is the only direct subscriber, move the set
@@ -1248,6 +1249,7 @@ begin
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
 	pa_server=p_failed_node;
 
+	update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node;
 
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
@@ -1364,6 +1366,8 @@ begin
 				p_failed_node::text, p_backup_node::text,
 				p_wait_seqno::text);
 	else
+	raise notice 'deleting from sl_subscribe all rows with receiver %',
+	p_backup_node;
 		delete from @NAMESPACE@.sl_subscribe
 				where sub_set = p_set_id
 					and sub_receiver = p_backup_node;
@@ -1478,8 +1482,8 @@ returns int4
 as $$
 begin
 	insert into @NAMESPACE@.sl_node
-		(no_id, no_active, no_comment)
-		select p_no_id, no_active, p_no_comment
+		(no_id, no_active, no_comment,no_failed)
+		select p_no_id, no_active, p_no_comment,no_failed
 		from @NAMESPACE@.sl_node
 		where no_id = p_no_provider;
 
@@ -3848,7 +3852,7 @@ DROP FUNCTION IF EXISTS @NAMESPACE@.subscribeSet_int(int4,int4,int4,bool,bool);
 --
 --  Also remember to look at the interview questions
 create or replace function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4, p_sub_forward bool, p_omit_copy bool)
-returns bigint
+returns int4
 as $$
 declare
 	v_set_origin		int4;
@@ -3931,7 +3935,7 @@ begin
 	-- ----
 	perform @NAMESPACE@.RebuildListenEntries();
 
-	return v_seq_id;
+	return p_sub_set;
 end;
 $$ language plpgsql;
 
@@ -4510,7 +4514,8 @@ begin
 	-- a node before the data provider actually has the data ready.
 
 	-- Loop over every possible pair of receiver and event origin
-	for v_row in select N1.no_id as receiver, N2.no_id as origin
+	for v_row in select N1.no_id as receiver, N2.no_id as origin,
+			  N2.no_failed as failed
 			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
 			where N1.no_id <> N2.no_id
 	loop
@@ -4533,33 +4538,43 @@ begin
 				  and li_receiver = v_row.receiver;
 			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
 				values (v_row.origin, v_row.origin, v_row.receiver);
-			continue;
-		end if;
-
+		
 		-- 2nd choice:
 		-- If we are subscribed to any set originating on this
 		-- event origin, we want to listen on all data providers
 		-- we use for this origin. We are a cascaded subscriber
 		-- for sets from this node.
-		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+		else
+				if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active)
-		then
-			delete from @NAMESPACE@.sl_listen
-					where li_origin = v_row.origin
-					  and li_receiver = v_row.receiver;
-			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
-					select distinct set_origin, sub_provider, v_row.receiver
-						from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+				then
+						delete from @NAMESPACE@.sl_listen
+							   where li_origin = v_row.origin
+					  		   and li_receiver = v_row.receiver;
+						insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
+						select distinct set_origin, sub_provider, v_row.receiver
+							   from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active;
-			continue;
+				end if;
 		end if;
 
+--		if v_row.failed then
+--		   insert into @NAMESPACE@.sl_listen
+--		   		  (li_origin,li_provider,li_receiver)
+--				  SELECT v_row.origin, pa_server
+--				  ,v_row.receiver
+--				  FROM @NAMESPACE@.sl_path where
+--				  	   pa_client=v_row.receiver
+--				  and (v_row.origin,pa_server,v_row.receiver) not in
+--				  	  		(select li_origin,li_provider,li_receiver
+--					  		from @NAMESPACE@.sl_listen);
+--		end if;
 	end loop ;
 
 	return null ;
@@ -5715,3 +5730,35 @@ tables that are already exclusivly locked by the current transaction are
 repaired. Otherwise all replicated tables with outdated trigger arguments
 are recreated.';
 
+create or replace function @NAMESPACE@.unsubscribe_abandoned_sets(p_failed_node int4) returns bigint
+as $$
+declare
+v_row record;
+v_seq_id bigint;
+v_local_node int4;
+begin
+
+	select @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') into
+			   v_local_node;
+
+	if found then
+		   --abandon all subscriptions from this origin.
+		for v_row in select sub_set,sub_receiver from
+			@NAMESPACE@.sl_subscribe, @NAMESPACE@.sl_set
+			where sub_set=set_id and set_origin=p_failed_node
+			and sub_receiver=v_local_node
+		loop
+				raise notice 'Slony-I: failover_abandon_set() is abandoning subscription to set % on node % because it is too far ahead', v_row.sub_set,
+				v_local_node;
+				--If this node is a provider for the set
+				--then the receiver needs to be unsubscribed.
+				--
+			select @NAMESPACE@.unsubscribeSet(v_row.sub_set,
+												v_local_node)
+				   into v_seq_id;
+		end loop;
+	end if;
+
+	return v_seq_id;
+end
+$$ language plpgsql;

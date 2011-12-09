@@ -117,7 +117,12 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 static int64 get_last_escaped_event_id(SlonikStmt * stmt,
 								int node_id,
 								int * skip_node_list);		
-
+static int slonik_abandon_sets(SlonikStmt * stmt,
+							   int no_id, int origin_id, 
+							   const char * provider_list,
+							   int64 valid_seq_id,
+							   bool force_abandon
+	);
 /* ----------
  * main
  * ----------
@@ -2986,38 +2991,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	{
 		
 		failnode_node * nodeinfo = (failnode_node *) failnodebuf[cur_origin_idx];
-		/*
-		 * Determine the absolutely last event sequence known from the failed
-		 * node.
-		 */
-		slon_mkquery(&query,
-					 "select max(ev_seqno) "
-					 "    from \"_%s\".sl_event "
-					 "    where ev_origin = %d; ",
-					 stmt->hdr.script->clustername,
-					 node_entry->no_id);
-		for (i = 0; i < node_entry->num_nodes; i++)
-		{
-			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
-			if (res1 != NULL)
-			{
-				if (PQntuples(res1) == 1)
-				{
-					int64		max_seqno;
-					
-					slon_scanint64(PQgetvalue(res1, 0, 0), &max_seqno);
-					if (max_seqno > max_seqno_total[cur_origin_idx])
-					{
-						max_seqno_total[cur_origin_idx] = max_seqno;
-						max_node_total[cur_origin_idx] = &nodeinfo[i];
-					}
-				}
-				PQclear(res1);
-			}
-			else
-				rc = -1;
-		}
-	
+		int64 min_last_seqno;
+		int64 max_seqno;
+
 		/*
 		 * For every set determine the direct subscriber with the highest 
 		 *applied
@@ -3116,6 +3092,46 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			}
 		}
 
+		/**
+		 * for the failed origin:  Check ALL nodes for events from
+		 *     the failed origin that are SYNC events higher than
+		 *     the smalleset setinfo[i].max_seqno.   
+		 *  these SYNC events must be deleted and those nodes must be
+		 *  unsubscribed any sets originating on the failed node.
+		 *  
+		 */
+		min_last_seqno=0;
+		max_seqno=0;
+		for (i = 0 ; i < node_entry->num_sets; i++)
+		{
+			if(setinfo[i].max_seqno < min_last_seqno
+			   || min_last_seqno==0) 
+			{
+				min_last_seqno=setinfo[i].max_seqno;
+				max_node_total[cur_origin_idx]=setinfo[i].max_node;
+			}
+			if(setinfo[i].max_seqno > max_seqno)
+				max_seqno=setinfo[i].max_seqno;
+		}
+
+		
+		for (i = 0; i < node_entry->num_nodes && min_last_seqno>0; i++)
+		{
+			if(slonik_abandon_sets((SlonikStmt*)stmt,
+					       nodeinfo[i].no_id,
+					       node_entry->no_id,
+					       dstring_data(&failed_node_list),
+					       min_last_seqno,false) < 0)
+			{
+				/*
+				 * error.
+				 */
+				return -1;
+			}
+			
+								
+		}
+
 		/*
 		 * Now switch the backup node to receive all sets from those highest
 		 * nodes.
@@ -3141,7 +3157,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				
 				setinfo[i].max_node->num_sets++;
 			}
-			
+
 			if (use_node != node_entry->backup_node)
 			{
 				SlonikStmt_wait_event wait_event;		
@@ -3159,25 +3175,30 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				slon_mkquery(&query,
 							 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
 							 "select \"_%s\".storeListen(%d,%d,%d); "
-							 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); ",
+							 "select \"_%s\".subscribeSet_int(%d,%d,%d,'t','f'); "
+							 "select \"_%s\".createEvent('_%s', 'SYNC'); ",
 							 stmt->hdr.script->clustername,
 							 stmt->hdr.script->clustername,
 							 stmt->hdr.script->clustername,
 							 node_entry->no_id, use_node, node_entry->backup_node,
 							 stmt->hdr.script->clustername,
-							 setinfo[i].set_id, use_node, node_entry->backup_node);
+							 setinfo[i].set_id, use_node, 
+							 node_entry->backup_node,
+							 stmt->hdr.script->clustername,
+							 stmt->hdr.script->clustername);
 				if (db_exec_evcommand((SlonikStmt *) stmt, adminfo1, &query) < 0)
 					rc = -1;
-
+#if 0 
 				/*
 				 * Commit the transaction on the backup node to activate 
 				 * those changes.
 				 */
 				if (db_commit_xact((SlonikStmt *) stmt, adminfo1) < 0)
 					rc = -1;		
+
 				/**
-				 * wait until all other nodes have confirmed the
-				 * ENABLE_SUBSCRIPTION created by the above 
+				 * wait until the most ahead node receives the
+				 *  created by the above 
 				 * subscribeSet_int(...) call.
 				 * It is important that nodes process the ENABLE_SUBSCRIPTION
 				 * before they process the FAILOVER_SET event generated
@@ -3199,8 +3220,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
 				}
 
+#endif
 			}
 		}
+
 		/*
 		 * Commit the transaction on the backup node to activate those 
 		 * changes.
@@ -3358,7 +3381,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				}/*else*/
 		   			
 			}
-		}   
+		}/*max_node_tota==NULL*/ 
 	
 		/*
 		 * commit all open transactions despite of all possible errors
@@ -6098,6 +6121,168 @@ static int64 get_last_escaped_event_id(SlonikStmt * stmt,
 	dstring_terminate(&query);
 	return max_event_id;
 }
+
+static int 
+slonik_abandon_sets(SlonikStmt * stmt,
+					int no_id, int origin_id, 
+					const char * provider_list,
+					int64 valid_seq_id,bool force_abandon)
+{
+	SlonDString query;
+	char ev_seq_c[NAMEDATALEN];
+	SlonikAdmInfo * adminfo1 = get_active_adminfo(stmt,no_id);
+	PGresult * result;
+	bool abandon=false;
+	int ret=0;
+	int events_deleted;
+
+	if(valid_seq_id==0)
+	{
+		/**
+		 * deleting all possible events is probably not right
+		 * assume this is a programming error.
+		 */
+
+		printf("%s:%d: Error: could not delete events from %d sequence no=0",
+			   stmt->stmt_filename,stmt->stmt_lno,
+			   adminfo1->no_id);		
+		return -1;
+	}
+
+	/**
+	 * delete all events on the node from the origin_id
+	 * with a seq_id > valid_seq_id.
+	 */
+
+	dstring_init(&query);	
+	sprintf(ev_seq_c,INT64_FORMAT,valid_seq_id);
+	slon_mkquery(&query,"delete from \"_%s\".sl_event where "
+				 "ev_type='SYNC' and ev_origin=%d and "
+				 "ev_seqno > %s",
+				 stmt->script->clustername,origin_id,
+				 ev_seq_c);
+	events_deleted=db_exec_command(stmt,adminfo1,&query);
+	if(events_deleted < 0)
+	{
+		printf("%s:%d: Error: could not delete events from %d",
+			   stmt->stmt_filename,stmt->stmt_lno,
+			   adminfo1->no_id);
+		dstring_terminate(&query);
+		return -1;
+	}
+	else if (events_deleted > 0)
+	{
+		/**
+		 * events were deleted. This node MUST be abandonded.
+		 */
+		abandon=true;
+
+	}
+	else
+	{
+		/**
+		 * events were not deleted. 
+		 * this node can be repointed at a non-failed provider
+		 * if a path exists.  
+		 */
+		abandon=force_abandon;
+	}
+
+	if( abandon )
+	{	
+
+		/**
+		 * Find any subscriptions on this node from the origin.
+		 * for each subscription.
+		 *    1. Find any nodes that we are a provider for.
+		 *       On those nodes recusively repeat this step
+		 *       and redirect/unsubsbscribe that node(if a path
+		 *       exists to the backup node use that. else
+		 *       drop it?).  Then wait
+		 *       for the subscribe/unsubscribe to be propogated back 
+		 *       this provider.
+		 *    2. Unsubscribe this node from any sets coming from the providers
+		 *       in provider_id_list originating from the given origin.
+		 *    
+		 */
+		int row;
+		SlonDString new_provider_string;
+		dstring_init(&new_provider_string);
+		slon_mkquery(&new_provider_string,"%s,%d",provider_list,no_id);
+		slon_mkquery(&query,"select sub_receiver from "
+					 " \"_%s\".sl_subscribe "
+					 ",\"_%s\".sl_set where set_id=sub_set and "
+					 "set_origin=%d and sub_provider in (%s) "
+					 , stmt->script->clustername, stmt->script->clustername
+					 , origin_id, dstring_data(&new_provider_string));
+		result = db_exec_select(stmt,adminfo1,&query);
+		if (result == NULL) 
+		{
+			printf("%s:%d: Error: could not query subscriptions from %d\n",
+				   stmt->stmt_filename,stmt->stmt_lno,
+				   adminfo1->no_id);
+			if(result != NULL)
+				PQclear(result);
+			dstring_terminate(&query);
+			return -1;
+		}
+		for(row=0; row < PQntuples(result); row++)
+		{
+			char * receiver_str=PQgetvalue(result,row,0);
+			if(receiver_str != NULL)
+			{
+				/**
+				 * recurse to the receiver.
+				 */
+				int receiver_id=atoi(receiver_str);
+				SlonikStmt_wait_event wait_event;		
+				ret=slonik_abandon_sets(stmt,
+										receiver_id,
+										origin_id,
+										dstring_data(&new_provider_string),
+										valid_seq_id,true);				
+				if ( ret < 0)
+				{
+					dstring_terminate(&query);
+					return ret;
+				}
+				/**
+				 * wait until the unsubscribe event from the 
+				 * receiver is confirmed by no_id.
+				 */
+				
+				wait_event.hdr=*(SlonikStmt*)stmt;
+				wait_event.wait_origin=receiver_id;
+				wait_event.wait_on=no_id;
+				wait_event.wait_confirmed=no_id;
+				wait_event.wait_timeout=0;
+				wait_event.ignore_nodes=0;
+				db_rollback_xact(stmt,adminfo1);
+				slonik_wait_event(&wait_event);
+			}
+			dstring_terminate(&new_provider_string);
+		}
+		/**
+		 * now unsubscribe this node from any sets
+		 * it receives from the providers in the 
+		 * provider list (with an origin of origin_id).
+		 */
+		slon_mkquery(&query,"lock table \"_%s\".sl_event_lock;select \"_%s\".unsubscribe_abandoned_sets(%d)",
+					 stmt->script->clustername,
+					 stmt->script->clustername,
+					 no_id);
+		
+	
+		if(db_exec_evcommand(stmt,adminfo1,&query) < 0) 
+		{
+			return -1;
+		}
+		db_commit_xact(stmt,adminfo1);
+	}
+	return 0;
+}
+
+
 
 /*
  * Local Variables:

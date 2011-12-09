@@ -22,6 +22,7 @@ create table @NAMESPACE@.sl_node (
 	no_id				int4,
 	no_active			bool,
 	no_comment			text,
+	no_failed			bool,
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 ) WITHOUT OIDS;
