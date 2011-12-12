@@ -1,6 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+- Bug #240 :: Improve notes on VACUUM
+
 ** 2.2.0
 - Bug #250 :: Log shipper does not report application name - add in setting of GUC
 
