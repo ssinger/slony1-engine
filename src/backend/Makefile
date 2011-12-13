@@ -43,7 +43,7 @@ ALL = $(SQL_NAMES)		\
 
 all:	$(ALL)
 
-#$(SO_NAME):	$(SO_OBJS)
+$(SO_NAME):	$(SO_OBJS)
 
 $(NAME).o:	$(NAME).c avl_tree.c avl_tree.h
 
