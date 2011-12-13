@@ -1180,66 +1180,7 @@ begin
 					where sub_set = v_row.set_id
 						and sub_receiver = p_backup_node;
 		else
-			raise notice 'failedNode: set % has other direct receivers - change providers only', v_row.set_id;
-			-- ----
-			-- Backup node is not the only direct subscriber or not
-			-- a direct subscriber at all. 
-			-- This means that at this moment, we redirect all possible
-			-- direct subscribers to receive from the backup node, and the
-			-- backup node itself to receive from another one.
-			-- The admin utility will wait for the slon engine to
-			-- restart and then call failedNode2() on the node with
-			-- the highest SYNC and redirect this to it on
-			-- backup node later.
-			-- ----
-
-			--update the backup node's sl_subscribe to have
-			--a new provider that the backup node has a path to.
-			update @NAMESPACE@.sl_subscribe				   
-					set sub_provider = (select min(SS.sub_receiver)
-							from @NAMESPACE@.sl_subscribe SS
-							where SS.sub_set = v_row.set_id
-								and SS.sub_receiver <> p_backup_node
-								and SS.sub_forward
-								and exists (
-								--A path exists between the backup node
-								--and what we are selecting
-									select 1 from @NAMESPACE@.sl_path
-										where pa_server = SS.sub_receiver
-										  and pa_client = p_backup_node
-								))
-					where sub_set = v_row.set_id
-						and sub_receiver = p_backup_node;		
-
-			--
-			-- update all nodes but the backup to have a provider
-			-- that is the some node other than the failed node.
-			  update @NAMESPACE@.sl_subscribe
-                   set sub_provider = (select min(SS.sub_receiver)
-                           from @NAMESPACE@.sl_subscribe SS
-                           where SS.sub_set = v_row.set_id
-                               and SS.sub_receiver <> p_failed_node
-                               and SS.sub_forward
-                               and exists (
-                                   select 1 from @NAMESPACE@.sl_path
-                                       where pa_server = SS.sub_receiver
-                                         and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
-                               ))
-                   where sub_set = v_row.set_id
-                       and sub_receiver <> p_backup_node;
-			--
-			-- update all nodes to use the backup node
-			-- except the backup node.
-			-- as long as there is a path.
-			update @NAMESPACE@.sl_subscribe
-					set sub_provider = p_backup_node
-					where sub_set = v_row.set_id
-						and sub_receiver <> p_backup_node
-						and exists (
-							select 1 from @NAMESPACE@.sl_path
-								where pa_server = p_backup_node
-								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
-						);						
+			raise notice 'failedNode: set % has other direct receivers - change providers only', v_row.set_id;		
 		end if;
 	end loop;
 	
@@ -1271,6 +1212,83 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4) is
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
+
+create or replace function @NAMESPACE@.failedNodeSub(p_new_receiver int4, p_new_provider int4, p_set_id int4) returns int4 as $$
+declare
+v_remaining int4;
+v_cur_node int4;
+v_row record;
+v_last_node int4;
+begin
+		--Build a list of subscribers (not failed)
+		CREATE TEMP TABLE old_subscribers as 
+				SELECT sub_receiver from @NAMESPACE@.sl_subscribe,
+				@NAMESPACE@.sl_node where sub_receiver=no_id AND
+				sub_set = p_set_id AND sub_forward=true and sub_active=true;
+	
+		--Build a working queue.
+		CREATE TEMP TABLE queue (
+				no_id int4,
+				order_id serial);
+	
+		--Build a sl_subscribe new table
+		CREATE TEMP TABLE subscribe_additions (
+					   provider_id int4,
+					   receiver_id int4
+					   );
+		--Put the new_provider on the queue
+		EXECUTE 'INSERT INTO queue(no_id) VALUES (' ||
+		p_new_provider || ')';
+		loop
+		--While queue not empty.
+		--  select first item from queue table
+			EXECUTE 'SELECT no_id FROM queue order by order_id desc limit 1'
+				INTO v_cur_node;		
+		--    For each path leaving the item(sl_path join) that is an unvisted
+		--        subscriber:
+			v_last_node=v_cur_node;
+			FOR v_row IN EXECUTE 'select pa_server,pa_client from @NAMESPACE@.sl_path,'
+				||'old_subscribers where pa_client=sub_receiver'
+				||' and pa_server=' || v_cur_node || ' AND pa_client not in '
+				||'(SELECT receiver_id from subscribe_additions)'
+				||' and pa_client <> ' || p_new_provider
+				||' order by pa_client'
+				LOOP
+		--      add the item to the working queue
+				EXECUTE 'INSERT INTO subscribe_additions(provider_id,'
+						||'receiver_id) VALUES (' || v_row.pa_server || ','||
+						v_row.pa_client || ')';
+				if v_last_node <> v_row.pa_client then
+				   v_last_node=v_row.pa_client;
+		--      add a subscription 
+				   EXECUTE 'INSERT INTO queue VALUES (' ||v_row.pa_client
+				|| ')';
+				end if;
+				end loop;				
+		--    end for
+		EXECUTE 'DELETE FROM queue WHERE no_id=' || v_cur_node;
+		--Update sl_subscribe with our new list.
+		  EXECUTE 'SELECT COUNT(*) FROM queue' INTO v_remaining;
+		  if v_remaining=0 then
+		   exit;
+		  end if;
+		-- end while
+		end loop;
+		DELETE FROM @NAMESPACE@.sl_subscribe where sub_set=p_set_id AND
+		sub_forward=true and sub_active=true;
+		EXECUTE 'INSERT INTO @NAMESPACE@.sl_subscribe (sub_set,sub_provider,'
+			   ||'sub_receiver,sub_forward,sub_active)'
+			   ||' select '|| p_set_id|| ', provider_id,receiver_id,true,true'
+			   ||' from subscribe_additions ';
+	    EXECUTE 'DROP TABLE queue';
+		EXECUTE 'DROP TABLE subscribe_additions';
+		EXECUTE DROP 'TABLE old_subscribers';
+		perform @NAMESPACE@.addPartialLogIndices();		
+RETURN 0;
+		
+end;
+$$
+language plpgsql;
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
