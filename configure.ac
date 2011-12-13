@@ -205,13 +205,13 @@ AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>  Location of 
 AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of the PostgreSQL libs. ])
 AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
+AC_ARG_WITH(slonbindir, 	[  --with-slonbindir=<dir>	    Location to install slony binaries (slon,slonik,etc..) Default is $PREFIX/bin. ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools. Default $PREFIX/bin. ])
 AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm. Default $pglibdir. ])
 AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation. Default is $PREFIX/doc. ])
 AC_ARG_WITH(d2mdir,		[  --with-d2mdir=<dir>              Location of docbook2man-spec.pl (Manpages will be skipped if not specified)])
 AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the manpages. Default is $PREFIX/man.])
-
 
 SLON_AC_ARG_BOOL(enable, engine, yes,
               [  --disable-engine     Don't build slony1-engine source. (Used when building documentation only)])
@@ -250,12 +250,14 @@ AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
 
-if test ${prefix} = "NONE"; then
-  SLONBINDIR="${PG_BINDIR}"
-else
-  SLONBINDIR="${prefix}/bin"
+if test "${SLON_BINDIR}" = ""; then
+ if test ${prefix} = "NONE"; then
+   SLON_BINDIR="${PG_BINDIR}"
+ else
+   SLON_BINDIR="${prefix}/bin"
+ fi
 fi
-AC_SUBST(SLONBINDIR,$SLONBINDIR)
+AC_SUBST(SLONBINDIR,$SLON_BINDIR)
 
 fi
 
