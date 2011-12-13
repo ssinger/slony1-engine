@@ -293,6 +293,52 @@ remoteListenThread_main(void *cdata)
 
 				continue;
 			}
+			if(PQserverVersion(dbconn) >= 90100) 
+			{
+				slon_mkquery(&query1,"SET SESSION CHARACTERISTICS AS TRANSACTION read only deferrable");
+				res = PQexec(dbconn, dstring_data(&query1));
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)
+				{
+					slon_log(SLON_ERROR,
+							 "remoteListenThread_%d: \"%s\" - %s",
+							 node->no_id,
+							 dstring_data(&query1), PQresultErrorMessage(res));
+					PQclear(res);
+					slon_disconnectdb(conn);
+					free(conn_conninfo);
+					conn = NULL;
+					conn_conninfo = NULL;
+					rc = sched_msleep(node, pa_connretry * 1000);
+					if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+						break;
+					
+					continue;
+				}						
+			
+			}
+			if(PQserverVersion(dbconn) >= 90100)
+			{
+				slon_mkquery(&query1,"SET SESSION CHARACTERISTICS AS TRANSACTION read only isolation level serializable deferrable");
+				res = PQexec(dbconn, dstring_data(&query1));
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)
+				{
+					slon_log(SLON_ERROR,
+							 "remoteListenThread_%d: \"%s\" - %s",
+							 node->no_id,
+							 dstring_data(&query1), PQresultErrorMessage(res));
+					PQclear(res);
+					slon_disconnectdb(conn);
+					free(conn_conninfo);
+					conn = NULL;
+					conn_conninfo = NULL;
+					rc = sched_msleep(node, pa_connretry * 1000);
+					if (rc != SCHED_STATUS_OK && rc != SCHED_STATUS_CANCEL)
+						break;
+
+					continue;
+				}
+
+			}
 			slon_log(SLON_DEBUG1,
 					 "remoteListenThread_%d: connected to '%s'\n",
 					 node->no_id, conn_conninfo);
