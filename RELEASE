@@ -368,3 +368,5 @@ Added post rc2
 - Bug 236 :: Fix default formatting of timestamp in logs
 
 - Add express support to recognize PostgreSQL 9.1
+
+- Bug 255 :: Fix serialization issues when using PostgreSQL 9.1
