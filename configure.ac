@@ -205,7 +205,7 @@ AC_ARG_WITH(pgincludeserverdir, [  --with-pgincludeserverdir=<dir>  Location of 
 AC_ARG_WITH(pglibdir,           [  --with-pglibdir=<dir>            Location of the PostgreSQL libs. ])
 AC_ARG_WITH(pgpkglibdir,        [  --with-pgpkglibdir=<dir>         Location of the PostgreSQL pkglibs. E.g. plpgsql.so ])
 AC_ARG_WITH(pgsharedir,         [  --with-pgsharedir=<dir>          Location of the PostgreSQL share dir. E.g. postgresql.conf.sample ])
-AC_ARG_WITH(slonbindir, 	[  --with-slonbindir=<dir>	    Location to install slony binaries (slon,slonik,etc..) Default is $PREFIX/bin. ])
+AC_ARG_WITH(slonybindir, 	[  --with-slonybindir=<dir>	    Location to install slony binaries (slon,slonik,etc..) Default is $PREFIX/bin. ])
 AC_ARG_WITH(perltools,          [  --with-perltools=<dir>           Location to install the perl management tools. Default $PREFIX/bin. ])
 AC_ARG_WITH(perlsharedir,       [  --with-perlsharedir=<dir>        Location to install slon-tools.pm. Default $pglibdir. ])
 AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentation [default=no]])
