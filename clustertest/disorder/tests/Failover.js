@@ -52,11 +52,13 @@ Failover.prototype.runTest = function() {
 	 * Node 5 is not a provider.
 	 * This should go off smoothly.
 	 */
-	this.failNode(5,1,true);
+	this.failNode(5,1,false);
+  
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);
 	var lag2 = this.measureLag(1,5);	
 	this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
+		
 	
 	/**
 	 * DROP node 5.
@@ -67,7 +69,8 @@ Failover.prototype.runTest = function() {
 	//make it elsewhere.
 	this.slonikSync(1,1);
 	this.reAddNode(5,1,3);
-	this.subscribeSet(1,1,3,[5]);
+   	this.subscribeSet(1,1,3,[5]);
+
 	
 
 	
@@ -229,13 +232,19 @@ Failover.prototype.runTest = function() {
 	this.testResults.assertCheck('drop path from 1 to 4',slonik.getReturnCode(),0);
 	   
 	this.slonikSync(1,1);
+	 /**
+	  * fail from 1--->4.  
+	  * 4 is not a direct subscriber
+	  * but the failover still works because 3
+	  * can be used as a intermediate node.
+	  */
 	this.failNode(1,4,true);
-	
+
 	this.compareDb('db2','db4');
-	this.compareDb('db3','db4');
+	this.compareDb('db3','db4');		
 	java.lang.Thread.sleep(30*1000);
 	this.dropNode(1,4);
-	this.coordinator.log('PROGRESS: About to re-add node 4');
+	this.coordinator.log('PROGRESS: About to re-add node 1');
 	this.reAddNode(1,4,4);
 	
 	

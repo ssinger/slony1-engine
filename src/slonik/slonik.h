@@ -204,6 +204,7 @@ struct SlonikStmt_drop_node_s
 struct failed_node_entry {
 	int no_id;
 	int backup_node;
+	int temp_backup_node;
 	struct failed_node_entry * next;
 	int num_sets;
 	int num_nodes;

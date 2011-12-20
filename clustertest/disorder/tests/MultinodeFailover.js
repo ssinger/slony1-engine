@@ -74,6 +74,7 @@ MultinodeFailover.prototype.runTest = function() {
 	this.subscribeSet(2,3,3,[2]);
 	this.moveSet(2,3,2);
 
+
 	/**
 	 * generate some load (node1) and
 	 * reviews on node2. Let multiple txn snapshots be
