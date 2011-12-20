@@ -622,8 +622,6 @@ remoteWorkerThread_main(void *cdata)
 				pthread_mutex_lock(&(node->message_lock));
 				sg_last_grouping = 1;   /* reset sizes */
 				sync_group_size = 1;
-				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d sync group size:%d proposed:%d\n",
-						 node->no_id,sync_group_size, sg_proposed );
 				while (sync_group_size < sg_proposed && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
@@ -638,8 +636,6 @@ remoteWorkerThread_main(void *cdata)
 					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
 				}
 				sg_last_grouping = sync_group_size;
-				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d sync group size finished:%d proposed:%d\n",
-						 node->no_id,sync_group_size, sg_proposed );
 				pthread_mutex_unlock(&(node->message_lock));
 			}
 			while (true)
