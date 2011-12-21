@@ -201,7 +201,7 @@ Failover.prototype.runTest = function() {
 
 	this.dropNode(1,3);
 	this.reAddNode(1,3,3);	
-		this.slonikSync(1,1);
+	this.slonikSync(1,3);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
