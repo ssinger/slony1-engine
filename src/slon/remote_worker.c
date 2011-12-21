@@ -1242,7 +1242,7 @@ remoteWorkerThread_main(void *cdata)
 				slon_mkquery(&query2," select * FROM %s.sl_event "
 							 " where "
 							 "       ev_origin=%d and "
-							 "       ev_seqno=%s"
+							 "       ev_seqno>=%s"
 							 ,	 rtcfg_namespace, failed_node,
 							 seq_no_c);
 				res=PQexec(local_dbconn,dstring_data(&query2));
@@ -1279,10 +1279,10 @@ remoteWorkerThread_main(void *cdata)
 
 				slon_appendquery(&query1,
 								 "lock %s.sl_config_lock;"
-								 "select %s.failoverSet_int(%d, %d); ",
+								 "select %s.failoverSet_int(%d, %d,'%s'); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace, 
-								 failed_node, node->no_id);
+								 failed_node, node->no_id,seq_no_c);
 				
 				need_reloadListen = true;
 			}

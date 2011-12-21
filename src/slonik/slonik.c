@@ -2852,6 +2852,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 node_entry->no_id, node_entry->backup_node);
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
+			printf("executing failedNode(%d,%d) on %d\n",
+				   node_entry->no_id, node_entry->backup_node,
+				   nodeinfo[i].no_id);
 			if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 			{
 				free(failnodebuf);
@@ -2940,8 +2943,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		char		ev_seqno_c[64];
 
 		/*
-		 * For every node determine the one with the heighest
-		 * sync, preferring the backup node.
+		 * For every node determine the one with the event
+		 *, preferring the backup node.
 		 */
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
@@ -2952,8 +2955,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			slon_mkquery(&query,
 						 "select max(ev_seqno) "
 						 "	from \"_%s\".sl_event "
-						 "	where ev_origin = %d "
-						 "	and ev_type = 'SYNC'; ",
+						 "	where ev_origin = %d; ",
 						 stmt->hdr.script->clustername,
 						 node_entry->no_id);
 			res1 = db_exec_select((SlonikStmt *) stmt,
@@ -3043,11 +3045,12 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 */
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-					 "select \"_%s\".failedNode3(%d,%d); ",
+					 "select \"_%s\".failedNode3(%d,%d,'%s'); ",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
-					 node_entry->no_id,nodeinfo[max_node_idx].no_id);
+					 node_entry->no_id,nodeinfo[max_node_idx].no_id
+					 ,ev_seqno_c);
 		printf("NOTICE: executing \"_%s\".failedNode3 on node %d\n",
 			   stmt->hdr.script->clustername,
 			   nodeinfo[max_node_idx].no_id);
@@ -5833,7 +5836,6 @@ static int64 get_last_escaped_event_id(SlonikStmt * stmt,
 					max_event_id=cur_event_id;
 			}
 			PQclear(result);
-			db_rollback_xact(stmt, activeAdmInfo);			
 		
 		}		
 	}

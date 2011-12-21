@@ -1111,6 +1111,7 @@ begin
 		end if;
 	end loop;
 
+
 	--
 	-- any nodes other than the backup receiving
 	-- ANY subscription from a failed node
@@ -1125,16 +1126,20 @@ begin
 	-- ----
 	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
 
-	--blank the paths for the failed node.
-	--this ensures that *this* node won't be pulling
-	--data from the failed node (if the failed node can be accessed)
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
-	pa_server=p_failed_node;
+	   		  pa_server=p_failed_node;
+	
+	select count(*) INTO v_n from @NAMESPACE@.sl_node
+		   where no_failed=true and no_id=p_failed_node;
+    if v_n=0 then
+	   --blank the paths for the failed node.
+	   --this ensures that *this* node won't be pulling
+	   --data from the failed node (if the failed node can be accessed)
+	   
 
-	update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
-	and no_failed=false;
-
-	if FOUND then
+	
+		update @NAMESPACE@.sl_node set no_failed=true, no_fail_time=now() where no_id=p_failed_node
+		and no_failed=false;
 	   -- Rewrite sl_listen table
 	   perform @NAMESPACE@.RebuildListenEntries();
 
@@ -1144,7 +1149,7 @@ begin
 	   -- ----
 	   -- Make sure the node daemon will restart
 	   -- ----
-	   raise notice 'calling restart';
+	   raise notice 'calling restart node %',p_failed_node;
 	   notify "_@CLUSTERNAME@_Restart";
 	else
 		raise notice 'node already disabled restart not required node %',p_failed_node;
@@ -1198,14 +1203,14 @@ comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node i
 On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
 
-create or replace function @NAMESPACE@.failedNode3 (p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.failedNode3 (p_failed_node int4, p_backup_node int4,p_seq_no bigint)
 returns int4
 as $$
 declare
 
 begin
 		perform @NAMESPACE@.failoverSet_int(p_failed_node,
-			p_backup_node);
+			p_backup_node,p_seq_no);
 
 	notify "_@CLUSTERNAME@_Restart";
     return 0;
@@ -1217,7 +1222,7 @@ $$ language plpgsql;
 --
 --	Finish failover for one set.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4,p_last_seqno bigint)
 returns int4
 as $$
 declare
@@ -1225,6 +1230,23 @@ declare
 	v_last_sync			int8;
 	v_set				int4;
 begin
+	SELECT max(ev_seqno) into v_last_sync FROM @NAMESPACE@.sl_event where
+		   ev_origin=p_failed_node;
+	if v_last_sync > p_last_seqno then
+	   -- this node is ahead of the last sequence number from the
+	   -- failed node that the backup node has.
+	   -- this node must unsubscribe from all sets from the origin.
+	   for v_set in select set_id from @NAMESPACE@.sl_set where 
+		set_origin=p_failed_node
+		loop
+			raise warning 'Slony is dropping the subscription of set % found sync %s bigger than %s '
+			, v_set, v_last_sync::text, p_last_seqno::text;
+			perform @NAMESPACE@.unsubscribeSet(v_set,
+				   @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+		end loop;
+		delete from @NAMESPACE@.sl_event where ev_origin=p_failed_node
+			   and ev_seqno > p_last_seqno;
+	end if;
 	-- ----
 	-- Change the origin of the set now to the backup node.
 	-- On the backup node this includes changing all the
@@ -1312,7 +1334,7 @@ begin
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4) is
+comment on function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4,p_seqno bigint) is
 'FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 
 Finish failover for one set.';
@@ -3859,8 +3881,12 @@ begin
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
-		raise exception 'Slony-I: Cannot unsubscribe set % while being provider',
-				p_sub_set;
+		--delete the receivers of this provider.
+		--unsubscribeSet_int() will generate the event
+		--when it runs on the receiver.
+		delete from @NAMESPACE@.sl_subscribe 
+			   where sub_set=p_sub_set
+			   and sub_provider=p_sub_receiver;
 	end if;
 
 	-- ----
@@ -3922,11 +3948,25 @@ node to publish that the node is being dropped.';
 create or replace function @NAMESPACE@.unsubscribeSet_int (p_sub_set int4, p_sub_receiver int4)
 returns int4
 as $$
+declare
 begin
 	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
+
+	--if this event unsubscribes the provider of this node
+	--then this node should unsubscribe itself from the set as well.
+	
+	if exists (select true from 
+		   @NAMESPACE@.sl_subscribe where 
+		   sub_set=p_sub_set and sub_provider=p_sub_receiver
+		   and sub_receiver=@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
+	then
+	   perform @NAMESPACE@.unsubscribeSet(p_sub_set,@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+	end if;
+	
+
 	delete from @NAMESPACE@.sl_subscribe
 			where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
@@ -4457,16 +4497,33 @@ begin
 		end if;
 
 		if v_row.failed then
-		   insert into @NAMESPACE@.sl_listen
-		   		  (li_origin,li_provider,li_receiver)
-				  SELECT v_row.origin, pa_server
-				  ,v_row.receiver
-				  FROM @NAMESPACE@.sl_path where
-				  	   pa_client=v_row.receiver
-				  and (v_row.origin,pa_server,v_row.receiver) not in
-				  	  		(select li_origin,li_provider,li_receiver
-					  		from @NAMESPACE@.sl_listen);
+		
+		--for every failed node we delete all sl_listen entries
+		--except via providers (listed in sl_subscribe).
+		--we do this to prevent a non-failover candidate
+		--that is more ahead of the failover candidate from
+		--sending events to the failover candidate that
+		--are 'too far ahead'
+		delete from @NAMESPACE@.sl_listen where
+			   li_origin=v_row.origin and
+			   li_receiver=v_row.receiver
+			   and li_provider not in 
+			   	   (select sub_provider from
+				   @NAMESPACE@.sl_subscribe,
+				   @NAMESPACE@.sl_set where	
+				   sub_set=set_id
+				   and set_origin=v_row.origin);
 		end if;
+--		   insert into @NAMESPACE@.sl_listen
+--		   		  (li_origin,li_provider,li_receiver)
+--				  SELECT v_row.origin, pa_server
+--				  ,v_row.receiver
+--				  FROM @NAMESPACE@.sl_path where
+--				  	   pa_client=v_row.receiver
+--				  and (v_row.origin,pa_server,v_row.receiver) not in
+--				  	  		(select li_origin,li_provider,li_receiver
+--					  		from @NAMESPACE@.sl_listen);
+--		end if;
 	end loop ;
 
 	return null ;
