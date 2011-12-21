@@ -8,3 +8,4 @@
 
 - Bug #235 :: SYNC GROUP sizes are now dynamically grow from 1 to a maximum size set in the config file.  The old logic based on time it took to complete the last SYNC has been removed.
 
+- Add correct 'ps' arguments to the altperl tools for Darwin.
