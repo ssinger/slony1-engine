@@ -2577,8 +2577,13 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 			
 		}
 
-		dstring_init(&query);
-		
+	}
+	
+
+	dstring_init(&query);
+	
+	for(no_id_idx=0; stmt->no_id_list[no_id_idx]!=-1;no_id_idx++)
+	{
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
 					 "select \"_%s\".dropNode(%d); ",
@@ -2604,9 +2609,8 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 		if(adminfo2 != NULL) {
 			adminfo2->last_event=-1;
 		}
-		
-		dstring_free(&query);
 	}
+		dstring_free(&query);	
 	return 0;
 }
 
