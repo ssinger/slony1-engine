@@ -69,6 +69,7 @@ MultinodeFailover.prototype.runTest = function() {
 	 */
 	this.updateReviewTable(3,'From node 3');
 	this.moveSet(1,3,1);
+	
 	this.reAddNode(2,1,1);
 	this.addCompletePaths();
 	this.subscribeSet(2,3,3,[2]);
@@ -95,6 +96,10 @@ MultinodeFailover.prototype.runTest = function() {
 	this.dropTwoNodes(1,2,3);
 	this.compareDb('db3','db4');
 		//exit(-1);
+	//auto wait for should not require the
+		//sync but we have a race condition.
+		//		this.slonikSync(1,3);
+		//	this.slonikSync(1,4);
 	this.reAddNode(1,3,3);		
 	this.reAddNode(2,3,3);
 	this.addCompletePaths();

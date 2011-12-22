@@ -2184,6 +2184,13 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	if (adminfo2 == NULL)
 		return -1;
 
+	if(!auto_wait_disabled)
+	{
+		rc=slonik_wait_config_caughtup(adminfo2,&stmt->hdr,stmt->no_id);
+		if(rc < 0 )
+		  return rc;
+	}
+
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo2,false) < 0)
 		return -1;
 
