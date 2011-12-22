@@ -2714,6 +2714,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	max_node_total = (failnode_node **) malloc ( sizeof(failnode_node*) *
 												 num_origins);
 	fail_node_ids = (int*) malloc(sizeof(int) * num_origins+1);
+	memset(failnodebuf,0,sizeof(char*) * num_origins);
 	memset(max_node_total,0, sizeof(failnode_node*) * num_origins);
 	memset(max_seqno_total,0, sizeof(int64) * num_origins); 
 	memset(fail_node_ids , -1, sizeof(int) * (num_origins+1) );
@@ -2876,18 +2877,19 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		PQclear(res2);
 		
 		/*
-		 * Execute the failedNode() procedure on all candidate nodes.		 
+		 * Execute the preFailover() procedure on all failover candidate 
+		 * nodes to stop them from receiving new messages from the failed node.
 		 */
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_config_lock; "
-					 "select \"_%s\".failedNode(%d, %d); ",
+					 "select \"_%s\".preFailover(%d); ",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
-					 node_entry->no_id, node_entry->backup_node);
+					 node_entry->no_id);
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
-			printf("executing failedNode(%d,%d) on %d\n",
-				   node_entry->no_id, node_entry->backup_node,
+			printf("executing preFailover(%d) on %d\n",
+				   node_entry->no_id,
 				   nodeinfo[i].no_id);
 			if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 			{
@@ -2983,8 +2985,10 @@ cleanup:
 	for(node_entry=stmt->nodes; node_entry != NULL;
 		node_entry=node_entry->next, cur_origin_idx++)
 	{
-		free(failnodebuf[cur_origin_idx]);
-		free(set_list[cur_origin_idx]);			 
+		if(failnodebuf[cur_origin_idx])
+			free(failnodebuf[cur_origin_idx]);
+		if(set_list[cur_origin_idx])
+			free(set_list[cur_origin_idx]);			 
 	}
 	free(failnodebuf);
 	free(set_list);

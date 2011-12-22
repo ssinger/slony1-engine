@@ -1052,12 +1052,15 @@ comment on function @NAMESPACE@.dropNode_int(p_no_id int4) is
 
 
 -- ----------------------------------------------------------------------
--- FUNCTION failedNode (failed_node, backup_node)
+-- FUNCTION preFailover (failed_node)
 --
---	Initiate a failover. This function must be called on all nodes
---	and then waited for the restart of all node daemons.
+-- Called on all failover candidates before the failover.
+-- Failover candidates are direct subscribers of the failed node.
+-- This function blanks the paths to the failed node and restarts slon.
+-- This ensures that slonik will have a stable state to determine 
+-- which node is the most-ahead.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.preFailover(p_failed_node int4)
 returns int4
 as $$
 declare
@@ -1083,10 +1086,10 @@ begin
 		select into v_row2 sub_forward, sub_active
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = v_row.set_id
-					and sub_receiver = p_backup_node;
+					and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if not found then
 			raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
-					p_backup_node, v_row.set_id;
+					@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
 		end if;
 
 		-- ----
@@ -1104,14 +1107,50 @@ begin
 		select into v_n count(*)
 				from @NAMESPACE@.sl_subscribe
 				where sub_set = v_row.set_id
-					and sub_receiver <> p_backup_node;
+					and sub_receiver <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		if v_n > 0 and not v_row2.sub_forward then
 			raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
-					p_backup_node, v_row.set_id;
+					 @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
 		end if;
 	end loop;
 
+	-- ----
+	-- Terminate all connections of the failed node the hard way
+	-- ----
+	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
 
+	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
+	   		  pa_server=p_failed_node;	
+	notify "_@CLUSTERNAME@_Restart";
+	-- ----
+	-- That is it - so far.
+	-- ----
+	return p_failed_node;
+end;
+$$ language plpgsql;
+comment on function @NAMESPACE@.preFailover(p_failed_node int4) is
+'Prepare for a failover.  This function is called on all candidate nodes.
+It blanks the paths to the failed node
+and then restart of all node daemons.';
+
+
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION failedNode (failed_node, backup_node)
+--
+--	Initiate a failover. This function must be called on all nodes
+--	and then waited for the restart of all node daemons.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4)
+returns int4
+as $$
+declare
+	v_row				record;
+	v_row2				record;
+	v_n					int4;
+begin
+	
 	--
 	-- any nodes other than the backup receiving
 	-- ANY subscription from a failed node
@@ -1135,9 +1174,7 @@ begin
 	   --blank the paths for the failed node.
 	   --this ensures that *this* node won't be pulling
 	   --data from the failed node (if the failed node can be accessed)
-	   
-
-	
+	   	
 		update @NAMESPACE@.sl_node set no_failed=true, no_fail_time=now() where no_id=p_failed_node
 		and no_failed=false;
 	   -- Rewrite sl_listen table
@@ -1166,6 +1203,7 @@ comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int
 and then waited for the restart of all node daemons.';
 
 
+
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 --
@@ -1187,6 +1225,17 @@ begin
 		raise exception 'Slony-I: event %,% not found',
 				p_failed_node, p_ev_seqno;
 	end if;
+
+	update @NAMESPACE@.sl_node set no_failed=true, no_fail_time=now() where no_id=p_failed_node
+		and no_failed=false;
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+	-- ----
+	-- Make sure the node daemon will restart
+	-- ----
+	raise notice 'calling restart node %',p_failed_node;
+
+	notify "_@CLUSTERNAME@_Restart";
 
 	select @NAMESPACE@.createEvent('_@CLUSTERNAME@','FAILOVER_NODE',
 								p_failed_node::text,p_ev_seqno::text)
