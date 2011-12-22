@@ -57,7 +57,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 	option_list	*opt_list;
 	SlonikAdmInfo	*adm_info;
 	SlonikStmt	*statement;
-	struct failed_node_entry * failed_node_entry;
+	failed_node_entry * failed_node_entry;
 }
 
 %type <ival>		id
@@ -702,9 +702,9 @@ stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')' ';'
 						new->hdr.stmt_type		= STMT_FAILED_NODE;
 						new->hdr.stmt_filename	= current_file;
 						new->hdr.stmt_lno		= $1;
-						new->nodes=(struct failed_node_entry*)
-							malloc(sizeof(struct failed_node_entry)*1);
-						memset(new->nodes,0, sizeof(struct failed_node_entry));
+						new->nodes=(failed_node_entry*)
+							malloc(sizeof(failed_node_entry)*1);
+						memset(new->nodes,0, sizeof(failed_node_entry));
 
 						if (assign_options(opt, $3) == 0)
 						{
@@ -720,16 +720,16 @@ stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')' ';'
 
 fail_node_list      :   K_NODE '=' '(' option_list_items ')'
 {
-						struct failed_node_entry *new;
+						failed_node_entry *new;
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
 							STMT_OPTION_END
 						};
 
-						new = (struct failed_node_entry *)
-								malloc(sizeof(struct failed_node_entry));
-						memset(new, 0, sizeof(struct failed_node_entry));
+						new = (failed_node_entry *)
+								malloc(sizeof(failed_node_entry));
+						memset(new, 0, sizeof(failed_node_entry));
 						if (assign_options(opt, $4) == 0)
 						{
 							new->no_id			= opt[0].ival;
@@ -743,16 +743,16 @@ fail_node_list      :   K_NODE '=' '(' option_list_items ')'
 }
 |    K_NODE '=' '(' option_list_items ')' ',' fail_node_list
 {
-					struct failed_node_entry *new;
+					failed_node_entry *new;
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
 							STMT_OPTION_END
 						};
 
-						new = (struct failed_node_entry *)
-								malloc(sizeof(struct failed_node_entry));
-						memset(new, 0, sizeof(struct failed_node_entry));
+						new = (failed_node_entry *)
+								malloc(sizeof(failed_node_entry));
+						memset(new, 0, sizeof(failed_node_entry));
 						if (assign_options(opt, $4) == 0)
 						{
 							new->no_id			= opt[0].ival;

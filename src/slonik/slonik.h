@@ -201,19 +201,21 @@ struct SlonikStmt_drop_node_s
 	int			ev_origin;
 };
 
-struct failed_node_entry {
+struct failed_node_entry_s {
 	int no_id;
 	int backup_node;
 	int temp_backup_node;
-	struct failed_node_entry * next;
+	struct failed_node_entry_s * next;
 	int num_sets;
 	int num_nodes;
 };
 
+typedef struct failed_node_entry_s failed_node_entry;
+
 struct SlonikStmt_failed_node_s
 {
 	SlonikStmt	hdr;
-	struct failed_node_entry * nodes;
+	failed_node_entry * nodes;
 };
 
 

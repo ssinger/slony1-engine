@@ -56,6 +56,32 @@ int auto_wait_disabled=0;
 
 static char share_path[MAXPGPATH];
 
+
+
+
+typedef struct
+{
+	int			no_id;
+	SlonikAdmInfo *adminfo;
+	int			has_slon;
+	int			slon_pid;
+	int			num_sets;
+	int64		max_seqno;
+}	failnode_node;
+
+
+typedef struct
+{
+	int			set_id;
+	int			num_subscribers;
+	failnode_node **subscribers;
+	failnode_node *max_node;
+	int64		max_seqno;
+	int			old_origin;
+	int			backup_origin;
+}	failnode_set;
+
+
 /*
  * Local functions
  */
@@ -117,6 +143,18 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 static int64 get_last_escaped_event_id(SlonikStmt * stmt,
 								int node_id,
 						    	int * skip_node_list);		
+
+
+static int
+fail_node_restart(SlonikStmt_failed_node * stmt,
+				  failed_node_entry * node_entry,
+				  failnode_node * nodeinfo);
+
+
+static int fail_node_promote(SlonikStmt_failed_node * stmt,
+							 failed_node_entry * node_entry,
+							 failnode_node* nodeinfo
+							 ,int * fail_node_ids);
 /* ----------
  * main
  * ----------
@@ -432,7 +470,7 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				{
 					SlonikStmt_failed_node *stmt =
 					(SlonikStmt_failed_node *) hdr;
-					struct failed_node_entry* node=NULL;
+					failed_node_entry* node=NULL;
 
 					if(stmt->nodes == NULL)
 					{
@@ -2616,28 +2654,6 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 }
 
 
-typedef struct
-{
-	int			no_id;
-	SlonikAdmInfo *adminfo;
-	int			has_slon;
-	int			slon_pid;
-	int			num_sets;
-	int64		max_seqno;
-}	failnode_node;
-
-
-typedef struct
-{
-	int			set_id;
-	int			num_subscribers;
-	failnode_node **subscribers;
-	failnode_node *max_node;
-	int64		max_seqno;
-	int			old_origin;
-	int			backup_origin;
-}	failnode_set;
-
 
 int
 slonik_failed_node(SlonikStmt_failed_node * stmt)
@@ -2646,8 +2662,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	SlonDString query;
 	SlonDString failed_node_list;
 
-	int			n,
-		i;				
+	int			i;				
 	int			num_origins=0;
 	int			cur_origin_idx=0;	
 	char	   **failnodebuf;
@@ -2657,35 +2672,11 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	PGresult   *res3;
 	int64		* max_seqno_total = 0;
 	failnode_node **max_node_total = NULL;
-	struct failed_node_entry * node_entry = stmt->nodes;
+	failed_node_entry * node_entry = stmt->nodes;
 	int * fail_node_ids = NULL;
 
 	int			rc = 0;
-	
-	dstring_init(&failed_node_list);
-	for(node_entry=stmt->nodes; node_entry != NULL;
-		node_entry=node_entry->next) 
-	{
-		if ( node_entry==stmt->nodes)
-			slon_appendquery(&failed_node_list,"%d",node_entry->no_id);
-		else
-			slon_appendquery(&failed_node_list,",%d",node_entry->no_id);
-		num_origins++;
-	}
-	
 
-	
-	dstring_init(&query);
-	failnodebuf = (char**) malloc ( sizeof(char*) * num_origins);
-	set_list = (int**) malloc ( sizeof(int*) * num_origins);
-	max_seqno_total = (int64*) malloc ( sizeof(int64) * num_origins);
-	max_node_total = (failnode_node **) malloc ( sizeof(failnode_node*) *
-												 num_origins);
-	fail_node_ids = (int*) malloc(sizeof(int) * num_origins+1);
-	memset(max_node_total,0, sizeof(failnode_node*) * num_origins);
-	memset(max_seqno_total,0, sizeof(int64) * num_origins); 
-	memset(fail_node_ids , -1, sizeof(int) * (num_origins+1) );
-	memset(set_list, 0, sizeof(int*) * num_origins);
 
 	/**
 	 *  The failover procedure (at a high level) is as follows
@@ -2700,8 +2691,39 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 */
 	
 
+	dstring_init(&failed_node_list);
+	for(node_entry=stmt->nodes; node_entry != NULL;
+		node_entry=node_entry->next) 
+	{
+		if ( node_entry==stmt->nodes)
+			slon_appendquery(&failed_node_list,"%d",node_entry->no_id);
+		else
+			slon_appendquery(&failed_node_list,",%d",node_entry->no_id);
+		num_origins++;
+	}
+	
+
+	
 	/**
-	 * for each failed node 
+	 * peform some memory allocations
+	 */
+	dstring_init(&query);
+	failnodebuf = (char**) malloc ( sizeof(char*) * num_origins);
+	set_list = (int**) malloc ( sizeof(int*) * num_origins);
+	max_seqno_total = (int64*) malloc ( sizeof(int64) * num_origins);
+	max_node_total = (failnode_node **) malloc ( sizeof(failnode_node*) *
+												 num_origins);
+	fail_node_ids = (int*) malloc(sizeof(int) * num_origins+1);
+	memset(max_node_total,0, sizeof(failnode_node*) * num_origins);
+	memset(max_seqno_total,0, sizeof(int64) * num_origins); 
+	memset(fail_node_ids , -1, sizeof(int) * (num_origins+1) );
+	memset(set_list, 0, sizeof(int*) * num_origins);
+
+
+   
+	/**
+	 * get the list of failover candidates for each of the
+	 * failed nodes.
 	 */
 	cur_origin_idx=0;
 	for(node_entry=stmt->nodes; node_entry != NULL;
@@ -2710,15 +2732,23 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		failnode_node *nodeinfo;
 		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, node_entry->backup_node);
 		if (adminfo1 == NULL)
-			return -1;
-
+		{
+			printf("%s:%d no admin conninfo for node %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+				   node_entry->backup_node);
+			rc=-1;
+			goto cleanup;
+		}
 		if (db_begin_xact((SlonikStmt *) stmt, adminfo1,false) < 0)
-			return -1;
+		{
+			printf("%s:%d can not connect to node %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+				   node_entry->backup_node);
+			rc=-1;
+			goto cleanup;
+		}
 
 		fail_node_ids[cur_origin_idx]=node_entry->no_id;
-
-
-	
 
 		/*
 		 * On the backup node select a list of all failover candidate
@@ -2734,8 +2764,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res1 == NULL)
 		{
-			dstring_free(&query);
-			return -1;
+			rc=-1;
+			goto cleanup;
 		}
 		node_entry->num_nodes = PQntuples(res1);
 		if (node_entry->num_nodes == 0)
@@ -2744,13 +2774,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
 				   ,node_entry->no_id);
 			PQclear(res1);
-			dstring_free(&query);
-			return -1;
+			rc=-1;
+			goto cleanup;
 		}
+		
 		/*
 		 * Get a list of all sets that are subscribed more than once 
-		 directly from the origin
-		*/
+		 * directly from the origin
+		 */
 		slon_mkquery(&query,
 					 "select S.set_id, count(S.set_id) "
 					 "    from \"_%s\".sl_set S, \"_%s\".sl_subscribe SUB "
@@ -2766,8 +2797,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		if (res2 == NULL)
 		{
 			PQclear(res1);
-			dstring_free(&query);
-			return -1;
+			rc=-1;
+			goto cleanup;
 		}
 		node_entry->num_sets = PQntuples(res2);
 		
@@ -2807,9 +2838,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
 					   ,nodeinfo[i].no_id);
 				PQclear(res1);
-				free(failnodebuf);
-				dstring_free(&query);
-				return -1;
+				rc=-1;
+				goto cleanup;
 			}
 			
 			slon_mkquery(&query,
@@ -2827,9 +2857,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			{
 				PQclear(res1);
 				PQclear(res2);
-				free(failnodebuf);
-				dstring_free(&query);
-				return -1;
+				rc=-1;
+				goto cleanup;
 			}
 			if (PQntuples(res3) == 0)
 			{
@@ -2847,7 +2876,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		PQclear(res2);
 		
 		/*
-		 * Execute the failedNode() procedure on all candidate nodes.
+		 * Execute the failedNode() procedure on all candidate nodes.		 
 		 */
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_config_lock; "
@@ -2862,23 +2891,17 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				   nodeinfo[i].no_id);
 			if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 			{
-				free(failnodebuf);
-				dstring_free(&query);
-				return -1;
+				rc=-1;
+				goto cleanup;
 			}
 			if (db_commit_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
 			{
-				free(failnodebuf);
-				dstring_free(&query);
-				return -1;
+				rc=-1;
+				goto cleanup;
 			}
 		}
 			
 	}
-/**
- * end of loop
- */
-
 
 	/*
 	 * Wait until all slon replication engines that were running have
@@ -2889,189 +2912,29 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		node_entry=node_entry->next,cur_origin_idx++) 
 	{
 		failnode_node *nodeinfo = (failnode_node *) failnodebuf[cur_origin_idx];
-		
-		n = 0;
-		while (n < node_entry->num_nodes)
-		{
-			sleep(1);
-			n = 0;
-			for (i = 0; i < node_entry->num_nodes; i++)
-			{
-				if (!nodeinfo[i].has_slon)
-				{
-					n++;
-					continue;
-				}
-				
-				slon_mkquery(&query,
-							 "select nl_backendpid from \"_%s\".sl_nodelock "
-							 "    where nl_backendpid <> %d "
-							 "    and nl_nodeid = \"_%s\".getLocalNodeId('_%s');",
-							 stmt->hdr.script->clustername,
-							 nodeinfo[i].slon_pid, 
-							 stmt->hdr.script->clustername,
-							 stmt->hdr.script->clustername
-					);
-				res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
-				if (res1 == NULL)
-				{
-					free(failnodebuf);
-					dstring_free(&query);
-					return -1;
-				}
-				if (PQntuples(res1) == 1)
-				{
-					nodeinfo[i].has_slon = false;
-					n++;
-				}
-				
-				PQclear(res1);
-				if (db_rollback_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
-				{
-					free(failnodebuf);
-					dstring_free(&query);
-					return -1;
-				}
-			}
+		rc=fail_node_restart(stmt,node_entry,nodeinfo);
+		if ( rc < 0 ) 
+		{			
+			goto cleanup;
 		}
+	
 	}
 	
+	/**
+	 * promote the most ahead node to be the new (temporary) origin
+	 * for each of the failed nodes.
+	 */
 	cur_origin_idx=0;
 	for(node_entry=stmt->nodes; node_entry != NULL;
 		node_entry=node_entry->next, cur_origin_idx++)
 	{
 		
 		failnode_node * nodeinfo = (failnode_node *) failnodebuf[cur_origin_idx];	   
-		int64 max_seqno=0;
-		int max_node_idx=0;
-		int backup_idx=0;
-		char		ev_seqno_c[64];
-
-		/*
-		 * For every node determine the one with the event
-		 *, preferring the backup node.
-		 */
-		for (i = 0; i < node_entry->num_nodes; i++)
+		rc = fail_node_promote(stmt,node_entry,nodeinfo,
+			fail_node_ids);
+		if ( rc < 0 ) 
 		{
-		 
-			int64		ev_seqno;
-			if (nodeinfo[i].no_id == node_entry->backup_node)
-				backup_idx=i;
-			slon_mkquery(&query,
-						 "select max(ev_seqno) "
-						 "	from \"_%s\".sl_event "
-						 "	where ev_origin = %d; ",
-						 stmt->hdr.script->clustername,
-						 node_entry->no_id);
-			res1 = db_exec_select((SlonikStmt *) stmt,
-								  nodeinfo[i].adminfo, &query);
-			if (res1 == NULL)
-			{
-				free(failnodebuf);
-				dstring_free(&query);
-				return -1;
-			}
-			slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
-			
-			nodeinfo[i].max_seqno = ev_seqno;
-			if (nodeinfo[i].max_seqno > max_seqno)
-			{
-				max_seqno=nodeinfo[i].max_seqno;
-				max_node_idx=i;
-			}
-			PQclear(res1);
-			
-		}			
-		if (nodeinfo[max_node_idx].no_id!=node_entry->backup_node)
-		{
-			if (nodeinfo[max_node_idx].max_seqno == 
-				nodeinfo[backup_idx].max_seqno)
-				max_node_idx=backup_idx;
-		}
-		adminfo1 = nodeinfo[max_node_idx].adminfo;
-		/*
-		 * Now execute all FAILED_NODE events on the most ahead candidate
-		 */
-		sprintf(ev_seqno_c, INT64_FORMAT, max_seqno);
-		slon_mkquery(&query,
-					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-					 "select \"_%s\".failedNode2(%d,%d,'%s'); ",
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 node_entry->no_id,nodeinfo[max_node_idx].no_id
-					 , ev_seqno_c);
-		printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
-			   stmt->hdr.script->clustername,
-			   nodeinfo[max_node_idx].no_id);
-		node_entry->temp_backup_node=nodeinfo[max_node_idx].no_id;
-		
-		if (db_exec_evcommand((SlonikStmt *) stmt,
-							  adminfo1,
-							  &query) < 0)
-			rc = -1;			
-
-		/**
-		 * now wait for the FAILOVER_NODE event to be confirmed
-		 * by all nodes
-		 */
-		/*
-		 * commit all open transactions despite of all possible errors
-		 */
-		for (i = 0; i < node_entry->num_nodes; i++)
-		{
-			if (db_commit_xact((SlonikStmt *) stmt, 
-							   nodeinfo[i].adminfo) < 0)
-				rc = -1;
-		}
-		SlonikStmt_wait_event wait_event; 
-		wait_event.hdr=*(SlonikStmt*)stmt;
-		wait_event.wait_origin=nodeinfo[max_node_idx].no_id;
-		wait_event.wait_on=nodeinfo[max_node_idx].no_id;;
-		wait_event.wait_confirmed=-1;
-		wait_event.wait_timeout=0;
-		wait_event.ignore_nodes=fail_node_ids;
-
-		if (db_commit_xact((SlonikStmt *) stmt, 
-							   adminfo1) < 0)
-			rc = -1;
-		rc = slonik_wait_event(&wait_event);
-		if(rc < 0)  
-		{
-			/**
-			 * pretty serious? how do we recover?
-			 */
-			printf("%s:%d error waiting for event\n",
-				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
-		}
-		
-		/**
-		 * now failedNod3e on the temp backup node.
-		 */
-		slon_mkquery(&query,
-					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-					 "select \"_%s\".failedNode3(%d,%d,'%s'); ",
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 node_entry->no_id,nodeinfo[max_node_idx].no_id
-					 ,ev_seqno_c);
-		printf("NOTICE: executing \"_%s\".failedNode3 on node %d\n",
-			   stmt->hdr.script->clustername,
-			   nodeinfo[max_node_idx].no_id);
-		
-		if (db_exec_evcommand((SlonikStmt *) stmt,
-							  adminfo1,
-							  &query) < 0)
-			rc = -1;			
-		/*
-		 * commit all open transactions despite of all possible errors
-		 */
-		for (i = 0; i < node_entry->num_nodes; i++)
-		{
-			if (db_commit_xact((SlonikStmt *) stmt, 
-							   nodeinfo[i].adminfo) < 0)
-				rc = -1;
+			goto cleanup;
 		}
 	}
 
@@ -3115,7 +2978,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 	
 	
-	
+cleanup:
 	cur_origin_idx=0;
 	for(node_entry=stmt->nodes; node_entry != NULL;
 		node_entry=node_entry->next, cur_origin_idx++)
@@ -3125,8 +2988,214 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	}
 	free(failnodebuf);
 	free(set_list);
+	free(max_seqno_total);
+	free(max_node_total);
+	free(fail_node_ids);	
 	dstring_free(&query);
 	return rc;
+}
+
+static int
+fail_node_restart(SlonikStmt_failed_node * stmt,
+				  failed_node_entry * node_entry,
+				  failnode_node * nodeinfo)
+{
+	int n = 0;
+	int i=0;
+	SlonDString query;
+	PGresult * res1;
+
+	dstring_init(&query);
+
+	while (n < node_entry->num_nodes)
+	{
+		sleep(1);
+		n = 0;
+		for (i = 0; i < node_entry->num_nodes; i++)
+		{
+			if (!nodeinfo[i].has_slon)
+			{
+				n++;
+				continue;
+			}
+			
+			slon_mkquery(&query,
+						 "select nl_backendpid from \"_%s\".sl_nodelock "
+						 "    where nl_backendpid <> %d "
+						 "    and nl_nodeid = \"_%s\".getLocalNodeId('_%s');",
+						 stmt->hdr.script->clustername,
+						 nodeinfo[i].slon_pid, 
+						 stmt->hdr.script->clustername,
+						 stmt->hdr.script->clustername
+				);
+			res1 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
+			if (res1 == NULL)
+			{				
+				dstring_free(&query);
+				return -1;
+			}
+			if (PQntuples(res1) == 1)
+			{
+				nodeinfo[i].has_slon = false;
+				n++;
+			}
+			
+			PQclear(res1);
+			if (db_rollback_xact((SlonikStmt *) stmt, nodeinfo[i].adminfo) < 0)
+			{
+				dstring_free(&query);
+				return -1;
+			}
+		}
+	}
+	dstring_free(&query);
+	return 0;
+}
+
+int fail_node_promote(SlonikStmt_failed_node * stmt,
+					  failed_node_entry * node_entry,
+					  failnode_node * nodeinfo,
+					  int * fail_node_ids)
+{
+	int64 max_seqno=0;
+	int max_node_idx=0;
+	int backup_idx=0;
+	char		ev_seqno_c[64];
+	SlonDString query;
+	int rc=0;
+	int i;
+	PGresult * res1;
+	SlonikAdmInfo *adminfo1;
+
+	dstring_init(&query);
+
+	/*
+	 * For every node determine the one with the event
+	 *, preferring the backup node.
+	 */
+	for (i = 0; i < node_entry->num_nodes; i++)
+	{
+		
+		int64		ev_seqno;
+		if (nodeinfo[i].no_id == node_entry->backup_node)
+			backup_idx=i;
+		slon_mkquery(&query,
+					 "select max(ev_seqno) "
+					 "	from \"_%s\".sl_event "
+					 "	where ev_origin = %d; ",
+					 stmt->hdr.script->clustername,
+					 node_entry->no_id);
+		res1 = db_exec_select((SlonikStmt *) stmt,
+							  nodeinfo[i].adminfo, &query);
+		if (res1 == NULL)
+		{
+			dstring_free(&query);
+			return -1;
+		}
+		slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
+		
+		nodeinfo[i].max_seqno = ev_seqno;
+		if (nodeinfo[i].max_seqno > max_seqno)
+		{
+			max_seqno=nodeinfo[i].max_seqno;
+			max_node_idx=i;
+		}
+		PQclear(res1);
+		
+	}			
+	if (nodeinfo[max_node_idx].no_id!=node_entry->backup_node)
+	{
+		if (nodeinfo[max_node_idx].max_seqno == 
+			nodeinfo[backup_idx].max_seqno)
+			max_node_idx=backup_idx;
+	}
+	adminfo1 = nodeinfo[max_node_idx].adminfo;
+	/*
+	 * Now execute all FAILED_NODE events on the most ahead candidate
+	 */
+	sprintf(ev_seqno_c, INT64_FORMAT, max_seqno);
+		slon_mkquery(&query,
+					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+					 "select \"_%s\".failedNode2(%d,%d,'%s'); ",
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 node_entry->no_id,nodeinfo[max_node_idx].no_id
+					 , ev_seqno_c);
+		printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
+			   stmt->hdr.script->clustername,
+			   nodeinfo[max_node_idx].no_id);
+		node_entry->temp_backup_node=nodeinfo[max_node_idx].no_id;
+		
+		if (db_exec_evcommand((SlonikStmt *) stmt,
+							  adminfo1,
+							  &query) < 0)
+			rc = -1;			
+		
+		/**
+		 * now wait for the FAILOVER_NODE event to be confirmed
+		 * by all nodes
+		 */
+		/*
+		 * commit all open transactions despite of all possible errors
+		 */
+		for (i = 0; i < node_entry->num_nodes; i++)
+		{
+			if (db_commit_xact((SlonikStmt *) stmt, 
+							   nodeinfo[i].adminfo) < 0)
+				rc = -1;
+		}
+		SlonikStmt_wait_event wait_event; 
+		wait_event.hdr=*(SlonikStmt*)stmt;
+		wait_event.wait_origin=nodeinfo[max_node_idx].no_id;
+		wait_event.wait_on=nodeinfo[max_node_idx].no_id;;
+		wait_event.wait_confirmed=-1;
+		wait_event.wait_timeout=0;
+		wait_event.ignore_nodes=fail_node_ids;
+		
+		if (db_commit_xact((SlonikStmt *) stmt, 
+						   adminfo1) < 0)
+			rc = -1;
+		rc = slonik_wait_event(&wait_event);
+		if(rc < 0)  
+		{
+			/**
+			 * pretty serious? how do we recover?
+			 */
+			printf("%s:%d error waiting for event\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+		}
+		
+		/**
+		 * now failedNod3e on the temp backup node.
+		 */
+		slon_mkquery(&query,
+					 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+					 "select \"_%s\".failedNode3(%d,%d,'%s'); ",
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 stmt->hdr.script->clustername,
+					 node_entry->no_id,nodeinfo[max_node_idx].no_id
+					 ,ev_seqno_c);
+		printf("NOTICE: executing \"_%s\".failedNode3 on node %d\n",
+			   stmt->hdr.script->clustername,
+			   nodeinfo[max_node_idx].no_id);
+		
+		if (db_exec_evcommand((SlonikStmt *) stmt,
+							  adminfo1,
+							  &query) < 0)
+			rc = -1;			
+		/*
+		 * commit all open transactions despite of all possible errors
+		 */
+		for (i = 0; i < node_entry->num_nodes; i++)
+		{
+			if (db_commit_xact((SlonikStmt *) stmt, 
+							   nodeinfo[i].adminfo) < 0)
+				rc = -1;
+		}
+		dstring_free(&query);
+		return rc;
 }
 
 
