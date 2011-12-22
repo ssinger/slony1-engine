@@ -1045,7 +1045,7 @@ remoteWorkerThread_main(void *cdata)
 
 				/*
 				 * If we're a remote node, and haven't yet received the
-				 * MOVE/FAILOVER_SET event from the new origin, then we'll
+				 * MOVE_SET event from the new origin, then we'll
 				 * need to sleep a bit...  This avoids a race condition where
 				 * new SYNCs take place on the new origin, and are ignored on
 				 * some subscribers (and their children) because the MOVE_SET
@@ -1064,25 +1064,17 @@ remoteWorkerThread_main(void *cdata)
 										"      ev_type = 'MOVE_SET' and "
 										"      ev_data1 = '%d' and "
 										"      ev_data2 = '%d' and "
-										"      ev_data3 = '%d') "
-										"or "
-										"     (ev_origin = %d and "
-										"      ev_seqno = %s and "
-										"      ev_type = 'FAILOVER_SET' and "
-										"      ev_data1 = '%d' and "
-										"      ev_data2 = '%d' and "
-										"      ev_data3 = '%d'); ",
+										"      ev_data3 = '%d') ",
 
 										rtcfg_namespace,
-					  old_origin, wait_seqno, set_id, old_origin, new_origin,
-					 old_origin, wait_seqno, old_origin, new_origin, set_id);
+					  old_origin, wait_seqno, set_id, old_origin, new_origin);
 
 					res = PQexec(local_dbconn, dstring_data(&query2));
 					while (PQntuples(res) == 0)
 					{
 						PQclear(res);
 
-						slon_log(SLON_INFO, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+						slon_log(SLON_INFO, "ACCEPT_SET - MOVE_SET not received yet - sleep\n");
 
 						/* Rollback the transaction for now */
 						(void) slon_mkquery(&query3, "rollback transaction");
@@ -1108,7 +1100,7 @@ remoteWorkerThread_main(void *cdata)
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
 					PQclear(res);
-					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET exists - adjusting setsync status\n");
 
 					/*
 					 * Finalize the setsync status to mave the ACCEPT_SET's
@@ -1214,6 +1206,9 @@ remoteWorkerThread_main(void *cdata)
 				 * events from the failed node from all other nodes.
 				 * If this node is not a direct subscriber then slonik
 				 * might not have done so.
+				 *
+				 * The most-ahead failover canidate is the node that
+				 * created the FAILOVER_NODE event (node->id)
 				 */
 				slon_mkquery(&query2,"select %s.failedNode(%d,%d);"
 							 ,rtcfg_namespace,							 
