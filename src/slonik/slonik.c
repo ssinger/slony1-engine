@@ -2999,6 +2999,11 @@ cleanup:
 	return rc;
 }
 
+/**
+ * A helper function used during the failover process.
+ * This function will check to see which nodes need to have there
+ * slons restarted.
+ */
 static int
 fail_node_restart(SlonikStmt_failed_node * stmt,
 				  failed_node_entry * node_entry,
@@ -3056,6 +3061,12 @@ fail_node_restart(SlonikStmt_failed_node * stmt,
 	return 0;
 }
 
+
+/**
+ * A helper function used during the failover process.
+ * This function will promote the most-ahead failover candidate
+ * to be the new (at least temporary) set origin.
+ */
 int fail_node_promote(SlonikStmt_failed_node * stmt,
 					  failed_node_entry * node_entry,
 					  failnode_node * nodeinfo,

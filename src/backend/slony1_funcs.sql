@@ -1175,7 +1175,7 @@ begin
 	   --this ensures that *this* node won't be pulling
 	   --data from the failed node (if the failed node can be accessed)
 	   	
-		update @NAMESPACE@.sl_node set no_failed=true, no_fail_time=now() where no_id=p_failed_node
+		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
 		and no_failed=false;
 	   -- Rewrite sl_listen table
 	   perform @NAMESPACE@.RebuildListenEntries();
@@ -1186,10 +1186,7 @@ begin
 	   -- ----
 	   -- Make sure the node daemon will restart
 	   -- ----
-	   raise notice 'calling restart node %',p_failed_node;
 	   notify "_@CLUSTERNAME@_Restart";
-	else
-		raise notice 'node already disabled restart not required node %',p_failed_node;
 	end if;
 
 	-- ----
