@@ -1,0 +1,1254 @@
+
+
+
+
+
+
+            +----------------------------------------------------------+
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |Slon.eps                                                  |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            |                                                          |
+            +----------------------------------------------------------+
+
+
+
+                                      [1mSlony-I[0m
+                        [1mA replication system for PostgreSQL[0m
+
+                                      -[1mC[22m-[1mo[22m-[1mn[22m-[1mc[22m-[1me[22m-[1mp[22m-[1mt[22m-
+
+
+                                     [4mJan[24m [4mWieck[0m
+                                  Afilias USA INC.
+                             Horsham, Pennsylvania, USA
+
+
+                                      [4mABSTRACT[0m
+
+                      This  document describes the design goals and
+                 technical outline of the implementation of  Slony-
+                 I, the first member of a new replication solutions
+                 family for the PostgreSQL ORDBMS.
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Slony-I                      -i-                 Version 1.0
+
+
+
+                                 [1mTable of Contents[0m
+
+
+            1. Design goals  . . . . . . . . . . . . . . . . . . . .   1
+            1.1. Master to multiple cascaded slaves  . . . . . . . .   1
+            1.2. Hot installation and configuration  . . . . . . . .   2
+            1.3. Database schema changes . . . . . . . . . . . . . .   2
+            1.4. Multiple database versions  . . . . . . . . . . . .   3
+            1.5. Backup and point in time recovery . . . . . . . . .   3
+            2. Technical overview  . . . . . . . . . . . . . . . . .   4
+            2.1. Nodes, Sets and forwarding  . . . . . . . . . . . .   4
+            2.2. Logging database activity . . . . . . . . . . . . .   5
+            2.3. Replicating sequences . . . . . . . . . . . . . . .   7
+            2.4. The node daemon . . . . . . . . . . . . . . . . . .   8
+            2.4.1. Splitting the logdata . . . . . . . . . . . . . .   8
+            2.4.2. Exchanging messages . . . . . . . . . . . . . . .   9
+            2.4.3. Confirming events . . . . . . . . . . . . . . . .  11
+            2.4.4. Cleaning up . . . . . . . . . . . . . . . . . . .  11
+            2.4.5. Replicating data  . . . . . . . . . . . . . . . .  12
+            2.4.6. Subscribing a set . . . . . . . . . . . . . . . .  14
+            2.4.7. Store and archive . . . . . . . . . . . . . . . .  15
+            2.4.8. Provider change and failover  . . . . . . . . . .  16
+            3. Acknowledgements  . . . . . . . . . . . . . . . . . .  17
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Slony-I                      -1-                 Version 1.0
+
+
+            [1m1.  Design goals[0m
+
+                 This chapter gives a brief overview about the principle
+            design goals that will be met in final product.
+
+                 The  [4mbig[24m  [4mpicture[24m  for the development of Slony-I is to
+            build a master-slave system that includes all  features  and
+            capabilities  needed  to replicate large databases to a rea-
+            sonably limited number of slave systems.   The  analysis  of
+            existing  replication  systems for PostgreSQL has shown that
+            it is literally impossible to add a fundamental  feature  to
+            an  existing  replication  system  if  that  feature was not
+            planned in the initial design.
+
+                 The core capabilites defined in this chapter might  not
+            all get fully implemented in the first release. They however
+            need to be an integral part of the metadata and  administra-
+            tive structures of the system to be added later with minimal
+            impact to a running system.
+
+                 The number of different replication solutions available
+            supports  the  theory  that  [4m"one[24m [4msize[24m [4mfits[24m [4mall"[24m is not true
+            when it comes to database replication.  Slony-I  is  planned
+            as  a  system  for  data centers and backup sites, where the
+            normal mode of operation is that all  nodes  are  available.
+            Extended periods of downtime will require to remove or deac-
+            tivate the node in question in  the  configuration.  Neither
+            offline  nodes  that only become available sporadic for syn-
+            chronization (the salesman on the road) nor  multimaster  or
+            synchronous replication will be supported and are subject to
+            a future member of the Slony family.
+
+            [1m1.1.  Master to multiple cascaded slaves[0m
+
+                 The basic structure of the systems combined in a Slony-
+            I  installation  is  a master with one or more slaves nodes.
+            Not all  slave  nodes  must  receive  the  replication  data
+            directly  from the master. Every node that receives the data
+            from a valid source can be configured to be able to  forward
+            that data to other nodes.
+
+                 There  are three distinct ideas behind this capability.
+            The first is scalability. One database, especially the  mas-
+            ter  that  receives  all  the  update  transactions from the
+            client applications, has only a limited capability  to  sat-
+            isfy the slave nodes queries during the replication process.
+            In order to satisfy the need for a big number  of  read-only
+            slave systems it must be possible to cascade.
+
+                 The  second idea is to limit the required network band-
+            width for a backup site while keeping the  ability  to  have
+            multiple slaves at the remote location.
+
+
+
+
+
+
+
+
+
+
+
+            Slony-I                      -2-                 Version 1.0
+
+
+                 The third idea is to be able to configure failover sce-
+            narios. In a master to multiple slave configuration,  it  is
+            unlikely  that  all slave nodes are exactly in the same syn-
+            chronization status when the master fails.  To  ensure  that
+            one slave can be promoted to the master it is necessary that
+            all remaining systems can agree on the status of  the  data.
+            Since  a  committed  transaction cannot be rolled back, this
+            status is undoubtly the  most  recent  sync  status  of  all
+            remaining  slave nodes. The delta between this one and every
+            other node must be easily and fast generated and applied  at
+            least  to  the  new  master  (if that's not the same system)
+            before the promotion can occur.
+
+            [1m1.2.  Hot installation and configuration[0m
+
+                 It must be possible to install and uninstall the entire
+            replication  system  on a running production database system
+            without stopping the client application. This includes  cre-
+            ating  the  initial configuration on the master system, con-
+            figuring one or more slaves, copying the data  and  catching
+            up to a full running master-slave status.
+
+                 Changing  the  configuration  also includes that a cas-
+            caded slave node can change its data provider  on  the  fly.
+            Especially for the failover scenario mentioned in the former
+            section it is important to have the ability to  promote  one
+            of  the first level slaves to the master, redirect the other
+            first level slaves to replicate  from  the  new  master  and
+            lower  the workload on the new master by redirecting some or
+            all of its cascaded slaves to replicate from  another  first
+            level slave.
+
+                 Hot  installation  and  configuration change is further
+            the only way to guarantee the ability to upgrade the  repli-
+            cation software itself to a new version that is incompatible
+            with the existing one in its metadata.
+
+                 Even if this is given, upgrading the  slaves  will  not
+            work  without interrupting the slave.  What will be provided
+            at least is the ability to install a new version in parallel
+            to  the  old  one,  so  that  a new slave can be created and
+            started before an existing one gets removed from the system.
+
+            [1m1.3.  Database schema changes[0m
+
+                 Replicating schema changes is an often discussed  prob-
+            lem and only very few database systems provide the necessary
+            hooks to implement it.   PostgreSQL  does  not  provide  the
+            ability  to  define  triggers called on schema changes, so a
+            transparent way to replicate schema changes is not  possible
+            without substantial work in the core PostgreSQL system.
+
+                 Moreover,  very  often  database schema changes are not
+            single, isolated DDL statements that can occur at  any  time
+
+
+
+
+
+
+
+
+
+            Slony-I                      -3-                 Version 1.0
+
+
+            within  a running system.  Instead they tend to be groups of
+            DDL and DML statements that modify multiple database objects
+            and  do mass data manipulation like updating a new column to
+            its initial value.
+
+                 The Slony-I replication system will have a mechanism to
+            execute  SQL  scripts in a controlled fashion as part of the
+            replication process.
+
+            [1m1.4.  Multiple database versions[0m
+
+                 To aid in the process of upgrading  from  one  database
+            version  to  another,  the  system must be able to replicate
+            between different PostgreSQL versions.
+
+                 A database upgrade of the  master  must  be  doable  by
+            failing  over  to  a slave. A pure asynchronous master slave
+            system like Slony-I will never be able to provide the  abil-
+            ity  to  failover  with zero transaction loss. True failover
+            with zero loss of committed transactions  is  only  possible
+            with  synchronous  replication  and will not be supported by
+            Slony-I.  Therefore, this administrative forced failover for
+            the purpose of changing the master will need brief interrup-
+            tion of the client application to let the slave system catch
+            up and become the master before the client resumes work, now
+            against the promoted new master.
+
+            [1m1.5.  Backup and point in time recovery[0m
+
+                 It is not necessarily obvious why backup  and  recovery
+            is  a  topic  for a replication system. The reason why it is
+            subject to the design of  Slony-I  is  that  the  PostgreSQL
+            database  system lacks any point in time recovery and a sys-
+            tem design that covers failover would be incomplete  without
+            covering an application fault corrupting the data.
+
+                 The  technical  design presented later in this document
+            will make it relatively easy to use one or more  slave  sys-
+            tems  for  backup purposes.  In addition it will be possible
+            to configure single slaves with or without  cascaded  slaves
+            to  apply replication data after a delay. In high availabil-
+            ity scenarios there is usually no time to restore  a  backup
+            and do a point in time recovery. The affordable backup media
+            are just not fast enough. A slave that applies the  replica-
+            tion  data with a 1 hour delay can be promoted to the master
+            at logically any point in time within the past  60  minutes.
+            Provided  at  least  one other node (the master or any other
+            node that does not replicate  with  a  delay)  has  the  log
+            information  for  the last hour and is available, the backup
+            node can be instructed to catchup until a specific point  in
+            time  and then be promoted to the master.  Assuming that the
+            node can replicate faster than the master was able  to  work
+            (how  does  it keep up otherwise), this would take less time
+            than the delay it had.
+
+
+
+
+
+
+
+
+
+            Slony-I                      -4-                 Version 1.0
+
+
+            [1m2.  Technical overview[0m
+
+                 This chapter explains the components  and  the  logical
+            operation of Slony-I.
+
+            [1m2.1.  Nodes, Sets and forwarding[0m
+
+                 The Slony-I replication system can replicate tables and
+            sequence  numbers.   Replicating  sequence  numbers  is  not
+            unproblematic  and  is  discussed  in more detail in section
+            2.3.
+
+                 Table and sequence objects are logically  grouped  into
+            sets.  Every  set  should contain a group of objects that is
+            independant from other objects  originating  from  the  same
+            master.   In  short, all tables that have relationships that
+            could be expressed as foreign key constraints  and  all  the
+            sequences  used  to  generate  any  serial  numbers in these
+            tables should be contained in one and the same set.
+
+
+            [47m[40m[47m[40m[0m[47m[40m     [0m+-------------------------------------------------+
+                 |                                                 |
+                 | +[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mA[22m------+                     +[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mB[22m------+ |
+                 | |+--S-e-t--1---+|                     |[47m+--S-e-t--1---+[0m| |
+                 | || Origin  ++[40m---------------------+[47m+Subscribed|[0m| |
+                 | |+---------+|                     |[47m+---------+[0m| |
+                 | |           |                     |+---------+| |
+                 | |           |                     || Set 2   || |
+                 | |           |                     |+--O-r-i-g-i-n--+| |
+                 | |           |    +[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mC[22m------+    |           | |
+                 | +-----------+    |[47m+--S-e-t[40m-+[47m1---+[0m|    +-----------+ |
+                 |                  |[47m|Subscribed|[0m|                  |
+                 |                  |[47m+---------+[0m|                  |
+                 |                  |           |                  |
+                 |                  |[47m+--S-e-t--2---+[40m+                  [0m|
+                 |                  |[47m|Subscribed|[0m|                  |
+                 |                  |[47m+---------+[0m|                  |
+                 |                  +-----------+                  |
+                 +-------------------------------------------------+
+                                      Figure 1
+
+                 [40mFigure 1 illustrates a replication  configuration  that[0m
+            [40mhas  2  data  sets with different origins. To replicate both[0m
+            [40mdata sets to NodeC it is not  required  that  Node C  really[0m
+            [40mcommunicates  with  the  origin  of Set 1. This scenario has[0m
+            [40mfull redundancy for every node.  Obviously if Node C  fails,[0m
+            [40mthe  masters  of Set 1 and Set2 are still alive, no problem.[0m
+            [40mIf Node A fails, Node B can get promoted to  the  master  of[0m
+            [40mboth sets. The tricky situation is if Node B fails.[0m
+
+                 [40mIn  the case Node B fails, Node C needs to get promoted[0m
+            [40mto the master of Set 2  and  it  must  continue  replicating[0m
+            [40mSet 1 from Node A. For that to be possible, Node A must have[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -5-                 Version 1.0
+
+
+            [40mknowledge about Node C and its subscription to Set 1. Gener-[0m
+            [40mally speaking, every node that stores replication log infor-[0m
+            [40mmation must keep it until all subscribers  of  the  affected[0m
+            [40mset are known to have replicated that data.[0m
+
+                 [40mTo  simplify  the logic, the configuration of the whole[0m
+            [40mnetwork with all nodes, sets and subscriptions will be  for-[0m
+            [40mwarded to and stored on all nodes.  Because the sets, a node[0m
+            [40mis not subscribed to must not even exist  in  its  database,[0m
+            [40mthis  does not include the information about what tables and[0m
+            [40msequences are included in any specific set.[0m
+
+            [1m[40m2.2.  Logging database activity[0m
+
+                 [40mSlony-I will be an AFTER ROW trigger based  replication[0m
+            [40msystem that analyses the NEW and OLD rows to reconstruct the[0m
+            [40mmeaningful pieces  of  an  SQL  statement  representing  the[0m
+            [40mchange to the actual data row. To identify a row in the log,[0m
+            [40mthe table must have some UNIQUE constraint. This  can  be  a[0m
+            [40mcompound  key  of  any data types.  If there is none at all,[0m
+            [40mthe Slony-I installation process needs to add an int8 column[0m
+            [40mto the table.  Unmodified fields in an UPDATE event will not[0m
+            [40mbe included in the  statement.  Some  analysis  of  existing[0m
+            [40mreplication  methods  has shown that despite the increase of[0m
+            [40mlog information  that  must  be  stored  during  replication[0m
+            [40mcycles, this technology has several advantages over a system[0m
+            [40mthat holds information about which application  tables  need[0m
+            [40mto  be  replicated,  but  will fetch the latest value at the[0m
+            [40mtime of replication from the current row.[0m
+
+
+            Stability:[40m[0m
+                   [40mThere are possible duplicate key conflicts  that  are[0m
+                   [40mnot  easy  solvable  when losing history information.[0m
+                   [40mThe simplest case to demonstrate is  a  unique  field[0m
+                   [40mwhere two rows swap their value like[0m
+
+                        [40mUPDATE table SET col = 'temp' WHERE col = 'A';[0m
+                        [40mUPDATE table SET col = 'A' WHERE col = 'B';[0m
+                        [40mUPDATE table SET col = 'B' WHERE col = 'temp';[0m
+
+                   [40mWithout  doing  the extra step over the 'temp' value,[0m
+                   [40mthere is no order in which the replication engine can[0m
+                   [40mreplicate these updates.[0m
+
+            Splitting:[40m[0m
+                   [40mSlony-I  will  split the entire amount of replication[0m
+                   [40mactivity into smaller units covering a few seconds of[0m
+                   [40mworkload as described in section 2.4.1.  This will be[0m
+                   [40mdone on the visibility boundaries of two serializable[0m
+                   [40mtransactions. So the slave systems will leap from one[0m
+                   [40mconsistent state to another  as  if  multiple  master[0m
+                   [40mtransactions  would  have  been done at once. Without[0m
+                   [40mhistory information this  is  not  possible  and  the[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -6-                 Version 1.0
+
+
+            [40m       slave  only has the chance to jump from its last sync[0m
+                   [40mpoint to now. If it was stopped for a while for what-[0m
+                   [40mever  reason, it must catch up in one big transaction[0m
+                   [40mcovering the whole work done on  the  master  in  the[0m
+                   [40mmeantime, increasing the duplicate key risk mentioned[0m
+                   [40mabove.[0m
+
+                   [40mThe point in  time  standby  capability  via  delayed[0m
+                   [40mapplication  of  replication data, described in 1.5.,[0m
+                   [40mneeds this splitting as well.[0m
+
+            Failover:[40m[0m
+                   [40mWhile it is relatively easy to tell in  a  master  to[0m
+                   [40mmultiple  slave  scenario which of the slaves is most[0m
+                   [40mrecent at the time the master  fails,  it  is  nearly[0m
+                   [40mimpossible  to  tell the actual row delta between two[0m
+                   [40mslaves. So in the case of a failing master, one slave[0m
+                   [40mcan  be  promoted to the master, but all other slaves[0m
+                   [40mneed to be re-synchronized with the new master.[0m
+
+            Performance:[40m[0m
+                   [40mStoring the logging information in one  or  very  few[0m
+                   [40mrotating log tables means that the replication engine[0m
+                   [40mcan retrieve the actual data for one replication step[0m
+                   [40mwith  very  few  queries  that  select from one table[0m
+                   [40monly.  In contrast to that a system that fetches  the[0m
+                   [40mcurrent  values from the application tables at repli-[0m
+                   [40mcation time needs to issue the same number of queries[0m
+                   [1m[40mper  replicated table [22mand these queries will be join-[0m
+                   [40ming the log table(s) with the application data table.[0m
+                   [40mIt  is  obvious that this systems performance will be[0m
+                   [40mreverse proportional  to  the  number  of  replicated[0m
+                   [40mtables.  At  some  time  the  complete  delta  to  be[0m
+                   [40mapplied, which  can  not  be  split  as  pointed  out[0m
+                   [40malready, will cause the PostgreSQL database system to[0m
+                   [40mrequire less optimal than in memory hash  join  query[0m
+                   [40mplans  to  deal  with  the number of rows returned by[0m
+                   [40mthese queries and  the  replication  system  will  be[0m
+                   [40munable  to  ever  catch up unless the workload on the[0m
+                   [40mmaster drops significantly.[0m
+
+                 [40mThe log will under normal circumstances be collected in[0m
+            [40mone log table, deleted from there periodically and the table[0m
+            [40mvacuumed (see section 2.4.4.).   A  reasonably  large  table[0m
+            [40mwith sufficient freespace has a better performance on INSERT[0m
+            [40moperations than an empty table that gets  only  extended  at[0m
+            [40mthe  end.  This  is because the free space handling in Post-[0m
+            [40mgreSQL allows multiple backends to  simultaneously  add  new[0m
+            [40mtuples  to  different  blocks. Also extending a table at the[0m
+            [40mend is more expensive than reusing existing blocks as  those[0m
+            [40mblocks  can  never be found in the cache and need filesystem[0m
+            [40mmetadata changes in the OS due to increasing the file  size.[0m
+            [40mA  log switching mechanism to another table will be provided[0m
+            [40mfor the case  that  a  log  table  had  once  grown  out  of[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -7-                 Version 1.0
+
+
+            [40mreasonable size, so that it is possible to shrink it without[0m
+            [40mdoing a VACUUM FULL which would cause an exclusive  lock  on[0m
+            [40mthe table, effectively stopping the client application.[0m
+
+                 [40mEach  log  row will contain the current transaction ID,[0m
+            [40mthe local node ID, the  affected  table  ID,  a  log  action[0m
+            [40msequence  number and the information required to reconstruct[0m
+            [40mthe SQL statement that can cause the same modification on  a[0m
+            [40mslave  system.  Since the action sequence is allocated in an[0m
+            [40mAFTER ROW trigger, its ascending order is  automatically  an[0m
+            [40morder  that  is not in conflict with the order in which con-[0m
+            [40mcurrent updates happened to the base tables. It is not  nec-[0m
+            [40messarily  the  exact  same order in which the updates really[0m
+            [40moccured, and it is for sure not the  order  in  which  those[0m
+            [40mupdates  became visible or in other words their transactions[0m
+            [40mcommitted. But statements executed in this order within log-[0m
+            [40mically  ascending  groups  of  transactions,  grouped by the[0m
+            [40morder in which they became visible, will lead to  the  exact[0m
+            [40msame result. This order is called agreeable order.[0m
+
+            [1m[40m2.3.  Replicating sequences[0m
+
+                 [40mSequence  number  generators  in  PostgreSQL are highly[0m
+            [40moptimized for concurrency. Because of that they only guaran-[0m
+            [40mtee  not  to  generate duplicate ID's. They do not roll back[0m
+            [40mand can therefore generate gaps.  Another  problem  is  that[0m
+            [40mtriggers cannot be defined on sequence numbers.[0m
+
+                 [40mSince  sequences  in PostgreSQL are 64 bit integers, it[0m
+            [40mwould be quite possible to split the entire available number[0m
+            [40mrange  into multiple segments and assign each node that will[0m
+            [40meventually be promoted to the master its own  unique  range.[0m
+            [40mThis  way, sequences can be simply ignored during the repli-[0m
+            [40mcation process. The drawback is that they cannot be  ignored[0m
+            [40min  the backup/restore process and the risk of restoring the[0m
+            [40mwrong backup without re- adjusting the sequences is high.[0m
+
+                 [40mAnother possibility is to use a user  defined  function[0m
+            [40mand  effectively replace sequences by a row held in a repli-[0m
+            [40mcated table, destroying  thus  the  concurrency  and  making[0m
+            [40msequences  a  major bottleneck in the entire client applica-[0m
+            [40mtion.[0m
+
+                 [40mYet  another  approach  seen  is   not   to   replicate[0m
+            [40msequences,  but  to adjust them at the time a slave would be[0m
+            [40mpromoted to master. This requires at least  one  full  table[0m
+            [40mscan  on every table that contains sequence generated values[0m
+            [40mand can mean a significant delay in the failover process.[0m
+
+                 [40mThe approach Slony-I will take is a different one.  The[0m
+            [40mstandard   function   that   generates   sequence   numbers,[0m
+            [4m[40mnextval()[24m, as well as [4msetval()[24m, will be moved out of the way[0m
+            [40mby  creating  a  new pg_proc catalog entry with another name[0m
+            [40mand Oid for it. Their places will be  taken  by  new  custom[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -8-                 Version 1.0
+
+
+            [40mfunctions  that will call the original nextval() or setval()[0m
+            [40mfunction and then  check  the  configuration  table  if  the[0m
+            [40msequence is replicated. In the case of sequence replication,[0m
+            [40mthe function will insert a replication action row  into  the[0m
+            [40mlog  table.  Since no updates are ever done to the log table[0m
+            [40mand the cleanup process only removes log entries that are in[0m
+            [40mthe  past,  this will not block concurrent transactions from[0m
+            [40mallocating sequences. The fact that an  aborted  transaction[0m
+            [40mwill  loose the allocated sequence can be ignored because it[0m
+            [40mwill be skipped on the next allocation anyway.[0m
+
+                 [40mThe slave must be carefull during the  replication  not[0m
+            [40mto  adjust  the  sequence number backwards, because the side[0m
+            [40meffect that guarantees the agreeable order of action  record[0m
+            [40msequences,  the row lock on the applications table, does not[0m
+            [40mexist for sequences.  The  allocation  of  sequence  numbers[0m
+            [40mhappens logically at a time even before a BEFORE ROW trigger[0m
+            [40mwould fire and inside of our replacement nextval()  function[0m
+            [40mthere is a race condition (the gap between calling the orig-[0m
+            [40minal nextval() and inserting the log record) that we do  not[0m
+            [40mwant to serialize for concurrency reasons.[0m
+
+            [1m[40m2.4.  The node daemon[0m
+
+                 [40mIn Slony-I every database that participates in a repli-[0m
+            [40mcation system is a  node.  Databases  need  not  necessarily[0m
+            [40mreside  on  different servers or even be served by different[0m
+            [40mpostmasters.  Two  different  databases  are  two  different[0m
+            [40mnodes.[0m
+
+                 [40mFor  each  database  in  the replication system, a node[0m
+            [40mdaemon called [1mSlon [22mis started. This daemon is  the  replica-[0m
+            [40mtion  engine  itself and consists of one hybrid program with[0m
+            [40mmaster and slave functionality. The differentiation  between[0m
+            [40mmaster and slave is not really appropriate in Slony-I anyway[0m
+            [40msince the role of a node is only defined on the  set  level,[0m
+            [40mnot on the database level.  Slon has the following duties.[0m
+
+            [1m[40m2.4.1.  Splitting the logdata[0m
+
+                 [40mSplitting  the logdata into groups of logically ascend-[0m
+            [40ming transactions is much easier than someone might  imagine.[0m
+            [40mThe  Slony-I  daemon will check in a configurable timeout if[0m
+            [40mthe log action sequence number of the local node has changed[0m
+            [40mand  if so, it will generate a SYNC event. All events gener-[0m
+            [40mated by a system are generated in a serializable transaction[0m
+            [40mand lock one object.  It is thus guaranteed that their event[0m
+            [40msequence is the exact order in which they are generated  and[0m
+            [40mcommitted.[0m
+
+                 [40mAn  event  contains among the message code and its pay-[0m
+            [40mload information the entire serializable  snapshot  informa-[0m
+            [40mtion of the transaction, that created this event. All trans-[0m
+            [40mactions that committed between any two ascending SYNC events[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                      -9-                 Version 1.0
+
+
+            [40mcan thus be defined as[0m
+
+                 [40mSELECT xid FROM logtable[0m
+                     [40mWHERE (xid > sync1_maxxid OR[0m
+                           [40m(xid >= sync1_minxid AND xid IN (sync1_xip)))[0m
+                     [40mAND   (xid < sync2_minxid OR[0m
+                           [40m(xid <= sync2_maxxid AND xid NOT IN (sync2_xip)));[0m
+
+            [40mThe  real  query  used  in the activity described in section[0m
+            [40m2.4.5.  is far more complicated. Yet the  general  principle[0m
+            [40mis  this  simple and after all, the daemon on the local node[0m
+            [40monly checks the local log action sequence, inserts a row and[0m
+            [40mgenerates a notification if the sequence has changed.[0m
+
+            [1m[40m2.4.2.  Exchanging messages[0m
+
+                 [40mAll  configuration changes like adding nodes, subscrib-[0m
+            [40ming or unsubscribing sets, adding a table to a  set  and  so[0m
+            [40mforth  are  communicated  through  the  system as events. An[0m
+            [40mevent is generated by inserting the event information into a[0m
+            [40mtable and notifying all listeners on the same. SYNC messages[0m
+            [40mare communicated with the same mechanism.[0m
+
+                 [40mThe Slony-I system configuration  contains  information[0m
+            [40mfor every node which other it will query for which events.[0m
+
+
+            [40m          +---------------------------------------+[0m
+                      [40m| [0m+-----------+           +-----------+ [40m|[0m
+                      [40m| [0m|[1mNode A      [22m+[40m--A--C--D--E--+[0m+[1mNode B      [22m| [40m|[0m
+                      [40m| [0m|           +[40m+----------[0m+           | [40m|[0m
+                      [40m| [0m+----[40m+[0m-[40m+[0m----+    [40mB      [0m+-----------+ [40m|[0m
+                      [40m|      + |                              |[0m
+                      [40m|C D E | +A B                           |[0m
+                      [40m| [0m+----[40m+[0m-[40m+[0m----+           +-----------+ [40m|[0m
+                      [40m| [0m|[1mNode [22m[40m|[1m[0m[1mC      [22m+[40m--A--B--C--D--+[0m+[1mNode E      [22m| [40m|[0m
+                      [40m| [0m|           |           |           | [40m|[0m
+                      [40m| [0m+----[40m+[0m-[40m+[0m----+[40m+----E------[0m+-----------+ [40m|[0m
+                      [40m|      + |                              |[0m
+                      [40m|    D | |A B C E                       |[0m
+                      [40m|      | +                              |[0m
+                      [40m| [0m+[1mN[22m-[1mo[22m-[1md[22m-[1me[22m-[40m+[1m[0m[1mD[22m-[40m+[0m----+                         [40m|[0m
+                      [40m| [0m|           |                         [40m|[0m
+                      [40m| [0m|           |                         [40m|[0m
+                      [40m| [0m+-----------+                         [40m|[0m
+                      [40m+---------------------------------------+[0m
+                                      [40mFigure 2[0m
+
+                 [40mFigure  2 illustrates the event flow in a configuration[0m
+            [40mwith 5 nodes, where direct connections  only  exist  between[0m
+            [40mthe following combinations of nodes.[0m
+
+
+
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -10-                 Version 1.0
+
+
+            [40m     NodeA <-> NodeB[0m
+                 [40mNodeA <-> NodeC[0m
+                 [40mNodeC <-> NodeD[0m
+                 [40mNodeC <-> NodeE[0m
+
+
+                 [40mEvery daemon establishes remote database connections to[0m
+            [40mthe nodes, from where it receives events (which as shown  in[0m
+            [40mfigure  2  is not necessarily the event origin). The daemons[0m
+            [40muse the PostgreSQL LISTEN/NOTIFY mechanism  to  inform  each[0m
+            [40mother about event generation.[0m
+
+                 [40mWhen receiving a new event, the daemon processes it and[0m
+            [40min the same transaction, inserts it into its own  event  ta-[0m
+            [40mble. This way the event gets forwarded and it is guaranteed,[0m
+            [40mthat all required data is stored and available on  the  for-[0m
+            [40mwarding  node when the event arrives on the next receiver in[0m
+            [40mthe chain.[0m
+
+                 [40mThe fact that an event generated on node D  or  E  will[0m
+            [40mtravel  a  while before it is seen by node B is good. Events[0m
+            [40mincluding SYNC messages are only important for any  node  if[0m
+            [40mit  is  subscribed  to  any  set that originates on the same[0m
+            [40mnode, the event originates from.[0m
+
+                 [40mWe assume a data set originating on node A that is cur-[0m
+            [40mrently  subscribed  on  nodes  B and C, both with forwarding[0m
+            [40menabled. This data set now should be subscribed by  node  D.[0m
+            [40mThe  actual subscribe event must be generated on node A, the[0m
+            [40morigin of the data set, and travel within the flow  of  SYNC[0m
+            [40mevents  to all subscribers of the set. Otherwise, node B and[0m
+            [40mC would not know at which logical point in time node D  sub-[0m
+            [40mscribed  the  set  and would not know that they need to keep[0m
+            [40mreplication data for possible forwarding to D.  When node  D[0m
+            [40mreceives the event by looking at node C's event queue, it is[0m
+            [40mguaranteed that C has processed all replication deltas until[0m
+            [40mthe SYNC event prior to this subscribe event and that C cur-[0m
+            [40mrently knows that D possibly  needs  all  following  delta's[0m
+            [40mresulting from future SYNC events.[0m
+
+                 [40mLikewise  will  node B receive the subscribe message at[0m
+            [40mthe same logical point in time within  the  event  flow  and[0m
+            [40mknow, that it from this moment on has to keep delta informa-[0m
+            [40mtion for the case that node C might fail at any  time,  even[0m
+            [40mbefore it would be able to provide the current data snapshot[0m
+            [40mor even the subscribe message itself to D  and  D  would  be[0m
+            [40mreconfigured to talk to B as a substitute provider.[0m
+
+                 [40mAs  a  side  note, the configuration in figure 2 with a[0m
+            [40mset originating on node A is the very setup the author  used[0m
+            [40mduring the development of the prototype. The entire configu-[0m
+            [40mration can be installed and started while  node  A  is  con-[0m
+            [40mstantly online and write accessed by an application.[0m
+
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -11-                 Version 1.0
+
+
+            [40m[1m2.4.3.  Confirming events[0m
+
+                 [40mThe  majority of event types are configuration changes.[0m
+            [40mThe only exceptions are SYNC and  SUBSCRIBE  events  covered[0m
+            [40mmore detailed in sections 2.4.5.  and 2.4.6.[0m
+
+                 [40mConfiguration  change events carry all necessary infor-[0m
+            [40mmation to modify the local configuration information in  the[0m
+            [40mevent data row.  Processing consists more or less of storing[0m
+            [40mor deleting a row in one of the Slony-I control tables.[0m
+
+                 [40mIn the same transaction the local node daemon processes[0m
+            [40mthe  event,  he  will insert a confirmation row into a local[0m
+            [40mtable that matches the events  origin,  the  event  sequence[0m
+            [40mnumber and the local node ID.[0m
+
+                 [40mReverse  to  the  event  delivery mechanism, the daemon[0m
+            [40mwill now insert the same confirmation row into the confirma-[0m
+            [40mtion  table  of  every  remote  node it is connected to, and[0m
+            [40mNOTIFY on that table.  The remote node daemon will LISTEN on[0m
+            [40mthat  table, pick up any new confirmation rows and propagate[0m
+            [40mthem through the network. This way, all nodes in the cluster[0m
+            [40mwill  get  to know that the local node has successfully pro-[0m
+            [40mcessed the event.[0m
+
+            [1m[40m2.4.4.  Cleaning up[0m
+
+                 [40mSo far we have generated may events, confirmations  and[0m
+            [40m(hopefully)  even more transaction log data. Needless to say[0m
+            [40mthat we need to get rid of all that after a while.  Periodi-[0m
+            [40mcally  the  node daemon will clean up the event, confirm and[0m
+            [40mlog tables. This is done in two steps.[0m
+
+            1.[40m   The confirmation data is  condensed.  Since  all  nodes[0m
+                 [40mprocess  all  events  per origin in ascending order, we[0m
+                 [40monly need the row with the highest event sequence  num-[0m
+                 [40mber per <origin,receiver>.[0m
+
+            2.[40m   Old  event  and  log data is removed. As we will see in[0m
+                 [40msection 2.4.5.  we need to keep the last SYNC event per[0m
+                 [40morigin. Thus we select the SYNC event with the smallest[0m
+                 [40mevent sequence per origin, that is not yet confirmed by[0m
+                 [40mall  other  nodes  in  the  cluster  and loop over that[0m
+                 [40mresult set. Per SYNC found we remove all  older  events[0m
+                 [40mfrom that origin and all log data from that origin that[0m
+                 [40mwould be visible according to the snapshot  information[0m
+                 [40min the SYNC.[0m
+
+                 [40mFor  the case that large volumes of log data once accu-[0m
+            [40mmulated a log switching mechanism will be provided on a  per[0m
+            [40mnode  base.   This  is  required since the only other way to[0m
+            [40mreclaim the disk space would be a full vacuum,  which  grabs[0m
+            [40man  exclusive  lock  on the table, thus effectively stopping[0m
+            [40mthe client application.  After entering the switching  mode,[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -12-                 Version 1.0
+
+
+            [40mthe triggers and functions inserting into the log table will[0m
+            [40mstart using an alterate table. While  the  node  is  in  the[0m
+            [40mswitching  mode, the log data is logically the union between[0m
+            [40mthe two log tables. When the cleanup  process  detects  that[0m
+            [40mthe  old log table is empty, it ends the log switching mode,[0m
+            [40mwaits until all transactions that could possibly  have  seen[0m
+            [40mthe  system  in  switching mode have ended and truncates the[0m
+            [40mold log table.[0m
+
+            [1m[40m2.4.5.  Replicating data[0m
+
+                 [40mUpon receiving a remote SYNC the node checks if  it  is[0m
+            [40mactually  subscribed to any set originating on the node that[0m
+            [40mgenerated the event. If it is not, it  simply  confirms  the[0m
+            [40mevent like any other and is done with it. All other nodes do[0m
+            [40mnot need to keep the log data (at least not for  this  node)[0m
+            [40mbecause  it will never ask for log information prior to this[0m
+            [40mSYNC event.[0m
+
+                 [40mIf it is subscribed to one or more sets from that  ori-[0m
+            [40mgin, the actual replication works in the following steps.[0m
+
+            1.[40m   The  node  checks that it has connections to all remote[0m
+                 [40mnodes that provide forward information for any set that[0m
+                 [40mis subscribed from the SYNC events origin.[0m
+
+
+            [47m[40m[47m[40m[0m[47m[40m[47m[40m            +---------------------------------------+[0m
+                        [40m|                                       |[0m
+                        [40m| [0m+[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mA[22m------+           +[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mB[22m------+ [40m|[0m
+                        [40m| [0m|+--S-e-t--1---+|           |[47m+--S-e-t--1---+[0m| [40m|[0m
+                        [40m| [0m|| Origin  ++[40m-----------+[47m+Subscribed|[0m| [40m|[0m
+                        [40m| [0m|+---------+|           |[47m+----[40m+[47m----+[0m| [40m|[0m
+                        [40m| [0m|+---------+|           |     [40m|     [0m| [40m|[0m
+                        [40m| [0m|| Set 2   ||           |     [40m|     [0m| [40m|[0m
+                        [40m| [0m|+--O-r-i[40m+[0mg-i-n--+|           |     [40m|     [0m| [40m|[0m
+                        [40m| [0m|     [40m|     [0m|           |     [40m|     [0m| [40m|[0m
+                        [40m| [0m+-----[40m+[0m-----+           +-----[40m+[0m-----+ [40m|[0m
+                        [40m|       |                       |       |[0m
+                        [40m| [0m+[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mC[22m[40m+[0m-----+           +[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mD[22m[40m+[0m-----+ [40m|[0m
+                        [40m| [0m|     [40m|     [0m|           |[47m+--S-e-t[40m+[47m-1---+[0m| [40m|[0m
+                        [40m| [0m|     [40m|     [0m|           |[47m|Subscribed|[0m| [40m|[0m
+                        [40m| [0m|     [40m+     [0m|           |[47m+---------+[0m| [40m|[0m
+                        [40m| [0m|     [40m|     [0m|           |           | [40m|[0m
+                        [40m| [0m|[47m+--S-e-t--2---+[0m+[40m-----------+[47m+--S-e-t--2---+[0m| [40m|[0m
+                        [40m| [0m|[47m|Subscribed|[0m|           |[47m|Subscribed|[0m| [40m|[0m
+                        [40m| [0m|[47m+---------+[0m|           |[47m+---------+[0m| [40m|[0m
+                        [40m| [0m+-----------+           +-----------+ [40m|[0m
+                        [40m+---------------------------------------+[0m
+                                        [40mFigure 3[0m
+
+                 [40mFigure 3 illustrates a scenario where node B is config-[0m
+                 [40mured to replicate only set 1. Likewise is node  C  con-[0m
+                 [40mfigured to replicate only set 2. For reporting purposes[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -13-                 Version 1.0
+
+
+            [40m     node D is subscribed to both  sets,  but  to  keep  the[0m
+                 [40mworkload  on  the primary node A as low as possible, it[0m
+                 [40mreplicates set 1 from node B and set 2 from node C.[0m
+
+                 [40mDespite of this distributed data path, the  SYNC  event[0m
+                 [40mgenerated  on node A is meant for both sets and all the[0m
+                 [40mlog data for both sets that has accumulated  since  the[0m
+                 [40mlast SYNC event must be applied to node D in one trans-[0m
+                 [40maction. Thus, node D can only proceed and start  repli-[0m
+                 [40mcating if both nodes have already finished applying the[0m
+                 [40mSYNC event.[0m
+
+            2.[40m   What the node daemon does  now  consists  logically  of[0m
+                 [40mselecting  a  union  of  the  active log table of every[0m
+                 [40mremote node providing any set from the SYNC events ori-[0m
+                 [40mgin in log action sequence order.  The data selected is[0m
+                 [40mrestricted to the tables contained in all the sets pro-[0m
+                 [40mvided  by  the  specific  node  and  constrained to lay[0m
+                 [40mbetween the last and the  actual  SYNC  event.  In  the[0m
+                 [40mexample of figure 3, node D would query node B like[0m
+
+                      [40mSELECT * FROM log[0m
+                          [40mWHERE log_origin = [4mid_of_node[24m [4mA[0m
+                          [40mAND   log_tableid IN ([4mlist_of_tables_in_set_1[24m)[0m
+                          [40mAND   (log_xid > [4mlast_maxxid[24m OR[0m
+                                [40m(log_xid >= [4mlast_minxid[0m
+                                [4m[40mAND[24m [4mlog_xid[24m [4mIN[24m [4m(last_xip[24m)))[0m
+                          [40mAND   (log_xid < [4msync_minxid[24m OR[0m
+                                [40m(log_xid <= [4msync_maxxid[0m
+                                [40mAND log_xid NOT IN ([4msync_xip[24m)))[0m
+                          [40mORDER BY log_origin, log_actionseq;[0m
+
+
+                 [40mWell, at least for theory starters. In practice because[0m
+                 [40mof the subscribe process it will be  an  OR'd  list  of[0m
+                 [40mthose  qualifications  per  set,  and  during  the  log[0m
+                 [40mswitching of the queried node it  will  do  this  whole[0m
+                 [40mthing  on a union between both log tables.  Fortunately[0m
+                 [40mPostgreSQL has a sufficiently mature query optimizer to[0m
+                 [40mrecognize  that  this  is still an index scan along the[0m
+                 [40morigin and actionseq of the log  table  that  does  not[0m
+                 [40mneed sorting.[0m
+
+            3.[40m   All  these  remote  result  sets  are now merged on the[0m
+                 [40mreplicating node and applied  to  the  local  database.[0m
+                 [40mSince  they  are coming in correct sorted, the node can[0m
+                 [40mmerge them on the fly with a one row  lookahead.  Trig-[0m
+                 [40mgers  defined  on any replicated table will be disabled[0m
+                 [40mduring the entire SYNC processing. If there is a  trig-[0m
+                 [40mger defined on a table, it would be defined on the same[0m
+                 [40mtable on the set origin as well. All the  actions  per-[0m
+                 [40mformed  by  that  trigger,  as long as they are actions[0m
+                 [40mthat affect replicated tables, will get  replicated  as[0m
+                 [40mwell.   So  there  is no need to execute the trigger on[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -14-                 Version 1.0
+
+
+            [40m     the slave again and depending on the trigger  code,  it[0m
+                 [40mcould  even  lead to inconsistencies between the master[0m
+                 [40mand the slave.[0m
+
+            4.[40m   The SYNC event that caused all this trouble  is  stored[0m
+                 [40mas  usual, the local transaction committed and the con-[0m
+                 [40mfirmation sent out as for all other events.[0m
+
+            [1m[40m2.4.6.  Subscribing a set[0m
+
+                 [40mSubscribing to a set is an operation that must be  ini-[0m
+            [40mtiated  at  the  origin  of the set. This is because Slony-I[0m
+            [40mallows subscribing to sets that are actually in use on their[0m
+            [40morigin,  the  application is concurrently modifying the sets[0m
+            [40mdata. For larger data sets it will take a while to create  a[0m
+            [40msnapshot  copy  of  the data, and during that time all nodes[0m
+            [40mthat are possible replication providers  for  the  set  must[0m
+            [40mknow  that  there  will be a new subscriber maybe asking for[0m
+            [40mlog data in the future.  Generating the SUBSCRIBE  event  on[0m
+            [40mthe sets origin guarantees that every node will receive this[0m
+            [40mevent between the same two SYNC events coming from the  ori-[0m
+            [40mgin  of  the  set. So they will all start preserving the log[0m
+            [40mdata at the same point.[0m
+
+                 [40mSUBSCRIBE events are a little special in that they must[0m
+            [40mbe  received  directly  from  the  node that is the log data[0m
+            [40mprovider for the set. This is because the log data  provider[0m
+            [40mis the node from which the new subscriber will copy the ini-[0m
+            [40mtial snapshot as well.[0m
+
+                 [40mWhen the SUBSCRIBE event is received from  the  correct[0m
+            [40mnode,  the  exact  procedure  how  to  subscribe  depends on[0m
+            [40mwhether the log data provider is the sets origin so the  new[0m
+            [40msubscriber  is a first level slave, or if is with respect to[0m
+            [40mthe set a forwarding slave and the new  node  cascades  from[0m
+            [40mthat.[0m
+
+            1.[40m   For  all  tables  that  are  in the set, the slave will[0m
+                 [40mquery the table configuration and store it locally.  It[0m
+                 [40mwill  also  create the replication trigger on all these[0m
+                 [40mtables.[0m
+
+            2.[40m   All triggers on the tables in the set get  disabled  to[0m
+                 [40mspeed  up  the  data copy process and to avoid possible[0m
+                 [40mforeign key conflicts resulting from copying  the  data[0m
+                 [40min the wrong order or because of circular dependencies.[0m
+
+            3.[40m   For  each table it will use the PostgreSQL command COPY[0m
+                 [40mon both sides and forward the data stream.[0m
+
+            4.[40m   The triggers get restored.[0m
+
+            5a.[40m  If the node we copied the data from  is  another  slave[0m
+                 [40m(cascading),  we  have  just  copied  the entire set in[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -15-                 Version 1.0
+
+
+            [40m     exactly the state at the last visible SYNC  event  from[0m
+                 [40mthe  sets  origin  inside  of  our current transaction.[0m
+                 [40mWhatever happened after we started copying the  set  is[0m
+                 [40minvisible  to  this  transaction yet. So the local sets[0m
+                 [40mSYNC status is remembered as that and we are done.[0m
+
+            5b.[40m  If the node we received the initial copy  from  is  the[0m
+                 [40msets  origin, the problem is that the set data does not[0m
+                 [40m"leap" from one SYNC point to another. In this case  we[0m
+                 [40mneed  to  use  the last SYNC event before the SUBSCRIBE[0m
+                 [40mevent we  are  currently  processing  plus  all  action[0m
+                 [40msequences  that we already see after that last SYNC. We[0m
+                 [40mhave copied the data rows with  those  actions  applied[0m
+                 [40malready,  so  when  later  on  processing the next SYNC[0m
+                 [40mevent, we have to explicitly  filter  them  out.   This[0m
+                 [40monly  applies to the first SYNC event that gets created[0m
+                 [40mafter subscribing to a new set directly from  its  ori-[0m
+                 [40mgin.[0m
+
+            6.[40m   As  usual,  the  SUBSCRIBE  event  is stored local, the[0m
+                 [40mtransaction committed and  the  event  processing  con-[0m
+                 [40mfirmed.[0m
+
+
+            [1m[40m2.4.7.  Store and archive[0m
+
+                 [40mIn order to be able to cascade, the log data merged and[0m
+            [40mapplied in 2.4.5.  must also be stored in the local log data[0m
+            [40mtable. Since this happens in the same transaction as insert-[0m
+            [40ming the SYNC event the log data was  resulting  from,  every[0m
+            [40mcascading  slave that receives this data will be able to see[0m
+            [40mit exactly when he receives the SYNC  event,  provided  that[0m
+            [40mthe  SYNC event was delivered by the provider.  The log data[0m
+            [40mwill get cleaned up together with eventually local generated[0m
+            [40mlog  data  for  sets  originating  on this node. The process[0m
+            [40mdescribed in 2.4.4.  covers this already.[0m
+
+                 [40mIn addition to the cascading through store and forward,[0m
+            [40mSlony-I  will  also be able to provide a backup and point in[0m
+            [40mtime recovery mechanism. The local node daemon knows exactly[0m
+            [40mwhat  the  current SYNC status of its node is and it has the[0m
+            [40mability to delay the replication of  the  next  SYNC  status[0m
+            [40mlong  enough  to start a pg_dump and ensure that it has cre-[0m
+            [40mated its serializable transaction  snapshot.  The  resulting[0m
+            [40mdump  will be an exact representation of the database at the[0m
+            [40mtime the last SYNC event got committed locally. If it writes[0m
+            [40mout  files  containing the same queries that get applied for[0m
+            [40mall subsequent SYNC events, these files together will  build[0m
+            [40ma  backup  that can be restored with the same granularity as[0m
+            [40mSYNC events are generated on the master.[0m
+
+
+
+
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -16-                 Version 1.0
+
+
+            [40m[1m2.4.8.  Provider change and failover[0m
+
+                 [40mTo store the log data on a node so configured until all[0m
+            [40mnodes  that subscribe the set have confirmed the correspond-[0m
+            [40ming SYNC events is the basis for on-the-fly provider changes[0m
+            [40mand failover.[0m
+
+                 [40mChanging  the log data provider means nothing else than[0m
+            [40mstarting at some arbitrary point in time  (of  course  trig-[0m
+            [40mgered  and  communicated with an event, what else) to select[0m
+            [40mthe log data in 2.4.5.  from another node that is either the[0m
+            [40mmaster or a slave that does store the data.[0m
+
+                 [40mFailover  is  not  much more than a logical sequence of[0m
+            [40msyncing with other nodes, changing the origin  of  sets  and[0m
+            [40mfinally a provider change with a twist.[0m
+
+
+            [47m[40m[47m[40m[47m[40m          +---------------------------------------+[0m
+                      [40m| [0m+-----------+           +-----------+ [40m|[0m
+                      [40m| [0m|[1mNode A      [22m|           |[1mNode B      [22m| [40m|[0m
+                      [40m| [0m|+---------+|           |[47m+---------+[0m| [40m|[0m
+                      [40m| [0m|| Set 1   [40m+++(+1+.++f+a+i+l+s+)++[47m+ Set 1   |[0m| [40m|[0m
+                      [40m| [0m|+--O-r-i[40m+[0mg-i-n--+|           [40m+[47m+S[40m+[47mu-b-s-c[40m+[47mr-i-b-e-d+[0m| [40m|[0m
+                      [40m| [0m|     [40m+     [0m|         [40m++++    |     [0m| [40m|[0m
+                      [40m| [0m+-----[40m+[0m-----+       [40m+++++[0m-----[40m+[0m-----+ [40m|[0m
+                      [40m|       + (2. sync) ++++        |       |[0m
+                   [40m(1.|fails) +         +++++         |       |[0m
+                      [40m|       +       ++++(3. origin) |       |[0m
+                      [40m| [0m+[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mC[22m[40m+[0m-----+[40m++++       [0m+[1mN[22m-[1mo[22m-[1md[22m-[1me[22m--[1mD[22m[40m+[0m-----+ [40m|[0m
+                      [40m| [0m|     [40m+   +++++         [0m|     [40m+     [0m| [40m|[0m
+                      [40m| [0m|[47m+--S-e-t[40m+[47m-1---+[40m+           [0m|[47m+--S-e-t[40m+[47m-1---+[0m| [40m|[0m
+                      [40m| [0m|[47m|Subscribed|[0m|           |[47m|Subscribed|[0m| [40m|[0m
+                      [40m| [0m|[47m+---------+[0m|           |[47m+---------+[0m| [40m|[0m
+                      [40m| [0m|           |           |           | [40m|[0m
+                      [40m| [0m+-----------+           +-----------+ [40m|[0m
+                      [40m+---------------------------------------+[0m
+                                      [40mFigure 3[0m
+
+            1.[40m   Node  A  in figure 4 fails. It is the current origin of[0m
+                 [40mthe data set 1.  The plan is to promote node B  to  the[0m
+                 [40mmaster and let node C continue to replicate against the[0m
+                 [40mnew master.[0m
+
+            2.[40m   Since it is possible that node C at that time  is  more[0m
+                 [40madvanced  in  the replication than node B, node B first[0m
+                 [40masks for every event (and the corresponding log  deltas[0m
+                 [40mfor  SYNC  events)  that  it  does not have itself yet.[0m
+                 [40mThere is no real difference in this action than  repli-[0m
+                 [40mcating against node A.[0m
+
+            3.[40m   At the time Node B is for sure equally or more advanced[0m
+                 [40mthan Node C, it takes over the set (becoming  the  ori-[0m
+                 [40mgin).  The twist in the provider change that node C now[0m
+
+
+
+            
+
+
+
+
+
+            Slony-I                     -17-                 Version 1.0
+
+
+            [40m     has to do is, that until now it is not guaranteed  that[0m
+                 [40mnode C has replicated all SYNC events from node A, that[0m
+                 [40mhave been known to node B. Thus, the ORIGIN event  from[0m
+                 [40mnode B will contain the last node A event known by node[0m
+                 [40mB at that time, which must be the  last  node  A  event[0m
+                 [40mknown  to  the  cluster at all. The twist in processing[0m
+                 [40mthat ORIGIN event on node C is, that it cannot be  con-[0m
+                 [40mfirmed until node C has replicated all events from node[0m
+                 [40mA until the one mentioned in the ORIGIN.  At that  time[0m
+                 [40mof  course  node C is free to either continue to repli-[0m
+                 [40mcate using node B or D as its provider.[0m
+
+                 [40mThe whole failover process looks relatively  simple  at[0m
+            [40mthis  point  because  it  is  so  simple. The entire Slony-I[0m
+            [40mdesign pointed from the beginning into  this  direction,  so[0m
+            [40mit's  no real surprise.  However, this simplicity comes at a[0m
+            [40mprice. The price is, that if a (slave) node becomes unavail-[0m
+            [40mable,  all  other  nodes in the cluster stop cleaning up and[0m
+            [40maccumulate event information and possibly log data.   So  it[0m
+            [40mis important that if a node becomes unavailable for a longer[0m
+            [40mtime, to change the configuration and let  the  system  know[0m
+            [40mthat  other  techniques  will be used to reactivate it. This[0m
+            [40mcan be done by suspending (deactivating) the node logically,[0m
+            [40mor by removing it from the configuration completely.[0m
+
+                 [40mFor  a deactivated node there is still hope to catch up[0m
+            [40mwith  the  rest  of  the  cluster  without  re-joining  from[0m
+            [40mscratch.  The  point in time recovery delta files created in[0m
+            [40m2.4.7.  can be used to feed it  information  that  has  been[0m
+            [40mremoved  from the log tables long ago. When the node is fin-[0m
+            [40mished replaying that it  is  reactivated,  causing  everyone[0m
+            [40melse  in  the  cluster to keep new log information again for[0m
+            [40mthe reactivated node. The reactivated node now again replays[0m
+            [40mdelta  log  files,  eventually  waiting  for more to appear,[0m
+            [40muntil the one corresponding to the  last  known  SYNC  event[0m
+            [40mbefore its reactivation appears. It is back online now.[0m
+
+            [1m[40m3.  Acknowledgements[0m
+
+                 [40mSome  of  the core principles of Slony-I are taken from[0m
+            [40manother replication solution that has  been  contributed  to[0m
+            [40mthe PostgreSQL project. Namely the splitting of the continu-[0m
+            [40mous stream of log information at a transaction boundary com-[0m
+            [40mpatible  with  the serializable isolation level and the idea[0m
+            [40mto be able to switch log tables and how to do it exist  very[0m
+            [40msimilar in eRServer, contributed by PostgreSQL INC.[0m
+
+
+
+
+
+
+
+
+
+
+
+            
+
+

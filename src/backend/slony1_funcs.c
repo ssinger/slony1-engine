@@ -34,6 +34,8 @@
 #include "utils/builtins.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
+#include "utils/rel.h"
+#include "utils/relcache.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -66,6 +68,7 @@ PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
 
 PG_FUNCTION_INFO_V1(_slon_quote_ident);
 PG_FUNCTION_INFO_V1(_Slony_I_resetSession);
+PG_FUNCTION_INFO_V1(_slon_decode_tgargs);
 
 Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
 Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
@@ -78,6 +81,7 @@ Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
 
 Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
+Datum		_slon_decode_tgargs(PG_FUNCTION_ARGS);
 
 Datum		_Slony_I_resetSession(PG_FUNCTION_ARGS);
 
@@ -87,7 +91,7 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 
 #define PLAN_NONE			0
 #define PLAN_INSERT_EVENT	(1 << 1)
-#define PLAN_INSERT_LOG		(1 << 2)
+#define PLAN_INSERT_LOG_STATUS (1 << 2)
 
 
 /* ----
@@ -128,7 +132,8 @@ getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
 static const char *slon_quote_identifier(const char *ident);
 static char *slon_quote_literal(char *str);
-
+static int prepareLogPlan(Slony_I_ClusterStatus * cs,
+					   int log_status);
 
 Datum
 _Slony_I_createEvent(PG_FUNCTION_ARGS)
@@ -138,7 +143,6 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 	char	   *ev_type_c;
 	Datum		argv[9];
 	char		nulls[10];
-	char	   *buf;
 	size_t		buf_size;
 	int			rc;
 	int			i;
@@ -164,7 +168,6 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 						  PLAN_INSERT_EVENT);
 
 	buf_size = 8192;
-	buf = palloc(buf_size);
 
 	/*
 	 * Do the following only once per transaction.
@@ -334,7 +337,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	 * Get or create the cluster status information and make sure it has the
 	 * SPI plans that we need here.
 	 */
-	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG);
+	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG_STATUS);
 
 	/*
 	 * Do the following only once per transaction.
@@ -355,7 +358,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 		log_status = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
 											SPI_tuptable->tupdesc, 1, &isnull));
 		SPI_freetuptable(SPI_tuptable);
-
+		prepareLogPlan(cs,log_status);
 		switch (log_status)
 		{
 			case 0:
@@ -375,6 +378,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 
 		cs->currentXid = newXid;
 	}
+
 
 	/*
 	 * Determine cmdtype and cmddata depending on the command type
@@ -1021,7 +1025,7 @@ slon_quote_literal(char *str)
 	char	   *cp1;
 	char	   *cp2;
 	int			len;
-	int			wl;
+	int wl;
 
 	if (str == NULL)
 		return NULL;
@@ -1034,7 +1038,7 @@ slon_quote_literal(char *str)
 	*cp2++ = '\'';
 	while (len > 0)
 	{
-		if ((wl = pg_mblen((unsigned char *) cp1)) != 1)
+		if ((wl = pg_mblen((const char *) cp1)) != 1)
 		{
 			len -= wl;
 
@@ -1189,7 +1193,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	char		query[1024];
 	bool		isnull;
 	Oid			plan_types[9];
-	Oid			txid_snapshot_typid;
 	TypeName   *txid_snapshot_typname;
 
 	/*
@@ -1274,14 +1277,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 			lappend(lappend(NIL, makeString("pg_catalog")),
 					makeString("txid_snapshot"));
 
-#ifdef HAVE_TYPENAMETYPEID_3
-		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname, NULL);
-#elif HAVE_TYPENAMETYPEID_2
-		txid_snapshot_typid = typenameTypeId(NULL, txid_snapshot_typname);
-#elif HAVE_TYPENAMETYPEID_1
-		txid_snapshot_typid = typenameTypeId(txid_snapshot_typname);
-#endif
-
 		/*
 		 * Create the saved plan. We lock the sl_event table in exclusive mode
 		 * in order to ensure that all events are really assigned sequence
@@ -1338,42 +1333,11 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	}
 
 	/*
-	 * Prepare and save the PLAN_INSERT_LOG
+	 * Prepare and save the PLAN_INSERT_LOG_STATUS
 	 */
-	if ((need_plan_mask & PLAN_INSERT_LOG) != 0 &&
-		(cs->have_plan & PLAN_INSERT_LOG) == 0)
+	if ((need_plan_mask & PLAN_INSERT_LOG_STATUS) != 0 &&
+		(cs->have_plan & PLAN_INSERT_LOG_STATUS) == 0)
 	{
-		/*
-		 * Create the saved plan's
-		 */
-		sprintf(query, "INSERT INTO %s.sl_log_1 "
-				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
-				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = INT4OID;
-		plan_types[1] = TEXTOID;
-		plan_types[2] = TEXTOID;
-
-		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
-		if (cs->plan_insert_log_1 == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed");
-
-		sprintf(query, "INSERT INTO %s.sl_log_2 "
-				"(log_origin, log_txid, log_tableid, log_actionseq,"
-				" log_cmdtype, log_cmddata) "
-				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
-				"nextval('%s.sl_action_seq'), $2, $3); ",
-				cs->clusterident, cs->localNodeId, cs->clusterident);
-		plan_types[0] = INT4OID;
-		plan_types[1] = TEXTOID;
-		plan_types[2] = TEXTOID;
-
-		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
-		if (cs->plan_insert_log_2 == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed");
-
 		/* @-nullderef@ */
 
 		/*
@@ -1400,13 +1364,66 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->cmddata_size = 8192;
 		cs->cmddata_buf = (text *) malloc(8192);
 
-		cs->have_plan |= PLAN_INSERT_LOG;
+		cs->have_plan |= PLAN_INSERT_LOG_STATUS;
 	}
 
 	return cs;
 	/* @+nullderef@ */
 }
 
+/**
+ * prepare the plan for the curren sl_log_x insert query.
+ *
+ */
+int prepareLogPlan(Slony_I_ClusterStatus * cs,
+				int log_status)
+{
+	char		query[1024];
+	Oid			plan_types[9];
+
+	if( (log_status==0 ||
+		 log_status==2) &&
+		cs->plan_insert_log_1==NULL)
+	{
+
+		/*
+		 * Create the saved plan's
+		 */
+		sprintf(query, "INSERT INTO %s.sl_log_1 "
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
+		plan_types[2] = TEXTOID;
+
+		cs->plan_insert_log_1 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		if (cs->plan_insert_log_1 == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+	}
+	else if ( (log_status==1 ||
+			   log_status==3) &&
+			  cs->plan_insert_log_2==NULL)
+	{
+		sprintf(query, "INSERT INTO %s.sl_log_2 "
+				"(log_origin, log_txid, log_tableid, log_actionseq,"
+				" log_cmdtype, log_cmddata) "
+				"VALUES (%d, \"pg_catalog\".txid_current(), $1, "
+				"nextval('%s.sl_action_seq'), $2, $3); ",
+				cs->clusterident, cs->localNodeId, cs->clusterident);
+		plan_types[0] = INT4OID;
+		plan_types[1] = TEXTOID;
+		plan_types[2] = TEXTOID;
+
+		cs->plan_insert_log_2 = SPI_saveplan(SPI_prepare(query, 3, plan_types));
+		if (cs->plan_insert_log_2 == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+	}
+
+	return 0;
+}
 /* Provide a way to reset the per-session data structure that stores
    the cluster status in the C functions. 
 
@@ -1453,7 +1470,59 @@ _Slony_I_resetSession(PG_FUNCTION_ARGS)
 
 }
 
+/**
+ * A function to decode the tgargs column of pg_trigger
+ * and return an array of text objects with each trigger
+ * argument.
+ */
+Datum
+_slon_decode_tgargs(PG_FUNCTION_ARGS)
+{
+	const char * arg;
+	size_t elem_size=0;
+	ArrayType * out_array;
+	int idx;
+	bytea	   *t = PG_GETARG_BYTEA_P(0);
 
+	int arg_size = VARSIZE(t)- VARHDRSZ;
+	const char * in_args = VARDATA(t);
+	int array_size = 0;
+	out_array=construct_empty_array(TEXTOID);
+	arg=in_args;
+
+	for(idx = 0; idx < arg_size; idx++)
+	{
+		
+		if(in_args[idx ]=='\0')
+		{
+			text * one_arg = palloc(elem_size+VARHDRSZ);
+			SET_VARSIZE(one_arg,elem_size + VARHDRSZ);
+			memcpy(VARDATA(one_arg),arg,elem_size);
+			out_array = array_set(out_array,
+								  1, &array_size,
+								  PointerGetDatum(one_arg),
+								  false,
+								  -1,
+								  -1,
+								  false , /*typbyval for TEXT*/
+								  'i' /*typalign for TEXT */
+				);
+			elem_size=0;
+			array_size++;
+			arg=&in_args[idx+1];
+		}
+		else
+		{
+			elem_size++;
+		}
+	}
+
+
+	PG_RETURN_ARRAYTYPE_P(out_array);
+}
+	
+	
+	
 /*
  * Local Variables:
  *	tab-width: 4

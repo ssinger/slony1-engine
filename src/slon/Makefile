@@ -78,8 +78,8 @@ conf-file.c:		conf-file.l
 ifdef FLEX
 	$(FLEX) $(FLEXFLAGS) -o'$@' $<
 else
-    @echo "Missing flex $< $@"
-    @exit
+	@echo "Missing flex $< $@"
+	@exit
 endif
 
 clean distclean:

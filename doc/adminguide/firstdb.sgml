@@ -88,7 +88,7 @@ ERROR  remoteListenThread_1: db_getLocalNodeId() returned 2 - wrong database?
 <indexterm><primary>pgbench setup</primary> </indexterm>
 
 <para><command>
-createuser -A -D $PGBENCHUSER
+createuser -SRD $PGBENCHUSER
 </command>
 </para>
 </sect2>
@@ -101,7 +101,7 @@ pgbench -i -s 1 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 
 <para> One of the tables created by
-<application>pgbench</application>, <envar>history</envar>, does not
+<application>pgbench</application>, <envar>pgbench_history</envar>, does not
 have a primary key.  &slony1; <emphasis>requires</emphasis> that there
 is a suitable candidate primary key. </para>
 
@@ -110,9 +110,9 @@ on this table: </para>
 
 <programlisting>
 psql -U $PGBENCHUSER -h $HOST1 -d $MASTERDBNAME -c "begin; alter table
-history add column id serial; update history set id =
-nextval('history_id_seq'); alter table history add primary key(id);
-commit"
+pgbench_history add column id serial; update history set id =
+nextval('pgbench_history_id_seq'); alter table pgbench_history add primary key(id);
+commit;"
 </programlisting>
 
 <para>Because &slony1; depends on the databases having the pl/pgSQL
@@ -221,10 +221,10 @@ slonik <<_EOF_
 	# all 4 pgbench tables.  The master or origin of the set is node 1.
 	#--
 	create set (id=1, origin=1, comment='All pgbench tables');
-	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.accounts', comment='accounts table');
-	set add table (set id=1, origin=1, id=2, fully qualified name = 'public.branches', comment='branches table');
-	set add table (set id=1, origin=1, id=3, fully qualified name = 'public.tellers', comment='tellers table');
-	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.history', comment='history table');
+	set add table (set id=1, origin=1, id=1, fully qualified name = 'public.pgbench_accounts', comment='accounts table');
+	set add table (set id=1, origin=1, id=2, fully qualified name = 'public.pgbench_branches', comment='branches table');
+	set add table (set id=1, origin=1, id=3, fully qualified name = 'public.pgbench_tellers', comment='tellers table');
+	set add table (set id=1, origin=1, id=4, fully qualified name = 'public.pgbench_history', comment='history table');
 
 	#--
 	# Create the second node (the slave) tell the 2 nodes how to connect to
@@ -328,25 +328,23 @@ caught up.</para>
 echo -n "**** comparing sample1 ... "
 psql -U $REPLICATIONUSER -h $MASTERHOST $MASTERDBNAME >dump.tmp.1.$$ <<_EOF_
 	 select 'accounts:'::text, aid, bid, abalance, filler
-		  from accounts order by aid;
+		  from pgbench_accounts order by aid;
 	 select 'branches:'::text, bid, bbalance, filler
-		  from branches order by bid;
+		  from pgbench_branches order by bid;
 	 select 'tellers:'::text, tid, bid, tbalance, filler
-		  from tellers order by tid;
-	 select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-		  "_Slony-I_${CLUSTERNAME}_rowID"
-		  from history order by "_Slony-I_${CLUSTERNAME}_rowID";
+		  from pgbench_tellers order by tid;
+	 select 'history:'::text, tid, bid, aid, delta, mtime, filler, id
+		  from pgbench_history order by id;
 _EOF_
 psql -U $REPLICATIONUSER -h $SLAVEHOST $SLAVEDBNAME >dump.tmp.2.$$ <<_EOF_
 	 select 'accounts:'::text, aid, bid, abalance, filler
-		  from accounts order by aid;
+		  from pgbench_accounts order by aid;
 	 select 'branches:'::text, bid, bbalance, filler
-		  from branches order by bid;
+		  from pgbench_branches order by bid;
 	 select 'tellers:'::text, tid, bid, tbalance, filler
-		  from tellers order by tid;
-	 select 'history:'::text, tid, bid, aid, delta, mtime, filler,
-		  "_Slony-I_${CLUSTERNAME}_rowID"
-		  from history order by "_Slony-I_${CLUSTERNAME}_rowID";
+		  from pgbench_tellers order by tid;
+	 select 'history:'::text, tid, bid, aid, delta, mtime, filler, id
+		  from pgbench_history order by id;
 _EOF_
 
 if diff dump.tmp.1.$$ dump.tmp.2.$$ >$CLUSTERNAME.diff ; then
@@ -401,9 +399,7 @@ $ slonik_create_set 1 | slonik
 $ slonik_subscribe_set 1 2 | slonik
 </programlisting>
 
-<para> You have now replicated your first database.  You can skip the
-following section of documentation if you'd like, which documents more
-of a <quote>bare-metal</quote> approach.</para>
+<para> You have now replicated your first database.</para>
 </sect3>
 
 </sect2>

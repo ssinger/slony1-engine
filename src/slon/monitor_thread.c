@@ -59,13 +59,14 @@ monitorThread_main(void *dummy)
 	PGconn	   *dbconn;
 	PGresult   *res;
 	SlonState	state;
-	char		timebuf[256];
 	ScheduleStatus rc;
 
 	slon_log(SLON_INFO,
 			 "monitorThread: thread starts\n");
-
+	pthread_mutex_lock(&stack_lock);
 	stack_init();
+	pthread_mutex_unlock(&stack_lock);
+
 
 	/*
 	 * Connect to the local database
@@ -161,8 +162,7 @@ monitorThread_main(void *dummy)
 					{
 						slon_appendquery(&monquery, "NULL::text, ");
 					}
-					(void) strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S%z", localtime(&(state.start_time)));
-					slon_appendquery(&monquery, "'%s', ", timebuf);
+					slon_appendquery(&monquery, "'1970-01-01 0:0:0 UTC'::timestamptz + '%d seconds'::interval, ", time(NULL));
 					if (state.event > 0)
 					{
 						slon_appendquery(&monquery, "%L, ", state.event);

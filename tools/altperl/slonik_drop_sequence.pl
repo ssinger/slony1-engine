@@ -53,7 +53,7 @@ $slonik .= "  try {\n";
 $slonik .= "    SET DROP SEQUENCE (id = $SEQ_ID, origin = $SET_ORIGIN);\n";
 $slonik .= "  } on error {\n";
 $slonik .= "    echo 'Could not drop sequence $SEQ_ID for $CLUSTER_NAME!';\n";
-$slonik .= "    exit -1;\n";
+$slonik .= "    exit 1;\n";
 $slonik .= "  }\n";
 
 run_slonik_script($slonik, 'DROP SEQUENCE');

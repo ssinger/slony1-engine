@@ -47,6 +47,9 @@ places.</para>
 </para></listitem>
 <listitem><para>Make modifications (INSERT/UPDATE/DELETE/ALTER) to all replicated tables.</para>
 </listitem>
+<listitem>
+<para> set the session_replication_role to replica</para>
+</listitem>
 </itemizedlist>
 
 </para>
@@ -92,51 +95,11 @@ management user be a superuser, as, in that case, one need not think
 about what permissions to configure, but this is excessive.</para>
 
 <para> There is only actually one place where &slony1; truly requires
-superuser access, and that is during the subscription process, as it
-uses a <quote>hack</quote> to substantially improve performance,
-updating the system catalogue directly to shut off indices during the
-<command>COPY</command>.  This functionality is restricted to two
-functions, as of version 2.1, with
-<function>disable_indexes_on_table()</function> and
-<function>enable_indexes_on_table()</function>, which may appropriate
-superuser permissions if configured with <command>SECURITY
-DEFINER</command>.  If these two functions are owned by a superuser,
-then that is all the database superuser access that is
-required. </para>
+superuser access, and that is for installation (slonik) and on the
+local connetion slon uses.
+</para>
 
-<para> One could set up a <quote>weak user</quote> assigned to all
-&lslon; requests.  The minimal permissions that
-this user, let's call it <command>weakuser</command>, requires are as
-follows:</para>
-
-<itemizedlist>
-
-<listitem><para> It must have read access to the &slony1;-specific
-namespace </para> </listitem>
-
-<listitem><para> It must have read access to all tables and sequences
-in that namespace</para> </listitem>
-
-<listitem><para> It must have write access to the &slony1; table
-<envar>sl_nodelock</envar> and sequence
-<envar>sl_nodelock_nl_conncnt_seq</envar> </para> </listitem>
-
-<listitem><para> At subscribe time, it must have read access to all of
-the replicated tables. </para>
-
-<para> Outside of subscription time, there is no need for access to
-access to the replicated tables. </para> </listitem>
-
-<listitem><para> There is some need for read access to tables in
-pg_catalog; it has not been verified how little access would be
-suitable. </para> </listitem>
-
-<listitem><para> As mentioned, the functions for disabling and
-re-enabling indexes during the subscription process must be owned by a
-superuser, and must be accessible to the <quote>weak user.</quote>
-</para></listitem>
-
-</itemizedlist></sect2>
+</sect2>
 
 <sect2>
 <title>Handling Database Authentication (Passwords)</title>

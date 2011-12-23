@@ -51,12 +51,7 @@ $slonik .= "# TABLE ADD KEY\n";
 # CREATE SET
 $slonik .= "\n";
 $slonik .= "# CREATE SET\n";
-$slonik .= "  try {\n";
 $slonik .= "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
-$slonik .= "  } on error {\n";
-$slonik .= "    echo 'Could not create subscription set $SET_ID for $CLUSTER_NAME!';\n";
-$slonik .= "    exit -1;\n";
-$slonik .= "  }\n";
 
 # SET ADD TABLE
 $slonik .= "\n";

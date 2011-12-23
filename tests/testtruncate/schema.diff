@@ -2,3 +2,4 @@ select id,pname, price from products order by id
 SELECT id,cname from customers order by id
 SELECT id,customer_id, order_date, order_value from orders order by id
 SELECT order_id,product_id,quantity from line_items order by order_id,product_id
+select id,value from test_237 order by id

@@ -27,6 +27,7 @@ slonbindir=		@SLONBINDIR@
 distdir=		@SLONYPATH@/@PACKAGE_NAME@-@PACKAGE_VERSION@
 prefix=			@prefix@
 sysconfdir=		@sysconfdir@
+datarootdir=		@datarootdir@
 
 host_os=        @HOST_OS@
 host_cpu=		@host_cpu@
@@ -78,7 +79,7 @@ PERL=			@PERL@
 SED=			@SED@
 subdir=$(slony_subdir)
 
-override CPPFLAGS := -I${pgincludedir} -I${pgincludeserverdir} $(CPPFLAGS)
+override CPPFLAGS := -I${pgincludeserverdir} -I${pgincludedir} $(CPPFLAGS)
 LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq @NLSLIB@
 
 ifeq ($(GCC), yes)

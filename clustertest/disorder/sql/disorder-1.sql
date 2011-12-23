@@ -101,6 +101,13 @@ GRANT ALL ON TABLE do_item_review TO PUBLIC;
 GRANT ALL ON SEQUENCE do_item_review_ir_id_seq TO PUBLIC;
 
 
+create view do_order_view as select
+	   * FROM do_order_line, do_order,
+	   	 do_item
+	   where do_item.i_id=do_order_line.ol_i_id
+	   and do_order.o_id=do_order_line.ol_o_id;
+	   
+
 -- ----
 -- random(x,y)
 --

@@ -40,8 +40,8 @@ generate_initdata()
     txtb=$(random_string ${txtblen})
     txtb=`echo ${txtb} | sed -e "s/\\\\\\\/\\\\\\\\\\\\\\/g" -e "s/'/''/g"`
     echo "INSERT INTO table1(data) VALUES ('${txta}');" >> $GENDATA
-    echo "INSERT INTO table2(table1_id,data) SELECT id, '${txtb}' FROM table1 WHERE data='${txta}';" >> $GENDATA
-    echo "INSERT INTO table3(table2_id) SELECT id FROM table2 WHERE data ='${txtb}';" >> $GENDATA
+    echo "INSERT INTO table2(table1_id,data) (SELECT id, '${txtb}' FROM table1 WHERE data='${txta}' order by id desc limit 3);" >> $GENDATA
+    echo "INSERT INTO table3(table2_id) (SELECT id FROM table2 WHERE data ='${txtb}' order by id desc limit 3);" >> $GENDATA
     echo "INSERT INTO table4(data) VALUES ('${txtb}');" >> $GENDATA
     if [ ${i} -ge ${numrows} ]; then
       break;

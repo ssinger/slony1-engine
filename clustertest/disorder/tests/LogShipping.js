@@ -23,6 +23,12 @@ LogShipping.prototype.getNodeCount=function() {
 	return 4;
 }
 
+LogShipping.prototype.getSyncWaitTime = function()
+{
+
+	return 3*120;
+}
+
 LogShipping.prototype.runTest = function() {	
         this.coordinator.log("LogShipping.prototype.runTest - begin");
 	this.testResults.newGroup("Log Shipping");
@@ -86,30 +92,104 @@ LogShipping.prototype.runTest = function() {
         this.coordinator.log("LogShipping.prototype.runTest - start log shipping daemon");
 	//Invoke log shipping daemon.
 	var logShippingDaemon = this.coordinator.createLogShippingDaemon('db6',this.logdirectoryFile);
+
+															 
+
+
 	logShippingDaemon.run();
 	
-	java.lang.Thread.sleep(3*1000);
+	java.lang.Thread.sleep(10*1000);
+	 // create the second set and
+	 // subscribe it.
+	 // we then check that the log slave
+	 // is populated.
+	this.createSecondSet(1);
+	this.subscribeSet(2,1,1,[2,3]);
+	this.subscribeSet(2,1,3,[4]);
+	this.populateReviewTable(1);	
+	java.lang.Thread.sleep(10*1000);
 	populate.stop();
-	this.coordinator.join(populate);	
+	this.coordinator.join(populate);			
 	this.slonikSync(1, 1);
 	this.compareDb('db1','db3');
 	this.compareDb('db1','db4');
 	
+	java.lang.Thread.sleep(60*1000);
+	this.coordinator.log("LogShipping.prototype.runTest - compare db4,6");
+	this.compareDb('db4','db6');		
+	this.truncateTest();
 	
-        this.coordinator.log("LogShipping.prototype.runTest - shut down slons");
+    this.coordinator.log("LogShipping.prototype.runTest - shut down slons");
 	this.coordinator.log("Shutting down slons");
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {		
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);	
 	}
-	
-	java.lang.Thread.sleep(30*1000);
+	   
 	logShippingDaemon.stop();
 	this.coordinator.join(logShippingDaemon);
-        this.coordinator.log("LogShipping.prototype.runTest - compare db4,6");
-	this.compareDb('db4','db6');
-	
 	this.dropDb(['db6']);
         this.coordinator.log("LogShipping.prototype.runTest - complete");
 }
 
+
+/**
+ * Tests the behaviour of truncate through log shipping.
+ * this is only done if the master is running on PG 8.4 or 
+ * higher.
+ *
+ */
+LogShipping.prototype.truncateTest = function() {
+	var connection=this.coordinator.createJdbcConnection('db1');
+	var db6Con = this.coordinator.createJdbcConnection('db6');
+
+	var metaData = connection.getMetaData();
+	if( metaData.getDatabaseMajorVersion()< 8
+		|| (metaData.getDatabaseMajorVersion()==8
+			&& metaData.getDatabaseMinorVersion()<4))
+	 {
+		 this.coordinator.log('skipping truncate test. PG version too old');
+	 }
+
+
+	
+	this.slonikSync(1,1);
+	var stat = db6Con.createStatement();
+	try {
+		var rs = stat.executeQuery("select count(*) FROM disorder.do_item_review;");
+		rs.next();
+		this.testResults.assertCheck('logshipping node is truncated',
+									 rs.getInt(1),100);
+		rs.close();
+	}
+	finally {
+		stat.close();
+	}
+
+	stat = connection.createStatement();
+	try {
+		stat.execute("TRUNCATE disorder.do_item_review;");
+	}
+	catch(error) {
+		this.testResults.assertCheck('truncate failed',true,true);
+		
+	}
+	finally {
+		stat.close();
+		connection.close();
+	}
+	this.slonikSync(1,1);
+	java.lang.Thread.sleep(30*1000);
+	var stat = db6Con.createStatement();
+	try {
+		var rs = stat.executeQuery("select count(*) FROM disorder.do_item_review;");
+		rs.next();
+		this.testResults.assertCheck('logshipping node is truncated',
+									 rs.getInt(1),0);
+		rs.close();
+	}
+	finally {
+		stat.close();
+		db6Con.close();
+	}
+}

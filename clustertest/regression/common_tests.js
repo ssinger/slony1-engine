@@ -136,8 +136,12 @@ function get_slonik_preamble() {
 	
 	var slonikPre = 'cluster name=slonyregress;\n';
 	for(var idx = 1; idx <= NUM_NODES; idx++) {
-		slonikPre+=  'node '+idx+' admin conninfo=\'dbname=$database.db'+idx+'.dbname host=$database.db'+idx+'.host user=$database.db'+idx+'.user.slony password=$database.db'+idx+'.password\';\n';
-		slonikPre+= 'define CONNINFO'+idx+' \'dbname=$database.db'+idx+'.dbname host=$database.db'+idx+'.host user=$database.db'+idx+'.user.slony password=$database.db'+idx+'.password\';\n';
+		var port='';
+		if(properties.getProperty('database.db' + idx + '.port') != null) {
+			port='port=$database.db' + idx + '.port ';
+		}
+		slonikPre+=  'node '+idx+' admin conninfo=\'dbname=$database.db'+idx+'.dbname host=$database.db'+idx+'.host '+port+' user=$database.db'+idx+'.user.slony password=$database.db'+idx+'.password\';\n';
+		slonikPre+= 'define CONNINFO'+idx+' \'dbname=$database.db'+idx+'.dbname host=$database.db'+idx+'.host '+port+' user=$database.db'+idx+'.user.slony password=$database.db'+idx+'.password\';\n';
 	}
 	return slonikPre;
 
@@ -166,7 +170,7 @@ function do_compare(coordinator) {
 			compareOp = coordinator.createCompareOperation('db1','db' + dbidx,queries[idx],'id');
 			compareOp.run();
 			coordinator.join(compareOp);
-			results.assertCheck('database comparision',compareOp.getResultCode(),Packages.info.slony.clustertest.testcoordinator.CompareOperation.COMPARE_EQUALS);
+			results.assertCheck('database comparison',compareOp.getResultCode(),Packages.info.slony.clustertest.testcoordinator.CompareOperation.COMPARE_EQUALS);
 		}
 	}
 }

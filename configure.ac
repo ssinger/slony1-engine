@@ -11,7 +11,7 @@
 # ----------
 m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
-    -e 's/\ //g' -e s/\:/`date +HEAD_%Y%m%d`/ | tr -d '\n']))
+    -e 's/\ //g' -e s/\:/`echo 2.2.0`/ | tr -d '\n']))
 
 m4_pattern_allow([^SLON_AC_])
 

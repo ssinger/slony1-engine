@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -93,11 +93,17 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	dbconn = conn->dbconn;
 
 	monitor_state("local_cleanup", 0, conn->conn_pid, "thread main loop", 0, "n/a");
+
 	/*
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */
 	dstring_init(&query_baseclean);
-	slon_mkquery(&query_baseclean, "select %s.cleanupEvent('%s'::interval); ",
+	slon_mkquery(&query_baseclean,
+				 "begin;"
+				 "lock table %s.sl_config_lock;"
+				 "select %s.cleanupEvent('%s'::interval);"
+				 "commit;",
+				 rtcfg_namespace,
 				 rtcfg_namespace,
 				 cleanup_interval
 		);
@@ -106,20 +112,20 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	/*
 	 * Loop until shutdown time arrived
 	 *
-	 * Note the introduction of vac_bias and an up-to-100s random
-	 * "fuzz"; this reduces the likelihood that having multiple slons
-	 * hitting the same cluster will run into conflicts due to trying
-	 * to vacuum common tables * such as pg_listener concurrently
+	 * Note the introduction of vac_bias and an up-to-100s random "fuzz"; this
+	 * reduces the likelihood that having multiple slons hitting the same
+	 * cluster will run into conflicts due to trying to vacuum common tables *
+	 * such as pg_listener concurrently
 	 */
 	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
 		 */
-	        monitor_state("local_cleanup", 0, conn->conn_pid, "cleanupEvent", 0, "n/a");
+		monitor_state("local_cleanup", 0, conn->conn_pid, "cleanupEvent", 0, "n/a");
 		gettimeofday(&tv_start, NULL);
 		res = PQexec(dbconn, dstring_data(&query_baseclean));
-		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
 			slon_log(SLON_FATAL,
 					 "cleanupThread: \"%s\" - %s",
@@ -207,17 +213,20 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 				{
 					slon_log(SLON_ERROR,
 							 "cleanupThread: \"%s\" - %s\n",
-							 dstring_data(&query_pertbl), PQresultErrorMessage(res2));
+					dstring_data(&query_pertbl), PQresultErrorMessage(res2));
 
 					/*
 					 * slon_retry(); break;
 					 */
-				} else {
-					if (vrc == PGRES_NONFATAL_ERROR) {
+				}
+				else
+				{
+					if (vrc == PGRES_NONFATAL_ERROR)
+					{
 						slon_log(SLON_WARN,
 								 "cleanupThread: \"%s\" - %s\n",
 								 dstring_data(&query_pertbl), PQresultErrorMessage(res2));
-						
+
 					}
 				}
 				PQclear(res2);
@@ -270,7 +279,7 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 static unsigned long
 get_earliest_xid(PGconn *dbconn)
 {
-	int64	xid;
+	int64		xid;
 	PGresult   *res;
 	SlonDString query;
 

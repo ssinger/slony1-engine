@@ -26,34 +26,81 @@ it will need to add to the &slevent; table.</para></listitem>
 
 <sect2>
 <title>Vacuum Concerns</title>
-<para>
-The &slevent; and &slconfirm; tables need to be regularly vacuumed because
-&slony1; will often add and delete rows to these tables.  The autovacuum
-feature of &postgres; included in 8.3 and above is the recommended
-way of handling vacuums.   If autovacuum does is not working well it can
-be configured to not vacuum the &slevent; and &slconfirm; tables (See
-the &postgres; documentation information on how to disable autovacuum
-on a per table basis).  If &slony1; detects that autovacuum has been
-disabled for any of the &slony1; tables then it will try to vacuum
-the table itself as part of cleanupThread processing.
+
+<para> Tables &slevent; and &slconfirm; need to be regularly vacuumed
+because &slony1; regularly adds and deletes rows to and from these
+tables.  The autovacuum feature of &postgres; included in 8.3 and
+above is the recommended way of handling vacuums.  If autovacuum does
+is not working well, it may be configured to not vacuum the &slevent;
+and &slconfirm; tables.  See the &postgres; documentation information
+on how to disable autovacuum on a per-table basis.</para>
+
+<itemizedlist>
+
+<listitem><para><ulink
+url="http://www.postgresql.org/docs/8.3/static/routine-vacuuming.html#AUTOVACUUM">
+&postgres; 8.3 autovacuum </ulink> </para>
+
+<para> Up to &postgres; 8.3, tables requiring special handling for
+autovacuum were captured in the system catalog <ulink
+url="http://www.postgresql.org/docs/8.3/static/catalog-pg-autovacuum.html">
+pg_autovacuum </ulink> table. </para>
+
+</listitem>
+<listitem><para><ulink url="http://www.postgresql.org/docs/9.1/static/sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS"> CREATE TABLE parameters </ulink> </para> 
+
+<para> In &postgres; 8.4 and later, autovacuum control is captured as
+part of table <quote>storage parameters</quote> using <command>CREATE
+TABLE</command> or <command>ALTER TABLE</command>. </para>
+
+</listitem>
+</itemizedlist>
+
+<para> When &slony1; detects that autovacuum has been disabled for any
+or all of the &slony1; tables then it will try to vacuum such tables
+itself as part of <function>cleanupThread</function> processing.
 </para>
 
 <note>
-<para>Older versions of &slony1; and older versions of &postgres;
-had different vacuuming concerns.  If your using an older version
-of &slony1; (prior to 2.0) then you should refer to the documentation for your
-&slony1; version to learn about the vacuuming concerns that apply to you.
+<para>Older versions of &slony1; and older versions of &postgres; had
+different vacuuming concerns.  If your using an older version of
+&slony1; (prior to 2.0) then you should refer to the documentation for
+your &slony1; version to determine applicable vacuuming concerns.
 </para></note>
 
+<para> It is generally to be expected that the use of autovacuum is to
+be preferred, as it allows &slony1; tables to be vacuumed as often or
+as seldom as their update patterns indicate.  In cases where
+autovacuum does <emphasis>not</emphasis> provide appropriate
+maintenance, it seems likely that either:</para>
+
+<itemizedlist>
+
+<listitem><para> Configuration parameters for autovacuum are poorly
+set, in which case the <quote>fix</quote> is to improve the
+configuration values, or </para> </listitem>
+
+<listitem><para> There is a bug in autovacuum, in which case it
+warrants fixing or improving that portion of &postgres;. </para>
+</listitem>
+
+</itemizedlist>
+
+<para> There have been some substantial enhancements done to the
+autovacuum facility over the course of its history, and it is very
+much preferable to take advantage of those efforts rather than
+reinventing it, likely badly. </para>
 
 <sect2>
 <title>Log Switching</title>
+
 <para>
-&slony1; will frequently switch between &sllog1; and &sllog2; as the 
-table that the &slony1; triggers log data into.  Once all of the 
-transactions in one of these tables have been replicated &slony1;
-will TRUNCATE the table.  The usage of TRUNCATE in this manner
-eliminates the need to vacuum &sllog1; and &sllog2;.
+&slony1; will frequently switch between &sllog1; and &sllog2; as the
+table into which the &slony1; triggers capture data.  Once all of the
+transactions in one of these tables have been replicated and confirmed
+across the whole cluster, &slony1; will <command>TRUNCATE</command>
+the table.  This usage of <command>TRUNCATE</command> eliminates the
+need to vacuum &sllog1; and &sllog2;.
 </para>
 
 

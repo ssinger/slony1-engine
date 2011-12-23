@@ -203,6 +203,14 @@ schema/functions.';
 
 select @NAMESPACE@.checkmoduleversion();
 
+create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
+'$libdir/slony1_funcs','_slon_decode_tgargs' language C security definer;
+
+comment on function @NAMESPACE@.decode_tgargs(bytea) is 
+'Translates the contents of pg_trigger.tgargs to an array of text arguments';
+
+grant execute on function @NAMESPACE@.decode_tgargs(bytea) to public;
+
 -----------------------------------------------------------------------
 -- This function checks to see if the namespace name is valid.  
 --
@@ -421,7 +429,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 1;
+	return 2;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
@@ -451,7 +459,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -689,11 +697,6 @@ declare
 	v_event_seq			int8;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Make sure this node is uninitialized or got reset
 	-- ----
 	select last_value::int4 into v_old_node_id from @NAMESPACE@.sl_local_node_id;
@@ -758,11 +761,6 @@ declare
 	v_old_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check if the node exists
 	-- ----
 	select * into v_old_row
@@ -809,11 +807,6 @@ declare
 	v_node_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
@@ -856,11 +849,6 @@ declare
 	v_node_row		record;
 	v_sub_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the node is inactive
 	-- ----
@@ -965,11 +953,6 @@ declare
 	v_node_row		record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that this got called on a different node
 	-- ----
 	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -1025,11 +1008,6 @@ as $$
 declare
 	v_tab_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- If the dropped node is a remote node, clean the configuration
 	-- from all traces for it.
@@ -1087,11 +1065,6 @@ declare
 	v_row2				record;
 	v_n					int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- All consistency checks first
 	-- Check that every node that has a path to the failed node
@@ -1248,6 +1221,10 @@ begin
 								where pa_server = p_backup_node
 								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
 						);						
+			delete from @NAMESPACE@.sl_subscribe
+                   where sub_set = v_row.set_id
+                       and sub_receiver = p_backup_node;
+
 		end if;
 	end loop;
 	
@@ -1285,11 +1262,6 @@ as $$
 declare
 	v_row				record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select * into v_row
 			from @NAMESPACE@.sl_event
 			where ev_origin = p_failed_node
@@ -1340,11 +1312,6 @@ declare
 	v_row				record;
 	v_last_sync			int8;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Change the origin of the set now to the backup node.
 	-- On the backup node this includes changing all the
@@ -1447,11 +1414,6 @@ as $$
 declare
 	v_tab_row		record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	raise notice 'Slony-I: Please drop schema "_@CLUSTERNAME@"';
 	return 0;
 end;
@@ -1461,6 +1423,11 @@ comment on function @NAMESPACE@.uninstallNode() is
 'Reset the whole database to standalone by removing the whole
 replication system.';
 
+--
+-- The return type of cloneNodePrepare changed at one point.
+-- drop it to make the script upgrade safe.
+--
+DROP FUNCTION IF EXISTS @NAMESPACE@.cloneNodePrepare(int4,int4,text);
 -- ----------------------------------------------------------------------
 -- FUNCTION cloneNodePrepare ()
 --
@@ -1471,11 +1438,6 @@ create or replace function @NAMESPACE@.cloneNodePrepare (p_no_id int4, p_no_prov
 returns bigint
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	perform @NAMESPACE@.cloneNodePrepare_int (p_no_id, p_no_provider, p_no_comment);
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'CLONE_NODE',
 									p_no_id::text, p_no_provider::text,
@@ -1610,11 +1572,6 @@ declare
 	v_dummy			int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check if the path already exists
 	-- ----
 	select 1 into v_dummy
@@ -1676,11 +1633,6 @@ declare
 	v_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- There should be no existing subscriptions. Auto unsubscribing
 	-- is considered too dangerous. 
 	-- ----
@@ -1731,11 +1683,6 @@ create or replace function @NAMESPACE@.dropPath_int (p_pa_server int4, p_pa_clie
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Remove any dangling sl_listen entries with the server
 	-- as provider and the client as receiver. This must have
@@ -1800,11 +1747,6 @@ as $$
 declare
 	v_exists		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select 1 into v_exists
 			from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
@@ -1877,11 +1819,6 @@ create or replace function @NAMESPACE@.dropListen_int (p_li_origin int4, p_li_pr
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	delete from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
 			and li_provider = p_li_provider
@@ -1911,11 +1848,6 @@ as $$
 declare
 	v_local_node_id		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	insert into @NAMESPACE@.sl_set
@@ -1940,11 +1872,6 @@ as $$
 declare
 	v_dummy				int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	select 1 into v_dummy
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id
@@ -1990,11 +1917,6 @@ declare
 	v_set_row			record;
 	v_tab_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
@@ -2065,11 +1987,6 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
@@ -2133,11 +2050,6 @@ declare
 	v_sync_seqno		int8;
 	v_lv_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that the set is locked and that this locking
 	-- happened long enough ago.
@@ -2230,11 +2142,6 @@ declare
 	v_sub_next			int4;
 	v_last_sync			int8;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get our local node ID
 	-- ----
@@ -2409,11 +2316,6 @@ declare
 	v_origin			int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Check that the set exists and originates here
 	-- ----
 	select set_origin into v_origin from @NAMESPACE@.sl_set
@@ -2448,11 +2350,6 @@ as $$
 declare
 	v_tab_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	-- ----
 	-- Restore all tables original triggers and rules and remove
 	-- our replication stuff.
@@ -2504,11 +2401,6 @@ declare
 	v_origin			int4;
 	in_progress			boolean;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
@@ -2614,11 +2506,6 @@ create or replace function @NAMESPACE@.mergeSet_int (p_set_id int4, p_add_id int
 returns int4
 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
 	update @NAMESPACE@.sl_sequence
 			set seq_set = p_set_id
 			where seq_set = p_add_id;
@@ -2649,11 +2536,6 @@ as $$
 declare
 	v_set_origin		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that we are the origin of the set
 	-- ----
@@ -2710,11 +2592,6 @@ declare
 	v_pkcand_nn		boolean;
 	v_prec			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the table because it might 
@@ -2823,14 +2700,9 @@ declare
 	v_set_id		int4;
 	v_set_origin		int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
+    -- ----
 	-- Determine the set_id
-        -- ----
+    -- ----
 	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 
 	-- ----
@@ -2881,14 +2753,9 @@ declare
 	v_sub_provider		int4;
 	v_tab_reloid		oid;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
+    -- ----
 	-- Determine the set_id
-        -- ----
+    -- ----
 	select tab_set into v_set_id from @NAMESPACE@.sl_table where tab_id = p_tab_id;
 
 	-- ----
@@ -2946,11 +2813,6 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
@@ -3003,11 +2865,6 @@ declare
 	v_seq_nspname		name;
 	v_sync_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the sequence because it might 
@@ -3101,11 +2958,6 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Determine set id for this sequence
 	-- ----
 	select seq_set into v_set_id from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
@@ -3160,11 +3012,6 @@ declare
 	v_relkind			char;
 	v_sync_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Determine set id for this sequence
 	-- ----
@@ -3229,11 +3076,6 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the tables current set
 	-- ----
@@ -3318,11 +3160,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Move the table to the new set
 	-- ----
 	update @NAMESPACE@.sl_table
@@ -3348,11 +3185,6 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the sequences current set
 	-- ----
@@ -3436,11 +3268,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-	
-	-- ----
 	-- Move the sequence to the new set
 	-- ----
 	update @NAMESPACE@.sl_sequence
@@ -3508,11 +3335,6 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that the set exists and originates here
 	-- ----
 	select set_origin into v_set_origin
@@ -3569,6 +3391,7 @@ declare
 	v_row				record;
 begin
 	if p_only_on_node = -1 then
+	        perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
 			p_set_id::text, p_script::text, p_only_on_node::text);
 	end if;
@@ -3579,6 +3402,7 @@ begin
 		end loop;
 		execute v_query;
 		execute 'drop table _slony1_saved_session_replication_role';
+		perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
 	end if;
 	return NULL;
 end;
@@ -3604,11 +3428,6 @@ declare
 	v_no_id				int4;
 	v_row				record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Check that we either are the set origin or a current
 	-- subscriber of the set.
@@ -3660,6 +3479,7 @@ declare
 	v_row				record;
 begin
 	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
+	perform @NAMESPACE@.repair_log_triggers(true);
 	return p_set_id;
 end;
 $$ language plpgsql;
@@ -3738,7 +3558,7 @@ begin
 			v_tab_fqname || ' for each row execute procedure ' ||
 			'@NAMESPACE@.denyAccess (' || pg_catalog.quote_literal('_@CLUSTERNAME@') || ');';
 
-	perform @NAMESPACE@.addtruncatetrigger(v_tab_fqname, p_tab_id);
+	perform @NAMESPACE@.alterTableAddTruncateTrigger(v_tab_fqname, p_tab_id);
 
 	perform @NAMESPACE@.alterTableConfigureTriggers (p_tab_id);
 	return p_tab_id;
@@ -3806,6 +3626,8 @@ begin
 	execute 'drop trigger "_@CLUSTERNAME@_denyaccess" on ' || 
 			v_tab_fqname;
 				
+	perform @NAMESPACE@.alterTableDropTruncateTrigger(v_tab_fqname, p_tab_id);
+
 	return p_tab_id;
 end;
 $$ language plpgsql;
@@ -3872,7 +3694,8 @@ begin
 				' enable trigger "_@CLUSTERNAME@_logtrigger"';
 		execute 'alter table ' || v_tab_fqname ||
 				' disable trigger "_@CLUSTERNAME@_denyaccess"';
-        perform @NAMESPACE@.origin_truncate_trigger(v_tab_fqname);
+        perform @NAMESPACE@.alterTableConfigureTruncateTrigger(v_tab_fqname,
+				'enable', 'disable');
 	else
 		-- ----
 		-- On a replica the log trigger is disabled and the
@@ -3882,7 +3705,8 @@ begin
 				' disable trigger "_@CLUSTERNAME@_logtrigger"';
 		execute 'alter table ' || v_tab_fqname ||
 				' enable trigger "_@CLUSTERNAME@_denyaccess"';
-        perform @NAMESPACE@.replica_truncate_trigger(v_tab_fqname);
+        perform @NAMESPACE@.alterTableConfigureTruncateTrigger(v_tab_fqname,
+				'disable', 'enable');
 
 	end if;
 
@@ -3906,12 +3730,6 @@ declare
 	v_ev_seqno			int8;
 	v_rec			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-
 	--
 	-- Check that the receiver exists
 	--
@@ -4003,11 +3821,6 @@ declare
 	v_set_origin		int4;
 	v_sub_row			record;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Provider change is only allowed for active sets
 	-- ----
@@ -4103,11 +3916,6 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
 	if p_sub_receiver != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -4186,11 +3994,6 @@ returns int4
 as $$
 begin
 	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
@@ -4239,11 +4042,6 @@ as $$
 declare
 	v_n					int4;
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- The real work is done in the replication engine. All
 	-- we have to do here is remembering that it happened.
@@ -4846,11 +4644,6 @@ declare
 	prec			record;
 begin
         -- ----
-        -- Grab the central configuration lock
-        -- ----
-        lock table @NAMESPACE@.sl_config_lock;
-
-        -- ----
         -- Check that we either are the set origin or a current
         -- subscriber of the set.
         -- ----
@@ -4932,12 +4725,6 @@ DECLARE
 	v_current_status	int4;
 BEGIN
 	-- ----
-	-- Grab the central configuration lock to prevent race conditions
-	-- while changing the sl_log_status sequence value.
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
-	-- ----
 	-- Get the current log status.
 	-- ----
 	select last_value into v_current_status from @NAMESPACE@.sl_log_status;
@@ -4990,12 +4777,6 @@ DECLARE
 	v_xmin		bigint;
 	v_purgeable boolean;
 BEGIN
-	-- ----
-	-- Grab the central configuration lock to prevent race conditions
-	-- while changing the sl_log_status sequence value.
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	-- ----
 	-- Get the current log status.
 	-- ----
@@ -5161,13 +4942,14 @@ BEGIN
 --                                       PartInd_test_db_sl_log_2-node-1
 	-- Add missing indices...
 	for v_dummy in select distinct set_origin from @NAMESPACE@.sl_set loop
-            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+            v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' 
+			|| v_dummy.set_origin::text;
 	   -- raise notice 'Consider adding partial index % on sl_log_%', v_iname, v_log;
 	   -- raise notice 'schema: [_@CLUSTERNAME@] tablename:[sl_log_%]', v_log;
             select * into v_dummy2 from pg_catalog.pg_indexes where tablename = 'sl_log_' || v_log::text and  indexname = v_iname;
             if not found then
 		-- raise notice 'index was not found - add it!';
-        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin;
+        v_iname := 'PartInd_@CLUSTERNAME@_sl_log_' || v_log::text || '-node-' || v_dummy.set_origin::text;
 		v_ilen := pg_catalog.length(v_iname);
 		v_maxlen := pg_catalog.current_setting('max_identifier_length'::text)::int4;
                 if v_ilen > v_maxlen then
@@ -5252,8 +5034,7 @@ begin
 		raise exception 'Upgrading to Slony-I 2.x requires running slony_upgrade_20';
 	end if;
 
-	perform @NAMESPACE@.add_truncate_triggers();
-
+	perform @NAMESPACE@.upgradeSchemaAddTruncateTriggers();
 
 	-- Change all Slony-I-defined columns that are "timestamp without time zone" to "timestamp *WITH* time zone"
 	if exists (select 1 from information_schema.columns c
@@ -5273,7 +5054,7 @@ begin
 		raise notice 'Changing Slony-I column [%.%] to timestamp WITH time zone', v_tab_row.table_name, v_tab_row.column_name;
 		v_query := 'alter table ' || @NAMESPACE@.slon_quote_brute(v_tab_row.table_schema) ||
                    '.' || v_tab_row.table_name || ' alter column ' || v_tab_row.column_name ||
-                   ' set data type timestamp with time zone;';
+                   ' type timestamp with time zone;';
 		execute v_query;
 	  end loop;
 	  -- restore sl_status
@@ -5697,11 +5478,6 @@ for superuser access by Slony-I.
 
 create or replace function @NAMESPACE@.reshapeSubscription (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4) returns int4 as $$
 begin
-	-- ----
-	-- Grab the central configuration lock
-	-- ----
-	lock table @NAMESPACE@.sl_config_lock;
-
 	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
 		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
 	if found then
@@ -5752,7 +5528,7 @@ $$
         c_tabid := tg_argv[0];
 	    c_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		c_command := 'TRUNCATE TABLE ONLY "' || tab_nspname || '"."' ||
-				  tab_relname || '" CASCADE;' 
+				  tab_relname || '" CASCADE' 
 				  from @NAMESPACE@.sl_table where tab_id = c_tabid;
 		select last_value into c_log from @NAMESPACE@.sl_log_status;
 		if c_log in (0, 2) then
@@ -5760,7 +5536,7 @@ $$
 		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
 		else   -- (1, 3) 
 		   insert into @NAMESPACE@.sl_log_2 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current, c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
 		end if;
 		return NULL;
     end
@@ -5769,14 +5545,14 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.log_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';
 
-create or replace function @NAMESPACE@.truncate_deny () returns trigger as
+create or replace function @NAMESPACE@.deny_truncate () returns trigger as
 $$
 	begin
 		raise exception 'truncation of replicated table forbidden on subscriber node';
     end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.truncate_deny ()
+comment on function @NAMESPACE@.deny_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';
 
 create or replace function @NAMESPACE@.store_application_name (i_name text) returns text as $$
@@ -5834,4 +5610,73 @@ language plpgsql;
 
 comment on function @NAMESPACE@.component_state (i_actor text, i_pid integer, i_node integer, i_conn_pid integer, i_activity text, i_starttime timestamptz, i_event bigint, i_eventtype text) is
 'Store state of a Slony component.  Useful for monitoring';
+
+create or replace function @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) returns integer as $$
+begin
+	execute 'drop trigger "_@CLUSTERNAME@_logtrigger" on ' ||
+		p_fq_table_name	;
+		-- ----
+	execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
+			' after insert or update or delete on ' ||
+			p_fq_table_name 
+			|| ' for each row execute procedure @NAMESPACE@.logTrigger (' ||
+                               pg_catalog.quote_literal('_@CLUSTERNAME@') || ',' || 
+				pg_catalog.quote_literal(p_tab_id::text) || ',' || 
+				pg_catalog.quote_literal(p_tab_attkind) || ');';
+	return 0;
+end
+$$ language plpgsql;
+
+comment on function  @NAMESPACE@.recreate_log_trigger(p_fq_table_name text,
+       p_tab_id oid, p_tab_attkind text) is
+'A function that drops and recreates the log trigger on the specified table.
+It is intended to be used after the primary_key/unique index has changed.';
+
+create or replace function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+returns integer as $$
+declare
+	retval integer;
+	table_row record;
+begin
+	retval=0;
+	for table_row in	
+		select  tab_nspname,tab_relname,
+				tab_idxname, tab_id, mode,
+				@NAMESPACE@.determineAttKindUnique(tab_nspname||
+					'.'||tab_relname,tab_idxname) as attkind
+		from
+				@NAMESPACE@.sl_table
+				left join 
+				pg_locks on (relation=tab_reloid and pid=pg_backend_pid()
+				and mode='AccessExclusiveLock')				
+				,pg_trigger
+		where tab_reloid=tgrelid and 
+		@NAMESPACE@.determineAttKindUnique(tab_nspname||'.'
+						||tab_relname,tab_idxname)
+			!=(@NAMESPACE@.decode_tgargs(tgargs))[2]
+			and tgname =  '_@CLUSTERNAME@'
+			|| '_logtrigger'
+		LOOP
+				if (only_locked=false) or table_row.mode='AccessExclusiveLock' then
+					 perform @NAMESPACE@.recreate_log_trigger
+					 		 (table_row.tab_nspname||'.'||table_row.tab_relname,
+							 table_row.tab_id,table_row.attkind);
+					retval=retval+1;
+				else 
+					 raise notice '%.% has an invalid configuration on the log trigger. This was not corrected because only_lock is true and the table is not locked.',
+					 table_row.tab_nspname,table_row.tab_relname;
+			
+				end if;
+		end loop;
+	return retval;
+end
+$$
+language plpgsql;
+comment on function @NAMESPACE@.repair_log_triggers(only_locked boolean)
+is '
+repair the log triggers as required.  If only_locked is true then only 
+tables that are already exclusivly locked by the current transaction are 
+repaired. Otherwise all replicated tables with outdated trigger arguments
+are recreated.';
 
