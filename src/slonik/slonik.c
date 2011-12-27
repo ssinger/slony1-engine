@@ -541,7 +541,13 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 				{
 					SlonikStmt_create_set *stmt =
 					(SlonikStmt_create_set *) hdr;
-
+					if (stmt->set_id < 0)
+					{
+						printf("%s:%d: Error: "
+							   "set id must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
 					if (script_check_adminfo(hdr, stmt->set_origin) < 0)
 						errors++;
 				}
@@ -1782,10 +1788,10 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	int			rc;
 	char		fnamebuf[1024];
 	char		buf[4096];
-	char		rex1[256];
-	char		rex2[256];
-	char		rex3[256];
-	char		rex4[256];
+	char		rex1[257];
+	char		rex2[257];
+	char		rex3[257];
+	char		rex4[257];
 	FILE	   *stmtp;
 
 
@@ -1899,15 +1905,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;   
 	}		
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.4 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.x */
 	{
 		/**
-		 * 9.0 is so far just like 8.4
+		 * 9.0 and 9.1 are so far just like 8.4
 		 **/
 		use_major=8;
 		use_minor=4;
 	}
-	else	/* above 8.4 ??? */
+	else	/* above 9.1 ??? */
 	{
 		use_major = 8;
 		use_minor = 4;
@@ -1984,10 +1990,10 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.0 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.0, 9.1 */
 	{
 		/**
-		 * 9.0 is so far just like 8.4
+		 * 9.0 and 9.1 are so far just like 8.4
 		 */
 		use_major = 8;
 		use_minor = 4;
@@ -5076,7 +5082,7 @@ replace_token(char *resout, char *lines, const char *token, const char *replacem
 	}
 
 	result_set[o] = '\0';
-	memcpy(resout, result_set, o);
+	memcpy(resout, result_set, o+1);
 }
 
 /**

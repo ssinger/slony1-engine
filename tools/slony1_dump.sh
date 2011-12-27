@@ -13,10 +13,11 @@
 # ----
 # Check for correct usage
 # ----
-if test $# -ne 2 ; then
-	echo "usage: $0 subscriber-dbname clustername" >&2
+if test $# -lt 2 ; then
+	echo "usage: $0 subscriber-dbname clustername [-omit_copy ]" >&2
 	exit 1
 fi
+
 
 # ----
 # Remember call arguments and get the nodeId of the DB specified
@@ -24,6 +25,17 @@ fi
 dbname=$1
 cluster=$2
 clname="\"_$2\""
+omit_copy=0
+if test $# -eq 3; then
+	if [ "$3" = "-omit_copy" ];
+	then
+		omit_copy=1
+	else
+		echo "usage: $0 subscriber-dbname clustername [-omit_copy ]" >&2
+		exit 1	
+    fi
+fi
+
 pgc="\"pg_catalog\""
 nodeid=`psql -q -At -c "select \"_$cluster\".getLocalNodeId('_$cluster')" $dbname`
 
@@ -75,18 +87,6 @@ start transaction;
 -- ----------------------------------------------------------------------
 create schema $clname;
 
--- ----------------------------------------------------------------------
--- TABLE sl_sequence_offline
--- ----------------------------------------------------------------------
-create table $clname.sl_sequence_offline (
-	seq_id				int4,
-	seq_relname			name NOT NULL,
-	seq_nspname			name NOT NULL,
-
-	CONSTRAINT "sl_sequence-pkey"
-		PRIMARY KEY (seq_id)
-);
-
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_archive_tracking
@@ -100,30 +100,22 @@ create table $clname.sl_archive_tracking (
 -- -----------------------------------------------------------------------------
 -- FUNCTION sequenceSetValue_offline (seq_id, last_value)
 -- -----------------------------------------------------------------------------
-create or replace function $clname.sequenceSetValue_offline(int4, int8) returns int4
+create or replace function $clname.sequenceSetValue_offline(text,text, int8) returns int4
 as '
 declare
-	p_seq_id			alias for \$1;
-	p_last_value		alias for \$2;
-	v_fqname			text;
+	p_seq_nsp			alias for \$1;
+    p_seq_name          alias for \$2;
+	p_last_value		alias for \$3;
+
 begin
-	-- ----
-	-- Get the sequences fully qualified name
-	-- ----
-	select "pg_catalog".quote_ident(seq_nspname) || ''.'' ||
-			"pg_catalog".quote_ident(seq_relname) into v_fqname
-		from $clname.sl_sequence_offline
-		where seq_id = p_seq_id;
-	if not found then
-		raise exception ''Slony-I: sequence % not found'', p_seq_id;
-	end if;
+
 
 	-- ----
 	-- Update it to the new value
 	-- ----
-	execute ''select setval('''''' || v_fqname ||
-			'''''', '''''' || p_last_value || '''''')'';
-	return p_seq_id;
+	execute '' select setval(''''''|| p_seq_nsp || ''.'' || 
+			p_seq_name || '''''', '''''' || p_last_value || '''''')'';
+	return 0;
 end;
 ' language plpgsql;
 -- ---------------------------------------------------------------------------------------
@@ -171,12 +163,13 @@ set session_replication_role='replica';
 _EOF_
 
 
-
-for tab in $tables
-do
-	eval tabname=\$tabname_$tab
-	echo "truncate $tabname cascade;";
-done
+if [ "$omit_copy" != "1" ]; then
+	for tab in $tables
+	do
+		eval tabname=\$tabname_$tab
+		echo "truncate $tabname cascade;";
+	done
+fi
 
 # ----
 # The remainder of this script is written in a way that
@@ -190,16 +183,13 @@ echo "start transaction;"
 echo "set transaction isolation level serializable;"
 
 # ----
-# Fill the sl_sequence_offline table and provide initial 
-# values for all sequences.
+# Provide initial values for all sequences.
 # ----
-echo "select 'copy $clname.sl_sequence_offline from stdin;';"
-echo "select seq_id::text || '	' || seq_relname  || '	' || seq_nspname from $clname.sl_sequence;"
-printf "select E'\\\\\\\\.';"
-
 for seq in $sequences ; do
 	eval seqname=\$seqname_$seq
-	echo "select 'select $clname.sequenceSetValue_offline($seq, ''' || last_value::text || ''');' from $seqname;"
+	schema=`echo $seqname|cut -d'.' -f1`
+	name=`echo $seqname|cut -d'.' -f2`
+	echo "select E'select $clname.sequenceSetValue_offline(''$schema'',''$name'', ''' || last_value::text || E''');' from $seqname;"
 done
 
 # ----
@@ -213,16 +203,18 @@ echo "select 'insert into $clname.sl_archive_tracking values (' ||
 # ----
 # Now dump all the user table data
 # ----
-system_type=`uname`
-for tab in $tables ; do
-	eval tabname=\$tabname_$tab
+if [ "$omit_copy" -eq "0" ]; then
+	system_type=`uname`
+	for tab in $tables ; do
+		eval tabname=\$tabname_$tab
 
-	# Get fieldnames...
- 	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
- 	echo "select 'copy $tabname $fields from stdin;';"
-	echo "copy $tabname $fields to stdout;"
- 	printf "select E'\\\\\\\\.';"
-done
+		# Get fieldnames...
+ 		fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
+ 		echo "select 'copy $tabname $fields from stdin;';"
+		echo "copy $tabname $fields to stdout;"
+ 		printf "select E'\\\\\\\\.';"
+	done
+fi
 
 # ----
 # Commit the transaction here in the replica that provided us
