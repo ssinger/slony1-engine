@@ -13,6 +13,7 @@
   return -1 on an error (invalid as a slonik exit code in 2.1)
 - Bug #244 :: The CREATE SET command now requires a set id to be specified.
 - Bug #255 :: Fix serialization conflict issues when using PostgreSQL 9.1.
+- Bug #256 :: set_conf_option() has an extra elevel parameter on PG 9.2
 
 ** 2.1.0 
 ** 2.1.0 RC 2
@@ -213,5 +214,6 @@
 
 ** RELEASE 2.0.6
 - Bug #162 :: typenameTypeId() changes signatures in 9.1
+
 
 

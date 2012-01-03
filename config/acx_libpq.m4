@@ -457,6 +457,33 @@ else
   AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
 fi
 
+AC_MSG_CHECKING(for set_config_option)
+if test -z "$ac_cv_set_config_option_args"; then
+   AC_TRY_COMPILE(
+     [#include "postgres.h"
+      #include "utils/guc.h"],
+     [set_config_option(NULL, NULL, (GucContext) 0, (GucSource) 0, (GucAction) 0, (bool) 0);],
+      ac_cv_set_config_option_args=6)
+   AC_MSG_RESULT([yes, and it takes $ac_cv_set_config_option_args arguments])
+fi
+if test -z "$ac_cv_set_config_option_args"; then
+   AC_TRY_COMPILE(
+     [#include "postgres.h"
+      #include "utils/guc.h"],
+     [set_config_option(NULL, NULL, (GucContext) 0, (GucSource) 0, (GucAction) 0, (bool) 0, (int) 0);],
+      ac_cv_set_config_option_args=7)
+   AC_MSG_RESULT([yes, and it takes $ac_cv_set_config_option_args arguments])
+fi
+
+AC_MSG_CHECKING(for set_config_option)
+if test "$ac_cv_set_config_options_args" = 6; then
+   AC_DEFINE(SETCONFIGOPTION_6)
+elif test "$ac_cv_set_config_options_args" = 7; then
+   AC_DEFINE(SETCONFIGOPTION_7)
+else
+   AC_MSG_RESULT([problem: set_config_option has incompatible args])
+fi
+
 AC_MSG_CHECKING(for standard_conforming_strings)
 if test -z "$ac_cv_standard_conforming_strings"; then
   AC_EGREP_HEADER(standard_conforming_strings, 
