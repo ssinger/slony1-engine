@@ -1223,7 +1223,7 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	update @NAMESPACE@.sl_node set no_failed=true, no_fail_time=now() where no_id=p_failed_node
+	update @NAMESPACE@.sl_node set no_failed=true  where no_id=p_failed_node
 		and no_failed=false;
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
