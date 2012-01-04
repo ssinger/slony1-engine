@@ -2950,6 +2950,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	{
 		SlonikStmt_lock_set lock_set;
 		SlonikStmt_move_set move_set;
+		SlonikStmt_wait_event wait_event; 
 		if( node_entry->temp_backup_node == node_entry->backup_node)
 			continue;
 		lock_set.hdr=stmt->hdr;
@@ -2975,6 +2976,35 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					   lock_set.set_id,	lock_set.set_origin);
 				continue;
 			}
+			/**
+			 * now wait until the MOVE_SET completes.
+			 * FAILOVER is not finished until backup_node is the
+			 * origin.  
+			 */
+			wait_event.hdr=*(SlonikStmt*)stmt;
+			wait_event.wait_origin=node_entry->temp_backup_node;
+			wait_event.wait_on=node_entry->temp_backup_node;
+			wait_event.wait_confirmed=node_entry->backup_node;
+			wait_event.wait_timeout=0;
+			wait_event.ignore_nodes=fail_node_ids;		
+			adminfo1 = get_active_adminfo((SlonikStmt *) stmt, 
+										  node_entry->temp_backup_node);
+			if (db_commit_xact((SlonikStmt *) stmt, 
+							   adminfo1) < 0)
+			{
+				rc = -1;
+				goto cleanup;
+			}
+			rc = slonik_wait_event(&wait_event);
+			if(rc < 0)  
+			{
+				/**
+				 * pretty serious? how do we recover?
+				 */
+				printf("%s:%d error waiting for event\n",
+					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+			}
+		
 		}
 	}
 
@@ -3145,8 +3175,10 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 		if (db_exec_evcommand((SlonikStmt *) stmt,
 							  adminfo1,
 							  &query) < 0)
-			rc = -1;			
-		
+		{
+			rc = -1;
+			goto cleanup;
+		}
 		/**
 		 * now wait for the FAILOVER_NODE event to be confirmed
 		 * by all nodes
@@ -3158,7 +3190,10 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 		{
 			if (db_commit_xact((SlonikStmt *) stmt, 
 							   nodeinfo[i].adminfo) < 0)
-				rc = -1;
+			{
+				rc = -1;			
+				goto cleanup;
+			}
 		}
 		SlonikStmt_wait_event wait_event; 
 		wait_event.hdr=*(SlonikStmt*)stmt;
@@ -3170,7 +3205,10 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 		
 		if (db_commit_xact((SlonikStmt *) stmt, 
 						   adminfo1) < 0)
+		{
 			rc = -1;
+			goto cleanup;
+		}
 		rc = slonik_wait_event(&wait_event);
 		if(rc < 0)  
 		{
@@ -3199,7 +3237,10 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 		if (db_exec_evcommand((SlonikStmt *) stmt,
 							  adminfo1,
 							  &query) < 0)
+		{
 			rc = -1;			
+			goto cleanup;
+		}
 		/*
 		 * commit all open transactions despite of all possible errors
 		 */
@@ -3209,6 +3250,7 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 							   nodeinfo[i].adminfo) < 0)
 				rc = -1;
 		}
+cleanup:
 		dstring_free(&query);
 		return rc;
 }
