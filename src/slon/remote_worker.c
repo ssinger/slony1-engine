@@ -1243,7 +1243,7 @@ remoteWorkerThread_main(void *cdata)
 				res=PQexec(local_dbconn,dstring_data(&query2));
 				while (PQntuples(res) == 0)
 				{
-					slon_log(SLON_INFO, "remoteWorkerThread_%d FAILOVER_NODE waiting for event %d,%s"
+					slon_log(SLON_INFO, "remoteWorkerThread_%d FAILOVER_NODE waiting for event %d,%s\n"
 							 ,node->no_id,
 							 failed_node,seq_no_c);
 					PQclear(res);
