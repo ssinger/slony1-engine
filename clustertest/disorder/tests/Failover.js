@@ -152,7 +152,7 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,3,3);
 	
 	
-	this.slonikSync(1,1);
+	this.slonikSync(1,3);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -248,7 +248,7 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,4,4);
 	
 	
-	this.slonikSync(1,1);	
+	this.slonikSync(1,4);	
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
