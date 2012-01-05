@@ -621,7 +621,7 @@ remoteWorkerThread_main(void *cdata)
 
 				pthread_mutex_lock(&(node->message_lock));
 				sg_last_grouping = 1;   /* reset sizes */
-				sync_group_size = 0;
+				sync_group_size = 1;
 				while (sync_group_size < sg_proposed && sync_group_size < MAXGROUPSIZE && node->message_head != NULL)
 				{
 					if (node->message_head->msg_type != WMSG_EVENT)
