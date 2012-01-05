@@ -1288,7 +1288,8 @@ begin
 			raise warning 'Slony is dropping the subscription of set % found sync %s bigger than %s '
 			, v_set, v_last_sync::text, p_last_seqno::text;
 			perform @NAMESPACE@.unsubscribeSet(v_set,
-				   @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+				   @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),
+				   true);
 		end loop;
 		delete from @NAMESPACE@.sl_event where ev_origin=p_failed_node
 			   and ev_seqno > p_last_seqno;
@@ -3903,11 +3904,11 @@ comment on function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider
 
 Internal actions for subscribing receiver sub_receiver to subscription
 set sub_set.';
-
+drop function IF EXISTS @NAMESPACE@.unsubscribeSet(int4,int4,boolean);
 -- ----------------------------------------------------------------------
--- FUNCTION unsubscribeSet (sub_set, sub_receiver)
+-- FUNCTION unsubscribeSet (sub_set, sub_receiver,force)
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4)
+create or replace function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,p_force boolean)
 returns bigint
 as $$
 declare
@@ -3920,9 +3921,19 @@ begin
 		raise exception 'Slony-I: unsubscribeSet() must be called on receiver';
 	end if;
 
+
+
 	-- ----
 	-- Check that this does not break any chains
 	-- ----
+	if p_force=false and exists (select true from @NAMESPACE@.sl_subscribe
+			 where sub_set = p_sub_set
+				and sub_provider = p_sub_receiver)
+	then
+		raise exception 'Slony-I: Cannot unsubscribe set % while being provider',
+				p_sub_set;
+	end if;
+
 	if exists (select true from @NAMESPACE@.sl_subscribe
 			where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
@@ -3978,7 +3989,7 @@ begin
 			p_sub_set::text, p_sub_receiver::text);
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4) is
+comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,boolean) is
 'unsubscribeSet (sub_set, sub_receiver) 
 
 Unsubscribe node sub_receiver from subscription set sub_set.  This is
@@ -4009,7 +4020,7 @@ begin
 		   sub_set=p_sub_set and sub_provider=p_sub_receiver
 		   and sub_receiver=@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
 	then
-	   perform @NAMESPACE@.unsubscribeSet(p_sub_set,@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+	   perform @NAMESPACE@.unsubscribeSet(p_sub_set,@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),true);
 	end if;
 	
 
@@ -5749,7 +5760,7 @@ begin
 				--then the receiver needs to be unsubscribed.
 				--
 			select @NAMESPACE@.unsubscribeSet(v_row.sub_set,
-												v_local_node)
+												v_local_node,true)
 				   into v_seq_id;
 		end loop;
 	end if;

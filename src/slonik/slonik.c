@@ -4438,7 +4438,7 @@ slonik_unsubscribe_set(SlonikStmt_unsubscribe_set * stmt)
 
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".unsubscribeSet(%d, %d); ",
+				 "select \"_%s\".unsubscribeSet(%d, %d,false); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
