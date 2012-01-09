@@ -480,9 +480,9 @@ if test -z "$ac_cv_set_config_option_args"; then
 fi
 
 AC_MSG_CHECKING(for set_config_option)
-if test "$ac_cv_set_config_options_args" = 6; then
+if test "$ac_cv_set_config_option_args" = 6; then
    AC_DEFINE(SETCONFIGOPTION_6)
-elif test "$ac_cv_set_config_options_args" = 7; then
+elif test "$ac_cv_set_config_option_args" = 7; then
    AC_DEFINE(SETCONFIGOPTION_7)
 else
    AC_MSG_RESULT([problem: set_config_option has incompatible args])
