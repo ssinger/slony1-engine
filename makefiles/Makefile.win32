@@ -12,7 +12,7 @@ AROPT = crs
 DLSUFFIX = .dll
 CFLAGS_SL =
 
-%.dll: %.o
+%.dll: $(SO_OBJS)
 	$(DLLTOOL) --export-all --output-def $*.def $^
 	$(DLLWRAP) -o $@ --def $*.def $^ $(DLLINIT) $(SHLIB_LINK)
 	rm -f $*.def

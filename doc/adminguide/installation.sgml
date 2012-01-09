@@ -201,11 +201,11 @@ is, for versions of &slony1; </para>
 <itemizedlist>
 <listitem><para><filename> $bindir/slon</filename></para></listitem>
 <listitem><para><filename> $bindir/slonik</filename></para></listitem>
-<listitem><para><filename> $libdir/slony1_funcs$(DLSUFFIX)</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_base.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.v83.sql</filename></para></listitem>
-<listitem><para><filename> $datadir/slony1_funcs.v84.sql</filename></para></listitem>
+<listitem><para><filename> $libdir/slony1_funcs.$(SLONY_VERSION).$(DLSUFFIX)</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_base.$(SLONY_VERSION).sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.$(SLONY_VERSION).sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v83.$(SLONY_VERSION).sql</filename></para></listitem>
+<listitem><para><filename> $datadir/slony1_funcs.v84.$(SLONY_VERSION).sql</filename></para></listitem>
 </itemizedlist>
 
 </sect2>
@@ -236,7 +236,9 @@ To compile the &slony1; binaries you will need to
 <itemizedlist>
 <listitem><para>Set the environment variables PGSHARE,PG_INC,PG_LIB,
 PTHREADS_INC,PTHREADS_LIB, GETTEXT_LIB to point to the proper locations
-based on where these applications were installed.  For example</para>
+based on where these applications were installed.  You will also
+need to set SLONY_VERSION to the version of slony you are building.
+For example</para>
 <programlisting>
 set PG_INC=c:\Postgresql\9.0\include
 set PG_LIB=c:\Postgresql\9.0\lib
@@ -244,6 +246,7 @@ set PGSHARE=c:\\Postgresql\\9.0\\share
 set PTHREADS_INC=c:\pthreads-win32\include
 set PTHREADS_LIB=c:\pthreads-win32\lib
 set GETTEXT_LIB=c:\gettext\lib
+set SLONY_VERSION=2.2.0
 </programlisting>
 <para>
 Note that the backslash characters must be escaped for PGSHARE as in the
@@ -262,8 +265,10 @@ nmake /f win32.mak slonik.exe
 </programlisting>
 </para>
 <para>
-src\backend\slony1_funcs.dll and any of the .sql files in 
+src\backend\slony1_funcs.$SLONY_VERSION.dll and any of the .sql files in 
 src\backend need to be installed in your postgresql $share directory.
+The SQL files also need to be renamed to contain the slony version number in 
+them. For example the slony1_funcs.sql should be renamed slony1_funcs.2.2.1.sql
 </para>
 
 </sect2>

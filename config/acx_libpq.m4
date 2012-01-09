@@ -79,6 +79,10 @@ PG_SHAREDIR=${with_pgsharedir}
 fi
 
 
+if test -n "${with_slonybindir}"; then
+SLON_BINDIR=${with_slonybindir}
+fi
+
 AC_MSG_CHECKING(for pg_config)
 
 dnl Checking for pg_config in a list of possible locations.

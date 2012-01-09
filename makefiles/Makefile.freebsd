@@ -14,7 +14,7 @@ CFLAGS_SL = -fpic -DPIC
 endif
 
 
-%.so: %.o
+%.so: $(SO_OBJS)
 ifdef ELF_SYSTEM
 	$(LD) -x -shared -o $@ $<
 else
