@@ -652,9 +652,10 @@ INIT CLUSTER (
 
      <variablelist>
       <varlistentry><term><literal> ID  = ival </literal></term>
-       <listitem><para> Node ID of the node to remove. This can be
-		   either a single node id or a comma seperated list of nodes
-	   </para></listitem>
+
+       <listitem><para> Node ID of the node to remove. This may be
+		   represented either by a single node id or by a
+		   quoted comma separated list of nodes </para></listitem>
       </varlistentry>
       <varlistentry><term><literal> EVENT NODE = ival </literal></term>
        <listitem><para> Node ID of the node to generate the event.
@@ -707,8 +708,8 @@ INIT CLUSTER (
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
    <para> In version 2.0, the default value for <envar>EVENT NODE</envar> was removed, so a node must be specified.</para>
-   <para> In version 2.2 support for dropping multiple ndoes in a single
-	 command was added</para>
+   <para> In version 2.2, support for dropping multiple nodes in a single
+	 command was introduced</para>
    </refsect1>
   </refentry>
 
@@ -2663,9 +2664,9 @@ MOVE SET (
     </para>
     
 	<para>
-	  If multiple set origin nodes have failed then you should tell FAILOVER
-	  about all of them at once.  This is done by passing a list of 
-	  <literal>NODE=(ID=val,BACKUP NODE=val), NODE=(ID=val2, BACKUP NODE=val2)</literal> to failover.
+	  If multiple set origin nodes have failed, then you should tell FAILOVER
+	  about all of them in one request.  This is done by passing a list like
+	  <literal>NODE=(ID=val,BACKUP NODE=val), NODE=(ID=val2, BACKUP NODE=val2)</literal> to FAILOVER.
 	</para>
 
     <variablelist>
@@ -2731,8 +2732,8 @@ FAILOVER(
 
    <refsect1> <title> Version Information </title>
     <para> This command was introduced in &slony1; 1.0 </para>
-    <para> In version 2.0, the default <envar>BACKUP NODE</envar> value of 1 was removed, so it is mandatory to provide a value for this parameter.</para>
-	<para> In version 2.1 support was added for passing multiple nodes to 
+    <para> In version 2.0, the default <envar>BACKUP NODE</envar> value of 1 was removed, so it is mandatory to provide a value for this parameter</para>
+    <para> In version 2.2 support was added for passing multiple nodes to 
 	  a single failover command</para>
    </refsect1>
   </refentry>
