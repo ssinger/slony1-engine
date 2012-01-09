@@ -1148,7 +1148,7 @@ as $$
 declare
 	v_row				record;
 	v_row2				record;
-	v_n					int4;
+	v_failed					boolean;
 begin
 	
 	--
@@ -1165,20 +1165,25 @@ begin
 	-- ----
 	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
 
+	-- Clear out the paths for the failed node.
+	-- This ensures that *this* node won't be pulling data from
+	-- the failed node even if it *does* become accessible
+
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
 	   		  pa_server=p_failed_node;
 	
-	select count(*) INTO v_n from @NAMESPACE@.sl_node
-		   where no_failed=true and no_id=p_failed_node;
-    if v_n=0 then
-	   --blank the paths for the failed node.
-	   --this ensures that *this* node won't be pulling
-	   --data from the failed node (if the failed node can be accessed)
+	v_failed := exists (select 1 from @NAMESPACE@.sl_node 
+		   where no_failed=true and no_id=p_failed_node);
+
+        if not v_failed then
 	   	
 		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
 		and no_failed=false;
 	   -- Rewrite sl_listen table
 	   perform @NAMESPACE@.RebuildListenEntries();
+
+	   -- I suggest removing the addPartialLogIndices() call; this
+	   -- seems unnecessary here, right?
 
 	   -- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
 	   perform @NAMESPACE@.addPartialLogIndices();
