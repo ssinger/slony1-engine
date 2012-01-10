@@ -11,7 +11,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 # ----------
-m4_define([SLONREL_VERSION], esyscmd([echo "1.2.22" | \
+m4_define([SLONREL_VERSION], esyscmd([echo "1.2.23" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
     -e 's/\ //g' -e s/\:/`date +HEAD_%Y%m%d`/ | tr -d '\n']))
 
