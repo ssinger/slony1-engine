@@ -5533,10 +5533,10 @@ $$
 		select last_value into c_log from @NAMESPACE@.sl_log_status;
 		if c_log in (0, 2) then
 		   insert into @NAMESPACE@.sl_log_1 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
 		else   -- (1, 3) 
 		   insert into @NAMESPACE@.sl_log_2 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
 		end if;
 		return NULL;
     end
