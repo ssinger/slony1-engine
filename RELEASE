@@ -14,6 +14,8 @@
 - Bug #244 :: The CREATE SET command now requires a set id to be specified.
 - Bug #255 :: Fix serialization conflict issues when using PostgreSQL 9.1.
 - Bug #256 :: set_conf_option() has an extra elevel parameter on PG 9.2
+- Bug #259 :: Fix TRUNCATE logging so it works with mixed case slony clusters.
+
 
 ** 2.1.0 
 ** 2.1.0 RC 2
