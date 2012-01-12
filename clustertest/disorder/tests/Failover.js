@@ -239,20 +239,18 @@ Failover.prototype.runTest = function() {
 	  * can be used as a intermediate node.
 	  */
 	this.failNode(1,4,true);
-
+		//this.dropNode(1,4);
+	this.slonikSync(1,4);
 	this.compareDb('db2','db4');
 	this.compareDb('db3','db4');		
 	java.lang.Thread.sleep(30*1000);
-	this.dropNode(1,4);
+
 	this.coordinator.log('PROGRESS: About to re-add node 1');
+	this.dropNode(1,4);
 	this.reAddNode(1,4,4);
 	
 	
 	this.slonikSync(1,4);	
-	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
-		this.slonArray[idx - 1].stop();
-		this.coordinator.join(this.slonArray[idx - 1]);
-	}
 
 	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
@@ -260,6 +258,36 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db4','db3');
 	this.compareDb('db3','db2');
 	this.compareDb('db4','db2');
+	this.moveSet(1,4,1);
+
+	//make nodes 2,3 receive from 1 directly.
+	this.addCompletePaths();
+	this.subscribeSet(1,1,1,[2,3]);
+
+	//
+	// create a SECOND replication set
+	// on the same origin as the first set.
+	// Fail this over and make sure we can
+	// failover both sets.
+	this.createSecondSet(1);
+
+	this.subscribeSet(2,1, 1, [ 2, 3 ]);
+	this.slonikSync(1,1);
+	this.failNode(1,2,true);
+    this.slonikSync(1,2);
+
+
+	this.compareDb('db1','db2');
+	this.compareDb('db1', 'db3');
+	this.compareDb('db1', 'db4');
+	this.compareDb('db4','db3');
+	this.compareDb('db3','db2');
+	this.compareDb('db4','db2');
+
+	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
+		this.slonArray[idx - 1].stop();
+		this.coordinator.join(this.slonArray[idx - 1]);
+	}
 
 }
 
