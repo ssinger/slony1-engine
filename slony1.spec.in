@@ -82,8 +82,13 @@ install -d %{buildroot}%{_sysconfdir}/init.d/
 install -d %{buildroot}%{_datadir}/pgsql/
 install -d %{buildroot}%{_libdir}/pgsql/
 make %{?_smp_mflags} DESTDIR=%{buildroot} install
-install -m 0755 src/backend/slony1_funcs.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.so
-install -m 0644 src/backend/*.sql %{buildroot}%{_datadir}/pgsql/
+install -m 0755 src/backend/slony1_funcs.%{version}.so %{buildroot}%{_libdir}/pgsql/slony1_funcs.%{version}.so
+install -m 0644 src/backend/slony1_base.sql %{buildroot}%{_datadir}/pgsql/slony1_base.%{version}.sql
+install -m 0644 src/backend/slony1_base.v83.sql %{buildroot}%{_datadir}/pgsql/slony1_base.v83.%{version}.sql
+install -m 0644 src/backend/slony1_base.v84.sql %{buildroot}%{_datadir}/pgsql/slony1_base.v84.%{version}.sql
+install -m 0644 src/backend/slony1_funcs.sql %{buildroot}%{_datadir}/pgsql/slony1_funcs.%{version}.sql
+install -m 0644 src/backend/slony1_funcs.v83.sql %{buildroot}%{_datadir}/pgsql/slony1_funcs.v83.%{version}.sql
+install -m 0644 src/backend/slony1_funcs.v84.sql %{buildroot}%{_datadir}/pgsql/slony1_funcs.v84.%{version}.sql
 install -m 0755 tools/*.sh  %{buildroot}%{_bindir}/
 install -m 0644 share/slon.conf-sample %{buildroot}%{_sysconfdir}/slon.conf
 install -m 0755 redhat/slon.init %{buildroot}%{_sysconfdir}/init.d/slon
@@ -108,9 +113,9 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYRIGHT UPGRADING HISTORY-1.1 INSTALL SAMPLE RELEASE-2.0
+%doc COPYRIGHT UPGRADING INSTALL SAMPLE RELEASE
 %{_bindir}/*
-%{_libdir}/pgsql/slony1_funcs.so
+%{_libdir}/pgsql/slony1_funcs.%{version}.so
 %{_datadir}/pgsql/*.sql
 %config(noreplace) %{_sysconfdir}/slon.conf
 %{_sysconfdir}/init.d/slon
