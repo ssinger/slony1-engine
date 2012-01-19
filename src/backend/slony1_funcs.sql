@@ -1054,13 +1054,16 @@ comment on function @NAMESPACE@.dropNode_int(p_no_id int4) is
 -- ----------------------------------------------------------------------
 -- FUNCTION preFailover (failed_node)
 --
--- Called on all failover candidates before the failover.
+-- Called on all nodes before the failover.
 -- Failover candidates are direct subscribers of the failed node.
--- This function blanks the paths to the failed node and restarts slon.
+-- This function ensures that nodes identified as failover candidates
+-- meet the criteria for such a node.
+-- For all nodes this function will blank the paths to the failed node and
+-- restarts slon.
 -- This ensures that slonik will have a stable state to determine 
 -- which node is the most-ahead.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.preFailover(p_failed_node int4)
+create or replace function @NAMESPACE@.preFailover(p_failed_node int4,p_is_candidate boolean)
 returns int4
 as $$
 declare
@@ -1071,48 +1074,49 @@ begin
 	-- ----
 	-- All consistency checks first
 
-
-	-- ----
-	-- Check all sets originating on the failed node
-	-- ----
-	for v_row in select set_id
+	if p_is_candidate then
+	   -- ----
+	   -- Check all sets originating on the failed node
+	   -- ----
+	   for v_row in select set_id
 			from @NAMESPACE@.sl_set
 			where set_origin = p_failed_node
-	loop
-		-- ----
-		-- Check that the backup node is subscribed to all sets
-		-- that originate on the failed node
-		-- ----
-		select into v_row2 sub_forward, sub_active
-				from @NAMESPACE@.sl_subscribe
-				where sub_set = v_row.set_id
+		loop
+				-- ----
+				-- Check that the backup node is subscribed to all sets
+				-- that originate on the failed node
+				-- ----
+				select into v_row2 sub_forward, sub_active
+					   from @NAMESPACE@.sl_subscribe
+					   where sub_set = v_row.set_id
 					and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-		if not found then
-			raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
+				if not found then
+				   raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
 					@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
-		end if;
+				end if;
 
-		-- ----
-		-- Check that the subscription is active
-		-- ----
-		if not v_row2.sub_active then
-			raise exception 'Slony-I: cannot failover - subscription for set % is not active',
+				-- ----
+				-- Check that the subscription is active
+				-- ----
+				if not v_row2.sub_active then
+				   raise exception 'Slony-I: cannot failover - subscription for set % is not active',
 					v_row.set_id;
-		end if;
+				end if;
 
-		-- ----
-		-- If there are other subscribers, the backup node needs to
-		-- be a forwarder too.
-		-- ----
-		select into v_n count(*)
-				from @NAMESPACE@.sl_subscribe
-				where sub_set = v_row.set_id
-					and sub_receiver <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-		if v_n > 0 and not v_row2.sub_forward then
-			raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
+				-- ----
+				-- If there are other subscribers, the backup node needs to
+				-- be a forwarder too.
+				-- ----
+				select into v_n count(*)
+					   from @NAMESPACE@.sl_subscribe
+					   where sub_set = v_row.set_id
+					   and sub_receiver <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+				if v_n > 0 and not v_row2.sub_forward then
+				raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
 					 @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
-		end if;
-	end loop;
+				end if;
+			end loop;
+	end if;
 
 	-- ----
 	-- Terminate all connections of the failed node the hard way
@@ -1128,13 +1132,10 @@ begin
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.preFailover(p_failed_node int4) is
+comment on function @NAMESPACE@.preFailover(p_failed_node int4,is_failover_candidate boolean) is
 'Prepare for a failover.  This function is called on all candidate nodes.
 It blanks the paths to the failed node
 and then restart of all node daemons.';
-
-
-
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode (failed_node, backup_node)

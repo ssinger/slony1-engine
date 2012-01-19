@@ -67,6 +67,7 @@ typedef struct
 	int			slon_pid;
 	int			num_sets;
 	int64		max_seqno;
+	bool		failover_candidate;
 }	failnode_node;
 
 
@@ -2731,6 +2732,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		node_entry=node_entry->next,cur_origin_idx++)
 	{
 		failnode_node *nodeinfo;
+		bool has_candidate=false;
 		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, node_entry->backup_node);
 		if (adminfo1 == NULL)
 		{
@@ -2756,12 +2758,18 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 * nodes except for the failed nodes.
 		 */
 		slon_mkquery(&query,
-					 "select distinct backup_id from \"_%s\".sl_failover_targets"
-					 "    where backup_id not in ( %s ) "
-					 "    and set_origin=%d"
-					 "    order by backup_id; ",
+					 "select distinct no_id, backup_id from "
+					 " \"_%s\".sl_node left join \"_%s\".sl_failover_targets"
+					 "    on (sl_node.no_id=sl_failover_targets.backup_id "
+					 "        and set_origin=%d )"
+					 "    where no_id not in ( %s ) "
+					 "    and backup_id not in ( %s ) "
+					 "    order by no_id; ",
 					 stmt->hdr.script->clustername,
-					 dstring_data(&failed_node_list),node_entry->no_id);
+					 stmt->hdr.script->clustername,
+					 node_entry->no_id,
+					 dstring_data(&failed_node_list), 
+					 dstring_data(&failed_node_list));
 		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (res1 == NULL)
 		{
@@ -2769,15 +2777,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			goto cleanup;
 		}
 		node_entry->num_nodes = PQntuples(res1);
-		if (node_entry->num_nodes == 0)
-		{
-			printf("%s:%d error no failover candidates for %d\n",
-						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
-				   ,node_entry->no_id);
-			PQclear(res1);
-			rc=-1;
-			goto cleanup;
-		}
+		
 		
 		/*
 		 * Get a list of all sets that are subscribed more than once 
@@ -2807,7 +2807,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 * Allocate and initialize memory to hold some config info
 		 */
 		failnodebuf[cur_origin_idx] = malloc( sizeof(failnode_node) 
-											  * (node_entry->num_nodes
+										  * (node_entry->num_nodes
 												 +node_entry->num_sets
 												 *node_entry->num_nodes));
 		memset(failnodebuf[cur_origin_idx],0,sizeof(failnode_node) 
@@ -2828,6 +2828,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 * Connect to all these nodes and determine if there is a node daemon
 		 * running on that node.
 		 */
+		has_candidate=true;
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
 			nodeinfo[i].no_id = (int)strtol(PQgetvalue(res1, i, 0), NULL, 10);
@@ -2842,7 +2843,13 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				rc=-1;
 				goto cleanup;
 			}
-			
+			if (PQgetvalue(res1,i,0) != NULL) 
+			{
+				nodeinfo[i].failover_candidate=true;
+			}
+			else
+			  nodeinfo[i].failover_candidate=false;
+
 			slon_mkquery(&query,
 						 "lock table \"_%s\".sl_config_lock; "
 						 "select nl_backendpid from \"_%s\".sl_nodelock "
@@ -2875,22 +2882,32 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		}
 		PQclear(res1);		
 		PQclear(res2);
-		
+		if ( ! has_candidate )
+		{
+			printf("%s:%d error no failover candidates for %d\n",
+						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
+				   ,node_entry->no_id);
+			PQclear(res1);
+			rc=-1;
+			goto cleanup;
+		}
 		/*
 		 * Execute the preFailover() procedure on all failover candidate 
 		 * nodes to stop them from receiving new messages from the failed node.
 		 */
-		slon_mkquery(&query,
-					 "lock table \"_%s\".sl_config_lock; "
-					 "select \"_%s\".preFailover(%d); ",
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 node_entry->no_id);
+	
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
-			printf("executing preFailover(%d) on %d\n",
+			printf("executing preFailover(%d,%d) on %d\n",
 				   node_entry->no_id,
-				   nodeinfo[i].no_id);
+				   nodeinfo[i].no_id,
+				   nodeinfo[i].failover_candidate);
+			slon_mkquery(&query,
+						 "lock table \"_%s\".sl_config_lock; "
+						 "select \"_%s\".preFailover(%d,%s); ",
+						 stmt->hdr.script->clustername,
+						 stmt->hdr.script->clustername,
+						 node_entry->no_id, nodeinfo[i].failover_candidate ? "true" : "false" );
 			if (db_exec_command((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query) < 0)
 			{
 				rc=-1;
@@ -2901,7 +2918,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				rc=-1;
 				goto cleanup;
 			}
-		}
+		}		
 			
 	}
 
@@ -3122,6 +3139,8 @@ int fail_node_promote(SlonikStmt_failed_node * stmt,
 	{
 		
 		int64		ev_seqno;
+		if ( ! nodeinfo[i].failover_candidate )
+			continue;
 		if (nodeinfo[i].no_id == node_entry->backup_node)
 			backup_idx=i;
 		slon_mkquery(&query,
