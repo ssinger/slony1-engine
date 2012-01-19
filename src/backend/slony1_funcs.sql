@@ -1181,13 +1181,7 @@ begin
 		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
 		and no_failed=false;
 	   -- Rewrite sl_listen table
-	   perform @NAMESPACE@.RebuildListenEntries();
-
-	   -- I suggest removing the addPartialLogIndices() call; this
-	   -- seems unnecessary here, right?
-
-	   -- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
-	   perform @NAMESPACE@.addPartialLogIndices();
+	   perform @NAMESPACE@.RebuildListenEntries();	   
 
 	   -- ----
 	   -- Make sure the node daemon will restart
