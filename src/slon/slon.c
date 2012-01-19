@@ -548,10 +548,18 @@ SlonMain(void)
                  "select no_id, no_active, no_comment, "
                  "    (select coalesce(max(con_seqno),0) from %s.sl_confirm "
                  "        where con_origin = no_id and con_received = %d) "
-                 "        as last_event "
+                 "        as last_event, "
+				 "    (select ev_snapshot from %s.sl_event "
+				 "        where ev_origin = no_id "
+				 "        and ev_seqno = (select max(ev_seqno) "
+				 "                    from %s.sl_event "
+				 "                    where ev_origin = no_id "
+				 "                    and ev_type = 'SYNC')) as last_snapshot "
                  "from %s.sl_node "
                  "order by no_id; ",
-                 rtcfg_namespace, rtcfg_nodeid, rtcfg_namespace);
+                 rtcfg_namespace, rtcfg_nodeid, 
+				 rtcfg_namespace, rtcfg_namespace,
+				 rtcfg_namespace);
     res = PQexec(startup_conn, dstring_data(&query));
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -584,6 +592,7 @@ SlonMain(void)
             slon_scanint64(PQgetvalue(res, i, 3), &last_event);
             rtcfg_storeNode(no_id, no_comment);
             rtcfg_setNodeLastEvent(no_id, last_event);
+			rtcfg_setNodeLastSnapshot(no_id, PQgetvalue(res, i, 4));
 
             /*
              * If it is active, remember for activation just before we start

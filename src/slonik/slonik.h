@@ -407,7 +407,8 @@ struct SlonikStmt_ddl_script_s
 	int			ddl_setid;
 	char	   *ddl_fname;
 	int			ev_origin;
-	int			only_on_node;
+	char       *only_on_nodes;
+	int         only_on_node;
 	FILE	   *ddl_fd;
 };
 

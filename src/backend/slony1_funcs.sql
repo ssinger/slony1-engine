@@ -717,6 +717,20 @@ begin
 		raise notice 'You may run into problems later!';
 	end if;
 	
+	--
+	-- Put the apply trigger onto sl_log_1 and sl_log_2
+	--
+	create trigger apply_trigger
+		before INSERT on @NAMESPACE@.sl_log_1
+		for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
+	alter table @NAMESPACE@.sl_log_1
+	  enable replica trigger apply_trigger;
+	create trigger apply_trigger
+		before INSERT on @NAMESPACE@.sl_log_2
+		for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
+	alter table @NAMESPACE@.sl_log_2
+			enable replica trigger apply_trigger;
+
 	return p_local_node_id;
 end;
 $$ language plpgsql;
@@ -3324,170 +3338,64 @@ Set sequence seq_id to have new value last_value.
 ';
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlScript_prepare (set_id, only_on_node)
+-- FUNCTION ddlCapture (origin, statement)
 --
---	Generate the DDL_SCRIPT event
+--	Capture DDL into sl_log_script
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript_prepare (p_set_id int4, p_only_on_node int4)
+create or replace function @NAMESPACE@.ddlCapture (p_statement text, p_nodes text)
 returns integer
 as $$
 declare
-	v_set_origin		int4;
+	c_local_node	integer;
+	c_found_origin	boolean;
+	c_node			text;
+	c_cmdargs		text[];
 begin
-	-- ----
-	-- Check that the set exists and originates here
-	-- ----
-	select set_origin into v_set_origin
-			from @NAMESPACE@.sl_set
-			where set_id = p_set_id
-			for update;
-	if not found then
-		raise exception 'Slony-I: set % not found', p_set_id;
-	end if;
-	if p_only_on_node = -1 then
-		if v_set_origin <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-			raise exception 'Slony-I: set % does not originate on local node',
-				p_set_id;
-		end if;
-		-- ----
-		-- Create a SYNC event
-		-- ----
-		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SYNC', NULL);
-	else
-		-- If running "ONLY ON NODE", there are two possibilities:
-		-- 1.  Running on origin, where denyaccess() triggers are already shut off
-		-- 2.  Running on replica, where we need the LOCAL role to suppress denyaccess() triggers
-		execute 'create temp table _slony1_saved_session_replication_role (
-					setting text);';
-		execute 'insert into _slony1_saved_session_replication_role
-					select setting from pg_catalog.pg_settings
-					where name = ''session_replication_role'';';
-		if (v_set_origin <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')) then
-			execute 'set session_replication_role to local;';
-		end if;
-	end if;
-	return 1;
+	c_local_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
+	c_cmdargs = array_append('{}'::text[], p_statement);
+	if p_nodes is not null then
+		c_found_origin := 'f';
+		-- p_nodes list needs to consist of a list of nodes that exist
+		-- and that include the current node ID
+		for c_node in select trim(node) from
+				pg_catalog.regexp_split_to_table(p_nodes, ',') as node loop
+			if not exists 
+					(select 1 from @NAMESPACE@.sl_node 
+					where no_id = (c_node::integer)) then
+				raise exception 'ddlcapture(%,%) - node % does not exist!', 
+					p_statement, p_nodes, c_node;
+		   end if;
+
+		   if c_local_node = (c_node::integer) then
+		   	  c_found_origin := 't';
+		   end if;
+
+		   c_cmdargs = array_append(c_cmdargs, c_node);
+	   end loop;
+
+		if not c_found_origin then
+			raise exception 
+				'ddlcapture(%,%) - origin node % not included in ONLY ON list!',
+				p_statement, p_nodes, c_local_node;
+       end if;
+    end if;
+
+	execute p_statement;
+
+	insert into @NAMESPACE@.sl_log_script
+			(log_origin, log_txid, log_actionseq, log_cmdargs)
+		values 
+			(c_local_node, pg_catalog.txid_current(), 
+			nextval('@NAMESPACE@.sl_action_seq'), c_cmdargs);
+
+	return currval('@NAMESPACE@.sl_action_seq');
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.ddlScript_prepare (p_set_id int4, p_only_on_node int4) is 
-'Prepare for DDL script execution on origin';
+comment on function @NAMESPACE@.ddlCapture (p_statement text, p_nodes text) is
+'Capture an SQL statement (usually DDL) that is to be literally replayed on subscribers';
 
--- 	perform @NAMESPACE@.ddlScript_int(p_set_id, p_script, p_only_on_node);
-
--- ----------------------------------------------------------------------
--- FUNCTION ddlScript_complete (set_id, script, only_on_node)
---
---	Generate the DDL_SCRIPT event
--- ----------------------------------------------------------------------
-drop function if exists @NAMESPACE@.ddlScript_complete (int4, text, int4);  -- Needed because function signature has changed!
-
-create or replace function @NAMESPACE@.ddlScript_complete (p_set_id int4, p_script text, p_only_on_node int4)
-returns bigint
-as $$
-declare
-	v_set_origin		int4;
-	v_query				text;
-	v_row				record;
-begin
-	if p_only_on_node = -1 then
-	        perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
-		return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DDL_SCRIPT', 
-			p_set_id::text, p_script::text, p_only_on_node::text);
-	end if;
-	if p_only_on_node <> -1 then
-		for v_row in execute
-			'select setting from _slony1_saved_session_replication_role' loop
-			v_query := 'set session_replication_role to ' || v_row.setting;
-		end loop;
-		execute v_query;
-		execute 'drop table _slony1_saved_session_replication_role';
-		perform @NAMESPACE@.ddlScript_complete_int(p_set_id,p_only_on_node);
-	end if;
-	return NULL;
-end;
-$$ language plpgsql;
-
-comment on function @NAMESPACE@.ddlScript_complete(p_set_id int4, p_script text, p_only_on_node int4) is
-'ddlScript_complete(set_id, script, only_on_node)
-
-After script has run on origin, this fixes up relnames, restores
-triggers, and generates a DDL_SCRIPT event to request it to be run on
-replicated slaves.';
-
--- ----------------------------------------------------------------------
--- FUNCTION ddlScript_prepare_int (set_id, only_on_node)
---
---	Prepare for the DDL_SCRIPT event
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript_prepare_int (p_set_id int4, p_only_on_node int4)
-returns int4
-as $$
-declare
-	v_set_origin		int4;
-	v_no_id				int4;
-	v_row				record;
-begin
-	-- ----
-	-- Check that we either are the set origin or a current
-	-- subscriber of the set.
-	-- ----
-	v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-	select set_origin into v_set_origin
-			from @NAMESPACE@.sl_set
-			where set_id = p_set_id
-			for update;
-	if not found then
-		raise exception 'Slony-I: set % not found', p_set_id;
-	end if;
-	if v_set_origin <> v_no_id
-			and not exists (select 1 from @NAMESPACE@.sl_subscribe
-						where sub_set = p_set_id
-						and sub_receiver = v_no_id)
-	then
-		return 0;
-	end if;
-
-	-- ----
-	-- If execution on only one node is requested, check that
-	-- we are that node.
-	-- ----
-	if p_only_on_node > 0 and p_only_on_node <> v_no_id then
-		return 0;
-	end if;
-
-	return p_set_id;
-end;
-$$ language plpgsql;
-
-comment on function @NAMESPACE@.ddlScript_prepare_int (p_set_id int4, p_only_on_node int4) is
-'ddlScript_prepare_int (set_id, only_on_node)
-
-Do preparatory work for a DDL script, restoring 
-triggers/rules to original state.';
-
-
--- ----------------------------------------------------------------------
--- FUNCTION ddlScript_complete_int (set_id, only_on_node)
---
---	Complete the DDL_SCRIPT event
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.ddlScript_complete_int (p_set_id int4, p_only_on_node int4)
-returns int4
-as $$
-declare
-	v_row				record;
-begin
-	perform @NAMESPACE@.updateRelname(p_set_id, p_only_on_node);
-	perform @NAMESPACE@.repair_log_triggers(true);
-	return p_set_id;
-end;
-$$ language plpgsql;
-comment on function @NAMESPACE@.ddlScript_complete_int(p_set_id int4, p_only_on_node int4) is
-'ddlScript_complete_int(set_id, script, only_on_node)
-
-Complete processing the DDL_SCRIPT event.  This puts tables back into
-replicated mode.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableAddTriggers (tab_id)
@@ -3783,6 +3691,43 @@ begin
 		end if;
 	end if;
 
+	-- ---
+	-- Enforce that all sets from one origin are subscribed
+	-- using the same data provider per receiver.
+	-- ----
+	if not exists (select 1 from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set and sub_receiver = p_sub_receiver) then
+		--
+		-- New subscription - error out if we have any other subscription
+		-- from that origin with a different data provider.
+		--
+		for v_rec in select sub_provider from @NAMESPACE@.sl_subscribe
+				join @NAMESPACE@.sl_set on set_id = sub_set
+				where set_origin = v_set_origin and sub_receiver = p_sub_receiver
+		loop
+			if v_rec.sub_provider <> p_sub_provider then
+				raise exception 'Slony-I: subscribeSet(): wrong provider % - existing subscription from origin % users provider %',
+					p_sub_provider, v_set_origin, v_rec.sub_provider;
+			end if;
+		end loop;
+	else
+		--
+		-- Existing subscription - in case the data provider changes and
+		-- there are other subscriptions, warn here. subscribeSet_int()
+		-- will currently change the data provider for those sets as well.
+		--
+		for v_rec in select set_id, sub_provider from @NAMESPACE@.sl_subscribe
+				join @NAMESPACE@.sl_set on set_id = sub_set
+				where set_origin = v_set_origin and sub_receiver = p_sub_receiver
+				and set_id <> p_sub_set
+		loop
+			if v_rec.sub_provider <> p_sub_provider then
+				raise notice 'Slony-I: subscribeSet(): data provider for set % will also be changed',
+					v_rec.set_id;
+			end if;
+		end loop;
+	end if;
+
 	-- ----
 	-- Create the SUBSCRIBE_SET event
 	-- ----
@@ -3822,6 +3767,16 @@ declare
 	v_sub_row			record;
 begin
 	-- ----
+	-- Lookup the set origin
+	-- ----
+	select set_origin into v_set_origin
+			from @NAMESPACE@.sl_set
+			where set_id = p_sub_set;
+	if not found then
+		raise exception 'Slony-I: subscribeSet_int(): set % not found', p_sub_set;
+	end if;
+
+	-- ----
 	-- Provider change is only allowed for active sets
 	-- ----
 	if p_sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -3845,6 +3800,40 @@ begin
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	if found then
+		-- ----
+		-- This is changing a subscriptoin. Make sure all sets from
+		-- this origin are subscribed using the same data provider.
+		-- For this we first check that the requested data provider
+		-- is subscribed to all the sets, the receiver is subscribed to.
+		-- ----
+		for v_sub_row in select set_id from @NAMESPACE@.sl_set
+				join @NAMESPACE@.sl_subscribe on set_id = sub_set
+				where set_origin = v_set_origin
+				and sub_receiver = p_sub_receiver
+				and sub_set <> p_sub_set
+		loop
+			if not exists (select 1 from @NAMESPACE@.sl_subscribe
+					where sub_set = v_sub_row.set_id
+					and sub_receiver = p_sub_provider
+					and sub_active and sub_forward)
+				and not exists (select 1 from @NAMESPACE@.sl_set
+					where set_id = v_sub_row.set_id
+					and set_origin = p_sub_provider)
+			then
+				raise exception 'Slony-I: subscribeSet_int(): node % is not a forwarding subscriber for set %',
+						p_sub_provider, v_sub_row.set_id;
+			end if;
+
+			-- ----
+			-- New data provider offers this set as well, change that
+			-- subscription too.
+			-- ----
+			update @NAMESPACE@.sl_subscribe
+					set sub_provider = p_sub_provider
+					where sub_set = v_sub_row.set_id
+					and sub_receiver = p_sub_receiver;
+		end loop;
+
 		-- ----
 		-- Rewrite sl_listen table
 		-- ----
@@ -3874,13 +3863,6 @@ begin
 	-- ----
 	-- If the set origin is here, then enable the subscription
 	-- ----
-	select set_origin into v_set_origin
-			from @NAMESPACE@.sl_set
-			where set_id = p_sub_set;
-	if not found then
-		raise exception 'Slony-I: subscribeSet_int(): set % not found', p_sub_set;
-	end if;
-
 	if v_set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
 		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
 				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
@@ -3905,6 +3887,7 @@ comment on function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider
 
 Internal actions for subscribing receiver sub_receiver to subscription
 set sub_set.';
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION unsubscribeSet (sub_set, sub_receiver)
@@ -4222,6 +4205,7 @@ begin
           where (ev_origin, ev_seqno) in (select ev_origin, min(ev_seqno) from @NAMESPACE@.sl_event where ev_type = 'SYNC' group by ev_origin)
 	loop
 		delete from @NAMESPACE@.sl_seqlog where seql_origin = v_origin and seql_ev_seqno < v_seqno;
+		delete from @NAMESPACE@.sl_log_script where log_origin = v_origin and log_txid < v_xmin;
     end loop;
 	
 	v_rc := @NAMESPACE@.logswitch_finish();
@@ -4616,12 +4600,14 @@ begin
                 tab_relname = PGC.relname, tab_nspname = PGN.nspname
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN 
                 where @NAMESPACE@.sl_table.tab_reloid = PGC.oid
-                        and PGC.relnamespace = PGN.oid;
+                        and PGC.relnamespace = PGN.oid and
+                    (tab_relname <> PGC.relname or tab_nspname <> PGN.nspname);
         update @NAMESPACE@.sl_sequence set
                 seq_relname = PGC.relname, seq_nspname = PGN.nspname
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN
                 where @NAMESPACE@.sl_sequence.seq_reloid = PGC.oid
-                and PGC.relnamespace = PGN.oid;
+                and PGC.relnamespace = PGN.oid and
+ 		    (seq_relname <> PGC.relname or seq_nspname <> PGN.nspname);
         return p_set_id;
 end;
 $$ language plpgsql;
@@ -4996,19 +4982,27 @@ system switches between sl_log_1 and sl_log_2.';
 --
 --	Called by slonik during the function upgrade process. 
 -- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.check_table_field_exists (p_namespace text, p_table text, p_field text)
+returns bool as $$
+BEGIN
+	return exists (
+			select 1 from "information_schema".columns
+				where table_schema = p_namespace
+				and table_name = p_table
+				and column_name = p_field
+		);
+END;$$ language plpgsql;
+
+comment on function @NAMESPACE@.check_table_field_exists (p_namespace text, p_table text, p_field text)
+is 'Check if a table has a specific attribute';
+
 create or replace function @NAMESPACE@.add_missing_table_field (p_namespace text, p_table text, p_field text, p_type text) 
 returns bool as $$
 DECLARE
   v_row       record;
   v_query     text;
 BEGIN
-  select 1 into v_row from pg_namespace n, pg_class c, pg_attribute a
-     where @NAMESPACE@.slon_quote_brute(n.nspname) = p_namespace and 
-         c.relnamespace = n.oid and
-         @NAMESPACE@.slon_quote_brute(c.relname) = p_table and
-         a.attrelid = c.oid and
-         @NAMESPACE@.slon_quote_brute(a.attname) = p_field;
-  if not found then
+  if not @NAMESPACE@.check_table_field_exists(p_namespace, p_table, p_field) then
     raise notice 'Upgrade table %.% - add field %', p_namespace, p_table, p_field;
     v_query := 'alter table ' || p_namespace || '.' || p_table || ' add column ';
     v_query := v_query || p_field || ' ' || p_type || ';';
@@ -5080,9 +5074,213 @@ create table @NAMESPACE@.sl_components (
 	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
 	   execute v_query;
         end if;
+	
+	--
+	-- On the upgrade to 2.2, we change the layout of sl_log_N by
+	-- adding columns log_tablenspname, log_tablerelname, and
+	-- log_cmdupdncols as well as changing log_cmddata into
+	-- log_cmdargs, which is a text array.
+	--
+	if not @NAMESPACE@.check_table_field_exists('_@CLUSTERNAME@', 'sl_log_1', 'log_cmdargs') then
+		--
+		-- Check that the cluster is completely caught up
+		--
+		if @NAMESPACE@.check_unconfirmed_log() then
+			raise EXCEPTION 'cannot upgrade to new sl_log_N format due to existing unreplicated data';
+		end if;
+
+		--
+		-- Drop tables sl_log_1 and sl_log_2
+		--
+		drop table @NAMESPACE@.sl_log_1;
+		drop table @NAMESPACE@.sl_log_2;
+
+		--
+		-- Create the new sl_log_1
+		--
+		create table @NAMESPACE@.sl_log_1 (
+			log_origin          int4,
+			log_txid            bigint,
+			log_tableid         int4,
+			log_actionseq       int8,
+			log_tablenspname    text,
+			log_tablerelname    text,
+			log_cmdtype         char,
+			log_cmdupdncols     int4,
+			log_cmdargs         text[]
+		) without oids;
+		create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
+			(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
+		comment on column @NAMESPACE@.sl_log_1.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+		comment on column @NAMESPACE@.sl_log_1.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_1.log_tablenspname is 'The schema name of the table affected';
+		comment on column @NAMESPACE@.sl_log_1.log_tablerelname is 'The table name of the table affected';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+		comment on column @NAMESPACE@.sl_log_1.log_cmdargs is 'The data needed to perform the log action on the replica';
+
+		--
+		-- Create the new sl_log_2
+		--
+		create table @NAMESPACE@.sl_log_2 (
+			log_origin          int4,
+			log_txid            bigint,
+			log_tableid         int4,
+			log_actionseq       int8,
+			log_tablenspname    text,
+			log_tablerelname    text,
+			log_cmdtype         char,
+			log_cmdupdncols     int4,
+			log_cmdargs         text[]
+		) without oids;
+		create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
+			(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
+		comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+		comment on column @NAMESPACE@.sl_log_2.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_2.log_tablenspname is 'The schema name of the table affected';
+		comment on column @NAMESPACE@.sl_log_2.log_tablerelname is 'The table name of the table affected';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
+
+        create table @NAMESPACE@.sl_log_script (
+        	log_origin			int4,
+        	log_txid			bigint,
+        	log_actionseq		int8,
+        	log_query			text,
+			log_only_on			text
+        ) WITHOUT OIDS;
+        create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
+        	(log_origin, log_txid, log_actionseq);
+        
+        comment on table @NAMESPACE@.sl_log_script is 'Captures DDL queries to be propagated to subscriber nodes';
+        comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
+        comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
+        comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+        comment on column @NAMESPACE@.sl_log_script.log_query is 'The data needed to perform the log action on the replica.';
+		comment on column @NAMESPACE@.sl_log_script.log_only_on is 'Optional list of nodes on which scripts are to be executed';
+
+		--
+		-- Put the log apply triggers back onto sl_log_1/2
+		--
+		create trigger apply_trigger
+			before INSERT on @NAMESPACE@.sl_log_1
+			for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
+		alter table @NAMESPACE@.sl_log_1
+			enable replica trigger apply_trigger;
+		create trigger apply_trigger
+			before INSERT on @NAMESPACE@.sl_log_2
+			for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
+		alter table @NAMESPACE@.sl_log_2
+			enable replica trigger apply_trigger;
+	end if;
+
 	return p_old;
 end;
-$$ language plpgsql
+$$ language plpgsql;
+
+create or replace function @NAMESPACE@.check_unconfirmed_log ()
+returns bool as $$
+declare
+	v_rc		bool = false;
+	v_error		bool = false;
+	v_origin	integer;
+	v_allconf	bigint;
+	v_allsnap	txid_snapshot;
+	v_count		bigint;
+begin
+	--
+	-- Loop over all nodes that are the origin of at least one set
+	--
+	for v_origin in select distinct set_origin as no_id
+			from @NAMESPACE@.sl_set loop
+		--
+		-- Per origin determine which is the highest event seqno
+		-- that is confirmed by all subscribers to any of the
+		-- origins sets.
+		--
+		select into v_allconf min(max_seqno) from (
+				select con_received, max(con_seqno) as max_seqno
+					from @NAMESPACE@.sl_confirm
+					where con_origin = v_origin
+					and con_received in (
+						select distinct sub_receiver
+							from @NAMESPACE@.sl_set as SET,
+								@NAMESPACE@.sl_subscribe as SUB
+							where SET.set_id = SUB.sub_set
+							and SET.set_origin = v_origin
+						)
+					group by con_received
+			) as maxconfirmed;
+		if not found then
+			raise NOTICE 'check_unconfirmed_log(): cannot determine highest ev_seqno for node % confirmed by all subscribers', v_origin;
+			v_error = true;
+			continue;
+		end if;
+
+		--
+		-- Get the txid snapshot that corresponds with that event
+		--
+		select into v_allsnap ev_snapshot
+			from @NAMESPACE@.sl_event
+			where ev_origin = v_origin
+			and ev_seqno = v_allconf;
+		if not found then
+			raise NOTICE 'check_unconfirmed_log(): cannot find event %,% in sl_event', v_origin, v_allconf;
+			v_error = true;
+			continue;
+		end if;
+
+		--
+		-- Count the number of log rows that appeard after that event.
+		--
+		select into v_count count(*) from (
+			select 1 from @NAMESPACE@.sl_log_1
+				where log_origin = v_origin
+				and log_txid >= "pg_catalog".txid_snapshot_xmax(v_allsnap)
+			union all
+			select 1 from @NAMESPACE@.sl_log_1
+				where log_origin = v_origin
+				and log_txid in (
+					select * from "pg_catalog".txid_snapshot_xip(v_allsnap)
+				)
+			union all
+			select 1 from @NAMESPACE@.sl_log_2
+				where log_origin = v_origin
+				and log_txid >= "pg_catalog".txid_snapshot_xmax(v_allsnap)
+			union all
+			select 1 from @NAMESPACE@.sl_log_2
+				where log_origin = v_origin
+				and log_txid in (
+					select * from "pg_catalog".txid_snapshot_xip(v_allsnap)
+				)
+		) as cnt;
+
+		if v_count > 0 then
+			raise NOTICE 'check_unconfirmed_log(): origin % has % log rows that have not propagated to all subscribers yet', v_origin, v_count;
+			v_rc = true;
+		end if;
+	end loop;
+
+	if v_error then
+		raise EXCEPTION 'check_unconfirmed_log(): aborting due to previous inconsistency';
+	end if;
+
+	return v_rc;
+end;
+$$ language plpgsql;
+
+--
+-- XXX What is this doing here?
+--
 set search_path to @NAMESPACE@
 ;
 
@@ -5305,6 +5503,11 @@ begin
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
 		return next prec;
 	end if;
+	prec.nspname := '_@CLUSTERNAME@';
+	prec.relname := 'sl_log_script';
+	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
+		return next prec;
+	end if;
 	prec.nspname := 'pg_catalog';
 	prec.relname := 'pg_listener';
 	if @NAMESPACE@.ShouldSlonyVacuumTable(prec.nspname, prec.relname) then
@@ -5520,23 +5723,37 @@ comment on function @NAMESPACE@.slon_node_health_check() is 'called when slon st
 create or replace function @NAMESPACE@.log_truncate () returns trigger as
 $$
 	declare
-		c_command text;
+		c_nspname text;
+		c_relname text;
 		c_log integer;
 		c_node integer;
 		c_tabid integer;
 	begin
         c_tabid := tg_argv[0];
 	    c_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-		c_command := 'TRUNCATE TABLE ONLY "' || tab_nspname || '"."' ||
-				  tab_relname || '" CASCADE' 
+		select tab_nspname, tab_relname into c_nspname, c_relname
 				  from @NAMESPACE@.sl_table where tab_id = c_tabid;
 		select last_value into c_log from @NAMESPACE@.sl_log_status;
 		if c_log in (0, 2) then
-		   insert into @NAMESPACE@.sl_log_1 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
+			insert into @NAMESPACE@.sl_log_1 (
+					log_origin, log_txid, log_tableid, 
+					log_actionseq, log_tablenspname, 
+					log_tablerelname, log_cmdtype, 
+					log_cmdupdncols, log_cmdargs
+				) values (
+					c_node, pg_catalog.txid_current(), c_tabid,
+					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
+					c_relname, 'T', 0, array[]::text[]);
 		else   -- (1, 3) 
-		   insert into @NAMESPACE@.sl_log_2 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
+			insert into @NAMESPACE@.sl_log_2 (
+					log_origin, log_txid, log_tableid, 
+					log_actionseq, log_tablenspname, 
+					log_tablerelname, log_cmdtype, 
+					log_cmdupdncols, log_cmdargs
+				) values (
+					c_node, pg_catalog.txid_current(), c_tabid,
+					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
+					c_relname, 'T', 0, array[]::text[]);
 		end if;
 		return NULL;
     end
@@ -5676,7 +5893,18 @@ language plpgsql;
 comment on function @NAMESPACE@.repair_log_triggers(only_locked boolean)
 is '
 repair the log triggers as required.  If only_locked is true then only 
-tables that are already exclusivly locked by the current transaction are 
+tables that are already exclusively locked by the current transaction are 
 repaired. Otherwise all replicated tables with outdated trigger arguments
 are recreated.';
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApply ()
+--
+--	
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApply () returns trigger
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
+	language C
+	security definer;
 

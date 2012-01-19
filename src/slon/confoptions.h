@@ -18,8 +18,6 @@ extern char *archive_dir;
 extern int	slon_log_level;
 extern int	sync_interval;
 extern int	sync_interval_timeout;
-extern int	sync_max_rowsize;
-extern int	sync_max_largemem;
 extern int	remote_listen_timeout;
 
 extern int	sync_group_maxsize;
