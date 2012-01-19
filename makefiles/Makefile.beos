@@ -8,7 +8,7 @@ endif
 DLSUFFIX = .so
 CFLAGS_SL = -fpic -DPIC
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	ln -fs $(top_srcdir)/src/backend/postgres _APP_
 	$(CC) -nostart -Xlinker -soname=$@ -o $@ _APP_ $<
 

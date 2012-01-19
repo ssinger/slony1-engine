@@ -9,6 +9,6 @@ else
 CFLAGS_SL = -K PIC
 endif
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(LD) -G -Bdynamic -o $@ $<
 sqlmansect = 7

@@ -10,12 +10,12 @@
 slony_subdir = src/backend
 slony_top_builddir = ../..
 SLFILEDESC="Slony replication functions"
-SO_NAME = $(NAME)$(DLSUFFIX)
+NAME		= slony1_funcs
+SO_NAME = $(NAME).$(VERSION)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
 
 override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL)
 
-NAME		= slony1_funcs
 
 SO_OBJS	= $(NAME).o $(WIN32RES)
 
@@ -62,7 +62,7 @@ splint:
 install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)
 	for file in $(SQL_NAMES); do \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(pgsharedir) || exit ; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(pgsharedir)/`basename $$file .sql`.$(VERSION).sql || exit ; \
 	done
 
 

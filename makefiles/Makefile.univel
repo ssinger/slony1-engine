@@ -3,7 +3,7 @@ export_dynamic = -Wl,-Bexport
 DLSUFFIX = .so
 CFLAGS_SL = -K PIC
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(LD) -G -Bdynamic -o $@ $<
 
 sqlmansect = 5

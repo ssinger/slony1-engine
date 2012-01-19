@@ -112,6 +112,8 @@ sub ps_args {
     return "/usr/ucb/ps -auxww";
   } elsif ($sys eq "AIX") {
     return "/usr/bin/ps auxww";
+  } elsif ($sys eq "Darwin") {
+    return "/bin/ps auxww";
   } 
   return "/usr/bin/ps -auxww";    # This may be questionable for other systems; extend as needed!    
 }
