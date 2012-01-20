@@ -404,7 +404,6 @@ struct SlonikStmt_move_set_s
 struct SlonikStmt_ddl_script_s
 {
 	SlonikStmt	hdr;
-	int			ddl_setid;
 	char	   *ddl_fname;
 	int			ev_origin;
 	char       *only_on_nodes;
@@ -645,6 +644,7 @@ typedef enum {
 	O_DATE_FORMAT,
 	O_EVENT_NODE,
 	O_EXECUTE_ONLY_ON,
+	O_EXECUTE_ONLY_LIST,
 	O_FILENAME,
 	O_FORWARD,
 	O_FQNAME,
