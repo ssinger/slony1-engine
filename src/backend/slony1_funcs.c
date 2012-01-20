@@ -25,7 +25,6 @@
 #include "parser/keywords.h"
 #include "parser/parse_type.h"
 #include "executor/spi.h"
-#include "libpq/md5.h"
 #include "commands/trigger.h"
 #include "commands/async.h"
 #include "catalog/pg_operator.h"
