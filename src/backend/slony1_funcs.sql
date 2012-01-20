@@ -5901,10 +5901,22 @@ are recreated.';
 -- ----------------------------------------------------------------------
 -- FUNCTION logApply ()
 --
---	
+--	A trigger function that is placed on the tables sl_log_1/2 that
+--	does the actual work of updating the user tables.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApply () returns trigger
     as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
 	language C
 	security definer;
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApplySetCacheSize ()
+--
+--	A control function for the prepared query plan cache size used
+--	in the logApply() trigger.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApplySetCacheSize (int4) 
+returns int4
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
+	language C;
 

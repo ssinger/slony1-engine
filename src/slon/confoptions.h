@@ -30,6 +30,8 @@ extern int  keep_alive_idle;
 extern int  keep_alive_interval;
 extern int  keep_alive_count;
 
+extern int	apply_cache_size;
+
 /*
  * ----------
  * Global variables in cleanup_thread.c

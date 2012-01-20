@@ -341,8 +341,16 @@ remoteWorkerThread_main(void *cdata)
 	 * Put the connection into replication mode
 	 */
 	(void) slon_mkquery(&query1,
-						"set session_replication_role = replica; ",
-						rtcfg_namespace, rtcfg_cluster_name);
+						"set session_replication_role = replica; ");
+	if (query_execute(node, local_dbconn, &query1) < 0)
+		slon_retry();
+
+	/*
+	 * Tell the logApply() trigger the query cache size to use.
+	 */
+	(void) slon_mkquery(&query1,
+						"select %s.logApplySetCacheSize(%d);",
+						rtcfg_namespace, apply_cache_size);
 	if (query_execute(node, local_dbconn, &query1) < 0)
 		slon_retry();
 
@@ -4551,7 +4559,7 @@ sync_helper(void *cdata,PGconn * local_conn)
 	slon_mkquery(&copy_in,"COPY %s.\"sl_log_%d\" ( log_origin, "	   	\
 				 "log_txid,log_tableid,log_actionseq,log_tablenspname, "	\
 				 "log_tablerelname, log_cmdtype, log_cmdupdncols,"		\
-				 "log_cmdargs) FROM STDOUT",
+				 "log_cmdargs) FROM STDIN",
 				 rtcfg_namespace, wd->active_log_table);
 	
 	res2 = PQexec(local_conn,dstring_data(&copy_in));	\
