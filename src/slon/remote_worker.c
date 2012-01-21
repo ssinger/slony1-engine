@@ -189,6 +189,7 @@ struct WorkerGroupData_s
 	ProviderInfo *provider_head;
 	ProviderInfo *provider_tail;
 
+	char		duration_buf[64];
 };
 
 
@@ -317,6 +318,7 @@ remoteWorkerThread_main(void *cdata)
 	else
 	{
 		memset(wd, 0, sizeof(WorkerGroupData));
+		strcpy(wd->duration_buf, "0 s");
 	}
 
 
@@ -641,7 +643,7 @@ remoteWorkerThread_main(void *cdata)
 
 			/*
 			 * replace query1 with the forwarding of all the grouped sync
-			 * events and a commit.
+			 * events, the call to logApplySaveStats()  and a commit.
 			 */
 			dstring_reset(&query1);
 			sg_last_grouping = 0;
@@ -652,6 +654,13 @@ remoteWorkerThread_main(void *cdata)
 							free(sync_group[i]);
 					sg_last_grouping++;
 			}
+
+			slon_appendquery(&query1, "select %s.logApplySaveStats("
+					"'_%s', %d, '%s'::interval); ",
+					rtcfg_namespace, rtcfg_cluster_name,
+					node->no_id, wd->duration_buf);
+			strcpy(wd->duration_buf, "0 s");
+
 			slon_appendquery(&query1, "commit transaction;");
 
 			if (query_execute(node, local_dbconn, &query1) < 0)
@@ -4365,6 +4374,7 @@ slon_log(SLON_DEBUG2,
 			 INT64_FORMAT " done in %.3f seconds\n",
 			 node->no_id, event->ev_seqno,
 			 TIMEVAL_DIFF(&tv_start, &tv_now));
+	sprintf(wd->duration_buf, "%.3f s", TIMEVAL_DIFF(&tv_start, &tv_now));
 
  	slon_log(SLON_DEBUG1, 
 			 "remoteWorkerThread_%d: SYNC " INT64_FORMAT " sync_event timing: " 
