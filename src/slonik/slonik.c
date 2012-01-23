@@ -91,7 +91,7 @@ static SlonikAdmInfo *get_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_active_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_checked_adminfo(SlonikStmt * stmt, int no_id);
 static int	slonik_repair_config(SlonikStmt_repair_config * stmt);
-
+static int  slonik_resubscribe_node(SlonikStmt_resubscribe_node * stmt);
 
 static int	script_check(SlonikScript * script);
 static int	script_check_adminfo(SlonikStmt * hdr, int no_id);
@@ -386,7 +386,31 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					}
 				}
 				break;
+		case STMT_RESUBSCRIBE_NODE:
+				{
+				  SlonikStmt_resubscribe_node * stmt = 
+					(SlonikStmt_resubscribe_node*)hdr;
+				  if (stmt->no_origin < 0 )
+				  {
+					  printf("%s:%d: Error: require ORIGIN node\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+				  }
+				  if (stmt->no_provider < 0 )
+				  {
 
+					  printf("%s:%d: Error: require PROVIDER node\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+				  }
+				  if (stmt->no_receiver  < 0 )
+				  {
+					  printf("%s:%d: Error: require RECEIVER node\n", 
+						       hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+				  }
+				}
+				break;
 			case STMT_ERROR:
 				break;
 
@@ -1380,7 +1404,14 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 						errors++;
 				}
 				break;
-
+			case STMT_RESUBSCRIBE_NODE:
+				{
+					SlonikStmt_resubscribe_node * stmt  =
+						(SlonikStmt_resubscribe_node*) hdr;
+					if(slonik_resubscribe_node(stmt) < 0)
+						errors++;
+				}
+				break;
 			case STMT_STORE_NODE:
 				{
 					SlonikStmt_store_node *stmt =
@@ -6014,6 +6045,88 @@ static int64 get_last_escaped_event_id(SlonikStmt * stmt,
 	
 	dstring_terminate(&query);
 	return max_event_id;
+}
+
+
+int
+slonik_resubscribe_node(SlonikStmt_resubscribe_node * stmt)
+{
+
+
+	SlonikAdmInfo *adminfo1;
+	SlonikAdmInfo *adminfo2;
+	SlonDString query;
+	int rc;
+
+	adminfo1 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_provider);
+	if (adminfo1 == NULL)
+		return -1;
+
+	
+	dstring_init(&query);
+
+
+	/**
+	 * we don't actually want to execute the query until
+	 * the provider node is caught up with all other nodes wrt config data.
+	 *
+	 * this is because we don't want to pick the origin based on
+	 * stale data. 
+	 *
+	 * @note an alternative might be to contact all adminconninfo
+	 * nodes looking for the set origin and then submit the
+	 * set origin to that.  This avoids the wait for and is probably
+	 * what we should do.
+	 */ 
+	if (!auto_wait_disabled)
+	{
+		rc=slonik_wait_config_caughtup(adminfo1,&stmt->hdr,-1);
+		if (rc < 0) 
+			return rc;
+	}
+
+
+
+	adminfo2 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_origin);
+	if (db_begin_xact((SlonikStmt *) stmt, adminfo2,false) < 0)
+		return -1;
+	slon_mkquery(&query,
+				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+				 "select \"_%s\".resubscribeNode(%d, %d, %d); ",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->no_origin,stmt->no_provider,
+				 stmt->no_receiver);
+	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo2, &query,
+						   stmt->hdr.script,auto_wait_disabled) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	dstring_reset(&query);
+	adminfo2 = get_active_adminfo((SlonikStmt *) stmt, stmt->no_receiver);
+	if(adminfo2 == NULL) 
+	{
+		printf("can not find conninfo for receiver node %d\n",
+			   stmt->no_receiver);
+		return -1;
+	}
+	slon_mkquery(&query,
+				 "lock table \"_%s\".sl_config_lock;"
+				 "select \"_%s\".reshapeSubscription(%d,%d,%d);",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->no_origin,
+				 stmt->no_provider,
+				 stmt->no_receiver);	
+	if (db_exec_command((SlonikStmt *) stmt, adminfo2, &query) < 0)
+	{
+		printf("error reshaping subscriber\n");		
+	}
+	
+	dstring_free(&query);	
+	return 0;
 }
 
 

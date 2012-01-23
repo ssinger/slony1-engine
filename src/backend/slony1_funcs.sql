@@ -3730,6 +3730,98 @@ comment on function @NAMESPACE@.alterTableConfigureTriggers (p_tab_id int4) is
 Set the enable/disable configuration for the replication triggers
 according to the origin of the set.';
 
+
+
+-- ----------------------------------------------------------------------
+-- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.resubscribeNode (p_origin int4, 
+p_provider int4, p_receiver int4)
+returns bigint
+as $$
+declare
+	v_record record;
+	v_missing_sets text;
+	v_ev_seqno bigint;
+begin
+	--
+	-- Check that the receiver exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_receiver) then
+		      raise exception 'Slony-I: subscribeSet() receiver % does not exist' , p_receiver;
+	end if;
+
+	--
+	-- Check that the provider exists
+	--
+	if not exists (select no_id from @NAMESPACE@.sl_node where no_id=
+	       	      p_provider) then
+		      raise exception 'Slony-I: subscribeSet() provider % does not exist' , p_provider;
+	end if;
+
+	
+	-- ----
+	-- Check that this is called on the origin node
+	-- ----
+	if p_origin != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+		raise exception 'Slony-I: subscribeSet() must be called on origin';
+	end if;
+
+	-- ---
+	-- Verify that the provider is either the origin or an active subscriber
+	-- Bug report #1362
+	-- ---
+	if p_origin <> p_provider then
+	   for v_record in select sub1.sub_set from 
+		    @NAMESPACE@.sl_subscribe sub1			
+		    left outer join  (@NAMESPACE@.sl_subscribe sub2 
+				 inner join
+				 @NAMESPACE@.sl_set  on (
+								sl_set.set_id=sub2.sub_set
+								and sub2.sub_set=p_origin)
+								)
+			ON (  sub1.sub_set = sub2.sub_set and 
+                  sub1.sub_receiver = p_provider and
+			      sub1.sub_forward and sub1.sub_active
+				  and sub2.sub_receiver=p_receiver)
+		
+			where sub2.sub_set is null 
+		loop
+				v_missing_sets=v_missing_sets || ' ' || v_record.sub_set;
+		end loop;
+		if v_missing_sets is not null then
+			raise exception 'Slony-I: subscribeSet(): provider % is not an active forwarding node for replication set %', p_sub_provider, v_missing_sets;
+		end if;
+	end if;
+
+	for v_record in select *  from 
+		@NAMESPACE@.sl_subscribe, @NAMESPACE@.sl_set where 
+		sub_set=set_id and
+		sub_receiver=p_receiver
+		and set_origin=p_origin
+	loop
+	-- ----
+	-- Create the SUBSCRIBE_SET event
+	-- ----
+	   v_ev_seqno :=  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'SUBSCRIBE_SET', 
+				  v_record.sub_set::text, p_provider::text, p_receiver::text, 
+				  case v_record.sub_forward when true then 't' else 'f' end,
+				  	   'f' );
+
+		-- ----
+		-- Call the internal procedure to store the subscription
+		-- ----
+		perform @NAMESPACE@.subscribeSet_int(v_record.sub_set, 
+				p_provider,
+				p_receiver, v_record.sub_forward, false);
+	end loop;
+
+	return v_ev_seqno;	
+end;
+$$
+language plpgsql;
+
 -- ----------------------------------------------------------------------
 -- FUNCTION subscribeSet (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 -- ----------------------------------------------------------------------
@@ -3826,7 +3918,7 @@ begin
 				and set_id <> p_sub_set
 		loop
 			if v_rec.sub_provider <> p_sub_provider then
-				raise notice 'Slony-I: subscribeSet(): data provider for set % will also be changed',
+				raise exception 'Slony-I: subscribeSet(): also data provider for set % use resubscribe instead',
 					v_rec.set_id;
 			end if;
 		end loop;
@@ -5852,11 +5944,15 @@ comment on function @NAMESPACE@.enable_indexes_on_table(i_oid oid) is
 This may be set as a SECURITY DEFINER in order to eliminate the need
 for superuser access by Slony-I.
 ';
+drop function if exists @NAMESPACE@.reshapeSubscription(int4,int4,int4);
 
-create or replace function @NAMESPACE@.reshapeSubscription (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4) returns int4 as $$
+create or replace function @NAMESPACE@.reshapeSubscription (p_sub_origin int4, p_sub_provider int4, p_sub_receiver int4) returns int4 as $$
 begin
-	update @NAMESPACE@.sl_subscribe set sub_provider=p_sub_provider
-		   WHERE sub_set=p_sub_set AND sub_receiver=p_sub_receiver;
+	update @NAMESPACE@.sl_subscribe
+		   set sub_provider=p_sub_provider
+		   from @NAMESPACE@.sl_set
+		   WHERE sub_set=sl_set.set_id
+		   and sl_set.set_origin=p_sub_origin and sub_receiver=p_sub_receiver;
 	if found then
 	   perform @NAMESPACE@.RebuildListenEntries();
 	   notify "_@CLUSTERNAME@_Restart";
@@ -5865,7 +5961,7 @@ begin
 end
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.reshapeSubscription(p_sub_set int4, p_sub_provider int4, p_sub_receiver int4) is
+comment on function @NAMESPACE@.reshapeSubscription(p_sub_origin int4, p_sub_provider int4, p_sub_receiver int4) is
 'Run on a receiver/subscriber node when the provider for that
 subscription is being changed.  Slonik will invoke this method
 before the SUBSCRIBE_SET event propogates to the receiver
