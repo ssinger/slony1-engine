@@ -77,7 +77,7 @@ function create_partition(year,month,cluster,coordinator) {
 	ddlWriter.write(sqlScript);
 	ddlWriter.close();
 	
-	var slonikScript = "EXECUTE SCRIPT(set id=1, filename='" + ddlFile.getAbsolutePath()
+	var slonikScript = "EXECUTE SCRIPT( filename='" + ddlFile.getAbsolutePath()
 		+ "', EVENT NODE =1);\n";
 	slonikScript += "sync(id=1);\n";
 	slonikScript += "wait for event(origin=1,confirmed=all,wait on =1);\n";
@@ -86,11 +86,15 @@ function create_partition(year,month,cluster,coordinator) {
 	slonikScript += month + ",origin=1,set id =999"
 		+ ", fully qualified name='public.sales_txns_" + year + "_" + month + "');\n";
 	
-	for(var idx=2; idx <=4; idx++) {
+	for(var idx=2; idx <=3; idx++) {
 		slonikScript += "subscribe set(id=999, provider=1, receiver=" + idx + ", forward=yes);\n";
 		slonikScript+=" sync(id=1);\n";
 		slonikScript+= "wait for event(origin=1, confirmed=all, wait on=1);\n";
 	}
+	slonikScript += "subscribe set(id=999, provider=2, receiver=4, forward=yes);\n";
+	slonikScript+=" sync(id=1);\n";
+	slonikScript+= "wait for event(origin=1, confirmed=all, wait on=1);\n";
+	
 	slonikScript+= 'sleep(seconds=4);\n';
 	slonikScript+="merge set(id=1, ADD ID=999, origin=1);\n";
 	var slonikPreamble=get_slonik_preamble();

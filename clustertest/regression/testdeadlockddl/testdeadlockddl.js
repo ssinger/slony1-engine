@@ -72,7 +72,7 @@ function generate_data() {
 
 
 function exec_ddl(coordinator) {
-	var slonikScript = "EXECUTE SCRIPT(SET ID=1, FILENAME='regression/testdeadlockddl/ddl_updates.sql',EVENT NODE=1);\n";
+	var slonikScript = "EXECUTE SCRIPT( FILENAME='regression/testdeadlockddl/ddl_updates.sql',EVENT NODE=1);\n";
 	var preamble = get_slonik_preamble();
 	
 	run_slonik('exec ddl',coordinator,preamble,slonikScript);
