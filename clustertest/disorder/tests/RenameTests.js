@@ -118,7 +118,7 @@ RenameTests.prototype.executeScript=function(sql) {
 	fileWriter.write(sql);
 	fileWriter.close();
         var slonikScript = 'echo \'RenameTests.prototype.executeScript\';\n';
-	slonikScript += "EXECUTE SCRIPT(SET ID=3,FILENAME='" + scriptFile.getAbsolutePath()
+	slonikScript += "EXECUTE SCRIPT(FILENAME='" + scriptFile.getAbsolutePath()
 		+ "',EVENT NODE=1);\n";
 	var slonik = this.coordinator.createSlonik('rename table',slonikPreamble,slonikScript);
 	slonik.run();
