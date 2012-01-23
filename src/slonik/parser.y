@@ -1303,10 +1303,9 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 					{
 						SlonikStmt_ddl_script *new;
 						statement_option opt[] = {
-							STMT_OPTION_INT( O_SET_ID, -1 ),
 							STMT_OPTION_STR( O_FILENAME, NULL ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
-							STMT_OPTION_STR( O_EXECUTE_ONLY_ON, NULL ),
+							STMT_OPTION_STR( O_EXECUTE_ONLY_LIST, NULL ),
 							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
 							STMT_OPTION_END
 						};
@@ -1320,12 +1319,11 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 
 						if (assign_options(opt, $4) == 0)
 						{
-							new->ddl_setid		= opt[0].ival;
-							new->ddl_fname		= opt[1].str;
-							new->ev_origin		= opt[2].ival;
-							new->only_on_nodes	= opt[3].str;
-							new->only_on_node   = opt[4].ival;
-							new->ddl_fd		= NULL;
+							new->ddl_fname		= opt[0].str;
+							new->ev_origin		= opt[1].ival;
+							new->only_on_nodes	= opt[2].str;
+							new->only_on_node   = opt[3].ival;
+							new->ddl_fd			= NULL;
 						}
 						else
 							parser_errors++;
@@ -1700,7 +1698,7 @@ option_list_item	: K_ID '=' option_item_id
 					}
 					| K_EXECUTE K_ONLY K_ON '=' option_item_literal
 					{
-						$5->opt_code	= O_EXECUTE_ONLY_ON;
+						$5->opt_code	= O_EXECUTE_ONLY_LIST;
 						$$ = $5;
 					}
 					| K_SECONDS '=' option_item_id
@@ -1849,6 +1847,7 @@ option_str(option_code opt_code)
 		case O_DATE_FORMAT:		return "format";
 		case O_EVENT_NODE:		return "event node";
 		case O_EXECUTE_ONLY_ON:	return "execute only on";
+		case O_EXECUTE_ONLY_LIST:	return "execute only on";
 		case O_FILENAME:		return "filename";
 		case O_FORWARD:			return "forward";
 		case O_FQNAME:			return "full qualified name";

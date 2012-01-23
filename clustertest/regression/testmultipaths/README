@@ -17,8 +17,6 @@ structure:
                       \
                        3
 
-This ought to work; according to recent reports, it doesn't.
+As of 2.2 this structure should not be allowed. Make sure it isn't accepted.
 
-See:
-<http://lists.slony.info/pipermail/slony1-general/2007-September/006642.html>
 

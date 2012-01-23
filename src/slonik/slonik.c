@@ -1000,13 +1000,6 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 						       hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->ddl_setid < 0)
-					{
-						printf("%s:%d: Error: "
-							   "set id must be specified\n",
-							   hdr->stmt_filename, hdr->stmt_lno);
-						errors++;
-					}
 					if (stmt->ddl_fname == NULL)
 					{
 						printf("%s:%d: Error: "
