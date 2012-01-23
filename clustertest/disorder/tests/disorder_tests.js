@@ -25,6 +25,7 @@ coordinator.includeFile('disorder/tests/RecreateSet.js');
 coordinator.includeFile('disorder/tests/MergeSet.js');
 coordinator.includeFile('disorder/tests/BulkAddingTest.js');
 coordinator.includeFile('disorder/tests/WaitForTest.js');
+coordinator.includeFile('disorder/tests/Resubscribe.js');
 var tests = 
     [new EmptySet(coordinator,results)
      ,new OmitCopy(coordinator,results)
@@ -50,6 +51,7 @@ var tests =
      ,new MergeSet(coordinator,results)
      ,new BulkAddingTest(coordinator,results)
 	 ,new WaitForTest(coordinator,results)
+	 ,new Resubscribe(coordinator,results)
 	 //Below tests are known to fail.
 	 ,new UnsubscribeBeforeEnable(coordinator,results)
      ,new DropSet(coordinator,results) //fails bug 133
