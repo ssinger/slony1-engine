@@ -25,7 +25,6 @@
 #include "parser/keywords.h"
 #include "parser/parse_type.h"
 #include "executor/spi.h"
-#include "libpq/md5.h"
 #include "commands/trigger.h"
 #include "commands/async.h"
 #include "catalog/pg_operator.h"
@@ -33,12 +32,14 @@
 #include "catalog/namespace.h"
 #include "access/xact.h"
 #include "access/transam.h"
+#include "access/hash.h"
 #include "utils/builtins.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
 #include "utils/rel.h"
 #include "utils/relcache.h"
 #include "utils/lsyscache.h"
+#include "utils/memutils.h"
 #include "utils/hsearch.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
@@ -67,6 +68,8 @@ PG_FUNCTION_INFO_V1(_Slony_I_getModuleVersion);
 PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
 PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
 PG_FUNCTION_INFO_V1(_Slony_I_logApply);
+PG_FUNCTION_INFO_V1(_Slony_I_logApplySetCacheSize);
+PG_FUNCTION_INFO_V1(_Slony_I_logApplySaveStats);
 PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
 PG_FUNCTION_INFO_V1(_Slony_I_killBackend);
 PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
@@ -82,6 +85,8 @@ Datum		_Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
 Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
 Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
 Datum		_Slony_I_logApply(PG_FUNCTION_ARGS);
+Datum		_Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS);
+Datum		_Slony_I_logApplySaveStats(PG_FUNCTION_ARGS);
 Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
 Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
 Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
@@ -123,6 +128,8 @@ typedef struct slony_I_cluster_status
 	void	   *plan_record_sequences;
 	void	   *plan_get_logstatus;
 	void	   *plan_table_info;
+	void	   *plan_apply_stats_update;
+	void	   *plan_apply_stats_insert;
 
 	text	   *cmdtype_I;
 	text	   *cmdtype_U;
@@ -132,25 +139,55 @@ typedef struct slony_I_cluster_status
 } Slony_I_ClusterStatus;
 
 
+/*
+ * Defining APPLY_CACHE_VERIFY causes the apply cache to store a second
+ * copy of the query hash key and verify it when hash_search() reports "found".
+ * The reason for doing this is that it is not entirely clear if using
+ * a char pointer as the hash key works the way we are using it.
+ */
+#define APPLY_CACHE_VERIFY
+
 typedef struct apply_cache_entry
 {
-	char		key[16];
+	char	   *queryKey;
 
 	void	   *plan;
 	bool		forward;
 	struct apply_cache_entry *prev;
 	struct apply_cache_entry *next;
-	struct apply_cache_entry *self;
+
+#ifdef APPLY_CACHE_VERIFY
+	char	   *verifyKey;
+	int			evicted;
+#endif
 } ApplyCacheEntry;
 
 
+static MemoryContext		applyCacheContext = NULL;
 static HTAB				   *applyCacheHash = NULL;
 static ApplyCacheEntry	   *applyCacheHead = NULL;
 static ApplyCacheEntry	   *applyCacheTail = NULL;
 static int					applyCacheSize = 100;
 static int					applyCacheUsed = 0;
 
+static uint32 applyCache_hash(const void *kp, Size ksize);
+static int applyCache_cmp(const void *kp1, const void *kp2, Size ksize);
 
+static char		   *applyQuery = NULL;
+static char		   *applyQueryPos = NULL;
+static int			applyQuerySize = 8192;
+
+static void applyQueryReset(void);
+static void applyQueryIncrease(void);
+
+static int64		apply_num_insert;
+static int64		apply_num_update;
+static int64		apply_num_delete;
+static int64		apply_num_truncate;
+static int64		apply_num_script;
+static int64		apply_num_prepare;
+static int64		apply_num_hit;
+static int64		apply_num_evict;
 
 
 /*@null@*/
@@ -776,9 +813,6 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 Datum
 _Slony_I_logApply(PG_FUNCTION_ARGS)
 {
-	static char *query = NULL;
-	static int	query_alloc = 0;
-
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	TriggerData *tg;
@@ -789,9 +823,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	bool		isnull;
 	Relation	target_rel;
 
-	char		*query_pos;
 	Datum		dat;
 	char		cmdtype;
+	int32		tableid;
 	char		*nspname;
 	char		*relname;
 	int32		cmdupdncols;
@@ -806,8 +840,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	int			i;
 	int			spi_rc;
 
+	MemoryContext		oldContext;
 	ApplyCacheEntry	   *cacheEnt;
-	char				cacheKey[16];
+	char			   *cacheKey;
 	bool				found;
 
 	/*
@@ -854,6 +889,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	{
 		HASHCTL		hctl;
 
+		/*
+		 * Free all prepared apply queries.
+		 */
 		for (cacheEnt = applyCacheHead; cacheEnt; cacheEnt = cacheEnt->next)
 		{
 			if (cacheEnt->plan != NULL)
@@ -864,13 +902,48 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		applyCacheTail = NULL;
 		applyCacheUsed = 0;
 
+		/*
+		 * Destroy and recreate the hashtable for the apply cache
+		 */
 		if (applyCacheHash != NULL)
 			hash_destroy(applyCacheHash);
 		memset(&hctl, 0, sizeof(hctl));
-		hctl.keysize = 16;
+		hctl.keysize = sizeof(char *);
 		hctl.entrysize = sizeof(ApplyCacheEntry);
+		hctl.hash = applyCache_hash;
+		hctl.match = applyCache_cmp;
 		applyCacheHash = hash_create("Slony-I apply cache",
-					50, &hctl, HASH_ELEM);
+					50, &hctl, 
+					HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
+
+		/*
+		 * Reset or create the apply cache key memory context.
+		 */
+		if (applyCacheContext == NULL)
+		{
+			applyCacheContext = AllocSetContextCreate(
+						TopMemoryContext,
+						"Slony-I apply query keys",
+						ALLOCSET_DEFAULT_MINSIZE,
+						ALLOCSET_DEFAULT_INITSIZE,
+						ALLOCSET_DEFAULT_MAXSIZE);
+		}
+		else
+		{
+			MemoryContextReset(applyCacheContext);
+		}
+
+		/*
+		 * Reset statistic counters.
+		 */
+		apply_num_insert = 0;
+		apply_num_update = 0;
+		apply_num_delete = 0;
+		apply_num_truncate = 0;
+		apply_num_script = 0;
+		apply_num_prepare = 0;
+		apply_num_hit = 0;
+		apply_num_evict = 0;
 
 		cs->currentXid = newXid;
 	}
@@ -897,14 +970,16 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		bool		localNodeFound = true;
 		Datum		script_insert_args[4];
 
+		apply_num_script++;
+
+		/*
+		 * Turn the log_cmdargs into a plain array of Text Datums.
+		 */
 		dat = SPI_getbinval(new_row, tupdesc, 
 				SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
 		if (isnull)
 			elog(ERROR, "Slony-I: log_cmdargs is NULL");
 
-		/*
-		 * Turn the log_cmdargs into a plain array of Text Datums.
-		 */
 		deconstruct_array(DatumGetArrayTypeP(dat), 
 				TEXTOID, -1, false, 'i', 
 				&cmdargs, &cmdargsnulls, &cmdargsn);
@@ -977,6 +1052,11 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	/*
 	 * Normal data log row. Get all the relevant data from the log row.
 	 */
+	dat = SPI_getbinval(new_row, tupdesc, 
+			SPI_fnumber(tupdesc, "log_tableid"), &isnull);
+	if (isnull)
+		elog(ERROR, "Slony-I: log_tableid is NULL");
+	tableid = DatumGetInt32(dat);
 	nspname = SPI_getvalue(new_row, tupdesc, 
 			SPI_fnumber(tupdesc, "log_tablenspname"));
 
@@ -1002,370 +1082,65 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 			&cmdargs, &cmdargsnulls, &cmdargsn);
 
 	/*
-	 * Find the target relation in the system cache. We need this to
-	 * find the data types of the target columns for casting.
+	 * Build the query cache key. This is for insert, update and truncate
+	 * just the operation type and the table ID. For update we also append
+	 * the fully quoted names of updated columns.
 	 */
-	target_rel = RelationIdGetRelation(
-			get_relname_relid(relname, LookupExplicitNamespace(nspname)));
-	if (target_rel == NULL)
-		elog(ERROR, "Slony-I: cannot find table %s.%s in logApply()",
-				slon_quote_identifier(nspname),
-				slon_quote_identifier(relname));
+	applyQueryReset();
+	sprintf(applyQueryPos, "%c,%d", cmdtype, tableid);
+	applyQueryPos += strlen(applyQueryPos);
 
-	/*
-	 * On first call, allocate the query string buffer. 
-	 */
-    if (query == NULL)
+	if (cmdtype == 'U')
 	{
-		if ((query = malloc(query_alloc = 8192)) == NULL)
+		char   *colname;
+
+		for (i = 0; i < cmdupdncols * 2; i+= 2)
 		{
-			elog(ERROR, "Slony-I: out of memory in logApply()");
+			applyQueryIncrease();
+
+			colname = DatumGetCString(DirectFunctionCall1(
+							textout, cmdargs[i]));
+			sprintf(applyQueryPos, ",%s", slon_quote_identifier(colname));
+			applyQueryPos += strlen(applyQueryPos);
 		}
 	}
-	query_pos = query;
 
 	/*
-	 * Handle the log row according to its log_cmdtype
+	 * We now need to copy this cache key into the cache context because
+	 * the hash_search() call will eventually create the hash entry pointing
+	 * to this string.
 	 */
-	switch (cmdtype) 
-	{
-		case 'I':
-			/*
-			 * INSERT
-			 */
-			querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
-			queryvals = (Datum *)palloc(sizeof(Datum) * cmdargsn / 2);
-			querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
-			querynulls = (char *)palloc(cmdargsn / 2 + 1);
+	oldContext = MemoryContextSwitchTo(applyCacheContext);
+	cacheKey = pstrdup(applyQuery);
+	MemoryContextSwitchTo(oldContext);
 
-			sprintf(query_pos, "INSERT INTO %s.%s (",
-					slon_quote_identifier(nspname),
-					slon_quote_identifier(relname));
-			query_pos += strlen(query_pos);
-
-			/*
-			 * Construct the list of quoted column names.
-			 */
-			for (i = 0; i < cmdargsn; i += 2)
-			{
-				char	*colname;
-
-				/*
-				 * Double the query buffer if we are running low.
-				 */
-				if (query_pos - query > query_alloc - 256)
-				{
-					int		have = query_pos - query;
-
-					query_alloc *= 2;
-					query = realloc(query, query_alloc);
-					query_pos = query + have;
-				}
-
-				if (i > 0)
-				{
-					strcpy(query_pos, ", ");
-					query_pos += 2;
-				}
-
-				if (cmdargsnulls[i])
-					elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-				querycolnames[i / 2] = DatumGetCString(DirectFunctionCall1(
-								textout, cmdargs[i]));
-				colname = (char *)slon_quote_identifier(querycolnames[i / 2]);
-				strcpy(query_pos, colname);
-				query_pos += strlen(query_pos);
-			}
-
-			/* 
-			 * Add ") VALUES ("
-			 */
-			strcpy(query_pos, ") VALUES (");
-			query_pos += strlen(query_pos);
-
-			/*
-			 * Add $n::<coltype> placeholders for all the values. 
-			 * At the same time assemble the Datum array, nulls string
-			 * and typeoid array for query planning and execution.
-			 */
-			for (i = 0; i < cmdargsn; i += 2)
-			{
-				char *coltype;
-
-				/*
-				 * Double the query buffer if we are running low.
-				 */
-				if (query_pos - query > query_alloc - 256)
-				{
-					int		have = query_pos - query;
-
-					query_alloc *= 2;
-					query = realloc(query, query_alloc);
-					query_pos = query + have;
-				}
-
-				/*
-				 * Lookup the column data type in the target relation.
-				 */
-				coltype = SPI_gettype(target_rel->rd_att, 
-						SPI_fnumber(target_rel->rd_att, querycolnames[i / 2]));
-				if (coltype == NULL)
-					elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
-							querycolnames[i / 2]);
-
-				/*
-				 * Add the parameter to the query string and the
-				 * datum to the query parameter array.
-				 */
-				sprintf(query_pos, "%s$%d::%s", (i == 0) ? "" : ", ", 
-						i / 2 + 1, coltype);
-				query_pos += strlen(query_pos);
-
-				queryvals[i / 2] = cmdargs[i + 1];
-				if (cmdargsnulls[i + 1])
-					querynulls[i / 2] = 'n';
-				else
-					querynulls[i / 2] = ' ';
-				querytypes[i / 2] = TEXTOID;
-			}
-
-			/*
-			 * Finish the query string and terminate the nulls vector.
-			 */
-			strcpy(query_pos, ");");
-			query_pos += 2;
-			querynulls[cmdargsn / 2] = '\0';
-			querynvals = cmdargsn / 2;
-
-			break;
-
-		case 'U':
-			/*
-			 * UPDATE
-			 */
-			querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
-			queryvals = (Datum *)palloc(sizeof(Datum) * cmdargsn / 2);
-			querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
-			querynulls = (char *)palloc(cmdargsn / 2 + 1);
-
-			sprintf(query_pos, "UPDATE ONLY %s.%s SET ",
-					slon_quote_identifier(nspname),
-					slon_quote_identifier(relname));
-			query_pos += strlen(query_pos);
-
-			/*
-			 * This can all be done in one pass over the cmdargs array.
-			 * We just have to switch the behavior slightly between
-			 * the SET clause and the WHERE clause.
-			 */
-			for (i = 0; i < cmdargsn; i += 2)
-			{
-				char *colname;
-				char *coltype;
-
-				/*
-				 * Double the query buffer if we are running low.
-				 */
-				if (query_pos - query > query_alloc - 256)
-				{
-					int		have = query_pos - query;
-
-					query_alloc *= 2;
-					query = realloc(query, query_alloc);
-					query_pos = query + have;
-				}
-
-				/*
-				 * Get the column name and data type.
-				 */
-				if (cmdargsnulls[i])
-					elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-				colname = DatumGetCString(DirectFunctionCall1(
-								textout, cmdargs[i]));
-				coltype = SPI_gettype(target_rel->rd_att, 
-						SPI_fnumber(target_rel->rd_att, colname));
-				if (coltype == NULL)
-					elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
-							colname);
-
-				/*
-				 * Special case if there were no columns updated.
-				 * We tell it to set the first PK column to itself.
-				 */
-				if (cmdupdncols == 0)
-				{
-					sprintf(query_pos, "%s = %s",
-							slon_quote_identifier(colname),
-							slon_quote_identifier(colname));
-					query_pos += strlen(query_pos);
-				}
-
-				/*
-				 * If we are at the transition point from SET to WHERE,
-				 * add the WHERE keyword.
-				 */
-				if (i == cmdupdncols * 2)
-				{
-					strcpy(query_pos, " WHERE ");
-					query_pos += 7;
-				}
-
-				if (i < cmdupdncols * 2)
-				{
-					/*
-					 * This is inside the SET clause.
-					 * Add the <colname> = $n::<coltype> separated by
-					 * comma.
-					 */
-					sprintf(query_pos, "%s%s = $%d::%s",
-							(i > 0) ? ", " : "",
-							slon_quote_identifier(colname),
-							i / 2 + 1, coltype);
-				}
-				else
-				{
-					/*
-					 * This is in the WHERE clause. Same as above but
-					 * separated by AND.
-					 */
-					sprintf(query_pos, "%s%s = $%d::%s", 
-							(i > cmdupdncols * 2) ? " AND " : "",
-							slon_quote_identifier(colname),
-							i / 2 + 1, coltype);
-				}
-				query_pos += strlen(query_pos);
-
-				queryvals[i / 2] = cmdargs[i + 1];
-				if (cmdargsnulls[i + 1])
-					querynulls[i / 2] = 'n';
-				else
-					querynulls[i / 2] = ' ';
-				querytypes[i / 2] = TEXTOID;
-			}
-
-			strcpy(query_pos, ";");
-			query_pos += 1;
-			querynulls[cmdargsn / 2] = '\0';
-			querynvals = cmdargsn / 2;
-
-			break;
-
-		case 'D':
-			/*
-			 * DELETE
-			 */
-			querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
-			queryvals = (Datum *)palloc(sizeof(Datum) * cmdargsn / 2);
-			querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
-			querynulls = (char *)palloc(cmdargsn / 2 + 1);
-
-			sprintf(query_pos, "DELETE FROM ONLY %s.%s WHERE ",
-					slon_quote_identifier(nspname),
-					slon_quote_identifier(relname));
-			query_pos += strlen(query_pos);
-
-			for (i = 0; i < cmdargsn; i += 2)
-			{
-				char *colname;
-				char *coltype;
-
-				/*
-				 * Double the query buffer if we are running low.
-				 */
-				if (query_pos - query > query_alloc - 256)
-				{
-					int		have = query_pos - query;
-
-					query_alloc *= 2;
-					query = realloc(query, query_alloc);
-					query_pos = query + have;
-				}
-
-				/*
-				 * Add <colname> = $n::<coltype> separated by comma.
-				 */
-				if (cmdargsnulls[i])
-					elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-				colname = DatumGetCString(DirectFunctionCall1(
-								textout, cmdargs[i]));
-				coltype = SPI_gettype(target_rel->rd_att, 
-						SPI_fnumber(target_rel->rd_att, colname));
-				if (coltype == NULL)
-					elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
-							colname);
-				sprintf(query_pos, "%s%s = $%d::%s", 
-						(i > 0) ? " AND " : "",
-						slon_quote_identifier(colname),
-						i / 2 + 1, coltype);
-
-				query_pos += strlen(query_pos);
-
-				queryvals[i / 2] = cmdargs[i + 1];
-				if (cmdargsnulls[i + 1])
-					querynulls[i / 2] = 'n';
-				else
-					querynulls[i / 2] = ' ';
-				querytypes[i / 2] = TEXTOID;
-			}
-
-			strcpy(query_pos, ";");
-			query_pos += 1;
-
-			querynulls[cmdargsn / 2] = '\0';
-			querynvals = cmdargsn / 2;
-
-			break;
-
-		case 'T':
-			/*
-			 * TRUNCATE
-			 */
-			queryvals = (Datum *)palloc(sizeof(Datum) * 2);
-			querytypes = (Oid *)palloc(sizeof(Oid) * 2);
-			querynulls = (char *)palloc(3);
-
-			sprintf(query_pos, "SELECT %s.TruncateOnlyTable("
-					"%s.slon_quote_brute($1) || '.' || "
-					"%s.slon_quote_brute($2));",
-					slon_quote_identifier(NameStr(*cluster_name)),
-					slon_quote_identifier(NameStr(*cluster_name)),
-					slon_quote_identifier(NameStr(*cluster_name)));
-
-			queryvals[0] = DirectFunctionCall1(textin, CStringGetDatum(nspname));
-			queryvals[1] = DirectFunctionCall1(textin, CStringGetDatum(relname));
-			querytypes[0] = TEXTOID;
-			querytypes[1] = TEXTOID;
-			querynulls[0] = ' ';
-			querynulls[1] = ' ';
-			querynulls[2] = '\0';
-			querynvals = 2;
-
-			break;
-
-		default:
-			elog(ERROR, "Slony-I: unhandled log cmdtype '%c' in logApply()",
-					cmdtype);
-			break;
-	}
-
-	/*
-	 * Close the target relation.
-	 */
-	RelationClose(target_rel);
-
-	/*
-	 * Check the query cache if we have an entry.
-	 */
-	pg_md5_binary(query, strlen(query), &cacheKey);
+// elog(NOTICE, "looking for key=%s", cacheKey);
 	cacheEnt = hash_search(applyCacheHash, &cacheKey, HASH_ENTER, &found);
 	if (found)
 	{
+		apply_num_hit++;
+
+		// elog(NOTICE, "cache entry for %s found", cacheKey);
+		/*
+		 * Free the cacheKey copy.
+		 */
+		oldContext = MemoryContextSwitchTo(applyCacheContext);
+#ifdef APPLY_CACHE_VERIFY
+		if (cacheEnt->evicted)
+			elog(ERROR, "Slony-I: query cache returned evicted entry for '%s'",
+					cacheKey);
+		if (strcmp(cacheEnt->verifyKey, cacheKey) != 0)
+			elog(ERROR, "Slony-I: query cache key verification failed - "
+					"searched='%s' found='%s'", cacheKey,
+					cacheEnt->verifyKey);
+#endif
+		pfree(cacheKey);
+		MemoryContextSwitchTo(oldContext);
+
 		/*
 		 * We are reusing an existing query plan. Just move it
 		 * to the end of the list.
 		 */
-		if (cacheEnt->self != cacheEnt)
-			elog(ERROR, "logApply(): cacheEnt != cacheEnt->self");
 		if (cacheEnt != applyCacheTail)
 		{
 			/*
@@ -1403,13 +1178,300 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	{
 		Datum	query_args[2];
 
+		apply_num_prepare++;
+
+		// elog(NOTICE, "cache entry for %s NOT found", cacheKey);
+
+#ifdef APPLY_CACHE_VERIFY
 		/*
-		 * Query plan not found in plan cache, need to SPI_prepare() it.
+		 * Save a second copy of the query key for verification/debugging
+		 */
+		oldContext = MemoryContextSwitchTo(applyCacheContext);
+		cacheEnt->verifyKey = pstrdup(cacheKey);
+		MemoryContextSwitchTo(oldContext);
+		cacheEnt->evicted = 0;
+#endif
+		/*
+		 * Find the target relation in the system cache. We need this to
+		 * find the data types of the target columns for casting.
+		 */
+		target_rel = RelationIdGetRelation(
+				get_relname_relid(relname, LookupExplicitNamespace(nspname)));
+		if (target_rel == NULL)
+			elog(ERROR, "Slony-I: cannot find table %s.%s in logApply()",
+					slon_quote_identifier(nspname),
+					slon_quote_identifier(relname));
+
+		/*
+		 * Create the saved SPI plan for this query
+		 */
+		applyQueryReset();
+
+		/*
+		 * Build the query string and parameter type array for the
+		 * SPI_prepare() call.
+		 */
+		switch (cmdtype) 
+		{
+			case 'I':
+				/*
+				 * INSERT
+				 */
+				querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
+				querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
+
+				sprintf(applyQueryPos, "INSERT INTO %s.%s (",
+						slon_quote_identifier(nspname),
+						slon_quote_identifier(relname));
+				applyQueryPos += strlen(applyQueryPos);
+
+				/*
+				 * Construct the list of quoted column names.
+				 */
+				for (i = 0; i < cmdargsn; i += 2)
+				{
+					char	*colname;
+
+					applyQueryIncrease();
+
+					if (i > 0)
+					{
+						strcpy(applyQueryPos, ", ");
+						applyQueryPos += 2;
+					}
+
+					if (cmdargsnulls[i])
+						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
+					querycolnames[i / 2] = DatumGetCString(DirectFunctionCall1(
+									textout, cmdargs[i]));
+					colname = (char *)slon_quote_identifier(querycolnames[i / 2]);
+					strcpy(applyQueryPos, colname);
+					applyQueryPos += strlen(applyQueryPos);
+				}
+
+				/* 
+				 * Add ") VALUES ("
+				 */
+				strcpy(applyQueryPos, ") VALUES (");
+				applyQueryPos += strlen(applyQueryPos);
+
+				/*
+				 * Add $n::<coltype> placeholders for all the values. 
+				 */
+				for (i = 0; i < cmdargsn; i += 2)
+				{
+					char *coltype;
+
+					applyQueryIncrease();
+
+					/*
+					 * Lookup the column data type in the target relation.
+					 */
+					coltype = SPI_gettype(target_rel->rd_att, 
+							SPI_fnumber(target_rel->rd_att, querycolnames[i / 2]));
+					if (coltype == NULL)
+						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
+								querycolnames[i / 2]);
+
+					/*
+					 * Add the parameter to the query string
+					 */
+					sprintf(applyQueryPos, "%s$%d::%s", (i == 0) ? "" : ", ", 
+							i / 2 + 1, coltype);
+					applyQueryPos += strlen(applyQueryPos);
+
+					querytypes[i / 2] = TEXTOID;
+				}
+
+				/*
+				 * Finish the query string
+				 */
+				strcpy(applyQueryPos, ");");
+				applyQueryPos += 2;
+				querynvals = cmdargsn / 2;
+
+				break;
+
+			case 'U':
+				/*
+				 * UPDATE
+				 */
+				querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
+				querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
+
+				sprintf(applyQueryPos, "UPDATE ONLY %s.%s SET ",
+						slon_quote_identifier(nspname),
+						slon_quote_identifier(relname));
+				applyQueryPos += strlen(applyQueryPos);
+
+				/*
+				 * This can all be done in one pass over the cmdargs array.
+				 * We just have to switch the behavior slightly between
+				 * the SET clause and the WHERE clause.
+				 */
+				for (i = 0; i < cmdargsn; i += 2)
+				{
+					char *colname;
+					char *coltype;
+
+					applyQueryIncrease();
+
+					/*
+					 * Get the column name and data type.
+					 */
+					if (cmdargsnulls[i])
+						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
+					colname = DatumGetCString(DirectFunctionCall1(
+									textout, cmdargs[i]));
+					coltype = SPI_gettype(target_rel->rd_att, 
+							SPI_fnumber(target_rel->rd_att, colname));
+					if (coltype == NULL)
+						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
+								colname);
+
+					/*
+					 * Special case if there were no columns updated.
+					 * We tell it to set the first PK column to itself.
+					 */
+					if (cmdupdncols == 0)
+					{
+						sprintf(applyQueryPos, "%s = %s",
+								slon_quote_identifier(colname),
+								slon_quote_identifier(colname));
+						applyQueryPos += strlen(applyQueryPos);
+					}
+
+					/*
+					 * If we are at the transition point from SET to WHERE,
+					 * add the WHERE keyword.
+					 */
+					if (i == cmdupdncols * 2)
+					{
+						strcpy(applyQueryPos, " WHERE ");
+						applyQueryPos += 7;
+					}
+
+					if (i < cmdupdncols * 2)
+					{
+						/*
+						 * This is inside the SET clause.
+						 * Add the <colname> = $n::<coltype> separated by
+						 * comma.
+						 */
+						sprintf(applyQueryPos, "%s%s = $%d::%s",
+								(i > 0) ? ", " : "",
+								slon_quote_identifier(colname),
+								i / 2 + 1, coltype);
+					}
+					else
+					{
+						/*
+						 * This is in the WHERE clause. Same as above but
+						 * separated by AND.
+						 */
+						sprintf(applyQueryPos, "%s%s = $%d::%s", 
+								(i > cmdupdncols * 2) ? " AND " : "",
+								slon_quote_identifier(colname),
+								i / 2 + 1, coltype);
+					}
+					applyQueryPos += strlen(applyQueryPos);
+
+					querytypes[i / 2] = TEXTOID;
+				}
+
+				strcpy(applyQueryPos, ";");
+				applyQueryPos += 1;
+				querynvals = cmdargsn / 2;
+
+				break;
+
+			case 'D':
+				/*
+				 * DELETE
+				 */
+				querycolnames = (char **)palloc(sizeof(char *) * cmdargsn / 2);
+				querytypes = (Oid *)palloc(sizeof(Oid) * cmdargsn / 2);
+
+				sprintf(applyQueryPos, "DELETE FROM ONLY %s.%s WHERE ",
+						slon_quote_identifier(nspname),
+						slon_quote_identifier(relname));
+				applyQueryPos += strlen(applyQueryPos);
+
+				for (i = 0; i < cmdargsn; i += 2)
+				{
+					char *colname;
+					char *coltype;
+
+					applyQueryIncrease();
+
+					/*
+					 * Add <colname> = $n::<coltype> separated by comma.
+					 */
+					if (cmdargsnulls[i])
+						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
+					colname = DatumGetCString(DirectFunctionCall1(
+									textout, cmdargs[i]));
+					coltype = SPI_gettype(target_rel->rd_att, 
+							SPI_fnumber(target_rel->rd_att, colname));
+					if (coltype == NULL)
+						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
+								colname);
+					sprintf(applyQueryPos, "%s%s = $%d::%s", 
+							(i > 0) ? " AND " : "",
+							slon_quote_identifier(colname),
+							i / 2 + 1, coltype);
+
+					applyQueryPos += strlen(applyQueryPos);
+
+					querytypes[i / 2] = TEXTOID;
+				}
+
+				strcpy(applyQueryPos, ";");
+				applyQueryPos += 1;
+
+				querynvals = cmdargsn / 2;
+
+				break;
+
+			case 'T':
+				/*
+				 * TRUNCATE
+				 */
+				querytypes = (Oid *)palloc(sizeof(Oid) * 2);
+
+				sprintf(applyQueryPos, "SELECT %s.TruncateOnlyTable("
+						"%s.slon_quote_brute($1) || '.' || "
+						"%s.slon_quote_brute($2));",
+						slon_quote_identifier(NameStr(*cluster_name)),
+						slon_quote_identifier(NameStr(*cluster_name)),
+						slon_quote_identifier(NameStr(*cluster_name)));
+
+				querytypes[0] = TEXTOID;
+				querytypes[1] = TEXTOID;
+				querynvals = 2;
+
+				break;
+
+			default:
+				elog(ERROR, "Slony-I: unhandled log cmdtype '%c' in logApply()",
+						cmdtype);
+				break;
+		}
+
+		/*
+		 * Close the target relation.
+		 */
+		RelationClose(target_rel);
+
+		/*
+		 * Prepare the saved SPI query plan.
 		 */
 		cacheEnt->plan	= SPI_saveplan(
-				SPI_prepare(query, querynvals, querytypes));
+				SPI_prepare(applyQuery, querynvals, querytypes));
 		if (cacheEnt->plan == NULL)
-			elog(ERROR, "Slony-I: SPI_prepare() failed for query '%s'", query);
+			elog(ERROR, "Slony-I: SPI_prepare() failed for query '%s'", 
+					applyQuery);
+// elog(NOTICE, "key=%s nvals=%d query=%s ", cacheEnt->verifyKey, querynvals, applyQuery);
 
 		/*
 		 * Add the plan to the double linked LRU list
@@ -1428,7 +1490,6 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 			applyCacheTail->next = cacheEnt;
 			applyCacheTail = cacheEnt;
 		}
-		cacheEnt->self = cacheEnt;
 		applyCacheUsed++;
 
 		/*
@@ -1439,7 +1500,13 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		{
 			ApplyCacheEntry *evict = applyCacheHead;
 
+			apply_num_evict++;
+
 			SPI_freeplan(evict->plan);
+			evict->plan = NULL;
+#ifdef APPLY_CACHE_VERIFY
+			evict->evicted = 1;
+#endif
 
 			if (evict->prev == NULL)
 				applyCacheHead = evict->next; 
@@ -1450,10 +1517,12 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 			else
 				evict->next->prev = evict->prev;
 
-			hash_search(applyCacheHash, &(evict->key), HASH_REMOVE, &found);
+			hash_search(applyCacheHash, &(evict->queryKey), HASH_REMOVE, &found);
 			if (!found)
 				elog(ERROR, "Slony-I: cached queries hash entry not found "
 						"on evict");
+			
+			applyCacheUsed--;
 		}
 
 		/*
@@ -1477,20 +1546,238 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	}
 
 	/*
+	 * We now have a cached SPI plan. Construct the call parameter
+	 * and null flag arrays.
+	 */
+	switch (cmdtype) 
+	{
+		case 'I':
+		case 'U':
+		case 'D':
+			/*
+			 * INSERT, UPDATE and DELETE
+			 */
+			queryvals = (Datum *)palloc(sizeof(Datum) * cmdargsn / 2);
+			querynulls = (char *)palloc(cmdargsn / 2 + 1);
+
+			for (i = 0; i < cmdargsn; i += 2)
+			{
+				queryvals[i / 2] = cmdargs[i + 1];
+				if (cmdargsnulls[i + 1])
+					querynulls[i / 2] = 'n';
+				else
+					querynulls[i / 2] = ' ';
+			}
+			querynulls[cmdargsn / 2] = '\0';
+
+			break;
+
+		case 'T':
+			/*
+			 * TRUNCATE
+			 */
+			queryvals = (Datum *)palloc(sizeof(Datum) * 2);
+			querynulls = (char *)palloc(3);
+
+			queryvals[0] = DirectFunctionCall1(textin, CStringGetDatum(nspname));
+			queryvals[1] = DirectFunctionCall1(textin, CStringGetDatum(relname));
+			querynulls[0] = ' ';
+			querynulls[1] = ' ';
+			querynulls[2] = '\0';
+
+			break;
+
+		default:
+			elog(ERROR, "Slony-I: unhandled log cmdtype '%c' in logApply()",
+					cmdtype);
+			break;
+	}
+
+// elog(NOTICE, "using key=%s nvals=%d", cacheEnt->verifyKey, cmdargsn / 2);
+
+	/*
 	 * Execute the query.
 	 */
-	if (cacheEnt->plan == NULL)
-		elog(ERROR, "Slony-I: cacheEnt->plan is NULL");
 	if ((spi_rc = SPI_execp(cacheEnt->plan, queryvals, querynulls, 0)) < 0)
-		elog(ERROR, "Slony-I: SPI_execp() for query '%s' failed - rc=%d",
-				query, spi_rc);
+		elog(ERROR, "Slony-I: SPI_execp() failed - rc=%d", spi_rc);
 
+	/*
+	 * Count operations
+	 */
+	switch(cmdtype)
+	{
+		case 'I':		apply_num_insert++;
+						break;
+		case 'U':		apply_num_update++;
+						break;
+		case 'D':		apply_num_delete++;
+						break;
+		case 'T':		apply_num_truncate++;
+						break;
+		default:		break;
+	}
 
+	/*
+	 * Disconnect from SPI manager and return either the new tuple
+	 * or NULL according to the forwarding of log data.
+	 */
 	SPI_finish();
 	if (cacheEnt->forward)
 		return PointerGetDatum(tg->tg_trigtuple);
 	else
 		return PointerGetDatum(NULL);
+}
+
+
+Datum
+_Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS)
+{
+	int32		newSize;
+	int32		oldSize = applyCacheSize;
+
+	if (!superuser())
+		elog(ERROR, "Slony-I: insufficient privilege logApplySetCacheSize");
+
+	newSize = PG_GETARG_INT32(0);
+
+	if (newSize <= 0)
+		PG_RETURN_INT32(oldSize);
+
+	if (newSize < 10 || newSize > 2000)
+		elog(ERROR, "Slony-I: logApplySetCacheSize(): illegal size");
+
+	applyCacheSize = newSize;
+	PG_RETURN_INT32(oldSize);
+}
+
+
+Datum
+_Slony_I_logApplySaveStats(PG_FUNCTION_ARGS)
+{
+	Slony_I_ClusterStatus *cs;
+	Datum		params[10];
+	char	   *nulls = "           ";
+	int32		rc = 0;
+	int			spi_rc;
+
+	if (!superuser())
+		elog(ERROR, "Slony-I: insufficient privilege logApplySetCacheSize");
+
+	/*
+	 * Connect to the SPI manager
+	 */
+	if (SPI_connect() < 0)
+		elog(ERROR, "Slony-I: SPI_connect() failed in logApply()");
+
+	/*
+	 * Get or create the cluster status information and make sure it has the
+	 * SPI plans that we need here.
+	 */
+	cs = getClusterStatus(PG_GETARG_NAME(0), PLAN_APPLY_QUERIES);
+
+	/* 
+	 * Setup the parameter array. Note that both queries use the
+	 * same parameters in exactly the same order.
+	 */
+	params[0] = Int32GetDatum(PG_GETARG_INT32(1));
+
+	params[1] = Int64GetDatum(apply_num_insert);
+	params[2] = Int64GetDatum(apply_num_update);
+	params[3] = Int64GetDatum(apply_num_delete);
+	params[4] = Int64GetDatum(apply_num_truncate);
+	params[5] = Int64GetDatum(apply_num_script);
+	params[6] = Int64GetDatum(apply_num_insert + apply_num_update +
+					apply_num_delete + apply_num_truncate * apply_num_script);
+	params[7] = PointerGetDatum(PG_GETARG_INTERVAL_P(2));
+	params[8] = Int64GetDatum(apply_num_prepare);
+	params[9] = Int64GetDatum(apply_num_hit);
+	params[10] = Int64GetDatum(apply_num_evict);
+
+	/*
+	 * Perform the UPDATE of sl_apply_stats. If that doesn't update
+	 * any row(s), try to INSERT one.
+	 */
+	if ((spi_rc = SPI_execp(cs->plan_apply_stats_update, params, nulls, 0)) < 0)
+		elog(ERROR, "Slony-I: SPI_execp() to update apply stats failed"
+				" - rc=%d", spi_rc);
+	if (SPI_processed > 0)
+	{
+		rc = 2;
+	}
+	else
+	{
+		if ((spi_rc = SPI_execp(cs->plan_apply_stats_insert, params, nulls, 0)) < 0)
+			elog(ERROR, "Slony-I: SPI_execp() to insert apply stats failed"
+					" - rc=%d", spi_rc);
+		if (SPI_processed > 0)
+			rc = 1;
+	}
+
+	/*
+	 * Reset statistic counters.
+	 */
+	apply_num_insert = 0;
+	apply_num_update = 0;
+	apply_num_delete = 0;
+	apply_num_truncate = 0;
+	apply_num_script = 0;
+	apply_num_prepare = 0;
+	apply_num_hit = 0;
+	apply_num_evict = 0;
+
+	/*
+	 * That's it.
+	 */
+	SPI_finish();
+	PG_RETURN_INT32(rc);
+}
+
+
+static uint32
+applyCache_hash(const void *kp, Size ksize)
+{
+	char   *key = *((char **)kp);
+
+	return hash_any((void *)key, strlen(key));
+}
+
+
+static int
+applyCache_cmp(const void *kp1, const void *kp2, Size ksize)
+{
+	char   *key1 = *((char **)kp1);
+	char   *key2 = *((char **)kp2);
+
+	return strcmp(key1, key2);
+}
+
+
+static void
+applyQueryReset(void)
+{
+	if (applyQuery == NULL)
+	{
+		applyQuery = malloc(applyQuerySize);
+		if (applyQuery == NULL)
+			elog(ERROR, "Slony-I: applyQueryReset(): out of memory");
+	}
+
+	applyQueryPos = applyQuery;
+}
+
+
+static void
+applyQueryIncrease(void)
+{
+	if (applyQueryPos - applyQuery + 1024 > applyQuerySize)
+	{
+		int offset = applyQueryPos - applyQuery;
+		applyQuerySize *= 2;
+		applyQuery = realloc(applyQuery, applyQuerySize);
+		if (applyQuery == NULL)
+			elog(ERROR, "Slony-I: applyQueryIncrease(): out of memory");
+		applyQueryPos = applyQuery + offset;
+	}
 }
 
 
@@ -1756,7 +2043,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	int			rc;
 	char		query[1024];
 	bool		isnull;
-	Oid			plan_types[9];
+	Oid			plan_types[16];
 	TypeName   *txid_snapshot_typname;
 
 	/*
@@ -1972,6 +2259,79 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		cs->plan_table_info = SPI_saveplan(
 				SPI_prepare(query, 2, plan_types));
 		if (cs->plan_table_info == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+
+		/*
+		 * The plan to update the apply stats
+		 */
+		sprintf(query,
+				"update %s.sl_apply_stats set "
+				" as_num_insert = as_num_insert + $2, "
+				" as_num_update = as_num_update + $3, "
+				" as_num_delete = as_num_delete + $4, "
+				" as_num_truncate = as_num_truncate + $5, "
+				" as_num_script = as_num_script + $6, "
+				" as_num_total = as_num_total + $7, "
+				" as_duration = as_duration + $8, "
+				" as_apply_last = \"pg_catalog\".timeofday()::timestamptz, "
+				" as_cache_prepare = as_cache_prepare + $9, "
+				" as_cache_hit = as_cache_hit + $10, "
+				" as_cache_evict = as_cache_evict + $11, "
+				" as_cache_prepare_max = case "
+				"     when $9 > as_cache_prepare_max then $9 "
+				"     else as_cache_prepare_max end "
+				" where as_origin = $1;",
+				slon_quote_identifier(NameStr(*cluster_name)));
+
+		plan_types[0] = INT4OID;
+		plan_types[1] = INT8OID;
+		plan_types[2] = INT8OID;
+		plan_types[3] = INT8OID;
+		plan_types[4] = INT8OID;
+		plan_types[5] = INT8OID;
+		plan_types[6] = INT8OID;
+		plan_types[7] = INTERVALOID;
+		plan_types[8] = INT8OID;
+		plan_types[9] = INT8OID;
+		plan_types[10] = INT8OID;
+
+		cs->plan_apply_stats_update = SPI_saveplan(
+				SPI_prepare(query, 11, plan_types));
+		if (cs->plan_apply_stats_update == NULL)
+			elog(ERROR, "Slony-I: SPI_prepare() failed");
+
+		/*
+		 * The plan to insert the apply stats, if update misses
+		 */
+		sprintf(query,
+				"insert into %s.sl_apply_stats ("
+				" as_origin, as_num_insert, as_num_update, as_num_delete, "
+				" as_num_truncate, as_num_script, as_num_total, "
+				" as_duration, as_apply_first, as_apply_last, "
+				" as_cache_prepare, as_cache_hit, as_cache_evict, "
+				" as_cache_prepare_max) "
+				"values "
+				"($1, $2, $3, $4, $5, $6, $7, $8, "
+				"\"pg_catalog\".timeofday()::timestamptz, "
+				"\"pg_catalog\".timeofday()::timestamptz, "
+				"$9, $10, $11, $9);",
+				slon_quote_identifier(NameStr(*cluster_name)));
+
+		plan_types[0] = INT4OID;
+		plan_types[1] = INT8OID;
+		plan_types[2] = INT8OID;
+		plan_types[3] = INT8OID;
+		plan_types[4] = INT8OID;
+		plan_types[5] = INT8OID;
+		plan_types[6] = INT8OID;
+		plan_types[7] = INTERVALOID;
+		plan_types[8] = INT8OID;
+		plan_types[9] = INT8OID;
+		plan_types[10] = INT8OID;
+
+		cs->plan_apply_stats_insert = SPI_saveplan(
+				SPI_prepare(query, 11, plan_types));
+		if (cs->plan_apply_stats_insert == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
 		cs->have_plan |= PLAN_APPLY_QUERIES;

@@ -59,7 +59,9 @@ int			sched_wakeuppipe[2];
 pthread_mutex_t slon_wait_listen_lock;
 pthread_cond_t slon_wait_listen_cond;
 int            slon_listen_started=0;
-bool	monitor_threads;
+bool		monitor_threads;
+
+int			apply_cache_size;
 
 /* ----------
  * Local data

@@ -459,6 +459,44 @@ comment on column @NAMESPACE@.sl_registry.reg_text is 'Option value if type text
 comment on column @NAMESPACE@.sl_registry.reg_timestamp is 'Option value if type timestamp';
 
 
+-- ----------------------------------------------------------------------
+-- TABLE sl_apply_stats
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_apply_stats (
+	as_origin			int4,
+	as_num_insert		int8,
+	as_num_update		int8,
+	as_num_delete		int8,
+	as_num_truncate		int8,
+	as_num_script		int8,
+	as_num_total		int8,
+	as_duration			interval,
+	as_apply_first		timestamptz,
+	as_apply_last		timestamptz,
+	as_cache_prepare	int8,
+	as_cache_hit		int8,
+	as_cache_evict		int8,
+	as_cache_prepare_max int8
+) WITHOUT OIDS;
+
+create index sl_apply_stats_idx1 on @NAMESPACE@.sl_apply_stats
+	(as_origin);
+
+comment on table @NAMESPACE@.sl_apply_stats is 'Local SYNC apply statistics (running totals)';
+comment on column @NAMESPACE@.sl_apply_stats.as_origin is 'Origin of the SYNCs';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_insert is 'Number of INSERT operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_update is 'Number of UPDATE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_delete is 'Number of DELETE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_truncate is 'Number of TRUNCATE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_script is 'Number of DDL operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_total is 'Total number of operations';
+comment on column @NAMESPACE@.sl_apply_stats.as_duration is 'Processing time';
+comment on column @NAMESPACE@.sl_apply_stats.as_apply_first is 'Timestamp of first recorded SYNC';
+comment on column @NAMESPACE@.sl_apply_stats.as_apply_last is 'Timestamp of most recent recorded SYNC';
+comment on column @NAMESPACE@.sl_apply_stats.as_cache_evict is 'Number of apply query cache evict operations';
+comment on column @NAMESPACE@.sl_apply_stats.as_cache_prepare_max is 'Maximum number of apply queries prepared in one SYNC group';
+
+
 -- **********************************************************************
 -- * Views
 -- **********************************************************************

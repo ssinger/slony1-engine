@@ -5070,10 +5070,34 @@ create table @NAMESPACE@.sl_components (
 ';
   	   execute v_query;
 	end if;
+
 	if not exists (select 1 from information_schema.tables t where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_event_lock') then
 	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
 	   execute v_query;
         end if;
+	
+	if not exists (select 1 from information_schema.tables t 
+			where table_schema = '_@CLUSTERNAME@' 
+			and table_name = 'sl_apply_stats') then
+		v_query := '
+			create table @NAMESPACE@.sl_apply_stats (
+				as_origin			int4,
+				as_num_insert		int8,
+				as_num_update		int8,
+				as_num_delete		int8,
+				as_num_truncate		int8,
+				as_num_script		int8,
+				as_num_total		int8,
+				as_duration			interval,
+				as_apply_first		timestamptz,
+				as_apply_last		timestamptz,
+				as_cache_prepare	int8,
+				as_cache_hit		int8,
+				as_cache_evict		int8,
+				as_cache_prepare_max int8
+			) WITHOUT OIDS;';
+		execute v_query;
+	end if;
 	
 	--
 	-- On the upgrade to 2.2, we change the layout of sl_log_N by
@@ -5901,10 +5925,33 @@ are recreated.';
 -- ----------------------------------------------------------------------
 -- FUNCTION logApply ()
 --
---	
+--	A trigger function that is placed on the tables sl_log_1/2 that
+--	does the actual work of updating the user tables.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApply () returns trigger
     as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
 	language C
 	security definer;
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApplySetCacheSize ()
+--
+--	A control function for the prepared query plan cache size used
+--	in the logApply() trigger.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApplySetCacheSize (p_size int4) 
+returns int4
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
+	language C;
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApplySaveStats ()
+--
+--	A function used by the remote worker to update sl_apply_stats after
+--	performing a SYNC.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApplySaveStats (p_cluster name, p_origin int4, p_duration interval) 
+returns int4
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySaveStats'
+	language C;
 

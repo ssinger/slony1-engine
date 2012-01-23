@@ -202,6 +202,18 @@ static struct config_int ConfigureNamesInt[] =
 		0, /* min val */
 		1073741824	/*max val*/
 	},
+	{
+		{
+			(const char *) "apply_cache_size",
+			gettext_noop("apply cache size"),
+			gettext_noop("apply cache size in number of prepared queries"),
+			SLON_C_INT
+		},
+		&apply_cache_size,
+		100,
+		10,
+		2000
+	},
 	{{0}}
 };
 
