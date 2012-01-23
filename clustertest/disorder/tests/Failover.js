@@ -239,7 +239,31 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,4,4);
 	
 	
-	this.slonikSync(1,1);	
+	this.slonikSync(1,4);	
+	this.compareDb('db1','db2');
+	this.compareDb('db1', 'db3');
+	this.compareDb('db1', 'db4');
+	this.compareDb('db4','db3');
+	this.compareDb('db3','db2');
+	this.compareDb('db4','db2');
+	this.moveSet(1,4,1);
+
+		//
+		// create a SECOND replication set
+		// on the same origin as the first set.
+		// Fail this over and make sure we can
+		// failover both sets.
+	this.createSecondSet(1);
+	this.addCompletePaths();
+	this.subscribeSet(2,1, 1, [ 2, 3 ]);
+	this.slonikSync(1,1);
+	this.failNode(1,2,true);
+		//The problem we have is that if failedoverSet_int()
+		//does not set no_active=false then autowait for
+		//will fail later unless we do a DRop NODE.
+		this.dropNode(1,4);
+    this.slonikSync(1,2);
+
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
