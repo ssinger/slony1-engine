@@ -1436,9 +1436,9 @@ begin
 				where set_id = p_set_id;
 	end if;
 
-	update @NAMESPACE@.sl_node
-		   set no_active=false WHERE 
-		   no_id=p_failed_node;
+	-- update @NAMESPACE@.sl_node
+	-- 	   set no_active=false WHERE 
+	-- 	   no_id=p_failed_node;
 
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
