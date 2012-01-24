@@ -3,6 +3,11 @@
 
 ** 2.1.1
 
+- Bug #260 :: Fixed issue when with FAILOVER command when the failed node has 
+              multiple sets.
+
+Release Candidate 1
+
 - Bug #246 :: Include path order changes
 - Bug #161 :: fix memory overrun in EXECUTE SCRIPT parser
 - Bug #247 :: slony_logshipper to handle TRUNCATE commands
