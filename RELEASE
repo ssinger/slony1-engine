@@ -370,3 +370,8 @@ Added post rc2
 - Add express support to recognize PostgreSQL 9.1
 
 - Bug 255 :: Fix serialization issues when using PostgreSQL 9.1
+
+Post Release Candidate 1
+
+- Bug 260 :: Fix issue with FAILOVER when failing over an origin with
+          multiple sets.
