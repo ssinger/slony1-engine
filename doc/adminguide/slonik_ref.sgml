@@ -2122,16 +2122,16 @@ SET MOVE SEQUENCE (
 
      </listitem>
 
-     <listitem><para> Revising subscription information for already-subscribed nodes. </para>
+     <listitem><para> Revising subscription information for already-subscribed provider/receiver pair of nodes. </para>
 
      <para> If you need to revise subscription information for a
-       node, you <emphasis>also</emphasis> submit the new information
+       set,provider,receiver combination you must submit the new information
        using this command, and the new configuration will be propagated
        throughout the replication network.  The normal reason to revise
-       this information is that you want a node to subscribe to a
-       <emphasis> different </emphasis> provider node, or for a node to
-       become a <quote>forwarding</quote> subscriber so it may later
-       become the provider for a later subscriber.</para>
+       this information is if you want to change the <literal>FORWARD</literal>
+	   status of a set on a particular receiver node.   If you want to change
+	   the provider used by a particular node you should use the 
+	   <xref linkend="stmtresubscribenode"> command.
 
      </listitem>
      </itemizedlist>
@@ -2306,6 +2306,10 @@ SUBSCRIBE SET (
            directly against the set origin. Prior to this change the 
            SUBSCRIBE SET was submitted against the provider
    </para>
+	<para> Prior to &slony1; 2.2.0 the SUBSCRIBE SET command could be
+	  used to change the provider of an already subscribed node.  As of
+	  2.2.0 the <xref linkend="stmtresubscribenode"> command must be used.
+	  </para>
    </refsect1>
   </refentry>
   
@@ -3127,6 +3131,77 @@ REPAIR CONFIG (
     <para> This command was introduced in &slony1; 1.1 </para>
    </refsect1>
   </refentry>
+<!-- **************************************** -->
+ <refentry id="stmtresubscribenode"><refmeta><refentrytitle>SLONIK RESUBSCRIBE NODE</refentrytitle>
+   <manvolnum>7</manvolnum></refmeta>
+   
+   <refnamediv><refname>RESUBSCRIBE NODE</refname>
+
+    <refpurpose> Change the provider of a replication set </refpurpose></refnamediv>
+   
+   <refsynopsisdiv>
+    <cmdsynopsis>
+     <command>RESUBSCRIBE NODE (options);</command>
+    </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+    <title>Description</title>
+
+    <para> 
+     The RESUBSCRIBE NODE command will change the provider used to receive
+	 data from for all of the replication sets originating on a given node. 
+	 If a subscriber node is receiving a number of replication sets with a 
+	 particular node as an origin then the RESUBSCRIBE NODE command will
+	 change the provider node used by that subscriber node for all of the
+	 replication sets originating on the given origin.
+	 <para>
+	 
+	<para>
+     <variablelist>
+      <varlistentry><term><literal>ORIGIN = ival </literal></term>
+       <listitem><para> ID of the set origin for all subscriptions to change
+	   </para></listitem>
+       
+      </varlistentry>
+      <varlistentry><term><literal> RECEIVER = ival </literal></term>
+       
+       <listitem><para> Node ID of the subscriber</para></listitem>
+       
+	   <varlistentry><term><literal> PROVIDER = ival </literal></term>
+       
+       <listitem><para> Node ID of the provider</para></listitem>
+       
+
+      </varlistentry>
+     </variablelist>
+    </para>
+   </refsect1>
+   <refsect1><title>Example</title>
+    <programlisting>
+RESUBSCRIBE NODE  (
+   ORIGIN = 1,
+   PROVIDER = 2,
+   RECEIVER = 3
+);
+    </programlisting>
+   </refsect1>
+   <refsect1> <title> Locking Behaviour </title>
+
+    <para> None </para>
+   </refsect1>
+
+   <refsect1> <title> Slonik Event Confirmation Behaviour </title>
+	 <para> Slonik waits for the command submitted to the previous
+	   event node to be confirmed on the specified event node before
+	   submitting this command.</para>
+   </refsect1>
+
+
+   <refsect1> <title> Version Information </title>
+    <para> This command was introduced in &slony1; 2.2 </para>
+   </refsect1>
+  </refentry>
+
 <!-- **************************************** -->
 
   <refentry id="stmtsync"><refmeta><refentrytitle>SLONIK SYNC</refentrytitle>
