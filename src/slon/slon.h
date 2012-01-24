@@ -31,14 +31,12 @@
 
 
 #define SLON_MEMDEBUG	1
-
 #ifndef false
 #define   false 0
 #endif
 #ifndef true
-#define   true (~false)
+#define   true 1
 #endif
-
 
 #undef	SLON_CHECK_CMDTUPLES
 

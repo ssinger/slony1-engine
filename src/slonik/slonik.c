@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <stdarg.h>
 
+
 #include "types.h"
 #include "libpq-fe.h"
 #include "slonik.h"
@@ -116,14 +117,7 @@ main(int argc, const char *argv[])
 	/*
 	 * We need to find a share directory like PostgreSQL. 
 	 */
-	if (strlen(PGSHARE) > 0)
-	{
-		strcpy(share_path, PGSHARE);
-	}
-	else
-	{
-		get_share_path(myfull_path, share_path);
-	}
+	strcpy(share_path, PGSHARE);
 
 	if (optind < argc)
 	{
@@ -1551,15 +1545,13 @@ static void
 script_commit_all(SlonikStmt * stmt, SlonikScript * script)
 {
 	SlonikAdmInfo *adminfo;
-	int			error = 0;
 
 	for (adminfo = script->adminfo_list;
 		 adminfo; adminfo = adminfo->next)
 	{
 		if (adminfo->dbconn != NULL && adminfo->have_xact)
 		{
-			if (db_commit_xact(stmt, adminfo) < 0)
-				error = 1;
+		  db_commit_xact(stmt, adminfo);
 		}
 		else
 		{
@@ -1768,17 +1760,14 @@ static int
 load_slony_base(SlonikStmt * stmt, int no_id)
 {
 	SlonikAdmInfo *adminfo;
-	PGconn	   *dbconn;
-	SlonDString query;
 	int			rc;
+	SlonDString query;
 
 	int			use_major = 0;
 	int			use_minor = 0;
 
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
-
-	dbconn = adminfo->dbconn;
 
 	rc = db_check_namespace(stmt, adminfo, stmt->script->clustername);
 	if (rc > 0)
@@ -1822,10 +1811,10 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;   
 	}		
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.4 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.x */
 	{
 		/**
-		 * 9.0 is so far just like 8.4
+		 * 9.0 and 9.1 are so far just like 8.4
 		 **/
 		use_major=8;
 		use_minor=4;
@@ -1878,7 +1867,7 @@ static int
 load_slony_functions(SlonikStmt * stmt, int no_id)
 {
 	SlonikAdmInfo *adminfo;
-	PGconn	   *dbconn;
+	
 
 	int			use_major = 0;
 	int			use_minor = 0;
@@ -1886,7 +1875,6 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 	if ((adminfo = get_active_adminfo(stmt, no_id)) == NULL)
 		return -1;
 
-	dbconn = adminfo->dbconn;
 
         /* determine what schema version we should load */
 
@@ -1908,10 +1896,10 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.0 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.0 */
 	{
 		/**
-		 * 9.0 is so far just like 8.4
+		 * 9.0 and 9.1 are so far just like 8.4
 		 */
 		use_major = 8;
 		use_minor = 4;
@@ -2826,12 +2814,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	for (i = 0; i < num_sets; i++)
 	{
 		int			use_node;
-		SlonikAdmInfo *use_adminfo;
 
 		if (setinfo[i].num_directsub <= 1)
 		{
 			use_node = stmt->backup_node;
-			use_adminfo = adminfo1;
 		}
 		else if (setinfo[i].max_node == NULL)
 		{
@@ -2839,7 +2825,6 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				   setinfo[i].set_id);
 			rc = -1;
 			use_node = stmt->backup_node;
-			use_adminfo = adminfo1;
 		}
 		else
 		{
@@ -2848,7 +2833,6 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				   setinfo[i].set_id,
 				   setinfo[i].max_seqno);
 			use_node = setinfo[i].max_node->no_id;
-			use_adminfo = setinfo[i].max_node->adminfo;
 
 			setinfo[i].max_node->num_sets++;
 		}
@@ -3515,10 +3499,13 @@ slonik_subscribe_set(SlonikStmt_subscribe_set * stmt)
 				 " set_id=%d",stmt->hdr.script->clustername,
 				 stmt->sub_setid);
 	res1 = db_exec_select((SlonikStmt*)stmt,adminfo1,&query);
-	if(res1==NULL) 
+	if(res1==NULL || PQntuples(res1)==0 ) 
 	{
 		PQclear(res1);
 		dstring_free(&query);
+		printf("%s:%d Error: set %d not found. \n",
+			   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+			   stmt->sub_setid);
 		return -1;
 
 	}

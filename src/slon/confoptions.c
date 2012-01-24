@@ -19,9 +19,7 @@ static int	conf_name_compare(const char *namea, const char *nameb);
 bool		set_config_option(const char *name, const char *value);
 void	   *get_config_option(const char *name);
 
-static bool bool_placeholder;
 static double real_placeholder;
-static char *string_placeholder;
 
 void		dump_configuration(void);
 void build_conf_variables(void);
@@ -279,11 +277,11 @@ static struct config_string ConfigureNamesString[] =
 		{
 			(const char *) "log_timestamp_format",
 			gettext_noop("A strftime()-style log timestamp format string."),
-			NULL,
+			gettext_noop("If modified, a trailing space to separate this from the next field is likely wanted."),
 			SLON_C_STRING
 		},
 		&log_timestamp_format,
-		"%Y-%m-%d %H:%M:%S %Z"
+		"%Y-%m-%d %H:%M:%S %Z "
 	},
 	{
 		{

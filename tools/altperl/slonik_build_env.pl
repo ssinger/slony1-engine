@@ -7,7 +7,7 @@
 # This script, given parameters concerning the database nodes,
 # generates output for "slon_tools.conf" consisting of:
 # - A set of add_node() calls to configure the cluster
-# - The arrays @KEYEDTABLES, and @SEQUENCES
+# - The arrays @PKEYEDTABLES, and @SEQUENCES
 
 use DBI;
 use Getopt::Long;
@@ -85,7 +85,7 @@ $tableQuery->finish();
 $dbh->disconnect();
 
 if ( scalar(@tablesWithIndexes) >= 1 ) {
-  print '@KEYEDTABLES=(' . "\n";
+  print '@PKEYEDTABLES=(' . "\n";
   foreach my $table (sort @tablesWithIndexes) {
     print "\t\"$table\",\n";
   }

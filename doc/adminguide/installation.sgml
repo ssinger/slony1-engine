@@ -240,7 +240,7 @@ distributions, it is also possible to install &slony1; using binary
 packages. Slony Global Development Team provides official RPMs and
 SRPMs for many versions or Red Hat and Fedora .</para>
 
-<para>The RPMs are available at <ulink url="http://yum.pgsqlrpms.org"> &postgres RPM Repository
+<para>The RPMs are available at <ulink url="http://yum.postgresql.org"> &postgres RPM Repository
 </ulink>. Please read the howto provided in the website for configuring
 yum to use that repository. Please note that the RPMs will look for RPM
 installation of &postgres;, so if you install &postgres; from source,

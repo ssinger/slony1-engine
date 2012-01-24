@@ -547,7 +547,7 @@ remoteWorkerThread_main(void *cdata)
 		 */
 		(void) slon_mkquery(&query1,
 							"begin transaction; "
-							"set transaction isolation level serializable; ");
+							"set transaction isolation level read committed; ");
 
 		/*
 		 * Event type specific processing
@@ -1081,7 +1081,7 @@ remoteWorkerThread_main(void *cdata)
 						/* Start the transaction again */
 						(void) slon_mkquery(&query3,
 							"begin transaction; "
-							"set transaction isolation level serializable; ");
+							"set transaction isolation level read committed; ");
 						slon_appendquery(&query1,
 							 "lock table %s.sl_config_lock; ",
 							 rtcfg_namespace);
@@ -1281,7 +1281,7 @@ remoteWorkerThread_main(void *cdata)
 								 * it was released above.
 								 */
 								slon_mkquery(&query1, "start transaction;"
-											 "set transaction isolation level serializable;");
+											 "set transaction isolation level read committed;");
 								slon_appendquery(&query1,
 												  "lock table %s.sl_config_lock; ",
 												 rtcfg_namespace);
@@ -1303,7 +1303,7 @@ remoteWorkerThread_main(void *cdata)
 						if(copy_set_retries != 0)
 						  {
 							slon_mkquery(&query1, "start transaction;"
-										 "set transaction isolation level serializable;");
+										 "set transaction isolation level read committed;");
 							slon_appendquery(&query1,
 											 "lock table %s.sl_config_lock; ",
 											 rtcfg_namespace);
@@ -2644,11 +2644,13 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	 */
 	if (sub_provider == set_origin)
 	{
+		int provider_version=PQserverVersion(pro_dbconn);
 		(void) slon_mkquery(&query1,
 							"start transaction; "
-							"set transaction isolation level serializable; "
+							"set transaction isolation level serializable read only %s; "
 							"select \"pg_catalog\".txid_snapshot_xmin(\"pg_catalog\".txid_current_snapshot()) <= '%s'; ",
-							event->ev_maxtxid_c);
+							provider_version>=90100 ? "deferrable" : ""
+							,event->ev_maxtxid_c);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
 		if (PQresultStatus(res1) != PGRES_TUPLES_OK)
 		{
@@ -2684,9 +2686,11 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 	}
 	else
 	{
+		int provider_version=PQserverVersion(pro_dbconn);
 		(void) slon_mkquery(&query1,
 							"start transaction; "
-							"set transaction isolation level serializable; ");
+							"set transaction isolation level serializable read only %s; ",
+							provider_version >= 90100 ? "deferrable" : "" );
 		if (query_execute(node, pro_dbconn, &query1) < 0)
 		{
 			slon_disconnectdb(pro_conn);
@@ -4172,7 +4176,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 	while (num_providers_active > 0)
 	{
 		WorkerGroupLine *lines_head = NULL;
-		WorkerGroupLine *lines_tail = NULL;
 		WorkerGroupLine *wgnext = NULL;
 
 		/*
@@ -4186,7 +4189,6 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 			pthread_cond_wait(&(wd->repldata_cond), &(wd->workdata_lock));
 		}
 		lines_head = wd->repldata_head;
-		lines_tail = wd->repldata_tail;
 		wd->repldata_head = NULL;
 		wd->repldata_tail = NULL;
 		pthread_mutex_unlock(&(wd->workdata_lock));
@@ -5466,7 +5468,7 @@ archive_close(SlonNode *node)
 	if (command_on_logarchive)
 	{
 		char		command[1024];
-
+		
 		sprintf(command, "%s %s", command_on_logarchive, node->archive_name);
 		slon_log(SLON_DEBUG1, "remoteWorkerThread_%d: Run Archive Command %s\n",
 				 node->no_id, command);
