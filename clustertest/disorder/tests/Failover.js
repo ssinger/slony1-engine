@@ -128,20 +128,20 @@ Failover.prototype.runTest = function() {
 	// happen.
 	//
 	// To get around this we don't use the normal wait for function.
-	//var oldWait = this.generateSlonikWait;
-	//this.generateSlonikWait = function(event_node) {
-	//	var script = '';
-	//	for(var node=1; node < this.getNodeCount(); node++) {
-	//		if(node == event_node || node==1) {
-	//			continue;
-	//		}
-	//		script+='wait for event(origin='+event_node+', wait on=' +
-	//			event_node + ',confirmed=' + node+');\n';
-	//	}
-	//	return script;
-	//}
+	var oldWait = this.generateSlonikWait;
+	this.generateSlonikWait = function(event_node) {
+		var script = '';
+		for(var node=1; node < this.getNodeCount(); node++) {
+			if(node == event_node || node==1) {
+				continue;
+			}
+			script+='wait for event(origin='+event_node+', wait on=' +
+				event_node + ',confirmed=' + node+');\n';
+		}
+		return script;
+	}
 	this.subscribeSet(1,3,3, [2]);
-	//this.generateSlonikWait=oldWait;
+	this.generateSlonikWait=oldWait;
 	load.stop();
 	this.coordinator.join(load);
 	
