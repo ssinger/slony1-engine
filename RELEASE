@@ -3,6 +3,11 @@
 
 ** 2.1.1
 
+- Bug #260 :: Fixed issue when with FAILOVER command when the failed node has 
+              multiple sets.
+
+Release Candidate 1
+
 - Bug #246 :: Include path order changes
 - Bug #161 :: fix memory overrun in EXECUTE SCRIPT parser
 - Bug #247 :: slony_logshipper to handle TRUNCATE commands
@@ -13,6 +18,9 @@
   return -1 on an error (invalid as a slonik exit code in 2.1)
 - Bug #244 :: The CREATE SET command now requires a set id to be specified.
 - Bug #255 :: Fix serialization conflict issues when using PostgreSQL 9.1.
+- Bug #256 :: set_conf_option() has an extra elevel parameter on PG 9.2
+- Bug #259 :: Fix TRUNCATE logging so it works with mixed case slony clusters.
+
 
 ** 2.1.0 
 ** 2.1.0 RC 2
@@ -213,5 +221,6 @@
 
 ** RELEASE 2.0.6
 - Bug #162 :: typenameTypeId() changes signatures in 9.1
+
 
 

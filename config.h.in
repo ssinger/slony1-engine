@@ -65,4 +65,7 @@
 /* Set to 1 if we have POSIX signals */
 #undef HAVE_POSIX_SIGNALS
 
+#undef SETCONFIGOPTION_6
+#undef SETCONFIGOPTION_7
+
 #endif /* SLONY_I_CONFIG_H */

@@ -3118,10 +3118,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				 * commit all open transactions despite of all possible errors
 				 * otherwise the WAIT FOR will not work.
 				 **/
-				for (i = 0; i < num_nodes; i++)
+				for (j = 0; j < num_nodes; j++)
 				{
 					if (db_commit_xact((SlonikStmt *) stmt, 
-									   nodeinfo[i].adminfo) < 0)
+									   nodeinfo[j].adminfo) < 0)
 						rc = -1;
 				}
 				
