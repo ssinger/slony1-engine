@@ -50,7 +50,7 @@ MultipleOrigins.prototype.runTest = function() {
         this.coordinator.log("MultipleOrigins.prototype.runTest - subscribe empty set 2");
 	this.addCompletePaths();
 	this.createSecondSet(2);
-	this.subscribeSet(2,2,'2','4');
+	this.subscribeSet(2,2,2,[4]);
 
 	
         this.coordinator.log("MultipleOrigins.prototype.runTest - generate load");
@@ -71,7 +71,7 @@ MultipleOrigins.prototype.runTest = function() {
 	this.slonikSync(1,1);
 	this.compareDb('db1','db3');	
 	this.compareDb('db1','db4');
-	
+	this.compareSecondSet('db2','db4');
         this.coordinator.log("MultipleOrigins.prototype.runTest - move set 1-->3");
 	/**
 	 * MOVE SET 1===>3
@@ -91,10 +91,29 @@ MultipleOrigins.prototype.runTest = function() {
 	this.slonikSync(1,1);
 	this.slonikSync(1,4);
 	this.failNode(1,4,true);
-	
+	load = this.generateLoad(4);
+	java.lang.Thread.sleep(10*1000);
+	load.stop();
+	this.coordinator.join(load);
+
+	this.slonikSync(1,4);
+		//exit(-1);
+		//	this.compareDb('db2','db3');	
+	this.compareDb('db3','db4');
+	this.compareDb('db4','db5');
+	this.compareSecondSet('db2','db4');
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {		
 		this.slonArray[idx-1].stop();
 		this.coordinator.join(this.slonArray[idx-1]);
 	}
         this.coordinator.log("MultipleOrigins.prototype.runTest - complete");
+}
+
+MultipleOrigins.prototype.compareSecondSet=function(a,b) 
+{
+
+	oldCompare = this.compareQueryList;
+	this.compareQueryList=[['select i_id,comments from disorder.do_item_review order by i_id','i_id']];
+	this.compareDb(a,b);
+	this.compareQueryList=oldCompare;
 }
