@@ -1811,15 +1811,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;   
 	}		
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.x */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 0100)) /* 9.0 */
 	{
 		/**
-		 * 9.0 and 9.1 are so far just like 8.4
+		 * 9.0 and so far just like 8.4
 		 **/
 		use_major=8;
 		use_minor=4;
 	}
-	else	/* above 8.4 ??? */
+	else	/* 9.1 or higher */
 	{
 		use_major = 8;
 		use_minor = 4;
@@ -1896,15 +1896,15 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200)) /* 9.0 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90100)) /* 9.0 */
 	{
 		/**
-		 * 9.0 and 9.1 are so far just like 8.4
+		 * 9.0 is so far just like 8.4
 		 */
 		use_major = 8;
 		use_minor = 4;
 	}
-	else    /* above 8.4 */
+	else    /* above 9.1 */
 	{
 		use_major = 8;
 		use_minor = 4;
